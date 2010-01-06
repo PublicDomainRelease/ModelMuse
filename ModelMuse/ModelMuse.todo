@@ -1,0 +1,49 @@
+{DONE 1 : Allow editing of imported values.}
+{TODO 1 : Add inclusion/exclusion filters for archive.}
+{TODO 1 : I noticed that the dialog box that asks if you want to archive the model sometimes is hidden behind the main ModelMuse Window.}
+{TODO 1 : use meaningful names for objects when importing model results.}
+{TODO 1 : Check on flicker of 3D view when importing big shapefile.}
+{DONE 1 : Display max, min values for data sets in Color grid dialog box.}
+{TODO 1 : Have logical criterion for coloring grid}
+{TODO 1 : Allow Enable/Disable object}
+{TODO 1 : import model pieces}
+{TODO 1 : Allow "no editor" to be an option.}
+{TODO 1 : Export objects from ModelMuse}
+{TODO 1 : Always enable import multipart object (don't include if already multipart)}
+{TODO : Find a way to display time-series data for both input and output.}
+{TODO : Find out how to export grind information so that other codes can use it. Contact Randy Hanson.}
+{TODO : Consider using GDAL for importing ESRI raster data. http://www.gdal.org/}
+{TODO : 
+Find an easy way for the user to have multiple scenarios in which selected
+inputs to the model are changed based on the scenario that is selected.}
+{TODO : Automatically display results after running model.}
+{TODO : Consider using non-moldal windows where-ever possible.}
+{TODO : Consider adding Reminders for the users.  They would appear when requested or when opening a file.}
+
+{TODO : Allow the user to specify "Default" in the expression of a screen object.}
+{TODO : Allow the user to resize an object by dragging the corners or edges of a selection rectangle.}
+{TODO : Implement "Snap to Grid"}
+{TODO : Allow the user to set the initial conditions by selecting the SaveHeads file.}
+
+{TODO : Add undo/redo for all commands}
+{TODO : draw 3D screen objects using more precise positions}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

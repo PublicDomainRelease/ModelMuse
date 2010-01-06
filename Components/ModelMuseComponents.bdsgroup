@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<PersonalityInfo>
+		<Option>
+			<Option Name="Personality">Default.Personality</Option>
+			<Option Name="ProjectType"></Option>
+			<Option Name="Version">1.0</Option>
+			<Option Name="GUID">{BB5FDE1F-641E-4635-A8DA-40F6E8B8AFFE}</Option>
+		</Option>
+	</PersonalityInfo>
+	<Default.Personality>  
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <Projects>
+      <Projects Name="RBW95ButtonPkg_2006.bpl">95button\RBW95ButtonPkg_2006.bdsproj</Projects>
+      <Projects Name="Ade2006Pkg.bpl">ade\Ade2006Pkg.bdsproj</Projects>
+      <Projects Name="datagridPkg.bpl">datagrid\datagridPkg.bdsproj</Projects>
+      <Projects Name="ModelCube2006Pkg.bpl">ModelCube\ModelCube2006Pkg.bdsproj</Projects>
+      <Projects Name="MostRecentFiles2006.bpl">QMostRecentlyUsedFiles\MostRecentFiles2006.bdsproj</Projects>
+      <Projects Name="QuadTreePkg.bpl">Quadtree\QuadTreePkg.bdsproj</Projects>
+      <Projects Name="ZoomBox2Pkg.bpl">QZoomBox2\ZoomBox2Pkg.bdsproj</Projects>
+      <Projects Name="RbwControllerPackage.bpl">RbwController\RbwControllerPackage.bdsproj</Projects>
+      <Projects Name="RbwDataGridPkg2006.bpl">RbwDataGrid\RbwDataGridPkg2006.bdsproj</Projects>
+      <Projects Name="DynamicCursor2006Pkg.bpl">RbwDynamicCursor\DynamicCursor2006Pkg.bdsproj</Projects>
+      <Projects Name="RbwEditPkg.bpl">RbwEdit\RbwEditPkg.bdsproj</Projects>
+      <Projects Name="RbwParserPkg2006.bpl">RbwParser\RbwParserPkg2006.bdsproj</Projects>
+      <Projects Name="RbwRulerPkg.bpl">RbwRuler\RbwRulerPkg.bdsproj</Projects>
+      <Projects Name="XBasePkg2006.bpl">xbase\XBasePkg2006.bdsproj</Projects>
+      <Projects Name="XBasePropEd2006.bpl">xbase\XBasePropEd2006.bdsproj</Projects>
+      <Projects Name="VGlWidget2006Pkg.bpl">GLWidget\VGlWidget2006Pkg.bdsproj</Projects>
+      <Projects Name="Targets">RBW95ButtonPkg_2006.bpl Ade2006Pkg.bpl datagridPkg.bpl ModelCube2006Pkg.bpl MostRecentFiles2006.bpl QuadTreePkg.bpl ZoomBox2Pkg.bpl RbwControllerPackage.bpl RbwDataGridPkg2006.bpl DynamicCursor2006Pkg.bpl RbwEditPkg.bpl RbwParserPkg2006.bpl RbwRulerPkg.bpl XBasePkg2006.bpl XBasePropEd2006.bpl VGlWidget2006Pkg.bpl</Projects>
+    </Projects>
+    <Dependencies/>
+  </Default.Personality>
+</BorlandProject>

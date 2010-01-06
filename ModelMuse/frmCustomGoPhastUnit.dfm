@@ -1,0 +1,23 @@
+object frmCustomGoPhast: TfrmCustomGoPhast
+  Left = 550
+  Top = 496
+  Caption = 'frmCustomGoPhast'
+  ClientHeight = 240
+  ClientWidth = 434
+  Color = clBtnFace
+  Font.Charset = ANSI_CHARSET
+  Font.Color = clBlack
+  Font.Height = -16
+  Font.Name = 'Arial'
+  Font.Pitch = fpVariable
+  Font.Style = []
+  OldCreateOrder = False
+  PopupMode = pmAuto
+  Position = poMainFormCenter
+  Scaled = False
+  OnCreate = FormCreate
+  OnHelp = FormHelp
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 18
+end

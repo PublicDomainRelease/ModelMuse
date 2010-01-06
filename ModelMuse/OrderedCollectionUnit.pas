@@ -1,0 +1,614 @@
+unit OrderedCollectionUnit;
+
+interface
+
+uses DataSetUnit, Classes, GoPhastTypes;
+
+type
+  {@name defines the types of parameters used in MODFLOW.
+  @value(ptUndefined ptUndefined represents an undefined type.)
+  @value(ptLPF_HK ptLPF_HK represents the HK parameter type
+    in the LPF package. (Hydraulic conductivity in the
+    horizontal (row) direction.))
+  @value(ptLPF_HANI ptLPF_HANI represents the HANI parameter type
+    in the LPF package. (Horizontal anisotropy: the ratio of hydraulic
+    conductivity along columns to hydraulic conductivity along rows.
+    The hydraulic conductivity along columns is the product of the values
+    in HK and HANI))
+  @value(ptLPF_VK ptLPF_VK represents the VK parameter type
+    in the LPF package. (Hydraulic conductivity in the
+    vertical direction.))
+  @value(ptLPF_VANI ptLPF_VANI represents the VANI parameter type
+    in the LPF package. (Vertical anisotropy: the ratio of
+    hydraulic conductivity along rows to vertical hydraulic
+    conductivity.)  HK is divided by VANI to obtain vertical
+    hydraulic conductivity, and values of VANI typically are greater
+    than or equal to 1.0)
+  @value(ptLPF_SS ptLPF_SS represents the SS parameter type
+    in the LPF package. (Specific storage.))
+  @value(ptLPF_SY ptLPF_SY represents the SY parameter type
+    in the LPF package. (Specific yield.))
+  @value(ptLPF_VKCB ptLPF_VKCB represents the VKCB parameter type
+    in the LPF package. (Vertical hydraulic conductivity of a
+    Quasi-three-dimensional confining layer.))
+  @value(ptRCH ptRCH represents the RCH parameter type
+    in the RCH package. (ptRCH defines values of the recharge at the boundary.))
+  @value(ptEVT ptEVT represents the EVT parameter type
+    in the EVT package. (ptEVT defines values of the maximum
+    evapotranspiration at the boundary.))
+  @value(ptETS ptETS represents the ETS parameter type
+    in the ETS package. (ptETS defines values of the maximum
+    evapotranspiration at the boundary.))
+  @value(ptCHD ptCHD represents the CHD parameter type
+    in the CHD package. (ptCHD defines values of the start
+    and end head at the boundary.))
+  @value(ptGHB ptGHB represents the GHB parameter type
+    in the General-Head Boundary package. (ptGHB defines values of the conductance
+    at the boundary.))
+  @value(ptQ ptQ represents the Q parameter type
+    in the Well package. (ptQ defines values of the pumping rate
+    at the boundary.))
+  @value(ptRIV ptRIV represents the RIV parameter type
+    in the River package. (ptRIV defines values of the conductance
+    at the boundary.))
+  @value(ptDRN ptDRN represents the DRN parameter type
+    in the Drain package. (ptDRN defines values of the conductance
+    at the boundary.))
+  @value(ptDRT ptDRT represents the DRT parameter type
+    in the Drain Return package. (ptDRT defines values of the conductance
+    at the boundary.))
+  @value(ptSFR ptSFR represents the SFR parameter type
+    in the SFR package. (ptSFR defines values of the streambed hydraulic
+    conductivity at the boundary.))
+  @value(ptHFB ptHFB represents the HFB parameter type
+    in the HFB package. (ptHFB defines values of the hydraulic characteristic
+    of the barrier.))
+
+  @value(ptHUF_HK ptHUF_HK represents the HK parameter type
+    in the HUF package. (ptHUF_HK defines values of the horizontal hydraulic conductivity
+    of the hydrogeologic unit.))
+  @value(ptHUF_HANI ptHUF_HANI represents the HANI parameter type
+    in the HUF package. (ptHUF_HANI defines values of the horizontal anisotropy
+    of the hydrogeologic unit.))
+  @value(ptHUF_VK ptHUF_VK represents the VK parameter type
+    in the HUF package. (ptHUF_VK defines values of the vertical hydraulic conductivity
+    of the hydrogeologic unit.))
+  @value(ptHUF_VANI ptHUF_VANI represents the VANI parameter type
+    in the HUF package. (ptHUF_VANI defines values of the vertical anisotropy
+    of the hydrogeologic unit.))
+  @value(ptHUF_SS ptHUF_SS represents the SS parameter type
+    in the HUF package. (ptHUF_SS defines values of the specific storage
+    of the hydrogeologic unit.))
+  @value(ptHUF_SY ptHUF_SY represents the SY parameter type
+    in the HUF package. (ptHUF_SY defines values of the specific yield
+    of the hydrogeologic unit.))
+  @value(ptHUF_SYTP ptHUF_SYTP represents the SYTP parameter type
+    in the HUF package. (ptHUF_SYTP defines values of the storage coefficient
+    for the top active cell.))
+  @value(ptHUF_KDEP ptHUF_KDEP represents the KDEP parameter type
+    in the KDEP package. (ptHUF_KDEP defines values of the depth-dependent
+    hydraulic conductivity coefficient.))
+  @value(ptHUF_LVDA ptHUF_LVDA represents the LVDA parameter type
+    in the LVDA package. (ptHUF_LVDA defines values of horizontal anisotropy.))
+  }
+  TParameterType = (ptUndefined, ptLPF_HK, ptLPF_HANI, ptLPF_VK,
+    ptLPF_VANI, ptLPF_SS, ptLPF_SY, ptLPF_VKCB, ptRCH, ptEVT, ptETS,
+    ptCHD, ptGHB, ptQ,
+    ptRIV, ptDRN, ptDRT, ptSFR, ptHFB,
+    ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI, ptHUF_SS, ptHUF_SY,
+    ptHUF_SYTP, ptHUF_KDEP, ptHUF_LVDA);
+
+  // @name is used to indicate groups of related MODFLOW parameters.
+  TParameterTypes = set of TParameterType;
+
+  {@name is designed to allow @link(TOrderedCollection) to identify
+    changed and new items during @link(TOrderedCollection.Assign
+    TOrderedCollection.Assign).}
+  TOrderedItem = class(TCollectionItem)
+  private
+    {@name is the ID of a @classname that has been assigned to this
+     @classname.  If no @classname has been assigned to it, @name is -1.}
+    FForeignId: integer;
+    // See @link(AlwaysAssignForeignId).
+    FAlwaysAssignForeignId: boolean;
+    FInsertionNeeded: boolean;
+  protected
+    function Model: TObject;
+    // @name tests whether another @classname is identical to the current one.
+    function IsSame(AnotherItem: TOrderedItem): boolean; virtual; abstract;
+    // @name invalidates the model.
+    // @seeAlso(TOrderedCollection.InvalidateModel)
+    // @seeAlso(TPhastModel.Invalidate)
+    procedure InvalidateModel; virtual;
+    // if @name is @true, @link(FForeignId) will always be assigned during
+    // @link(Assign).  Otherwise, @link(FForeignId) will only be assigned if
+    // @link(IsSame) returns @false.
+    // @name is set to @true in @link(TModflowParamItem)
+    // and @link(TGlobalVariableItem).
+    property AlwaysAssignForeignId: boolean read FAlwaysAssignForeignId
+      write FAlwaysAssignForeignId;
+  public
+    // @name copies Source to the current @classname.  It will also assign
+    // @link(FForeignId) if @link(AlwaysAssignForeignId) is @true or
+    // @link(IsSame) returns @false.
+    procedure Assign(Source: TPersistent); override;
+    // @name creates and instance of @classname and
+    // sets @link(FForeignId) to -1.
+    constructor Create(Collection: TCollection); override;
+  end;
+
+  // @name is a base class for collections that avoid deleting their collection
+  // items during assign whenever they can. @name is typically used to
+  // allow editing of the collection in a GUI.  The model owns (directly or
+  // indirectly) one copy of the @classname.  Another copy will be created
+  // in the GUI in which @link(TOrderedCollection.Model) will be @nil.
+  // The user will edit this latter copy in the GUI.  The copy then gets
+  // assigned back to the original copy.
+  // @seealso(TOrderedCollection.Assign)
+  TOrderedCollection = class(TCollection)
+  private
+    // See @link(Model).
+    FModel: TObject;
+  protected
+    // @name invalidates the model.
+    // @seeAlso(TPhastModel.Invalidate)
+    procedure InvalidateModel; virtual;
+  public
+    // @name tests whether the contents of AnOrderedCollection are the same
+    // as the current @classname.
+    function IsSame(AnOrderedCollection: TOrderedCollection): boolean; virtual;
+    // @name is a @link(TPhastModel) or nil.
+    property Model: TObject read FModel;
+    // @name creates an instance of @classname.
+    // @param(ItemClass ItemClass must be a descendant of @link(TOrderedItem).)
+    // @param(Model Model must be a @link(TPhastModel) or nil.)
+    constructor Create(ItemClass: TCollectionItemClass; Model: TObject);
+    // @name copies the source @classname to itself.  If @link(Model) is nil,
+    // it uses the inherited method which causes it to delete all its items,
+    // and copy new ones from the source.  If @link(Model) is assigned,
+    // @unorderedlist(
+    //   @item(existing items will be copied back to the items from which
+    //     they were originally copied.)
+    //   @item(items deleted in the copy will be deleted in the original.)
+    //   @item(new items created in the copy will be inserted into the
+    //     original at the same position.)
+    // )
+    procedure Assign(Source: TPersistent); override;
+  end;
+
+  // @name extends @link(TOrderedCollection) by adding
+  // @link(TEnhancedOrderedCollection.IndexOf) and
+  // @link(TEnhancedOrderedCollection.Remove).
+  TEnhancedOrderedCollection = class(TOrderedCollection)
+  public
+    // @name returns the position of Item.  @name returns -1
+    // if Item is not in the @classname.
+    function IndexOf(Item: TOrderedItem): integer;
+    // @name removes Item from the @classname if it is in it.
+    procedure Remove(Item: TOrderedItem);
+  end;
+
+  // @name is a @link(TEnhancedOrderedCollection) that stores of list of
+  // @link(TDataArray)s that it can delete. The list (@link(NewDataSets))
+  // is not created by the @classname.  Instead another class
+  // creates it and assigns it to @classname. @link(TUndoChangePackageSelection)
+  // is an example of a class that assigns @link(NewDataSets).
+  //
+  // When a new @link(TDataArray) is created, it should be added to
+  // @link(NewDataSets) using @link(AddOwnedDataArray);
+  // In @link(TUndoItem.DoCommand),  @link(ClearNewDataSets) should be called
+  // before the @link(TDataArray)s are created.
+  // In @link(TUndoItem.Undo),  @link(RemoveNewDataSets) should be called;
+  TLayerOwnerCollection = class(TEnhancedOrderedCollection)
+  private
+    // See @link(NewDataSets).
+    FNewDataSets: TList;
+  protected
+    // @name adds DataArray to @link(NewDataSets)
+    procedure AddOwnedDataArray(DataArray: TDataArray);
+  public
+    // @name clears @link(NewDataSets).
+    procedure ClearNewDataSets;
+    // @name frees all the @link(TDataArray)s in @link(NewDataSets).
+    procedure RemoveNewDataSets;
+    // @name is the list of @link(TDataArray)s managed by @classname.
+    // @name is NOT owned by @classname.
+    property NewDataSets: TList read FNewDataSets write FNewDataSets;
+  end;
+
+  // @name represents a MODFLOW parameter
+  TModflowParameter = class abstract (TOrderedItem)
+  private
+    // See @link(ParameterType).
+    FParameterType: TParameterType;
+    // See @link(Value).
+    FValue: double;
+    // See @link(ParameterType).
+    procedure SetParameterType(const Value: TParameterType);
+    // See @link(Value).
+    procedure SetValue(Value : double);
+  protected
+    // See @link(ParameterName).
+    FParameterName: string;
+    // See @link(ParameterName).
+    function CorrectParamName(const Value: string): string;
+    procedure SetParameterName(const Value: string); virtual; abstract;
+  public
+    // @name copies @link(ParameterName), @link(ParameterType), @link(Value)
+    // and @link(FForeignId) from source.  (@link(FForeignId) gets assigned the
+    // value of the Source's ID not the Source's @link(FForeignId).
+    procedure Assign(Source: TPersistent); override;
+    // @name tests whether @1ink(ParameterName), @link(ParameterType)
+    // @link(Value) are the same as or different from those of AnotherItem.
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    // @name destroys @classname.  If @link(ParameterType)
+    // in [ptRCH, ptEVT, ptETS, ptCHD, ptGHB, ptQ, ptRIV, ptDRN, ptDRT]
+    // All @link(TScreenObject)s that use @classname will have it removed from
+    // them.
+    Destructor Destroy; override;
+  published
+    // @name is the name of the parameter.  All parameter names must be unique
+    // but ensuring that they are unique is left up to the GUI rather than
+    // being validated by @classname.
+    property ParameterName: string read FParameterName write SetParameterName;
+    // @name indicates what type of parameter this is.
+    property ParameterType: TParameterType read FParameterType
+      write SetParameterType;
+    // @name is the value assigned to the parameter.
+    property Value: double read FValue write SetValue;
+  end;
+
+function ParmeterTypeToStr(ParmType: TParameterType): string;
+
+implementation
+
+uses ModflowParameterUnit, LayerStructureUnit, PhastModelUnit, ScreenObjectUnit,
+  ModflowBoundaryUnit;
+
+function ParmeterTypeToStr(ParmType: TParameterType): string;
+begin
+  case ParmType of
+    ptUndefined: result := 'Undefined';
+    ptLPF_HK: result := 'HK' ;
+    ptLPF_HANI: result := 'HANI' ;
+    ptLPF_VK: result := 'VK' ;
+    ptLPF_VANI: result := 'VANI' ;
+    ptLPF_SS: result := 'SS' ;
+    ptLPF_SY: result := 'SY' ;
+    ptLPF_VKCB: result := 'VKCB' ;
+    ptRCH: result := 'RCH' ;
+    ptEVT: result := 'EVT' ;
+    ptETS: result := 'ETS' ;
+    ptCHD: result := 'CHD' ;
+    ptGHB: result := 'GHB' ;
+    ptQ: result := 'Q' ;
+    ptRIV: result := 'RIV' ;
+    ptDRN: result := 'DRN' ;
+    ptDRT: result := 'DRT' ;
+    ptHUF_SYTP: result := 'SYTP' ;
+    ptHUF_LVDA: result := 'LVDA' ;
+    else Assert(False);
+  end;
+end;
+
+constructor TOrderedCollection.Create(ItemClass: TCollectionItemClass;
+  Model: TObject);
+begin
+  inherited Create(ItemClass);
+  Assert((Model = nil) or (Model is TPhastModel));
+  FModel := Model;
+end;
+
+function TOrderedCollection.IsSame(
+  AnOrderedCollection: TOrderedCollection): boolean;
+var
+  Index: Integer;
+begin
+  result := Count = AnOrderedCollection.Count;
+  if result then
+  begin
+    for Index := 0 to Count - 1 do
+    begin
+      result := (Items[Index] as TOrderedItem).IsSame(
+        AnOrderedCollection.Items[Index] as TOrderedItem);
+      if not result then Exit;
+    end;
+  end;
+end;
+
+procedure TOrderedCollection.Assign(Source: TPersistent);
+var
+  Index: integer;
+  AnotherOrderedCollection: TOrderedCollection;
+  AnItem: TOrderedItem;
+  ForeignItem: TOrderedItem;
+//  TempList: TList;
+  ID_Array: array of integer;
+  function FindUnitByForeignId(ForeignId: integer): TOrderedItem;
+  var
+    Index: integer;
+    AnItem: TOrderedItem;
+  begin
+    result := nil;
+    for Index := 0 to AnotherOrderedCollection.Count - 1 do
+    begin
+      AnItem := AnotherOrderedCollection.Items[Index] as TOrderedItem;
+      if AnItem.FForeignId = ForeignId then
+      begin
+        result := AnItem;
+        Exit;
+      end;
+    end;
+  end;
+begin
+  AnotherOrderedCollection := Source as TOrderedCollection;
+  if not IsSame(AnotherOrderedCollection) then
+  begin
+    if FModel = nil then
+    begin
+      SetLength(ID_Array, AnotherOrderedCollection.Count);
+      for Index := 0 to AnotherOrderedCollection.Count - 1 do
+      begin
+        AnItem := AnotherOrderedCollection.Items[Index] as TOrderedItem;
+        ID_Array[Index] := AnItem.ID;
+      end;
+      inherited;
+      for Index := 0 to Count - 1 do
+      begin
+        AnItem := Items[Index] as TOrderedItem;
+        AnItem.FForeignId := ID_Array[Index];
+      end;
+    end
+    else
+    begin
+      { TODO :
+It isn't clear that FInsertionNeeded is actually needed. 
+Make exhaustive tests to see if it is needed.}
+      for Index := 0 to AnotherOrderedCollection.Count - 1 do
+      begin
+        ForeignItem := AnotherOrderedCollection.Items[Index] as TOrderedItem;
+        ForeignItem.FInsertionNeeded := True;
+      end;
+
+      for Index := Count - 1 downto 0 do
+      begin
+        AnItem := Items[Index] as TOrderedItem;
+        ForeignItem := FindUnitByForeignId(AnItem.ID);
+        if ForeignItem = nil then
+        begin
+          Delete(Index);
+        end
+        else
+        begin
+          AnItem.Assign(ForeignItem);
+          ForeignItem.FInsertionNeeded := False;
+        end;
+      end;
+
+      for Index := 0 to AnotherOrderedCollection.Count - 1 do
+      begin
+        ForeignItem := AnotherOrderedCollection.Items[Index] as TOrderedItem;
+        if (ForeignItem.FForeignId = -1) or
+          ForeignItem.FInsertionNeeded then
+        begin
+          AnItem := Insert(Index) as TOrderedItem;
+          AnItem.Assign(ForeignItem);
+        end;
+      end;
+
+      // Test to make sure everything seems right.
+      Assert(Count = AnotherOrderedCollection.Count);
+    end;
+  end;
+end;
+
+{ TOrderedItem }
+
+procedure TOrderedItem.Assign(Source: TPersistent);
+var
+  AnotherItem: TOrderedItem;
+begin
+  AnotherItem := Source as TOrderedItem;
+  if AlwaysAssignForeignId or (not IsSame(AnotherItem)) then
+  begin
+    FForeignId := AnotherItem.ID;
+  end;
+end;
+
+constructor TOrderedItem.Create(Collection: TCollection);
+begin
+  inherited;
+  FForeignId := -1;
+end;
+
+procedure TOrderedItem.InvalidateModel;
+begin
+  (Collection as TOrderedCollection).InvalidateModel;
+end;
+
+function TOrderedItem.Model: TObject;
+begin
+  result := (Collection as TOrderedCollection).Model;
+end;
+
+procedure TOrderedCollection.InvalidateModel;
+begin
+  If (FModel <> nil) and (FModel is TPhastModel) then
+  begin
+    TPhastModel(FModel).Invalidate;
+  end;
+end;
+
+procedure TLayerOwnerCollection.ClearNewDataSets;
+begin
+  Assert(FNewDataSets <> nil);
+  FNewDataSets.Clear;
+end;
+
+procedure TLayerOwnerCollection.RemoveNewDataSets;
+var
+  DataArray: TDataArray;
+  Index: integer;
+begin
+  Assert(FNewDataSets <> nil);
+  Assert(FModel <> nil);
+  for Index := 0 to FNewDataSets.Count - 1 do
+  begin
+    DataArray := FNewDataSets[Index];
+    (FModel as TPhastModel).RemoveVariables(DataArray);
+    (FModel as TPhastModel).ExtractDataSet(DataArray);
+    DataArray.Free;
+  end;
+  ClearNewDataSets;
+end;
+
+procedure TLayerOwnerCollection.AddOwnedDataArray(DataArray: TDataArray);
+begin
+  if (FNewDataSets <> nil) then
+  begin
+    FNewDataSets.Add(DataArray);
+  end;
+end;
+
+procedure TModflowParameter.Assign(Source: TPersistent);
+Var
+  SourceParameter: TModflowParameter;
+begin
+  if Source is TModflowParameter then
+  begin
+    SourceParameter := TModflowParameter(Source);
+    ParameterName := SourceParameter.ParameterName;
+    ParameterType := SourceParameter.ParameterType;
+    Value := SourceParameter.Value;
+    FForeignId := SourceParameter.ID;
+  end;
+  inherited;
+end;
+
+function TModflowParameter.CorrectParamName(const Value: string): string;
+var
+  Index: integer;
+begin
+  result := Value;
+  if Length(result) >= 1 then
+  begin
+    if not (result[1] in ['_', 'A'..'Z', 'a'..'z', '_']) then
+    begin
+      result[1] := '_';
+    end;
+  end;
+  for Index := 2 to Length(result) - 1 do
+  begin
+    if not (result[Index] in ['_', 'A'..'Z', 'a'..'z', '0'..'9', '_']) then
+    begin
+      result[Index] := '_';
+    end;
+  end;
+end;
+
+destructor TModflowParameter.Destroy;
+var
+  Model: TPhastModel;
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  Boundary: TModflowParamBoundary;
+begin
+  if ParameterType in [ptRCH, ptEVT, ptETS, ptCHD, ptGHB, ptQ, ptRIV, ptDRN, ptDRT] then
+  begin
+    if (Collection as TOrderedCollection).Model <> nil then
+    begin
+      Model := TOrderedCollection(Collection).Model as TPhastModel;
+      for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
+      begin
+        ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+        Boundary := ScreenObject.GetMfBoundary(ParameterType);
+        if Boundary <> nil then
+        begin
+          Boundary.DeleteParam(self);
+        end;
+      end;
+    end;
+  end;
+  inherited;
+end;
+
+function TModflowParameter.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  AnotherParameter: TModflowParameter;
+begin
+  Assert(AnotherItem is TModflowParameter);
+  AnotherParameter := TModflowParameter(AnotherItem);
+  result :=
+    (ParameterName = AnotherParameter.ParameterName) and
+    (ParameterType = AnotherParameter.ParameterType) and
+    (Value = AnotherParameter.Value);
+end;
+
+procedure TModflowParameter.SetParameterType(const Value: TParameterType);
+begin
+  if FParameterType <> Value then
+  begin
+    FParameterType := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TModflowParameter.SetValue(Value : double);
+var
+  PhastModel: TPhastModel;
+  ScreenObject: TScreenObject;
+  ScreenObjectIndex: Integer;
+
+begin
+  if FValue <> Value then
+  begin
+    FValue := Value;
+    if (ParameterType = ptHFB) then
+    begin
+      if Model <> nil then
+      begin
+        PhastModel := Model as TPhastModel;
+        for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+        begin
+          ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+          if (ScreenObject.ModflowHfbBoundary <> nil)
+            and (ScreenObject.ModflowHfbBoundary.ParameterName = ParameterName)
+            then
+          begin
+            ScreenObject.ModflowHfbBoundary.HandleChangedParameterValue;
+          end;
+        end;
+      end;
+    end;
+    InvalidateModel;
+  end;
+end;
+
+function TEnhancedOrderedCollection.IndexOf(Item: TOrderedItem): integer;
+var
+  Index: Integer;
+begin
+  result := -1;
+  for Index := 0 to Count - 1 do
+  begin
+    if Items[Index] = Item then
+    begin
+      result := Index;
+      break;
+    end;
+  end;
+end;
+
+procedure TEnhancedOrderedCollection.Remove(Item: TOrderedItem);
+var
+  Index: integer;
+begin
+  Index := IndexOf(Item);
+  if Index >= 0 then
+  begin
+    Delete(Index);
+  end;
+end;
+
+end.
+
