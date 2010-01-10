@@ -2733,8 +2733,9 @@ const
   //    "Select Objects of Editing or Deletion" dialog box
   //    along with a change in functionality to allow objects to be
   //    deleted with this dialog box.
+  //  '2.2.1.0' Fixed bug in starting RunPhast.bat. 
 
-  ModelVersion = '2.2.0.0';
+  ModelVersion = '2.2.1.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
