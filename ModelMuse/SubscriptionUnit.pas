@@ -276,7 +276,9 @@ begin
   if FSubscribers.IndexOf(Observer) < 0 then
   begin
     FSubscribers.Add(Observer);
-//    Observer.UpToDate := False;
+    // is the following OK?
+    // The following may be needed when adding or removing a new HUF multiplier or zone array.
+    Observer.UpToDate := False;
   end;
 end;
 
@@ -290,7 +292,9 @@ begin
   if (FSubscribers <> nil) and (FSubscribers.IndexOf(Observer) >= 0) then
   begin
     FSubscribers.Remove(Observer);
-//    Observer.UpToDate := False;
+    // is the following OK?
+    // The following may be needed when adding or removing a new HUF multiplier or zone array.
+    Observer.UpToDate := False;
   end;
 end;
 
@@ -311,6 +315,7 @@ begin
       StopsTalkingTo(Observer);
     end;
   end;
+  FreeAndNil(FSubscribers);
 end;
 
 end.

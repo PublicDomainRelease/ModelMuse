@@ -16,7 +16,7 @@ type
     ConductanceAnnotation: string;
     BoundaryHeadAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
   end;
 
   TGhbArray = array of TGhbRecord;
@@ -26,7 +26,7 @@ type
     FGhbArray: TGhbArray;
     function GetGhbArray: TGhbArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -142,7 +142,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property Conductance: double read GetConductance;
@@ -658,10 +658,10 @@ begin
   result := Values.Cell.Section;
 end;
 
-procedure TGhb_Cell.Restore(Decomp: TDecompressionStream);
+procedure TGhb_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp);
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -697,7 +697,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.GhbArray) - 1 do
       begin
         BoundaryValues := LocalBoundaryStorage.GhbArray[BoundaryIndex];
@@ -871,15 +871,15 @@ begin
   WriteCompString(Comp, BoundaryHeadAnnotation);
 end;
 
-procedure TGhbRecord.Restore(Decomp: TDecompressionStream);
+procedure TGhbRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   Conductance := ReadCompReal(Decomp);
   BoundaryHead := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  ConductanceAnnotation := ReadCompString(Decomp);
-  BoundaryHeadAnnotation := ReadCompString(Decomp);
+  ConductanceAnnotation := ReadCompString(Decomp, Annotations);
+  BoundaryHeadAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TGhbStorage }
@@ -904,7 +904,7 @@ begin
   end;
 end;
 
-procedure TGhbStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TGhbStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Count: Integer;
   Index: Integer;
@@ -913,7 +913,7 @@ begin
   SetLength(FGhbArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FGhbArray[Index].Restore(DecompressionStream);
+    FGhbArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 

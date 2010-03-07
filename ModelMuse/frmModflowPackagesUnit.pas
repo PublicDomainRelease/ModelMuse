@@ -34,7 +34,7 @@ uses
   framePackageLayerChoiceUnit, framePackageUZFUnit, frameGmgUnit, frameSipUnit,
   frameDe4Unit, JvExComCtrls, JvComCtrls, RequiredDataSetsUndoUnit,
   framePackageHobUnit, framePackageLpfUnit, frameModpathSelectionUnit,
-  framePackageHufUnit, HufDefinition, framePackageMnw2Unit;
+  framePackageHufUnit, HufDefinition, framePackageMnw2Unit, framePackageSubUnit;
 
 type
   TfrmModflowPackages = class(TfrmCustomGoPhast)
@@ -126,6 +126,10 @@ type
     rbwHufParamCountController: TRbwController;
     jvspMNW2: TJvStandardPage;
     framePkgMnw2: TframePackageMnw2;
+    jvspBCF: TJvStandardPage;
+    framePkgBCF: TframePackage;
+    jvspSUB: TJvStandardPage;
+    framePkgSUB: TframePackageSub;
     procedure tvPackagesChange(Sender: TObject; Node: TTreeNode);
     procedure btnOKClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -154,6 +158,8 @@ type
     procedure FormCreate(Sender: TObject); override;
     procedure tvHufParameterTypesChange(Sender: TObject; Node: TTreeNode);
     procedure framePkgHufrcSelectionControllerEnabledChange(Sender: TObject);
+    procedure framePkgUZFrcSelectionControllerEnabledChange(Sender: TObject);
+    procedure framePkgBCFrcSelectionControllerEnabledChange(Sender: TObject);
   private
     IsLoaded: boolean;
     CurrentParameterType: TParameterType;
@@ -194,6 +200,7 @@ type
       ParameterCollection: TCollection;
       ParameterFrameController: TRbwController);
     procedure ActivateHufReferenceChoice;
+    procedure EnableUzfVerticalKSource;
     { Private declarations }
   public
     procedure GetData;
@@ -213,6 +220,9 @@ type
     FOldHufModflowParameters: THufModflowParameters;
     FNewHufModflowParameters: THufModflowParameters;
     FOldHydroGeologicUnits: THydrogeologicUnits;
+    FOldInterBlockTransmissivity: array of integer;
+    FOldAquiferType: array of integer;
+    procedure UpdateLayerGroupProperties(BcfPackage: TModflowPackageSelection);
   protected
     function Description: string; override;
   public
@@ -233,7 +243,7 @@ implementation
 uses Contnrs, JvListComb, frmGoPhastUnit, ScreenObjectUnit,
   ModflowConstantHeadBoundaryUnit, frmGridColorUnit, frmShowHideObjectsUnit,
   frameSfrParamInstancesUnit, LayerStructureUnit, frmErrorsAndWarningsUnit, 
-  frmManageFluxObservationsUnit;
+  frmManageFluxObservationsUnit, ModflowSubsidenceDefUnit;
 
 {$R *.dfm}
 
@@ -516,6 +526,7 @@ procedure TfrmModflowPackages.btnOKClick(Sender: TObject);
 var
   NeedToDefineFluxObservations: Boolean;
   ModflowPackages: TModflowPackages;
+  SubPackage: TSubPackageSelection;
 begin
   inherited;
   CheckLpfParameters;
@@ -546,6 +557,12 @@ begin
 
   SetData;
 
+  SubPackage := ModflowPackages.SubPackage;
+  if SubPackage.IsSelected then
+  begin
+    SubPackage.PrintChoices.ReportErrors;
+  end;
+
   if NeedToDefineFluxObservations then
   begin
     Hide;
@@ -556,6 +573,12 @@ begin
     and (frmGoPhast.PhastModel.HydrogeologicUnits.Count = 0) then
   begin
     frmGoPhast.miMF_HydrogeologicUnitsClick(nil);
+  end;
+
+  if frmGoPhast.PhastModel.ModflowPackages.SubPackage.IsSelected
+    and not frmGoPhast.PhastModel.LayerStructure.SubsidenceDefined then
+  begin
+    frmGoPhast.acLayersExecute(nil);
   end;
 end;
 
@@ -649,6 +672,13 @@ begin
   ChildNode.Data := Pointer(ptLPF_VKCB);
 
   tvLpfParameterTypes.Selected := HkNode;
+end;
+
+procedure TfrmModflowPackages.framePkgBCFrcSelectionControllerEnabledChange(
+  Sender: TObject);
+begin
+  inherited;
+  EnableUzfVerticalKSource;
 end;
 
 procedure TfrmModflowPackages.framePkgEVTrcSelectionControllerEnabledChange(
@@ -779,6 +809,13 @@ procedure TfrmModflowPackages.framePkgSFRrgSfr2ISFROPTClick(Sender: TObject);
 begin
   inherited;
   EnableSfrParameters;
+end;
+
+procedure TfrmModflowPackages.framePkgUZFrcSelectionControllerEnabledChange(
+  Sender: TObject);
+begin
+  inherited;
+  EnableUzfVerticalKSource;
 end;
 
 procedure TfrmModflowPackages.frameSFRParameterDefinitionbtnDeleteClick(
@@ -1262,6 +1299,7 @@ begin
     AddChildNode(BC_SpecifiedFlux, StrSpecifiedFlux, PriorNode);
     AddChildNode(BC_HeadDependentFlux, StrHeaddependentFlux, PriorNode);
     AddNode(StrSolver, StrSolver, PriorNode);
+    AddNode(StrSubSidence, StrSubSidence, PriorNode);
     AddNode(StrObservations, StrObservations, PriorNode);
     AddNode(StrMODPATH, StrMODPATH, PriorNode);
 
@@ -1333,6 +1371,10 @@ begin
     begin
       jvplPackages.ActivePage := jvspHUF;
     end
+    else if frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected then
+    begin
+      jvplPackages.ActivePage := jvspBCF;
+    end
     else
     begin
       jvplPackages.ActivePage := jvspLPF;
@@ -1346,6 +1388,19 @@ begin
     RivSelectedChange(nil);
   finally
     IsLoaded := True;
+  end;
+end;
+
+procedure TfrmModflowPackages.EnableUzfVerticalKSource;
+begin
+  framePkgUZF.comboVerticalKSource.Enabled :=
+    framePkgUZF.rcSelectionController.Enabled
+    and not framePkgBcf.rcSelectionController.Enabled;
+  framePkgUZF.lblVerticalKSource.Enabled :=
+    framePkgUZF.comboVerticalKSource.Enabled;
+  if not framePkgUZF.comboVerticalKSource.Enabled then
+  begin
+    framePkgUZF.comboVerticalKSource.ItemIndex := 0;
   end;
 end;
 
@@ -1763,7 +1818,7 @@ begin
               if ChildNode <> Node then
               begin
                 SelectedFrame := NodeToFrame(ChildNode);
-                if (Frame.SelectionType = stRadioButton)
+                if (SelectedFrame.SelectionType = stRadioButton)
                   and SelectedFrame.Selected then
                 begin
                   SelectedFrame.Selected := False;
@@ -1873,6 +1928,9 @@ begin
   PackageList.Clear;
 
   // add to list in alphabetical order.
+  Packages.BcfPackage.Frame := framePkgBCF;
+  PackageList.Add(Packages.BcfPackage);
+
   Packages.ChdBoundary.Frame := framePkgCHD;
   PackageList.Add(Packages.ChdBoundary);
 
@@ -1936,6 +1994,9 @@ begin
   Packages.De4Package.Frame := framePkgDE4;
   PackageList.Add(Packages.De4Package);
 
+  Packages.SubPackage.Frame := framePkgSub;
+  PackageList.Add(Packages.SubPackage);
+
   Packages.HobPackage.Frame := framePkgHOB;
   PackageList.Add(Packages.HobPackage);
 
@@ -1988,8 +2049,20 @@ constructor TUndoChangePackageSelection.Create(
   var NewTransientParameters: TModflowTransientListParameters;
   var SfrParameterInstances: TSfrParamInstances;
   var NewHufModflowParameters: THufModflowParameters);
+var
+  Index: Integer;
+  LayerGroup: TLayerGroup;
 begin
   inherited Create;
+  SetLength(FOldInterBlockTransmissivity, frmGoPhast.PhastModel.LayerStructure.Count);
+  SetLength(FOldAquiferType, frmGoPhast.PhastModel.LayerStructure.Count);
+  for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  begin
+    LayerGroup := frmGoPhast.PhastModel.LayerStructure[Index];
+    FOldInterBlockTransmissivity[Index] := LayerGroup.InterblockTransmissivityMethod;
+    FOldAquiferType[Index] := LayerGroup.AquiferType;
+  end;
+
   FOldHydroGeologicUnits := THydrogeologicUnits.Create(nil);
   FOldHydroGeologicUnits.Assign(frmGoPhast.PhastModel.HydrogeologicUnits);
 
@@ -2051,6 +2124,7 @@ begin
   inherited;
   frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := False;
   try
+    UpdateLayerGroupProperties(FNewPackages.BcfPackage);
     frmGoPhast.PhastModel.ModflowPackages := FNewPackages;
   finally
     frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := True;
@@ -2069,10 +2143,19 @@ begin
 end;
 
 procedure TUndoChangePackageSelection.Undo;
+var
+  Index: Integer;
+  LayerGroup: TLayerGroup;
 begin
   inherited;
   frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := False;
   try
+    for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+    begin
+      LayerGroup := frmGoPhast.PhastModel.LayerStructure[Index];
+      LayerGroup.InterblockTransmissivityMethod := FOldInterBlockTransmissivity[Index];
+      LayerGroup.AquiferType := FOldAquiferType[Index];
+    end;
     frmGoPhast.PhastModel.ModflowPackages := FOldPackages;
   finally
     frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := True;
@@ -2089,6 +2172,48 @@ begin
   frmGoPhast.EnableLinkStreams;
   frmGoPhast.EnableHufMenuItems;
   frmGoPhast.EnableManageObservations;
+end;
+
+procedure TUndoChangePackageSelection.UpdateLayerGroupProperties(BcfPackage: TModflowPackageSelection);
+var
+  Index: Integer;
+  LayerGroup: TLayerGroup;
+begin
+  if frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected <> BcfPackage.IsSelected then
+  begin
+    if BcfPackage.IsSelected then
+    begin
+      for Index := 1 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+      begin
+        LayerGroup := frmGoPhast.PhastModel.LayerStructure[Index];
+        if LayerGroup.InterblockTransmissivityMethod >= 1 then
+        begin
+          LayerGroup.InterblockTransmissivityMethod :=
+            LayerGroup.InterblockTransmissivityMethod + 1;
+        end;
+        if LayerGroup.AquiferType = 1 then
+        begin
+          LayerGroup.AquiferType := 3;
+        end;
+      end;
+    end
+    else
+    begin
+      for Index := 1 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+      begin
+        LayerGroup := frmGoPhast.PhastModel.LayerStructure[Index];
+        if LayerGroup.InterblockTransmissivityMethod >= 1 then
+        begin
+          LayerGroup.InterblockTransmissivityMethod :=
+            LayerGroup.InterblockTransmissivityMethod - 1;
+        end;
+        if LayerGroup.AquiferType > 1 then
+        begin
+          LayerGroup.AquiferType := 1;
+        end;
+      end;
+    end;
+  end;
 end;
 
 end.

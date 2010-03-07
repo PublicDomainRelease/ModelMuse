@@ -10,6 +10,7 @@ type
   private
     FHufPackage: THufPackageSelection;
     FNameOfFile: string;
+    FTransient: Boolean;
     procedure WriteDataSet1;
     procedure WriteDataSet2;
     procedure WriteDataSet3;
@@ -37,7 +38,8 @@ uses Math, Contnrs , ModflowUnitNumbers, frmProgressUnit, OrderedCollectionUnit,
   GoPhastTypes, DataSetUnit, frmErrorsAndWarningsUnit, ModflowParameterUnit;
 
 const
-  HufParameters = [ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI, ptHUF_SS, ptHUF_SY];
+  HufSteadyAndTransientParameters = [ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI, ptHUF_SS, ptHUF_SY];
+  HufSteadyParameters = [ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI];
 
 type
   THguSort = class(TObject)
@@ -186,8 +188,16 @@ begin
   GetFlowUnitNumber(IHUFCB);
   HDRY := PhastModel.ModflowOptions.HDry;
   NHUF := PhastModel.HydrogeologicUnits.Count;
-  NPHUF := PhastModel.HufParameters.CountParameters(HufParameters) +
-    PhastModel.ModflowSteadyParameters.CountParameters([ptHUF_SYTP]);
+  FTransient := PhastModel.ModflowFullStressPeriods.TransientModel;
+  if FTransient then
+  begin
+    NPHUF := PhastModel.HufParameters.CountParameters(HufSteadyAndTransientParameters) +
+      PhastModel.ModflowSteadyParameters.CountParameters([ptHUF_SYTP]);
+  end
+  else
+  begin
+    NPHUF := PhastModel.HufParameters.CountParameters(HufSteadyParameters);
+  end;
   if FHufPackage.SaveHeads then
   begin
     IOHUFHEADS := PhastModel.UnitNumbers.UnitNumber(StrIOHUFHEADS);
@@ -249,7 +259,7 @@ begin
     for PrintIndex := Low(TPrintParam) to High(TPrintParam) do
     begin
       PrintItem := HGU.PrintItems[PrintIndex];
-      if PrintItem.Print then
+      if PrintItem.ShouldPrint then
       begin
         PRINTFLAGS := PRINTFLAGS + ' ' + PrintItem.PrintString;
       end;
@@ -460,9 +470,19 @@ begin
     for ParamIndex := 0 to PhastModel.HufParameters.Count - 1 do
     begin
       Parameter := PhastModel.HufParameters[ParamIndex];
-      if not (Parameter.ParameterType in HufParameters) then
+      if FTransient then
       begin
-        Continue;
+        if not (Parameter.ParameterType in HufSteadyAndTransientParameters) then
+        begin
+          Continue;
+        end;
+      end
+      else
+      begin
+        if not (Parameter.ParameterType in HufSteadyParameters) then
+        begin
+          Continue;
+        end;
       end;
       UsedParameters.Clear;
       UsedHufUnits.Clear;
@@ -536,9 +556,9 @@ begin
         end;
         Zonarr := ExpandString(Zonarr, 10);
 
-        WriteString(HGUNAM);
-        WriteString(Mltarr);
-        WriteString(Zonarr);
+        WriteString(HGUNAM + ' ');
+        WriteString(Mltarr + ' ');
+        WriteString(Zonarr + ' ');
         WriteString(IZ);
         WriteString(' # Data Set 11: HGUNAM Mltarr Zonarr IZ');
         NewLine;
@@ -549,51 +569,56 @@ begin
     UsedHufUnits.Free;
   end;
 
-  for ParamIndex := 0 to PhastModel.ModflowSteadyParameters.Count - 1 do
+  if FTransient then
   begin
-    Param := PhastModel.ModflowSteadyParameters.Items[ParamIndex];
-    if Param.ParameterType = ptHUF_SYTP then
+    for ParamIndex := 0 to PhastModel.ModflowSteadyParameters.Count - 1 do
     begin
-      PARNAM := Param.ParameterName;
-      PARTYP := ' SYTP';
-      PARVAL := Param.Value;
-      NCLU := 1;
+      Param := PhastModel.ModflowSteadyParameters.Items[ParamIndex];
+      if Param.ParameterType = ptHUF_SYTP then
+      begin
+        PARNAM := Param.ParameterName;
+        PARTYP := ' SYTP';
+        PARVAL := Param.Value;
+        NCLU := 1;
     
-      WriteString(PARNAM);
-      WriteString(PARTYP);
-      WriteFloat(PARVAL);
-      WriteInteger(NCLU);
-      WriteString(' # Data set 10: PARNAM PARTYP Parval NCLU');
-      NewLine;
+        WriteString(PARNAM);
+        WriteString(PARTYP);
+        WriteFloat(PARVAL);
+        WriteInteger(NCLU);
+        WriteString(' # Data set 10: PARNAM PARTYP Parval NCLU');
+        NewLine;
 
-      HGUNAM := 'SYTP';
+        HGUNAM := 'SYTP';
 
-      if Param.UseMultiplier then
-      begin
-        Mltarr := Param.MultiplierArrayName(1);
-      end
-      else
-      begin
-        Mltarr := ' NONE ';
+        if Param.UseMultiplier then
+        begin
+          Mltarr := Param.MultiplierArrayName(1);
+          UsedMultiplierArrayNames.Add(Mltarr);
+        end
+        else
+        begin
+          Mltarr := ' NONE ';
+        end;
+
+        if Param.UseZone then
+        begin
+          Zonarr := Param.ZoneArrayName(1);
+          IZ := ' 1';
+          UsedZoneArrayNames.Add(Zonarr);
+        end
+        else
+        begin
+          Zonarr := ' ALL ';
+          IZ := '';
+        end;
+
+        WriteString(HGUNAM + ' ');
+        WriteString(Mltarr + ' ');
+        WriteString(Zonarr + ' ');
+        WriteString(IZ);
+        WriteString(' # Data Set 11: HGUNAM Mltarr Zonarr IZ');
+        NewLine;
       end;
-
-      if Param.UseZone then
-      begin
-        Zonarr := Param.ZoneArrayName(1);
-        IZ := ' 1';
-      end
-      else
-      begin
-        Zonarr := ' ALL ';
-        IZ := '';
-      end;
-
-      WriteString(HGUNAM);
-      WriteString(Mltarr);
-      WriteString(Zonarr);
-      WriteString(IZ);
-      WriteString(' # Data Set 11: HGUNAM Mltarr Zonarr IZ');
-      NewLine;
     end;
   end;
 end;

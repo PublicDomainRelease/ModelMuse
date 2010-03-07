@@ -15,7 +15,7 @@ type
   TModflowDoubleArray = array of array of TModflowDouble;
   T3DTModflowArray = array of TModflowDoubleArray;
 
-  TModflowPrecison = (mpSingle, mpDouble);
+  TModflowPrecision = (mpSingle, mpDouble);
 
   TFileVariable = class(TObject)
     AFile: TextFile;
@@ -53,7 +53,9 @@ procedure ReadModflowAsciiRealArray(F: TFileVariable;
 procedure ReadModflowSinglePrecFluxArray(AFile: TFileStream;
   var KSTP, KPER: Integer; var PERTIM, TOTIM: TModflowDouble;
   var DESC: TModflowDesc; var NCOL, NROW, NLAY: Integer;
-  var AnArray: T3DTModflowArray; HufFormat: boolean);
+  var AnArray: T3DTModflowArray;
+  HufFormat: boolean
+  );
 
 // AFile needs to be open before being passed to this procedure.
 // The other variables will be returned from the procedure.
@@ -63,24 +65,25 @@ procedure ReadModflowDoublePrecFluxArray(AFile: TFileStream;
   var KSTP, KPER: Integer;
   var PERTIM, TOTIM: TModflowDouble; var DESC: TModflowDesc;
   var NCOL, NROW, NLAY: Integer; var AnArray: T3DTModflowArray;
-  HufFormat: boolean);
+  HufFormat: boolean
+  );
 
 // Use this function to check the precision of
 // a binary head or drawdown file or other similar files.
 // AFile should be at the beginning of the file when this
 // function is called.  It will still be at the beginning
 // when the function returns.
-function CheckArrayPrecision(AFile: TFileStream): TModflowPrecison;
+function CheckArrayPrecision(AFile: TFileStream): TModflowPrecision;
 
 // Use this function to check the precision of a
 // cell by cell flow file. AFile should be at the beginning of
 // the file when this function is called.  It will still
 // be at the beginning when the function returns.
-function CheckBudgetPrecision(AFile: TFileStream; out HufFormat: boolean): TModflowPrecison;
+function CheckBudgetPrecision(AFile: TFileStream; out HufFormat: boolean): TModflowPrecision;
 
 implementation
 
-function CheckArrayPrecision(AFile: TFileStream): TModflowPrecison;
+function CheckArrayPrecision(AFile: TFileStream): TModflowPrecision;
 var
   KSTP, KPER: Integer;
   PERTIM, TOTIM: TModflowFloat;
@@ -143,7 +146,7 @@ begin
   AFile.Position := 0;
 end;
 
-function CheckBudgetPrecision(AFile: TFileStream; out HufFormat: boolean): TModflowPrecison;
+function CheckBudgetPrecision(AFile: TFileStream; out HufFormat: boolean): TModflowPrecision;
 var
   Description: string;
   FirstDescription: string;

@@ -37,7 +37,8 @@ type
     function GetRealAnnotation(Index: integer): string; virtual; abstract;
     function GetIntegerAnnotation(Index: integer): string; virtual; abstract;
     procedure Cache(Comp: TCompressionStream); virtual;
-    procedure Restore(Decomp: TDecompressionStream); virtual;
+    procedure Restore(Decomp: TDecompressionStream;
+      Annotations: TStringList); virtual;
     function GetSection: integer; virtual; abstract;
   public
     Constructor Create; virtual; 
@@ -70,17 +71,18 @@ type
   private
     FCachedCount: integer;
     FCached: Boolean;
-    FTempFileName: string;
+    FTempFileNames: TStringList;
     FCleared: Boolean;
     FValueCellType: TValueCellType;
+    FCondensedCount: integer;
     function GetCount: integer;
     procedure SetCount(const Value: integer);
     function GetItem(Index: integer): TValueCell;
     procedure SetItem(Index: integer; const Value: TValueCell);
-    procedure Restore;
+    procedure Restore(Start: integer = 0);
+    procedure Condense;
   public
     function Add(Item: TValueCell): integer;
-//    property Cached: boolean read FCached write FCached;
     procedure Cache;
     procedure CheckRestore;
     Constructor Create(ValueCellType: TValueCellType);
@@ -96,12 +98,15 @@ procedure WriteCompCell(Stream: TStream; Cell: TCellLocation);
 
 function ReadCompInt(Stream: TStream): integer;
 function ReadCompReal(Stream: TStream): double;
-function ReadCompString(Stream: TStream): string;
+function ReadCompString(Stream: TStream; Annotations: TStringList): string;
 function ReadCompCell(Stream: TStream): TCellLocation;
 
 implementation
 
 uses TempFiles, ScreenObjectUnit, frmGoPhastUnit;
+
+const
+  MaxCondensed = 100;
 
 procedure WriteCompInt(Stream: TStream; Value: integer);
 begin
@@ -132,13 +137,23 @@ begin
   Stream.WriteBuffer(Pointer(Value)^, StringLength * SizeOf(Char));
 end;
 
-function ReadCompString(Stream: TStream): string;
+function ReadCompString(Stream: TStream; Annotations: TStringList): string;
 var
   CommentLength: Integer;
+  StringPostion: integer;
 begin
   Stream.Read(CommentLength, SizeOf(CommentLength));
   SetString(result, nil, CommentLength);
   Stream.Read(Pointer(result)^, CommentLength * SizeOf(Char));
+  StringPostion := Annotations.IndexOf(result);
+  if StringPostion < 0 then
+  begin
+    Annotations.Add(result);
+  end
+  else
+  begin
+    result := Annotations[StringPostion]
+  end;
 end;
 
 procedure WriteCompCell(Stream: TStream; Cell: TCellLocation);
@@ -156,12 +171,44 @@ end;
 
 function TValueCellList.Add(Item: TValueCell): integer;
 begin
-  if FCached and fCleared then
-  begin
-    Restore;
-  end;
+//  if FCached and fCleared then
+//  begin
+//    Restore;
+//  end;
   FCached := False;
   result := inherited Add(Item);
+end;
+
+procedure TValueCellList.Condense;
+var
+  TempList: TList;
+  Index: Integer;
+begin
+  if FCondensedCount >= MaxCondensed then
+  begin
+    FCondensedCount := 0;
+  end;
+  TempList := TList.Create;
+  try
+    TempList.Capacity := inherited Count;
+    for Index := 0 to inherited Count - 1 do
+    begin
+      TempList.Add(inherited Items[Index])
+    end;
+    OwnsObjects := False;
+    Clear;
+    FCleared := True;
+    OwnsObjects := True;
+    FCached := True;
+    Restore(FCondensedCount);
+    for Index := 0 to TempList.Count - 1 do
+    begin
+      Add(TempList[Index]);
+    end;
+    Inc(FCondensedCount);
+  finally
+    TempList.Free;
+  end;
 end;
 
 procedure TValueCellList.Cache;
@@ -171,25 +218,26 @@ var
   Index: Integer;
   Cell: TValueCell;
   LocalCount: integer;
+  NewTempFileName: string;
 begin
-  if not FCached then
+  LocalCount := inherited Count;
+  if LocalCount > 0 then
   begin
-    if FTempFileName = '' then
+    if FTempFileNames.Count  >= FCondensedCount + MaxCondensed then
     begin
-      FTempFileName := TempFileName;
+      Condense;
+      LocalCount := inherited Count;
     end;
-    TempFile := TTempFileStream.Create(FTempFileName, fmOpenReadWrite);
-//    TempFile := TFileStream.Create(FTempFileName,
-//      fmCreate or fmShareDenyWrite, ReadWritePermissions);
+    NewTempFileName := TempFileName;
+    FTempFileNames.Add(NewTempFileName);
+    TempFile := TTempFileStream.Create(NewTempFileName, fmOpenReadWrite);
     Compressor := TCompressionStream.Create(clDefault, TempFile);
     try
-      LocalCount := inherited Count;
-      FCachedCount := LocalCount;
+      FCachedCount := FCachedCount + LocalCount;
       WriteCompInt(Compressor, LocalCount);
       for Index := 0 to LocalCount - 1 do
       begin
-//        Inc(FCacheCount);
-        Cell := Items[Index] as TValueCell;
+        Cell := inherited Items[Index] as TValueCell;
         Cell.Cache(Compressor);
       end;
     finally
@@ -213,15 +261,22 @@ end;
 constructor TValueCellList.Create(ValueCellType: TValueCellType);
 begin
   inherited Create;
+  FTempFileNames := TStringList.Create;
   FValueCellType := ValueCellType;
 end;
 
 destructor TValueCellList.Destroy;
+var
+  Index: Integer;
 begin
-  if FileExists(FTempFileName) then
+  for Index := 0 to FTempFileNames.Count - 1 do
   begin
-    DeleteFile(FTempFileName);
+    if FileExists(FTempFileNames[Index]) then
+    begin
+      DeleteFile(FTempFileNames[Index]);
+    end;
   end;
+  FTempFileNames.Free;
   inherited;
 end;
 
@@ -233,7 +288,6 @@ begin
   end
   else
   begin
-//    CheckRestore;
     result := inherited Count;
   end;
 end;
@@ -244,34 +298,55 @@ begin
   result := inherited Items[Index] as TValueCell;
 end;
 
-procedure TValueCellList.Restore;
+procedure TValueCellList.Restore(Start: integer = 0);
 var
   TempFile: TTempFileStream;
   DecompressionStream: TDecompressionStream;
   ValueCell: TValueCell;
   Index: Integer;
   LocalCount : integer;
+  CacheFileName: string;
+  CellIndex: Integer;
+  SumOfLocalCounts: integer;
+  Annotations: TStringList;
 begin
-  Assert(FileExists(FTempFileName));
   Assert(FCached);
   Assert(FCleared);
-  TempFile := TTempFileStream.Create(FTempFileName, fmOpenRead);
-//  TempFile := TFileStream.Create(FTempFileName,
-//    fmOpenRead or fmShareDenyWrite, ReadWritePermissions);
-  DecompressionStream := TDecompressionStream.Create(TempFile);
+
+  Annotations := TStringList.Create;
   try
-    LocalCount := ReadCompInt(DecompressionStream);
-    Capacity := LocalCount;
-    for Index := 0 to LocalCount - 1 do
+    Annotations.Sorted := True;
+    Capacity := FCachedCount;
+    SumOfLocalCounts := 0;
+    for Index := Start to FTempFileNames.Count -1 do
     begin
-      ValueCell := FValueCellType.Create;
-      inherited Add(ValueCell);
-      ValueCell.Restore(DecompressionStream);
+      CacheFileName := FTempFileNames[Index];
+      Assert(FileExists(CacheFileName));
+      TempFile := TTempFileStream.Create(CacheFileName, fmOpenRead);
+      DecompressionStream := TDecompressionStream.Create(TempFile);
+      try
+        LocalCount := ReadCompInt(DecompressionStream);
+        SumOfLocalCounts := SumOfLocalCounts + LocalCount;
+        for CellIndex := 0 to LocalCount - 1 do
+        begin
+          ValueCell := FValueCellType.Create;
+          inherited Add(ValueCell);
+          ValueCell.Restore(DecompressionStream, Annotations);
+        end;
+      finally
+        DecompressionStream.Free;
+        TempFile.Free;
+        DeleteFile(CacheFileName);
+      end;
     end;
-  finally
-    DecompressionStream.Free;
-    TempFile.Free;
     FCleared := False;
+    While FTempFileNames.Count > Start do
+    begin
+      FTempFileNames.Delete(FTempFileNames.Count-1);
+    end;
+    FCachedCount := FCachedCount - SumOfLocalCounts;
+  finally
+    Annotations.Free;
   end;
 end;
 
@@ -309,12 +384,13 @@ begin
 
 end;
 
-procedure TValueCell.Restore(Decomp: TDecompressionStream);
+procedure TValueCell.Restore(Decomp: TDecompressionStream;
+  Annotations: TStringList);
 var
   ScreenObjectName: string;
 begin
   Decomp.Read(FIFace, SizeOf(FIFace));
-  ScreenObjectName := ReadCompString(Decomp);
+  ScreenObjectName := ReadCompString(Decomp, Annotations);
   if ScreenObjectName = '' then
   begin
     ScreenObject := nil;

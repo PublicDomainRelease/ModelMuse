@@ -112,6 +112,7 @@ type
     // See @link(AlwaysAssignForeignId).
     FAlwaysAssignForeignId: boolean;
     FInsertionNeeded: boolean;
+
   protected
     function Model: TObject;
     // @name tests whether another @classname is identical to the current one.
@@ -135,6 +136,10 @@ type
     // @name creates and instance of @classname and
     // sets @link(FForeignId) to -1.
     constructor Create(Collection: TCollection); override;
+    procedure SetBooleanProperty(var AField: boolean; const NewValue: boolean);
+    procedure SetIntegerProperty(var AField: Integer; const NewValue: Integer);
+    procedure SetRealProperty(var AField: double; const NewValue: double);
+    procedure SetStringProperty(var AField: string; const NewValue: string);
   end;
 
   // @name is a base class for collections that avoid deleting their collection
@@ -227,6 +232,11 @@ type
     procedure SetParameterType(const Value: TParameterType);
     // See @link(Value).
     procedure SetValue(Value : double);
+    procedure NotifyHufKx;
+    procedure NotifyHufKy;
+    procedure NotifyHufKz;
+    procedure NotifyHufSS;
+    procedure NotifyHufSy;
   protected
     // See @link(ParameterName).
     FParameterName: string;
@@ -234,6 +244,7 @@ type
     function CorrectParamName(const Value: string): string;
     procedure SetParameterName(const Value: string); virtual; abstract;
   public
+    procedure NotifyParamChange(const Value: TParameterType);
     // @name copies @link(ParameterName), @link(ParameterType), @link(Value)
     // and @link(FForeignId) from source.  (@link(FForeignId) gets assigned the
     // value of the Source's ID not the Source's @link(FForeignId).
@@ -532,6 +543,126 @@ begin
   inherited;
 end;
 
+procedure TModflowParameter.NotifyHufSy;
+var
+  PhastModel: TPhastModel;
+begin
+  if Model <> nil then
+  begin
+    PhastModel := Model as TPhastModel;
+    PhastModel.HufSyNotifier.UpToDate := False;
+    PhastModel.HufSyNotifier.UpToDate := True;
+  end;
+end;
+
+procedure TModflowParameter.NotifyParamChange(const Value: TParameterType);
+begin
+  case Value of
+    ptUndefined: ;
+    ptLPF_HK: ;
+    ptLPF_HANI: ;
+    ptLPF_VK: ;
+    ptLPF_VANI: ;
+    ptLPF_SS: ;
+    ptLPF_SY: ;
+    ptLPF_VKCB: ;
+    ptRCH: ;
+    ptEVT: ;
+    ptETS: ;
+    ptCHD: ;
+    ptGHB: ;
+    ptQ: ;
+    ptRIV: ;
+    ptDRN: ;
+    ptDRT: ;
+    ptSFR: ;
+    ptHFB: ;
+    ptHUF_HK:
+      begin
+        NotifyHufKx;
+        NotifyHufKy;
+        NotifyHufKz;
+      end;
+    ptHUF_HANI:
+      begin
+        NotifyHufKy;
+      end;
+    ptHUF_VK:
+      begin
+        NotifyHufKz;
+      end;
+    ptHUF_VANI:
+      begin
+        NotifyHufKz;
+      end;
+    ptHUF_SS:
+      begin
+        NotifyHufSS;
+      end;
+    ptHUF_SY:
+      begin
+        NotifyHufSY;
+      end;
+    ptHUF_SYTP: ;
+    ptHUF_KDEP:
+      begin
+        NotifyHufKx;
+        NotifyHufKy;
+        NotifyHufKz;
+      end;
+    ptHUF_LVDA: ;
+    else Assert(False);
+  end;
+end;
+
+procedure TModflowParameter.NotifyHufSS;
+var
+  PhastModel: TPhastModel;
+begin
+  if Model <> nil then
+  begin
+    PhastModel := Model as TPhastModel;
+    PhastModel.HufSsNotifier.UpToDate := False;
+    PhastModel.HufSsNotifier.UpToDate := True;
+  end;
+end;
+
+procedure TModflowParameter.NotifyHufKz;
+var
+  PhastModel: TPhastModel;
+begin
+  if Model <> nil then
+  begin
+    PhastModel := Model as TPhastModel;
+    PhastModel.HufKzNotifier.UpToDate := False;
+    PhastModel.HufKzNotifier.UpToDate := True;
+  end;
+end;
+
+procedure TModflowParameter.NotifyHufKy;
+var
+  PhastModel: TPhastModel;
+begin
+  if Model <> nil then
+  begin
+    PhastModel := Model as TPhastModel;
+    PhastModel.HufKyNotifier.UpToDate := False;
+    PhastModel.HufKyNotifier.UpToDate := True;
+  end;
+end;
+
+procedure TModflowParameter.NotifyHufKx;
+var
+  PhastModel: TPhastModel;
+begin
+  if Model <> nil then
+  begin
+    PhastModel := Model as TPhastModel;
+    PhastModel.HufKxNotifier.UpToDate := False;
+    PhastModel.HufKxNotifier.UpToDate := True;
+  end;
+end;
+
 function TModflowParameter.IsSame(AnotherItem: TOrderedItem): boolean;
 var
   AnotherParameter: TModflowParameter;
@@ -545,9 +676,18 @@ begin
 end;
 
 procedure TModflowParameter.SetParameterType(const Value: TParameterType);
+const
+  HufParam = [ptHUF_HK, ptHUF_KDEP, ptHUF_HANI, ptHUF_VK,
+      ptHUF_VANI, ptHUF_SS, ptHUF_SY];
 begin
   if FParameterType <> Value then
   begin
+    if (FParameterType in HufParam) or (Value in HufParam) then
+    begin
+      NotifyParamChange(FParameterType);
+      NotifyParamChange(Value);
+    end;
+
     FParameterType := Value;
     InvalidateModel;
   end;
@@ -563,6 +703,39 @@ begin
   if FValue <> Value then
   begin
     FValue := Value;
+    if Model <> nil then
+    begin
+      if ParameterType in [ptHUF_HK, ptHUF_KDEP]  then
+      begin
+        PhastModel := Model as TPhastModel;
+        PhastModel.HufKxNotifier.UpToDate := False;
+        PhastModel.HufKxNotifier.UpToDate := True;
+      end;
+      if ParameterType in [ptHUF_HK, ptHUF_KDEP, ptHUF_HANI]  then
+      begin
+        PhastModel := Model as TPhastModel;
+        PhastModel.HufKyNotifier.UpToDate := False;
+        PhastModel.HufKyNotifier.UpToDate := True;
+      end;
+      if ParameterType in [ptHUF_HK, ptHUF_KDEP, ptHUF_VK, ptHUF_VANI]  then
+      begin
+        PhastModel := Model as TPhastModel;
+        PhastModel.HufKzNotifier.UpToDate := False;
+        PhastModel.HufKzNotifier.UpToDate := True;
+      end;
+      if ParameterType = ptHUF_SS  then
+      begin
+        PhastModel := Model as TPhastModel;
+        PhastModel.HufSsNotifier.UpToDate := False;
+        PhastModel.HufSsNotifier.UpToDate := True;
+      end;
+      if ParameterType = ptHUF_SY  then
+      begin
+        PhastModel := Model as TPhastModel;
+        PhastModel.HufSyNotifier.UpToDate := False;
+        PhastModel.HufSyNotifier.UpToDate := True;
+      end;
+    end;
     if (ParameterType = ptHFB) then
     begin
       if Model <> nil then
@@ -610,5 +783,42 @@ begin
   end;
 end;
 
-end.
+procedure TOrderedItem.SetRealProperty(var AField: double; const NewValue: double);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
+end;
 
+procedure TOrderedItem.SetStringProperty(var AField: string;
+  const NewValue: string);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
+end;
+
+procedure TOrderedItem.SetBooleanProperty(var AField: boolean; const NewValue: boolean);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
+end;
+
+procedure TOrderedItem.SetIntegerProperty(var AField: Integer;
+  const NewValue: Integer);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
+end;
+
+end.

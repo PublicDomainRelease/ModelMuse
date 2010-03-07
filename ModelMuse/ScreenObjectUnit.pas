@@ -236,14 +236,12 @@ type
     FModel: TComponent;
     // See @link(UpToDate).
     FUpToDate: boolean;
-//    FTempFileName: string;
     FTempMemoryStream: TMemoryStream;
     FCached: Boolean;
     FCleared: Boolean;
     // @name is set and used in @link(TCellElementSegmentList.ClosestSegment)
     // to help find the closest segment to the point of interest.
     FMinDistance: double;
-//    FAnisotropy: double;
     FRangeTree: TRbwRangeTree;
     // See @link(Items).
     // @param(Index indicates the position of the @link(TCellElementSegment).)
@@ -255,12 +253,6 @@ type
     // See @link(UpToDate).
     procedure SetUpToDate(const Value: boolean);
     procedure RestoreData;
-//    procedure GetExpandedXInterval(Subject: TObject;
-//      out LowerBoundary, UpperBoundary: double);
-//    procedure GetExpandedYInterval(Subject: TObject;
-//      out LowerBoundary, UpperBoundary: double);
-//    procedure CheckSegment(Subject: TObject; Point: TOneDRealArray;
-//      var Accept: boolean);
   public
     procedure CacheData;
     // @name indicates that the @link(TCellElementSegment)s in this
@@ -313,8 +305,6 @@ type
   // @Seealso(TScreenObject.EvaluateSubPolygon)
   // @Seealso(TScreenObject.IsAnyPointCloser)
   TSubPolygon = class(TObject)
-//  strict private
-//    constructor Copy(Source: TSubPolygon; New: boolean); overload;
   private
     FOriginalCount: integer;
     // @name is the number of points used by the @classname.
@@ -369,7 +359,6 @@ type
     procedure GrowByOne;
     Procedure BoxIntersect(const Point1, Point2: TPoint2D; SubPolygons: TList);
     property SectionIndex: integer read FSectionIndex;
-//    constructor Copy(Source: TSubPolygon); overload;
   end;
               
   TAssignmentMethod = (amEnclose, amIntersect);
@@ -437,12 +426,6 @@ type
     FEvalAt: TEvaluatedAt;
     FOrientation: TDataSetOrientation;
     FAssignmentLocation: TAssignmentLocation;
-//    FMinRow: integer;
-//    FMaxLayer: integer;
-//    FMinLayer: integer;
-//    FMaxCol: integer;
-//    FMaxRow: integer;
-//    FMinCol: integer;
   public
     function RestoreFromCache(CellList: TCellAssignmentList;
       EvalAt: TEvaluatedAt; Orientation: TDataSetOrientation;
@@ -453,12 +436,6 @@ type
       AssignmentLocation: TAssignmentLocation);
     Destructor Destroy; override;
     procedure Invalidate;
-//    property MinLayer: integer read FMinLayer;
-//    property MaxLayer: integer read FMaxLayer;
-//    property MinRow: integer read FMinRow;
-//    property MaxRow: integer read FMaxRow;
-//    property MinCol: integer read FMinCol;
-//    property MaxCol: integer read FMaxCol;
   end;
 
 
@@ -4808,19 +4785,22 @@ begin
     begin
       VarName := UsedVariables[VarIndex];
       VarPosition := Compiler.IndexOfVariable(VarName);
-      Variable := Compiler.Variables[VarPosition];
-      VariableList.Add(Variable);
-      AnotherDataSet := Model.GetDataSetByName(VarName);
-      if AnotherDataSet = nil then
+      if VarPosition >= 0 then
       begin
-        DataSetList.Add(nil);
-      end
-      else
-      begin
-        DataSetList.Add(AnotherDataSet);
-        Assert(AnotherDataSet.DataType = Variable.ResultType);
-        AnotherDataSet.Initialize;
-        Model.AddDataSetToCache(AnotherDataSet);
+        Variable := Compiler.Variables[VarPosition];
+        VariableList.Add(Variable);
+        AnotherDataSet := Model.GetDataSetByName(VarName);
+        if AnotherDataSet = nil then
+        begin
+          DataSetList.Add(nil);
+        end
+        else
+        begin
+          DataSetList.Add(AnotherDataSet);
+          Assert(AnotherDataSet.DataType = Variable.ResultType);
+          AnotherDataSet.Initialize;
+          Model.AddDataSetToCache(AnotherDataSet);
+        end;
       end;
     end;
   finally
@@ -7348,7 +7328,8 @@ begin
           CreateOrRetrieveFormulaObject(Index, ADataSet, FormulaObject);
           frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
             FormulaObject, Compiler.CurrentExpression.Decompile, Compiler,
-            GlobalRemoveScreenObjectDataArraySubscription, GlobalRestoreDataArraySubscription, self);
+            GlobalRemoveScreenObjectDataArraySubscription,
+            GlobalRestoreDataArraySubscription, self);
           FDataSetFormulas[Index] := FormulaObject;
           for UseIndex := OldUseList.Count - 1 downto 0 do
           begin
@@ -7391,7 +7372,10 @@ begin
         begin
           if Observer.IsRecursive then
           begin
-            DataSetFormulas[Index] := OldFunction;
+            if OldFunction <> '' then
+            begin
+              DataSetFormulas[Index] := OldFunction;
+            end;
           end;
         end;
       end;
@@ -7403,7 +7387,8 @@ begin
         ADataSet.EvaluatedAt);
       CreateOrRetrieveFormulaObject(Index, ADataSet, FormulaObject);
       frmGoPhast.PhastModel.FormulaManager.ChangeFormula(FormulaObject, Value,
-        Compiler, GlobalRemoveScreenObjectDataArraySubscription, GlobalRestoreDataArraySubscription, self);
+        Compiler, GlobalRemoveScreenObjectDataArraySubscription,
+        GlobalRestoreDataArraySubscription, self);
       FDataSetFormulas[Index] := FormulaObject;
     end;
   end;
@@ -12009,48 +11994,52 @@ begin
   begin
     VarName := UsedVariables[VarIndex];
     VarPosition := Compiler.IndexOfVariable(VarName);
-    Variable := Compiler.Variables[VarPosition];
-    AnotherDataSet := (FModel as TPhastModel).GetDataSetByName(VarName);
-    if AnotherDataSet <> nil then
+    if VarPosition >= 0 then
     begin
-//      AnotherDataSet := (FModel as TPhastModel).DataSets[DataSetIndex];
-      Assert(AnotherDataSet <> DataSet);
-      Assert(AnotherDataSet.DataType = Variable.ResultType);
-      if AnotherDataSet.Orientation = dsoTop then
+
+      Variable := Compiler.Variables[VarPosition];
+      AnotherDataSet := (FModel as TPhastModel).GetDataSetByName(VarName);
+      if AnotherDataSet <> nil then
       begin
-        Layer := 0;
-      end;
-      if AnotherDataSet.Orientation = dsoFront then
-      begin
-        Row := 0;
-      end;
-      if AnotherDataSet.Orientation = dsoSide then
-      begin
-        Column := 0;
-      end;
-      case Variable.ResultType of
-        rdtDouble:
-          begin
-            TRealVariable(Variable).Value :=
-              AnotherDataSet.RealData[Layer, Row, Column];
-          end;
-        rdtInteger:
-          begin
-            TIntegerVariable(Variable).Value :=
-              AnotherDataSet.IntegerData[Layer, Row, Column];
-          end;
-        rdtBoolean:
-          begin
-            TBooleanVariable(Variable).Value :=
-              AnotherDataSet.BooleanData[Layer, Row, Column];
-          end;
-        rdtString:
-          begin
-            TStringVariable(Variable).Value :=
-              AnotherDataSet.StringData[Layer, Row, Column];
-          end;
-      else
-        Assert(False);
+  //      AnotherDataSet := (FModel as TPhastModel).DataSets[DataSetIndex];
+        Assert(AnotherDataSet <> DataSet);
+        Assert(AnotherDataSet.DataType = Variable.ResultType);
+        if AnotherDataSet.Orientation = dsoTop then
+        begin
+          Layer := 0;
+        end;
+        if AnotherDataSet.Orientation = dsoFront then
+        begin
+          Row := 0;
+        end;
+        if AnotherDataSet.Orientation = dsoSide then
+        begin
+          Column := 0;
+        end;
+        case Variable.ResultType of
+          rdtDouble:
+            begin
+              TRealVariable(Variable).Value :=
+                AnotherDataSet.RealData[Layer, Row, Column];
+            end;
+          rdtInteger:
+            begin
+              TIntegerVariable(Variable).Value :=
+                AnotherDataSet.IntegerData[Layer, Row, Column];
+            end;
+          rdtBoolean:
+            begin
+              TBooleanVariable(Variable).Value :=
+                AnotherDataSet.BooleanData[Layer, Row, Column];
+            end;
+          rdtString:
+            begin
+              TStringVariable(Variable).Value :=
+                AnotherDataSet.StringData[Layer, Row, Column];
+            end;
+        else
+          Assert(False);
+        end;
       end;
     end;
   end;
@@ -12076,20 +12065,23 @@ begin
   begin
     VarName := UsedVariables[VarIndex];
     VarPosition := Compiler.IndexOfVariable(VarName);
-    Variable := Compiler.Variables[VarPosition];
-    AnotherDataSet := Model.GetDataSetByName(VarName);
-    if AnotherDataSet <> nil then
+    if VarPosition >= 0 then
     begin
-      Assert(AnotherDataSet <> DataSet);
-      Assert(AnotherDataSet.DataType = Variable.ResultType);
-      AnotherDataSet.Initialize;
-      Model.AddDataSetToCache(AnotherDataSet);
-    end
-    else
-    begin
-      GlobalVariable := Model.GlobalVariables.GetVariableByName(VarName);
-      Assert(GlobalVariable <> nil);
-      Assert(Variable.ResultType = GlobalVariable.Format);
+      Variable := Compiler.Variables[VarPosition];
+      AnotherDataSet := Model.GetDataSetByName(VarName);
+      if AnotherDataSet <> nil then
+      begin
+        Assert(AnotherDataSet <> DataSet);
+        Assert(AnotherDataSet.DataType = Variable.ResultType);
+        AnotherDataSet.Initialize;
+        Model.AddDataSetToCache(AnotherDataSet);
+      end
+      else
+      begin
+        GlobalVariable := Model.GlobalVariables.GetVariableByName(VarName);
+        Assert(GlobalVariable <> nil);
+        Assert(Variable.ResultType = GlobalVariable.Format);
+      end;
     end;
   end;
 end;
@@ -16365,8 +16357,6 @@ begin
         FTempMemoryStream := TMemoryStream.Create;
       end;
       FTempMemoryStream.Position := 0;
-//      TempFile := TFileStream.Create(FTempFileName, fmCreate or fmShareDenyWrite,
-//        ReadWritePermissions);
       Compressor := TCompressionStream.Create(ZLib.clDefault, FTempMemoryStream);
       try
         LocalCount := Count;
@@ -16862,48 +16852,8 @@ begin
   FStartPoints.Free;
   FEndPoints.Free;
   FTempMemoryStream.Free;
-//  if FileExists(FTempFileName) then
-//  begin
-//    DeleteFile(FTempFileName);
-//  end;
   inherited;
 end;
-
-//procedure TCellElementSegmentList.GetExpandedXInterval(Subject: TObject;
-//  out LowerBoundary, UpperBoundary: double);
-//var
-//  Segment: TCellElementSegment;
-//begin
-//  Segment := Subject as TCellElementSegment;
-//  if Segment.X1 < Segment.X2 then
-//  begin
-//    LowerBoundary := Segment.X1-FMinDistance;
-//    UpperBoundary := Segment.X2+FMinDistance;
-//  end
-//  else
-//  begin
-//    LowerBoundary := Segment.X2-FMinDistance;
-//    UpperBoundary := Segment.X1+FMinDistance;
-//  end;
-//end;
-//
-//procedure TCellElementSegmentList.GetExpandedYInterval(Subject: TObject;
-//  out LowerBoundary, UpperBoundary: double);
-//var
-//  Segment: TCellElementSegment;
-//begin
-//  Segment := Subject as TCellElementSegment;
-//  if Segment.Y1 < Segment.Y2 then
-//  begin
-//    LowerBoundary := Segment.Y1-FMinDistance;
-//    UpperBoundary := Segment.Y2+FMinDistance;
-//  end
-//  else
-//  begin
-//    LowerBoundary := Segment.Y2-FMinDistance;
-//    UpperBoundary := Segment.Y1+FMinDistance;
-//  end;
-//end;
 
 function TCellElementSegmentList.GetSegment(Index: Integer):
   TCellElementSegment;
@@ -16913,7 +16863,6 @@ end;
 
 procedure TCellElementSegmentList.RestoreData;
 var
-//  TempFile: TFileStream;
   DeCompressor: TDecompressionStream;
   LocalCount: integer;
   Index: Integer;
@@ -16924,8 +16873,6 @@ begin
   Assert(FCleared);
   Assert(FTempMemoryStream <> nil);
   FTempMemoryStream.Position := 0;
-//  TempFile := TFileStream.Create(FTempFileName, fmOpenRead or fmShareDenyWrite,
-//    ReadWritePermissions);
   DeCompressor := TDecompressionStream.Create(FTempMemoryStream);
   try
     DeCompressor.Read(LocalCount, SizeOf(LocalCount));
@@ -16948,7 +16895,6 @@ begin
     end;
   finally
     DeCompressor.Free;
-//    TempFile.Free;
   end;
   FCleared := False;
 end;
@@ -23833,12 +23779,10 @@ procedure TScreenObject.AssignValuesToModflowDataSet(const Grid: TCustomGrid;
   const DataSet: TDataArray; const Formula: string;
   AssignmentLocation: TAssignmentLocation = alAll);
 var
-  UsedVariables: TStringList;
   Compiler: TRbwParser;
   DataSetFunction: string;
   OtherData: TModflowDataObject;
 begin
-  UsedVariables := TStringList.Create;
   try
     Compiler := GetCompiler(DataSet.Orientation);
     DataSetFunction := Formula;
@@ -23882,7 +23826,6 @@ begin
       else Assert(False);
     end;
   finally
-    UsedVariables.Free;
     if FSegments.UpToDate and not FSegments.FCleared then
     begin
       FSegments.CacheData;
@@ -28304,7 +28247,8 @@ begin
   TempFormula := '0.';
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FFormulaObject, TempFormula, Compiler,
-    GlobalRemovePhastBoundarySubscription, GlobalRestorePhastBoundarySubscription, self);
+    GlobalRemovePhastBoundarySubscription,
+    GlobalRestorePhastBoundarySubscription, self);
   Compiler.Compile(TempFormula);
 end;
 
@@ -28381,7 +28325,8 @@ begin
     RemoveFormulaSubscriptions;
     frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
       FFormulaObject, Value, frmGoPhast.PhastModel.rpThreeDFormulaCompilerNodes,
-      GlobalRemovePhastBoundarySubscription, GlobalRestorePhastBoundarySubscription, self);
+      GlobalRemovePhastBoundarySubscription,
+      GlobalRestorePhastBoundarySubscription, self);
     AddFormulaSubscriptions;
     InvalidateModel;
   end;
@@ -30179,10 +30124,6 @@ end;
 destructor TCellAssignmentList.Destroy;
 begin
   FMemoryStream.Free;
-//  if FileExists(FTempFileName) then
-//  begin
-//    DeleteFile(FTempFileName);
-//  end;
   FList.Free;
   inherited;
 end;

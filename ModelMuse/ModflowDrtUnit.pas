@@ -22,7 +22,7 @@ type
     ReturnFractionAnnotation: string;
     ReturnCell: TCellLocation;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream); 
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); 
   end;
 
   TDrtArray = array of TDrtRecord;
@@ -32,7 +32,7 @@ type
     FDrtArray: TDrtArray;
     function GetDrtArray: TDrtArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -141,7 +141,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property Conductance: double read GetConductance;
@@ -747,10 +747,10 @@ begin
   result := Values.Cell.Section;
 end;
 
-procedure TDrt_Cell.Restore(Decomp: TDecompressionStream);
+procedure TDrt_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp); 
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -786,7 +786,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.DrtArray) - 1 do
       begin
         BoundaryValues := LocalBoundaryStorage.DrtArray[BoundaryIndex];
@@ -1233,7 +1233,7 @@ begin
   WriteCompCell(Comp, ReturnCell);
 end;
 
-procedure TDrtRecord.Restore(Decomp: TDecompressionStream);
+procedure TDrtRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   Conductance := ReadCompReal(Decomp);
@@ -1241,9 +1241,9 @@ begin
   ReturnFraction := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  ConductanceAnnotation := ReadCompString(Decomp);
-  ElevationAnnotation := ReadCompString(Decomp);
-  ReturnFractionAnnotation := ReadCompString(Decomp);
+  ConductanceAnnotation := ReadCompString(Decomp, Annotations);
+  ElevationAnnotation := ReadCompString(Decomp, Annotations);
+  ReturnFractionAnnotation := ReadCompString(Decomp, Annotations);
   ReturnCell := ReadCompCell(Decomp);
 end;
 
@@ -1268,7 +1268,7 @@ begin
   end;
 end;
 
-procedure TDrtStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TDrtStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -1277,7 +1277,7 @@ begin
   SetLength(FDrtArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FDrtArray[Index].Restore(DecompressionStream);
+    FDrtArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 

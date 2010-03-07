@@ -170,8 +170,10 @@ c Parse multiplication and zone array information
 !         WRITE(IOUT,37) LINE(IM1:IM2),LINE(IZ1:IZ2)
 !   37    FORMAT(1X,'               MULTIPLIER:',A,'   ZONE:',A)
       END IF
-      WRITE(IOUT, *) 'NUMBER OF ZONES:'  
-      WRITE(IOUT, *) IZONECOUNT  
+	IF (IZONECOUNT.GT.0) THEN
+        WRITE(IOUT, *) 'NUMBER OF ZONES:'  
+        WRITE(IOUT, *) IZONECOUNT 
+	ENDIF 
 C
 C  Find the multiplier array number
       CTMP1=LINE(IM1:IM2)

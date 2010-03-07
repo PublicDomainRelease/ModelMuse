@@ -129,9 +129,11 @@ type
       The minimum number of arguments is the length of @link(InputDataTypes)
       minus 1.
       If more arguments are used, the types of those arguments must correspond
-      to the value defined in the last member of InputDataTypes.
+      to the value defined in the last member of @link(InputDataTypes) or to
+      @link(OptionalType) if no @link(InputDataTypes) are defined.
     }
     OptionalArguments: integer;
+    OptionalType: TRbwDataType;
     {
       @Name defines whether the result of a function may be
       considered a constant value if all of the values passed to the function
@@ -363,6 +365,8 @@ type
     procedure SetSFunctionAddr(const Value: TrbwStringFunction);
     // See @link(Synonyms).
     procedure SetSynonyms(const Value: TStrings);
+    function GetOptionalType: TRbwDataType;
+    procedure SetOptionalType(const Value: TRbwDataType);
   public
     {
       @Name defines whether the result of a function may be
@@ -428,7 +432,9 @@ type
       than pointers.
     }
     property InputDataTypes[const Index: integer]: TRbwDataType
-    read GetInputDataTypes write SetInputDataTypes;
+      read GetInputDataTypes write SetInputDataTypes;
+    property OptionalType: TRbwDataType
+      read GetOptionalType write SetOptionalType;
     {
       @Name defines the name of the function.  The @Name of each function and
       variable in a @Link(TRbwParser) must be unique.
@@ -949,10 +955,8 @@ type
   }
   TCustomValue = class(TConstant)
   private
-    // @Name: string;
     // Always upper case
     FName: string;
-    // @Name: string;
     // FUserName is the mixed-case version of @link(FName).
     // It is used in @link(Decompile).
     FUserName: string;
@@ -1333,7 +1337,10 @@ type
       character and then a @link(Decompile)d version of the @link(TCustomValue).
     }
     procedure Diagram(List: TStringList);
+    // @name is used to provide notification to components that
+    // used an instance of @name when the instance is destroyed.
     property Notifier: TNotifierComponent read FNotifier;
+    function UsesFunction(FunctionName: string): boolean;
   end;
 
   // @name is used in @link(TSpecialImplementor) to create a descendant
@@ -3633,34 +3640,37 @@ begin
           if isVariable then
           begin
             VariableList := Objects[Index] as TList;
-            if VariableList.Count > 1 then
+            if (VariableList <> nil) then
             begin
-              Dec(Index);
-              MakeVariableList(SpecialImplementorList, Index, Index + 1);
-              VariableList := Objects[Index] as TList;
-              if VariableList.Count <> 1 then
+              if (VariableList.Count > 1) then
               begin
-                for VarIndex := 0 to VariableList.Count - 1 do
+                Dec(Index);
+                MakeVariableList(SpecialImplementorList, Index, Index + 1);
+                VariableList := Objects[Index] as TList;
+                if VariableList.Count <> 1 then
                 begin
-                  Constant := VariableList[VarIndex];
-                  if not (Constant is TCustomValue) or (Constant is TExpression)
-                    then
+                  for VarIndex := 0 to VariableList.Count - 1 do
                   begin
-                    Constant.Free;
+                    Constant := VariableList[VarIndex];
+                    if not (Constant is TCustomValue) or (Constant is TExpression)
+                      then
+                    begin
+                      Constant.Free;
+                    end;
                   end;
+                  VariableList.Free;
+                  VariableList := nil;
+                  Objects[Index] := nil;
+                  raise ErbwParserError.Create('Parsing Error; Check that no '
+                    + 'function or variable names have been misspelled.');
                 end;
-                VariableList.Free;
-                VariableList := nil;
-                Objects[Index] := nil;
-                raise ErbwParserError.Create('Parsing Error; Check that no '
-                  + 'function or variable names have been misspelled.');
               end;
-            end;
 
-            // Assert(VariableList.Count=1);
-            Objects[Index] := VariableList[0];
-            VariableList.Free;
-            VariableList := nil
+              // Assert(VariableList.Count=1);
+              Objects[Index] := VariableList[0];
+              VariableList.Free;
+              VariableList := nil
+            end;
           end;
         end;
         Inc(Index);
@@ -3822,7 +3832,14 @@ var
     if ArgumentIndex >= FunctionClass.InputDataCount then
     begin
       Assert(FunctionClass.OptionalArguments <> 0);
-      result := FunctionClass.InputDataTypes[FunctionClass.InputDataCount - 1];
+      if FunctionClass.InputDataCount = 0 then
+      begin
+        result := FunctionClass.OptionalType;
+      end
+      else
+      begin
+        result := FunctionClass.InputDataTypes[FunctionClass.InputDataCount - 1];
+      end;
     end
     else
     begin
@@ -3864,6 +3881,7 @@ var
     end;
   end;
 begin
+  LastArgument := -1;
   Functions := TList.Create;
   Arguments := TList.Create;
   try
@@ -3911,7 +3929,8 @@ begin
           end
           else
           begin
-            if (Arguments.Count < FunctionClass.InputDataCount) then
+            if (Arguments.Count <
+              FunctionClass.InputDataCount - FunctionClass.OptionalArguments) then
             begin
               Functions.Delete(FunctionIndex);
               Continue;
@@ -6423,6 +6442,37 @@ begin
   end;
 end;
 
+function TExpression.UsesFunction(FunctionName: string): boolean;
+var
+  ArrayLength: Integer;
+  Index: Integer;
+  AVariable: TConstant;
+begin
+  result := SameText(FunctionName, FName);
+  if not result then
+  begin
+    ArrayLength := Length(Data);
+    if (ArrayLength > 0) and Assigned(FunctionAddr) then
+    begin
+      for Index := 0 to ArrayLength - 1 do
+      begin
+        if Data[Index].Datum <> nil then
+        begin
+          AVariable := Data[Index].Datum;
+          if AVariable is TExpression then
+          begin
+            result := TExpression(AVariable).UsesFunction(FunctionName);
+            if result then
+            begin
+              Exit;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
 function TExpression.Decompile: string;
 var
   Index: integer;
@@ -6682,6 +6732,11 @@ begin
   result := FunctionRecord.OptionalArguments;
 end;
 
+function TFunctionClass.GetOptionalType: TRbwDataType;
+begin
+  result := FunctionRecord.OptionalType;
+end;
+
 function TFunctionClass.GetResultType: TRbwDataType;
 begin
   result := FunctionRecord.ResultType;
@@ -6760,6 +6815,11 @@ end;
 procedure TFunctionClass.SetOptionalArguments(const Value: integer);
 begin
   FunctionRecord.OptionalArguments := Value;
+end;
+
+procedure TFunctionClass.SetOptionalType(const Value: TRbwDataType);
+begin
+  FunctionRecord.OptionalType := Value;
 end;
 
 procedure TFunctionClass.SetRFunctionAddr(const Value: TrbwRealFunction);

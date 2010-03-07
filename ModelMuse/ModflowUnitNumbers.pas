@@ -58,9 +58,20 @@ const
   StrMNWI_Wells = 'MNWI_Wells';
   StrMNWI_SummarizeByWell = 'MNWI_SummarizeByWell';
   StrMNWI_SummarizeByNode = 'MNWI_SummarizeByNode';
+  StrBCF = 'BCF6';
+  StrSUB = 'SUB';
+  StrSUBSaveRestart = 'SUB_SaveRestart';
+  StrSUBReadRestart = 'SUB_ReadRestart';
+
+  StrSubSUB_Out = 'SUB_SUB_OUT';
+  StrSubCOM_ML_Out = 'SUB_COM_ML_OUT';
+  StrSubCOM_IS_Out = 'SUB_COM_IS_OUT';
+  StrSub_VD_Out = 'SUB_VD_OUT';
+  StrSub_NDPCH_Out = 'SUB_NDPCH_OUT';
+  StrSub_DPCH_Out = 'SUB_DPCH_OUT';
 
   Solvers: array[0..3] of string = (StrPCG, StrGMG, StrSIP, StrDE4);
-  FlowPackages: array[0..2] of string = (StrLPF, StrHUF2, 'BCF6');
+  FlowPackages: array[0..2] of string = (StrLPF, StrHUF2, StrBCF);
 
 
 type
@@ -188,9 +199,21 @@ const
   StreamFlows = 58;
   MNW2_Unit = 59;
   MNWI_Unit = 60;
-  StrMNWI_Wells_Unit = 61;
-  StrMNWI_SummarizeByWell_Unit = 62;
-  StrMNWI_SummarizeByNode_Unit = 63;
+  MNWI_Wells_Unit = 61;
+  MNWI_SummarizeByWell_Unit = 62;
+  MNWI_SummarizeByNode_Unit = 63;
+  BcfUnit = 64;
+  SubUnit = 65;
+  SubUnitSave = 66;
+  SubUnitRead = 67;
+
+  SubSUB_Out = 110;
+  SubCOM_ML_Out = 111;
+  SubCOM_IS_Out = 112;
+  Sub_VD_Out = 113;
+  Sub_NDPCH_Out = 114;
+  Sub_DPCH_Out = 115;
+
 
   // Unit numbers 70 - 95 are reserved for the user.
   // If the reserved unit numbers are changed, the documentation
@@ -293,9 +316,20 @@ begin
   AddItem(StrISTCB2, StreamFlows);
   AddItem(StrMNW2, MNW2_Unit);
   AddItem(StrMNWI, MNWI_Unit);
-  AddItem(StrMNWI_Wells, StrMNWI_Wells_Unit);
-  AddItem(StrMNWI_SummarizeByWell, StrMNWI_SummarizeByWell_Unit);
-  AddItem(StrMNWI_SummarizeByNode, StrMNWI_SummarizeByNode_Unit);
+  AddItem(StrMNWI_Wells, MNWI_Wells_Unit);
+  AddItem(StrMNWI_SummarizeByWell, MNWI_SummarizeByWell_Unit);
+  AddItem(StrMNWI_SummarizeByNode, MNWI_SummarizeByNode_Unit);
+  AddItem(StrBCF, BcfUnit);
+  AddItem(StrSUB, SubUnit);
+  AddItem(StrSUBSaveRestart, SubUnitSave);
+  AddItem(StrSUBReadRestart, SubUnitRead);
+
+  AddItem(StrSubSUB_Out, SubSUB_Out);
+  AddItem(StrSubCOM_ML_Out, SubCOM_ML_Out);
+  AddItem(StrSubCOM_IS_Out, SubCOM_IS_Out);
+  AddItem(StrSub_VD_Out, Sub_VD_Out);
+  AddItem(StrSub_NDPCH_Out, Sub_NDPCH_Out);
+  AddItem(StrSub_DPCH_Out, Sub_DPCH_Out);
 
 end;
 

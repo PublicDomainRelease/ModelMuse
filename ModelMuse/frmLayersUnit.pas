@@ -7,7 +7,8 @@ uses
   Dialogs, frmCustomGoPhastUnit, ComCtrls, ExtCtrls, StdCtrls, Buttons, Grids,
   RbwDataGrid4, ArgusDataEntry, GoPhastTypes, LayerStructureUnit, ImgList,
   JvExStdCtrls, JvCombobox, JvListComb, UndoItems, RbwController, RbwEdit,
-  RequiredDataSetsUndoUnit, JvCheckBox;
+  RequiredDataSetsUndoUnit, JvCheckBox, Mask, JvExMask, JvSpin, frameSubBedsUnit,
+  ModflowSubsidenceDefUnit;
                                  
 type
   TfrmLayers = class(TfrmCustomGoPhast)
@@ -41,8 +42,17 @@ type
     sbInsertLine: TSpeedButton;
     sbMoveLine: TSpeedButton;
     sbDeleteLine: TSpeedButton;
-    ImageList1: TImageList;
+    ilCombo: TImageList;
     Label5: TLabel;
+    {
+     @unorderedlist(
+       @item(0, non-simulated)
+       @item(1, confined)
+       @item(2, convertible in LPF and HUF, Unconfined in BCF)
+       @item(3, limited convertible in BCF with constant transmissivity)
+       @item(4, fully convertible in BCF with variable transmissivity)
+      )
+    }
     comboAquiferType: TJvImageComboBox;
     lblInterblockMethod: TLabel;
     lbVertKMethod: TLabel;
@@ -52,7 +62,13 @@ type
     edName: TRbwEdit;
     cbComputeSaturatedThickness: TJvCheckBox;
     tvLayerGroups: TTreeView;
-    TreeViewImageList: TImageList;
+    ilTreeView: TImageList;
+    lblAnisotropy: TLabel;
+    rdeAnisotropy: TRbwDataEntry;
+    tabNoDelay: TTabSheet;
+    frameSubNoDelayBeds: TframeSubBeds;
+    tabDelay: TTabSheet;
+    frameSubDelayBeds: TframeSubBeds;
     procedure rdeVDiscretizationChange(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure rdeGrowthRateChange(Sender: TObject);
@@ -85,6 +101,7 @@ type
     procedure cbComputeSaturatedThicknessClick(Sender: TObject);
     procedure rdgSubLayerBoundariesExit(Sender: TObject);
     procedure tvLayerGroupsChange(Sender: TObject; Node: TTreeNode);
+    procedure rdeAnisotropyChange(Sender: TObject);
   private
     FLayerPositions: TOneDIntegerArray;
     FMovingLine: boolean;
@@ -123,6 +140,12 @@ type
     procedure SetControlValues;
     procedure EnableComputeSatThick;
     procedure EnableK_Methods;
+    procedure SetUpLayerTypeOptions;
+    procedure SetUpAveragingOptions;
+    procedure EnableAnisotropy;
+    procedure GetSubsidenceLayers(Sender: TObject;
+      var SubLayers: TCustomSubLayer);
+    procedure GetNewSubsidenceName(Sender: TObject; var NewName: string);
     { Private declarations }
   public
     { Public declarations }
@@ -144,7 +167,8 @@ type
 
 implementation
 
-uses Math, RealListUnit, CursorsFoiledAgain, frmGoPhastUnit;
+uses Math, RealListUnit, CursorsFoiledAgain, frmGoPhastUnit,
+  ModflowPackagesUnit;
 
 {$R *.dfm}
 
@@ -156,19 +180,54 @@ begin
   end
   else
   begin
-    case LayerGroup.AquiferType of
-      0: // confined
-        begin
-          result := 1;
-        end;
-      1: // convertible
-        begin
-          result := 2;
-        end;
-      else
-        begin
-          result := -1;
-        end;
+    if frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected then
+    begin
+      case LayerGroup.AquiferType of
+        0: // confined
+          begin
+            result := 1;
+          end;
+        1: // unconfined
+          begin
+            if LayerGroup.Index = 1 then
+            begin
+              result := 3;
+            end
+            else
+            begin
+              result := 2;
+            end;
+          end;
+        2: // limited convertible
+          begin
+            result := 5;
+          end;
+        3: // fully convertible
+          begin
+            result := 2;
+          end;
+        else
+          begin
+            result := -1;
+          end;
+      end;
+    end
+    else
+    begin
+      case LayerGroup.AquiferType of
+        0: // confined
+          begin
+            result := 1;
+          end;
+        1,2,3: // convertible
+          begin
+            result := 2;
+          end;
+        else
+          begin
+            result := -1;
+          end;
+      end;
     end;
   end;
 end;
@@ -182,8 +241,13 @@ begin
   pcLayerGroups.ActivePageIndex := 0;
   FLayerStructure:= TLayerStructure.Create(nil);
   rdgSubLayerBoundaries.Cells[0,0] := 'Layer boundary';
+  frameSubNoDelayBeds.OnGetSelectedSubLayers := GetSubsidenceLayers;
+  frameSubDelayBeds.OnGetSelectedSubLayers := GetSubsidenceLayers;
+  frameSubNoDelayBeds.OnGetNewName := GetNewSubsidenceName;
+  frameSubDelayBeds.OnGetNewName := GetNewSubsidenceName;
   GetData;
   EnableComputeSatThick;
+
 end;
 
 procedure TfrmLayers.FormDestroy(Sender: TObject);
@@ -194,21 +258,77 @@ begin
   inherited;
 end;
 
+procedure TfrmLayers.SetUpAveragingOptions;
+var
+  Packages: TModflowPackages;
+  Item: TJvImageItem;
+begin
+  Packages := frmGoPhast.PhastModel.ModflowPackages;
+
+  comboInterblockMethod.Items.Clear;
+
+  Item := comboInterblockMethod.Items.Add;
+  Item.Text := 'Harmonic mean (0)';
+
+  if Packages.BcfPackage.IsSelected then
+  begin
+    Item := comboInterblockMethod.Items.Add;
+    Item.Text := 'Arithmetic mean (1)';
+
+    Item := comboInterblockMethod.Items.Add;
+    Item.Text := 'Logarithmic mean (2)';
+
+    Item := comboInterblockMethod.Items.Add;
+    Item.Text := 'Arithmetic and logarithmic (3)';
+  end
+  else
+  begin
+    Item := comboInterblockMethod.Items.Add;
+    Item.Text := 'Logarithmic mean (1)';
+
+    Item := comboInterblockMethod.Items.Add;
+    Item.Text := 'Arithmetic and logarithmic (2)';
+  end;
+end;
+
+procedure TfrmLayers.EnableAnisotropy;
+var
+
+ShouldEnable: Boolean;
+  Index: Integer;
+  Group: TLayerGroup;
+begin
+  ShouldEnable :=  (FSelectedUnits.Count >= 1)
+    and frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected;
+  if ShouldEnable then
+  begin
+    ShouldEnable := False;
+    for Index := 0 to FSelectedUnits.Count - 1 do
+    begin
+      Group := FSelectedUnits[Index];
+      if Group.Simulated then
+      begin
+        ShouldEnable := True;
+        break;
+      end;
+    end;
+  end;
+  rdeAnisotropy.Enabled := ShouldEnable
+end;
+
 procedure TfrmLayers.GetData;
 var
   Index: integer;
   LayerGroup: TLayerGroup;
   NodeItem: TTreeNode;
 begin
-  if frmGoPhast.PhastModel. ModflowPackages.
-    HufPackage.IsSelected then
-  begin
-    comboAquiferType.Items[0].Brush.Color := clBtnFace;
-  end
-  else
-  begin
-    comboAquiferType.Items[0].Brush.Color := clWhite;
-  end;
+  tabNoDelay.TabVisible := frmGoPhast.PhastModel.
+    ModflowPackages.SubPackage.IsSelected;
+  tabDelay.TabVisible := frmGoPhast.PhastModel.
+    ModflowPackages.SubPackage.IsSelected;
+
+  SetUpLayerTypeOptions;
+  SetUpAveragingOptions;
 
   FUseSaturatedThickness := frmGoPhast.PhastModel.
     ModflowPackages.LpfPackage.IsSelected
@@ -246,6 +366,48 @@ begin
   begin
     LayerPostions[Index] :=
       Round((pbSubLayers.Height-20)*(1-Fractions[Index])+10);
+  end;
+end;
+
+procedure TfrmLayers.GetNewSubsidenceName(Sender: TObject;
+  var NewName: string);
+begin
+  if Sender = frameSubNoDelayBeds then
+  begin
+    NewName := 'ND_SYS_' + IntToStr(FLayerStructure.NoDelayCount);
+  end
+  else if Sender = frameSubDelayBeds then
+  begin
+    NewName := 'D_SYS_' + IntToStr(FLayerStructure.DelayCount);
+  end
+  else
+  begin
+    Assert(False);
+  end;
+end;
+
+procedure TfrmLayers.GetSubsidenceLayers(Sender: TObject;
+  var SubLayers: TCustomSubLayer);
+var
+  SelectedUnit: TLayerGroup;
+begin
+  SubLayers := nil;
+  if (not FSettingUnit) and (FSelectedUnits.Count > 0) then
+  begin
+    Assert(FSelectedUnits.Count = 1);
+    SelectedUnit := FSelectedUnits[0];
+    if Sender = frameSubNoDelayBeds then
+    begin
+      SubLayers := SelectedUnit.SubNoDelayBedLayers;
+    end
+    else if Sender = frameSubDelayBeds then
+    begin
+      SubLayers := SelectedUnit.SubDelayBedLayers;
+    end
+    else
+    begin
+      Assert(False);
+    end;
   end;
 end;
 
@@ -385,7 +547,6 @@ begin
       end;
     end;
   end;
-
 end;
 
 procedure TfrmLayers.comboAquiferTypeChange(Sender: TObject);
@@ -394,6 +555,7 @@ var
   SelectedUnit: TLayerGroup;
   SimulatedLayer: boolean;
   TreeNode: TTreeNode;
+  ShowWarning: boolean;
 begin
   inherited;
   if frmGoPhast.PhastModel.ModflowPackages.HufPackage.IsSelected then
@@ -405,16 +567,35 @@ begin
   end;
   if not FSettingUnit then
   begin
+    ShowWarning := False;
     for Index := 0 to FSelectedUnits.Count - 1 do
     begin
       SelectedUnit := FSelectedUnits[Index];
       SelectedUnit.Simulated := comboAquiferType.ItemIndex > 0;
       if SelectedUnit.Simulated then
       begin
-        SelectedUnit.AquiferType := comboAquiferType.ItemIndex -1;
+        if frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected
+          and (SelectedUnit.Index <> 1)
+          and (comboAquiferType.ItemIndex = 2) then
+        begin
+          SelectedUnit.AquiferType := 3;
+          ShowWarning := True;
+          if FSelectedUnits.Count = 1 then
+          begin
+            comboAquiferType.ItemIndex := 4
+          end;
+        end
+        else
+        begin
+          SelectedUnit.AquiferType := comboAquiferType.ItemIndex -1;
+        end;
       end;
       TreeNode := FSelectedTreeNodes[Index];
       TreeNode.StateIndex := FindImageIndex(SelectedUnit);
+    end;
+    if ShowWarning then
+    begin
+      MessageDlg('Only the top layer can be unconfined.', mtWarning, [mbOK], 0);
     end;
   end;
   SimulatedLayer := comboAquiferType.ItemIndex > 0;
@@ -422,6 +603,7 @@ begin
   EnableK_Methods;
   rconLayerType.Enabled := SimulatedLayer;
   EnableComputeSatThick;
+  EnableAnisotropy;
   EnableOkButton;
 end;
 
@@ -476,7 +658,8 @@ begin
     LayerGroup := FSelectedUnits[LayerIndex];
     rgMethod.ItemIndex := Integer(gmCustom);
     LayerGroup.GrowthMethod := gmCustom;
-    SetSpacing(LayerGroup.GrowthRate, gmCustom, LayerGroup.LayerCount, Fractions);
+    SetSpacing(LayerGroup.GrowthRate, gmCustom,
+      LayerGroup.LayerCount, Fractions);
     rdeVDiscretization.Text := IntToStr(Length(Fractions) + 1);
     rdeVDiscretizationChange(rdeVDiscretization);
     LayerGroup.LayerCollection.Clear;
@@ -535,7 +718,8 @@ begin
   begin
     for Index := LineToDelete+1 to rdgSubLayerBoundaries.RowCount - 1 do
     begin
-      rdgSubLayerBoundaries.Cells[0,Index] := rdgSubLayerBoundaries.Cells[0,Index+1];
+      rdgSubLayerBoundaries.Cells[0,Index] :=
+        rdgSubLayerBoundaries.Cells[0,Index+1];
     end;
     rdgSubLayerBoundaries.Cells[0, rdgSubLayerBoundaries.RowCount-1] := '';
     RearrangeValuesInStringGrid;
@@ -627,6 +811,26 @@ procedure TfrmLayers.pcLayerGroupsChange(Sender: TObject);
 begin
   inherited;
   btnHelp.HelpKeyword := pcLayerGroups.ActivePage.HelpKeyword;
+end;
+
+procedure TfrmLayers.rdeAnisotropyChange(Sender: TObject);
+var
+  Index: Integer;
+  SelectedUnit: TLayerGroup;
+  AValue: double;
+begin
+  inherited;
+  if (FSelectedUnits <> nil) and not FSettingUnit then
+  begin
+    if TryStrToFloat(rdeAnisotropy.Text, AValue) then
+    begin
+      for Index := 0 to FSelectedUnits.Count - 1 do
+      begin
+        SelectedUnit := FSelectedUnits[Index];
+        SelectedUnit.HorizontalAnisotropy := AValue;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmLayers.rdeGrowthRateChange(Sender: TObject);
@@ -805,7 +1009,8 @@ begin
         begin
           SelectedUnit.LayerCollection.Add;
         end;
-        LayerFraction := SelectedUnit.LayerCollection.Items[Index] as TLayerFraction;
+        LayerFraction := SelectedUnit.LayerCollection.
+          Items[Index] as TLayerFraction;
         LayerFraction.Fraction := Fractions[Length(Fractions)-Index-1];
       end;
     end;
@@ -888,6 +1093,11 @@ begin
     rdeGrowthRate.Enabled := False;
     rgMethod.Enabled := False;
   end;
+
+  if not FSettingUnit then
+  begin
+    SetControlValues;
+  end;
 end;
 
 procedure TfrmLayers.rdgSubLayerBoundariesExit(Sender: TObject);
@@ -963,6 +1173,7 @@ begin
     begin
       FLayerStructure.Delete(Index+1);
       NewIndex := Index-1;
+      Item.Selected := False;
       tvLayerGroups.Items.Delete(Item);
     end;
   end;
@@ -973,7 +1184,6 @@ begin
   tvLayerGroups.Items[NewIndex].Selected := True;
   sbDeleteUnit.Enabled := FLayerStructure.Count > 2;
   EnableOkButton;
-
 end;
 
 procedure TfrmLayers.sbInsertUnitClick(Sender: TObject);
@@ -990,7 +1200,6 @@ begin
   begin
     sbAddUnitClick(nil);
   end;
-
 end;
 
 procedure TfrmLayers.SetControlValues;
@@ -998,7 +1207,6 @@ var
   SelectedUnit: TLayerGroup;
   FirstUnit: TLayerGroup;
   Same: boolean;
-  Index: integer;
   procedure AssignGrowthRate;
   var
     Index: integer;
@@ -1015,7 +1223,7 @@ var
     end;
     if Same then
     begin
-      rdeGrowthRate.Text := FloatToStr(SelectedUnit.GrowthRate);
+      rdeGrowthRate.Text := FloatToStr(FirstUnit.GrowthRate);
     end
     else
     begin
@@ -1038,11 +1246,49 @@ var
     end;
     if Same then
     begin
-      rgMethod.ItemIndex := Ord(SelectedUnit.GrowthMethod);
+      rgMethod.ItemIndex := Ord(FirstUnit.GrowthMethod);
     end
     else
     begin
       rgMethod.ItemIndex := -1;
+    end;
+  end;
+  procedure InitializeSubsidenceGrid(Frame: TframeSubBeds);
+  var
+    ColIndex: Integer;
+  begin
+    Frame.rdgSubBed.BeginUpdate;
+    try
+      if FSelectedUnits.Count = 1 then
+      begin
+        if FirstUnit.LayerCollection.Count = 0 then
+        begin
+          Frame.rdgSubBed.ColCount := 1;
+        end
+        else
+        begin
+          Frame.rdgSubBed.ColCount := 2
+            + FirstUnit.LayerCollection.Count+1;
+          Frame.rdgSubBed.Cells[1,0] := 'Use in all layers';
+          Frame.rdgSubBed.Columns[1].AutoAdjustRowHeights := True;
+          Frame.rdgSubBed.Columns[1].WordWrapCaptions := True;
+          for ColIndex := Ord(scUseAll) to
+            Frame.rdgSubBed.ColCount - 1 do
+          begin
+            Frame.rdgSubBed.Columns[ColIndex].Format := rcf4Boolean;
+          end;
+          for ColIndex := Ord(fcFirst) to
+            Frame.rdgSubBed.ColCount - 1 do
+          begin
+            Frame.rdgSubBed.ColWidths[ColIndex] := 10;
+            Frame.rdgSubBed.Columns[ColIndex].AutoAdjustColWidths := True;
+            Frame.rdgSubBed.Cells[ColIndex,0] := IntToStr(ColIndex-1);
+          end;
+        end;
+        Frame.rdgSubBed.Cells[0,0] := 'Name'
+      end;
+    finally
+      Frame.rdgSubBed.EndUpdate;
     end;
   end;
   procedure AssignDiscretization;
@@ -1061,7 +1307,7 @@ var
     end;
     if Same then
     begin
-      rdeVDiscretization.Text := IntToStr(SelectedUnit.
+      rdeVDiscretization.Text := IntToStr(FirstUnit.
         LayerCollection.Count + 1);
     end
     else
@@ -1094,14 +1340,15 @@ var
     end;
     if Same then
     begin
-      if not SelectedUnit.Simulated then
+      if not FirstUnit.Simulated then
       begin
         comboAquiferType.ItemIndex := 0
       end
       else
       begin
-        comboAquiferType.ItemIndex := SelectedUnit.AquiferType + 1;
+        comboAquiferType.ItemIndex := FirstUnit.AquiferType + 1;
       end;
+      comboAquiferTypeChange(comboAquiferType);
       tabDiscretization.TabVisible := comboAquiferType.ItemIndex > 0;
     end
     else
@@ -1140,7 +1387,7 @@ var
     if Same then
     begin
       comboInterblockMethod.ItemIndex :=
-        SelectedUnit.InterblockTransmissivityMethod;
+        FirstUnit.InterblockTransmissivityMethod;
     end
     else
     begin
@@ -1165,7 +1412,7 @@ var
     if Same then
     begin
       comboVertKMethod.ItemIndex :=
-        SelectedUnit.VerticalHydraulicConductivityMethod;
+        FirstUnit.VerticalHydraulicConductivityMethod;
     end
     else
     begin
@@ -1176,7 +1423,7 @@ var
   var
     Index: integer;
   begin
-    if SelectedUnit.GrowthMethod = gmCustom then
+    if FirstUnit.GrowthMethod = gmCustom then
     begin
       Same := True;
       for Index := 1 to FSelectedUnits.Count - 1 do
@@ -1191,11 +1438,11 @@ var
       end;
       if Same then
       begin
-        for Index := 0 to SelectedUnit.LayerCollection.Count - 1 do
+        for Index := 0 to FirstUnit.LayerCollection.Count - 1 do
         begin
           rdgSubLayerBoundaries.Cells[0,
             rdgSubLayerBoundaries.RowCount - Index]
-            := FloatToStr((SelectedUnit.LayerCollection.Items[Index]
+            := FloatToStr((FirstUnit.LayerCollection.Items[Index]
             as TLayerFraction).Fraction);
         end;
         UpdateLayerPositions;
@@ -1228,7 +1475,7 @@ var
     if Same then
     begin
       cbComputeSaturatedThickness.Checked :=
-        SelectedUnit.UseStartingHeadForSaturatedThickness;
+        FirstUnit.UseStartingHeadForSaturatedThickness;
     end
     else
     begin
@@ -1236,92 +1483,142 @@ var
       cbComputeSaturatedThickness.State := cbGrayed;
     end;
   end;
-begin
-  if csDestroying in ComponentState then Exit;
-    FSettingUnit := True;
-    edName.Enabled := FSelectedUnits.Count = 1;
-    rdeGrowthRate.Enabled := FSelectedUnits.Count >= 1;
-    rdeVDiscretization.Enabled := FSelectedUnits.Count >= 1;
-    rgMethod.Enabled := FSelectedUnits.Count >= 1;
-    comboAquiferType.Enabled := FSelectedUnits.Count >= 1;
-    EnableK_Methods;
-    EnableComputeSatThick;
-//    ConfinedLayer := False;
-//    if FUseSaturatedThickness and
-//      (FSelectedUnits.Count >= 1) then
-//    begin
-//      for Index := 0 to FSelectedUnits.Count - 1 do
-//      begin
-//        SelectedUnit := FSelectedUnits[Index];
-//        if (SelectedUnit.AquiferType = 0) then
-//        begin
-//          ConfinedLayer := True;
-//          break;
-//        end;
-//      end;
-//    end;
-//    cbComputeSaturatedThickness.Enabled := ConfinedLayer;
-
-    if FSelectedUnits.Count = 0 then
+  procedure AssignHorizontalAnisotropy;
+  var
+    Index: integer;
+  begin
+    Same := True;
+    for Index := 1 to FSelectedUnits.Count - 1 do
     begin
-      Exit;
-    end;
-
-    try
-      if FSelectedUnits.Count = 1 then
+      SelectedUnit := FSelectedUnits[Index];
+      Same := FirstUnit.HorizontalAnisotropy
+        = SelectedUnit.HorizontalAnisotropy;
+      if not Same then
       begin
-        SelectedUnit := FSelectedUnits[0];
-        edName.Text := SelectedUnit.AquiferName;
-        rdeGrowthRate.Text := FloatToStr(SelectedUnit.GrowthRate);
-        rdeVDiscretization.Text := IntToStr(SelectedUnit.
-          LayerCollection.Count + 1);
-        rdeVDiscretizationChange(nil);
-        rgMethod.ItemIndex := Ord(SelectedUnit.GrowthMethod);
-        if not SelectedUnit.Simulated then
+        break;
+      end;
+    end;
+    if Same then
+    begin
+      rdeAnisotropy.Text := FloatToStr(
+        FirstUnit.HorizontalAnisotropy);
+    end
+    else
+    begin
+      rdeAnisotropy.Text := '';
+    end;
+  end;
+  procedure AssignSubFrame(SubLayers: TCustomSubLayer; Frame: TframeSubBeds);
+  var
+    Index: Integer;
+    ColIndex: Integer;
+    ItemIndex: Integer;
+    UseItem: TUseLayerNumberItem;
+    AnItem: TCustomSubLayerItem;
+  begin
+    Frame.seCount.AsInteger := SubLayers.Count;
+    Frame.seCountChange(nil);
+    for Index := 0 to SubLayers.Count - 1 do
+    begin
+      AnItem := SubLayers.Items[Index] as TCustomSubLayerItem;
+      Frame.rdgSubBed.Cells[Ord(scName), Index + 1] := AnItem.Name;
+      if Frame.rdgSubBed.ColCount > 1 then
+      begin
+        Frame.rdgSubBed.Checked[Ord(scUseAll), Index + 1] :=
+          AnItem.UseInAllLayers;
+        if AnItem.UseInAllLayers then
         begin
-          comboAquiferType.ItemIndex := 0
+          for ColIndex := Ord(fcFirst) to Frame.rdgSubBed.ColCount - 1 do
+          begin
+            Frame.rdgSubBed.Checked[ColIndex, Index + 1] := True;
+          end;
         end
         else
         begin
-          comboAquiferType.ItemIndex := SelectedUnit.AquiferType + 1;
-        end;
-        comboAquiferTypeChange(comboAquiferType);
-
-        comboInterblockMethod.ItemIndex :=
-          SelectedUnit.InterblockTransmissivityMethod;
-        comboVertKMethod.ItemIndex :=
-          SelectedUnit.VerticalHydraulicConductivityMethod;
-        cbComputeSaturatedThickness.Checked :=
-          SelectedUnit.UseStartingHeadForSaturatedThickness;
-
-        if SelectedUnit.GrowthMethod = gmCustom then
-        begin
-          for Index := 0 to SelectedUnit.LayerCollection.Count - 1 do
+          for ColIndex := Ord(fcFirst) to Frame.rdgSubBed.ColCount - 1 do
           begin
-            rdgSubLayerBoundaries.Cells[0,
-              rdgSubLayerBoundaries.RowCount -1 - Index]
-              := FloatToStr((SelectedUnit.LayerCollection.Items[Index]
-              as TLayerFraction).Fraction);
+            Frame.rdgSubBed.Checked[ColIndex, Index + 1] := False;
+          end;
+          for ItemIndex := 0 to AnItem.UsedLayers.Count - 1 do
+          begin
+            UseItem := AnItem.UsedLayers[ItemIndex];
+            ColIndex := UseItem.LayerNumber + 1;
+            if ColIndex < Frame.rdgSubBed.ColCount then
+            begin
+              Frame.rdgSubBed.Checked[ColIndex, Index + 1] := True;
+            end;
           end;
         end;
-        UpdateLayerPositions;
-      end
-      else
-      begin
-        edName.Text := '';
-        FirstUnit := FSelectedUnits[0];
-        AssignGrowthRate;
-        AssignDiscretization;
-        AssignGrowthMethod;
-        AssignAquiferType;
-        AssignTransmissivityMethod;
-        AssignVerticalKMethod;
-        AssignCustomPostions;
-        AssignComputeSaturatedThickness;
       end;
-    finally
-      FSettingUnit := False;
     end;
+  end;
+  procedure AssignNoDelayBeds;
+  begin
+    if FSelectedUnits.Count > 1 then
+    begin
+      tabNoDelay.TabVisible := False;
+      Exit;
+    end;
+    tabNoDelay.TabVisible := frmGoPhast.PhastModel.
+      ModflowPackages.SubPackage.IsSelected;;
+    InitializeSubsidenceGrid(frameSubNoDelayBeds);
+    AssignSubFrame(FirstUnit.SubNoDelayBedLayers, frameSubNoDelayBeds);
+  end;
+  procedure AssignDelayBeds;
+  begin
+    if FSelectedUnits.Count > 1 then
+    begin
+      tabDelay.TabVisible := False;
+      Exit;
+    end;
+    tabDelay.TabVisible := frmGoPhast.PhastModel.
+      ModflowPackages.SubPackage.IsSelected;;
+    InitializeSubsidenceGrid(frameSubDelayBeds);
+    AssignSubFrame(FirstUnit.SubDelayBedLayers, frameSubDelayBeds);
+  end;
+begin
+  if csDestroying in ComponentState then Exit;
+
+  FSettingUnit := True;
+  edName.Enabled := FSelectedUnits.Count = 1;
+  rdeGrowthRate.Enabled := FSelectedUnits.Count >= 1;
+  rdeVDiscretization.Enabled := FSelectedUnits.Count >= 1;
+  rgMethod.Enabled := FSelectedUnits.Count >= 1;
+  comboAquiferType.Enabled := FSelectedUnits.Count >= 1;
+  EnableK_Methods;
+  EnableComputeSatThick;
+  EnableAnisotropy;
+
+  if FSelectedUnits.Count = 0 then
+  begin
+    Exit;
+  end;
+  FirstUnit := FSelectedUnits[0];
+
+  try
+    if FSelectedUnits.Count = 1 then
+    begin
+      edName.Text := FirstUnit.AquiferName;
+    end
+    else
+    begin
+      edName.Text := '';
+    end;
+    FirstUnit := FSelectedUnits[0];
+    AssignGrowthRate;
+    AssignDiscretization;
+    AssignGrowthMethod;
+    AssignAquiferType;
+    AssignTransmissivityMethod;
+    AssignVerticalKMethod;
+    AssignCustomPostions;
+    AssignComputeSaturatedThickness;
+    AssignHorizontalAnisotropy;
+    AssignNoDelayBeds;
+    AssignDelayBeds;
+  finally
+    FSettingUnit := False;
+  end;
 
 end;
 
@@ -1347,8 +1644,6 @@ begin
   end;
   cbComputeSaturatedThickness.Enabled := ConfinedLayer
     and frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected;
-//  cbComputeSaturatedThickness.Enabled := FUseSaturatedThickness
-//    and (comboAquiferType.ItemIndex = 1);
 end;
 
 procedure TfrmLayers.EnableK_Methods;
@@ -1361,13 +1656,73 @@ begin
     SimulatedLayer := comboAquiferType.ItemIndex > 0;
     ShouldEnable := SimulatedLayer
       and frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected;
-    comboInterblockMethod.Enabled := ShouldEnable;
     comboVertKMethod.Enabled := ShouldEnable;
+    ShouldEnable := SimulatedLayer
+      and (frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected
+      or frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected);
+    comboInterblockMethod.Enabled := ShouldEnable;
   end
   else
   begin
     comboInterblockMethod.Enabled := False;
     comboVertKMethod.Enabled := False;
+  end;
+end;
+
+procedure TfrmLayers.SetUpLayerTypeOptions;
+var
+  Packages: TModflowPackages;
+  Item: TJvImageItem;
+begin
+  comboAquiferType.Items.Clear;
+  Item := comboAquiferType.Items.Add;
+  Item.Text := 'Non-simulated';
+  Item.ImageIndex := 3;
+
+  Item := comboAquiferType.Items.Add;
+  Item.Text := 'Confined';
+  Item.ImageIndex := 0;
+
+  Packages := frmGoPhast.PhastModel.ModflowPackages;
+  if Packages.BcfPackage.isSelected then
+  begin
+    Item := comboAquiferType.Items.Add;
+    Item.Text := 'Unconfined';
+    Item.ImageIndex := 2;
+
+    Item := comboAquiferType.Items.Add;
+    Item.Text := 'Limited convertible';
+    Item.ImageIndex := 4;
+
+    Item := comboAquiferType.Items.Add;
+    Item.Text := 'Fully convertible';
+    Item.ImageIndex := 1;
+  end
+  else if Packages.HufPackage.isSelected then
+  begin
+    Item := comboAquiferType.Items.Add;
+    Item.Text := 'Convertible';
+    Item.ImageIndex := 1;
+  end
+  else if Packages.LpfPackage.isSelected then
+  begin
+    Item := comboAquiferType.Items.Add;
+    Item.Text := 'Convertible';
+    Item.ImageIndex := 1;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+
+
+  if Packages.HufPackage.IsSelected then
+  begin
+    comboAquiferType.Items[0].Brush.Color := clBtnFace;
+  end
+  else
+  begin
+    comboAquiferType.Items[0].Brush.Color := clWhite;
   end;
 end;
 
@@ -1563,7 +1918,6 @@ begin
       end;
     end;
   end;
-
 end;
 
 procedure TfrmLayers.UpdateStringGrid;
@@ -1623,24 +1977,32 @@ end;
 
 procedure TUndoDefineLayers.DoCommand;
 begin
-  inherited;
-  frmGoPhast.PhastModel.LayerStructure.NewDataSets := FNewDataSets;
-  frmGoPhast.PhastModel.LayerStructure.ClearNewDataSets;
-  frmGoPhast.PhastModel.LayerStructure.Assign(FNewLayerStructure);
-  frmGoPhast.PhastModel.LayerStructure.NewDataSets := nil;
-  UpdatedRequiredDataSets;
-//  frmGoPhast.PhastModel.DataArrayNameChangeWarning;
+  frmGoPhast.CanDraw := False;
+  try
+    inherited;
+    frmGoPhast.PhastModel.LayerStructure.NewDataSets := FNewDataSets;
+    frmGoPhast.PhastModel.LayerStructure.ClearNewDataSets;
+    frmGoPhast.PhastModel.LayerStructure.Assign(FNewLayerStructure);
+    frmGoPhast.PhastModel.LayerStructure.NewDataSets := nil;
+    UpdatedRequiredDataSets;
+  finally
+    frmGoPhast.CanDraw := True;
+  end;
 end;
 
 procedure TUndoDefineLayers.Undo;
 begin
-  inherited;
-  frmGoPhast.PhastModel.LayerStructure.NewDataSets := FNewDataSets;
-  frmGoPhast.PhastModel.LayerStructure.Assign(FOldLayerStructure);
-  frmGoPhast.PhastModel.LayerStructure.RemoveNewDataSets;
-  frmGoPhast.PhastModel.LayerStructure.NewDataSets := nil;
-  UpdatedRequiredDataSets;
-//  frmGoPhast.PhastModel.DataArrayNameChangeWarning;
+  frmGoPhast.CanDraw := False;
+  try
+    inherited;
+    frmGoPhast.PhastModel.LayerStructure.NewDataSets := FNewDataSets;
+    frmGoPhast.PhastModel.LayerStructure.Assign(FOldLayerStructure);
+    frmGoPhast.PhastModel.LayerStructure.RemoveNewDataSets;
+    frmGoPhast.PhastModel.LayerStructure.NewDataSets := nil;
+    UpdatedRequiredDataSets;
+  finally
+    frmGoPhast.CanDraw := True;
+  end;
 end;
 
 end.

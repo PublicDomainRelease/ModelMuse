@@ -180,6 +180,8 @@ type
     procedure HideAllOthersClick(Sender: TObject);
     procedure ShowAll1Click(Sender: TObject);
     procedure miMergeObjectsClick(Sender: TObject);
+    procedure FrameMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
   private
     MouseStartX: integer;
     MouseStartY: integer;
@@ -1929,6 +1931,28 @@ begin
   UndoMoveUp := TUndoMoveUp.Create(ViewDirection);
   UndoMoveUp.SetPostSelection;
   frmGoPhast.UndoStack.Submit(UndoMoveUp);
+end;
+
+procedure TframeView.FrameMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+var
+  ctrl : TWinControl;
+  APoint: TPoint;
+begin
+  ctrl := FindVCLWindow(MousePos) ;
+  if (ctrl <> nil) and (ctrl.Parent is TQRbwZoomBox2) then
+  begin
+    APoint := ctrl.ScreenToClient(MousePos);
+    Handled := True;
+    if WheelDelta > 0 then
+    begin
+      ZoomInTool.MouseUp(Sender, mbLeft, Shift, APoint.X, APoint.Y);
+    end
+    else
+    begin
+      ZoomOutTool.MouseUp(Sender, mbLeft, Shift, APoint.X, APoint.Y);
+    end;
+  end;
 end;
 
 procedure TframeView.BackOneClick(Sender: TObject);

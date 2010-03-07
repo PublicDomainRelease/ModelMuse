@@ -242,7 +242,7 @@ C7------FOR LAYERS WITH DELAY.
 !     1  ' SYSTEMS OF INTERBEDS:')
        CALL URDCOM(IN,IOUT,LINE)
        READ(LINE,*) (LDN(N),N=1,NDB)
-       WRITE(IOUT,*) '(LDN(N),N=1,NDB);'
+       WRITE(IOUT,*) '(LDN(N),N=1,NDB):'
        WRITE(IOUT,*) (LDN(N),N=1,NDB)
 !       WRITE(IOUT,115) (LDN(N),N=1,NDB)
        DO 140 N=1,NDB
@@ -414,9 +414,9 @@ C17-----OF NMZ ZONES.
 !     1 ,//,'   ZONE        HYDRAULIC           ELASTIC            INEL',
 !     2 'ASTIC       ',/,'  NUMBER      CONDUCTIVITY     SPECIFIC STORA',
 !     3 'GE    SPECIFIC STORAGE   ',/,' ',69('-'))
+       WRITE(IOUT,*) '(DP(N,NP),NP=1,3):'
        DO 300 N=1,NMZ
        READ(IN,*) (DP(N,NP),NP=1,3)
-       WRITE(IOUT,*) '(DP(N,NP),NP=1,3):'
        WRITE(IOUT,*) (DP(N,NP),NP=1,3)
   300  CONTINUE
 !       WRITE(IOUT,305) (N,(DP(N,NP),NP=1,3),N=1,NMZ)
@@ -541,6 +541,7 @@ C21-----READ FORMATS AND UNIT NUMBERS OUTPUT FLAGS.
         NTSSUM(N)=NTSSUM(N-1)+NSTP(N-1)
   415   CONTINUE
        ENDIF
+	 WRITE(IOUT,*) 'ISP1, ISP2, JTS1, JTS2, (IFL(II), II=1,13):'
        DO 450 NOCLIN=1,ISUBOC
        CALL URDCOM(IN,IOUT,LINE)
        LLOC=1

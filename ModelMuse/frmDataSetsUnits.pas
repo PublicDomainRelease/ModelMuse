@@ -19,7 +19,31 @@ uses
 
 { TODO : Consider using a non-moldal window here. }
 
-type
+Type
+  TOK_Variables = record
+    ActiveOK: boolean;
+    SpecifiedHeadOK: boolean;
+    GetVContOK: Boolean;
+    HufKxOK: Boolean;
+    HufKyOK: Boolean;
+    HufKzOK: Boolean;
+    HufSsOk: Boolean;
+    HufSyOk: Boolean;
+  end;
+
+  TDataArrayEdit = class;
+
+  TEditorNotifierComponent = class(TComponent)
+  private
+    FEditor: TDataArrayEdit;
+  protected
+    procedure Notification(AComponent: TComponent;
+      Operation: TOperation); override;
+  public
+    property Editor: TDataArrayEdit read FEditor;
+    constructor Create(Owner: TDataArrayEdit); reintroduce;
+  end;
+
   // @name stores a @link(TDataArray) and records changes to the properties
   // of the @link(TDataArray).
   TDataArrayEdit = class(TClassificationObject)
@@ -38,10 +62,12 @@ type
     FExpression: TExpression;
     FNode: TTreeNode;
     FComment: string;
+    FNotifier: TEditorNotifierComponent;
     procedure SetTwoDInterpolator(const Value: TCustom2DInterpolater);
     procedure SetInterpValues(const Value: TPhastInterpolationValues);
     procedure SetNewUses(const Value: TStringList);
     function GetAssociatedDataSets: string;
+    procedure SetExpression(const Value: TExpression);
   public
     property DataArray: TDataArray read FDataArray;
     Constructor Create(ADataArray: TDataArray);
@@ -61,7 +87,7 @@ type
     // used by the formula for the @link(DataArray).
     property NewUses: TStringList read FNewUses write SetNewUses;
     property Variable: TCustomVariable read FVariable write FVariable;
-    property Expression: TExpression read FExpression write FExpression;
+    property Expression: TExpression read FExpression write SetExpression;
     property Comment: string read FComment write FComment;
     function ClassificationName: string; override;
     function FullClassification: string; override;
@@ -356,6 +382,9 @@ DataSetUnit.GenerateNewName. }
     procedure UpdateMixtureAllowed(ADataSet: TDataArray);
     procedure SetInterpolationMethod(NewInterpolatorName: string);
     procedure UpdateInterpolationControl;
+    procedure UpdateOkVariables(VariablePosition: Integer;
+      const VariableName: string; var OK_Var: TOK_Variables);
+    procedure InitializeOK_Variables(var OK_Var: TOK_Variables; EvaluatedAt: TEvaluatedAt);
     { Private declarations }
   protected
     // @name is the TDataArrayEdit that is currently being edited.
@@ -373,7 +402,7 @@ implementation
 
 uses frmGoPhastUnit, frmFormulaUnit, frmConvertChoiceUnit, InterpolationUnit,
   GIS_Functions, PhastModelUnit, frmShowHideObjectsUnit, GlobalVariablesUnit,
-  StrUtils;
+  StrUtils, OrderedCollectionUnit, HufDefinition, LayerStructureUnit;
 
 {$R *.dfm}
 var
@@ -652,6 +681,8 @@ end;
 
 procedure TfrmDataSets.btnEditFormulaClick(Sender: TObject);
 var
+VarPosition: Integer;
+
   VariableList: TList;
   Expression: TExpression;
   Variable: TCustomVariable;
@@ -669,9 +700,8 @@ var
   DataSetName: string;
   DataSetIndex: integer;
   UseList: TStringList;
-  ActiveOK: boolean;
-  SpecifiedHeadOK: boolean;
   DataArrayEdit: TDataArrayEdit;
+  OK_Var: TOK_Variables;
 begin
   inherited;
   if FSelectedEdit = nil then
@@ -691,9 +721,7 @@ begin
 
     Used.Assign(FSelectedEdit.NewUses);
     Used.Sorted := True;
-
-    SpecifiedHeadOK := FSelectedEdit.Name <> rsModflowSpecifiedHead;
-    ActiveOK := FSelectedEdit.Name <> rsActive;
+    InitializeOK_Variables(OK_Var, EvaluatedAt);
     for Index := 0 to FArrayEdits.Count - 1 do
     begin
       DataArrayEdit := FArrayEdits[Index];
@@ -711,19 +739,12 @@ begin
           // can be used in the formula.
           VariableList.Add(DataArrayEdit.Variable);
         end;
-        if VariableName = rsActive then
-        begin
-          ActiveOK := VariablePosition < 0;
-        end;
-        if VariableName = rsModflowSpecifiedHead then
-        begin
-          SpecifiedHeadOK := VariablePosition < 0;
-        end;
+        UpdateOkVariables(VariablePosition, VariableName, OK_Var);
       end;
     end;
 
     // if the user makes an invalid formula, it
-    // may be necessary to restore it but only
+    // may be necessary to restore an older formula but only
     // if the formula that was already present
     // was OK to begin with.
     OldFormulaOK := FSelectedEdit.Expression <> nil;
@@ -732,13 +753,29 @@ begin
     begin
       try
         IncludeGIS_Functions;
-        if not ActiveOK then
+        if not OK_Var.ActiveOK then
         begin
           RemoveActiveOnLayer;
         end;
-        if not SpecifiedHeadOK then
+        if not OK_Var.SpecifiedHeadOK then
         begin
           RemoveSpecifiedHeadOnLayer;
+        end;
+        if not OK_Var.GetVContOK then
+        begin
+          RemoveGetVCont;
+        end;
+        if not OK_Var.HufKxOK then
+        begin
+          RemoveHufKx;
+        end;
+        if not OK_Var.HufKyOK then
+        begin
+          RemoveHufKy;
+        end;
+        if not OK_Var.HufKzOK then
+        begin
+          RemoveHufKz;
         end;
         PopupParent := self;
 
@@ -774,12 +811,12 @@ begin
               for Index := 0 to Used.Count - 1 do
               begin
                 VariableName := Used[Index];
-                // VariablePosition is the row in the table that stores
+                // VarPosition is the row in the table that stores
                 // data for the variable.
-                VariablePosition := GetDataSetIndex(VariableName);
-                if VariablePosition >= 0 then
+                VarPosition := GetDataSetIndex(VariableName);
+                if VarPosition >= 0 then
                 begin
-                  DataArrayEdit := FArrayEdits[VariablePosition];
+                  DataArrayEdit := FArrayEdits[VarPosition];
                   if Expression.UsesVariable(DataArrayEdit.Variable) then
                   begin
                     FSelectedEdit.Expression := nil;
@@ -878,6 +915,7 @@ var
   Eval: TEvaluatedAt;
   EvalString: string;
 begin
+  memoAssociatedDataSets.WordWrap := True;
   for Eval := Low(TEvaluatedAt) to High(TEvaluatedAt) do
   begin
     EvalString := EvalAtToString(Eval, frmGoPhast.ModelSelection, True, True);
@@ -1023,6 +1061,8 @@ begin
   // user has made.
   Screen.Cursor := crHourGlass;
   try
+    memoAssociatedDataSets.WordWrap := False;
+
     DeletedDataSets := TList.Create;
     NewDataSets:= TList.Create;
     NewDataSetProperties := TObjectList.Create;
@@ -1970,6 +2010,344 @@ begin
   FLoading := False;
 end;
 
+procedure TfrmDataSets.InitializeOK_Variables(var OK_Var: TOK_Variables; EvaluatedAt: TEvaluatedAt);
+var
+  GeoUnit: TLayerGroup;
+  GeoIndex: Integer;
+  HufIndex: Integer;
+  HufUnit: THydrogeologicUnit;
+  HufParamIndex: Integer;
+  HufParam: THufUsedParameter;
+begin
+  OK_Var.SpecifiedHeadOK := FSelectedEdit.Name <> rsModflowSpecifiedHead;
+  OK_Var.ActiveOK := FSelectedEdit.Name <> rsActive;
+  OK_Var.GetVContOK := (EvaluatedAt = eaBlocks)
+    and (FSelectedEdit.Name <> rsKz)
+    and (FSelectedEdit.Name <> rsModflow_CBKz);
+  OK_Var.HufKxOK := (EvaluatedAt = eaBlocks)
+    and (FSelectedEdit.Name <> rsModflow_Initial_Head)
+    and (FSelectedEdit.Name <> StrHufReferenceSurface)
+    and (FSelectedEdit.Name <> StrModelTop);
+  OK_Var.HufKyOK := (EvaluatedAt = eaBlocks)
+    and (FSelectedEdit.Name <> rsModflow_Initial_Head)
+    and (FSelectedEdit.Name <> StrHufReferenceSurface)
+    and (FSelectedEdit.Name <> StrModelTop);
+  OK_Var.HufKzOK := (EvaluatedAt = eaBlocks)
+    and (FSelectedEdit.Name <> rsModflow_Initial_Head)
+    and (FSelectedEdit.Name <> StrHufReferenceSurface)
+    and (FSelectedEdit.Name <> StrModelTop);
+  OK_Var.HufSsOk := (EvaluatedAt = eaBlocks)
+    and (FSelectedEdit.Name <> rsModflow_Initial_Head)
+    and (FSelectedEdit.Name <> StrModelTop);
+  OK_Var.HufSyOk := (EvaluatedAt = eaBlocks)
+    and (FSelectedEdit.Name <> rsModflow_Initial_Head)
+    and (FSelectedEdit.Name <> StrModelTop);
+  for GeoIndex := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  begin
+    GeoUnit := frmGoPhast.PhastModel.LayerStructure[GeoIndex];
+    if FSelectedEdit.Name = GeoUnit.DataArrayName then
+    begin
+      OK_Var.GetVContOK := False;
+      OK_Var.HufKxOK := False;
+      OK_Var.HufKyOK := False;
+      OK_Var.HufKzOK := False;
+      OK_Var.HufSsOk := False;
+      OK_Var.HufSyOk := False;
+    end;
+  end;
+  for HufIndex := 0 to frmGoPhast.PhastModel.HydrogeologicUnits.Count - 1 do
+  begin
+    HufUnit := frmGoPhast.PhastModel.HydrogeologicUnits[HufIndex];
+    if FSelectedEdit.Name = HufUnit.TopDataArrayName then
+    begin
+      OK_Var.HufKxOK := False;
+      OK_Var.HufKyOK := False;
+      OK_Var.HufKzOK := False;
+      OK_Var.HufSsOk := False;
+      OK_Var.HufSyOk := False;
+    end;
+    if FSelectedEdit.Name = HufUnit.ThickessDataArrayName then
+    begin
+      OK_Var.HufKxOK := False;
+      OK_Var.HufKyOK := False;
+      OK_Var.HufKzOK := False;
+      OK_Var.HufSsOk := False;
+      OK_Var.HufSyOk := False;
+    end;
+    for HufParamIndex := 0 to HufUnit.HufUsedParameters.Count - 1 do
+    begin
+      HufParam := HufUnit.HufUsedParameters[HufParamIndex];
+      case HufParam.Parameter.ParameterType of
+        ptHUF_HK:
+          begin
+            if HufParam.UseMultiplier then
+            begin
+              if FSelectedEdit.Name = HufParam.MultiplierArrayName then
+              begin
+                OK_Var.HufKxOK := False;
+                OK_Var.HufKyOK := False;
+                OK_Var.HufKzOK := False;
+              end;
+            end;
+            if HufParam.UseZone then
+            begin
+              if FSelectedEdit.Name = HufParam.ZoneArrayName then
+              begin
+                OK_Var.HufKxOK := False;
+                OK_Var.HufKyOK := False;
+                OK_Var.HufKzOK := False;
+              end;
+            end;
+          end;
+        ptHUF_HANI:
+          begin
+            if HufParam.UseMultiplier then
+            begin
+              if FSelectedEdit.Name = HufParam.MultiplierArrayName then
+              begin
+                OK_Var.HufKyOK := False;
+              end;
+            end;
+            if HufParam.UseZone then
+            begin
+              if FSelectedEdit.Name = HufParam.ZoneArrayName then
+              begin
+                OK_Var.HufKyOK := False;
+              end;
+            end;
+          end;
+        ptHUF_VK:
+          begin
+            if HufParam.UseMultiplier then
+            begin
+              if FSelectedEdit.Name = HufParam.MultiplierArrayName then
+              begin
+                OK_Var.HufKzOK := False;
+              end;
+            end;
+            if HufParam.UseZone then
+            begin
+              if FSelectedEdit.Name = HufParam.ZoneArrayName then
+              begin
+                OK_Var.HufKzOK := False;
+              end;
+            end;
+          end;
+        ptHUF_VANI:
+          begin
+            if HufParam.UseMultiplier then
+            begin
+              if FSelectedEdit.Name = HufParam.MultiplierArrayName then
+              begin
+                OK_Var.HufKzOK := False;
+              end;
+            end;
+            if HufParam.UseZone then
+            begin
+              if FSelectedEdit.Name = HufParam.ZoneArrayName then
+              begin
+                OK_Var.HufKzOK := False;
+              end;
+            end;
+          end;
+        ptHUF_SS:
+          begin
+            if HufParam.UseMultiplier then
+            begin
+              if FSelectedEdit.Name = HufParam.MultiplierArrayName then
+              begin
+                OK_Var.HufSsOk := False;
+              end;
+            end;
+            if HufParam.UseZone then
+            begin
+              if FSelectedEdit.Name = HufParam.ZoneArrayName then
+              begin
+                OK_Var.HufSsOk := False;
+              end;
+            end;
+          end;
+        ptHUF_SY:
+          begin
+            if HufParam.UseMultiplier then
+            begin
+              if FSelectedEdit.Name = HufParam.MultiplierArrayName then
+              begin
+                OK_Var.HufSyOk := False;
+              end;
+            end;
+            if HufParam.UseZone then
+            begin
+              if FSelectedEdit.Name = HufParam.ZoneArrayName then
+              begin
+                OK_Var.HufSyOk := False;
+              end;
+            end;
+          end;
+        ptHUF_SYTP:
+          begin
+          end;
+        ptHUF_KDEP:
+          begin
+            if HufParam.UseMultiplier then
+            begin
+              if FSelectedEdit.Name = HufParam.MultiplierArrayName then
+              begin
+                OK_Var.HufKxOK := False;
+                OK_Var.HufKyOK := False;
+                OK_Var.HufKzOK := False;
+              end;
+            end;
+            if HufParam.UseZone then
+            begin
+              if FSelectedEdit.Name = HufParam.ZoneArrayName then
+              begin
+                OK_Var.HufKxOK := False;
+                OK_Var.HufKyOK := False;
+                OK_Var.HufKzOK := False;
+              end;
+            end;
+          end;
+        ptHUF_LVDA:
+          begin
+          end;
+      else
+        Assert(False);
+      end;
+    end;
+  end
+end;
+
+procedure TfrmDataSets.UpdateOkVariables(VariablePosition: Integer;
+  const VariableName: string;
+  var OK_Var: TOK_Variables);
+var
+  HufParam: THufUsedParameter;
+  HufParamIndex: Integer;
+  HufUnit: THydrogeologicUnit;
+  HufIndex: Integer;
+  GeoIndex: Integer;
+  GeoUnit: TLayerGroup;
+begin
+  if VariableName = rsActive then
+  begin
+    OK_Var.ActiveOK := OK_Var.ActiveOK and (VariablePosition < 0);
+  end;
+  if VariableName = rsModflowSpecifiedHead then
+  begin
+    OK_Var.SpecifiedHeadOK := OK_Var.SpecifiedHeadOK and (VariablePosition < 0);
+  end;
+  if VariableName = rsKz then
+  begin
+    OK_Var.GetVContOK := OK_Var.GetVContOK and (VariablePosition < 0);
+  end;
+  if VariableName = rsModflow_CBKz then
+  begin
+    OK_Var.GetVContOK := OK_Var.GetVContOK and (VariablePosition < 0);
+  end;
+  if VariableName = rsModflow_Initial_Head then
+  begin
+    OK_Var.HufKxOK := OK_Var.HufKxOK and (VariablePosition < 0);
+    OK_Var.HufKyOK := OK_Var.HufKyOK and (VariablePosition < 0);
+    OK_Var.HufKzOK := OK_Var.HufKzOK and (VariablePosition < 0);
+    OK_Var.HufSsOk := OK_Var.HufSsOk and (VariablePosition < 0);
+    OK_Var.HufSyOk := OK_Var.HufSyOk and (VariablePosition < 0);
+  end;
+  if VariableName = StrHufReferenceSurface then
+  begin
+    OK_Var.HufKxOK := OK_Var.HufKxOK and (VariablePosition < 0);
+    OK_Var.HufKyOK := OK_Var.HufKyOK and (VariablePosition < 0);
+    OK_Var.HufKzOK := OK_Var.HufKzOK and (VariablePosition < 0);
+  end;
+  if VariableName = StrModelTop then
+  begin
+    OK_Var.HufKxOK := OK_Var.HufKxOK and (VariablePosition < 0);
+    OK_Var.HufKyOK := OK_Var.HufKyOK and (VariablePosition < 0);
+    OK_Var.HufKzOK := OK_Var.HufKzOK and (VariablePosition < 0);
+    OK_Var.HufSsOk := OK_Var.HufSsOk and (VariablePosition < 0);
+    OK_Var.HufSyOk := OK_Var.HufSyOk and (VariablePosition < 0);
+  end;
+  for GeoIndex := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  begin
+    GeoUnit := frmGoPhast.PhastModel.LayerStructure[GeoIndex];
+    if VariableName = GeoUnit.DataArrayName then
+    begin
+      OK_Var.GetVContOK := OK_Var.GetVContOK and (VariablePosition < 0);
+      OK_Var.HufKxOK := OK_Var.HufKxOK and (VariablePosition < 0);
+      OK_Var.HufKyOK := OK_Var.HufKyOK and (VariablePosition < 0);
+      OK_Var.HufKzOK := OK_Var.HufKzOK and (VariablePosition < 0);
+      OK_Var.HufSsOk := OK_Var.HufSsOk and (VariablePosition < 0);
+      OK_Var.HufSyOk := OK_Var.HufSyOk and (VariablePosition < 0);
+    end;
+  end;
+  for HufIndex := 0 to frmGoPhast.PhastModel.HydrogeologicUnits.Count - 1 do
+  begin
+    HufUnit := frmGoPhast.PhastModel.HydrogeologicUnits[HufIndex];
+    if VariableName = HufUnit.TopDataArrayName then
+    begin
+      OK_Var.HufKxOK := OK_Var.HufKxOK and (VariablePosition < 0);
+      OK_Var.HufKyOK := OK_Var.HufKyOK and (VariablePosition < 0);
+      OK_Var.HufKzOK := OK_Var.HufKzOK and (VariablePosition < 0);
+      OK_Var.HufSsOk := OK_Var.HufSsOk and (VariablePosition < 0);
+      OK_Var.HufSyOk := OK_Var.HufSyOk and (VariablePosition < 0);
+    end;
+    if VariableName = HufUnit.ThickessDataArrayName then
+    begin
+      OK_Var.HufKxOK := OK_Var.HufKxOK and (VariablePosition < 0);
+      OK_Var.HufKyOK := OK_Var.HufKyOK and (VariablePosition < 0);
+      OK_Var.HufKzOK := OK_Var.HufKzOK and (VariablePosition < 0);
+      OK_Var.HufSsOk := OK_Var.HufSsOk and (VariablePosition < 0);
+      OK_Var.HufSyOk := OK_Var.HufSyOk and (VariablePosition < 0);
+    end;
+    for HufParamIndex := 0 to HufUnit.HufUsedParameters.Count - 1 do
+    begin
+      HufParam := HufUnit.HufUsedParameters[HufParamIndex];
+      case HufParam.Parameter.ParameterType of
+        ptHUF_HK:
+          begin
+            OK_Var.HufKxOK := OK_Var.HufKxOK and (VariablePosition < 0);
+            OK_Var.HufKyOK := OK_Var.HufKyOK and (VariablePosition < 0);
+            OK_Var.HufKzOK := OK_Var.HufKzOK and (VariablePosition < 0);
+          end;
+        ptHUF_HANI:
+          begin
+            OK_Var.HufKyOK := OK_Var.HufKyOK and (VariablePosition < 0);
+          end;
+        ptHUF_VK:
+          begin
+            OK_Var.HufKzOK := OK_Var.HufKzOK and (VariablePosition < 0);
+          end;
+        ptHUF_VANI:
+          begin
+            OK_Var.HufKzOK := OK_Var.HufKzOK and (VariablePosition < 0);
+          end;
+        ptHUF_SS:
+          begin
+            OK_Var.HufSsOk := OK_Var.HufSsOk and (VariablePosition < 0);
+          end;
+        ptHUF_SY:
+          begin
+            OK_Var.HufSyOk := OK_Var.HufSyOk and (VariablePosition < 0);
+          end;
+        ptHUF_SYTP:
+          begin
+          end;
+        ptHUF_KDEP:
+          begin
+            OK_Var.HufKxOK := OK_Var.HufKxOK and (VariablePosition < 0);
+            OK_Var.HufKyOK := OK_Var.HufKyOK and (VariablePosition < 0);
+            OK_Var.HufKzOK := OK_Var.HufKzOK and (VariablePosition < 0);
+          end;
+        ptHUF_LVDA:
+          begin
+          end;
+      else
+        Assert(False);
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmDataSets.UpdateInterpolationControl;
 var
   InterpolatorName: string;
@@ -2786,6 +3164,7 @@ end;
 constructor TDataArrayEdit.Create(ADataArray: TDataArray);
 begin
   inherited Create;
+  FNotifier := TEditorNotifierComponent.Create(self);
   FNewUses := TStringList.Create;
   FDataArray := ADataArray;
   if FDataArray <> nil then
@@ -2817,6 +3196,7 @@ begin
   FTwoDInterpolator.Free;
   FInterpValues.Free;
   FNewUses.Free;
+  FNotifier.Free;
   inherited;
 end;
 
@@ -2832,6 +3212,19 @@ begin
   if DataArray <> nil then
   begin
     result := DataArray.AssociatedDataSets;
+  end;
+end;
+
+procedure TDataArrayEdit.SetExpression(const Value: TExpression);
+begin
+  if FExpression <> nil then
+  begin
+    FExpression.Notifier.RemoveFreeNotification(FNotifier);
+  end;
+  FExpression := Value;
+  if FExpression <> nil then
+  begin
+    FExpression.Notifier.FreeNotification(FNotifier);
   end;
 end;
 
@@ -2876,5 +3269,26 @@ begin
   end;
 end;
 
-end.
+{ TEditorNotifierComponent }
 
+constructor TEditorNotifierComponent.Create(Owner: TDataArrayEdit);
+begin
+  inherited Create(nil);
+  FEditor := Owner;
+end;
+
+procedure TEditorNotifierComponent.Notification(AComponent: TComponent;
+  Operation: TOperation);
+var
+  ExprNotifier: TNotifierComponent;
+begin
+  if Operation = opRemove then
+  begin
+    ExprNotifier := AComponent as TNotifierComponent;
+    Assert(ExprNotifier.Expression = FEditor.Expression);
+    FEditor.FExpression := nil;
+  end;
+  inherited;
+end;
+
+end.

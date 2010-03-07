@@ -14,7 +14,7 @@ inherited frmModflowOptions: TfrmModflowOptions
     Top = 0
     Width = 543
     Height = 273
-    ActivePage = TabSheet1
+    ActivePage = tabWetting
     Align = alClient
     TabOrder = 0
     OnChange = pcOptionsChange

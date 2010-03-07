@@ -276,6 +276,7 @@ type
     miConfigureEndpoints: TMenuItem;
     miModpathTimeSeries: TMenuItem;
     miConfigureTimeSeries: TMenuItem;
+    SurferGridFile1: TMenuItem;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -355,6 +356,7 @@ type
     procedure miPHASTProgramLocationClick(Sender: TObject);
     procedure miModpathEndpointsClick(Sender: TObject);
     procedure miModpathTimeSeriesClick(Sender: TObject);
+    procedure SurferGridFile1Click(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -1639,7 +1641,7 @@ uses
   frmHUF_LayersUnit, frmBatchFileAdditionsUnit, frmSelectObjectsForEditingUnit, 
   frmDataSetValuesUnit, frmExportShapefileObjectsUnit, frmDeleteImageUnit,
   frmModpathDisplayUnit, frmPhastLocationUnit, frmEndPointDisplayUnit,
-  frmTimeSeriesDisplayUnit;
+  frmTimeSeriesDisplayUnit, frmImportSurferGrdFileUnitUnit;
 
 resourcestring
   StrModelMate = 'ModelMate';
@@ -1899,7 +1901,10 @@ begin
     PhastGrid.ColumnCount := -1;
     PhastGrid.RowCount := -1;
     PhastGrid.LayerCount := -1;
-    FreeAndNil(FPhastModel);
+    // Formula manager needs FPhastModel to be defined during FPhastModel.Free;
+    FPhastModel.Free;
+    FPhastModel := nil;
+//    FreeAndNil(FPhastModel);
 
     if frmColors <> nil then
     begin
@@ -2009,6 +2014,11 @@ var
   Index: integer;
   FileName: string;
   IniFName: string;
+  WebIniFileName: string;
+  WebIniFile: TMemIniFile;
+  ShownURL: Boolean;
+  LastTipDate: TDateTime;
+  LastCheckInternetDate: TDateTime;
 begin
   FIniFile.Free;
   IniFName := IniFileName(Handle, Application.ExeName);
@@ -2031,6 +2041,29 @@ begin
     PhastModel.ProgramLocations.ReadFromIniFile(IniFile);
     N5.Visible :=  MostRecentlyUsed.MenuItemCount > 0;
     N6.Visible := N5.Visible;
+
+    WebIniFileName := InternetIniFileName(Handle, Application.ExeName);
+    if not FileExists(WebIniFileName) then
+    begin
+      WebIniFile:= TMemInifile.Create(WebIniFileName);
+      try
+        FIniFile.ReadSection(StrVideoDisplayed, Keys);
+        for Index := 0 to Keys.Count - 1 do
+        begin
+          ShownURL := FIniFile.ReadBool(StrVideoDisplayed, Keys[Index], False);
+          WebIniFile.WriteBool(StrVideoDisplayed, Keys[Index], ShownURL);
+        end;
+        LastTipDate := FIniFile.ReadDateTime(StrCustomization, StrTipDate, 0);
+        WebIniFile.WriteDateTime(StrCustomization, StrTipDate, LastTipDate);
+        LastCheckInternetDate := FIniFile.ReadDateTime(StrCustomization, StrInternetCheckDate, LastTipDate);
+        WebIniFile.WriteDateTime(StrCustomization, StrInternetCheckDate, LastCheckInternetDate);
+
+
+        WebIniFile.UpdateFile;
+      finally
+        WebIniFile.Free;
+      end;
+    end;
 
   finally
     Keys.Free;
@@ -2662,6 +2695,7 @@ begin
   FDeletedDataSets.Free;
   // Get rid of the model.
 //  FreeAndNil(FPhastModel);
+  // Formula manager needs FPhastModel to be defined during FPhastModel.Free;
   FPhastModel.Free;
   FPhastModel := nil;
 end;
@@ -2831,6 +2865,7 @@ begin
 
   miModelResults.Enabled := PhastModel.ModelSelection = msModflow;
   miExportModflow.Enabled := PhastModel.ModelSelection = msModflow;
+  acExportModpath.Enabled := PhastModel.ModelSelection = msModflow;
   miExportPhast.Enabled := PhastModel.ModelSelection = msPhast;
   miImportDistributedDatabyZone.Enabled := PhastModel.ModelSelection = msPhast;
 
@@ -3620,6 +3655,23 @@ begin
 
   acPositionBackward.Enabled := False;
   tbPositionRedo.Enabled := False;
+end;
+
+procedure TfrmGoPhast.SurferGridFile1Click(Sender: TObject);
+begin
+  inherited;
+  with TfrmImportSurferGrdFile.Create(nil) do
+  begin
+    try
+      if GetData then
+      begin
+        ShowModal;
+      end;
+    finally
+      Free;
+    end;
+  end;
+
 end;
 
 procedure TfrmGoPhast.miPHASTProgramLocationClick(Sender: TObject);
@@ -5561,6 +5613,7 @@ begin
     begin
       PhastModel.CreateArchive('');
     end;
+    ReadIniFile;
   end;
 end;
 
@@ -5647,6 +5700,7 @@ begin
       frmScreenObjectProperties.tvDataSetsChange(nil, nil);
     end;
 
+    UndoStack.Clear;
     PhastModel.Clear;
     PhastModel.CreateInitialBoundaryDataSets;
     ClearingDeletedDataSets := True;
@@ -5655,7 +5709,6 @@ begin
     finally
       ClearingDeletedDataSets := False;
     end;
-    UndoStack.Clear;
     FPositionList.Clear;
     PhastModel.ClearExpressionsAndVariables;
     PhastModel.BeginScreenObjectUpdate;
@@ -6056,7 +6109,7 @@ end;
 procedure TfrmGoPhast.miFileClick(Sender: TObject);
 begin
   inherited;
-  ReadIniFile;
+//  ReadIniFile;
 end;
 
 procedure TfrmGoPhast.miFreeSurfaceClick(Sender: TObject);
@@ -6423,6 +6476,9 @@ var
   ModelPair: TModelIOPair;
   FoundPair: TModelIOPair;
   CurrentDir: string;
+  InputFiles: TModelIOPairs;
+  NameFile: string;
+  CommandLine: string;
 begin
   inherited;
 
@@ -6469,47 +6525,70 @@ begin
         ExtractFileName(sdSaveDialog.FileName), '');
     end;
 
-    PhastModel.ModelMateProject.ModflowNameFile :=
-      ExtractRelativePath(sdSaveDialog.FileName,
+    NameFile := ExtractRelativePath(sdSaveDialog.FileName,
       ChangeFileExt(sdSaveDialog.FileName, '.nam'));
+    case PhastModel.ObservationPurpose of
+      ofObserved:
+        begin
+          PhastModel.ModelMateProject.ModflowNameFile := NameFile
+        end;
+      ofPredicted:
+        begin
+          PhastModel.ModelMateProject.ModflowNameFilePred := NameFile
+        end;
+      ofInacative:
+        begin
+        end;
+      else Assert(False);
+    end;
+
 
     ModelFile := ExtractRelativePath(sdSaveDialog.FileName,
       ChangeFileExt(sdSaveDialog.FileName, StrPvalExt));
     AppFile := ExtractRelativePath(sdSaveDialog.FileName,
       ChangeFileExt(sdSaveDialog.FileName, StrJtf));
     FoundPair := nil;
-    for Index := 0 to PhastModel.ModelMateProject.MIFiles.Count - 1 do
-    begin
-      ModelPair := PhastModel.ModelMateProject.MIFiles.Items[Index];
-      if SameText(ExtractFileExt(ModelPair.ModelFile), StrPvalExt) then
-      begin
-        FoundPair := ModelPair;
-        break;
-      end;
-    end;
-    if FoundPair = nil then
-    begin
-      FoundPair := PhastModel.ModelMateProject.MIFiles.Add as TModelIOPair;
-    end;
-    FoundPair.ModelFile := ModelFile;
-    FoundPair.AppFile := AppFile;
 
+    InputFiles := nil;
+    case PhastModel.ObservationPurpose of
+      ofObserved: InputFiles := PhastModel.ModelMateProject.MIFiles;
+      ofPredicted: InputFiles := PhastModel.ModelMateProject.MIFilesPred;
+      ofInacative: ;
+      else Assert(False);
+    end;
+
+    if InputFiles <> nil then
+    begin
+      for Index := 0 to InputFiles.Count - 1 do
+      begin
+        ModelPair := InputFiles.Items[Index];
+        if SameText(ExtractFileExt(ModelPair.ModelFile), StrPvalExt) then
+        begin
+          FoundPair := ModelPair;
+          break;
+        end;
+      end;
+      if FoundPair = nil then
+      begin
+        FoundPair := InputFiles.Add as TModelIOPair;
+      end;
+      FoundPair.ModelFile := ModelFile;
+      FoundPair.AppFile := AppFile;
+    end;
+
+    CommandLine := ExtractRelativePath(sdSaveDialog.FileName,
+      PhastModel.ProgramLocations.ModflowLocation)
+      + ' ' + ExtractRelativePath(sdSaveDialog.FileName,
+      ChangeFileExt(ExtractFileName(sdSaveDialog.FileName), '.nam'));
     case PhastModel.ObservationPurpose of
       ofObserved:
         begin
-          PhastModel.ModelMateProject.MCLForward :=
-            ExtractRelativePath(sdSaveDialog.FileName,
-            PhastModel.ProgramLocations.ModflowLocation)
-            + ' ' + ExtractRelativePath(sdSaveDialog.FileName,
-            ChangeFileExt(ExtractFileName(sdSaveDialog.FileName), '.nam'));
+          PhastModel.ModelMateProject.MCLForward := CommandLine;
+
         end;
       ofPredicted:
         begin
-          PhastModel.ModelMateProject.MCLPred :=
-            ExtractRelativePath(sdSaveDialog.FileName,
-            PhastModel.ProgramLocations.ModflowLocation)
-            + ' ' + ExtractRelativePath(sdSaveDialog.FileName,
-            ChangeFileExt(ExtractFileName(sdSaveDialog.FileName), '.nam'));
+          PhastModel.ModelMateProject.MCLPred := CommandLine;
         end;
       else Assert(False);
     end;
@@ -6606,6 +6685,7 @@ begin
     finally
       Project.Free;
     end;
+    PhastModel.ModelMateProjectFileName := odModelMate.FileName;
   end;
 end;
 
@@ -6615,16 +6695,9 @@ begin
 end;
 
 procedure TfrmGoPhast.CheckInternet;
-//var
-//  UpdateText: TStringList;
-//  VersionOnWeb: string;
-//  VerCompar: TVersionCompare;
-//  VideoURLs: TStringList;
-//  Index: Integer;
-//  OldURL: string;
-//  NewURL: string;
-//  LastTipDate: TDateTime;
-//  HasDisplayed: Boolean;
+var
+  WebIniFileName: string;
+  WebIniFile: TMemIniFile;
 begin
   if ParamCount > 1 then
   begin
@@ -6633,8 +6706,15 @@ begin
   end;
 
   ReadIniFile;
-  TCheckInternetThread.Create(PhastModel.Version, FIniFile);
-  
+
+  WebIniFileName := InternetIniFileName(Handle, Application.ExeName);
+  Assert(FileExists(WebIniFileName));
+  WebIniFile:= TMemInifile.Create(WebIniFileName);
+  TCheckInternetThread.Create(PhastModel.Version, WebIniFile,
+    miShowVideoTips.Checked);
+
+
+
 end;
 
 function TfrmGoPhast.CheckModel: boolean;

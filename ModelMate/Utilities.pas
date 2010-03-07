@@ -37,6 +37,7 @@ interface
   function TrimLeadingBlanks(const Str: string): string;
   function TrimTrailingBlanks(const Str: string): string;
   function WriteBatchFile(ProgramLocation, CmdLineOption, BatchName: string): string;
+  function YesOrNoToBoolean(const Str: string): boolean;
 
 
 implementation
@@ -794,5 +795,21 @@ begin
     BatchFile.Free;
   end;
 end;
+
+//###################################################################
+
+function YesOrNoToBoolean(const Str: string): boolean;
+begin
+  if (AnsiSameText(Str,'yes')) or (AnsiSameText(Str,'y')) then
+    begin
+      result := True;
+    end
+  else
+    begin
+      result := False;
+    end;
+end;
+
+//###################################################################
 
 end.

@@ -28,7 +28,7 @@ type
     EndingTime: double;
     EvapotranspirationRateAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
   end;
 
   {
@@ -54,7 +54,7 @@ type
     EvapotranspirationSurfaceAnnotation: string;
     EvapotranspirationDepthAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
   end;
 
   {
@@ -76,7 +76,7 @@ type
     EndingTime: double;
     EvapotranspirationLayerAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
   end;
 
   // @name is an array of @link(TEvtRecord)s.
@@ -93,7 +93,7 @@ type
     FEvtArray: TEvtArray;
     function GetEvtArray: TEvtArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -107,7 +107,7 @@ type
     FEvtLayerArray: TEvtLayerArray;
     function GetEvtLayerArray: TEvtLayerArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -122,7 +122,7 @@ type
     FEvtSurfDepthArray: TEvtSurfDepthArray;
     function GetEvtSurfDepthArray: TEvtSurfDepthArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -358,7 +358,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property EvapotranspirationRate: double read GetEvapotranspirationRate;
@@ -380,7 +380,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property StressPeriod: integer read FStressPeriod write FStressPeriod;
@@ -404,7 +404,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property EvapotranspirationSurface: double read GetEvapotranspirationSurface;
@@ -788,10 +788,10 @@ begin
   result := Values.Cell.Section;
 end;
 
-procedure TEvt_Cell.Restore(Decomp: TDecompressionStream);
+procedure TEvt_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp); 
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -840,7 +840,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.EvtLayerArray) - 1 do
       begin
 //        Cells.Cached := False;
@@ -887,7 +887,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.EvtSurfDepthArray) - 1 do
       begin
 //        Cells.Cached := False;
@@ -933,7 +933,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.EvtArray) - 1 do
       begin
         BoundaryValues := LocalBoundaryStorage.EvtArray[BoundaryIndex];
@@ -1427,10 +1427,10 @@ begin
   result := Values.Cell.Section;
 end;
 
-procedure TEvapotranspirationLayerCell.Restore(Decomp: TDecompressionStream);
+procedure TEvapotranspirationLayerCell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp);
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -1807,10 +1807,10 @@ begin
   result := Values.Cell.Section;
 end;
 
-procedure TEvtSurfDepth_Cell.Restore(Decomp: TDecompressionStream);
+procedure TEvtSurfDepth_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp);
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -1835,7 +1835,7 @@ begin
   end;
 end;
 
-procedure TEvtStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TEvtStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -1844,7 +1844,7 @@ begin
   SetLength(FEvtArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FEvtArray[Index].Restore(DecompressionStream);
+    FEvtArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 
@@ -1878,7 +1878,7 @@ begin
   end;
 end;
 
-procedure TEvtLayerStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TEvtLayerStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -1887,7 +1887,7 @@ begin
   SetLength(FEvtLayerArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FEvtLayerArray[Index].Restore(DecompressionStream);
+    FEvtLayerArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 
@@ -1921,7 +1921,7 @@ begin
   end;
 end;
 
-procedure TEvtSurfDepthStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TEvtSurfDepthStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -1930,7 +1930,7 @@ begin
   SetLength(FEvtSurfDepthArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FEvtSurfDepthArray[Index].Restore(DecompressionStream);
+    FEvtSurfDepthArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 
@@ -1960,19 +1960,16 @@ begin
     CommentLength * SizeOf(Char));
 end;
 
-procedure TEvtRecord.Restore(Decomp: TDecompressionStream);
-var
-  CommentLength: Integer;
-  Comment: string;
+procedure TEvtRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+//var
+//  CommentLength: Integer;
+//  Comment: string;
 begin
-  Decomp.Read(Cell, SizeOf(Cell));
-  Decomp.Read(EvapotranspirationRate, SizeOf(EvapotranspirationRate));
-  Decomp.Read(StartingTime, SizeOf(StartingTime));
-  Decomp.Read(EndingTime, SizeOf(EndingTime));
-  Decomp.Read(CommentLength, SizeOf(CommentLength));
-  SetString(Comment, nil, CommentLength);
-  Decomp.Read(Pointer(Comment)^, CommentLength * SizeOf(Char));
-  EvapotranspirationRateAnnotation := Comment;
+  Cell := ReadCompCell(Decomp);
+  EvapotranspirationRate := ReadCompReal(Decomp);
+  StartingTime := ReadCompReal(Decomp);
+  EndingTime := ReadCompReal(Decomp);
+  EvapotranspirationRateAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TEvtSurfDepthRecord }
@@ -1998,26 +1995,18 @@ begin
     CommentLength * SizeOf(Char));
 end;
 
-procedure TEvtSurfDepthRecord.Restore(Decomp: TDecompressionStream);
-var
-  CommentLength: Integer;
-  Comment: string;
+procedure TEvtSurfDepthRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+//var
+//  CommentLength: Integer;
+//  Comment: string;
 begin
-  Decomp.Read(Cell, SizeOf(Cell));
-  Decomp.Read(EvapotranspirationSurface, SizeOf(EvapotranspirationSurface));
-  Decomp.Read(EvapotranspirationDepth, SizeOf(EvapotranspirationDepth));
-  Decomp.Read(StartingTime, SizeOf(StartingTime));
-  Decomp.Read(EndingTime, SizeOf(EndingTime));
-
-  Decomp.Read(CommentLength, SizeOf(CommentLength));
-  SetString(Comment, nil, CommentLength);
-  Decomp.Read(Pointer(Comment)^, CommentLength * SizeOf(Char));
-  EvapotranspirationSurfaceAnnotation := Comment;
-  
-  Decomp.Read(CommentLength, SizeOf(CommentLength));
-  SetString(Comment, nil, CommentLength);
-  Decomp.Read(Pointer(Comment)^, CommentLength * SizeOf(Char));
-  EvapotranspirationDepthAnnotation := Comment;
+  Cell := ReadCompCell(Decomp);
+  EvapotranspirationSurface := ReadCompReal(Decomp);
+  EvapotranspirationDepth := ReadCompReal(Decomp);
+  StartingTime := ReadCompReal(Decomp);
+  EndingTime := ReadCompReal(Decomp);
+  EvapotranspirationSurfaceAnnotation := ReadCompString(Decomp, Annotations);
+  EvapotranspirationDepthAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TEvtLayerRecord }
@@ -2038,19 +2027,16 @@ begin
     CommentLength * SizeOf(Char));
 end;
 
-procedure TEvtLayerRecord.Restore(Decomp: TDecompressionStream);
-var
-  CommentLength: Integer;
-  Comment: string;
+procedure TEvtLayerRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+//var
+//  CommentLength: Integer;
+//  Comment: string;
 begin
-  Decomp.Read(Cell, SizeOf(Cell));
-  Decomp.Read(EvapotranspirationLayer, SizeOf(EvapotranspirationLayer));
-  Decomp.Read(StartingTime, SizeOf(StartingTime));
-  Decomp.Read(EndingTime, SizeOf(EndingTime));
-  Decomp.Read(CommentLength, SizeOf(CommentLength));
-  SetString(Comment, nil, CommentLength);
-  Decomp.Read(Pointer(Comment)^, CommentLength * SizeOf(Char));
-  EvapotranspirationLayerAnnotation := Comment;
+  Cell := ReadCompCell(Decomp);
+  EvapotranspirationLayer := ReadCompInt(Decomp);
+  StartingTime := ReadCompReal(Decomp);
+  EndingTime := ReadCompReal(Decomp);
+  EvapotranspirationLayerAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 end.

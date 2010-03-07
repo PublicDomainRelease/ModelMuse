@@ -2,7 +2,7 @@ unit ModflowBoundaryDisplayUnit;
 
 interface
 
-uses Windows, SysUtils, Classes, DataSetUnit, SparseDataSets;
+uses Windows, SysUtils, Classes, DataSetUnit, SparseDataSets, ZLib;
 
 type
   TOnGetUseList = procedure (Sender: TObject;
@@ -14,7 +14,11 @@ type
     function GetCellCount(Layer, Row, Column: integer): integer;
     procedure SetCellCount(Layer, Row, Column: integer; const Value: integer);
   protected
+    procedure Clear; override;
+    procedure SetDimensions(const SetToZero: boolean); override;
     procedure SetUpToDate(const Value: boolean); override;
+    procedure StoreData(Compressor: TCompressionStream); override;
+    procedure ReadData(DecompressionStream: TDecompressionStream); override;
   public
     procedure AddDataArray(DataArray: TDataArray);
     procedure AddDataValue(const DataAnnotation: string; DataValue: Double;
@@ -77,7 +81,7 @@ type
 
 implementation
 
-uses ZLib, GoPhastTypes, SparseArrayUnit, PhastModelUnit, frmGoPhastUnit,
+uses GoPhastTypes, SparseArrayUnit, PhastModelUnit, frmGoPhastUnit,
   ModflowTimeUnit, SubscriptionUnit, RealListUnit, ScreenObjectUnit,
   ModflowHobUnit, TempFiles, IntListUnit, CustomModflowWriterUnit, 
   frmProgressUnit;
@@ -109,6 +113,12 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TModflowBoundaryDisplayDataArray.Clear;
+begin
+  inherited;
+  FCount.Clear;
 end;
 
 procedure TModflowBoundaryDisplayDataArray.ComputeAverage;
@@ -211,12 +221,8 @@ end;
 
 destructor TModflowBoundaryDisplayDataArray.Destroy;
 begin
-  if FileExists(FTempFileName) then
-  begin
-    DeleteFile(FTempFileName);
-  end;
-  FCount.Free;
   inherited;
+  FCount.Free;
 end;
 
 function TModflowBoundaryDisplayDataArray.GetCellCount(Layer, Row,
@@ -252,10 +258,56 @@ begin
   end;
 end;
 
+procedure TModflowBoundaryDisplayDataArray.ReadData(
+  DecompressionStream: TDecompressionStream);
+var
+  Count: Integer;
+  LayerArray: array of Integer;
+  RowArray: array of Integer;
+  ColumnArray: array of Integer;
+  IntegerValues: array of Integer;
+  Index: Integer;
+  LayerIndex: Integer;
+  RowIndex: Integer;
+  ColIndex: Integer;
+  IntValue: Integer;
+begin
+  inherited ReadData(DecompressionStream);
+  DecompressionStream.Read(Count, SizeOf(Count));
+  SetLength(LayerArray, Count);
+  SetLength(RowArray, Count);
+  SetLength(ColumnArray, Count);
+  SetLength(IntegerValues, Count);
+  if Count > 0 then
+  begin
+    DecompressionStream.Read(LayerArray[0], Count*SizeOf(integer));
+    DecompressionStream.Read(RowArray[0], Count*SizeOf(integer));
+    DecompressionStream.Read(ColumnArray[0], Count*SizeOf(integer));
+    DecompressionStream.Read(IntegerValues[0], Count*SizeOf(integer));
+
+    for Index := 0 to Count - 1 do
+    begin
+      LayerIndex := LayerArray[Index];
+      RowIndex := RowArray[Index];
+      ColIndex := ColumnArray[Index];
+      IntValue := IntegerValues[Index];
+      CellCount[LayerIndex, RowIndex, ColIndex] := IntValue;
+    end;
+  end;
+
+end;
+
 procedure TModflowBoundaryDisplayDataArray.SetCellCount(Layer, Row,
   Column: integer; const Value: integer);
 begin
   FCount[Layer, Row, Column] := Value;
+end;
+
+procedure TModflowBoundaryDisplayDataArray.SetDimensions(
+  const SetToZero: boolean);
+begin
+  inherited;
+  FCount.Clear;
 end;
 
 procedure TModflowBoundaryDisplayDataArray.SetUpToDate(const Value: boolean);
@@ -265,6 +317,63 @@ begin
     FDataCached := False;
   end;
   inherited;
+end;
+
+procedure TModflowBoundaryDisplayDataArray.StoreData(
+  Compressor: TCompressionStream);
+var
+  Count: Integer;
+  LayerLimit: Integer;
+  RowLimit: Integer;
+  ColLimit: Integer;
+  LayerMin: Integer;
+  RowMin: Integer;
+  ColMin: Integer;
+  LayerArray: array of Integer;
+  RowArray: array of Integer;
+  ColumnArray: array of Integer;
+  IntegerValues: array of Integer;
+  LayerIndex: Integer;
+  RowIndex: Integer;
+  ColIndex: Integer;
+begin
+  inherited StoreData(Compressor);
+  Count := 0;
+  CountValues(LayerLimit, RowLimit, ColLimit, Count);
+  GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
+    LayerLimit, RowLimit, ColLimit);
+  if Count > 0 then
+  begin
+    SetLength(LayerArray, Count);
+    SetLength(RowArray, Count);
+    SetLength(ColumnArray, Count);
+    SetLength(IntegerValues, Count);
+    Count := 0;
+    for LayerIndex := LayerMin to LayerLimit do
+    begin
+      for RowIndex := RowMin to RowLimit do
+      begin
+        for ColIndex := ColMin to ColLimit do
+        begin
+          if IsValue[LayerIndex, RowIndex, ColIndex] then
+          begin
+            LayerArray[Count] := LayerIndex;
+            RowArray[Count] := RowIndex;
+            ColumnArray[Count] := ColIndex;
+            IntegerValues[Count] := CellCount[LayerIndex, RowIndex, ColIndex];
+            Inc(Count);
+          end;
+        end;
+      end;
+    end;
+    Compressor.Write(Count, SizeOf(Count));
+    Compressor.Write(LayerArray[0], Count*SizeOf(integer));
+    Compressor.Write(RowArray[0], Count*SizeOf(integer));
+    Compressor.Write(ColumnArray[0], Count*SizeOf(integer));
+    Compressor.Write(IntegerValues[0], Count*SizeOf(integer));
+
+  end;
+
 end;
 
 { TModflowBoundaryDisplayTimeList }

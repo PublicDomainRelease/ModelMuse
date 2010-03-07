@@ -196,6 +196,7 @@ begin
           DepthSurfaceCellList.CheckRestore;
           AssignTransient2DArray(EvapSurfArray, 0, DepthSurfaceCellList, 0,
             rdtDouble, umAssign);
+          EvapSurfArray.CacheData;
 
           if NPEVT = 0 then
           begin
@@ -213,6 +214,7 @@ begin
           // data set 9
           AssignTransient2DArray(EvapDepthArray, 1, DepthSurfaceCellList, 0,
             rdtDouble, umAssign);
+          EvapDepthArray.CacheData;
 
           // data set 10
           if EvapLayerArray <> nil then
@@ -222,15 +224,18 @@ begin
               and not PhastModel.ModflowPackages.EvtPackage.
               TimeVaryingLayers then
             begin
+              List.Cache;
               RetrieveParametersForStressPeriod(D7PNameIname, D7PName, 0,
                 ParametersUsed, ParameterValues);
               List := Values[0];
+              List.CheckRestore;
             end;
             UpdateLayerDisplay(List, ParameterValues, TimeIndex,
               EvapLayerArray);
             EvapLayerArray.CacheData;
           end;
           List.Cache;
+          DepthSurfaceCellList.Cache;
         finally
           ParametersUsed.Free;
         end;
@@ -363,12 +368,14 @@ var
   DataType: TRbwDataType;
   DataTypeIndex: integer;
   Comment: string;
+  Dummy: TDataArray;
 begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := 0;
   Comment := DataSetIdentifier + ' ' + VariableIdentifiers;
-  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue, CellList);
+  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
+    CellList, Dummy);
 end;
 
 procedure TModflowEVT_Writer.WriteEvapotranspirationSurface(CellList: TValueCellList);
@@ -377,12 +384,14 @@ var
   DataType: TRbwDataType;
   DataTypeIndex: integer;
   Comment: string;
+  Dummy: TDataArray;
 begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := 0;
   Comment := '# Data Set 6: SURF';
-  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue, CellList);
+  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
+    CellList, Dummy);
 end;
 
 procedure TModflowEVT_Writer.WriteExtinctionDepth(CellList: TValueCellList);
@@ -391,12 +400,14 @@ var
   DataType: TRbwDataType;
   DataTypeIndex: integer;
   Comment: string;
+  Dummy: TDataArray;
 begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := 1;
   Comment := '# Data Set 9: EXDP';
-  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue, CellList);
+  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
+    CellList, Dummy);
 end;
 
 procedure TModflowEVT_Writer.WriteStressPeriods(const VariableIdentifiers,

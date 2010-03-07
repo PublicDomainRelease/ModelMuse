@@ -35,6 +35,8 @@ type
     FDrobPackage: TModflowPackageSelection;
     FHufPackage: THufPackageSelection;
     FMnw2Package: TMultinodeWellSelection;
+    FBcfPackage: TModflowPackageSelection;
+    FSubPackage: TSubPackageSelection;
     procedure SetChdBoundary(const Value: TChdPackage);
     procedure SetLpfPackage(const Value: TLpfSelection);
     procedure SetPcgPackage(const Value: TPcgSelection);
@@ -62,6 +64,8 @@ type
     procedure SetRvobPackage(const Value: TModflowPackageSelection);
     procedure SetHufPackage(const Value: THufPackageSelection);
     procedure SetMnw2Package(const Value: TMultinodeWellSelection);
+    procedure SetBcfPackage(const Value: TModflowPackageSelection);
+    procedure SetSubPackage(const Value: TSubPackageSelection);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TObject);
@@ -116,6 +120,10 @@ type
       read FHufPackage write SetHufPackage;
     property Mnw2Package: TMultinodeWellSelection
       read FMnw2Package write SetMnw2Package;
+    property BcfPackage: TModflowPackageSelection
+      read FBcfPackage write SetBcfPackage;
+    property SubPackage: TSubPackageSelection
+      read FSubPackage write SetSubPackage;
     // Assign, Create, Destroy, SelectedPackageCount
     // and Reset must be updated each time a new package is added.
   end;
@@ -178,6 +186,8 @@ begin
     RvobPackage := SourcePackages.RvobPackage;
     HufPackage := SourcePackages.HufPackage;
     Mnw2Package := SourcePackages.Mnw2Package;
+    BcfPackage := SourcePackages.BcfPackage;
+    SubPackage := SourcePackages.SubPackage;
   end
   else
   begin
@@ -313,10 +323,21 @@ begin
   FMnw2Package.Classification := BC_HeadDependentFlux;
   FMnw2Package.SelectionType := stCheckBox;
 
+  FBcfPackage := TModflowPackageSelection.Create(Model);
+  FBcfPackage.PackageIdentifier := 'BCF6: Block-Centered Flow package';
+  FBcfPackage.Classification := StrFlow;
+  FBcfPackage.SelectionType := stRadioButton;
+
+  FSubPackage := TSubPackageSelection.Create(Model);
+  FSubPackage.PackageIdentifier := 'SUB: Subsidence and Aquifer-System Compaction Package';
+  FSubPackage.Classification := 'Subsidence';
+  FSubPackage.SelectionType := stCheckBox;
 end;
 
 destructor TModflowPackages.Destroy;
 begin
+  FSubPackage.Free;
+  FBcfPackage.Free;
   FRvobPackage.Free;
   FGbobPackage.Free;
   FDrobPackage.Free;
@@ -375,6 +396,8 @@ begin
   GbobPackage.IsSelected := False;
   RvobPackage.IsSelected := False;
   HufPackage.IsSelected := False;
+  BcfPackage.IsSelected := False;
+  SubPackage.IsSelected := False;
 
   DrtPackage.Comments.Clear;
   DrnPackage.Comments.Clear;
@@ -402,6 +425,8 @@ begin
   GbobPackage.Comments.Clear;
   RvobPackage.Comments.Clear;
   HufPackage.Comments.Clear;
+  BcfPackage.Comments.Clear;
+  SubPackage.Comments.Clear;
 
   PcgPackage.InitializeVariables;
   GmgPackage.InitializeVariables;
@@ -410,6 +435,7 @@ begin
   HobPackage.InitializeVariables;
   ModPath.InitializeVariables;
   HufPackage.InitializeVariables;
+  SubPackage.InitializeVariables;
 end;
 
 function TModflowPackages.SelectedPackageCount: integer;
@@ -533,6 +559,19 @@ begin
   begin
     Inc(Result);
   end;
+  if BcfPackage.IsSelected then
+  begin
+    Inc(Result);
+  end;
+  if SubPackage.IsSelected then
+  begin
+    Inc(Result);
+  end;
+end;
+
+procedure TModflowPackages.SetBcfPackage(const Value: TModflowPackageSelection);
+begin
+  FBcfPackage.Assign(Value);
 end;
 
 procedure TModflowPackages.SetChdBoundary(
@@ -673,6 +712,11 @@ end;
 procedure TModflowPackages.SetSipPackage(const Value: TSIPPackageSelection);
 begin
   FSipPackage.Assign(Value);
+end;
+
+procedure TModflowPackages.SetSubPackage(const Value: TSubPackageSelection);
+begin
+  FSubPackage.Assign(Value);
 end;
 
 procedure TModflowPackages.SetUzfPackage(const Value: TUzfPackageSelection);

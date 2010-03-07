@@ -31,7 +31,48 @@ type
       or if the variable is named "Specified_Head".
     }
     function UsesVariable(const Variable: TCustomVariable): boolean; override;
+  end;
 
+  TBcfVcont = class(TExpression)
+  protected
+    function GetVariablesUsed: TStringList; override;
+  public
+    {
+      @Name returns True if Variable is used by the @Link(TExpression)
+      or if the variable is named "Kz", "Confining_Bed_Kz",
+      or one of the variables for grid layer elevations.
+    }
+    function UsesVariable(const Variable: TCustomVariable): boolean; override;
+  end;
+
+  TCustomHufExpression = class(TExpression)
+  public
+    function UsesVariable(const Variable: TCustomVariable): boolean; override;
+  end;
+
+  THufKx = class(TCustomHufExpression)
+  protected
+    function GetVariablesUsed: TStringList; override;
+  end;
+
+  THufKy = class(THufKx)
+  protected
+    function GetVariablesUsed: TStringList; override;
+  end;
+
+  THufKz = class(THufKx)
+  protected
+    function GetVariablesUsed: TStringList; override;
+  end;
+
+  THufSS = class(TCustomHufExpression)
+  protected
+    function GetVariablesUsed: TStringList; override;
+  end;
+
+  THufSY = class(TCustomHufExpression)
+  protected
+    function GetVariablesUsed: TStringList; override;
   end;
 
   // @name adds a series of (mostly) GIS function to Parser.
@@ -75,6 +116,14 @@ const
   StrImportedHigherElev = 'Imported Higher Elevations';
   StrImportedLowerEleva = 'Imported Lower Elevations';
   StrImportedElevations = 'Imported Elevations';
+  StrBcfVCONT = 'BcfVCONT';
+  StrHufKx = 'GetHufKx';
+  StrHufKy = 'GetHufKy';
+  StrHufKz = 'GetHuf_Interlayer_Kz';
+  StrHufSs = 'GetHufSs';
+  StrHufAverageSy = 'GetHuf_Average_Sy';
+  StrHufSy = 'GetHufSy';
+  StrLayerHeight = 'LayerHeight';
 
 function GetColumnWidth(Column: Integer): Double;
 function GetRowWidth(Row: Integer): Double;
@@ -84,7 +133,7 @@ implementation
 
 uses frmGoPhastUnit, DataSetUnit, FastGEO, LayerStructureUnit, PhastModelUnit,
   ValueArrayStorageUnit, HufDefinition, OrderedCollectionUnit,
-  ModflowPackageSelectionUnit, Math;
+  ModflowPackageSelectionUnit, Math, ModflowGridUnit;
 
 var  
   SpecialImplementors: TList;
@@ -152,7 +201,7 @@ var
   ListRealValueFunction: TFunctionRecord;
   ListIntegerValueFunction: TFunctionRecord;
   ModflowLayerSimulatedFunction: TFunctionRecord;
-  ModflowHufKx: TFunctionRecord;
+//  ModflowHufKx: TFunctionRecord;
 
   ImportedValuesRFunction: TFunctionRecord;
   ImportedValuesIFunction: TFunctionRecord;
@@ -167,6 +216,27 @@ var
 
   SpecifiedHeadOnLayer: TFunctionClass;
   SpecifiedHeadOnLayerSpecialImplementor: TSpecialImplementor;
+
+  BcfVcont: TFunctionClass;
+  BcfVcontSpecialImplementor: TSpecialImplementor;
+
+  HufKx: TFunctionClass;
+  HufKxSpecialImplementor: TSpecialImplementor;
+
+  HufKy: TFunctionClass;
+  HufKySpecialImplementor: TSpecialImplementor;
+
+  HufKz: TFunctionClass;
+  HufKzSpecialImplementor: TSpecialImplementor;
+
+  HufSS: TFunctionClass;
+  HufSSSpecialImplementor: TSpecialImplementor;
+
+  HufAverageSY: TFunctionClass;
+  HufAverageSYSpecialImplementor: TSpecialImplementor;
+
+  HufSY: TFunctionClass;
+  HufSYSpecialImplementor: TSpecialImplementor;
 
 procedure AddGIS_Functions(const Parser: TRbwParser;
   ModelSelection: TModelSelection);
@@ -238,11 +308,43 @@ begin
   AddItem(ListRealValueFunction, True);
   AddItem(ListIntegerValueFunction, True);
   AddItem(ModflowLayerSimulatedFunction, True);
-  AddItem(ModflowHufKx, True);
+//  AddItem(ModflowHufKx, True);
   AddItem(ImportedValuesRFunction, True);
   AddItem(ImportedValuesIFunction, True);
   AddItem(ImportedValuesBFunction, True);
   AddItem(ImportedValuesTFunction, True);
+end;
+
+procedure GetCellIndicies(var Column, Row, Layer: Integer;
+  Values: array of Pointer; FirstIndex: integer = 0);
+begin
+  // This function returns the hydraulic conductivity of a cell as calculated
+  // using the method in the HUF package. At present, it accounts
+  // for KDEP but not for LVDA.
+  if (Length(Values) >= FirstIndex+1) and (Values[FirstIndex] <> nil) then
+  begin
+    Layer := PInteger(Values[FirstIndex])^ - 1;
+  end
+  else
+  begin
+    Layer := GlobalLayer - 1;
+  end;
+  if (Length(Values) >= FirstIndex+2) and (Values[FirstIndex+1] <> nil) then
+  begin
+    Row := PInteger(Values[FirstIndex+1])^ - 1;
+  end
+  else
+  begin
+    Row := GlobalRow - 1;
+  end;
+  if (Length(Values) >= FirstIndex+3) and (Values[FirstIndex+2] <> nil) then
+  begin
+    Column := PInteger(Values[FirstIndex+2])^ - 1;
+  end
+  else
+  begin
+    Column := GlobalColumn - 1;
+  end;
 end;
 
 function NodeDistances(const Index: integer): double;
@@ -909,7 +1011,8 @@ begin
           end
           else
           begin
-            result := (frmGoPhast.PhastGrid.ColumnPosition[Column + 1] - frmGoPhast.PhastGrid.ColumnPosition[Column - 1]) / 2;
+            result := (frmGoPhast.PhastGrid.ColumnPosition[Column + 1]
+              - frmGoPhast.PhastGrid.ColumnPosition[Column - 1]) / 2;
           end;
         end;
       end;
@@ -968,7 +1071,8 @@ begin
           end
           else
           begin
-            result := (frmGoPhast.PhastGrid.RowPosition[Row + 1] - frmGoPhast.PhastGrid.RowPosition[Row - 1]) / 2;
+            result := (frmGoPhast.PhastGrid.RowPosition[Row + 1]
+              - frmGoPhast.PhastGrid.RowPosition[Row - 1]) / 2;
           end;
         end;
       end;
@@ -1010,7 +1114,8 @@ begin
   result := frmGoPhast.PhastModel.LayerStructure.IsLayerSimulated(Layer);
 end;
 
-procedure ExtractColRowLayer(var Lay: Integer; var Row: Integer; var Col: Integer; Values: array of Pointer);
+procedure ExtractColRowLayer(var Lay, Row, Col: Integer;
+  Values: array of Pointer);
 begin
   if Values[2] <> nil then
   begin
@@ -1074,7 +1179,8 @@ begin
                 end
                 else
                 begin
-                  result := (frmGoPhast.PhastGrid.LayerElevation[Lay + 1] - frmGoPhast.PhastGrid.LayerElevation[Lay - 1]) / 2;
+                  result := (frmGoPhast.PhastGrid.LayerElevation[Lay + 1]
+                    - frmGoPhast.PhastGrid.LayerElevation[Lay - 1]) / 2;
                 end;
               end;
             end;
@@ -1087,7 +1193,9 @@ begin
       end;
     msModflow:
       begin
-        if (Lay < 0) or (Lay > frmGoPhast.ModflowGrid.LayerCount - 1) or (Row < 0) or (Row > frmGoPhast.ModflowGrid.RowCount - 1) or (Col < 0) or (Col > frmGoPhast.ModflowGrid.ColumnCount - 1) then
+        if (Lay < 0) or (Lay > frmGoPhast.ModflowGrid.LayerCount - 1)
+          or (Row < 0) or (Row > frmGoPhast.ModflowGrid.RowCount - 1)
+          or (Col < 0) or (Col > frmGoPhast.ModflowGrid.ColumnCount - 1) then
         begin
           Result := 0;
         end
@@ -1580,9 +1688,7 @@ begin
 end;
 
 procedure GetImportedValues(var ImportedValues: TValueArrayStorage;
-  const Values: array of Pointer);
-var
-  ImportedName: string;
+  const Values: array of Pointer; var ImportedName: string);
 begin
   if (Length(Values) > 0) and (Values[0] <> nil) then
   begin
@@ -1610,6 +1716,7 @@ begin
   end
   else
   begin
+    ImportedName := '';
     ImportedValues := GlobalCurrentScreenObject.CurrentValues;
   end;
 end;
@@ -1618,17 +1725,28 @@ function _ImportedScreenObjectValuesR(Values: array of pointer): double;
 var
   Index: integer;
   ImportedValues: TValueArrayStorage;
+  ImportedName: string;
+  ErrorMessage: string;
 begin
   result := 0;
   if GlobalCurrentScreenObject <> nil then
   begin
-    GetImportedValues(ImportedValues, Values);
+    GetImportedValues(ImportedValues, Values, ImportedName);
     if ImportedValues <> nil then
     begin
       Index := GlobalSection;
       Assert(Index >= 0);
       Assert(Index < ImportedValues.Count);
-      Assert(ImportedValues.DataType= rdtDouble);
+      if ImportedValues.DataType <> rdtDouble then
+      begin
+        ErrorMessage := 'The data accessed through '
+          + rsObjectImportedValuesR + 'are not real numbers.';
+        if ImportedName <> '' then
+        begin
+          ErrorMessage := ErrorMessage + ' (' + ImportedName + ')';
+        end;
+        raise Exception.Create(ErrorMessage);
+      end;
       result := ImportedValues.RealValues[Index];
     end;
   end;
@@ -1638,16 +1756,28 @@ function _ImportedScreenObjectValuesI(Values: array of pointer): integer;
 var
   Index: integer;
   ImportedValues: TValueArrayStorage;
+  ErrorMessage: string;
+  ImportedName: string;
 begin
   result := 0;
   if GlobalCurrentScreenObject <> nil then
   begin
-    GetImportedValues(ImportedValues, Values);
+    GetImportedValues(ImportedValues, Values, ImportedName);
     if ImportedValues <> nil then
     begin
       Index := GlobalSection;
       Assert(Index >= 0);
       Assert(Index < ImportedValues.Count);
+      if ImportedValues.DataType <> rdtInteger then
+      begin
+        ErrorMessage := 'The data accessed through '
+          + rsObjectImportedValuesI + 'are not integers.';
+        if ImportedName <> '' then
+        begin
+          ErrorMessage := ErrorMessage + ' (' + ImportedName + ')';
+        end;
+        raise Exception.Create(ErrorMessage);
+      end;
       Assert(ImportedValues.DataType= rdtInteger);
       result := ImportedValues.IntValues[Index];
     end;
@@ -1658,17 +1788,28 @@ function _ImportedScreenObjectValuesB(Values: array of pointer): boolean;
 var
   Index: integer;
   ImportedValues: TValueArrayStorage;
+  ErrorMessage: string;
+  ImportedName: string;
 begin
   result := False;
   if GlobalCurrentScreenObject <> nil then
   begin
-    GetImportedValues(ImportedValues, Values);
+    GetImportedValues(ImportedValues, Values, ImportedName);
     if ImportedValues <> nil then
     begin
       Index := GlobalSection;
       Assert(Index >= 0);
       Assert(Index < ImportedValues.Count);
-      Assert(ImportedValues.DataType= rdtBoolean);
+      if ImportedValues.DataType <> rdtBoolean then
+      begin
+        ErrorMessage := 'The data accessed through '
+          + rsObjectImportedValuesB + 'are not booleans.';
+        if ImportedName <> '' then
+        begin
+          ErrorMessage := ErrorMessage + ' (' + ImportedName + ')';
+        end;
+        raise Exception.Create(ErrorMessage);
+      end;
       result := ImportedValues.BooleanValues[Index];
     end;
   end;
@@ -1678,31 +1819,55 @@ function _ImportedScreenObjectValuesT(Values: array of pointer): string;
 var
   Index: integer;
   ImportedValues: TValueArrayStorage;
+  ErrorMessage: string;
+  ImportedName: string;
 begin
   result := '';
   if GlobalCurrentScreenObject <> nil then
   begin
-    GetImportedValues(ImportedValues, Values);
+    GetImportedValues(ImportedValues, Values, ImportedName);
     if ImportedValues <> nil then
     begin
       Index := GlobalSection;
       Assert(Index >= 0);
       Assert(Index < ImportedValues.Count);
-      Assert(ImportedValues.DataType= rdtString);
+      if ImportedValues.DataType <> rdtString then
+      begin
+        ErrorMessage := 'The data accessed through '
+          + rsObjectImportedValuesT + 'are not text.';
+        if ImportedName <> '' then
+        begin
+          ErrorMessage := ErrorMessage + ' (' + ImportedName + ')';
+        end;
+        raise Exception.Create(ErrorMessage);
+      end;
       result := ImportedValues.StringValues[Index];
     end;
   end;
 end;
 
-procedure UpdateCellValue(var CellValue: Double; Parameter: TModflowParameter;
-  Param: THufUsedParameter; PhastModel: TPhastModel; Column: Integer; Row: Integer);
+function GetDataSetValue(Column: Integer; Row: Integer;Layer: Integer;
+  const DataSetName: string): Double;
+var
+  DataArray: TDataArray;
+  PhastModel: TPhastModel;
+begin
+  PhastModel := frmGoPhast.PhastModel;
+  DataArray := PhastModel.GetDataSetByName(DataSetName);
+  Assert(DataArray <> nil);
+  DataArray.Initialize;
+  result := DataArray.RealData[Layer, Row, Column];
+end;
+
+
+procedure UpdateCellValue(var CellValue: Double;
+  Param: THufUsedParameter; PhastModel: TPhastModel; Column, Row: Integer;
+  var Updated: boolean);
 var
   Multiplier: Double;
-  MultiplierArray: TDataArray;
   ZoneArray: TDataArray;
-//  UseParam: Boolean;
+  Parameter: TModflowParameter;
 begin
-//  UseParam := True;
   if Param.UseZone then
   begin
     ZoneArray := PhastModel.GetDataSetByName(Param.ZoneDataSetName);
@@ -1715,83 +1880,290 @@ begin
   end;
   if Param.UseMultiplier then
   begin
-    MultiplierArray := PhastModel.GetDataSetByName(Param.MultiplierDataSetName);
-    Assert(MultiplierArray <> nil);
-    MultiplierArray.Initialize;
-    Multiplier := MultiplierArray.RealData[0, Row, Column];
+    Multiplier := GetDataSetValue(Column, Row, 0, Param.MultiplierDataSetName);
   end
   else
   begin
     Multiplier := 1;
   end;
+  Parameter := Param.Parameter;
   CellValue := CellValue + Multiplier * Parameter.Value;
+  Updated := True;
 end;
 
-function _HufKx(Values: array of pointer): double;
+function _BcfGetVcont(Values: array of pointer): double;
 var
   Layer: Integer;
   Row: Integer;
   Column: Integer;
-  LayerTop: Double;
-  LayerBottom: Double;
-  HufUnitIndex: Integer;
-  HydrogeologicUnits: THydrogeologicUnits;
-  HufUnit: THydrogeologicUnit;
   PhastModel: TPhastModel;
-  ThicknessDataArray: TDataArray;
-  HufThickness: Double;
-  TopDataArray: TDataArray;
-  HufTop: Double;
-  HufBottom: Double;
-  HufK: double;
+  KzDataArray: TDataArray;
+  TopLayer: Integer;
+  KzNonSimDataArray: TDataArray;
+  BottomLayer: Integer;
+  LayerIndex: Integer;
+  Grid: TModflowGrid;
+  LayerThickness: Double;
+  VK: Double;
+  ASum: double;
+begin
+  GetCellIndicies(Column, Row, Layer, Values);
+
+  result := 0;
+  PhastModel := frmGoPhast.PhastModel;
+  Grid := PhastModel.ModflowGrid;
+  if (Grid.LayerCount -1 <= Layer)
+    or (Layer < 0) then
+  begin
+    // VCont for bottom layer is always zero.
+    Exit;
+  end;
+
+  while not PhastModel.LayerStructure.IsLayerSimulated(Layer)
+    and (Layer >= 0) do
+  begin
+    Dec(Layer);
+  end;
+
+  KzNonSimDataArray := nil;
+  TopLayer := Layer;
+  Inc(Layer);
+  if not PhastModel.LayerStructure.IsLayerSimulated(Layer) then
+  begin
+    KzNonSimDataArray := PhastModel.GetDataSetByName(rsModflow_CBKz);
+    Assert(KzNonSimDataArray <> nil);
+    KzNonSimDataArray.Initialize;
+    Inc(Layer);
+  end;
+  BottomLayer := Layer;
+
+  KzDataArray := PhastModel.GetDataSetByName(rsKz);
+  Assert(KzDataArray <> nil);
+  KzDataArray.Initialize;
+
+  ASum := 0.0;
+  for LayerIndex := TopLayer to BottomLayer do
+  begin
+    LayerThickness := GetLayerHeight(Column, Row, LayerIndex);
+    if LayerThickness <= 0 then
+    begin
+      Exit;
+    end;
+    if PhastModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+    begin
+      VK := KzDataArray.RealData[LayerIndex, Row, Column];
+      LayerThickness := LayerThickness/2;
+    end
+    else
+    begin
+      VK := KzNonSimDataArray.RealData[LayerIndex, Row, Column];
+    end;
+    if VK <= 0 then
+    begin
+      Exit;
+    end;
+    ASum := ASum + LayerThickness/VK;
+  end;
+  if ASum > 0 then
+  begin
+    result := 1/ASum;
+  end;
+
+end;
+
+function HguHorizontalAnisotrpy(HufUnit: THydrogeologicUnit; Column, Row: integer): double;
+var
+  HorizontalAnisotropy: double;
   ParamIndex: Integer;
   Param: THufUsedParameter;
   Parameter: TModflowParameter;
-  ZoneArray: TDataArray;
-  MultiplierArray: TDataArray;
-  Multiplier: Double;
-  CumulativeHufThickness: double;
-  InitialHeadDataArray: TDataArray;
-  InitialHead: Double;
-  LayerGroup: TLayerGroup;
-  KDEP_Used: Boolean;
-  RefSurfDataArray: TDataArray;
-  GroundSurface: Double;
-  ModelTopArray: TDataArray;
-  DepthToTop: Double;
-  DepthToBottom: Double;
-  Lambda: double;
-  KDepMult: double;
-//  AValue: Double;
+  PhastModel: TPhastModel;
+  HufThickness: Double;
+  HaniUsed: boolean;
 begin
-// This function returns the hydraulic conductivity of a cell as calculated
-// using the method in the HUF package. At present, it accounts
-// for KDEP but not for LVDA.
+  result := 1;
+  PhastModel := frmGoPhast.PhastModel;
+  HufThickness := GetDataSetValue(Column, Row, 0, HufUnit.ThickessDataArrayName);
+  if HufThickness <= 0 then
+  begin
+    Exit;
+  end;
 
-  if(Length(Values) >= 1) and (Values[0] <> nil) then
+  HaniUsed := False;
+  HorizontalAnisotropy := 0.;
+  for ParamIndex := 0 to HufUnit.HufUsedParameters.Count - 1 do
   begin
-    Layer := PInteger(Values[0])^ - 1;
-  end
-  else
-  begin
-    Layer := GlobalLayer-1;
+    Param := HufUnit.HufUsedParameters[ParamIndex];
+    Parameter := Param.Parameter;
+    if Parameter.ParameterType = ptHUF_HANI then
+    begin
+      UpdateCellValue(HorizontalAnisotropy, Param, PhastModel, Column, Row, HaniUsed);
+    end
   end;
-  if(Length(Values) >= 2) and (Values[1] <> nil) then
+  if not HaniUsed then
   begin
-    Row := PInteger(Values[1])^ - 1;
-  end
-  else
-  begin
-    Row := GlobalRow-1;
+    HorizontalAnisotropy := HufUnit.HorizontalAnisotropy;
   end;
-  if(Length(Values) >= 3) and (Values[2] <> nil) then
+  result := HorizontalAnisotropy;
+
+end;
+
+function HguTransmissivity(HufUnit: THydrogeologicUnit; Column, Row: integer): double;
+var
+  KDEP_Used: Boolean;
+  HufK: double;
+  Lambda: double;
+  ParamIndex: Integer;
+  Param: THufUsedParameter;
+  Parameter: TModflowParameter;
+  PhastModel: TPhastModel;
+  KDepMult: double;
+  GroundSurface: Double;
+  HufTop: Double;
+  DepthToTop: Double;
+  HufThickness: Double;
+  HufBottom: Double;
+  DepthToBottom: Double;
+  Kx_Used: Boolean;
+begin
+  result := 0;
+  PhastModel := frmGoPhast.PhastModel;
+  HufThickness := GetDataSetValue(Column, Row, 0, HufUnit.ThickessDataArrayName);
+  if HufThickness <= 0 then
   begin
-    Column := PInteger(Values[2])^ - 1;
-  end
-  else
-  begin
-    Column := GlobalColumn-1;
+    Exit;
   end;
+
+  KDEP_Used := False;
+  Kx_Used := False;
+  HufK := 0.;
+  Lambda := 0.;
+  for ParamIndex := 0 to HufUnit.HufUsedParameters.Count - 1 do
+  begin
+    Param := HufUnit.HufUsedParameters[ParamIndex];
+    Parameter := Param.Parameter;
+    if Parameter.ParameterType = ptHUF_HK then
+    begin
+      UpdateCellValue(HufK, Param, PhastModel, Column, Row, Kx_Used);
+    end
+    else if Parameter.ParameterType = ptHUF_KDEP then
+    begin
+      UpdateCellValue(Lambda, Param, PhastModel, Column, Row, KDEP_Used);
+    end;
+  end;
+  if not Kx_Used then
+  begin
+    Exit;
+  end;
+
+  KDepMult := 1.;
+  if KDEP_Used then
+  begin
+    if PhastModel.ModflowPackages.HufPackage.ReferenceChoice
+      = hrcReferenceLayer then
+    begin
+      GroundSurface := GetDataSetValue(Column, Row, 0, StrHufReferenceSurface);
+    end
+    else
+    begin
+      GroundSurface := GetDataSetValue(Column, Row, 0, StrModelTop);
+    end;
+
+    HufTop := GetDataSetValue(Column, Row, 0, HufUnit.TopDataArrayName);
+
+    HufBottom := HufTop - HufThickness;
+
+    DepthToTop := GroundSurface - HufTop;
+    DepthToBottom := GroundSurface - HufBottom;
+    if Abs(2*(DepthToTop-DepthToBottom)/
+      (DepthToBottom+DepthToTop)) < 1E-6 then
+    begin
+      KDepMult := 1.;
+    end
+    else
+    begin
+      KDepMult := Power(10.,(-Lambda*DepthToBottom))
+        - Power(10.,(-Lambda*DepthToTop));
+      KDepMult := KDepMult / (-Lambda*Ln(10.0)*(DepthToBottom-DepthToTop))
+    end;
+  end;
+  // result is in terms of transmissivity at this point.
+  result := HufK * KDepMult *HufThickness;
+
+end;
+
+procedure GetLayerTopAndBottom(Head: double; Layer, Row, Column: Integer;
+  var LayerBottom, LayerTop: Double; UseHead: boolean = True);
+var
+  LayerGroup: TLayerGroup;
+  PhastModel: TPhastModel;
+begin
+  PhastModel := frmGoPhast.PhastModel;
+  LayerTop := GetLayerPosition(Layer, Row, Column);
+  LayerBottom := GetLayerPosition(Layer + 1, Row, Column);
+  LayerGroup := PhastModel.LayerStructure.GetLayerGroupByLayer(Layer);
+  if (LayerGroup.AquiferType <> 0) and UseHead then
+  begin
+    if Head < LayerTop then
+    begin
+      LayerTop := Head;
+    end;
+  end;
+end;
+
+function HufUnitParam(HufUnit: THydrogeologicUnit; Column, Row: integer;
+  Paramtype: TParameterType; var Updated: boolean): double;
+var
+  CellValue: double;
+  ParamIndex: Integer;
+  Param: THufUsedParameter;
+  Parameter: TModflowParameter;
+  PhastModel: TPhastModel;
+  HufThickness: Double;
+begin
+  result := 0;
+  PhastModel := frmGoPhast.PhastModel;
+  HufThickness := GetDataSetValue(Column, Row, 0, HufUnit.ThickessDataArrayName);
+  if HufThickness <= 0 then
+  begin
+    Exit;
+  end;
+
+  CellValue := 0.;
+  for ParamIndex := 0 to HufUnit.HufUsedParameters.Count - 1 do
+  begin
+    Param := HufUnit.HufUsedParameters[ParamIndex];
+    Parameter := Param.Parameter;
+    if Parameter.ParameterType = Paramtype then
+    begin
+      UpdateCellValue(CellValue, Param, PhastModel, Column, Row, Updated);
+    end
+  end;
+
+  // result will be divided by total cell thickness later.
+  result := CellValue //* HufThickness;
+end;
+
+function GetHufSy(Values: array of pointer): double;
+var
+  Head: double;
+  Column: Integer;
+  Row: Integer;
+  Layer: Integer;
+  PhastModel: TPhastModel;
+  LayerBottom: Double;
+  LayerTop: Double;
+  HydrogeologicUnits: THydrogeologicUnits;
+  HufUnitIndex: Integer;
+  HufUnit: THydrogeologicUnit;
+  HufThickness: Double;
+  HufTop: Double;
+  HufBottom: Double;
+  Updated: Boolean;
+begin
+  Assert(Length(Values) >= 1);
+  Head := PDouble(Values[0])^;
+  GetCellIndicies(Column, Row, Layer, Values, 1);
 
   PhastModel := frmGoPhast.PhastModel;
 
@@ -1800,45 +2172,21 @@ begin
   begin
     Exit;
   end;
-
-  LayerTop := GetLayerPosition (Layer, Row, Column);
-  LayerBottom := GetLayerPosition (Layer+1, Row, Column);
-
-  LayerGroup := PhastModel.LayerStructure.GetLayerGroupByLayer(Layer);
-  if LayerGroup.AquiferType <> 0 then
-  begin
-    InitialHeadDataArray := PhastModel.GetDataSetByName(rsModflow_Initial_Head);
-    InitialHeadDataArray.Initialize;
-    InitialHead := InitialHeadDataArray.RealData[Layer, Row, Column];
-    if InitialHead < LayerTop then
-    begin
-      LayerTop := InitialHead;
-    end;
-  end;
+  GetLayerTopAndBottom(Head, Layer, Row, Column, LayerBottom, LayerTop);
 
   if LayerTop <= LayerBottom then
   begin
     Exit;
   end;
-  
+
   HydrogeologicUnits := PhastModel.HydrogeologicUnits;
-  CumulativeHufThickness := 0.;
   for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
   begin
-    HufK := 0.;
     HufUnit := HydrogeologicUnits[HufUnitIndex];
-    ThicknessDataArray := PhastModel.GetDataSetByName(
-      HufUnit.ThickessDataArrayName);
-    Assert(ThicknessDataArray <> nil);
-    ThicknessDataArray.Initialize;
-    HufThickness := ThicknessDataArray.RealData[0, Row, Column];
+    HufThickness := GetDataSetValue(Column, Row, 0, HufUnit.ThickessDataArrayName);
     if HufThickness > 0 then
     begin
-      TopDataArray := PhastModel.GetDataSetByName(
-        HufUnit.TopDataArrayName);
-      Assert(TopDataArray <> nil);
-      TopDataArray.Initialize;
-      HufTop := TopDataArray.RealData[0, Row, Column];
+      HufTop := GetDataSetValue(Column, Row, 0, HufUnit.TopDataArrayName);
       if HufTop > LayerBottom then
       begin
         HufBottom := HufTop - HufThickness;
@@ -1853,59 +2201,111 @@ begin
             HufTop := LayerTop
           end;
           HufThickness := HufTop - HufBottom;
-          Lambda := 0.;
+          if HufThickness > 0 then
+          begin
+            if (HufTop >= Head) and (Head >= HufBottom) then
+            begin
+              result := HufUnitParam(HufUnit, Column, Row, ptHUF_SY, Updated);
+              Exit;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+
+end;
+
+function HufKHorizontal(Values: array of pointer;
+  UseHorizontalAnisotropy: boolean): double;
+var
+  Layer: Integer;
+  Row: Integer;
+  Column: Integer;
+  LayerTop: Double;
+  LayerBottom: Double;
+  HufUnitIndex: Integer;
+  HydrogeologicUnits: THydrogeologicUnits;
+  HufUnit: THydrogeologicUnit;
+  PhastModel: TPhastModel;
+  HufThickness: Double;
+  HufTop: Double;
+  HufBottom: Double;
+  CumulativeHufThickness: double;
+  HorizontalAnisotropy: double;
+  Head: double;
+begin
+  // does not account for LVDA.  SGWF2HUF7VDHT?
+
+  // affected by simulated layer
+  // affected by rsModflow_Initial_Head if any layer type is not equal to zero.
+  // affected by tops and thicknesses of all HUF units.
+  // affected by tops and bottoms of all layers.
+  // affected by zone arrays and multiplier arrays of ptHUF_HK
+  // and ptHUF_KDEP parameters
+  // may be affected by StrHufReferenceSurface either
+  // or StrModelTop depending on
+  // PhastModel.ModflowPackages.HufPackage.ReferenceChoice
+  // and whether or not KDEP is used.
+
+  Assert(Length(Values) >= 1);
+  Head := PDouble(Values[0])^;
+
+  GetCellIndicies(Column, Row, Layer, Values, 1);
+
+  PhastModel := frmGoPhast.PhastModel;
+
+  result := 0;
+  if not PhastModel.LayerStructure.IsLayerSimulated(Layer) then
+  begin
+    Exit;
+  end;
+  GetLayerTopAndBottom(Head, Layer, Row, Column, LayerBottom, LayerTop);
+
+  if LayerTop <= LayerBottom then
+  begin
+    Exit;
+  end;
+
+  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  CumulativeHufThickness := 0.;
+  for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
+  begin
+    HufUnit := HydrogeologicUnits[HufUnitIndex];
+    HufThickness := GetDataSetValue(Column, Row, 0,
+      HufUnit.ThickessDataArrayName);
+    if HufThickness > 0 then
+    begin
+      HufTop := GetDataSetValue(Column, Row, 0, HufUnit.TopDataArrayName);
+      if HufTop > LayerBottom then
+      begin
+        HufBottom := HufTop - HufThickness;
+        if HufBottom < LayerTop then
+        begin
+          if HufBottom < LayerBottom then
+          begin
+            HufBottom := LayerBottom;
+          end;
+          if HufTop > LayerTop then
+          begin
+            HufTop := LayerTop
+          end;
+          HufThickness := HufTop - HufBottom;
           if HufThickness > 0 then
           begin
             CumulativeHufThickness := CumulativeHufThickness + HufThickness;
-            KDEP_Used := False;
-            for ParamIndex := 0 to HufUnit.HufUsedParameters.Count - 1 do
-            begin
-              Param := HufUnit.HufUsedParameters[ParamIndex];
-              Parameter := Param.Parameter;
-              if Parameter.ParameterType = ptHUF_HK then
-              begin
-                UpdateCellValue(HufK, Parameter, Param, PhastModel, Column, Row);
-              end
-              else if Parameter.ParameterType = ptHUF_KDEP then
-              begin
-                KDEP_Used := True;
-                UpdateCellValue(Lambda, Parameter, Param, PhastModel, Column, Row);
-              end;
-            end;
-
-            KDepMult := 1.;
-            if KDEP_Used then
-            begin
-              if PhastModel.ModflowPackages.HufPackage.ReferenceChoice
-                = hrcReferenceLayer then
-              begin
-                RefSurfDataArray := PhastModel.GetDataSetByName(
-                  StrHufReferenceSurface);
-                RefSurfDataArray.Initialize;
-                GroundSurface := RefSurfDataArray.RealData[0,Row,Column];
-              end
-              else
-              begin
-                ModelTopArray := PhastModel.GetDataSetByName(StrModelTop);
-                ModelTopArray.Initialize;
-                GroundSurface := ModelTopArray.RealData[0,Row,Column];
-              end;
-              DepthToTop := GroundSurface - HufTop;
-              DepthToBottom := GroundSurface - HufBottom;
-              if Abs(2*(DepthToTop-DepthToBottom)/
-                (DepthToBottom+DepthToTop)) < 1E-6 then
-              begin
-                KDepMult := 1.;
-              end
-              else
-              begin
-                KDepMult := Power(10.,(-Lambda*DepthToBottom))
-                  - Power(10.,(-Lambda*DepthToTop));
-                KDepMult := KDepMult / (-Lambda*Ln(10.0)*(DepthToBottom-DepthToTop))
-              end;
-            end;
             // result is in terms of transmissivity at this point.
-            result := result + HufK * KDepMult *HufThickness;
+            if UseHorizontalAnisotropy then
+            begin
+              HorizontalAnisotropy := HguHorizontalAnisotrpy(
+                HufUnit, Column, Row);
+            end
+            else
+            begin
+              HorizontalAnisotropy := 1.;
+            end;
+            result := result + HorizontalAnisotropy*
+              HguTransmissivity(HufUnit, Column, Row);
           end;
         end;
       end;
@@ -1916,6 +2316,321 @@ begin
     // convert transmissivity back to hydraulic conductivity.
     result := result/CumulativeHufThickness;
   end;
+end;
+
+function _HufKx(Values: array of pointer): double;
+begin
+  result := HufKHorizontal(Values, False);
+  // does not account for LVDA.  SGWF2HUF7VDHT?
+
+  // affected by simulated layer
+  // affected by rsModflow_Initial_Head if any layer type is not equal to zero.
+  // affected by tops and thicknesses of all HUF units.
+  // affected by tops and bottoms of all layers.
+  // affected by zone arrays and multiplier arrays of ptHUF_HK
+  // and ptHUF_KDEP parameters
+  // may be affected by StrHufReferenceSurface either
+  // or StrModelTop depending on
+  // PhastModel.ModflowPackages.HufPackage.ReferenceChoice
+  // and whether or not KDEP is used.
+end;
+
+function _HufAverageKY(Values: array of pointer): double;
+begin
+  result := HufKHorizontal(Values, True);
+  // does not account for LVDA.  SGWF2HUF7VDHT?
+
+  // affected by simulated layer
+  // affected by rsModflow_Initial_Head if any layer type is not equal to zero.
+  // affected by tops and thicknesses of all HUF units.
+  // affected by tops and bottoms of all layers.
+  // affected by zone arrays and multiplier arrays of ptHUF_HK
+  // and ptHUF_KDEP parameters
+  // may be affected by StrHufReferenceSurface either
+  // or StrModelTop depending on
+  // PhastModel.ModflowPackages.HufPackage.ReferenceChoice
+  // and whether or not KDEP is used.
+  // affected by zone arrays and multiplier arrays of ptHUF_HANI
+  // parameters
+end;
+
+function _HufKZ(Values: array of pointer): double;
+var
+  Column: Integer;
+  Row: Integer;
+  Layer: Integer;
+  PhastModel: TPhastModel;
+  UpperLayerBottom: Double;
+  UpperLayerTop: Double;
+  LowerLayerBottom: Double;
+  LowerLayerTop: Double;
+  IntervalTop: Double;
+  IntervalBottom: Double;
+  HydrogeologicUnits: THydrogeologicUnits;
+  CumulativeHufThickness: double;
+  HufUnitIndex: Integer;
+  HufUnit: THydrogeologicUnit;
+  HufThickness: Double;
+  HufTop: Double;
+  HufBottom: Double;
+  ParamIndex: Integer;
+  Param: THufUsedParameter;
+  Parameter: TModflowParameter;
+  VK: double;
+  Vani_Used: Boolean;
+  Vani: double;
+  VK_Used: Boolean;
+  UpperHead: double;
+  HufIntervalThickness: Double;
+//  LowerHead: double;
+begin
+  // affected by everything in _HufKx plus the
+  // by zone arrays and multiplier arrays of ptHUF_VK and ptHUF_VANI
+  // parameters
+  // affected by HufUnit.VK_Method.
+
+  Assert(Length(Values) >= 1);
+  UpperHead := PDouble(Values[0])^;
+//  LowerHead := PDouble(Values[2])^;
+  GetCellIndicies(Column, Row, Layer, Values, 1);
+
+  PhastModel := frmGoPhast.PhastModel;
+
+  result := 0;
+  if not PhastModel.LayerStructure.IsLayerSimulated(Layer) then
+  begin
+    Exit;
+  end;
+
+  if (PhastModel.ModflowGrid.LayerCount -1 <= Layer)
+    or (Layer < 0) then
+  begin
+    // no vertical hydraulic conductivity is defined
+    // below the middle of the bottom layer.
+    Exit;
+  end;
+
+  GetLayerTopAndBottom(UpperHead, Layer, Row, Column, UpperLayerBottom, UpperLayerTop);
+
+  if UpperLayerTop <= UpperLayerBottom then
+  begin
+    Exit;
+  end;
+
+  GetLayerTopAndBottom(UpperHead, Layer+1, Row, Column,
+    LowerLayerBottom, LowerLayerTop, False);
+
+  if LowerLayerTop <= LowerLayerBottom then
+  begin
+    Exit;
+  end;
+
+  IntervalTop := (UpperLayerTop + UpperLayerBottom)/2;
+  IntervalBottom := (LowerLayerTop + LowerLayerBottom)/2;
+
+  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  CumulativeHufThickness := 0.;
+  for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
+  begin
+    HufUnit := HydrogeologicUnits[HufUnitIndex];
+    HufThickness := GetDataSetValue(Column, Row, 0, HufUnit.ThickessDataArrayName);
+    if HufThickness > 0 then
+    begin
+      HufTop := GetDataSetValue(Column, Row, 0, HufUnit.TopDataArrayName);
+      if HufTop > IntervalBottom then
+      begin
+        HufBottom := HufTop - HufThickness;
+        if HufBottom < IntervalTop then
+        begin
+          if HufBottom < IntervalBottom then
+          begin
+            HufBottom := IntervalBottom;
+          end;
+          if HufTop > IntervalTop then
+          begin
+            HufTop := IntervalTop
+          end;
+          HufIntervalThickness := HufTop - HufBottom;
+          if HufIntervalThickness > 0 then
+          begin
+            CumulativeHufThickness := CumulativeHufThickness + HufIntervalThickness;
+
+            VK := 0.;
+            Vani := 0.;
+            Vani_Used := False;
+            VK_Used := False;
+
+            for ParamIndex := 0 to HufUnit.HufUsedParameters.Count - 1 do
+            begin
+              Param := HufUnit.HufUsedParameters[ParamIndex];
+              Parameter := Param.Parameter;
+              if Parameter.ParameterType = ptHUF_VK then
+              begin
+                UpdateCellValue(VK, Param, PhastModel, Column, Row, VK_Used);
+              end
+              else if Parameter.ParameterType = ptHUF_VANI then
+              begin
+                UpdateCellValue(Vani, Param, PhastModel, Column, Row, Vani_Used);
+              end;
+            end;
+
+            case HufUnit.VK_Method of
+              vkVK: 
+                begin
+                  // do nothing.
+                end;
+              vkVANI:
+                begin
+                  if not Vani_Used then
+                  begin
+                    Vani := HufUnit.VerticalAnisotropy;
+                  end;
+                  if Vani <= 0 then
+                  begin
+                    Vani := 1;
+                  end;
+                  VK := HguTransmissivity(HufUnit, Column, Row)
+                    /HufThickness/Vani;
+//                  result := result +
+//                    HguTransmissivity(HufUnit, Column, Row)/Vani;
+                end;
+              else Assert(False);
+            end;
+            result := result + HufIntervalThickness/VK;
+          end;
+        end;
+      end;
+    end;
+  end;
+  if CumulativeHufThickness > 0 then
+  begin
+    result := CumulativeHufThickness/result;
+  end;
+end;
+
+{function HufUnitParam(HufUnit: THydrogeologicUnit; Column, Row: integer;
+  Paramtype: TParameterType; var Updated: boolean): double;
+var
+  CellValue: double;
+  ParamIndex: Integer;
+  Param: THufUsedParameter;
+  Parameter: TModflowParameter;
+  PhastModel: TPhastModel;
+  HufThickness: Double;
+begin
+  result := 0;
+  PhastModel := frmGoPhast.PhastModel;
+  HufThickness := GetDataSetValue(Column, Row, 0, HufUnit.ThickessDataArrayName);
+  if HufThickness <= 0 then
+  begin
+    Exit;
+  end;
+
+  CellValue := 0.;
+  for ParamIndex := 0 to HufUnit.HufUsedParameters.Count - 1 do
+  begin
+    Param := HufUnit.HufUsedParameters[ParamIndex];
+    Parameter := Param.Parameter;
+    if Parameter.ParameterType = Paramtype then
+    begin
+      UpdateCellValue(CellValue, Param, PhastModel, Column, Row, Updated);
+    end
+  end;
+
+  // result will be divided by total cell thickness later.
+  result := CellValue //* HufThickness;
+end; }
+
+function HufAveragParam(Values: array of pointer;
+  Paramtype: TParameterType): double;
+var
+  Layer: Integer;
+  Row: Integer;
+  Column: Integer;
+  LayerTop: Double;
+  LayerBottom: Double;
+  HufUnitIndex: Integer;
+  HydrogeologicUnits: THydrogeologicUnits;
+  HufUnit: THydrogeologicUnit;
+  PhastModel: TPhastModel;
+  HufThickness: Double;
+  HufTop: Double;
+  HufBottom: Double;
+  CumulativeHufThickness: double;
+  Updated: boolean;
+  Head: double;
+begin
+  // affected by simulated layer
+  // affected by tops and thicknesses of all HUF units.
+  // affected by tops and bottoms of all layers.
+  // affected by zone arrays and multiplier arrays of Paramtype
+
+  Assert(Length(Values) >= 1);
+  Head := PDouble(Values[0])^;
+  GetCellIndicies(Column, Row, Layer, Values, 1);
+
+  PhastModel := frmGoPhast.PhastModel;
+
+  result := 0;
+  if not PhastModel.LayerStructure.IsLayerSimulated(Layer) then
+  begin
+    Exit;
+  end;
+  GetLayerTopAndBottom(Head, Layer, Row, Column, LayerBottom, LayerTop);
+
+  if LayerTop <= LayerBottom then
+  begin
+    Exit;
+  end;
+
+  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  CumulativeHufThickness := 0.;
+  for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
+  begin
+    HufUnit := HydrogeologicUnits[HufUnitIndex];
+    HufThickness := GetDataSetValue(Column, Row, 0, HufUnit.ThickessDataArrayName);
+    if HufThickness > 0 then
+    begin
+      HufTop := GetDataSetValue(Column, Row, 0, HufUnit.TopDataArrayName);
+      if HufTop > LayerBottom then
+      begin
+        HufBottom := HufTop - HufThickness;
+        if HufBottom < LayerTop then
+        begin
+          if HufBottom < LayerBottom then
+          begin
+            HufBottom := LayerBottom;
+          end;
+          if HufTop > LayerTop then
+          begin
+            HufTop := LayerTop
+          end;
+          HufThickness := HufTop - HufBottom;
+          if HufThickness > 0 then
+          begin
+            CumulativeHufThickness := CumulativeHufThickness + HufThickness;
+            result := result + HufThickness*
+              HufUnitParam(HufUnit, Column, Row, Paramtype, Updated);
+          end;
+        end;
+      end;
+    end;
+  end;
+  if CumulativeHufThickness > 0 then
+  begin
+    // convert transmissivity back to hydraulic conductivity.
+    result := result/CumulativeHufThickness;
+  end;
+end;
+
+function _HufSS(Values: array of pointer): double;
+begin
+  result := HufAveragParam(Values, ptHUF_SS);
+end;
+
+function _HufAverageSY(Values: array of pointer): double;
+begin
+  result := HufAveragParam(Values, ptHUF_SY);
 end;
 
 { TNodeInterpolateExpression }
@@ -2067,6 +2782,369 @@ begin
     or (Variable.Name = UpperCase(rsModflowSpecifiedHead));
 end;
 
+{ TBcfVcont }
+
+function TBcfVcont.GetVariablesUsed: TStringList;
+var
+  Index: Integer;
+  GeoUnit: TLayerGroup;
+begin
+  result := inherited GetVariablesUsed;
+  result.Add(rsKz);
+  if frmGoPhast.PhastModel.LayerStructure.NonSimulatedLayersPresent then
+  begin
+    result.Add(rsModflow_CBKz);
+  end;
+  for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  begin
+    GeoUnit := frmGoPhast.PhastModel.LayerStructure[Index];
+    result.Add(GeoUnit.DataArrayName);
+  end;
+end;
+
+function TBcfVcont.UsesVariable(const Variable: TCustomVariable): boolean;
+var
+  Index: Integer;
+  GeoUnit: TLayerGroup;
+begin
+  result := inherited UsesVariable(Variable)
+    or SameText(Variable.Name, rsKz)
+    or (SameText(Variable.Name, rsModflow_CBKz)
+    and frmGoPhast.PhastModel.LayerStructure.NonSimulatedLayersPresent);
+  if not result then
+  begin
+    for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+    begin
+      GeoUnit := frmGoPhast.PhastModel.LayerStructure[Index];
+      result := SameText(Variable.Name, GeoUnit.DataArrayName);
+      if result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+{ THufKx }
+
+function THufKx.GetVariablesUsed: TStringList;
+var
+  PhastModel: TPhastModel;
+  HydrogeologicUnits: THydrogeologicUnits;
+  HufUnitIndex: Integer;
+  HufUnit: THydrogeologicUnit;
+  ParamIndex: Integer;
+  Param: THufUsedParameter;
+  Parameter: TModflowParameter;
+  KDEP_Used: Boolean;
+  Index: Integer;
+  GeoUnit: TLayerGroup;
+  InitialHeadUsed: Boolean;
+begin
+  result := inherited GetVariablesUsed;
+
+  PhastModel := frmGoPhast.PhastModel;
+
+  InitialHeadUsed := False;
+  for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  begin
+    GeoUnit := frmGoPhast.PhastModel.LayerStructure[Index];
+    result.Add(GeoUnit.DataArrayName);
+    if GeoUnit.AquiferType <> 0 then
+    begin
+      InitialHeadUsed := True;
+    end;
+  end;
+
+  if InitialHeadUsed then
+  begin
+    result.Add(rsModflow_Initial_Head);
+  end;
+
+  KDEP_Used := False;
+  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
+  begin
+    HufUnit := HydrogeologicUnits[HufUnitIndex];
+    result.Add(HufUnit.TopDataArrayName);
+    result.Add(HufUnit.ThickessDataArrayName);
+    for ParamIndex := 0 to HufUnit.HufUsedParameters.Count - 1 do
+    begin
+      Param := HufUnit.HufUsedParameters[ParamIndex];
+      Parameter := Param.Parameter;
+      if Parameter.ParameterType = ptHUF_HK then
+      begin
+        if Param.UseZone then
+        begin
+          result.Add(Param.ZoneDataSetName);
+        end;
+        if Param.UseMultiplier then
+        begin
+          result.Add(Param.MultiplierDataSetName);
+        end;
+      end
+      else if Parameter.ParameterType = ptHUF_KDEP then
+      begin
+        KDEP_Used := True;
+        if Param.UseZone then
+        begin
+          result.Add(Param.ZoneDataSetName);
+        end;
+        if Param.UseMultiplier then
+        begin
+          result.Add(Param.MultiplierDataSetName);
+        end;
+      end;
+    end;
+  end;
+
+  if KDEP_Used then
+  begin
+    case PhastModel.ModflowPackages.HufPackage.ReferenceChoice of
+      hrcModelTop:
+        begin
+//          StrModelTop added previously.
+//          result.Add(StrModelTop);
+        end;
+      hrcReferenceLayer:
+        begin
+          result.Add(StrHufReferenceSurface);
+        end;
+      else Assert(False);
+    end;
+  end;
+
+end;
+
+{
+function THufKx.UsesVariable(const Variable: TCustomVariable): boolean;
+var
+  List: TStringList;
+begin
+  List := GetVariablesUsed;
+  result := List.IndexOf(Variable.Name) >= 0;
+//  result := inherited UsesVariable(Variable)
+//    or SameText(Variable.Name, rsModflow_Initial_Head)
+//    or (SameText(Variable.Name, rsModflow_CBKz)
+//    and frmGoPhast.PhastModel.LayerStructure.NonSimulatedLayersPresent);
+//  if not result then
+//  begin
+//    for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+//    begin
+//      GeoUnit := frmGoPhast.PhastModel.LayerStructure[Index];
+//      result := SameText(Variable.Name, GeoUnit.DataArrayName);
+//      if result then
+//      begin
+//        Exit;
+//      end;
+//    end;
+//  end;
+end;
+}
+
+{ THufKy }
+
+function THufKy.GetVariablesUsed: TStringList;
+var
+  PhastModel: TPhastModel;
+  HydrogeologicUnits: THydrogeologicUnits;
+  HufUnitIndex: Integer;
+  HufUnit: THydrogeologicUnit;
+  ParamIndex: Integer;
+  Param: THufUsedParameter;
+  Parameter: TModflowParameter;
+begin
+  result := inherited GetVariablesUsed;
+  PhastModel := frmGoPhast.PhastModel;
+  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
+  begin
+    HufUnit := HydrogeologicUnits[HufUnitIndex];
+    for ParamIndex := 0 to HufUnit.HufUsedParameters.Count - 1 do
+    begin
+      Param := HufUnit.HufUsedParameters[ParamIndex];
+      Parameter := Param.Parameter;
+      if Parameter.ParameterType = ptHUF_HANI then
+      begin
+        if Param.UseZone then
+        begin
+          result.Add(Param.ZoneDataSetName);
+        end;
+        if Param.UseMultiplier then
+        begin
+          result.Add(Param.MultiplierDataSetName);
+        end;
+      end;
+    end;
+  end;
+end;
+
+{ THufKz }
+
+function THufKz.GetVariablesUsed: TStringList;
+var
+  PhastModel: TPhastModel;
+  HydrogeologicUnits: THydrogeologicUnits;
+  HufUnitIndex: Integer;
+  HufUnit: THydrogeologicUnit;
+  ParamIndex: Integer;
+  Param: THufUsedParameter;
+  Parameter: TModflowParameter;
+begin
+  result := inherited GetVariablesUsed;
+  PhastModel := frmGoPhast.PhastModel;
+  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
+  begin
+    HufUnit := HydrogeologicUnits[HufUnitIndex];
+    for ParamIndex := 0 to HufUnit.HufUsedParameters.Count - 1 do
+    begin
+      Param := HufUnit.HufUsedParameters[ParamIndex];
+      Parameter := Param.Parameter;
+      if Parameter.ParameterType in [ptHUF_VK, ptHUF_VANI] then
+      begin
+        if Param.UseZone then
+        begin
+          result.Add(Param.ZoneDataSetName);
+        end;
+        if Param.UseMultiplier then
+        begin
+          result.Add(Param.MultiplierDataSetName);
+        end;
+      end;
+    end;
+  end;
+end;
+
+{ TCustomHufExpression }
+
+function TCustomHufExpression.UsesVariable(
+  const Variable: TCustomVariable): boolean;
+var
+  List: TStringList;
+begin
+  List := GetVariablesUsed;
+  result := List.IndexOf(Variable.Name) >= 0;
+end;
+
+{ THufSS }
+
+function THufSS.GetVariablesUsed: TStringList;
+var
+  PhastModel: TPhastModel;
+  Index: Integer;
+  GeoUnit: TLayerGroup;
+  HydrogeologicUnits: THydrogeologicUnits;
+  HufUnitIndex: Integer;
+  HufUnit: THydrogeologicUnit;
+  ParamIndex: Integer;
+  Param: THufUsedParameter;
+  Parameter: TModflowParameter;
+  InitialHeadUsed: Boolean;
+begin
+  result := inherited GetVariablesUsed;
+
+  PhastModel := frmGoPhast.PhastModel;
+  InitialHeadUsed := False;
+  for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  begin
+    GeoUnit := frmGoPhast.PhastModel.LayerStructure[Index];
+    result.Add(GeoUnit.DataArrayName);
+    if GeoUnit.AquiferType <> 0 then
+    begin
+      InitialHeadUsed := True;
+    end;
+  end;
+
+  if InitialHeadUsed then
+  begin
+    result.Add(rsModflow_Initial_Head);
+  end;
+
+  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
+  begin
+    HufUnit := HydrogeologicUnits[HufUnitIndex];
+    result.Add(HufUnit.TopDataArrayName);
+    result.Add(HufUnit.ThickessDataArrayName);
+    for ParamIndex := 0 to HufUnit.HufUsedParameters.Count - 1 do
+    begin
+      Param := HufUnit.HufUsedParameters[ParamIndex];
+      Parameter := Param.Parameter;
+      if Parameter.ParameterType = ptHUF_SS then
+      begin
+        if Param.UseZone then
+        begin
+          result.Add(Param.ZoneDataSetName);
+        end;
+        if Param.UseMultiplier then
+        begin
+          result.Add(Param.MultiplierDataSetName);
+        end;
+      end;
+    end;
+  end;
+end;
+
+{ THufSY }
+
+function THufSY.GetVariablesUsed: TStringList;
+var
+  PhastModel: TPhastModel;
+  Index: Integer;
+  GeoUnit: TLayerGroup;
+  HydrogeologicUnits: THydrogeologicUnits;
+  HufUnitIndex: Integer;
+  HufUnit: THydrogeologicUnit;
+  ParamIndex: Integer;
+  Param: THufUsedParameter;
+  Parameter: TModflowParameter;
+  InitialHeadUsed: Boolean;
+begin
+  result := inherited GetVariablesUsed;
+
+  PhastModel := frmGoPhast.PhastModel;
+  InitialHeadUsed := False;
+  for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  begin
+    GeoUnit := frmGoPhast.PhastModel.LayerStructure[Index];
+    result.Add(GeoUnit.DataArrayName);
+    if GeoUnit.AquiferType <> 0 then
+    begin
+      InitialHeadUsed := True;
+    end;
+  end;
+
+  if InitialHeadUsed then
+  begin
+    result.Add(rsModflow_Initial_Head);
+  end;
+
+  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
+  begin
+    HufUnit := HydrogeologicUnits[HufUnitIndex];
+    result.Add(HufUnit.TopDataArrayName);
+    result.Add(HufUnit.ThickessDataArrayName);
+    for ParamIndex := 0 to HufUnit.HufUsedParameters.Count - 1 do
+    begin
+      Param := HufUnit.HufUsedParameters[ParamIndex];
+      Parameter := Param.Parameter;
+      if Parameter.ParameterType = ptHUF_SY then
+      begin
+        if Param.UseZone then
+        begin
+          result.Add(Param.ZoneDataSetName);
+        end;
+        if Param.UseMultiplier then
+        begin
+          result.Add(Param.MultiplierDataSetName);
+        end;
+      end;
+    end;
+  end;
+end;
+
 initialization
   SpecialImplementors := TList.Create;
 
@@ -2178,8 +3256,8 @@ initialization
   LayerHeightFunction.InputDataTypes[2] := rdtInteger;
   LayerHeightFunction.OptionalArguments := 3;
   LayerHeightFunction.CanConvertToConstant := False;
-  LayerHeightFunction.Name := 'LayerHeight';
-  LayerHeightFunction.Prototype := 'Grid|LayerHeight({{Col, Row,} Layer})';
+  LayerHeightFunction.Name := StrLayerHeight;
+  LayerHeightFunction.Prototype := 'Grid|'+StrLayerHeight+'({{Col, Row,} Layer})';
 
   BlockAreaTopFunction.ResultType := rdtDouble;
   BlockAreaTopFunction.RFunctionAddr := _BlockAreaTop;
@@ -2519,18 +3597,6 @@ initialization
   ModflowLayerSimulatedFunction.Name := 'SimulatedLayer';
   ModflowLayerSimulatedFunction.Prototype := 'MODFLOW|SimulatedLayer({Layer})';
 
-  ModflowHufKx.ResultType := rdtDouble;
-  ModflowHufKx.RFunctionAddr := _HufKx;
-  SetLength(ModflowHufKx.InputDataTypes, 3);
-  ModflowHufKx.InputDataTypes[0] := rdtInteger;
-  ModflowHufKx.InputDataTypes[1] := rdtInteger;
-  ModflowHufKx.InputDataTypes[2] := rdtInteger;
-  ModflowHufKx.OptionalArguments := 3;
-  ModflowHufKx.CanConvertToConstant := False;
-  ModflowHufKx.Name := 'HufKx';
-  ModflowHufKx.Prototype := 'MODFLOW|HufKx({Layer, Row, Column})';
-  ModflowHufKx.Hidden := True;
-
   NodeInterpolate := TFunctionClass.Create;
   NodeInterpolate.InputDataCount := 3;
   NodeInterpolate.OptionalArguments := -1;
@@ -2576,6 +3642,128 @@ initialization
   SpecifiedHeadOnLayerSpecialImplementor.Implementor := TSpecifiedHeadOnLayer;
   SpecialImplementors.Add(SpecifiedHeadOnLayerSpecialImplementor);
 
+  BcfVcont := TFunctionClass.Create;
+  BcfVcont.InputDataCount := 0;
+  BcfVcont.OptionalArguments := 3;
+  BcfVcont.RFunctionAddr := _BcfGetVcont;
+  BcfVcont.Name := StrBcfVCONT;
+  BcfVcont.Prototype := 'MODFLOW|' + StrBcfVCONT + '({Layer, Row, Column})';
+  BcfVcont.OptionalType := rdtInteger;
+  BcfVcont.AllowConversionToConstant := False;
+
+  BcfVcontSpecialImplementor := TSpecialImplementor.Create;
+  BcfVcontSpecialImplementor.FunctionClass := BcfVcont;
+  BcfVcontSpecialImplementor.Implementor := TBcfVcont;
+  SpecialImplementors.Add(BcfVcontSpecialImplementor);
+
+  HufKx := TFunctionClass.Create;
+  HufKx.InputDataCount := 4;
+  HufKx.OptionalArguments := 3;
+  HufKx.RFunctionAddr := _HufKx;
+  HufKx.Name := StrHufKx;
+  HufKx.Prototype := 'MODFLOW|' + StrHufKx + '(Head, {Layer, Row, Column})';
+  HufKx.OptionalType := rdtInteger;
+  HufKx.AllowConversionToConstant := False;
+  HufKx.InputDataTypes[0] := rdtDouble;
+  HufKx.InputDataTypes[1] := rdtInteger;
+  HufKx.InputDataTypes[2] := rdtInteger;
+  HufKx.InputDataTypes[3] := rdtInteger;
+
+  HufKxSpecialImplementor := TSpecialImplementor.Create;
+  HufKxSpecialImplementor.FunctionClass := HufKx;
+  HufKxSpecialImplementor.Implementor := THufKx;
+  SpecialImplementors.Add(HufKxSpecialImplementor);
+
+  HufKy := TFunctionClass.Create;
+  HufKy.InputDataCount := 4;
+  HufKy.OptionalArguments := 3;
+  HufKy.RFunctionAddr := _HufAverageKY;
+  HufKy.Name := StrHufKy;
+  HufKy.Prototype := 'MODFLOW|' + StrHufKy + '(Head, {Layer, Row, Column})';
+  HufKy.OptionalType := rdtInteger;
+  HufKy.AllowConversionToConstant := False;
+  HufKy.InputDataTypes[0] := rdtDouble;
+  HufKy.InputDataTypes[1] := rdtInteger;
+  HufKy.InputDataTypes[2] := rdtInteger;
+  HufKy.InputDataTypes[3] := rdtInteger;
+
+  HufKySpecialImplementor := TSpecialImplementor.Create;
+  HufKySpecialImplementor.FunctionClass := HufKy;
+  HufKySpecialImplementor.Implementor := THufKy;
+  SpecialImplementors.Add(HufKySpecialImplementor);
+
+  HufKz := TFunctionClass.Create;
+  HufKz.InputDataCount := 4;
+  HufKz.OptionalArguments := 3;
+  HufKz.RFunctionAddr := _HufKz;
+  HufKz.Name := StrHufKz;
+  HufKz.Prototype := 'MODFLOW|' + StrHufKz + '(Head, {Layer, Row, Column})';
+  HufKz.OptionalType := rdtInteger;
+  HufKz.AllowConversionToConstant := False;
+  HufKz.InputDataTypes[0] := rdtDouble;
+  HufKz.InputDataTypes[1] := rdtInteger;
+  HufKz.InputDataTypes[2] := rdtInteger;
+  HufKz.InputDataTypes[3] := rdtInteger;
+
+  HufKzSpecialImplementor := TSpecialImplementor.Create;
+  HufKzSpecialImplementor.FunctionClass := HufKz;
+  HufKzSpecialImplementor.Implementor := THufKz;
+  SpecialImplementors.Add(HufKzSpecialImplementor);
+
+  HufSS := TFunctionClass.Create;
+  HufSS.InputDataCount := 4;
+  HufSS.OptionalArguments := 3;
+  HufSS.RFunctionAddr := _HufSS;
+  HufSS.Name := StrHufSs;
+  HufSS.Prototype := 'MODFLOW|' + StrHufSs + '(Head, {Layer, Row, Column})';
+  HufSS.OptionalType := rdtInteger;
+  HufSS.AllowConversionToConstant := False;
+  HufSS.InputDataTypes[0] := rdtDouble;
+  HufSS.InputDataTypes[1] := rdtInteger;
+  HufSS.InputDataTypes[2] := rdtInteger;
+  HufSS.InputDataTypes[3] := rdtInteger;
+
+  HufSSSpecialImplementor := TSpecialImplementor.Create;
+  HufSSSpecialImplementor.FunctionClass := HufSS;
+  HufSSSpecialImplementor.Implementor := THufSS;
+  SpecialImplementors.Add(HufSSSpecialImplementor);
+
+  HufAverageSY := TFunctionClass.Create;
+  HufAverageSY.InputDataCount := 4;
+  HufAverageSY.OptionalArguments := 3;
+  HufAverageSY.RFunctionAddr := _HufAverageSY;
+  HufAverageSY.Name := StrHufAverageSy;
+  HufAverageSY.Prototype := 'MODFLOW|' + StrHufAverageSy + '(Head, {Layer, Row, Column})';
+  HufAverageSY.OptionalType := rdtInteger;
+  HufAverageSY.AllowConversionToConstant := False;
+  HufAverageSY.InputDataTypes[0] := rdtDouble;
+  HufAverageSY.InputDataTypes[1] := rdtInteger;
+  HufAverageSY.InputDataTypes[2] := rdtInteger;
+  HufAverageSY.InputDataTypes[3] := rdtInteger;
+
+  HufAverageSYSpecialImplementor := TSpecialImplementor.Create;
+  HufAverageSYSpecialImplementor.FunctionClass := HufAverageSY;
+  HufAverageSYSpecialImplementor.Implementor := THufSY;
+  SpecialImplementors.Add(HufAverageSYSpecialImplementor);
+
+  HufSY := TFunctionClass.Create;
+  HufSY.InputDataCount := 4;
+  HufSY.OptionalArguments := 3;
+  HufSY.RFunctionAddr := GetHufSy;
+  HufSY.Name := StrHufSy;
+  HufSY.Prototype := 'MODFLOW|' + StrHufSy + '(Head, {Layer, Row, Column})';
+  HufSY.OptionalType := rdtInteger;
+  HufSY.AllowConversionToConstant := False;
+  HufSY.InputDataTypes[0] := rdtDouble;
+  HufSY.InputDataTypes[1] := rdtInteger;
+  HufSY.InputDataTypes[2] := rdtInteger;
+  HufSY.InputDataTypes[3] := rdtInteger;
+
+  HufSYSpecialImplementor := TSpecialImplementor.Create;
+  HufSYSpecialImplementor.FunctionClass := HufSY;
+  HufSYSpecialImplementor.Implementor := THufSY;
+  SpecialImplementors.Add(HufSYSpecialImplementor);
+
 finalization
   NodeInterpolate.Free;
   NodeInterpolateSpecialImplementor.Free;
@@ -2585,6 +3773,27 @@ finalization
 
   SpecifiedHeadOnLayer.Free;
   SpecifiedHeadOnLayerSpecialImplementor.Free;
+
+  BcfVcont.Free;
+  BcfVcontSpecialImplementor.Free;
+
+  HufKx.Free;
+  HufKxSpecialImplementor.Free;
+
+  HufKy.Free;
+  HufKySpecialImplementor.Free;
+
+  HufKz.Free;
+  HufKzSpecialImplementor.Free;
+
+  HufSS.Free;
+  HufSSSpecialImplementor.Free;
+
+  HufAverageSY.Free;
+  HufAverageSYSpecialImplementor.Free;
+
+  HufSY.Free;
+  HufSYSpecialImplementor.Free;
 
   SpecialImplementors.Free;
 

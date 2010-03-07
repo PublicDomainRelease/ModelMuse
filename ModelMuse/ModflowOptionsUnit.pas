@@ -68,13 +68,14 @@ Type
     procedure SetWettingEquation(const Value: integer);
     procedure SetWettingFactor(const Value: real);
     procedure InvalidateModel;
-    procedure SetWettingIterations(const Value: integer);
+    procedure SetWettingIterations(Value: integer);
   published
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TComponent);
     property WettingActive: boolean read FWettingActive write SetWettingActive;
     property WettingFactor: real read FWettingFactor write SetWettingFactor;
-    property WettingIterations: integer read FWettingIterations write SetWettingIterations default 1;
+    property WettingIterations: integer read FWettingIterations
+      write SetWettingIterations default 1;
     property WettingEquation: integer read FWettingEquation write SetWettingEquation;
   end;
 
@@ -305,6 +306,7 @@ begin
     Assert(FModel is TPhastModel);
   end;
   FWettingFactor := 1;
+  FWettingIterations := 1;
 end;
 
 procedure TWettingOptions.InvalidateModel;
@@ -342,8 +344,12 @@ begin
   end;
 end;
 
-procedure TWettingOptions.SetWettingIterations(const Value: integer);
+procedure TWettingOptions.SetWettingIterations(Value: integer);
 begin
+  if Value <= 0 then
+  begin
+    Value := 1;
+  end;
   if FWettingIterations <> Value then
   begin
     FWettingIterations := Value;

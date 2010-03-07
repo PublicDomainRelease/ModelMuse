@@ -79,7 +79,7 @@ var
   DataSetName: string;
   Orientation: TDataSetOrientation;
   DataType: TRbwDataType;
-  ArrayNeeded: TObjectUsedEvent;
+  ArrayNeeded, CreateDataSet: TObjectUsedEvent;
   NewFormula, Classification: string;
   Lock: TDataLock;
 begin
@@ -90,6 +90,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
   Orientation := Model.DataArrayCreationRecords[Index].Orientation;
   DataType := Model.DataArrayCreationRecords[Index].DataType;
   ArrayNeeded := Model.DataArrayCreationRecords[Index].DataSetNeeded;
+  CreateDataSet := Model.DataArrayCreationRecords[Index].DataSetShouldBeCreated;
   NewFormula := Model.DataArrayCreationRecords[Index].Formula;
   Classification := Model.DataArrayCreationRecords[Index].Classification;
   Lock := Model.DataArrayCreationRecords[Index].Lock;
@@ -103,7 +104,8 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
     DataArray.Name := DataSetName;
     DataArray.Lock := Lock;
   end
-  else if ArrayNeeded(self) then
+  else if ArrayNeeded(self)
+    or (Assigned(CreateDataSet) and CreateDataSet(self)) then
   begin
     DataArray := Model.CreateNewDataArray(TDataArray, DataSetName, NewFormula,
       Lock, DataType, Model.DataArrayCreationRecords[Index].EvaluatedAt,

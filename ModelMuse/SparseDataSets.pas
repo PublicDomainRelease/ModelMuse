@@ -377,6 +377,7 @@ begin
   FMaxRow := -1;
   FMinCol := -1;
   FMaxCol := -1;
+
   for Index := 0 to FData.HighBound do
   begin
     TwoDSparsePointerArray := FData.Items[Index];
@@ -605,8 +606,6 @@ begin
       FTempFileName := TempFileName;
     end;
     TempFile := TTempFileStream.Create(FTempFileName, fmOpenReadWrite);
-//      TempFile := TFileStream.Create(FTempFileName, fmCreate or fmShareDenyWrite,
-//        ReadWritePermissions);
     Compressor := TCompressionStream.Create(clDefault, TempFile);
     try
       TempFile.Position := 0;

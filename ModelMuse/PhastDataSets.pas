@@ -1431,8 +1431,8 @@ begin
 
       PostInitialize;
 
-      UpToDate := True;
       CheckIfUniform;
+      UpToDate := True;
     end
     else
     begin

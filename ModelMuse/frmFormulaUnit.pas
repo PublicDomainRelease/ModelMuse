@@ -279,6 +279,13 @@ many will be displayed at one time. }
     procedure IncludeGIS_Functions;
     procedure RemoveActiveOnLayer;
     procedure RemoveSpecifiedHeadOnLayer;
+    procedure RemoveGetVCont;
+    procedure RemoveHufFunctions;
+    procedure RemoveHufKx;
+    procedure RemoveHufKy;
+    procedure RemoveHufKz;
+    procedure RemoveHufSs;
+    procedure RemoveHufSy;
     // Name used in the TTreeNode that holds TCustomVariables in @link(tvItems).
     // By default, it is 'Data Sets'.
     property DataSetGroupName: string read FDataSetGroupName
@@ -582,19 +589,31 @@ begin
 end;
 
 function TfrmFormula.GetFormula: string;
-var
-  Index: integer;
+//var
+//  Index: integer;
+//  OnChangeEvent: TNotifyEvent;
 begin
-  result := '';
-  for Index := 0 to jreFormula.Lines.Count - 1 do
-  begin
-    result := result + jreFormula.Lines[Index];
-    if (Length(result) > 0) and (result[Length(result)] <> ' ') then
-    begin
-      result := result + ' ';
-    end;
-  end;
-  result := Trim(Result);
+//  OnChangeEvent := jreFormula.OnChange;
+//  jreFormula.OnChange := nil;
+//  try
+//    jreFormula.WordWrap := False;
+    result := jreFormula.Lines.Text;
+    result := StringReplace(result, #13#10, '', [rfReplaceAll, rfIgnoreCase]);
+
+//    result := '';
+//    for Index := 0 to jreFormula.Lines.Count - 1 do
+//    begin
+//      result := result + jreFormula.Lines[Index];
+//      if (Length(result) > 0) and (result[Length(result)] <> ' ') then
+//      begin
+//        result := result + ' ';
+//      end;
+//    end;
+    result := Trim(Result);
+//  finally
+//    jreFormula.WordWrap := True;
+//    jreFormula.OnChange := OnChangeEvent;
+//  end;
 end;
 
 procedure TfrmFormula.jreFormulaDblClick(Sender: TObject);
@@ -752,6 +771,7 @@ begin
   jreFormula.Lines.Clear;
   jreFormula.Lines.Add(Value);
   jreFormula.SelectAll;
+//  DiagramFormula;
 end;
 
 procedure TfrmFormula.TimerSetSelection(Sender: TObject);
@@ -797,6 +817,11 @@ begin
   RemoveSpecialImplementor(TSpecifiedHeadOnLayer);
 end;
 
+procedure TfrmFormula.RemoveGetVCont;
+begin
+  RemoveSpecialImplementor(TBcfVcont);
+end;
+
 procedure TfrmFormula.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -820,6 +845,15 @@ procedure TfrmFormula.RemoveGIS_Functions;
 begin
   rbFormulaParser.Functions.Clear;
   rbFormulaParser.Functions.Create;
+end;
+
+procedure TfrmFormula.RemoveHufFunctions;
+begin
+  RemoveHufKx;
+  RemoveHufKy;
+  RemoveHufKz;
+  RemoveHufSs;
+  RemoveHufSy;
 end;
 
 procedure TfrmFormula.UpdateTreeList;
@@ -899,6 +933,31 @@ begin
   finally
     FunctionNames.Free;
   end;
+end;
+
+procedure TfrmFormula.RemoveHufKz;
+begin
+  RemoveSpecialImplementor(THufKz);
+end;
+
+procedure TfrmFormula.RemoveHufSs;
+begin
+  RemoveSpecialImplementor(THufSs);
+end;
+
+procedure TfrmFormula.RemoveHufSy;
+begin
+  RemoveSpecialImplementor(THufSy);
+end;
+
+procedure TfrmFormula.RemoveHufKy;
+begin
+  RemoveSpecialImplementor(THufKy);
+end;
+
+procedure TfrmFormula.RemoveHufKx;
+begin
+  RemoveSpecialImplementor(THufKx);
 end;
 
 procedure TfrmFormula.CreateNodesForVariables;

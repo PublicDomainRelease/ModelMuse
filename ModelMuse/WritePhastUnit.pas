@@ -2058,9 +2058,8 @@ begin
   if RunModel then
   begin
     SetCurrentDir(FileDir);
-//    SetCurrentDir(ExtractFileDir(frmGoPhast.PhastModel.ProgramLocations.PhastLocation));
     try
-    WinExec(PChar('"' + BatchName + '"'), SW_SHOW);
+      WinExec(PChar('"' + BatchName + '"'), SW_SHOW);
     finally
       SetCurrentDir(ADir);
     end;

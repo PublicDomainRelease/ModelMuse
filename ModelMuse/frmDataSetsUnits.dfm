@@ -103,14 +103,13 @@ inherited frmDataSets: TfrmDataSets
     ReadOnly = True
     TabOrder = 2
     OnChange = tvDataSetsChange
-    ExplicitWidth = 328
   end
   object pcDataSets: TJvPageControl
     Left = 328
     Top = 0
     Width = 320
     Height = 405
-    ActivePage = tabComment
+    ActivePage = tabBasic
     Align = alRight
     TabOrder = 3
     object tabBasic: TTabSheet
@@ -342,6 +341,10 @@ inherited frmDataSets: TfrmDataSets
     object tabPHAST: TTabSheet
       Caption = 'PHAST-Interpolation'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline framePhastInterpolation: TframePhastInterpolation
         Left = -2
         Top = 3
@@ -360,7 +363,6 @@ inherited frmDataSets: TfrmDataSets
           Top = 128
           Width = 78
           Height = 19
-          Margins.Bottom = 0
           ExplicitLeft = 12
           ExplicitTop = 128
           ExplicitWidth = 78
@@ -371,7 +373,6 @@ inherited frmDataSets: TfrmDataSets
           Top = 188
           Width = 78
           Height = 19
-          Margins.Bottom = 0
           ExplicitLeft = 12
           ExplicitTop = 188
           ExplicitWidth = 78
@@ -382,7 +383,6 @@ inherited frmDataSets: TfrmDataSets
           Top = 128
           Width = 55
           Height = 19
-          Margins.Bottom = 0
           ExplicitLeft = 184
           ExplicitTop = 128
           ExplicitWidth = 55
@@ -393,7 +393,6 @@ inherited frmDataSets: TfrmDataSets
           Top = 188
           Width = 55
           Height = 19
-          Margins.Bottom = 0
           ExplicitLeft = 184
           ExplicitTop = 188
           ExplicitWidth = 55
@@ -404,7 +403,6 @@ inherited frmDataSets: TfrmDataSets
           Top = 252
           Width = 111
           Height = 19
-          Margins.Bottom = 0
           ExplicitLeft = 12
           ExplicitTop = 252
           ExplicitWidth = 111
@@ -429,7 +427,7 @@ inherited frmDataSets: TfrmDataSets
           Left = 12
           Top = 153
           Height = 30
-          ItemHeight = 19
+          ItemHeight = 0
           OnChange = framePhastInterpolationrdeDistance1Change
           ExplicitLeft = 12
           ExplicitTop = 153
@@ -439,7 +437,7 @@ inherited frmDataSets: TfrmDataSets
           Left = 12
           Top = 211
           Height = 30
-          ItemHeight = 19
+          ItemHeight = 0
           OnChange = framePhastInterpolationrdeDistance2Change
           ExplicitLeft = 12
           ExplicitTop = 211
@@ -449,7 +447,7 @@ inherited frmDataSets: TfrmDataSets
           Left = 184
           Top = 153
           Height = 30
-          ItemHeight = 19
+          ItemHeight = 0
           OnChange = framePhastInterpolationrdeValue1Change
           ExplicitLeft = 184
           ExplicitTop = 153
@@ -459,7 +457,7 @@ inherited frmDataSets: TfrmDataSets
           Left = 184
           Top = 214
           Height = 30
-          ItemHeight = 19
+          ItemHeight = 0
           OnChange = framePhastInterpolationrdeValue2Change
           ExplicitLeft = 184
           ExplicitTop = 214
@@ -502,6 +500,10 @@ inherited frmDataSets: TfrmDataSets
     object tabComment: TTabSheet
       Caption = 'Comment'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         312
         371)

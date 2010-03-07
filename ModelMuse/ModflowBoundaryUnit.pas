@@ -28,7 +28,7 @@ type
     FCleared: Boolean;
     FTempFileName : string;
     procedure Clear; virtual; abstract;
-    procedure Restore(DecompressionStream: TDecompressionStream); virtual; abstract;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); virtual; abstract;
     procedure Store(Compressor: TCompressionStream); virtual; abstract;
     procedure RestoreData;
   public
@@ -865,9 +865,9 @@ end;
 
 destructor TCustomMF_BoundColl.Destroy;
 begin
+  inherited;
   FBoundaries.Free;
   FTimeLists.Free;
-  inherited;
 end;
 
 procedure TCustomMF_ArrayBoundColl.EvaluateArrayBoundaries;
@@ -2138,14 +2138,19 @@ var
   LocalScreenObject: TScreenObject;
   Observer: TObserver;
   Index: integer;
+  PhastModel: TPhastModel;
 begin
   LocalScreenObject := ScreenObject as TScreenObject;
   if (LocalScreenObject <> nil) and LocalScreenObject.CanInvalidateModel then
   begin
-    for Index := 0 to FObserverList.Count - 1 do
+    PhastModel := Model as TPhastModel;
+    if not (csDestroying in PhastModel.ComponentState) then
     begin
-      Observer := FObserverList[Index];
-      LocalScreenObject.StopsTalkingTo(Observer);
+      for Index := 0 to FObserverList.Count - 1 do
+      begin
+        Observer := FObserverList[Index];
+        LocalScreenObject.StopsTalkingTo(Observer);
+      end;
     end;
   end;
   RemoveFormulaObjects;
@@ -2178,18 +2183,20 @@ procedure TCustomBoundaryStorage.RestoreData;
 var
   TempFile: TTempFileStream;
   DecompressionStream: TDecompressionStream;
+  Annotations: TStringList;
 begin
   Assert(FileExists(FTempFileName));
   Assert(FCached);
   Assert(FCleared);
+  Annotations := TStringList.Create;
   TempFile := TTempFileStream.Create(FTempFileName, fmOpenRead);
-//  TempFile := TFileStream.Create(FTempFileName,
-//    fmOpenRead or fmShareDenyWrite, ReadWritePermissions);
   DecompressionStream := TDecompressionStream.Create(TempFile);
   try
-    Restore(DecompressionStream);
+    Annotations.Sorted := True;
+    Restore(DecompressionStream, Annotations);
   finally
     DecompressionStream.Free;
+    Annotations.Free;
     TempFile.Free;
     FCleared := False;
   end;
@@ -2207,8 +2214,6 @@ begin
       FTempFileName := TempFileName;
     end;
     TempFile := TTempFileStream.Create(FTempFileName, fmOpenReadWrite);
-//    TempFile := TFileStream.Create(FTempFileName, fmCreate or fmShareDenyWrite,
-//      ReadWritePermissions);
     Compressor := TCompressionStream.Create(clDefault, TempFile);
     try
       TempFile.Position := 0;
@@ -2283,7 +2288,8 @@ begin
     begin
       frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
         FormulaObject, Value, frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
-        GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
+        GlobalRemoveModflowBoundarySubscription,
+        GlobalRestoreModflowBoundarySubscription, self);
     end;
   end;
 end;

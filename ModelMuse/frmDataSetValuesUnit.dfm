@@ -5,6 +5,7 @@ inherited frmDataSetValues: TfrmDataSetValues
   ClientWidth = 548
   OnDestroy = FormDestroy
   ExplicitWidth = 556
+  ExplicitHeight = 274
   PixelsPerInch = 96
   TextHeight = 18
   object Panel1: TPanel
@@ -14,7 +15,6 @@ inherited frmDataSetValues: TfrmDataSetValues
     Height = 48
     Align = alBottom
     TabOrder = 0
-    ExplicitWidth = 434
     DesignSize = (
       548
       48)
@@ -79,12 +79,43 @@ inherited frmDataSetValues: TfrmDataSetValues
     end
   end
   object pcDataSet: TPageControl
-    Left = 0
+    Left = 97
     Top = 0
-    Width = 548
+    Width = 451
     Height = 192
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 434
+  end
+  object Panel2: TPanel
+    Left = 0
+    Top = 0
+    Width = 97
+    Height = 192
+    Align = alLeft
+    Caption = 'Panel2'
+    TabOrder = 2
+    object Label1: TLabel
+      AlignWithMargins = True
+      Left = 4
+      Top = 4
+      Width = 89
+      Height = 18
+      Align = alTop
+      Alignment = taCenter
+      Caption = 'Layer'
+      ExplicitWidth = 39
+    end
+    object lbLayers: TJvListBox
+      Left = 1
+      Top = 22
+      Width = 95
+      Height = 169
+      Align = alClient
+      ItemHeight = 18
+      Background.FillMode = bfmTile
+      Background.Visible = False
+      TabOrder = 0
+      OnMouseUp = lbLayersMouseUp
+    end
   end
 end

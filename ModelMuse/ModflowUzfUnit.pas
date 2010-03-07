@@ -28,7 +28,7 @@ type
     EndingTime: double;
     ExtinctionDepthAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
   end;
 
   {
@@ -50,7 +50,7 @@ type
     EndingTime: double;
     MinimumWaterContentAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream); 
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); 
   end;
 
   // @name is an array of @link(TUzfExtinctionDepthRecord)s.
@@ -65,7 +65,7 @@ type
     FExtinctDepthArray: TUzfExtinctDepthArray;
     function GetExtinctDepthArray: TUzfExtinctDepthArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -79,7 +79,7 @@ type
     FWaterContentArray: TUzfWaterContentArray;
     function GetWaterContentArray: TUzfWaterContentArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -245,7 +245,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property ExtinctionDepth: double read GetExtinctionDepth;
@@ -269,7 +269,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property WaterContent: double read GetWaterContent;
@@ -413,7 +413,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.RchArray) - 1 do
       begin
 //        Cells.Cached := False;
@@ -459,7 +459,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.EvtArray) - 1 do
       begin
 //        Cells.Cached := False;
@@ -505,7 +505,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.ExtinctDepthArray) - 1 do
       begin
 //        Cells.Cached := False;
@@ -553,7 +553,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.WaterContentArray) - 1 do
       begin
 //        Cells.Cached := False;
@@ -1258,10 +1258,10 @@ begin
   result := Values.Cell.Section;
 end;
 
-procedure TUzfExtinctionDepthCell.Restore(Decomp: TDecompressionStream);
+procedure TUzfExtinctionDepthCell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp); 
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -1334,10 +1334,10 @@ begin
   result := Values.MinimumWaterContentAnnotation;
 end;
 
-procedure TUzfWaterContentCell.Restore(Decomp: TDecompressionStream);
+procedure TUzfWaterContentCell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp); 
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -1352,13 +1352,13 @@ begin
   WriteCompString(Comp, ExtinctionDepthAnnotation);
 end;
 
-procedure TUzfExtinctionDepthRecord.Restore(Decomp: TDecompressionStream);
+procedure TUzfExtinctionDepthRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   ExtinctionDepth := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  ExtinctionDepthAnnotation := ReadCompString(Decomp);
+  ExtinctionDepthAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TUzfWaterContentRecord }
@@ -1372,13 +1372,13 @@ begin
   WriteCompString(Comp, MinimumWaterContentAnnotation);
 end;
 
-procedure TUzfWaterContentRecord.Restore(Decomp: TDecompressionStream);
+procedure TUzfWaterContentRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   MinimumWaterContent := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  MinimumWaterContentAnnotation := ReadCompString(Decomp);
+  MinimumWaterContentAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TUzfExtinctDepthStorage }
@@ -1402,7 +1402,7 @@ begin
   end;
 end;
 
-procedure TUzfExtinctDepthStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TUzfExtinctDepthStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -1411,7 +1411,7 @@ begin
   SetLength(FExtinctDepthArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FExtinctDepthArray[Index].Restore(DecompressionStream);
+    FExtinctDepthArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 
@@ -1445,7 +1445,7 @@ begin
   end;
 end;
 
-procedure TUzfWaterContentStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TUzfWaterContentStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -1454,7 +1454,7 @@ begin
   SetLength(FWaterContentArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FWaterContentArray[Index].Restore(DecompressionStream);
+    FWaterContentArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 

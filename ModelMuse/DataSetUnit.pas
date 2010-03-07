@@ -431,6 +431,7 @@ type
     function ValueOK(const Layer, Row, Col: Integer;
       LocalLimits: TColoringLimits): Boolean;
     function GetHash: longint;
+    procedure UpdateSubscriptions(NewUseList: TStringList; OldUseList: TStringList);
   protected
     // See @link(IsUniform).
     FIsUniform: TIsUniform;
@@ -556,6 +557,7 @@ type
     procedure RemoveSubscription(Sender: TObject; const AName: string);
     procedure RestoreSubscription(Sender: TObject; const AName: string);
   public
+    procedure RefreshUseList;
     function ColorGridValueOK(const Layer, Row, Col: integer): boolean;
     function ContourGridValueOK(const Layer, Row, Col: integer): boolean;
     procedure CheckIfUniform; virtual;
@@ -1639,6 +1641,40 @@ begin
   end;
 end;
 
+procedure TDataArray.UpdateSubscriptions(NewUseList: TStringList; OldUseList: TStringList);
+var
+  ObservedItem: TObserver;
+  OtherIndex: Integer;
+  Index: Integer;
+  Model: TPhastModel;
+begin
+  Model := FPhastModel as TPhastModel;
+  for Index := OldUseList.Count - 1 downto 0 do
+  begin
+    OtherIndex := NewUseList.IndexOf(OldUseList[Index]);
+    if OtherIndex >= 0 then
+    begin
+      OldUseList.Delete(Index);
+//      NewUseList.Delete(OtherIndex);
+    end;
+  end;
+  for Index := 0 to OldUseList.Count - 1 do
+  begin
+    ObservedItem := Model.GetObserverByName(OldUseList[Index]);
+    if ObservedItem <> nil then
+    begin
+      // DS may be nil when the model is being destroyed.
+      ObservedItem.StopsTalkingTo(self);
+    end;
+  end;
+  for Index := 0 to NewUseList.Count - 1 do
+  begin
+    ObservedItem := Model.GetObserverByName(NewUseList[Index]);
+    Assert(ObservedItem <> nil);
+    ObservedItem.TalksTo(self);
+  end;
+end;
+
 procedure TDataArray.Initialize;
 var
   ColIndex, RowIndex, LayerIndex: integer;
@@ -2297,9 +2333,9 @@ begin
   end;
   PostInitialize;
 
-  UpToDate := True;
   FCleared := False;
   CheckIfUniform;
+  UpToDate := True;
 end;
 
 procedure TDataArray.Invalidate;
@@ -2547,6 +2583,10 @@ begin
   end
   else
   begin
+    if (FTwoDInterpolator <> nil) and FTwoDInterpolator.SameAs(Value) then
+    begin
+      Exit;
+    end;
     FTwoDInterpolator.Free;
     try
       FTwoDInterpolator := TInterpolatorType(Value.ClassType).Create(self);
@@ -2580,6 +2620,7 @@ begin
 
   FIsUniform := iuUnknown;
   frmGoPhast.InvalidateModel;
+  RefreshUseList;
   FUseListUpToDate := False;
 
   Updated := Value and not UpToDate;
@@ -3106,10 +3147,12 @@ procedure TDataArray.SetName(const Value: TComponentName);
 var
   LocalModel :  TPhastModel;
   MustAdd: boolean;
+  NameChanged: Boolean;
 begin
+  NameChanged := Name <> Value;
   LocalModel := FPhastModel as TPhastModel;
   MustAdd := False;
-  if Name <> Value then
+  if NameChanged then
   begin
     if LocalModel.GetDataSetByName(Name) <> nil then
     begin
@@ -3117,7 +3160,7 @@ begin
       MustAdd := True;
     end;
   end;
-  if Name <> '' then
+  if NameChanged and (Name <> '') then
   begin
     LocalModel.ThreeDGridObserver.StopsTalkingTo(self);
     LocalModel.TopGridObserver.StopsTalkingTo(self);
@@ -3127,16 +3170,19 @@ begin
   begin
     LocalModel.AddDataSetToLookUpList(self);
   end;
-  case FOrientation of
-    dsoTop:
-      begin
-        LocalModel.TopGridObserver.TalksTo(self);
-      end;
-    dsoFront, dsoSide, dso3D:
-      begin
-        LocalModel.ThreeDGridObserver.TalksTo(self);
-      end;
-    else Assert(False);
+  if NameChanged then
+  begin
+    case FOrientation of
+      dsoTop:
+        begin
+          LocalModel.TopGridObserver.TalksTo(self);
+        end;
+      dsoFront, dsoSide, dso3D:
+        begin
+          LocalModel.ThreeDGridObserver.TalksTo(self);
+        end;
+      else Assert(False);
+    end;
   end;
   frmGoPhast.InvalidateModel;
 end;
@@ -3883,8 +3929,6 @@ begin
           end;
         else Assert(False);
       end;
-
-
     end;
   finally
     LocalAnnotatations.Free;
@@ -4029,20 +4073,50 @@ begin
   end;
 end;
 
+procedure TDataArray.RefreshUseList;
+var
+  OldUseList: TStringList;
+  NewUseList: TStringList;
+begin
+  if csDestroying in ComponentState then
+  begin
+    Exit;
+  end;
+  OldUseList := TStringList.Create;
+  NewUseList := TStringList.Create;
+  try
+    try
+      OldUseList.Assign(GetUseList);
+    except on ERbwParserError do
+      begin
+        OldUseList.Clear;
+      end;
+    end;
+    FUseListUpToDate := False;
+    NewUseList.Assign(GetUseList);
+
+    if not (FPhastModel as TPhastModel).Clearing then
+    begin
+      UpdateSubscriptions(NewUseList, OldUseList);
+    end;
+  finally
+    OldUseList.Free;
+    NewUseList.Free
+  end;
+
+end;
+
 procedure TDataArray.ChangeAFormula(const NewFormula: string;
   var OldFormula: string; var UseListUpToDate: boolean;
   UseListFunction: TUseListFunction);
 var
-  ObservedItem: TObserver;
-  OtherIndex: Integer;
-  Index: Integer;
   NewUseList: TStringList;
   OldUseList: TStringList;
-  Model: TPhastModel;
+//  Model: TPhastModel;
 begin
   if OldFormula <> NewFormula then
   begin
-    Model := FPhastModel as TPhastModel;
+//    Model := FPhastModel as TPhastModel;
     frmGoPhast.InvalidateModel;
     OldUseList := TStringList.Create;
     NewUseList := TStringList.Create;
@@ -4057,30 +4131,7 @@ begin
       OldFormula := NewFormula;
       UseListUpToDate := False;
       NewUseList.Assign(UseListFunction);
-      for Index := OldUseList.Count - 1 downto 0 do
-      begin
-        OtherIndex := NewUseList.IndexOf(OldUseList[Index]);
-        if OtherIndex >= 0 then
-        begin
-          OldUseList.Delete(Index);
-          NewUseList.Delete(OtherIndex);
-        end;
-      end;
-      for Index := 0 to OldUseList.Count - 1 do
-      begin
-        ObservedItem := Model.GetObserverByName(OldUseList[Index]);
-        if ObservedItem <> nil then
-        begin
-          // DS may be nil when the model is being destroyed.
-          ObservedItem.StopsTalkingTo(self);
-        end;
-      end;
-      for Index := 0 to NewUseList.Count - 1 do
-      begin
-        ObservedItem := Model.GetObserverByName(NewUseList[Index]);
-        Assert(ObservedItem <> nil);
-        ObservedItem.TalksTo(self);
-      end;
+      UpdateSubscriptions(NewUseList, OldUseList);
       Invalidate;
     finally
       OldUseList.Free;
@@ -4473,7 +4524,8 @@ end;
 
 procedure TCustomSparseDataSet.SetDimensions(const SetToZero: boolean);
 begin
-  inherited;
+  // don't call inherited.
+//  inherited;
   if FAnnotation <> nil then
   begin
     FAnnotation.Clear;
@@ -4484,7 +4536,10 @@ end;
 procedure TRealSparseDataSet.Clear;
 begin
   inherited;
-  FRealValues.Clear;
+  if FRealValues <> nil then
+  begin
+    FRealValues.Clear;
+  end;
 end;
 
 constructor TRealSparseDataSet.Create(AnOwner: TComponent);
@@ -4567,7 +4622,10 @@ end;
 procedure TIntegerSparseDataSet.Clear;
 begin
   inherited;
-  FIntegerValues.Clear;
+  if FIntegerValues <> nil then
+  begin
+    FIntegerValues.Clear;
+  end;
 end;
 
 constructor TIntegerSparseDataSet.Create(AnOwner: TComponent);
@@ -5560,8 +5618,6 @@ begin
         FTempFileName := TempFileName;
       end;
       TempFile := TTempFileStream.Create(FTempFileName, fmOpenReadWrite);
-//      TempFile := TFileStream.Create(FTempFileName, fmCreate or fmShareDenyWrite,
-//        ReadWritePermissions);
       Compressor := TCompressionStream.Create(clDefault, TempFile);
       try
         TempFile.Position := 0;
@@ -5725,8 +5781,6 @@ begin
   Assert(FDataCached);
   Assert(FCleared);
   TempFile := TTempFileStream.Create(FTempFileName, fmOpenRead);
-//  TempFile := TFileStream.Create(FTempFileName,
-//    fmOpenRead or fmShareDenyWrite, ReadWritePermissions);
   DecompressionStream := TDecompressionStream.Create(TempFile);
   try
     ReadData(DecompressionStream);

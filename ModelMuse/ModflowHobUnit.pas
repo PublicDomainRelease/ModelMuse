@@ -12,7 +12,7 @@ type
     Time: double;
     HeadAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream); 
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); 
   end;
 
   TMultiObsMethod = (momAllHeads, momHeadAndDrawdown);
@@ -94,7 +94,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property Head: double read GetHead;
@@ -303,10 +303,10 @@ begin
   result := Values.Time;
 end;
 
-procedure THob_Cell.Restore(Decomp: TDecompressionStream);
+procedure THob_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp); 
+  Values.Restore(Decomp, Annotations);
 end;
 
 { THobBoundary }
@@ -906,12 +906,12 @@ begin
   WriteCompString(Comp, HeadAnnotation);
 end;
 
-procedure THobRecord.Restore(Decomp: TDecompressionStream);
+procedure THobRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   Head := ReadCompReal(Decomp);
   Time := ReadCompReal(Decomp);
-  HeadAnnotation := ReadCompString(Decomp);
+  HeadAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 end.

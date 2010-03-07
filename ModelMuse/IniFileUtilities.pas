@@ -11,6 +11,7 @@ uses Windows, ShlObj, SysUtils, Classes;
 // "Application Data" directory for the system.  If it does not exist
 // the subdirectory of the "Application Data" directory will be created.
 function IniFileName(Handle: HWnd; ExeName: string): string;
+function InternetIniFileName(Handle: HWnd; ExeName: string): string;
 
 function GetAppDirectory(Handle: HWnd; ProgramName: string): string;
 
@@ -90,6 +91,11 @@ begin
     Parents.Free;
   end;
 
+end;
+
+function InternetIniFileName(Handle: HWnd; ExeName: string): string;
+begin
+  result :=  ChangeFileExt(IniFileName(Handle, ExeName), '.web_ini');
 end;
 
 function IniFileName(Handle: HWnd; ExeName: string): string;

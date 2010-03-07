@@ -2,10 +2,12 @@ unit LayerStructureUnit;
 
 interface
 
-uses OrderedCollectionUnit, Classes, GoPhastTypes;
+uses OrderedCollectionUnit, Classes, GoPhastTypes, SubscriptionUnit,
+  ModflowSubsidenceDefUnit;
 
 type
   TIntTypeMethod = (itmLaytype, itmLayavg, itmLayvka);
+  TFloatTypeMethod = (ftmTrpy);
 
   TLayerCollection = class;
 
@@ -49,6 +51,9 @@ type
     FInterblockTransmissivityMethod: integer;
     FVerticalHydraulicConductivityMethod: integer;
     FUseStartingHeadForSaturatedThickness: boolean;
+    FHorizontalAnisotropy: double;
+    FSubNoDelayBedLayers: TSubNoDelayBedLayers;
+    FSubDelayBedLayers: TSubDelayBedLayers;
     procedure SetDataArrayName(const NewName : string);
     procedure SetAquiferName(const Value : string);
     procedure SetGrowthMethod(const Value: TGrowthMethod);
@@ -62,6 +67,10 @@ type
     function Collection: TLayerStructure;
     procedure SetUseStartingHeadForSaturatedThickness(const Value: boolean);
     function GetSimulated: boolean;
+    procedure SetHorizontalAnisotropy(const Value: double);
+    procedure SetSubDelayBedLayers(const Value: TSubDelayBedLayers);
+    procedure SetSubNoDelayBedLayers(const Value: TSubNoDelayBedLayers);
+    function SubsidenceLayerCount(SubLayers: TCustomSubLayer): integer;
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
   public
@@ -71,13 +80,19 @@ type
     function LayerCount: integer;
     function ModflowLayerCount: integer;
     procedure WriteLAYCB(const DiscretizationWriter: TObject);
+    function SubsidenceDefined: boolean;
+    function DelayCount: integer;
+    function NoDelayCount: integer;
   published
     property AquiferName : string read FAquiferName write SetAquiferName;
-    // @name can take on the following values:
-    // @unorderedlist(
-    //   @item(0, confined)
-    //   @item 1, unconfined)
-    //  )
+    {@name can take on the following values:
+     @unorderedlist(
+       @item(0, confined)
+       @item(1, convertible in LPF and HUF, Unconfined in BCF)
+       @item(2, limited convertible in BCF with constant transmissivity)
+       @item(3, fully convertible in BCF with variable transmissivity)
+      )
+    }
     property AquiferType: integer read FAquiferType write SetAquiferType;
     property DataArrayName :  string read FDataArrayName write SetDataArrayName;
     property GrowthMethod: TGrowthMethod read FGrowthMethod
@@ -95,16 +110,28 @@ type
     property UseStartingHeadForSaturatedThickness: boolean
       read FUseStartingHeadForSaturatedThickness
       write SetUseStartingHeadForSaturatedThickness;
+    // TRPY in BCF package.
+    property HorizontalAnisotropy: double read FHorizontalAnisotropy
+      write SetHorizontalAnisotropy;
+    property SubNoDelayBedLayers: TSubNoDelayBedLayers
+      read FSubNoDelayBedLayers write SetSubNoDelayBedLayers;
+    property SubDelayBedLayers: TSubDelayBedLayers
+      read FSubDelayBedLayers write SetSubDelayBedLayers;
   end;
 
   TLayerStructure = class(TLayerOwnerCollection)
   Private
+    FSimulatedNotifier: TObserver;
+    FAquiferTypeNotifier: TObserver;
     function GetLayerGroup(const Index: integer): TLayerGroup;
     function IntegerArray(Method: TIntTypeMethod): TOneDIntegerArray;
+    function FloatArray(Method: TFloatTypeMethod): TOneDRealArray;
   public
+    function NonSimulatedLayersPresent: boolean;
     procedure AssignAssociatedInputDataSets;
     procedure Assign(Source: TPersistent);override;
     constructor Create(Model: TObject);
+    destructor Destroy; override;
     property LayerGroups[const Index: integer]: TLayerGroup
       read GetLayerGroup; default;
     function LayerCount: integer;
@@ -120,6 +147,7 @@ type
     Function Layavg: TOneDIntegerArray;
     function Chani: TOneDIntegerArray;
     Function Layvka: TOneDIntegerArray;
+    function Trpy: TOneDRealArray;
     // @name converts a MODFLOW model layer (starting at 1) to the
     // appropriate index in a 3D data array;
     Function ModflowLayerToDataSetLayer(ModflowLayer: integer): integer;
@@ -127,6 +155,12 @@ type
     //  @name returns the @link(TLayerGroup) that contains Layer.
     // Layer is zero-based.
     function GetLayerGroupByLayer(const Layer: integer): TLayerGroup;
+    property SimulatedNotifier: TObserver read FSimulatedNotifier;
+    property AquiferTypeNotifier: TObserver read FAquiferTypeNotifier;
+    procedure StopTalkingToAnyone;
+    function SubsidenceDefined: boolean;
+    function DelayCount: integer;
+    function NoDelayCount: integer;
   end;
 
 resourcestring
@@ -165,6 +199,9 @@ begin
       AnotherLayerGroup.VerticalHydraulicConductivityMethod;
     UseStartingHeadForSaturatedThickness :=
       AnotherLayerGroup.UseStartingHeadForSaturatedThickness;
+    HorizontalAnisotropy := AnotherLayerGroup.HorizontalAnisotropy;
+    SubNoDelayBedLayers := AnotherLayerGroup.SubNoDelayBedLayers;
+    SubDelayBedLayers := AnotherLayerGroup.SubDelayBedLayers;
   end;
 end;
 
@@ -177,17 +214,26 @@ constructor TLayerGroup.Create(Collection: TCollection);
 begin
   inherited;
   FLayerCollection:= TLayerCollection.Create(self);
+  FSubNoDelayBedLayers := TSubNoDelayBedLayers.Create(Model);
+  FSubDelayBedLayers := TSubDelayBedLayers.Create(Model);
   AquiferName := 'New Layer Group';
   FGrowthRate := 1.2;
+  FHorizontalAnisotropy := 1;
   FSimulated := True;
+end;
+
+function TLayerGroup.DelayCount: integer;
+begin
+  Result := SubsidenceLayerCount(SubDelayBedLayers);
 end;
 
 destructor TLayerGroup.Destroy;
 var
   Model: TPhastModel;
-//  DataArrayIndex: Integer;
   DataArray: TDataArray;
 begin
+  FSubDelayBedLayers.Free;
+  FSubNoDelayBedLayers.Free;
   if Collection.Model <> nil then
   begin
     Model := Collection.Model as TPhastModel;
@@ -196,7 +242,6 @@ begin
       DataArray := Model.GetDataSetByName(FDataArrayName);
       if DataArray <> nil then
       begin
-  //      DataArray := Model.DataSets[DataArrayIndex];
         DataArray.Lock := [];
       end;
     end;
@@ -240,7 +285,10 @@ begin
       VerticalHydraulicConductivityMethod)
     and (AnotherLayerGroup.UseStartingHeadForSaturatedThickness =
       UseStartingHeadForSaturatedThickness)
-    and AnotherLayerGroup.LayerCollection.IsSame(LayerCollection);
+    and (AnotherLayerGroup.HorizontalAnisotropy = HorizontalAnisotropy)
+    and AnotherLayerGroup.LayerCollection.IsSame(LayerCollection)
+    and AnotherLayerGroup.SubNoDelayBedLayers.IsSame(SubNoDelayBedLayers)
+    and AnotherLayerGroup.SubDelayBedLayers.IsSame(SubDelayBedLayers);
 end;
 
 function TLayerGroup.LayerCount: integer;
@@ -268,6 +316,8 @@ begin
   Model.TopGridObserver.TalksTo(DataArray);
   DataArray.TalksTo(Model.ThreeDGridObserver);
   Model.ThreeDGridObserver.StopsTalkingTo(DataArray);
+  SubNoDelayBedLayers.Loaded;
+  SubDelayBedLayers.Loaded;
 end;
 
 function TLayerGroup.ModflowLayerCount: integer;
@@ -279,6 +329,48 @@ begin
   else
   begin
     result := 0;
+  end;
+end;
+
+function TLayerGroup.NoDelayCount: integer;
+begin
+  Result := SubsidenceLayerCount(SubNoDelayBedLayers);
+end;
+
+function TLayerGroup.SubsidenceLayerCount(SubLayers: TCustomSubLayer): integer;
+var
+  Index: Integer;
+  UseIndex: Integer;
+  Item: TCustomSubLayerItem;
+begin
+  result := 0;
+  if Simulated then
+  begin
+    if LayerCount > 1 then
+    begin
+      for Index := 0 to SubLayers.Count - 1 do
+      begin
+        Item := SubLayers.Items[Index] as TCustomSubLayerItem;
+        if Item.UseInAllLayers then
+        begin
+          Inc(result, LayerCount);
+        end
+        else
+        begin
+          for UseIndex := 1 to LayerCount do
+          begin
+            if Item.UsedLayers.GetItemByLayerNumber(UseIndex) <> nil then
+            begin
+              Inc(result);
+            end;
+          end;
+        end;
+      end;
+    end
+    else
+    begin
+      result := SubLayers.Count;
+    end;
   end;
 end;
 
@@ -312,11 +404,16 @@ begin
 end;
 
 procedure TLayerGroup.SetAquiferType(const Value: integer);
+var
+  Notifier: TObserver;
 begin
   if FAquiferType <> Value then
   begin
     Assert(Value  in [0..3]);
     FAquiferType := Value;
+    Notifier := (Collection as TLayerStructure).AquiferTypeNotifier;
+    Notifier.UpToDate := False;
+    Notifier.UpToDate := True;
     InvalidateModel;
   end;
 end;
@@ -324,7 +421,6 @@ end;
 procedure TLayerGroup.SetDataArrayName(const NewName : string);
 var
   Model: TPhastModel;
-//  DataArrayIndex: integer;
   DataArray: TDataArray;
   UnitAbove, UnitBelow: TLayerGroup;
   NewFormula: string;
@@ -341,7 +437,7 @@ begin
         DataArray := Model.GetDataSetByName(FDataArrayName);
         if DataArray <> nil then
         begin
-//          DataArray := Model.DataSets[DataArrayIndex];
+          // rename data array.
           Model.TopGridObserver.StopsTalkingTo(DataArray);
           DataArray.StopsTalkingTo(Model.ThreeDGridObserver);
           DataArray.Name := NewName;
@@ -362,6 +458,9 @@ begin
         end
         else
         begin
+          // create a new data array.
+
+          // First get formula for new layer.
           if Collection.Count = 1 then
           begin
             NewFormula := '0';
@@ -384,6 +483,7 @@ begin
               + UnitBelow.DataArrayName + ') / 2';
           end;
 
+          // create new data array.
           DataArray := Model.CreateNewDataArray(TDataArray, NewName, NewFormula,
             [dcName, dcType, dcOrientation, dcEvaluatedAt], rdtDouble,
             eaBlocks, dsoTop, StrLayerDefinition);
@@ -423,6 +523,15 @@ begin
   end;
 end;
 
+procedure TLayerGroup.SetHorizontalAnisotropy(const Value: double);
+begin
+  if FHorizontalAnisotropy <> Value then
+  begin
+    FHorizontalAnisotropy := Value;
+    InvalidateModel;
+  end;
+end;
+
 procedure TLayerGroup.SetInterblockTransmissivityMethod(const Value: integer);
 begin
   if FInterblockTransmissivityMethod <> Value then
@@ -440,6 +549,7 @@ end;
 procedure TLayerGroup.SetSimulated(const Value: boolean);
 var
   PhastModel: TPhastModel;
+  Notifier: TObserver;
 begin
   if FSimulated <> Value then
   begin
@@ -449,8 +559,21 @@ begin
     begin
       PhastModel.InvalidateModflowBoundaries;
     end;
+    Notifier := (Collection as TLayerStructure).SimulatedNotifier;
+    Notifier.UpToDate := False;
+    Notifier.UpToDate := True;
     InvalidateModel;
   end;
+end;
+
+procedure TLayerGroup.SetSubDelayBedLayers(const Value: TSubDelayBedLayers);
+begin
+  FSubDelayBedLayers.Assign(Value);
+end;
+
+procedure TLayerGroup.SetSubNoDelayBedLayers(const Value: TSubNoDelayBedLayers);
+begin
+  FSubNoDelayBedLayers.Assign(Value)
 end;
 
 procedure TLayerGroup.SetUseStartingHeadForSaturatedThickness(
@@ -471,6 +594,12 @@ begin
     FVerticalHydraulicConductivityMethod := Value;
     InvalidateModel;
   end;
+end;
+
+function TLayerGroup.SubsidenceDefined: boolean;
+begin
+  result := Simulated and
+    ((SubNoDelayBedLayers.Count > 0) or (SubDelayBedLayers.Count > 0));
 end;
 
 procedure TLayerGroup.WriteLAYCB(const DiscretizationWriter: TObject);
@@ -523,6 +652,8 @@ end;
 constructor TLayerStructure.Create(Model: TObject);
 begin
   inherited Create(TLayerGroup, Model);
+  FSimulatedNotifier := TObserver.Create(nil);
+  FAquiferTypeNotifier := TObserver.Create(nil);
 end;
 
 function TLayerStructure.GetLayerGroup(const Index: integer): TLayerGroup;
@@ -605,6 +736,15 @@ begin
                 and PhastModel.ModflowPackages.LpfPackage.UseSaturatedThickness then
               begin
                 result[MFLayIndex] := -1;
+              end;
+              if PhastModel.ModflowPackages.BcfPackage.isSelected then
+              begin
+                if (MFLayIndex > 0) and (result[MFLayIndex] = 1) then
+                begin
+                  result[MFLayIndex] := 3;
+                end;
+                result[MFLayIndex] := result[MFLayIndex]
+                  + Group.InterblockTransmissivityMethod*10;
               end;
             end;
           itmLayavg: result[MFLayIndex] := Group.InterblockTransmissivityMethod;
@@ -749,6 +889,56 @@ begin
   Assert(False);
 end;
 
+function TLayerStructure.DelayCount: integer;
+var
+  Index: Integer;
+  Group: TLayerGroup;
+begin
+  result := 0;
+  for Index := 0 to Count - 1 do
+  begin
+    Group := LayerGroups[Index];
+    result := result + Group.DelayCount;
+  end;
+end;
+
+destructor TLayerStructure.Destroy;
+begin
+  FAquiferTypeNotifier.Free;
+  FSimulatedNotifier.Free;
+  inherited;
+end;
+
+function TLayerStructure.FloatArray(Method: TFloatTypeMethod): TOneDRealArray;
+var
+  LayerCount: integer;
+  GroupIndex: Integer;
+  Group: TLayerGroup;
+  LayerIndex: Integer;
+  MFLayIndex: integer;
+begin
+  LayerCount := ModflowLayerCount;
+  SetLength(result, LayerCount);
+  MFLayIndex := 0;
+  for GroupIndex := 1 to Count - 1 do
+  begin
+    Group := LayerGroups[GroupIndex];
+    if Group.Simulated then
+    begin
+      for LayerIndex := 0 to Group.ModflowLayerCount - 1 do
+      begin
+        Assert(MFLayIndex < LayerCount);
+        case Method of
+          ftmTrpy: result[MFLayIndex] := Group.HorizontalAnisotropy;
+          else Assert(False);
+        end;
+        Inc(MFLayIndex);
+      end;
+    end;
+  end;
+  Assert(MFLayIndex = LayerCount);
+end;
+
 procedure TLayerStructure.AssignAssociatedInputDataSets;
 var
   Index: Integer;
@@ -803,6 +993,64 @@ begin
     end;
   end;
   Assert(False);
+end;
+
+function TLayerStructure.NoDelayCount: integer;
+var
+  Index: Integer;
+  Group: TLayerGroup;
+begin
+  result := 0;
+  for Index := 0 to Count - 1 do
+  begin
+    Group := LayerGroups[Index];
+    result := result + Group.NoDelayCount;
+  end;
+end;
+
+function TLayerStructure.NonSimulatedLayersPresent: boolean;
+var
+  Index: Integer;
+  LayerGroup: TLayerGroup;
+begin
+  result := false;
+  for Index := 1 to Count - 1 do
+  begin
+    LayerGroup := Items[Index] as TLayerGroup;
+    if not LayerGroup.Simulated then
+    begin
+      result := True;
+      Exit;
+    end;
+  end;
+end;
+
+procedure TLayerStructure.StopTalkingToAnyone;
+begin
+  SimulatedNotifier.StopTalkingToAnyone;
+  AquiferTypeNotifier.StopTalkingToAnyone;
+end;
+
+function TLayerStructure.SubsidenceDefined: boolean;
+var
+  Index: Integer;
+  Group: TLayerGroup;
+begin
+  result := False;
+  for Index := 0 to Count - 1 do
+  begin
+    Group := LayerGroups[Index];
+    result := Group.SubsidenceDefined;
+    if result then
+    begin
+      Exit;
+    end;
+  end;
+end;
+
+function TLayerStructure.Trpy: TOneDRealArray;
+begin
+  result := FloatArray(ftmTrpy);
 end;
 
 procedure TLayerStructure.WriteLAYCB(const DiscretizationWriter: TObject);

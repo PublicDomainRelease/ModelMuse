@@ -22,7 +22,7 @@ type
     StreamWidthAnnotation: string;
     StreamDepthAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
   end;
 
   TSrfSegmentArray = array of TSfrSegmentRecord;
@@ -32,7 +32,7 @@ type
     FSrfSegmentArray: TSrfSegmentArray;
     function GetSrfSegmentArray: TSrfSegmentArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -164,7 +164,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
   public
     property Values: TSfrSegmentRecord read FValues write FValues;
     property StressPeriod: integer read FStressPeriod write FStressPeriod;
@@ -1037,10 +1037,10 @@ begin
   result := Values.StreamWidthAnnotation;
 end;
 
-procedure TSfrSegment_Cell.Restore(Decomp: TDecompressionStream);
+procedure TSfrSegment_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp);
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -1066,7 +1066,7 @@ begin
   WriteCompString(Comp, StreamDepthAnnotation);
 end;
 
-procedure TSfrSegmentRecord.Restore(Decomp: TDecompressionStream);
+procedure TSfrSegmentRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   StreambedElevation := ReadCompReal(Decomp);
@@ -1078,11 +1078,11 @@ begin
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
 
-  HydraulicConductivityAnnotation := ReadCompString(Decomp);
-  StreambedElevationAnnotation := ReadCompString(Decomp);
-  StreamBedThicknessAnnotation := ReadCompString(Decomp);
-  StreamWidthAnnotation := ReadCompString(Decomp);
-  StreamDepthAnnotation := ReadCompString(Decomp);
+  HydraulicConductivityAnnotation := ReadCompString(Decomp, Annotations);
+  StreambedElevationAnnotation := ReadCompString(Decomp, Annotations);
+  StreamBedThicknessAnnotation := ReadCompString(Decomp, Annotations);
+  StreamWidthAnnotation := ReadCompString(Decomp, Annotations);
+  StreamDepthAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TSfrSegmentStorage }
@@ -1106,7 +1106,7 @@ begin
   end;
 end;
 
-procedure TSfrSegmentStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TSfrSegmentStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Count: Integer;
   Index: Integer;
@@ -1115,7 +1115,7 @@ begin
   SetLength(FSrfSegmentArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FSrfSegmentArray[Index].Restore(DecompressionStream);
+    FSrfSegmentArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 

@@ -42,7 +42,7 @@ inherited frmModflowPackages: TfrmModflowPackages
     Top = 0
     Width = 605
     Height = 503
-    ActivePage = jvspMNW2
+    ActivePage = jvspSUB
     PropagateEnable = False
     Align = alClient
     OnChange = jvplPackagesChange
@@ -2339,9 +2339,6 @@ inherited frmModflowPackages: TfrmModflowPackages
         object tabSfrParameters: TTabSheet
           Caption = 'Parameters'
           ImageIndex = 1
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object splitSFR: TSplitter
             Left = 0
             Top = 257
@@ -2573,7 +2570,6 @@ inherited frmModflowPackages: TfrmModflowPackages
               Control = framePkgUZF.cbSimulateEvapotranspiration
             end
             item
-              Control = framePkgUZF.comboVerticalKSource
             end
             item
               Control = framePkgUZF.rdeNumberOfTrailingWaves
@@ -2585,7 +2581,6 @@ inherited frmModflowPackages: TfrmModflowPackages
               Control = framePkgUZF.rdeNumberOfWaveSets
             end
             item
-              Control = framePkgUZF.lblVerticalKSource
             end
             item
               Control = framePkgUZF.lblNumberOfWaveSets
@@ -2599,6 +2594,7 @@ inherited frmModflowPackages: TfrmModflowPackages
             item
               Control = framePkgUZF.lblSURFDEP
             end>
+          OnEnabledChange = framePkgUZFrcSelectionControllerEnabledChange
         end
       end
     end
@@ -4011,6 +4007,291 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
             item
               Control = framePkgMnw2.comboPrintOption
+            end>
+        end
+      end
+    end
+    object jvspBCF: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 605
+      Height = 503
+      HelpType = htKeyword
+      HelpKeyword = 'BCF_Block-Centered_Flow_Package'
+      Caption = 'jvspBCF'
+      inline framePkgBCF: TframePackage
+        Left = 0
+        Top = 0
+        Width = 605
+        Height = 503
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        ExplicitWidth = 605
+        ExplicitHeight = 503
+        inherited lblComments: TLabel
+          Width = 76
+          Height = 18
+          ExplicitWidth = 76
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited memoComments: TMemo
+          Width = 574
+          Height = 435
+          ExplicitWidth = 574
+          ExplicitHeight = 435
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = framePkgBCF.lblComments
+            end
+            item
+              Control = framePkgBCF.memoComments
+            end>
+          OnEnabledChange = framePkgBCFrcSelectionControllerEnabledChange
+        end
+      end
+    end
+    object jvspSUB: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 605
+      Height = 503
+      HelpType = htKeyword
+      HelpKeyword = 'SUB_Subsidence_and_Aquifer_Sys'
+      Caption = 'jvspSUB'
+      inline framePkgSUB: TframePackageSub
+        Left = 0
+        Top = 0
+        Width = 605
+        Height = 503
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        ExplicitWidth = 605
+        ExplicitHeight = 503
+        inherited lblComments: TLabel
+          Width = 76
+          Height = 18
+          ExplicitWidth = 76
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited memoComments: TMemo
+          Width = 574
+          ExplicitWidth = 574
+        end
+        inherited pcSub: TPageControl
+          Width = 605
+          Height = 384
+          ActivePage = framePkgSUB.tabPrintSave
+          ExplicitWidth = 605
+          ExplicitHeight = 384
+          inherited tabControls: TTabSheet
+            ExplicitLeft = 4
+            ExplicitTop = 29
+            ExplicitWidth = 597
+            ExplicitHeight = 351
+            inherited lblNumberOfNodes: TLabel
+              Width = 287
+              Height = 18
+              ExplicitWidth = 287
+              ExplicitHeight = 18
+            end
+            inherited lblAccel1: TLabel
+              Width = 238
+              Height = 18
+              ExplicitWidth = 238
+              ExplicitHeight = 18
+            end
+            inherited lblAccel2: TLabel
+              Width = 265
+              Height = 18
+              ExplicitWidth = 265
+              ExplicitHeight = 18
+            end
+            inherited lblMinIterations: TLabel
+              Width = 353
+              Height = 18
+              ExplicitWidth = 353
+              ExplicitHeight = 18
+            end
+            inherited lbReadRestart: TLabel
+              Width = 380
+              Height = 18
+              ExplicitWidth = 380
+              ExplicitHeight = 18
+            end
+            inherited lblOutputChoice: TLabel
+              Width = 140
+              Height = 18
+              ExplicitWidth = 140
+              ExplicitHeight = 18
+            end
+            inherited seNumberOfNodes: TJvSpinEdit
+              Height = 26
+              ExplicitHeight = 26
+            end
+            inherited rdeAccel1: TRbwDataEntry
+              ItemHeight = 18
+            end
+            inherited rdeAccel2: TRbwDataEntry
+              ItemHeight = 18
+            end
+            inherited rdeMinIterations: TRbwDataEntry
+              ItemHeight = 18
+            end
+            inherited feReadRestart: TJvFilenameEdit
+              Left = 14
+              Top = 163
+              Width = 573
+              Height = 26
+              ExplicitLeft = 14
+              ExplicitTop = 163
+              ExplicitWidth = 573
+              ExplicitHeight = 26
+            end
+            inherited comboOutputChoice: TJvImageComboBox
+              Top = 213
+              Height = 28
+              ItemHeight = 22
+              ExplicitTop = 213
+              ExplicitHeight = 28
+            end
+          end
+          inherited tabFormat: TTabSheet
+            ExplicitLeft = 4
+            ExplicitTop = 29
+            ExplicitWidth = 436
+            ExplicitHeight = 250
+            inherited rdgFormats: TRbwDataGrid4
+              Left = 13
+              Top = 40
+              Width = 573
+              Height = 291
+              ExplicitLeft = 13
+              ExplicitTop = 40
+              ExplicitWidth = 573
+              ExplicitHeight = 291
+              ColWidths = (
+                83
+                64
+                64
+                64
+                64
+                64)
+            end
+            inherited comboMultiFomat: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ExplicitHeight = 28
+            end
+          end
+          inherited tabPrintSave: TTabSheet
+            ExplicitLeft = 4
+            ExplicitTop = 29
+            ExplicitWidth = 436
+            ExplicitHeight = 250
+            inherited lblNumExportPeriods: TLabel
+              Top = 427
+              Width = 176
+              Height = 18
+              ExplicitTop = 326
+              ExplicitWidth = 176
+              ExplicitHeight = 18
+            end
+            inherited sbAdd: TSpeedButton
+              Left = 667
+              Top = 428
+              ExplicitLeft = 506
+              ExplicitTop = 327
+            end
+            inherited sbInsert: TSpeedButton
+              Left = 696
+              Top = 428
+              ExplicitLeft = 535
+              ExplicitTop = 327
+            end
+            inherited sbDelete: TSpeedButton
+              Left = 725
+              Top = 428
+              ExplicitLeft = 564
+              ExplicitTop = 327
+            end
+            inherited cbMultiPrintSave: TCheckBox
+              Width = 209
+              ExplicitWidth = 209
+            end
+            inherited rdgOutput: TRbwDataGrid4
+              Left = 13
+              Top = 40
+              Width = 573
+              Height = 297
+              ExplicitLeft = 13
+              ExplicitTop = 40
+              ExplicitWidth = 573
+              ExplicitHeight = 297
+            end
+            inherited seNumExportPeriods: TJvSpinEdit
+              Top = 424
+              Height = 26
+              ExplicitTop = 323
+              ExplicitHeight = 26
+            end
+          end
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = framePkgSUB.lblComments
+            end
+            item
+              Control = framePkgSUB.memoComments
+            end
+            item
+              Control = framePkgSUB.seNumberOfNodes
+            end
+            item
+              Control = framePkgSUB.rdeAccel1
+            end
+            item
+              Control = framePkgSUB.rdeAccel2
+            end
+            item
+              Control = framePkgSUB.rdeMinIterations
+            end
+            item
+              Control = framePkgSUB.cbSaveRestart
+            end
+            item
+              Control = framePkgSUB.feReadRestart
+            end
+            item
+              Control = framePkgSUB.rdgFormats
+            end
+            item
+              Control = framePkgSUB.rdgOutput
+            end
+            item
+              Control = framePkgSUB.seNumExportPeriods
+            end
+            item
+              Control = framePkgSUB.sbAdd
+            end
+            item
+              Control = framePkgSUB.sbInsert
             end>
         end
       end

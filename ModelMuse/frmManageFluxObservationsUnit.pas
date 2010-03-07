@@ -1015,6 +1015,8 @@ begin
   begin
     try
       IncludeGIS_Functions;
+      RemoveGetVCont;
+      RemoveHufFunctions;
       PopupParent := self;
 
       for Index := 0 to rparserThreeDFormulaElements.VariableCount - 1 do

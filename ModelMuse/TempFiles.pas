@@ -77,6 +77,12 @@ begin
     end;
   end;
   TempDir := CurrentTempDir;
+  if not DirectoryExists(TempDir) then
+  begin
+    CreateDir(TempDir);
+    Directories.Add(TempDir);
+//    Application.ProcessMessages;
+  end;
 
   if GetTempFileName(PChar(TempDir), 'MM_', 0, @NewFileName) = 0 then
   begin
@@ -94,9 +100,12 @@ begin
     begin
       RaiseLastOSError;
     end;
+  end
+  else
+  begin
+    ErrorCount := 0;
+    result := NewFileName;
   end;
-  ErrorCount := 0;
-  result := NewFileName;
   if Pos('FFFF', ExtractFileName(result)) > 0 then
   begin
     Inc(DirCount);

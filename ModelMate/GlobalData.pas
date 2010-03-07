@@ -7,7 +7,7 @@ interface
     //Classes,
     DataGrid, PriorInfoUnit, DependentsUnit,
     GlobalBasicData, GlobalTypesUnit, ModelMateClassesUnit, ParallelControlUnit,
-    ParallelRunnerUnit, JupiterUnit;
+    ParallelRunnerUnit, JupiterUnit, RbwDataGrid4;
 
   var
     // Types defined for ModelMate
@@ -38,7 +38,8 @@ interface
   procedure FreeGlobalData;
   function GetObsHint(const aGrid: TDataGrid; const aCol: Integer): string;
   function GetPredHint(const aGrid: TDataGrid; const aCol: Integer): string;
-  function GetParHint(const aGrid: TDataGrid; const aCol: Integer): string;
+  function GetParHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
+  function GetParHintOld(const aGrid: TDataGrid; const aCol: Integer): string;
   function GetPriHint(const aGrid: TDataGrid; const aCol: Integer): string;
   procedure InitializeGlobalData;
 
@@ -112,13 +113,39 @@ end;
 
 //###################################################################
 
-function GetParHint(const aGrid: TDataGrid; const aCol: Integer): string;
+function GetParHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
 var
   Str, TestStr, Caption: string;
   I: Integer;
 begin
   // Need to determine attribute type, given Caption
-  Caption := aGrid.Columns[aCol].Title.Caption;
+  Caption := aGrid.Cells[aCol,0];
+  result := '';
+  if ParameterSetupCurrent <> nil then
+    begin
+      for I := 0 to ParameterSetupCurrent.NumAtt - 1 do
+        begin
+          TestStr := ParameterSetupCurrent.ParAttributes[I].Caption;
+          if TestStr = Caption then
+            begin
+              Str := ParameterSetupCurrent.ParAttributes[I].Caption + ': ' +
+                     ParameterSetupCurrent.ParAttributes[I].Hint;
+              result := Str;
+              Break;
+            end;
+        end;
+    end;
+end;
+
+//###################################################################
+
+function GetParHintOld(const aGrid: TDataGrid; const aCol: Integer): string;
+var
+  Str, TestStr, Caption: string;
+  I: Integer;
+begin
+  // Need to determine attribute type, given Caption
+  Caption := aGrid.Cells[aCol,0];
   result := '';
   for I := 0 to ParameterSetupCurrent.NumAtt - 1 do
   begin
@@ -128,6 +155,7 @@ begin
       Str := ParameterSetupCurrent.ParAttributes[I].Caption + ': ' +
              ParameterSetupCurrent.ParAttributes[I].Hint;
       result := Str;
+      Break;
     end;
   end;
 end;

@@ -1,3 +1,7 @@
+{TODO : import ascii rasters}
+{TODO : add ability to Lock objects so the can't be be moved accidentally}
+{TODO : Add a "ruler" feature}
+{TODO : use scroll wheel to zoom in or out}
 {DONE 1 : Allow editing of imported values.}
 {TODO 1 : Add inclusion/exclusion filters for archive.}
 {TODO 1 : I noticed that the dialog box that asks if you want to archive the model sometimes is hidden behind the main ModelMuse Window.}

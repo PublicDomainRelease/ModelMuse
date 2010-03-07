@@ -29,7 +29,7 @@ type
     CellToWellConductanceAnnotation: string;
     PartialPenetrationAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
   end;
 
   TMnw2Array = array of TMnw2Record;
@@ -39,7 +39,7 @@ type
     FMnw2Array: TMnw2Array;
     function GetMnw2Array: TMnw2Array;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -288,7 +288,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property WellRadius: double read GetWellRadius;
@@ -1755,7 +1755,7 @@ begin
   end;
   // Check if the stress period is completely enclosed within the times
   // of the LocalBoundaryStorage;
-  Cells.CheckRestore;
+//  Cells.CheckRestore;
   for BoundaryIndex := 0 to Length(LocalBoundaryStorage.Mnw2Array) - 1 do
   begin
     BoundaryValues := LocalBoundaryStorage.Mnw2Array[BoundaryIndex];
@@ -2470,7 +2470,7 @@ begin
   WriteCompString(Comp, PartialPenetrationAnnotation);
 end;
 
-procedure TMnw2Record.Restore(Decomp: TDecompressionStream);
+procedure TMnw2Record.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
 
@@ -2483,14 +2483,14 @@ begin
   CellToWellConductance := ReadCompReal(Decomp);
   PartialPenetration := ReadCompReal(Decomp);
 
-  WellRadiusAnnotation := ReadCompString(Decomp);
-  SkinRadiusAnnotation := ReadCompString(Decomp);
-  SkinKAnnotation := ReadCompString(Decomp);
-  BAnnotation := ReadCompString(Decomp);
-  CAnnotation := ReadCompString(Decomp);
-  PAnnotation := ReadCompString(Decomp);
-  CellToWellConductanceAnnotation := ReadCompString(Decomp);
-  PartialPenetrationAnnotation := ReadCompString(Decomp);
+  WellRadiusAnnotation := ReadCompString(Decomp, Annotations);
+  SkinRadiusAnnotation := ReadCompString(Decomp, Annotations);
+  SkinKAnnotation := ReadCompString(Decomp, Annotations);
+  BAnnotation := ReadCompString(Decomp, Annotations);
+  CAnnotation := ReadCompString(Decomp, Annotations);
+  PAnnotation := ReadCompString(Decomp, Annotations);
+  CellToWellConductanceAnnotation := ReadCompString(Decomp, Annotations);
+  PartialPenetrationAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TMnw2Storage }
@@ -2510,7 +2510,7 @@ begin
   result := FMnw2Array;
 end;
 
-procedure TMnw2Storage.Restore(DecompressionStream: TDecompressionStream);
+procedure TMnw2Storage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -2519,7 +2519,7 @@ begin
   SetLength(FMnw2Array, Count);
   for Index := 0 to Count - 1 do
   begin
-    FMnw2Array[Index].Restore(DecompressionStream);
+    FMnw2Array[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 
@@ -2726,10 +2726,10 @@ begin
   result := Values.WellRadiusAnnotation;
 end;
 
-procedure TMnw2_Cell.Restore(Decomp: TDecompressionStream);
+procedure TMnw2_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp);
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 

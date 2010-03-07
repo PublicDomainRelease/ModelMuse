@@ -33,12 +33,18 @@ type
     procedure GetAppName;
     procedure CheckCurrentUrl;
     procedure UpdateIniFile;
+    procedure DestroyIniFile;
   public
-    Constructor Create(ModelVersion: string; IniFile: TMemInifile);
+    Constructor Create(ModelVersion: string; IniFile: TMemInifile; ShowTips: boolean);
     destructor Destroy; override;
     procedure Execute; override;
   end;
 
+const
+  StrVideoDisplayed = 'VideoDisplayed';
+  StrTipDate = 'TipDate';
+  StrInternetCheckDate = 'InternetCheckDate';
+  
 implementation
 
 uses
@@ -47,9 +53,6 @@ uses
 
 const
   UpdateURL = 'http://water.usgs.gov/nrp/gwsoftware/ModelMuse/ModelMuseInternetUpdate.txt';
-  StrVideoDisplayed = 'VideoDisplayed';
-  StrTipDate = 'TipDate';
-  StrInternetCheckDate = 'InternetCheckDate';
 
 { TCheckInternetThread }
 
@@ -111,60 +114,66 @@ var
   Index: Integer;
 begin
   try
-    Synchronize(GetAppName);
-    Synchronize(ReadIniFile);
+    try
+      Synchronize(GetAppName);
+      Synchronize(ReadIniFile);
 
-    if (Now - FLastCheckInternetDate) > 0.95 then
-    begin
-      if ReadInternetFile(UpdateURL, FUpdateText, FAppName) then
+      if (Now - FLastCheckInternetDate) > 0.95 then
       begin
-        if FUpdateText.Count > 0 then
+        if ReadInternetFile(UpdateURL, FUpdateText, FAppName) then
         begin
-          Synchronize(UpdateIniFile);
-          VersionOnWeb := FUpdateText[0];
-          VerCompar := CheckVersion(VersionOnWeb);
-          case VerCompar of
-            vcUnknown, vcSame, vcExternalOlder: ; // do nothing
-            vcExternalNewer:
-              begin
-                Synchronize(ShowNewVersionMessage);
-              end
-            else Assert(False)
-          end;
-          FUpdateText.Delete(0);
           if FUpdateText.Count > 0 then
           begin
-            Synchronize(ReadIniFile);
-          end;
-        end;
-        if FShowVideos then
-        begin
-          if (Now - FLastTipDate) > 0.95 then
-          begin
-            for Index := 0 to FVideoURLs.Count - 1 do
+  //          Synchronize(UpdateIniFile);
+            VersionOnWeb := FUpdateText[0];
+            VerCompar := CheckVersion(VersionOnWeb);
+            case VerCompar of
+              vcUnknown, vcSame, vcExternalOlder: ; // do nothing
+              vcExternalNewer:
+                begin
+                  Synchronize(ShowNewVersionMessage);
+                end
+              else Assert(False)
+            end;
+            FUpdateText.Delete(0);
+            if FUpdateText.Count > 0 then
             begin
-              FCurrentURL := FVideoURLs[Index];
-              Synchronize(CheckCurrentUrl);
-              if not FCurrentUrlHasBeenDisplayed then
+              Synchronize(ReadIniFile);
+            end;
+          end;
+          if FShowVideos then
+          begin
+            if (Now - FLastTipDate) > 0.95 then
+            begin
+              for Index := 0 to FVideoURLs.Count - 1 do
               begin
-                LaunchURL(FBrowser, FCurrentURL);
-                Synchronize(UpdateIniFile);
-                break;
+                FCurrentURL := FVideoURLs[Index];
+                Synchronize(CheckCurrentUrl);
+                if not FCurrentUrlHasBeenDisplayed then
+                begin
+                  LaunchURL(FBrowser, FCurrentURL);
+                  Synchronize(UpdateIniFile);
+                  break;
+                end;
               end;
             end;
           end;
         end;
+        Synchronize(UpdateIniFile);
+
       end;
-    end;
-  except on E: EInternetConnectionError do
-    begin
-      Terminate;
-    end;
-  end
+    except on E: EInternetConnectionError do
+      begin
+        Terminate;
+      end;
+    end
+  finally
+    Synchronize(DestroyIniFile);
+  end;
 end;
 
 constructor TCheckInternetThread.Create(ModelVersion: string;
-  IniFile: TMemInifile);
+  IniFile: TMemInifile; ShowTips: boolean);
 begin
   inherited Create(False);
   FModelVersion := ModelVersion;
@@ -172,11 +181,17 @@ begin
   FVideoURLs := TStringList.Create;
   FUpdateText := TStringList.Create;
   FreeOnTerminate := True;
-  FShowVideos := False;
+  FShowVideos := ShowTips;
+end;
+
+procedure TCheckInternetThread.DestroyIniFile;
+begin
+  FIniFile.Free;
 end;
 
 destructor TCheckInternetThread.Destroy;
 begin
+
   FVideoURLs.Free;
   FUpdateText.Free;
   inherited;
@@ -189,7 +204,10 @@ end;
 
 procedure TCheckInternetThread.UpdateIniFile;
 begin
-  FIniFile.WriteBool(StrVideoDisplayed, FCurrentURL, True);
+  if FCurrentURL <> '' then
+  begin
+    FIniFile.WriteBool(StrVideoDisplayed, FCurrentURL, True);
+  end;
   FIniFile.WriteDateTime(StrCustomization, StrTipDate, Now);
   FIniFile.WriteDateTime(StrCustomization, StrInternetCheckDate, Now);
   FIniFile.UpdateFile;
@@ -213,14 +231,17 @@ var
   NewURL: string;
   HasDisplayed: Boolean;
 begin
-  FShowVideos := FIniFile.ReadBool(StrCustomization, StrShowTips, True);
+//  FShowVideos := FIniFile.ReadBool(StrCustomization, StrShowTips, True);
   FIniFile.ReadSection(StrVideoDisplayed, FVideoURLs);
-  for Index := 0 to FVideoURLs.Count - 1 do
+  if FUpdateText.Count > 0 then
   begin
-    OldURL := FVideoURLs[Index];
-    if FUpdateText.IndexOf(OldURL) < 0 then
+    for Index := 0 to FVideoURLs.Count - 1 do
     begin
-      FIniFile.DeleteKey(StrVideoDisplayed, OldURL);
+      OldURL := FVideoURLs[Index];
+      if FUpdateText.IndexOf(OldURL) < 0 then
+      begin
+        FIniFile.DeleteKey(StrVideoDisplayed, OldURL);
+      end;
     end;
   end;
   for Index := 0 to FUpdateText.Count - 1 do
@@ -228,6 +249,10 @@ begin
     NewURL := FUpdateText[Index];
     HasDisplayed := FIniFile.ReadBool(StrVideoDisplayed, NewURL, False);
     FIniFile.WriteBool(StrVideoDisplayed, NewURL, HasDisplayed);
+    if FVideoURLs.IndexOf(NewURL) < 0 then
+    begin
+      FVideoURLs.Add(NewURL);
+    end;
   end;
 //  if FShowVideos then
   begin

@@ -557,6 +557,59 @@ program ModelMuse;
 {%TogetherDiagram 'ModelSupport_ModelMuse\frmLinkStreamsUnit\default.txvpck'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\PrintChemistryZone\default.txvpck'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\frameFlowTableUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\PathlineReader\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmEndPointDisplayUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmCustomSelectObjectsUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\GlobalData\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\UcodeUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowHUF_WriterUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\framePackageSubUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\DependentsUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowMNW2_WriterUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\PriorInfoUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\GlobalBasicData\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ParallelControlUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmHUF_LayersUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ConvexHullUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmDeleteImageUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\framePackageHufUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmDataSetValuesUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\sskutils\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\HufDefinition\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmSelectObjectsForEditingUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowSubsidenceDefUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmRunModpathUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowMnw2Unit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModelMateClassesUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frameBatchFileLinesUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\GlobalTypesUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModelMuseUtilities\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\HashTrie\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowSUB_Writer\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmBatchFileAdditionsUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ParallelRunnerUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmWorldFileTypeUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\UnitCrc\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frameLocationMethodUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\UnitList\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowKDEP_WriterUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmTimeStepLengthCalculatorUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\framePackageMnw2Unit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\CheckInternetUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmTimeSeriesDisplayUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowBCF_WriterUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowGageUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frameSubBedsUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\FormulaManagerUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frameScreenObjectMNW2Unit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmModelMateInterfaceUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmModpathDisplayUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModelMateUtilities\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmPhastLocationUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowLVDA_WriterUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\JvRichEdit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\JupiterUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmExportShapefileObjectsUnit\default.txaPackage'}
 
 //  FastMM4 in 'FastMM4.pas',
 //  FastMove in 'FastCode\FastMove.pas',
@@ -890,7 +943,17 @@ uses
   frmModpathDisplayUnit in 'frmModpathDisplayUnit.pas' {frmModpathDisplay},
   frmPhastLocationUnit in 'frmPhastLocationUnit.pas' {frmPhastLocation},
   frmEndPointDisplayUnit in 'frmEndPointDisplayUnit.pas' {frmEndPointDisplay},
-  frmTimeSeriesDisplayUnit in 'frmTimeSeriesDisplayUnit.pas' {frmTimeSeriesDisplay};
+  frmTimeSeriesDisplayUnit in 'frmTimeSeriesDisplayUnit.pas' {frmTimeSeriesDisplay},
+  ModflowBCF_WriterUnit in 'ModflowBCF_WriterUnit.pas',
+  ModflowSubsidenceDefUnit in 'ModflowSubsidenceDefUnit.pas',
+  frameSubBedsUnit in 'frameSubBedsUnit.pas' {frameSubBeds: TFrame},
+  framePackageSubUnit in 'framePackageSubUnit.pas' {framePackageSub: TFrame},
+  ModflowSUB_Writer in 'ModflowSUB_Writer.pas',
+  UnitList in 'UnitList.pas',
+  UnitCRC in 'UnitCRC.pas',
+  SurferGridFileReaderUnit in 'SurferGridFileReaderUnit.pas',
+  frmImportSurferGrdFileUnitUnit in 'frmImportSurferGrdFileUnitUnit.pas' {frmImportSurferGrdFile},
+  frmCustomImportSimpleFileUnit in 'frmCustomImportSimpleFileUnit.pas' {frmCustomImportSimpleFile};
 
 {$R *.res}
 

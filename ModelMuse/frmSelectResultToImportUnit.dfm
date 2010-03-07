@@ -105,12 +105,20 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
   end
   object odSelectFiles: TJvOpenDialog
     Filter = 
-      'All supported file types|*.bhd;*.bdn;*.fhd;*.fdn;*.cbc|Formatted' +
-      ' head files (*.fhd)|*.fhd|Formatted drawdown files (*.fdn)|*.fdn' +
-      '|Binary head files (*.bhd)|*.bhd|Binary drawdown files (*.bdn)|*' +
-      '.bdn|Binary flow files (*.cbc)|*.cbc|Formatted HUF head files (*' +
-      '.huf_fhd)|*.huf_fhd|Binary HUF head files (*.huf_bhd)|*.huf_bhd|' +
-      'HUF flow files (*.huf_flow)|*.huf_flow'
+      'All supported file types|*.bhd;*.bdn;*.fhd;*.fdn;*.cbc;*.huf_fhd' +
+      ';*.huf_bhd;*.huf_flow;*.Sub_Out;*.SubSubOut;*.SubComMlOut;*.SubC' +
+      'omIsOut;*.SubVdOut;*.SubNdCritHeadOut;*.SubDCritHeadOut|Formatte' +
+      'd head files (*.fhd)|*.fhd|Formatted drawdown files (*.fdn)|*.fd' +
+      'n|Binary head files (*.bhd)|*.bhd|Binary drawdown files (*.bdn)|' +
+      '*.bdn|Binary flow files (*.cbc)|*.cbc|Formatted HUF head files (' +
+      '*.huf_fhd)|*.huf_fhd|Binary HUF head files (*.huf_bhd)|*.huf_bhd' +
+      '|HUF flow files (*.huf_flow)|*.huf_flow|Combined SUB output file' +
+      ' (*.Sub_Out)|*.Sub_Out|Subsidence (*.SubSubOut)|*.SubSubOut|Comp' +
+      'action by model layer (*.SubComMlOut)|*.SubComMlOut|Compaction b' +
+      'y interbed system (*.SubComIsOut)|*.SubComIsOut|Vertical displac' +
+      'ement (*.SubVdOut)|*.SubVdOut|Critical head for no-delay interbe' +
+      'ds (*.SubNdCritHeadOut)|*.SubNdCritHeadOut|Critical head for del' +
+      'ay interbeds (*.SubDCritHeadOut)|*.SubDCritHeadOut'
     Title = 'Select Model File'
     OnTypeChange = odSelectFilesTypeChange
     Height = 454

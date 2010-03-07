@@ -424,6 +424,12 @@ begin
     dgCredit.Cells[0, Row] := 'HashTrie.pas';
     dgCredit.Cells[1, Row] := 'SoftComplete Development';
     dgCredit.Cells[2, Row] := 'http://www.softcomplete.com/freeware.asp';
+
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'UnitList.pas, UnitCRC.pas';
+    dgCredit.Cells[1, Row] := 'ContinuIT BV';
+    dgCredit.Cells[2, Row] := 'http://www.continuit.nl/index.php?LANGUAGE=EN&PAGE=FREEWARE';
   finally
     dgCredit.EndUpdate
   end;

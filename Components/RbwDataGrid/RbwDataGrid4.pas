@@ -1430,6 +1430,7 @@ procedure TRbwDataGrid4.EndUpdate;
 var
   Index: Integer;
   AdjustRows: boolean;
+  LocalSelection: TGridRect;
 begin
   Dec(FUpdateCount);
   if FUpdateCount = 0 then
@@ -1458,6 +1459,9 @@ begin
     begin
       FOnEndUpdate(self);
     end;
+    // move editor to correct location.
+    LocalSelection := Selection;
+    Selection := LocalSelection;
   end;
 end;
 

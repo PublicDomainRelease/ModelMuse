@@ -176,9 +176,9 @@ begin
         end;
         Zonarr := ExpandString(Zonarr, 10);
 
-        WriteString(HGUNAM);
-        WriteString(Mltarr);
-        WriteString(Zonarr);
+        WriteString(HGUNAM + ' ');
+        WriteString(Mltarr + ' ');
+        WriteString(Zonarr + ' ');
         WriteString(IZ);
         WriteString(' # Data Set 4: HGUNAM Mltarr Zonarr IZ');
         NewLine;

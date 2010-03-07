@@ -65,8 +65,6 @@ type
     FList: TList;
     FSortedList: TStringHashTrie;
     FEmptyFormula: TFormulaObject;
-//    FCompileFormulas: boolean;
-//    procedure SetCompileFormulas(const Value: boolean);
   public
     Constructor Create;
     Destructor Destroy; override;
@@ -82,6 +80,7 @@ type
       NewFormula: string; Parser: TRbwParser; OnRemoveSubscription,
       OnRestoreSubscription: TChangeSubscription; Subject: TObject);
     procedure Pack;
+    procedure Clear;
 //    property CompileFormulas: boolean read FCompileFormulas write SetCompileFormulas;
   end;
 
@@ -89,7 +88,8 @@ implementation
 
 uses
   frmGoPhastUnit, DataSetUnit, ScreenObjectUnit, ModflowBoundaryUnit, 
-  ModflowEtsUnit, ModflowSfrTable;
+  ModflowEtsUnit, ModflowSfrTable, SubscriptionUnit, GIS_Functions,
+  PhastModelUnit;
 
 { TFormulaObject }
 
@@ -119,22 +119,25 @@ begin
   begin
     Assert(Assigned(OnRestoreSubscription));
     Index := FOnRemoveSubscriptionList.IndexOf(Addr(OnRemoveSubscription));
-    Assert(FOnRestoreSubscriptionList[Index] = Addr(OnRestoreSubscription));
-    FReferenceCountList[Index] := FReferenceCountList[Index]-1;
-    Subjects := FSubjectList[Index];
-    for SubjectIndex := Subjects.Count - 1 downto 0 do
+    if Index >= 0 then
     begin
-      if Subjects[SubjectIndex] = Subject then
+      Assert(FOnRestoreSubscriptionList[Index] = Addr(OnRestoreSubscription));
+      FReferenceCountList[Index] := FReferenceCountList[Index]-1;
+      Subjects := FSubjectList[Index];
+      for SubjectIndex := Subjects.Count - 1 downto 0 do
       begin
-        Subjects[SubjectIndex] := nil;
-        break;
+        if Subjects[SubjectIndex] = Subject then
+        begin
+          Subjects[SubjectIndex] := nil;
+          break;
+        end;
       end;
-    end;
-    if Subjects.Count > 100 then
-    begin
-      if (FReferenceCountList[Index] < (Subjects.Count div 6)) then
+      if (Subjects.Count > 100) then
       begin
-        Subjects.Pack;
+        if (FReferenceCountList[Index] < (Subjects.Count div 6)) then
+        begin
+          Subjects.Pack;
+        end;
       end;
     end;
   end;
@@ -504,7 +507,7 @@ var
 begin
   if (FExpression <> nil) and FNotifies then
   begin
-    if FExpression.VariablesUsed.Count > 0 then
+//    if FExpression.VariablesUsed.Count > 0 then
     begin
       FExpression.Notifier.RemoveFreeNotification(self);
     end;
@@ -521,14 +524,14 @@ begin
       FParser.Compile(Value);
       FExpression := FParser.CurrentExpression;
       Assert(FExpression <> nil);
-      if FExpression.VariablesUsed.Count > 0 then
+//      if FExpression.VariablesUsed.Count > 0 then
       begin
         FNotifies := True;
         FExpression.Notifier.FreeNotification(self);
-      end
-      else
-      begin
-        FNotifies := False;
+//      end
+//      else
+//      begin
+//        FNotifies := False;
       end;
     except on ERbwParserError do
       begin
@@ -580,6 +583,9 @@ procedure TFormulaManager.ChangeFormula(var FormulaObject: TFormulaObject;
   OnRestoreSubscription: TChangeSubscription; Subject: TObject);
 var
   AnObject: TObject;
+  Listener: TObserver;
+  Notifier: TObserver;
+  PhastModel: TPhastModel;
 begin
   Remove(FormulaObject, OnRemoveSubscription, OnRestoreSubscription, Subject);
 
@@ -615,6 +621,108 @@ begin
 
   FormulaObject.AddSubscriptionEvents(OnRemoveSubscription,
     OnRestoreSubscription, Subject);
+
+  // This is imperfect because not all Subjects will
+  // be TObservers.  
+  if Subject is TObserver then
+  begin
+    if FormulaObject.FExpression <> nil then
+    begin
+      PhastModel := frmGoPhast.PhastModel;
+      if PhastModel <> nil then
+      begin
+        Notifier :=PhastModel.LayerStructure.SimulatedNotifier;
+        if Notifier <> nil then
+        begin
+          Listener := TObserver(Subject);
+          if FormulaObject.FExpression.UsesFunction(StrBcfVCONT)
+            or FormulaObject.FExpression.UsesFunction(StrHufKx)
+            or FormulaObject.FExpression.UsesFunction(StrHufKy)
+            or FormulaObject.FExpression.UsesFunction(StrHufKz)
+            or FormulaObject.FExpression.UsesFunction(StrHufSs)
+            or FormulaObject.FExpression.UsesFunction(StrHufAverageSy)
+            or FormulaObject.FExpression.UsesFunction(StrHufSy)
+            then
+          begin
+            Notifier.TalksTo(Listener);
+          end
+          else
+          begin
+            Notifier.StopsTalkingTo(Listener);
+          end;
+        end;
+        Notifier :=PhastModel.LayerStructure.AquiferTypeNotifier;
+        if Notifier <> nil then
+        begin
+          Listener := TObserver(Subject);
+          if FormulaObject.FExpression.UsesFunction(StrHufKx)
+            then
+          begin
+            Notifier.TalksTo(Listener);
+            PhastModel.HufKxNotifier.TalksTo(Listener);
+          end
+          else
+          begin
+            Notifier.StopsTalkingTo(Listener);
+            PhastModel.HufKxNotifier.StopsTalkingTo(Listener);
+          end;
+          if FormulaObject.FExpression.UsesFunction(StrHufKy)
+            then
+          begin
+            Notifier.TalksTo(Listener);
+            PhastModel.HufKyNotifier.TalksTo(Listener);
+          end
+          else
+          begin
+            Notifier.StopsTalkingTo(Listener);
+            PhastModel.HufKyNotifier.StopsTalkingTo(Listener);
+          end;
+          if FormulaObject.FExpression.UsesFunction(StrHufKz)
+            then
+          begin
+            Notifier.TalksTo(Listener);
+            PhastModel.HufKzNotifier.TalksTo(Listener);
+          end
+          else
+          begin
+            Notifier.StopsTalkingTo(Listener);
+            PhastModel.HufKzNotifier.StopsTalkingTo(Listener);
+          end;
+          if FormulaObject.FExpression.UsesFunction(StrHufSs)
+            then
+          begin
+            Notifier.TalksTo(Listener);
+            PhastModel.HufSsNotifier.TalksTo(Listener);
+          end
+          else
+          begin
+            Notifier.StopsTalkingTo(Listener);
+            PhastModel.HufSsNotifier.StopsTalkingTo(Listener);
+          end;
+          if FormulaObject.FExpression.UsesFunction(StrHufAverageSy)
+            or FormulaObject.FExpression.UsesFunction(StrHufSy)
+            then
+          begin
+            Notifier.TalksTo(Listener);
+            PhastModel.HufSyNotifier.TalksTo(Listener);
+          end
+          else
+          begin
+            Notifier.StopsTalkingTo(Listener);
+            PhastModel.HufSyNotifier.StopsTalkingTo(Listener);
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TFormulaManager.Clear;
+begin
+  FList.Clear;
+  FSortedList.Free;
+  FSortedList:= TStringHashTrie.Create;
+  FSortedList.CaseSensitive := True;
 end;
 
 constructor TFormulaManager.Create;
@@ -680,8 +788,9 @@ end;
 procedure TFormulaManager.Remove(FormulaObject: TFormulaObject;
   OnRemoveSubscription, OnRestoreSubscription:TChangeSubscription; Subject: TObject);
 begin
-  if (frmGoPhast.PhastModel <> nil)
-    and (csDestroying in frmGoPhast.PhastModel.ComponentState) then
+  if (FormulaObject = nil)
+    or ((frmGoPhast.PhastModel <> nil)
+    and (csDestroying in frmGoPhast.PhastModel.ComponentState)) then
   begin
     Exit;
   end;

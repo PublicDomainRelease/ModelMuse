@@ -26,7 +26,7 @@ type
     EndingTime: double;
     RechargeRateAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
   end;
 
   TRchLayerRecord = record
@@ -36,7 +36,7 @@ type
     EndingTime: double;
     RechargeLayerAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
   end;
   // @name is an array of @link(TRchRecord)s.
   TRchArray = array of TRchRecord;
@@ -49,7 +49,7 @@ type
     FRchArray: TRchArray;
     function GetRchArray: TRchArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -61,7 +61,7 @@ type
     FRchLayerArray: TRchLayerArray;
     function GetRchLayerArray: TRchLayerArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -223,7 +223,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property StressPeriod: integer read FStressPeriod write FStressPeriod;
@@ -245,7 +245,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   end;
 
@@ -617,10 +617,10 @@ begin
   result := Values.Cell.Section;
 end;
 
-procedure TRch_Cell.Restore(Decomp: TDecompressionStream);
+procedure TRch_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp); 
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -669,7 +669,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to
         Length(LocalBoundaryStorage.RchLayerArray) - 1 do
       begin
@@ -718,7 +718,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.RchArray) - 1 do
       begin
         BoundaryValues := LocalBoundaryStorage.RchArray[BoundaryIndex];
@@ -1183,10 +1183,10 @@ begin
   result := Values.Cell.Section;
 end;
 
-procedure TRechargeLayerCell.Restore(Decomp: TDecompressionStream);
+procedure TRechargeLayerCell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp); 
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -1211,7 +1211,7 @@ begin
   end;
 end;
 
-procedure TRchStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TRchStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -1220,7 +1220,7 @@ begin
   SetLength(FRchArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FRchArray[Index].Restore(DecompressionStream);
+    FRchArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 
@@ -1254,7 +1254,7 @@ begin
   end;
 end;
 
-procedure TRchLayerStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TRchLayerStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Count: Integer;
   Index: Integer;
@@ -1263,7 +1263,7 @@ begin
   SetLength(FRchLayerArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FRchLayerArray[Index].Restore(DecompressionStream);
+    FRchLayerArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 
@@ -1287,13 +1287,13 @@ begin
   WriteCompString(Comp, RechargeRateAnnotation);
 end;
 
-procedure TRchRecord.Restore(Decomp: TDecompressionStream);
+procedure TRchRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   RechargeRate := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  RechargeRateAnnotation := ReadCompString(Decomp);
+  RechargeRateAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TRchLayerRecord }
@@ -1307,13 +1307,13 @@ begin
   WriteCompString(Comp, RechargeLayerAnnotation);
 end;
 
-procedure TRchLayerRecord.Restore(Decomp: TDecompressionStream);
+procedure TRchLayerRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   RechargeLayer := ReadCompInt(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  RechargeLayerAnnotation := ReadCompString(Decomp);
+  RechargeLayerAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 end.

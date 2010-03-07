@@ -250,6 +250,9 @@ type
   protected
     FModel: TObject;
     procedure InvalidateModel; virtual;
+    procedure SetBooleanProperty(var AField: boolean; const NewValue: boolean);
+    procedure SetIntegerProperty(var AField: integer; const NewValue: integer);
+    procedure SetStringProperty(var AField: string; const NewValue: string);
   public
     Constructor Create(Model: TObject);
   end;
@@ -285,8 +288,8 @@ resourcestring
   // @Seealso(rsByInterpolation)
   // @Seealso(frmScreenObjectPropertiesUnit.TfrmScreenObjectProperties.SetCheckBoxCaptions)
   //  frmScreenObjectPropertiesUnit.TfrmScreenObjectProperties.SetCheckBoxCaptions)
-  // @Seealso(frmImportDXFUnit.TfrmImportDXF.SetCheckBoxCaptions
-  // frmImportDXFUnit.TfrmImportDXF.SetCheckBoxCaptions)
+  // @Seealso(frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.SetCheckBoxCaptions
+  // frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.SetCheckBoxCaptions)
   // @Seealso(frmImportPointsUnits.TfrmImportPoints.SetCheckBoxCaptions
   // frmImportPointsUnits.TfrmImportPoints.SetCheckBoxCaptions)
   // @Seealso(frmImportShapefileUnit.TfrmImportShapefile.SetCheckBoxCaptions
@@ -298,8 +301,8 @@ resourcestring
   // @Seealso(rsByInterpolation)
   // @Seealso(frmScreenObjectPropertiesUnit.TfrmScreenObjectProperties.SetCheckBoxCaptions)
   //  frmScreenObjectPropertiesUnit.TfrmScreenObjectProperties.SetCheckBoxCaptions)
-  // @Seealso(frmImportDXFUnit.TfrmImportDXF.SetCheckBoxCaptions
-  // frmImportDXFUnit.TfrmImportDXF.SetCheckBoxCaptions)
+  // @Seealso(frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.SetCheckBoxCaptions
+  // frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.SetCheckBoxCaptions)
   // @Seealso(frmImportPointsUnits.TfrmImportPoints.SetCheckBoxCaptions
   // frmImportPointsUnits.TfrmImportPoints.SetCheckBoxCaptions)
   // @Seealso(frmImportShapefileUnit.TfrmImportShapefile.SetCheckBoxCaptions
@@ -311,8 +314,8 @@ resourcestring
   // @Seealso(rsByInterpolation)
   // @Seealso(frmScreenObjectPropertiesUnit.TfrmScreenObjectProperties.SetCheckBoxCaptions)
   //  frmScreenObjectPropertiesUnit.TfrmScreenObjectProperties.SetCheckBoxCaptions)
-  // @Seealso(frmImportDXFUnit.TfrmImportDXF.SetCheckBoxCaptions
-  // frmImportDXFUnit.TfrmImportDXF.SetCheckBoxCaptions)
+  // @Seealso(frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.SetCheckBoxCaptions
+  // frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.SetCheckBoxCaptions)
   // @Seealso(frmImportPointsUnits.TfrmImportPoints.SetCheckBoxCaptions
   // frmImportPointsUnits.TfrmImportPoints.SetCheckBoxCaptions)
   // @Seealso(frmImportShapefileUnit.TfrmImportShapefile.SetCheckBoxCaptions
@@ -324,8 +327,8 @@ resourcestring
   // @Seealso(rsSetValueOf)
   // @Seealso(frmScreenObjectPropertiesUnit.TfrmScreenObjectProperties.SetCheckBoxCaptions)
   //  frmScreenObjectPropertiesUnit.TfrmScreenObjectProperties.SetCheckBoxCaptions)
-  // @Seealso(frmImportDXFUnit.TfrmImportDXF.SetCheckBoxCaptions
-  // frmImportDXFUnit.TfrmImportDXF.SetCheckBoxCaptions)
+  // @Seealso(frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.SetCheckBoxCaptions
+  // frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.SetCheckBoxCaptions)
   // @Seealso(frmImportPointsUnits.TfrmImportPoints.SetCheckBoxCaptions
   // frmImportPointsUnits.TfrmImportPoints.SetCheckBoxCaptions)
   // @Seealso(frmImportShapefileUnit.TfrmImportShapefile.SetCheckBoxCaptions
@@ -366,6 +369,7 @@ const
   SelectEpsilon = 5;
 
 implementation
+
 
 {$IFNDEF Testing}
 uses frmGoPhastUnit, PhastModelUnit;
@@ -443,6 +447,36 @@ begin
   if FModel <> nil then
   begin
     (FModel as TPhastModel).Invalidate;
+  end;
+end;
+
+procedure TGoPhastPersistent.SetBooleanProperty(var AField: boolean;
+  const NewValue: boolean);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
+end;
+
+procedure TGoPhastPersistent.SetIntegerProperty(var AField: integer;
+  const NewValue: integer);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
+end;
+
+procedure TGoPhastPersistent.SetStringProperty(var AField: string;
+  const NewValue: string);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
   end;
 end;
 

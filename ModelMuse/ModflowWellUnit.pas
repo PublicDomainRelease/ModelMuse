@@ -26,7 +26,7 @@ type
     EndingTime: double;
     PumpingRateAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream); 
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); 
   end;
 
   // @name is an array of @link(TWellRecord)s.
@@ -39,7 +39,7 @@ type
     FWellArray: TWellArray;
     function GetWellArray: TWellArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -137,7 +137,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property PumpingRate: double read GetPumpingRate;
@@ -680,10 +680,10 @@ begin
   result := Values.Cell.Section;
 end;
 
-procedure TWell_Cell.Restore(Decomp: TDecompressionStream);
+procedure TWell_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp);
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -719,7 +719,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.WellArray) - 1 do
       begin
         BoundaryValues := LocalBoundaryStorage.WellArray[BoundaryIndex];
@@ -851,13 +851,13 @@ begin
   WriteCompString(Comp, PumpingRateAnnotation);
 end;
 
-procedure TWellRecord.Restore(Decomp: TDecompressionStream);
+procedure TWellRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   PumpingRate := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  PumpingRateAnnotation := ReadCompString(Decomp);
+  PumpingRateAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TWellStorage }
@@ -881,7 +881,7 @@ begin
   end;
 end;
 
-procedure TWellStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TWellStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -890,7 +890,7 @@ begin
   SetLength(FWellArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FWellArray[Index].Restore(DecompressionStream);
+    FWellArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 

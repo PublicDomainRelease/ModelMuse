@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ExtCtrls, TntStdCtrls,
   TntExDropDownEdit, TntExDropDownVirtualStringTree, VirtualTrees, ComCtrls,
-  Grids, RbwDataGrid4;
+  Grids, RbwDataGrid4, JvExStdCtrls, JvListBox;
 
 type
   TfrmDataSetValues = class(TfrmCustomGoPhast)
@@ -16,6 +16,9 @@ type
     treecomboDataSets: TTntExDropDownVirtualStringTree;
     pcDataSet: TPageControl;
     btnCopy: TButton;
+    Panel2: TPanel;
+    lbLayers: TJvListBox;
+    Label1: TLabel;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject);
     procedure treecomboDataSetsDropDownTreeChange(Sender: TBaseVirtualTree;
@@ -27,6 +30,8 @@ type
     procedure treecomboDataSetsDropDownTreeGetNodeDataSize(
       Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure btnCopyClick(Sender: TObject);
+    procedure lbLayersMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     FSelectedVirtNode: PVirtualNode;
     // @name is implemented as a TObjectList.
@@ -83,6 +88,16 @@ begin
     FDataSets, nil);
 end;
 
+procedure TfrmDataSetValues.lbLayersMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
+  if lbLayers.ItemIndex >= 0 then
+  begin
+    pcDataSet.ActivePageIndex := lbLayers.ItemIndex;
+  end;
+end;
+
 procedure TfrmDataSetValues.treecomboDataSetsChange(Sender: TObject);
 var
   DataArray: TDataArray;
@@ -96,11 +111,18 @@ begin
   inherited;
   UpdateTreeComboText(SelectedVirtNode, treecomboDataSets);
   DataArray := frmGoPhast.PhastModel.GetDataSetByName(treecomboDataSets.Text);
+  if DataArray = nil then
+  begin
+    Exit;
+  end;
   FTempControls.Clear;
+  lbLayers.Items.Clear;
   DataArray.Initialize;
   for LayerIndex := 0 to DataArray.LayerCount - 1 do
   begin
+    lbLayers.Items.Add(IntToStr(LayerIndex+1));
     APage := TTabSheet.Create(self);
+
     FTempControls.Add(APage);
     APage.PageControl := pcDataSet;
     APage.Caption := IntToStr(LayerIndex+1);
@@ -153,7 +175,10 @@ begin
     finally
       AGrid.EndUpdate;
     end;
+    APage.TabVisible := False;
   end;
+  pcDataSet.ActivePageIndex := 0;
+  lbLayers.ItemIndex := 0;
   btnCopy.Enabled := True;
 end;
 

@@ -89,6 +89,7 @@ begin
     Boundary := ScreenObject.ModflowUzfBoundary;
     if Boundary <> nil then
     begin
+      frmProgress.AddMessage('    Evaluating ' + ScreenObject.Name + '.');
       if not ScreenObject.SetValuesOfEnclosedCells
         and not ScreenObject.SetValuesOfIntersectedCells then
       begin
@@ -213,12 +214,14 @@ var
   DataType: TRbwDataType;
   DataTypeIndex: integer;
   Comment: string;
+  Dummy: TDataArray;
 begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := 0;
   Comment := '# Data Set 12: PET';
-  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue, CellList);
+  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
+    CellList, Dummy);
 end;
 
 procedure TModflowUzfWriter.WriteExtinctionDepth(CellList: TList);
@@ -227,12 +230,14 @@ var
   DataType: TRbwDataType;
   DataTypeIndex: integer;
   Comment: string;
+  Dummy: TDataArray;
 begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := 0;
   Comment := '# Data Set 14: EXTDP';
-  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue, CellList);
+  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
+    CellList, Dummy);
 end;
 
 procedure TModflowUzfWriter.WriteExtinctionWaterContent(CellList: TList);
@@ -241,12 +246,14 @@ var
   DataType: TRbwDataType;
   DataTypeIndex: integer;
   Comment: string;
+  Dummy: TDataArray;
 begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := 0;
   Comment := '# Data Set 16: EXTWC';
-  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue, CellList);
+  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
+    CellList, Dummy);
 end;
 
 procedure TModflowUzfWriter.WriteDataSet1;
@@ -549,12 +556,14 @@ var
   DataType: TRbwDataType;
   DataTypeIndex: integer;
   Comment: string;
+  Dummy: TDataArray;
 begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := 0;
   Comment := '# Data Set 10: FINF';
-  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue, CellList);
+  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
+    CellList, Dummy);
 end;
 
 

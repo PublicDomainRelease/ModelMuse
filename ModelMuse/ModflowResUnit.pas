@@ -14,7 +14,7 @@ type
     EndingTime: double;
     ResIDAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
   end;
 
   TResArray = array of TResRecord;
@@ -24,7 +24,7 @@ type
     FResArray: TResArray;
     function GetResArray: TResArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -85,7 +85,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property ResID: integer read GetResID;
@@ -447,7 +447,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.ResArray) - 1 do
       begin
         BoundaryValues := LocalBoundaryStorage.ResArray[BoundaryIndex];
@@ -561,10 +561,10 @@ begin
   result := Values.Cell.Section;
 end;
 
-procedure TRes_Cell.Restore(Decomp: TDecompressionStream);
+procedure TRes_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp); 
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -579,13 +579,13 @@ begin
   WriteCompString(Comp, ResIDAnnotation);
 end;
 
-procedure TResRecord.Restore(Decomp: TDecompressionStream);
+procedure TResRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   ResID := ReadCompInt(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  ResIDAnnotation := ReadCompString(Decomp);
+  ResIDAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TResStorage }
@@ -609,7 +609,7 @@ begin
   end;
 end;
 
-procedure TResStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TResStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Count: Integer;
   Index: Integer;
@@ -618,7 +618,7 @@ begin
   SetLength(FResArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FResArray[Index].Restore(DecompressionStream);
+    FResArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 

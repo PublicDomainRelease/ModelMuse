@@ -5,7 +5,7 @@ interface
 uses SysUtils, Classes, Contnrs, RbwParser, CustomModflowWriterUnit,
   ScreenObjectUnit, ModflowBoundaryUnit, ModflowPackageSelectionUnit,
   OrderedCollectionUnit, ModflowCellUnit, PhastModelUnit,
-  ModflowBoundaryDisplayUnit;
+  ModflowBoundaryDisplayUnit, DataSetUnit;
 
 Type
   TModflowETS_Writer = class(TCustomTransientArrayWriter)
@@ -14,6 +14,8 @@ Type
     NETSEG: integer;
     NETSOP: integer;
     FDepthSurface: TList;
+    FPriorDepthFractionArray: TDataArray;
+    FPriorRateFractionArray: TDataArray;
     procedure WriteDataSet1;
     procedure WriteDataSets2And3;
     procedure WriteDataSets4To11;
@@ -23,6 +25,8 @@ Type
     procedure WriteExtinctionDepth(CellList: TList);
     procedure WriteDepthFraction(CellList: TList; SegmentIndex: integer);
     procedure WriteRateFraction(CellList: TList; SegmentIndex: integer);
+    procedure CheckDepthFraction(NewArray: TDataArray; SegmentIndex: Integer);
+    procedure CheckRateFraction(NewArray: TDataArray; SegmentIndex: Integer);
   protected
     function CellType: TValueCellType; override;
     function Prefix: string; override;
@@ -70,7 +74,7 @@ Type
 implementation
 
 uses ModflowUnitNumbers, ModflowTransientListParameterUnit,
-  frmErrorsAndWarningsUnit, DataSetUnit, ModflowEtsUnit, GoPhastTypes, 
+  frmErrorsAndWarningsUnit, ModflowEtsUnit, GoPhastTypes, 
   frmProgressUnit;
 
 { TModflowETS_Writer }
@@ -278,19 +282,31 @@ begin
               EvapLayerArray);
           end;
 
-          for SegmentIndex := 1 to NETSEG - 1 do
-          begin
-            // data set 10
-            ATimeList := DepthFractionList[SegmentIndex-1];
-            AnArray := ATimeList[TimeIndex] as TModflowBoundaryDisplayDataArray;
-            AssignTransient2DArray(AnArray, SegmentIndex*2,
-              DepthSurfaceCellList, 0, rdtDouble, umAssign);
+          FPriorDepthFractionArray := nil;
+          FPriorRateFractionArray := nil;
+          try
+            for SegmentIndex := 1 to NETSEG - 1 do
+            begin
+              // data set 10
+              ATimeList := DepthFractionList[SegmentIndex-1];
+              AnArray := ATimeList[TimeIndex] as TModflowBoundaryDisplayDataArray;
+              AssignTransient2DArray(AnArray, SegmentIndex*2,
+                DepthSurfaceCellList, 0, rdtDouble, umAssign);
+              CheckDepthFraction(AnArray, SegmentIndex);
+              FPriorDepthFractionArray := AnArray;
 
-            // data set 11
-            ATimeList := EtFractionList[SegmentIndex-1];
-            AnArray := ATimeList[TimeIndex] as TModflowBoundaryDisplayDataArray;
-            AssignTransient2DArray(AnArray, SegmentIndex*2+1,
-              DepthSurfaceCellList, 0, rdtDouble, umAssign);
+              // data set 11
+              ATimeList := EtFractionList[SegmentIndex-1];
+              AnArray := ATimeList[TimeIndex]
+                as TModflowBoundaryDisplayDataArray;
+              AssignTransient2DArray(AnArray, SegmentIndex*2+1,
+                DepthSurfaceCellList, 0, rdtDouble, umAssign);
+              CheckRateFraction(AnArray, SegmentIndex);
+              FPriorRateFractionArray := AnArray;
+            end;
+          finally
+            FPriorDepthFractionArray := nil;
+            FPriorRateFractionArray := nil;
           end;
           List.Cache;
         finally
@@ -312,6 +328,76 @@ begin
     end;
   finally
     ParameterValues.Free;
+  end;
+end;
+
+procedure TModflowETS_Writer.CheckRateFraction(NewArray: TDataArray;
+  SegmentIndex: Integer);
+var
+  Error: string;
+  PriorValue: Double;
+  NewValue: Double;
+  ColIndex: Integer;
+  RowIndex: Integer;
+  ErrorRoot: string;
+begin
+  if FPriorRateFractionArray <> nil then
+  begin
+    ErrorRoot := 'In the ETS package, rate fraction of each succeeding '
+      + 'segment should be less than the rate fraction of the previous '
+      + 'segment.  At the following locations in segment '
+      + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
+    frmErrorsAndWarnings.RemoveErrorGroup(ErrorRoot);
+    Assert(NewArray.UpToDate);
+    for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+    begin
+      for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+      begin
+        NewValue := NewArray.RealData[0, RowIndex, ColIndex];
+        PriorValue := FPriorRateFractionArray.RealData[0, RowIndex, ColIndex];
+        if NewValue > PriorValue then
+        begin
+          Error := '(' + IntToStr(RowIndex + 1) + ', '
+            + IntToStr(ColIndex + 1) + ')';
+          frmErrorsAndWarnings.AddError(ErrorRoot, Error);
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TModflowETS_Writer.CheckDepthFraction(NewArray: TDataArray;
+  SegmentIndex: Integer);
+var
+  RowIndex: Integer;
+  ColIndex: Integer;
+  NewValue: Double;
+  PriorValue: Double;
+  Error: string;
+  ErrorRoot: string;
+begin
+  if FPriorDepthFractionArray <> nil then
+  begin
+    ErrorRoot := 'In the ETS package, depth fraction of each succeeding '
+    + 'segment should be greater than the depth fraction of the previous '
+    + 'segment.  At the following locations in segment '
+    + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
+    frmErrorsAndWarnings.RemoveErrorGroup(ErrorRoot);
+    Assert(NewArray.UpToDate);
+    for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+    begin
+      for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+      begin
+        NewValue := NewArray.RealData[0, RowIndex, ColIndex];
+        PriorValue := FPriorDepthFractionArray.RealData[0, RowIndex, ColIndex];
+        if NewValue < PriorValue then
+        begin
+          Error := '(' + IntToStr(RowIndex + 1) + ', '
+            + IntToStr(ColIndex + 1) + ')';
+          frmErrorsAndWarnings.AddError(ErrorRoot, Error);
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -370,7 +456,8 @@ begin
   end;
 //  frmProgress.AddMessage('Evaluating ETS Package data.');
   NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrETS, PhastModel.UnitNumbers.UnitNumber(StrETS), NameOfFile, foInput);
+  WriteToNameFile(StrETS, PhastModel.UnitNumbers.UnitNumber(StrETS),
+    NameOfFile, foInput);
   Evaluate;
   OpenFile(FileName(AFileName));
   try
@@ -410,12 +497,14 @@ var
   DataType: TRbwDataType;
   DataTypeIndex: integer;
   Comment: string;
+  Dummy: TDataArray;
 begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := 0;
   Comment := DataSetIdentifier + ' ' + VariableIdentifiers;
-  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue, CellList);
+  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
+    CellList, Dummy);
 end;
 
 procedure TModflowETS_Writer.WriteEvapotranspirationSurface(CellList: TList);
@@ -424,12 +513,14 @@ var
   DataType: TRbwDataType;
   DataTypeIndex: integer;
   Comment: string;
+  Dummy: TDataArray;
 begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := 0;
   Comment := 'Data Set 5: ETSS';
-  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue, CellList);
+  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
+    CellList, Dummy);
 end;
 
 procedure TModflowETS_Writer.WriteExtinctionDepth(CellList: TList);
@@ -438,40 +529,54 @@ var
   DataType: TRbwDataType;
   DataTypeIndex: integer;
   Comment: string;
+  Dummy: TDataArray;
 begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := 1;
   Comment := 'Data Set 8: ETSX';
-  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue, CellList);
+  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
+    CellList, Dummy);
 end;
 
-procedure TModflowETS_Writer.WriteDepthFraction(CellList: TList; SegmentIndex: integer);
+procedure TModflowETS_Writer.WriteDepthFraction(CellList: TList;
+  SegmentIndex: integer);
 var
   DefaultValue: double;
   DataType: TRbwDataType;
   DataTypeIndex: integer;
   Comment: string;
+  NewArray: TDataArray;
 begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := SegmentIndex*2;
   Comment := 'Data Set 10: PXDP';
-  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue, CellList);
+  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
+    CellList, NewArray, False);
+  CheckDepthFraction(NewArray, SegmentIndex);
+  FPriorDepthFractionArray.Free;
+  FPriorDepthFractionArray := NewArray;
 end;
 
-procedure TModflowETS_Writer.WriteRateFraction(CellList: TList; SegmentIndex: integer);
+procedure TModflowETS_Writer.WriteRateFraction(CellList: TList;
+  SegmentIndex: integer);
 var
   DefaultValue: double;
   DataType: TRbwDataType;
   DataTypeIndex: integer;
   Comment: string;
+  NewArray: TDataArray;
 begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := SegmentIndex*2+1;
   Comment := 'Data Set 11: PETM';
-  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue, CellList);
+  WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
+    CellList, NewArray, False);
+  CheckRateFraction(NewArray, SegmentIndex);
+  FPriorRateFractionArray.Free;
+  FPriorRateFractionArray := NewArray;
 end;
 
 procedure TModflowETS_Writer.WriteStressPeriods(const VariableIdentifiers,
@@ -497,7 +602,8 @@ begin
     begin
       frmErrorsAndWarnings.AddError('No evapotranspiration segments defined',
         'The Evapotranspiration Segments package is active but '
-        + 'no evapotranspiration segments have been defined for any stress period.');
+        + 'no evapotranspiration segments have been defined '
+        + 'for any stress period.');
     end;
     for TimeIndex := 0 to Values.Count - 1 do
     begin
@@ -505,7 +611,8 @@ begin
       begin
         Exit;
       end;
-      frmProgress.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
+      frmProgress.AddMessage('    Writing Stress Period '
+        + IntToStr(TimeIndex+1));
       ParametersUsed := TStringList.Create;
       try
         RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
@@ -587,23 +694,32 @@ begin
           Exit;
         end;
 
-        for SegmentIndex := 1 to NETSEG - 1 do
-        begin
-          // data set 10
-          WriteDepthFraction(DepthSurfaceCellList, SegmentIndex);
-          if not frmProgress.ShouldContinue then
+        FPriorDepthFractionArray := nil;
+        FPriorRateFractionArray := nil;
+        try
+          for SegmentIndex := 1 to NETSEG - 1 do
           begin
-            List.Cache;
-            Exit;
-          end;
+            // data set 10
+            WriteDepthFraction(DepthSurfaceCellList, SegmentIndex);
+            if not frmProgress.ShouldContinue then
+            begin
+              List.Cache;
+              Exit;
+            end;
 
-          // data set 11
-          WriteRateFraction(DepthSurfaceCellList, SegmentIndex);
-          if not frmProgress.ShouldContinue then
-          begin
-            List.Cache;
-            Exit;
+            // data set 11
+            WriteRateFraction(DepthSurfaceCellList, SegmentIndex);
+            if not frmProgress.ShouldContinue then
+            begin
+              List.Cache;
+              Exit;
+            end;
           end;
+        finally
+          FPriorDepthFractionArray.Free;
+          FPriorRateFractionArray.Free;
+          FPriorDepthFractionArray := nil;
+          FPriorRateFractionArray := nil;
         end;
         List.Cache;
       finally

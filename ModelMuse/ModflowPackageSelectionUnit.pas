@@ -1119,6 +1119,184 @@ Type
     property SummarizeByNode: Boolean read FSummarizeByNode write SetSummarizeByNode;
   end;
 
+  TSubPrintItem = class(TOrderedItem)
+  private
+    FPrintVerticalDisplacement: boolean;
+    FSaveCompactionByInterbedSystem: boolean;
+    FSaveCriticalHeadDelay: boolean;
+    FStartTime: double;
+    FPrintCompactionByInterbedSystem: boolean;
+    FPrintCriticalHeadDelay: boolean;
+    FSaveCriticalHeadNoDelay: boolean;
+    FPrintDelayBudgets: boolean;
+    FEndTime: double;
+    FPrintCriticalHeadNoDelay: boolean;
+    FSaveSubsidence: boolean;
+    FSaveCompactionByModelLayer: boolean;
+    FPrintSubsidence: boolean;
+    FPrintCompactionByModelLayer: boolean;
+    FSaveVerticalDisplacement: boolean;
+    procedure SetEndTime(const Value: double);
+    procedure SetPrintCompactionByInterbedSystem(const Value: boolean);
+    procedure SetPrintCompactionByModelLayer(const Value: boolean);
+    procedure SetPrintCriticalHeadDelay(const Value: boolean);
+    procedure SetPrintCriticalHeadNoDelay(const Value: boolean);
+    procedure SetPrintDelayBudgets(const Value: boolean);
+    procedure SetPrintSubsidence(const Value: boolean);
+    procedure SetPrintVerticalDisplacement(const Value: boolean);
+    procedure SetSaveCompactionByInterbedSystem(const Value: boolean);
+    procedure SetSaveCompactionByModelLayer(const Value: boolean);
+    procedure SetSaveCriticalHeadDelay(const Value: boolean);
+    procedure SetSaveCriticalHeadNoDelay(const Value: boolean);
+    procedure SetSaveSubsidence(const Value: boolean);
+    procedure SetStartTime(const Value: double);
+    procedure SetSaveVerticalDisplacement(const Value: boolean);
+  public
+    procedure Assign(Source: TPersistent); override;
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+  published
+    property StartTime: double read FStartTime write SetStartTime;
+    property EndTime: double read FEndTime write SetEndTime;
+    // Ifl1
+    property PrintSubsidence: boolean read FPrintSubsidence
+      write SetPrintSubsidence;
+    // Ifl2
+    property SaveSubsidence: boolean read FSaveSubsidence
+      write SetSaveSubsidence;
+    // Ifl3
+    property PrintCompactionByModelLayer: boolean
+      read FPrintCompactionByModelLayer write SetPrintCompactionByModelLayer;
+    // Ifl4
+    property SaveCompactionByModelLayer: boolean
+      read FSaveCompactionByModelLayer write SetSaveCompactionByModelLayer;
+    // Ifl5
+    property PrintCompactionByInterbedSystem: boolean
+      read FPrintCompactionByInterbedSystem
+      write SetPrintCompactionByInterbedSystem;
+    // Ifl6
+    property SaveCompactionByInterbedSystem: boolean
+      read FSaveCompactionByInterbedSystem
+      write SetSaveCompactionByInterbedSystem;
+    // Ifl7
+    property PrintVerticalDisplacement: boolean read FPrintVerticalDisplacement
+      write SetPrintVerticalDisplacement;
+    // Ifl8
+    property SaveVerticalDisplacement: boolean read FSaveVerticalDisplacement
+      write SetSaveVerticalDisplacement;
+    // Ifl9
+    property PrintCriticalHeadNoDelay: boolean read FPrintCriticalHeadNoDelay
+      write SetPrintCriticalHeadNoDelay;
+    // Ifl10
+    property SaveCriticalHeadNoDelay: boolean read FSaveCriticalHeadNoDelay
+      write SetSaveCriticalHeadNoDelay;
+    // Ifl11
+    property PrintCriticalHeadDelay: boolean read FPrintCriticalHeadDelay
+      write SetPrintCriticalHeadDelay;
+    // Ifl12
+    property SaveCriticalHeadDelay: boolean read FSaveCriticalHeadDelay
+      write SetSaveCriticalHeadDelay;
+    // Ifl13
+    property PrintDelayBudgets: boolean read FPrintDelayBudgets
+      write SetPrintDelayBudgets;
+  end;
+
+  TSubPrintCollection = class(TOrderedCollection)
+  private
+    function GetItem(Index: integer): TSubPrintItem;
+    procedure SetItem(Index: integer; const Value: TSubPrintItem);
+  public
+    constructor Create(Model: TObject);
+    property Items[Index: integer]: TSubPrintItem read GetItem
+      write SetItem; default;
+    procedure ReportErrors;
+  end;
+
+  TSubPrintFormats = class(TGoPhastPersistent)
+  private
+    FDelayPreconsolidationHeadFormat: integer;
+    FVerticalDisplacementFormat: integer;
+    FNoDelayPreconsolidationHeadFormat: integer;
+    FCompactionByInterbedSystemFormat: integer;
+    FSubsidenceFormat: integer;
+    FCompactionByModelLayerFormat: integer;
+    procedure SetCompactionByInterbedSystemFormat(const Value: integer);
+    procedure SetCompactionByModelLayerFormat(const Value: integer);
+    procedure SetDelayPreconsolidationHeadFormat(const Value: integer);
+    procedure SetNoDelayPreconsolidationHeadFormat(const Value: integer);
+    procedure SetSubsidenceFormat(const Value: integer);
+    procedure SetVerticalDisplacementFormat(const Value: integer);
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property SubsidenceFormat : integer read FSubsidenceFormat
+      write SetSubsidenceFormat;
+    property CompactionByModelLayerFormat: integer
+      read FCompactionByModelLayerFormat write SetCompactionByModelLayerFormat;
+    property CompactionByInterbedSystemFormat: integer
+      read FCompactionByInterbedSystemFormat
+      write SetCompactionByInterbedSystemFormat;
+    property VerticalDisplacementFormat: integer
+      read FVerticalDisplacementFormat write SetVerticalDisplacementFormat;
+    property NoDelayPreconsolidationHeadFormat: integer
+      read FNoDelayPreconsolidationHeadFormat
+      write SetNoDelayPreconsolidationHeadFormat;
+    property DelayPreconsolidationHeadFormat: integer
+      read FDelayPreconsolidationHeadFormat
+      write SetDelayPreconsolidationHeadFormat;
+  end;
+
+  TSubBinaryOutputChoice = (sbocSingleFile, sbocMultipleFiles);
+
+  TSubPackageSelection = class(TModflowPackageSelection)
+  private
+    FPrintChoices: TSubPrintCollection;
+    FReadDelayRestartFileName: string;
+    FAccelerationParameter2: double;
+    FAccelerationParameter1: double;
+    FMinIterations: integer;
+    FNumberOfNodes: integer;
+    FPrintFormats: TSubPrintFormats;
+    FSaveDelayRestart: boolean;
+    FSubBinaryOutputChoice: TSubBinaryOutputChoice;
+    procedure SetPrintChoices(const Value: TSubPrintCollection);
+    procedure SetAccelerationParameter1(const Value: double);
+    procedure SetAccelerationParameter2(const Value: double);
+    procedure SetMinIterations(const Value: integer);
+    procedure SetNumberOfNodes(const Value: integer);
+    procedure SetPrintFormats(const Value: TSubPrintFormats);
+    procedure SetReadDelayRestartFileName(const Value: string);
+    procedure SetSaveDelayRestart(const Value: boolean);
+    procedure SetSubBinaryOutputChoice(const Value: TSubBinaryOutputChoice);
+  public
+    procedure Assign(Source: TPersistent); override;
+    procedure InitializeVariables;
+    Constructor Create(Model: TObject);
+    Destructor Destroy; override;
+  published
+    property PrintFormats: TSubPrintFormats read FPrintFormats
+      write SetPrintFormats;
+    property PrintChoices: TSubPrintCollection read FPrintChoices
+      write SetPrintChoices;
+    // NN
+    property NumberOfNodes: integer read FNumberOfNodes write SetNumberOfNodes;
+    // AC1
+    property AccelerationParameter1: double read FAccelerationParameter1
+      write SetAccelerationParameter1;
+    // AC2
+    property AccelerationParameter2: double read FAccelerationParameter2
+      write SetAccelerationParameter2;
+    // ITMIN
+    property MinIterations: integer read FMinIterations write SetMinIterations;
+    // IDSAVE
+    property SaveDelayRestart: boolean read FSaveDelayRestart
+      write SetSaveDelayRestart;
+    // IDREST
+    property ReadDelayRestartFileName: string read FReadDelayRestartFileName
+      write SetReadDelayRestartFileName;
+    property BinaryOutputChoice: TSubBinaryOutputChoice
+      read FSubBinaryOutputChoice write SetSubBinaryOutputChoice;
+  end;
+
 implementation
 
 uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
@@ -5839,6 +6017,364 @@ begin
     FSummarizeByWell := Value;
     InvalidateModel;
   end;
+end;
+
+{ TSubPrintItem }
+
+procedure TSubPrintItem.Assign(Source: TPersistent);
+var
+  SourceItem: TSubPrintItem;
+begin
+  if Source is TSubPrintItem then
+  begin
+    SourceItem := TSubPrintItem(Source);
+    StartTime := SourceItem.StartTime;
+    EndTime := SourceItem.EndTime;
+    PrintSubsidence := SourceItem.PrintSubsidence;
+    SaveSubsidence := SourceItem.SaveSubsidence;
+    PrintCompactionByModelLayer := SourceItem.PrintCompactionByModelLayer;
+    SaveCompactionByModelLayer := SourceItem.SaveCompactionByModelLayer;
+    PrintCompactionByInterbedSystem := SourceItem.PrintCompactionByInterbedSystem;
+    SaveCompactionByInterbedSystem := SourceItem.SaveCompactionByInterbedSystem;
+    PrintVerticalDisplacement := SourceItem.PrintVerticalDisplacement;
+    SaveVerticalDisplacement := SourceItem.SaveVerticalDisplacement;
+    PrintCriticalHeadNoDelay := SourceItem.PrintCriticalHeadNoDelay;
+    SaveCriticalHeadNoDelay := SourceItem.SaveCriticalHeadNoDelay;
+    PrintCriticalHeadDelay := SourceItem.PrintCriticalHeadDelay;
+    SaveCriticalHeadDelay := SourceItem.SaveCriticalHeadDelay;
+    PrintDelayBudgets := SourceItem.PrintDelayBudgets;
+  end;
+  inherited;
+
+end;
+
+function TSubPrintItem.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  SourceItem: TSubPrintItem;
+begin
+  if AnotherItem is TSubPrintItem then
+  begin
+    SourceItem := TSubPrintItem(AnotherItem);
+    result := (StartTime = SourceItem.StartTime)
+      and (EndTime = SourceItem.EndTime)
+      and (PrintSubsidence = SourceItem.PrintSubsidence)
+      and (SaveSubsidence = SourceItem.SaveSubsidence)
+      and (PrintCompactionByModelLayer = SourceItem.PrintCompactionByModelLayer)
+      and (SaveCompactionByModelLayer = SourceItem.SaveCompactionByModelLayer)
+      and (PrintCompactionByInterbedSystem = SourceItem.PrintCompactionByInterbedSystem)
+      and (SaveCompactionByInterbedSystem = SourceItem.SaveCompactionByInterbedSystem)
+      and (PrintVerticalDisplacement = SourceItem.PrintVerticalDisplacement)
+      and (SaveVerticalDisplacement = SourceItem.SaveVerticalDisplacement)
+      and (PrintCriticalHeadNoDelay = SourceItem.PrintCriticalHeadNoDelay)
+      and (SaveCriticalHeadNoDelay = SourceItem.SaveCriticalHeadNoDelay)
+      and (PrintCriticalHeadDelay = SourceItem.PrintCriticalHeadDelay)
+      and (SaveCriticalHeadDelay = SourceItem.SaveCriticalHeadDelay)
+      and (PrintDelayBudgets = SourceItem.PrintDelayBudgets);
+  end
+  else
+  begin
+    result := False;
+  end;
+end;
+
+procedure TSubPrintItem.SetEndTime(const Value: double);
+begin
+  SetRealProperty(FEndTime, Value);
+end;
+
+procedure TSubPrintItem.SetPrintCompactionByInterbedSystem(
+  const Value: boolean);
+begin
+  SetBooleanProperty(FPrintCompactionByInterbedSystem, Value);
+end;
+
+procedure TSubPrintItem.SetPrintCompactionByModelLayer(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintCompactionByModelLayer, Value);
+end;
+
+procedure TSubPrintItem.SetPrintCriticalHeadDelay(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintCriticalHeadDelay, Value);
+end;
+
+procedure TSubPrintItem.SetPrintCriticalHeadNoDelay(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintCriticalHeadNoDelay, Value);
+end;
+
+procedure TSubPrintItem.SetPrintDelayBudgets(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintDelayBudgets, Value);
+end;
+
+procedure TSubPrintItem.SetPrintSubsidence(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintSubsidence, Value);
+end;
+
+procedure TSubPrintItem.SetPrintVerticalDisplacement(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintVerticalDisplacement, Value);
+end;
+
+procedure TSubPrintItem.SetSaveCompactionByInterbedSystem(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveCompactionByInterbedSystem, Value);
+end;
+
+procedure TSubPrintItem.SetSaveCompactionByModelLayer(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveCompactionByModelLayer, Value);
+end;
+
+procedure TSubPrintItem.SetSaveCriticalHeadDelay(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveCriticalHeadDelay, Value);
+end;
+
+procedure TSubPrintItem.SetSaveCriticalHeadNoDelay(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveCriticalHeadNoDelay, Value);
+end;
+
+procedure TSubPrintItem.SetSaveSubsidence(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveSubsidence, Value);
+end;
+
+procedure TSubPrintItem.SetSaveVerticalDisplacement(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveVerticalDisplacement, Value);
+end;
+
+procedure TSubPrintItem.SetStartTime(const Value: double);
+begin
+  SetRealProperty(FStartTime, Value);
+end;
+
+{ TSubPrintCollection }
+
+constructor TSubPrintCollection.Create(Model: TObject);
+begin
+  inherited Create(TSubPrintItem, Model);
+end;
+
+function TSubPrintCollection.GetItem(Index: integer): TSubPrintItem;
+begin
+  result := inherited Items[Index] as TSubPrintItem;
+end;
+
+procedure TSubPrintCollection.ReportErrors;
+const
+  ErrorRoot = 'In the Subsidence package, one or more starting time '
+    + 'is after the ending time';
+var
+  Index: Integer;
+  PrintChoice: TSubPrintItem;
+begin
+  for Index := 0 to Count -1 do
+  begin
+    PrintChoice := Items[Index];
+    if PrintChoice.StartTime > PrintChoice.EndTime then
+    begin
+      frmErrorsAndWarnings.AddError(ErrorRoot,
+        'StartingTime: ' + FloatToStr(PrintChoice.StartTime)
+        + '; EndingTime: ' + FloatToStr(PrintChoice.EndTime));
+    end;
+  end;
+end;
+
+procedure TSubPrintCollection.SetItem(Index: integer;
+  const Value: TSubPrintItem);
+begin
+  inherited Items[Index] := Value;
+end;
+
+{ TSubPackageSelection }
+
+procedure TSubPackageSelection.Assign(Source: TPersistent);
+var
+  SubSource: TSubPackageSelection;
+begin
+  if Source is TSubPackageSelection then
+  begin
+    SubSource := TSubPackageSelection(Source);
+    PrintFormats := SubSource.PrintFormats;
+    PrintChoices := SubSource.PrintChoices;
+    NumberOfNodes := SubSource.NumberOfNodes;
+    AccelerationParameter1 := SubSource.AccelerationParameter1;
+    AccelerationParameter2 := SubSource.AccelerationParameter2;
+    MinIterations := SubSource.MinIterations;
+    SaveDelayRestart := SubSource.SaveDelayRestart;
+    ReadDelayRestartFileName := SubSource.ReadDelayRestartFileName;
+    BinaryOutputChoice := SubSource.BinaryOutputChoice;
+
+  end;
+  inherited;
+
+end;
+
+constructor TSubPackageSelection.Create(Model: TObject);
+begin
+  inherited;
+  InitializeVariables;
+  FPrintChoices := TSubPrintCollection.Create(Model);
+  FPrintFormats := TSubPrintFormats.Create(Model);
+end;
+
+destructor TSubPackageSelection.Destroy;
+begin
+  FPrintFormats.Free;
+  FPrintChoices.Free;
+  inherited;
+end;
+
+procedure TSubPackageSelection.InitializeVariables;
+begin
+  FNumberOfNodes := 10;
+  FAccelerationParameter1 := 0;
+  FAccelerationParameter2 := 1;
+  FMinIterations := 5;
+  FSaveDelayRestart := False;
+  FReadDelayRestartFileName := '';
+  FSubBinaryOutputChoice := sbocSingleFile;
+end;
+
+procedure TSubPackageSelection.SetAccelerationParameter1(const Value: double);
+begin
+  if FAccelerationParameter1 <> Value then
+  begin
+    FAccelerationParameter1 := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSubPackageSelection.SetAccelerationParameter2(const Value: double);
+begin
+  if FAccelerationParameter2 <> Value then
+  begin
+    FAccelerationParameter2 := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSubPackageSelection.SetMinIterations(const Value: integer);
+begin
+  if FMinIterations <> Value then
+  begin
+    FMinIterations := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSubPackageSelection.SetNumberOfNodes(const Value: integer);
+begin
+  if FNumberOfNodes <> Value then
+  begin
+    FNumberOfNodes := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSubPackageSelection.SetPrintChoices(
+  const Value: TSubPrintCollection);
+begin
+  FPrintChoices.Assign(Value);
+end;
+
+procedure TSubPackageSelection.SetPrintFormats(const Value: TSubPrintFormats);
+begin
+  FPrintFormats.Assign(Value);
+end;
+
+procedure TSubPackageSelection.SetReadDelayRestartFileName(const Value: string);
+begin
+  if FReadDelayRestartFileName <> Value then
+  begin
+    FReadDelayRestartFileName := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSubPackageSelection.SetSaveDelayRestart(const Value: boolean);
+begin
+  if FSaveDelayRestart <> Value then
+  begin
+    FSaveDelayRestart := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSubPackageSelection.SetSubBinaryOutputChoice(
+  const Value: TSubBinaryOutputChoice);
+begin
+  if FSubBinaryOutputChoice <> Value then
+  begin
+    FSubBinaryOutputChoice := Value;
+    InvalidateModel;
+  end;
+end;
+
+{ TSubPrintFormats }
+
+procedure TSubPrintFormats.Assign(Source: TPersistent);
+var
+  SubPrintSource: TSubPrintFormats;
+begin
+  if Source is TSubPrintFormats then
+  begin
+    SubPrintSource := TSubPrintFormats(Source);
+    SubsidenceFormat := SubPrintSource.SubsidenceFormat;
+    CompactionByModelLayerFormat := SubPrintSource.CompactionByModelLayerFormat;
+    CompactionByInterbedSystemFormat :=
+      SubPrintSource.CompactionByInterbedSystemFormat;
+    VerticalDisplacementFormat := SubPrintSource.VerticalDisplacementFormat;
+    NoDelayPreconsolidationHeadFormat :=
+      SubPrintSource.NoDelayPreconsolidationHeadFormat;
+    DelayPreconsolidationHeadFormat :=
+      SubPrintSource.DelayPreconsolidationHeadFormat;
+  end
+  else
+  begin
+    inherited;
+  end;
+
+
+end;
+
+procedure TSubPrintFormats.SetCompactionByInterbedSystemFormat(
+  const Value: integer);
+begin
+  SetIntegerProperty(FCompactionByInterbedSystemFormat, Value);
+end;
+
+procedure TSubPrintFormats.SetCompactionByModelLayerFormat(
+  const Value: integer);
+begin
+  SetIntegerProperty(FCompactionByModelLayerFormat, Value);
+end;
+
+procedure TSubPrintFormats.SetDelayPreconsolidationHeadFormat(
+  const Value: integer);
+begin
+  SetIntegerProperty(FDelayPreconsolidationHeadFormat, Value);
+end;
+
+procedure TSubPrintFormats.SetNoDelayPreconsolidationHeadFormat(
+  const Value: integer);
+begin
+  SetIntegerProperty(FNoDelayPreconsolidationHeadFormat, Value);
+end;
+
+procedure TSubPrintFormats.SetSubsidenceFormat(const Value: integer);
+begin
+  SetIntegerProperty(FSubsidenceFormat, Value);
+end;
+
+procedure TSubPrintFormats.SetVerticalDisplacementFormat(const Value: integer);
+begin
+  SetIntegerProperty(FVerticalDisplacementFormat, Value);
 end;
 
 end.

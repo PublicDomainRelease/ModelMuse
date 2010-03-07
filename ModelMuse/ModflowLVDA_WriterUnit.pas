@@ -164,8 +164,8 @@ begin
         end;
         MLTARR := ' ' + MLTARR;
         WriteInteger(Layer);
-        WriteString(MLTARR);
-        WriteString(ZONARR);
+        WriteString(MLTARR + ' ');
+        WriteString(ZONARR + ' ');
         if Param.UseZone then
         begin
           WriteInteger(IZ);

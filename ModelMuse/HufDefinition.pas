@@ -35,9 +35,12 @@ type
     function GetParameter: TModflowParameter;
     function ArrayRoot: string;
     function UniqueName(Candidate: string; Names: TStringList): string;
+    procedure SendNotifications;
+    procedure NotifyParamChange;
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
   public
+    procedure Assign(Source: TPersistent); override;
     property Parameter: TModflowParameter read GetParameter write FParmeter;
     procedure GenerateMultiplierArrayName;
     procedure GenerateZoneArrayName;
@@ -47,7 +50,6 @@ type
     property MultiplierDataSetName: string read FMultiplierName;
     function Description: string;
   published
-    procedure Assign(Source: TPersistent); override;
     property ParameterName: string read FParameterName write SetParameterName;
     property UseZone: boolean read FUseZone write SetUseZone;
     property UseMultiplier: boolean read FUseMultiplier write SetUseMultiplier;
@@ -67,6 +69,7 @@ type
     constructor Create(Model: TComponent; HufUnit: THydrogeologicUnit);
     function GetUsedParameterByName(const ParameterName: string): THufUsedParameter;
     function IsUsed(const ParameterName: string): boolean;
+    procedure Notify(Item: TCollectionItem; Action: TCollectionNotification); override;
   end;
 
   TPrintItem = class(TPhastCollectionItem)
@@ -76,6 +79,8 @@ type
     procedure SetPrint(const Value: boolean);
     procedure SetPrintParam(const Value: TPrintParam);
     function GetPrintString: string;
+  public
+    function ShouldPrint: boolean;
   published
     property PrintParam: TPrintParam read FPrintParam write SetPrintParam;
     property Print: boolean read FPrint write SetPrint;
@@ -218,6 +223,46 @@ begin
   end;
 end;
 
+procedure THufUsedParameter.SendNotifications;
+//var
+//  PhastModel: TPhastModel;
+begin
+//  if (Model <> nil) and not (csLoading in (Model as TComponent).ComponentState) then
+//  begin
+    NotifyParamChange;
+//    if Parameter.ParameterType in [ptHUF_HK, ptHUF_KDEP] then
+//    begin
+//      PhastModel := Model as TPhastModel;
+//      PhastModel.HufKxNotifier.UpToDate := False;
+//      PhastModel.HufKxNotifier.UpToDate := True;
+//    end;
+//    if Parameter.ParameterType in [ptHUF_HK, ptHUF_KDEP, ptHUF_HANI] then
+//    begin
+//      PhastModel := Model as TPhastModel;
+//      PhastModel.HufKyNotifier.UpToDate := False;
+//      PhastModel.HufKyNotifier.UpToDate := True;
+//    end;
+//    if Parameter.ParameterType in [ptHUF_HK, ptHUF_KDEP, ptHUF_VK, ptHUF_VANI] then
+//    begin
+//      PhastModel := Model as TPhastModel;
+//      PhastModel.HufKzNotifier.UpToDate := False;
+//      PhastModel.HufKzNotifier.UpToDate := True;
+//    end;
+//    if Parameter.ParameterType = ptHUF_SS then
+//    begin
+//      PhastModel := Model as TPhastModel;
+//      PhastModel.HufSsNotifier.UpToDate := False;
+//      PhastModel.HufSsNotifier.UpToDate := True;
+//    end;
+//    if Parameter.ParameterType = ptHUF_SY then
+//    begin
+//      PhastModel := Model as TPhastModel;
+//      PhastModel.HufSyNotifier.UpToDate := False;
+//      PhastModel.HufSyNotifier.UpToDate := True;
+//    end;
+//  end;
+end;
+
 procedure THufUsedParameter.RenameDataArrays(NewRoot: string);
 var
   NewName: string;
@@ -313,6 +358,19 @@ begin
     + '; Parameter = ' + ParameterName;
 end;
 
+procedure THufUsedParameter.NotifyParamChange;
+var
+  AParam: TModflowParameter;
+  PhastModel: TPhastModel;
+begin
+  PhastModel := Model as TPhastModel;
+  if (PhastModel <> nil) and not (csLoading in PhastModel.ComponentState) then
+  begin
+    AParam := Parameter;
+    AParam.NotifyParamChange(AParam.ParameterType);
+  end;
+end;
+
 procedure THufUsedParameter.FillDataArrayNames(DataArrayNames: TStrings);
 begin
   if UseMultiplier and (FMultiplierName <> '') then
@@ -387,6 +445,7 @@ end;
 procedure THufUsedParameter.SetParameterName(const Value: string);
 var
   NewRoot: string;
+//  PhastModel: TPhastModel;
 begin
   if FParameterName <> Value then
   begin
@@ -394,6 +453,7 @@ begin
     RenameDataArrays(NewRoot);
     FParameterName := Value;
     InvalidateModel;
+    NotifyParamChange;
   end;
 end;
 
@@ -403,7 +463,9 @@ begin
   begin
     FUseMultiplier := Value;
     CreateOrUpdataDataArray(FMultiplierName, rdtDouble, FUseMultiplier);
+    SendNotifications;
     InvalidateModel;
+    NotifyParamChange;
   end;
 end;
 
@@ -413,7 +475,9 @@ begin
   begin
     FUseZone := Value;
     CreateOrUpdataDataArray(FZoneName, rdtBoolean, FUseZone);
+    SendNotifications;
     InvalidateModel;
+    NotifyParamChange;
   end;
 end;
 
@@ -496,6 +560,16 @@ end;
 function THufUsedParameters.IsUsed(const ParameterName: string): boolean;
 begin
   result := GetUsedParameterByName(ParameterName) <> nil;
+end;
+
+procedure THufUsedParameters.Notify(Item: TCollectionItem;
+  Action: TCollectionNotification);
+begin
+  inherited;
+  if Action = cnDeleting then
+  begin
+    (Item as THufUsedParameter).NotifyParamChange;
+  end;
 end;
 
 procedure THufUsedParameters.RemoveUsedParameter(const ParameterName: string);
@@ -703,11 +777,19 @@ begin
 end;
 
 procedure THydrogeologicUnit.SetHorizontalAnisotropy(const Value: double);
+var
+  PhastModel: TPhastModel;
 begin
   if FHorizontalAnisotropy <> Value then
   begin
     FHorizontalAnisotropy := Value;
     InvalidateModel;
+    PhastModel := Model as TPhastModel;
+    if PhastModel <> nil then
+    begin
+      PhastModel.HufKyNotifier.UpToDate := False;
+      PhastModel.HufKyNotifier.UpToDate := True;
+    end;
   end;
 end;
 
@@ -763,20 +845,36 @@ begin
 end;
 
 procedure THydrogeologicUnit.SetVerticalAnisotropy(const Value: double);
+var
+  PhastModel: TPhastModel;
 begin
   if FVerticalAnisotropy <> Value then
   begin
     FVerticalAnisotropy := Value;
     InvalidateModel;
+    PhastModel := Model as TPhastModel;
+    if PhastModel <> nil then
+    begin
+      PhastModel.HufKzNotifier.UpToDate := False;
+      PhastModel.HufKzNotifier.UpToDate := True;
+    end;
   end;
 end;
 
 procedure THydrogeologicUnit.SetVK_Method(const Value: TVK_Method);
+var
+  PhastModel: TPhastModel;
 begin
   if FVK_Method <> Value then
   begin
     FVK_Method := Value;
     InvalidateModel;
+    PhastModel := Model as TPhastModel;
+    if PhastModel <> nil then
+    begin
+      PhastModel.HufKzNotifier.UpToDate := False;
+      PhastModel.HufKzNotifier.UpToDate := True;
+    end;
   end;
 end;
 
@@ -919,6 +1017,19 @@ begin
     InvalidateModel;
     FPrintParam := Value;
   end;
+end;
+
+function TPrintItem.ShouldPrint: boolean;
+var
+  Model: TPhastModel;
+begin
+  result := Print;
+  if result and (PrintParam in [pprSS, pprSY]) then
+  begin
+    Model := (Collection as TPhastCollection).Model as TPhastModel;
+    result := Model.ModflowFullStressPeriods.TransientModel;
+  end;
+  
 end;
 
 { TPrintCollection }

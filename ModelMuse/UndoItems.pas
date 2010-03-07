@@ -578,6 +578,7 @@ type
     procedure SetFormula(const Value: string);
     procedure SetDataSet(const Value: TDataArray);
   public
+    procedure AssignBasicProperties;
     // @name is the @link(TDataArray) whose values are being stored.
     property DataSet: TDataArray read FDataSet write SetDataSet;
     // @name is the name to assign to the @link(TDataArray).
@@ -590,7 +591,7 @@ type
     procedure AssignFormulasToDataSet;
     // @name copies the properties of @classname (except Formula
     // and PhastInterpolationValues) to DataSet.
-    procedure AssignToDataSet;
+    procedure AssignToDataSet(out ShouldInvalidate: boolean);
     // @name creates and instance of @classname
     constructor Create;
     // @name destroys the current instance of @classname.
@@ -1903,6 +1904,7 @@ var
   DataSet : TDataArray;
   DataStorage: TPhastDataSetStorage;
   UpdateObjectDisplay: boolean;
+  ShouldInvalidateDataArray: array of boolean;
 begin
   UpdateFormulas(DataSetProperties);
 
@@ -1928,7 +1930,19 @@ begin
     frmGoPhast.DeletedDataSets.Extract(DataSet);
   end;
 
+  for Index := 0 to DataSetProperties.Count - 1 do
+  begin
+    DataStorage := DataSetProperties[Index];
+    if (DataStorage.Name <> DataStorage.FDataSet.Name) then
+    begin
+      UpdateObjectDisplay := True;
+    end;
+    DataStorage.AssignBasicProperties;
+    frmGoPhast.PhastModel.CreateVariables(DataStorage.FDataSet);
+  end;
+
   // update the properties of the data sets.
+  SetLength(ShouldInvalidateDataArray, DataSetProperties.Count);
   for Index := 0 to DataSetProperties.Count - 1 do
   begin
     // set the data set properties except for the formula.
@@ -1938,10 +1952,10 @@ begin
       UpdateObjectDisplay := True;
     end;
 
-    DataStorage.AssignToDataSet;
+    DataStorage.AssignToDataSet(ShouldInvalidateDataArray[Index]);
     DataStorage.FDataSet.UpdateDimensions(frmGoPhast.Grid.LayerCount,
       frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
-    frmGoPhast.PhastModel.CreateVariables(DataStorage.FDataSet);
+//    frmGoPhast.PhastModel.CreateVariables(DataStorage.FDataSet);
   end;
 
   // After all the data set names have been updated,
@@ -1950,6 +1964,10 @@ begin
   begin
     DataStorage := DataSetProperties[Index];
     DataStorage.AssignFormulasToDataSet;
+    if ShouldInvalidateDataArray[Index] then
+    begin
+      DataStorage.DataSet.Invalidate;
+    end;
   end;
 
   if FOldNames.Count > 0 then
@@ -2156,25 +2174,37 @@ begin
   end;
 end;
 
-procedure TPhastDataSetStorage.AssignToDataSet;
+procedure TPhastDataSetStorage.AssignBasicProperties;
 begin
+  FDataSet.Name := Name;
+  FDataSet.Orientation := Orientation;
+  FDataSet.EvaluatedAt := EvaluatedAt;
+  FDataSet.DataType := DataType;
+end;
+
+procedure TPhastDataSetStorage.AssignToDataSet(out ShouldInvalidate: boolean);
+begin
+  ShouldInvalidate := False;
   if (FDataSet.Name <> Name)
     or (FDataSet.Orientation <> Orientation)
     or (FDataSet.EvaluatedAt <> EvaluatedAt)
     or (FDataSet.DataType <> DataType)
     or (FDataSet.Units <> Units) then
   begin
-    FDataSet.Invalidate;
+    ShouldInvalidate := True;
+//    FDataSet.Invalidate;
   end
   else if (FDataSet.TwoDInterpolator = nil) <> (TwoDInterpolator = nil) then
   begin
-    FDataSet.Invalidate;
+    ShouldInvalidate := True;
+//    FDataSet.Invalidate;
   end
   else if (FDataSet.TwoDInterpolator <> nil)
     and (TwoDInterpolator <> nil)
     and not FDataSet.TwoDInterpolator.SameAs(TwoDInterpolator) then
   begin
-    FDataSet.Invalidate;
+    ShouldInvalidate := True;
+//    FDataSet.Invalidate;
   end;
 
 

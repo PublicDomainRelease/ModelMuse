@@ -118,9 +118,14 @@ type
     // to use.
     // DataType indicates what sort of information in the TList.
     // DefaultValue indicates the proper default parameter for the gridded data.
+    // If FreeArray is @true, TransientArray will be set to nil.
+    // If FreeArray is @false, TransientArray will be set
+    // to the @link(TDataArray) that was exported and it will be the caller's
+    // responsibility to free TransientArray
     procedure WriteTransient2DArray(const Comment: string;
       DataTypeIndex: Integer; DataType: TRbwDataType; DefaultValue: Double;
-      List: TList);
+      List: TList; var TransientArray: TDataArray;
+      FreeArray: boolean = True);
   public
     {@name checks that the values stored in DataArray are valid.)
     @param(DataArray is the @link(TDataArray) to be checked.)
@@ -179,7 +184,7 @@ type
     // @name writes a line to the name file.
     class procedure WriteToNameFile(const Ftype: string;
       const UnitNumber: integer; FileName: string;
-      const Option: TFileOption);
+      const Option: TFileOption; RelativeFileName: boolean = False);
     // @name adds a comment line to the name file.
     class procedure AddNameFileComment(const Comment: string);
   end;
@@ -532,7 +537,7 @@ type
     {@name assigns values to DataArray based on Param and
      the contents of CellList.}
     procedure EvaluateParameterCells(CellList: TValueCellList;
-      DataArray: TDataArray; Param: TModflowTransientListParameter);
+      DataArray: TModflowBoundaryDisplayDataArray; Param: TModflowTransientListParameter);
     {@name assigns the layer where the array boundary condition will be applied
     based on the contents of List.
     List can be a @link(TValueCellList) or contain @link(TValueCellList)s
@@ -580,6 +585,8 @@ type
   end;
 
   TNameFileWriter = class(TCustomModflowWriter)
+  private
+    procedure CheckExternalFiles(const FileName: string);
   public
     class function Extension: string; override;
     // @name clears the name file.
@@ -1202,12 +1209,16 @@ begin
 end;
 
 class procedure TCustomModflowWriter.WriteToNameFile(const Ftype: string;
-  const UnitNumber: integer; FileName: string; const Option: TFileOption);
+  const UnitNumber: integer; FileName: string; const Option: TFileOption;
+  RelativeFileName: boolean = False);
 var
   Line: string;
 begin
   frmGoPhast.PhastModel.AddModelInputFile(FileName);
-  FileName := ExtractFileName(FileName);
+  if not RelativeFileName then
+  begin
+    FileName := ExtractFileName(FileName);
+  end;
   Line := Ftype + ' ' + IntToStr(UnitNumber) + ' ' + FileName;
   case Option of
     foNone: ;// do nothing
@@ -1293,6 +1304,66 @@ begin
   result := '.nam';
 end;
 
+procedure TNameFileWriter.CheckExternalFiles(const FileName: string);
+const
+  MissingFile = 'One or more files that you specified in the MODFLOW Name '
+    + 'File dialog box are missing. If these are input files, MODFLOW will '
+    + 'not be able to run.';
+var
+  Directory: string;
+  OldDir: string;
+  Index: Integer;
+  ALine: string;
+  Splitter: TStringList;
+  Fname: string;
+  InputFile: Boolean;
+  Option: string;
+begin
+  Directory := ExtractFileDir(FileName);
+  Directory := IncludeTrailingPathDelimiter(Directory);
+  OldDir := GetCurrentDir;
+  try
+    SetCurrentDir(Directory);
+    Splitter := TStringList.Create;
+    try
+      Splitter.Delimiter := #9;
+      for Index := 0 to PhastModel.ModflowNameFileLines.Count - 1 do
+      begin
+        ALine := PhastModel.ModflowNameFileLines[Index];
+        if (ALine <> '') and (ALine[1] <> '#') then
+        begin
+          Splitter.DelimitedText := ALine;
+          if Splitter.Count >= 3 then
+          begin
+            Fname := Splitter[2];
+            if not FileExists(Fname) then
+            begin
+              InputFile := True;
+              if Splitter.Count >= 4 then
+              begin
+                Option := Splitter[3];
+                if SameText(Option, 'REPLACE') then
+                begin
+                  InputFile := False;
+                end;
+              end;
+              if InputFile then
+              begin
+                frmErrorsAndWarnings.AddWarning(MissingFile, Fname);
+              end;
+            end;
+            PhastModel.AddModelInputFile(ExpandFileName(Fname));
+          end;
+        end;
+      end;
+    finally
+      Splitter.Free;
+    end;
+  finally
+    SetCurrentDir(OldDir);
+  end;
+end;
+
 procedure TNameFileWriter.InitilizeNameFile(const FileName: string;
   out ListFileName: string);
 var
@@ -1327,6 +1398,7 @@ begin
   end;
   if PhastModel.ModflowNameFileLines.Count > 0 then
   begin
+    CheckExternalFiles(FileName);
     NameFile.Add('');
     NameFile.Add('#Files generated outside of ' + PhastModel.ProgramName);
     NameFile.AddStrings(PhastModel.ModflowNameFileLines);
@@ -1895,7 +1967,7 @@ end;
 
 { TCustomTransientArrayWriter }
 procedure TCustomTransientArrayWriter.EvaluateParameterCells(
-  CellList: TValueCellList; DataArray: TDataArray;
+  CellList: TValueCellList; DataArray: TModflowBoundaryDisplayDataArray;
   Param: TModflowTransientListParameter);
 var
   CellIndex: Integer;
@@ -1924,6 +1996,7 @@ begin
       Annotation := NewAnnotation;
     end;
     DataArray.Annotation[0, Cell.Row, Cell.Column] := Annotation;
+    DataArray.CellCount[0, Cell.Row, Cell.Column] := 1;
   end;
 
   DataArray.UpToDate := True;
@@ -2118,6 +2191,7 @@ begin
             PhastModel.ModflowGrid.ColumnCount);
           DataArrayList.Add(DataArray);
           EvaluateParameterCells(CellList, DataArray, Param);
+          DataArray.CacheData;
         end;
       end;
     end;
@@ -2245,8 +2319,10 @@ end;
 
 procedure TCustomTransientArrayWriter.WriteLayerArray(Lists: TList;
   const Comment: string);
+var
+  Dummy: TDataArray;
 begin
-  WriteTransient2DArray(Comment, 0, rdtInteger, 1, Lists);
+  WriteTransient2DArray(Comment, 0, rdtInteger, 1, Lists, Dummy);
 end;
 
 procedure TCustomTransientArrayWriter.UpdateLayerDataSet(List: TList;
@@ -2362,7 +2438,7 @@ procedure TCustomTransientArrayWriter.UpdateLayerDisplay(
   List: TValueCellList; ParameterValues: TList; TimeIndex: Integer;
   DataArray: TModflowBoundaryDisplayDataArray);
 var
-  LayerList: TValueCellList;
+  CellList: TValueCellList;
   LocalPackage : TCustomTransientLayerPackageSelection;
 begin
   LocalPackage := Package as TCustomTransientLayerPackageSelection;
@@ -2372,9 +2448,9 @@ begin
     begin
       if TimeIndex < FLayers.Count then
       begin
-        LayerList := FLayers[TimeIndex];
-        LayerList.CheckRestore;
-        UpdateLayerDataSet(LayerList, DataArray);
+        CellList := FLayers[TimeIndex];
+        CellList.CheckRestore;
+        UpdateLayerDataSet(CellList, DataArray);
       end
       else
       begin
@@ -2501,8 +2577,8 @@ begin
 end;
 
 procedure TCustomModflowWriter.WriteTransient2DArray(const Comment: string;
-      DataTypeIndex: Integer; DataType: TRbwDataType; DefaultValue: Double;
-      List: TList);
+  DataTypeIndex: Integer; DataType: TRbwDataType; DefaultValue: Double;
+  List: TList; var TransientArray: TDataArray; FreeArray: boolean = True);
 var
   ColIndex: Integer;
   RowIndex: Integer;
@@ -2601,7 +2677,15 @@ begin
     ExportArray.UpToDate := True;
     WriteArray(ExportArray, 0, Comment);
   finally
-    ExportArray.Free;
+    if FreeArray then
+    begin
+      TransientArray := nil;
+      ExportArray.Free;
+    end
+    else
+    begin
+      TransientArray := ExportArray;
+    end;
   end;
 end;
 

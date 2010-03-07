@@ -13,7 +13,7 @@ type
     procedure WriteDataSet0; virtual; abstract;
     procedure WriteDataSet1; virtual; abstract;
     function UseSteadyParameter(Param: TModflowSteadyParameter): boolean;
-      virtual; abstract;
+      virtual; 
     function GetDataArray(Param: TModflowSteadyParameter): TDataArray;
       virtual; abstract;
     function GetArrayName(Param: TModflowSteadyParameter;
@@ -27,7 +27,7 @@ type
     property FileUnit : integer read FFileUnit;
     function TransientArrayList: TList; virtual; abstract;
     function UsesHufParam(UsedParam: THufUsedParameter;
-      var ArrayName: string; var DataArray: TDataArray): boolean; virtual; abstract;
+      var ArrayName: string; var DataArray: TDataArray): boolean; virtual;
   public
     procedure WriteFile(const AFileName: string);
   end;
@@ -82,6 +82,63 @@ uses frmErrorsAndWarningsUnit, OrderedCollectionUnit, ModflowUnitNumbers,
   frmProgressUnit;
 
 { TCustomMultZoneWriter }
+
+function TCustomMultZoneWriter.UsesHufParam(UsedParam: THufUsedParameter;
+  var ArrayName: string; var DataArray: TDataArray): boolean;
+begin
+  result := False;
+  case UsedParam.Parameter.ParameterType of
+    ptUndefined, ptLPF_HK, ptLPF_HANI, ptLPF_VK, ptLPF_VANI, ptLPF_SS,
+    ptLPF_SY, ptLPF_VKCB, ptRCH, ptEVT, ptETS, ptCHD, ptGHB, ptQ, ptRIV,
+    ptDRN, ptDRT, ptSFR, ptHFB:
+      begin
+        Assert(False);
+      end;
+    ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI, ptHUF_KDEP, ptHUF_LVDA:
+      begin
+        result := PhastModel.ModflowPackages.HufPackage.IsSelected;
+      end;
+    ptHUF_SS, ptHUF_SY, ptHUF_SYTP:
+      begin
+        result := PhastModel.ModflowPackages.HufPackage.IsSelected
+          and PhastModel.ModflowFullStressPeriods.TransientModel;
+      end;
+    else Assert(False);
+  end;
+end;
+
+function TCustomMultZoneWriter.UseSteadyParameter(
+  Param: TModflowSteadyParameter): boolean;
+begin
+  result := False;
+  case Param.ParameterType of
+    ptLPF_HK, ptLPF_HANI, ptLPF_VK, ptLPF_VANI, ptLPF_VKCB:
+      begin
+        result := PhastModel.ModflowPackages.LpfPackage.IsSelected;
+      end;
+    ptLPF_SS, ptLPF_SY:
+      begin
+        result := PhastModel.ModflowPackages.LpfPackage.IsSelected
+          and PhastModel.ModflowFullStressPeriods.TransientModel;
+      end;
+    ptHUF_LVDA:
+      begin
+        result := PhastModel.ModflowPackages.HufPackage.IsSelected;
+      end;
+    ptHUF_SYTP:
+      begin
+        result := PhastModel.ModflowPackages.HufPackage.IsSelected
+          and PhastModel.ModflowFullStressPeriods.TransientModel;
+      end;
+    ptUndefined, ptRCH, ptEVT, ptETS, ptCHD, ptGHB, ptQ,
+    ptRIV, ptDRN, ptDRT, ptSFR, ptHFB,
+    ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI, ptHUF_SS, ptHUF_SY,
+    ptHUF_KDEP:
+      begin
+        Assert(False);
+      end;
+  end;
+end;
 
 procedure TCustomMultZoneWriter.WriteDataSets2And3;
 var
@@ -320,18 +377,26 @@ end;
 function TModflowZoneWriter.UsesHufParam(UsedParam: THufUsedParameter;
   var ArrayName: string; var DataArray: TDataArray): boolean;
 begin
-  result := UsedParam.UseZone;
+  result := inherited UsesHufParam(UsedParam, ArrayName, DataArray);
   if result then
   begin
-    ArrayName := UsedParam.ZoneArrayName;
-    DataArray := PhastModel.GetDataSetByName(UsedParam.ZoneDataSetName);
+    result := UsedParam.UseZone;
+    if result then
+    begin
+      ArrayName := UsedParam.ZoneArrayName;
+      DataArray := PhastModel.GetDataSetByName(UsedParam.ZoneDataSetName);
+    end;
   end;
 end;
 
 function TModflowZoneWriter.UseSteadyParameter(
   Param: TModflowSteadyParameter): boolean;
 begin
-  result := Param.UseZone;
+  result := inherited UseSteadyParameter(Param);
+  if result then
+  begin
+    result := Param.UseZone;
+  end;
 end;
 
 procedure TModflowZoneWriter.WriteDataSet0;
@@ -419,18 +484,26 @@ end;
 function TModflowMultiplierWriter.UsesHufParam(UsedParam: THufUsedParameter;
   var ArrayName: string; var DataArray: TDataArray): boolean;
 begin
-  result := UsedParam.UseMultiplier;
+  result := inherited UsesHufParam(UsedParam, ArrayName, DataArray);
   if result then
   begin
-    ArrayName := UsedParam.MultiplierArrayName;
-    DataArray := PhastModel.GetDataSetByName(UsedParam.MultiplierDataSetName);
+    result := UsedParam.UseMultiplier;
+    if result then
+    begin
+      ArrayName := UsedParam.MultiplierArrayName;
+      DataArray := PhastModel.GetDataSetByName(UsedParam.MultiplierDataSetName);
+    end;
   end;
 end;
 
 function TModflowMultiplierWriter.UseSteadyParameter(
   Param: TModflowSteadyParameter): boolean;
 begin
-  result := Param.UseMultiplier;
+  result := inherited UseSteadyParameter(Param);
+  if result then
+  begin
+    result := Param.UseMultiplier;
+  end;
 end;
 
 procedure TModflowMultiplierWriter.WriteDataSet0;

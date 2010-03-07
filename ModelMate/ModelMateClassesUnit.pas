@@ -586,13 +586,15 @@ begin
           muCalib: MFiles := MIFiles; // Pointer assignment to define source of data.
           muPred: MFiles := MIFilesPred;
         end;
-
         BLabel := 'Model_Input_Files';
         KeyItem := 'ModInFile';
         NR := MFiles.Count;
         NC := 2;
         Msg1 := '# Model_Input_Files input block not generated because it would be empty';
-        Msg2 := 'Model_Input_Files input block not generated because there are no model input files entered';
+        case ModelUse of
+          muCalib: Msg2 := 'Model_Input_Files input block not generated because there are no model input files entered';
+          muPred: Msg2 := 'Model_Input_Files input block not generated because there are no prediction-model input files entered';
+        end;
         Keyword0 := 'ModInFile';
         Keyword1 := 'TemplateFile';
         Keyword2 := '';
@@ -608,7 +610,10 @@ begin
         NR := MFiles.Count;
         NC := 3;
         Msg1 := '# Model_Output_Files input block not generated because it would be empty';
-        Msg2 := 'Model_Output_Files input block not generated because there are no model output files entered';
+        case ModelUse of
+          muCalib: Msg2 := 'Model_Output_Files input block not generated because there are no model output files entered';
+          muPred: Msg2 := 'Model_Output_Files input block not generated because there are no prediction-model output files entered';
+        end;
         Keyword0 := 'ModOutFile';
         Keyword1 := 'InstructionFile';
         Keyword2 := 'Category';
@@ -1636,7 +1641,7 @@ begin
   fUseObsGps := False;
   fUsePredGps := False;
   fUseParGps := False;
-  fUsePriorInfo := False;
+  fUsePriorInfo := True;
   fLinkTemplateToParamsTable := True;
 end; // constructor TProject.Create
 
@@ -2127,7 +2132,7 @@ begin
     patConstrain: result := 'Constrain';
     patConstraints: result := 'Constraints';
     patGroupName: result := 'Group Name';
-    patDerived: result := 'Derived?';
+    patDerived: result := 'Derived';
     patLowerBound: result := 'Lower Constraint';
     patUpperBound: result := 'Upper Constraint';
     patLowerValue: result := 'Lower Reasonable Value';
@@ -2417,6 +2422,20 @@ begin
       else
         if Item.AllAtts.Count < NumParAttributes then
           Populate(Source);
+      if self.Name = '' then
+        begin
+          if Item.GetAttributeByType(patParamName) <> '' then
+            begin
+              self.SetAttributeByType(patParamName,self.Name);
+            end;
+        end
+      else
+        begin
+          if self.GetAttributeByType(patParamName) = '' then
+            begin
+              self.SetAttributeByType(patParamName,self.Name);
+            end;
+        end;
     end
   else
     inherited;

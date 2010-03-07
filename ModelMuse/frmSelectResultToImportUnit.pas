@@ -7,11 +7,13 @@ uses
   Dialogs, frmCustomGoPhastUnit, StdCtrls, CheckLst, JvExCheckLst,
   JvCheckListBox, Buttons, JvDialogs, IntListUnit, ReadModflowArrayUnit,
   DataSetUnit, ScreenObjectUnit, StrUtils, UndoItems, Contnrs, RealListUnit,
-  ModflowGridUnit, ExtCtrls, EdgeDisplayUnit;
+  ModflowGridUnit, ExtCtrls, EdgeDisplayUnit, GoPhastTypes;
 
 type
   TModflowResultFormat = (mrBinary, mrAscii, mrFlux, mrHufAscii, mrHufBinary,
-    mrHufFlux);
+    mrHufFlux, mfSubBinary);
+
+  TDataArrayForm = (dafLayer, dafSystem, dafNone);
 
   TfrmSelectResultToImport = class(TfrmCustomGoPhast)
     clData: TJvCheckListBox;
@@ -46,18 +48,19 @@ type
     FMaxLayer: Integer;
     FGrid: TModflowGrid;
     function DefaultFileName: string;
-    procedure OpenResultFile(out Precision: TModflowPrecison; out HufFormat: boolean);
+    procedure OpenResultFile(out Precision: TModflowPrecision; out HufFormat: boolean);
     procedure ReadArray(var AnArray: TModflowDoubleArray;
       var EndReached: Boolean; var KPER, KSTP, ILAY: Integer;
-      var Description: string; Precision: TModflowPrecison);
+      var Description: string; Precision: TModflowPrecision);
     procedure CreateOrRetrieveLayerDataSet(const Description: string;
       KSTP, KPER, ILAY: integer;
       out LayerData: TDataArray; out OldComment: string; NewDataSets: TList;
-      ScreenObjectsToDelete: TScreenObjectList);
+      ScreenObjectsToDelete: TScreenObjectList; DataArrayForm: TDataArrayForm = dafLayer);
     procedure CreateScreenObject(LayerIndex: integer;
       out ScreenObject: TScreenObject);
     procedure AssignValues(LayerIndex: integer; ScreenObject: TScreenObject; LayerData: TDataArray;
-      AnArray: TModflowDoubleArray);
+      AnArray: TModflowDoubleArray; ValuesToIgnore: TOneDRealArray;
+      out MinMaxAssigned: boolean);
     procedure CreateOrRetrieve3DDataSet(Description: string;
       KPER, KSTP: integer;
       LayerNumbers: TIntegerList; LayerDataSets: TList;
@@ -65,16 +68,20 @@ type
     procedure CloseFiles;
     procedure Read3DArray(var NLAY: Integer; var EndReached: Boolean;
       var KPER, KSTP: Integer; var Description: string;
-      var A3DArray: T3DTModflowArray; Precision: TModflowPrecison; HufFormat: boolean);
+      var A3DArray: T3DTModflowArray; Precision: TModflowPrecision; HufFormat: boolean);
     procedure Assign3DValues(ScreenObject: TScreenObject; LayerData: TDataArray;
-      AnArray: T3DTModflowArray; LayerIndex: integer; CheckAllLayers: boolean);
+      AnArray: T3DTModflowArray; LayerIndex: integer; CheckAllLayers: boolean;
+      ValuesToIgnore: TOneDRealArray);
     procedure SetData;
     function AskUserIfNewDataSet: boolean;
     procedure AssignLimits(MinValues, MaxValues: TRealList;
-      New3DArray: TDataArray);
+      New3DArray: TDataArray; ValuesToIgnore: TOneDRealArray);
     procedure AssignObjectName(var ScreenObject: TScreenObject; LayerData: TDataArray);
     procedure UpdateCombo;
+    procedure GetShouldIgnore(ValuesToIgnore: TOneDRealArray; Temp: TModflowFloat; var ShouldIgnore: Boolean);
+    function SubsidenceDescription(DESC: string; ILAY: integer): string;
     { Private declarations }
+
   public
     function SelectFiles: boolean;
     { Public declarations }
@@ -137,7 +144,7 @@ var
 
 implementation
 
-uses Math, frmGoPhastUnit, RbwParser, GoPhastTypes,
+uses Math, frmGoPhastUnit, RbwParser, 
   GIS_Functions, ValueArrayStorageUnit, ModelMuseUtilities, PhastModelUnit,
   frmUpdateDataSetsUnit, UndoItemsScreenObjects, frmGridColorUnit,
   InterpolationUnit, frmContourDataUnit, HufDefinition;
@@ -165,7 +172,8 @@ end;
 procedure TfrmSelectResultToImport.CreateOrRetrieveLayerDataSet(
   const Description: string; KSTP, KPER, ILAY: integer;
   out LayerData: TDataArray; out OldComment: string; NewDataSets: TList;
-  ScreenObjectsToDelete: TScreenObjectList);
+  ScreenObjectsToDelete: TScreenObjectList;
+  DataArrayForm: TDataArrayForm = dafLayer);
 var
   NewName: string;
   Grid: TModflowGrid;
@@ -176,8 +184,23 @@ begin
   NewName := TitleCase(Description);
   NewName := ValidName(NewName);
   NewName := NewName + '_P' + PaddedIntToStr(KPER, FMaxPeriod) +
-    '_S' + PaddedIntToStr(KSTP, FMaxStep)
-    + '_L' + PaddedIntToStr(ILAY, FMaxLayer);
+    '_S' + PaddedIntToStr(KSTP, FMaxStep);
+  case DataArrayForm of
+    dafLayer:
+      begin
+        NewName := NewName + '_L' + PaddedIntToStr(ILAY, FMaxLayer);
+      end;
+    dafSystem:
+      begin
+        NewName := NewName + '_Sys' + PaddedIntToStr(ILAY, FMaxLayer);
+      end;
+    dafNone:
+      begin
+        // do nothing
+      end;
+    else
+      Assert(False);
+  end;
   CreateNewDataSet := True;
   if frmGoPhast.PhastModel.GetDataSetByName(NewName) <> nil then
   begin
@@ -297,8 +320,10 @@ begin
   end;
 end;
 
-procedure TfrmSelectResultToImport.AssignValues(LayerIndex: integer; ScreenObject: TScreenObject;
-  LayerData: TDataArray; AnArray: TModflowDoubleArray);
+procedure TfrmSelectResultToImport.AssignValues(LayerIndex: integer;
+  ScreenObject: TScreenObject; LayerData: TDataArray;
+  AnArray: TModflowDoubleArray; ValuesToIgnore: TOneDRealArray;
+  out MinMaxAssigned: boolean);
 var
   RowIndex: Integer;
   ColIndex: Integer;
@@ -307,11 +332,13 @@ var
   PointIndex: Integer;
   Grid: TModflowGrid;
   ActiveDataSet: TDataArray;
-  MinMaxAssigned: boolean;
   Temp: TModflowFloat;
   MinValue, MaxValue: TModflowFloat;
   ShouldCheck: Boolean;
   LI: Integer;
+  ShouldIgnore: Boolean;
+  IgnoreIndex: Integer;
+  SkipReal: TSkipReal;
 begin
   ActiveDataSet := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
   ActiveDataSet.Initialize;
@@ -357,21 +384,26 @@ begin
         Temp:= AnArray[RowIndex, ColIndex];
         ImportedValues.Values.RealValues[PointIndex] := Temp;
         Inc(PointIndex);
-        if not MinMaxAssigned then
+        GetShouldIgnore(ValuesToIgnore, Temp, ShouldIgnore);
+
+        if not ShouldIgnore then
         begin
-          MinValue := Temp;
-          MaxValue := Temp;
-          MinMaxAssigned := True;
-        end
-        else
-        begin
-          if MinValue > Temp then
+          if not MinMaxAssigned then
           begin
             MinValue := Temp;
-          end
-          else if MaxValue < Temp then
-          begin
             MaxValue := Temp;
+            MinMaxAssigned := True;
+          end
+          else
+          begin
+            if MinValue > Temp then
+            begin
+              MinValue := Temp;
+            end
+            else if MaxValue < Temp then
+            begin
+              MaxValue := Temp;
+            end;
           end;
         end;
       end;
@@ -385,12 +417,18 @@ begin
   LayerData.Limits.Update;
   LayerData.Comment := LayerData.Comment
     + #13#10 + 'Minimum value: ' + FloatToStr(MinValue)
-    + #13#10 + 'Maximum value: ' + FloatToStr(MaxValue)
+    + #13#10 + 'Maximum value: ' + FloatToStr(MaxValue);
+  LayerData.Limits.RealValuesToSkip.Clear;
+  for IgnoreIndex := 0 to Length(ValuesToIgnore) - 1 do
+  begin
+    SkipReal := LayerData.Limits.RealValuesToSkip.Add as TSkipReal;
+    SkipReal.RealValue := ValuesToIgnore[IgnoreIndex];
+  end;
 end;
 
 procedure TfrmSelectResultToImport.Assign3DValues(ScreenObject: TScreenObject;
   LayerData: TDataArray; AnArray: T3DTModflowArray; LayerIndex: integer;
-  CheckAllLayers: boolean);
+  CheckAllLayers: boolean; ValuesToIgnore: TOneDRealArray);
 var
   RowIndex: Integer;
   ColIndex: Integer;
@@ -404,6 +442,7 @@ var
   ActiveDataSet: TDataArray;
   ShouldCheck: Boolean;
   LI: Integer;
+  ShouldIgnore: Boolean;
 begin
   AssignObjectName(ScreenObject, LayerData);
 
@@ -448,21 +487,26 @@ begin
         Temp := AnArray[LayerIndex, RowIndex, ColIndex];
         ImportedValues.Values.RealValues[PointIndex] := Temp;
         Inc(PointIndex);
-        if not MinMaxAssigned then
+        GetShouldIgnore(ValuesToIgnore, Temp, ShouldIgnore);
+
+        if not ShouldIgnore then
         begin
-          MinValue := Temp;
-          MaxValue := Temp;
-          MinMaxAssigned := True;
-        end
-        else
-        begin
-          if MinValue > Temp then
+          if not MinMaxAssigned then
           begin
             MinValue := Temp;
-          end
-          else if MaxValue < Temp then
-          begin
             MaxValue := Temp;
+            MinMaxAssigned := True;
+          end
+          else
+          begin
+            if MinValue > Temp then
+            begin
+              MinValue := Temp;
+            end
+            else if MaxValue < Temp then
+            begin
+              MaxValue := Temp;
+            end;
           end;
         end;
       end;
@@ -601,7 +645,10 @@ begin
 end;
 
 procedure TfrmSelectResultToImport.AssignLimits( MinValues, MaxValues: TRealList;
-  New3DArray: TDataArray);
+  New3DArray: TDataArray; ValuesToIgnore: TOneDRealArray);
+var
+  IgnoreIndex: Integer;
+  SkipReal: TSkipReal;
 begin
   MinValues.Sort;
   MaxValues.Sort;
@@ -617,7 +664,13 @@ begin
     + #13#10 + 'Minimum value: '
     + FloatToStr(New3DArray.Limits.LowerLimit.RealLimitValue)
     + #13#10 + 'Maximum value: '
-    + FloatToStr(New3DArray.Limits.UpperLimit.RealLimitValue)
+    + FloatToStr(New3DArray.Limits.UpperLimit.RealLimitValue);
+  New3DArray.Limits.RealValuesToSkip.Clear;
+  for IgnoreIndex := 0 to Length(ValuesToIgnore) - 1 do
+  begin
+    SkipReal := New3DArray.Limits.RealValuesToSkip.Add as TSkipReal;
+    SkipReal.RealValue := ValuesToIgnore[IgnoreIndex];
+  end;
 end;
 
 procedure TfrmSelectResultToImport.SetData;
@@ -655,10 +708,12 @@ var
   OldComment: string;
   DataSetNames: TStringList;
   ColIndex: Integer;
-  Precision: TModflowPrecison;
+  Precision: TModflowPrecision;
   HufFormat: boolean;
   HGU: THydrogeologicUnit;
   LayerDescription: string;
+  ValuesToIgnore: TOneDRealArray;
+  MinMaxAssigned: Boolean;
 begin
   inherited;
   FGrid := frmGoPhast.PhastModel.ModflowGrid;
@@ -685,6 +740,16 @@ begin
     Description := '';
     Count := 0;
     NLAY := 1;
+    if FResultFormat = mrFlux then
+    begin
+      SetLength(ValuesToIgnore, 0);
+    end
+    else
+    begin
+      SetLength(ValuesToIgnore, 2);
+      ValuesToIgnore[0] := frmGoPhast.PhastModel.ModflowOptions.HDry;
+      ValuesToIgnore[1] := frmGoPhast.PhastModel.ModflowOptions.HNoFlow;
+    end;
     for Index := 0 to clData.Items.Count - 1 do
     begin
       case FResultFormat of
@@ -719,13 +784,17 @@ begin
                     CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
                       LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
                     CreateScreenObject(ILAY-1, ScreenObject);
-                    AssignValues(ILAY-1, ScreenObject, LayerData, LayerArray);
+                    AssignValues(ILAY-1, ScreenObject, LayerData, LayerArray,
+                      ValuesToIgnore, MinMaxAssigned);
                     LayerNumbers.Add(ILAY);
                     LayerDataSets.Add(LayerData);
                     OldComments.AddObject(OldComment, LayerData);
                     DataSetNames.AddObject(LayerData.Name, LayerData);
-                    MinValues.Add(LayerData.Limits.LowerLimit.RealLimitValue);
-                    MaxValues.Add(LayerData.Limits.UpperLimit.RealLimitValue);
+                    if MinMaxAssigned then
+                    begin
+                      MinValues.Add(LayerData.Limits.LowerLimit.RealLimitValue);
+                      MaxValues.Add(LayerData.Limits.UpperLimit.RealLimitValue);
+                    end;
 
                     if ILAY = FGrid.LayerCount then
                     begin
@@ -737,7 +806,8 @@ begin
                       DataSetNames.AddObject(New3DArray.Name, New3DArray);
                       comboColorGrid.Items.Objects[Count] := New3DArray;
 
-                      AssignLimits(MinValues, MaxValues, New3DArray);
+                      AssignLimits(MinValues, MaxValues, New3DArray,
+                        ValuesToIgnore);
                     end;
                     NewCreateScreenObjects.Add(
                       TUndoCreateScreenObject.Create(ScreenObject))
@@ -754,13 +824,17 @@ begin
                   CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
                     LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
                   CreateScreenObject(ILAY-1, ScreenObject);
-                  AssignValues(ILAY-1, ScreenObject, LayerData, AnArray);
+                  AssignValues(ILAY-1, ScreenObject, LayerData, AnArray,
+                    ValuesToIgnore, MinMaxAssigned);
                   LayerNumbers.Add(ILAY);
                   LayerDataSets.Add(LayerData);
                   OldComments.AddObject(OldComment, LayerData);
                   DataSetNames.AddObject(LayerData.Name, LayerData);
-                  MinValues.Add(LayerData.Limits.LowerLimit.RealLimitValue);
-                  MaxValues.Add(LayerData.Limits.UpperLimit.RealLimitValue);
+                  if MinMaxAssigned then
+                  begin
+                    MinValues.Add(LayerData.Limits.LowerLimit.RealLimitValue);
+                    MaxValues.Add(LayerData.Limits.UpperLimit.RealLimitValue);
+                  end;
 
                   if ILAY = FGrid.LayerCount then
                   begin
@@ -772,7 +846,8 @@ begin
                     DataSetNames.AddObject(New3DArray.Name, New3DArray);
                     comboColorGrid.Items.Objects[Count] := New3DArray;
 
-                    AssignLimits(MinValues, MaxValues, New3DArray);
+                    AssignLimits(MinValues, MaxValues, New3DArray,
+                      ValuesToIgnore);
                   end;
                   NewCreateScreenObjects.Add(
                     TUndoCreateScreenObject.Create(ScreenObject))
@@ -797,7 +872,8 @@ begin
                 CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
                   LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
                 CreateScreenObject(ILAY-1, ScreenObject);
-                Assign3DValues(ScreenObject, LayerData, A3DArray, LayerIndex, False);
+                Assign3DValues(ScreenObject, LayerData, A3DArray, LayerIndex,
+                  False, ValuesToIgnore);
                 LayerNumbers.Add(ILAY);
                 LayerDataSets.Add(LayerData);
                 OldComments.AddObject(OldComment, LayerData);
@@ -814,7 +890,7 @@ begin
               DataSetNames.AddObject(New3DArray.Name, New3DArray);
               comboColorGrid.Items.Objects[Count] := New3DArray;
 
-              AssignLimits(MinValues, MaxValues, New3DArray);
+              AssignLimits(MinValues, MaxValues, New3DArray, ValuesToIgnore);
             end;
 
           end;
@@ -834,7 +910,8 @@ begin
               CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
                 LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
               CreateScreenObject(-1, ScreenObject);
-              AssignValues(-1, ScreenObject, LayerData, AnArray);
+              AssignValues(-1, ScreenObject, LayerData, AnArray,
+                ValuesToIgnore, MinMaxAssigned);
               OldComments.AddObject(OldComment, LayerData);
               DataSetNames.AddObject(LayerData.Name, LayerData);
               Inc(Count);
@@ -860,7 +937,8 @@ begin
               CreateOrRetrieveLayerDataSet(LayerDescription, KSTP, KPER, ILAY,
                 LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
               CreateScreenObject(-1, ScreenObject);
-              Assign3DValues(ScreenObject, LayerData, A3DArray, LayerIndex, True);
+              Assign3DValues(ScreenObject, LayerData, A3DArray, LayerIndex,
+                True, ValuesToIgnore);
               OldComments.AddObject(OldComment, LayerData);
               DataSetNames.AddObject(LayerData.Name, LayerData);
               Inc(Count);
@@ -868,7 +946,34 @@ begin
               NewCreateScreenObjects.Add(
                 TUndoCreateScreenObject.Create(ScreenObject))
             end;
-          end
+          end;
+        mfSubBinary:
+          begin
+            ReadArray(AnArray, EndReached,
+              KPER, KSTP, ILAY, Description, Precision);
+            Description := SubsidenceDescription(Description, ILAY);
+            if clData.Checked[Index] then
+            begin
+              Inc(Count);
+              CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
+                LayerData, OldComment, NewDataSets, ScreenObjectsToDelete,
+                dafNone);
+              comboColorGrid.Items.Objects[Count] := LayerData;
+              CreateScreenObject(ILAY-1, ScreenObject);
+              AssignValues(ILAY-1, ScreenObject, LayerData, AnArray,
+                ValuesToIgnore, MinMaxAssigned);
+              LayerNumbers.Add(ILAY);
+              LayerDataSets.Add(LayerData);
+              OldComments.AddObject(OldComment, LayerData);
+              DataSetNames.AddObject(LayerData.Name, LayerData);
+              if MinMaxAssigned then
+              begin
+                MinValues.Add(LayerData.Limits.LowerLimit.RealLimitValue);
+                MaxValues.Add(LayerData.Limits.UpperLimit.RealLimitValue);
+              end;
+            end;
+
+          end;
         else Assert(False);
       end;
     end;
@@ -938,6 +1043,27 @@ begin
 //    Max3DValues.Free;
   end;
 
+end;
+
+function TfrmSelectResultToImport.SubsidenceDescription(DESC: string;
+  ILAY: integer): string;
+begin
+  result := Trim(DESC);
+  if SameText(result, 'SUBSIDENCE') then
+  begin
+    Exit;
+  end
+  else if SameText(result, 'NDSYS COMPACTION')
+    or SameText(result, 'ND CRITICAL HEAD')
+    or SameText(result, 'DSYS COMPACTION')
+    or SameText(result, 'D CRITICAL HEAD') then
+  begin
+    result := result + ' System ' + IntToStr(ILAY);
+  end
+  else
+  begin
+    result := result + ' Layer ' + IntToStr(ILAY);
+  end;
 end;
 
 procedure TfrmSelectResultToImport.clDataClickCheck(Sender: TObject);
@@ -1016,9 +1142,10 @@ var
   Item: string;
   DESC2: TModflowDesc2;
   NLAY: Integer;
-  Precision: TModflowPrecison;
+  Precision: TModflowPrecision;
   HufFormat: boolean;
   LayerIndex: Integer;
+  Description: string;
   function WriteLabel(Description: string): string;
   var
     HGU: THydrogeologicUnit;
@@ -1247,6 +1374,33 @@ begin
               end;
             end;
           end;
+        mfSubBinary:
+          begin
+            while FFileStream.Position < FFileStream.Size do
+            begin
+              case Precision of
+                mpSingle:
+                  ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
+                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
+                mpDouble:
+                  ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
+                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
+                else Assert(False);
+              end;
+              Description := SubsidenceDescription(DESC, ILAY);
+              RecordItem(Description);
+              if (frmGoPhast.ModflowGrid.RowCount <> NROW)
+                or (frmGoPhast.ModflowGrid.ColumnCount <> NCOL) then
+              begin
+                Beep;
+                MessageDlg('The number of rows or columns in the data set doesn''t'
+                  + ' match the number of rows or columns in the grid.',
+                  mtError, [mbOK], 0);
+                result := False;
+                break;
+              end;
+            end;
+          end
         else Assert(False);
       end;
     finally
@@ -1262,6 +1416,27 @@ begin
     begin
       clData.Checked[clData.Items.Count-1] := True;
       clDataClickCheck(clData);
+    end;
+  end;
+end;
+
+procedure TfrmSelectResultToImport.GetShouldIgnore(ValuesToIgnore: TOneDRealArray; Temp: TModflowFloat; var ShouldIgnore: Boolean);
+var
+  Delta: Double;
+  IgnoreIndex: Integer;
+  IgnoreValue: Double;
+const
+  Epsilon = 1E-07;
+begin
+  ShouldIgnore := False;
+  for IgnoreIndex := 0 to Length(ValuesToIgnore) - 1 do
+  begin
+    IgnoreValue := ValuesToIgnore[IgnoreIndex];
+    Delta := Abs(IgnoreValue) * Epsilon;
+    if (IgnoreValue - Delta <= Temp) and (IgnoreValue + Delta >= Temp) then
+    begin
+      ShouldIgnore := True;
+      Break;
     end;
   end;
 end;
@@ -1333,7 +1508,7 @@ end;
 
 procedure TfrmSelectResultToImport.Read3DArray(var NLAY: Integer;
    var EndReached: Boolean; var KPER, KSTP: Integer; var Description: string;
-   var A3DArray: T3DTModflowArray; Precision: TModflowPrecison; HufFormat: boolean);
+   var A3DArray: T3DTModflowArray; Precision: TModflowPrecision; HufFormat: boolean);
 var
   PERTIM: TModflowDouble;
   TOTIM: TModflowDouble;
@@ -1372,7 +1547,7 @@ end;
 
 procedure TfrmSelectResultToImport.ReadArray(var AnArray: TModflowDoubleArray;
   var EndReached: Boolean; var KPER: Integer; var KSTP: Integer;
-  var ILAY: Integer; var Description: string; Precision: TModflowPrecison);
+  var ILAY: Integer; var Description: string; Precision: TModflowPrecision);
 var
   NROW: Integer;
   DESC2: TModflowDesc2;
@@ -1382,7 +1557,7 @@ var
   TOTIM: TModflowDouble;
 begin
   case FResultFormat of
-    mrBinary, mrHufBinary:
+    mrBinary, mrHufBinary, mfSubBinary:
       begin
         if FFileStream.Position < FFileStream.Size then
         begin
@@ -1422,7 +1597,7 @@ begin
 end;
 
 procedure TfrmSelectResultToImport.OpenResultFile(
-  out Precision: TModflowPrecison; out HufFormat: boolean);
+  out Precision: TModflowPrecision; out HufFormat: boolean);
 var
   Extension: string; 
 begin
@@ -1454,6 +1629,34 @@ begin
   begin
     FResultFormat := mrHufFlux;
   end
+  else if (SameText(Extension, '.Sub_Out')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SubSubOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SubComMlOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SubComIsOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SubVdOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SubNdCritHeadOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SubDCritHeadOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
   else
   begin
     Assert(False);
@@ -1461,17 +1664,15 @@ begin
 
   HufFormat:= false;
   case FResultFormat of
-    mrBinary,mrFlux, mrHufBinary, mrHufFlux:
+    mrBinary, mrHufBinary, mfSubBinary:
       begin
         FFileStream := TFileStream.Create(FFileName, fmOpenRead or fmShareDenyWrite);
-        if FResultFormat in [mrBinary, mrHufBinary] then
-        begin
-          Precision := CheckArrayPrecision(FFileStream);
-        end
-        else
-        begin
-          Precision := CheckBudgetPrecision(FFileStream, HufFormat);
-        end;
+        Precision := CheckArrayPrecision(FFileStream);
+      end;
+    mrFlux, mrHufFlux:
+      begin
+        FFileStream := TFileStream.Create(FFileName, fmOpenRead or fmShareDenyWrite);
+        Precision := CheckBudgetPrecision(FFileStream, HufFormat);
       end;
     mrAscii, mrHufAscii:
       begin

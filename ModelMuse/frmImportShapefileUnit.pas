@@ -827,6 +827,7 @@ begin
       begin
         xbShapeDataBase.FileName := FDataBaseFileName;
         xbShapeDataBase.Active := True;
+        Assert(xbShapeDataBase.RecordCount = FGeometryFile.Count);
         xbShapeDataBase.GotoBOF;
         ValidFields := TStringList.Create;
         ValidIndicies := TIntegerList.Create;
@@ -5575,6 +5576,7 @@ var
   Index: integer;
   DataSet: TDataArray;
   Prop: TPhastDataSetStorage;
+  ShouldInvalidate: array of boolean;
 begin
   frmGoPhast.CanDraw := False;
   try
@@ -5588,10 +5590,16 @@ begin
       end;
       frmGoPhast.DeletedDataSets.Extract(DataSet);
     end;
+
+    SetLength(ShouldInvalidate, FNewProperties.Count);
     for Index := 0 to FNewProperties.Count - 1 do
     begin
       Prop := FNewProperties[Index];
-      Prop.AssignToDataSet;
+      Prop.AssignToDataSet(ShouldInvalidate[Index]);
+      if ShouldInvalidate[Index] then
+      begin
+        Prop.DataSet.Invalidate;
+      end;
     end;
   finally
     frmGoPhast.CanDraw := True;
@@ -5615,6 +5623,7 @@ var
   Index: integer;
   DataSet: TDataArray;
   Prop: TPhastDataSetStorage;
+  ShouldInvalidate: array of boolean;
 begin
   inherited;
   frmGoPhast.CanDraw := False;
@@ -5625,10 +5634,15 @@ begin
       DataSet := FNewDataSets[Index];
       frmGoPhast.PhastModel.ExtractDataSet(DataSet);
     end;
+    SetLength(ShouldInvalidate, FOldProperties.Count);
     for Index := 0 to FOldProperties.Count - 1 do
     begin
       Prop := FOldProperties[Index];
-      Prop.AssignToDataSet;
+      Prop.AssignToDataSet(ShouldInvalidate[Index]);
+      if ShouldInvalidate[Index] then
+      begin
+        Prop.DataSet.Invalidate;
+      end;
     end;
     frmGoPhast.DeletedDataSets.Assign(FNewDataSets, laOr);
 

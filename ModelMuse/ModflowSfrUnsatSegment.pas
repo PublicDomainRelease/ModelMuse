@@ -20,7 +20,7 @@ type
     InitialWaterContentAnnotation: string;
     VerticalSaturatedKAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
   end;
 
   TSrfUnsatSegmentArray = array of TSfrUnsatSegmentRecord;
@@ -30,7 +30,7 @@ type
     FSrfUnsatSegmentArray: TSrfUnsatSegmentArray;
     function GetSrfUnsatSegmentArray: TSrfUnsatSegmentArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -151,7 +151,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
   public
     property Values: TSfrUnsatSegmentRecord read FValues write FValues;
     property StressPeriod: integer read FStressPeriod write FStressPeriod;
@@ -870,10 +870,10 @@ function TSfrUnsatSegment_Cell.GetVerticalSaturatedKAnnotation: string;
 begin
   result := Values.VerticalSaturatedKAnnotation;
 end;
-procedure TSfrUnsatSegment_Cell.Restore(Decomp: TDecompressionStream);
+procedure TSfrUnsatSegment_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp);
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -898,7 +898,7 @@ begin
 
 end;
 
-procedure TSfrUnsatSegmentRecord.Restore(Decomp: TDecompressionStream);
+procedure TSfrUnsatSegmentRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   SaturatedWaterContent := ReadCompReal(Decomp);
@@ -909,10 +909,10 @@ begin
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
 
-  BrooksCoreyExponentAnnotation := ReadCompString(Decomp);
-  SaturatedWaterContentAnnotation := ReadCompString(Decomp);
-  InitialWaterContentAnnotation := ReadCompString(Decomp);
-  VerticalSaturatedKAnnotation := ReadCompString(Decomp);
+  BrooksCoreyExponentAnnotation := ReadCompString(Decomp, Annotations);
+  SaturatedWaterContentAnnotation := ReadCompString(Decomp, Annotations);
+  InitialWaterContentAnnotation := ReadCompString(Decomp, Annotations);
+  VerticalSaturatedKAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TSfrUnsatSegmentStorage }
@@ -936,7 +936,7 @@ begin
   end;
 end;
 
-procedure TSfrUnsatSegmentStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TSfrUnsatSegmentStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -945,7 +945,7 @@ begin
   SetLength(FSrfUnsatSegmentArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FSrfUnsatSegmentArray[Index].Restore(DecompressionStream);
+    FSrfUnsatSegmentArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 

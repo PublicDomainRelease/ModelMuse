@@ -325,13 +325,14 @@ var
   DataType: TRbwDataType;
   DataTypeIndex: integer;
   Comment: string;
+  Dummy: TDataArray;
 begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := 0;
   Comment := DataSetIdentifier + ' ' + VariableIdentifiers;
   WriteTransient2DArray(Comment, DataTypeIndex, DataType,
-    DefaultValue, CellList);
+    DefaultValue, CellList, Dummy);
 end;
 
 procedure TModflowRCH_Writer.WriteStressPeriods(const VariableIdentifiers,

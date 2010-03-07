@@ -106,9 +106,13 @@ type
                                                   write fResidAnalysisAdvLocation;
     end;
 
+var
+  setATBoolean: set of TParamAttType;
+
   function GT_ParAttKeyword(PAT: TParamAttType): string;
   function GT_DepAttKeyword(DAT: TDepAttType): string;
   function GT_PriAttKeyword(PriAt: TPriAttType): string;
+  procedure InitializeGlobalTypesUnit;
 
 implementation
 
@@ -201,11 +205,21 @@ end;
 constructor TProgramLocations.Create;
 begin
   fModflow2000Location := 'C:\WRDAPP\MF2K.1_18\bin\mf2k.exe';
-  fModflow2005Location := 'C:\WRDAPP\MF2005.1_7\bin\mf2005.exe';
-  fUcodeLocation := 'C:\WRDAPP\UCODE_2005_1.016\bin\ucode_2005.exe';
+  fModflow2005Location := 'C:\WRDAPP\MF2005.1_8\bin\mf2005.exe';
+  fUcodeLocation := 'C:\WRDAPP\UCODE_2005_1.017\bin\ucode_2005.exe';
   fGWChartLocation := '';
-  fResidAnalysisLocation := 'C:\WRDAPP\UCODE_2005_1.016\bin\residual_analysis.exe';
-  fResidAnalysisAdvLocation := 'C:\WRDAPP\UCODE_2005_1.016\bin\residual_analysis_adv.exe';
+  fResidAnalysisLocation := 'C:\WRDAPP\UCODE_2005_1.017\bin\residual_analysis.exe';
+  fResidAnalysisAdvLocation := 'C:\WRDAPP\UCODE_2005_1.017\bin\residual_analysis_adv.exe';
 end;
+
+//###################################################################
+
+procedure InitializeGlobalTypesUnit;
+begin
+  setATBoolean := [patAdjustable, patConstrain, patTransform, patConstrain];
+end;
+
+initialization
+  InitializeGlobalTypesUnit;
 
 end.

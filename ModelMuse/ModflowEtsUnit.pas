@@ -22,7 +22,7 @@ type
     EtFractionAnnotations: array of string;
     procedure Assign(const Item: TEtsSurfDepthRecord);
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream); 
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); 
   end;
 
   // @name is an array of @link(TEtsSurfDepthRecord)s.
@@ -33,7 +33,7 @@ type
     FEtsSurfDepthArray: TEtsSurfDepthArray;
     function GetEtsSurfDepthArray: TEtsSurfDepthArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -198,7 +198,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property EvapotranspirationSurface: double read GetEvapotranspirationSurface;
@@ -342,7 +342,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.EvtLayerArray) - 1 do
       begin
 //        Cells.Cached := False;
@@ -388,7 +388,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.EtsSurfDepthArray) - 1 do
       begin
 //        Cells.Cached := False;
@@ -435,7 +435,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.EvtArray) - 1 do
       begin
         BoundaryValues := LocalBoundaryStorage.EvtArray[BoundaryIndex];
@@ -1367,10 +1367,10 @@ begin
   result := Values.Cell.Section;
 end;
 
-procedure TEtsSurfDepth_Cell.Restore(Decomp: TDecompressionStream);
+procedure TEtsSurfDepth_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp); 
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -1417,7 +1417,7 @@ begin
   end;
 end;
 
-procedure TEtsSurfDepthRecord.Restore(Decomp: TDecompressionStream);
+procedure TEtsSurfDepthRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 var
   Count: integer;
   Index: Integer;
@@ -1438,17 +1438,17 @@ begin
   end;
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  EvapotranspirationSurfaceAnnotation := ReadCompString(Decomp);
-  EvapotranspirationDepthAnnotation := ReadCompString(Decomp);
+  EvapotranspirationSurfaceAnnotation := ReadCompString(Decomp, Annotations);
+  EvapotranspirationDepthAnnotation := ReadCompString(Decomp, Annotations);
   SetLength(DepthFractionAnnotations, Count);
   for Index := 0 to Count - 1 do
   begin
-    DepthFractionAnnotations[Index] := ReadCompString(Decomp);
+    DepthFractionAnnotations[Index] := ReadCompString(Decomp, Annotations);
   end;
   SetLength(EtFractionAnnotations, Count);
   for Index := 0 to Count - 1 do
   begin
-    EtFractionAnnotations[Index] := ReadCompString(Decomp);
+    EtFractionAnnotations[Index] := ReadCompString(Decomp, Annotations);
   end;
 end;
 
@@ -1734,7 +1734,7 @@ begin
   end;
 end;
 
-procedure TEtsSurfDepthStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TEtsSurfDepthStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Count: Integer;
   Index: Integer;
@@ -1743,7 +1743,7 @@ begin
   SetLength(FEtsSurfDepthArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FEtsSurfDepthArray[Index].Restore(DecompressionStream);
+    FEtsSurfDepthArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 

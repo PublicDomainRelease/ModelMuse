@@ -195,7 +195,7 @@ begin
     ValueTimeList.Add(Cells);
   end;
 
-  Cells.CheckRestore;
+//  Cells.CheckRestore;
   for BoundaryIndex := 0 to Length(LocalBoundaryStorage.SfrArray) - 1 do
   begin
     BoundaryValues := LocalBoundaryStorage.SfrArray[BoundaryIndex];

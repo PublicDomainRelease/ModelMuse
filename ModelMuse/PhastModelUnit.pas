@@ -307,6 +307,7 @@ type
     Formula: string;
     Classification: String;
     DataSetNeeded: TObjectUsedEvent;
+    DataSetShouldBeCreated: TObjectUsedEvent;
     Lock: TDataLock;
     CheckMax: boolean;
     CheckMin: boolean;
@@ -1473,6 +1474,11 @@ that affects the model output should also have a comment. }
     FTimeSeries: TTimeSeriesReader;
     FCachedZoneArrayIndex: integer;
     FCachedMultiplierArrayIndex: Integer;
+    FHufKxNotifier: TObserver;
+    FHufKyNotifier: TObserver;
+    FHufKzNotifier: TObserver;
+    FHufSyNotifier: TObserver;
+    FHufSsNotifier: TObserver;
     // See @link(UpToDate).
     procedure SetUpToDate(const Value: boolean);
     function AlwaysUsed(Sender: TObject): boolean;
@@ -1754,6 +1760,12 @@ that affects the model output should also have a comment. }
     function GetTimeSeries: TTimeSeriesReader;
     function IndenticalTransientArray(DataArray: TDataArray; DataArrays: TList;
       var CachedIndex: integer): TDataArray;
+    function KyUsed(Sender: TObject): boolean;
+    function BcfUsed(Sender: TObject): boolean;
+    function ConfinedStorageCoefUsed(Sender: TObject): boolean;
+    function HufSelected(Sender: TObject): boolean;
+    function OptionalDataSet(Sender: TObject): boolean;
+    function HufStorageUsed(Sender: TObject): boolean;
   protected
     // @name is used to store DataSet in @link(FBoundaryDataSets).
     function AddBoundaryDataSet(const DataSet: TDataArray): Integer;
@@ -1761,6 +1773,11 @@ that affects the model output should also have a comment. }
     procedure Loaded; override;
   public
     DataArrayCreationRecords: array of TDataSetCreationData;
+    property HufKxNotifier: TObserver read FHufKxNotifier;
+    property HufKyNotifier: TObserver read FHufKyNotifier;
+    property HufKzNotifier: TObserver read FHufKzNotifier;
+    property HufSsNotifier: TObserver read FHufSsNotifier;
+    property HufSyNotifier: TObserver read FHufSyNotifier;
     procedure OnActiveDataSetChanged(Sender: TObject);
     function HufDataArrayUsed(Sender: TObject): boolean;
     procedure FillCompilerList(CompilerList: TList);
@@ -1776,6 +1793,7 @@ that affects the model output should also have a comment. }
     procedure InvalidateModflowBoundaries;
     function ModelResultsRequired(Sender: TObject): boolean;
     function ModelLayerDataArrayUsed(Sender: TObject): boolean;
+    function SubsidenceDataArrayUsed(Sender: TObject): boolean;
     procedure AddDataSetToCache(DataArray: TDataArray);
     procedure CacheDataArrays;
     procedure CreateInitialDataSets;
@@ -2733,20 +2751,101 @@ const
   //    "Select Objects of Editing or Deletion" dialog box
   //    along with a change in functionality to allow objects to be
   //    deleted with this dialog box.
-  //  '2.2.1.0' Fixed bug in starting RunPhast.bat. 
+  //  '2.2.1.0' Fixed bug that prevented RunPhast.bat from executing
+  //    correctly when it was executed by ModelMuse.
+  //  '2.2.1.1' When importing model results, heads and drawdowns equal to
+  //      HDRY and HNOFLO are not used in assigning the minimum and maximum
+  //      values for the array.
+  //    In Data Set Values dialog box, the layers are now in a list on the left.
+  //    Fixed bug that caused the HFB and UZF packages to become
+  //      deselected whenever the selected flow package was switched.
+  //    Fixed bug that caused the number of wetting iterations could be saved
+  //      as zero incorrectly if it should have been a 1.
+  //      However, MODFLOW would change it back to 1 so it would not affect
+  //      model computations.
+  //    Added support for BCF package.
+  //    When the HUF package is selected, optional data sets will be created
+  //      that display hydaulic properties that result from applying the
+  //      HUF parameters to the model.
+  //    Added support of importing the MNWI package from an existing model.
+  //    Fixed bug exporting HUF files in which storage parameters were exported
+  //      in steady-state models.
+  //  '2.2.1.2' Fixed bug in LPF and HUF package export in which there could
+  //      be no space between a multiplier array name and a zone array name.
+  //    Fixed bug in HUF package in which zone and multiplier arrays were not
+  //      written.
+  //    Fixed bugs that could cause access violation when opening a new model
+  //      after having edited objects in the currently opened model.
+  //  '2.2.1.3' Fixed bug that kept the videos from being played automatically.
+  //    Added a check of the fractional depth and fractional rates in the ETS
+  //      package.
+  //    Fixed bug that caused an error when certain functions were used to
+  //      assign values to data sets.
+  //    Improved speed.
+  //    Fixed bug that caused errors creating temporary files if more than
+  //      one model was being run at one time.
+  //    Fixed bug getting temp file names.
+  //  '2.2.1.4' Added warning when an input file specified in the
+  //      MODFLOW Name File dialog box does not exist.
+  //    Files specified in the MODFLOW Name File dialog box are now
+  //      included in the archive.
+  //    Fixed export of Shapefiles.
+  //  '2.2.1.5' The mouse wheel can now be used to zoom in or out in the
+  //      top, front, or side views of the model.
+  //    Fixed bug importing ModelMate file.
+  //    Added support for the SUB package.
+  //    Fixed bug deleting the last Layer group in a model.
+  //    Added support for importing binary files generated by the SUB package.
+  //    Added support for importing the SUB package
+  //      from existing MODFLOW models.
+  //    Fixed bug in getting the formula from the Formula Editor.
+  //  '2.2.1.6' Fixed bug importing models that contain the HUF package when a
+  //      zone array was not used with a parameter.
+  //    Fixed bug that allowed invalid formulas to be set for
+  //      the Z elevation formulas for an object.
+  //    Fixed bug with access violations when checking the internet.
+  //    Disabled MODPATH export for PHAST models.
+  //  '2.2.1.7' Assigned default names to new systems of delay and no-delay beds.
+  //    Fixed bug in evaluating formulas that contain "ActiveOnLayer" for
+  //      Z-coordinates
+  //  '2.2.1.8' When updating ModelMate files, if an observation
+  //      or prediction group has no associated observations or predictions,
+  //      and the user has elected to delete unused observations or predictions,
+  //      the unused observation or prediction groups are deleted too.
+  //    When importing model results and updating existing data for the results
+  //      duplicate copies of HDRY and HNOFLO are no longer added to the
+  //      values to skip.
+  //    Improved error messages for functions that retrieve imported data.
+  //    Fixed bug getting names of new temporary files.
+  //    Fixed bugs in exporting ModelMate files.
+  //  '2.2.1.9' Added info on associated model input data sets for SUB package.
+  //    Added support for importing Surfer Grid files.
+  //  '2.2.1.10' Attempted to fix problem with access violations when
+  //      accessing the file menu.
+  //  '2.2.1.11' Added support for Surfer ASCII grid files.
+  //  '2.2.1.12' Fixed bug with not conserving memory properly in EVT.
+  //  '2.2.1.13' Worked on conserving memory.
+  //  '2.2.1.14' Worked on conserving memory. Fixed bug that caused
+  //      access violations when undoing the setting of a boundary condition.
+  //  '2.3.0.0' Fixed bug that could cause layer elevations to be set
+  //      incorrectly after changing the layer structure.
+  //    Fixed bug that could cause access violation when deleting a data set.
 
-  ModelVersion = '2.2.1.0';
+  ModelVersion = '2.3.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
   StrHUF = 'HUF2';
   StrTop = '_Top';
   StrThickness = '_Thickness';
+  StrConfinedStorageCoe = 'Confined_Storage_Coefficient';
+  StrVerticalConductance = 'Vertical_Conductance';
+  StrTransmissivity = 'Transmissivity';
 
 implementation
 
 uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
-  frmColorsUnit, GIS_Functions, ModflowDrtUnit, CustomModflowWriterUnit, 
+  frmColorsUnit, GIS_Functions, ModflowDrtUnit, CustomModflowWriterUnit,
   ModflowDiscretizationWriterUnit, ModflowBasicWriterUnit,
   ModflowMultiplierZoneWriterUnit, ModflowCHD_WriterUnit, ModflowPCG_WriterUnit,
   ModflowGHB_WriterUnit, ModflowWellWriterUnit, ModflowRiverWriterUnit,
@@ -2763,10 +2862,11 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   ModflowHFB_WriterUnit, frmProgressUnit, ModpathStartingLocationsWriter,
   ModpathMainFileWriterUnit, ModpathTimeFileWriterUnit,
   ModpathResponseFileWriterUnit, ModpathNameFileWriterUnit, Clipbrd,
-  GlobalTypesUnit, DependentsUnit, ModelMateUtilities, GlobalBasicData, 
-  AbZipper, AbArcTyp, PriorInfoUnit, frmErrorsAndWarningsUnit, 
+  GlobalTypesUnit, DependentsUnit, ModelMateUtilities, GlobalBasicData,
+  AbZipper, AbArcTyp, PriorInfoUnit, frmErrorsAndWarningsUnit,
   ModflowHUF_WriterUnit, ModflowKDEP_WriterUnit, ModflowLVDA_WriterUnit,
-  ModflowMNW2_WriterUnit;
+  ModflowMNW2_WriterUnit, ModflowBCF_WriterUnit, ModflowSubsidenceDefUnit,
+  ModflowSUB_Writer;
 
 resourcestring
   StrProgramLocations = 'Program Locations';
@@ -2801,16 +2901,23 @@ function StrToStatFlag(const StatFlagString: string): TStatFlag;
 var
   Index: TStatFlag;
 begin
-  result := Low(TStatFlag);
-  for Index := Low(TStatFlag) to High(TStatFlag) do
+  if StatFlagString = '' then
   begin
-    if StatFlagString = StatFlagStrings[Index] then
+    result := Low(TStatFlag);
+  end
+  else
+  begin
+    result := Low(TStatFlag);
+    for Index := Low(TStatFlag) to High(TStatFlag) do
     begin
-      result := Index;
-      Exit;
+      if StatFlagString = StatFlagStrings[Index] then
+      begin
+        result := Index;
+        Exit;
+      end;
     end;
+    Assert(False);
   end;
-  Assert(False);
 end;
 
   { TPhastModel }
@@ -2830,6 +2937,12 @@ end;
 function TPhastModel.AlwaysUsed(Sender: TObject): boolean;
 begin
   result := True;
+end;
+
+function TPhastModel.KyUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection = msPhast)
+    or ModflowPackages.LpfPackage.IsSelected;
 end;
 
 function TPhastModel.AquiferPropertiesUsed(Sender: TObject): boolean;
@@ -2859,11 +2972,11 @@ begin
           result := False;
           Exit;
         end;
-        VK_Used := False;
-        VaniUsed := False;
-        VkcbUsed := False;
         if ModflowPackages.LpfPackage.IsSelected then
         begin
+          VK_Used := False;
+          VaniUsed := False;
+          VkcbUsed := False;
           for ParamIndex := 0 to ModflowSteadyParameters.Count - 1 do
           begin
             Param := ModflowSteadyParameters[ParamIndex];
@@ -2880,30 +2993,30 @@ begin
               VkcbUsed := True;
             end
           end;
-        end;
-        
-        result := False;
-        for LayerGroupIndex := 1 to LayerStructure.Count - 1 do
-        begin
-          LayerGroup := LayerStructure[LayerGroupIndex];
-          if LayerGroup.Simulated then
+
+          result := False;
+          for LayerGroupIndex := 1 to LayerStructure.Count - 1 do
           begin
-            case LayerGroup.VerticalHydraulicConductivityMethod of
-              0: result := not VK_Used; // 0 means use vertical hydraulic conductivity
-              1: result := not VaniUsed; // 1 means user vertical anisotropy
-              else Assert(False);
-            end;
-            if result then
+            LayerGroup := LayerStructure[LayerGroupIndex];
+            if LayerGroup.Simulated then
             begin
-              break;
-            end;
-          end
-          else
-          begin
-            if not VkcbUsed then
+              case LayerGroup.VerticalHydraulicConductivityMethod of
+                0: result := not VK_Used; // 0 means use vertical hydraulic conductivity
+                1: result := not VaniUsed; // 1 means user vertical anisotropy
+                else Assert(False);
+              end;
+              if result then
+              begin
+                break;
+              end;
+            end
+            else
             begin
-              result := True;
-              break;
+              if not VkcbUsed then
+              begin
+                result := True;
+                break;
+              end;
             end;
           end;
         end;
@@ -3231,6 +3344,11 @@ begin
   CreateInitialDataSets;
 
   FHydrogeologicUnits := THydrogeologicUnits.Create(self);
+  FHufKxNotifier := TObserver.Create(nil);
+  FHufKyNotifier := TObserver.Create(nil);
+  FHufKzNotifier := TObserver.Create(nil);
+  FHufSsNotifier := TObserver.Create(nil);
+  FHufSyNotifier := TObserver.Create(nil);
 end;
 
 procedure TPhastModel.CreateArchive(const FileName: string);
@@ -3372,6 +3490,8 @@ var
 begin
   frmFileProgress:= TfrmProgress.Create(nil);
   try
+    Clear;
+
     FTimeSeries.Free;
     FEndPoints.Free;
     FPathLine.Free;
@@ -3437,7 +3557,21 @@ begin
     end;
     FTopGridObserver.StopTalkingToAnyone;
     FThreeDGridObserver.StopTalkingToAnyone;
+    FHufSyNotifier.StopTalkingToAnyone;
+    FHufSsNotifier.StopTalkingToAnyone;
+    FHufKzNotifier.StopTalkingToAnyone;
+    FHufKyNotifier.StopTalkingToAnyone;
+    FHufKxNotifier.StopTalkingToAnyone;
 
+
+    FHufSyNotifier.Free;
+    FHufSsNotifier.Free;
+    FHufKzNotifier.Free;
+    FHufKyNotifier.Free;
+    FHufKxNotifier.Free;
+
+
+    FLayerStructure.Free;
     FScreenObjectList.Free;
     FDataSets.Free;
 
@@ -3447,7 +3581,6 @@ begin
     FThreeDGridObserver.Free;
     FThreeDGridObserver := nil;
 
-    FLayerStructure.Free;
     PhastGrid.Free;
     FDataSetCollection.Free;
     FBoundaryDataSets.Free;
@@ -3944,6 +4077,17 @@ var
 begin
   FClearing := True;
   try
+    ClearViewedItems;
+    ModelSelection := msUndefined;
+    FLayerStructure.StopTalkingToAnyone;
+    FTopGridObserver.StopTalkingToAnyone;
+    FThreeDGridObserver.StopTalkingToAnyone;
+    FHufKxNotifier.StopTalkingToAnyone;
+    FHufKyNotifier.StopTalkingToAnyone;
+    FHufKzNotifier.StopTalkingToAnyone;
+    FHufSyNotifier.StopTalkingToAnyone;
+    FHufSsNotifier.StopTalkingToAnyone;
+
     FCachedZoneArrayIndex := -1;
     FCachedMultiplierArrayIndex := -1;
     FChangedDataArrayNames.Clear;
@@ -3979,8 +4123,14 @@ begin
       DataSet := DataSets[Index];
       DataSet.StopTalkingToAnyone;
     end;
+    for Index := 0 to BoundaryDataSetCount - 1 do
+    begin
+      DataSet := BoundaryDataSets[Index];
+      DataSet.StopTalkingToAnyone;
+    end;
     FScreenObjectList.Clear;
     FDataSets.Clear;
+    FBoundaryDataSets.Clear;
     for Index := 0 to FParsers.Count - 1 do
     begin
       Parser := FParsers[Index];
@@ -3988,10 +4138,9 @@ begin
       Parser.ClearVariables;
     end;
     FDataSetFunctions.Clear;
-    FBoundaryDataSets.Clear;
+
     FModflowOptions.Clear;
 
-    ClearViewedItems;
     //  FluidProperties.Initialize;
     SolutionOptions.Initialize;
     PhastGrid.GridAngle := 0;
@@ -4025,8 +4174,8 @@ begin
 
     BatchFileAdditionsBeforeModel.Clear;
     BatchFileAdditionsAfterModel.Clear;
+    FormulaManager.Clear;
 
-    ModelSelection := msUndefined;
     Invalidate;
 
   finally
@@ -4480,6 +4629,30 @@ begin
     and ModflowPackages.ModPath.IsSelected;
 end;
 
+function TPhastModel.BcfUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection = msModflow)
+    and ModflowPackages.BcfPackage.IsSelected
+end;
+
+function TPhastModel.OptionalDataSet(Sender: TObject): boolean;
+begin
+  result := False;
+end;
+
+function TPhastModel.HufSelected(Sender: TObject): boolean;
+begin
+  result := (ModelSelection = msModflow)
+    and ModflowPackages.HufPackage.IsSelected
+end;
+
+function TPhastModel.HufStorageUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection = msModflow)
+    and ModflowPackages.HufPackage.IsSelected
+    and ModflowStressPeriods.TransientModel;
+end;
+
 function TPhastModel.HufReferenceSurfaceNeeded(Sender: TObject): boolean;
 begin
   result := (ModelSelection = msModflow)
@@ -4493,8 +4666,9 @@ var
   UnitIndex: Integer;
   LayerGroup: TLayerGroup;
 begin
-  result := ModflowPackages.LpfPackage.IsSelected and
-    (ModflowSteadyParameters.CountParameters([ptLPF_SY]) = 0);
+  result := (ModflowPackages.LpfPackage.IsSelected and
+    (ModflowSteadyParameters.CountParameters([ptLPF_SY]) = 0))
+    or ModflowPackages.BcfPackage.IsSelected;
   if result then
   begin
     result := ModflowStressPeriods.TransientModel
@@ -4507,7 +4681,7 @@ begin
       LayerGroup := LayerStructure[UnitIndex];
       if LayerGroup.Simulated then
       begin
-        result := LayerGroup.AquiferType <> 0;
+        result := LayerGroup.AquiferType in [1,3];
         if result then break;
       end;
     end;
@@ -4534,8 +4708,9 @@ var
   UnitIndex: Integer;
   LayerGroup: TLayerGroup;
 begin
-  result := ModflowPackages.LpfPackage.IsSelected and
-    (ModflowSteadyParameters.CountParameters([ptLPF_VKCB]) = 0);
+  result := (ModflowPackages.LpfPackage.IsSelected and
+    (ModflowSteadyParameters.CountParameters([ptLPF_VKCB]) = 0))
+    or ModflowPackages.BcfPackage.IsSelected;
   if result then
   begin
     result := False;
@@ -7049,6 +7224,27 @@ begin
   FDataSetsToCache.Clear;
 end;
 
+function TPhastModel.ConfinedStorageCoefUsed(Sender: TObject): boolean;
+begin
+  result := False;
+  case ModelSelection of
+    msUndefined: result := False;
+    msPhast: result := False;
+    msModflow:
+      begin
+        if ModflowPackages.BcfPackage.IsSelected then
+        begin
+          result := ModflowStressPeriods.TransientModel;
+        end
+        else
+        begin
+          result := False;
+        end;
+      end
+    else Assert(False);
+  end;
+end;
+
 function TPhastModel.SpecificStorageUsed(Sender: TObject): boolean;
 begin
   result := False;
@@ -7057,7 +7253,8 @@ begin
     msPhast: result := True;
     msModflow:
       begin
-        if ModflowPackages.LpfPackage.IsSelected then
+        if ModflowPackages.LpfPackage.IsSelected
+          or ModflowPackages.BcfPackage.IsSelected then
         begin
           result := ModflowStressPeriods.TransientModel;
         end
@@ -7090,6 +7287,58 @@ end;
 function TPhastModel.EquilibriumPhasesUsed(Sender: TObject): boolean;
 begin
   result := ChemistryUsed(Sender) and ChemistryOptions.UseEquilibriumPhases;
+end;
+
+function TPhastModel.SubsidenceDataArrayUsed(Sender: TObject): boolean;
+var
+  Index: Integer;
+  Group: TLayerGroup;
+  DataArray: TDataArray;
+  SubDataSetIndex: Integer;
+  NoDelayItem: TSubNoDelayBedLayerItem;
+  DelayItem: TSubDelayBedLayerItem;
+begin
+  result := (ModelSelection = msModflow)
+    and ModflowPackages.SubPackage.IsSelected;
+  if result then
+  begin
+    result := False;
+    DataArray := Sender as TDataArray;
+    for Index := 0 to LayerStructure.Count - 1 do
+    begin
+      Group := LayerStructure[Index];
+      for SubDataSetIndex := 0 to Group.SubNoDelayBedLayers.Count - 1 do
+      begin
+        NoDelayItem := Group.SubNoDelayBedLayers[SubDataSetIndex];
+        if (NoDelayItem.PreconsolidationHeadDataArrayName = DataArray.Name)
+          or (NoDelayItem.ElasticSkeletalStorageCoefficientDataArrayName = DataArray.Name)
+          or (NoDelayItem.InelasticSkeletalStorageCoefficientDataArrayName = DataArray.Name)
+          or (NoDelayItem.InitialCompactionDataArrayName = DataArray.Name)
+          then
+        begin
+          result := True;
+          Exit;
+        end;
+      end;
+      for SubDataSetIndex := 0 to Group.SubDelayBedLayers.Count - 1 do
+      begin
+        DelayItem := Group.SubDelayBedLayers[SubDataSetIndex];
+        if (DelayItem.EquivNumberDataArrayName = DataArray.Name)
+          or (DelayItem.VerticalHydraulicConductivityDataArrayName = DataArray.Name)
+          or (DelayItem.ElasticSpecificStorageDataArrayName = DataArray.Name)
+          or (DelayItem.InelasticSpecificStorageDataArrayName = DataArray.Name)
+          or (DelayItem.InterbedStartingHeadDataArrayName = DataArray.Name)
+          or (DelayItem.InterbedPreconsolidationHeadDataArrayName = DataArray.Name)
+          or (DelayItem.InterbedStartingCompactionDataArrayName = DataArray.Name)
+          or (DelayItem.InterbedEquivalentThicknessDataArrayName = DataArray.Name)
+          then
+        begin
+          result := True;
+          Exit;
+        end;
+      end;
+    end;
+  end;
 end;
 
 function TPhastModel.SurfacesUsed(Sender: TObject): boolean;
@@ -7591,6 +7840,10 @@ var
   ModelMateObs: TDep;
   ModMatObs: TDepSet;
   DepType: string;
+  ObsGroup: TDepSet;
+  GroupIndex: Integer;
+  Group: TDep;
+  GroupUsed: Boolean;
 begin
   if FileExists(ProgramLocations.ModflowLocation) then
   begin
@@ -7698,6 +7951,7 @@ begin
 
   DepType := '';
   ModMatObs := nil;
+  ObsGroup := nil;
   ObservationList := TStringList.Create;
   try
     case ObservationPurpose of
@@ -7705,11 +7959,13 @@ begin
         begin
           ModMatObs := ModelMateProject.ObsSet;
           DepType := 'observations';
+          ObsGroup := ModelMateProject.ObsGpSet;
         end;
       ofPredicted:
         begin
           ModMatObs := ModelMateProject.PredSet;
           DepType := 'predictions';
+          ObsGroup := ModelMateProject.PredGpSet;
         end
       else Assert(False);
     end;
@@ -7750,6 +8006,24 @@ begin
               end;
             end;
           end;
+          for GroupIndex := ObsGroup.Count - 1 downto 0 do
+          begin
+            Group := ObsGroup.Items[GroupIndex];
+            GroupUsed := False;
+            for Index := 0 to ModMatObs.Count - 1 do
+            begin
+              ModelMateObs := ModMatObs.Items[Index];
+              if ModelMateObs.AllAtts[DepAttPos(datGroupName)].Text = Group.Name then
+              begin
+                GroupUsed := True;
+                break;
+              end;
+            end;
+            if not GroupUsed then
+            begin
+              ObsGroup.Delete(GroupIndex);
+            end;
+          end;
         end;
       end;
     finally
@@ -7776,6 +8050,7 @@ var
   PcgWriter: TPcgWriter;
   LPF_Writer: TModflowLPF_Writer;
   HUF_Writer: TModflowHUF_Writer;
+  BCF_Writer: TModflowBCF_Writer;
   KDEP_Writer : TModflowKDEP_Writer;
   LVDA_Writer : TModflowLVDA_Writer;
   ChdWriter: TModflowCHD_Writer;
@@ -7809,6 +8084,7 @@ var
   StepCount: Integer;
   StressPeriod: TModflowStressPeriod;
   NumberOfSteps: Integer;
+  SubWriter: TModflowSUB_Writer;
 begin
   PValFile.Clear;
   Template.Clear;
@@ -7843,6 +8119,7 @@ begin
     if ModflowPackages.SfrPackage.IsSelected
       or ModflowPackages.LakPackage.IsSelected then
     begin
+      // gages
       Inc(NumberOfSteps)
     end;
     frmProgress.pbProgress.Max := NumberOfSteps;
@@ -7990,6 +8267,22 @@ begin
         Exit;
       end;
       if ModflowPackages.LpfPackage.IsSelected then
+      begin
+        frmProgress.StepIt;
+      end;
+
+      BCF_Writer := TModflowBCF_Writer.Create(self);
+      try
+        BCF_Writer.WriteFile(FileName);
+      finally
+        BCF_Writer.Free;
+      end;
+      CacheDataArrays;
+      if not frmProgress.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.BcfPackage.IsSelected then
       begin
         frmProgress.StepIt;
       end;
@@ -8313,6 +8606,21 @@ begin
         frmProgress.StepIt;
       end;
 
+      SubWriter := TModflowSUB_Writer.Create(Self);
+      try
+        SubWriter.WriteFile(FileName);
+      finally
+        SubWriter.Free;
+      end;
+      CacheDataArrays;
+      if not frmProgress.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.SubPackage.IsSelected then
+      begin
+        frmProgress.StepIt;
+      end;
       // It is important that the TModflowZoneWriter not be used
       // until after all the zones have been identified through the
       // export of TModflowLPF_Writer and any other packages that use
@@ -8483,9 +8791,9 @@ var
   ParameterList: TStringList;
   ObservationList: TStringList;
 begin
-  if ModelMateProject.UcProject.ModelName <> '' then
+  if Project.UcProject.ModelName <> '' then
   begin
-    ModflowOptions.ProjectName := ModelMateProject.UcProject.ModelName;
+    ModflowOptions.ProjectName := Project.UcProject.ModelName;
   end;
 
   ParameterList := TStringList.Create;
@@ -9526,7 +9834,7 @@ procedure TPhastModel.DefinePackageDataArrays;
 var
   Index: integer;
 begin
-  SetLength(DataArrayCreationRecords, 46);
+  SetLength(DataArrayCreationRecords, 55);
   Index := 0;
 
   DataArrayCreationRecords[Index].DataSetType := TDataArray;
@@ -9565,11 +9873,11 @@ begin
   DataArrayCreationRecords[Index].Name := rsKy;
   DataArrayCreationRecords[Index].Formula := rsKx;
   DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := AquiferPropertiesUsed;
+  DataArrayCreationRecords[Index].DataSetNeeded := KyUsed;
   DataArrayCreationRecords[Index].Lock := StandardLock;
   DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   DataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-Ky'#13#10'MODFLOW LPF: HANI'#13#10'MODFLOW BCF: (not used)';
+    'PHAST: MEDIA-Ky'#13#10'MODFLOW LPF: HANI'#13#10'MODFLOW HUF and BCF: (not used)';
   DataArrayCreationRecords[Index].CheckMax := False;
   DataArrayCreationRecords[Index].CheckMin := True;
   DataArrayCreationRecords[Index].Min := 0;
@@ -9829,8 +10137,6 @@ begin
   DataArrayCreationRecords[Index].Min := 0;
   Inc(Index);
 
-
-
   // Reservoir layers
   DataArrayCreationRecords[Index].DataSetType := TDataArray;
   DataArrayCreationRecords[Index].Orientation := dsoTop;
@@ -10069,7 +10375,7 @@ begin
   DataArrayCreationRecords[Index].DataSetNeeded := ConfiningBedKzUsed;
   DataArrayCreationRecords[Index].Lock := StandardLock;
   DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LFP: VKCB';
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'LFP: VKCB; BCF: VCONT';
   NoCheck(DataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -10110,7 +10416,7 @@ begin
   DataArrayCreationRecords[Index].DataSetNeeded := SpecificYieldUsed;
   DataArrayCreationRecords[Index].Lock := StandardLock;
   DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LFP: Sy';
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'LFP: Sy; BCF: Sf1';
   NoCheck(DataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -10118,7 +10424,7 @@ begin
   DataArrayCreationRecords[Index].Orientation := dso3D;
   DataArrayCreationRecords[Index].DataType := rdtDouble;
   DataArrayCreationRecords[Index].Name := rsWetDryThreshold;
-  DataArrayCreationRecords[Index].Formula := 'LayerHeight * 0.1';
+  DataArrayCreationRecords[Index].Formula := StrLayerHeight + ' * 0.1';
   DataArrayCreationRecords[Index].Classification := StrHydrology;
   DataArrayCreationRecords[Index].DataSetNeeded := WetDryUsed;
   DataArrayCreationRecords[Index].Lock := StandardLock;
@@ -10187,6 +10493,137 @@ begin
   DataArrayCreationRecords[Index].Max := 1;
   DataArrayCreationRecords[Index].Min := 0;
   DataArrayCreationRecords[Index].AssociatedDataSets := 'MODFLOW, KDEP package: RS';
+  Inc(Index);
+
+  // BCF data sets.
+  DataArrayCreationRecords[Index].DataSetType := TDataArray;
+  DataArrayCreationRecords[Index].Orientation := dso3D;
+  DataArrayCreationRecords[Index].DataType := rdtDouble;
+  DataArrayCreationRecords[Index].Name := StrTransmissivity;
+  DataArrayCreationRecords[Index].Formula := rsKx + ' * ' + StrLayerHeight;
+  DataArrayCreationRecords[Index].Classification := StrHydrology;
+  DataArrayCreationRecords[Index].DataSetNeeded := BcfUsed;
+  DataArrayCreationRecords[Index].Lock := StandardLock;
+  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  DataArrayCreationRecords[Index].CheckMax := False;
+  DataArrayCreationRecords[Index].CheckMin := True;
+  DataArrayCreationRecords[Index].Max := 1;
+  DataArrayCreationRecords[Index].Min := 0;
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: Tran';
+  Inc(Index);
+
+  DataArrayCreationRecords[Index].DataSetType := TDataArray;
+  DataArrayCreationRecords[Index].Orientation := dso3D;
+  DataArrayCreationRecords[Index].DataType := rdtDouble;
+  DataArrayCreationRecords[Index].Name := StrVerticalConductance;
+  DataArrayCreationRecords[Index].Formula := StrBcfVCONT;
+  DataArrayCreationRecords[Index].Classification := StrHydrology;
+  DataArrayCreationRecords[Index].DataSetNeeded := BcfUsed;
+  DataArrayCreationRecords[Index].Lock := StandardLock;
+  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  DataArrayCreationRecords[Index].CheckMax := False;
+  DataArrayCreationRecords[Index].CheckMin := True;
+  DataArrayCreationRecords[Index].Max := 1;
+  DataArrayCreationRecords[Index].Min := 0;
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: VCONT';
+  Inc(Index);
+
+  DataArrayCreationRecords[Index].DataSetType := TDataArray;
+  DataArrayCreationRecords[Index].Orientation := dso3D;
+  DataArrayCreationRecords[Index].DataType := rdtDouble;
+  DataArrayCreationRecords[Index].Name := StrConfinedStorageCoe;
+  DataArrayCreationRecords[Index].Formula := rsSpecific_Storage + ' * ' + StrLayerHeight;
+  DataArrayCreationRecords[Index].Classification := StrHydrology;
+  DataArrayCreationRecords[Index].DataSetNeeded := ConfinedStorageCoefUsed;
+  DataArrayCreationRecords[Index].Lock := StandardLock;
+  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  DataArrayCreationRecords[Index].CheckMax := False;
+  DataArrayCreationRecords[Index].CheckMin := True;
+  DataArrayCreationRecords[Index].Max := 1;
+  DataArrayCreationRecords[Index].Min := 0;
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: Sf1';
+  Inc(Index);
+
+  DataArrayCreationRecords[Index].DataSetType := TDataArray;
+  DataArrayCreationRecords[Index].Orientation := dso3D;
+  DataArrayCreationRecords[Index].DataType := rdtDouble;
+  DataArrayCreationRecords[Index].Name := 'HUF_Kx';
+  DataArrayCreationRecords[Index].Formula := StrHufKx + '(' + rsModflow_Initial_Head + ')';;
+  DataArrayCreationRecords[Index].Classification := StrHUF;
+  DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
+  DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
+  DataArrayCreationRecords[Index].Lock := StandardLock;
+  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'displays HUF Kx values';
+  Inc(Index);
+
+  DataArrayCreationRecords[Index].DataSetType := TDataArray;
+  DataArrayCreationRecords[Index].Orientation := dso3D;
+  DataArrayCreationRecords[Index].DataType := rdtDouble;
+  DataArrayCreationRecords[Index].Name := 'HUF_Ky';
+  DataArrayCreationRecords[Index].Formula := StrHufKy + '(' + rsModflow_Initial_Head + ')';;
+  DataArrayCreationRecords[Index].Classification := StrHUF;
+  DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
+  DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
+  DataArrayCreationRecords[Index].Lock := StandardLock;
+  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'displays HUF Ky values';
+  Inc(Index);
+
+  DataArrayCreationRecords[Index].DataSetType := TDataArray;
+  DataArrayCreationRecords[Index].Orientation := dso3D;
+  DataArrayCreationRecords[Index].DataType := rdtDouble;
+  DataArrayCreationRecords[Index].Name := 'HUF_Interlayer_Kz';
+  DataArrayCreationRecords[Index].Formula := StrHufKz + '(' + rsModflow_Initial_Head + ')';;
+  DataArrayCreationRecords[Index].Classification := StrHUF;
+  DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
+  DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
+  DataArrayCreationRecords[Index].Lock := StandardLock;
+  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  DataArrayCreationRecords[Index].AssociatedDataSets :=
+    'displays HUF Kz values between one layer and the layer beneath';
+  Inc(Index);
+
+  DataArrayCreationRecords[Index].DataSetType := TDataArray;
+  DataArrayCreationRecords[Index].Orientation := dso3D;
+  DataArrayCreationRecords[Index].DataType := rdtDouble;
+  DataArrayCreationRecords[Index].Name := 'HUF_SS';
+  DataArrayCreationRecords[Index].Formula := StrHufSs + '(' + rsModflow_Initial_Head + ')';;
+  DataArrayCreationRecords[Index].Classification := StrHUF;
+  DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
+  DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
+  DataArrayCreationRecords[Index].Lock := StandardLock;
+  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  DataArrayCreationRecords[Index].AssociatedDataSets :=
+    'displays HUF SS values';
+  Inc(Index);
+
+  DataArrayCreationRecords[Index].DataSetType := TDataArray;
+  DataArrayCreationRecords[Index].Orientation := dso3D;
+  DataArrayCreationRecords[Index].DataType := rdtDouble;
+  DataArrayCreationRecords[Index].Name := 'HUF_Average_SY';
+  DataArrayCreationRecords[Index].Formula := StrHufAverageSy + '(' + rsModflow_Initial_Head + ')';;
+  DataArrayCreationRecords[Index].Classification := StrHUF;
+  DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
+  DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
+  DataArrayCreationRecords[Index].Lock := StandardLock;
+  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  DataArrayCreationRecords[Index].AssociatedDataSets :=
+    'displays average HUF Sy values for a cell';
+  Inc(Index);
+
+  DataArrayCreationRecords[Index].DataSetType := TDataArray;
+  DataArrayCreationRecords[Index].Orientation := dso3D;
+  DataArrayCreationRecords[Index].DataType := rdtDouble;
+  DataArrayCreationRecords[Index].Name := 'HUF_SY';
+  DataArrayCreationRecords[Index].Formula := StrHufSy + '(' + rsModflow_Initial_Head + ')';;
+  DataArrayCreationRecords[Index].Classification := StrHUF;
+  DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
+  DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
+  DataArrayCreationRecords[Index].Lock := StandardLock;
+  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  DataArrayCreationRecords[Index].AssociatedDataSets :=
+    'displays HUF Sy values for a cell';
   Inc(Index);
 
   Assert(Length(DataArrayCreationRecords) = Index);
@@ -10430,7 +10867,7 @@ begin
   PhastDataSet.DataType := rdtDouble;
   PhastDataSet.EvaluatedAt := eaNodes;
   PhastDataSet.Orientation := dso3D;
-  PhastDataSet.Formula := 'True';
+  PhastDataSet.Formula := '0.';
   PhastDataSet.BoundaryDataType := TopBoundaryType;
   FTopFluxBoundaryFlux.Add(0, (PhastDataSet
     as TSparseArrayPhastInterpolationDataSet));
@@ -10441,7 +10878,7 @@ begin
   PhastDataSet.DataType := rdtDouble;
   PhastDataSet.EvaluatedAt := eaNodes;
   PhastDataSet.Orientation := dso3D;
-  PhastDataSet.Formula := 'True';
+  PhastDataSet.Formula := '0.';
   PhastDataSet.BoundaryDataType := FrontBoundaryType;
   FFrontFluxBoundaryFlux.Add(0, PhastDataSet
     as TSparseArrayPhastInterpolationDataSet);
@@ -10452,7 +10889,7 @@ begin
   PhastDataSet.DataType := rdtDouble;
   PhastDataSet.EvaluatedAt := eaNodes;
   PhastDataSet.Orientation := dso3D;
-  PhastDataSet.Formula := 'True';
+  PhastDataSet.Formula := '0.';
   PhastDataSet.BoundaryDataType := SideBoundaryType;
   FSideFluxBoundaryFlux.Add(0, PhastDataSet
     as TSparseArrayPhastInterpolationDataSet);
@@ -10463,7 +10900,7 @@ begin
   PhastDataSet.DataType := rdtInteger;
   PhastDataSet.EvaluatedAt := eaNodes;
   PhastDataSet.Orientation := dso3D;
-  PhastDataSet.Formula := 'True';
+  PhastDataSet.Formula := '0';
   PhastDataSet.BoundaryDataType := TopBoundaryType;
   FTopFluxBoundaryChemistry.Add(0, (PhastDataSet
     as TSparseArrayPhastInterpolationDataSet));
@@ -10474,7 +10911,7 @@ begin
   PhastDataSet.DataType := rdtInteger;
   PhastDataSet.EvaluatedAt := eaNodes;
   PhastDataSet.Orientation := dso3D;
-  PhastDataSet.Formula := 'True';
+  PhastDataSet.Formula := '0';
   PhastDataSet.BoundaryDataType := FrontBoundaryType;
   FFrontFluxBoundaryChemistry.Add(0, PhastDataSet
     as TSparseArrayPhastInterpolationDataSet);
@@ -10485,7 +10922,7 @@ begin
   PhastDataSet.DataType := rdtInteger;
   PhastDataSet.EvaluatedAt := eaNodes;
   PhastDataSet.Orientation := dso3D;
-  PhastDataSet.Formula := 'True';
+  PhastDataSet.Formula := '0';
   PhastDataSet.BoundaryDataType := SideBoundaryType;
   FSideFluxBoundaryChemistry.Add(0, PhastDataSet
     as TSparseArrayPhastInterpolationDataSet);
@@ -10829,7 +11266,14 @@ begin
       AName := Copy(AScreenObject.Name, Length(Root)+1, MAXINT);
 
       try
-        Value := StrToInt(AName);
+        if AName = '' then
+        begin
+          Value := 1;
+        end
+        else
+        begin
+          Value := StrToInt(AName);
+        end;
         if Value > result then
         begin
           result := value;
@@ -10852,24 +11296,27 @@ begin
   ActiveDataArray := Sender as TDataArray;
   Assert(ActiveDataArray <> nil);
   Assert(ActiveDataArray.Name = rsActive);
-  DataArray := Grid.ThreeDDataSet;
-  if (DataArray <> nil) and DataArray.Limits.ActiveOnly then
+  if Grid <> nil then
   begin
-    if not ActiveDataArray.UpToDate then
+    DataArray := Grid.ThreeDDataSet;
+    if (DataArray <> nil) and DataArray.Limits.ActiveOnly then
     begin
-      Grid.NeedToRecalculate3DCellColors := True;
-      ThreeDGridObserver.UpToDate := False;
-      ThreeDGridObserver.UpToDate := True;
-    end;
-  end
-  else if (EdgeDisplay <> nil)
-    and EdgeDisplay.Limits[EdgeDisplay.DataToPlot].ActiveOnly then
-  begin
-    if not ActiveDataArray.UpToDate then
+      if not ActiveDataArray.UpToDate then
+      begin
+        Grid.NeedToRecalculate3DCellColors := True;
+        ThreeDGridObserver.UpToDate := False;
+        ThreeDGridObserver.UpToDate := True;
+      end;
+    end
+    else if (EdgeDisplay <> nil)
+      and EdgeDisplay.Limits[EdgeDisplay.DataToPlot].ActiveOnly then
     begin
-      Grid.NeedToRecalculate3DCellColors := True;
-      ThreeDGridObserver.UpToDate := False;
-      ThreeDGridObserver.UpToDate := True;
+      if not ActiveDataArray.UpToDate then
+      begin
+        Grid.NeedToRecalculate3DCellColors := True;
+        ThreeDGridObserver.UpToDate := False;
+        ThreeDGridObserver.UpToDate := True;
+      end;
     end;
   end;
 end;
@@ -11084,6 +11531,7 @@ var
   Orientation: TDataSetOrientation;
   DataType: TRbwDataType;
   ArrayNeeded: TObjectUsedEvent;
+  ArrayArrayShouldBeCreated: TObjectUsedEvent;
   NewFormula, Classification: string;
   Lock: TDataLock;
 begin
@@ -11099,6 +11547,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
     Orientation := DataArrayCreationRecords[Index].Orientation;
     DataType := DataArrayCreationRecords[Index].DataType;
     ArrayNeeded := DataArrayCreationRecords[Index].DataSetNeeded;
+    ArrayArrayShouldBeCreated := DataArrayCreationRecords[Index].DataSetShouldBeCreated;
     NewFormula := DataArrayCreationRecords[Index].Formula;
     Classification := DataArrayCreationRecords[Index].Classification;
     Lock := DataArrayCreationRecords[Index].Lock;
@@ -11112,7 +11561,9 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
       DataArray.OnDataSetUsed := ArrayNeeded;
       CreateVariables(DataArray);
     end
-    else if ArrayNeeded(self) then
+    else if ArrayNeeded(self)
+      or (Assigned(ArrayArrayShouldBeCreated)
+      and ArrayArrayShouldBeCreated(self)) then
     begin
       DataArray := CreateNewDataArray(
         DataArrayCreationRecords[Index].DataSetType, DataSetName, NewFormula,

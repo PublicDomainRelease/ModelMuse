@@ -868,6 +868,7 @@ C     ------------------------------------------------------------------
 C     ---------------------------------------------------------------
 C
 C1------INITIALIZE CONSTANTS.
+      WRITE(IOUT, *) 'NAM:'
       INBAS=0
       NFILE=0
       IOUT=0
@@ -982,7 +983,9 @@ C12-----FOR DATA FILES, CHECK FOR "REPLACE" OR "OLD" OPTION
       IF (FILACT.EQ.' ') FILACT=ACTION(2)
 C
 C13-----WRITE THE FILE NAME AND OPEN IT.
-      WRITE(IOUT,50) FNAME(1:IFLEN),
+      WRITE(IOUT,*) 'OPENING:'
+      WRITE(IOUT,*) IU, FNAME(1:IFLEN)
+            WRITE(IOUT,50) FNAME(1:IFLEN),
      1     LINE(ITYP1:ITYP2),IU,FILSTAT,FMTARG,ACCARG
 50    FORMAT(1X,/1X,'OPENING ',A,/
      &  1X,'FILE TYPE:',A,'   UNIT ',I4,3X,'STATUS:',A,/

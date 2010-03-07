@@ -2061,6 +2061,8 @@ begin
         begin
           RemoveSpecifiedHeadOnLayer;
         end;
+        RemoveGetVCont;
+        RemoveHufFunctions;
 
         // show the variables and functions
         UpdateTreeList;
@@ -3293,7 +3295,7 @@ begin
     Item := Collection.Add as TScreenObjectEditItem;
     ScreenObjectClass := TScreenObjectClass(ScreenObject.ClassType);
     Item.ScreenObject := ScreenObjectClass.Create(nil);
-    ScreenObject := List[Index];
+//    ScreenObject := List[Index];
     Item.ScreenObject.Assign(ScreenObject);
   end;
 end;
@@ -4746,6 +4748,8 @@ begin
   begin
     try
       IncludeGIS_Functions;
+      RemoveGetVCont;
+      RemoveHufFunctions;
       PopupParent := self;
       // show the variables and functions
       UpdateTreeList;
@@ -10884,6 +10888,12 @@ var
   AScreenObject: TScreenObject;
   ScreenObjectIndex: integer;
   AVar: TCustomValue;
+  DataSetIndex: Integer;
+  DataArray: TDataArray;
+  UsedDataSets: TStringList;
+  Edit: TScreenObjectDataEdit;
+  UsedIndex: Integer;
+  UsedArray: TDataArray;
 begin
 { TODO : See if some of this can be combined with ValidateEdFormula. }
 
@@ -11085,19 +11095,79 @@ begin
 
   VariableList := TList.Create;
   try
-    for VarIndex := 0 to Compiler.VariableCount - 1 do
-    begin
-      AVar := Compiler.Variables[VarIndex];
-      if frmGoPhast.PhastModel.GlobalVariables.IndexOfVariable(AVar.Name) < 0 then
+    UsedDataSets := TStringList.Create;
+    try
+      UsedDataSets.CaseSensitive  := False;
+      UsedDataSets.Duplicates := dupIgnore;
+      UsedDataSets.Sorted := True;
+      if FScreenObject = nil then
       begin
-        VariableList.Add(Compiler.Variables[VarIndex]);
+        for ScreenObjectIndex := 0 to FScreenObjectList.Count - 1 do
+        begin
+          AScreenObject := FScreenObjectList[ScreenObjectIndex];
+          for DataSetIndex := 0 to AScreenObject.DataSetCount - 1 do
+          begin
+            DataArray := AScreenObject.DataSets[DataSetIndex];
+            UsedDataSets.AddObject(DataArray.Name, DataArray);
+          end;
+        end;
+      end
+      else
+      begin
+        for DataSetIndex := 0 to FScreenObject.DataSetCount - 1 do
+        begin
+          DataArray := FScreenObject.DataSets[DataSetIndex];
+          UsedDataSets.AddObject(DataArray.Name, DataArray);
+        end;
       end;
+
+      for Index := 0 to FDataEdits.Count - 1 do
+      begin
+        Edit := FDataEdits[Index];
+        if Edit.Used <> cbUnChecked then
+        begin
+          UsedDataSets.AddObject(Edit.DataArray.Name, Edit.DataArray);
+        end;
+      end;
+
+      for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+      begin
+        DataArray := frmGoPhast.PhastModel.DataSets[Index];
+        if UsedDataSets.IndexOf(DataArray.Name) < 0 then
+        begin
+          for UsedIndex := 0 to UsedDataSets.Count - 1 do
+          begin
+            UsedArray := UsedDataSets.Objects[UsedIndex] as TDataArray;
+            if DataArray.IsListeningTo(UsedArray) then
+            begin
+              UsedDataSets.AddObject(DataArray.Name, DataArray);
+              break;
+            end;
+          end;
+        end;
+      end;
+
+
+      for VarIndex := 0 to Compiler.VariableCount - 1 do
+      begin
+        AVar := Compiler.Variables[VarIndex];
+        if (frmGoPhast.PhastModel.GlobalVariables.
+          IndexOfVariable(AVar.Name) < 0)
+          and (UsedDataSets.IndexOf(AVar.Name) < 0) then
+        begin
+          VariableList.Add(Compiler.Variables[VarIndex]);
+        end;
+      end;
+    finally
+      UsedDataSets.Free;
     end;
 
     with TfrmFormula.Create(nil) do
     begin
       try
         IncludeGIS_Functions;
+        RemoveGetVCont;
+        RemoveHufFunctions;
         PopupParent := self;
 
         for Index := 0 to VariableList.Count - 1 do
@@ -12424,6 +12494,8 @@ begin
     begin
       try
         IncludeGIS_Functions;
+        RemoveGetVCont;
+        RemoveHufFunctions;
         PopupParent := self;
 
         for Index := 0 to VariableList.Count - 1 do
@@ -13812,6 +13884,8 @@ begin
     begin
       try
         IncludeGIS_Functions;
+        RemoveGetVCont;
+        RemoveHufFunctions;
         PopupParent := self;
 
         // register the appropriate variables with the
@@ -15154,6 +15228,8 @@ begin
     begin
       try
         IncludeGIS_Functions;
+        RemoveGetVCont;
+        RemoveHufFunctions;
         PopupParent := self;
 
         // register the appropriate variables with the
@@ -15668,6 +15744,8 @@ begin
     begin
       try
         IncludeGIS_Functions;
+        RemoveGetVCont;
+        RemoveHufFunctions;
         PopupParent := self;
 
         // register the appropriate variables with the

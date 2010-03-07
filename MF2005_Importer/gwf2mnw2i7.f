@@ -132,13 +132,15 @@ c
        READ(INMNWI,*) MNWIID(IOB),MNWILST(3,IOB),MNWILST(4,IOB),
      & MNWILST(5,IOB),MNWILST(6,IOB)
        write(iout,*) 'WELLID UNIT QNDflag QBHflag CONCflag:'
-       write(iout,*) MNWIID(IOB),MNWILST(3,IOB),MNWILST(4,IOB),
+       write(iout,*) MNWIID(IOB)
+       write(iout,*) MNWILST(3,IOB),MNWILST(4,IOB),
      &   MNWILST(5,IOB),MNWILST(6,IOB)
       else
        READ(INMNWI,*) MNWIID(IOB),MNWILST(3,IOB),MNWILST(4,IOB),
      & MNWILST(5,IOB)
        write(iout,*) 'WELLID UNIT QNDflag QBHflag:'
-       write(iout,*) MNWIID(IOB),MNWILST(3,IOB),MNWILST(4,IOB),
+       write(iout,*) MNWIID(IOB)
+       write(iout,*) MNWILST(3,IOB),MNWILST(4,IOB),
      & MNWILST(5,IOB)
        MNWILST(6,IOB)=0
       end if

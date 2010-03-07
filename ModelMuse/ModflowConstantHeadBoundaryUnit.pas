@@ -44,7 +44,7 @@ type
     StartAnnotation: string;
     EndAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
   end;
 
   TChdArray = array of TChdRecord;
@@ -104,7 +104,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property StartingHead: double read GetStartingHead;
@@ -145,7 +145,7 @@ type
     FChdArray: TChdArray;
     function GetChdArray: TChdArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -358,9 +358,9 @@ end;
 
 destructor TChdCollection.Destroy;
 begin
+  inherited;
   FStartData.Free;
   FEndData.Free;
-  inherited;
 end;
 
 procedure TChdCollection.AddSpecificBoundary;
@@ -721,10 +721,10 @@ begin
   result := Values.StartAnnotation;
 end;
 
-procedure TCHD_Cell.Restore(Decomp: TDecompressionStream);
+procedure TCHD_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp);
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -741,15 +741,15 @@ begin
   WriteCompString(Comp, EndAnnotation);
 end;
 
-procedure TChdRecord.Restore(Decomp: TDecompressionStream);
+procedure TChdRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   StartingHead := ReadCompReal(Decomp);
   EndingHead := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  StartAnnotation := ReadCompString(Decomp);
-  EndAnnotation := ReadCompString(Decomp);
+  StartAnnotation := ReadCompString(Decomp, Annotations);
+  EndAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TChdStorage }
@@ -773,7 +773,7 @@ begin
   end;
 end;
 
-procedure TChdStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TChdStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Index: Integer;
   Count: Integer;
@@ -782,7 +782,7 @@ begin
   SetLength(FChdArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FChdArray[Index].Restore(DecompressionStream);
+    FChdArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 

@@ -1524,6 +1524,8 @@ begin
       FileStream.Read(FFileHeader, SizeOf(TShapefileHeader));
       IndexFileStream.Read(DummyFileHeader, SizeOf(TShapefileHeader));
 
+      Assert(FFileHeader.FileCode = DummyFileHeader.FileCode);
+
       ShapeType := FFileHeader.ShapeType;
       while IndexFileStream.Position < IndexFileStream.Size do
       begin
@@ -2062,6 +2064,11 @@ begin
   ShapeMemoryStream := TMemoryStream.Create;
   IndexMemoryStream := TMemoryStream.Create;
   ShapeStream := TMemoryStream.Create;
+  ShapeFileHeader.Unused1 := 0;
+  ShapeFileHeader.Unused2 := 0;
+  ShapeFileHeader.Unused3 := 0;
+  ShapeFileHeader.Unused4 := 0;
+  ShapeFileHeader.Unused5 := 0;
   try
     Offset := SizeOf(TShapefileHeader);
     ShapeMemoryStream.Position := 0;

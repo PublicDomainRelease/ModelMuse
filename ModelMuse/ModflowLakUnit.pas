@@ -22,7 +22,7 @@ type
     OverlandRunoffAnnotation: string;
     WithdrawalAnnotation: string;
     procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
   end;
 
   TLakArray = array of TLakRecord;
@@ -32,7 +32,7 @@ type
     FLakArray: TLakArray;
     function GetLakArray: TLakArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream); override;
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -118,7 +118,7 @@ type
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
     procedure Cache(Comp: TCompressionStream); override;
-    procedure Restore(Decomp: TDecompressionStream); override;
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
   public
     property MinimumStage: double read GetMinimumStage;
@@ -742,10 +742,10 @@ begin
   result := Values.WithdrawalAnnotation;
 end;
 
-procedure TLak_Cell.Restore(Decomp: TDecompressionStream);
+procedure TLak_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
-  Values.Restore(Decomp); 
+  Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
 end;
 
@@ -1113,7 +1113,7 @@ begin
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
-      Cells.CheckRestore;
+//      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.LakArray) - 1 do
       begin
         BoundaryValues := LocalBoundaryStorage.LakArray[BoundaryIndex];
@@ -1297,7 +1297,7 @@ begin
   WriteCompString(Comp, WithdrawalAnnotation);
 end;
 
-procedure TLakRecord.Restore(Decomp: TDecompressionStream);
+procedure TLakRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   Cell := ReadCompCell(Decomp);
   MinimumStage := ReadCompReal(Decomp);
@@ -1307,12 +1307,12 @@ begin
   OverlandRunoff := ReadCompReal(Decomp);
   Withdrawal := ReadCompReal(Decomp);
 
-  MinimumStageAnnotation := ReadCompString(Decomp);
-  MaximumStageAnnotation := ReadCompString(Decomp);
-  PrecipitationAnnotation := ReadCompString(Decomp);
-  EvaporationAnnotation := ReadCompString(Decomp);
-  OverlandRunoffAnnotation := ReadCompString(Decomp);
-  WithdrawalAnnotation := ReadCompString(Decomp);
+  MinimumStageAnnotation := ReadCompString(Decomp, Annotations);
+  MaximumStageAnnotation := ReadCompString(Decomp, Annotations);
+  PrecipitationAnnotation := ReadCompString(Decomp, Annotations);
+  EvaporationAnnotation := ReadCompString(Decomp, Annotations);
+  OverlandRunoffAnnotation := ReadCompString(Decomp, Annotations);
+  WithdrawalAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TLakStorage }
@@ -1335,7 +1335,7 @@ begin
   end;
 end;
 
-procedure TLakStorage.Restore(DecompressionStream: TDecompressionStream);
+procedure TLakStorage.Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList);
 var
   Count: Integer;
   Index: Integer;
@@ -1344,7 +1344,7 @@ begin
   SetLength(FLakArray, Count);
   for Index := 0 to Count - 1 do
   begin
-    FLakArray[Index].Restore(DecompressionStream);
+    FLakArray[Index].Restore(DecompressionStream, Annotations);
   end;
 end;
 
