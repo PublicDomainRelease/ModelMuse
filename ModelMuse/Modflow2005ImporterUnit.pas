@@ -212,7 +212,7 @@ Type
     // of the each cell as seen from the top view of the model.  Each vertex
     // is a new section. When adding verticies, the loop over columns is
     // inside the loop over rows.
-    procedure CreateCellCenterScreenObject(var ScreenObject: TScreenObject);
+    procedure CreateOrRetrieveCellCenterScreenObject(var ScreenObject: TScreenObject);
     procedure AssignRealValuesToCellCenters(DataArray: TDataArray;
       ScreenObject: TScreenObject; ImportedData: T2DDoubleArray);
     procedure AssignIntegerValuesToCellCenters(DataArray: TDataArray;
@@ -2638,6 +2638,7 @@ var
   Importer: TModflow2005Importer;
 begin
   Assert(Assigned(textHandler));
+  frmGoPhast.CanDraw:= False;
   Importer := TModflow2005Importer.Create(ListFileName,
     XOrigin, YOrigin, GridAngle);
   try
@@ -2645,6 +2646,7 @@ begin
     Importer.ImportModel;
   finally
     Importer.Free;
+    frmGoPhast.CanDraw := True;
   end;
 end;
 
@@ -3116,7 +3118,6 @@ procedure TDisImporter.ImportElevations;
 var
   GroupIndex: Integer;
   NewLayerStructure: TLayerStructure;
-  Interpolator: TNearestPoint2DInterpolator;
   ScreenObject: TScreenObject;
   DataArray: TDataArray;
   DataArrayName: string;
@@ -3174,13 +3175,7 @@ begin
     begin
       if ScreenObject = nil then
       begin
-        CreateCellCenterScreenObject(ScreenObject);
-      end;
-      Interpolator := TNearestPoint2DInterpolator.Create(nil);
-      try
-        DataArray.TwoDInterpolator := Interpolator;
-      finally
-        Interpolator.Free;
+        CreateOrRetrieveCellCenterScreenObject(ScreenObject);
       end;
       AssignRealValuesToCellCenters(DataArray, ScreenObject,
         FElevations[GroupIndex]);
@@ -3591,7 +3586,18 @@ var
   DataSetIndex: Integer;
   RowIndex: Integer;
   ColIndex: Integer;
+  Interpolator: TNearestPoint2DInterpolator;
 begin
+  Assert(DataArray.Orientation = dsoTop);
+  if DataArray.TwoDInterpolator = nil then
+  begin
+    Interpolator := TNearestPoint2DInterpolator.Create(nil);
+    try
+      DataArray.TwoDInterpolator := Interpolator;
+    finally
+      Interpolator.Free;
+    end;
+  end;
   DataSetIndex := ScreenObject.AddDataSet(DataArray);
   ScreenObject.DataSetFormulas[DataSetIndex] := rsObjectImportedValuesI;
   ScreenObject.ImportedValues.Add;
@@ -3621,7 +3627,18 @@ var
   DataSetIndex: Integer;
   RowIndex: Integer;
   ColIndex: Integer;
+  Interpolator: TNearestPoint2DInterpolator;
 begin
+  Assert(DataArray.Orientation = dsoTop);
+  if DataArray.TwoDInterpolator = nil then
+  begin
+    Interpolator := TNearestPoint2DInterpolator.Create(nil);
+    try
+      DataArray.TwoDInterpolator := Interpolator;
+    finally
+      Interpolator.Free;
+    end;
+  end;
   DataSetIndex := ScreenObject.AddDataSet(DataArray);
   ScreenObject.DataSetFormulas[DataSetIndex] := rsObjectImportedValuesB;
   ScreenObject.ImportedValues.Add;
@@ -3931,7 +3948,7 @@ begin
         begin
           if ScreenObject = nil then
           begin
-            CreateCellCenterScreenObject(ScreenObject);
+            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
           end;
           DataArrayName := 'Imported_Active_Layer_' + IntToStr(GroupIndex);
           DataArray := FModel.GetDataSetByName(DataArrayName);
@@ -4131,7 +4148,7 @@ begin
         begin
           if ScreenObject = nil then
           begin
-            CreateCellCenterScreenObject(ScreenObject);
+            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
 //            ScreenObject.Name := 'Imported_Initial_Head_Object_'
 //              + IntToStr(GroupIndex);
           end;
@@ -4287,7 +4304,7 @@ begin
   end;
 end;
 
-procedure TPackageImporter.CreateCellCenterScreenObject(
+procedure TPackageImporter.CreateOrRetrieveCellCenterScreenObject(
   var ScreenObject: TScreenObject);
 var
   UndoCreateScreenObject: TCustomUndo;
@@ -4326,7 +4343,18 @@ var
   DataSetIndex: Integer;
   RowIndex: Integer;
   ColIndex: Integer;
+  Interpolator: TNearestPoint2DInterpolator;
 begin
+  Assert(DataArray.Orientation = dsoTop);
+  if DataArray.TwoDInterpolator = nil then
+  begin
+    Interpolator := TNearestPoint2DInterpolator.Create(nil);
+    try
+      DataArray.TwoDInterpolator := Interpolator;
+    finally
+      Interpolator.Free;
+    end;
+  end;
   DataSetIndex := ScreenObject.AddDataSet(DataArray);
   ScreenObject.DataSetFormulas[DataSetIndex] := rsObjectImportedValuesR
     + '("' + DataArray.Name + '")';
@@ -4384,7 +4412,6 @@ var
   ZoneIndex: Integer;
   DataArrayName: string;
   DataArray: TDataArray;
-  Interpolator: TNearestPoint2DInterpolator;
   ScreenObject: TScreenObject;
 begin
   ScreenObject := nil;
@@ -4401,12 +4428,6 @@ begin
 
       DataArray.UpdateDimensions(FGrid.LayerCount,
         FGrid.RowCount, FGrid.ColumnCount);
-      Interpolator := TNearestPoint2DInterpolator.Create(nil);
-      try
-        DataArray.TwoDInterpolator := Interpolator;
-      finally
-        Interpolator.Free;
-      end;
     end;
     if FConstantZoneArrays[ZoneIndex].IsConstant then
     begin
@@ -4418,7 +4439,7 @@ begin
       DataArray.Formula := '0';
       if ScreenObject = nil then
       begin
-        CreateCellCenterScreenObject(ScreenObject);
+        CreateOrRetrieveCellCenterScreenObject(ScreenObject);
       end;
       AssignIntegerValuesToCellCenters(DataArray, ScreenObject,
         FZoneArrays[ZoneIndex]);
@@ -4436,7 +4457,6 @@ var
   MultIndex: Integer;
   DataArrayName: string;
   DataArray: TDataArray;
-  Interpolator: TNearestPoint2DInterpolator;
   ScreenObject: TScreenObject;
 begin
   ScreenObject := nil;
@@ -4451,23 +4471,8 @@ begin
       DataArray := FModel.CreateNewDataArray(TDataArray, DataArrayName, '0',
         [], rdtDouble, eaBlocks, dsoTop, '');
 
-
-//      DataArray := TDataArray.Create(FModel);
-//      DataArray.Name := DataArrayName;
-//      DataArray.OnNameChange := FModel.DataArrayNameChange;
-//      FModel.AddDataSet(DataArray);
-//      DataArray.DataType := rdtDouble;
-//      DataArray.EvaluatedAt := eaBlocks;
-//      DataArray.Orientation := dsoTop;
       DataArray.UpdateDimensions(FGrid.LayerCount,
         FGrid.RowCount, FGrid.ColumnCount);
-//      FModel.CreateVariables(DataArray);
-      Interpolator := TNearestPoint2DInterpolator.Create(nil);
-      try
-        DataArray.TwoDInterpolator := Interpolator;
-      finally
-        Interpolator.Free;
-      end;
     end;
     if FConstantMultArrays[MultIndex].IsConstant then
     begin
@@ -4478,7 +4483,7 @@ begin
       DataArray.Formula := '0';
       if ScreenObject = nil then
       begin
-        CreateCellCenterScreenObject(ScreenObject);
+        CreateOrRetrieveCellCenterScreenObject(ScreenObject);
       end;
       AssignRealValuesToCellCenters(DataArray, ScreenObject,
         FMultArrays[MultIndex]);
@@ -4784,7 +4789,7 @@ begin
             begin
               if ScreenObject = nil then
               begin
-                CreateCellCenterScreenObject(ScreenObject);
+                CreateOrRetrieveCellCenterScreenObject(ScreenObject);
               end;
               DataArrayName := 'Imported_' + ImportName
                 + '_Layer_' + IntToStr(GroupIndex);
@@ -4940,7 +4945,7 @@ begin
               begin
                 if ScreenObject = nil then
                 begin
-                  CreateCellCenterScreenObject(ScreenObject);
+                  CreateOrRetrieveCellCenterScreenObject(ScreenObject);
                 end;
                 DataArrayName :=
                   'Imported_Vertical_Anisotropy_Layer_' + IntToStr(GroupIndex);
@@ -4962,7 +4967,7 @@ begin
               begin
                 if ScreenObject = nil then
                 begin
-                  CreateCellCenterScreenObject(ScreenObject);
+                  CreateOrRetrieveCellCenterScreenObject(ScreenObject);
                 end;
                 Assert(FVerticalK <> nil);
                 DataArrayName := 'Imported_Kz_Layer_' + IntToStr(GroupIndex);
@@ -4995,7 +5000,7 @@ begin
             begin
               if ScreenObject = nil then
               begin
-                CreateCellCenterScreenObject(ScreenObject);
+                CreateOrRetrieveCellCenterScreenObject(ScreenObject);
               end;
               DataArrayName := 'Imported_Kz_Layer_' + IntToStr(GroupIndex);
               CreateDataArrayAndAssignValues(ScreenObject, DataArrayName,
@@ -5384,7 +5389,7 @@ begin
       begin
         if ScreenObject = nil then
         begin
-          CreateCellCenterScreenObject(ScreenObject);
+          CreateOrRetrieveCellCenterScreenObject(ScreenObject);
         end;
         DataArrayName := 'Imported_Horizontal_Anisotropy_Layer_'
           + IntToStr(GroupIndex);
@@ -8893,7 +8898,7 @@ begin
       Assert(FVariableLayerIndicators[0] <> nil);
       if ScreenObject = nil then
       begin
-        CreateCellCenterScreenObject(ScreenObject);
+        CreateOrRetrieveCellCenterScreenObject(ScreenObject);
 //        ScreenObject.Name := ScreenObjectName;
       end;
       SetLength(ImportedData, FGrid.RowCount, FGrid.ColumnCount);
@@ -9373,7 +9378,7 @@ begin
         begin
           if ScreenObject = nil then
           begin
-            CreateCellCenterScreenObject(ScreenObject);
+            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
 //            ScreenObject.Name := 'Imported_RCH_Values_SP_'
 //              + GetStressPeriodString(StressPeriodIndex);
           end;
@@ -9636,7 +9641,7 @@ begin
           begin
             if ScreenObject = nil then
             begin
-              CreateCellCenterScreenObject(ScreenObject);
+              CreateOrRetrieveCellCenterScreenObject(ScreenObject);
 //              ScreenObject.Name := ScreenObjectRoot
 //                + GetStressPeriodString(StressPeriodIndex);
             end;
@@ -9683,6 +9688,7 @@ begin
     begin
       ScreenObject := CreateScreenObjectAroundGrid(ScreenObjectRoot
         + IntToStr(ObjectIndex));
+      ScreenObject.ElevationFormula := StrModelTop;
     end
     else
     begin
@@ -9704,6 +9710,7 @@ begin
             begin
               ScreenObject := CreateScreenObjectAroundGrid(ScreenObjectRoot
                 + IntToStr(ObjectIndex));
+              ScreenObject.ElevationFormula := StrModelTop;
               break;
             end;
           end;
@@ -9714,6 +9721,7 @@ begin
         ZoneArray := FZoneImporter.ZoneArray(ZoneIndex);
         ScreenObject := CreateScreenObjectAroundZones(ZoneArray, Cluster,
           ScreenObjectRoot + IntToStr(ObjectIndex));
+        ScreenObject.ElevationFormula := StrModelTop;
       end;
     end;
     if ScreenObject <> nil then
@@ -11182,7 +11190,7 @@ begin
         begin
           if ScreenObject = nil then
           begin
-            CreateCellCenterScreenObject(ScreenObject);
+            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
           end;
           AssignRealValuesToCellCenters(DataSet, ScreenObject,
             FVariableEtSurface[StressPeriodIndex]);
@@ -11277,7 +11285,7 @@ begin
         begin
           if ScreenObject = nil then
           begin
-            CreateCellCenterScreenObject(ScreenObject);
+            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
           end;
           AssignRealValuesToCellCenters(DataSet, ScreenObject,
             FVariableExtinctionDepth[StressPeriodIndex]);
@@ -11365,7 +11373,7 @@ begin
         begin
           if ScreenObject = nil then
           begin
-            CreateCellCenterScreenObject(ScreenObject);
+            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
           end;
           AssignRealValuesToCellCenters(EtRateDataSet, ScreenObject,
             FVariableEtRate[StressPeriodIndex]);
@@ -14206,7 +14214,6 @@ var
   Layer: Integer;
   NewName: string;
   DataArray: TDataArray;
-  ObjectIndex: Integer;
   TimeIndex: Integer;
   ValuesArray: TLakeValueArray;
   LakeValues: TLakeValues;
@@ -14259,7 +14266,7 @@ begin
   begin
     BottomFormula := StrImportedLakeBottom;
     CreateDataSet(-1, StrImportedLakeBottom, rdtDouble, DataArray);
-    CreateCellCenterScreenObject(ScreenObject);
+    CreateOrRetrieveCellCenterScreenObject(ScreenObject);
     AssignRealValuesToCellCenters(DataArray, ScreenObject, FLakeBottom);
   end;
 
@@ -14366,7 +14373,6 @@ begin
         Values.Add('0');
       end;
 
-      ObjectIndex := 0;
       for LayerIndex := 0 to Length(FConstantBdlknc) - 1 do
       begin
         Layer :=FModel.LayerStructure.
@@ -14381,9 +14387,7 @@ begin
           CreateDataSet(-1, NewName, rdtDouble, DataArray);
           if ScreenObject = nil then
           begin
-            CreateCellCenterScreenObject(ScreenObject);
-//            ScreenObject.Name := 'Imported_LakeLeakance_Object'
-//              + IntToStr(LayerIndex+1);
+            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
           end;
           AssignRealValuesToCellCenters(DataArray, ScreenObject,
             BDLKNC[LayerIndex]);
@@ -15748,7 +15752,7 @@ begin
         begin
           if ScreenObject = nil then
           begin
-            CreateCellCenterScreenObject(ScreenObject);
+            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
           end;
           AssignRealValuesToCellCenters(DataSet, ScreenObject,
             FVariableDepthProportions[SegmentIndex-1][StressPeriodIndex]);
@@ -15835,7 +15839,7 @@ begin
         begin
           if ScreenObject = nil then
           begin
-            CreateCellCenterScreenObject(ScreenObject);
+            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
           end;
           AssignRealValuesToCellCenters(DataSet, ScreenObject,
             FVariableRateProportions[SegmentIndex-1][StressPeriodIndex]);
@@ -15924,7 +15928,7 @@ begin
     ClusterList := TList.Create;
     ScreenObjectList := TList.Create;
     try
-      ObjectIndex := 0;
+//      ObjectIndex := 0;
       for ParamIndex := 0 to FParams.ArrayLength - 1 do
       begin
         Param := FParams[ParamIndex];
@@ -16465,6 +16469,7 @@ begin
           ScreenObjectName := 'Imported_RES_Layer_' + IntToStr(LayerIndex);
           ScreenObject := CreateScreenObjectAroundZones(
             ResLayer, Cluster, ScreenObjectName);
+          ScreenObject.ElevationFormula := StrModelTop;
           Position := ScreenObject.AddDataSet(DataArray);
           ScreenObject.DataSetFormulas[Position] := IntToStr(LayerIndex);
         end;
@@ -16485,7 +16490,7 @@ begin
   begin
     if ScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
 //      ScreenObject.Name := 'Imported_RES_Land_Surface';
     end;
     AssignRealValuesToCellCenters(DataArray, ScreenObject, LandSurface);
@@ -16501,7 +16506,7 @@ begin
   begin
     if ScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
 //      ScreenObject.Name := 'Imported_RES_Vertical_K';
     end;
     AssignRealValuesToCellCenters(DataArray, ScreenObject, VertK);
@@ -16517,7 +16522,7 @@ begin
   begin
     if ScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
     end;
     AssignRealValuesToCellCenters(DataArray, ScreenObject, BedThickness);
   end;
@@ -16531,6 +16536,7 @@ begin
       ScreenObjectName := 'Imported_Reservoir_' + IntToStr(ResIndex);
       ScreenObject := CreateScreenObjectAroundZones(
         ResLocation, Cluster, ScreenObjectName);
+      ScreenObject.ElevationFormula := StrModelTop;
       CreateBoundary(ScreenObject);
       ResBoundary := ScreenObject.ModflowResBoundary;
       ResBoundary.Values.Capacity := FModel.ModflowStressPeriods.Count;
@@ -16781,11 +16787,16 @@ var
   ImportedData: T2DDoubleArray;
   EvtItem: TEvtItem;
   ExtinctDetphItem: TUzfExtinctDepthItem;
-  WaterContendItem: TUzfWaterContentItem;
+  WaterContentItem: TUzfWaterContentItem;
   CellCenterScreenObject: TScreenObject;
   UndoCreateScreenObject: TCustomUndo;
   RowIndex: Integer;
   ColIndex: Integer;
+  ReUse: Boolean;
+  PriorInfiltrationItem: TRchItem;
+  PriorEvtItem: TEvtItem;
+  PriorWaterContentItem: TUzfWaterContentItem;
+  PriorExtinctDetphItem: TUzfExtinctDepthItem;
   procedure AssignVariableIntValues(const ScreenObjectName: string;
     Data: T2DIntArray);
   var
@@ -16793,7 +16804,7 @@ var
   begin
     if CellCenterScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(CellCenterScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(CellCenterScreenObject);
     end;
 
 
@@ -16812,7 +16823,7 @@ var
   begin
     if CellCenterScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(CellCenterScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(CellCenterScreenObject);
     end;
 
     AssignRealValuesToCellCenters(DataArray, CellCenterScreenObject, Data);
@@ -16824,12 +16835,12 @@ var
     end;
   end;
 begin
-  CellCenterScreenObject := nil;
   if (FCurrentStressPeriod < 0) or
     (FCurrentStressPeriod < FModel.ModflowStressPeriods.Count -1) then
   begin
     Exit;
   end;
+  CellCenterScreenObject := nil;
   inherited;
   FUzfPackage := FModel.ModflowPackages.UzfPackage;
   FUzfPackage.IsSelected := True;
@@ -16953,22 +16964,38 @@ begin
   InfiltrationItem := nil;
   EvtItem := nil;
   ExtinctDetphItem := nil;
-  WaterContendItem := nil;
+  WaterContentItem := nil;
   AScreenObject := nil;
   for StressPeriodIndex := 0 to FModel.ModflowStressPeriods.Count - 1 do
   begin
     StressPeriod := FModel.ModflowStressPeriods[StressPeriodIndex];
-    if FStressPeriods[StressPeriodIndex].Reuse then
+
+    ReUse := FStressPeriods[StressPeriodIndex].Reuse;
+    if ReUse and FUzfPackage.SimulateET then
+    begin
+      ReUse := FEtStressPeriods[StressPeriodIndex].Reuse
+        and FEtExtinctDepthStressPeriods[StressPeriodIndex].Reuse
+        and FEtExtinctWaterContentStressPeriods[StressPeriodIndex].Reuse;
+    end;
+
+    if Reuse then
     begin
       InfiltrationItem.EndTime := StressPeriod.EndTime;
+      if FUzfPackage.SimulateET then
+      begin
+        EvtItem.EndTime := StressPeriod.EndTime;
+        ExtinctDetphItem.EndTime := StressPeriod.EndTime;
+        WaterContentItem.EndTime := StressPeriod.EndTime;
+      end;
     end
     else
     begin
-      Boundary := nil;
+//      Boundary := nil;
       if AScreenObject = nil then
       begin
         AScreenObject := TScreenObject.CreateWithViewDirection(FModel, vdTop,
           UndoCreateScreenObject, False);
+        AScreenObject.Name := 'Imported_UZF_Rates';
 
         FModel.AddScreenObject(AScreenObject);
         AScreenObject.ElevationCount := ecZero;
@@ -16993,24 +17020,34 @@ begin
       InfiltrationItem := Boundary.Values.Add as TRchItem;
       InfiltrationItem.StartTime := StressPeriod.StartTime;
       InfiltrationItem.EndTime := StressPeriod.EndTime;
-      if FConstantInfiltration[StressPeriodIndex].IsConstant then
+
+      if FStressPeriods[StressPeriodIndex].Reuse then
       begin
-        InfiltrationItem.RechargeRate :=
-          FloatToStr(FConstantInfiltration[StressPeriodIndex].RealValue)
+        PriorInfiltrationItem := Boundary.Values[Boundary.Values.Count -2]
+          as TRchItem;
+        InfiltrationItem.RechargeRate := PriorInfiltrationItem.RechargeRate
       end
       else
       begin
-        ImportedData := FVariableInfiltration[StressPeriodIndex];
-        ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
-        ImportedValues.Name := 'Imported_UZF_Infiltration_'
-          + IntToStr(StressPeriodIndex+1);
-        AssignImportedValues(ImportedValues, ImportedData);
-        InfiltrationItem.RechargeRate := rsObjectImportedValuesR
-          + '("' + ImportedValues.Name + '")';
+        if FConstantInfiltration[StressPeriodIndex].IsConstant then
+        begin
+          InfiltrationItem.RechargeRate :=
+            FloatToStr(FConstantInfiltration[StressPeriodIndex].RealValue)
+        end
+        else
+        begin
+          ImportedData := FVariableInfiltration[StressPeriodIndex];
+          ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
+          ImportedValues.Name := 'Imported_UZF_Infiltration_'
+            + IntToStr(StressPeriodIndex+1);
+          AssignImportedValues(ImportedValues, ImportedData);
+          InfiltrationItem.RechargeRate := rsObjectImportedValuesR
+            + '("' + ImportedValues.Name + '")';
+        end;
       end;
       if FUzfPackage.SimulateET then
       begin
-        if FEtStressPeriods[StressPeriodIndex].Reuse then
+        if Reuse then
         begin
           EvtItem.EndTime := StressPeriod.EndTime;
         end
@@ -17019,24 +17056,34 @@ begin
           EvtItem := Boundary.EvapotranspirationDemand.Add as TEvtItem;
           EvtItem.StartTime := StressPeriod.StartTime;
           EvtItem.EndTime := StressPeriod.EndTime;
-          if FConstantET[StressPeriodIndex].IsConstant then
+          if FEtStressPeriods[StressPeriodIndex].Reuse then
           begin
+            PriorEvtItem := Boundary.EvapotranspirationDemand.Items[
+              Boundary.EvapotranspirationDemand.Count-2] as TEvtItem;
             EvtItem.EvapotranspirationRate :=
-              FloatToStr(FConstantET[StressPeriodIndex].RealValue)
+              PriorEvtItem.EvapotranspirationRate;
           end
           else
           begin
-            ImportedData := FVariableET[StressPeriodIndex];
-            ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
-            ImportedValues.Name := 'Imported_UZF_ET_'
-              + IntToStr(StressPeriodIndex+1);
-            AssignImportedValues(ImportedValues, ImportedData);
-            EvtItem.EvapotranspirationRate := rsObjectImportedValuesR
-              + '("' + ImportedValues.Name + '")';
+            if FConstantET[StressPeriodIndex].IsConstant then
+            begin
+              EvtItem.EvapotranspirationRate :=
+                FloatToStr(FConstantET[StressPeriodIndex].RealValue)
+            end
+            else
+            begin
+              ImportedData := FVariableET[StressPeriodIndex];
+              ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
+              ImportedValues.Name := 'Imported_UZF_ET_'
+                + IntToStr(StressPeriodIndex+1);
+              AssignImportedValues(ImportedValues, ImportedData);
+              EvtItem.EvapotranspirationRate := rsObjectImportedValuesR
+                + '("' + ImportedValues.Name + '")';
+            end;
           end;
         end;
 
-        if FEtExtinctDepthStressPeriods[StressPeriodIndex].Reuse then
+        if Reuse then
         begin
           ExtinctDetphItem.EndTime := StressPeriod.EndTime;
         end
@@ -17045,46 +17092,65 @@ begin
           ExtinctDetphItem := Boundary.ExtinctionDepth.Add as TUzfExtinctDepthItem;
           ExtinctDetphItem.StartTime := StressPeriod.StartTime;
           ExtinctDetphItem.EndTime := StressPeriod.EndTime;
-          if FConstantExtinctDepth[StressPeriodIndex].IsConstant then
+          if FEtExtinctDepthStressPeriods[StressPeriodIndex].Reuse then
           begin
+            PriorExtinctDetphItem := Boundary.ExtinctionDepth.Items[
+              Boundary.ExtinctionDepth.Count-2] as TUzfExtinctDepthItem;
             ExtinctDetphItem.UzfExtinctDepth :=
-              FloatToStr(FConstantExtinctDepth[StressPeriodIndex].RealValue)
+              PriorExtinctDetphItem.UzfExtinctDepth;
           end
           else
           begin
-            ImportedData := FVariableExtinctDepth[StressPeriodIndex];
-            ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
-            ImportedValues.Name := 'Imported_UZF_ExtinctionDepth_'
-              + IntToStr(StressPeriodIndex+1);
-            AssignImportedValues(ImportedValues, ImportedData);
-            ExtinctDetphItem.UzfExtinctDepth := rsObjectImportedValuesR
-              + '("' + ImportedValues.Name + '")';
+            if FConstantExtinctDepth[StressPeriodIndex].IsConstant then
+            begin
+              ExtinctDetphItem.UzfExtinctDepth :=
+                FloatToStr(FConstantExtinctDepth[StressPeriodIndex].RealValue)
+            end
+            else
+            begin
+              ImportedData := FVariableExtinctDepth[StressPeriodIndex];
+              ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
+              ImportedValues.Name := 'Imported_UZF_ExtinctionDepth_'
+                + IntToStr(StressPeriodIndex+1);
+              AssignImportedValues(ImportedValues, ImportedData);
+              ExtinctDetphItem.UzfExtinctDepth := rsObjectImportedValuesR
+                + '("' + ImportedValues.Name + '")';
+            end;
           end;
         end;
 
-        if FEtExtinctWaterContentStressPeriods[StressPeriodIndex].Reuse then
+        if Reuse then
         begin
-          WaterContendItem.EndTime := StressPeriod.EndTime;
+          WaterContentItem.EndTime := StressPeriod.EndTime;
         end
         else
         begin
-          WaterContendItem := Boundary.WaterContent.Add as TUzfWaterContentItem;
-          WaterContendItem.StartTime := StressPeriod.StartTime;
-          WaterContendItem.EndTime := StressPeriod.EndTime;
-          if FConstantExtinctWaterContent[StressPeriodIndex].IsConstant then
+          WaterContentItem := Boundary.WaterContent.Add as TUzfWaterContentItem;
+          WaterContentItem.StartTime := StressPeriod.StartTime;
+          WaterContentItem.EndTime := StressPeriod.EndTime;
+          if FEtExtinctWaterContentStressPeriods[StressPeriodIndex].Reuse then
           begin
-            WaterContendItem.UzfWaterContent :=
-              FloatToStr(FConstantExtinctWaterContent[StressPeriodIndex].RealValue)
+            PriorWaterContentItem := Boundary.WaterContent.Items[
+              Boundary.WaterContent.Count-2] as TUzfWaterContentItem;
+            WaterContentItem.UzfWaterContent := PriorWaterContentItem.UzfWaterContent;
           end
           else
           begin
-            ImportedData := FVariableExtinctWaterContent[StressPeriodIndex];
-            ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
-            ImportedValues.Name := 'Imported_UZF_ExtinctionWaterContent_'
-              + IntToStr(StressPeriodIndex+1);
-            AssignImportedValues(ImportedValues, ImportedData);
-            WaterContendItem.UzfWaterContent := rsObjectImportedValuesR
-              + '("' + ImportedValues.Name + '")';
+            if FConstantExtinctWaterContent[StressPeriodIndex].IsConstant then
+            begin
+              WaterContentItem.UzfWaterContent :=
+                FloatToStr(FConstantExtinctWaterContent[StressPeriodIndex].RealValue)
+            end
+            else
+            begin
+              ImportedData := FVariableExtinctWaterContent[StressPeriodIndex];
+              ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
+              ImportedValues.Name := 'Imported_UZF_ExtinctionWaterContent_'
+                + IntToStr(StressPeriodIndex+1);
+              AssignImportedValues(ImportedValues, ImportedData);
+              WaterContentItem.UzfWaterContent := rsObjectImportedValuesR
+                + '("' + ImportedValues.Name + '")';
+            end;
           end;
         end;
       end;
@@ -17965,7 +18031,7 @@ begin
     begin
       if ScreenObject = nil then
       begin
-        CreateCellCenterScreenObject(ScreenObject);
+        CreateOrRetrieveCellCenterScreenObject(ScreenObject);
       end;
       Interpolator := TNearestPoint2DInterpolator.Create(nil);
       try
@@ -17989,7 +18055,7 @@ begin
     begin
       if ScreenObject = nil then
       begin
-        CreateCellCenterScreenObject(ScreenObject);
+        CreateOrRetrieveCellCenterScreenObject(ScreenObject);
       end;
       Interpolator := TNearestPoint2DInterpolator.Create(nil);
       try
@@ -18507,7 +18573,7 @@ begin
     end
     else
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
       Interpolator := TNearestPoint2DInterpolator.Create(nil);
       try
         RefDataArray.TwoDInterpolator := Interpolator;
@@ -21227,7 +21293,7 @@ begin
     end;
     if ScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
     end;
     DataArrayName := 'Imported_'
       + DelayItem.VerticalHydraulicConductivityDataArrayName;
@@ -21296,7 +21362,7 @@ begin
     Assert(FDZ <> nil);
     if ScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
     end;
     DataArrayName := 'Imported_'
       + DelayItem.InterbedEquivalentThicknessDataArrayName;
@@ -21323,7 +21389,7 @@ begin
     Assert(FDCOM <> nil);
     if ScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
     end;
     DataArrayName := 'Imported_'
       + DelayItem.InterbedStartingCompactionDataArrayName;
@@ -21350,7 +21416,7 @@ begin
     Assert(FDHC <> nil);
     if ScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
     end;
     DataArrayName := 'Imported_'
       + DelayItem.InterbedPreconsolidationHeadDataArrayName;
@@ -21377,7 +21443,7 @@ begin
     Assert(FDstart <> nil);
     if ScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
     end;
     DataArrayName := 'Imported_' + DelayItem.InterbedStartingHeadDataArrayName;
     CreateDataArrayAndAssignValues(ScreenObject, DataArrayName, FDstart[Index]);
@@ -21402,7 +21468,7 @@ begin
     Assert(FRNB <> nil);
     if ScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
     end;
     DataArrayName := 'Imported_' + DelayItem.EquivNumberDataArrayName;
     CreateDataArrayAndAssignValues(ScreenObject, DataArrayName, FRNB[Index]);
@@ -21428,7 +21494,7 @@ begin
     Assert(FCom <> nil);
     if ScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
     end;
     DataArrayName := 'Imported_' + NoDelayItem.InitialCompactionDataArrayName;
     CreateDataArrayAndAssignValues(ScreenObject, DataArrayName, FCom[Index]);
@@ -21454,7 +21520,7 @@ begin
     Assert(FSfv <> nil);
     if ScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
     end;
     DataArrayName := 'Imported_'
       + NoDelayItem.InelasticSkeletalStorageCoefficientDataArrayName;
@@ -21481,7 +21547,7 @@ begin
     Assert(FSfe <> nil);
     if ScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
     end;
     DataArrayName := 'Imported_'
       + NoDelayItem.ElasticSkeletalStorageCoefficientDataArrayName;
@@ -21508,7 +21574,7 @@ begin
     Assert(FHC <> nil);
     if ScreenObject = nil then
     begin
-      CreateCellCenterScreenObject(ScreenObject);
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
     end;
     DataArrayName := 'Imported_'
       + NoDelayItem.PreconsolidationHeadDataArrayName;

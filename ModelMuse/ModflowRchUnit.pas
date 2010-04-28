@@ -273,6 +273,7 @@ type
     // See @link(TModflowParamBoundary.ModflowParamItemClass
     // TModflowParamBoundary.ModflowParamItemClass).
     class function ModflowParamItemClass: TModflowParamItemClass; override;
+    function ParameterType: TParameterType; override;
   public
     procedure Assign(Source: TPersistent);override;
 
@@ -794,31 +795,45 @@ var
   Times: TList;
   Position: integer;
   ParamName: string;
+  Model: TPhastModel;
 begin
   EvaluateArrayBoundaries;
-  for ValueIndex := 0 to Values.Count - 1 do
+  Model := PhastModel as TPhastModel;
+  if Model.ModflowTransientParameters.CountParam(ParameterType) = 0 then
   begin
-    BoundaryStorage := Values.Boundaries[ValueIndex] as TRchStorage;
-    AssignCells(BoundaryStorage, ValueTimeList);
-  end;
-  for ParamIndex := 0 to Parameters.Count - 1 do
-  begin
-    Param := Parameters[ParamIndex];
-    ParamName := Param.Param.ParamName;
-    Position := ParamList.IndexOf(ParamName);
-    if Position < 0 then
+    for ValueIndex := 0 to Values.Count - 1 do
     begin
-      Times := TObjectList.Create;
-      ParamList.AddObject(ParamName, Times);
-    end
-    else
-    begin
-      Times := ParamList.Objects[Position] as TList;
+      if ValueIndex < Values.BoundaryCount then
+      begin
+        BoundaryStorage := Values.Boundaries[ValueIndex] as TRchStorage;
+        AssignCells(BoundaryStorage, ValueTimeList);
+      end;
     end;
-    for ValueIndex := 0 to Param.Param.Count - 1 do
+  end
+  else
+  begin
+    for ParamIndex := 0 to Parameters.Count - 1 do
     begin
-      BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TRchStorage;
-      AssignCells(BoundaryStorage, Times);
+      Param := Parameters[ParamIndex];
+      ParamName := Param.Param.ParamName;
+      Position := ParamList.IndexOf(ParamName);
+      if Position < 0 then
+      begin
+        Times := TObjectList.Create;
+        ParamList.AddObject(ParamName, Times);
+      end
+      else
+      begin
+        Times := ParamList.Objects[Position] as TList;
+      end;
+      for ValueIndex := 0 to Param.Param.Count - 1 do
+      begin
+        if ValueIndex < Param.Param.BoundaryCount then
+        begin
+          BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TRchStorage;
+          AssignCells(BoundaryStorage, Times);
+        end;
+      end;
     end;
   end;
 end;
@@ -862,6 +877,11 @@ begin
   begin
     result := result + RechargeLayers.TimeListCount;
   end;
+end;
+
+function TRchBoundary.ParameterType: TParameterType;
+begin
+  result := ptRCH;
 end;
 
 procedure TRchBoundary.SetRechargeLayers(const Value: TRchLayerCollection);

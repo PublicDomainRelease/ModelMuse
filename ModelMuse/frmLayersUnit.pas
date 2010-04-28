@@ -168,7 +168,7 @@ type
 implementation
 
 uses Math, RealListUnit, CursorsFoiledAgain, frmGoPhastUnit,
-  ModflowPackagesUnit;
+  ModflowPackagesUnit, frmErrorsAndWarningsUnit, PhastModelUnit;
 
 {$R *.dfm}
 

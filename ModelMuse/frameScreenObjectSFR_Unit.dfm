@@ -395,6 +395,10 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
       HelpKeyword = 'Time_Tab'
       Caption = 'Time'
       ImageIndex = 7
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlParamTop: TPanel
         Left = 0
         Top = 0
@@ -717,6 +721,10 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
     object tabNetwork: TTabSheet
       Caption = 'Network'
       ImageIndex = 9
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlNetwork: TPanel
         Left = 0
         Top = 0
@@ -935,6 +943,10 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
       HelpKeyword = 'Flows_Tab'
       Caption = 'Flows'
       ImageIndex = 6
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object dgFlowTimes: TRbwDataGrid4
         Left = 0
         Top = 57
@@ -1123,6 +1135,10 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
       HelpType = htKeyword
       HelpKeyword = 'Segment_Tab'
       Caption = 'Segment'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter1: TSplitter
         Left = 0
         Top = 209
@@ -1566,6 +1582,10 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
       HelpKeyword = 'Channel_Tab'
       Caption = 'Channel'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter3: TSplitter
         Left = 379
         Top = 0
@@ -1743,7 +1763,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
         Exaggeration = 1.000000000000000000
         HorizontalDirection = hdRight
         Image32.Left = 0
-        Image32.Top = 0
+        Image32.Top = 68
         Image32.Width = 553
         Image32.Height = 109
         Image32.Anchors = [akLeft, akBottom]
@@ -1754,6 +1774,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
         Image32.Scale = 1.000000000000000000
         Image32.ScaleMode = smNormal
         Image32.TabOrder = 0
+        Image32.ExplicitTop = 0
         ImmediateResize = True
         Magnification = 1.000000000000000000
         VerticalDirection = vdUp
@@ -1767,6 +1788,10 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
       HelpKeyword = 'Equation_Tab'
       Caption = 'Equation'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object dgSfrEquation: TRbwDataGrid4
         Left = 0
         Top = 57
@@ -1955,6 +1980,10 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
       HelpKeyword = 'Flow_Table_Tab'
       Caption = 'Flow Table'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 208
         Top = 0
@@ -2085,7 +2114,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Exaggeration = 1.000000000000000000
           HorizontalDirection = hdRight
           Image32.Left = 0
-          Image32.Top = 0
+          Image32.Top = 108
           Image32.Width = 269
           Image32.Height = 149
           Image32.Anchors = [akLeft, akBottom]
@@ -2096,6 +2125,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Image32.Scale = 1.000000000000000000
           Image32.ScaleMode = smNormal
           Image32.TabOrder = 0
+          Image32.ExplicitTop = 0
           ImmediateResize = True
           Magnification = 1.000000000000000000
           VerticalDirection = vdUp
@@ -2115,7 +2145,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Exaggeration = 1.000000000000000000
           HorizontalDirection = hdRight
           Image32.Left = 0
-          Image32.Top = 0
+          Image32.Top = 108
           Image32.Width = 270
           Image32.Height = 149
           Image32.Anchors = [akLeft, akBottom]
@@ -2126,6 +2156,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Image32.Scale = 1.000000000000000000
           Image32.ScaleMode = smNormal
           Image32.TabOrder = 0
+          Image32.ExplicitTop = 0
           ImmediateResize = True
           Magnification = 1.000000000000000000
           VerticalDirection = vdUp
@@ -2453,6 +2484,10 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
     object tabGage: TTabSheet
       Caption = 'Gage'
       ImageIndex = 8
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         553
         478)

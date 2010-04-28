@@ -799,11 +799,19 @@ begin
 end;
 
 procedure THydrogeologicUnit.RenameLayer(const NewHufName: string);
+var
+  PhastModel: TPhastModel;
+  DataArray: TDataArray;
 begin
   if Model <> nil then
   begin
     CreateOrRenameDataArray(FTopArrayName, StrTop, NewHufName);
     CreateOrRenameDataArray(FThickessArrayName, StrThickness, NewHufName);
+    PhastModel := Model as TPhastModel;
+    DataArray := PhastModel.GetDataSetByName(FThickessArrayName);
+    Assert(DataArray <> nil);
+    DataArray.CheckMin := True;
+    DataArray.Min := 0;
     HufUsedParameters.RenameLayer(NewHufName);
   end;
 end;

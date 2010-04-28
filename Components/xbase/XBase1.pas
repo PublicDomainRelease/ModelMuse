@@ -1624,7 +1624,7 @@ Begin
 //   end ;
    repeat
      try
-         TmpS := FloatToStrF( Data , ffFixed , 17 , XDEC ) ;
+         TmpS := FloatToStrF( Data , ffFixed , 17 , XDEC-1 ) ;
      except
          TmpS := '0.00' ;
      end ;

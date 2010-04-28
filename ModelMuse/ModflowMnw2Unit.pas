@@ -565,7 +565,7 @@ implementation
 
 uses
   frmGoPhastUnit, ScreenObjectUnit, PhastModelUnit,
-  ModflowGridUnit, frmFormulaErrorsUnit, Math;
+  ModflowGridUnit, frmFormulaErrorsUnit, Math, SparseDataSets, SparseArrayUnit;
 
 { TMnw2Item }
 
@@ -1052,6 +1052,7 @@ var
   Boundary: TMnw2Boundary;
   LossType: TMnwLossType;
   IsValue: Boolean;
+  UsedCells: T3DSparseIntegerArray;
 begin
   LocalModel := Model as TPhastModel;
   PriorCol := -1;
@@ -1118,149 +1119,140 @@ begin
   BoundaryIndex := -1;
   BoundaryStorage := Boundaries[ItemIndex] as TMnw2Storage;
 
-  LocalScreenObject := ScreenObject as TScreenObject;
-  for SegmentIndex := 0 to LocalScreenObject.Segments.Count - 1 do
-  begin
-    Segment := LocalScreenObject.Segments[SegmentIndex];
-    ColIndex := Segment.Col;
-    RowIndex := Segment.Row;
-    LayerIndex := Segment.Layer;
-    if not LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+  UsedCells := T3DSparseIntegerArray.Create(SPASmall);
+  try
+    LocalScreenObject := ScreenObject as TScreenObject;
+    for SegmentIndex := 0 to LocalScreenObject.Segments.Count - 1 do
     begin
-      Continue;
-    end;
-
-    IsValue := False;
-    if WellRadiusArray <> nil then
-    begin
-      IsValue := WellRadiusArray.IsValue[LayerIndex, RowIndex, ColIndex];
-    end;
-    if SkinRadiusArray <> nil then
-    begin
-      IsValue := SkinRadiusArray.IsValue[LayerIndex, RowIndex, ColIndex];
-    end;
-    if BArray <> nil then
-    begin
-      IsValue := BArray.IsValue[LayerIndex, RowIndex, ColIndex];
-    end;
-    if CellToWellConductanceArray <> nil then
-    begin
-      IsValue := CellToWellConductanceArray.IsValue[LayerIndex, RowIndex, ColIndex];
-    end;
-    if PartialPenetrationArray <> nil then
-    begin
-      IsValue := PartialPenetrationArray.IsValue[LayerIndex, RowIndex, ColIndex];
-    end;
-
-    if not IsValue then
-    begin
-      Continue;
-    end;
-    if (ColIndex = PriorCol)
-      and (RowIndex = PriorRow)
-      and (LayerIndex = PriorLayer) then
-    begin
-      Continue
-    end;
-    Inc(BoundaryIndex);
-    PriorCol := Segment.Col;
-    PriorRow := Segment.Row;
-    PriorLayer := Segment.Layer;
-
-//    Assert(BoundaryIndex < Length(BoundaryStorage.Mnw2Array));
-//    if ISFROPT in [1,2,3] then
-//    begin
-//      if WellRadiusArray.IsValue[LayerIndex, RowIndex, ColIndex] then
-//      begin
-//        Assert(SkinRadiusArray.IsValue[LayerIndex, RowIndex, ColIndex]);
-//        Assert(SkinKArray.IsValue[LayerIndex, RowIndex, ColIndex]);
-//        Assert(BArray.IsValue[LayerIndex, RowIndex, ColIndex]);
-//        Assert(CArray.IsValue[LayerIndex, RowIndex, ColIndex]);
-//        if ISFROPT in [2,3] then
-//        begin
-//          Assert(PArray.IsValue[LayerIndex, RowIndex, ColIndex]);
-//          Assert(InitialWaterContentArray.IsValue[LayerIndex, RowIndex, ColIndex]);
-//          Assert(PartialPenetrationArray.IsValue[LayerIndex, RowIndex, ColIndex]);
-//        end;
-//        if ISFROPT = 3 then
-//        begin
-//          Assert(VerticalKArray.IsValue[LayerIndex, RowIndex, ColIndex]);
-//        end;
-//      end;
-//    end;
-
-//    if WellRadiusArray.IsValue[LayerIndex, RowIndex, ColIndex] then
-    begin
-//      BoundaryStorage := Boundaries[ItemIndex] as TMnw2Storage;
-      Assert(BoundaryIndex < Length(BoundaryStorage.Mnw2Array));
-      with BoundaryStorage.Mnw2Array[BoundaryIndex] do
+      Segment := LocalScreenObject.Segments[SegmentIndex];
+      ColIndex := Segment.Col;
+      RowIndex := Segment.Row;
+      LayerIndex := Segment.Layer;
+      if not LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
       begin
-        Cell.Layer := LayerIndex;
-        Cell.Row := RowIndex;
-        Cell.Column := ColIndex;
-//        Cell.Section := Sections[LayerIndex, RowIndex, ColIndex];
-        if WellRadiusArray <> nil then
-        begin
-          WellRadius := WellRadiusArray.
-            RealData[LayerIndex, RowIndex, ColIndex];
-          WellRadiusAnnotation := WellRadiusArray.
-            Annotation[LayerIndex, RowIndex, ColIndex];
-        end;
+        Continue;
+      end;
 
-        if SkinRadiusArray <> nil then
-        begin
-          SkinRadius := SkinRadiusArray.
-            RealData[LayerIndex, RowIndex, ColIndex];
-          SkinRadiusAnnotation := SkinRadiusArray.
-            Annotation[LayerIndex, RowIndex, ColIndex];
-        end;
-        if SkinKArray <> nil then
-        begin
-          SkinK := SkinKArray.
-            RealData[LayerIndex, RowIndex, ColIndex];
-          SkinKAnnotation := SkinKArray.
-            Annotation[LayerIndex, RowIndex, ColIndex];
-        end;
+      IsValue := False;
+      if WellRadiusArray <> nil then
+      begin
+        IsValue := WellRadiusArray.IsValue[LayerIndex, RowIndex, ColIndex];
+      end;
+      if SkinRadiusArray <> nil then
+      begin
+        IsValue := SkinRadiusArray.IsValue[LayerIndex, RowIndex, ColIndex];
+      end;
+      if BArray <> nil then
+      begin
+        IsValue := BArray.IsValue[LayerIndex, RowIndex, ColIndex];
+      end;
+      if CellToWellConductanceArray <> nil then
+      begin
+        IsValue := CellToWellConductanceArray.IsValue[LayerIndex, RowIndex, ColIndex];
+      end;
+      if PartialPenetrationArray <> nil then
+      begin
+        IsValue := PartialPenetrationArray.IsValue[LayerIndex, RowIndex, ColIndex];
+      end;
 
-        if BArray <> nil then
-        begin
-          B := BArray.
-            RealData[LayerIndex, RowIndex, ColIndex];
-          BAnnotation := BArray.
-            Annotation[LayerIndex, RowIndex, ColIndex];
-        end;
-        if CArray <> nil then
-        begin
-          C := CArray.
-            RealData[LayerIndex, RowIndex, ColIndex];
-          CAnnotation := CArray.
-            Annotation[LayerIndex, RowIndex, ColIndex];
-        end;
-        if PArray <> nil then
-        begin
-          P := PArray.
-            RealData[LayerIndex, RowIndex, ColIndex];
-          PAnnotation := PArray.
-            Annotation[LayerIndex, RowIndex, ColIndex];
-        end;
+      if not IsValue then
+      begin
+        Continue;
+      end;
+      if (ColIndex = PriorCol)
+        and (RowIndex = PriorRow)
+        and (LayerIndex = PriorLayer) then
+      begin
+        Continue
+      end;
 
-        if CellToWellConductanceArray <> nil then
-        begin
-          CellToWellConductance := CellToWellConductanceArray.
-            RealData[LayerIndex, RowIndex, ColIndex];
-          CellToWellConductanceAnnotation := CellToWellConductanceArray.
-            Annotation[LayerIndex, RowIndex, ColIndex];
-        end;
+      if UsedCells.IsValue[LayerIndex, RowIndex, ColIndex] then
+      begin
+        Continue
+      end;
+      UsedCells.Items[LayerIndex, RowIndex, ColIndex] := 1;
 
-        if PartialPenetrationArray <> nil then
+      Inc(BoundaryIndex);
+      PriorCol := Segment.Col;
+      PriorRow := Segment.Row;
+      PriorLayer := Segment.Layer;
+
+
+  //    if WellRadiusArray.IsValue[LayerIndex, RowIndex, ColIndex] then
+      begin
+  //      BoundaryStorage := Boundaries[ItemIndex] as TMnw2Storage;
+        Assert(BoundaryIndex < Length(BoundaryStorage.Mnw2Array));
+        with BoundaryStorage.Mnw2Array[BoundaryIndex] do
         begin
-          PartialPenetration := PartialPenetrationArray.
-            RealData[LayerIndex, RowIndex, ColIndex];
-          PartialPenetrationAnnotation := PartialPenetrationArray.
-            Annotation[LayerIndex, RowIndex, ColIndex];
+          Cell.Layer := LayerIndex;
+          Cell.Row := RowIndex;
+          Cell.Column := ColIndex;
+  //        Cell.Section := Sections[LayerIndex, RowIndex, ColIndex];
+          if WellRadiusArray <> nil then
+          begin
+            WellRadius := WellRadiusArray.
+              RealData[LayerIndex, RowIndex, ColIndex];
+            WellRadiusAnnotation := WellRadiusArray.
+              Annotation[LayerIndex, RowIndex, ColIndex];
+          end;
+
+          if SkinRadiusArray <> nil then
+          begin
+            SkinRadius := SkinRadiusArray.
+              RealData[LayerIndex, RowIndex, ColIndex];
+            SkinRadiusAnnotation := SkinRadiusArray.
+              Annotation[LayerIndex, RowIndex, ColIndex];
+          end;
+          if SkinKArray <> nil then
+          begin
+            SkinK := SkinKArray.
+              RealData[LayerIndex, RowIndex, ColIndex];
+            SkinKAnnotation := SkinKArray.
+              Annotation[LayerIndex, RowIndex, ColIndex];
+          end;
+
+          if BArray <> nil then
+          begin
+            B := BArray.
+              RealData[LayerIndex, RowIndex, ColIndex];
+            BAnnotation := BArray.
+              Annotation[LayerIndex, RowIndex, ColIndex];
+          end;
+          if CArray <> nil then
+          begin
+            C := CArray.
+              RealData[LayerIndex, RowIndex, ColIndex];
+            CAnnotation := CArray.
+              Annotation[LayerIndex, RowIndex, ColIndex];
+          end;
+          if PArray <> nil then
+          begin
+            P := PArray.
+              RealData[LayerIndex, RowIndex, ColIndex];
+            PAnnotation := PArray.
+              Annotation[LayerIndex, RowIndex, ColIndex];
+          end;
+
+          if CellToWellConductanceArray <> nil then
+          begin
+            CellToWellConductance := CellToWellConductanceArray.
+              RealData[LayerIndex, RowIndex, ColIndex];
+            CellToWellConductanceAnnotation := CellToWellConductanceArray.
+              Annotation[LayerIndex, RowIndex, ColIndex];
+          end;
+
+          if PartialPenetrationArray <> nil then
+          begin
+            PartialPenetration := PartialPenetrationArray.
+              RealData[LayerIndex, RowIndex, ColIndex];
+            PartialPenetrationAnnotation := PartialPenetrationArray.
+              Annotation[LayerIndex, RowIndex, ColIndex];
+          end;
         end;
       end;
     end;
+  finally
+    UsedCells.Free;
   end;
   if WellRadiusArray <> nil then
   begin
@@ -1870,18 +1862,20 @@ procedure TMnw2Boundary.GetCellValues(ValueTimeList: TList;
 var
   ValueIndex: Integer;
   BoundaryStorage: TMnw2Storage;
-  ValueCount: Integer;
+//  ValueCount: Integer;
 begin
   EvaluateArrayBoundaries;
 //  EvaluateListBoundaries;
-  ValueCount := 0;
+//  ValueCount := 0;
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    BoundaryStorage := Values.Boundaries[ValueCount] as TMnw2Storage;
-    AssignCells(BoundaryStorage, ValueTimeList);
-    Inc(ValueCount);
+    if ValueIndex < Values.BoundaryCount then
+    begin
+      BoundaryStorage := Values.Boundaries[ValueIndex] as TMnw2Storage;
+      AssignCells(BoundaryStorage, ValueTimeList);
+//      Inc(ValueCount);
+    end;
   end;
-
   TimeValues.Evaluate;
 end;
 

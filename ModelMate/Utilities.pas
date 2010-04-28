@@ -3,8 +3,10 @@ unit Utilities;
 interface
 
   uses Classes, Dialogs, SysUtils, Windows, StdCtrls, Forms, StrUtils,
-       GlobalBasicData;
+       GlobalBasicData, RbwDataGrid4, Grids;
 
+  procedure AllowEditing(const RbwGrid: TRbwDataGrid4; Allow: boolean);
+  procedure AllowRowSelect(const RbwGrid: TRbwDataGrid4; Allow: boolean);
   function BooleanToYesOrNo(const Bool: boolean): string;
   function BuildCommand(const ProgName, ArgList: string; const Quote: boolean): string;
   procedure CenterForm(aForm: TForm);
@@ -20,6 +22,7 @@ interface
   function GetNextDataString(const slSource: TStringList; var Index: integer): string;
   function GetNextString(const slSource: TStringList; var Index: integer): string;
   function GetQuotedString(const Str: string; var StrRem: string): string;
+  function IsNonBlank(const Str: string): boolean;
   function IsUNC(const Directory: string): boolean;
   function LastPos(const Str: string; const SubStr: string): integer;
   function LongInt2Bool(const IBool: LongInt): boolean;
@@ -32,6 +35,7 @@ interface
   function QuoteIfNeeded(const Str: string): string;
   function RelativePath(const Value: string): string;
   function RelDirToAbsDir(const SourceDir, RelDir: string): string;
+  function RowContainsSelectedCell(const RbwGrid: TRbwDataGrid4; IRow: integer): boolean;
   function StrToBoolean(const Str: string): boolean;
   function TrimLeadingAndTrailingBlanks(const Str: string): string;
   function TrimLeadingBlanks(const Str: string): string;
@@ -41,6 +45,39 @@ interface
 
 
 implementation
+
+//###################################################################
+
+procedure AllowEditing(const RbwGrid: TRbwDataGrid4; Allow: boolean);
+begin
+  if Allow then
+    begin
+      if not (goEditing in RbwGrid.Options) then
+        begin
+          RbwGrid.Options := RbwGrid.Options + [goEditing];
+        end;
+    end
+  else
+    begin
+      if goEditing in RbwGrid.Options then
+        begin
+          RbwGrid.Options := RbwGrid.Options - [goEditing];
+        end;
+    end;
+end;
+//###################################################################
+
+procedure AllowRowSelect(const RbwGrid: TRbwDataGrid4; Allow: boolean);
+begin
+  if Allow then
+    begin
+      RbwGrid.ColorSelectedRow := True;
+    end
+  else
+    begin
+      RbwGrid.ColorSelectedRow := False;
+    end;
+end;
 
 //###################################################################
 
@@ -350,6 +387,16 @@ begin
         end;
     end;
   result := QStr;
+end;
+
+//###################################################################
+
+function IsNonBlank(const Str: string): boolean;
+var
+  S: string;
+begin
+  S := TrimLeadingAndTrailingBlanks(Str);
+  result := (S <> '');
 end;
 
 //###################################################################
@@ -697,6 +744,25 @@ begin
   result := ExcludeTrailingPathDelimiter(ResultTemp);
 end;
 
+//###################################################################
+
+function RowContainsSelectedCell(const RbwGrid: TRbwDataGrid4; IRow: integer): boolean;
+var
+  J: integer;
+begin
+  result := False;
+  if (IRow >= 0) and (IRow < RbwGrid.RowCount) then
+    begin
+      for J := 0 to RbwGrid.ColCount - 1 do
+        begin
+          if RbwGrid.IsSelectedCell(J,IRow) then
+            begin
+              result := True;
+              Exit;
+            end;
+        end;
+    end;
+end;
 //###################################################################
 
 function StrToBoolean(const Str: string): boolean;

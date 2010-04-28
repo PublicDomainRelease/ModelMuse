@@ -62,7 +62,7 @@ begin
   FirstTime := PhastModel.ModflowFullStressPeriods.Items[0].StartTime;
   TBEGIN := FirstTime - ReferenceTime;
   WriteFloat(TBEGIN);
-  WriteString(' # TBEGIN');
+  WriteString(' # Data Set 6A: TBEGIN');
   NewLine;
 end;
 
@@ -71,21 +71,30 @@ var
   BeginPeriod, BeginStep, EndPeriod, EndStep: integer;
   ATime: Real;
 begin
-    ATime := PhastModel.ModflowPackages.ModPath.BeginningTime;
-    PhastModel.ModflowFullStressPeriods.TimeToPeriodAndStep(
-      ATime, BeginPeriod, BeginStep);
+    if PhastModel.ModflowStressPeriods.CompletelyTransient then
+    begin
+      ATime := PhastModel.ModflowPackages.ModPath.BeginningTime;
+      PhastModel.ModflowFullStressPeriods.TimeToPeriodAndStep(
+        ATime, BeginPeriod, BeginStep);
+      Inc(BeginPeriod);
+      Inc(BeginStep);
+    end
+    else
+    begin
+      BeginPeriod := 1;
+      BeginStep := 1;
+    end;
     ATime := PhastModel.ModflowPackages.ModPath.EndingTime;
     PhastModel.ModflowFullStressPeriods.TimeToPeriodAndStep(
       ATime, EndPeriod, EndStep);
-    Inc(BeginPeriod);
-    Inc(BeginStep);
+
     Inc(EndPeriod);
     Inc(EndStep);
     WriteInteger(BeginPeriod);
     WriteInteger(BeginStep);
     WriteInteger(EndPeriod);
     WriteInteger(EndStep);
-    WriteString(' # BeginPeriod, BeginStep, EndPeriod, EndStep');
+    WriteString(' # Data set 6B: BeginPeriod, BeginStep, EndPeriod, EndStep');
     NewLine;
 end;
 
@@ -110,7 +119,7 @@ begin
       begin
         Inc(LayerCount);
         Inc(Layer);
-        WriteArray(PorosityArray, Layer, 'POR' + ' Layer '
+        WriteArray(PorosityArray, Layer, 'Data Set 5: POR' + ' Layer '
           + IntToStr(LayerCount) + ': '
           + PhastModel.LayerStructure.ModflowLayerBottomDescription(LayerCount));
       end;
@@ -118,7 +127,7 @@ begin
     else
     begin
       Inc(Layer);
-      WriteArray(PorosityArray, Layer, 'PorCB' + ' Layer '
+      WriteArray(PorosityArray, Layer, 'Data Set 5: PorCB' + ' Layer '
         + IntToStr(LayerCount) + ': '
         + PhastModel.LayerStructure.ModflowLayerBottomDescription(LayerCount));
     end;
@@ -130,7 +139,7 @@ var
   ZoneDataArray: TDataArray;
 begin
   ZoneDataArray := PhastModel.GetDataSetByName(StrModpathZone);
-  WriteDataSet('IBOUND', ZoneDataArray);
+  WriteDataSet('Data Set 4: IBOUND', ZoneDataArray);
 end;
 
 // copied from TModflowBasicWriter
@@ -231,7 +240,7 @@ begin
   else
     Assert(False);
   end;
-  Option := Trim(Option + ' # OPTION');
+  Option := Trim(Option + ' # Data Set 2: OPTION');
   WriteString(Option);
   NewLine;
 end;
@@ -257,7 +266,7 @@ begin
   WriteInteger(NPART);
   WriteInteger(IRCHTP);
   WriteInteger(IEVTTP);
-  WriteString(' # MAXSIZ HNOFLO  HDRY  NPART  IRCHTP  IEVTTP');
+  WriteString(' # Data Set 1: MAXSIZ HNOFLO  HDRY  NPART  IRCHTP  IEVTTP');
   NewLine;
 end;
 

@@ -5,12 +5,11 @@ inherited frmGlobalVariables: TfrmGlobalVariables
   ClientWidth = 494
   OnDestroy = FormDestroy
   ExplicitWidth = 502
-  ExplicitHeight = 274
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 170
+    Top = 164
     Width = 494
     Height = 70
     Align = alBottom
@@ -19,8 +18,8 @@ inherited frmGlobalVariables: TfrmGlobalVariables
     object Label1: TLabel
       Left = 71
       Top = 11
-      Width = 169
-      Height = 17
+      Width = 185
+      Height = 18
       Caption = 'Number of global variables'
     end
     object btnHelp: TBitBtn
@@ -29,6 +28,7 @@ inherited frmGlobalVariables: TfrmGlobalVariables
       Width = 82
       Height = 27
       TabOrder = 0
+      OnClick = btnHelpClick
       Kind = bkHelp
     end
     object btnOK: TBitBtn
@@ -52,7 +52,7 @@ inherited frmGlobalVariables: TfrmGlobalVariables
       Left = 8
       Top = 6
       Width = 57
-      Height = 25
+      Height = 26
       ButtonKind = bkClassic
       TabOrder = 3
       OnChange = seGlobalVariableCountChange
@@ -72,7 +72,7 @@ inherited frmGlobalVariables: TfrmGlobalVariables
     Left = 0
     Top = 0
     Width = 494
-    Height = 170
+    Height = 164
     Align = alClient
     ColCount = 4
     FixedCols = 0

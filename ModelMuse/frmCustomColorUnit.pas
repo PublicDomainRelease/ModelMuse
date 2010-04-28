@@ -9,7 +9,7 @@ uses
   JvExControls, JvxSlider, Buttons, DataSetUnit, SubscriptionUnit,
   ClassificationUnit, frmGoPhastUnit, PhastModelUnit, TntStdCtrls,
   TntExDropDownEdit, TntExDropDownVirtualStringTree, VirtualTrees, JvExComCtrls,
-  JvUpDown, Grids, RbwDataGrid4, RbwParser;
+  JvUpDown, Grids, RbwDataGrid4, RbwParser, ArgusDataEntry;
 
 type
   TfrmCustomColor = class(TfrmCustomGoPhast)
@@ -59,6 +59,8 @@ type
     seNumberOfValuesToIgnore: TJvSpinEdit;
     lblNumberOfValuesToIgnore: TLabel;
     cbLogTransform: TCheckBox;
+    lblEpsilon: TLabel;
+    rdeEpsilon: TRbwDataEntry;
     // @name gives a preview of the color scheme
     // selected in @link(comboColorScheme).
     procedure pbColorSchemePaint(Sender: TObject);
@@ -81,10 +83,13 @@ type
     procedure FormShow(Sender: TObject);
     procedure rdgValuesToIgnoreEndUpdate(Sender: TObject);
     procedure seNumberOfValuesToIgnoreChange(Sender: TObject);
+    procedure virttreecomboDataSetsClosedUp(Sender: TObject);
+    procedure virttreecomboDataSetsDropDownTreeEnter(Sender: TObject);
   private
     // @name is implemented as a TObjectList.
     FDataSetDummyObjects: TList;
     FSelectedVirtNode: PVirtualNode;
+    FShouldClick: Boolean;
 
   { Private declarations }
   protected
@@ -138,6 +143,10 @@ var
   SkipIndex: Integer;
   SkipIntegerItem: TSkipInteger;
 begin
+  if TryStrToFloat(rdeEpsilon.Text, RealValue) then
+  begin
+    Limits.Epsilon := RealValue
+  end;
   Limits.LowerLimit := frameCheck3DMin.Limit;
   Limits.UpperLimit := frameCheck3DMax.Limit;
   Limits.ActiveOnly := cbActiveOnly.Checked;
@@ -288,11 +297,28 @@ begin
   ResetTreeText;
 end;
 
+procedure TfrmCustomColor.virttreecomboDataSetsClosedUp(Sender: TObject);
+begin
+  inherited;
+  if FShouldClick then
+  begin
+    FShouldClick := False;
+    MouseClick;
+  end;
+end;
+
 procedure TfrmCustomColor.virttreecomboDataSetsDropDownTreeChange(
   Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   inherited;
   SetSelectedNode(Sender, Node);
+end;
+
+procedure TfrmCustomColor.virttreecomboDataSetsDropDownTreeEnter(
+  Sender: TObject);
+begin
+  inherited;
+  FShouldClick := True;
 end;
 
 procedure TfrmCustomColor.virttreecomboDataSetsDropDownTreeGetText(
@@ -471,6 +497,7 @@ var
   SkipRealItem: TSkipReal;
   SkipIndex: Integer;
 begin
+  rdeEpsilon.Text := FloatToStr(Limits.Epsilon);
   frameCheck3DMin.Limit := Limits.LowerLimit;
   frameCheck3DMax.Limit := Limits.UpperLimit;
   frameCheck3DMin.DataType := DataType;

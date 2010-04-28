@@ -105,6 +105,8 @@ type
     FX: double;
     // See @link(Y).
     FY: double;
+    FCanShow: boolean;
+    FDisplayMessage: boolean;
     // @name checks whether @link(FCalculatedValues) is true.
     // If not, it calculates and stores @link(X), @link(Y), @link(ScaleX),
     // and @link(ScaleY) and sets @link(FCalculatedValues) to true.
@@ -161,6 +163,8 @@ type
     // be drawn on the appropriate
     // Image32 as determined by @link(ViewDirection).
     property Y: double read GetY;
+    property CanShow: boolean read FCanShow write FCanShow;
+    property DisplayMessage: boolean read FDisplayMessage write FDisplayMessage;
   published
     // @name is the bitmap that will be drawn.
     property Bitmap: TCompressedBitmap read FBitmap write SetBitmap;
@@ -362,6 +366,8 @@ end;
 constructor TCompressedBitmapItem.Create(Collection: TCollection);
 begin
   inherited;
+  FCanShow := True;
+  FDisplayMessage := True;
   FVisible := True;
   Name := 'Image' + IntToStr(Collection.Count);
   FBitmap := TCompressedBitmap.Create;

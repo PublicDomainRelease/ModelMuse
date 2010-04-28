@@ -91,7 +91,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         135
         32)
       object sbAddRow: TSpeedButton
-        Left = 11
+        Left = 10
         Top = 5
         Width = 23
         Height = 22
@@ -109,10 +109,11 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         ParentShowHint = False
         ShowHint = True
         OnClick = sbAddRowClick
+        ExplicitLeft = 11
         ExplicitTop = 6
       end
       object sbInsertRow: TSpeedButton
-        Left = 56
+        Left = 54
         Top = 5
         Width = 23
         Height = 22
@@ -130,10 +131,11 @@ inherited frmSpecifyContours: TfrmSpecifyContours
         ParentShowHint = False
         ShowHint = True
         OnClick = sbInsertRowClick
+        ExplicitLeft = 56
         ExplicitTop = 6
       end
       object sbDeleteRow: TSpeedButton
-        Left = 101
+        Left = 100
         Top = 5
         Width = 23
         Height = 22
@@ -326,7 +328,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 18
+      ItemHeight = 0
       TabOrder = 0
       Text = '2'
       OnChange = rdeLineThicknessChange

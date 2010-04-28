@@ -2,7 +2,7 @@ unit ModflowSfrWriterUnit;
 
 interface
 
-uses Types, SysUtils, Classes, Contnrs, CustomModflowWriterUnit,
+uses Windows, Types, SysUtils, Classes, Contnrs, CustomModflowWriterUnit,
   ModflowPackageSelectionUnit, PhastModelUnit, ScreenObjectUnit,
   ModflowSfrParamIcalcUnit, ModflowSfrUnit, ModflowSfrSegment,
   ModflowSfrUnsatSegment, ModflowBoundaryDisplayUnit, ModflowCellUnit;
@@ -96,6 +96,8 @@ const
 const
   DupErrorCategory = 'Duplicate SFR segment numbers';
   CircularCategory = 'The following SFR segments circle back on themselves.';
+  NoSegmentsWarning = 'One or more objects do not define segments '
+    + 'in the SFR package because they do not intersect the grid.';
 
 { TModflowSFR_Writer }
 
@@ -166,8 +168,12 @@ begin
         end
         else
         begin
+          frmErrorsAndWarnings.AddWarning(NoSegmentsWarning, ScreenObject.Name);
           Segment.Free;
         end;
+      end
+      else
+      begin
       end;
     end;
   finally
@@ -466,6 +472,10 @@ begin
   frmErrorsAndWarnings.RemoveErrorGroup(StrIncompleteSFRData);
   frmErrorsAndWarnings.RemoveErrorGroup(DupErrorCategory);
   frmErrorsAndWarnings.RemoveErrorGroup(CircularCategory);
+  frmErrorsAndWarnings.RemoveErrorGroup(ChannelRoughnessError);
+  frmErrorsAndWarnings.RemoveErrorGroup(BankRoughnessError);
+  frmErrorsAndWarnings.RemoveWarningGroup(NoSegmentsWarning);
+
 
 
 
@@ -1587,6 +1597,8 @@ begin
         end;
 
         // Data set 3
+        frmProgress.AddMessage('    Writing parameter '
+          + ParamItem.ParameterName);
         WriteString(ParamItem.ParameterName + ' SFR');
         WriteFloat(ParamItem.Value);
         WriteInteger(Segments.Count);
@@ -1693,7 +1705,6 @@ begin
       end;
     end;
   end;
-
 end;
 
 procedure TModflowSFR_Writer.WriteDataSets5to7;
@@ -1744,6 +1755,8 @@ begin
 
     for TimeIndex := 0 to PhastModel.ModflowFullStressPeriods.Count - 1 do
     begin
+        frmProgress.AddMessage('    Writing stress period '
+          + IntToStr(TimeIndex + 1));
       // data set 5;
       UsedSegments.Clear;
       ParametersUsed.Clear;
@@ -1875,6 +1888,7 @@ end;
 procedure TModflowSFR_Writer.WriteFile(const AFileName: string;
   var StartUnitNumber: integer; Lines: TStrings);
 begin
+  OutputDebugString('SAMPLING ON') ;
   if not Package.IsSelected then
   begin
     Exit
@@ -2338,6 +2352,7 @@ var
   SegmentFlow: TSfrSegmentFlowRecord;
   ChannelValues: TSfrChannelRecord;
   EqValues: TSfrEquationRecord;
+  IUPSEG: Integer;
 begin
   // data set 4b and 6a
   //  NSEG
@@ -2348,8 +2363,9 @@ begin
   // OUTSEG
   WriteInteger(FindConvertedSegment(ParamScreenObjectItem.OutflowSegment));
   // IUPSEG
-  WriteInteger(FindConvertedSegment(ParamScreenObjectItem.DiversionSegment));
-  if ParamScreenObjectItem.DiversionSegment <> 0 then
+  IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment);
+  WriteInteger(IUPSEG);
+  if IUPSEG > 0 then
   begin
     // IPRIOR
     WriteInteger(ParamScreenObjectItem.IPRIOR);
@@ -2406,7 +2422,7 @@ begin
     WriteString(' # Data Set 6a: ');
   end;
   WriteString('NSEG ICALC OUTSEG IUPSEG');
-  if ParamScreenObjectItem.DiversionSegment <> 0 then
+  if IUPSEG <> 0 then
   begin
     WriteString(' IPRIOR');
   end;

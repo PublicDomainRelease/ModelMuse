@@ -10,13 +10,15 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 199
-    Width = 434
+    Top = 193
+    Width = 432
     Height = 41
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 199
+    ExplicitWidth = 434
     DesignSize = (
-      434
+      432
       41)
     object btnClose: TBitBtn
       Left = 334
@@ -59,8 +61,8 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
   object vstWarningsAndErrors: TVirtualStringTree
     Left = 0
     Top = 0
-    Width = 434
-    Height = 199
+    Width = 432
+    Height = 193
     Align = alClient
     CheckImageKind = ckLightTick
     Header.AutoSizeIndex = -1
@@ -75,6 +77,8 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
     OnGetText = vstWarningsAndErrorsGetText
     OnInitNode = vstWarningsAndErrorsInitNode
     OnMeasureItem = vstWarningsAndErrorsMeasureItem
+    ExplicitWidth = 434
+    ExplicitHeight = 199
     Columns = <
       item
         Position = 0

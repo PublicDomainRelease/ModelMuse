@@ -2,12 +2,12 @@ inherited frmGridValue: TfrmGridValue
   HelpType = htKeyword
   HelpKeyword = 'Grid_Value_Dialog_Box'
   Caption = 'Grid Value'
-  ClientHeight = 281
-  ClientWidth = 342
+  ClientHeight = 380
+  ClientWidth = 406
   KeyPreview = True
   OnClose = FormClose
-  ExplicitWidth = 350
-  ExplicitHeight = 315
+  ExplicitWidth = 414
+  ExplicitHeight = 414
   PixelsPerInch = 96
   TextHeight = 18
   object lblLayer: TLabel
@@ -73,47 +73,77 @@ inherited frmGridValue: TfrmGridValue
     Height = 18
     Caption = 'Column width'
   end
+  object lblSelectedObject: TLabel
+    Left = 8
+    Top = 242
+    Width = 108
+    Height = 18
+    Anchors = [akLeft, akRight, akBottom]
+    Caption = 'Selected object'
+  end
+  object lblHigher3rdDimensionCoordinate: TLabel
+    Left = 8
+    Top = 289
+    Width = 227
+    Height = 18
+    Anchors = [akLeft, akRight, akBottom]
+    Caption = 'Higher 3rd dimension coordinate'
+  end
+  object lblLower3rdDimensionCoordinate: TLabel
+    Left = 8
+    Top = 310
+    Width = 224
+    Height = 18
+    Anchors = [akLeft, akRight, akBottom]
+    Caption = 'Lower 3rd dimension coordinate'
+  end
   object memoExplanation: TMemo
     Left = 8
     Top = 146
-    Width = 324
-    Height = 89
+    Width = 388
+    Height = 83
     Anchors = [akLeft, akTop, akRight, akBottom]
     ReadOnly = True
     ScrollBars = ssVertical
     TabOrder = 0
     OnKeyUp = memoExplanationKeyUp
-    ExplicitWidth = 265
   end
   object edCellValue: TEdit
     Left = 72
     Top = 97
-    Width = 260
+    Width = 324
     Height = 26
     Anchors = [akLeft, akTop, akRight]
     ReadOnly = True
     TabOrder = 1
     OnKeyUp = edCellValueKeyUp
-    ExplicitWidth = 201
   end
   object btnHelp: TBitBtn
-    Left = 146
-    Top = 241
+    Left = 210
+    Top = 340
     Width = 89
     Height = 33
     Anchors = [akRight, akBottom]
     TabOrder = 2
+    OnClick = btnHelpClick
     Kind = bkHelp
-    ExplicitLeft = 87
   end
   object btnClose: TBitBtn
-    Left = 243
-    Top = 241
+    Left = 307
+    Top = 340
     Width = 89
     Height = 33
     Anchors = [akRight, akBottom]
     TabOrder = 3
     Kind = bkClose
-    ExplicitLeft = 184
+  end
+  object cbShowThirdDValues: TCheckBox
+    Left = 8
+    Top = 266
+    Width = 390
+    Height = 17
+    Anchors = [akLeft, akRight, akBottom]
+    Caption = 'Show selected object 3rd dimension coordinates'
+    TabOrder = 4
   end
 end

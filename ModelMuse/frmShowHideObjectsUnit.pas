@@ -46,6 +46,7 @@ type
     procedure vstObjectsPaintText(Sender: TBaseVirtualTree;
       const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
       TextType: TVSTTextType);
+    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     FUndoShowHide: TUndoShowHideScreenObject;
     FCount: integer;
@@ -88,6 +89,18 @@ begin
   inherited;
   FSupressUndo := False;
   GetData;
+end;
+
+procedure TfrmShowHideObjects.FormKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+const
+  Key_Delete = VK_DELETE; // = 46
+begin
+  inherited;
+  if Key = Key_Delete then
+  begin
+    frmGoPhast.FormKeyUp(Sender, Key, Shift);
+  end;
 end;
 
 procedure TfrmShowHideObjects.FormClose(Sender: TObject;
@@ -218,6 +231,26 @@ procedure TfrmShowHideObjects.vstObjectsPaintText(Sender: TBaseVirtualTree;
 var
   Data: PMyRec;
   ScreenObject: TScreenObject;
+  Index: Integer;
+  HasSelected: Boolean;
+  ChildNodes: TList;
+  NodeIndex: Integer;
+  ChildNode : PVirtualNode;
+  procedure GetChildNodes(ANode: PVirtualNode; ChildNodes: TList);
+  var
+    ChildNode : PVirtualNode;
+  begin
+    ChildNode := ANode.FirstChild;
+    While ChildNode <> nil do
+    begin
+      ChildNodes.Add(ChildNode);
+      if ChildNode.ChildCount > 0 then
+      begin
+        GetChildNodes(ChildNode, ChildNodes);
+      end;
+      ChildNode := ChildNode.NextSibling;
+    end;
+  end;
 begin
   inherited;
   Data := vstObjects.GetNodeData(Node.Parent);
@@ -235,6 +268,77 @@ begin
     else
     begin
       TargetCanvas.Font.Style := [];
+    end;
+  end
+  else if vsExpanded in Node.States then
+  begin
+    TargetCanvas.Font.Style := [];
+  end
+  else
+  begin
+    Data := vstObjects.GetNodeData(Node);
+    if (Data <> nil) and (Data.ScreenObjects <> nil) then
+    begin
+      HasSelected := False;
+      for Index := 0 to Data.ScreenObjects.Count - 1 do
+      begin
+        ScreenObject := Data.ScreenObjects[Index];
+        if (ScreenObject <> nil) and ScreenObject.Selected then
+        begin
+          HasSelected := True;
+          break;
+        end;
+      end;
+      if HasSelected then
+      begin
+        TargetCanvas.Font.Style := [fsBold];
+      end
+      else
+      begin
+        TargetCanvas.Font.Style := [];
+      end;
+    end
+    else
+    begin
+      if Node.ChildCount > 0 then
+      begin
+        HasSelected := False;
+        ChildNodes := TList.Create;
+        try
+          GetChildNodes(Node, ChildNodes);
+          for NodeIndex := 0 to ChildNodes.Count - 1 do
+          begin
+            ChildNode := ChildNodes[NodeIndex];
+            Data := vstObjects.GetNodeData(ChildNode);
+            if (Data <> nil) and (Data.ScreenObjects <> nil) then
+            begin
+              for Index := 0 to Data.ScreenObjects.Count - 1 do
+              begin
+                ScreenObject := Data.ScreenObjects[Index];
+                if (ScreenObject <> nil) and ScreenObject.Selected then
+                begin
+                  HasSelected := True;
+                  break;
+                end;
+              end;
+              if HasSelected then
+              begin
+                break;
+              end;
+            end;
+          end;
+        finally
+          ChildNodes.Free;
+        end;
+        if HasSelected then
+        begin
+          TargetCanvas.Font.Style := [fsBold];
+        end
+        else
+        begin
+          TargetCanvas.Font.Style := [];
+        end;
+      end;
     end;
   end;
 

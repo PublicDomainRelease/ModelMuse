@@ -130,6 +130,7 @@ begin
     FfrmErrorsAndWarnings := TfrmErrorsAndWarnings.Create(nil);
 //    Application.CreateForm(TfrmErrorsAndWarnings, FfrmErrorsAndWarnings);
   end;
+  FfrmErrorsAndWarnings.Handle;
   result := FfrmErrorsAndWarnings;
 end;
 

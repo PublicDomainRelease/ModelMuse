@@ -123,9 +123,14 @@ begin
   rdgSpecific.Cells[1,0] := 'X';
   rdgSpecific.Cells[2,0] := 'Y';
   rdgSpecific.Cells[3,0] := 'Z';
-  rdgReleaseTimes.Cells[0,0] := 'N';
-  rdgReleaseTimes.Cells[1,0] := 'Release (tracking) time';
-  NumberSpecificGridRows;
+  rdgReleaseTimes.BeginUpdate;
+  try
+    rdgReleaseTimes.Cells[0,0] := 'N';
+    rdgReleaseTimes.Cells[1,0] := 'Release (tracking) time';
+    NumberSpecificGridRows;
+  finally
+    rdgReleaseTimes.EndUpdate;
+  end;
   NumberTimeGridRows;
   CreateParticles;
 end;
@@ -285,7 +290,12 @@ begin
   seTimeCount.AsInteger := 1;
   rdgReleaseTimes.FixedCols := 1;
   rdgReleaseTimes.RowCount := 2;
-  rdgReleaseTimes.Cells[1,1] := '0';
+  rdgReleaseTimes.BeginUpdate;
+  try
+    rdgReleaseTimes.Cells[1,1] := '0';
+  finally
+    rdgReleaseTimes.EndUpdate;
+  end;
 end;
 
 procedure TframeModpathParticles.EnableDeleteTimeButton;
@@ -323,9 +333,14 @@ procedure TframeModpathParticles.NumberSpecificGridRows;
 var
   Index: Integer;
 begin
-  for Index := 1 to rdgSpecific.RowCount - 1 do
-  begin
-    rdgSpecific.Cells[0, Index] := IntToStr(Index);
+  rdgReleaseTimes.BeginUpdate;
+  try
+    for Index := 1 to rdgSpecific.RowCount - 1 do
+    begin
+      rdgSpecific.Cells[0, Index] := IntToStr(Index);
+    end;
+  finally
+    rdgReleaseTimes.EndUpdate;
   end;
 end;
 
@@ -342,8 +357,11 @@ end;
 procedure TframeModpathParticles.rdgReleaseTimesEndUpdate(Sender: TObject);
 begin
   seTimeCount.AsInteger := rdgReleaseTimes.RowCount -1;
-  Assert(Assigned(seTimeCount.OnChange));
-  seTimeCount.OnChange(seTimeCount);
+  if Assigned(seTimeCount.OnChange) then
+  begin
+    seTimeCount.OnChange(seTimeCount);
+  end;
+
 end;
 
 procedure TframeModpathParticles.rdgSpecificEndUpdate(Sender: TObject);

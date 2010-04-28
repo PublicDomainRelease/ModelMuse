@@ -204,12 +204,12 @@ end;
 
 constructor TProgramLocations.Create;
 begin
-  fModflow2000Location := 'C:\WRDAPP\MF2K.1_18\bin\mf2k.exe';
+  fModflow2000Location := 'C:\WRDAPP\MF2K.1_19\bin\mf2k.exe';
   fModflow2005Location := 'C:\WRDAPP\MF2005.1_8\bin\mf2005.exe';
-  fUcodeLocation := 'C:\WRDAPP\UCODE_2005_1.017\bin\ucode_2005.exe';
+  fUcodeLocation := 'C:\WRDAPP\UCODE_2005_1.019\bin\ucode_2005.exe';
   fGWChartLocation := '';
-  fResidAnalysisLocation := 'C:\WRDAPP\UCODE_2005_1.017\bin\residual_analysis.exe';
-  fResidAnalysisAdvLocation := 'C:\WRDAPP\UCODE_2005_1.017\bin\residual_analysis_adv.exe';
+  fResidAnalysisLocation := 'C:\WRDAPP\UCODE_2005_1.019\bin\residual_analysis.exe';
+  fResidAnalysisAdvLocation := 'C:\WRDAPP\UCODE_2005_1.019\bin\residual_analysis_adv.exe';
 end;
 
 //###################################################################

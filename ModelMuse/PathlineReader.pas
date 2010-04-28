@@ -1117,7 +1117,7 @@ begin
       end;
     clcTime:
       begin
-        AValue := Point.Time;
+        AValue := Abs(Point.Time);
       end;
     clcXPrime:
       begin
@@ -1259,6 +1259,7 @@ begin
         begin
           Readln(FTextFile, ParticleIndex, XPrime, YPrime, LocalZ, Z, Time, J, I, K, TS);
         end;
+//        Time := Abs(Time);
 
         CreateParticle;
       end;

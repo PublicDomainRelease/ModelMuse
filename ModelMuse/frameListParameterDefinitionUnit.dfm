@@ -76,10 +76,11 @@ object frameListParameterDefinition: TframeListParameterDefinition
     end
   end
   object dgParameters: TRbwDataGrid4
-    Left = 0
-    Top = 0
-    Width = 320
-    Height = 192
+    AlignWithMargins = True
+    Left = 3
+    Top = 3
+    Width = 314
+    Height = 186
     Align = alClient
     ColCount = 2
     Enabled = False
@@ -141,5 +142,9 @@ object frameListParameterDefinition: TframeListParameterDefinition
         WordWrapCells = False
         AutoAdjustColWidths = True
       end>
+    ExplicitLeft = 0
+    ExplicitTop = 0
+    ExplicitWidth = 320
+    ExplicitHeight = 192
   end
 end

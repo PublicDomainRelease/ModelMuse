@@ -70,6 +70,9 @@ type
 
   {@abstract(@name is used to undo or redo the import of a Shapefile)}
   TUndoImportShapefile = class(TCustomImportMultipleScreenObjects)
+  private
+    FTopDataSet: TDataArray;
+    FThreeDDataSet: TDataArray;
   protected
     FNewDataSets: TList;
     FOldProperties: TList;
@@ -462,6 +465,7 @@ type
     FFieldNumbers: TStringList;
     FNumPointsInCurrentShape: Integer;
     FInvalidParameterNames: TStringList;
+    FCombinedObjectsAllowed: Boolean;
     // @name checks for valid data in @link(dgFields).
     function CheckDataSets: boolean;
     // @name checks that AFormula is a valid formula.
@@ -561,6 +565,7 @@ type
       var ParamItem: TModflowParamItem; Boundary: TModflowParamBoundary);
     procedure AddParameterNamesToPickList(ParameterType: TParameterType;
       ParameterColumn: Integer);
+    procedure EnableJoinObjects;
     { Private declarations }
   public
     // @name returns @true if the Shapefile is selected.
@@ -702,6 +707,7 @@ end;
 procedure TfrmImportShapefile.FormCreate(Sender: TObject);
 begin
   inherited;
+  FCombinedObjectsAllowed := True;
   FFieldNumbers := TStringList.Create;
   FFieldNumbers.CaseSensitive := False;
   FFieldNumbers.Sorted := True;
@@ -720,7 +726,6 @@ begin
 
   pcImportShape.ActivePageIndex := 0;
 
-  dgFields.DefaultRowHeight := dgFields.Canvas.TextHeight('Fields')+4;
   dgFields.Cells[Ord(fgcAttributes), 0] := StrAttribute;
   dgFields.Cells[Ord(fgcImport), 0] := 'Import';
   dgFields.Cells[Ord(fgcDataSet), 0] := 'Data Set';
@@ -768,6 +773,8 @@ var
   DataArray: TDataArray;
 begin
   inherited;
+  dgFields.DefaultRowHeight := dgFields.Canvas.TextHeight('Fields')+4;
+
   rgEvaluatedAt.Items[Ord(eaBlocks)] := EvalAtToString(eaBlocks,
     frmGoPhast.PhastModel.ModelSelection, True, True);
   rgEvaluatedAt.Items[Ord(eaNodes)] := EvalAtToString(eaNodes,
@@ -788,6 +795,7 @@ begin
       if not FileExists(FGeometryFileName) then
       begin
         Beep;
+        result := False;
         MessageDlg('The ".shp" file "' + FGeometryFileName
           + '" does not exist.', mtError, [mbOK], 0);
         Exit;
@@ -800,6 +808,7 @@ begin
           + 'of the shapes in the shape file',
           mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
         begin
+          result := False;
           Exit;
         end;
         FDataBaseFileName := '';
@@ -847,6 +856,7 @@ begin
             + 'of the shapes in the shape file',
             mtConfirmation, [mbYes, mbNo], 0) <> mrYes) then
           begin
+            result := False;
             Exit;
           end;
 
@@ -976,6 +986,17 @@ begin
     begin
       Close;
     end;
+  end;
+end;
+
+procedure TfrmImportShapefile.EnableJoinObjects;
+begin
+  comboJoinObjects.Enabled := FAllowShapesToCombine
+    and cbImportObjects.Checked
+    and FCombinedObjectsAllowed;
+  if not comboJoinObjects.Enabled then
+  begin
+    comboJoinObjects.ItemIndex := 0
   end;
 end;
 
@@ -1885,6 +1906,7 @@ var
   ShouldIgnoreValues: boolean;
   IgnoreValue: double;
   AValue: Extended;
+  AnIntValue: Integer;
 begin
   ShouldIgnoreValues := rdeIgnoreValues.Text <> '';
   if ShouldIgnoreValues then
@@ -1911,6 +1933,20 @@ begin
       Item := AScreenObject.ModflowHeadObservations.Values.Add as THobItem;
       Item.Time := ATime;
       Item.Head := AValue;
+      if frmGoPhast.ShowUcodeInterface then
+      begin
+        AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[2, Index + 1]);
+        Item.Statistic := AValue;
+        AnIntValue := GetIntegerValueFromText(rdgBoundaryConditions.Cells[3, Index + 1]);
+        if (AnIntValue < 0) or (AnIntValue > Ord(High(TStatFlag))) then
+        begin
+          Item.StatFlag := stVariance;
+        end
+        else
+        begin
+          Item.StatFlag := TStatFlag(AnIntValue);
+        end;
+      end;
     end;
   end;
   AScreenObject.ModflowHeadObservations.ObservationName :=
@@ -2263,16 +2299,37 @@ begin
   plBoundary.ActivePage := jvspModflowHOB;
   comboHeadObservationNames.Items := FStringFieldNames;
   rdgBoundaryConditions.Enabled := True;
-  rdgBoundaryConditions.ColCount := 2;
+  if frmGoPhast.ShowUcodeInterface then
+  begin
+    rdgBoundaryConditions.ColCount := 4;
+  end
+  else
+  begin
+    rdgBoundaryConditions.ColCount := 2;
+  end;
   AssignColFeatureProperties;
   rdgBoundaryConditions.Columns[0].ComboUsed := True;
-  rdgBoundaryConditions.Columns[1].ComboUsed := True;
   rdgBoundaryConditions.Columns[0].Format := rcf4String;
-  rdgBoundaryConditions.Columns[1].Format := rcf4String;
   rdgBoundaryConditions.Columns[0].PickList := FRealFieldNames;
+  rdgBoundaryConditions.Columns[1].ComboUsed := True;
+  rdgBoundaryConditions.Columns[1].Format := rcf4String;
   rdgBoundaryConditions.Columns[1].PickList := FRealFieldNames;
+  if frmGoPhast.ShowUcodeInterface then
+  begin
+    rdgBoundaryConditions.Columns[2].ComboUsed := True;
+    rdgBoundaryConditions.Columns[2].Format := rcf4String;
+    rdgBoundaryConditions.Columns[2].PickList := FRealFieldNames;
+    rdgBoundaryConditions.Columns[3].ComboUsed := True;
+    rdgBoundaryConditions.Columns[3].Format := rcf4String;
+    rdgBoundaryConditions.Columns[3].PickList := FIntegerFieldNames;
+  end;
   rdgBoundaryConditions.Cells[0, 0] := 'Time';
   rdgBoundaryConditions.Cells[1, 0] := 'Observed head';
+  if frmGoPhast.ShowUcodeInterface then
+  begin
+    rdgBoundaryConditions.Cells[2, 0] := 'Statistic';
+    rdgBoundaryConditions.Cells[3, 0] := 'Stat Flag';
+  end;
 end;
 
 procedure TfrmImportShapefile.ImportModflowResPackage(
@@ -4874,7 +4931,7 @@ begin
                               StringFormula := xbShapeDataBase.GetFieldStr(
                                 RealFieldNames[DataSetIndex]);
                               StringFormula := StringReplace(StringFormula, '"', '''', [rfReplaceAll]);
-                              StringVariable.Value := StringFormula;
+                              StringVariable.Value := Trim(StringFormula);
                               if DataSet <> nil then
                               begin
                                 if CombinedObjects then
@@ -5295,6 +5352,7 @@ end;
 
 procedure TfrmImportShapefile.btnOKClick(Sender: TObject);
 begin
+//  OutputDebugString('SAMPLING ON');
   inherited;
   edImportCriterionExit(nil);
   if not btnOk.Enabled then
@@ -5340,6 +5398,7 @@ begin
   // may display a dialog box.  If ModalResult is already set, the
   // application will hang.
   ModalResult := mrOK;
+//  OutputDebugString('SAMPLING OFF');
 end;
 
 procedure TfrmImportShapefile.GetInterpolators(const ARow: integer);
@@ -5450,12 +5509,15 @@ begin
   inherited;
   edZ.Enabled := rgElevationCount.ItemIndex = 1;
   btnZ.Enabled := edZ.Enabled;
+  lblZ.Enabled := edZ.Enabled;
 
   edHighZ.Enabled := rgElevationCount.ItemIndex = 2;
   btnHighZ.Enabled := edHighZ.Enabled;
+  lblHighZ.Enabled := edHighZ.Enabled;
 
   edLowZ.Enabled := rgElevationCount.ItemIndex = 2;
   btnLowZ.Enabled := edLowZ.Enabled;
+  lblLowZ.Enabled := edLowZ.Enabled;
 end;
 
 procedure TfrmImportShapefile.rgEvaluatedAtClick(Sender: TObject);
@@ -5556,6 +5618,8 @@ begin
   FNewDataSets := TList.Create;
   FOldProperties := TList.Create;
   FNewProperties := TList.Create;
+  FTopDataSet := nil;
+  FThreeDDataSet := nil;
 end;
 
 function TUndoImportShapefile.Description: string;
@@ -5589,6 +5653,14 @@ begin
         frmGoPhast.PhastModel.AddDataSet(DataSet);
       end;
       frmGoPhast.DeletedDataSets.Extract(DataSet);
+      if FTopDataSet = DataSet then
+      begin
+        frmGoPhast.PhastModel.Grid.TopDataSet := DataSet;
+      end;
+      if FThreeDDataSet = DataSet then
+      begin
+        frmGoPhast.PhastModel.Grid.ThreeDDataSet := FThreeDDataSet;
+      end;
     end;
 
     SetLength(ShouldInvalidate, FNewProperties.Count);
@@ -5629,9 +5701,21 @@ begin
   frmGoPhast.CanDraw := False;
   try
     DeleteNewScreenObjects;
+    FTopDataSet := nil;
+    FThreeDDataSet := nil;
     for Index := 0 to FNewDataSets.Count - 1 do
     begin
       DataSet := FNewDataSets[Index];
+      if frmGoPhast.PhastModel.Grid.TopDataSet = DataSet then
+      begin
+        FTopDataSet := DataSet;
+        frmGoPhast.PhastModel.Grid.TopDataSet := nil;
+      end;
+      if frmGoPhast.PhastModel.Grid.ThreeDDataSet = DataSet then
+      begin
+        FThreeDDataSet := DataSet;
+        frmGoPhast.PhastModel.Grid.ThreeDDataSet := nil;
+      end;
       frmGoPhast.PhastModel.ExtractDataSet(DataSet);
     end;
     SetLength(ShouldInvalidate, FOldProperties.Count);
@@ -5988,6 +6072,7 @@ var
   Packages: TModflowPackages;
 begin
   inherited;
+  FCombinedObjectsAllowed := True;
   Model := frmGoPhast.PhastModel;
   rdgBoundaryConditions.Enabled := comboBoundaryChoice.ItemIndex <> 0;
   seBoundaryTimeCount.Enabled := comboBoundaryChoice.ItemIndex <> 0;
@@ -6036,12 +6121,14 @@ begin
               plBoundary.ActivePage := jvspPhastRiver;
               rdgBoundaryConditions.Cells[1,0] := 'Head';
               rdgBoundaryConditions.Cells[2,0] := 'Solution';
+              FCombinedObjectsAllowed := False;
             end;
           5: //Well
             begin
               plBoundary.ActivePage := jvspPhastWell;
               rdgBoundaryConditions.Cells[1,0] := 'Pumping Range;';
               rdgBoundaryConditions.Cells[2,0] := 'Solution';
+              FCombinedObjectsAllowed := False;
             end;
           else
             begin
@@ -6097,10 +6184,12 @@ begin
         else if APackage = Packages.HobPackage then
         begin
           InitializeBoundaryControlsForHOB;
+          FCombinedObjectsAllowed := False;
         end
         else if APackage = Packages.SfrPackage then
         begin
           InitializeBoundaryControlsForSFR;
+          FCombinedObjectsAllowed := False;
         end
         else if APackage = Packages.LakPackage then
         begin
@@ -6116,7 +6205,8 @@ begin
         end
         else if APackage = Packages.Mnw2Package then
         begin
-          InitializeBoundaryControlsForMnw2
+          InitializeBoundaryControlsForMnw2;
+          FCombinedObjectsAllowed := False;
         end;
       end;
     else
@@ -6124,6 +6214,7 @@ begin
         Assert(False);
       end;
   end;
+  EnableJoinObjects;
 end;
 
 procedure TfrmImportShapefile.comboDrainReturnLocationMethodChange(
@@ -6628,8 +6719,7 @@ begin
   EnableEvalAt;
   edImportCriterion.Enabled := cbImportObjects.Checked;
   btnImportCriterion.Enabled := cbImportObjects.Checked;
-  comboJoinObjects.Enabled := FAllowShapesToCombine
-    and cbImportObjects.Checked;
+  EnableJoinObjects;
   comboVisibility.Enabled := cbImportObjects.Checked;
   EnableOK;
 end;

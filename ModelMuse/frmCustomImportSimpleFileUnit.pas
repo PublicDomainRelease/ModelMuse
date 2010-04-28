@@ -82,7 +82,7 @@ type
     procedure MakeNewDataSet(NewDataSets: TList; Suffix, Classification: string);
     { Set the captions of @link(cbEnclosedCells), @link(cbIntersectedCells),
       and @link(cbInterpolation) based on @link(rgEvaluatedAt).ItemIndex.}
-    procedure SetCheckBoxCaptions;
+    procedure SetCheckBoxCaptions; virtual;
     { Protected declarations }
   public
     { Public declarations }
@@ -202,7 +202,7 @@ var
   NodeElemString: string;
 begin
   NodeElemString := EvalAtToString(TEvaluatedAt(rgEvaluatedAt.ItemIndex),
-       frmGoPhast.ModelSelection, True, False);
+    frmGoPhast.ModelSelection, True, False);
   cbEnclosedCells.Caption := rsSetValueOfEnclosed + NodeElemString;
   cbIntersectedCells.Caption := rsSetValueOfIntersected + NodeElemString;
   cbInterpolation.Caption := rsSetValueOf + NodeElemString + rsByInterpolation;

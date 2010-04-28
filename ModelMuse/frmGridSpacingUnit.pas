@@ -378,6 +378,18 @@ begin
   dgColumns.ColWidths[0] := 60;
   dgRows.ColWidths[0] := 60;
   dgLayers.ColWidths[0] := 60;
+  case frmGoPhast.PhastModel.ModelSelection of
+    msPhast:
+      begin
+        // do nothing
+      end;
+    msModflow:
+      begin
+        rdeSpacingRows.Text := '-100';
+      end;
+    else
+      Assert(False);
+  end;
 
   GetData;
 end;

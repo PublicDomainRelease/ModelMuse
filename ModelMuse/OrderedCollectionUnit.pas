@@ -228,10 +228,6 @@ type
     FParameterType: TParameterType;
     // See @link(Value).
     FValue: double;
-    // See @link(ParameterType).
-    procedure SetParameterType(const Value: TParameterType);
-    // See @link(Value).
-    procedure SetValue(Value : double);
     procedure NotifyHufKx;
     procedure NotifyHufKy;
     procedure NotifyHufKz;
@@ -240,9 +236,13 @@ type
   protected
     // See @link(ParameterName).
     FParameterName: string;
+    // See @link(ParameterType).
+    procedure SetParameterType(const Value: TParameterType); virtual;
     // See @link(ParameterName).
     function CorrectParamName(const Value: string): string;
     procedure SetParameterName(const Value: string); virtual; abstract;
+    // See @link(Value).
+    procedure SetValue(Value : double); virtual;
   public
     procedure NotifyParamChange(const Value: TParameterType);
     // @name copies @link(ParameterName), @link(ParameterType), @link(Value)
@@ -274,7 +274,7 @@ function ParmeterTypeToStr(ParmType: TParameterType): string;
 implementation
 
 uses ModflowParameterUnit, LayerStructureUnit, PhastModelUnit, ScreenObjectUnit,
-  ModflowBoundaryUnit;
+  ModflowBoundaryUnit, ModflowTransientListParameterUnit;
 
 function ParmeterTypeToStr(ParmType: TParameterType): string;
 begin
@@ -734,6 +734,26 @@ begin
         PhastModel := Model as TPhastModel;
         PhastModel.HufSyNotifier.UpToDate := False;
         PhastModel.HufSyNotifier.UpToDate := True;
+      end;
+      if ParameterType = ptRCH then
+      begin
+        PhastModel := Model as TPhastModel;
+        PhastModel.InvalidateMfRchRate(nil);
+      end;
+      if ParameterType = ptEVT then
+      begin
+        PhastModel := Model as TPhastModel;
+        PhastModel.InvalidateMfEvtEvapRate(nil);
+      end;
+      if ParameterType = ptETS then
+      begin
+        PhastModel := Model as TPhastModel;
+        PhastModel.InvalidateMfEtsEvapRate(nil);
+      end;
+      if ParameterType = ptETS then
+      begin
+        PhastModel := Model as TPhastModel;
+        PhastModel.InvalidateMfEtsEvapRate(nil);
       end;
     end;
     if (ParameterType = ptHFB) then

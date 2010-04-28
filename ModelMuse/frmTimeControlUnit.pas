@@ -244,6 +244,10 @@ end;
 
 procedure TfrmTimeControl.LayoutMultiRowEditControl;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   LayoutControls(dgTime, rdeLength, nil, Ord(tcStepSize));
 end;
 

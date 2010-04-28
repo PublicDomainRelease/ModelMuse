@@ -2,6 +2,11 @@ unit frmMonitorUnit;
 
 interface
 
+{
+  1.0.2.0 Fixed bug that caused ModelMonitor to work improperly when the
+    decimal separator was not a period in the local language settings.
+}
+
 uses
   Types, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, JvExExtCtrls, JvImage, ImgList, JvImageList,
@@ -572,67 +577,76 @@ procedure TfrmMonitor.HandleMonitorFileLine(ALine: string);
 var
   Position: integer;
   SelStart: Integer;
+  OldDecimalSeparator: Char;
+  OldThousandSeparator: Char;
 begin
   if (FOutFile = '') then
   begin
     Exit;
   end;
-  reMonitor.Lines.Add(ALine);
-  Position := Pos(StrNormalTermination, ALine);
-  if Position > 0 then
-  begin
-    FindStart(reMonitor, Position, SelStart);
-    reMonitor.SetSelection(SelStart,
-      SelStart + Length(StrNormalTermination), True);
-    reMonitor.SelAttributes.BackColor := clGreen;
-    reMonitor.SelAttributes.Color := clWhite;
-    reMonitor.SetSelection(SelStart, SelStart, True);
-  end
-  else
-  begin
-    Position := Pos(StrFIRSTENTRYINNAME, ALine);
+  OldDecimalSeparator := DecimalSeparator;
+  OldThousandSeparator := ThousandSeparator;
+  try
+    DecimalSeparator := '.';
+    ThousandSeparator := ',';
+    reMonitor.Lines.Add(ALine);
+    Position := Pos(StrNormalTermination, ALine);
     if Position > 0 then
     begin
       FindStart(reMonitor, Position, SelStart);
       reMonitor.SetSelection(SelStart,
-        SelStart + Length(StrFIRSTENTRYINNAME), True);
-      reMonitor.SelAttributes.BackColor := clRed;
+        SelStart + Length(StrNormalTermination), True);
+      reMonitor.SelAttributes.BackColor := clGreen;
       reMonitor.SelAttributes.Color := clWhite;
       reMonitor.SetSelection(SelStart, SelStart, True);
-      jimageStatus.Tag := 2;
-      tabMonitor.ImageIndex := 2;
-      jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
-    end;
-
-    Position := Pos(StrFailureToConverge, ALine);
-    if Position > 0 then
+    end
+    else
     begin
-      FindStart(reMonitor, Position, SelStart);
-      reMonitor.SetSelection(SelStart,
-        SelStart + Length(StrFailureToConverge), True);
-      reMonitor.SelAttributes.BackColor := clRed;
-      reMonitor.SelAttributes.Color := clWhite;
-      reMonitor.SetSelection(SelStart, SelStart, True);
-      jimageStatus.Tag := 0;
-      tabMonitor.ImageIndex := 2;
-      jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
+      Position := Pos(StrFIRSTENTRYINNAME, ALine);
+      if Position > 0 then
+      begin
+        FindStart(reMonitor, Position, SelStart);
+        reMonitor.SetSelection(SelStart,
+          SelStart + Length(StrFIRSTENTRYINNAME), True);
+        reMonitor.SelAttributes.BackColor := clRed;
+        reMonitor.SelAttributes.Color := clWhite;
+        reMonitor.SetSelection(SelStart, SelStart, True);
+        jimageStatus.Tag := 2;
+        tabMonitor.ImageIndex := 2;
+        jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
+      end;
+
+      Position := Pos(StrFailureToConverge, ALine);
+      if Position > 0 then
+      begin
+        FindStart(reMonitor, Position, SelStart);
+        reMonitor.SetSelection(SelStart,
+          SelStart + Length(StrFailureToConverge), True);
+        reMonitor.SelAttributes.BackColor := clRed;
+        reMonitor.SelAttributes.Color := clWhite;
+        reMonitor.SetSelection(SelStart, SelStart, True);
+        jimageStatus.Tag := 0;
+        tabMonitor.ImageIndex := 2;
+        jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
+      end;
+
+      Position := Pos(StrFAILEDTOMEETSOLVE, ALine);
+      if Position > 0 then
+      begin
+        FindStart(reMonitor, Position, SelStart);
+        reMonitor.SetSelection(SelStart,
+          SelStart + Length(StrFAILEDTOMEETSOLVE), True);
+        reMonitor.SelAttributes.BackColor := clRed;
+        reMonitor.SelAttributes.Color := clWhite;
+        reMonitor.SetSelection(SelStart, SelStart, True);
+        jimageStatus.Tag := 0;
+        tabMonitor.ImageIndex := 2;
+        jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
+      end;
     end;
-
-    Position := Pos(StrFAILEDTOMEETSOLVE, ALine);
-    if Position > 0 then
-    begin
-      FindStart(reMonitor, Position, SelStart);
-      reMonitor.SetSelection(SelStart,
-        SelStart + Length(StrFAILEDTOMEETSOLVE), True);
-      reMonitor.SelAttributes.BackColor := clRed;
-      reMonitor.SelAttributes.Color := clWhite;
-      reMonitor.SetSelection(SelStart, SelStart, True);
-      jimageStatus.Tag := 0;
-      tabMonitor.ImageIndex := 2;
-      jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
-    end;
-
-
+  finally
+    DecimalSeparator := OldDecimalSeparator;
+    ThousandSeparator := OldThousandSeparator;
   end;
 end;
 
@@ -708,22 +722,34 @@ procedure TfrmMonitor.HandleListFileLine(ALine: string);
 var
   IsError: boolean;
   IsWarning: Boolean;
+  OldDecimalSeparator: Char;
+  OldThousandSeparator: Char;
 begin
-  Inc(FLineCount);
-  if (FListingFile = '') then
-  begin
-    Exit;
-  end;
-  StorePercentDiscrepancy(ALine);
+  OldDecimalSeparator := DecimalSeparator;
+  OldThousandSeparator := ThousandSeparator;
+  try
+    DecimalSeparator := '.';
+    ThousandSeparator := ',';
 
-  ALine := IntToStr(FLineCount) + ': ' + ALine;
-  IndentifyProblem(ALine, IsError, 2, FErrorPositions, ErrorValues);
-  IndentifyProblem(ALine, IsWarning, 1, FWarningPositions, WarningValues);
-  if IsError or IsWarning then
-  begin
-    reListing.Lines.Add(ALine);
-    HandleProblem(IsWarning, clYellow, FWarningPositions, WarningValues);
-    HandleProblem(IsError, clRed, FErrorPositions, ErrorValues);
+    Inc(FLineCount);
+    if (FListingFile = '') then
+    begin
+      Exit;
+    end;
+    StorePercentDiscrepancy(ALine);
+
+    ALine := IntToStr(FLineCount) + ': ' + ALine;
+    IndentifyProblem(ALine, IsError, 2, FErrorPositions, ErrorValues);
+    IndentifyProblem(ALine, IsWarning, 1, FWarningPositions, WarningValues);
+    if IsError or IsWarning then
+    begin
+      reListing.Lines.Add(ALine);
+      HandleProblem(IsWarning, clYellow, FWarningPositions, WarningValues);
+      HandleProblem(IsError, clRed, FErrorPositions, ErrorValues);
+    end;
+  finally
+    DecimalSeparator := OldDecimalSeparator;
+    ThousandSeparator := OldThousandSeparator;
   end;
 end;
 

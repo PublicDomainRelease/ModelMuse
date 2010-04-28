@@ -2,7 +2,6 @@ inherited frmContourData: TfrmContourData
   HelpType = htKeyword
   HelpKeyword = 'Contour_Data_Dialog_Box'
   Caption = 'Contour Data'
-  ExplicitTop = 8
   DesignSize = (
     606
     417)
@@ -39,15 +38,32 @@ inherited frmContourData: TfrmContourData
     OnClick = btnEditContoursClick
   end
   inherited pcChoices: TPageControl
+    ActivePage = tabSelection
     TabOrder = 2
     inherited tabSelection: TTabSheet
       ExplicitLeft = 4
       ExplicitTop = 29
       ExplicitWidth = 598
       ExplicitHeight = 335
+      inherited lblDataSet: TLabel
+        Margins.Bottom = 0
+      end
+      inherited lblColorScheme: TLabel
+        Margins.Bottom = 0
+      end
+      inherited lblCycles: TLabel
+        Margins.Bottom = 0
+      end
+      inherited lblColorAdjustment: TLabel
+        Margins.Bottom = 0
+      end
+      inherited lblComment: TLabel
+        Margins.Bottom = 0
+      end
       inherited virttreecomboDataSets: TTntExDropDownVirtualStringTree
         Top = 29
         Width = 337
+        Anchors = [akLeft, akTop, akRight]
         Tree.OnGetNodeDataSize = virttreecomboDataSetsDropDownTreeGetNodeDataSize
         PanelWidth = 337
         ExplicitTop = 29
@@ -56,6 +72,7 @@ inherited frmContourData: TfrmContourData
       inherited udDataSets: TJvUpDown
         Left = 351
         Top = 27
+        Anchors = [akTop, akRight]
         ExplicitLeft = 351
         ExplicitTop = 27
       end
@@ -69,11 +86,22 @@ inherited frmContourData: TfrmContourData
       ExplicitWidth = 598
       ExplicitHeight = 335
       inherited lblLowerLimit: TLabel
+        Margins.Bottom = 0
         Anchors = [akLeft, akTop, akBottom]
+      end
+      inherited lblUpperLimit: TLabel
+        Margins.Bottom = 0
       end
       inherited lblValuesToIgnore: TLabel
         Top = 56
+        Margins.Bottom = 0
         ExplicitTop = 56
+      end
+      inherited lblNumberOfValuesToIgnore: TLabel
+        Margins.Bottom = 0
+      end
+      inherited lblEpsilon: TLabel
+        Margins.Bottom = 0
       end
       inherited cbActiveOnly: TCheckBox
         Left = 498
@@ -91,6 +119,9 @@ inherited frmContourData: TfrmContourData
     end
   end
   inherited Panel1: TPanel
+    inherited btnHelp: TBitBtn
+      OnClick = btnHelpClick
+    end
     inherited btnOK: TBitBtn
       OnClick = btnOKClick
     end

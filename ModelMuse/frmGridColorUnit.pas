@@ -65,7 +65,6 @@ type
     procedure StoreBoundaryDataSetsInLists;
     procedure StoreTimelistsInLists;
     procedure HandleSelectedObject(AnObject: TObject);
-
   protected
     function GetSelectedArray: TDataArray; override;
     { Private declarations }
@@ -144,6 +143,11 @@ begin
   VirtNoneNode := virttreecomboDataSets.Tree.AddChild(nil);
   virttreecomboDataSets.Tree.Selected[VirtNoneNode] := True;
 
+  if csDestroying in frmGoPhast.PhastModel.ComponentState then
+  begin
+    Exit;
+  end;
+
   GetDataSets;
   GetBoundaryConditions;
   UpdateTopFrontAndSideItems;
@@ -182,6 +186,7 @@ var
   TimeListIndex: Integer;
   ADataArray: TDataArray;
 begin
+  frmGoPhast.CanDraw := False;
   Screen.Cursor := crHourGlass;
   try
     Application.ProcessMessages;
@@ -342,6 +347,7 @@ begin
 
   finally
     Screen.Cursor := crDefault;
+    frmGoPhast.CanDraw := True;
   end;
 end;
 
@@ -519,7 +525,6 @@ procedure TfrmGridColor.virttreecomboDataSetsDropDownTreeChange(
 begin
   inherited;
   SetSelectedNode(Sender, Node);
-
 end;
 
 procedure TfrmGridColor.virttreecomboDataSetsDropDownTreeGetNodeDataSize(

@@ -521,6 +521,10 @@ begin
   tvFormulaDiagram.Items.Clear;
   FDiagramObjectStorage.Clear;
   AFormula := Formula;
+  if AFormula = '' then
+  begin
+    Exit;
+  end;
   try
     if rbFormulaParser.Compile(AFormula) >= 0 then
     begin

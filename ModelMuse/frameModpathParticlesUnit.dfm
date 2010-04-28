@@ -14,10 +14,7 @@ object frameModpathParticles: TframeModpathParticles
     Caption = 'Initial particle placement'
     TabOrder = 0
     Checkable = True
-    Checked = True
     PropagateEnable = True
-    ExplicitLeft = -3
-    ExplicitTop = -3
     DesignSize = (
       545
       274)

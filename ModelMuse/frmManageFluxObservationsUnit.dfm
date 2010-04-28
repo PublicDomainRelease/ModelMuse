@@ -13,7 +13,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
   OnActivate = ListClick
   OnDestroy = FormDestroy
   OnResize = FormResize
-  ExplicitTop = -48
   ExplicitWidth = 691
   ExplicitHeight = 425
   PixelsPerInch = 96
@@ -112,10 +111,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObservationsTimes: TTabSheet
         Caption = 'Observations times and values'
         OnResize = tabObservationsTimesResize
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           544
           252)
@@ -257,11 +252,11 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
               MaxLength = 0
               ParentButtonFont = False
               PickList.Strings = (
-                'Variance'
-                'Standard dev.'
-                'Coef. of var.'
-                'Weight'
-                'Sq. rt. of weight')
+                'Variance (0)'
+                'Standard dev. (1)'
+                'Coef. of var. (2)'
+                'Weight (3)'
+                'Sq. rt. of weight (4)')
               WordWrapCaptions = False
               WordWrapCells = False
               AutoAdjustColWidths = True
@@ -331,7 +326,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
           Top = 3
           Width = 61
           Height = 22
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 4
           Text = '0'
           OnChange = rdeMultiValueEditChange
@@ -384,10 +379,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObjects: TTabSheet
         Caption = 'Objects'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           544
           252)

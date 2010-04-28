@@ -225,9 +225,13 @@ type
     property CellLists[Index: integer]: TObsCellList read GetCellList; default;
   end;
 
+resourcestring
+  StrHeadObservationsError = 'Head observations can only be defined using ' +
+    'objects with a single vertex.  The following objects need to be fixed.';
+
 implementation
 
-uses RbwParser, ScreenObjectUnit, PhastModelUnit, ModflowGridUnit, FastGEO, 
+uses RbwParser, ScreenObjectUnit, PhastModelUnit, ModflowGridUnit, FastGEO,
   SubscriptionUnit, RealListUnit, frmErrorsAndWarningsUnit;
 
 { THob_Cell }
@@ -574,22 +578,6 @@ var
   CellList: TObsCellList;
   Cell : THob_Cell;
 begin
-//  Row := Grid.GetContainingRow(ObservationPoint.y);
-//  Column := Grid.GetContainingColumn(ObservationPoint.x);
-//  if (Row < 0) or (Column < 0) or (Row >= Grid.RowCount)
-//    or (Column >= Grid.ColumnCount) then
-//  begin
-//    Exit;
-//  end;
-//
-//  Width := Grid.RowWidth[Row];
-//  Center := Grid.RowCenter(Row);
-//  FObservationRowOffset := -(ObservationPoint.y - Center)/Width;
-//
-//  Width := Grid.ColumnWidth[Column];
-//  Center := Grid.ColumnCenter(Column);
-//  FObservationColumnOffset := (ObservationPoint.x - Center)/Width;
-
   FObservationHeads.Initialize(self, ScreenObject);
 
   if FObservationHeads.FCellList.Count > 0 then
@@ -604,21 +592,31 @@ begin
       LocalModel := Model as TPhastModel;
       Grid := LocalModel.ModflowGrid;
       Assert(Grid <> nil);
-      Assert(LocalScreenObject.Count = 1);
-      ObservationPoint := Grid.RotateFromRealWorldCoordinatesToGridCoordinates(
-        LocalScreenObject.Points[0]);
 
-      Cell := CellList[0];
-      Row := Cell.Row;
-      Column := Cell.Column;
+      if LocalScreenObject.Count > 1 then
+      begin
+        FObservationRowOffset := -1000;
+        FObservationColumnOffset := -1000;
+        frmErrorsAndWarnings.AddError(StrHeadObservationsError, LocalScreenObject.Name)
+      end
+      else
+      begin
+        Assert(LocalScreenObject.Count = 1);
+        ObservationPoint := Grid.RotateFromRealWorldCoordinatesToGridCoordinates(
+          LocalScreenObject.Points[0]);
 
-      Width := Grid.RowWidth[Row];
-      Center := Grid.RowCenter(Row);
-      FObservationRowOffset := -(ObservationPoint.y - Center)/Width;
+        Cell := CellList[0];
+        Row := Cell.Row;
+        Column := Cell.Column;
 
-      Width := Grid.ColumnWidth[Column];
-      Center := Grid.ColumnCenter(Column);
-      FObservationColumnOffset := (ObservationPoint.x - Center)/Width;
+        Width := Grid.RowWidth[Row];
+        Center := Grid.RowCenter(Row);
+        FObservationRowOffset := -(ObservationPoint.y - Center)/Width;
+
+        Width := Grid.ColumnWidth[Column];
+        Center := Grid.ColumnCenter(Column);
+        FObservationColumnOffset := (ObservationPoint.x - Center)/Width;
+      end;
     end;
   end;
 end;

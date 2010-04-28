@@ -5,7 +5,6 @@ inherited frmExportShapefile: TfrmExportShapefile
   ClientHeight = 470
   ClientWidth = 456
   OnDestroy = FormDestroy
-  ExplicitTop = -90
   ExplicitWidth = 464
   ExplicitHeight = 504
   PixelsPerInch = 96
@@ -236,7 +235,7 @@ inherited frmExportShapefile: TfrmExportShapefile
   end
   object btnHelp: TBitBtn
     Left = 190
-    Top = 429
+    Top = 428
     Width = 82
     Height = 34
     Anchors = [akTop, akRight]

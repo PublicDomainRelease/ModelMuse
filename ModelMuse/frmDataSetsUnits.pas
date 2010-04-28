@@ -317,7 +317,7 @@ Type
     procedure DeleteVariable(const DataEdit: TDataArrayEdit);
     // @name allows the user to click the OK button (@link(btnOK))
     // only if all the formulas are valid.
-    procedure EnableOK_Button;
+    procedure EnableOK_Button(ForceCheck: boolean = False);
     { TODO :
 See if TfrmDataSets.GenerateNewName can be combined with
 DataSetUnit.GenerateNewName. }
@@ -616,6 +616,8 @@ var
   Temp: TDataArrayEdit;
   Node: TTreeNode;
   SelectionIndex: Integer;
+  Index: Integer;
+  DataArrayEdit: TDataArrayEdit;
 begin
   inherited;
   // This procedure deletes a data set.
@@ -642,7 +644,6 @@ begin
     FSelectedEdit := nil;
     FArrayEdits.Remove(Temp);
     tvDataSets.Items.Delete(Node);
-    EnableOK_Button;
   end
   else if tvDataSets.SelectionCount > 1 then
   begin
@@ -677,6 +678,12 @@ begin
       end;
     end;
   end;
+  for Index := 0 to FArrayEdits.Count - 1 do
+  begin
+    DataArrayEdit := FArrayEdits[Index];
+    ValidateFormula(DataArrayEdit, DataArrayEdit.Formula);
+  end;
+  EnableOK_Button(True);
 end;
 
 procedure TfrmDataSets.btnEditFormulaClick(Sender: TObject);
@@ -1817,7 +1824,7 @@ begin
   SelectedEdit.Units := edUnits.Text;
 end;
 
-procedure TfrmDataSets.EnableOK_Button;
+procedure TfrmDataSets.EnableOK_Button(ForceCheck: boolean = False);
 var
   Index: integer;
   Enable: boolean;
@@ -1825,10 +1832,10 @@ var
 begin
   // allow the user to click the OK button only if all the formulas
   // are valid.
-  if ComponentState = [] then
+  if ForceCheck or (ComponentState = []) then
   begin
     Enable := True;
-    for Index := 0 to FArrayEdits.Count do
+    for Index := 0 to FArrayEdits.Count-1 do
     begin
       DataEdit := FArrayEdits[Index];
       if DataEdit.Expression = nil then

@@ -1789,6 +1789,10 @@ var
   ColIndex: Integer;
   Rect: TRect;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   LayoutControls(rdgTimeTable, comboQCUT, lblQCUT, Ord(mtcLimitMethod));
 
   for ColIndex := Ord(mtcPumpingRate) to Ord(mtcMaxRate) do
@@ -1812,6 +1816,10 @@ var
   ColIndex: Integer;
   Rect: TRect;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   for ColIndex := Ord(vsRw) to Ord(vsCWC) do
   begin
     Rect := rdgVerticalScreens.CellRect(ColIndex, 0);

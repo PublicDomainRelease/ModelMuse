@@ -10,7 +10,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
   ExplicitWidth = 626
   ExplicitHeight = 560
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
     Top = 453
@@ -254,7 +254,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 17
+      ItemHeight = 0
       TabOrder = 0
       Text = '0'
       OnChange = rdeTimeChange
@@ -267,7 +267,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Left = 198
       Top = 8
       Width = 73
-      Height = 27
+      Height = 28
       Style = csOwnerDrawVariable
       ButtonStyle = fsLighter
       Color = clBtnFace
@@ -275,7 +275,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Enabled = False
       ImageHeight = 0
       ImageWidth = 0
-      ItemHeight = 21
+      ItemHeight = 22
       ItemIndex = 0
       TabOrder = 1
       OnChange = comboUnitsChange

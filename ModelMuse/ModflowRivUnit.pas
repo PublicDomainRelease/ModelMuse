@@ -196,6 +196,7 @@ type
     // See @link(TModflowParamBoundary.ModflowParamItemClass
     // TModflowParamBoundary.ModflowParamItemClass).
     class function ModflowParamItemClass: TModflowParamItemClass; override;
+    function ParameterType: TParameterType; override;
   public
     // @name fills ValueTimeList via a call to AssignCells for each
     // link  @link(TRivStorage) in
@@ -798,22 +799,31 @@ begin
     begin
       if PriorTime < Item.StartTime then
       begin
-        BoundaryStorage := Values.Boundaries[ValueCount] as TRivStorage;
-        AssignCells(BoundaryStorage, ValueTimeList);
-        Inc(ValueCount);
+        if ValueCount < Values.BoundaryCount then
+        begin
+          BoundaryStorage := Values.Boundaries[ValueCount] as TRivStorage;
+          AssignCells(BoundaryStorage, ValueTimeList);
+          Inc(ValueCount);
+        end;
       end;
       PriorTime := Item.EndTime;
     end;
-    BoundaryStorage := Values.Boundaries[ValueCount] as TRivStorage;
-    AssignCells(BoundaryStorage, ValueTimeList);
-    Inc(ValueCount);
+    if ValueCount < Values.BoundaryCount then
+    begin
+      BoundaryStorage := Values.Boundaries[ValueCount] as TRivStorage;
+      AssignCells(BoundaryStorage, ValueTimeList);
+      Inc(ValueCount);
+    end;
     if (ValueIndex = Values.Count - 1) and ObservationsPresent then
     begin
       if Item.EndTime < EndOfLastStressPeriod then
       begin
-        BoundaryStorage := Values.Boundaries[ValueCount] as TRivStorage;
-        AssignCells(BoundaryStorage, ValueTimeList);
-        Inc(ValueCount);
+        if ValueCount < Values.BoundaryCount then
+        begin
+          BoundaryStorage := Values.Boundaries[ValueCount] as TRivStorage;
+          AssignCells(BoundaryStorage, ValueTimeList);
+          Inc(ValueCount);
+        end;
       end;
     end;
   end;
@@ -840,22 +850,31 @@ begin
       begin
         if PriorTime < Item.StartTime then
         begin
-          BoundaryStorage := Param.Param.Boundaries[ValueCount] as TRivStorage;
-          AssignCells(BoundaryStorage, Times);
-          Inc(ValueCount);
+          if ValueCount < Param.Param.BoundaryCount then
+          begin
+            BoundaryStorage := Param.Param.Boundaries[ValueCount] as TRivStorage;
+            AssignCells(BoundaryStorage, Times);
+            Inc(ValueCount);
+          end;
         end;
         PriorTime := Item.EndTime;
       end;
-      BoundaryStorage := Param.Param.Boundaries[ValueCount] as TRivStorage;
-      AssignCells(BoundaryStorage, Times);
-      Inc(ValueCount);
-      if (ValueIndex = Param.Param.Count - 1) and ObservationsPresent then
+      if ValueCount < Param.Param.BoundaryCount then
+      begin
+        BoundaryStorage := Param.Param.Boundaries[ValueCount] as TRivStorage;
+        AssignCells(BoundaryStorage, Times);
+        Inc(ValueCount);
+      end;
+      if {(ValueIndex = Param.Param.Count - 1) and} ObservationsPresent then
       begin
         if Item.EndTime < EndOfLastStressPeriod then
         begin
-          BoundaryStorage := Param.Param.Boundaries[ValueCount] as TRivStorage;
-          AssignCells(BoundaryStorage, Times);
-          Inc(ValueCount);
+          if ValueCount < Param.Param.BoundaryCount then
+          begin
+            BoundaryStorage := Param.Param.Boundaries[ValueCount] as TRivStorage;
+            AssignCells(BoundaryStorage, Times);
+            Inc(ValueCount);
+          end;
         end;
       end;
     end;
@@ -879,6 +898,11 @@ end;
 class function TRivBoundary.ModflowParamItemClass: TModflowParamItemClass;
 begin
   result := TRivParamItem;
+end;
+
+function TRivBoundary.ParameterType: TParameterType;
+begin
+  result := ptRIV;
 end;
 
 procedure TRivBoundary.TestIfObservationsPresent(var EndOfLastStressPeriod,

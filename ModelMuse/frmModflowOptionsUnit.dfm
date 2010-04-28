@@ -280,12 +280,13 @@ inherited frmModflowOptions: TfrmModflowOptions
       end
       object lblWettingDataSets: TLabel
         Left = 245
-        Top = 12
-        Width = 258
-        Height = 54
+        Top = 3
+        Width = 260
+        Height = 90
         Caption = 
-          'You will need to assign non-zero values to the Wet_Dry_Threshold' +
-          ' and Wet_Dry_Flag data sets'
+          'You will need to have at least one unconfined or convertible lay' +
+          'er and assign non-zero values to the Wet_Dry_Threshold and Wet_D' +
+          'ry_Flag data sets'
         Visible = False
         WordWrap = True
       end

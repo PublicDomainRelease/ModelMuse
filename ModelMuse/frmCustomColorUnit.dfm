@@ -3,7 +3,6 @@ inherited frmCustomColor: TfrmCustomColor
   ClientHeight = 417
   ClientWidth = 606
   OnDestroy = FormDestroy
-  ExplicitTop = -74
   ExplicitWidth = 614
   ExplicitHeight = 451
   PixelsPerInch = 96
@@ -18,10 +17,6 @@ inherited frmCustomColor: TfrmCustomColor
     TabOrder = 0
     object tabSelection: TTabSheet
       Caption = 'Selection'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         598
         335)
@@ -172,11 +167,13 @@ inherited frmCustomColor: TfrmCustomColor
         Tree.TabOrder = 0
         Tree.Visible = False
         Tree.OnChange = virttreecomboDataSetsDropDownTreeChange
+        Tree.OnEnter = virttreecomboDataSetsDropDownTreeEnter
         Tree.OnGetText = virttreecomboDataSetsDropDownTreeGetText
         Tree.Columns = <>
         PanelAutoWidth = True
         PanelWidth = 465
         PanelHeight = 168
+        OnClosedUp = virttreecomboDataSetsClosedUp
       end
       object udDataSets: TJvUpDown
         Left = 472
@@ -192,6 +189,7 @@ inherited frmCustomColor: TfrmCustomColor
         Top = 310
         Width = 137
         Height = 17
+        Anchors = [akLeft, akBottom]
         Caption = 'Log transform'
         TabOrder = 7
       end
@@ -199,10 +197,6 @@ inherited frmCustomColor: TfrmCustomColor
     object tabFilters: TTabSheet
       Caption = 'Filters'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         598
         335)
@@ -218,7 +212,6 @@ inherited frmCustomColor: TfrmCustomColor
         Top = 3
         Width = 75
         Height = 18
-        Anchors = [akLeft, akBottom]
         Caption = 'Upper limit'
       end
       object lblValuesToIgnore: TLabel
@@ -235,6 +228,13 @@ inherited frmCustomColor: TfrmCustomColor
         Height = 18
         Anchors = [akLeft, akBottom]
         Caption = 'Number of values to ignore'
+      end
+      object lblEpsilon: TLabel
+        Left = 203
+        Top = 81
+        Width = 168
+        Height = 18
+        Caption = 'Epsilon (margin of error)'
       end
       inline frameCheck3DMax: TframeDisplayLimit
         Left = 299
@@ -343,6 +343,19 @@ inherited frmCustomColor: TfrmCustomColor
         TabOrder = 4
         OnChange = seNumberOfValuesToIgnoreChange
       end
+      object rdeEpsilon: TRbwDataEntry
+        Left = 203
+        Top = 112
+        Width = 145
+        Height = 22
+        ItemHeight = 18
+        TabOrder = 5
+        Text = '0'
+        DataType = dtReal
+        Max = 1.000000000000000000
+        CheckMin = True
+        ChangeDisabledColor = True
+      end
     end
   end
   object Panel1: TPanel
@@ -366,6 +379,7 @@ inherited frmCustomColor: TfrmCustomColor
       Width = 101
       Height = 33
       TabOrder = 1
+      OnClick = btnHelpClick
       Kind = bkHelp
     end
     object btnOK: TBitBtn

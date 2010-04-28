@@ -345,7 +345,7 @@ type
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
       Variables, DataSets: TList); virtual; abstract;
     // @name when the formula assigned by the user needs to be
-    // expanded by the program @name is used to do that.      
+    // expanded by the program @name is used to do that.
     function AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
       virtual; abstract;
   public
@@ -583,6 +583,7 @@ type
     // @name is passed to the constructor of @link(FParameters).
     class function ModflowParamItemClass: TModflowParamItemClass;
       virtual; abstract;
+    function ParameterType: TParameterType; virtual; abstract;
   public
     // @name copies @link(Values) and @link(Parameters) from the Source
     // @classname to this @classname.
@@ -699,6 +700,11 @@ begin
   OldFormula := Trim(OldFormula);
   NewFormula := Trim(NewFormula);
   if OldFormula = NewFormula then
+  begin
+    Exit;
+  end;
+  if (frmGoPhast.PhastModel <> nil)
+    and ((frmGoPhast.PhastModel.ComponentState * [csLoading, csReading]) <> []) then
   begin
     Exit;
   end;
@@ -882,7 +888,18 @@ var
   PriorTime: Double;
   ItemCount: Integer;
   ExtraItem: TNoFormulaItem;
+  PhastModel: TPhastModel;
+  FirstUsedTime: Double;
+  LastUsedTime: Double;
+  TimeIndex: Integer;
+  TimeList1: TModflowTimeList;
 begin
+  PhastModel := Model as TPhastModel;
+  FirstUsedTime := PhastModel.ModflowStressPeriods[0].StartTime;
+  LastUsedTime := PhastModel.ModflowStressPeriods[
+    PhastModel.ModflowStressPeriods.Count - 1].EndTime;
+
+
   ListOfTimeLists := TList.Create;
   DataSets := TList.Create;
   try
@@ -894,6 +911,18 @@ begin
     for ItemIndex := 0 to Count - 1 do
     begin
       Item := Items[ItemIndex];
+      if (Item.StartTime > LastUsedTime)
+        or (Item.EndTime < FirstUsedTime) then
+      begin
+        for TimeIndex := 0 to ListOfTimeLists.Count - 1 do
+        begin
+          TimeList1 := ListOfTimeLists[TimeIndex];
+          TimeList1.FreeItem(ItemCount);
+        end;
+        Inc(ItemCount);
+        Continue;
+      end;
+
       if ObservationsPresent then
       begin
         if PriorTime < Item.StartTime then
@@ -957,6 +986,7 @@ var
   BoundaryFunctionIndex: Integer;
   Formula: string;
   AnItem: TCustomModflowBoundaryItem;
+  NextItem: TCustomModflowBoundaryItem;
   Compiler: TRbwParser;
   Expression: TExpression;
   UsedVariables: TStringList;
@@ -977,6 +1007,8 @@ var
   Layer: Integer;
   Variables: TList;
   DataSets: TList;
+  FirstUsedTime: Double;
+  LastUsedTime: Double;
 begin
   if Count = 0 then
   begin
@@ -1036,6 +1068,11 @@ begin
 
     ClearBoundaries;
 
+    FirstUsedTime := PhastModel.ModflowStressPeriods[0].StartTime;
+    LastUsedTime := PhastModel.ModflowStressPeriods[
+      PhastModel.ModflowStressPeriods.Count - 1].EndTime;
+
+
     TestIfObservationsPresent(EndOfLastStressPeriod, StartOfFirstStressPeriod,
       ObservationsPresent);
     PriorTime := StartOfFirstStressPeriod;
@@ -1045,6 +1082,35 @@ begin
     begin
       AnItem := Items[ItemIndex];
 
+      // Skip times earlier than the first time or after
+      // the last time.
+      if (AnItem.StartTime > LastUsedTime)
+        or (AnItem.EndTime <= FirstUsedTime) then
+      begin
+        if ObservationsPresent then
+        begin
+          if PriorTime < AnItem.StartTime then
+          begin
+            AddSpecificBoundary;
+            Inc(ItemCount);
+          end;
+          Inc(ItemCount);
+          AddSpecificBoundary;
+          if AnItem.EndTime < EndOfLastStressPeriod then
+          begin
+            Inc(ItemCount);
+            AddSpecificBoundary;
+          end;
+        end
+        else
+        begin
+          Inc(ItemCount);
+          AddSpecificBoundary;
+        end;
+        Continue;
+      end;
+
+      //  Add extra items if this boundary skips a stress period.
       if ObservationsPresent then
       begin
         if PriorTime < AnItem.StartTime then
@@ -1167,42 +1233,54 @@ begin
       begin
         if AnItem.EndTime < EndOfLastStressPeriod then
         begin
-          ExtraItem := TNoFormulaItem.Create(nil);
-          try
-            ExtraItem.FStartTime := AnItem.EndTime;
-            ExtraItem.FEndTime := EndOfLastStressPeriod;
+          if (ItemIndex+1 < Count) then
+          begin
+            NextItem := Items[ItemIndex+1];
+          end
+          else
+          begin
+            NextItem := nil;
+          end;
 
-            Variables := TList.Create;
-            DataSets := TList.Create;
+          if (NextItem = nil) or (AnItem.EndTime < NextItem.StartTime) then
+          begin
+            ExtraItem := TNoFormulaItem.Create(nil);
             try
-              AddSpecificBoundary;
-              SetBoundaryStartAndEndTime(CellList.Count, ExtraItem, ItemCount);
-              AssignCellLocation(Boundaries[ItemCount],  CellList);
-              for BoundaryFunctionIndex := 0 to AnItem.BoundaryFormulaCount - 1 do
-              begin
-                Formula := '0';
-                Compiler.Compile(Formula);
-                Expression := Compiler.CurrentExpression;
+              ExtraItem.FStartTime := AnItem.EndTime;
+              ExtraItem.FEndTime := EndOfLastStressPeriod;
 
-                CellList.Clear;
-                ScreenObject.GetCellsToAssign(Grid, Formula, nil, nil, CellList, alAll);
-                for Index := 0 to EliminateIndicies.Count - 1  do
+              Variables := TList.Create;
+              DataSets := TList.Create;
+              try
+                AddSpecificBoundary;
+                SetBoundaryStartAndEndTime(CellList.Count, ExtraItem, ItemCount);
+                AssignCellLocation(Boundaries[ItemCount],  CellList);
+                for BoundaryFunctionIndex := 0 to AnItem.BoundaryFormulaCount - 1 do
                 begin
-                  CellList.Delete(EliminateIndicies[Index]);
-                end;
-  //              AssignCellsWithItem(ExtraItem, ItemCount, DataSets, ListOfTimeLists);
-                UpdateCurrentScreenObject(ScreenObject);
+                  Formula := '0';
+                  Compiler.Compile(Formula);
+                  Expression := Compiler.CurrentExpression;
 
-                AssignCellList(Expression, CellList, Boundaries[ItemCount],
-                  BoundaryFunctionIndex, Variables, DataSets);
+                  CellList.Clear;
+                  ScreenObject.GetCellsToAssign(Grid, Formula, nil, nil, CellList, alAll);
+                  for Index := 0 to EliminateIndicies.Count - 1  do
+                  begin
+                    CellList.Delete(EliminateIndicies[Index]);
+                  end;
+    //              AssignCellsWithItem(ExtraItem, ItemCount, DataSets, ListOfTimeLists);
+                  UpdateCurrentScreenObject(ScreenObject);
+
+                  AssignCellList(Expression, CellList, Boundaries[ItemCount],
+                    BoundaryFunctionIndex, Variables, DataSets);
+                end;
+              finally
+                Variables.Free;
+                DataSets.Free;
               end;
+              Inc(ItemCount);
             finally
-              Variables.Free;
-              DataSets.Free;
+              ExtraItem.Free;
             end;
-            Inc(ItemCount);
-          finally
-            ExtraItem.Free;
           end;
         end;
         PriorTime := AnItem.EndTime;
@@ -1482,6 +1560,10 @@ var
   Grid: TModflowGrid;
   Formula: string;
   StoredUpToDate: boolean;
+  FirstUsedTime: Double;
+  LastUsedTime: Double;
+  Time1: Double;
+  Time2: Double;
 begin
   if UpToDate then
     Exit;
@@ -1490,6 +1572,11 @@ begin
   Assert(LocalScreenObject <> nil);
   PhastModel := LocalScreenObject.Model as TPhastModel;
   Assert(PhastModel <> nil);
+
+  FirstUsedTime := PhastModel.ModflowStressPeriods[0].StartTime;
+  LastUsedTime := PhastModel.ModflowStressPeriods[
+    PhastModel.ModflowStressPeriods.Count - 1].EndTime;
+
   StoredUpToDate := PhastModel.UpToDate;
   try
 
@@ -1505,16 +1592,17 @@ begin
       case DataType of
         rdtDouble:
           begin
-            DataArray := TRealSparseDataSet.Create(PhastModel);
+            DataArray := TTransientRealSparseDataSet.Create(PhastModel);
             DataArray.DataType := rdtDouble;
           end;
         rdtInteger:
           begin
-            DataArray := TIntegerSparseDataSet.Create(PhastModel);
+            DataArray := TTransientIntegerSparseDataSet.Create(PhastModel);
             DataArray.DataType := rdtInteger;
           end;
         else Assert(False);
       end;
+      DataArray.Name := ValidName(NonParamDescription) + '_' + IntToStr(Index+1);
       Add(Time, DataArray);
       DataArray.EvaluatedAt := eaBlocks;
       DataArray.Orientation := dso3D;
@@ -1524,17 +1612,27 @@ begin
 //      Sections := T3DSparseIntegerArray.Create(SPASmall);
 //      FSectionArrays.Add(Sections);
 
-      try
-        LocalScreenObject.AssignValuesToModflowDataSet(Grid, DataArray, Formula,
-          AssignmentLocation);
-      except on E: ErbwParserError do
-        begin
-          frmFormulaErrors.AddError(LocalScreenObject.Name, Name, Formula,
-            E.Message);
-          Formula := '0';
-          BoundaryValues[Index].Formula := Formula;
-          LocalScreenObject.AssignValuesToModflowDataSet(Grid, DataArray,
-            Formula, AssignmentLocation);
+      Time1 := Time;
+      Time2 := Time;
+      if Index < Length(BoundaryValues) - 1 then
+      begin
+        Time2 := BoundaryValues[Index+1].Time;
+      end;
+      if (Time2 >= FirstUsedTime)
+        and (Time1 <= LastUsedTime) then
+      begin
+        try
+          LocalScreenObject.AssignValuesToModflowDataSet(Grid, DataArray, Formula,
+            AssignmentLocation);
+        except on E: ErbwParserError do
+          begin
+            frmFormulaErrors.AddError(LocalScreenObject.Name, Name, Formula,
+              E.Message);
+            Formula := '0';
+            BoundaryValues[Index].Formula := Formula;
+            LocalScreenObject.AssignValuesToModflowDataSet(Grid, DataArray,
+              Formula, AssignmentLocation);
+          end;
         end;
       end;
       PhastModel.CacheDataArrays;
@@ -1888,9 +1986,18 @@ begin
 end;
 
 procedure TModflowParamBoundary.EvaluateArrayBoundaries;
+var
+  Model: TPhastModel;
 begin
-  Parameters.EvaluateArrayBoundaries;
-  inherited;
+  Model := PhastModel as TPhastModel;
+  if Model.ModflowTransientParameters.CountParam(ParameterType) > 0 then
+  begin
+    Parameters.EvaluateArrayBoundaries;
+  end
+  else
+  begin
+    inherited;
+  end;
 end;
 
 procedure TModflowParamBoundary.EvaluateListBoundaries;
@@ -2181,30 +2288,42 @@ end;
 
 procedure TCustomBoundaryStorage.RestoreData;
 var
-  TempFile: TTempFileStream;
+//  TempFile: TTempFileStream;
   DecompressionStream: TDecompressionStream;
   Annotations: TStringList;
+  MemStream: TMemoryStream;
 begin
-  Assert(FileExists(FTempFileName));
+//  ExtractAFile(FTempFileName);
+//  Assert(FileExists(FTempFileName));
   Assert(FCached);
   Assert(FCleared);
   Annotations := TStringList.Create;
-  TempFile := TTempFileStream.Create(FTempFileName, fmOpenRead);
-  DecompressionStream := TDecompressionStream.Create(TempFile);
+  MemStream := TMemoryStream.Create;
+//  TempFile := TTempFileStream.Create(FTempFileName, fmOpenRead);
+//  DecompressionStream := TDecompressionStream.Create(TempFile);
   try
-    Annotations.Sorted := True;
-    Restore(DecompressionStream, Annotations);
+    ExtractAFile(FTempFileName, MemStream);
+    MemStream.Position := 0;
+    DecompressionStream := TDecompressionStream.Create(MemStream);
+    try
+      Annotations.Sorted := True;
+      Restore(DecompressionStream, Annotations);
+    finally
+      DecompressionStream.Free;
+    end;
   finally
-    DecompressionStream.Free;
+    MemStream.Free;
     Annotations.Free;
-    TempFile.Free;
+//    TempFile.Free;
     FCleared := False;
+//    DeleteFile(FTempFileName);
   end;
 end;
 
 procedure TCustomBoundaryStorage.CacheData;
 var
-  TempFile: TTempFileStream;
+//  TempFile: TTempFileStream;
+  MemStream: TMemoryStream;
   Compressor: TCompressionStream;
 begin
   if not FCached then
@@ -2213,15 +2332,25 @@ begin
     begin
       FTempFileName := TempFileName;
     end;
-    TempFile := TTempFileStream.Create(FTempFileName, fmOpenReadWrite);
-    Compressor := TCompressionStream.Create(clDefault, TempFile);
+    MemStream:= TMemoryStream.Create;
     try
-      TempFile.Position := 0;
-      Store(Compressor);
+//    TempFile := TTempFileStream.Create(FTempFileName, fmOpenReadWrite);
+//    Compressor := TCompressionStream.Create(clDefault, TempFile);
+      Compressor := TCompressionStream.Create(clDefault, MemStream);
+      try
+        MemStream.Position := 0;
+  //      TempFile.Position := 0;
+        Store(Compressor);
+      finally
+        Compressor.Free;
+      end;
+      MemStream.Position := 0;
+      ZipAFile(FTempFileName, MemStream);
     finally
-      Compressor.Free;
-      TempFile.Free;
+      MemStream.Free;
+//      TempFile.Free;
     end;
+//    ZipAFile(FTempFileName);
     FCached := True;
   end;
   Clear;

@@ -11,7 +11,7 @@ inherited frmSelectObjects: TfrmSelectObjects
   ExplicitWidth = 348
   ExplicitHeight = 394
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
     Top = 191
@@ -23,8 +23,8 @@ inherited frmSelectObjects: TfrmSelectObjects
     object lblCount: TLabel
       Left = 8
       Top = 6
-      Width = 51
-      Height = 17
+      Width = 56
+      Height = 18
       Caption = 'lblCount'
     end
     object btnCancel: TBitBtn
@@ -119,6 +119,10 @@ inherited frmSelectObjects: TfrmSelectObjects
     TabOrder = 1
     object tabTop: TTabSheet
       Caption = 'Top'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lvTop: TListView
         Left = 0
         Top = 0
@@ -140,6 +144,10 @@ inherited frmSelectObjects: TfrmSelectObjects
     object tabFront: TTabSheet
       Caption = 'Front'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lvFront: TListView
         Left = 0
         Top = 0
@@ -161,6 +169,10 @@ inherited frmSelectObjects: TfrmSelectObjects
     object tabSide: TTabSheet
       Caption = 'Side'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lvSide: TListView
         Left = 0
         Top = 0

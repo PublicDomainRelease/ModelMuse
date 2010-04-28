@@ -11,6 +11,7 @@ type
     FHufPackage: THufPackageSelection;
     FNameOfFile: string;
     FTransient: Boolean;
+    FConvertibleLayerPresent: Boolean;
     procedure WriteDataSet1;
     procedure WriteDataSet2;
     procedure WriteDataSet3;
@@ -295,12 +296,14 @@ var
   LTHUF: TOneDIntegerArray;
 begin
   LTHUF := PhastModel.LayerStructure.Laytyp;
+  FConvertibleLayerPresent := False;
   for index := 0 to PhastModel.LayerStructure.ModflowLayerCount - 1 do
   begin
     if PhastModel.ModflowWettingOptions.WettingActive
       and (LTHUF[index] <> 0) then
     begin
       WriteInteger(1);
+      FConvertibleLayerPresent := True;
     end
     else
     begin
@@ -317,7 +320,8 @@ var
   IWETIT: integer;
   IHDWET: integer;
 begin
-  if PhastModel.ModflowWettingOptions.WettingActive then
+  if PhastModel.ModflowWettingOptions.WettingActive
+    and FConvertibleLayerPresent then
   begin
     WETFCT := PhastModel.ModflowWettingOptions.WettingFactor;
     IWETIT := PhastModel.ModflowWettingOptions.WettingIterations;

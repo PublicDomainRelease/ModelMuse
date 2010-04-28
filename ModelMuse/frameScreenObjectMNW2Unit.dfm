@@ -33,6 +33,10 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpType = htKeyword
       HelpKeyword = 'MNW2_Basic_Tab'
       Caption = 'Basic'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         601
         393)
@@ -216,6 +220,16 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
             ExplicitWidth = 268
             ExplicitHeight = 60
           end
+          inherited tabCell: TTabSheet
+            ExplicitTop = 2
+            ExplicitWidth = 218
+            ExplicitHeight = 70
+          end
+          inherited tabLocation: TTabSheet
+            ExplicitTop = 2
+            ExplicitWidth = 218
+            ExplicitHeight = 70
+          end
           inherited tabObject: TTabSheet
             inherited comboObject: TComboBox
               Width = 258
@@ -225,7 +239,6 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         end
         inherited comboLocationChoice: TJvImageComboBox
           Left = 173
-          ItemIndex = -1
           OnChange = framePumpLocationMethodcomboLocationChoiceChange
           ExplicitLeft = 173
         end
@@ -237,7 +250,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Height = 22
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 18
+        ItemHeight = 0
         TabOrder = 8
         Text = '0'
         OnChange = edWellIdChange
@@ -546,6 +559,10 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpKeyword = 'MNW2_Discharge_Adjustment_Tab'
       Caption = 'Discharge Adjustment'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         601
         393)
@@ -596,7 +613,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Top = 7
         Width = 172
         Height = 22
-        ItemHeight = 18
+        ItemHeight = 0
         TabOrder = 0
         Text = '0'
         OnChange = edWellIdChange
@@ -609,7 +626,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Top = 35
         Width = 172
         Height = 22
-        ItemHeight = 18
+        ItemHeight = 0
         TabOrder = 1
         Text = '0'
         OnChange = edWellIdChange
@@ -622,7 +639,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Top = 63
         Width = 172
         Height = 22
-        ItemHeight = 18
+        ItemHeight = 0
         TabOrder = 2
         Text = '0'
         OnChange = edWellIdChange
@@ -635,7 +652,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Top = 91
         Width = 172
         Height = 22
-        ItemHeight = 18
+        ItemHeight = 0
         TabOrder = 3
         Text = '0'
         OnChange = edWellIdChange
@@ -742,6 +759,10 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpKeyword = 'MNW2_Pumping_Rate_Tab'
       Caption = 'Pumping Rate'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgTimeTable: TRbwDataGrid4
         Left = 0
         Top = 65
@@ -1026,7 +1047,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
           Height = 25
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 18
+          ItemHeight = 0
           TabOrder = 0
           OnChange = rdeFormulaChange
           Max = 1.000000000000000000
@@ -1057,6 +1078,10 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpKeyword = 'Well_Screens'
       Caption = 'Well Screens'
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Panel3: TPanel
         Left = 0
         Top = 352
@@ -1352,7 +1377,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
           Height = 25
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 18
+          ItemHeight = 0
           TabOrder = 0
           OnChange = rdeWellScreenFormulaChange
           Max = 1.000000000000000000

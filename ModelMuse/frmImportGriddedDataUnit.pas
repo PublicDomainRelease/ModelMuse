@@ -57,6 +57,8 @@ type
     procedure combotreeDataSetsDropDownTreeGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: WideString);
+    procedure combotreeDataSetsClosedUp(Sender: TObject);
+    procedure combotreeDataSetsDropDownTreeEnter(Sender: TObject);
   private
     FGrids: TList;
     FRealIgnoreValues: array of double;
@@ -65,6 +67,7 @@ type
     FStringIgnoreValues: array of string;
     FStoredClassifications: TList;
     FSelectedVirtNode: PVirtualNode;
+    FShouldClick: Boolean;
     procedure InitializeGridForCellList(DataSet: TDataArray);
     procedure InitializeGridForGriddedData(Grid: TRbwDataGrid4;
       ColumnFormat: TRbwColumnFormat4; ColumnsForward, RowsForward: Boolean);
@@ -1646,12 +1649,29 @@ begin
   AssignDataSetValue;
 end;
 
+procedure TfrmImportGriddedData.combotreeDataSetsClosedUp(Sender: TObject);
+begin
+  inherited;
+  if FShouldClick then
+  begin
+    FShouldClick := False;
+    MouseClick;
+  end;
+end;
+
 procedure TfrmImportGriddedData.combotreeDataSetsDropDownTreeChange(
   Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   inherited;
   SetSelectedNode(Sender, Node);
   AssignDataSetValue;
+end;
+
+procedure TfrmImportGriddedData.combotreeDataSetsDropDownTreeEnter(
+  Sender: TObject);
+begin
+  inherited;
+  FShouldClick := True;
 end;
 
 procedure TfrmImportGriddedData.combotreeDataSetsDropDownTreeGetNodeDataSize(

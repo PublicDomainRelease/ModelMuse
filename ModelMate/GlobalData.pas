@@ -36,7 +36,7 @@ interface
 
   procedure InitializeGlobalMemoryObjects;
   procedure FreeGlobalData;
-  function GetObsHint(const aGrid: TDataGrid; const aCol: Integer): string;
+  function GetObsHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
   function GetPredHint(const aGrid: TDataGrid; const aCol: Integer): string;
   function GetParHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
   function GetParHintOld(const aGrid: TDataGrid; const aCol: Integer): string;
@@ -71,13 +71,13 @@ end;
 
 //###################################################################
 
-function GetObsHint(const aGrid: TDataGrid; const aCol: Integer): string;
+function GetObsHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
 var
   Str, TestStr, Caption: string;
   I: Integer;
 begin
   // Need to determine attribute type, given Caption
-  Caption := aGrid.Columns[aCol].Title.Caption;
+  Caption := aGrid.Cells[aCol,0];
   result := '';
   for I := 0 to ObservationSetupCurrent.NumAtt - 1 do
   begin

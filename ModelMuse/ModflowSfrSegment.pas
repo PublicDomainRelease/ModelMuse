@@ -396,6 +396,7 @@ procedure TSfrSegmentItem.SetHydraulicConductivity(const Value: string);
 var
   PhastModel: TPhastModel;
   ScreenObj: TObject;
+  ModflowSfrBoundary: TSfrBoundary;
 begin
   if FHydraulicConductivity.Formula <> Value then
   begin
@@ -408,16 +409,19 @@ begin
       if (ScreenObj <> nil)
         and (ScreenObj as TScreenObject).CanInvalidateModel then
       begin
-        if Collection = (ScreenObj as TScreenObject).
-          ModflowSfrBoundary.UpstreamSegmentValues then
+        ModflowSfrBoundary := (ScreenObj as TScreenObject).
+          ModflowSfrBoundary ;
+        if ModflowSfrBoundary <> nil then
         begin
-          PhastModel.InvalidateMfSfrUpstreamHydraulicConductivity(self);
-        end
-        else
-        begin
-          Assert(Collection = (ScreenObj as TScreenObject).
-            ModflowSfrBoundary.DownstreamSegmentValues);
-          PhastModel.InvalidateMfSfrDownstreamHydraulicConductivity(self);
+          if Collection = ModflowSfrBoundary.UpstreamSegmentValues then
+          begin
+            PhastModel.InvalidateMfSfrUpstreamHydraulicConductivity(self);
+          end
+          else
+          begin
+            Assert(Collection = ModflowSfrBoundary.DownstreamSegmentValues);
+            PhastModel.InvalidateMfSfrDownstreamHydraulicConductivity(self);
+          end;
         end;
       end;
     end;
@@ -428,6 +432,7 @@ procedure TSfrSegmentItem.SetStreambedElevation(const Value: string);
 var
   PhastModel: TPhastModel;
   ScreenObj: TObject;
+  ModflowSfrBoundary: TSfrBoundary;
 begin
   if FStreambedElevation.Formula <> Value then
   begin
@@ -440,16 +445,19 @@ begin
       if (ScreenObj <> nil)
         and (ScreenObj as TScreenObject).CanInvalidateModel then
       begin
-        if Collection = (ScreenObj as TScreenObject).
-          ModflowSfrBoundary.UpstreamSegmentValues then
+        ModflowSfrBoundary := (ScreenObj as TScreenObject).
+          ModflowSfrBoundary ;
+        if ModflowSfrBoundary <> nil then
         begin
-          PhastModel.InvalidateMfSfrUpstreamElevation(self);
-        end
-        else
-        begin
-          Assert(Collection = (ScreenObj as TScreenObject).
-            ModflowSfrBoundary.DownstreamSegmentValues);
-          PhastModel.InvalidateMfSfrDownstreamElevation(self);
+          if Collection = ModflowSfrBoundary.UpstreamSegmentValues then
+          begin
+            PhastModel.InvalidateMfSfrUpstreamElevation(self);
+          end
+          else
+          begin
+            Assert(Collection = ModflowSfrBoundary.DownstreamSegmentValues);
+            PhastModel.InvalidateMfSfrDownstreamElevation(self);
+          end;
         end;
       end;
     end;
@@ -460,6 +468,7 @@ procedure TSfrSegmentItem.SetStreamBedThickness(const Value: string);
 var
   PhastModel: TPhastModel;
   ScreenObj: TObject;
+  ModflowSfrBoundary: TSfrBoundary;
 begin
   if FStreamBedThickness.Formula <> Value then
   begin
@@ -472,16 +481,19 @@ begin
       if (ScreenObj <> nil)
         and (ScreenObj as TScreenObject).CanInvalidateModel then
       begin
-        if Collection = (ScreenObj as TScreenObject).
-          ModflowSfrBoundary.UpstreamSegmentValues then
+        ModflowSfrBoundary := (ScreenObj as TScreenObject).
+          ModflowSfrBoundary ;
+        if ModflowSfrBoundary <> nil then
         begin
-          PhastModel.InvalidateMfSfrUpstreamThickness(self);
-        end
-        else
-        begin
-          Assert(Collection = (ScreenObj as TScreenObject).
-            ModflowSfrBoundary.DownstreamSegmentValues);
-          PhastModel.InvalidateMfSfrDownstreamThickness(self);
+          if Collection = ModflowSfrBoundary.UpstreamSegmentValues then
+          begin
+            PhastModel.InvalidateMfSfrUpstreamThickness(self);
+          end
+          else
+          begin
+            Assert(Collection = ModflowSfrBoundary.DownstreamSegmentValues);
+            PhastModel.InvalidateMfSfrDownstreamThickness(self);
+          end;
         end;
       end;
     end;
@@ -492,6 +504,7 @@ procedure TSfrSegmentItem.SetStreamDepth(const Value: string);
 var
   PhastModel: TPhastModel;
   ScreenObj: TObject;
+  ModflowSfrBoundary: TSfrBoundary;
 begin
   if FStreamDepth.Formula <> Value then
   begin
@@ -504,16 +517,19 @@ begin
       if (ScreenObj <> nil)
         and (ScreenObj as TScreenObject).CanInvalidateModel then
       begin
-        if Collection = (ScreenObj as TScreenObject).
-          ModflowSfrBoundary.UpstreamSegmentValues then
+        ModflowSfrBoundary := (ScreenObj as TScreenObject).
+          ModflowSfrBoundary ;
+        if ModflowSfrBoundary <> nil then
         begin
-          PhastModel.InvalidateMfSfrUpstreamDepth(self);
-        end
-        else
-        begin
-          Assert(Collection = (ScreenObj as TScreenObject).
-            ModflowSfrBoundary.DownstreamSegmentValues);
-          PhastModel.InvalidateMfSfrDownstreamDepth(self);
+          if Collection = ModflowSfrBoundary.UpstreamSegmentValues then
+          begin
+            PhastModel.InvalidateMfSfrUpstreamDepth(self);
+          end
+          else
+          begin
+            Assert(Collection = ModflowSfrBoundary.DownstreamSegmentValues);
+            PhastModel.InvalidateMfSfrDownstreamDepth(self);
+          end;
         end;
       end;
     end;
@@ -524,6 +540,7 @@ procedure TSfrSegmentItem.SetStreamWidth(const Value: string);
 var
   PhastModel: TPhastModel;
   ScreenObj: TObject;
+  ModflowSfrBoundary: TSfrBoundary;
 begin
   if FStreamWidth.Formula <> Value then
   begin
@@ -536,16 +553,19 @@ begin
       if (ScreenObj <> nil)
         and (ScreenObj as TScreenObject).CanInvalidateModel then
       begin
-        if Collection = (ScreenObj as TScreenObject).
-          ModflowSfrBoundary.UpstreamSegmentValues then
+        ModflowSfrBoundary := (ScreenObj as TScreenObject).
+          ModflowSfrBoundary ;
+        if ModflowSfrBoundary <> nil then
         begin
-          PhastModel.InvalidateMfSfrUpstreamWidth(self);
-        end
-        else
-        begin
-          Assert(Collection = (ScreenObj as TScreenObject).
-            ModflowSfrBoundary.DownstreamSegmentValues);
-          PhastModel.InvalidateMfSfrDownstreamWidth(self);
+          if Collection = ModflowSfrBoundary.UpstreamSegmentValues then
+          begin
+            PhastModel.InvalidateMfSfrUpstreamWidth(self);
+          end
+          else
+          begin
+            Assert(Collection = ModflowSfrBoundary.DownstreamSegmentValues);
+            PhastModel.InvalidateMfSfrDownstreamWidth(self);
+          end;
         end;
       end;
     end;

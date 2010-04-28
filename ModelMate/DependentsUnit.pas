@@ -2,7 +2,7 @@ unit DependentsUnit;
 
 interface
 
-  uses Classes, SysUtils, Dialogs,
+  uses Classes, SysUtils, Dialogs, Windows,
        GlobalTypesUnit, GlobalBasicData, Utilities;
 
   type

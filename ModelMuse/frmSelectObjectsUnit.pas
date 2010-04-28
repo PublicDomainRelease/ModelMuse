@@ -140,6 +140,11 @@ begin
     tabTop.TabVisible := lvTop.Items.Count <> 0;
     tabFront.TabVisible := lvFront.Items.Count <> 0;
     tabSide.TabVisible := lvSide.Items.Count <> 0;
+    if not (tabTop.TabVisible or tabFront.TabVisible or tabSide.TabVisible) then
+    begin
+      MessageDlg('Your model has no objects.', mtInformation, [mbOK], 0);
+      Exit;
+    end;
   finally
     FGettingData := False;
   end;

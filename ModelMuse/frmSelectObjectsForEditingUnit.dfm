@@ -1,7 +1,7 @@
 inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
   HelpType = htKeyword
   HelpKeyword = 'Select_Objects_for_Editing'
-  Caption = 'Select Objects for Editing of Deletion'
+  Caption = 'Select Objects for Editing or Deletion'
   PixelsPerInch = 96
   TextHeight = 18
   inherited pnlBottom: TPanel

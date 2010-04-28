@@ -119,23 +119,17 @@ end;
 
 procedure TModpathResponseFileWriter.WriteFile(const AFileName: string;
   NewBudgetFile: boolean);
-//const
-//  MAXSIZ = 150000000;
 var
   NameOfFile: string;
   CBF_Option: TCompositeBudgetFileOption;
   Index: Integer;
   ComputeLocations: Boolean;
   ReferenceTime: Real;
-//  CBFileSize: Integer;
-//  KCBFileSize: double;
-//  MCBFileSize: Double;
   procedure WriteResponse;
   begin
     WriteString('@RESPONSE:');
     NewLine;
   end;
-//  Responses: TModpathResponses;
 begin
   FLargeBudgetFileResponse := '';
   FNewBudgetFile := NewBudgetFile;
@@ -215,8 +209,14 @@ begin
       case FOptions.TrackingDirection of
         tdForward:
           begin
-            ReferenceTime := FOptions.ReferenceTime -
-              PhastModel.ModflowStressPeriods[0].StartTime;
+            ReferenceTime := FOptions.ReferenceTime;
+//              - PhastModel.ModflowStressPeriods[0].StartTime;
+
+//            if ReferenceTime = 0 then
+//            begin
+//              ReferenceTime := ReferenceTime
+//                + Abs(PhastModel.ModflowStressPeriods[0].StartTime)*0.0000000001
+//            end;
           end;
         tdBackward:
           begin
@@ -540,71 +540,7 @@ begin
   finally
     CloseFile
   end;
-//  Responses := TModpathResponses.Create(nil);
-//  try
-//    Responses.Path := FModel.ProgramLocations.ModPathLocation;
-//    Responses.NameFile := ExtractFileName(AFileName);
-//    Responses.StopAfterMaxTime := FOptions.StopAfterMaxTime;
-//    Responses.MaxTime := FOptions.MaxTime;
-//    Responses.ReferenceTime := FOptions.ReferenceTime;
-//    Responses.ReferenceTimeOption := rtoTime;
-//    Responses.ReferenceStressPeriod := 0;
-//    Responses.ReferenceStep := 0;
-//    Responses.ReferenceOffSet := 0;
-//    CompositeBudgetFileName := ChangeFileExt(AFileName, '.cbf');
-//    BudgetFileName := ChangeFileExt(AFileName, '.cbc');
-//    if FileExists(CompositeBudgetFileName) and FileExists(BudgetFileName) then
-//    begin
-//      if FileAge(CompositeBudgetFileName, CompositeAge)
-//        and FileAge(BudgetFileName, BudgetAge) then
-//      begin
-//        if CompositeAge > BudgetAge then
-//        begin
-//          Responses.CompositeBudgetFileOption := cbfUseOldFile;
-//        end
-//        else
-//        begin
-//          Responses.CompositeBudgetFileOption := cbfGenerateNew;
-//        end;
-//      end
-//      else
-//      begin
-//        Responses.CompositeBudgetFileOption := cbfGenerateNew;
-//      end;
-//    end
-//    else
-//    begin
-//      Responses.CompositeBudgetFileOption := cbfGenerateNew;
-//    end;
-//    Responses.CompositeBudgetFileName := ExtractFileName(CompositeBudgetFileName);
-//    Responses.OutputMode := FOptions.OutputMode;
-//
-//    Responses.PlotAtSpecificTimes :=
-//      (FOptions.OutputMode in [mopPathline, mopTimeSeries])
-//      and (FOptions.OutputTimes.Count > 0);
-//
-//    Responses.TimeMethod := tmIndividual;
-//    Responses.TimeInterval := 0;
-//    Responses.MaxTimePoints := FOptions.OutputTimes.Count;
-//    Responses.TrackingDirection := FOptions.TrackingDirection;
-//    Responses.WeakSink := FOptions.WeakSink;
-//    Responses.WeakSinkThreshold := FOptions.WeakSinkThreshold;
-//    Responses.StopInZone := FOptions.StopInZone;
-//    Responses.StopZoneNumber := FOptions.StopZoneNumber;
-//    Responses.EndpointWrite := FOptions.EndpointWrite;
-//    Responses.ComputeBudgetInAllCells := FOptions.ComputeBudgetInAllCells;
-//    Responses.ErrorTolerance := FOptions.ErrorTolerance;
-//    Responses.FirstBudgetTimeStep := 1;
-//    Responses.LastBudgetTimeStep :=
-//      FModel.ModflowFullStressPeriods.NumberOfSteps;
-//    Responses.CheckCellByCell := FOptions.CheckCellByCell;
-//    Responses.Summarize := FOptions.Summarize;
-//    Responses.MakeBigBudgetFile := FOptions.MakeBigBudgetFile;
-//
-//    Responses.SaveToFile(NameOfFile);
-//  finally
-//    Responses.Free;
-//  end;
+
 end;
 
 function TModpathResponseFileWriter.RespondToLargeBudgetFile(
@@ -662,7 +598,6 @@ begin
       begin
         result := '2';
       end;
-//      NewLine;
     end;
   end;
 end;

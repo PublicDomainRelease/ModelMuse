@@ -358,6 +358,10 @@ end;
 
 procedure TframeScreenObjectNoParam.LayoutMultiRowEditControls;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   LayoutControls(dgModflowBoundary, rdeFormula, lblFormula,
     Max(2,dgModflowBoundary.LeftCol));
 end;

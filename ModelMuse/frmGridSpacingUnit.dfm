@@ -11,24 +11,23 @@ inherited frmGridSpacing: TfrmGridSpacing
   KeyPreview = True
   Position = poOwnerFormCenter
   OnKeyPress = FormKeyPress
-  ExplicitTop = -58
   ExplicitWidth = 455
   ExplicitHeight = 491
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object pcSubdivide: TPageControl
     Left = 0
     Top = 129
     Width = 447
     Height = 287
-    ActivePage = tabLayers
+    ActivePage = tabRows
     Align = alClient
     TabOrder = 0
     object tabColumns: TTabSheet
       Caption = 'Columns (X'#39')'
       object pnlColumns: TPanel
         Left = 0
-        Top = 174
+        Top = 173
         Width = 439
         Height = 81
         Align = alBottom
@@ -40,15 +39,15 @@ inherited frmGridSpacing: TfrmGridSpacing
         object lblColNumNodes: TLabel
           Left = 8
           Top = 8
-          Width = 286
-          Height = 17
+          Width = 310
+          Height = 18
           Caption = 'Number of nodes in the X (column) direction: '
         end
         object lblColDefaultSpacing: TLabel
           Left = 8
           Top = 44
-          Width = 98
-          Height = 17
+          Width = 108
+          Height = 18
           Caption = 'Default spacing'
         end
         object rdeSpacingColumns: TRbwDataEntry
@@ -58,19 +57,18 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 17
+          ItemHeight = 18
           TabOrder = 1
           Text = '100'
           DataType = dtReal
           Max = 1.000000000000000000
-          CheckMin = True
           ChangeDisabledColor = True
         end
         object seColumns: TJvSpinEdit
           Left = 324
           Top = 9
           Width = 102
-          Height = 25
+          Height = 26
           ButtonKind = bkClassic
           MaxValue = 2147483647.000000000000000000
           TabOrder = 0
@@ -81,7 +79,7 @@ inherited frmGridSpacing: TfrmGridSpacing
         Left = 0
         Top = 0
         Width = 439
-        Height = 174
+        Height = 173
         Align = alClient
         ColCount = 2
         DefaultColWidth = 200
@@ -157,7 +155,7 @@ inherited frmGridSpacing: TfrmGridSpacing
       ImageIndex = 1
       object pnlRows: TPanel
         Left = 0
-        Top = 174
+        Top = 173
         Width = 439
         Height = 81
         Align = alBottom
@@ -169,15 +167,15 @@ inherited frmGridSpacing: TfrmGridSpacing
         object lblRowNumNodes: TLabel
           Left = 8
           Top = 8
-          Width = 263
-          Height = 17
+          Width = 284
+          Height = 18
           Caption = 'Number of nodes in the Y (row) direction: '
         end
         object lblRowDefaultSpacing: TLabel
           Left = 8
           Top = 44
-          Width = 98
-          Height = 17
+          Width = 108
+          Height = 18
           Caption = 'Default spacing'
         end
         object rdeSpacingRows: TRbwDataEntry
@@ -187,19 +185,18 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 17
+          ItemHeight = 18
           TabOrder = 0
           Text = '100'
           DataType = dtReal
           Max = 1.000000000000000000
-          CheckMin = True
           ChangeDisabledColor = True
         end
         object seRows: TJvSpinEdit
           Left = 324
           Top = 9
           Width = 102
-          Height = 25
+          Height = 26
           ButtonKind = bkClassic
           MaxValue = 2147483647.000000000000000000
           TabOrder = 1
@@ -210,7 +207,7 @@ inherited frmGridSpacing: TfrmGridSpacing
         Left = 0
         Top = 0
         Width = 439
-        Height = 174
+        Height = 173
         Align = alClient
         ColCount = 2
         DefaultColWidth = 200
@@ -286,7 +283,7 @@ inherited frmGridSpacing: TfrmGridSpacing
       ImageIndex = 2
       object pnlLayers: TPanel
         Left = 0
-        Top = 174
+        Top = 173
         Width = 439
         Height = 81
         Align = alBottom
@@ -298,15 +295,15 @@ inherited frmGridSpacing: TfrmGridSpacing
         object lblLayNumNodes: TLabel
           Left = 8
           Top = 8
-          Width = 272
-          Height = 17
+          Width = 292
+          Height = 18
           Caption = 'Number of nodes in the Z (layer) direction: '
         end
         object lblLayDefaultSpacing: TLabel
           Left = 8
           Top = 44
-          Width = 98
-          Height = 17
+          Width = 108
+          Height = 18
           Caption = 'Default spacing'
         end
         object rdeSpacingLayers: TRbwDataEntry
@@ -316,19 +313,18 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 17
+          ItemHeight = 18
           TabOrder = 0
           Text = '10'
           DataType = dtReal
           Max = 1.000000000000000000
-          CheckMin = True
           ChangeDisabledColor = True
         end
         object seLayers: TJvSpinEdit
           Left = 324
           Top = 9
           Width = 102
-          Height = 25
+          Height = 26
           ButtonKind = bkClassic
           MaxValue = 2147483647.000000000000000000
           TabOrder = 1
@@ -339,7 +335,7 @@ inherited frmGridSpacing: TfrmGridSpacing
         Left = 0
         Top = 0
         Width = 439
-        Height = 174
+        Height = 173
         Align = alClient
         ColCount = 2
         DefaultColWidth = 200
@@ -467,7 +463,7 @@ inherited frmGridSpacing: TfrmGridSpacing
       Left = 8
       Top = 8
       Width = 422
-      Height = 51
+      Height = 54
       Anchors = [akLeft, akTop, akRight]
       Caption = 
         'Type in new positions of element boundaries, or drag them to the' +

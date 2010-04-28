@@ -135,6 +135,7 @@ object frameView: TframeView
     Magnification = 1.000000000000000000
     VerticalDirection = vdUp
     OnPan = ZoomBoxPan
+    OnMagnificationChanged = ZoomBoxMagnificationChanged
     DesignSize = (
       467
       208)

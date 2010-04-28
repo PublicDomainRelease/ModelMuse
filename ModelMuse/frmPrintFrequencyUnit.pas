@@ -365,6 +365,10 @@ var
   Col: Integer;
   Index: Integer;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   Col := 2;
   Row := rdgPrintFrequency.Row;
   for Index := 2 to rdgPrintFrequency.ColCount - 1 do

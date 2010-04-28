@@ -49,7 +49,7 @@ inherited frmModflowNameFile: TfrmModflowNameFile
   end
   object btnHelp: TBitBtn
     Left = 217
-    Top = 297
+    Top = 299
     Width = 82
     Height = 34
     Anchors = [akRight, akBottom]

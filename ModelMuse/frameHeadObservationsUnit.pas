@@ -73,10 +73,12 @@ type
     procedure edObsNameChange(Sender: TObject);
     procedure comboTreatmentChange(Sender: TObject);
     procedure rgMultiObsMethodClick(Sender: TObject);
+    procedure rdgHeadsEndUpdate(Sender: TObject);
   private
     FDeletingTime: Boolean;
     FDeletingLayer: Boolean;
     FChanged: Boolean;
+    FHidingColumns: Boolean;
     procedure ClearGrid(Grid: TRbwDataGrid4);
     procedure EnableMultiSelect(Shift: TShiftState; Grid: TRbwDataGrid4);
     procedure AssignValuesToSelectedGridCells(const NewText: string;
@@ -91,6 +93,7 @@ type
     procedure LayoutMultiHeadEditControls;
     { Private declarations }
   public
+    procedure HideUcodeColumns;
     procedure GetData(List: TScreenObjectEditCollection);
     procedure SetData(List: TScreenObjectEditCollection; SetAll: boolean;
       ClearAll: boolean);
@@ -101,7 +104,7 @@ type
 implementation
 
 uses
-  GoPhastTypes, frmCustomGoPhastUnit;
+  GoPhastTypes, frmCustomGoPhastUnit, frmGoPhastUnit;
 
 {$R *.dfm}
 
@@ -306,11 +309,22 @@ begin
     rdgHeads.EndUpdate;
     rdgLayers.EndUpdate;
   end;
+  HideUcodeColumns;
   FChanged := False;
 end;
 
 procedure TframeHeadObservations.InitializeControls;
+var
+  Column: TRbwColumn4;
+  Index: Integer;
 begin
+  Column := rdgHeads.Columns[Ord(hocStatFlag)];
+  Assert(comboMultiStatFlag.Items.Count = Column.PickList.Count);
+  for Index := 0 to Column.PickList.Count - 1 do
+  begin
+    comboMultiStatFlag.Items[Index].Text := Column.PickList[Index];
+  end;
+
   rdgHeads.Cells[Ord(hocTime),0] := 'Time';
   rdgHeads.Cells[Ord(hocHead),0] := 'Observed  Head';
   rdgHeads.Cells[Ord(hocStatistic),0] := 'Statistic';
@@ -325,6 +339,7 @@ begin
   lblTreatment.Top := comboTreatment.Top - lblTreatment.Height - 2;
 
   LayoutMultiHeadEditControls;
+  HideUcodeColumns;
 end;
 
 procedure TframeHeadObservations.LayoutMultiHeadEditControls;
@@ -332,6 +347,10 @@ var
   Index: Integer;
   AColVisible: Boolean;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   AColVisible := False;
   for Index := Ord(hocTime) to Ord(hocStatistic) do
   begin
@@ -402,6 +421,7 @@ begin
   begin
     SpinEdit.AsInteger := Grid.RowCount - 1;
   end;
+  HideUcodeColumns;
 end;
 
 procedure TframeHeadObservations.DeleteSelectedRow(Grid: TRbwDataGrid4;
@@ -534,6 +554,11 @@ procedure TframeHeadObservations.rdgHeadsColSize(Sender: TObject; ACol,
   PriorWidth: Integer);
 begin
   LayoutMultiHeadEditControls;
+end;
+
+procedure TframeHeadObservations.rdgHeadsEndUpdate(Sender: TObject);
+begin
+  HideUcodeColumns;
 end;
 
 procedure TframeHeadObservations.rdgHeadsExit(Sender: TObject);
@@ -769,6 +794,21 @@ begin
   end;
 end;
 
+procedure TframeHeadObservations.HideUcodeColumns;
+begin
+  if FHidingColumns then Exit;
+  FHidingColumns := True;
+  try
+    if not frmGoPhast.ShowUcodeInterface then
+    begin
+      rdgHeads.ColWidths[Ord(hocStatistic)] := 0;
+      rdgHeads.ColWidths[Ord(hocStatFlag)] := 0;
+    end;
+  finally
+    FHidingColumns := False;
+  end;
+end;
+
 procedure TframeHeadObservations.seTimesChange(Sender: TObject);
 var
   CharNumber: integer;
@@ -807,6 +847,7 @@ begin
   finally
     FDeletingTime := False;
   end;
+  HideUcodeColumns;
 end;
 
 end.

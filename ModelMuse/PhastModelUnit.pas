@@ -283,6 +283,11 @@ const
   StrModpathZone = 'Modpath_Zone';
   StrHufReferenceSurface = 'HUF_Reference_Surface';
 
+const
+  WetError = 'The wetting option is active but '
+    + 'no layers of the proper type have been specified.';
+  WettableLayers = [1,3];
+  
 type
   // @name represents how PHAST results are printed - XY orientation or
   // XZ orientation.
@@ -1680,7 +1685,6 @@ that affects the model output should also have a comment. }
       out ParameterUsed: Boolean; out ParameterFormula: string;
       ParameterType: TParameterType);
     procedure CreatePhastTimeLists;
-    procedure CreateInitialDataSetsForPhastTimeLists;
     procedure CreatePhastTimeListGroups;
     procedure CreateModflowDisplayTimeLists;
     function GetParsers(Index: integer): TRbwParser;
@@ -1712,7 +1716,6 @@ that affects the model output should also have a comment. }
     function SpecificStorageUsed(Sender: TObject): boolean;
     procedure SetModflowNameFileLines(const Value: TStrings);
     function ModpathUsed(Sender: TObject): boolean;
-    function FixFileName(AFileName: string): string;
     procedure UpdateModPathZone(Sender: TObject);
     procedure SetHeadFluxObservations(const Value: TFluxObservationGroups);
     procedure SetDrainObservations(const Value: TFluxObservationGroups);
@@ -1766,6 +1769,7 @@ that affects the model output should also have a comment. }
     function HufSelected(Sender: TObject): boolean;
     function OptionalDataSet(Sender: TObject): boolean;
     function HufStorageUsed(Sender: TObject): boolean;
+    procedure CreateInitialDataSetsForPhastTimeLists;
   protected
     // @name is used to store DataSet in @link(FBoundaryDataSets).
     function AddBoundaryDataSet(const DataSet: TDataArray): Integer;
@@ -1773,6 +1777,8 @@ that affects the model output should also have a comment. }
     procedure Loaded; override;
   public
     DataArrayCreationRecords: array of TDataSetCreationData;
+    function CheckWetting: boolean;
+    function FixFileName(AFileName: string): string;
     property HufKxNotifier: TObserver read FHufKxNotifier;
     property HufKyNotifier: TObserver read FHufKyNotifier;
     property HufKzNotifier: TObserver read FHufKzNotifier;
@@ -2830,8 +2836,185 @@ const
   //  '2.3.0.0' Fixed bug that could cause layer elevations to be set
   //      incorrectly after changing the layer structure.
   //    Fixed bug that could cause access violation when deleting a data set.
+  //  '2.3.0.1' Bug fix: Corrected name of the
+  //      "Select Objects for Editing or Deletion."
+  //    Enhancement: Added warning messages in export of the
+  //      MODPATH input files if the required MODFLOW input or
+  //      output files are missing.
+  //    Bug fix: when deleting data sets, check that all data set formulas
+  //      are still OK.
+  //    Bug fix: the text on the status panel is no longer truncated
+  //      when it is over 110 characters in length.
+  //    Bug fix: fixed access violation when closing with the Color Grid
+  //      or Contour data dialog boxes open.
+  //    Bug fix: fixed import of rate data in the UZF package when some
+  //      rates are reused and others are not reused.
+  //    Change: Boundary condition times prior to the beginning of the first
+  //      defined boundary condition are now ignored.
+  //  '2.3.0.2' Enhancement: Added support for sampling DEM files.
+  //    Bug fix: Fixed access violations that occurred when closing
+  //      ModelMuse after deleting a data set.
+  //    Change: When importing character attributes of Shapefiles,
+  //      blank characters at the beginning or end will be removed.
+  //    Bug fix: The row width is now displayed correctly on the Grid Values
+  //      dialog box.
+  //    Bug fix: When the first time defined in the MODFLOW Time dialog box
+  //      is after the first time defined in an object, values were not
+  //      assigned properly. (Bug introduced in version 2.3.0.1.)
+  //  '2.3.0.3' Change: added pumping rate comment for wells. This can
+  //      be helpful when using PEST.
+  //  '2.3.0.4' Bug fix: If attempting to draw a bitmap results in an
+  //       out-of-resources error, drawing the bitmap will be skipped.
+  //     Change: menu item caption switches between "Show 2-D Grid"
+  //       and "Hide 2-D Grid" depending on whether or not the grid lines
+  //       are visible.
+  //     Bug fix: Various controls on the Color Grid and
+  //       Contour Grid dialog boxes now changes position appropriately
+  //       if the dialog box is changed in size.
+  //     Bug fix: The beginning and ending times for MODPATH can now be
+  //       set to non-integer values.
+  //     Bug fix: The name of a multiplier array would not be exported
+  //       correctly if it was used in one of the HUF package input files
+  //       but that input file was not being created by ModelMuse.
+  //  '2.3.0.5' Change: if a bitmap can not be displayed, it will be hidden
+  //       and then must be shown again manually after decreasing the
+  //       magnification.
+  //     Bug fix: fixed "List index out of bounds" error when deleting
+  //       a data set.
+  //     Bug fix: If every cell has gone dry, there is no longer an
+  //       "List index out of bounds" error when attempting to import
+  //       the model results.
+  //     Enhancement: It is now possible to paste multiple data set names in
+  //       the table on the Data tab of the Import Shapefile dialog box.
+  //  '2.3.0.6' Bug fix: The labels for the various Z-coordinate formulas
+  //       in the Import Shapefile dialog box are now enabled when appropriate.
+  //  '2.3.0.7' - '2.3.0.9' Bug fix: Fixed bug that prevented
+  //       the Packages and Programs dialog box from being displayed
+  //       on some computers.
+  //     Bug fix: Fixed bug that caused an Assertion error when
+  //       attempting to show the "Select Objects By Name" dialog box
+  //       in a model that had no objects.
+  //  '2.3.0.10' Enhancement: The Grid Value dialog box has been changed to
+  //       display the name of the selected object and to show its 3'rd
+  //       dimension coordinates for those cells intersected or enclosed
+  //       by the object.
+  //  '2.3.0.11' Enhancement: Improved speed of importing data.
+  //  '2.3.0.12' Bug fix: Saving the ModelMuse file with a new file name now
+  //       results in the default name for the model input files being
+  //       changed as well.
+  //     Bug fix: When importing Shapefiles, if the feature that is being
+  //       imported must be imported as separate objects, the Import Shapefile
+  //       dialog box no longer allows them to be combined.
+  //     Bug fix: When flow observations were used the GHB, DRN, RIV, and CHD
+  //       packages were not always exported correctly.
+  //   '2.3.0.13' - '2.3.0.17' Reduced disk usage.
+  //   '2.3.0.18' Enhancement: Improved speed.
+  //   '2.3.0.19' Bug fix: fixed bug introduced in '2.3.0.18'.
+  //   '2.3.0.20' Bug fix: Fixed display of the recharge, EVT, and ETS layers
+  //       when no parameters were defined.
+  //     Bug fix: The SFR package input could be generated incorrectly if an
+  //       object that was supposed to define a stream segment did not
+  //       intersect the grid.
+  //   '2.3.0.21' Bug fix: Fixed display of RCH, EVT, and ETS rates when
+  //       parameters are first defined.
+  //     Bug fix: Fixed when certain controls related to MODPATH become
+  //       enabled.
+  //     Bug fix: There no longer is an access violation if you attempt to
+  //       create a new model while in the midst of creating a new object.
+  //     Bug fix: Fixed calculation of HUF_Kx.
+  //     Bug fix: Fixed export of Reference time in the MODPATH response file.
+  //   '2.3.0.22' Enhancement: When the MODFLOW Hydrogeologic Units dialog box
+  //       is closed, it now checks that at least one parameter
+  //       has been associated with each hydrogeologic unit and that
+  //       each parameter is associated with at least one hydrogeologic unit.
+  //     Enhancement: The thickness of HUF units is now constrained to be
+  //       greater than or equal to zero.
+  //     Bug fix: Access violations no longer occur when creating a new
+  //       object after having closed a previous model and starting
+  //       a new model.
+  //     Bug fix: fixed export of BeginPeriod and BeginStep.  They must both
+  //       be set to 1 if any stress period in the model is a steady-state
+  //       stress period.
+  //   '2.3.0.23' Bug fix: Fixed Assertion error in evaluation of MNW2 input.
+  //     Enhancement: Added error message if a MODPATH particle start time was
+  //       invalid.
+  //     Bug fix: Fixed import of the RES package from existing models.
+  //     Enhancement: Added Epsilon when specifying data values to skip.
+  //     Bug fix: Fixed display of UZF transient data sets.
+  //     Bug fix: Fixed deletion of verticies in an object when all but one
+  //       vertices are deleted.
+  //     Bug fix: Fixed default file names for the MODFLOW name file
+  //       and for the default output files when the file name has a space
+  //       in it.
+  //     Bug fix: Fixed display of MODPATH particle release times.
+  //     Bug fix: Fixed assignment of color to MODPATH pathlines.
+  //     Bug fix: Fixed crash when entering multiple times for flow
+  //       observations.
+  //     Change: Statistic and Stat-Flag are no longer visible for head
+  //       observations unless ModelMate interface has been activated.
+  //     Bug fix: When attempting to import an incomplete Shapefile,
+  //       ModelMuse now exits the procedure properly.
+  //     Enhancement: When importing head observations, if the ModelMate
+  //       interface is active, Statistic and StatFlag are imported too.
+  //   '2.3.0.24' Bug fix.  Entering a real number for the recharge layer
+  //       no longer causes ModelMuse to hang. Instead an error message is
+  //       displayed.
+  //   '2.3.0.25' Bug fix: If wetting is active but there are no
+  //       convertible layers a warning is displayed.
+  //     Bug fix: If wetting is active but there are no
+  //       convertible layers data set 7 is no longer created in the LPF
+  //       package and data set 4 is no longer created in the HUF package.
+  //     Bug fix: When the ET Surface and the ET Depth are undefined
+  //       in the EVT or ETS packages, an error message is displayed instead of
+  //       the export failing.
+  //     Bug fix: Editing an object containing SFR data no longer results in
+  //       an access violation if the SFR package is not selected.
+  //     Bug fix: Editing an object that defines data for the SFR, MNW2, HOB
+  //       or HFB packages no longer results in deletion of data for those
+  //       packages when those packages are not selected.
+  //     Bug fix: In the Object Properties dialog box, clicking the
+  //       "Edit F()..." button on the Data Sets tab would cause
+  //       an Assertion error when no data set was selected.  The button
+  //       is now disabled when no data set is selected.
+  //   '2.3.0.26' Bug fix: When performing coordinate conversions on Shapefiles,
+  //       you can no longer select a UTM zone until you have choosen to
+  //       perform the conversion.
+  //     Enhancement: In the Show or Hide Objects dialog box, any collapsed
+  //       branch that contains a selected object is shown with a bold font.
+  //     Bug fix: Fixed access violations when opening a model when a model is
+  //       already open.
+  //     Enhancement: If additional vertices are added to an object that
+  //       defines head observations, an error message is displayed when
+  //       attempting to export the HOB input file or plot HOB data on the
+  //       grid.
+  //     Bug fix: If the flow package corresponding to a flow observation
+  //       is not selected in the object properties dialog box, attempting
+  //       to select the flow observation will no longer cause toggling
+  //       of the selected node.
+  //     Bug fix: After selecting the item with with to color the grid in
+  //       the Color Grid dialog box, you can click directly on the Apply
+  //       button without clicking elsewhere first.
+  //     Enhancement: When defining a new global variable, default values for
+  //       the type and value are displayed in the Global Variables dialog box.
+  //     Enhancement: Bitmaps that were hidden because the magnification was
+  //       too high, are now displayed again automatically when the
+  //       magnification is sufficiently reduced.
+  //     Enhancement: Added new function for use in formulas - PositionInList.
+  //     Enhancement: Objects now have a comment field that can be used to
+  //       document what the object does.
+  //     Enhancement: The Grid Spacing dialog box now allows negative numbers
+  //       for the default spacing for columns, rows, and layers.  In MODFLOW
+  //       models, the default spacing for rows is set to -100 instead of 100.
+  //     Enhancement: When tips are turned off, ModelMuse will tell you when it
+  //       detects new videos on the ModelMuse web site.
+  //     Bug Fix: Editing an object that defines an SFR stream with unsaturated
+  //       properties defined no longer causes an assertion failure if the
+  //       object is edited again.
+  //     Bug fix: Importing a model no longer causes an access violation
+  //       when the previous model had objects that defined an SFR stream
+  //       with unsaturated properties.
 
-  ModelVersion = '2.3.0.0';
+  ModelVersion = '2.4.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -2889,6 +3072,7 @@ const
 const
   StatFlagStrings : array[Low(TStatFlag)..High(TStatFlag)] of string
     = ('VAR', 'SD', 'CV', 'WT', 'SQRWT');
+
 
 var
   PValFile: TStringList;
@@ -3173,6 +3357,10 @@ begin
     FHfbWriter := TModflowHfb_Writer.Create(Self);
   end;
   (FHfbWriter as TModflowHfb_Writer).UpdateDisplay;
+  if frmErrorsAndWarnings.HasMessages then
+  begin
+    frmErrorsAndWarnings.Show;
+  end;
 end;
 
 constructor TPhastModel.Create(AnOwner: TComponent);
@@ -4078,7 +4266,30 @@ begin
   FClearing := True;
   try
     ClearViewedItems;
-    ModelSelection := msUndefined;
+
+    if PhastGrid <> nil then
+    begin
+      if PhastGrid.TopGridObserver <> nil then
+      begin
+        PhastGrid.TopGridObserver.StopTalkingToAnyone;
+      end;
+      if PhastGrid.ThreeDGridObserver <> nil then
+      begin
+        PhastGrid.ThreeDGridObserver.StopTalkingToAnyone;
+      end;
+    end;
+    if ModflowGrid <> nil then
+    begin
+      if ModflowGrid.TopGridObserver <> nil then
+      begin
+        ModflowGrid.TopGridObserver.StopTalkingToAnyone;
+      end;
+      if ModflowGrid.ThreeDGridObserver <> nil then
+      begin
+        ModflowGrid.ThreeDGridObserver.StopTalkingToAnyone;
+      end;
+    end;
+
     FLayerStructure.StopTalkingToAnyone;
     FTopGridObserver.StopTalkingToAnyone;
     FThreeDGridObserver.StopTalkingToAnyone;
@@ -4128,6 +4339,9 @@ begin
       DataSet := BoundaryDataSets[Index];
       DataSet.StopTalkingToAnyone;
     end;
+
+    ModelSelection := msUndefined;
+
     FScreenObjectList.Clear;
     FDataSets.Clear;
     FBoundaryDataSets.Clear;
@@ -4161,6 +4375,7 @@ begin
     begin
       TimeList := FTimeLists[Index];
       TimeList.Invalidate;
+      TimeList.Clear;
     end;
 
     HeadFluxObservations.Clear;
@@ -5603,6 +5818,7 @@ var
   TempCompiler: TRbwParser;
   ParamItem: TModflowSteadyParameter;
   SearchName: string;
+  Compiler: TRbwParser;
 begin
   FDataSets.Capacity := FDataSetCollection.Count;
   FDataSetFunctions.Capacity := FDataSetCollection.Count;
@@ -5675,6 +5891,8 @@ begin
     ExistingDataSet := GetDataSetByName(SearchName);
     Assert(ExistingDataSet <> nil);
     ExistingDataSet.Assign(ADataSet);
+    Compiler := GetCompiler(ExistingDataSet.Orientation, ExistingDataSet.EvaluatedAt);
+    Compiler.Compile(Item.FDataSetFormula);
     ExistingDataSet.Formula := Item.FDataSetFormula;
     if ExistingDataSet is TCustomPhastDataSet then
     begin
@@ -6373,6 +6591,8 @@ var
   ScreenObjectIndex, StressPeriodIndex: Integer;
   ScreenObject: TScreenObject;
   StartTime, EndTime: double;
+  FirstTime: Double;
+  DeletedTimes: Boolean;
 //  StartTimeIndex: integer;
 begin
   if FUpdatingFullStressPeriods then
@@ -6402,6 +6622,36 @@ begin
       begin
         Exit;
       end;
+    end;
+
+    DeletedTimes := False;
+    StressPeriod := ModflowStressPeriods[0];
+    FirstTime := 0;
+    While TimeList.Count > 0 do
+    begin
+      if TimeList[0] < StressPeriod.StartTime then
+      begin
+        if not DeletedTimes then
+        begin
+          FirstTime := TimeList[0]
+        end;
+        TimeList.Delete(0);
+        DeletedTimes := True;
+      end
+      else
+      begin
+        break;
+      end;
+    end;
+
+    if DeletedTimes then
+    begin
+      frmErrorsAndWarnings.AddWarning(
+        'Any times begore the beginning of the first defined stress period will be ignored.',
+        'The beginning of the first stress period is '
+        + FloatToStr(StressPeriod.StartTime)
+        + '. The first defined time is '
+        + FloatToStr(FirstTime) + '.');
     end;
 
     TimeIndex := 0;
@@ -7045,6 +7295,10 @@ begin
     List.Free;
   end;
   MfHobHeads.ComputeAverage;
+  if frmErrorsAndWarnings.HasMessages then
+  begin
+    frmErrorsAndWarnings.Show;
+  end;
 end;
 
 type
@@ -8086,6 +8340,9 @@ var
   NumberOfSteps: Integer;
   SubWriter: TModflowSUB_Writer;
 begin
+  CheckWetting;
+
+
   PValFile.Clear;
   Template.Clear;
 
@@ -9411,26 +9668,6 @@ begin
   FChangedDataArrayNames.Add((Sender as TDataArray).Name);
 end;
 
-//procedure TPhastModel.DataArrayNameChangeWarning;
-//var
-//  Index: Integer;
-//const
-//  Warning = 'Data set names have changed. '
-//    + 'Formulas that use these data sets may need to be updated.';
-//begin
-//  if FChangedDataArrayNames.Count > 0 then
-//  begin
-//    frmErrorsAndWarnings.RemoveWarningGroup(Warning);
-//    for Index := 0 to FChangedDataArrayNames.Count - 1 do
-//    begin
-//      frmErrorsAndWarnings.AddWarning(Warning,
-//        FChangedDataArrayNames[Index]);
-//    end;
-//    frmErrorsAndWarnings.ShowAfterDelay;
-//    FChangedDataArrayNames.Clear;
-//  end;
-//end;
-
 function TPhastModel.DefaultArchiveName: string;
 var
   ArchiveRoot: string;
@@ -9821,6 +10058,7 @@ begin
     Exit;
   end;
   result := ChangeFileExt(ModelFileName, Extension);
+  result := FixFileName(result);
 end;
 
 procedure TPhastModel.DefinePackageDataArrays;
@@ -10375,7 +10613,7 @@ begin
   DataArrayCreationRecords[Index].DataSetNeeded := ConfiningBedKzUsed;
   DataArrayCreationRecords[Index].Lock := StandardLock;
   DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LFP: VKCB; BCF: VCONT';
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: VKCB; BCF: VCONT';
   NoCheck(DataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -10389,7 +10627,7 @@ begin
   DataArrayCreationRecords[Index].DataSetNeeded := VerticalAnisotropyUsed;
   DataArrayCreationRecords[Index].Lock := StandardLock;
   DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LFP: VKA';
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: VKA';
   NoCheck(DataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -10403,7 +10641,7 @@ begin
   DataArrayCreationRecords[Index].DataSetNeeded := HorizontalAnisotropyUsed;
   DataArrayCreationRecords[Index].Lock := StandardLock;
   DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LFP: HANI';
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: HANI';
   NoCheck(DataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -10416,7 +10654,7 @@ begin
   DataArrayCreationRecords[Index].DataSetNeeded := SpecificYieldUsed;
   DataArrayCreationRecords[Index].Lock := StandardLock;
   DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LFP: Sy; BCF: Sf1';
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: Sy; BCF: Sf1';
   NoCheck(DataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -10429,7 +10667,7 @@ begin
   DataArrayCreationRecords[Index].DataSetNeeded := WetDryUsed;
   DataArrayCreationRecords[Index].Lock := StandardLock;
   DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LFP, HUF: WETDRY';
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY';
   NoCheck(DataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -10446,7 +10684,14 @@ begin
   DataArrayCreationRecords[Index].CheckMin := True;
   DataArrayCreationRecords[Index].Max := 1;
   DataArrayCreationRecords[Index].Min := -1;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LFP, HUF: WETDRY';
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY'
+    + #13#10#13#10'A value < 0 indicates that only the cell below the '
+      + 'dry cell can cause the dry cell to become active again.'
+    + #13#10#13#10'A value > 0 indicates that the cell below the dry cell '
+      + 'or the cells next to the dry cell can cause the dry cell to become '
+      + 'active again.'
+    + #13#10#13#10'A value = 0 indicates that the dry cell can not become '
+      +'active again.';
   Inc(Index);
 
   DataArrayCreationRecords[Index].DataSetType := TDataArray;
@@ -10459,7 +10704,7 @@ begin
   DataArrayCreationRecords[Index].DataSetNeeded := WetDryUsed;
   DataArrayCreationRecords[Index].Lock := StandardLock;
   DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LFP, HUF: WETDRY';
+  DataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY';
   NoCheck(DataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -11367,6 +11612,48 @@ begin
       result := True;
       Exit;
     end;
+  end;
+end;
+
+function TPhastModel.CheckWetting: boolean;
+var
+  Group: TLayerGroup;
+  LayerGroupIndex: Integer;
+var
+  WetErrorMessage: string;
+begin
+  result := False;
+  frmErrorsAndWarnings.RemoveErrorGroup(WetError);
+  if ModflowWettingOptions.WettingActive then
+  begin
+    result := True;
+    for LayerGroupIndex := 1 to LayerStructure.Count - 1 do
+    begin
+      Group := LayerStructure[LayerGroupIndex];
+      if Group.AquiferType in WettableLayers then
+      begin
+        result := False;
+        break;
+      end;
+    end;
+  end;
+  if result then
+  begin
+    if frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected
+      or frmGoPhast.PhastModel.ModflowPackages.HufPackage.IsSelected then
+    begin
+      WetErrorMessage := 'At least one layer must be convertible.';
+    end
+    else if frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected then
+    begin
+      WetErrorMessage :=
+        'At least one layer must be unconfined or fully convertible.';
+    end
+    else
+    begin
+      Assert(False);
+    end;
+    frmErrorsAndWarnings.AddError(WetError, WetErrorMessage);
   end;
 end;
 

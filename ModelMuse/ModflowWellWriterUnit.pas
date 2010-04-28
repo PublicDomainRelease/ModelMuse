@@ -134,8 +134,10 @@ begin
   WriteFloat(Well_Cell.PumpingRate);
   WriteIface(Well_Cell.IFace);
   WriteString(' # ' + DataSetIdentifier + ' Layer Row Column Bhead '
-    + VariableIdentifiers);
-
+    + VariableIdentifiers + ' ');
+  // The annotation identifies the object used to define the well.
+  // This can be helpful in identifying when used with PEST. 
+  WriteString(Well_Cell.PumpingRateAnnotation);
   NewLine;
 end;
 

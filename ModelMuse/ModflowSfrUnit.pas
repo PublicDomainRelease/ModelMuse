@@ -287,8 +287,11 @@ begin
   EvaluateArrayBoundaries;
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    BoundaryStorage := Values.Boundaries[ValueIndex] as TSfrStorage;
-    AssignCells(BoundaryStorage, ValueTimeList);
+    if ValueIndex < Values.BoundaryCount then
+    begin
+      BoundaryStorage := Values.Boundaries[ValueIndex] as TSfrStorage;
+      AssignCells(BoundaryStorage, ValueTimeList);
+    end;
   end;
 end;
 

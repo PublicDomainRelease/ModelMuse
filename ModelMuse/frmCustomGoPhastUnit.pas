@@ -59,6 +59,7 @@ type
     // on whether or not the TSpinEdit is enabled or not.
 //    procedure SetSpinColor;
   public
+    procedure MouseClick;
     procedure UpdateSubComponents(AComponent: TComponent);
     // @name changes all the cells in Grid that are in Column and that
     // are selected to NewText.
@@ -340,6 +341,12 @@ begin
   CustomizeControls;
 end;
 
+procedure TfrmCustomGoPhast.MouseClick;
+begin
+  Mouse_Event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+  Mouse_Event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+end;
+
 procedure TfrmCustomGoPhast.AdjustFormPosition(DesiredPosition: TDesiredPosition);
 var
   NewLeft: integer;
@@ -559,6 +566,14 @@ begin
     Exit;
   end;
   if (Control = nil) and (ALabel = nil) then
+  begin
+    Exit;
+  end;
+  if Column >= Grid.ColCount then
+  begin
+    Exit;
+  end;
+  if Grid.RowCount = 0 then
   begin
     Exit;
   end;

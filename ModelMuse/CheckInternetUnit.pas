@@ -8,7 +8,7 @@ unit CheckInternetUnit;
 
 interface
 
-uses SysUtils, Classes, Dialogs, Forms, IniFiles;
+uses SysUtils, Classes, Dialogs, Forms, IniFiles, JvExStdCtrls, JvHtControls;
 
 type
   TVersionCompare = (vcUnknown, vcSame, vcExternalOlder, vcExternalNewer);
@@ -26,6 +26,7 @@ type
     FCurrentURL: String;
     FCurrentUrlHasBeenDisplayed: Boolean;
     FLastCheckInternetDate: TDateTime;
+    FNewVideoCount: Integer;
     procedure CheckWeb;
     procedure ReadIniFile;
     function CheckVersion(const ExternalVersionString: string): TVersionCompare;
@@ -34,6 +35,7 @@ type
     procedure CheckCurrentUrl;
     procedure UpdateIniFile;
     procedure DestroyIniFile;
+    procedure NewVideoMessage;
   public
     Constructor Create(ModelVersion: string; IniFile: TMemInifile; ShowTips: boolean);
     destructor Destroy; override;
@@ -124,7 +126,6 @@ begin
         begin
           if FUpdateText.Count > 0 then
           begin
-  //          Synchronize(UpdateIniFile);
             VersionOnWeb := FUpdateText[0];
             VerCompar := CheckVersion(VersionOnWeb);
             case VerCompar of
@@ -157,6 +158,10 @@ begin
                 end;
               end;
             end;
+          end
+          else if (FNewVideoCount > 0) then
+          begin
+            Synchronize(NewVideoMessage);
           end;
         end;
         Synchronize(UpdateIniFile);
@@ -218,6 +223,36 @@ begin
   FAppName := ExtractFileName(Application.Name);
 end;
 
+procedure TCheckInternetThread.NewVideoMessage;
+var
+  Lbl: TJvHTLabel;
+  AForm: TForm;
+  AMessage: string;
+begin
+  if FNewVideoCount = 1 then
+  begin
+    AMessage := 'There is a new video on the ModelMuse web site.';
+  end
+  else
+  begin
+    AMessage := 'There are ' + IntToStr(FNewVideoCount)
+      + ' new videos on the ModelMuse web site.';
+  end;
+  AForm := CreateMessageDialog(AMessage, mtInformation, [mbOK]);
+  try
+    Lbl := TJvHTLabel.Create(AForm);
+    Lbl.Parent := AForm;
+    Lbl.Caption := '<u><a href="http://water.usgs.gov/nrp/gwsoftware/'
+      + 'ModelMuse/ModelMuseVideos.html">Click here for '
+      + 'ModelMuse Videos</a></u>';
+    Lbl.Left := (AForm.ClientWidth - Lbl.Width) div 2;
+    Lbl.Top := 40;
+    AForm.ShowModal;
+  finally
+    AForm.Free;
+  end;
+end;
+
 procedure TCheckInternetThread.ShowNewVersionMessage;
 begin
   Beep;
@@ -231,6 +266,7 @@ var
   NewURL: string;
   HasDisplayed: Boolean;
 begin
+  FNewVideoCount := 0;
 //  FShowVideos := FIniFile.ReadBool(StrCustomization, StrShowTips, True);
   FIniFile.ReadSection(StrVideoDisplayed, FVideoURLs);
   if FUpdateText.Count > 0 then
@@ -252,6 +288,7 @@ begin
     if FVideoURLs.IndexOf(NewURL) < 0 then
     begin
       FVideoURLs.Add(NewURL);
+      Inc(FNewVideoCount);
     end;
   end;
 //  if FShowVideos then

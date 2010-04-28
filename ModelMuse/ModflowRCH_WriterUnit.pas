@@ -56,6 +56,8 @@ var
   ScreenObject: TScreenObject;
   Boundary: TRchBoundary;
 begin
+
+
   inherited;
   for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
   begin
@@ -182,7 +184,7 @@ begin
             if (PhastModel.ModflowPackages.RchPackage.
               LayerOption = loSpecified)
               and not PhastModel.ModflowPackages.RchPackage.
-              TimeVaryingLayers then
+              TimeVaryingLayers and (ParameterCount > 0) then
             begin
               RetrieveParametersForStressPeriod(D7PNameIname, D7PName, 0,
                 ParametersUsed, ParameterValues);

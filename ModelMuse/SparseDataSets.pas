@@ -596,8 +596,9 @@ end;
 
 procedure T3DSparseRealArray.Cache;
 var
-  TempFile: TTempFileStream;
+//  TempFile: TTempFileStream;
   Compressor: TCompressionStream;
+  MemStream: TMemoryStream;
 begin
   if not FCached then
   begin
@@ -605,16 +606,26 @@ begin
     begin
       FTempFileName := TempFileName;
     end;
-    TempFile := TTempFileStream.Create(FTempFileName, fmOpenReadWrite);
-    Compressor := TCompressionStream.Create(clDefault, TempFile);
+    MemStream := TMemoryStream.Create;
     try
-      TempFile.Position := 0;
-      StoreData(Compressor);
+//    TempFile := TTempFileStream.Create(FTempFileName, fmOpenReadWrite);
+//    Compressor := TCompressionStream.Create(clDefault, TempFile);
+      Compressor := TCompressionStream.Create(clDefault, MemStream);
+      try
+  //      TempFile.Position := 0;
+        MemStream.Position := 0;
+        StoreData(Compressor);
+      finally
+        Compressor.Free;
+      end;
+      MemStream.Position := 0;
+      ZipAFile(FTempFileName, MemStream);
     finally
-      Compressor.Free;
-      TempFile.Free;
+//      TempFile.Free;
+      MemStream.Free
     end;
     FCached := True;
+//    ZipAFile(FTempFileName);
   end;
   Clear;
   FCleared := True;
@@ -685,21 +696,31 @@ end;
 
 procedure T3DSparseRealArray.Restore;
 var
-  TempFile: TTempFileStream;
+//  TempFile: TTempFileStream;
+  MemStream: TMemoryStream;
   DecompressionStream: TDecompressionStream;
 begin
-  Assert(FileExists(FTempFileName));
+//  ExtractAFile(FTempFileName);
+//  Assert(FileExists(FTempFileName));
   Assert(FCached);
   Assert(FCleared);
-  TempFile := TTempFileStream.Create(FTempFileName, fmOpenRead);
-  DecompressionStream := TDecompressionStream.Create(TempFile);
+  MemStream := TMemoryStream.Create;
+//  TempFile := TTempFileStream.Create(FTempFileName, fmOpenRead);
+//  DecompressionStream := TDecompressionStream.Create(TempFile);
+  try
+    ExtractAFile(FTempFileName, MemStream);
+    MemStream.Position := 0;
+    DecompressionStream := TDecompressionStream.Create(MemStream);
   try
     ReadData(DecompressionStream);
     FCached := True;
   finally
     DecompressionStream.Free;
-    TempFile.Free;
   end;
+  finally
+    MemStream.Free;
+  end;
+//  DeleteFile(FTempFileName);
   FCleared := False;
 end;
 

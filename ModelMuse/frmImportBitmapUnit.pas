@@ -367,7 +367,7 @@ there is no loss in resolution at higher magnifications. }
     if not btnOK.Enabled then
     begin
       MessageDlg('Click on the image and assign real-world coordinates to the '
-        + 'points you clicked.', mtInformation, [mbOK], 0);
+        + 'points you clicked or fill in the information in the table.', mtInformation, [mbOK], 0);
     end;
   end;
 end;

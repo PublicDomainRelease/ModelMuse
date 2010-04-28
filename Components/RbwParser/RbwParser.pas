@@ -2230,6 +2230,7 @@ var
   PowerFunction: TFunctionRecord;
   PosFunction: TFunctionRecord;
   PosExFunction: TFunctionRecord;
+  PositionInList: TFunctionRecord;
   RadToDegFunction: TFunctionRecord;
   RoundFunction: TFunctionRecord;
   SinFunction: TFunctionRecord;
@@ -4084,14 +4085,23 @@ begin
 
   if not OperatorDefinition.SignOperator or IsSign(Index, OperatorDefinition.OperatorName) then
   begin
-
-    AnArgument := Objects[Index + 1] as TConstant;
-    if (AnArgument = nil) then
+    if (Objects[Index + 1] = nil) then
     begin
       raise ErbwParserError.Create('Error in parsing "'
         + OperatorDefinition.OperatorName + '" operator.');
     end;
-    Assert(OperatorDefinition.ArgumentDefinitions.Count >= 1);
+    try
+      AnArgument := Objects[Index + 1] as TConstant;
+    except on EInvalidCast do
+      raise ErbwParserError.Create('Error in parsing "'
+        + OperatorDefinition.OperatorName + '" operator.');
+    end;
+    if (OperatorDefinition.ArgumentDefinitions.Count < 1) then
+    begin
+      raise ErbwParserError.Create('the "'
+        + OperatorDefinition.OperatorName
+        + '" operator must have at least one argument.');
+    end;
     UsedDef := nil;
     for DefIndex := 0 to OperatorDefinition.ArgumentDefinitions.Count - 1 do
     begin
@@ -5990,6 +6000,23 @@ begin
   result := PBoolean(Values[PInteger(Values[0])^])^;
 end;
 
+function _PositionInList(Values: array of pointer): integer;
+var
+  TestItem: string;
+  Index: Integer;
+begin
+  result := 0;
+  TestItem := PString(Values[0])^;
+  for Index := 1 to Length(Values) - 1 do
+  begin
+    if TestItem = PString(Values[Index])^ then
+    begin
+      result := Index;
+      Exit;
+    end;
+  end;
+end;
+
 function _CaseInteger(Values: array of pointer): integer;
 begin
   result := PInteger(Values[PInteger(Values[0])^])^;
@@ -7369,6 +7396,21 @@ begin
   PosExFunction.CanConvertToConstant := True;
   PosExFunction.IFunctionAddr := _PosEx;
   Add(PosExFunction);
+
+
+  PositionInList.ResultType := rdtInteger;
+  PositionInList.Name := 'PositionInList';
+  PositionInList.Prototype :=
+    'Text|PositionInList(TestTextItem, FirstTextItem, SecondTextItem, ...)';
+  SetLength(PositionInList.InputDataTypes, 2);
+  PositionInList.InputDataTypes[0] := rdtString;
+  PositionInList.InputDataTypes[1] := rdtString;
+  PositionInList.CanConvertToConstant := True;
+  PositionInList.OptionalArguments := -1;
+  PositionInList.IFunctionAddr := _PositionInList;
+  Add(PositionInList);
+
+
 
   PowerFunction.ResultType := rdtDouble;
   PowerFunction.Name := 'Power';

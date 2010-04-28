@@ -108,6 +108,10 @@ uses ModflowParameterUnit, OrderedCollectionUnit;
 
 procedure TframeArrayParameterDefinition.ArrangeMultiEditControls;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   LayoutControls(dgParameters, rdeParamValue, lblParamValue, Ord(pcValue));
   LayoutControls(dgParameters, cbUseZone, nil, Ord(pcUseZone), 5);
   LayoutControls(dgParameters, cbUseMultiplier, nil, Ord(pcUseMultiplier), 5);

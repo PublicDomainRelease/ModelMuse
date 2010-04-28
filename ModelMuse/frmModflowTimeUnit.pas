@@ -440,6 +440,10 @@ end;
 
 procedure TfrmModflowTime.LayoutMultiRowEditControls;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   LayoutControls(dgTime, rdePeriodLength, lblPeriodLength, Ord(tcLength));
   LayoutControls(dgTime, rdeMaxFirstStepLength, lblMaxFirstTimeStepLength, Ord(tcTimeFirstStep));
   LayoutControls(dgTime, rdeMultiplier, lblMultiplier, Ord(tcMultiplier));

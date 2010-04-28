@@ -10,21 +10,38 @@ Type
     procedure WriteFile(const FileName: string; Model: TPhastModel);
   end;
 
+
 implementation
 
 uses ModpathMainFileWriterUnit, ModflowDiscretizationWriterUnit, 
   ModpathStartingLocationsWriter, ModflowPackageSelectionUnit,
-  ModflowOutputControlUnit;
+  ModflowOutputControlUnit, frmErrorsAndWarningsUnit;
 
 { TModpathNameFileWriter }
 
 procedure TModpathNameFileWriter.WriteFile(const FileName: string;
   Model: TPhastModel);
+const
+  CbfFileExistsError = 'The following MODFLOW input or output files are '
+    + 'required by MODPATH to run but they are not in the directory in which '
+    + 'MODPATH is being run: "';
 var
   NameFile: TStringList;
   AFileName: string;
   Options: TModpathSelection;
+  procedure CheckFileExists(const AFileName: string);
+  var
+    FullFileName: string;
+  begin
+    FullFileName := ExpandFileName(AFileName);
+    if not FileExists(FullFileName) then
+    begin
+      frmErrorsAndWarnings.AddError(CbfFileExistsError + ExtractFilePath(FileName) + '".',
+        AFileName);
+    end;
+  end;
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(CbfFileExistsError);
   Options := Model.ModflowPackages.ModPath;
   
   NameFile := TStringList.Create;
@@ -39,9 +56,16 @@ begin
     AFileName := ExtractFileName(ChangeFileExt(FileName,
       TModflowDiscretizationWriter.Extension));
     NameFile.Add('DIS 13 ' + AFileName);
+    CheckFileExists(AFileName);
 
-    AFileName := ExtractFileName(ChangeFileExt(FileName, '.cbf'));
-    NameFile.Add('CBF 14 ' + AFileName);
+    if Model.ModflowStressPeriods.TransientModel then
+    begin
+      AFileName := ExtractFileName(ChangeFileExt(FileName, '.cbf'));
+      NameFile.Add('CBF 14 ' + AFileName);
+      // The response file will direct MODPATH to generated
+      // the CBF file if it doesn't exist.
+//      CheckFileExists(AFileName);
+    end;
 
     if Options.Binary then
     begin
@@ -96,6 +120,7 @@ begin
 
     AFileName := ExtractFileName(ChangeFileExt(FileName, '.cbc'));
     NameFile.Add('BUDGET 20 ' + AFileName);
+    CheckFileExists(AFileName);
 
     if Model.ModflowOutputControl.HeadOC.SaveInExternalFile then
     begin
@@ -104,11 +129,13 @@ begin
           begin
             AFileName := ExtractFileName(ChangeFileExt(FileName, '.fhd'));
             NameFile.Add('HEAD 21 ' + AFileName);
+            CheckFileExists(AFileName);
           end;
         oftBinary:
           begin
             AFileName := ExtractFileName(ChangeFileExt(FileName, '.bhd'));
             NameFile.Add('HEAD(BINARY) 22 ' + AFileName);
+            CheckFileExists(AFileName);
           end;
         else Assert(False);
       end;
@@ -121,11 +148,13 @@ begin
           begin
             AFileName := ExtractFileName(ChangeFileExt(FileName, '.fdn'));
             NameFile.Add('DRAWDOWN 23 ' + AFileName);
+            CheckFileExists(AFileName);
           end;
         oftBinary:
           begin
             AFileName := ExtractFileName(ChangeFileExt(FileName, '.bdn'));
             NameFile.Add('DRAWDOWN(BINARY) 24 ' + AFileName);
+            CheckFileExists(AFileName);
           end;
         else Assert(False);
       end;

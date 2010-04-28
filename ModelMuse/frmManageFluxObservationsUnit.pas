@@ -135,6 +135,7 @@ located at http://jvcl.sourceforge.net
     FDrobNode: TTreeNode;
     FRvobNode: TTreeNode;
     FSettingTimeCount: Boolean;
+    FHidingColumns: Boolean;
     procedure SetSelectedObservation(const Value: TFluxObservationGroup);
     procedure AssignObsNames;
     procedure DisplayFactor;
@@ -192,10 +193,17 @@ end;
 
 procedure TfrmManageFluxObservations.HideUcodeColumns;
 begin
-  if not frmGoPhast.ShowUcodeInterface then
-  begin
-    rdgFluxObsTimes.ColWidths[Ord(fcStatistic)] := 0;
-    rdgFluxObsTimes.ColWidths[Ord(fcStatFlag)] := 0;
+  if FHidingColumns then Exit;
+  FHidingColumns := True;
+  try
+    if not frmGoPhast.ShowUcodeInterface then
+    begin
+      rdgFluxObsTimes.ColWidths[Ord(fcStatistic)] := 0;
+      rdgFluxObsTimes.ColWidths[Ord(fcStatFlag)] := 0;
+    end;
+    comboMultiStatFlag.Visible := frmGoPhast.ShowUcodeInterface;
+  finally
+    FHidingColumns := False;
   end;
 end;
 
@@ -241,6 +249,10 @@ var
   AColVisible: Boolean;
   Index: Integer;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   if (rdgFluxObsTimes = nil) or (rdeMultiValueEdit = nil)
      or (comboMultiStatFlag = nil) then
   begin
@@ -1422,7 +1434,15 @@ procedure TfrmManageFluxObservations.GetData;
 var
   Index: Integer;
   ScreenObject: TScreenObject;
+  Column: TRbwColumn4;
 begin
+  Column := rdgFluxObsTimes.Columns[Ord(fcStatFlag)];
+  Assert(comboMultiStatFlag.Items.Count = Column.PickList.Count);
+  for Index := 0 to Column.PickList.Count - 1 do
+  begin
+    comboMultiStatFlag.Items[Index].Text := Column.PickList[Index];
+  end;
+
   for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];

@@ -294,11 +294,11 @@ object frameHeadObservations: TframeHeadObservations
             MaxLength = 0
             ParentButtonFont = False
             PickList.Strings = (
-              'Variance'
-              'Standard dev.'
-              'Coef. of var.'
-              'Weight'
-              'Sq. rt. of weight')
+              'Variance (0)'
+              'Standard dev. (1)'
+              'Coef. of var. (2)'
+              'Weight (3)'
+              'Sq. rt. of weight (4)')
             WordWrapCaptions = False
             WordWrapCells = False
             AutoAdjustColWidths = True
@@ -324,6 +324,7 @@ object frameHeadObservations: TframeHeadObservations
             WordWrapCells = True
             AutoAdjustColWidths = False
           end>
+        OnEndUpdate = rdgHeadsEndUpdate
         ColWidths = (
           64
           64

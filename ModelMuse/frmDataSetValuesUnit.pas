@@ -32,11 +32,14 @@ type
     procedure btnCopyClick(Sender: TObject);
     procedure lbLayersMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure treecomboDataSetsClosedUp(Sender: TObject);
+    procedure treecomboDataSetsDropDownTreeEnter(Sender: TObject);
   private
     FSelectedVirtNode: PVirtualNode;
     // @name is implemented as a TObjectList.
     FDataSets: TList;
     FTempControls: TList;
+    FShouldClick: Boolean;
     procedure GetData;
     procedure SetSelectedNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     { Private declarations }
@@ -182,11 +185,27 @@ begin
   btnCopy.Enabled := True;
 end;
 
+procedure TfrmDataSetValues.treecomboDataSetsClosedUp(Sender: TObject);
+begin
+  inherited;
+  if FShouldClick then
+  begin
+    MouseClick;
+    FShouldClick := False;
+  end;
+end;
+
 procedure TfrmDataSetValues.treecomboDataSetsDropDownTreeChange(
   Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   inherited;
   SetSelectedNode(Sender, Node);
+end;
+
+procedure TfrmDataSetValues.treecomboDataSetsDropDownTreeEnter(Sender: TObject);
+begin
+  inherited;
+  FShouldClick := True;
 end;
 
 procedure TfrmDataSetValues.treecomboDataSetsDropDownTreeGetNodeDataSize(

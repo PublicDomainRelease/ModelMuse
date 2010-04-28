@@ -12,8 +12,11 @@ type
     function Collection: TModflowTransientListParameters;
   protected
     procedure SetParameterName(const Value: string); override;
+    procedure SetParameterType(const Value: TParameterType); override;
+    procedure SetValue(Value : double); override;
   public
     procedure Assign(Source: TPersistent); override;
+    destructor Destroy; override;
   end;
 
   TModflowTransientListParameters = class(TEnhancedOrderedCollection)
@@ -21,8 +24,8 @@ type
     function GetItems(Index: integer): TModflowTransientListParameter;
     procedure SetItems(Index: integer;
       const Value: TModflowTransientListParameter);
-    procedure UpdateDisplay(Value: TModflowTransientListParameter);
   public
+    procedure UpdateDisplay(Value: TModflowTransientListParameter);
     constructor Create(Model: TObject);
     property Items[Index: integer]: TModflowTransientListParameter
       read GetItems write SetItems; default;
@@ -67,6 +70,12 @@ end;
 function TModflowTransientListParameter.Collection: TModflowTransientListParameters;
 begin
   result := inherited Collection as TModflowTransientListParameters;
+end;
+
+destructor TModflowTransientListParameter.Destroy;
+begin
+  (Collection as TModflowTransientListParameters).UpdateDisplay(self);
+  inherited;
 end;
 
 procedure TModflowTransientListParameter.SetParameterName(const Value: string);
@@ -126,6 +135,19 @@ begin
     FParameterName := NewName;
     InvalidateModel;
   end;
+end;
+
+procedure TModflowTransientListParameter.SetParameterType(
+  const Value: TParameterType);
+begin
+  inherited;
+  (Collection as TModflowTransientListParameters).UpdateDisplay(self);
+end;
+
+procedure TModflowTransientListParameter.SetValue(Value: double);
+begin
+  inherited;
+  (Collection as TModflowTransientListParameters).UpdateDisplay(self);
 end;
 
 { TModflowTransientListParameters }

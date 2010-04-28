@@ -93,6 +93,11 @@ type
     function GetChannelTimeValuesFromTime(StartTime: double): TSfrChannelRecord;
   end;
 
+const
+  ChannelRoughnessError = 'SFR Channel roughness is less than or equal to zero.';
+  BankRoughnessError = 'SFR Bank roughness is less than or equal to zero.';
+  IDError = 'Object: %s; Time: %g.';
+
 implementation
 
 uses Contnrs, DataSetUnit, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit,
@@ -582,6 +587,12 @@ begin
       end;
     end;
     CurrentRecord.ChannelRoughness := Expression.DoubleResult;
+    if CurrentRecord.ChannelRoughness <= 0 then
+    begin
+      frmErrorsAndWarnings.AddError(ChannelRoughnessError,
+        Format(IDError, [ScrObj.Name, CurrentItem.StartTime]));
+
+    end;
     if ICALC = 2 then
     begin
       Formula := CurrentItem.BankRoughness;
@@ -607,6 +618,11 @@ begin
         end;
       end;
       CurrentRecord.BankRoughness := Expression.DoubleResult;
+      if CurrentRecord.BankRoughness <= 0 then
+      begin
+        frmErrorsAndWarnings.AddError(BankRoughnessError,
+          Format(IDError, [ScrObj.Name, CurrentItem.StartTime]));
+      end;
 
       for XSIndex := 0 to 7 do
       begin

@@ -244,6 +244,9 @@ type
     btnCopyVertices: TButton;
     jvspMNW2: TJvStandardPage;
     frameMNW2: TframeScreenObjectMNW2;
+    tabComments: TTabSheet;
+    memoComments: TMemo;
+    lblComments: TLabel;
     // @name changes which check image is displayed for the selected item
     // in @link(jvtlModflowBoundaryNavigator).
     procedure jvtlModflowBoundaryNavigatorMouseDown(Sender: TObject;
@@ -1815,6 +1818,7 @@ type
     procedure SetFrameData;
     { Private declarations }
   public
+    procedure ClearExpressionsAndVariables;
     // When a @link(TScreenObject) is first created,
     // @name is called to display it's properties.
     // GetDataForMultipleScreenObjects)
@@ -2189,6 +2193,7 @@ begin
   inherited;
   HelpKeyWord := jvplModflowBoundaries.ActivePage.HelpKeyword;
   btnHelp.HelpKeyword := HelpKeyWord;
+  frameHeadObservations.HideUcodeColumns;
 end;
 
 procedure TfrmScreenObjectProperties.jvtlModflowBoundaryNavigatorChanging(
@@ -2222,7 +2227,7 @@ begin
     begin
       AllowChange := False;
     end;
-  end
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.jvtlModflowBoundaryNavigatorCustomDrawItem(
@@ -2274,8 +2279,17 @@ end;
 
 procedure TfrmScreenObjectProperties.jvtlModflowBoundaryNavigatorMouseDown(
   Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  CanSelectNode: Boolean;
 begin
   inherited;
+  CanSelectNode := True;
+  jvtlModflowBoundaryNavigatorChanging(Sender,
+    jvtlModflowBoundaryNavigator.GetNodeAt(X,Y), CanSelectNode);
+  if not CanSelectNode then
+  begin
+    Exit;
+  end;
   if htOnStateIcon in jvtlModflowBoundaryNavigator.GetHitTestInfoAt(X, Y) then
   begin
     case jvtlModflowBoundaryNavigator.Selected.StateIndex of
@@ -2446,6 +2460,7 @@ begin
     CompilerList.Free;
   end;
 
+
   // If FUndoSetScreenObjectProperties was submitted, it will have
   // been set to nil.
   FBoundaryPhastInterpolationList.Clear;
@@ -2504,6 +2519,8 @@ var
   Index: Integer;
   ValueItem: TValueArrayItem;
 begin
+  tabImportedData.TabVisible := True;
+  memoComments.Text := AScreenObject.Comment;
   SetCheckBoxCaptions;
   frameModpathParticles.InitializeFrame;
   edObjectOrder.Text := IntToStr(
@@ -2683,6 +2700,8 @@ begin
   // whether or not anything should be done.
   IsLoaded := True;
   UpdateSubComponents(self);
+  frameHeadObservations.HideUcodeColumns;
+  UpdateCurrentEdit;
 end;
 
 procedure TfrmScreenObjectProperties.GetChdBoundary(ScreenObjectList: TList);
@@ -3148,6 +3167,7 @@ begin
   SetFrameData;
 
   FScreenObject.Assign(FNewProperties.Items[0].ScreenObject);
+  FScreenObject.Comment := memoComments.Text;
 
   List := TList.Create;
   try
@@ -3321,6 +3341,14 @@ begin
     rdgImportedData.RowCount := 2;
   finally
     rdgImportedData.EndUpdate;
+  end;
+  if FNewProperties <> nil then
+  begin
+    FNewProperties.Clear;
+  end;
+  if FOldProperties <> nil then
+  begin
+    FOldProperties.Clear;
   end;
 end;
 
@@ -3648,6 +3676,13 @@ var
   Compiler: TRbwParser;
   FirstScreenObject: TScreenObject;
 begin
+  if FNewProperties = nil then
+  begin
+    FNewProperties := TScreenObjectEditCollection.Create;
+    FNewProperties.OwnScreenObject := True;
+  end;
+  FillPropertyCollection(FNewProperties, AScreenObjectList);
+  
   IsLoaded := False;
   TempList := TStringList.Create;
   try
@@ -3659,6 +3694,7 @@ begin
     end;
     if AScreenObjectList.Count > 1 then
     begin
+      tabImportedData.TabVisible := False;
       tabImportedData.TabVisible := False;
       CompilerList := TList.Create;
       try
@@ -3676,12 +3712,6 @@ begin
     end;
 
 
-    if FNewProperties = nil then
-    begin
-      FNewProperties := TScreenObjectEditCollection.Create;
-      FNewProperties.OwnScreenObject := True;
-    end;
-    FillPropertyCollection(FNewProperties, AScreenObjectList);
     if FOldProperties = nil then
     begin
       FOldProperties := TScreenObjectEditCollection.Create;
@@ -3764,26 +3794,50 @@ begin
   EnableOK_Button;
   EmphasizeValueChoices;
   UpdateSubComponents(self);
+  UpdateCurrentEdit;
+end;
 
+procedure TfrmScreenObjectProperties.ClearExpressionsAndVariables();
+var
+  Compiler: TRbwParser;
+  Index: Integer;
+  CompilerList: TList;
+begin
+  CompilerList := TList.Create;
+  try
+    FillCompilerList(CompilerList);
+    for Index := 0 to CompilerList.Count - 1 do
+    begin
+      Compiler := CompilerList[Index];
+      Compiler.ClearExpressions;
+      Compiler.ClearVariables;
+    end;
+  finally
+    CompilerList.Free;
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.SetFrameData;
 begin
   frameHeadObservations.SetData(FNewProperties,
     ((FHOB_Node <> nil) and (FHOB_Node.StateIndex = 2)),
-    ((FHOB_Node = nil) or (FHOB_Node.StateIndex = 1)));
+    ((FHOB_Node = nil) or (FHOB_Node.StateIndex = 1))
+    and frmGoPhast.PhastModel.ModflowPackages.HobPackage.IsSelected);
 
   frameScreenObjectSFR.SetData(FNewProperties,
     ((FSFR_Node <> nil) and (FSFR_Node.StateIndex = 2)),
-    ((FSFR_Node = nil) or (FSFR_Node.StateIndex = 1)));
+    ((FSFR_Node = nil) or (FSFR_Node.StateIndex = 1))
+    and frmGoPhast.PhastModel.ModflowPackages.SfrPackage.IsSelected);
 
   frameMNW2.SetData(FNewProperties,
     ((FMNW2_Node <> nil) and (FMNW2_Node.StateIndex = 2)),
-    ((FMNW2_Node = nil) or (FMNW2_Node.StateIndex = 1)));
+    ((FMNW2_Node = nil) or (FMNW2_Node.StateIndex = 1))
+    and frmGoPhast.PhastModel.ModflowPackages.Mnw2Package.IsSelected);
 
   frameHfbBoundary.SetData(FNewProperties,
     ((FHFB_Node <> nil) and (FHFB_Node.StateIndex = 2)),
-    ((FHFB_Node = nil) or (FHFB_Node.StateIndex = 1)));
+    ((FHFB_Node = nil) or (FHFB_Node.StateIndex = 1))
+    and frmGoPhast.PhastModel.ModflowPackages.HfbPackage.IsSelected);
 end;
 
 procedure TfrmScreenObjectProperties.UpdateVertices;
@@ -4874,16 +4928,21 @@ begin
     end;
     if AScreenObject.ImportedSectionElevations.Count > 0 then
     begin
-      AScreenObject.ImportedSectionElevations := AScreenObject.ImportedSectionElevations;
+      AScreenObject.ImportedSectionElevations :=
+        AScreenObject.ImportedSectionElevations;
     end;
     if AScreenObject.ImportedHigherSectionElevations.Count > 0 then
     begin
-      AScreenObject.ImportedHigherSectionElevations := AScreenObject.ImportedHigherSectionElevations;
+      AScreenObject.ImportedHigherSectionElevations :=
+        AScreenObject.ImportedHigherSectionElevations;
     end;
     if AScreenObject.ImportedLowerSectionElevations.Count > 0 then
     begin
-      AScreenObject.ImportedLowerSectionElevations := AScreenObject.ImportedLowerSectionElevations;
+      AScreenObject.ImportedLowerSectionElevations :=
+        AScreenObject.ImportedLowerSectionElevations;
     end;
+    ScreenObject.Comment := memoComments.Text;
+    AScreenObject.Comment := memoComments.Text;
   end;
   for Index := 0 to FNewProperties.Count - 1 do
   begin
@@ -11750,14 +11809,14 @@ begin
       if FNewProperties.Count = 1 then
       begin
         MessageDlg('This object will no longer set the properties of 2D '
-          + 'data sets are used in its '
+          + 'data sets that are used in its '
           + 'elevation formula(s) either directly or indirectly.',
           mtWarning, [mbOK], 0);
       end
       else
       begin
         MessageDlg('These objects will no longer set the properties of 2D '
-          + 'data sets are used in their '
+          + 'data sets that are used in their '
           + 'elevation formula(s) either directly or indirectly.',
           mtWarning, [mbOK], 0);
       end;
@@ -14445,7 +14504,7 @@ var
   RowAdded: Boolean;
   CheckBox: TCheckBox;
 begin
-  if IsLoaded then
+  if IsLoaded  and (FNewProperties <> nil) then
   begin
     for Index := 0 to FNewProperties.Count - 1 do
     begin

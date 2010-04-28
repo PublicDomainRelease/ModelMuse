@@ -14,7 +14,7 @@ type
     FTrackingDirection: TTrackingDirection;
   public
     Constructor Create(ScreenObject: TScreenObject;
-      TrackingDirection: TTrackingDirection);
+      TrackingDirection: TTrackingDirection; StartTime, EndTime: Real);
     Destructor Destroy; override;
     procedure UpdateLocationLines(Lines: TStringList;
       Layer, Row, Column: integer; SimulatedLayer: boolean);
@@ -26,6 +26,8 @@ type
     FCellList: TCellAssignmentList;
     FParticleGrid: array of array of array of TParticleLines;
     FStartingLocations: TStringList;
+    FStartTime: Real;
+    FEndTime: Real;
     procedure AssignParticleLocationsToElements;
     procedure UpdateParticleLines;
     procedure WriteLines;
@@ -39,7 +41,12 @@ type
 implementation
 
 uses
-  ModpathParticleUnit;
+  ModpathParticleUnit, ModflowTimeUnit, frmErrorsAndWarningsUnit;
+
+resourcestring
+  StrAStartingTimeFor = 'A starting time for the MODPATH particles defined '
+    + 'with the following objects are not valid. Adjust the beginning and '
+    + 'ending time for MODPATH or adjust the relese time.';
 
 { TModpathStartingLocationsWriter }
 
@@ -67,7 +74,27 @@ end;
 procedure TModpathStartingLocationsWriter.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
+  StressPeriods: TModflowStressPeriods;
 begin
+  StressPeriods := PhastModel.ModflowStressPeriods;
+  if StressPeriods.CompletelyTransient then
+  begin
+    FStartTime := PhastModel.ModflowPackages.ModPath.BeginningTime;
+  end
+  else
+  begin
+    FStartTime := StressPeriods[0].StartTime;
+  end;
+  if StressPeriods.TransientModel then
+  begin
+    FEndTime := PhastModel.ModflowPackages.ModPath.EndingTime;
+  end
+  else
+  begin
+    FEndTime := StressPeriods[StressPeriods.Count-1].EndTime;
+  end;
+  frmErrorsAndWarnings.RemoveErrorGroup(StrAStartingTimeFor);
+
   NameOfFile := FileName(AFileName);
   OpenFile(NameOfFile);
   try
@@ -108,7 +135,8 @@ begin
         ParticleLines := FParticleGrid[LayerIndex, RowIndex, ColumnIndex];
         if ParticleLines <> nil then
         begin
-          ParticleLines.UpdateLocationLines(FStartingLocations, LayerIndex + 1, RowIndex + 1, ColumnIndex + 1, SimulatedLayer);
+          ParticleLines.UpdateLocationLines(FStartingLocations,
+            LayerIndex + 1, RowIndex + 1, ColumnIndex + 1, SimulatedLayer);
         end;
       end;
     end;
@@ -123,14 +151,16 @@ var
   ObjectIndex: Integer;
   ParticleLines: TParticleLines;
 begin
-  SetLength(FParticleGrid, PhastModel.Grid.LayerCount, PhastModel.Grid.RowCount, PhastModel.Grid.ColumnCount);
+  SetLength(FParticleGrid, PhastModel.Grid.LayerCount,
+    PhastModel.Grid.RowCount, PhastModel.Grid.ColumnCount);
   for Index := 0 to PhastModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := PhastModel.ScreenObjects[Index];
     if (not ScreenObject.Deleted) and ScreenObject.ModpathParticles.Used then
     begin
       ParticleLines := TParticleLines.Create(ScreenObject,
-        PhastModel.ModflowPackages.ModPath.TrackingDirection);
+        PhastModel.ModflowPackages.ModPath.TrackingDirection,
+        FStartTime, FEndTime);
       FParticleLines.Add(ParticleLines);
       FCellList.Clear;
       ScreenObject.GetModpathCellList(FCellList);
@@ -146,7 +176,7 @@ end;
 { TParticleLines }
 
 constructor TParticleLines.Create(ScreenObject: TScreenObject;
-TrackingDirection: TTrackingDirection);
+TrackingDirection: TTrackingDirection; StartTime, EndTime: Real);
 var
   TimeIndex: Integer;
   ParticleReleaseTimes: TModpathTimes;
@@ -155,6 +185,7 @@ var
   Index: Integer;
   ParticleItem: TParticleLocation;
   XYString: string;
+  ReleaseTimeErrorDetected: boolean;
 begin
 
   Assert(ScreenObject <> nil);
@@ -166,9 +197,17 @@ begin
   FReleaseTimes:= TStringList.Create;
   ParticleReleaseTimes := ScreenObject.ModpathParticles.ReleaseTimes;
   FReleaseTimes.Capacity := ParticleReleaseTimes.Count;
+  ReleaseTimeErrorDetected := False;
   for TimeIndex := 0 to ParticleReleaseTimes.Count - 1 do
   begin
     TimeItem := ParticleReleaseTimes.Items[TimeIndex] as TModpathTimeItem;
+    if (not ReleaseTimeErrorDetected) and (FTrackingDirection = tdForward) and
+      ((TimeItem.Time < StartTime) or (TimeItem.Time > EndTime)) then
+    begin
+      frmErrorsAndWarnings.AddError(StrAStartingTimeFor,
+        ScreenObject.Name);
+      ReleaseTimeErrorDetected := True;
+    end;
     FReleaseTimes.Add(FloatToStr(TimeItem.Time));
   end;
   Particles := ScreenObject.ModpathParticles.Particles;

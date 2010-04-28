@@ -110,16 +110,16 @@ side views of the model.}
 
   {@abstract(@name is an abstract class that defines the interface for a grid.
    It implements storage for columns and rows but not for layers.)  It also
-   implements display of the top view of the grid but not the front or side
+   implements the display of the top view of the grid but not the front or side
    views.  The columns and rows boundaries are stored in one-dimensional
    arrays.  For some finite-difference models such as PHAST, the layers can
-   also be stored in a one-dimensional arrays.  Others, such as MODFLOW, would
+   also be stored in a one-dimensional arrays.  Others, such as MODFLOW,
    require a more complex access method.  The interface defined
    in @name defines the more complex access method required by a
-   MODFLOW-type grid. However, because no MODFLOW-type grid has actually
-   been implemented, there may prove to be bugs in @name when used as an
-   ancestor of a MODFLOW-type grid.
+   MODFLOW-type grid. 
    )
+   @seealso(TPhastGrid)
+   @seealso(TModflowGrid)
    }
   TCustomGrid = class(TPersistent)
   private
@@ -920,9 +920,11 @@ side views of the model.}
     { @name returns the X, and Y coordinates of the center of
       a grid element in the real-world coordinates.}
     function TwoDElementCenter(const Column, Row: integer): TPoint2D;
+    function UnrotatedTwoDElementCenter(const Column, Row: integer): TPoint2D;
     { TwoDCellCorner returns the X ,and Y coordinates of a corner of
       a grid element in the real-world coordinates.}
     function TwoDElementCorner(const Column, Row: integer): TPoint2D;
+    function UnrotatedTwoDElementCorner(const Column, Row: integer): TPoint2D;
     { @name returns the X ,and Y coordinates of the center
       of the edge of a row in the real-world coordinates.}
     function TwoDRowEdgeCenter(const Column, Row: integer): TPoint2D;
@@ -3312,12 +3314,26 @@ begin
   result.Z := CellElevation[Column, Row, Layer];
 end;
 
+function TCustomGrid.UnrotatedTwoDElementCenter(const Column,
+  Row: integer): TPoint2D;
+begin
+  result.X := (ColumnPosition[Column] + ColumnPosition[Column + 1]) / 2;
+  result.Y := (RowPosition[Row] + RowPosition[Row + 1]) / 2;
+end;
+
 function TCustomGrid.TwoDElementCenter(const Column,
   Row: integer): TPoint2D;
 begin
   result.X := (ColumnPosition[Column] + ColumnPosition[Column + 1]) / 2;
   result.Y := (RowPosition[Row] + RowPosition[Row + 1]) / 2;
   result := RotateFromGridCoordinatesToRealWorldCoordinates(result);
+end;
+
+function TCustomGrid.UnrotatedTwoDElementCorner(const Column,
+  Row: integer): TPoint2D;
+begin
+  result.X := ColumnPosition[Column];
+  result.Y := RowPosition[Row];
 end;
 
 function TCustomGrid.TwoDElementCorner(const Column,

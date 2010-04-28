@@ -610,6 +610,69 @@ program ModelMuse;
 {%TogetherDiagram 'ModelSupport_ModelMuse\JvRichEdit\default.txaPackage'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\JupiterUnit\default.txaPackage'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\frmExportShapefileObjectsUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmImportSurferGrdFileUnitUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmImportDEMUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmCustomImportSimpleFileUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\SurferGridFileReaderUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\DemReaderUnit\default.txaPackage'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ParallelRunnerUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmWorldFileTypeUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\UnitCrc\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmCustomImportSimpleFileUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frameLocationMethodUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\UnitList\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowKDEP_WriterUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmDeleteImageUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\framePackageMnw2Unit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\framePackageHufUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\CheckInternetUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmTimeSeriesDisplayUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmModelMateInterfaceUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowBCF_WriterUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowGageUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frameSubBedsUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\FormulaManagerUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\GlobalBasicData\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frameScreenObjectMNW2Unit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\framePackageSubUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmModpathDisplayUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModelMateUtilities\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmPhastLocationUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowLVDA_WriterUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\JvRichEdit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\SurferGridFileReaderUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\JupiterUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\DemReaderUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmExportShapefileObjectsUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmImportSurferGrdFileUnitUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\PathlineReader\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\DependentsUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmEndPointDisplayUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowHUF_WriterUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmCustomSelectObjectsUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ParallelControlUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmHUF_LayersUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmTimeStepLengthCalculatorUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\GlobalData\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\UcodeUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ConvexHullUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowMNW2_WriterUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\PriorInfoUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmImportDEMUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmDataSetValuesUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\sskutils\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\HufDefinition\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmSelectObjectsForEditingUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowSubsidenceDefUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmRunModpathUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowMnw2Unit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModelMateClassesUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frameBatchFileLinesUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\GlobalTypesUnit\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModelMuseUtilities\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\HashTrie\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\ModflowSUB_Writer\default.txvpck'}
+{%TogetherDiagram 'ModelSupport_ModelMuse\frmBatchFileAdditionsUnit\default.txvpck'}
 
 //  FastMM4 in 'FastMM4.pas',
 //  FastMove in 'FastCode\FastMove.pas',
@@ -631,6 +694,7 @@ uses
   FastObj in 'FastObj.pas',
   FastSys in 'FastSys.pas',
   RtlVclOptimize in 'RtlVclOptimize.pas',
+  TempFiles in 'TempFiles.pas',
   Forms,
   frmGoPhastUnit in 'frmGoPhastUnit.pas' {frmGoPhast},
   AbstractGridUnit in 'AbstractGridUnit.pas',
@@ -870,7 +934,6 @@ uses
   frmImportModflowUnit in 'frmImportModflowUnit.pas' {frmImportModflow},
   framePackageLpfUnit in 'framePackageLpfUnit.pas' {framePackageLpf: TFrame},
   ContourUnit in 'ContourUnit.pas',
-  TempFiles in 'TempFiles.pas',
   ReadModflowArrayUnit in 'ReadModflowArrayUnit.pas',
   frmSelectResultToImportUnit in 'frmSelectResultToImportUnit.pas' {frmSelectResultToImport},
   frmUpdateDataSetsUnit in 'frmUpdateDataSetsUnit.pas' {frmUpdateDataSets},
@@ -953,7 +1016,9 @@ uses
   UnitCRC in 'UnitCRC.pas',
   SurferGridFileReaderUnit in 'SurferGridFileReaderUnit.pas',
   frmImportSurferGrdFileUnitUnit in 'frmImportSurferGrdFileUnitUnit.pas' {frmImportSurferGrdFile},
-  frmCustomImportSimpleFileUnit in 'frmCustomImportSimpleFileUnit.pas' {frmCustomImportSimpleFile};
+  frmCustomImportSimpleFileUnit in 'frmCustomImportSimpleFileUnit.pas' {frmCustomImportSimpleFile},
+  DemReaderUnit in 'DemReaderUnit.pas',
+  frmImportDEMUnit in 'frmImportDEMUnit.pas' {frmImportDEM};
 
 {$R *.res}
 

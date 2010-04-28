@@ -196,24 +196,6 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
           Caption = 'Listing file format (IHEDFM)'
           ExplicitWidth = 192
         end
-        inherited comboP: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboREdit: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboFrequency: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboPrintStyle: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboPrintFormat: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboSaveType: TJvImageComboBox
-          ItemIndex = -1
-        end
         inherited rcExternalFormat: TRbwController
           ControlList = <
             item
@@ -277,10 +259,8 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
           ExplicitWidth = 74
         end
         inherited lblExternalFormat: TLabel
-          Top = 108
           Width = 212
           Caption = 'External file format (CDDNFM)'
-          ExplicitTop = 108
           ExplicitWidth = 212
         end
         inherited lblDot: TLabel
@@ -304,11 +284,7 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
           ItemIndex = -1
         end
         inherited comboPrintFormat: TJvImageComboBox
-          Left = 88
-          Top = 205
           ItemIndex = -1
-          ExplicitLeft = 88
-          ExplicitTop = 205
         end
         inherited comboSaveType: TJvImageComboBox
           ItemIndex = -1

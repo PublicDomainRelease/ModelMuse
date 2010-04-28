@@ -182,6 +182,7 @@ type
     procedure miMergeObjectsClick(Sender: TObject);
     procedure FrameMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure ZoomBoxMagnificationChanged(Sender: TObject);
   private
     MouseStartX: integer;
     MouseStartY: integer;
@@ -190,6 +191,7 @@ type
     FBitMap32: TBitmap32;
     FPaintingLayer: Boolean;
     FNeedToRedraw: Boolean;
+    FPreviousMagnification: double;
     procedure UpdateStatusBarCoordinates(APoint: TPoint2D);
     procedure UpdateStatusBarForTopBlockDataSet(Column, Row, X, Y: Integer);
     procedure UpdateStatusBarForTopNodeDataSet(Column:
@@ -201,6 +203,7 @@ type
     procedure ShowCurrentValue(DataSet: TDataArray; const NameToDisplay: string;
       Column, Row, Layer: Integer);
     procedure HideScreenObjects(HideSelected: Boolean);
+    procedure AllowBitmapsToBeDisplayed;
   public
     FPositionedLayer: TPositionedLayer;
     procedure SelectAll;
@@ -632,6 +635,10 @@ var
   Column, Row, Layer: integer;
   DataSet: TDataArray;
 begin
+  if (frmGoPhast.phastModel.ComponentState * [csLoading, csReading]) <> [] then
+  begin
+    Exit;
+  end;
     // @name shows appropriate text on the status bar.
 
   // Display information on the status bar.
@@ -1100,9 +1107,24 @@ begin
       begin
         Item := frmGoPhast.PhastModel.Bitmaps.Items[BitmapIndex] as
           TCompressedBitmapItem;
-        if Item.Visible and (Item.ViewDirection = ViewDirection) then
+        if Item.Visible and Item.CanShow and (Item.ViewDirection = ViewDirection) then
         begin
-          DrawImage(Item);
+          try
+            DrawImage(Item);
+          except on EOutOfResources do
+            begin
+              Item.CanShow := False;
+              if Item.DisplayMessage then
+              begin
+                MessageDlg('The ' + Item.Name
+                  + ' image can not be shown at this magnification. '
+                  + 'When the magnification is reduced, '
+                  + 'it will be displayed again.',
+                  mtInformation, [mbOK], 0);
+                Item.DisplayMessage := False;
+              end;
+            end;
+          end;
         end;
       end;
 
@@ -1395,6 +1417,11 @@ begin
   finally
     FBusy := False;
   end;
+end;
+
+procedure TframeView.ZoomBoxMagnificationChanged(Sender: TObject);
+begin
+  AllowBitmapsToBeDisplayed;
 end;
 
 procedure TframeView.PaintLayer(Sender: TObject; Buffer: TBitmap32);
@@ -2496,6 +2523,22 @@ begin
   result.Y := result.Y / MaxGridCorners;
 end;
 
+procedure TframeView.AllowBitmapsToBeDisplayed;
+var
+  BitmapIndex: Integer;
+  Item: TCompressedBitmapItem;
+begin
+  If (FPreviousMagnification = 0) or (FPreviousMagnification >= ZoomBox.Magnification) then
+  begin
+    for BitmapIndex := 0 to frmGoPhast.PhastModel.Bitmaps.Count - 1 do
+    begin
+      Item := frmGoPhast.PhastModel.Bitmaps.Items[BitmapIndex] as TCompressedBitmapItem;
+      Item.CanShow := True;
+    end;
+    FPreviousMagnification := ZoomBox.Magnification;
+  end;
+end;
+
 procedure TframeView.HideScreenObjects(HideSelected: Boolean);
 var
   Count: Integer;
@@ -3037,6 +3080,11 @@ var
   RotatedPoint: TPoint2D;
 begin
   // Display the current coordinates.
+  if (frmGoPhast.phastModel.ComponentState * [csLoading, csReading]) <> [] then
+  begin
+    Exit;
+  end;
+  
   case ViewDirection of
     vdTop:
       begin
@@ -3198,8 +3246,11 @@ begin
 
     if (NewWidth > 5000) or (NewHeight > 5000) then
     begin
+      Source.Visible := False;
       MessageDlg('The ' + Source.Name
-        + ' image will not be shown at this magnification',
+        + ' image can not be shown at this magnification '
+        + 'and has been turned off. You can turn it back on later '
+        + 'after decreasing the magnification.',
         mtInformation, [mbOK], 0);
     end
     else
@@ -3221,6 +3272,8 @@ begin
   finally
     NewBmp.Free;
   end;
+  Source.DisplayMessage := True;
+  FPreviousMagnification := ZoomBox.Magnification;
 end;
 
 procedure TframeView.HideAllOthersClick(Sender: TObject);

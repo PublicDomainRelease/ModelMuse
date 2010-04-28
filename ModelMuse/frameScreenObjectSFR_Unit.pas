@@ -2570,12 +2570,20 @@ end;
 
 procedure TframeScreenObjectSFR.LayoutMultiRowFlowEditControls;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   LayoutControls(dgFlowTimes, rdeFlowFormula, lblFlowFormula,
     Max(2,dgFlowTimes.LeftCol));
 end;
 
 procedure TframeScreenObjectSFR.LayoutMultiRowParamIcalcControls;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   LayoutControls(rdgParameters, comboParameterChoices, lblParameterChoices,
     Ord(spicParameter));
   LayoutControls(rdgParameters, comboIcalcChoice, lblIcalcChoice,
@@ -2584,6 +2592,10 @@ end;
 
 procedure TframeScreenObjectSFR.LayoutMultiRowNetworkControls;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   LayoutControls(rdgNetwork, rdeNetwork, lblSegment,
     Ord(sncOutflowSegment));
   LayoutControls(rdgNetwork, comboMultiIprior, nil,
@@ -2592,24 +2604,40 @@ end;
 
 procedure TframeScreenObjectSFR.LayoutMultiRowChannelEditControls;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   LayoutControls(dgSfrRough, rdeChannelFormula, lblChannelFormula,
     Max(2,dgSfrRough.LeftCol));
 end;
 
 procedure TframeScreenObjectSFR.LayoutMultiRowEquationEditControls;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   LayoutControls(dgSfrEquation, rdeEquationFormula, lblEquationFormula,
     Max(2,dgSfrEquation.LeftCol));
 end;
 
 procedure TframeScreenObjectSFR.LayoutMultiRowUpstreamEditControls;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   LayoutControls(dgUp, rdeUpstreamFormula, lblUpstreamFormula,
     Max(2,dgUp.LeftCol));
 end;
 
 procedure TframeScreenObjectSFR.LayoutMultiRowDownstreamEditControls;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   LayoutControls(dgDown, rdeDownstreamFormula, lblDownstreamFormula,
     Max(2,dgDown.LeftCol));
 end;
@@ -3297,7 +3325,14 @@ begin
     UpUnsat := TSfrUnsatSegmentCollection.Create(nil, nil, nil);
     try
       UpUnsat.Assign(Boundary.UpstreamUnsatSegmentValues);
-      Item := UpUnsat.Add as TSfrUnsatSegmentItem;
+      if UpUnsat.Count = 0 then
+      begin
+        Item := UpUnsat.Add as TSfrUnsatSegmentItem;
+      end
+      else
+      begin
+        Item := UpUnsat[0] as TSfrUnsatSegmentItem;
+      end;
       Item.StartTime := 0;
       Item.EndTime := 0;
       Item.SaturatedWaterContent := THTS1;
@@ -3313,7 +3348,15 @@ begin
     UpUnsat := TSfrUnsatSegmentCollection.Create(nil, nil, nil);
     try
       UpUnsat.Assign(Boundary.DownstreamUnsatSegmentValues);
-      Item := UpUnsat.Add as TSfrUnsatSegmentItem;
+      if UpUnsat.Count = 0 then
+      begin
+        Item := UpUnsat.Add as TSfrUnsatSegmentItem;
+      end
+      else
+      begin
+        Item := UpUnsat[0] as TSfrUnsatSegmentItem;
+      end;
+//      Item := UpUnsat.Add as TSfrUnsatSegmentItem;
       Item.StartTime := 0;
       Item.EndTime := 0;
       Item.SaturatedWaterContent := THTS2;

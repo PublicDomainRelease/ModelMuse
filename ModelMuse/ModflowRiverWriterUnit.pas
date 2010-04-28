@@ -96,7 +96,7 @@ begin
   WriteIface(Riv_Cell.IFace);
   WriteString(' # ' + DataSetIdentifier + ' Layer Row Column Stage '
     + VariableIdentifiers);
-
+//  WriteString(' ' + Riv_Cell.ConductanceAnnotation);
   NewLine;
 end;
 

@@ -15,20 +15,18 @@ inherited frmProgramLocations: TfrmProgramLocations
     Height = 41
     Align = alBottom
     TabOrder = 0
-    ExplicitWidth = 588
     DesignSize = (
       623
       41)
     object btnHelp: TBitBtn
       Left = 359
-      Top = 7
+      Top = 6
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
       TabOrder = 0
       OnClick = btnHelpClick
       Kind = bkHelp
-      ExplicitLeft = 324
     end
     object btnOK: TBitBtn
       Left = 447
@@ -39,7 +37,6 @@ inherited frmProgramLocations: TfrmProgramLocations
       TabOrder = 1
       OnClick = btnOKClick
       Kind = bkOK
-      ExplicitLeft = 412
     end
     object btnCancel: TBitBtn
       Left = 535
@@ -49,7 +46,6 @@ inherited frmProgramLocations: TfrmProgramLocations
       Anchors = [akTop, akRight]
       TabOrder = 2
       Kind = bkCancel
-      ExplicitLeft = 500
     end
   end
   object Panel1: TPanel
@@ -59,7 +55,6 @@ inherited frmProgramLocations: TfrmProgramLocations
     Height = 243
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 588
     DesignSize = (
       623
       243)
@@ -122,7 +117,6 @@ inherited frmProgramLocations: TfrmProgramLocations
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       OnChange = fedModflowChange
-      ExplicitWidth = 553
     end
     object fedTextEditor: TJvFilenameEdit
       Left = 16
@@ -135,7 +129,6 @@ inherited frmProgramLocations: TfrmProgramLocations
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 1
       OnChange = fedModflowChange
-      ExplicitWidth = 553
     end
     object fedModpath: TJvFilenameEdit
       Left = 16
@@ -148,7 +141,6 @@ inherited frmProgramLocations: TfrmProgramLocations
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 2
       OnChange = fedModflowChange
-      ExplicitWidth = 553
     end
     object fedModelMonitor: TJvFilenameEdit
       Left = 16
@@ -161,7 +153,6 @@ inherited frmProgramLocations: TfrmProgramLocations
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 3
       OnChange = fedModflowChange
-      ExplicitWidth = 553
     end
   end
 end

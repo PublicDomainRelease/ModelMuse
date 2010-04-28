@@ -5,18 +5,19 @@ inherited frmWorldFileType: TfrmWorldFileType
   ExplicitWidth = 326
   ExplicitHeight = 214
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object lblQuestion: TLabel
     Left = 8
     Top = 8
-    Width = 187
-    Height = 17
+    Width = 204
+    Height = 18
     Caption = 'What type of world file is this?'
   end
   object lnklblRaster: TJvLinkLabel
     Left = 43
     Top = 63
     Width = 262
+    Height = 18
     Caption = '<link>Raster world file description<\link>'
     Text.Strings = (
       '<link>Raster world file description<\link>')
@@ -26,6 +27,7 @@ inherited frmWorldFileType: TfrmWorldFileType
     Left = 43
     Top = 109
     Width = 262
+    Height = 18
     Caption = '<link>CAD world file description<\link>'
     Text.Strings = (
       '<link>CAD world file description<\link>')
@@ -33,7 +35,7 @@ inherited frmWorldFileType: TfrmWorldFileType
   object rbRaster: TRadioButton
     Left = 24
     Top = 40
-    Width = 153
+    Width = 281
     Height = 17
     Caption = 'Raster world file'
     TabOrder = 0
@@ -41,7 +43,7 @@ inherited frmWorldFileType: TfrmWorldFileType
   object rbCAD: TRadioButton
     Left = 24
     Top = 86
-    Width = 113
+    Width = 281
     Height = 17
     Caption = 'CAD world file'
     TabOrder = 1

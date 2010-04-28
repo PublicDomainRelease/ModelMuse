@@ -82,6 +82,10 @@ uses ModflowUnitNumbers, ModflowTransientListParameterUnit,
 const
   ErrorRoot = 'One or more %s parameters have been eliminated '
     + 'because there are no cells associated with them.';
+  EtsSurfaceError = 'The ET Surface is undefined in the ETS package.';
+  EtsSurfaceErrorMessage = 'No objects define the ET Surface in the ETS package.';
+  EtsDepthError = 'The ET Depth is undefined in the ETS package.';
+  EtsDepthErrorMessage = 'No objects define the ET Depth in the ETS package.';
 
 function TModflowETS_Writer.CellType: TValueCellType;
 begin
@@ -181,6 +185,8 @@ const
   D7PNameIname = '';
   D7PName = '';
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(EtsSurfaceError);
+  frmErrorsAndWarnings.RemoveErrorGroup(EtsDepthError);
   if not Package.IsSelected then
   begin
     UpdateNotUsedDisplay(TimeLists);
@@ -244,10 +250,20 @@ begin
           List.CheckRestore;
 
           // data set 5
-          DepthSurfaceCellList := FDepthSurface[TimeIndex];
-          DepthSurfaceCellList.CheckRestore;
-          AssignTransient2DArray(EvapSurfArray, 0, DepthSurfaceCellList, 0,
-            rdtDouble, umAssign);
+          if FDepthSurface.Count > 0 then
+          begin
+            DepthSurfaceCellList := FDepthSurface[TimeIndex];
+            DepthSurfaceCellList.CheckRestore;
+            AssignTransient2DArray(EvapSurfArray, 0, DepthSurfaceCellList, 0,
+              rdtDouble, umAssign);
+          end
+          else
+          begin
+            DepthSurfaceCellList := nil;
+            EvapSurfArray.UpToDate := True;
+            frmErrorsAndWarnings.AddError(EtsSurfaceError, EtsSurfaceErrorMessage);
+          end;
+          EvapSurfArray.CacheData;
 
           if NPETS = 0 then
           begin
@@ -263,15 +279,24 @@ begin
 
           // data set 8
 
-          AssignTransient2DArray(EvapDepthArray, 1, DepthSurfaceCellList, 0,
-            rdtDouble, umAssign);
+          if DepthSurfaceCellList <> nil then
+          begin
+            AssignTransient2DArray(EvapDepthArray, 1, DepthSurfaceCellList, 0,
+              rdtDouble, umAssign);
+          end
+          else
+          begin
+            EvapDepthArray.UpToDate := True;
+            frmErrorsAndWarnings.AddError(EtsDepthError, EtsDepthErrorMessage);
+          end;
+          EvapDepthArray.CacheData;
 
           if EvapLayerArray <> nil then
           begin
             if (PhastModel.ModflowPackages.EtsPackage.
               LayerOption = loSpecified)
               and not PhastModel.ModflowPackages.EtsPackage.
-              TimeVaryingLayers then
+              TimeVaryingLayers and (ParameterCount > 0)  then
             begin
               RetrieveParametersForStressPeriod(D7PNameIname, D7PName, 0,
                 ParametersUsed, ParameterValues);
@@ -284,29 +309,32 @@ begin
 
           FPriorDepthFractionArray := nil;
           FPriorRateFractionArray := nil;
-          try
-            for SegmentIndex := 1 to NETSEG - 1 do
-            begin
-              // data set 10
-              ATimeList := DepthFractionList[SegmentIndex-1];
-              AnArray := ATimeList[TimeIndex] as TModflowBoundaryDisplayDataArray;
-              AssignTransient2DArray(AnArray, SegmentIndex*2,
-                DepthSurfaceCellList, 0, rdtDouble, umAssign);
-              CheckDepthFraction(AnArray, SegmentIndex);
-              FPriorDepthFractionArray := AnArray;
+          if DepthSurfaceCellList <> nil then
+          begin
+            try
+              for SegmentIndex := 1 to NETSEG - 1 do
+              begin
+                // data set 10
+                ATimeList := DepthFractionList[SegmentIndex-1];
+                AnArray := ATimeList[TimeIndex] as TModflowBoundaryDisplayDataArray;
+                AssignTransient2DArray(AnArray, SegmentIndex*2,
+                  DepthSurfaceCellList, 0, rdtDouble, umAssign);
+                CheckDepthFraction(AnArray, SegmentIndex);
+                FPriorDepthFractionArray := AnArray;
 
-              // data set 11
-              ATimeList := EtFractionList[SegmentIndex-1];
-              AnArray := ATimeList[TimeIndex]
-                as TModflowBoundaryDisplayDataArray;
-              AssignTransient2DArray(AnArray, SegmentIndex*2+1,
-                DepthSurfaceCellList, 0, rdtDouble, umAssign);
-              CheckRateFraction(AnArray, SegmentIndex);
-              FPriorRateFractionArray := AnArray;
+                // data set 11
+                ATimeList := EtFractionList[SegmentIndex-1];
+                AnArray := ATimeList[TimeIndex]
+                  as TModflowBoundaryDisplayDataArray;
+                AssignTransient2DArray(AnArray, SegmentIndex*2+1,
+                  DepthSurfaceCellList, 0, rdtDouble, umAssign);
+                CheckRateFraction(AnArray, SegmentIndex);
+                FPriorRateFractionArray := AnArray;
+              end;
+            finally
+              FPriorDepthFractionArray := nil;
+              FPriorRateFractionArray := nil;
             end;
-          finally
-            FPriorDepthFractionArray := nil;
-            FPriorRateFractionArray := nil;
           end;
           List.Cache;
         finally
@@ -446,6 +474,8 @@ procedure TModflowETS_Writer.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(EtsSurfaceError);
+  frmErrorsAndWarnings.RemoveErrorGroup(EtsDepthError);
   if not Package.IsSelected then
   begin
     Exit
@@ -650,12 +680,20 @@ begin
         NewLine;
 
         // data set 5
-        DepthSurfaceCellList := FDepthSurface[TimeIndex];
-        WriteEvapotranspirationSurface(DepthSurfaceCellList);
-        if not frmProgress.ShouldContinue then
+        if FDepthSurface.Count > 0 then
         begin
-          List.Cache;
-          Exit;
+          DepthSurfaceCellList := FDepthSurface[TimeIndex];
+          WriteEvapotranspirationSurface(DepthSurfaceCellList);
+          if not frmProgress.ShouldContinue then
+          begin
+            List.Cache;
+            Exit;
+          end;
+        end
+        else
+        begin
+          DepthSurfaceCellList := nil;
+          frmErrorsAndWarnings.AddError(EtsSurfaceError, EtsSurfaceErrorMessage);
         end;
 
         if NPETS = 0 then
@@ -679,11 +717,18 @@ begin
         end;
 
         // data set 8
-        WriteExtinctionDepth(DepthSurfaceCellList);
-        if not frmProgress.ShouldContinue then
+        if FDepthSurface.Count > 0 then
         begin
-          List.Cache;
-          Exit;
+          WriteExtinctionDepth(DepthSurfaceCellList);
+          if not frmProgress.ShouldContinue then
+          begin
+            List.Cache;
+            Exit;
+          end;
+        end
+        else
+        begin
+          frmErrorsAndWarnings.AddError(EtsDepthError, EtsDepthErrorMessage);
         end;
 
         // data set 9

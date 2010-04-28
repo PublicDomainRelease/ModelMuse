@@ -179,6 +179,7 @@ type
     // See @link(TModflowParamBoundary.ModflowParamItemClass
     // TModflowParamBoundary.ModflowParamItemClass).
     class function ModflowParamItemClass: TModflowParamItemClass; override;
+    function ParameterType: TParameterType; override;
   public
     // @name fills ValueTimeList via a call to AssignCells for each
     // link  @link(TDrnStorage) in
@@ -719,22 +720,31 @@ begin
     begin
       if PriorTime < Item.StartTime then
       begin
-        BoundaryStorage := Values.Boundaries[ValueCount] as TDrnStorage;
-        AssignCells(BoundaryStorage, ValueTimeList);
-        Inc(ValueCount);
+        if ValueCount < Values.BoundaryCount then
+        begin
+          BoundaryStorage := Values.Boundaries[ValueCount] as TDrnStorage;
+          AssignCells(BoundaryStorage, ValueTimeList);
+          Inc(ValueCount);
+        end;
       end;
       PriorTime := Item.EndTime;
     end;
-    BoundaryStorage := Values.Boundaries[ValueCount] as TDrnStorage;
-    AssignCells(BoundaryStorage, ValueTimeList);
-    Inc(ValueCount);
+    if ValueCount < Values.BoundaryCount then
+    begin
+      BoundaryStorage := Values.Boundaries[ValueCount] as TDrnStorage;
+      AssignCells(BoundaryStorage, ValueTimeList);
+      Inc(ValueCount);
+    end;
     if (ValueIndex = Values.Count - 1) and ObservationsPresent then
     begin
       if Item.EndTime < EndOfLastStressPeriod then
       begin
-        BoundaryStorage := Values.Boundaries[ValueCount] as TDrnStorage;
-        AssignCells(BoundaryStorage, ValueTimeList);
-        Inc(ValueCount);
+        if ValueCount < Values.BoundaryCount then
+        begin
+          BoundaryStorage := Values.Boundaries[ValueCount] as TDrnStorage;
+          AssignCells(BoundaryStorage, ValueTimeList);
+          Inc(ValueCount);
+        end;
       end;
     end;
   end;
@@ -761,22 +771,31 @@ begin
       begin
         if PriorTime < Item.StartTime then
         begin
-          BoundaryStorage := Param.Param.Boundaries[ValueCount] as TDrnStorage;
-          AssignCells(BoundaryStorage, Times);
-          Inc(ValueCount);
+          if ValueCount < Param.Param.BoundaryCount then
+          begin
+            BoundaryStorage := Param.Param.Boundaries[ValueCount] as TDrnStorage;
+            AssignCells(BoundaryStorage, Times);
+            Inc(ValueCount);
+          end;
         end;
         PriorTime := Item.EndTime;
       end;
-      BoundaryStorage := Param.Param.Boundaries[ValueCount] as TDrnStorage;
-      AssignCells(BoundaryStorage, Times);
-      Inc(ValueCount);
-      if (ValueIndex = Param.Param.Count - 1) and ObservationsPresent then
+      if ValueCount < Param.Param.BoundaryCount then
+      begin
+        BoundaryStorage := Param.Param.Boundaries[ValueCount] as TDrnStorage;
+        AssignCells(BoundaryStorage, Times);
+        Inc(ValueCount);
+      end;
+      if {(ValueIndex = Param.Param.Count - 1) and} ObservationsPresent then
       begin
         if Item.EndTime < EndOfLastStressPeriod then
         begin
-          BoundaryStorage := Param.Param.Boundaries[ValueCount] as TDrnStorage;
-          AssignCells(BoundaryStorage, Times);
-          Inc(ValueCount);
+          if ValueCount < Param.Param.BoundaryCount then
+          begin
+            BoundaryStorage := Param.Param.Boundaries[ValueCount] as TDrnStorage;
+            AssignCells(BoundaryStorage, Times);
+            Inc(ValueCount);
+          end;
         end;
       end;
     end;
@@ -799,6 +818,11 @@ end;
 class function TDrnBoundary.ModflowParamItemClass: TModflowParamItemClass;
 begin
   result := TDrnParamItem;
+end;
+
+function TDrnBoundary.ParameterType: TParameterType;
+begin
+  result := ptDRN;
 end;
 
 procedure TDrnBoundary.TestIfObservationsPresent(var EndOfLastStressPeriod,

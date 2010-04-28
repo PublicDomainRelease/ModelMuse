@@ -448,12 +448,14 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Tree.TabOrder = 0
       Tree.Visible = False
       Tree.OnChange = combotreeDataSetsDropDownTreeChange
+      Tree.OnEnter = combotreeDataSetsDropDownTreeEnter
       Tree.OnGetText = combotreeDataSetsDropDownTreeGetText
       Tree.OnGetNodeDataSize = combotreeDataSetsDropDownTreeGetNodeDataSize
       Tree.Columns = <>
       PanelAutoWidth = True
       PanelWidth = 289
       PanelHeight = 200
+      OnClosedUp = combotreeDataSetsClosedUp
     end
   end
   object Panel2: TPanel

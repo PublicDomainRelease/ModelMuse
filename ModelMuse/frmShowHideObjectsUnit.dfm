@@ -5,8 +5,10 @@ inherited frmShowHideObjects: TfrmShowHideObjects
   HelpKeyword = 'Show_or_Hide_Objects_Dialog_Box'
   VertScrollBar.Range = 41
   Caption = 'Show or Hide Objects'
+  KeyPreview = True
   Position = poDesigned
   OnClose = FormClose
+  OnKeyUp = FormKeyUp
   PixelsPerInch = 96
   TextHeight = 18
   inherited pnlBottom: TPanel

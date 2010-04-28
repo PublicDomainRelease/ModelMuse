@@ -103,9 +103,8 @@ const
   crSnapMultiPartPoint = 35;
   crSnapMultiPartLine = 36;
 
-  // @name represents a cursor shaped like a narrow triangle with
-  // a plus sign at its wide end (the top) and a minus sign at its
-  // point (the bottom).
+  // @name represents a cursor shaped like a magnifying glass with
+  // a plus sign above it and a minus sign below it.
   crZoomByY = 33;
 
   // @name represents a cursor shaped like a large arrowhead.

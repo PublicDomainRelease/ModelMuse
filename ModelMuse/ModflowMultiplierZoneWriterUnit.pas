@@ -173,6 +173,7 @@ begin
         ArrayName := GetArrayName(Param, LayerIndex);
         if ArrayUsed(ArrayName) then
         begin
+          Assert(ArrayName <> '');
           While Length(ArrayName) < 10 do
           begin
             ArrayName := ArrayName + ' ';
@@ -210,6 +211,7 @@ begin
         if UsesHufParam(UsedParam, ArrayName, DataArray) then
         begin
           // Data set 2;
+          Assert(ArrayName <> '');
           WriteString(ArrayName);
           WriteString('          ');
           WriteString(DataSet2Comment);
@@ -245,6 +247,7 @@ begin
     for LayerIndex := 1 to Limit do
     begin
       ArrayName := DataArray.Name;
+      Assert(ArrayName <> '');
       if DataArray.LayerCount > 1 then
       begin
         ArrayName := ArrayName + '_' + IntToStr(LayerIndex);
@@ -384,6 +387,12 @@ begin
     if result then
     begin
       ArrayName := UsedParam.ZoneArrayName;
+      if ArrayName = '' then
+      begin
+        UsedParam.GenerateZoneArrayName;
+        ArrayName := UsedParam.ZoneArrayName;
+        UsedZoneArrayNames.Add(ArrayName);
+      end;
       DataArray := PhastModel.GetDataSetByName(UsedParam.ZoneDataSetName);
     end;
   end;
@@ -407,7 +416,28 @@ begin
 end;
 
 procedure TModflowZoneWriter.WriteDataSet1;
+var
+  UnitIndex: Integer;
+  HGU: THydrogeologicUnit;
+  ParamIndex: Integer;
+  UsedParam: THufUsedParameter;
+  ArrayName: string;
+  DataArray: TDataArray;
 begin
+  //  If required, update UsedZoneArrayNames
+  if PhastModel.ModflowPackages.HufPackage.IsSelected then
+  begin
+    for UnitIndex := 0 to PhastModel.HydrogeologicUnits.Count - 1 do
+    begin
+      HGU := PhastModel.HydrogeologicUnits[UnitIndex];
+      for ParamIndex := 0 to HGU.HufUsedParameters.Count - 1 do
+      begin
+        UsedParam := HGU.HufUsedParameters[ParamIndex];
+        UsesHufParam(UsedParam, ArrayName, DataArray)
+      end;
+    end;
+  end;
+
   WriteInteger(NumberOfArrays);
   WriteString(' # NZN');
   NewLine;
@@ -491,6 +521,12 @@ begin
     if result then
     begin
       ArrayName := UsedParam.MultiplierArrayName;
+      if ArrayName = '' then
+      begin
+        UsedParam.GenerateMultiplierArrayName;
+        ArrayName := UsedParam.MultiplierArrayName;
+        UsedMultiplierArrayNames.Add(ArrayName);
+      end;
       DataArray := PhastModel.GetDataSetByName(UsedParam.MultiplierDataSetName);
     end;
   end;
@@ -514,7 +550,28 @@ begin
 end;
 
 procedure TModflowMultiplierWriter.WriteDataSet1;
+var
+  UnitIndex: Integer;
+  HGU: THydrogeologicUnit;
+  ParamIndex: Integer;
+  UsedParam: THufUsedParameter;
+  ArrayName: string;
+  DataArray: TDataArray;
 begin
+  //  If required, update UsedMultiplierArrayNames
+  if PhastModel.ModflowPackages.HufPackage.IsSelected then
+  begin
+    for UnitIndex := 0 to PhastModel.HydrogeologicUnits.Count - 1 do
+    begin
+      HGU := PhastModel.HydrogeologicUnits[UnitIndex];
+      for ParamIndex := 0 to HGU.HufUsedParameters.Count - 1 do
+      begin
+        UsedParam := HGU.HufUsedParameters[ParamIndex];
+        UsesHufParam(UsedParam, ArrayName, DataArray)
+      end;
+    end;
+  end;
+  
   WriteInteger(NumberOfArrays);
   WriteString(' # NML');
   NewLine;

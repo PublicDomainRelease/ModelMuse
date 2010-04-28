@@ -2234,6 +2234,7 @@ var
   CumulativeHufThickness: double;
   HorizontalAnisotropy: double;
   Head: double;
+  HufLayerThickness: Double;
 begin
   // does not account for LVDA.  SGWF2HUF7VDHT?
 
@@ -2290,10 +2291,10 @@ begin
           begin
             HufTop := LayerTop
           end;
-          HufThickness := HufTop - HufBottom;
-          if HufThickness > 0 then
+          HufLayerThickness := HufTop - HufBottom;
+          if HufLayerThickness > 0 then
           begin
-            CumulativeHufThickness := CumulativeHufThickness + HufThickness;
+            CumulativeHufThickness := CumulativeHufThickness + HufLayerThickness;
             // result is in terms of transmissivity at this point.
             if UseHorizontalAnisotropy then
             begin
@@ -2305,7 +2306,8 @@ begin
               HorizontalAnisotropy := 1.;
             end;
             result := result + HorizontalAnisotropy*
-              HguTransmissivity(HufUnit, Column, Row);
+              HguTransmissivity(HufUnit, Column, Row)
+              *HufLayerThickness/HufThickness;
           end;
         end;
       end;

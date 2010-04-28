@@ -8,7 +8,7 @@ uses
   JvExMask, JvSpin, frameDisplayLimitUnit, JvExStdCtrls, JvRichEdit, ExtCtrls,
   ComCtrls, DataSetUnit, JvCheckBox, TntStdCtrls, TntExDropDownEdit,
   TntExDropDownVirtualStringTree, VirtualTrees, JvExComCtrls, JvUpDown, Grids,
-  RbwDataGrid4, RbwParser;
+  RbwDataGrid4, RbwParser, ArgusDataEntry;
 
 type
   TfrmContourData = class(TfrmCustomColor)
@@ -164,6 +164,11 @@ begin
 
   VirtNoneNode := virttreecomboDataSets.Tree.AddChild(nil);
   virttreecomboDataSets.Tree.Selected[VirtNoneNode] := True;
+
+  if csDestroying in frmGoPhast.PhastModel.ComponentState then
+  begin
+    Exit;
+  end;
 
   GetDataSets;
   UpdateTopFrontAndSideItems;

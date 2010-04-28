@@ -29,6 +29,10 @@ inherited frmLayers: TfrmLayers
       HelpType = htKeyword
       HelpKeyword = 'Basics_Tab'
       Caption = 'Basics'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         412
         350)
@@ -195,7 +199,7 @@ inherited frmLayers: TfrmLayers
         Top = 318
         Width = 145
         Height = 22
-        ItemHeight = 18
+        ItemHeight = 0
         TabOrder = 5
         Text = '1'
         OnChange = rdeAnisotropyChange
@@ -210,6 +214,10 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'Discretization_Tab'
       Caption = 'Discretization'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         412
         350)
@@ -232,7 +240,7 @@ inherited frmLayers: TfrmLayers
         Top = 31
         Width = 57
         Height = 22
-        ItemHeight = 18
+        ItemHeight = 0
         TabOrder = 0
         Text = '1'
         OnChange = rdeVDiscretizationChange
@@ -247,7 +255,7 @@ inherited frmLayers: TfrmLayers
         Top = 82
         Width = 57
         Height = 22
-        ItemHeight = 18
+        ItemHeight = 0
         TabOrder = 1
         Text = '1.2'
         OnChange = rdeGrowthRateChange
@@ -349,15 +357,13 @@ inherited frmLayers: TfrmLayers
           object Label4: TLabel
             Left = 0
             Top = 0
-            Width = 163
-            Height = 41
+            Width = 142
+            Height = 36
             Align = alClient
             Alignment = taCenter
             Caption = 'Discretization within layer group'
             Layout = tlCenter
             WordWrap = True
-            ExplicitWidth = 142
-            ExplicitHeight = 36
           end
         end
         object pnlPaintboxParent: TPanel
@@ -396,13 +402,13 @@ inherited frmLayers: TfrmLayers
             Align = alBottom
             ColumnCollection = <
               item
-                Value = 33.333333333333330000
+                Value = 33.333333333333340000
               end
               item
-                Value = 33.333333333333330000
+                Value = 33.333333333333340000
               end
               item
-                Value = 33.333333333333330000
+                Value = 33.333333333333340000
               end>
             ControlCollection = <
               item
@@ -585,6 +591,10 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'No_Delay_Beds_Tab'
       Caption = 'No-Delay Beds'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameSubNoDelayBeds: TframeSubBeds
         Left = 0
         Top = 0
@@ -615,6 +625,10 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'Delay_Beds_Tab'
       Caption = 'Delay Beds'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frameSubDelayBeds: TframeSubBeds
         Left = 0
         Top = 0
@@ -708,13 +722,13 @@ inherited frmLayers: TfrmLayers
       Align = alBottom
       ColumnCollection = <
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end>
       ControlCollection = <
         item

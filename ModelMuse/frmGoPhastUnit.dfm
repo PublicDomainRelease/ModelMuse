@@ -2,7 +2,7 @@ inherited frmGoPhast: TfrmGoPhast
   Left = 91
   Top = 50
   Width = 682
-  Height = 578
+  Height = 655
   HelpType = htKeyword
   HelpKeyword = 'Main_Window'
   VertScrollBar.Range = 157
@@ -19,12 +19,12 @@ inherited frmGoPhast: TfrmGoPhast
   OnMouseMove = pnlLowerRightMouseMove
   OnResize = FormResize
   ExplicitWidth = 682
-  ExplicitHeight = 578
+  ExplicitHeight = 655
   PixelsPerInch = 96
   TextHeight = 18
   object splitHoriz: TJvNetscapeSplitter
     Left = 0
-    Top = 353
+    Top = 430
     Width = 674
     Height = 10
     Cursor = crVSplit
@@ -42,16 +42,15 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 0
     Top = 68
     Width = 674
-    Height = 285
+    Height = 362
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
-    ExplicitHeight = 265
     object splitVertTop: TJvNetscapeSplitter
       Left = 435
       Top = 0
-      Height = 285
+      Height = 362
       Hint = 'Click and drag to resize the windows.'
       Align = alRight
       MinSize = 1
@@ -67,16 +66,16 @@ inherited frmGoPhast: TfrmGoPhast
       Left = 0
       Top = 0
       Width = 435
-      Height = 285
+      Height = 362
       HorzScrollBar.Range = 36
       VertScrollBar.Range = 40
       Align = alClient
       TabOrder = 0
       TabStop = True
       ExplicitWidth = 435
-      ExplicitHeight = 265
+      ExplicitHeight = 362
       inherited rulVertical: TRbwRuler
-        Height = 231
+        Height = 308
         ExplicitTop = 39
         ExplicitHeight = 173
       end
@@ -90,14 +89,14 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited ZoomBox: TQRbwZoomBox2
         Width = 386
-        Height = 231
+        Height = 308
         Image32.Top = 0
         Image32.Width = 386
-        Image32.Height = 231
+        Image32.Height = 308
         Image32.ExplicitWidth = 386
-        Image32.ExplicitHeight = 231
+        Image32.ExplicitHeight = 308
         ExplicitWidth = 386
-        ExplicitHeight = 211
+        ExplicitHeight = 308
       end
       inherited OrderMenu: TPopupMenu
         Left = 80
@@ -108,7 +107,7 @@ inherited frmGoPhast: TfrmGoPhast
       Left = 445
       Top = 0
       Width = 229
-      Height = 285
+      Height = 362
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alRight
@@ -116,10 +115,10 @@ inherited frmGoPhast: TfrmGoPhast
       TabStop = True
       ExplicitLeft = 445
       ExplicitWidth = 229
-      ExplicitHeight = 265
+      ExplicitHeight = 362
       inherited rulVertical: TRbwRuler
         Left = 180
-        Height = 231
+        Height = 308
         Align = alRight
         RulerPosition = rpRight
         ExplicitLeft = 194
@@ -153,17 +152,17 @@ inherited frmGoPhast: TfrmGoPhast
       inherited ZoomBox: TQRbwZoomBox2
         Left = 0
         Width = 180
-        Height = 231
+        Height = 308
         ExaggerationDirection = edHorizontal
         HorizontalDirection = hdLeft
         Image32.Top = 0
         Image32.Width = 180
-        Image32.Height = 231
+        Image32.Height = 308
         Image32.ExplicitWidth = 180
-        Image32.ExplicitHeight = 231
+        Image32.ExplicitHeight = 308
         ExplicitLeft = 0
         ExplicitWidth = 180
-        ExplicitHeight = 211
+        ExplicitHeight = 308
       end
       inherited OrderMenu: TPopupMenu
         Left = 48
@@ -173,7 +172,7 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 363
+    Top = 440
     Width = 674
     Height = 133
     Align = alBottom
@@ -181,7 +180,6 @@ inherited frmGoPhast: TfrmGoPhast
     ParentColor = True
     TabOrder = 1
     OnMouseMove = pnlLowerRightMouseMove
-    ExplicitTop = 343
     object splitVertBottom: TJvNetscapeSplitter
       Left = 435
       Top = 0
@@ -275,7 +273,7 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object sbMain: TStatusBar
     Left = 0
-    Top = 496
+    Top = 573
     Width = 674
     Height = 28
     Hint = 'Drag with the mouse to resize status bar panels'
@@ -287,6 +285,7 @@ inherited frmGoPhast: TfrmGoPhast
         Width = 150
       end
       item
+        Style = psOwnerDraw
         Width = 200
       end>
     ParentColor = True
@@ -297,7 +296,7 @@ inherited frmGoPhast: TfrmGoPhast
     OnMouseDown = sbMainMouseDown
     OnMouseMove = sbMainMouseMove
     OnMouseUp = sbMainMouseUp
-    ExplicitTop = 476
+    OnDrawPanel = sbMainDrawPanel
   end
   object cbControlBar: TControlBar
     Left = 0
@@ -923,6 +922,10 @@ inherited frmGoPhast: TfrmGoPhast
           Caption = 'Surfer Grid File...'
           OnClick = SurferGridFile1Click
         end
+        object SampleDEMData1: TMenuItem
+          Caption = 'Sample DEM Data...'
+          OnClick = SampleDEMData1Click
+        end
         object miImportPoints: TMenuItem
           Caption = 'Points...'
           HelpContext = 1580
@@ -1199,7 +1202,7 @@ inherited frmGoPhast: TfrmGoPhast
           Action = acEditSelecteObjects
         end
         object miSelectObjectsforEditing: TMenuItem
-          Caption = 'Select Objects for Editing of Deletion...'
+          Caption = 'Select Objects for Editing or Deletion...'
           OnClick = miSelectObjectsforEditingClick
         end
         object AddPointstoObject1: TMenuItem
@@ -2213,9 +2216,9 @@ inherited frmGoPhast: TfrmGoPhast
     object acShowGridLines2D: TAction
       Category = 'View'
       AutoCheck = True
-      Caption = 'Show 2D Grid'
+      Caption = 'Hide 2-D Grid'
       Checked = True
-      Hint = 'Show 2D gridlines|Show gridlines in 2D views.'
+      Hint = 'Show or hide 2D gridlines|Show or hide gridlines in 2D views.'
       ImageIndex = 71
       OnExecute = acShowGridLines2DExecute
     end

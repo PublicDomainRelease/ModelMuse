@@ -652,11 +652,14 @@ var
 begin
   MinValues.Sort;
   MaxValues.Sort;
-  New3DArray.Limits.LowerLimit.UseLimit := True;
-  New3DArray.Limits.LowerLimit.RealLimitValue := MinValues[0];
-  New3DArray.Limits.UpperLimit.UseLimit := True;
-  New3DArray.Limits.UpperLimit.RealLimitValue :=
-    MaxValues[MaxValues.Count -1];
+  if MinValues.Count > 0 then
+  begin
+    New3DArray.Limits.LowerLimit.UseLimit := True;
+    New3DArray.Limits.LowerLimit.RealLimitValue := MinValues[0];
+    New3DArray.Limits.UpperLimit.UseLimit := True;
+    New3DArray.Limits.UpperLimit.RealLimitValue :=
+      MaxValues[MaxValues.Count -1];
+  end;
   New3DArray.Limits.Update;
   MinValues.Clear;
   MaxValues.Clear;

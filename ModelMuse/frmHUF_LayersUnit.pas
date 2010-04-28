@@ -77,6 +77,7 @@ type
       HufUnitsThatUseParameter: TList; FirstUsedParameter: THufUsedParameter);
     procedure AssignPrintFormat(HufUnit: THydrogeologicUnit);
     procedure AssignPrint(HufUnit: THydrogeologicUnit);
+    function CheckHuf: boolean;
     { Private declarations }
   public
     { Public declarations }
@@ -106,9 +107,92 @@ uses
 
 {$R *.dfm}
 
+function TfrmHUF_Layers.CheckHuf: boolean;
+var
+  HufIndex: Integer;
+  HufUnit: THydrogeologicUnit;
+  Names: TStringList;
+  ParamIndex: Integer;
+  Parameter: THufParameter;
+  IsUsed: Boolean;
+begin
+  if FHydrogeologicUnits.Count = 0 then
+  begin
+    result := MessageDlg('No hydrogeologic units have been defined.  '
+      +'Are you sure you want to close the dialog box?',
+      mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+  end
+  else
+  begin
+    result := True;
+    Names := TStringList.Create;
+    try
+      for HufIndex := 0 to FHydrogeologicUnits.Count - 1 do
+      begin
+        HufUnit := FHydrogeologicUnits[HufIndex];
+        if HufUnit.HufUsedParameters.Count = 0 then
+        begin
+          Names.Add(HufUnit.HufName)
+        end;
+      end;
+      if Names.Count  > 0 then
+      begin
+        result := MessageDlg('No parameters have been associated '
+          +'with the following Hydrogeologic units.  '
+          +'Are you sure you want to close the dialog box?'
+          + #13#10#13#10
+          + Names.Text,
+          mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+      end;
+    finally
+      Names.Free;
+    end;
+    if result then
+    begin
+      Names := TStringList.Create;
+      try
+        for ParamIndex := 0 to frmGoPhast.PhastModel.HufParameters.Count - 1 do
+        begin
+          Parameter := frmGoPhast.PhastModel.HufParameters[ParamIndex];
+          IsUsed := False;
+          for HufIndex := 0 to FHydrogeologicUnits.Count - 1 do
+          begin
+            HufUnit := FHydrogeologicUnits[HufIndex];
+            IsUsed := HufUnit.HufUsedParameters.IsUsed(Parameter.ParameterName);
+            if IsUsed then
+            begin
+              break;
+            end;
+          end;
+          if not IsUsed then
+          begin
+            Names.Add(Parameter.ParameterName)
+          end;
+        end;
+        if Names.Count  > 0 then
+        begin
+          result := MessageDlg('The following parameters are not associated '
+            +'with any Hydrogeologic units.  '
+            +'Are you sure you want to close the dialog box?'
+            + #13#10#13#10
+            + Names.Text,
+            mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+        end;
+      finally
+        Names.Free;
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmHUF_Layers.btnOKClick(Sender: TObject);
 begin
   inherited;
+  if not CheckHuf then
+  begin
+    ModalResult := mrNone;
+    Exit;
+  end;
   SetData;
 end;
 
@@ -799,11 +883,10 @@ begin
       HGU := FHydrogeologicUnits[Index];
       UsedNames.Add(HGU.HufName);
     end;
-    NewRoot := 'New_HGU';
+    NewRoot := 'HGU';
     result := NewRoot;
     Index := 1;
-    while UsedNames.IndexOf(result) >= 0 do
-    begin
+    repeat
       result := NewRoot + IntToStr(Index);
       if Length(result) > 10 then
       begin
@@ -811,7 +894,7 @@ begin
         result := NewRoot + IntToStr(Index);
       end;
       Inc(Index);
-    end;
+    until  UsedNames.IndexOf(result) < 0;
   finally
     UsedNames.Free;
   end;

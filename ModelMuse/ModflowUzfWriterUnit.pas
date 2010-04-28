@@ -191,6 +191,7 @@ begin
       CellList.Cache;
     end;
   end;
+  SetTimeListsUpToDate(TimeLists);
 
 end;
 

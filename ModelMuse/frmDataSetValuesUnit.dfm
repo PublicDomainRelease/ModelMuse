@@ -5,12 +5,12 @@ inherited frmDataSetValues: TfrmDataSetValues
   ClientWidth = 548
   OnDestroy = FormDestroy
   ExplicitWidth = 556
-  ExplicitHeight = 274
+  ExplicitHeight = 268
   PixelsPerInch = 96
   TextHeight = 18
   object Panel1: TPanel
     Left = 0
-    Top = 192
+    Top = 186
     Width = 548
     Height = 48
     Align = alBottom
@@ -60,12 +60,14 @@ inherited frmDataSetValues: TfrmDataSetValues
       Tree.TabOrder = 0
       Tree.Visible = False
       Tree.OnChange = treecomboDataSetsDropDownTreeChange
+      Tree.OnEnter = treecomboDataSetsDropDownTreeEnter
       Tree.OnGetText = treecomboDataSetsDropDownTreeGetText
       Tree.OnGetNodeDataSize = treecomboDataSetsDropDownTreeGetNodeDataSize
       Tree.Columns = <>
       PanelAutoWidth = True
       PanelWidth = 275
       PanelHeight = 208
+      OnClosedUp = treecomboDataSetsClosedUp
     end
     object btnCopy: TButton
       Left = 8
@@ -82,7 +84,7 @@ inherited frmDataSetValues: TfrmDataSetValues
     Left = 97
     Top = 0
     Width = 451
-    Height = 192
+    Height = 186
     Align = alClient
     TabOrder = 1
   end
@@ -90,7 +92,7 @@ inherited frmDataSetValues: TfrmDataSetValues
     Left = 0
     Top = 0
     Width = 97
-    Height = 192
+    Height = 186
     Align = alLeft
     Caption = 'Panel2'
     TabOrder = 2
@@ -109,7 +111,7 @@ inherited frmDataSetValues: TfrmDataSetValues
       Left = 1
       Top = 22
       Width = 95
-      Height = 169
+      Height = 163
       Align = alClient
       ItemHeight = 18
       Background.FillMode = bfmTile

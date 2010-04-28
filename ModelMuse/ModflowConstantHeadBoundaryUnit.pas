@@ -124,6 +124,7 @@ type
       ValueTimeList: TList);  override;        
     class function BoundaryCollectionClass: TMF_BoundCollClass; override;
     class function ModflowParamItemClass: TModflowParamItemClass; override;
+    function ParameterType: TParameterType; override;
   public
     procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
       override;
@@ -597,8 +598,11 @@ begin
   EvaluateListBoundaries;
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    BoundaryStorage := Values.Boundaries[ValueIndex] as TChdStorage;
-    AssignCells(BoundaryStorage, ValueTimeList);
+    if ValueIndex < Values.BoundaryCount then
+    begin
+      BoundaryStorage := Values.Boundaries[ValueIndex] as TChdStorage;
+      AssignCells(BoundaryStorage, ValueTimeList);
+    end;
   end;
   for ParamIndex := 0 to Parameters.Count - 1 do
   begin
@@ -616,8 +620,11 @@ begin
     end;
     for ValueIndex := 0 to Param.Param.Count - 1 do
     begin
-      BoundaryStorage := Param.Param.Boundaries[ValueIndex];
-      AssignCells(BoundaryStorage, Times);
+      if ValueIndex < Param.Param.BoundaryCount then
+      begin
+        BoundaryStorage := Param.Param.Boundaries[ValueIndex];
+        AssignCells(BoundaryStorage, Times);
+      end;
     end;
   end;
 end;
@@ -638,6 +645,11 @@ end;
 class function TChdBoundary.ModflowParamItemClass: TModflowParamItemClass;
 begin
   result := TChdParamItem;
+end;
+
+function TChdBoundary.ParameterType: TParameterType;
+begin
+  result := ptCHD;
 end;
 
 { TCHD_Cell }

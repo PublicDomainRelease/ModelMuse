@@ -615,8 +615,11 @@ begin
   EvaluateArrayBoundaries;
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    BoundaryStorage := Values.Boundaries[ValueIndex] as TRchStorage;
-    AssignCells(BoundaryStorage, ValueTimeList);
+    if ValueIndex < Values.BoundaryCount then
+    begin
+      BoundaryStorage := Values.Boundaries[ValueIndex] as TRchStorage;
+      AssignCells(BoundaryStorage, ValueTimeList);
+    end;
   end;
 end;
 
@@ -689,6 +692,10 @@ begin
   begin
     Assert(Value in [0, 1, 2]);
     FGageOption1 := Value;
+    if ScreenObject <> nil then
+    begin
+      (ScreenObject as TScreenObject).UpdateUzfGage1and2;
+    end;
     InvalidateModel;
   end;
 end;
@@ -699,6 +706,10 @@ begin
   begin
     Assert(Value in [0, 3]);
     FGageOption2 := Value;
+    if ScreenObject <> nil then
+    begin
+      (ScreenObject as TScreenObject).UpdateUzfGage3;
+    end;
     InvalidateModel;
   end;
 end;

@@ -6,6 +6,7 @@ inherited frmModflowPackages: TfrmModflowPackages
   ClientWidth = 792
   OnDestroy = FormDestroy
   OnResize = FormResize
+  ExplicitTop = -8
   ExplicitWidth = 800
   ExplicitHeight = 578
   PixelsPerInch = 96
@@ -42,7 +43,7 @@ inherited frmModflowPackages: TfrmModflowPackages
     Top = 0
     Width = 605
     Height = 503
-    ActivePage = jvspSUB
+    ActivePage = jvspUZF
     PropagateEnable = False
     Align = alClient
     OnChange = jvplPackagesChange
@@ -121,8 +122,8 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
         end
         inherited dgParameters: TRbwDataGrid4
-          Width = 474
-          Height = 107
+          Width = 468
+          Height = 101
           Enabled = True
           Columns = <
             item
@@ -209,8 +210,10 @@ inherited frmModflowPackages: TfrmModflowPackages
               WordWrapCells = False
               AutoAdjustColWidths = True
             end>
-          ExplicitWidth = 474
-          ExplicitHeight = 107
+          ExplicitLeft = 3
+          ExplicitTop = 60
+          ExplicitWidth = 468
+          ExplicitHeight = 101
         end
         inherited pnlTop: TPanel
           Width = 474
@@ -432,11 +435,13 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
         end
         inherited dgParameters: TRbwDataGrid4
-          Width = 474
-          Height = 170
+          Width = 468
+          Height = 164
           Enabled = True
-          ExplicitWidth = 474
-          ExplicitHeight = 170
+          ExplicitLeft = 3
+          ExplicitTop = 3
+          ExplicitWidth = 468
+          ExplicitHeight = 164
         end
       end
     end
@@ -460,12 +465,14 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited lblComments: TLabel
           Width = 76
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 76
           ExplicitHeight = 18
         end
         inherited lblPackage: TLabel
           Width = 78
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
@@ -521,10 +528,12 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
         end
         inherited dgParameters: TRbwDataGrid4
-          Width = 605
-          Height = 294
-          ExplicitWidth = 605
-          ExplicitHeight = 294
+          Width = 599
+          Height = 288
+          ExplicitLeft = 3
+          ExplicitTop = 3
+          ExplicitWidth = 599
+          ExplicitHeight = 288
         end
       end
     end
@@ -548,12 +557,14 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited lblComments: TLabel
           Width = 76
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 76
           ExplicitHeight = 18
         end
         inherited lblPackage: TLabel
           Width = 78
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
@@ -609,10 +620,12 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
         end
         inherited dgParameters: TRbwDataGrid4
-          Width = 605
-          Height = 294
-          ExplicitWidth = 605
-          ExplicitHeight = 294
+          Width = 599
+          Height = 288
+          ExplicitLeft = 3
+          ExplicitTop = 3
+          ExplicitWidth = 599
+          ExplicitHeight = 288
         end
       end
     end
@@ -1104,12 +1117,14 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited lblComments: TLabel
           Width = 76
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 76
           ExplicitHeight = 18
         end
         inherited lblPackage: TLabel
           Width = 78
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
@@ -1165,10 +1180,12 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
         end
         inherited dgParameters: TRbwDataGrid4
-          Width = 605
-          Height = 294
-          ExplicitWidth = 605
-          ExplicitHeight = 294
+          Width = 599
+          Height = 288
+          ExplicitLeft = 3
+          ExplicitTop = 3
+          ExplicitWidth = 599
+          ExplicitHeight = 288
         end
       end
     end
@@ -1192,12 +1209,14 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited lblComments: TLabel
           Width = 76
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 76
           ExplicitHeight = 18
         end
         inherited lblPackage: TLabel
           Width = 78
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
@@ -1253,10 +1272,12 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
         end
         inherited dgParameters: TRbwDataGrid4
-          Width = 605
-          Height = 294
-          ExplicitWidth = 605
-          ExplicitHeight = 294
+          Width = 599
+          Height = 288
+          ExplicitLeft = 3
+          ExplicitTop = 3
+          ExplicitWidth = 599
+          ExplicitHeight = 288
         end
       end
     end
@@ -1280,12 +1301,14 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited lblComments: TLabel
           Width = 76
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 76
           ExplicitHeight = 18
         end
         inherited lblPackage: TLabel
           Width = 78
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
@@ -1341,10 +1364,12 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
         end
         inherited dgParameters: TRbwDataGrid4
-          Width = 605
-          Height = 294
-          ExplicitWidth = 605
-          ExplicitHeight = 294
+          Width = 599
+          Height = 288
+          ExplicitLeft = 3
+          ExplicitTop = 3
+          ExplicitWidth = 599
+          ExplicitHeight = 288
         end
       end
     end
@@ -1368,12 +1393,14 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited lblComments: TLabel
           Width = 76
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 76
           ExplicitHeight = 18
         end
         inherited lblPackage: TLabel
           Width = 78
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
@@ -1429,10 +1456,12 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
         end
         inherited dgParameters: TRbwDataGrid4
-          Width = 605
-          Height = 294
-          ExplicitWidth = 605
-          ExplicitHeight = 294
+          Width = 599
+          Height = 288
+          ExplicitLeft = 3
+          ExplicitTop = 3
+          ExplicitWidth = 599
+          ExplicitHeight = 288
         end
       end
     end
@@ -1546,10 +1575,12 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
         end
         inherited dgParameters: TRbwDataGrid4
-          Width = 605
-          Height = 254
-          ExplicitWidth = 605
-          ExplicitHeight = 254
+          Width = 599
+          Height = 248
+          ExplicitLeft = 3
+          ExplicitTop = 3
+          ExplicitWidth = 599
+          ExplicitHeight = 248
         end
       end
     end
@@ -1663,10 +1694,12 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
         end
         inherited dgParameters: TRbwDataGrid4
-          Width = 605
-          Height = 254
-          ExplicitWidth = 605
-          ExplicitHeight = 254
+          Width = 599
+          Height = 248
+          ExplicitLeft = 3
+          ExplicitTop = 3
+          ExplicitWidth = 599
+          ExplicitHeight = 248
         end
       end
     end
@@ -1795,10 +1828,12 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
         end
         inherited dgParameters: TRbwDataGrid4
-          Width = 605
-          Height = 229
-          ExplicitWidth = 605
-          ExplicitHeight = 229
+          Width = 599
+          Height = 223
+          ExplicitLeft = 3
+          ExplicitTop = 3
+          ExplicitWidth = 599
+          ExplicitHeight = 223
         end
       end
     end
@@ -2385,12 +2420,14 @@ inherited frmModflowPackages: TfrmModflowPackages
               end
             end
             inherited dgParameters: TRbwDataGrid4
-              Width = 605
-              Height = 209
+              Width = 599
+              Height = 203
               OnSelectCell = frameSFRParameterDefinitiondgParametersSelectCell
               OnSetEditText = frameSFRParameterDefinitiondgParametersSetEditText
-              ExplicitWidth = 605
-              ExplicitHeight = 209
+              ExplicitLeft = 3
+              ExplicitTop = 3
+              ExplicitWidth = 599
+              ExplicitHeight = 203
               ColWidths = (
                 64
                 64)
@@ -2426,8 +2463,10 @@ inherited frmModflowPackages: TfrmModflowPackages
         ExplicitWidth = 605
         ExplicitHeight = 503
         inherited lblComments: TLabel
+          Top = 39
           Width = 76
           Height = 18
+          ExplicitTop = 39
           ExplicitWidth = 76
           ExplicitHeight = 18
         end
@@ -2470,36 +2509,36 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 18
           end
           inherited lblNumberOfTrailingWaves: TLabel
-            Top = 119
+            Top = 112
             Width = 251
             Height = 18
             Caption = 'Number of trailing waves (NTRAIL2) '
-            ExplicitTop = 119
+            ExplicitTop = 112
             ExplicitWidth = 251
             ExplicitHeight = 18
           end
           inherited lblNumberOfWaveSets: TLabel
-            Top = 175
+            Top = 161
             Width = 225
             Height = 18
             Caption = 'Number of wave sets (NSETS2) '
-            ExplicitTop = 175
+            ExplicitTop = 161
             ExplicitWidth = 225
             ExplicitHeight = 18
           end
           inherited lblSURFDEP: TLabel
-            Top = 295
-            Width = 511
+            Top = 282
+            Width = 506
             Height = 18
-            ExplicitTop = 295
-            ExplicitWidth = 511
+            ExplicitTop = 282
+            ExplicitWidth = 506
             ExplicitHeight = 18
           end
           inherited comboLayerOption: TComboBox
-            Top = 29
+            Top = 27
             Height = 26
             ItemHeight = 18
-            ExplicitTop = 29
+            ExplicitTop = 27
             ExplicitHeight = 26
           end
           inherited comboVerticalKSource: TComboBox
@@ -2512,41 +2551,39 @@ inherited frmModflowPackages: TfrmModflowPackages
             ExplicitHeight = 26
           end
           inherited cbRouteDischargeToStreamsAndLakes: TCheckBox
-            Left = 18
-            Top = 231
+            Top = 210
             Width = 449
             Caption = 'Route discharge to streams and lakes (IRUNFLG)'
-            ExplicitLeft = 18
-            ExplicitTop = 231
+            ExplicitTop = 210
             ExplicitWidth = 449
           end
           inherited cbSimulateEvapotranspiration: TCheckBox
-            Top = 254
+            Top = 233
             Width = 335
-            ExplicitTop = 254
+            ExplicitTop = 233
             ExplicitWidth = 335
           end
           inherited rdeNumberOfTrailingWaves: TRbwDataEntry
-            Top = 142
+            Top = 133
             ItemHeight = 18
-            ExplicitTop = 142
+            ExplicitTop = 133
           end
           inherited rdeNumberOfWaveSets: TRbwDataEntry
-            Top = 198
+            Top = 182
             ItemHeight = 18
-            ExplicitTop = 198
+            ExplicitTop = 182
           end
           inherited cbPrintSummary: TCheckBox
-            Top = 277
+            Top = 256
             Width = 585
             Caption = 'Print summary of UZF budget terms (IFTUNIT)'
-            ExplicitTop = 277
+            ExplicitTop = 256
             ExplicitWidth = 585
           end
           inherited rdeSURFDEP: TRbwDataEntry
-            Top = 315
+            Top = 303
             ItemHeight = 18
-            ExplicitTop = 315
+            ExplicitTop = 303
           end
         end
         inherited rcSelectionController: TRbwController
@@ -3375,12 +3412,14 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited lblComments: TLabel
           Width = 76
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 76
           ExplicitHeight = 18
         end
         inherited lblPackage: TLabel
           Width = 78
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
@@ -3437,10 +3476,12 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
         end
         inherited dgParameters: TRbwDataGrid4
-          Width = 605
-          Height = 294
-          ExplicitWidth = 605
-          ExplicitHeight = 294
+          Width = 599
+          Height = 288
+          ExplicitLeft = 3
+          ExplicitTop = 3
+          ExplicitWidth = 599
+          ExplicitHeight = 288
         end
       end
     end
@@ -3719,15 +3760,6 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
             item
               Control = frameModpath.cbStopAfterMaxTime
-            end
-            item
-              Control = frameModpath.comboWhichEndpoints
-            end
-            item
-              Control = frameModpath.rdeBeginningTime
-            end
-            item
-              Control = frameModpath.rdeEndingTime
             end>
           OnEnabledChange = frameModpathrcSelectionControllerEnabledChange
         end
@@ -3754,12 +3786,14 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited lblComments: TLabel
           Width = 76
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 76
           ExplicitHeight = 18
         end
         inherited lblPackage: TLabel
           Width = 78
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
@@ -3802,12 +3836,14 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited lblComments: TLabel
           Width = 76
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 76
           ExplicitHeight = 18
         end
         inherited lblPackage: TLabel
           Width = 78
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
@@ -3850,12 +3886,14 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited lblComments: TLabel
           Width = 76
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 76
           ExplicitHeight = 18
         end
         inherited lblPackage: TLabel
           Width = 78
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
@@ -3898,12 +3936,14 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited lblComments: TLabel
           Width = 76
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 76
           ExplicitHeight = 18
         end
         inherited lblPackage: TLabel
           Width = 78
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
@@ -4032,12 +4072,14 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited lblComments: TLabel
           Width = 76
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 76
           ExplicitHeight = 18
         end
         inherited lblPackage: TLabel
           Width = 78
           Height = 18
+          Margins.Bottom = 0
           ExplicitWidth = 78
           ExplicitHeight = 18
         end
@@ -4096,47 +4138,52 @@ inherited frmModflowPackages: TfrmModflowPackages
         inherited pcSub: TPageControl
           Width = 605
           Height = 384
-          ActivePage = framePkgSUB.tabPrintSave
           ExplicitWidth = 605
           ExplicitHeight = 384
           inherited tabControls: TTabSheet
             ExplicitLeft = 4
             ExplicitTop = 29
-            ExplicitWidth = 597
-            ExplicitHeight = 351
+            ExplicitWidth = 436
+            ExplicitHeight = 250
             inherited lblNumberOfNodes: TLabel
               Width = 287
               Height = 18
+              Margins.Bottom = 0
               ExplicitWidth = 287
               ExplicitHeight = 18
             end
             inherited lblAccel1: TLabel
               Width = 238
               Height = 18
+              Margins.Bottom = 0
               ExplicitWidth = 238
               ExplicitHeight = 18
             end
             inherited lblAccel2: TLabel
               Width = 265
               Height = 18
+              Margins.Bottom = 0
               ExplicitWidth = 265
               ExplicitHeight = 18
             end
             inherited lblMinIterations: TLabel
               Width = 353
               Height = 18
+              Margins.Bottom = 0
               ExplicitWidth = 353
               ExplicitHeight = 18
             end
             inherited lbReadRestart: TLabel
               Width = 380
               Height = 18
+              Margins.Bottom = 0
               ExplicitWidth = 380
               ExplicitHeight = 18
             end
             inherited lblOutputChoice: TLabel
               Width = 140
               Height = 18
+              Margins.Bottom = 0
               ExplicitWidth = 140
               ExplicitHeight = 18
             end
@@ -4179,12 +4226,12 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited rdgFormats: TRbwDataGrid4
               Left = 13
               Top = 40
-              Width = 573
-              Height = 291
+              Width = 734
+              Height = 392
               ExplicitLeft = 13
               ExplicitTop = 40
-              ExplicitWidth = 573
-              ExplicitHeight = 291
+              ExplicitWidth = 734
+              ExplicitHeight = 392
               ColWidths = (
                 83
                 64
@@ -4202,12 +4249,13 @@ inherited frmModflowPackages: TfrmModflowPackages
           inherited tabPrintSave: TTabSheet
             ExplicitLeft = 4
             ExplicitTop = 29
-            ExplicitWidth = 436
-            ExplicitHeight = 250
+            ExplicitWidth = 597
+            ExplicitHeight = 351
             inherited lblNumExportPeriods: TLabel
               Top = 427
               Width = 176
               Height = 18
+              Margins.Bottom = 0
               ExplicitTop = 326
               ExplicitWidth = 176
               ExplicitHeight = 18
@@ -4247,7 +4295,7 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited seNumExportPeriods: TJvSpinEdit
               Top = 424
               Height = 26
-              ExplicitTop = 323
+              ExplicitTop = 424
               ExplicitHeight = 26
             end
           end

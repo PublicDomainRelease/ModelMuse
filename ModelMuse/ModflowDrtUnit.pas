@@ -263,6 +263,7 @@ type
     // See @link(TModflowParamBoundary.ModflowParamItemClass
     // TModflowParamBoundary.ModflowParamItemClass).
     class function ModflowParamItemClass: TModflowParamItemClass; override;
+    function ParameterType: TParameterType; override;
   public
     // @name copies @link(Values) and @link(Parameters) from the Source
     // @classname to this @classname.
@@ -822,8 +823,11 @@ begin
   EvaluateListBoundaries;
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    BoundaryStorage := Values.Boundaries[ValueIndex] as TDrtStorage;
-    AssignCells(BoundaryStorage, ValueTimeList);
+    if ValueIndex < Values.BoundaryCount then
+    begin
+      BoundaryStorage := Values.Boundaries[ValueIndex] as TDrtStorage;
+      AssignCells(BoundaryStorage, ValueTimeList);
+    end;
   end;
   for ParamIndex := 0 to Parameters.Count - 1 do
   begin
@@ -841,8 +845,11 @@ begin
     end;
     for ValueIndex := 0 to Param.Param.Count - 1 do
     begin
-      BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TDrtStorage;
-      AssignCells(BoundaryStorage, Times);
+      if ValueIndex < Param.Param.BoundaryCount then
+      begin
+        BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TDrtStorage;
+        AssignCells(BoundaryStorage, Times);
+      end;
     end;
   end;
 end;
@@ -864,6 +871,11 @@ end;
 class function TDrtBoundary.ModflowParamItemClass: TModflowParamItemClass;
 begin
   result := TDrtParamItem;
+end;
+
+function TDrtBoundary.ParameterType: TParameterType;
+begin
+  result := ptDRT
 end;
 
 procedure TDrtBoundary.Assign(Source: TPersistent);

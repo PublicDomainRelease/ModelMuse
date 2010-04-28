@@ -504,6 +504,7 @@ end;
 procedure TFormulaObject.CompileFormula(var Value: string);
 var
   TempValue: string;
+  ADummyValue: double;
 begin
   if (FExpression <> nil) and FNotifies then
   begin
@@ -513,6 +514,14 @@ begin
     end;
   end;
   if Value = '' then
+  begin
+    FExpression := nil;
+    FNotifies := False;
+  end
+  else if (frmGoPhast.PhastModel <> nil)
+    and ((frmGoPhast.PhastModel.ComponentState * [csLoading, csReading]) <> [])
+    and (Value <> 'True') and (Value <> 'False')
+    and not TryStrToFloat(Value, ADummyValue) then
   begin
     FExpression := nil;
     FNotifies := False;
@@ -790,7 +799,8 @@ procedure TFormulaManager.Remove(FormulaObject: TFormulaObject;
 begin
   if (FormulaObject = nil)
     or ((frmGoPhast.PhastModel <> nil)
-    and (csDestroying in frmGoPhast.PhastModel.ComponentState)) then
+    and ((csDestroying in frmGoPhast.PhastModel.ComponentState)
+    or frmGoPhast.PhastModel.Clearing)) then
   begin
     Exit;
   end;

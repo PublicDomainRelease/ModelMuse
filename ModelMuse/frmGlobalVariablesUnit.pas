@@ -165,6 +165,17 @@ begin
           begin
             rdgGlobalVariables.Cells[ACol, ARow] := NewValue
           end;
+          if (Value <> '') then
+          begin
+            if rdgGlobalVariables.Cells[Ord(gvType), ARow] = '' then
+            begin
+              rdgGlobalVariables.ItemIndex[Ord(gvType), ARow] := 0;
+              if rdgGlobalVariables.Cells[Ord(gvValue), ARow] = '' then
+              begin
+                rdgGlobalVariables.Cells[Ord(gvValue), ARow] := '0';
+              end;
+            end;
+          end;
         end;
       gvType:
         begin

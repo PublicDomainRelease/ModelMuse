@@ -51,6 +51,9 @@ type
   // @link(TRbwDataGrid4) or a row of a @link(TRbwRowDataGrid).
   TRbwColumnFormat4 = (rcf4String, rcf4Integer, rcf4Real, rcf4Boolean);
 
+  EColWidthError = class(Exception);
+  EInvalidColumn = class(Exception);
+
   // @name is used in @link(TCustomRBWDataGrid.SpecialFormat) to assign
   // a @link(TRbwColumnFormat4) to a particular cell that is different from
   // the default format for that cell.
@@ -962,6 +965,7 @@ end;
 procedure TRbwColumn4.SetAutoAdjustColWidths(const Value: boolean);
 var
   ACol: integer;
+  LocalGrid: TCustomRBWDataGrid;
 begin
   if FAutoAdjustColWidths <> Value then
   begin
@@ -969,9 +973,20 @@ begin
     if Value then
     begin
       ACol := Index;
-      if (ACol >= 0) and (Grid <> nil) then
+      LocalGrid := Grid;
+      if (LocalGrid <> nil) and (ACol >= 0) and (ACol < LocalGrid.ColCount)
+        and ([csLoading, csReading] * LocalGrid.ComponentState = []) then
       begin
-        (Grid as TRbwDataGrid4).AdjustColWidths(ACol);
+        try
+          (LocalGrid as TRbwDataGrid4).AdjustColWidths(ACol);
+        except on E:Exception do
+          begin
+            raise EColWidthError.Create(
+              'There was an error adjusting the column width '
+              + #13#10
+              + E.Message);
+          end;
+        end;
       end;
     end;
   end;
@@ -1004,6 +1019,10 @@ end;
 
 function TRbwDataGridColumns4.GetItems(Index: Integer): TRbwColumn4;
 begin
+  if (Index < 0) or (Index >= Count) then
+  begin
+    raise EInvalidColumn.Create('Attempting to retrieve an invalid column');
+  end;
   Result := inherited Items[Index] as TRbwColumn4;
 end;
 
@@ -1722,6 +1741,8 @@ var
   RealValue : extended;
   AGrid : TCustomRBWDataGrid;
   CellValue : string;
+  SelStart: Integer;
+  SelLength: Integer;
 begin
   if not LocalCheckMax and not LocalCheckMin then Exit;
   if not (Format in [rcf4Integer, rcf4Real]) then Exit;
@@ -1732,71 +1753,125 @@ begin
   if Format = rcf4Integer then
   begin
     IntValue := 0;
-    try
-      IntValue := StrToInt(CellValue);
-    except on EConvertError do
-      begin
-        AGrid.Cells[ACol, ARow] := '0';
-        CheckACell(ACol, ARow, LocalCheckMax, LocalCheckMin, LocalMax, LocalMin);
+    if CellValue <> '-' then
+    begin
+      try
+        IntValue := StrToInt(CellValue);
+      except on EConvertError do
+        begin
+          AGrid.Cells[ACol, ARow] := '0';
+          CheckACell(ACol, ARow, LocalCheckMax, LocalCheckMin, LocalMax, LocalMin);
+        end;
       end;
-    end;
 
-    if LocalCheckMax and (IntValue > LocalMax) then
-    begin
-      IntValue := Trunc(LocalMax);
-      if (LocalMax < 0) and (IntValue <> LocalMax) then
+      if LocalCheckMax and (IntValue > LocalMax) then
       begin
-        Dec(IntValue);
+        IntValue := Trunc(LocalMax);
+        if (LocalMax < 0) and (IntValue <> LocalMax) then
+        begin
+          Dec(IntValue);
+        end;
+        Beep;
+        SelStart := -1;
+        SelLength := -1;
+        if AGrid.InplaceEditor <> nil then
+        begin
+          SelStart := AGrid.InplaceEditor.SelStart;
+          SelLength := AGrid.InplaceEditor.SelLength;
+        end;
+        AGrid.Cells[ACol, ARow] := IntToStr(IntValue);
+        if (not AGrid.Focused) and Assigned(AGrid.OnExit) then
+        begin
+          AGrid.OnExit(AGrid);
+        end;
+        if AGrid.InplaceEditor <> nil then
+        begin
+          AGrid.InplaceEditor.SelStart := SelStart;
+          AGrid.InplaceEditor.SelLength := SelLength;
+        end;
       end;
-      Beep;
-      AGrid.Cells[ACol, ARow] := IntToStr(IntValue);
-      if (not AGrid.Focused) and Assigned(AGrid.OnExit) then
+      if LocalCheckMin and (IntValue < LocalMin) then
       begin
-        AGrid.OnExit(AGrid);
-      end;
-    end;
-    if LocalCheckMin and (IntValue < LocalMin) then
-    begin
-      IntValue := Trunc(LocalMin);
-      if (LocalMin > 0) and (IntValue <> LocalMin) then
-      begin
-        Inc(IntValue);
-      end;
-      Beep;
-      AGrid.Cells[ACol, ARow] := IntToStr(IntValue);
-      if (not AGrid.Focused) and Assigned(AGrid.OnExit) then
-      begin
-        AGrid.OnExit(AGrid);
+        IntValue := Trunc(LocalMin);
+        if (LocalMin > 0) and (IntValue <> LocalMin) then
+        begin
+          Inc(IntValue);
+        end;
+        Beep;
+        SelStart := -1;
+        SelLength := -1;
+        if AGrid.InplaceEditor <> nil then
+        begin
+          SelStart := AGrid.InplaceEditor.SelStart;
+          SelLength := AGrid.InplaceEditor.SelLength;
+        end;
+        AGrid.Cells[ACol, ARow] := IntToStr(IntValue);
+        if (not AGrid.Focused) and Assigned(AGrid.OnExit) then
+        begin
+          AGrid.OnExit(AGrid);
+        end;
+        if AGrid.InplaceEditor <> nil then
+        begin
+          AGrid.InplaceEditor.SelStart := SelStart;
+          AGrid.InplaceEditor.SelLength := SelLength;
+        end;
       end;
     end;
   end
   else if Format = rcf4Real then
   begin
     RealValue := 0;
-    try
-      RealValue := AGrid.LocalStrToFloat(CellValue);
-    except on EConvertError do
-      begin
-        AGrid.Cells[ACol, ARow] := '0';
-        CheckACell(ACol, ARow, LocalCheckMax, LocalCheckMin, LocalMax, LocalMin);
-      end;
-    end;
-    if LocalCheckMax and (RealValue > LocalMax) then
+    if CellValue <> '-' then
     begin
-      Beep;
-      AGrid.Cells[ACol, ARow] := FloatToStr(LocalMax);
-      if (not AGrid.Focused) and Assigned(AGrid.OnExit) then
-      begin
-        AGrid.OnExit(AGrid);
+      try
+        RealValue := AGrid.LocalStrToFloat(CellValue);
+      except on EConvertError do
+        begin
+          AGrid.Cells[ACol, ARow] := '0';
+          CheckACell(ACol, ARow, LocalCheckMax, LocalCheckMin, LocalMax, LocalMin);
+        end;
       end;
-    end;
-    if LocalCheckMin and (RealValue < LocalMin) then
-    begin
-      Beep;
-      AGrid.Cells[ACol, ARow] := FloatToStr(LocalMin);
-      if (not AGrid.Focused) and Assigned(AGrid.OnExit) then
+      if LocalCheckMax and (RealValue > LocalMax) then
       begin
-        AGrid.OnExit(AGrid);
+        Beep;
+        SelStart := -1;
+        SelLength := -1;
+        if AGrid.InplaceEditor <> nil then
+        begin
+          SelStart := AGrid.InplaceEditor.SelStart;
+          SelLength := AGrid.InplaceEditor.SelLength;
+        end;
+        AGrid.Cells[ACol, ARow] := FloatToStr(LocalMax);
+        if (not AGrid.Focused) and Assigned(AGrid.OnExit) then
+        begin
+          AGrid.OnExit(AGrid);
+        end;
+        if AGrid.InplaceEditor <> nil then
+        begin
+          AGrid.InplaceEditor.SelStart := SelStart;
+          AGrid.InplaceEditor.SelLength := SelLength;
+        end;
+      end;
+      if LocalCheckMin and (RealValue < LocalMin) then
+      begin
+        Beep;
+        SelStart := -1;
+        SelLength := -1;
+        if AGrid.InplaceEditor <> nil then
+        begin
+          SelStart := AGrid.InplaceEditor.SelStart;
+          SelLength := AGrid.InplaceEditor.SelLength;
+        end;
+        AGrid.Cells[ACol, ARow] := FloatToStr(LocalMin);
+        if (not AGrid.Focused) and Assigned(AGrid.OnExit) then
+        begin
+          AGrid.OnExit(AGrid);
+        end;
+        if AGrid.InplaceEditor <> nil then
+        begin
+          AGrid.InplaceEditor.SelStart := SelStart;
+          AGrid.InplaceEditor.SelLength := SelLength;
+        end;
       end;
     end;
   end;
@@ -3035,14 +3110,14 @@ begin
       EditorMode := False;
     end;
   end;
-  if CanSelect then
+  if CanSelect and (ARow < FixedRows) and (ACol < FixedCols) then
   begin
     dgRow := ARow;
     dgColumn := ACol;
   end;
-  if (ACol >= 0) and (ACol < ColCount) then
+  if (ACol >= FixedCols) and (ACol < ColCount) then
   begin
-    if (ARow >= 0) and (ARow < RowCount)
+    if (ARow >= FixedRows) and (ARow < RowCount)
       and (CanSelect or (GetCellFormat(ACol, ARow) = rcf4Boolean)) then
     begin
       NewCoord.X := ACol;
@@ -3742,7 +3817,7 @@ begin
     if (dgColumn >=0) and (dgColumn < ColCount) then
     begin
       ColumnOrRow := CollectionItem(dgColumn,dgRow);
-      result := (ColumnOrRow.Format <> rcf4Boolean);
+      result := (ColumnOrRow <> nil) and (ColumnOrRow.Format <> rcf4Boolean);
     end;
   end;
 end;
@@ -3791,7 +3866,9 @@ begin
       end;
     end;
 
+
     ColumnOrRow := CollectionItem(ACol, ARow);
+    ColumnOrRow.CheckCell(ACol, ARow);
     if ColumnOrRow.LimitToList then
     begin
       if ColumnOrRow.PickList.IndexOf(Value) < 0 then

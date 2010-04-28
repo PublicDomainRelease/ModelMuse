@@ -117,6 +117,10 @@ end;
 const
   ErrorRoot = 'One or more %s parameters have been eliminated '
     + 'because there are no cells associated with them.';
+  EtSurfaceError = 'The ET Surface is undefined in the EVT package.';
+  EtSurfaceErrorMessage = 'No objects define the ET Surface in the EVT package.';
+  EtDepthError = 'The ET Depth is undefined in the EVT package.';
+  EtDepthErrorMessage = 'No objects define the ET Depth in the EVT package.';
 
 procedure TModflowEVT_Writer.UpdateDisplay(
   TimeLists: TModflowBoundListOfTimeLists);
@@ -143,6 +147,8 @@ const
   D7PNameIname = '';
   D7PName = '';
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(EtSurfaceError);
+  frmErrorsAndWarnings.RemoveErrorGroup(EtDepthError);
   if not Package.IsSelected then
   begin
     UpdateNotUsedDisplay(TimeLists);
@@ -192,10 +198,19 @@ begin
           List.CheckRestore;
 
           // data set 6
-          DepthSurfaceCellList := FDepthSurface[TimeIndex];
-          DepthSurfaceCellList.CheckRestore;
-          AssignTransient2DArray(EvapSurfArray, 0, DepthSurfaceCellList, 0,
-            rdtDouble, umAssign);
+          if FDepthSurface.Count > 0 then
+          begin
+            DepthSurfaceCellList := FDepthSurface[TimeIndex];
+            DepthSurfaceCellList.CheckRestore;
+            AssignTransient2DArray(EvapSurfArray, 0, DepthSurfaceCellList, 0,
+              rdtDouble, umAssign);
+          end
+          else
+          begin
+            DepthSurfaceCellList := nil;
+            EvapSurfArray.UpToDate := True;
+            frmErrorsAndWarnings.AddError(EtSurfaceError, EtSurfaceErrorMessage);
+          end;
           EvapSurfArray.CacheData;
 
           if NPEVT = 0 then
@@ -212,8 +227,16 @@ begin
           EvapRateArray.CacheData;
 
           // data set 9
-          AssignTransient2DArray(EvapDepthArray, 1, DepthSurfaceCellList, 0,
-            rdtDouble, umAssign);
+          if DepthSurfaceCellList <> nil then
+          begin
+            AssignTransient2DArray(EvapDepthArray, 1, DepthSurfaceCellList, 0,
+              rdtDouble, umAssign);
+          end
+          else
+          begin
+            EvapDepthArray.UpToDate := True;
+            frmErrorsAndWarnings.AddError(EtDepthError, EtDepthErrorMessage);
+          end;
           EvapDepthArray.CacheData;
 
           // data set 10
@@ -222,7 +245,7 @@ begin
             if (PhastModel.ModflowPackages.EvtPackage.
               LayerOption = loSpecified)
               and not PhastModel.ModflowPackages.EvtPackage.
-              TimeVaryingLayers then
+              TimeVaryingLayers and (ParameterCount > 0)  then
             begin
               List.Cache;
               RetrieveParametersForStressPeriod(D7PNameIname, D7PName, 0,
@@ -235,7 +258,10 @@ begin
             EvapLayerArray.CacheData;
           end;
           List.Cache;
-          DepthSurfaceCellList.Cache;
+          if DepthSurfaceCellList <> nil then
+          begin
+            DepthSurfaceCellList.Cache;
+          end;
         finally
           ParametersUsed.Free;
         end;
@@ -309,6 +335,8 @@ procedure TModflowEVT_Writer.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(EtSurfaceError);
+  frmErrorsAndWarnings.RemoveErrorGroup(EtDepthError);
   if not Package.IsSelected then
   begin
     Exit
@@ -389,7 +417,7 @@ begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := 0;
-  Comment := '# Data Set 6: SURF';
+  Comment := 'Data Set 6: SURF';
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
     CellList, Dummy);
 end;
@@ -405,7 +433,7 @@ begin
   DefaultValue := 0;
   DataType := rdtDouble;
   DataTypeIndex := 1;
-  Comment := '# Data Set 9: EXDP';
+  Comment := 'Data Set 9: EXDP';
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
     CellList, Dummy);
 end;
@@ -428,7 +456,7 @@ begin
   ParameterValues := TValueCellList.Create(CellType);
   try
     ParameterValues.OwnsObjects := False;
-    Comment := '# Data Set 10: IEVT';
+    Comment := 'Data Set 10: IEVT';
     if Values.Count = 0 then
     begin
       frmErrorsAndWarnings.AddError('No evapotranspiration defined',
@@ -481,12 +509,20 @@ begin
         end;
 
         // data set 6
-        DepthSurfaceCellList := FDepthSurface[TimeIndex];
-        WriteEvapotranspirationSurface(DepthSurfaceCellList);
-        if not frmProgress.ShouldContinue then
+        if FDepthSurface.Count > 0 then
         begin
-          List.Cache;
-          Exit;
+          DepthSurfaceCellList := FDepthSurface[TimeIndex];
+          WriteEvapotranspirationSurface(DepthSurfaceCellList);
+          if not frmProgress.ShouldContinue then
+          begin
+            List.Cache;
+            Exit;
+          end;
+        end
+        else
+        begin
+          DepthSurfaceCellList := nil;
+          frmErrorsAndWarnings.AddError(EtSurfaceError, EtSurfaceErrorMessage);
         end;
 
         if NPEVT = 0 then
@@ -510,11 +546,19 @@ begin
         end;
 
         // data set 9
-        WriteExtinctionDepth(DepthSurfaceCellList);
-        if not frmProgress.ShouldContinue then
+        if FDepthSurface.Count > 0 then
         begin
-          List.Cache;
-          Exit;
+          WriteExtinctionDepth(DepthSurfaceCellList);
+          if not frmProgress.ShouldContinue then
+          begin
+            List.Cache;
+            Exit;
+          end;
+          DepthSurfaceCellList.Cache;
+        end
+        else
+        begin
+          frmErrorsAndWarnings.AddError(EtDepthError, EtDepthErrorMessage);
         end;
 
         // data set 10

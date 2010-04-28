@@ -206,6 +206,7 @@ var
   CellIndex: Integer;
 begin
   // Quit if the package isn't used.
+  frmErrorsAndWarnings.RemoveErrorGroup(StrHeadObservationsError);
   if not Package.IsSelected then
   begin
     UpdateNotUsedDisplay(TimeLists);
@@ -215,7 +216,7 @@ begin
   try
     // evaluate all the data used in the package.
     Evaluate(Purpose);
-    
+
     Assert(TimeLists.Count= 1);
     DisplayTimeList := TimeLists[0] as THobDisplayTimeList;
     for ObsIndex := 0 to FObservations.Count - 1 do
@@ -339,6 +340,7 @@ begin
   begin
     Exit;
   end;
+  frmErrorsAndWarnings.RemoveErrorGroup(StrHeadObservationsError);
   frmProgress.AddMessage('Writing HOB Package input.');
   frmProgress.AddMessage('Evaluating data.');
   Evaluate(Purpose);

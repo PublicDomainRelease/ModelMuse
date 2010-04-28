@@ -13,7 +13,7 @@ interface
 
 uses Windows, Math, ZLib, GR32, TempFiles, IntListUnit, RealListUnit, SysUtils,
   Classes, Forms, RbwParser, FastGEO, GoPhastTypes, SubscriptionUnit,
-  SparseDataSets, ObserverIntfU, FormulaManagerUnit;
+  SparseDataSets, ObserverIntfU, FormulaManagerUnit, Dialogs;
 
 { TODO :
 Consider making dual data sets that can be evaluated at both elements 
@@ -183,6 +183,7 @@ type
     FRealValuesToSkip: TSkipRealCollection;
     FStringValuesToSkip: TStrings;
     FLogTransform: boolean;
+    FStoredEpsilon: TRealStorage;
     // See @link(LowerLimit).
     procedure SetLowerLimit(const Value: TColoringLimit);
     // See @link(UpperLimit).
@@ -194,6 +195,9 @@ type
     function StoreRealSkipValues: boolean;
     function StoreIntegerSkipValues: boolean;
     procedure SetLogTransform(const Value: boolean);
+    function GetEpsilon: double;
+    procedure SetEpsilon(const Value: double);
+    procedure SetStoredEpsilon(const Value: TRealStorage);
   public
     // @name calls TColoringLimit.@link(TColoringLimit.Assign)
     // for @link(LowerLimit) and @link(UpperLimit) and then calls
@@ -212,7 +216,7 @@ type
     function ValueOk(AValue: double): boolean; overload;
     function ValueOk(AValue: integer): boolean; overload;
     function ValueOk(const AValue: String): boolean; overload;
-
+    property Epsilon: double read GetEpsilon write SetEpsilon;
   published
     property ActiveOnly: boolean read FActiveOnly write SetActiveOnly stored FActiveOnly;
     // @name is the lower limit on what values should be used to color
@@ -230,6 +234,7 @@ type
     property StringValuesToSkip: TStrings read FStringValuesToSkip
       write SetStringValuesToSkip;
     property LogTransform: boolean read FLogTransform write SetLogTransform;
+    property StoredEpsilon: TRealStorage read FStoredEpsilon write SetStoredEpsilon;
   end;
 
   // @name is the data type of @link(TDataArray.IsUniform).
@@ -556,7 +561,9 @@ type
     }
     procedure RemoveSubscription(Sender: TObject; const AName: string);
     procedure RestoreSubscription(Sender: TObject; const AName: string);
+    procedure UpdateNotifiers; virtual;
   public
+    Procedure SetModelToNil;
     procedure RefreshUseList;
     function ColorGridValueOK(const Layer, Row, Col: integer): boolean;
     function ContourGridValueOK(const Layer, Row, Col: integer): boolean;
@@ -1003,6 +1010,11 @@ type
     destructor Destroy; override;
   end;
 
+  TTransientRealSparseDataSet = class(TRealSparseDataSet)
+  protected
+    procedure UpdateNotifiers; override;
+  end;
+
   {@abstract(@name is used to store integers in a sparse array.)}
   TIntegerSparseDataSet = class(TCustomSparseDataSet)
   private
@@ -1044,6 +1056,11 @@ type
     property IsBoundaryTypeDataSet: boolean read FIsBoundary write FIsBoundary;
     procedure GetMinMaxStoredLimits(out LayerMin, RowMin, ColMin,
       LayerMax, RowMax, ColMax: integer); override;
+  end;
+
+  TTransientIntegerSparseDataSet = class(TIntegerSparseDataSet)
+  protected
+    procedure UpdateNotifiers; override;
   end;
 
   // @name is used to store a series of @link(TDataArray)s. Each is associated
@@ -1638,6 +1655,24 @@ begin
         end;
       end;
     end;
+  end;
+end;
+
+procedure TDataArray.UpdateNotifiers;
+begin
+  case FOrientation of
+    dsoTop:
+      begin
+        (FPhastModel as TPhastModel).ThreeDGridObserver.StopsTalkingTo(self);
+        (FPhastModel as TPhastModel).TopGridObserver.TalksTo(self);
+      end;
+    dsoFront, dsoSide, dso3D:
+      begin
+        (FPhastModel as TPhastModel).ThreeDGridObserver.TalksTo(self);
+        (FPhastModel as TPhastModel).TopGridObserver.StopsTalkingTo(self);
+      end;
+  else
+    Assert(False);
   end;
 end;
 
@@ -2519,19 +2554,7 @@ begin
     FOrientation := Value;
     FDimensionsChanged := True;
     UpToDate := False;
-    case FOrientation of
-      dsoTop:
-        begin
-          (FPhastModel as TPhastModel).ThreeDGridObserver.StopsTalkingTo(self);
-          (FPhastModel as TPhastModel).TopGridObserver.TalksTo(self);
-        end;
-      dsoFront, dsoSide, dso3D:
-        begin
-          (FPhastModel as TPhastModel).ThreeDGridObserver.TalksTo(self);
-          (FPhastModel as TPhastModel).TopGridObserver.StopsTalkingTo(self);
-        end;
-      else Assert(False);
-    end;
+    UpdateNotifiers;
     frmGoPhast.InvalidateModel;
   end;
   FFormulaObject.Parser := GetCompiler;
@@ -2807,6 +2830,11 @@ end;
 procedure TDataArray.SetLock(const Value: TDataLock);
 begin
   FLock := Value;
+end;
+
+procedure TDataArray.SetModelToNil;
+begin
+  FPhastModel := nil;
 end;
 
 procedure TDataArray.SetClassification(const Value: string);
@@ -3904,7 +3932,8 @@ begin
       LocalAnnotation := LocalAnnotatations[Index];
       AnnSize := Length(LocalAnnotation);
       Compressor.Write(AnnSize, SizeOf(AnnSize));
-      Compressor.WriteBuffer(Pointer(LocalAnnotation)^, Length(LocalAnnotation) * SizeOf(Char));
+      Compressor.WriteBuffer(Pointer(LocalAnnotation)^,
+        Length(LocalAnnotation) * SizeOf(Char));
     end;
     Compressor.Write(Count, SizeOf(Count));
     if Count > 0 then
@@ -4845,6 +4874,7 @@ begin
     IntegerValuesToSkip := Value.IntegerValuesToSkip;
     StringValuesToSkip := Value.StringValuesToSkip;
     LogTransform := Value.LogTransform;
+    Epsilon := Value.Epsilon;
     Update;
   end
   else
@@ -4855,6 +4885,8 @@ end;
 
 constructor TColoringLimits.Create;
 begin
+  FStoredEpsilon:= TRealStorage.Create;
+  Epsilon := 1e-6;
   FLowerLimit := TColoringLimit.Create;
   FUpperLimit := TColoringLimit.Create;
   FUpperLimit.DefaultBooleanLimitValue := True;
@@ -4872,12 +4904,23 @@ begin
   FRealValuesToSkip.Free;
   FLowerLimit.Free;
   FUpperLimit.Free;
+  FStoredEpsilon.Free;
   inherited;
+end;
+
+function TColoringLimits.GetEpsilon: double;
+begin
+  result := FStoredEpsilon.Value;
 end;
 
 procedure TColoringLimits.SetActiveOnly(const Value: boolean);
 begin
   FActiveOnly := Value;
+end;
+
+procedure TColoringLimits.SetEpsilon(const Value: double);
+begin
+  FStoredEpsilon.Value := Value;
 end;
 
 procedure TColoringLimits.SetIntegerValuesToSkip(
@@ -4899,6 +4942,11 @@ end;
 procedure TColoringLimits.SetRealValuesToSkip(const Value: TSkipRealCollection);
 begin
   FRealValuesToSkip.Assign(Value);
+end;
+
+procedure TColoringLimits.SetStoredEpsilon(const Value: TRealStorage);
+begin
+  FStoredEpsilon.Assign(Value);
 end;
 
 procedure TColoringLimits.SetStringValuesToSkip(const Value: TStrings);
@@ -4978,7 +5026,7 @@ function TColoringLimits.ValueOk(AValue: double): boolean;
 var
   SkipIndex: Integer;
   SkipItem: TSkipReal;
-  Epsilon: double;
+  LocalEpsilon: Double;
 begin
   result := True;
   if LogTransform and (AValue <= 0) then
@@ -4996,14 +5044,14 @@ begin
     end;
     if SkipItem.RealValue = 0 then
     begin
-      Epsilon := 1E-6;
+      LocalEpsilon := Epsilon;
     end
     else
     begin
-      Epsilon := Abs(SkipItem.RealValue)*1E-6;
+      LocalEpsilon := Abs(SkipItem.RealValue)*Epsilon;
     end;
-    if ((SkipItem.RealValue - Epsilon) < AValue)
-      and ((SkipItem.RealValue + Epsilon) > AValue) then
+    if ((SkipItem.RealValue - LocalEpsilon) < AValue)
+      and ((SkipItem.RealValue + LocalEpsilon) > AValue) then
     begin
       result := False;
       Exit;
@@ -5600,7 +5648,8 @@ end;
 
 procedure TDataArray.CacheData;
 var
-  TempFile: TTempFileStream;
+//  TempFile: TTempFileStream;
+  MemStream: TMemoryStream;
   Compressor: TCompressionStream;
 begin
   if UpToDate then
@@ -5617,15 +5666,25 @@ begin
       begin
         FTempFileName := TempFileName;
       end;
-      TempFile := TTempFileStream.Create(FTempFileName, fmOpenReadWrite);
-      Compressor := TCompressionStream.Create(clDefault, TempFile);
+      MemStream := TMemoryStream.Create;
       try
-        TempFile.Position := 0;
-        StoreData(Compressor);
+  //      TempFile := TTempFileStream.Create(FTempFileName, fmOpenReadWrite);
+  //      Compressor := TCompressionStream.Create(clDefault, TempFile);
+        Compressor := TCompressionStream.Create(clDefault, MemStream);
+        try
+          MemStream.Position := 0;
+  //        TempFile.Position := 0;
+          StoreData(Compressor);
+        finally
+          Compressor.Free;
+        end;
+        MemStream.Position := 0;
+        ZipAFile(FTempFileName, MemStream);
       finally
-        Compressor.Free;
-        TempFile.Free;
+        MemStream.Free;
+//        TempFile.Free;
       end;
+//      ZipAFile(FTempFileName);
       FDataCached := True;
     end;
     Clear;
@@ -5774,20 +5833,31 @@ end;
 
 procedure TDataArray.RestoreData;
 var
-  TempFile: TTempFileStream;
+//  TempFile: TTempFileStream;
+  MemStream: TMemoryStream;
   DecompressionStream: TDecompressionStream;
 begin
-  Assert(FileExists(FTempFileName));
+//  ExtractAFile(FTempFileName);
+//  Assert(FileExists(FTempFileName), FTempFileName + ' does not exist.');
   Assert(FDataCached);
   Assert(FCleared);
-  TempFile := TTempFileStream.Create(FTempFileName, fmOpenRead);
-  DecompressionStream := TDecompressionStream.Create(TempFile);
+  MemStream := TMemoryStream.Create;
   try
-    ReadData(DecompressionStream);
+    ExtractAFile(FTempFileName, MemStream);
+    MemStream.Position := 0;
+//  TempFile := TTempFileStream.Create(FTempFileName, fmOpenRead);
+//  DecompressionStream := TDecompressionStream.Create(TempFile);
+    DecompressionStream := TDecompressionStream.Create(MemStream);
+    try
+      ReadData(DecompressionStream);
+    finally
+      DecompressionStream.Free;
+    end;
   finally
-    DecompressionStream.Free;
-    TempFile.Free;
+    MemStream.Free;
+//    TempFile.Free;
   end;
+//  DeleteFile(FTempFileName);
   FCleared := False;
 end;
 
@@ -5916,6 +5986,22 @@ end;
 constructor TSkipIntegerCollection.Create;
 begin
   inherited Create(TSkipInteger);
+end;
+
+{ TTransientRealSparseDataSet }
+
+procedure TTransientRealSparseDataSet.UpdateNotifiers;
+begin
+  // do nothing
+//  inherited;
+end;
+
+{ TTransientIntegerSparseDataSet }
+
+procedure TTransientIntegerSparseDataSet.UpdateNotifiers;
+begin
+  // do nothing
+//  inherited;
 end;
 
 initialization

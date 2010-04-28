@@ -43,11 +43,11 @@ inherited framePackageUZF: TframePackageUZF
     object lblSURFDEP: TLabel [4]
       Left = 16
       Top = 263
-      Width = 364
+      Width = 352
       Height = 13
       Caption = 
-        'The average height of undulations, D (Figure 1), in the land sur' +
-        'face altitude'
+        'The average height of undulations in the land surface altitude (' +
+        'SURFDEP)'
       Enabled = False
     end
     inherited comboLayerOption: TComboBox

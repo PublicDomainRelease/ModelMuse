@@ -1,12 +1,12 @@
 object frameFluxObs: TframeFluxObs
   Left = 0
   Top = 0
-  Width = 471
+  Width = 556
   Height = 248
   TabOrder = 0
   TabStop = True
   DesignSize = (
-    471
+    556
     248)
   object lblFluxObservations: TLabel
     Left = 8
@@ -18,7 +18,7 @@ object frameFluxObs: TframeFluxObs
   object rdgObservationGroups: TRbwDataGrid4
     Left = 3
     Top = 32
-    Width = 465
+    Width = 550
     Height = 213
     Anchors = [akLeft, akTop, akRight, akBottom]
     ColCount = 3
@@ -98,14 +98,15 @@ object frameFluxObs: TframeFluxObs
         WordWrapCells = False
         AutoAdjustColWidths = False
       end>
+    ExplicitWidth = 465
     ColWidths = (
       20
       20
       174)
   end
   object btnAddOrRemoveFluxObservations: TButton
-    Left = 208
-    Top = 6
+    Left = 280
+    Top = 3
     Width = 260
     Height = 25
     Caption = 'Add or remove flux observations'

@@ -1785,6 +1785,10 @@ begin
   finally
     DataArrayList.Free;
   end;
+  if frmErrorsAndWarnings.HasMessages then
+  begin
+    frmErrorsAndWarnings.Show;
+  end;
 end;
 
 procedure TCustomListWriter.WriteParameterDefinitions(const DS3, DS3Instances,
@@ -2143,6 +2147,8 @@ begin
     Else Assert(False);
   end;
   ErrorMessage := Format(ErrorRoot, [Trim(PARTYP)]);
+  frmErrorsAndWarnings.RemoveWarningGroup(ErrorMessage);
+
   for ParamIndex := 0 to PhastModel.ModflowTransientParameters.Count - 1 do
   begin
     Param := PhastModel.ModflowTransientParameters[ParamIndex];

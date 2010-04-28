@@ -181,10 +181,6 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       HelpType = htKeyword
       HelpKeyword = 'Properties_TabHUF'
       Caption = 'Properties'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         375
         279)
@@ -243,7 +239,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
         Font.Name = 'Arial'
         Font.Pitch = fpVariable
         Font.Style = []
-        ItemHeight = 0
+        ItemHeight = 18
         ParentFont = False
         TabOrder = 1
         Text = '1'
@@ -290,7 +286,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
         Font.Name = 'Arial'
         Font.Pitch = fpVariable
         Font.Style = []
-        ItemHeight = 0
+        ItemHeight = 18
         ParentFont = False
         TabOrder = 3
         Text = '1'
@@ -578,7 +574,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
     end
     object btnOK: TBitBtn
       Left = 298
-      Top = 4
+      Top = 6
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]

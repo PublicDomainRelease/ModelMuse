@@ -171,6 +171,7 @@ type
     // TModflowParamBoundary.ModflowParamItemClass).
     class function ModflowParamItemClass: TModflowParamItemClass; override;
 //    procedure EvaluateCellListBoundaries;
+    function ParameterType: TParameterType; override;
   public
     // @name fills ValueTimeList via a call to AssignCells for each
     // link  @link(TWellStorage) in
@@ -801,8 +802,11 @@ begin
   EvaluateListBoundaries;
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    BoundaryStorage := Values.Boundaries[ValueIndex] as TWellStorage;
-    AssignCells(BoundaryStorage, ValueTimeList);
+    if ValueIndex < Values.BoundaryCount then
+    begin
+      BoundaryStorage := Values.Boundaries[ValueIndex] as TWellStorage;
+      AssignCells(BoundaryStorage, ValueTimeList);
+    end;
   end;
   for ParamIndex := 0 to Parameters.Count - 1 do
   begin
@@ -820,8 +824,11 @@ begin
     end;
     for ValueIndex := 0 to Param.Param.Count - 1 do
     begin
-      BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TWellStorage;
-      AssignCells(BoundaryStorage, Times);
+      if ValueIndex < Param.Param.BoundaryCount then
+      begin
+        BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TWellStorage;
+        AssignCells(BoundaryStorage, Times);
+      end;
     end;
   end;
 end;
@@ -838,6 +845,11 @@ end;
 class function TMfWellBoundary.ModflowParamItemClass: TModflowParamItemClass;
 begin
   result := TWellParamItem;
+end;
+
+function TMfWellBoundary.ParameterType: TParameterType;
+begin
+  result := ptQ;
 end;
 
 { TWellRecord }

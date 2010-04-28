@@ -138,6 +138,7 @@ type
     FVerticalDirection: TVerticalDirection;
     // @name is @true when a zooming operation is underway.
     FZooming: boolean;
+    FOnMagnificationChanged: TNotifyEvent;
     // @name returns true if @link(Magnification)
     // is less than the maximum magnification.
     function GetCanZoomIn: boolean;
@@ -297,6 +298,8 @@ type
     // @name is called during panning operations to indicate the
     // amount of panning.  See @link(Pan).
     property OnPan: TPanEvent read FOnPan write FOnPan;
+    property OnMagnificationChanged: TNotifyEvent
+      read FOnMagnificationChanged write FOnMagnificationChanged;
   end;
 
 // @name registers @link(TQRbwZoomBox2).
@@ -699,6 +702,10 @@ begin
   begin
     FMagnification := Value;
     InvalidateImage32;
+    if Assigned(OnMagnificationChanged) then
+    begin
+      OnMagnificationChanged(self);
+    end;
   end;
 end;
 
@@ -887,10 +894,10 @@ begin
   AY := Y(CenterY);
   NewOriginX := AnX - (AnX - OriginX) / Factor;
   NewOriginY := AY - (AY - OriginY) / Factor;
-  FMagnification := NewMagnification;
   FOriginX := NewOriginX;
   FOriginY := NewOriginY;
-  InvalidateImage32;
+  Magnification := NewMagnification;
+//  InvalidateImage32;
 end;
 
 

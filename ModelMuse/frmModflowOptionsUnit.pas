@@ -98,7 +98,8 @@ var
 
 implementation
 
-uses frmGoPhastUnit;
+uses frmGoPhastUnit, frmErrorsAndWarningsUnit, 
+  LayerStructureUnit, PhastModelUnit;
 
 {$R *.dfm}
 

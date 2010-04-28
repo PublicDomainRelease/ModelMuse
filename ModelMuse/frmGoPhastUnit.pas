@@ -277,6 +277,7 @@ type
     miModpathTimeSeries: TMenuItem;
     miConfigureTimeSeries: TMenuItem;
     SurferGridFile1: TMenuItem;
+    SampleDEMData1: TMenuItem;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -357,6 +358,9 @@ type
     procedure miModpathEndpointsClick(Sender: TObject);
     procedure miModpathTimeSeriesClick(Sender: TObject);
     procedure SurferGridFile1Click(Sender: TObject);
+    procedure sbMainDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
+      const Rect: TRect);
+    procedure SampleDEMData1Click(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -398,254 +402,195 @@ type
     procedure InitializeModflowInputDialog;
     procedure SetVisibilityOfModelMateActions;
     procedure EnableDeleteImage;
+    procedure CancelCurrentScreenObject;
   published
-    // @name: TAction;
     // @name is the TAction for @link(miAddVerticalGridLine)
     // and @link(tbAddVerticalBoundary).
     // See @link(tbAddVerticalBoundaryClick).
     acAddColumn: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miAddHorizontalGridLine)
     // and @link(tbAddHorizontalBoundary).
     // See @link(tbAddHorizontalBoundaryClick).
     acAddRow: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miColor) and @link(tb3DColors).
     // See @link(acColorExecute).
     acColor: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miShowColoredGrid) and @link(tb3DColors).
     // See @link(tb3DColorsClick).
     acColoredGrid: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miCopy) and @link(tbCopy).
     // @name is not yet used.
     acCopy: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miCreateLine) and @link(tbLine).
     // See @link(tbLineClick).
     acCreateLine: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miCreatePoint) and @link(tbPoint).
     // See @link(tbPointClick).
     acCreatePoint: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miCreatePolygon) and @link(tbPolygon).
     // See @link(tbPolygonClick).
     acCreatePolygon: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miCreateRectangle)
     // and @link(tbRectangle).
     // See @link(tbRectangleClick).
     acCreateRectangle: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miCreateStraightLine)
     // and @link(tbStraightLine).
     // See @link(tbStraightLineClick).
     acCreateStraightLine: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miCut) and @link(tbCut).
     // @name is not yet used.
     acCut: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miDeleteGridLine)
     // and @link(tbDeleteColumnRow).
     // See @link(acDeleteColumnRowExecute).
     acDeleteColumnRow: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miDeleteSegment)
     // and @link(tbDeleteSegment).
     // See @link(tbDeleteSegmentClick).
     acDeleteSegment: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miEditDataSet).
     // See @link(acEditDataSetsExecute).
     acEditDataSets: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miEditGridLines).
     // See @link(acEditGridLinesExecute).
     acEditGridLines: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miVerticalExaggeration).
     // See @link(miVerticalExaggerationClick).
     acEditVerticalExaggeration: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miExit).
     // See @link(acExitExecute).
     acExit: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miExportPhast).
     // See @link(acExportPhastInputFileExecute).
     acExportPhastInputFile: TAction;
     acFileNewModflowModel: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miOpen) and @link(tbOpen).
     // See @link(acFileOpenExecute).
     acFileOpen: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miPrint) and @link(tbPrint).
     // @name is not yet used.
     acFilePrint: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miSave) and @link(tbSave).
     // See @link(acFileSaveExecute).
     acFileSave: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miSaveAs).
     // See @link(acFileSaveAsExecute).
     acFileSaveAs: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miFont).
     // See @link(acFontExecute).
     acFont: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miGenerateGrid) and @link(tbGenerateGrid).
     // See @link(acGenerateGridExecute).
     acGenerateGrid: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miGridAngle).
     // See @link(acGridAngleExecute).
     acGridAngle: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miDragtoRotate) and @link(tbGridAngle).
     // See @link(tbGridAngleClick).
     acGridDragRotate: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miContents).
     // See @link(acHelpContentsExecute).
     acHelpContents: THelpContents;
-    // @name: TAction;
     // @name is the TAction for @link(miInsertNode) and @link(tbInsertPoint).
     // See @link(tbInsertPointClick).
     acInsertNode: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miMoveColumnOrRow) and @link(tbMove).
     // See @link(acMoveColumnOrRowExecute).
     acMoveColumnOrRow: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miGoTo).
     // See @link(acMoveToExecute).
     acMoveTo: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miPan) and @link(tbPan).
     // See @link(tbPanClick).
     acPan: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miPaste) and @link(tbPaste).
     // @name is not used yet.
     acPaste: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miRestoreDefaultView).
     // See @link(acRestoreDefaultViewExecute).
     acRestoreDefaultView: TAction;
     acSelectAllTop: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miSelectNodes) and @link(tbSelectPoint).
     // See @link(tbSelectPointClick).
     acSelectNode: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miSelectObjects) and @link(tbSelect).
     // See @link(tbSelectClick).
     acSelectObjects: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miSelectWithLasso) and @link(tbLasso).
     // See @link(tbLassoClick).
     acSelectWithLasso: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miSetSpacing) and @link(tbSpacing).
     // See @link(acSetSpacingExecute).
     acSetSpacing: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miShow3DObjects) and @link(tb3DObjects).
     // See @link(tb3DObjectsClick).
     acShow3DObjects: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miShowFrontGrid) and @link(tbFrontGrid).
     // See @link(acShowFrontGridExecute).
     acShowFrontGrid: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miShowGridShell) and @link(tbShell).
     // See @link(acShowGridShellExecute).
     acShowGridShell: TAction;
     // @name is the action for showing or hiding @link(frmShowHideObjects).
     // See @link(miShowHideObjectsClick).
     acShowHideObjects: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miShowSideGrid) and @link(tbSideGrid).
     // See @link(acShowSideGridExecute).
     acShowSideGrid: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miShowTopGrid) and @link(tbTopGrid).
     // See @link(acShowTopGridExecute).
     acShowTopGrid: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miSmoothGrid).
     // See @link(acSmoothGridExecute).
     acSmoothGrid: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miSubdivide) and @link(tbSubdivide).
     // See @link(acSubdivideExecute).
     acSubdivide: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miZoom) and @link(tbZoom).
     // See @link(tbZoomClick).
     acZoom: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miZoomIn) and @link(tbZoomIn).
     // See @link(miZoomInClick).
     acZoomIn: TAction;
-    // @name: TAction;
     // @name is the TAction for @link(miZoomOut) and @link(tbZoomOut).
     // See @link(tbZoomOutClick).
     acZoomOut: TAction;
-    // @name: TActionList;
     // @name holds the instances of TAction in GoPhast.
     alActionList: TActionList;
-    // @name: TColorDialog;
     // @name  is used to pick the background color for GoPhast
     // in @link(acColorExecute).
     cdColorDialog: TColorDialog;
-    // @name: TRbwDynamicCursor;
     // @name is used to draw a rotated version of the AddColumn cursor
     // in the top view of the model.
     dcAddColCursor: TRbwDynamicCursor;
-    // @name: TRbwDynamicCursor;
     // @name is used to draw a rotated version of the AddRow cursor
     // in the top view of the model.
     dcAddRowCursor: TRbwDynamicCursor;
-    // @name: TRbwDynamicCursor;
     // @name is used to draw a rotated version of the MoveColumn cursor
     // in the top view of the model.
     dcMoveColCursor: TRbwDynamicCursor;
-    // @name: TRbwDynamicCursor;
     // @name is used to draw a rotated version of the MoveRow cursor
     // in the top view of the model.
     dcMoveRowCursor: TRbwDynamicCursor;
-    // @name: TRbwDynamicCursor;
     // @name is used to draw a rotated version of the SetCellSpacing cursor
     // in the top view of the model.
     dcSetSpacing: TRbwDynamicCursor;
-    // @name: TRbwDynamicCursor;
     // @name is used to draw a rotated version of the Subdivide cursor
     // in the top view of the model.
     dcSubdivide: TRbwDynamicCursor;
-    // @name: TFontDialog;
     // @name  is used to pick the font for GoPhast
     // in @link(acFontExecute).
     fdFontDialog: TFontDialog;
-    // @name: @link(Tframe3DView);
     // @name displays a 3D view of the model and handles interaction
     // with the 3D view.
     frame3DView: Tframe3DView;
-    // @name: @link(TframeView);
     // @name displays a front view of the model and handles interaction
     // with the front view.
     frameFrontView: TframeView;
-    // @name: @link(TframeView);
     // @name displays a side view of the model and handles interaction
     // with the side view.
     frameSideView: TframeView;
-    // @name: @link(TframeView);
     // @name displays a top view of the model and handles interaction
     // with the top view.
     frameTopView: TframeView;
@@ -1454,6 +1399,7 @@ type
     procedure SetChangingSelection(const Value: boolean);
     procedure SetShowUcodeInterface(const Value: boolean);
     procedure OnOpenFile(Sender: TObject);
+    procedure SetCanDraw(const Value: boolean);
     { Private declarations }
   protected
     // @name is used to specify the format of the files that
@@ -1485,7 +1431,7 @@ type
     // Setting @name to False causes TframeView.@link(
     // TframeView.Paint) to
     // exit immediately without doing anything.
-    property CanDraw: boolean read FCanDraw write FCanDraw;
+    property CanDraw: boolean read FCanDraw write SetCanDraw;
     // @name is used to prevent editing of two or more sets of
     // @link(TScreenObject TScreenObjects) at one time.
     property CanEdit: boolean read FCanEdit write FCanEdit;
@@ -1641,7 +1587,7 @@ uses
   frmHUF_LayersUnit, frmBatchFileAdditionsUnit, frmSelectObjectsForEditingUnit, 
   frmDataSetValuesUnit, frmExportShapefileObjectsUnit, frmDeleteImageUnit,
   frmModpathDisplayUnit, frmPhastLocationUnit, frmEndPointDisplayUnit,
-  frmTimeSeriesDisplayUnit, frmImportSurferGrdFileUnitUnit;
+  frmTimeSeriesDisplayUnit, frmImportSurferGrdFileUnitUnit, frmImportDEMUnit;
 
 resourcestring
   StrModelMate = 'ModelMate';
@@ -1864,14 +1810,16 @@ procedure TfrmGoPhast.acFileNewModflowModelExecute(Sender: TObject);
 begin
   if CheckModel then
   begin
+    if frmScreenObjectProperties <> nil then
+    begin
+      frmScreenObjectProperties.ClearExpressionsAndVariables;
+    end;
+    CancelCurrentScreenObject;
     if frmShowHideObjects <> nil then
     begin
       frmShowHideObjects.Close;
     end;
-    if frmGridColor <> nil then
-    begin
-      frmGridColor.Close;
-    end;
+    FreeAndNil(frmGridColor);
     if frmGridValue <> nil then
     begin
       frmGridValue.Close;
@@ -1886,10 +1834,10 @@ begin
     sdSaveDialog.FileName := '';
     Caption := StrModelName;
 
-    PhastModel.Clear;
     DeletedDataSets.Clear;
     //  ObserverList.Clear;
     UndoStack.Clear;
+    PhastModel.Clear;
     FPositionList.Clear;
     UndoStack.SetUndoMenuItems(miUndo, miRedo);
     tbUndo.Enabled := False;
@@ -2673,8 +2621,11 @@ begin
 end;
 
 procedure TfrmGoPhast.FormDestroy(Sender: TObject);
+var
+  Index: Integer;
+  DataSet: TDataArray;
 begin
-
+//  OutputDebugString('SAMPLING ON');
   WriteIniFile;
   IniFile.Free;
   FPositionList.Free;
@@ -2692,12 +2643,20 @@ begin
   }
 
   UndoStack.Clear;
-  FDeletedDataSets.Free;
+  for Index := 0 to FDeletedDataSets.Count - 1 do
+  begin
+    DataSet := FDeletedDataSets[Index] as TDataArray;
+    DataSet.StopTalkingToAnyone;
+    DataSet.SetModelToNil;
+  end;
   // Get rid of the model.
 //  FreeAndNil(FPhastModel);
   // Formula manager needs FPhastModel to be defined during FPhastModel.Free;
   FPhastModel.Free;
   FPhastModel := nil;
+  FDeletedDataSets.Free;
+  FPhastModel := nil;
+//  OutputDebugString('SAMPLING OFF');
 end;
 
 procedure TfrmGoPhast.miVerticalExaggerationClick(Sender: TObject);
@@ -3568,6 +3527,19 @@ begin
   Grid.GridChanged;
 end;
 
+procedure TfrmGoPhast.CancelCurrentScreenObject;
+begin
+  if CurrentTool is TCustomCreateScreenObjectTool then
+  begin
+    CanEdit := False;
+    try
+      TCustomCreateScreenObjectTool(CurrentTool).FinishScreenObjects;
+    finally
+      CanEdit := True;
+    end;
+  end;
+end;
+
 procedure TfrmGoPhast.EnableDeleteImage;
 begin
   miDeleteImage.Enabled := frmGoPhast.PhastModel.Bitmaps.Count > 0;
@@ -3593,6 +3565,7 @@ begin
     sdModflowInput.FileName :=
       ChangeFileExt(sdSaveDialog.FileName, sdModflowInput.DefaultExt);
   end;
+  sdModflowInput.FileName := PhastModel.FixFileName(sdModflowInput.FileName);
 end;
 
 procedure TfrmGoPhast.ReadModelMateProject(FileName: string; ModelMateProject: TProject);
@@ -5104,6 +5077,10 @@ end;
 procedure TfrmGoPhast.miGeneralClick(Sender: TObject);
 begin
   ShowAForm(TfrmModflowOptions);
+  if PhastModel.CheckWetting then
+  begin
+    frmErrorsAndWarnings.Show;
+  end;
 end;
 
 procedure TfrmGoPhast.GetCurrentScreenObject(Sender: TObject;
@@ -5227,6 +5204,15 @@ begin
   begin
     sbMain.Cursor := crDefault;
   end;
+end;
+
+procedure TfrmGoPhast.sbMainDrawPanel(StatusBar: TStatusBar;
+  Panel: TStatusPanel; const Rect: TRect);
+begin
+  inherited;
+  // The usual drawing of the text will truncate
+  // the text after about 110 characters.
+  StatusBar.Canvas.TextRect(Rect,Rect.Left+1,3,Panel.Text);
 end;
 
 procedure TfrmGoPhast.sbMainMouseDown(Sender: TObject;
@@ -5492,6 +5478,22 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.SampleDEMData1Click(Sender: TObject);
+begin
+  inherited;
+  with TfrmImportDEM.Create(nil) do
+  begin
+    try
+      if GetData then
+      begin
+        ShowModal;
+      end;
+    finally
+      Free;
+    end;
+  end;
+end;
+
 procedure TfrmGoPhast.SaveAFile(FileName: string);
 var
   FileStream: TFileStream;
@@ -5648,16 +5650,14 @@ end;
 
 procedure TfrmGoPhast.OpenAFile(const FileName: string);
 var
-//  FFileStream: TFileStream;
   TempStream: TMemoryStream;
   NewTop, NewLeft: integer;
   Extension: string;
-//  ZLibStream: TJclZLibDecompressStream;
   DecompressionStream: TDecompressionStream;
   DataArray: TDataArray;
 begin
-//      OutputDebugString('SAMPLING ON');
   FreeAndNil(frmModflowPackages);
+  frmErrorsAndWarnings.Clear;
   Extension := LowerCase(ExtractFileExt(FileName));
   if Extension = '.gpt' then
   begin
@@ -5692,8 +5692,6 @@ begin
   try
     FFileStream.Position := 0;
     FFileSize := FFileStream.Size;
-//    FreeAndNil(FPhastModel);
-//    CreatePhastModel;
     if frmScreenObjectProperties <> nil then
     begin
       frmScreenObjectProperties.tvDataSets.Selected := nil;
@@ -5703,6 +5701,8 @@ begin
     UndoStack.Clear;
     PhastModel.Clear;
     PhastModel.CreateInitialBoundaryDataSets;
+//    PhastModel.CreateInitialDataSetsForPhastTimeLists;
+
     ClearingDeletedDataSets := True;
     try
       DeletedDataSets.Clear;
@@ -5714,7 +5714,6 @@ begin
     PhastModel.BeginScreenObjectUpdate;
     ClearFormulaErrors;
     try
-//      PhastModel.FormulaManager.CompileFormulas := False;
       DecompressionStream := nil;
       TempStream := TMemoryStream.Create;
       try
@@ -5775,7 +5774,6 @@ begin
       PhastModel.UpdateOnPostInitialize;
       PhastModel.UpdateDataArrayParameterUsed;
       PhastModel.ModelFileName := FileName;
-//      PhastModel.FormulaManager.CompileFormulas := True;
       PhastModel.FormulaManager.Pack;
       PhastModel.FormulaManager.FixSubscriptions;
       miObservations.Checked := PhastModel.ObservationPurpose = ofObserved;
@@ -5887,7 +5885,6 @@ begin
   EnableDeleteImage;
 
   WriteIniFile;
-//      OutputDebugString('SAMPLING OFF');
 end;
 
 procedure TfrmGoPhast.acFileOpenExecute(Sender: TObject);
@@ -5907,6 +5904,10 @@ begin
   begin
     acFileSaveExecute(Sender);
     Caption := StrModelName + ': ' + sdSaveDialog.FileName;
+    sdPhastInput.FileName := ChangeFileExt(sdSaveDialog.FileName,
+      sdPhastInput.DefaultExt);
+    sdModflowInput.FileName :=
+      ChangeFileExt(sdSaveDialog.FileName, sdModflowInput.DefaultExt);
   end;
 end;
 
@@ -6099,6 +6100,10 @@ end;
 procedure TfrmGoPhast.acLayersExecute(Sender: TObject);
 begin
   ShowAForm(TfrmLayers);
+  if PhastModel.CheckWetting then
+  begin
+    frmErrorsAndWarnings.Show;
+  end;
 end;
 
 procedure TfrmGoPhast.miGridOptionsClick(Sender: TObject);
@@ -6905,6 +6910,14 @@ begin
   inherited;
   ModflowGrid.DrawInteriorGridLines2D := acShowGridLines2D.Checked;
   PhastGrid.DrawInteriorGridLines2D := acShowGridLines2D.Checked;
+  if acShowGridLines2D.Checked then
+  begin
+    acShowGridLines2D.Caption := 'Hide 2-D Grid';
+  end
+  else
+  begin
+    acShowGridLines2D.Caption := 'Show 2-D Grid';
+  end;
   UpdateDisplay(nil);
 end;
 
@@ -7032,10 +7045,6 @@ begin
       if tabTop.TabVisible or tabFront.TabVisible or tabSide.TabVisible then
       begin
         ShowModal;
-      end
-      else
-      begin
-        MessageDlg('Your model has no objects.', mtInformation, [mbOK], 0);
       end;
     finally
       Free;
@@ -7047,6 +7056,15 @@ procedure TfrmGoPhast.miSelectObjectsforEditingClick(Sender: TObject);
 begin
   inherited;
   ShowAForm(TfrmSelectObjectsForEditing)
+end;
+
+procedure TfrmGoPhast.SetCanDraw(const Value: boolean);
+begin
+  FCanDraw := Value;
+  if frame3DView <> nil then
+  begin
+    frame3DView.glWidModelView.Visible := FCanDraw;
+  end;
 end;
 
 procedure TfrmGoPhast.SetChangingSelection(const Value: boolean);
@@ -7132,7 +7150,6 @@ begin
   end;
   frmModflowPackages.GetData;
   frmModflowPackages.ShowModal;
-//  ShowAForm(TfrmModflowPackages);
 end;
 
 procedure TfrmGoPhast.miExamplesClick(Sender: TObject);

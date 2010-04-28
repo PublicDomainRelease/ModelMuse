@@ -1528,6 +1528,7 @@ view. }
     FPriorObjectSectionIntersectLengthLayer: integer;
     FPriorObjectSectionIntersectLengthResult: real;
     FPriorObjectSectionIntersectLengthSection: integer;
+    FComment: string;
     procedure CreateLastSubPolygon;
     procedure DestroyLastSubPolygon;
     function GetSubPolygonCount: integer;
@@ -2205,6 +2206,7 @@ view. }
     function GetModflowMnw2Boundary: TMnw2Boundary;
     procedure SetModflowMnw2Boundary(const Value: TMnw2Boundary);
     procedure CacheElevationArrays;
+    procedure SetComment(const Value: string);
     property SubPolygonCount: integer read GetSubPolygonCount;
     property SubPolygons[Index: integer]: TSubPolygon read GetSubPolygon;
     procedure DeleteExtraSections;
@@ -2508,10 +2510,6 @@ view. }
     // @name sets RotatedPoints to be an array of
     // TPoint2Ds in the coordinate system of the grid.
     procedure GetRotatedPoints(out RotatedPoints: TRealPointArray);
-    // @name contains a set of higher elevations for points that
-    // could be in the @classname.  It is indexed by [Layer, Row, Column].
-    property Higher3DElevations: T3DSparseRealArray read GetHigher3DElevations;
-    function IsHigher3DElevationAssigned(Col, Row, Layer: integer): boolean;
 
     {@name
      @orderedlist(
@@ -2561,15 +2559,6 @@ view. }
     function IsBoundaryTimeDataSetUsed(const DataSet: TDataArray;
       out OtherData: TObject): boolean;
     procedure Loaded; override;
-    // @name is an array of elevations for the @classname.
-    // If @link(ElevationCount) = ecTwo, @name is set using
-    // @link(LowerElevationFormula).
-    // If @link(ElevationCount) = ecOne or ecZero, @name is not used.
-//    property LowerElevations: T2DSparseRealArray read GetLowerElevations;
-    // @name contains a set of lower elevations for points that
-    // could be in the @classname.  It is indexed by [Layer, Row, Column].
-    property Lower3DElevations: T3DSparseRealArray read GetLower3DElevations;
-    function IsLower3DElevationAssigned(Col, Row, Layer: integer): boolean;
     // The purpose of @name is to get First and Last.  They are
     // the indices of the first and last layer, row, or column
     // perpendicular to the plain of @link(TViewDirection) that are
@@ -2639,11 +2628,21 @@ view. }
     procedure UpdateFormulaExpression;
     property ModflowBoundaries: TModflowBoundaries read GetModflowBoundaries;
   public
+    // @name contains a set of higher elevations for points that
+    // could be in the @classname.  It is indexed by [Layer, Row, Column].
+    property Higher3DElevations: T3DSparseRealArray read GetHigher3DElevations;
+    function IsHigher3DElevationAssigned(Col, Row, Layer: integer): boolean;
+    // @name contains a set of lower elevations for points that
+    // could be in the @classname.  It is indexed by [Layer, Row, Column].
+    property Lower3DElevations: T3DSparseRealArray read GetLower3DElevations;
+    function IsLower3DElevationAssigned(Col, Row, Layer: integer): boolean;
     procedure GetCellsToAssign(const Grid: TCustomGrid;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation);
   public
+    procedure UpdateUzfGage1and2;
+    procedure UpdateUzfGage3;
     procedure CacheSegments;
     procedure BeginUpdate;
     procedure EndUpdate;
@@ -3267,6 +3266,7 @@ SectionStarts.}
       write SetImportedValues stored StoreImportedValues;
     property IFACE: TIface read FIFACE write SetIFACE default iInternal;
     property ModpathParticles: TParticleStorage read FModpathParticles write SetModpathParticles;
+    property Comment: string read FComment write SetComment;
   end;
 
   TScreenObjectList = class(TObject)
@@ -4152,7 +4152,7 @@ uses Math, UndoItemsScreenObjects, BigCanvasMethods,
   GIS_Functions, frmFormulaErrorsUnit, SparseArrayUnit, ModelMuseUtilities,
   InteractiveTools, PhastModelUnit, CountObjectsUnit, GlobalVariablesUnit,
   IntListUnit, frmGoPhastUnit, IsosurfaceUnit, TempFiles, LayerStructureUnit, 
-  gpc;
+  gpc, frmGridValueUnit;
 
 
 const
@@ -5291,6 +5291,7 @@ begin
   end;
 
   // copy the data of the other screen object.
+  Comment := AScreenObject.Comment;
   CellSize := AScreenObject.CellSize;
   CellSizeUsed := AScreenObject.CellSizeUsed;
   EvaluatedAt := AScreenObject.EvaluatedAt;
@@ -5530,50 +5531,8 @@ begin
       DeleteDataSet(DS_Index);
     end;
   end;
-
-  BoundarArray :=
-    frmGoPhast.PhastModel.GetDataSetByName(StrUzfGage_1_and_2);
-  if (ModflowUzfBoundary <> nil)
-    and ModflowUzfBoundary.Used
-    and (ModflowUzfBoundary.GageOption1 <> 0) then
-  begin
-    DS_Index := IndexOfDataSet(BoundarArray);
-    if DS_Index < 0 then
-    begin
-      DS_Index := AddDataSet(BoundarArray);
-    end;
-    DataSetFormulas[DS_Index] := IntToStr(ModflowUzfBoundary.GageOption1);
-  end
-  else
-  begin
-    DS_Index := IndexOfDataSet(BoundarArray);
-    if DS_Index >= 0 then
-    begin
-      DeleteDataSet(DS_Index);
-    end;
-  end;
-
-  BoundarArray :=
-    frmGoPhast.PhastModel.GetDataSetByName(StrUzfGage3);
-  if (ModflowUzfBoundary <> nil)
-    and ModflowUzfBoundary.Used
-    and (ModflowUzfBoundary.GageOption2 <> 0) then
-  begin
-    DS_Index := IndexOfDataSet(BoundarArray);
-    if DS_Index < 0 then
-    begin
-      DS_Index := AddDataSet(BoundarArray);
-    end;
-    DataSetFormulas[DS_Index] := IntToStr(ModflowUzfBoundary.GageOption2);
-  end
-  else
-  begin
-    DS_Index := IndexOfDataSet(BoundarArray);
-    if DS_Index >= 0 then
-    begin
-      DeleteDataSet(DS_Index);
-    end;
-  end;
+  UpdateUzfGage1and2;
+  UpdateUzfGage3;
 
   if not FCanInvalidateModel then
   begin
@@ -5778,146 +5737,146 @@ begin
   VariableList := TList.Create;
   DataSetList := TList.Create;
   try
-  Expression := Compiler.CurrentExpression;
-  Temp := FCurrentValues;
-  try
-    InitializeUsedDataSets(FModel as TPhastModel, Compiler, Expression,
-      VariableList, DataSetList);
-  finally
-    FCurrentValues := Temp;
-  end;
-  if (SetValuesOfEnclosedCells or SetValuesOfIntersectedCells)
-    and Closed then
-  begin
-    // Get the coordinates of the points.
-
-    Grid := (FModel as TPhastModel).Grid;
-    RotatePoints(Grid, RotatedPoints, TempMinX, TempMinY, TempMaxX, TempMaxY);
-    GetColumns(Grid, TempMinX, TempMaxX,
-      FirstCol, LastCol);
-
-    if FirstCol > Grid.ColumnCount then
-    begin
-      FirstCol := Grid.ColumnCount;
+    Expression := Compiler.CurrentExpression;
+    Temp := FCurrentValues;
+    try
+      InitializeUsedDataSets(FModel as TPhastModel, Compiler, Expression,
+        VariableList, DataSetList);
+    finally
+      FCurrentValues := Temp;
     end;
-    if LastCol > Grid.ColumnCount then
+    if (SetValuesOfEnclosedCells or SetValuesOfIntersectedCells)
+      and Closed then
     begin
-      LastCol := Grid.ColumnCount;
-    end;
+      // Get the coordinates of the points.
 
-    FirstLayer := -1;
-    LastLayer := -1;
-    case EvaluatedAt of
-      eaBlocks:
-        begin
-          FirstLayer := 0;
-          LastLayer := Grid.LayerCount -1;
-        end;
-      eaNodes:
-        begin
-          FirstLayer := 0;
-          LastLayer := Grid.LayerCount;
-        end;
-      else Assert(False);
-    end;
+      Grid := (FModel as TPhastModel).Grid;
+      RotatePoints(Grid, RotatedPoints, TempMinX, TempMinY, TempMaxX, TempMaxY);
+      GetColumns(Grid, TempMinX, TempMaxX,
+        FirstCol, LastCol);
 
-    GetRows(Grid, TempMinY, TempMaxY, FirstRow, LastRow);
-    if FirstRow > Grid.RowCount then
-    begin
-      FirstRow := Grid.RowCount;
-    end;
-    if LastRow > Grid.RowCount then
-    begin
-      LastRow := Grid.RowCount;
-    end;
-
-    // Find the cells inside the screen object and assign values to them.
-    Assert((FirstCol >= 0) and (LastCol >= 0)
-      and (FirstLayer >= 0) and (LastLayer >= 0));
-    for RowIndex := FirstRow to LastRow do
-    begin
-      for ColIndex := FirstCol to LastCol do
+      if FirstCol > Grid.ColumnCount then
       begin
-        for LayerIndex := FirstLayer to LastLayer do
-        begin
-          case EvaluatedAt of
-            eaBlocks:
-              begin
-                CellLocation3D := Grid.ThreeDElementCenter(
-                  ColIndex, RowIndex, LayerIndex);
-              end;
-            eaNodes:
-              begin
-                CellLocation3D := Grid.ThreeDElementCorner(
-                  ColIndex, RowIndex, LayerIndex);
-              end;
-          else
-            Assert(False);
+        FirstCol := Grid.ColumnCount;
+      end;
+      if LastCol > Grid.ColumnCount then
+      begin
+        LastCol := Grid.ColumnCount;
+      end;
+
+      FirstLayer := -1;
+      LastLayer := -1;
+      case EvaluatedAt of
+        eaBlocks:
+          begin
+            FirstLayer := 0;
+            LastLayer := Grid.LayerCount -1;
           end;
+        eaNodes:
+          begin
+            FirstLayer := 0;
+            LastLayer := Grid.LayerCount;
+          end;
+        else Assert(False);
+      end;
 
-          APoint.x := CellLocation3D.X;
-          APoint.y := CellLocation3D.Y;
-          APoint := Grid.
-            RotateFromGridCoordinatesToRealWorldCoordinates(APoint);
+      GetRows(Grid, TempMinY, TempMaxY, FirstRow, LastRow);
+      if FirstRow > Grid.RowCount then
+      begin
+        FirstRow := Grid.RowCount;
+      end;
+      if LastRow > Grid.RowCount then
+      begin
+        LastRow := Grid.RowCount;
+      end;
 
-          if IsPointInside(APoint.x, APoint.y,
-            SectionIndex) then
+      // Find the cells inside the screen object and assign values to them.
+      Assert((FirstCol >= 0) and (LastCol >= 0)
+        and (FirstLayer >= 0) and (LastLayer >= 0));
+      for RowIndex := FirstRow to LastRow do
+      begin
+        for ColIndex := FirstCol to LastCol do
+        begin
+          for LayerIndex := FirstLayer to LastLayer do
+          begin
+            case EvaluatedAt of
+              eaBlocks:
+                begin
+                  CellLocation3D := Grid.ThreeDElementCenter(
+                    ColIndex, RowIndex, LayerIndex);
+                end;
+              eaNodes:
+                begin
+                  CellLocation3D := Grid.ThreeDElementCorner(
+                    ColIndex, RowIndex, LayerIndex);
+                end;
+            else
+              Assert(False);
+            end;
+
+            APoint.x := CellLocation3D.X;
+            APoint.y := CellLocation3D.Y;
+            APoint := Grid.
+              RotateFromGridCoordinatesToRealWorldCoordinates(APoint);
+
+            if IsPointInside(APoint.x, APoint.y,
+              SectionIndex) then
+            begin
+              Temp := FCurrentValues;
+              try
+                UpdateUsedVariables(VariableList, DataSetList,
+                  LayerIndex, RowIndex, ColIndex);
+              finally
+                FCurrentValues := Temp;
+              end;
+              UpdateCurrentScreenObject(self);
+              UpdateGlobalLocations(ColIndex, RowIndex, LayerIndex, EvaluatedAt);
+              UpdateCurrentSection(SectionIndex);
+              Expression.Evaluate;
+
+              SparseArray.Items[LayerIndex, RowIndex, ColIndex] :=
+                Expression.DoubleResult;
+            end;
+          end;
+        end
+      end;
+    end;
+    if SetValuesOfIntersectedCells then
+    begin
+      if not Segments.UpToDate then
+      begin
+        UpdateTopSegments((FModel as TPhastModel).Grid, EvaluatedAt, False,
+          RotatedPoints);
+      end;
+      // Assign values here.
+      for SegmentIndex := 0 to Segments.Count - 1 do
+      begin
+        ASegment := Segments[SegmentIndex];
+        begin
+          UpdateCurrentSegment(ASegment);
+
+          if not SparseArray.IsValue[ASegment.Layer, ASegment.Row,
+            ASegment.Col] then
           begin
             Temp := FCurrentValues;
             try
               UpdateUsedVariables(VariableList, DataSetList,
-                LayerIndex, RowIndex, ColIndex);
+                ASegment.Layer, ASegment.Row, ASegment.Col);
             finally
               FCurrentValues := Temp;
             end;
             UpdateCurrentScreenObject(self);
-            UpdateGlobalLocations(ColIndex, RowIndex, LayerIndex, EvaluatedAt);
-            UpdateCurrentSection(SectionIndex);
+            UpdateCurrentSegment(ASegment);
+            UpdateGlobalLocations(ASegment.Col, ASegment.Row, ASegment.Layer,
+              EvaluatedAt);
             Expression.Evaluate;
 
-            SparseArray.Items[LayerIndex, RowIndex, ColIndex] :=
+            SparseArray.Items[ASegment.Layer, ASegment.Row, ASegment.Col] :=
               Expression.DoubleResult;
           end;
         end;
-      end
-    end;
-  end;
-  if SetValuesOfIntersectedCells then
-  begin
-    if not Segments.UpToDate then
-    begin
-      UpdateTopSegments((FModel as TPhastModel).Grid, EvaluatedAt, False,
-        RotatedPoints);
-    end;
-    // Assign values here.
-    for SegmentIndex := 0 to Segments.Count - 1 do
-    begin
-      ASegment := Segments[SegmentIndex];
-      begin
-        UpdateCurrentSegment(ASegment);
-
-        if not SparseArray.IsValue[ASegment.Layer, ASegment.Row,
-          ASegment.Col] then
-        begin
-          Temp := FCurrentValues;
-          try
-            UpdateUsedVariables(VariableList, DataSetList,
-              ASegment.Layer, ASegment.Row, ASegment.Col);
-          finally
-            FCurrentValues := Temp;
-          end;
-          UpdateCurrentScreenObject(self);
-          UpdateCurrentSegment(ASegment);
-          UpdateGlobalLocations(ASegment.Col, ASegment.Row, ASegment.Layer,
-            EvaluatedAt);
-          Expression.Evaluate;
-
-          SparseArray.Items[ASegment.Layer, ASegment.Row, ASegment.Col] :=
-            Expression.DoubleResult;
-        end;
       end;
     end;
-  end;
   finally
     VariableList.Free;
     DataSetList.Free;
@@ -6691,15 +6650,13 @@ end;
 function TScreenObject.IsHigher3DElevationAssigned(Col, Row,
   Layer: integer): boolean;
 begin
-  UpdateHigher3DElevations;
-  result := FHigher3DElevations.IsValue[Layer,Row,Col];
+  result := Higher3DElevations.IsValue[Layer,Row,Col];
 end;
 
 function TScreenObject.IsLower3DElevationAssigned(Col, Row,
   Layer: integer): boolean;
 begin
-  UpdateLower3DElevations;
-  result := FLower3DElevations.IsValue[Layer, Row, Col];
+  result := Lower3DElevations.IsValue[Layer, Row, Col];
 end;
 
 function TScreenObject.IndexOfBoundaryDataSet(const DataSet: TDataArray):
@@ -10369,6 +10326,7 @@ begin
     if not Value then
     begin
       Selected := False;
+      CacheElevationArrays;
     end;
     RefreshGui(self);
   end;
@@ -11037,6 +10995,15 @@ begin
   if FColorLine <> Value then
   begin
     FColorLine := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TScreenObject.SetComment(const Value: string);
+begin
+  if FComment <> Value then
+  begin
+    FComment := Value;
     InvalidateModel;
   end;
 end;
@@ -12581,11 +12548,19 @@ end;
 
 procedure TScreenObject.CacheElevationArrays;
 begin
-  if FHigher3DElevations <> nil then
+  if Selected
+    and (frmGridValue <> nil)
+    and frmGridValue.cbShowThirdDValues.Checked
+    and (frmGoPhast.PhastModel.SelectedScreenObjectCount = 1) then
+  begin
+    Exit;
+  end;
+  
+  if (FHigher3DElevations <> nil) and not FHigher3DElevationsNeedsUpdating then
   begin
     FHigher3DElevations.Cache;
   end;
-  if FLower3DElevations <> nil then
+  if (FLower3DElevations <> nil) and not FLower3DElevationsNeedsUpdating then
   begin
     FLower3DElevations.Cache;
   end;
@@ -12597,6 +12572,58 @@ procedure TScreenObject.UpdateCellCache(CellList: TCellAssignmentList;
 begin
 //  Exit;
   FCachedCells.UpdateCache(CellList, EvalAt, Orientation, AssignmentLocation);
+end;
+
+procedure TScreenObject.UpdateUzfGage3;
+var
+  DS_Index: Integer;
+  BoundarArray: TDataArray;
+begin
+  BoundarArray := frmGoPhast.PhastModel.GetDataSetByName(StrUzfGage3);
+  if (ModflowUzfBoundary <> nil) and ModflowUzfBoundary.Used and (ModflowUzfBoundary.GageOption2 <> 0) then
+  begin
+    DS_Index := IndexOfDataSet(BoundarArray);
+    if DS_Index < 0 then
+    begin
+      DS_Index := AddDataSet(BoundarArray);
+    end;
+    DataSetFormulas[DS_Index] := IntToStr(ModflowUzfBoundary.GageOption2);
+  end
+  else
+  begin
+    DS_Index := IndexOfDataSet(BoundarArray);
+    if DS_Index >= 0 then
+    begin
+      DeleteDataSet(DS_Index);
+    end;
+  end;
+end;
+
+procedure TScreenObject.UpdateUzfGage1and2;
+var
+  DS_Index: Integer;
+  BoundarArray: TDataArray;
+begin
+  BoundarArray := frmGoPhast.PhastModel.GetDataSetByName(StrUzfGage_1_and_2);
+  if (ModflowUzfBoundary <> nil)
+    and ModflowUzfBoundary.Used
+    and (ModflowUzfBoundary.GageOption1 <> 0) then
+  begin
+    DS_Index := IndexOfDataSet(BoundarArray);
+    if DS_Index < 0 then
+    begin
+      DS_Index := AddDataSet(BoundarArray);
+    end;
+    DataSetFormulas[DS_Index] := IntToStr(ModflowUzfBoundary.GageOption1);
+  end
+  else
+  begin
+    DS_Index := IndexOfDataSet(BoundarArray);
+    if DS_Index >= 0 then
+    begin
+      DeleteDataSet(DS_Index);
+    end;
+  end;
 end;
 
 procedure TScreenObject.RestoreSubscriptionToList(List: TList;
@@ -13247,6 +13274,7 @@ begin
         (FModel as TPhastModel).ScreenObjectUnSelected;
       end;
     end;
+    CacheElevationArrays;
     InvalidateModel;
   end;
 
@@ -15973,7 +16001,7 @@ begin
   end
   else
   begin
-    if (ModflowHeadObservations <> nil) and (Model <> nil) then
+    if CanInvalidateModel and (ModflowHeadObservations <> nil) and (Model <> nil) then
     begin
       (Model as TPhastModel).InvalidateMfHobHeads (self);
     end;
@@ -20574,7 +20602,6 @@ begin
       end;
     else Assert(False);
   end;
-
 end;
 
 procedure TModflowDelegate.AssignSelectedCells(const Grid: TCustomGrid);
@@ -20630,6 +20657,8 @@ var
   CellList: TCellAssignmentList;
   CellAssignment: TCellAssignment;
   AssignmentIndex: Integer;
+  DataObject: TModflowDataObject;
+  NewFormula: string;
 begin
   CellList := TCellAssignmentList.Create;
   try
@@ -20653,8 +20682,49 @@ begin
 //  begin
     UsedVariables := TStringList.Create;
     try
-      InitializeExpression(Compiler, DataSetFunction, Expression, DataSet,
-        OtherData);
+      try
+        InitializeExpression(Compiler, DataSetFunction, Expression, DataSet,
+          OtherData);
+      except on EInvalidDataType do
+        begin
+          if OtherData = nil then
+          begin
+            raise;
+          end
+          else
+          begin
+            DataObject := OtherData as TModflowDataObject;
+            NewFormula := '';
+            case DataSet.DataType of
+              rdtDouble:
+                begin
+                  NewFormula := '0.';
+                end;
+              rdtInteger:
+                begin
+                  NewFormula := '0';
+                end;
+              rdtBoolean:
+                begin
+                  NewFormula := 'False';
+                end;
+              rdtString:
+                begin
+                  NewFormula := '""';
+                end;
+              else Assert(False);
+            end;
+            frmFormulaErrors.AddError(FScreenObject.Name,
+              DataObject.AlternateName, DataObject.DataSetFunction,
+              DataObject.DataSetFunction + ' treated as ' + NewFormula );
+            DataObject.DataSetFunction := NewFormula;
+            InitializeExpression(Compiler, DataSetFunction, Expression, DataSet,
+              OtherData);
+          end;
+
+        end;
+
+      end;
 
       InitializeVariables(UsedVariables, DataSet, Expression, Compiler);
       GetCellsToAssign(Grid, DataSetFunction, OtherData,
@@ -23793,6 +23863,7 @@ begin
           try
             OtherData.Compiler := Compiler;
             OtherData.DataSetFunction := DataSetFunction;
+            OtherData.AlternateName := DataSet.Name;
             Delegate.AssignValuesToTopDataSet(Grid, DataSet, OtherData,
               AssignmentLocation);
           finally
@@ -27721,6 +27792,19 @@ begin
       SectionStarts.Delete(SectionIndex);
     end;
   end;
+  for SectionIndex := SectionStarts.Count - 1 downto 0 do
+  begin
+    Value1 := SectionStarts.IntValues[SectionIndex];
+    if Value1 >= count then
+    begin
+      SectionStarts.Delete(SectionIndex);
+    end
+    else
+    begin
+      break;
+    end;
+
+  end;
 end;
 
 procedure TScreenObject.AssignTopDataSetValues(const Grid: TCustomGrid;
@@ -28327,7 +28411,10 @@ begin
       FFormulaObject, Value, frmGoPhast.PhastModel.rpThreeDFormulaCompilerNodes,
       GlobalRemovePhastBoundarySubscription,
       GlobalRestorePhastBoundarySubscription, self);
-    AddFormulaSubscriptions;
+    if (ScreenObject <> nil) and ScreenObject.FCanInvalidateModel then
+    begin
+      AddFormulaSubscriptions;
+    end;
     InvalidateModel;
   end;
 end;
@@ -28357,7 +28444,9 @@ begin
   begin
     RemoveMixtureSubscriptions;
     Values.MixtureFormula := Value;
-    if Values.InterpolationDirection = pidMix then
+    if (Values.InterpolationDirection = pidMix)
+      and (ScreenObject <> nil)
+      and ScreenObject.FCanInvalidateModel then
     begin
       AddMixtureSubscriptions;
     end;

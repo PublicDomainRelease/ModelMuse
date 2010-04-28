@@ -90,6 +90,7 @@ type
     procedure UpdateMaxTimes;
     procedure EnableWhichEndPointsRecorded;
     procedure EnableTimeControls;
+    procedure EnableBeginAndEndTime;
     { Private declarations }
   public
     constructor Create(AOwner: TComponent); override;
@@ -181,10 +182,7 @@ begin
     end;
     comboTrackingDirection.ItemIndex := Ord(ModpathSource.TrackingDirection);
     EnableTimeControls;
-    rdeBeginningTime.Enabled :=
-      frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel;
-    rdeEndingTime.Enabled :=
-      frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel;
+    EnableBeginAndEndTime;
 
     StressPeriod := frmGoPhast.PhastModel.ModflowStressPeriods.Items[0];
     rdeBeginningTime.Min := StressPeriod.StartTime;
@@ -247,9 +245,10 @@ procedure TframeModpathSelection.rcSelectionControllerEnabledChange(
   Sender: TObject);
 begin
   inherited;
-  rdeBeginningTime.Enabled := rcSelectionController.Enabled
-    and frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel;
-  rdeEndingTime.Enabled := rdeBeginningTime.Enabled;
+  EnableBeginAndEndTime;
+//  rdeBeginningTime.Enabled := rcSelectionController.Enabled
+//    and frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel;
+//  rdeEndingTime.Enabled := rdeBeginningTime.Enabled;
 
   SetTimeControlsEnabled;
   EnableStopZone;
@@ -394,6 +393,14 @@ begin
   ModpathSource.BackwardsTrackingReleaseTime := StrToFloat(rdeReleaseTime.Text);
 end;
 
+procedure TframeModpathSelection.EnableBeginAndEndTime;
+begin
+  rdeBeginningTime.Enabled := rcSelectionController.Enabled
+    and frmGoPhast.PhastModel.ModflowStressPeriods.CompletelyTransient;
+  rdeEndingTime.Enabled := rcSelectionController.Enabled
+    and frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel;
+end;
+
 procedure TframeModpathSelection.EnableTimeControls;
 begin
   rdeReferenceTime.Enabled :=
@@ -406,7 +413,8 @@ end;
 
 procedure TframeModpathSelection.EnableWhichEndPointsRecorded;
 begin
-  comboWhichEndpoints.Enabled := cbStopInZone.Checked and (rgOutputMode.ItemIndex = 0) and rcSelectionController.Enabled;
+  comboWhichEndpoints.Enabled := cbStopInZone.Checked
+    and (rgOutputMode.ItemIndex = 0) and rcSelectionController.Enabled;
 end;
 
 procedure TframeModpathSelection.UpdateMaxTimes;

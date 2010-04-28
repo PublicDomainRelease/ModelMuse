@@ -7,6 +7,12 @@ inherited framePackageSub: TframePackageSub
   DesignSize = (
     444
     402)
+  inherited lblComments: TLabel
+    Margins.Bottom = 0
+  end
+  inherited lblPackage: TLabel
+    Margins.Bottom = 0
+  end
   inherited memoComments: TMemo
     Width = 413
     Height = 51
@@ -18,55 +24,59 @@ inherited framePackageSub: TframePackageSub
     Top = 119
     Width = 444
     Height = 283
-    ActivePage = tabControls
+    ActivePage = tabPrintSave
     Align = alBottom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 1
     object tabControls: TTabSheet
       Caption = 'Controls'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         436
-        255)
+        252)
       object lblNumberOfNodes: TLabel
         Left = 65
         Top = 7
-        Width = 201
-        Height = 13
+        Width = 239
+        Height = 16
         Caption = 'Number of nodes for delay interbeds (NN)'
       end
       object lblAccel1: TLabel
         Left = 88
         Top = 35
-        Width = 164
-        Height = 13
+        Width = 196
+        Height = 16
         Caption = 'First acceleration parameter (AC!)'
       end
       object lblAccel2: TLabel
         Left = 88
         Top = 63
-        Width = 180
-        Height = 13
+        Width = 216
+        Height = 16
         Caption = 'Second acceleration parameter (AC2)'
       end
       object lblMinIterations: TLabel
         Left = 88
         Top = 91
-        Width = 248
-        Height = 13
+        Width = 301
+        Height = 16
         Caption = 'Minimum number of iterations for SIP solver (ITMIN)'
       end
       object lbReadRestart: TLabel
         Left = 12
         Top = 142
-        Width = 264
-        Height = 13
+        Width = 321
+        Height = 16
         Caption = 'File from which the restart record will be read (IDREST)'
       end
       object lblOutputChoice: TLabel
         Left = 12
         Top = 192
-        Width = 98
-        Height = 13
+        Width = 115
+        Height = 16
         Caption = 'Binary output choice'
       end
       object seNumberOfNodes: TJvSpinEdit
@@ -88,7 +98,7 @@ inherited framePackageSub: TframePackageSub
         Height = 22
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
+        ItemHeight = 0
         TabOrder = 1
         Text = '0'
         DataType = dtReal
@@ -103,7 +113,7 @@ inherited framePackageSub: TframePackageSub
         Height = 22
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
+        ItemHeight = 0
         TabOrder = 2
         Text = '0'
         DataType = dtReal
@@ -118,7 +128,7 @@ inherited framePackageSub: TframePackageSub
         Height = 22
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
+        ItemHeight = 0
         TabOrder = 3
         Text = '1'
         DataType = dtInteger
@@ -150,13 +160,13 @@ inherited framePackageSub: TframePackageSub
         Left = 12
         Top = 208
         Width = 145
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         DroppedWidth = 145
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
+        ItemHeight = 20
         ItemIndex = -1
         TabOrder = 6
         Items = <
@@ -175,9 +185,13 @@ inherited framePackageSub: TframePackageSub
     object tabFormat: TTabSheet
       Caption = 'Output Format'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         436
-        255)
+        252)
       object rdgFormats: TRbwDataGrid4
         Left = 12
         Top = 35
@@ -412,12 +426,19 @@ inherited framePackageSub: TframePackageSub
             WordWrapCells = False
             AutoAdjustColWidths = True
           end>
+        ColWidths = (
+          69
+          69
+          69
+          69
+          69
+          69)
       end
       object comboMultiFomat: TJvImageComboBox
         Left = 144
         Top = 6
         Width = 145
-        Height = 23
+        Height = 26
         Style = csOwnerDrawVariable
         ButtonStyle = fsLighter
         Color = clBtnFace
@@ -425,7 +446,7 @@ inherited framePackageSub: TframePackageSub
         Enabled = False
         ImageHeight = 0
         ImageWidth = 0
-        ItemHeight = 17
+        ItemHeight = 20
         ItemIndex = -1
         TabOrder = 1
         OnChange = comboMultiFomatChange
@@ -500,17 +521,20 @@ inherited framePackageSub: TframePackageSub
     object tabPrintSave: TTabSheet
       Caption = 'Print/Save'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         436
-        255)
+        252)
       object lblNumExportPeriods: TLabel
         Left = 75
         Top = 230
-        Width = 123
-        Height = 13
+        Width = 146
+        Height = 16
         Anchors = [akLeft, akBottom]
         Caption = 'Number of export periods'
-        ExplicitTop = 300
       end
       object sbAdd: TSpeedButton
         Left = 352

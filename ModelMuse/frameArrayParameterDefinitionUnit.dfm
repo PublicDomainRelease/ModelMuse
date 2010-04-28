@@ -118,7 +118,7 @@ inherited frameArrayParameterDefinition: TframeArrayParameterDefinition
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 13
+      ItemHeight = 0
       TabOrder = 0
       Text = '0'
       OnChange = rdeParamValueChange

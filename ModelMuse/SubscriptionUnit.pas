@@ -307,9 +307,9 @@ begin
   begin
     Exit;
   end;
-  for Index := FSubscribers.Count - 1 downto 0 do
+  for Index := 0 to FSubscribers.Count - 1 do
   begin
-    Observer := FSubscribers[Index];
+    Observer := FSubscribers[0];
     if Observer <> nil then
     begin
       StopsTalkingTo(Observer);

@@ -72,6 +72,10 @@ type
 
 procedure TfrmSpecifyContours.ArrangeControls;
 begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;  
   LayoutControls(rdgContourData, rdeLineThickness, nil, Ord(ccThickness), 0);
 end;
 

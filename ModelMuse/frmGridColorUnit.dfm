@@ -6,7 +6,6 @@ inherited frmGridColor: TfrmGridColor
   HorzScrollBar.Range = 557
   VertScrollBar.Range = 225
   Caption = 'Color Grid'
-  ExplicitTop = 8
   DesignSize = (
     606
     417)
@@ -26,6 +25,7 @@ inherited frmGridColor: TfrmGridColor
     Top = 24
     Width = 85
     Height = 26
+    Anchors = [akTop, akRight]
     ItemHeight = 18
     TabOrder = 0
     Text = '0'
@@ -36,6 +36,8 @@ inherited frmGridColor: TfrmGridColor
     Top = 24
     Width = 17
     Height = 21
+    Anchors = [akTop, akRight]
+    Associate = btnCancel
     Max = 0
     TabOrder = 3
     OnChangingEx = udTimeChangingEx
@@ -43,19 +45,15 @@ inherited frmGridColor: TfrmGridColor
   inherited pcChoices: TPageControl
     TabOrder = 2
     inherited tabSelection: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 29
-      ExplicitWidth = 598
-      ExplicitHeight = 335
       inherited virttreecomboDataSets: TTntExDropDownVirtualStringTree
+        Anchors = [akLeft, akTop, akRight]
         Tree.OnGetNodeDataSize = virttreecomboDataSetsDropDownTreeGetNodeDataSize
+      end
+      inherited udDataSets: TJvUpDown
+        Anchors = [akTop, akRight]
       end
     end
     inherited tabFilters: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 29
-      ExplicitWidth = 598
-      ExplicitHeight = 335
       inherited lblLowerLimit: TLabel
         Anchors = [akLeft, akTop, akBottom]
       end
