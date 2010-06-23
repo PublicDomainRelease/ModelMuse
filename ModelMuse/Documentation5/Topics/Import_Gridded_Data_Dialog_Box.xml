@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
+<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+  <title translate="true">Import Gridded Data Dialog Box</title>
+  <body>
+    <header>
+      <para styleclass="Heading1"><text styleclass="Heading1" translate="true">Import Gridded Data Dialog Box</text></para>
+    </header>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">The </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Import Gridded Data</text><text styleclass="Normal" translate="true"> dialog box is used to import data </text><text styleclass="Normal" translate="true">at locations specified by column, row, and layer numbers. The data can either be in the form of a list of column, row, and layer numbers with associated data values or it can be an array of data arranged in the same way as the corresponding cells are arranged in the model. &#160;To open the </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Import Gridded Data</text><text styleclass="Normal" translate="true"> dialog box, select </text><text styleclass="Normal" style="font-weight:bold;" translate="true">File|Import|Gridded Data...</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">In the dialog box, the user must select the </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Method</text><text styleclass="Normal" translate="true"> (Array or List) and the </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Data set</text><text styleclass="Normal" translate="true"> into which the data are to be imported. &#160;Optionally, the user may also select one or more </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Values to ignore</text><text styleclass="Normal" translate="true"> in the data. &#160;The main part of the dialog box displays one or more tables in which to enter the data. &#160;Values may be typed into the tables or copied from a spreadsheet program and pasted into a table. &#160;(Ctrl-V is used to paste.) &#160;The data will be imported as one or more objects with multiple sections. &#160;Values will be assigned to the cells or elements intersected by the objects.</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">See also: </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Data_Set_Values_Dialog_Box" styleclass="Strong" translate="true">Data Set Values</link><text styleclass="Normal" translate="true"> dialog box</text></para>
+  </body>
+</topic>

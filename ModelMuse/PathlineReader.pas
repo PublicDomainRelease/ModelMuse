@@ -156,18 +156,50 @@ type
     property Lines[Index: integer]: TPathLine read GetLine; default;
   end;
 
-  TPathLineReader = class(TPersistent)
+  TCustomModpathSettings = class(TPersistent)
+  private
+    FColorParameters: TColorParameters;
+    procedure SetColorParameters(const Value: TColorParameters);
+  protected
+    FVisible: boolean;
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create;
+    Destructor Destroy; override;
+  published
+    property ColorParameters: TColorParameters read FColorParameters
+      write SetColorParameters;
+    property Visible: boolean read FVisible
+      write FVisible default True;
+  end;
+
+  TPathLineSettings = class(TCustomModpathSettings)
+  private
+    FDisplayLimits: TPathLineDisplayLimits;
+    FColorLimits: TPathlineColorLimits;
+    procedure SetDisplayLimits(const Value: TPathLineDisplayLimits);
+    procedure SetColorLimits(const Value: TPathlineColorLimits);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create;
+    Destructor Destroy; override;
+  published
+    property DisplayLimits: TPathLineDisplayLimits read FDisplayLimits
+      write SetDisplayLimits;
+    property ColorLimits: TPathlineColorLimits read FColorLimits
+      write SetColorLimits;
+    property DisplayPathLines: boolean read FVisible
+      write FVisible Stored False;
+   end;
+
+  TPathLineReader = class(TPathLineSettings)
   private
     FLines: TPathLines;
     FFileName: string;
     FFile: TFileStream;
     FFileDate: TDateTime;
-    FDisplayLimits: TPathLineDisplayLimits;
     FMaxTime: double;
     FMinTime: double;
-    FColorLimits: TPathlineColorLimits;
-    FColorParameters: TColorParameters;
-    FDisplayPathLines: boolean;
     FRecordedPathLines: Boolean;
     FDrawingPathLines: Boolean;
     class var
@@ -175,11 +207,8 @@ type
       FListInitialized: boolean;
     procedure SetLines(const Value: TPathLines);
     procedure SetFileDate(const Value: TDateTime);
-    procedure SetDisplayLimits(const Value: TPathLineDisplayLimits);
     procedure SetMaxTime(const Value: double);
     procedure SetMinTime(const Value: double);
-    procedure SetColorLimits(const Value: TPathlineColorLimits);
-    procedure SetColorParameters(const Value: TColorParameters);
     function GetPointColor(MaxValue, MinValue: double;
       Point: TPathLinePoint): TColor;
     procedure GetMinMaxValues(var MaxValue: Double; var MinValue: Double);
@@ -197,19 +226,11 @@ type
     procedure Draw3D;
     procedure Invalidate;
   published
-    property DisplayLimits: TPathLineDisplayLimits read FDisplayLimits
-      write SetDisplayLimits;
     property Lines: TPathLines read FLines write SetLines;
     property FileName: string read FFileName write FFileName;
     property FileDate: TDateTime read FFileDate write SetFileDate;
     property MaxTime: double read FMaxTime write SetMaxTime;
     property MinTime: double read FMinTime write SetMinTime;
-    property ColorLimits: TPathlineColorLimits read FColorLimits
-      write SetColorLimits;
-    property ColorParameters: TColorParameters read FColorParameters
-      write SetColorParameters;
-    property DisplayPathLines: boolean read FDisplayPathLines
-      write FDisplayPathLines;
   end;
 
   TEndpointShowChoice = (escAll, escSpecified);
@@ -377,18 +398,33 @@ type
     property UseLimit: boolean read FUseLimit write SetUseLimit;
   end;
 
-  TEndPointReader = class(TPersistent)
+  TEndPointSettings = class(TCustomModpathSettings)
+  private
+    FColorLimits: TEndPointColorLimits;
+    FDisplayLimits: TEndPointDisplayLimits;
+    procedure SetColorLimits(const Value: TEndPointColorLimits);
+    procedure SetDisplayLimits(const Value: TEndPointDisplayLimits);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create;
+    Destructor Destroy; override;
+  published
+    property ColorLimits: TEndPointColorLimits read FColorLimits write
+      SetColorLimits;
+    property DisplayLimits: TEndPointDisplayLimits read FDisplayLimits
+      write SetDisplayLimits;
+    property DisplayEndPoints: boolean read FVisible
+      write FVisible Stored False;
+  end;
+
+  TEndPointReader = class(TEndPointSettings)
   private
     FPoints: TEndPoints;
     FFileName: string;
     FFileDate: TDateTime;
     StartZ: Single;
-    FDisplayEndPoints: boolean;
-    FDisplayLimits: TEndPointDisplayLimits;
-    FColorLimits: TEndPointColorLimits;
     FMaxTrackingTime: double;
     FMinTrackingTime: double;
-    FColorParameters: TColorParameters;
     FMinReleaseTime: double;
     FMaxReleaseTime: double;
     FMinStartZone: integer;
@@ -406,11 +442,8 @@ type
     procedure GetMinMaxValues(var MaxValue: Double; var MinValue: Double);
     function GetPointColor(MaxValue, MinValue: double;
       Point: TEndPoint): TColor;
-    procedure SetDisplayLimits(const Value: TEndPointDisplayLimits);
-    procedure SetColorLimits(const Value: TEndPointColorLimits);
     procedure SetMaxTrackingTime(const Value: double);
     procedure SetTrackingMinTime(const Value: double);
-    procedure SetColorParameters(const Value: TColorParameters);
     procedure SetMaxReleaseTime(const Value: double);
     procedure SetMinReleaseTime(const Value: double);
     procedure SetMaxEndZone(const Value: integer);
@@ -421,22 +454,14 @@ type
   protected
     class property EndPointGLIndex: TGLuint read GetEndPointGLIndex;
   public
+    procedure Assign(Source: TPersistent); override;
     Constructor Create;
     Destructor Destroy; override;
     procedure ReadFile;
     procedure Draw(Orientation: TDataSetOrientation; const BitMap: TBitmap32);
     procedure Draw3D;
-    procedure Assign(Source: TPersistent); override;
     procedure Invalidate;
   published
-    property ColorLimits: TEndPointColorLimits read FColorLimits write
-      SetColorLimits;
-    property ColorParameters: TColorParameters read FColorParameters
-      write SetColorParameters;
-    property DisplayEndPoints: boolean read FDisplayEndPoints
-      write FDisplayEndPoints;
-    property DisplayLimits: TEndPointDisplayLimits read FDisplayLimits
-      write SetDisplayLimits;
     property FileDate: TDateTime read FFileDate write SetFileDate;
     property FileName: string read FFileName write FFileName;
     property MinReleaseTime: double read FMinReleaseTime
@@ -561,7 +586,6 @@ type
     procedure SetMaxColorLimit(const Value: double);
     procedure SetMinColorLimit(const Value: double);
     procedure SetUseLimit(const Value: boolean);
-  published
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
@@ -573,8 +597,26 @@ type
     property UseLimit: boolean read FUseLimit write SetUseLimit;
   end;
 
+  TTimeSeriesSettings = class(TCustomModpathSettings)
+  private
+    FColorLimits: TTimeSeriesColorLimits;
+    FDisplayLimits: TTimeSeriesDisplayLimits;
+    procedure SetColorLimits(const Value: TTimeSeriesColorLimits);
+    procedure SetDisplayLimits(const Value: TTimeSeriesDisplayLimits);
+  public
+    procedure Assign(Source: TPersistent); override;
+    constructor Create;
+    Destructor Destroy; override;
+  published
+    property ColorLimits: TTimeSeriesColorLimits read FColorLimits
+      write SetColorLimits;
+    property DisplayLimits: TTimeSeriesDisplayLimits read FDisplayLimits
+      write SetDisplayLimits;
+    property DisplayTimeSeries: boolean read FVisible
+      write FVisible Stored False;
+  end;
 
-  TTimeSeriesReader = class(TPersistent)
+  TTimeSeriesReader = class(TTimeSeriesSettings)
   private
     FFileName: string;
     FFileDate: TDateTime;
@@ -582,10 +624,6 @@ type
     FMaxTime: double;
     FMinTime: double;
     FTimeIndex: integer;
-    FDisplayTimeSeries: boolean;
-    FDisplayLimits: TTimeSeriesDisplayLimits;
-    FColorLimits: TTimeSeriesColorLimits;
-    FColorParameters: TColorParameters;
     FDrawingTimeSeries: Boolean;
     FTimeSeriesGLIndex: array of TGLuint;
     FRecordedTimeSeries: array of Boolean;
@@ -595,14 +633,10 @@ type
     procedure SetMaxTime(const Value: double);
     procedure SetMinTime(const Value: double);
     procedure SetTimeIndex(const Value: integer);
-    procedure SetDisplayTimeSeries(const Value: boolean);
     procedure GetMinMaxValues(var MaxValue: Double; var MinValue: Double);
     function CheckShowSeries(Series: TTimeSeries): Boolean;
     function GetPointColor(MaxValue, MinValue: double;
       Point: TTimeSeriesPoint): TColor;
-    procedure SetDisplayLimits(const Value: TTimeSeriesDisplayLimits);
-    procedure SetColorLimits(const Value: TTimeSeriesColorLimits);
-    procedure SetColorParameters(const Value: TColorParameters);
     function GetRecordedTimeSeries(ATimeIndex: integer): boolean;
     procedure SetRecordedTimeSeries(ATimeIndex: integer; const Value: boolean);
     function GetTimeSeriesGLIndex(ATimeIndex: integer): TGLuint;
@@ -616,21 +650,19 @@ type
     procedure ReadFile;
     procedure Draw(Orientation: TDataSetOrientation; const BitMap: TBitmap32);
     procedure Draw3D;
-    property RecordedTimeSeries[ATimeIndex: integer]: boolean read GetRecordedTimeSeries write SetRecordedTimeSeries;
-    property TimeSeriesGLIndex[ATimeIndex: integer]: TGLuint read GetTimeSeriesGLIndex;
+    property RecordedTimeSeries[ATimeIndex: integer]: boolean read
+      GetRecordedTimeSeries write SetRecordedTimeSeries;
+    property TimeSeriesGLIndex[ATimeIndex: integer]: TGLuint
+      read GetTimeSeriesGLIndex;
     property Times: TRealList read GetTimes;
     procedure Invalidate;
   published
-    property ColorLimits: TTimeSeriesColorLimits read FColorLimits write SetColorLimits;
-    property ColorParameters: TColorParameters read FColorParameters write SetColorParameters;
-    property DisplayTimeSeries: boolean read FDisplayTimeSeries write SetDisplayTimeSeries default True;
     property FileName: string read FFileName write FFileName;
     property FileDate: TDateTime read FFileDate write SetFileDate;
     property Series: TTimeSeriesCollection read FLines write SetLines;
     property MaxTime: double read FMaxTime write SetMaxTime;
     property MinTime: double read FMinTime write SetMinTime;
     property TimeIndex: integer read FTimeIndex write SetTimeIndex;
-    property DisplayLimits: TTimeSeriesDisplayLimits read FDisplayLimits write SetDisplayLimits;
   end;
 
 
@@ -731,37 +763,23 @@ begin
   if Source is TPathLineReader then
   begin
     PathLineReader := TPathLineReader(Source);
-    DisplayLimits := PathLineReader.DisplayLimits;
-    ColorLimits := PathLineReader.ColorLimits;
     Lines := PathLineReader.Lines;
-    ColorParameters := PathLineReader.ColorParameters;
     FileName := PathLineReader.FileName;
-    DisplayPathLines := PathLineReader.DisplayPathLines;
     MinTime := PathLineReader.MinTime;
     MaxTime := PathLineReader.MaxTime;
     FileDate := PathLineReader.FileDate;
-  end
-  else
-  begin
-    inherited;
   end;
+  inherited;
 end;
 
 constructor TPathLineReader.Create;
 begin
   inherited;
   FLines := TPathLines.Create;
-  FDisplayLimits:= TPathLineDisplayLimits.Create;
-  FColorLimits := TPathlineColorLimits.Create;
-  FColorParameters:= TColorParameters.Create;
-  FDisplayPathLines := True;
 end;
 
 destructor TPathLineReader.Destroy;
 begin
-  FColorParameters.Free;
-  FColorLimits.Free;
-  FDisplayLimits.Free;
   FLines.Free;
   inherited;
 end;
@@ -784,7 +802,7 @@ var
   AColor: TColor;
   AColor32: TColor32;
 begin
-  if not DisplayPathLines then
+  if not Visible then
   begin
     Exit;
   end;
@@ -894,7 +912,7 @@ begin
       FRecordedPathLines := True;
     end;
 
-    if not DisplayPathLines then
+    if not Visible then
     begin
       Exit;
     end;
@@ -950,7 +968,7 @@ var
     end;
   end;
 begin
-  if not DisplayPathLines then
+  if not Visible then
   begin
     Exit;
   end;
@@ -1347,21 +1365,6 @@ begin
     end;
   end;
 
-end;
-
-procedure TPathLineReader.SetColorLimits(const Value: TPathlineColorLimits);
-begin
-  FColorLimits.Assign(Value);
-end;
-
-procedure TPathLineReader.SetColorParameters(const Value: TColorParameters);
-begin
-  FColorParameters.Assign(Value);
-end;
-
-procedure TPathLineReader.SetDisplayLimits(const Value: TPathLineDisplayLimits);
-begin
-  FDisplayLimits.Assign(Value);
 end;
 
 procedure TPathLineReader.SetFileDate(const Value: TDateTime);
@@ -1921,10 +1924,6 @@ begin
   if Source is TEndPointReader then
   begin
     EndPointSource := TEndPointReader(Source);
-    ColorLimits := EndPointSource.ColorLimits;
-    ColorParameters := EndPointSource.ColorParameters;
-    DisplayEndPoints := EndPointSource.DisplayEndPoints;
-    DisplayLimits := EndPointSource.DisplayLimits;
     FileDate := EndPointSource.FileDate;
     FileName := EndPointSource.FileName;
     MinReleaseTime := EndPointSource.MinReleaseTime;
@@ -1936,29 +1935,19 @@ begin
     MinEndZone := EndPointSource.MinEndZone;
     MaxEndZone := EndPointSource.MaxEndZone;
     Points := EndPointSource.Points;
-  end
-  else
-  begin
-    inherited;
   end;
+  inherited;
 end;
 
 constructor TEndPointReader.Create;
 begin
   inherited;
-  FColorParameters := TColorParameters.Create;
-  FColorLimits := TEndPointColorLimits.Create;
-  FDisplayLimits:= TEndPointDisplayLimits.Create;
   FPoints:= TEndPoints.Create;
-  FDisplayEndPoints := True;
 end;
 
 destructor TEndPointReader.Destroy;
 begin
   FPoints.Free;
-  FDisplayLimits.Free;
-  FColorLimits.Free;
-  FColorParameters.Free;
   inherited;
 end;
 
@@ -1976,7 +1965,7 @@ var
   AColor32: TColor32;
   ARect: TRect;
 begin
-  if not DisplayEndPoints then
+  if not Visible then
   begin
     Exit;
   end;
@@ -2093,7 +2082,7 @@ begin
       FRecordedEndPoints := True;
     end;
 
-    if not DisplayEndPoints then
+    if not Visible then
     begin
       Exit;
     end;
@@ -2531,7 +2520,7 @@ var
   EndPoint: TEndPoint;
   AColor: TColor;
 begin
-  if not DisplayEndPoints then
+  if not Visible then
   begin
     Exit;
   end;
@@ -2588,21 +2577,6 @@ begin
   finally
     glEndList;
   end;
-end;
-
-procedure TEndPointReader.SetColorLimits(const Value: TEndPointColorLimits);
-begin
-  FColorLimits.Assign(Value);
-end;
-
-procedure TEndPointReader.SetColorParameters(const Value: TColorParameters);
-begin
-  FColorParameters.Assign(Value);
-end;
-
-procedure TEndPointReader.SetDisplayLimits(const Value: TEndPointDisplayLimits);
-begin
-  FDisplayLimits.Assign(Value);
 end;
 
 procedure TEndPointReader.SetFileDate(const Value: TDateTime);
@@ -2847,21 +2821,14 @@ begin
   if Source is TTimeSeriesReader then
   begin
     SourceSeries := TTimeSeriesReader(Source);
-    ColorLimits := SourceSeries.ColorLimits;
-    ColorParameters := SourceSeries.ColorParameters;
-    DisplayLimits := SourceSeries.DisplayLimits;
-    DisplayTimeSeries := SourceSeries.DisplayTimeSeries;
     FileName := SourceSeries.FileName;
     FileDate := SourceSeries.FileDate;
     Series := SourceSeries.Series;
     MaxTime := SourceSeries.MaxTime;
     MinTime := SourceSeries.MinTime;
     TimeIndex := SourceSeries.TimeIndex;
-  end
-  else
-  begin
-    inherited;
   end;
+  inherited;
 end;
 
 function TTimeSeriesReader.CheckShowSeries(Series: TTimeSeries): Boolean;
@@ -2890,19 +2857,12 @@ end;
 
 constructor TTimeSeriesReader.Create;
 begin
-  FDisplayTimeSeries := True;
-  FLines:= TTimeSeriesCollection.Create;
-  FDisplayLimits := TTimeSeriesDisplayLimits.Create;
-  FColorLimits := TTimeSeriesColorLimits.Create;
-  FColorParameters := TColorParameters.Create;
   inherited;
+  FLines:= TTimeSeriesCollection.Create;
 end;
 
 destructor TTimeSeriesReader.Destroy;
 begin
-  FColorParameters.Free;
-  FColorLimits.Free;
-  FDisplayLimits.Free;
   FLines.Free;
   FRealList.Free;
   inherited;
@@ -2923,7 +2883,7 @@ var
   AColor32: TColor32;
   ARect: TRect;
 begin
-  if not DisplayTimeSeries then
+  if not Visible then
   begin
     Exit;
   end;
@@ -3029,7 +2989,7 @@ begin
       RecordedTimeSeries[TimeIndex] := True;
     end;
 
-    if not DisplayTimeSeries then
+    if not Visible then
     begin
       Exit;
     end;
@@ -3498,7 +3458,7 @@ var
   AColor: TColor;
   ASeries: TTimeSeries;
 begin
-  if not DisplayTimeSeries then
+  if not Visible then
   begin
     Exit;
   end;
@@ -3557,27 +3517,6 @@ begin
   finally
     glEndList;
   end;
-end;
-
-procedure TTimeSeriesReader.SetColorLimits(const Value: TTimeSeriesColorLimits);
-begin
-  FColorLimits.Assign(Value);
-end;
-
-procedure TTimeSeriesReader.SetColorParameters(const Value: TColorParameters);
-begin
-  FColorParameters.Assign(Value);
-end;
-
-procedure TTimeSeriesReader.SetDisplayLimits(
-  const Value: TTimeSeriesDisplayLimits);
-begin
-  FDisplayLimits.Assign(Value);
-end;
-
-procedure TTimeSeriesReader.SetDisplayTimeSeries(const Value: boolean);
-begin
-  FDisplayTimeSeries := Value;
 end;
 
 procedure TTimeSeriesReader.SetFileDate(const Value: TDateTime);
@@ -3909,6 +3848,151 @@ end;
 procedure TTimeSeriesColorLimits.SetUseLimit(const Value: boolean);
 begin
   FUseLimit := Value;
+end;
+
+procedure TPathLineSettings.SetDisplayLimits(const Value: TPathLineDisplayLimits);
+begin
+  FDisplayLimits.Assign(Value);
+end;
+
+procedure TPathLineSettings.Assign(Source: TPersistent);
+var
+  PathLineSettings: TPathLineSettings;
+begin
+  if Source is TPathLineSettings then
+  begin
+    PathLineSettings := TPathLineSettings(Source);
+    DisplayLimits := PathLineSettings.DisplayLimits;
+    ColorLimits := PathLineSettings.ColorLimits;
+  end;
+  inherited;
+end;
+
+constructor TPathLineSettings.Create;
+begin
+  inherited;
+  FDisplayLimits:= TPathLineDisplayLimits.Create;
+  FColorLimits := TPathlineColorLimits.Create;
+end;
+
+destructor TPathLineSettings.Destroy;
+begin
+  FColorLimits.Free;
+  FDisplayLimits.Free;
+  inherited;
+end;
+
+procedure TPathLineSettings.SetColorLimits(const Value: TPathlineColorLimits);
+begin
+  FColorLimits.Assign(Value);
+end;
+
+procedure TEndPointSettings.Assign(Source: TPersistent);
+var
+  EndPointSettings: TEndPointSettings;
+begin
+  if Source is TEndPointSettings then
+  begin
+    EndPointSettings := TEndPointSettings(Source);
+    ColorLimits := EndPointSettings.ColorLimits;
+    DisplayLimits := EndPointSettings.DisplayLimits;
+  end;
+  inherited;
+end;
+
+constructor TEndPointSettings.Create;
+begin
+  inherited;
+  FColorLimits := TEndPointColorLimits.Create;
+  FDisplayLimits:= TEndPointDisplayLimits.Create;
+end;
+
+destructor TEndPointSettings.Destroy;
+begin
+  FDisplayLimits.Free;
+  FColorLimits.Free;
+  inherited;
+end;
+
+procedure TEndPointSettings.SetColorLimits(const Value: TEndPointColorLimits);
+begin
+  FColorLimits.Assign(Value);
+end;
+
+procedure TEndPointSettings.SetDisplayLimits(const Value: TEndPointDisplayLimits);
+begin
+  FDisplayLimits.Assign(Value);
+end;
+
+procedure TTimeSeriesSettings.Assign(Source: TPersistent);
+var
+  SourceSettings: TTimeSeriesSettings;
+begin
+  if Source is TTimeSeriesSettings then
+  begin
+    SourceSettings := TTimeSeriesSettings(Source);
+    ColorLimits := SourceSettings.ColorLimits;
+    DisplayLimits := SourceSettings.DisplayLimits;
+  end;
+  inherited;
+end;
+
+constructor TTimeSeriesSettings.Create;
+begin
+  inherited;
+  FDisplayLimits := TTimeSeriesDisplayLimits.Create;
+  FColorLimits := TTimeSeriesColorLimits.Create;
+end;
+
+destructor TTimeSeriesSettings.Destroy;
+begin
+  FColorLimits.Free;
+  FDisplayLimits.Free;
+  inherited;
+end;
+
+procedure TTimeSeriesSettings.SetColorLimits(const Value: TTimeSeriesColorLimits);
+begin
+  FColorLimits.Assign(Value);
+end;
+
+procedure TTimeSeriesSettings.SetDisplayLimits(const Value: TTimeSeriesDisplayLimits);
+begin
+  FDisplayLimits.Assign(Value);
+end;
+
+procedure TCustomModpathSettings.Assign(Source: TPersistent);
+var
+  Settings: TCustomModpathSettings;
+begin
+  if Source is TCustomModpathSettings then
+  begin
+    Settings := TCustomModpathSettings(Source);
+    ColorParameters := Settings.ColorParameters;
+    Visible := Settings.Visible;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TCustomModpathSettings.Create;
+begin
+  inherited;
+  FColorParameters:= TColorParameters.Create;
+  FVisible := True;
+end;
+
+destructor TCustomModpathSettings.Destroy;
+begin
+  FColorParameters.Free;
+  inherited;
+end;
+
+procedure TCustomModpathSettings.SetColorParameters(const Value: TColorParameters);
+begin
+  FColorParameters.Assign(Value);
 end;
 
 end.

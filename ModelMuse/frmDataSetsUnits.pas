@@ -204,7 +204,7 @@ Type
     // @name initializes many things when @classname is created.
     procedure FormCreate(Sender: TObject); override;
     // @name frees private fields of @classname when @classname is destroyed.
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     // @name responds to framePhastInterpolation.@link(
     // TframePhastInterpolation.btnEditMixtureFormula) being clicked.
     // It allows the user to edit the formula for mixtures.
@@ -1277,6 +1277,7 @@ begin
   end;
   SelectedEdit.DataType := TRbwDataType(comboType.ItemIndex);
   UpdateInterpolationControl;
+  reDefaultFormulaExit(nil);
 end;
 
 procedure TfrmDataSets.FormDestroy(Sender: TObject);

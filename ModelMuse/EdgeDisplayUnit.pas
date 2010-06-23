@@ -68,6 +68,25 @@ type
     function StartingLocation: TPoint2D;
   end;
 
+  TEdgeDisplaySettings = class(TPersistent)
+  private
+    FLimits: TColoringLimits;
+    FDataToPlot: integer;
+    FVisible: boolean;
+    procedure SetDataToPlot(const Value: integer);
+    procedure SetLimits(const Value: TColoringLimits);
+    procedure SetVisible(const Value: boolean);
+  public
+    Constructor Create;
+    Destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
+    procedure AssignTo(Dest: TPersistent); override;
+  published
+    property Limits: TColoringLimits read FLimits write SetLimits;
+    property DataToPlot: integer read FDataToPlot write SetDataToPlot;
+    property Visible: boolean read FVisible write SetVisible;
+  end;
+
   // @name stores but does not own a list of
   // @link(TCustomModflowGridEdgeFeature)s.
   // It is used to display the @link(TCustomModflowGridEdgeFeature)s.
@@ -115,7 +134,8 @@ type
     // See @link(RealValueTypeCount).
     function GetRealValueTypeCount: integer; virtual; abstract;
   public
-    function UseEdge(ActiveDataArray: TDataArray; Feature: TCustomModflowGridEdgeFeature): boolean;
+    function UseEdge(ActiveDataArray: TDataArray;
+      Feature: TCustomModflowGridEdgeFeature): boolean;
     // @name returns the minimum and maximum value allowed when drawing the
     // @link(TCustomModflowGridEdgeFeature)s.
     procedure GetValueRangeToDisplay(out MinValue, MaxValue, MinPositive: Double);
@@ -447,7 +467,7 @@ begin
     FMaxValue := FloatToStrF(MaxValue, ffGeneral, 7, 0);
     if frmGridColor <> nil then
     begin
-      frmGridColor.SetMinMaxLabels
+      frmGridColor.UpdateLabelsAndLegend
     end;
   finally
     FUpdatingMinMax := False;
@@ -634,6 +654,81 @@ begin
   Point := StartingLocation;
   result.X := frmGoPhast.frameTopView.ZoomBox.XCoord(Point.x);
   result.Y := frmGoPhast.frameTopView.ZoomBox.YCoord(Point.y);
+end;
+
+{ TEdgeDisplaySettings }
+
+procedure TEdgeDisplaySettings.Assign(Source: TPersistent);
+var
+  SourceSettings: TEdgeDisplaySettings;
+  SourceDisplay: TCustomModflowGridEdgeDisplay;
+begin
+  if Source = nil then
+  begin
+    Visible := False;
+  end
+  else if Source is TEdgeDisplaySettings then
+  begin
+    SourceSettings := TEdgeDisplaySettings(Source);
+    Limits := SourceSettings.Limits;
+    DataToPlot := SourceSettings.DataToPlot;
+    Visible := SourceSettings.Visible;
+  end
+  else if Source is TCustomModflowGridEdgeDisplay then
+  begin
+    SourceDisplay := TCustomModflowGridEdgeDisplay(Source);
+    Limits := SourceDisplay.Limits[SourceDisplay.DataToPlot];
+    DataToPlot := SourceDisplay.DataToPlot;
+    Visible := True;
+  end
+  else
+  begin
+    inherited;
+  end;
+
+end;
+
+procedure TEdgeDisplaySettings.AssignTo(Dest: TPersistent);
+var
+  DestDisplay: TCustomModflowGridEdgeDisplay;
+begin
+  if Dest is TCustomModflowGridEdgeDisplay then
+  begin
+    DestDisplay := TCustomModflowGridEdgeDisplay(Dest);
+    DestDisplay.DataToPlot := DataToPlot;
+    DestDisplay.Limits[DataToPlot] := Limits;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TEdgeDisplaySettings.Create;
+begin
+  inherited;
+  FLimits := TColoringLimits.Create;
+end;
+
+destructor TEdgeDisplaySettings.Destroy;
+begin
+  FLimits.Free;
+  inherited;
+end;
+
+procedure TEdgeDisplaySettings.SetDataToPlot(const Value: integer);
+begin
+  FDataToPlot := Value;
+end;
+
+procedure TEdgeDisplaySettings.SetLimits(const Value: TColoringLimits);
+begin
+  FLimits.Assign(Value);
+end;
+
+procedure TEdgeDisplaySettings.SetVisible(const Value: boolean);
+begin
+  FVisible := Value;
 end;
 
 end.

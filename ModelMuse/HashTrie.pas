@@ -2,6 +2,16 @@
 unit HashTrie;
 
 {
+This is a (slightly) modified version of the original code.
+Richard. B. Winston
+}
+
+{$IFNDEF MyDebug}
+  {$HINTS OFF}
+  {$WARNINGS OFF}
+{$ENDIF}
+
+{
   Delphi implementation of HashTrie dynamic hashing method
   Full description available on www.softlab.od.ua
 
@@ -55,6 +65,7 @@ type
     Data: DWORD;
     Next: TLinkedItem;
     constructor Create(FValue,FData: DWORD; FNext: TLinkedItem);
+  public
     destructor Destroy; override;
   end;
 
@@ -69,13 +80,14 @@ type
     Filled: integer;
     Items: array[0..LeafSize-1] of TObject;
     constructor Create(AOwner: THashTrie);
-    destructor Destroy; override;
     function ROR(Value: DWORD): DWORD;
     function RORN(Value: DWORD; Level: integer): DWORD;
     procedure AddDown(Value,Data,Hash: DWORD);
     procedure Delete(Value,Hash: DWORD);
     function Find(Value,Hash: DWORD; var Data: DWORD): Boolean;
     function Traverse(UserData,UserProc: Pointer; TraverseProc: TTraverseProc): Boolean;
+  public
+    destructor Destroy; override;
   end;
 
   THashTrie = class
@@ -223,7 +235,7 @@ end;
 
 procedure TTreeItem.Delete(Value, Hash: DWORD);
 var i: integer;
-    TreeItem: TTreeItem;
+//    TreeItem: TTreeItem;
     PrevLinkedItem,LinkedItem: TLinkedItem;
 begin
   i:=Hash and $FF;
@@ -279,7 +291,7 @@ end;
 
 function TTreeItem.Find(Value, Hash: DWORD; var Data: DWORD): Boolean;
 var i: integer;
-    TreeItem: TTreeItem;
+//    TreeItem: TTreeItem;
     LinkedItem: TLinkedItem;
 begin
   Result:=False;
@@ -590,4 +602,12 @@ end; }
 
 initialization
   BuildCRCTable;
+
+{$IFNDEF MyDebug}
+  {$HINTS ON}
+  {$WARNINGS ON}
+{$ENDIF}
+
 end.
+
+

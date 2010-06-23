@@ -3,6 +3,7 @@ inherited frmCustomColor: TfrmCustomColor
   ClientHeight = 417
   ClientWidth = 606
   OnDestroy = FormDestroy
+  OnResize = FormResize
   ExplicitWidth = 614
   ExplicitHeight = 451
   PixelsPerInch = 96
@@ -12,11 +13,15 @@ inherited frmCustomColor: TfrmCustomColor
     Top = 0
     Width = 606
     Height = 368
-    ActivePage = tabSelection
+    ActivePage = tabLegend
     Align = alClient
     TabOrder = 0
     object tabSelection: TTabSheet
       Caption = 'Selection'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         598
         335)
@@ -75,7 +80,7 @@ inherited frmCustomColor: TfrmCustomColor
         Anchors = [akLeft, akTop, akRight, akBottom]
         Enabled = False
         ReadOnly = True
-        TabOrder = 0
+        TabOrder = 2
       end
       object comboColorScheme: TComboBox
         Left = 8
@@ -87,7 +92,7 @@ inherited frmCustomColor: TfrmCustomColor
         DropDownCount = 12
         ItemHeight = 18
         ItemIndex = 0
-        TabOrder = 1
+        TabOrder = 3
         Text = 'Rainbow'
         OnChange = comboColorSchemeChange
         Items.Strings = (
@@ -114,7 +119,7 @@ inherited frmCustomColor: TfrmCustomColor
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
         Anchors = [akRight, akBottom]
-        TabOrder = 2
+        TabOrder = 4
         OnChange = comboColorSchemeChange
         OnKeyUp = seCyclesKeyUp
       end
@@ -125,7 +130,7 @@ inherited frmCustomColor: TfrmCustomColor
         Height = 40
         Increment = 2
         MaxValue = 200
-        TabOrder = 3
+        TabOrder = 5
         Value = 40
         Anchors = [akLeft, akBottom]
         OnChange = jsColorExponentChange
@@ -141,7 +146,7 @@ inherited frmCustomColor: TfrmCustomColor
         ValueType = vtFloat
         Value = 0.400000000000000000
         Anchors = [akLeft, akBottom]
-        TabOrder = 4
+        TabOrder = 6
         OnChange = seColorExponentChange
       end
       object virttreecomboDataSets: TTntExDropDownVirtualStringTree
@@ -149,7 +154,7 @@ inherited frmCustomColor: TfrmCustomColor
         Top = 27
         Width = 465
         Height = 26
-        TabOrder = 5
+        TabOrder = 0
         OnChange = virttreecomboDataSetsChange
         Tree.Left = 0
         Tree.Top = 0
@@ -175,15 +180,6 @@ inherited frmCustomColor: TfrmCustomColor
         PanelHeight = 168
         OnClosedUp = virttreecomboDataSetsClosedUp
       end
-      object udDataSets: TJvUpDown
-        Left = 472
-        Top = 24
-        Width = 17
-        Height = 21
-        Max = 0
-        TabOrder = 6
-        OnChangingEx = udDataSetsChangingEx
-      end
       object cbLogTransform: TCheckBox
         Left = 247
         Top = 310
@@ -193,10 +189,22 @@ inherited frmCustomColor: TfrmCustomColor
         Caption = 'Log transform'
         TabOrder = 7
       end
+      object udDataSets: TJvUpDown
+        Left = 479
+        Top = 28
+        Width = 17
+        Height = 25
+        TabOrder = 1
+        OnChangingEx = udDataSetsChangingEx
+      end
     end
     object tabFilters: TTabSheet
       Caption = 'Filters'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         598
         335)
@@ -357,6 +365,125 @@ inherited frmCustomColor: TfrmCustomColor
         ChangeDisabledColor = True
       end
     end
+    object tabLegend: TTabSheet
+      Caption = 'Legend'
+      ImageIndex = 2
+      TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+      object imLegend: TImage
+        Left = 218
+        Top = 0
+        Width = 380
+        Height = 335
+        Align = alClient
+        ExplicitLeft = 224
+        ExplicitTop = -2
+      end
+      object Panel2: TPanel
+        Left = 0
+        Top = 0
+        Width = 218
+        Height = 335
+        Align = alLeft
+        BevelOuter = bvNone
+        TabOrder = 0
+        DesignSize = (
+          218
+          335)
+        object lblMethod: TLabel
+          Left = 8
+          Top = 6
+          Width = 52
+          Height = 18
+          Caption = 'Method'
+        end
+        object lblColorLegendRows: TLabel
+          Left = 8
+          Top = 279
+          Width = 109
+          Height = 18
+          Anchors = [akLeft, akBottom]
+          Caption = 'Number of rows'
+        end
+        object comboMethod: TComboBox
+          Left = 8
+          Top = 27
+          Width = 145
+          Height = 26
+          Style = csDropDownList
+          ItemHeight = 18
+          ItemIndex = 0
+          TabOrder = 0
+          Text = 'Automatic'
+          OnChange = comboMethodChange
+          Items.Strings = (
+            'Automatic'
+            'Manual')
+        end
+        object seLegendRows: TJvSpinEdit
+          Left = 8
+          Top = 300
+          Width = 121
+          Height = 26
+          CheckMaxValue = False
+          ButtonKind = bkClassic
+          MinValue = 1.000000000000000000
+          Value = 1.000000000000000000
+          Enabled = False
+          Anchors = [akLeft, akBottom]
+          TabOrder = 1
+          OnChange = seLegendRowsChange
+        end
+        object rdgLegend: TRbwDataGrid4
+          Left = 8
+          Top = 59
+          Width = 184
+          Height = 214
+          Anchors = [akLeft, akTop, akBottom]
+          Color = clBtnFace
+          ColCount = 1
+          Enabled = False
+          FixedCols = 0
+          Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
+          TabOrder = 2
+          OnSetEditText = rdgLegendSetEditText
+          AutoDistributeText = True
+          AutoIncreaseColCount = False
+          AutoIncreaseRowCount = True
+          SelectedRowOrColumnColor = clAqua
+          UnselectableColor = clBtnFace
+          OnStateChange = rdgLegendStateChange
+          ColorRangeSelection = False
+          ColorSelectedRow = True
+          Columns = <
+            item
+              AutoAdjustRowHeights = False
+              ButtonCaption = '...'
+              ButtonFont.Charset = DEFAULT_CHARSET
+              ButtonFont.Color = clWindowText
+              ButtonFont.Height = -11
+              ButtonFont.Name = 'Tahoma'
+              ButtonFont.Style = []
+              ButtonUsed = False
+              ButtonWidth = 20
+              CheckMax = False
+              CheckMin = False
+              ComboUsed = False
+              Format = rcf4String
+              LimitToList = False
+              MaxLength = 0
+              ParentButtonFont = False
+              WordWrapCaptions = False
+              WordWrapCells = False
+              AutoAdjustColWidths = True
+            end>
+          OnEndUpdate = rdgLegendEndUpdate
+        end
+      end
+    end
   end
   object Panel1: TPanel
     Left = 0
@@ -409,5 +536,11 @@ inherited frmCustomColor: TfrmCustomColor
         0000}
       NumGlyphs = 2
     end
+  end
+  object timerLegend: TTimer
+    Interval = 100
+    OnTimer = timerLegendTimer
+    Left = 264
+    Top = 40
   end
 end

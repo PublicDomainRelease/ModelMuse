@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
+<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+  <title translate="true">Observation Process</title>
+  <keywords>
+    <keyword translate="true">observation</keyword>
+  </keywords>
+  <body>
+    <header>
+      <para styleclass="Heading1"><text styleclass="Heading1" translate="true">Observation Process</text></para>
+    </header>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">The Observation process is used to compare model-generated values of head, flux, or advective transport with observed values. &#160;During model calibration, the goal is to reduce the discrepencies between the two. &#160;Many of the input files for the observation process are linked to specific input files for the Ground-Water Flow process.</text></para>
+    <list id="1" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="OBS" styleclass="Normal" translate="true">Input File For All Observations</link><text styleclass="Normal" translate="true"> (required)</text></li>
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="HOB" styleclass="Normal" translate="true">Head-Observation</link><text styleclass="Normal" translate="true"> package (optional)</text></li>
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="CHOB" styleclass="Normal" translate="true">Constant-Head Flow Observation</link><text styleclass="Normal" translate="true"> package (optional)</text></li>
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="DROB" styleclass="Normal" translate="true">Drain Observation</link><text styleclass="Normal" translate="true"> package (optional)</text></li>
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="DTOB" styleclass="Normal" translate="true">Drain Return Observation</link><text styleclass="Normal" translate="true"> package (optional)</text></li>
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="RVOB" styleclass="Normal" translate="true">River Observation</link><text styleclass="Normal" translate="true"> package (optional)</text></li>
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="GBOB" styleclass="Normal" translate="true">General-Head-Boundary Observation</link><text styleclass="Normal" translate="true"> package (optional)</text></li>
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="STOB" styleclass="Normal" translate="true">Stream Observation</link><text styleclass="Normal" translate="true"> package (optional)</text></li>
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="ADV2" styleclass="Normal" translate="true">Advective-Transport Observation</link><text styleclass="Normal" translate="true"> package (optional)</text></li>
+    </list>
+    <para styleclass="Normal"></para>
+    <para styleclass="Normal"></para>
+  </body>
+</topic>

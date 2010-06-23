@@ -426,6 +426,7 @@ var
   NewFormula: string;
   Compiler: TRbwParser;
   Position: Integer;
+  OldNames, NewNames: TStringList;
 begin
   if FDataArrayName <> NewName then
   begin
@@ -440,6 +441,16 @@ begin
           // rename data array.
           Model.TopGridObserver.StopsTalkingTo(DataArray);
           DataArray.StopsTalkingTo(Model.ThreeDGridObserver);
+          OldNames := TStringList.Create;
+          NewNames := TStringList.Create;
+          try
+            OldNames.Add(FDataArrayName);
+            NewNames.Add(NewName);
+            Model.UpdateFormulas(OldNames, NewNames);
+          finally
+            NewNames.Free;
+            OldNames.Free;
+          end;
           DataArray.Name := NewName;
           Compiler := Model.GetCompiler(DataArray.Orientation,
             DataArray.EvaluatedAt);
@@ -730,7 +741,7 @@ begin
           itmLaytype:
             begin
               result[MFLayIndex] := Group.AquiferType;
-              if (Group.AquiferType = 0) and
+              if (Group.AquiferType = 1) and
                 Group.UseStartingHeadForSaturatedThickness
                 and PhastModel.ModflowPackages.LpfPackage.isSelected
                 and PhastModel.ModflowPackages.LpfPackage.UseSaturatedThickness then

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
+<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+  <title translate="true">RowBoundaryPosition</title>
+  <body>
+    <header>
+      <para style="margin-bottom:10px; line-height:2.0;"><text styleclass="Heading1" translate="true">RowBoundaryPosition</text></para>
+    </header>
+    <para styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">RowBoundaryPosition</text><text styleclass="Normal" translate="true">({Row}) returns the Y coordinate in the grid coordinate system of the position of the row boundary specified by its one optional argument Row.  If the optional argument is not included, the function uses the row number of the node or element for which the formula is being calculated.</text></para>
+  </body>
+</topic>

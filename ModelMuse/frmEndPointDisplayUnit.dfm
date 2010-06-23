@@ -53,15 +53,11 @@ inherited frmEndPointDisplay: TfrmEndPointDisplay
     Top = 0
     Width = 468
     Height = 317
-    ActivePage = tabOptions
+    ActivePage = tabBasic
     Align = alClient
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         460
         284)
@@ -107,9 +103,12 @@ inherited frmEndPointDisplay: TfrmEndPointDisplay
         Top = 29
         Width = 449
         Height = 26
+        OnBeforeDialog = fedModpathFileBeforeDialog
+        DefaultExt = '.end'
         Filter = 
           'MODPATH Endpoint files (*.end, *.end_bin)|*.end;*.end_bin|All fi' +
           'les (*.*)|*.*'
+        DialogOptions = [ofHideReadOnly, ofFileMustExist]
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
       end
@@ -137,7 +136,7 @@ inherited frmEndPointDisplay: TfrmEndPointDisplay
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
         DropDownCount = 12
-        ItemHeight = 0
+        ItemHeight = 18
         ItemIndex = 0
         TabOrder = 3
         Text = 'Rainbow'

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
+<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+  <title translate="true">PHAST Examples</title>
+  <body>
+    <header>
+      <para styleclass="Heading2"><text styleclass="Heading1" translate="true">PHAST Examples</text></para>
+    </header>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">The PHAST documentation (Parkhurst and others, 2004) includes four examples. &#160;This section describes how to create the transport input files for all but the third of those examples. &#160;This section also includes an example not represented among the examples distributed with PHAST. &#160;(The third example from the PHAST documentation does not show any features of ModelMuse not illustrated with the other examples.) &#160;The complete ModelMuse project files for the examples are included with ModelMuse. &#160;In addition other ModelMuse files are included. &#160;These example project files can be used to create the transport input files for the other examples included with PHAST.</text></para>
+  </body>
+</topic>

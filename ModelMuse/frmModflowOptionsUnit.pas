@@ -49,7 +49,7 @@ type
     cbOpenInTextEditor: TJvCheckBox;
     lblWettingDataSets: TLabel;
     procedure FormCreate(Sender: TObject); override;
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure cbCHTOCHClick(Sender: TObject);
     procedure cbPRINTTIMEClick(Sender: TObject);
     procedure rdeHNOFLOExit(Sender: TObject);

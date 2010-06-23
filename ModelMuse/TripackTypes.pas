@@ -2,6 +2,11 @@ unit TripackTypes;
 
 interface
 
+{$IFNDEF Debug}
+  {$HINTS OFF}
+  {$WARNINGS OFF}
+{$ENDIF}
+
 uses FastGeo;
 
 const
@@ -220,4 +225,12 @@ type
 
 implementation
 
+{$IFNDEF Debug}
+  {$HINTS ON}
+  {$WARNINGS ON}
+{$ENDIF}
+
 end.
+
+
+

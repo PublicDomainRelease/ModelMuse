@@ -21,6 +21,14 @@ type
     // @name defines how to write layer elevations to a stream.
     // See @link(LayerElevations) and @link(DefineProperties).
     procedure WriteLayerElevations(Writer: TWriter);
+    procedure DrawOrdinaryFrontLayers(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2);
+    procedure DrawOrdinaryFrontColumns(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2);
+    procedure DrawOrdinarySideLayers(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2);
+    procedure DrawOrdinarySideRows(const ZoomBox: TQRbwZoomBox2;
+      const BitMap: TBitmap32);
   protected
     // @name is used to define how layer elevations should be saved
     // and read from a file. See @link(ReadLayerElevations) and
@@ -563,8 +571,6 @@ var
   APoint: TPoint;
   ColumnLimit, LayerLimit: integer;
   LineWidth: single;
-  LocalEvalAt: TEvaluatedAt;
-  LocalLineColor: TColor32;
   P: TPolygon32;
   MultiplePolygons: boolean;
   function GetNodeBasedCorner(Col, Row, Lay: integer): T3DRealPoint;
@@ -608,7 +614,7 @@ begin
   P := nil;
   MultiplePolygons := False;
   SetLength(BoxCoordinates, 4);
-  with ZoomBox do
+//  with ZoomBox do
   begin
 
     if (ColumnCount <= 0)
@@ -618,15 +624,15 @@ begin
       LineWidth := OrdinaryGridLineThickness;
       for ColumnIndex := 0 to ColumnCount do
       begin
-        if Not DrawInteriorGridLines2D and (ColumnIndex <> 0)
+        if (GridLineDrawingChoice = gldcExterior) and (ColumnIndex <> 0)
           and (ColumnIndex <> ColumnCount) then
         begin
           Continue;
         end;
-        APoint.X := XCoord(ColumnPosition[ColumnIndex]);
+        APoint.X := ZoomBox.XCoord(ColumnPosition[ColumnIndex]);
         APoint.Y := 0;
         BoxCoordinates[0] := APoint;
-        APoint.Y := Image32.Height;
+        APoint.Y := ZoomBox.Image32.Height;
         BoxCoordinates[1] := APoint;
         DrawBigPolyline32(BitMap, clBlack32, LineWidth, BoxCoordinates,
           True, False, 0, 2);
@@ -634,15 +640,15 @@ begin
 
       for LayerIndex := 0 to LayerCount do
       begin
-        if Not DrawInteriorGridLines2D and (LayerIndex <> 0)
+        if (GridLineDrawingChoice = gldcExterior) and (LayerIndex <> 0)
           and (LayerIndex <> LayerCount) then
         begin
           Continue;
         end;
         APoint.X := 0;
-        APoint.Y := YCoord(LayerElevation[LayerIndex]);
+        APoint.Y := ZoomBox.YCoord(LayerElevation[LayerIndex]);
         BoxCoordinates[0] := APoint;
-        APoint.X := Image32.Width;
+        APoint.X := ZoomBox.Image32.Width;
         BoxCoordinates[1] := APoint;
         DrawBigPolyline32(BitMap, clBlack32, LineWidth, BoxCoordinates,
           True, False, 0, 2);
@@ -711,14 +717,14 @@ begin
                       Assert(False);
                     end;
                   end;
-                  BoxCoordinates[0] := Point(XCoord(Point1.X),
-                    YCoord(Point1.Z));
-                  BoxCoordinates[1] := Point(XCoord(Point2.X),
-                    YCoord(Point2.Z));
-                  BoxCoordinates[2] := Point(XCoord(Point3.X),
-                    YCoord(Point3.Z));
-                  BoxCoordinates[3] := Point(XCoord(Point4.X),
-                    YCoord(Point4.Z));
+                  BoxCoordinates[0] := Point(ZoomBox.XCoord(Point1.X),
+                    ZoomBox.YCoord(Point1.Z));
+                  BoxCoordinates[1] := Point(ZoomBox.XCoord(Point2.X),
+                    ZoomBox.YCoord(Point2.Z));
+                  BoxCoordinates[2] := Point(ZoomBox.XCoord(Point3.X),
+                    ZoomBox.YCoord(Point3.Z));
+                  BoxCoordinates[3] := Point(ZoomBox.XCoord(Point4.X),
+                    ZoomBox.YCoord(Point4.Z));
                   DrawBigPolygon32(BitMap, Color32(AColor), Color32(AColor),
                     0, BoxCoordinates, P, MultiplePolygons, True);
                 end;
@@ -754,10 +760,10 @@ begin
                   Assert(False);
                 end;
               end;
-              BoxCoordinates[0] := Point(XCoord(Point1.X), YCoord(Point1.Z));
-              BoxCoordinates[1] := Point(XCoord(Point2.X), YCoord(Point2.Z));
-              BoxCoordinates[2] := Point(XCoord(Point3.X), YCoord(Point3.Z));
-              BoxCoordinates[3] := Point(XCoord(Point4.X), YCoord(Point4.Z));
+              BoxCoordinates[0] := Point(ZoomBox.XCoord(Point1.X), ZoomBox.YCoord(Point1.Z));
+              BoxCoordinates[1] := Point(ZoomBox.XCoord(Point2.X), ZoomBox.YCoord(Point2.Z));
+              BoxCoordinates[2] := Point(ZoomBox.XCoord(Point3.X), ZoomBox.YCoord(Point3.Z));
+              BoxCoordinates[3] := Point(ZoomBox.XCoord(Point4.X), ZoomBox.YCoord(Point4.Z));
 
               DrawBigPolygon32(BitMap, Color32(NewColor), Color32(NewColor),
                 0, BoxCoordinates, P, MultiplePolygons, True);
@@ -765,56 +771,8 @@ begin
           end;
         end;
       end;
-      SetLocalEvalAt(vdFront, LocalEvalAt);
-
-      for ColumnIndex := 0 to ColumnCount do
-      begin
-        if (ColumnIndex mod 10 = 0) or (ColumnIndex = ColumnCount) then
-        begin
-          LineWidth := ThickGridLineThickness;
-        end
-        else
-        begin
-          LineWidth := OrdinaryGridLineThickness;
-        end;
-        SetColumnLineColor(ColumnIndex, LocalEvalAt, LocalLineColor, LineWidth);
-        if Not DrawInteriorGridLines2D and (ColumnIndex <> 0)
-          and (ColumnIndex <> ColumnCount)
-          and (LocalLineColor = clBlack32) then
-        begin
-          Continue;
-        end;
-        Point1 := ThreeDElementCorner(ColumnIndex, 0, 0);
-        Point2 := ThreeDElementCorner(ColumnIndex, 0, LayerCount);
-        DrawBigPolyline32(BitMap, LocalLineColor, LineWidth,
-          [Point(XCoord(Point1.X), YCoord(Point1.Z)),
-          Point(XCoord(Point2.X), YCoord(Point2.Z))], True);
-      end;
-
-      for LayerIndex := 0 to LayerCount do
-      begin
-        if (LayerIndex mod 10 = 0) or (LayerIndex = LayerCount) then
-        begin
-          LineWidth := ThickGridLineThickness;
-        end
-        else
-        begin
-          LineWidth := OrdinaryGridLineThickness;
-        end;
-        SetLayerLineColor(LayerIndex, LocalEvalAt, LocalLineColor, LineWidth);
-        if Not DrawInteriorGridLines2D and (LayerIndex <> 0)
-          and (LayerIndex <> LayerCount)
-          and (LocalLineColor = clBlack32) then
-        begin
-          Continue;
-        end;
-        Point1 := ThreeDElementCorner(0, 0, LayerIndex);
-        Point2 := ThreeDElementCorner(ColumnCount, 0, LayerIndex);
-
-        DrawBigPolyline32(BitMap, LocalLineColor, LineWidth,
-          [Point(XCoord(Point1.X), YCoord(Point1.Z)),
-          Point(XCoord(Point2.X), YCoord(Point2.Z))], True);
-      end;
+      DrawOrdinaryFrontColumns(BitMap, ZoomBox);
+      DrawOrdinaryFrontLayers(BitMap, ZoomBox);
 
     end;
   end;
@@ -832,8 +790,6 @@ var
   APoint: TPoint;
   RowLimit, LayerLimit: integer;
   LineWidth: single;
-  LocalEvalAt: TEvaluatedAt;
-  LocalLineColor: TColor32;
   P: TPolygon32;
   MultiplePolygons: boolean;
   function GetNodeBasedCorner(Col, Row, Lay: integer): T3DRealPoint;
@@ -877,7 +833,7 @@ begin
   P := nil;
   MultiplePolygons := False;
   SetLength(BoxCoordinates, 4);
-  with ZoomBox do
+//  with ZoomBox do
   begin
     LineWidth := OrdinaryGridLineThickness;
     if (ColumnCount <= 0)
@@ -886,10 +842,10 @@ begin
     begin
       for RowIndex := 0 to RowCount do
       begin
-        APoint.Y := YCoord(RowPosition[RowIndex]);
+        APoint.Y := ZoomBox.YCoord(RowPosition[RowIndex]);
         APoint.X := 0;
         BoxCoordinates[0] := APoint;
-        APoint.X := Image32.Width;
+        APoint.X := ZoomBox.Image32.Width;
         BoxCoordinates[1] := APoint;
         DrawBigPolyline32(BitMap, clBlack32, LineWidth, BoxCoordinates,
           True, False, 0, 2);
@@ -897,10 +853,10 @@ begin
 
       for LayerIndex := 0 to LayerCount do
       begin
-        APoint.X := XCoord(LayerElevations[LayerIndex]);
+        APoint.X := ZoomBox.XCoord(LayerElevations[LayerIndex]);
         APoint.Y := 0;
         BoxCoordinates[0] := APoint;
-        APoint.Y := Image32.Height;
+        APoint.Y := ZoomBox.Image32.Height;
         BoxCoordinates[1] := APoint;
         DrawBigPolyline32(BitMap, clBlack32, LineWidth, BoxCoordinates,
           True, False, 0, 2);
@@ -965,14 +921,14 @@ begin
                       Assert(False);
                     end;
                   end;
-                  BoxCoordinates[0] := Point(XCoord(Point1.Z),
-                    YCoord(Point1.Y));
-                  BoxCoordinates[1] := Point(XCoord(Point2.Z),
-                    YCoord(Point2.Y));
-                  BoxCoordinates[2] := Point(XCoord(Point3.Z),
-                    YCoord(Point3.Y));
-                  BoxCoordinates[3] := Point(XCoord(Point4.Z),
-                    YCoord(Point4.Y));
+                  BoxCoordinates[0] := Point(ZoomBox.XCoord(Point1.Z),
+                    ZoomBox.YCoord(Point1.Y));
+                  BoxCoordinates[1] := Point(ZoomBox.XCoord(Point2.Z),
+                    ZoomBox.YCoord(Point2.Y));
+                  BoxCoordinates[2] := Point(ZoomBox.XCoord(Point3.Z),
+                    ZoomBox.YCoord(Point3.Y));
+                  BoxCoordinates[3] := Point(ZoomBox.XCoord(Point4.Z),
+                    ZoomBox.YCoord(Point4.Y));
 
                   DrawBigPolygon32(BitMap, Color32(AColor), Color32(AColor),
                     0, BoxCoordinates, P, MultiplePolygons, True);
@@ -1005,65 +961,18 @@ begin
                   Assert(False);
                 end;
               end;
-              BoxCoordinates[0] := Point(XCoord(Point1.Z), YCoord(Point1.Y));
-              BoxCoordinates[1] := Point(XCoord(Point2.Z), YCoord(Point2.Y));
-              BoxCoordinates[2] := Point(XCoord(Point3.Z), YCoord(Point3.Y));
-              BoxCoordinates[3] := Point(XCoord(Point4.Z), YCoord(Point4.Y));
+              BoxCoordinates[0] := Point(ZoomBox.XCoord(Point1.Z), ZoomBox.YCoord(Point1.Y));
+              BoxCoordinates[1] := Point(ZoomBox.XCoord(Point2.Z), ZoomBox.YCoord(Point2.Y));
+              BoxCoordinates[2] := Point(ZoomBox.XCoord(Point3.Z), ZoomBox.YCoord(Point3.Y));
+              BoxCoordinates[3] := Point(ZoomBox.XCoord(Point4.Z), ZoomBox.YCoord(Point4.Y));
               DrawBigPolygon32(BitMap, Color32(NewColor), Color32(NewColor),
                 0, BoxCoordinates, P, MultiplePolygons, True);
             end;
-
           end;
-
         end;
       end;
-      SetLocalEvalAt(vdSide, LocalEvalAt);
-
-      for RowIndex := 0 to RowCount do
-      begin
-        if (RowIndex mod 10 = 0) or (RowIndex = RowCount) then
-        begin
-          LineWidth := ThickGridLineThickness;
-        end
-        else
-        begin
-          LineWidth := OrdinaryGridLineThickness;
-        end;
-        SetRowLineColor(RowIndex, LocalEvalAt, LocalLineColor, LineWidth);
-        if Not DrawInteriorGridLines2D and (RowIndex <> 0)
-          and (RowIndex <> RowCount) and (LocalLineColor = clBlack32) then
-        begin
-          Continue;
-        end;
-        Point1 := ThreeDElementCorner(0, RowIndex, 0);
-        Point2 := ThreeDElementCorner(0, RowIndex, LayerCount);
-        DrawBigPolyline32(BitMap, LocalLineColor, LineWidth,
-          [Point(XCoord(Point1.Z), YCoord(Point1.Y)),
-          Point(XCoord(Point2.Z), YCoord(Point2.Y))], True);
-      end;
-
-      for LayerIndex := 0 to LayerCount do
-      begin
-        if (LayerIndex mod 10 = 0) or (LayerIndex = LayerCount) then
-        begin
-          LineWidth := ThickGridLineThickness;
-        end
-        else
-        begin
-          LineWidth := OrdinaryGridLineThickness;
-        end;
-        SetLayerLineColor(LayerIndex, LocalEvalAt, LocalLineColor, LineWidth);
-        if Not DrawInteriorGridLines2D and (LayerIndex <> 0)
-          and (LayerIndex <> LayerCount) and (LocalLineColor = clBlack32) then
-        begin
-          Continue;
-        end;
-        Point1 := ThreeDElementCorner(0, 0, LayerIndex);
-        Point2 := ThreeDElementCorner(0, RowCount, LayerIndex);
-        DrawBigPolyline32(BitMap, LocalLineColor, LineWidth,
-          [Point(XCoord(Point1.Z), YCoord(Point1.Y)),
-          Point(XCoord(Point2.Z), YCoord(Point2.Y))], True);
-      end;
+      DrawOrdinarySideRows(ZoomBox, BitMap);
+      DrawOrdinarySideLayers(BitMap, ZoomBox);
     end;
   end;
   DrawSideContours(ZoomBox, BitMap);
@@ -1320,6 +1229,491 @@ begin
           else Assert(False);
         end
      end;
+  end;
+end;
+
+procedure TPhastGrid.DrawOrdinarySideRows(const ZoomBox: TQRbwZoomBox2;
+  const BitMap: TBitmap32);
+var
+  RowIndex: Integer;
+  LineWidth: Single;
+  Point1: T3DRealPoint;
+  Point2: T3DRealPoint;
+  LocalEvalAt: TEvaluatedAt;
+  LineColor: TColor32;
+  Column: Integer;
+  LayerIndex: Integer;
+  LocalLineWidth: single;
+  function IsActive: boolean;
+  begin
+    result := ((RowIndex < RowCount) and
+      IsElementActive(LayerIndex,RowIndex, Column))
+      or ((RowIndex > 0)
+      and IsElementActive(LayerIndex,RowIndex-1, Column))
+  end;
+  function IsEdge: boolean;
+  begin
+    result := ((RowIndex < RowCount) and
+      IsElementActive(LayerIndex,RowIndex, Column))
+      <> ((RowIndex > 0)
+      and IsElementActive(LayerIndex,RowIndex-1, Column));
+  end;
+begin
+  SetLocalEvalAt(vdSide, LocalEvalAt);
+  for RowIndex := 0 to RowCount do
+  begin
+    if (RowIndex mod 10 = 0) or (RowIndex = RowCount) then
+    begin
+      LineWidth := ThickGridLineThickness;
+    end
+    else
+    begin
+      LineWidth := OrdinaryGridLineThickness;
+    end;
+    SetRowLineColor(RowIndex, LocalEvalAt, LineColor, LineWidth);
+    case GridLineDrawingChoice of
+      gldcAll: 
+        begin
+          Point1 := ThreeDElementCorner(0, RowIndex, 0);
+          Point2 := ThreeDElementCorner(0, RowIndex, LayerCount);
+          DrawBigPolyline32(BitMap, LineColor, LineWidth,
+            [Point(ZoomBox.XCoord(Point1.Z), ZoomBox.YCoord(Point1.Y)),
+            Point(ZoomBox.XCoord(Point2.Z), ZoomBox.YCoord(Point2.Y))], True);
+        end;
+      gldcExterior:
+        begin
+          if (RowIndex <> 0) and (RowIndex <> RowCount)
+            and (LineColor = clBlack32) then
+          begin
+            Continue;
+          end;
+          Point1 := ThreeDElementCorner(0, RowIndex, 0);
+          Point2 := ThreeDElementCorner(0, RowIndex, LayerCount);
+          DrawBigPolyline32(BitMap, LineColor, LineWidth,
+            [Point(ZoomBox.XCoord(Point1.Z), ZoomBox.YCoord(Point1.Y)),
+            Point(ZoomBox.XCoord(Point2.Z), ZoomBox.YCoord(Point2.Y))], True);
+        end;
+      gldcActive:
+        begin
+          Column := SelectedColumn;
+          if Column >= ColumnCount then
+          begin
+            Dec(Column);
+          end;
+          for LayerIndex := 0 to LayerCount - 1 do
+          begin
+            if IsActive then
+            begin
+              if IsEdge then
+              begin
+                LocalLineWidth := ThickGridLineThickness;
+              end
+              else
+              begin
+                LocalLineWidth := LineWidth;
+              end;
+              Point1 := ThreeDElementCorner(Column, RowIndex, LayerIndex);
+              Point2 := ThreeDElementCorner(Column, RowIndex, LayerIndex+1);
+              DrawBigPolyline32(BitMap, LineColor, LocalLineWidth,
+                [Point(ZoomBox.XCoord(Point1.Z), ZoomBox.YCoord(Point1.Y)),
+                Point(ZoomBox.XCoord(Point2.Z), ZoomBox.YCoord(Point2.Y))], True);
+            end;
+          end;
+        end;
+      gldcActiveEdge:
+        begin
+          if LineColor = clBlack32 then
+          begin
+            LineWidth := OrdinaryGridLineThickness;
+          end
+          else
+          begin
+            LineWidth := ThickGridLineThickness;
+          end;
+          Column := SelectedColumn;
+          if Column >= ColumnCount then
+          begin
+            Dec(Column);
+          end;
+          for LayerIndex := 0 to LayerCount - 1 do
+          begin
+            if ((LineColor <> clBlack32) and IsActive)
+              or IsEdge then
+            begin
+              Point1 := ThreeDElementCorner(Column, RowIndex, LayerIndex);
+              Point2 := ThreeDElementCorner(Column, RowIndex, LayerIndex+1);
+              DrawBigPolyline32(BitMap, LineColor, LineWidth,
+                [Point(ZoomBox.XCoord(Point1.Z), ZoomBox.YCoord(Point1.Y)),
+                Point(ZoomBox.XCoord(Point2.Z), ZoomBox.YCoord(Point2.Y))], True);
+            end;
+          end;
+        end;
+      else Assert(False);
+    end;
+  end;
+end;
+
+procedure TPhastGrid.DrawOrdinarySideLayers(const BitMap: TBitmap32;
+  const ZoomBox: TQRbwZoomBox2);
+var
+  LayerIndex: Integer;
+  LineWidth: Single;
+  LineColor: TColor32;
+  LocalEvalAt: TEvaluatedAt;
+  Point1: T3DRealPoint;
+  Point2: T3DRealPoint;
+  Column: Integer;
+  RowIndex: Integer;
+  LocalLineWidth: single;
+  function IsActive: boolean;
+  begin
+    result := ((LayerIndex < LayerCount) and
+      IsElementActive(LayerIndex,RowIndex, Column))
+      or ((LayerIndex > 0)
+      and IsElementActive(LayerIndex-1,RowIndex, Column))
+  end;
+  function IsEdge: boolean;
+  begin
+    result :=  ((LayerIndex < LayerCount) and
+      IsElementActive(LayerIndex,RowIndex, Column))
+      <> ((LayerIndex > 0)
+      and IsElementActive(LayerIndex-1,RowIndex, Column));
+  end;
+begin
+  SetLocalEvalAt(vdSide, LocalEvalAt);
+  for LayerIndex := 0 to LayerCount do
+  begin
+    if (LayerIndex mod 10 = 0) or (LayerIndex = LayerCount) then
+    begin
+      LineWidth := ThickGridLineThickness;
+    end
+    else
+    begin
+      LineWidth := OrdinaryGridLineThickness;
+    end;
+    SetLayerLineColor(LayerIndex, LocalEvalAt, LineColor, LineWidth);
+    case GridLineDrawingChoice of
+      gldcAll: 
+        begin
+          Point1 := ThreeDElementCorner(0, 0, LayerIndex);
+          Point2 := ThreeDElementCorner(0, RowCount, LayerIndex);
+          DrawBigPolyline32(BitMap, LineColor, LineWidth,
+            [Point(ZoomBox.XCoord(Point1.Z), ZoomBox.YCoord(Point1.Y)),
+            Point(ZoomBox.XCoord(Point2.Z), ZoomBox.YCoord(Point2.Y))], True);
+        end;
+      gldcExterior:
+        begin
+          if (LayerIndex <> 0) and (LayerIndex <> LayerCount)
+            and (LineColor = clBlack32) then
+          begin
+            Continue;
+          end;
+          Point1 := ThreeDElementCorner(0, 0, LayerIndex);
+          Point2 := ThreeDElementCorner(0, RowCount, LayerIndex);
+          DrawBigPolyline32(BitMap, LineColor, LineWidth,
+            [Point(ZoomBox.XCoord(Point1.Z), ZoomBox.YCoord(Point1.Y)),
+            Point(ZoomBox.XCoord(Point2.Z), ZoomBox.YCoord(Point2.Y))], True);
+        end;
+      gldcActive:
+        begin
+          Column := SelectedColumn;
+          if Column >= ColumnCount then
+          begin
+            Dec(Column);
+          end;
+          for RowIndex := 0 to RowCount-1 do
+          begin
+            if IsActive then
+            begin
+              if IsEdge then
+              begin
+                LocalLineWidth := ThickGridLineThickness;
+              end
+              else
+              begin
+                LocalLineWidth := LineWidth;
+              end;
+              Point1 := ThreeDElementCorner(Column, RowIndex, LayerIndex);
+              Point2 := ThreeDElementCorner(Column, RowIndex+1, LayerIndex);
+              DrawBigPolyline32(BitMap, LineColor, LocalLineWidth,
+                [Point(ZoomBox.XCoord(Point1.Z), ZoomBox.YCoord(Point1.Y)),
+                Point(ZoomBox.XCoord(Point2.Z), ZoomBox.YCoord(Point2.Y))], True);
+            end;
+          end;
+        end;
+      gldcActiveEdge:
+        begin
+          if LineColor = clBlack32 then
+          begin
+            LineWidth := OrdinaryGridLineThickness;
+          end
+          else
+          begin
+            LineWidth := ThickGridLineThickness;
+          end;
+          Column := SelectedColumn;
+          if Column >= ColumnCount then
+          begin
+            Dec(Column);
+          end;
+          for RowIndex := 0 to RowCount-1 do
+          begin
+            if ((LineColor <> clBlack32) and IsActive)
+              or IsEdge then
+            begin
+              Point1 := ThreeDElementCorner(Column, RowIndex, LayerIndex);
+              Point2 := ThreeDElementCorner(Column, RowIndex+1, LayerIndex);
+              DrawBigPolyline32(BitMap, LineColor, LineWidth,
+                [Point(ZoomBox.XCoord(Point1.Z), ZoomBox.YCoord(Point1.Y)),
+                Point(ZoomBox.XCoord(Point2.Z), ZoomBox.YCoord(Point2.Y))], True);
+            end;
+          end;
+        end;
+      else Assert(False);
+    end;
+  end;
+end;
+
+procedure TPhastGrid.DrawOrdinaryFrontColumns(const BitMap: TBitmap32;
+  const ZoomBox: TQRbwZoomBox2);
+var
+  ColumnIndex: Integer;
+  LineColor: TColor32;
+  LocalEvalAt: TEvaluatedAt;
+  Point1: T3DRealPoint;
+  Point2: T3DRealPoint;
+  LineWidth: Single;
+  Row: Integer;
+  LayerIndex: Integer;
+  LocalLineWidth: single;
+  function IsActive: boolean;
+  begin
+    result := ((ColumnIndex < ColumnCount) and
+      IsElementActive(LayerIndex,Row, ColumnIndex))
+      or ((ColumnIndex > 0)
+      and IsElementActive(LayerIndex,Row, ColumnIndex-1))
+  end;
+  function IsEdge: boolean;
+  begin
+    result := ((ColumnIndex < ColumnCount) and
+      IsElementActive(LayerIndex,Row, ColumnIndex))
+      <> ((ColumnIndex > 0)
+      and IsElementActive(LayerIndex,Row, ColumnIndex-1));
+  end;
+begin
+  SetLocalEvalAt(vdFront, LocalEvalAt);
+  for ColumnIndex := 0 to ColumnCount do
+  begin
+    if (ColumnIndex mod 10 = 0) or (ColumnIndex = ColumnCount) then
+    begin
+      LineWidth := ThickGridLineThickness;
+    end
+    else
+    begin
+      LineWidth := OrdinaryGridLineThickness;
+    end;
+    SetColumnLineColor(ColumnIndex, LocalEvalAt, LineColor, LineWidth);
+    case GridLineDrawingChoice of
+      gldcAll: 
+        begin
+          Point1 := ThreeDElementCorner(ColumnIndex, 0, 0);
+          Point2 := ThreeDElementCorner(ColumnIndex, 0, LayerCount);
+          DrawBigPolyline32(BitMap, LineColor, LineWidth,
+            [Point(ZoomBox.XCoord(Point1.X), ZoomBox.YCoord(Point1.Z)),
+            Point(ZoomBox.XCoord(Point2.X), ZoomBox.YCoord(Point2.Z))], True);
+        end;
+      gldcExterior:
+        begin
+          if (GridLineDrawingChoice = gldcExterior)
+            and (ColumnIndex <> 0) and (ColumnIndex <> ColumnCount)
+            and (LineColor = clBlack32) then
+          begin
+            Continue;
+          end;
+          Point1 := ThreeDElementCorner(ColumnIndex, 0, 0);
+          Point2 := ThreeDElementCorner(ColumnIndex, 0, LayerCount);
+          DrawBigPolyline32(BitMap, LineColor, LineWidth,
+            [Point(ZoomBox.XCoord(Point1.X), ZoomBox.YCoord(Point1.Z)),
+            Point(ZoomBox.XCoord(Point2.X), ZoomBox.YCoord(Point2.Z))], True);
+        end;
+      gldcActive:
+        begin
+          Row := SelectedRow;
+          if Row >= RowCount then
+          begin
+            Dec(Row);
+          end;
+          for LayerIndex := 0 to LayerCount - 1 do
+          begin
+            if IsActive then
+            begin
+              if IsEdge then
+              begin
+                LocalLineWidth := ThickGridLineThickness;
+              end
+              else
+              begin
+                LocalLineWidth := LineWidth;
+              end;
+              Point1 := ThreeDElementCorner(ColumnIndex, 0, LayerIndex);
+              Point2 := ThreeDElementCorner(ColumnIndex, 0, LayerIndex+1);
+              DrawBigPolyline32(BitMap, LineColor, LocalLineWidth,
+                [Point(ZoomBox.XCoord(Point1.X), ZoomBox.YCoord(Point1.Z)),
+                Point(ZoomBox.XCoord(Point2.X), ZoomBox.YCoord(Point2.Z))], True);
+            end;
+          end;
+        end;
+      gldcActiveEdge:
+        begin
+          if LineColor = clBlack32 then
+          begin
+            LineWidth := OrdinaryGridLineThickness;
+          end
+          else
+          begin
+            LineWidth := ThickGridLineThickness;
+          end;
+          Row := SelectedRow;
+          if Row >= RowCount then
+          begin
+            Dec(Row);
+          end;
+          for LayerIndex := 0 to LayerCount - 1 do
+          begin
+            if ((LineColor <> clBlack32) and IsActive)
+              or IsEdge then
+            begin
+              Point1 := ThreeDElementCorner(ColumnIndex, 0, LayerIndex);
+              Point2 := ThreeDElementCorner(ColumnIndex, 0, LayerIndex+1);
+              DrawBigPolyline32(BitMap, LineColor, LineWidth,
+                [Point(ZoomBox.XCoord(Point1.X), ZoomBox.YCoord(Point1.Z)),
+                Point(ZoomBox.XCoord(Point2.X), ZoomBox.YCoord(Point2.Z))], True);
+            end;
+          end;
+        end;
+      else
+        Assert(False);
+    end;
+  end;
+end;
+
+procedure TPhastGrid.DrawOrdinaryFrontLayers(const BitMap: TBitmap32; const ZoomBox: TQRbwZoomBox2);
+var
+  LayerIndex: Integer;
+  LocalEvalAt: TEvaluatedAt;
+  LineWidth: Single;
+  LineColor: TColor32;
+  Point1: T3DRealPoint;
+  Point2: T3DRealPoint;
+  Row: Integer;
+  ColIndex: Integer;
+  LocalLineWidth: Extended;
+  function IsActive: boolean;
+  begin
+    result := ((LayerIndex < LayerCount) and
+      IsElementActive(LayerIndex,Row, ColIndex))
+      or ((LayerIndex > 0)
+      and IsElementActive(LayerIndex-1,Row, ColIndex))
+  end;
+  function IsEdge: boolean;
+  begin
+    result := ((LayerIndex < LayerCount) and
+      IsElementActive(LayerIndex,Row, ColIndex))
+      <> ((LayerIndex > 0)
+      and IsElementActive(LayerIndex-1,Row, ColIndex))
+  end;
+begin
+  SetLocalEvalAt(vdFront, LocalEvalAt);
+  for LayerIndex := 0 to LayerCount do
+  begin
+    if (LayerIndex mod 10 = 0) or (LayerIndex = LayerCount) then
+    begin
+      LineWidth := ThickGridLineThickness;
+    end
+    else
+    begin
+      LineWidth := OrdinaryGridLineThickness;
+    end;
+    SetLayerLineColor(LayerIndex, LocalEvalAt, LineColor, LineWidth);
+    case GridLineDrawingChoice of
+      gldcAll:
+        begin
+          Point1 := ThreeDElementCorner(0, 0, LayerIndex);
+          Point2 := ThreeDElementCorner(ColumnCount, 0, LayerIndex);
+          DrawBigPolyline32(BitMap, LineColor, LineWidth,
+            [Point(ZoomBox.XCoord(Point1.X), ZoomBox.YCoord(Point1.Z)),
+            Point(ZoomBox.XCoord(Point2.X), ZoomBox.YCoord(Point2.Z))], True);
+        end;
+      gldcExterior:
+        begin
+          if (LayerIndex <> 0) and (LayerIndex <> LayerCount)
+            and (LineColor = clBlack32) then
+          begin
+            Continue;
+          end;
+          Point1 := ThreeDElementCorner(0, 0, LayerIndex);
+          Point2 := ThreeDElementCorner(ColumnCount, 0, LayerIndex);
+          DrawBigPolyline32(BitMap, LineColor, LineWidth,
+            [Point(ZoomBox.XCoord(Point1.X), ZoomBox.YCoord(Point1.Z)),
+            Point(ZoomBox.XCoord(Point2.X), ZoomBox.YCoord(Point2.Z))], True);
+        end;
+      gldcActive:
+        begin
+          Row := SelectedRow;
+          if Row >= RowCount then
+          begin
+            Dec(Row);
+          end;
+          for ColIndex := 0 to ColumnCount-1 do
+          begin
+            if IsActive then
+            begin
+              if IsEdge then
+              begin
+                LocalLineWidth := ThickGridLineThickness;
+              end
+              else
+              begin
+                LocalLineWidth := LineWidth;
+              end;
+              Point1 := ThreeDElementCorner(ColIndex, 0, LayerIndex);
+              Point2 := ThreeDElementCorner(ColIndex+1, 0, LayerIndex);
+              DrawBigPolyline32(BitMap, LineColor, LocalLineWidth,
+                [Point(ZoomBox.XCoord(Point1.X), ZoomBox.YCoord(Point1.Z)),
+                Point(ZoomBox.XCoord(Point2.X), ZoomBox.YCoord(Point2.Z))], True);
+            end;
+          end;
+        end;
+      gldcActiveEdge:
+        begin
+          if LineColor = clBlack32 then
+          begin
+            LineWidth := OrdinaryGridLineThickness;
+          end
+          else
+          begin
+            LineWidth := ThickGridLineThickness;
+          end;
+          Row := SelectedRow;
+          if Row >= RowCount then
+          begin
+            Dec(Row);
+          end;
+          for ColIndex := 0 to ColumnCount-1 do
+          begin
+            if ((LineColor <> clBlack32) and IsActive)
+              or IsEdge then
+            begin
+              Point1 := ThreeDElementCorner(ColIndex, 0, LayerIndex);
+              Point2 := ThreeDElementCorner(ColIndex+1, 0, LayerIndex);
+              DrawBigPolyline32(BitMap, LineColor, LineWidth,
+                [Point(ZoomBox.XCoord(Point1.X), ZoomBox.YCoord(Point1.Z)),
+                Point(ZoomBox.XCoord(Point2.X), ZoomBox.YCoord(Point2.Z))], True);
+            end;
+          end;
+        end;
+      else Assert(False);
+    end;
   end;
 end;
 

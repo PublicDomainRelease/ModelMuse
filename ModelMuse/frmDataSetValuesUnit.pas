@@ -20,7 +20,7 @@ type
     lbLayers: TJvListBox;
     Label1: TLabel;
     procedure FormCreate(Sender: TObject); override;
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure treecomboDataSetsDropDownTreeChange(Sender: TBaseVirtualTree;
       Node: PVirtualNode);
     procedure treecomboDataSetsDropDownTreeGetText(Sender: TBaseVirtualTree;

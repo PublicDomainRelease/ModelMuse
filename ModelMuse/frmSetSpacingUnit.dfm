@@ -8,11 +8,10 @@ inherited frmSetSpacing: TfrmSetSpacing
   ClientHeight = 241
   ClientWidth = 606
   OnClose = FormClose
-  OnDestroy = FormDestroy
   ExplicitWidth = 614
   ExplicitHeight = 275
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object btnCancel: TBitBtn
     Left = 503
     Top = 200
@@ -50,23 +49,23 @@ inherited frmSetSpacing: TfrmSetSpacing
     object lblFromCol: TLabel
       Left = 11
       Top = 50
-      Width = 85
-      Height = 17
+      Width = 94
+      Height = 18
       Caption = 'From &column '
       FocusControl = seCol1
     end
     object lblThroughCol: TLabel
       Left = 11
       Top = 83
-      Width = 98
-      Height = 17
+      Width = 104
+      Height = 18
       Caption = 'through column'
     end
     object lblSetCol: TLabel
       Left = 11
       Top = 113
-      Width = 144
-      Height = 17
+      Width = 156
+      Height = 18
       Caption = 'set the column width to'
     end
     object cbColumns: TCheckBox
@@ -130,23 +129,23 @@ inherited frmSetSpacing: TfrmSetSpacing
     object lblFromRow: TLabel
       Left = 11
       Top = 50
-      Width = 58
-      Height = 17
+      Width = 66
+      Height = 18
       Caption = 'From &row'
       FocusControl = seRow1
     end
     object lblThroughRow: TLabel
       Left = 11
       Top = 83
-      Width = 75
-      Height = 17
+      Width = 80
+      Height = 18
       Caption = 'through row'
     end
     object lblSetRow: TLabel
       Left = 11
       Top = 113
-      Width = 121
-      Height = 17
+      Width = 132
+      Height = 18
       Caption = 'set the row width to'
     end
     object cbRows: TCheckBox
@@ -210,23 +209,23 @@ inherited frmSetSpacing: TfrmSetSpacing
     object lblFromLayer: TLabel
       Left = 11
       Top = 50
-      Width = 67
-      Height = 17
+      Width = 74
+      Height = 18
       Caption = 'From &layer'
       FocusControl = seLayer1
     end
     object lblThroughLayer: TLabel
       Left = 11
       Top = 83
-      Width = 84
-      Height = 17
+      Width = 88
+      Height = 18
       Caption = 'through layer'
     end
     object lblSetLayer: TLabel
       Left = 11
       Top = 113
-      Width = 157
-      Height = 17
+      Width = 169
+      Height = 18
       Caption = 'set the layer thickness to'
     end
     object cbLayers: TCheckBox

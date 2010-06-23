@@ -98,6 +98,8 @@ const
   CircularCategory = 'The following SFR segments circle back on themselves.';
   NoSegmentsWarning = 'One or more objects do not define segments '
     + 'in the SFR package because they do not intersect the grid.';
+  UnsatError = 'One or more objects do not define unsaturated flow properties '
+    + 'in the SFR package.';
 
 { TModflowSFR_Writer }
 
@@ -134,6 +136,14 @@ var
   Segment: TSegment;
   Index: Integer;
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(StrIncompleteSFRData);
+  frmErrorsAndWarnings.RemoveErrorGroup(DupErrorCategory);
+  frmErrorsAndWarnings.RemoveErrorGroup(CircularCategory);
+  frmErrorsAndWarnings.RemoveErrorGroup(ChannelRoughnessError);
+  frmErrorsAndWarnings.RemoveErrorGroup(BankRoughnessError);
+  frmErrorsAndWarnings.RemoveWarningGroup(NoSegmentsWarning);
+  frmErrorsAndWarnings.RemoveErrorGroup(UnsatError);
+
   frmProgress.AddMessage('Evaluating SFR Package data.');
   ISFROPT := (Package as TSfrPackageSelection).Isfropt;
   Dummy := TStringList.Create;
@@ -468,16 +478,6 @@ begin
     UpdateNotUsedDisplay(TimeLists);
     Exit;
   end;
-
-  frmErrorsAndWarnings.RemoveErrorGroup(StrIncompleteSFRData);
-  frmErrorsAndWarnings.RemoveErrorGroup(DupErrorCategory);
-  frmErrorsAndWarnings.RemoveErrorGroup(CircularCategory);
-  frmErrorsAndWarnings.RemoveErrorGroup(ChannelRoughnessError);
-  frmErrorsAndWarnings.RemoveErrorGroup(BankRoughnessError);
-  frmErrorsAndWarnings.RemoveWarningGroup(NoSegmentsWarning);
-
-
-
 
   Evaluate;
 
@@ -1100,15 +1100,25 @@ begin
               UpstreamUnSatWatContList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              UpstreamUnsatValues := Segment.FScreenObject.
+              if Segment.FScreenObject.
                 ModflowSfrBoundary.UpstreamUnsatSegmentValues.
-                Boundaries[0] as TSfrUnsatSegmentStorage;
-              UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
-              DataArray := UpstreamUnSatWatContList[TimeIndex]
-                as TModflowBoundaryDisplayDataArray;
-              DataArray.AddDataValue(UpstreamUnsatRecord.SaturatedWaterContentAnnotation,
-                UpstreamUnsatRecord.SaturatedWaterContent,
-                Reach.Column, Reach.Row, Reach.Layer);
+                BoundaryCount = 0 then
+              begin
+                frmErrorsAndWarnings.AddError(UnsatError,
+                  Segment.FScreenObject.Name);
+              end
+              else
+              begin
+                UpstreamUnsatValues := Segment.FScreenObject.
+                  ModflowSfrBoundary.UpstreamUnsatSegmentValues.
+                  Boundaries[0] as TSfrUnsatSegmentStorage;
+                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+                DataArray := UpstreamUnSatWatContList[TimeIndex]
+                  as TModflowBoundaryDisplayDataArray;
+                DataArray.AddDataValue(UpstreamUnsatRecord.SaturatedWaterContentAnnotation,
+                  UpstreamUnsatRecord.SaturatedWaterContent,
+                  Reach.Column, Reach.Row, Reach.Layer);
+              end;
             end;
           end;
         end;
@@ -1120,15 +1130,25 @@ begin
               DownstreamUnSatWatContList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              DownstreamUnsatValues := Segment.FScreenObject.
+              if Segment.FScreenObject.
                 ModflowSfrBoundary.DownstreamUnsatSegmentValues.
-                Boundaries[0] as TSfrUnsatSegmentStorage;
-              DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
-              DataArray := DownstreamUnSatWatContList[TimeIndex]
-                as TModflowBoundaryDisplayDataArray;
-              DataArray.AddDataValue(DownstreamUnsatRecord.SaturatedWaterContentAnnotation,
-                DownstreamUnsatRecord.SaturatedWaterContent,
-                Reach.Column, Reach.Row, Reach.Layer);
+                BoundaryCount = 0 then
+              begin
+                frmErrorsAndWarnings.AddError(UnsatError,
+                  Segment.FScreenObject.Name);
+              end
+              else
+              begin
+                DownstreamUnsatValues := Segment.FScreenObject.
+                  ModflowSfrBoundary.DownstreamUnsatSegmentValues.
+                  Boundaries[0] as TSfrUnsatSegmentStorage;
+                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+                DataArray := DownstreamUnSatWatContList[TimeIndex]
+                  as TModflowBoundaryDisplayDataArray;
+                DataArray.AddDataValue(DownstreamUnsatRecord.SaturatedWaterContentAnnotation,
+                  DownstreamUnsatRecord.SaturatedWaterContent,
+                  Reach.Column, Reach.Row, Reach.Layer);
+              end;
             end;
           end;
         end;
@@ -1143,15 +1163,25 @@ begin
               UpstreamUnSatInitWatContList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              UpstreamUnsatValues := Segment.FScreenObject.
+              if Segment.FScreenObject.
                 ModflowSfrBoundary.UpstreamUnsatSegmentValues.
-                Boundaries[0] as TSfrUnsatSegmentStorage;
-              UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
-              DataArray := UpstreamUnSatInitWatContList[TimeIndex]
-                as TModflowBoundaryDisplayDataArray;
-              DataArray.AddDataValue(UpstreamUnsatRecord.InitialWaterContentAnnotation,
-                UpstreamUnsatRecord.InitialWaterContent,
-                Reach.Column, Reach.Row, Reach.Layer);
+                BoundaryCount = 0 then
+              begin
+                frmErrorsAndWarnings.AddError(UnsatError,
+                  Segment.FScreenObject.Name);
+              end
+              else
+              begin
+                UpstreamUnsatValues := Segment.FScreenObject.
+                  ModflowSfrBoundary.UpstreamUnsatSegmentValues.
+                  Boundaries[0] as TSfrUnsatSegmentStorage;
+                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+                DataArray := UpstreamUnSatInitWatContList[TimeIndex]
+                  as TModflowBoundaryDisplayDataArray;
+                DataArray.AddDataValue(UpstreamUnsatRecord.InitialWaterContentAnnotation,
+                  UpstreamUnsatRecord.InitialWaterContent,
+                  Reach.Column, Reach.Row, Reach.Layer);
+              end;
             end;
           end;
         end;
@@ -1163,15 +1193,25 @@ begin
               DownstreamUnSatInitWatContList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              DownstreamUnsatValues := Segment.FScreenObject.
+              if Segment.FScreenObject.
                 ModflowSfrBoundary.DownstreamUnsatSegmentValues.
-                Boundaries[0] as TSfrUnsatSegmentStorage;
-              DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
-              DataArray := DownstreamUnSatInitWatContList[TimeIndex]
-                as TModflowBoundaryDisplayDataArray;
-              DataArray.AddDataValue(DownstreamUnsatRecord.InitialWaterContentAnnotation,
-                DownstreamUnsatRecord.InitialWaterContent,
-                Reach.Column, Reach.Row, Reach.Layer);
+                BoundaryCount = 0 then
+              begin
+                frmErrorsAndWarnings.AddError(UnsatError,
+                  Segment.FScreenObject.Name);
+              end
+              else
+              begin
+                DownstreamUnsatValues := Segment.FScreenObject.
+                  ModflowSfrBoundary.DownstreamUnsatSegmentValues.
+                  Boundaries[0] as TSfrUnsatSegmentStorage;
+                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+                DataArray := DownstreamUnSatInitWatContList[TimeIndex]
+                  as TModflowBoundaryDisplayDataArray;
+                DataArray.AddDataValue(DownstreamUnsatRecord.InitialWaterContentAnnotation,
+                  DownstreamUnsatRecord.InitialWaterContent,
+                  Reach.Column, Reach.Row, Reach.Layer);
+              end;
             end;
           end;
         end;
@@ -1186,15 +1226,25 @@ begin
               UpstreamBrooksCoreyList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              UpstreamUnsatValues := Segment.FScreenObject.
+              if Segment.FScreenObject.
                 ModflowSfrBoundary.UpstreamUnsatSegmentValues.
-                Boundaries[0] as TSfrUnsatSegmentStorage;
-              UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
-              DataArray := UpstreamBrooksCoreyList[TimeIndex]
-                as TModflowBoundaryDisplayDataArray;
-              DataArray.AddDataValue(UpstreamUnsatRecord.BrooksCoreyExponentAnnotation,
-                UpstreamUnsatRecord.BrooksCoreyExponent,
-                Reach.Column, Reach.Row, Reach.Layer);
+                BoundaryCount = 0 then
+              begin
+                frmErrorsAndWarnings.AddError(UnsatError,
+                  Segment.FScreenObject.Name);
+              end
+              else
+              begin
+                UpstreamUnsatValues := Segment.FScreenObject.
+                  ModflowSfrBoundary.UpstreamUnsatSegmentValues.
+                  Boundaries[0] as TSfrUnsatSegmentStorage;
+                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+                DataArray := UpstreamBrooksCoreyList[TimeIndex]
+                  as TModflowBoundaryDisplayDataArray;
+                DataArray.AddDataValue(UpstreamUnsatRecord.BrooksCoreyExponentAnnotation,
+                  UpstreamUnsatRecord.BrooksCoreyExponent,
+                  Reach.Column, Reach.Row, Reach.Layer);
+              end;
             end;
           end;
         end;
@@ -1206,15 +1256,25 @@ begin
               DownstreamBrooksCoreyList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              DownstreamUnsatValues := Segment.FScreenObject.
+              if Segment.FScreenObject.
                 ModflowSfrBoundary.DownstreamUnsatSegmentValues.
-                Boundaries[0] as TSfrUnsatSegmentStorage;
-              DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
-              DataArray := DownstreamBrooksCoreyList[TimeIndex]
-                as TModflowBoundaryDisplayDataArray;
-              DataArray.AddDataValue(DownstreamUnsatRecord.BrooksCoreyExponentAnnotation,
-                DownstreamUnsatRecord.BrooksCoreyExponent,
-                Reach.Column, Reach.Row, Reach.Layer);
+                BoundaryCount = 0 then
+              begin
+                frmErrorsAndWarnings.AddError(UnsatError,
+                  Segment.FScreenObject.Name);
+              end
+              else
+              begin
+                DownstreamUnsatValues := Segment.FScreenObject.
+                  ModflowSfrBoundary.DownstreamUnsatSegmentValues.
+                  Boundaries[0] as TSfrUnsatSegmentStorage;
+                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+                DataArray := DownstreamBrooksCoreyList[TimeIndex]
+                  as TModflowBoundaryDisplayDataArray;
+                DataArray.AddDataValue(DownstreamUnsatRecord.BrooksCoreyExponentAnnotation,
+                  DownstreamUnsatRecord.BrooksCoreyExponent,
+                  Reach.Column, Reach.Row, Reach.Layer);
+              end;
             end;
           end;
         end;
@@ -1229,15 +1289,25 @@ begin
               UpstreamUnSatKzList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              UpstreamUnsatValues := Segment.FScreenObject.
+              if Segment.FScreenObject.
                 ModflowSfrBoundary.UpstreamUnsatSegmentValues.
-                Boundaries[0] as TSfrUnsatSegmentStorage;
-              UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
-              DataArray := UpstreamUnSatKzList[TimeIndex]
-                as TModflowBoundaryDisplayDataArray;
-              DataArray.AddDataValue(UpstreamUnsatRecord.VerticalSaturatedKAnnotation,
-                UpstreamUnsatRecord.VerticalSaturatedK,
-                Reach.Column, Reach.Row, Reach.Layer);
+                BoundaryCount = 0 then
+              begin
+                frmErrorsAndWarnings.AddError(UnsatError,
+                  Segment.FScreenObject.Name);
+              end
+              else
+              begin
+                UpstreamUnsatValues := Segment.FScreenObject.
+                  ModflowSfrBoundary.UpstreamUnsatSegmentValues.
+                  Boundaries[0] as TSfrUnsatSegmentStorage;
+                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+                DataArray := UpstreamUnSatKzList[TimeIndex]
+                  as TModflowBoundaryDisplayDataArray;
+                DataArray.AddDataValue(UpstreamUnsatRecord.VerticalSaturatedKAnnotation,
+                  UpstreamUnsatRecord.VerticalSaturatedK,
+                  Reach.Column, Reach.Row, Reach.Layer);
+              end;
             end;
           end;
         end;
@@ -1249,15 +1319,25 @@ begin
               DownstreamUnSatKzList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              DownstreamUnsatValues := Segment.FScreenObject.
+              if Segment.FScreenObject.
                 ModflowSfrBoundary.DownstreamUnsatSegmentValues.
-                Boundaries[0] as TSfrUnsatSegmentStorage;
-              DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
-              DataArray := DownstreamUnSatKzList[TimeIndex]
-                as TModflowBoundaryDisplayDataArray;
-              DataArray.AddDataValue(DownstreamUnsatRecord.VerticalSaturatedKAnnotation,
-                DownstreamUnsatRecord.VerticalSaturatedK,
-                Reach.Column, Reach.Row, Reach.Layer);
+                BoundaryCount = 0 then
+              begin
+                frmErrorsAndWarnings.AddError(UnsatError,
+                  Segment.FScreenObject.Name);
+              end
+              else
+              begin
+                DownstreamUnsatValues := Segment.FScreenObject.
+                  ModflowSfrBoundary.DownstreamUnsatSegmentValues.
+                  Boundaries[0] as TSfrUnsatSegmentStorage;
+                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+                DataArray := DownstreamUnSatKzList[TimeIndex]
+                  as TModflowBoundaryDisplayDataArray;
+                DataArray.AddDataValue(DownstreamUnsatRecord.VerticalSaturatedKAnnotation,
+                  DownstreamUnsatRecord.VerticalSaturatedK,
+                  Reach.Column, Reach.Row, Reach.Layer);
+              end;
             end;
           end;
         end;
@@ -2495,7 +2575,8 @@ begin
     end
     else
     begin
-      Assert(false);
+      frmErrorsAndWarnings.AddError(UnsatError,
+        (SfrBoundary.ScreenObject as TScreenObject).Name);
     end;
   end;
 
@@ -2555,7 +2636,8 @@ begin
     end
     else
     begin
-      Assert(false);
+      frmErrorsAndWarnings.AddError(UnsatError,
+        (SfrBoundary.ScreenObject as TScreenObject).Name);
     end;
   end;
 

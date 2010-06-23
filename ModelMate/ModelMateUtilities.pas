@@ -14,6 +14,7 @@ interface
   procedure AssignCurrentPriorObjects(Prj: TProject);
   procedure FileBaseName(const FileName: TFileName; var BaseName: string);
   function PosCap(Cap: string): integer;
+  function UniqueGroupName(const GroupName: string; const GpUse: TGrpUse): boolean;
   procedure UpdateCurrentProject;
 
 implementation
@@ -79,6 +80,49 @@ begin
   finally
     ParTemp.Free;
   end;
+end;
+
+function UniqueGroupName(const GroupName: string; const GpUse: TGrpUse): boolean;
+var
+  I: integer;
+begin
+  result := True;
+  // Ensure that group name is unique among group GpUse.
+  case GpUse of
+    guParGroup:
+      begin
+        for I := 0 to ParamGpsCurrent.Count - 1 do
+          begin
+            if AnsiSameText(GroupName,ParamGpsCurrent.Items[I].Name) then
+              result := False;
+          end;
+      end;
+    guObsGroup:
+      begin
+        for I := 0  to ObsGpsCurrent.Count - 1 do
+          begin
+            if AnsiSameText(GroupName,ObsGpsCurrent.Items[I].Name) then
+              result := False;
+          end;
+      end;
+    guPredGroup:
+      begin
+        for I := 0  to PredGpsCurrent.Count - 1 do
+          begin
+            if AnsiSameText(GroupName,PredGpsCurrent.Items[I].Name) then
+              result := False;
+          end;
+      end;
+    guPriGroup:
+      begin
+        for I := 0  to PriGpsCurrent.Count - 1 do
+          begin
+            if AnsiSameText(GroupName,PriGpsCurrent.Items[I].Name) then
+              result := False;
+          end;
+      end;
+    guUnknown: ;
+  end
 end;
 
 procedure UpdateCurrentProject;

@@ -102,6 +102,7 @@ type
     // @link(UseLimit) is @false.
     property DefaultBooleanLimitValue: boolean read FDefaultBooleanLimitValue
       write FDefaultBooleanLimitValue;
+  private
     // If there is a change in @link(UseLimit),
     // @link(BooleanLimitValue), @link(IntegerLimitValue),
     // @link(RealLimitValue), or @link(StringLimitValue),
@@ -115,7 +116,7 @@ type
     property BooleanLimitValue: boolean read FBooleanLimitValue write
       SetBooleanLimitValue;
     // @name indicates the data type (real, integer, boolean, or string)
-    //  of the @link(TDataArray) to
+    //  of the @link(TDataArray) or @link(TCustomModflowGridEdgeDisplay) to
     // which this limit applies.
     property DataType: TRbwDataType read FDataType write SetDataType;
     // If @link(DataType) is rdtInteger and @link(UseLimit) is @True,
@@ -148,7 +149,16 @@ type
     property RealValue: double read FRealValue write SetRealValue;
   end;
 
-  TSkipRealCollection = class(TCollection)
+  TCustomSkipCollection = class(TCollection)
+  private var
+    FOnChange: TNotifyEvent;
+  public
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+  protected
+    procedure Update(Item: TCollectionItem);override;
+  end;
+
+  TSkipRealCollection = class(TCustomSkipCollection)
   public
     constructor Create;
   end;
@@ -163,7 +173,7 @@ type
     property IntegerValue: integer read FIntegerValue write SetIntegerValue;
   end;
 
-  TSkipIntegerCollection = class(TCollection)
+  TSkipIntegerCollection = class(TCustomSkipCollection)
   public
     constructor Create;
   end;
@@ -184,6 +194,8 @@ type
     FStringValuesToSkip: TStrings;
     FLogTransform: boolean;
     FStoredEpsilon: TRealStorage;
+    FShadeInactiveArea: boolean;
+    FOnChange: TNotifyEvent;
     // See @link(LowerLimit).
     procedure SetLowerLimit(const Value: TColoringLimit);
     // See @link(UpperLimit).
@@ -198,6 +210,8 @@ type
     function GetEpsilon: double;
     procedure SetEpsilon(const Value: double);
     procedure SetStoredEpsilon(const Value: TRealStorage);
+    procedure Changed;
+    procedure SetOnChange(const Value: TNotifyEvent);
   public
     // @name calls TColoringLimit.@link(TColoringLimit.Assign)
     // for @link(LowerLimit) and @link(UpperLimit) and then calls
@@ -217,8 +231,12 @@ type
     function ValueOk(AValue: integer): boolean; overload;
     function ValueOk(const AValue: String): boolean; overload;
     property Epsilon: double read GetEpsilon write SetEpsilon;
+    property ShadeInactiveArea: boolean read FShadeInactiveArea
+      write FShadeInactiveArea;
+    property OnChange: TNotifyEvent read FOnChange write SetOnChange;
   published
-    property ActiveOnly: boolean read FActiveOnly write SetActiveOnly stored FActiveOnly;
+    property ActiveOnly: boolean read FActiveOnly write SetActiveOnly
+      stored FActiveOnly;
     // @name is the lower limit on what values should be used to color
     // the grid.
     property LowerLimit: TColoringLimit read FLowerLimit write SetLowerLimit;
@@ -234,7 +252,8 @@ type
     property StringValuesToSkip: TStrings read FStringValuesToSkip
       write SetStringValuesToSkip;
     property LogTransform: boolean read FLogTransform write SetLogTransform;
-    property StoredEpsilon: TRealStorage read FStoredEpsilon write SetStoredEpsilon;
+    property StoredEpsilon: TRealStorage read FStoredEpsilon
+      write SetStoredEpsilon;
   end;
 
   // @name is the data type of @link(TDataArray.IsUniform).
@@ -250,10 +269,13 @@ type
     FContourValues: TOneDRealArray;
     FAutomaticColors: boolean;
     FLogTransform: boolean;
+    FContourStringValues: TStringList;
     function GetCount: integer;
     procedure SetCount(const Value: integer);
+    procedure SetContourStringValues(const Value: TStringList);
   public
     Constructor Create;
+    Destructor Destroy; override;
     property AutomaticColors: boolean read FAutomaticColors
       write FAutomaticColors;
     property Count: integer read GetCount write SetCount;
@@ -267,6 +289,8 @@ type
     property ContourColors: TArrayOfColor32 read FContourColors
       write FContourColors;
     property LogTransform: boolean read FLogTransform write FLogTransform;
+    property ContourStringValues: TStringList read FContourStringValues
+      write SetContourStringValues;
   end;
 
   {@abstract(@name provides an interface to a 3D array of data.)
@@ -294,8 +318,6 @@ type
     FDataArray: pointer;
     // See @link(Datatype).
     FDataType: TRbwDataType;
-    // See @link(DimensionsChanged).
-    FDimensionsChanged: boolean;
     // See @link(EvaluatedAt).
     FEvaluatedAt: TEvaluatedAt;
     // @name is used as temporary storage when changing a formula.
@@ -378,6 +400,7 @@ type
     FContours: TContours;
     FFormulaObject: TFormulaObject;
     FHash: longint;
+    FReadDataFromFile: Boolean;
     // See @link(TwoDInterpolatorClass).
     function GetTwoDInterpolatorClass: string;
     // @name is called if an invalid formula has been specified.
@@ -437,7 +460,11 @@ type
       LocalLimits: TColoringLimits): Boolean;
     function GetHash: longint;
     procedure UpdateSubscriptions(NewUseList: TStringList; OldUseList: TStringList);
+    procedure ReadCompressedData(Stream: TStream);
+    procedure WriteCompressedData(Stream: TStream);
   protected
+    // See @link(DimensionsChanged).
+    FDimensionsChanged: boolean;
     // See @link(IsUniform).
     FIsUniform: TIsUniform;
     // @name is the @link(TPhastModel) that owns the @classname.
@@ -454,6 +481,7 @@ type
     FEvalTime: Extended;
     // See @link(EvaluatedAt).
     procedure SetEvaluatedAt(const Value: TEvaluatedAt); virtual;
+    procedure DefineProperties(Filer: TFiler); override;
     function GetCompiler: TRbwParser;
     // See @link(Orientation).
     procedure SetOrientation(const Value: TDataSetOrientation); virtual;
@@ -563,6 +591,7 @@ type
     procedure RestoreSubscription(Sender: TObject; const AName: string);
     procedure UpdateNotifiers; virtual;
   public
+    procedure RestoreUpToDataStatus;
     Procedure SetModelToNil;
     procedure RefreshUseList;
     function ColorGridValueOK(const Layer, Row, Col: integer): boolean;
@@ -1285,7 +1314,8 @@ implementation
 
 uses Contnrs, frmGoPhastUnit, frmConvertChoiceUnit, GIS_Functions,
   ScreenObjectUnit, frmFormulaErrorsUnit, InterpolationUnit, SparseArrayUnit,
-  PhastModelUnit, AbstractGridUnit, frmGridColorUnit, frmContourDataUnit;
+  PhastModelUnit, AbstractGridUnit, frmGridColorUnit, frmContourDataUnit,
+  frmErrorsAndWarningsUnit;
 
 resourcestring
   StrUnassigned = 'Unassigned';
@@ -1711,6 +1741,17 @@ begin
 end;
 
 procedure TDataArray.Initialize;
+const
+  MaxReal = 3.4E38;
+  ErrorMessageInterpUnNamed = 'An invalid value assigned by an interpolator '
+    + 'has been replaced by the maximum single-precision real number in an unamed data set.';
+  ErrorMessageInterpNamed = 'An invalid value assigned by an interpolator '
+    + 'has been replaced by the maximum single-precision  real number in Data Set: %s.';
+  ErrorMessageFormulaUnNamed = 'An invalid value assigned by an formula '
+    + 'has been replaced by the maximum single-precision  real number in an unamed data set.';
+  ErrorMessageFormulaNamed = 'An invalid value assigned by an formula '
+    + 'has been replaced by the maximum single-precision  real number in Data Set: %s.';
+  ErrorString ='Layer: %d; Row: %d; Column: %d.';
 var
   ColIndex, RowIndex, LayerIndex: integer;
   Compiler: TRbwParser;
@@ -1735,14 +1776,7 @@ var
   VariablePositions: array of integer;
   DataSetIndexes: array of integer;
   InterpAnnString: string;
-//  MinReal: double;
-//  MaxReal: double;
-//  FirstValue: Boolean;
-//  MinInteger: Integer;
-//  MaxInteger: Integer;
-//  MinBoolean: Boolean;
-//  MaxBoolean: Boolean;
-//  StringValues: TStringList;
+  AValue: double;
   procedure GetLimits;
   begin
     case EvaluatedAt of
@@ -1852,8 +1886,30 @@ begin
                       case Datatype of
                         rdtDouble:
                           begin
-                            RealData[0, RowIndex, ColIndex] :=
-                              TwoDInterpolator.RealResult(CellCenter);
+                            AValue := TwoDInterpolator.RealResult(CellCenter);
+                            if IsInfinite(AValue) or IsNan(AValue) then
+                            begin
+                              if Name = '' then
+                              begin
+                                frmErrorsAndWarnings.AddError(
+                                  ErrorMessageInterpUnNamed, Format(ErrorString,
+                                  [1,RowIndex+1,ColIndex+1] ));
+                              end
+                              else
+                              begin
+                                frmErrorsAndWarnings.AddError(
+                                  Format(ErrorMessageInterpNamed, [Name]),
+                                  Format(ErrorString,
+                                  [1,RowIndex+1,ColIndex+1]));
+                              end;
+                              RealData[0, RowIndex, ColIndex] := MaxReal
+                            end
+                            else
+                            begin
+                              RealData[0, RowIndex, ColIndex] := AValue;
+                            end;
+//                            RealData[0, RowIndex, ColIndex] :=
+//                              TwoDInterpolator.RealResult(CellCenter);
                           end;
                         rdtInteger:
                           begin
@@ -1892,8 +1948,30 @@ begin
                       case Datatype of
                         rdtDouble:
                           begin
-                            RealData[0, RowIndex, ColIndex] :=
-                              TwoDInterpolator.RealResult(CellCorner);
+                            AValue := TwoDInterpolator.RealResult(CellCorner);
+                            if IsInfinite(AValue) or IsNan(AValue) then
+                            begin
+                              if Name = '' then
+                              begin
+                                frmErrorsAndWarnings.AddError(
+                                  ErrorMessageInterpUnNamed,
+                                  Format(ErrorString, [1,RowIndex+1,ColIndex+1] ));
+                              end
+                              else
+                              begin
+                                frmErrorsAndWarnings.AddError(
+                                  Format(ErrorMessageInterpNamed, [Name]),
+                                  Format(ErrorString,
+                                  [1,RowIndex+1,ColIndex+1]));
+                              end;
+                              RealData[0, RowIndex, ColIndex] := MaxReal
+                            end
+                            else
+                            begin
+                              RealData[0, RowIndex, ColIndex] := AValue;
+                            end;
+//                            RealData[0, RowIndex, ColIndex] :=
+//                              TwoDInterpolator.RealResult(CellCorner);
                           end;
                         rdtInteger:
                           begin
@@ -1944,8 +2022,30 @@ begin
                       case Datatype of
                         rdtDouble:
                           begin
-                            RealData[LayerIndex, 0, ColIndex] :=
-                              TwoDInterpolator.RealResult(CellCenter);
+                            AValue := TwoDInterpolator.RealResult(CellCenter);
+                            if IsInfinite(AValue) or IsNan(AValue) then
+                            begin
+                              if Name = '' then
+                              begin
+                                frmErrorsAndWarnings.AddError(
+                                  ErrorMessageInterpUnNamed, Format(ErrorString,
+                                  [LayerIndex+1,1,ColIndex+1] ));
+                              end
+                              else
+                              begin
+                                frmErrorsAndWarnings.AddError(
+                                  Format(ErrorMessageInterpNamed, [Name]),
+                                  Format(ErrorString,
+                                  [LayerIndex+1,1,ColIndex+1]));
+                              end;
+                              RealData[LayerIndex, 0, ColIndex] := MaxReal
+                            end
+                            else
+                            begin
+                              RealData[LayerIndex, 0, ColIndex] := AValue;
+                            end;
+//                            RealData[LayerIndex, 0, ColIndex] :=
+//                              TwoDInterpolator.RealResult(CellCenter);
                           end;
                         rdtInteger:
                           begin
@@ -1987,8 +2087,30 @@ begin
                       case Datatype of
                         rdtDouble:
                           begin
-                            RealData[LayerIndex, 0, ColIndex] :=
-                              TwoDInterpolator.RealResult(CellCorner);
+                            AValue := TwoDInterpolator.RealResult(CellCorner);
+                            if IsInfinite(AValue) or IsNan(AValue) then
+                            begin
+                              if Name = '' then
+                              begin
+                                frmErrorsAndWarnings.AddError(
+                                  ErrorMessageInterpUnNamed, Format(ErrorString,
+                                  [LayerIndex+1,1,ColIndex+1] ));
+                              end
+                              else
+                              begin
+                                frmErrorsAndWarnings.AddError(
+                                  Format(ErrorMessageInterpNamed, [Name]),
+                                  Format(ErrorString,
+                                  [LayerIndex+1,1,ColIndex+1]));
+                              end;
+                              RealData[LayerIndex, 0, ColIndex] := MaxReal
+                            end
+                            else
+                            begin
+                              RealData[LayerIndex, 0, ColIndex] := AValue;
+                            end;
+//                            RealData[LayerIndex, 0, ColIndex] :=
+//                              TwoDInterpolator.RealResult(CellCorner);
                           end;
                         rdtInteger:
                           begin
@@ -2040,8 +2162,30 @@ begin
                       case Datatype of
                         rdtDouble:
                           begin
-                            RealData[LayerIndex, RowIndex, 0] :=
-                              TwoDInterpolator.RealResult(CellCenter);
+                            AValue := TwoDInterpolator.RealResult(CellCenter);
+                            if IsInfinite(AValue) or IsNan(AValue) then
+                            begin
+                              if Name = '' then
+                              begin
+                                frmErrorsAndWarnings.AddError(
+                                  ErrorMessageInterpUnNamed, Format(ErrorString,
+                                  [LayerIndex+1,RowIndex+1,1] ));
+                              end
+                              else
+                              begin
+                                frmErrorsAndWarnings.AddError(
+                                  Format(ErrorMessageInterpNamed, [Name]),
+                                  Format(ErrorString,
+                                  [LayerIndex+1,RowIndex+1,1]));
+                              end;
+                              RealData[LayerIndex, RowIndex, 0] := MaxReal
+                            end
+                            else
+                            begin
+                              RealData[LayerIndex, RowIndex, 0] := AValue;
+                            end;
+//                            RealData[LayerIndex, RowIndex, 0] :=
+//                              TwoDInterpolator.RealResult(CellCenter);
                           end;
                         rdtInteger:
                           begin
@@ -2084,8 +2228,28 @@ begin
                       case Datatype of
                         rdtDouble:
                           begin
-                            RealData[LayerIndex, RowIndex, 0] :=
-                              TwoDInterpolator.RealResult(CellCorner);
+                            AValue := TwoDInterpolator.RealResult(CellCorner);
+                            if IsInfinite(AValue) or IsNan(AValue) then
+                            begin
+                              if Name = '' then
+                              begin
+                                frmErrorsAndWarnings.AddError(
+                                  ErrorMessageInterpUnNamed, Format(ErrorString,
+                                  [LayerIndex+1,RowIndex+1,1] ));
+                              end
+                              else
+                              begin
+                                frmErrorsAndWarnings.AddError(
+                                  Format(ErrorMessageInterpNamed, [Name]),
+                                  Format(ErrorString,
+                                  [LayerIndex+1,RowIndex+1,1]));
+                              end;
+                              RealData[LayerIndex, RowIndex, 0] := MaxReal
+                            end
+                            else
+                            begin
+                              RealData[LayerIndex, RowIndex, 0] := AValue;
+                            end;
                           end;
                         rdtInteger:
                           begin
@@ -2317,8 +2481,28 @@ begin
               case Datatype of
                 rdtDouble:
                   begin
-                    RealData[LayerIndex, RowIndex, ColIndex]
-                      := Expression.DoubleResult;
+                    AValue := Expression.DoubleResult;
+                    if IsInfinite(AValue) or IsNan(AValue) then
+                    begin
+                      if Name = '' then
+                      begin
+                        frmErrorsAndWarnings.AddError(
+                          ErrorMessageFormulaUnNamed, Format(ErrorString,
+                          [LayerIndex+1,RowIndex+1,ColIndex+1] ));
+                      end
+                      else
+                      begin
+                        frmErrorsAndWarnings.AddError(
+                          Format(ErrorMessageFormulaNamed, [Name]),
+                          Format(ErrorString,
+                          [LayerIndex+1,RowIndex+1,ColIndex+1]));
+                      end;
+                      RealData[LayerIndex, RowIndex, ColIndex] := MaxReal
+                    end
+                    else
+                    begin
+                      RealData[LayerIndex, RowIndex, ColIndex] := AValue;
+                    end;
                   end;
                 rdtInteger:
                   begin
@@ -2363,14 +2547,15 @@ begin
     if FreeStack then
     begin
       FreeAndNil(Stack);
+      frmGoPhast.PhastModel.DontCache(self);
       frmGoPhast.PhastModel.CacheDataArrays;
     end;
   end;
   PostInitialize;
 
   FCleared := False;
-  CheckIfUniform;
   UpToDate := True;
+  CheckIfUniform;
 end;
 
 procedure TDataArray.Invalidate;
@@ -2589,6 +2774,11 @@ begin
   else
   begin
     FContours.Assign(Value);
+    if frmContourData = nil then
+    begin
+      frmContourData := TfrmContourData.Create(nil);
+    end;
+    frmContourData.UpdateLabelsAndLegend;
   end;
 end;
 
@@ -2741,7 +2931,7 @@ begin
     or (FRowCount <> NumberOfRows)
     or (FColumnCount <> NumberOfColumns) then
   begin
-    if FDataCached and FCleared
+    if (FDataCached and FCleared) or (UpToDate and (IsUniform = iuTrue))
       and (FCachedLayerCount = NumberOfLayers)
       and (FCachedRowCount = NumberOfRows)
       and (FCachedColumnCount = NumberOfColumns) then
@@ -2802,17 +2992,17 @@ begin
   FFormulaObject.AddSubscriptionEvents(GlobalDataArrayRemoveSubscription,
       GlobalDataArrayRestoreSubscription, self);
   FLimits := TColoringLimits.Create;
-  FLimits.UpperLimit.OnChange := LimitsChanged;
-  FLimits.LowerLimit.OnChange := LimitsChanged;
+  FLimits.OnChange := LimitsChanged;
   FContourLimits := TColoringLimits.Create;
-  FContourLimits.UpperLimit.OnChange := ContourLimitsChanged;
-  FContourLimits.LowerLimit.OnChange := ContourLimitsChanged;
+  FContourLimits.OnChange := ContourLimitsChanged;
+//  FContourLimits.LowerLimit.OnChange := ContourLimitsChanged;
   FUseList := TStringList.Create;
   FUseList.Sorted := True;
   FUseList.Duplicates := dupAccept;
   UpToDate := False;
   FVisible := True;
   FUseListUpToDate := False;
+  FReadDataFromFile := False;
 end;
 
 procedure TDataArray.SetEvaluatedAt(const Value: TEvaluatedAt);
@@ -3180,6 +3370,11 @@ begin
   NameChanged := Name <> Value;
   LocalModel := FPhastModel as TPhastModel;
   MustAdd := False;
+  if NameChanged and (Name <> '') then
+  begin
+    LocalModel.ThreeDGridObserver.StopsTalkingTo(self);
+    LocalModel.TopGridObserver.StopsTalkingTo(self);
+  end;
   if NameChanged then
   begin
     if LocalModel.GetDataSetByName(Name) <> nil then
@@ -3187,11 +3382,6 @@ begin
       LocalModel.RemoveDataSetFromLookUpList(self);
       MustAdd := True;
     end;
-  end;
-  if NameChanged and (Name <> '') then
-  begin
-    LocalModel.ThreeDGridObserver.StopsTalkingTo(self);
-    LocalModel.TopGridObserver.StopsTalkingTo(self);
   end;
   inherited;
   if MustAdd then
@@ -3355,6 +3545,8 @@ var
   LayerMin: Integer;
   RowMin: Integer;
   ColMin: Integer;
+  ARealValue: double;
+  AnIntValue: Integer;
 begin
   if not UpToDate then
   begin
@@ -3387,13 +3579,14 @@ begin
                   end
                   else
                   begin
-                    if MinimumReal > RealData[LayerIndex, RowIndex, ColIndex] then
+                    ARealValue := RealData[LayerIndex, RowIndex, ColIndex];
+                    if MinimumReal > ARealValue then
                     begin
-                      MinimumReal := RealData[LayerIndex, RowIndex, ColIndex];
+                      MinimumReal := ARealValue;
                     end;
-                    if MaximumReal < RealData[LayerIndex, RowIndex, ColIndex] then
+                    if MaximumReal < ARealValue then
                     begin
-                      MaximumReal := RealData[LayerIndex, RowIndex, ColIndex];
+                      MaximumReal := ARealValue;
                     end;
                   end;
                 end;
@@ -3439,13 +3632,14 @@ begin
                   end
                   else
                   begin
-                    if MinimumInteger > IntegerData[LayerIndex, RowIndex, ColIndex] then
+                    AnIntValue := IntegerData[LayerIndex, RowIndex, ColIndex];
+                    if MinimumInteger > AnIntValue then
                     begin
-                      MinimumInteger := IntegerData[LayerIndex, RowIndex, ColIndex];
+                      MinimumInteger := AnIntValue;
                     end;
-                    if MaximumInteger < IntegerData[LayerIndex, RowIndex, ColIndex] then
+                    if MaximumInteger < AnIntValue then
                     begin
-                      MaximumInteger := IntegerData[LayerIndex, RowIndex, ColIndex];
+                      MaximumInteger := AnIntValue;
                     end;
                   end;
                 end;
@@ -3595,7 +3789,7 @@ begin
           or (Grid.SideDataSet = self)
           or (Grid.ThreeDDataSet = self) then
         begin
-          frmGridColor.SetMinMaxLabels;
+          frmGridColor.UpdateLabelsAndLegend;
         end;
       end;
       if frmContourData <> nil then
@@ -3605,7 +3799,7 @@ begin
           or (Grid.SideContourDataSet = self)
           or (Grid.ThreeDContourDataSet = self) then
         begin
-          frmContourData.SetMinMaxLabels;
+          frmContourData.UpdateLabelsAndLegend;
         end;
       end;
     end;
@@ -4220,6 +4414,16 @@ begin
   end;
 end;
 
+procedure TDataArray.RestoreUpToDataStatus;
+begin
+  inherited;
+  if FReadDataFromFile then
+  begin
+    UpToDate := True;
+    FReadDataFromFile := False;
+  end;
+end;
+
 procedure TDataArray.PostInitialize;
 begin
   if Assigned(OnPostInitialize) then
@@ -4559,6 +4763,7 @@ begin
   begin
     FAnnotation.Clear;
   end;
+  FDimensionsChanged := False;
 end;
 
 { TRealSparseDataSet }
@@ -4883,8 +5088,17 @@ begin
   end;
 end;
 
+procedure TColoringLimits.Changed;
+begin
+  if Assigned(FOnChange) then
+  begin
+    FOnChange(self)
+  end;
+end;
+
 constructor TColoringLimits.Create;
 begin
+  FShadeInactiveArea := True;
   FStoredEpsilon:= TRealStorage.Create;
   Epsilon := 1e-6;
   FLowerLimit := TColoringLimit.Create;
@@ -4915,12 +5129,20 @@ end;
 
 procedure TColoringLimits.SetActiveOnly(const Value: boolean);
 begin
-  FActiveOnly := Value;
+  if FActiveOnly <> Value then
+  begin
+    FActiveOnly := Value;
+    Changed
+  end;
 end;
 
 procedure TColoringLimits.SetEpsilon(const Value: double);
 begin
-  FStoredEpsilon.Value := Value;
+  if FStoredEpsilon.Value <> Value then
+  begin
+    FStoredEpsilon.Value := Value;
+    Changed
+  end;
 end;
 
 procedure TColoringLimits.SetIntegerValuesToSkip(
@@ -4931,12 +5153,26 @@ end;
 
 procedure TColoringLimits.SetLogTransform(const Value: boolean);
 begin
-  FLogTransform := Value;
+  if FLogTransform <> Value then
+  begin
+    FLogTransform := Value;
+    Changed
+  end;
 end;
 
 procedure TColoringLimits.SetLowerLimit(const Value: TColoringLimit);
 begin
   FLowerLimit.Assign(Value);
+end;
+
+procedure TColoringLimits.SetOnChange(const Value: TNotifyEvent);
+begin
+  FOnChange := Value;
+  LowerLimit.OnChange := Value;
+  UpperLimit.OnChange := Value;
+  IntegerValuesToSkip.OnChange := Value;
+  RealValuesToSkip.OnChange := Value;
+  TStringList(FStringValuesToSkip).OnChange := Value;
 end;
 
 procedure TColoringLimits.SetRealValuesToSkip(const Value: TSkipRealCollection);
@@ -5633,9 +5869,20 @@ begin
 end;
 
 procedure TDataArray.Assign(Source: TPersistent);
+var
+  SourceDataArray: TDataArray;
 begin
   if (Source is TDataArray) then
   begin
+    SourceDataArray := TDataArray(Source);
+    if SourceDataArray.FReadDataFromFile then
+    begin
+      FReadDataFromFile := True;
+      FTempFileName := SourceDataArray.FTempFileName;
+      UpToDate := True;
+      FDataCached := True;
+      FCleared := True;
+    end;
 //    DataType := TDataArray(Source).DataType;
 //    Orientation := TDataArray(Source).Orientation;
 //    TwoDInterpolator := TDataArray(Source).TwoDInterpolator;
@@ -5648,7 +5895,6 @@ end;
 
 procedure TDataArray.CacheData;
 var
-//  TempFile: TTempFileStream;
   MemStream: TMemoryStream;
   Compressor: TCompressionStream;
 begin
@@ -5668,12 +5914,9 @@ begin
       end;
       MemStream := TMemoryStream.Create;
       try
-  //      TempFile := TTempFileStream.Create(FTempFileName, fmOpenReadWrite);
-  //      Compressor := TCompressionStream.Create(clDefault, TempFile);
         Compressor := TCompressionStream.Create(clDefault, MemStream);
         try
           MemStream.Position := 0;
-  //        TempFile.Position := 0;
           StoreData(Compressor);
         finally
           Compressor.Free;
@@ -5682,9 +5925,7 @@ begin
         ZipAFile(FTempFileName, MemStream);
       finally
         MemStream.Free;
-//        TempFile.Free;
       end;
-//      ZipAFile(FTempFileName);
       FDataCached := True;
     end;
     Clear;
@@ -5714,10 +5955,14 @@ var
   RowIndex: Integer;
   ColIndex: Integer;
 begin
-  FIsUniform := iuUnknown;
-  if not UpToDate or FCleared then
+  if not UpToDate then
   begin
-    Exit
+    FIsUniform := iuUnknown;
+    Exit;
+  end;
+  if FCleared then
+  begin
+    Exit;
   end;
   FUniformAnnotation := '';
   FUniformStringValue := '';
@@ -5831,22 +6076,31 @@ begin
   end;
 end;
 
-procedure TDataArray.RestoreData;
+procedure TDataArray.ReadCompressedData(Stream: TStream);
 var
-//  TempFile: TTempFileStream;
   MemStream: TMemoryStream;
   DecompressionStream: TDecompressionStream;
+  Size: Int64;
+  Data: array of Byte;
+  StoredLayerCount: integer;
+  StoredRowCount: integer;
+  StoredColumnCount: integer;
 begin
-//  ExtractAFile(FTempFileName);
-//  Assert(FileExists(FTempFileName), FTempFileName + ' does not exist.');
-  Assert(FDataCached);
-  Assert(FCleared);
+  FCleared := True;
   MemStream := TMemoryStream.Create;
   try
-    ExtractAFile(FTempFileName, MemStream);
+    Stream.Read(StoredLayerCount, SizeOf(StoredLayerCount));
+    Stream.Read(StoredRowCount, SizeOf(StoredRowCount));
+    Stream.Read(StoredColumnCount, SizeOf(StoredColumnCount));
+    UpDateDimensions(StoredLayerCount, StoredRowCount, StoredColumnCount);
+    SetDimensions(False);
+
+    Stream.Read(Size, SizeOf(Size));
+    SetLength(Data, Size);
+    Stream.ReadBuffer(Data[0], Size);
+    MemStream.WriteBuffer(Data[0], Size);
     MemStream.Position := 0;
-//  TempFile := TTempFileStream.Create(FTempFileName, fmOpenRead);
-//  DecompressionStream := TDecompressionStream.Create(TempFile);
+
     DecompressionStream := TDecompressionStream.Create(MemStream);
     try
       ReadData(DecompressionStream);
@@ -5855,9 +6109,74 @@ begin
     end;
   finally
     MemStream.Free;
-//    TempFile.Free;
   end;
-//  DeleteFile(FTempFileName);
+  FDataCached := False;
+  FCleared := False;
+  FIsUniform := iuFalse;
+  UpToDate := True;
+  CacheData;
+  FReadDataFromFile := True;
+
+end;
+
+procedure TDataArray.WriteCompressedData(Stream: TStream);
+var
+  MemStream: TMemoryStream;
+  Size: Int64;
+  Data: array of Byte;
+begin
+  Assert(UpToDate);
+  Assert(IsUniform <> iuTrue);
+
+  CacheData;
+  Assert(FTempFileName <> '');
+  Stream.Write(FCachedLayerCount, SizeOf(FCachedLayerCount));
+  Stream.Write(FCachedRowCount, SizeOf(FCachedRowCount));
+  Stream.Write(FCachedColumnCount, SizeOf(FCachedColumnCount));
+
+  MemStream := TMemoryStream.Create;
+  try
+    ExtractAFile(FTempFileName, MemStream);
+    Size := MemStream.Size;
+    Stream.Write(Size, SizeOf(Size));
+    SetLength(Data, Size);
+    MemStream.ReadBuffer(Data[0], Size);
+    Stream.WriteBuffer(Data[0], Size);
+  finally
+    MemStream.Free;
+  end;
+end;
+
+procedure TDataArray.DefineProperties(Filer: TFiler);
+  function StoreCompressedData: boolean;
+  begin
+    result := UpToDate and (IsUniform <> iuTrue)
+  end;
+begin
+//  inherited;
+  Filer.DefineBinaryProperty('CompressedData', ReadCompressedData,
+    WriteCompressedData, StoreCompressedData);
+end;
+
+procedure TDataArray.RestoreData;
+var
+  MemStream: TMemoryStream;
+  DecompressionStream: TDecompressionStream;
+begin
+  Assert(FDataCached);
+  Assert(FCleared);
+  MemStream := TMemoryStream.Create;
+  try
+    ExtractAFile(FTempFileName, MemStream);
+    DecompressionStream := TDecompressionStream.Create(MemStream);
+    try
+      ReadData(DecompressionStream);
+    finally
+      DecompressionStream.Free;
+    end;
+  finally
+    MemStream.Free;
+  end;
   FCleared := False;
 end;
 
@@ -5883,16 +6202,29 @@ begin
   LineThicknesses := Copy(Source.LineThicknesses);
   ContourColors := Copy(Source.ContourColors);
   LogTransform := Source.LogTransform;
+  ContourStringValues := Source.ContourStringValues;
 end;
 
 constructor TContours.Create;
 begin
   FAutomaticColors := True;
+  FContourStringValues := TStringList.Create;
+end;
+
+destructor TContours.Destroy;
+begin
+  FContourStringValues.Free;
+  inherited;
 end;
 
 function TContours.GetCount: integer;
 begin
   result := Length(FContourValues);
+end;
+
+procedure TContours.SetContourStringValues(const Value: TStringList);
+begin
+  FContourStringValues.Assign(Value);
 end;
 
 procedure TContours.SetCount(const Value: integer);
@@ -5952,7 +6284,11 @@ end;
 
 procedure TSkipReal.SetRealValue(const Value: double);
 begin
-  FRealValue := Value;
+  if FRealValue <> Value then
+  begin
+    FRealValue := Value;
+    Changed(False);
+  end;
 end;
 
 { TSkipInteger }
@@ -5971,7 +6307,11 @@ end;
 
 procedure TSkipInteger.SetIntegerValue(const Value: integer);
 begin
-  FIntegerValue := Value;
+  if FIntegerValue <> Value then
+  begin
+    FIntegerValue := Value;
+    Changed(False);
+  end;
 end;
 
 { TSkipRealCollection }
@@ -5989,7 +6329,6 @@ begin
 end;
 
 { TTransientRealSparseDataSet }
-
 procedure TTransientRealSparseDataSet.UpdateNotifiers;
 begin
   // do nothing
@@ -6002,6 +6341,15 @@ procedure TTransientIntegerSparseDataSet.UpdateNotifiers;
 begin
   // do nothing
 //  inherited;
+end;
+
+procedure TCustomSkipCollection.Update(Item: TCollectionItem);
+begin
+  inherited;
+  if Assigned(OnChange) then
+  begin
+    OnChange(self);
+  end;
 end;
 
 initialization

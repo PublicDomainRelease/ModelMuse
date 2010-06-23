@@ -296,9 +296,6 @@ type
     // @name initializes the data set used to color the grid on this
     // view of the model.
     procedure InitializeDataSet;
-    // @name calls TScreenObject.@link(TScreenObject.InvalidateCoordinates)
-    // for every @link(TScreenObject) on this view of the model.
-    procedure InvalidateScreenObjects;
     // @name checks if the data set used to color the grid on this view of the
     // model is up to date.  If not, it initializes it.
     // Once it is up to data, @name will store the correct color for each cell
@@ -366,6 +363,9 @@ type
     FSelectTopLeft: TPoint;
     property Drawing: boolean read FDrawing;
     property ModelChanged: boolean read FModelChanged write FModelChanged;
+    // @name calls TScreenObject.@link(TScreenObject.InvalidateCoordinates)
+    // for every @link(TScreenObject) on this view of the model.
+    procedure InvalidateScreenObjectCoordinates;
     // @name adjusts the scales on @link(rulHorizontal) and @link(rulVertical)
     // to match the coordinates in @link(ZoomBox).
     procedure AdjustScales;
@@ -497,7 +497,10 @@ type
     function ZoomBox: TQRbwZoomBox2;
     procedure DrawOnBitMap32(Sender: TObject; Buffer: TBitmap32); virtual;
     function GetEvaluatedAt(const Direction: TViewDirection): TEvaluatedAt;
-
+    // @name returns the index of the first vertex in AScreenObject
+    // that is within @link(SelectionWidth) of X,Y.
+    function FindNodeInSelectedScreenObjects(const X, Y: integer;
+      const AScreenObject: TScreenObject): integer;
   public
     // @name is called when a @classname is made the
     // @link(TfrmGoPhast.CurrentTool).
@@ -1082,6 +1085,10 @@ begin
     // @name is the main routine for drawing the
     // @link(TfrmGoPhast.Grid) and @link(TScreenObject)s.
     // It will also draw any imported images.
+  if frmGoPhast.Grid <> nil then
+  begin
+    frmGoPhast.Grid.Draw3DAllowed := False;
+  end;
   try
     try
       FBitMap32.Free;
@@ -1154,7 +1161,7 @@ begin
       end;
 
       // Draw the screen objects.
-      InvalidateScreenObjects;
+      InvalidateScreenObjectCoordinates;
       DrawScreenObjects;
 
       if (frmGoPhast.PhastModel.PathLine.Lines.Count = 0)
@@ -1186,6 +1193,11 @@ begin
     end;
   finally
     ModelChanged := False;
+    if frmGoPhast.Grid <> nil then
+    begin
+      frmGoPhast.Grid.Draw3DAllowed := True;
+      frmGoPhast.frame3DView.glWidModelView.Invalidate;
+    end;
   end;
 end;
 
@@ -1701,7 +1713,7 @@ begin
     + 'I''ve had to zoom out a bit', mtInformation, [mbOK], 0);
 end;
 
-procedure TframeView.InvalidateScreenObjects;
+procedure TframeView.InvalidateScreenObjectCoordinates;
 var
   ScreenObjectIndex: integer;
   AScreenObject: TScreenObject;
@@ -1728,6 +1740,7 @@ begin
     vdTop: Orientation := dsoTop;
     vdFront: Orientation := dsoFront;
     vdSide: Orientation := dsoSide;
+    else Assert(False);
   end;
   frmGoPhast.PhastModel.Pathline.Draw(Orientation, FBitmap32);
 end;
@@ -1741,6 +1754,7 @@ begin
     vdTop: Orientation := dsoTop;
     vdFront: Orientation := dsoFront;
     vdSide: Orientation := dsoSide;
+    else Assert(False);
   end;
   frmGoPhast.PhastModel.EndPoints.Draw(Orientation, FBitmap32);
 end;
@@ -1754,6 +1768,7 @@ begin
     vdTop: Orientation := dsoTop;
     vdFront: Orientation := dsoFront;
     vdSide: Orientation := dsoSide;
+    else Assert(False);
   end;
   frmGoPhast.PhastModel.TimeSeries.Draw(Orientation, FBitmap32);
 end;
@@ -3219,60 +3234,121 @@ begin
   frmGoPhast.ShowAForm(TfrmRulerOptions);
 end;
 
+//procedure DrawCompressedImage(const Source: TCompressedBitmapItem;
+//  BitMap32: TBitMap32);
+//var
+//  X, Y: double;
+//  NewBmp: TBitmap;
+//  XMult, YMult: double;
+//  NewWidth, NewHeight: integer;
+//  NewBitMap32: TBitmap32;
+//begin
+//    // @name will draw an imported image (Source) on a bitmap (Dest)
+//    // at its proper location.
+//  Assert((Source <> nil) {and (Dest <> nil)});
+//
+//  X := Source.X;
+//  Y := Source.Y;
+//  XMult := Source.ScaleX;
+//  YMult := Source.ScaleY;
+//
+//  NewBmp := TBitmap.Create;
+//  try
+//    NewWidth := Round(Source.BitMap.Width * XMult);
+//    NewHeight := Round(Source.BitMap.Height * YMult);
+//
+//    if (NewWidth < 2) or (NewHeight < 2) then
+//      Exit;
+//
+//    if (NewWidth > 5000) or (NewHeight > 5000) then
+//    begin
+//      Source.Visible := False;
+//      MessageDlg('The ' + Source.Name
+//        + ' image can not be shown at this magnification '
+//        + 'and has been turned off. You can turn it back on later '
+//        + 'after decreasing the magnification.',
+//        mtInformation, [mbOK], 0);
+//    end
+//    else
+//    begin
+//      NewBmp.Width := NewWidth;
+//      NewBmp.Height := NewHeight;
+//      NewBmp.Canvas.StretchDraw(Rect(0, 0, NewWidth, NewHeight),
+//        Source.BitMap);
+//
+//      NewBitMap32 := TBitmap32.Create;
+//      try
+//        NewBitMap32.Assign(NewBmp);
+//        { TODO : rotate bitmap? }
+//        BitMap32.Draw(Round(X), Round(Y), NewBitMap32);
+//      finally
+//        NewBitMap32.Free;
+//      end;
+//    end;
+//  finally
+//    NewBmp.Free;
+//  end;
+//  Source.DisplayMessage := True;
+////  FPreviousMagnification := ZoomBox.Magnification;
+//end;
+
+
+
 procedure TframeView.DrawImage(const Source: TCompressedBitmapItem);
-var
-  X, Y: double;
-  NewBmp: TBitmap;
-  XMult, YMult: double;
-  NewWidth, NewHeight: integer;
-  NewBitMap32: TBitmap32;
+//var
+////  X, Y: double;
+//  NewBmp: TBitmap;
+//  XMult, YMult: double;
+//  NewWidth, NewHeight: integer;
+//  NewBitMap32: TBitmap32;
 begin
     // @name will draw an imported image (Source) on a bitmap (Dest)
     // at its proper location.
   Assert((Source <> nil) {and (Dest <> nil)});
+  Source.DrawCompressedImage(FBitMap32);
 
-  X := Source.X;
-  Y := Source.Y;
-  XMult := Source.ScaleX;
-  YMult := Source.ScaleY;
-
-  NewBmp := TBitmap.Create;
-  try
-    NewWidth := Round(Source.BitMap.Width * XMult);
-    NewHeight := Round(Source.BitMap.Height * YMult);
-
-    if (NewWidth < 2) or (NewHeight < 2) then
-      Exit;
-
-    if (NewWidth > 5000) or (NewHeight > 5000) then
-    begin
-      Source.Visible := False;
-      MessageDlg('The ' + Source.Name
-        + ' image can not be shown at this magnification '
-        + 'and has been turned off. You can turn it back on later '
-        + 'after decreasing the magnification.',
-        mtInformation, [mbOK], 0);
-    end
-    else
-    begin
-      NewBmp.Width := NewWidth;
-      NewBmp.Height := NewHeight;
-      NewBmp.Canvas.StretchDraw(Rect(0, 0, NewWidth, NewHeight),
-        Source.BitMap);
-
-      NewBitMap32 := TBitmap32.Create;
-      try
-        NewBitMap32.Assign(NewBmp);
-        { TODO : rotate bitmap? }
-        FBitMap32.Draw(Round(X), Round(Y), NewBitMap32);
-      finally
-        NewBitMap32.Free;
-      end;
-    end;
-  finally
-    NewBmp.Free;
-  end;
-  Source.DisplayMessage := True;
+//  X := Source.X;
+//  Y := Source.Y;
+//  XMult := Source.ScaleX;
+//  YMult := Source.ScaleY;
+//
+//  NewBmp := TBitmap.Create;
+//  try
+//    NewWidth := Round(Source.BitMap.Width * XMult);
+//    NewHeight := Round(Source.BitMap.Height * YMult);
+//
+//    if (NewWidth < 2) or (NewHeight < 2) then
+//      Exit;
+//
+//    if (NewWidth > 5000) or (NewHeight > 5000) then
+//    begin
+//      Source.Visible := False;
+//      MessageDlg('The ' + Source.Name
+//        + ' image can not be shown at this magnification '
+//        + 'and has been turned off. You can turn it back on later '
+//        + 'after decreasing the magnification.',
+//        mtInformation, [mbOK], 0);
+//    end
+//    else
+//    begin
+//      NewBmp.Width := NewWidth;
+//      NewBmp.Height := NewHeight;
+//      NewBmp.Canvas.StretchDraw(Rect(0, 0, NewWidth, NewHeight),
+//        Source.BitMap);
+//
+//      NewBitMap32 := TBitmap32.Create;
+//      try
+//        NewBitMap32.Assign(NewBmp);
+//        { TODO : rotate bitmap? }
+//        FBitMap32.Draw(Round(X), Round(Y), NewBitMap32);
+//      finally
+//        NewBitMap32.Free;
+//      end;
+//    end;
+//  finally
+//    NewBmp.Free;
+//  end;
+//  Source.DisplayMessage := True;
   FPreviousMagnification := ZoomBox.Magnification;
 end;
 
@@ -3501,6 +3577,26 @@ procedure TCustomInteractiveTool.DrawOnBitMap32(Sender: TObject;
   Buffer: TBitmap32);
 begin
   // do nothing
+end;
+
+function TCustomInteractiveTool.FindNodeInSelectedScreenObjects(const X,
+  Y: integer; const AScreenObject: TScreenObject): integer;
+var
+  PointIndex: integer;
+  APoint: TPoint;
+begin
+  result := -1;
+  Assert(AScreenObject.Selected);
+  for PointIndex := 0 to AScreenObject.Count - 1 do
+  begin
+    APoint := AScreenObject.CanvasCoordinates[PointIndex];
+    if (Abs(X - APoint.X) < SelectionWidth)
+      and (Abs(Y - APoint.Y) < SelectionWidth) then
+    begin
+      result := PointIndex;
+      Exit;
+    end;
+  end;
 end;
 
 procedure TCustomInteractiveTool.RightClick(Sender: TObject;

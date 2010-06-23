@@ -4,7 +4,6 @@ inherited frmSpecifyContours: TfrmSpecifyContours
   Caption = 'Specify Contours'
   ClientHeight = 301
   ClientWidth = 316
-  OnDestroy = FormDestroy
   ExplicitWidth = 324
   ExplicitHeight = 335
   PixelsPerInch = 96

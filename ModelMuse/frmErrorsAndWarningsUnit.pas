@@ -31,7 +31,7 @@ type
     // @name destroys @link(ErrorChildNodes),
     // @link(Errors), @link(WarningChildNodes) and
     // @link(Warnings) and other data associated with the @classname..
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     // @name determines the text to display in each cell.
     procedure vstWarningsAndErrorsGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;

@@ -44,7 +44,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure rdgContourDataMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
   private
     FContourColors: TColorParameters;
     FLogTransform: Boolean;

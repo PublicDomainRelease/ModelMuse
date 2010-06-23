@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
+<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+  <title translate="true">Miscellaneous</title>
+  <keywords>
+    <keyword translate="true">parameters</keyword>
+    <keyword translate="true">observations</keyword>
+    <keyword translate="true">prior-information equations</keyword>
+    <keyword translate="true">zone</keyword>
+    <keyword translate="true">multiplier</keyword>
+  </keywords>
+  <body>
+    <header>
+      <para styleclass="Heading1"><text styleclass="Heading1" translate="true">Miscellaneous</text></para>
+    </header>
+    <para styleclass="Normal"><table rowcount="1" colcount="2" style="cell-padding:2px; cell-spacing:2px; border-width:1px; cell-border-width:1px; border-color:#000000; border-style:raised-color;">
+      <tr style="vertical-align:top">
+        <td style="vertical-align:middle;">
+          <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
+        </td>
+        <td>
+          <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="release.txt" styleclass="Normal" translate="true">release.txt</link></para>
+        </td>
+      </tr>
+    </table></para>
+    <list id="1" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+      <li styleclass="Normal"><text styleclass="Normal" translate="true">In MODDFLOW-2000, the maximum number of allowed parameters is 999. &#160;In MODFLOW-2005 the maximum number of allowed parameters is 2000.</text></li>
+      <li styleclass="Normal"><text styleclass="Normal" translate="true">The number of observations and prior-information equations is not limited by the program.</text></li>
+      <li styleclass="Normal"><text styleclass="Normal" translate="true">In MODFLOW-2000, The maximum allowed numbers of </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ZONE" styleclass="Normal" translate="true">zone</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MULT" styleclass="Normal" translate="true">multiplier</link><text styleclass="Normal" translate="true"> arrays is 1000. In MODFLOW-2005, there is not a limit on the maximum allowed numbers of </text><link displaytype="text" defaultstyle="true" type="topiclink" href="ZONE" styleclass="Normal" translate="true">zone</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MULT" styleclass="Normal" translate="true">multiplier</link><text styleclass="Normal" translate="true"> arrays.</text></li>
+      <li styleclass="Normal"><text styleclass="Normal" translate="true">In MODFLOW-2005, the maximum number of parameter clusters is 20,000.</text></li>
+      <li styleclass="Normal"><text styleclass="Normal" translate="true">In MODFLOW-2005, the maximum number of parameter instances is 50,000.</text></li>
+    </list>
+  </body>
+</topic>

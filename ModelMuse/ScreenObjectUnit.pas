@@ -94,6 +94,51 @@ type
   // @name is an array of @link(TEdgePoint)s.
   TEdgePointArray = array of TEdgePoint;
 
+  TPointValue = class(TOrderedItem)
+  private
+    FName: string;
+    FValue: double;
+    procedure SetName(const Value: string);
+    procedure SetValue(const Value: double);
+  public
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    procedure Assign(Source: TPersistent); override;
+  published
+    property Name: string read FName write SetName;
+    property Value: double read FValue write SetValue;
+  end;
+
+  TPointValues = class(TEnhancedOrderedCollection)
+    constructor Create(Model: TObject);
+  end;
+
+  TPointValuesItem = class(TOrderedItem)
+  private
+    FValues: TPointValues;
+    FPosition: integer;
+    procedure SetPosition(const Value: integer);
+    procedure SetValues(const Value: TPointValues);
+    function GetValue(Index: integer): double;
+    procedure SetValue(Index: integer; const Value: double);
+  public
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    procedure Assign(Source: TPersistent); override;
+    property Value[Index: integer]: double read GetValue write SetValue;
+    function IndexOfName(AName: string): integer;
+    constructor Create(Collection: TCollection); override;
+    Destructor Destroy; override;
+  published
+    property Position: integer read FPosition write SetPosition;
+    property Values: TPointValues read FValues write SetValues;
+  end;
+
+  TPointPositionValues = class(TEnhancedOrderedCollection)
+    constructor Create(Model: TObject);
+    function IndexOfPosition(APosition: integer): integer;
+    function GetItemByPosition(APosition: integer): TPointValuesItem;
+    procedure Sort;
+  end;
+
   TLineSegment = class(TObject)
     Point1: TPoint2D;
     Point2: TPoint2D;
@@ -1529,6 +1574,7 @@ view. }
     FPriorObjectSectionIntersectLengthResult: real;
     FPriorObjectSectionIntersectLengthSection: integer;
     FComment: string;
+    FPointPositionValues: TPointPositionValues;
     procedure CreateLastSubPolygon;
     procedure DestroyLastSubPolygon;
     function GetSubPolygonCount: integer;
@@ -2207,6 +2253,9 @@ view. }
     procedure SetModflowMnw2Boundary(const Value: TMnw2Boundary);
     procedure CacheElevationArrays;
     procedure SetComment(const Value: string);
+    procedure SetPointPositionValues(const Value: TPointPositionValues);
+    function GetPointPositionValues: TPointPositionValues;
+    function ShouldStorePointPositionValues: Boolean;
     property SubPolygonCount: integer read GetSubPolygonCount;
     property SubPolygons[Index: integer]: TSubPolygon read GetSubPolygon;
     procedure DeleteExtraSections;
@@ -2387,7 +2436,8 @@ view. }
     procedure CreateGpcPolygon;
     procedure EvaluateDataArrayExpression(const DataSet: TDataArray; var Expression: TExpression; const Compiler: TRbwParser);
     procedure DrawPointMarker(LineColor32: TColor32; FillColor32: TColor32;
-      const Bitmap32: TBitmap32; IntPoint: TPoint; LineWidth: Single);
+      const Bitmap32: TBitmap32; IntPoint: TPoint; LineWidth: Single;
+      PointWithValue: boolean);
     procedure SetElevationFormulaParser;
     function GetElevationCompiler: TRbwParser;
     procedure SetHigherElevationFormulaParser;
@@ -3267,6 +3317,9 @@ SectionStarts.}
     property IFACE: TIface read FIFACE write SetIFACE default iInternal;
     property ModpathParticles: TParticleStorage read FModpathParticles write SetModpathParticles;
     property Comment: string read FComment write SetComment;
+    property PointPositionValues: TPointPositionValues
+      read GetPointPositionValues write SetPointPositionValues
+      stored ShouldStorePointPositionValues;
   end;
 
   TScreenObjectList = class(TObject)
@@ -4151,13 +4204,26 @@ implementation
 uses Math, UndoItemsScreenObjects, BigCanvasMethods,
   GIS_Functions, frmFormulaErrorsUnit, SparseArrayUnit, ModelMuseUtilities,
   InteractiveTools, PhastModelUnit, CountObjectsUnit, GlobalVariablesUnit,
-  IntListUnit, frmGoPhastUnit, IsosurfaceUnit, TempFiles, LayerStructureUnit, 
-  gpc, frmGridValueUnit;
+  IntListUnit, frmGoPhastUnit, IsosurfaceUnit, TempFiles, LayerStructureUnit,
+  gpc, frmGridValueUnit, frmErrorsAndWarningsUnit;
 
 
 const
   SquareSize = 3;
+  DiamondSize = 5;
   MaxPointsInSubPolygon = 4;
+
+const
+  MaxReal = 3.4E38;
+  ErrorMessageFormulaUnNamed = 'An invalid value assigned by an formula for '
+    + 'an unamed data set in Object "%s" '
+    + 'has been replaced by the maximum  single-precision real number.';
+  ErrorMessageFormulaNamed = 'An invalid value assigned by an formula for '
+    + 'Data Set "&s" in Object "%s" '
+    + 'has been replaced by the maximum  single-precision real number.';
+  ErrorString ='Layer: %d; Row: %d; Column: %d .';
+
+
 
 type
   // @name is used when intersecting @link(TScreenObject)s with a
@@ -5457,6 +5523,10 @@ begin
   ModflowStreamGage := AScreenObject.ModflowStreamGage;
   ModflowMnw2Boundary := AScreenObject.ModflowMnw2Boundary;
 
+  // avoid creating AScreenObject.FPointPositionValues if it
+  // hasn't been created yet.
+  PointPositionValues := AScreenObject.FPointPositionValues;
+
   if not FCanInvalidateModel then
   begin
     FModel := AScreenObject.FModel;
@@ -6138,6 +6208,9 @@ var
   SectionIndex: Integer;
   Value: integer;
   NeedToDestroyLastSubPolygon: boolean;
+  Item: TPointValuesItem;
+  LocalPPV: TPointPositionValues;
+  LpvIndex: Integer;
 begin
   FIsClosedCached := False;
   // make sure that the index is valid.  If it isn't, an exception will
@@ -6178,9 +6251,43 @@ begin
     // If the point to be deleted is the last point, just reduce
     // the count by 1.
     Count := Pred(FCount);
+    LocalPPV := PointPositionValues;
+    if PointPositionValues <> nil then
+    begin
+      Item := LocalPPV.Items[LocalPPV.Count-1] as TPointValuesItem;
+      if Item.Position = Index then
+      begin
+        LocalPPV.Delete(LocalPPV.Count-1);
+        if LocalPPV.Count = 0 then
+        begin
+          PointPositionValues := nil;
+        end;
+      end;
+    end;
   end
   else
   begin
+    LocalPPV := PointPositionValues;
+    if LocalPPV <> nil then
+    begin
+      for LpvIndex := LocalPPV.Count - 1 downto 0 do
+      begin
+        Item := LocalPPV.Items[LpvIndex] as TPointValuesItem;
+        if Item.Position > Index then
+        begin
+          Item.Position := Item.Position -1
+        end
+        else if Item.Position = Index then
+        begin
+          LocalPPV.Delete(LpvIndex);
+          break;
+        end;
+      end;
+      if LocalPPV.Count = 0 then
+      begin
+        PointPositionValues := nil;
+      end;
+    end;
     // Otherwise, you need to move the points to fill the space left
     // by the deleted point.
     Dec(FCount);
@@ -6442,6 +6549,8 @@ var
   P: TPolygon32;
   MultiplePolygons: boolean;
   LastClosedSection: integer;
+  PointWithValue: boolean;
+  PointIndex: Integer;
 begin
   P := nil;
   if Deleted or (ViewDirection <> Direction) then
@@ -6513,7 +6622,9 @@ begin
     for Index := 0 to Count - 1 do
     begin
       IntPoint := CanvasCoordinates[Index];
-      DrawPointMarker(LineColor32, FillColor32, Bitmap32, IntPoint, LineWidth);
+      PointWithValue := (FPointPositionValues <> nil)
+        and (FPointPositionValues.IndexOfPosition(Index) >= 0);
+      DrawPointMarker(LineColor32, FillColor32, Bitmap32, IntPoint, LineWidth, PointWithValue);
     end;
   end
   else
@@ -6563,8 +6674,12 @@ begin
           end
           else if SectionLength[SectionIndex] = 1 then
           begin
-            IntPoint := CanvasCoordinates[SectionStart[SectionIndex]];
-            DrawPointMarker(LineColor32, FillColor32, BitMap32, IntPoint, LineWidth);
+            PointIndex := SectionStart[SectionIndex];
+            PointWithValue := (FPointPositionValues <> nil)
+              and (FPointPositionValues.IndexOfPosition(PointIndex) >= 0);
+            IntPoint := CanvasCoordinates[PointIndex];
+            DrawPointMarker(LineColor32, FillColor32, BitMap32, IntPoint,
+              LineWidth, PointWithValue);
           end
           else
           begin
@@ -6599,7 +6714,10 @@ begin
               FillColor32 := clBlack32;
             end;
           end;
-          DrawPointMarker(LineColor32, FillColor32, BitMap32, IntPoint, LineWidth);
+          PointWithValue := (FPointPositionValues <> nil)
+            and (FPointPositionValues.IndexOfPosition(Index) >= 0);
+          DrawPointMarker(LineColor32, FillColor32, BitMap32, IntPoint,
+            LineWidth, PointWithValue);
         end;
       end;
     end;
@@ -6613,6 +6731,19 @@ begin
   // screen object should be drawn on the screeen.
   CalculateCanvasCoordinates;
   result := FCanvasCoordinates;
+end;
+
+function TScreenObject.GetPointPositionValues: TPointPositionValues;
+begin
+  if FPointPositionValues = nil then
+  begin
+    if (frmGoPhast.PhastModel <> nil)
+      and (frmGoPhast.PhastModel.ComponentState <> []) then
+    begin
+      FPointPositionValues := TPointPositionValues.Create(Model);
+    end;
+  end;
+  result := FPointPositionValues;
 end;
 
 function TScreenObject.GetPoints(const Index: integer): TPoint2D;
@@ -6767,6 +6898,9 @@ procedure TScreenObject.InsertPoint(const Index: Integer;
 var
   SectionIndex: Integer;
   Value: integer;
+  LocalPPV: TPointPositionValues;
+  LPPVIndex: Integer;
+  Item: TPointValuesItem;
 begin
   FIsClosedCached := False;
   InvalidateModel;
@@ -6805,6 +6939,22 @@ begin
     if FCount = FCapacity then
     begin
       Grow;
+    end;
+    LocalPPV := PointPositionValues;
+    if LocalPPV <> nil then
+    begin
+      for LPPVIndex := LocalPPV.Count - 1 downto 0 do
+      begin
+        Item := LocalPPV.Items[LPPVIndex] as TPointValuesItem;
+        if Item.Position >= Index then
+        begin
+          Item.Position := Item.Position + 1;
+        end
+        else
+        begin
+          break;
+        end;
+      end;
     end;
     // Move subsequent points out of the way.
     Move(FPoints[Index], FPoints[Index + 1],
@@ -7378,6 +7528,29 @@ begin
   InvalidateModel;
 end;
 
+procedure TScreenObject.SetPointPositionValues(
+  const Value: TPointPositionValues);
+begin
+  if (Value = nil) or (Value.Count= 0) then
+  begin
+    if FPointPositionValues <> nil then
+    begin
+      Invalidate;
+    end;
+    FreeAndNil(FPointPositionValues);
+  end
+  else
+  begin
+    if FPointPositionValues = nil then
+    begin
+      FPointPositionValues := TPointPositionValues.Create(Model);
+    end;
+    FPointPositionValues.Assign(Value);
+    FPointPositionValues.Sort;
+    Invalidate;
+  end;
+end;
+
 procedure TScreenObject.SetPoints(const Index: integer;
   const Value: TPoint2D);
 begin
@@ -7549,6 +7722,7 @@ begin
           if SectionStart[SectionIndex] = Index then
           begin
             Inc(SectionIndex);
+            First := Second;
             Continue;
           end;
         end;
@@ -10956,6 +11130,11 @@ begin
   end;
 end;
 
+function TScreenObject.ShouldStorePointPositionValues: Boolean;
+begin
+  result := (FPointPositionValues <> nil) and (FPointPositionValues.Count > 0);
+end;
+
 function TScreenObject.SingleCellLocation: TCellLocation;
 var
   PhastModel: TPhastModel;
@@ -12059,6 +12238,7 @@ procedure TScreenObject.AssignCellValue(const UsedVariables: TStringList;
   var Expression: TExpression; const OtherData: TObject);
 var
   InterpValue: TInterpValuesItem;
+  AValue: double;
 begin
   case DataSet.Orientation of
     dsoTop:
@@ -12089,8 +12269,29 @@ begin
     case DataSet.Datatype of
       rdtDouble:
         begin
-          DataSet.RealData[LayerIndex, RowIndex, ColIndex] :=
-            Expression.DoubleResult;
+          AValue := Expression.DoubleResult;
+          if IsInfinite(AValue) or IsNan(AValue) then
+          begin
+            if DataSet.Name = '' then
+            begin
+              frmErrorsAndWarnings.AddError(
+                Format(ErrorMessageFormulaUnNamed, [Name]),
+                Format(ErrorString, [LayerIndex+1,RowIndex+1,ColIndex+1] ));
+            end
+            else
+            begin
+              frmErrorsAndWarnings.AddError(
+                Format(ErrorMessageFormulaNamed, [DataSet.Name,Name]),
+                Format(ErrorString, [LayerIndex+1,RowIndex+1,ColIndex+1]));
+            end;
+            DataSet.RealData[LayerIndex, RowIndex, ColIndex] := MaxReal
+          end
+          else
+          begin
+            DataSet.RealData[LayerIndex, RowIndex, ColIndex] := AValue;
+          end;
+//          DataSet.RealData[LayerIndex, RowIndex, ColIndex] :=
+//            Expression.DoubleResult;
         end;
       rdtInteger:
         begin
@@ -12579,6 +12780,10 @@ var
   DS_Index: Integer;
   BoundarArray: TDataArray;
 begin
+  if csReading in frmGoPhast.PhastModel.ComponentState then
+  begin
+    Exit;
+  end;
   BoundarArray := frmGoPhast.PhastModel.GetDataSetByName(StrUzfGage3);
   if (ModflowUzfBoundary <> nil) and ModflowUzfBoundary.Used and (ModflowUzfBoundary.GageOption2 <> 0) then
   begin
@@ -12604,6 +12809,10 @@ var
   DS_Index: Integer;
   BoundarArray: TDataArray;
 begin
+  if csReading in frmGoPhast.PhastModel.ComponentState then
+  begin
+    Exit;
+  end;
   BoundarArray := frmGoPhast.PhastModel.GetDataSetByName(StrUzfGage_1_and_2);
   if (ModflowUzfBoundary <> nil)
     and ModflowUzfBoundary.Used
@@ -12831,33 +13040,73 @@ end;
 
 procedure TScreenObject.DrawPointMarker(LineColor32: TColor32;
   FillColor32: TColor32; const Bitmap32: TBitmap32;
-  IntPoint: TPoint; LineWidth: Single);
+  IntPoint: TPoint; LineWidth: Single; PointWithValue: boolean);
+  function ShapeSize: integer;
+  begin
+    if PointWithValue then
+    begin
+      result := DiamondSize;
+    end
+    else
+    begin
+      result := SquareSize;
+    end;
+  end;
   function GetLow(AnInt: integer): integer;
   begin
-    if AnInt < -MAXINT + SquareSize  then
+    if AnInt < -MAXINT + ShapeSize+1  then
     begin
       result := -MAXINT
     end
     else
     begin
-      result := AnInt - SquareSize;
+      result := AnInt - ShapeSize-1;
     end;
   end;
   function GetHigh(AnInt: integer): integer;
   begin
-    if AnInt > MAXINT - SquareSize -1 then
+    if AnInt > MAXINT - ShapeSize -1 then
     begin
       result := MAXINT
     end
     else
     begin
-      result := AnInt + SquareSize + 1;
+      result := AnInt + ShapeSize + 1;
     end;
   end;
+  var
+    Points: TPointArray;
+    Polygon: TPolygon32;
+    Index: integer;
 begin
-  DrawBigRectangle32(BitMap32, LineColor32, FillColor32, LineWidth,
-    GetLow(IntPoint.X), GetLow(IntPoint.Y),
-    GetHigh(IntPoint.X), GetHigh(IntPoint.Y));
+  if PointWithValue then
+  begin
+    // draw diamond
+    SetLength(Points, 5);
+    for Index := 0 to 4 do
+    begin
+      Points[Index] := IntPoint;
+    end;
+    Points[0].X := GetHigh(Points[0].X);
+    Points[1].Y := GetHigh(Points[1].Y);
+    Points[2].X := GetLow(Points[2].X);
+    Points[3].Y := GetLow(Points[3].Y);
+    Points[4] := Points[0];
+
+    Polygon := nil;
+    DrawBigPolygon32(BitMap32,
+      LineColor32, FillColor32, LineWidth,
+      Points, Polygon,
+      False, True, False);
+
+  end
+  else
+  begin
+    // draw square
+    DrawBigRectangle32(BitMap32, LineColor32, FillColor32, LineWidth,
+      GetLow(IntPoint.X), GetLow(IntPoint.Y),
+      GetHigh(IntPoint.X), GetHigh(IntPoint.Y));
+  end;
 end;
 
 procedure TScreenObject.EvaluateDataArrayExpression(const DataSet: TDataArray; var Expression: TExpression; const Compiler: TRbwParser);
@@ -12947,6 +13196,7 @@ var
   FormulaIndex: Integer;
   FormulaObject: TFormulaObject;
 begin
+  FPointPositionValues.Free;
   FGpcPolygons.Free;
   Selected := False;
   ElevationCount := ecZero;
@@ -13208,6 +13458,8 @@ begin
   begin
     FreeAndNil(ModflowBoundaries.FModflowHfbBoundary);
   end;
+  UpdateUzfGage1and2;
+  UpdateUzfGage3;
 end;
 
 function TScreenObject.GetSelectedVertices(const index: integer): boolean;
@@ -13699,7 +13951,7 @@ end;
 
 procedure TScreenObject.NotifyGuiOfChange(Sender: TObject);
 begin
-  if FModel <> nil then
+  if (FModel <> nil) and FCanInvalidateModel then
   begin
     (FModel as TPhastModel).ScreenObjectsChanged(Sender);
   end;
@@ -17325,6 +17577,8 @@ procedure TCustomScreenObjectDelegate.AssignCellValue(
   RowIndex, ColIndex: integer; const Compiler: TRbwParser;
   const Annotation: string; var Expression: TExpression;
   const OtherData: TObject; SectionIndex: integer);
+var
+  AValue: double;
 begin
   case DataSet.Orientation of
     dsoTop:
@@ -17354,8 +17608,29 @@ begin
   case DataSet.Datatype of
     rdtDouble:
       begin
-        DataSet.RealData[LayerIndex, RowIndex, ColIndex] :=
-          Expression.DoubleResult;
+        AValue := Expression.DoubleResult;
+        if IsInfinite(AValue) or IsNan(AValue) then
+        begin
+          if DataSet.Name = '' then
+          begin
+            frmErrorsAndWarnings.AddError(
+              Format(ErrorMessageFormulaUnNamed, [FScreenObject.Name]),
+              Format(ErrorString, [LayerIndex+1,RowIndex+1,ColIndex+1] ));
+          end
+          else
+          begin
+            frmErrorsAndWarnings.AddError(
+              Format(ErrorMessageFormulaNamed, [DataSet.Name,FScreenObject.Name]),
+              Format(ErrorString, [LayerIndex+1,RowIndex+1,ColIndex+1]));
+          end;
+          DataSet.RealData[LayerIndex, RowIndex, ColIndex] := MaxReal
+        end
+        else
+        begin
+          DataSet.RealData[LayerIndex, RowIndex, ColIndex] := AValue;
+        end;
+//        DataSet.RealData[LayerIndex, RowIndex, ColIndex] :=
+//          Expression.DoubleResult;
       end;
     rdtInteger:
       begin
@@ -30530,6 +30805,201 @@ constructor TCellElementLeafList.Create;
 begin
   inherited;
   OwnsObjects := True;
+end;
+
+{ TPointValue }
+
+procedure TPointValue.Assign(Source: TPersistent);
+var
+  AnotherPointValue: TPointValue;
+begin
+  if Source is TPointValue then
+  begin
+    AnotherPointValue := TPointValue(Source);
+    Name := AnotherPointValue.Name;
+    Value := AnotherPointValue.Value;
+  end;
+  inherited;
+end;
+
+function TPointValue.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  AnotherPointValue: TPointValue;
+begin
+  result := AnotherItem is TPointValue;
+  if result then
+  begin
+    AnotherPointValue := TPointValue(AnotherItem);
+    result := (CompareText(Name, AnotherPointValue.Name) = 0)
+      and (Value = AnotherPointValue.Value);
+  end;
+end;
+
+procedure TPointValue.SetName(const Value: string);
+begin
+  SetCaseInsensitiveStringProperty(FName, Value);
+end;
+
+procedure TPointValue.SetValue(const Value: double);
+begin
+  SetRealProperty(FValue, Value);
+end;
+
+{ TPointValues }
+
+constructor TPointValues.Create(Model: TObject);
+begin
+  inherited Create(TPointValue, Model);
+end;
+
+{ TPointValuesItem }
+
+procedure TPointValuesItem.Assign(Source: TPersistent);
+var
+  SourceValues: TPointValuesItem;
+begin
+  if Source is TPointValuesItem then
+  begin
+    SourceValues := TPointValuesItem(Source);
+    Position := SourceValues.Position;
+    Values := SourceValues.Values;
+  end;
+  inherited;
+end;
+
+constructor TPointValuesItem.Create(Collection: TCollection);
+begin
+  inherited;
+  FValues:= TPointValues.Create(Model);
+end;
+
+destructor TPointValuesItem.Destroy;
+begin
+  FValues.Free;
+  inherited;
+end;
+
+function TPointValuesItem.GetValue(Index: integer): double;
+begin
+  result := (Values.Items[Index] as TPointValue).Value;
+end;
+
+function TPointValuesItem.IndexOfName(AName: string): integer;
+var
+  Item: TPointValue;
+  Index: integer;
+begin
+  result := -1;
+  for Index := 0 to Values.Count - 1 do
+  begin
+    Item := Values.Items[Index] as TPointValue;
+    if CompareText(Item.Name, AName) = 0 then
+    begin
+      result := Index;
+      Exit;
+    end;
+  end;
+end;
+
+function TPointValuesItem.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  SourceValues: TPointValuesItem;
+begin
+  result := AnotherItem is TPointValuesItem;
+  if result then
+  begin
+    SourceValues := TPointValuesItem(AnotherItem);
+    result := (Position = SourceValues.Position)
+      and Values.IsSame(SourceValues.Values);
+  end;
+end;
+
+procedure TPointValuesItem.SetPosition(const Value: integer);
+begin
+  SetIntegerProperty(FPosition, Value);
+end;
+
+procedure TPointValuesItem.SetValue(Index: integer; const Value: double);
+begin
+  (Values.Items[Index] as TPointValue).Value := Value;
+end;
+
+procedure TPointValuesItem.SetValues(const Value: TPointValues);
+begin
+  FValues.Assign(Value);
+end;
+
+{ TPointPositionValues }
+
+constructor TPointPositionValues.Create(Model: TObject);
+begin
+  inherited Create(TPointValuesItem, Model);
+end;
+
+function TPointPositionValues.GetItemByPosition(
+  APosition: integer): TPointValuesItem;
+var
+  PositionInItems: Integer;
+begin
+  PositionInItems := IndexOfPosition(APosition);
+  if PositionInItems >= 0 then
+  begin
+    result := Items[PositionInItems] as TPointValuesItem;
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
+function TPointPositionValues.IndexOfPosition(APosition: integer): integer;
+var
+  Index: Integer;
+  Item: TPointValuesItem;
+begin
+  result := -1;
+  for Index := 0 to Count - 1 do
+  begin
+    Item := Items[Index] as TPointValuesItem;
+    if Item.Position = APosition then
+    begin
+      result := Index;
+      Exit;
+    end;
+  end;
+end;
+
+function ComparePointValuesItems(Item1, Item2: Pointer): Integer;
+var
+  Pv1, Pv2: TPointValuesItem;
+begin
+  Pv1 := Item1;
+  Pv2 := Item2;
+  result := Pv1.Position - Pv2.Position;
+end;
+
+procedure TPointPositionValues.Sort;
+var
+  List: TList;
+  Index: Integer;
+  PVItem: TPointValuesItem;
+begin
+  List := TList.Create;
+  try
+    List.Capacity := Count;
+    for Index := 0 to Count - 1 do
+    begin
+      List.Add(Items[Index])
+    end;
+    List.Sort(ComparePointValuesItems);
+    for Index := 0 to List.Count - 1 do
+    begin
+      PVItem := List[Index];
+      PVItem.Index := Index;
+    end;
+  finally
+    List.Free;
+  end;
 end;
 
 initialization

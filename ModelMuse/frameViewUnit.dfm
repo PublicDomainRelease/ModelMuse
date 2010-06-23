@@ -116,7 +116,7 @@ object frameView: TframeView
     Exaggeration = 1.000000000000000000
     HorizontalDirection = hdRight
     Image32.Left = 0
-    Image32.Top = 0
+    Image32.Top = 167
     Image32.Width = 467
     Image32.Height = 208
     Image32.Anchors = [akLeft, akBottom]
@@ -124,6 +124,7 @@ object frameView: TframeView
     Image32.BitmapAlign = baTopLeft
     Image32.Color = clWhite
     Image32.ParentColor = False
+    Image32.RepaintMode = rmOptimizer
     Image32.Scale = 1.000000000000000000
     Image32.ScaleMode = smNormal
     Image32.TabOrder = 0
@@ -131,6 +132,7 @@ object frameView: TframeView
     Image32.OnMouseDown = ZoomBoxImage32MouseDown
     Image32.OnMouseMove = ZoomBoxImage32MouseMove
     Image32.OnMouseUp = ZoomBoxImage32MouseUp
+    Image32.ExplicitTop = 0
     ImmediateResize = True
     Magnification = 1.000000000000000000
     VerticalDirection = vdUp

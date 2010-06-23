@@ -10,11 +10,8 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
   Caption = 'Object Properties'
   Font.Height = 19
   OnClose = FormClose
-  OnDestroy = FormDestroy
   OnKeyUp = FormKeyUp
   OnResize = FormResize
-  ExplicitLeft = -94
-  ExplicitTop = -35
   ExplicitWidth = 794
   ExplicitHeight = 588
   PixelsPerInch = 96
@@ -24,7 +21,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
     Top = 0
     Width = 786
     Height = 513
-    ActivePage = tabComments
+    ActivePage = tabModflowBoundaryConditions
     Align = alClient
     TabHeight = 28
     TabOrder = 0
@@ -397,10 +394,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpKeyword = 'Data_Sets_Tab'
       Caption = 'Data Sets'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbPhastInterpolation: TGroupBox
         Left = 0
         Top = 299
@@ -580,7 +573,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             Top = 32
             Width = 475
             Height = 139
-            AutoSize = False
             Anchors = [akLeft, akTop, akRight, akBottom]
             Enabled = False
             TabOrder = 0
@@ -672,10 +664,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpKeyword = 'PHAST_Boundary_Conditions_Tab'
       Caption = 'PHAST Boundary Conditions'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pcPhastBoundaries: TJvPageList
         Left = 0
         Top = 201
@@ -720,7 +708,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Width = 273
               Height = 27
               Style = csDropDownList
-              ItemHeight = 19
+              ItemHeight = 0
               ItemIndex = 0
               TabOrder = 0
               Text = 'Associated solution'
@@ -1680,7 +1668,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Width = 105
               Height = 27
               Style = csDropDownList
-              ItemHeight = 19
+              ItemHeight = 0
               ItemIndex = 0
               TabOrder = 4
               Text = 'Elevation'
@@ -2142,10 +2130,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpKeyword = 'MODFLOW_Features_Tab'
       Caption = 'MODFLOW Features'
       ImageIndex = 4
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object JvNetscapeSplitter1: TJvNetscapeSplitter
         Left = 185
         Top = 0
@@ -3437,7 +3421,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Width = 145
               Height = 27
               Style = csDropDownList
-              ItemHeight = 19
+              ItemHeight = 0
               TabOrder = 0
               OnChange = comboDrtLocationChoiceChange
               Items.Strings = (
@@ -3515,7 +3499,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 19
+                  ItemHeight = 0
                   TabOrder = 0
                   Text = '0'
                   OnChange = comboDrtReturnObjectChange
@@ -3532,7 +3516,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 19
+                  ItemHeight = 0
                   TabOrder = 1
                   Text = '0'
                   OnChange = comboDrtReturnObjectChange
@@ -3549,7 +3533,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 19
+                  ItemHeight = 0
                   TabOrder = 2
                   Text = '0'
                   OnChange = comboDrtReturnObjectChange
@@ -3595,7 +3579,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 19
+                  ItemHeight = 0
                   TabOrder = 0
                   Text = '1'
                   OnChange = comboDrtReturnObjectChange
@@ -3614,7 +3598,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 19
+                  ItemHeight = 0
                   TabOrder = 1
                   Text = '1'
                   OnChange = comboDrtReturnObjectChange
@@ -3633,7 +3617,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 19
+                  ItemHeight = 0
                   TabOrder = 2
                   Text = '1'
                   OnChange = comboDrtReturnObjectChange

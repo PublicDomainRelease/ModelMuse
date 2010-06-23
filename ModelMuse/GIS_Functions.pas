@@ -124,6 +124,7 @@ const
   StrHufAverageSy = 'GetHuf_Average_Sy';
   StrHufSy = 'GetHufSy';
   StrLayerHeight = 'LayerHeight';
+  StrInterpolatedVertexValues = 'InterpolatedVertexValue';
 
 function GetColumnWidth(Column: Integer): Double;
 function GetRowWidth(Row: Integer): Double;
@@ -176,6 +177,9 @@ var
   ColumnPositionFunction: TFunctionRecord;
   RowPositionFunction: TFunctionRecord;
   LayerPositionFunction: TFunctionRecord;
+  ColumnCenterFunction: TFunctionRecord;
+  RowCenterFunction: TFunctionRecord;
+  LayerCenterFunction: TFunctionRecord;
   ColumnCountFunction: TFunctionRecord;
   RowCountFunction: TFunctionRecord;
   LayerCountFunction: TFunctionRecord;
@@ -197,6 +201,7 @@ var
   CurrentSectionIndexFunction: TFunctionRecord;
   FractionOfObjectLengthFunction: TFunctionRecord;
   NodeCountFunction: TFunctionRecord;
+  InterpolationedValuesFunction: TFunctionRecord;
 
   ListRealValueFunction: TFunctionRecord;
   ListIntegerValueFunction: TFunctionRecord;
@@ -288,6 +293,9 @@ begin
   AddItem(ColumnPositionFunction, True);
   AddItem(RowPositionFunction, True);
   AddItem(LayerPositionFunction, True);
+  AddItem(ColumnCenterFunction, True);
+  AddItem(RowCenterFunction, True);
+  AddItem(LayerCenterFunction, True);
   AddItem(ObjectLengthFunction, True);
   AddItem(ObjectAreaFunction, True);
   AddItem(ObjectIntersectLengthFunction, True);
@@ -313,6 +321,7 @@ begin
   AddItem(ImportedValuesIFunction, True);
   AddItem(ImportedValuesBFunction, True);
   AddItem(ImportedValuesTFunction, True);
+  AddItem(InterpolationedValuesFunction, True);
 end;
 
 procedure GetCellIndicies(var Column, Row, Layer: Integer;
@@ -353,6 +362,7 @@ var
   CumulativeDistance: double;
   APoint: TPoint2D;
   PriorPoint: TPoint2D;
+  SectionIndex: Integer;
 begin
   if GlobalCurrentScreenObject = nil then
   begin
@@ -368,14 +378,22 @@ begin
         CumulativeDistance := 0;
         FNodeDistances[0] := 0;
         PriorPoint := GlobalCurrentScreenObject.Points[0];
+        SectionIndex := 0;
         for PointIndex := 1 to GlobalCurrentScreenObject.Count - 1 do
         begin
           APoint := GlobalCurrentScreenObject.Points[PointIndex];
-          CumulativeDistance := CumulativeDistance
-            + Sqrt(Sqr(APoint.X - PriorPoint.X)
-            + Sqr(APoint.Y - PriorPoint.Y));
+          if GlobalCurrentScreenObject.SectionStart[SectionIndex] <> PointIndex then
+          begin
+            CumulativeDistance := CumulativeDistance
+              + Sqrt(Sqr(APoint.X - PriorPoint.X)
+              + Sqr(APoint.Y - PriorPoint.Y));
+          end;
           FNodeDistances[PointIndex] := CumulativeDistance;
           PriorPoint := APoint;
+          if GlobalCurrentScreenObject.SectionEnd[SectionIndex] = PointIndex then
+          begin
+            Inc(SectionIndex);
+          end;
         end;
       end;
       NodeDistancesSet := True;
@@ -750,6 +768,119 @@ begin
   end;
 end;
 
+function _InterpolatedVertexValues(Values: array of pointer): double;
+var
+  VertexValueName: string;
+  LocalPPV: TPointPositionValues;
+  Index: Integer;
+  Item: TPointValuesItem;
+  VVIndex: Integer;
+  AValue: Double;
+  BeforeValue: Double;
+  AfterValue: Double;
+  BeforePosition: Integer;
+  AfterPosition: Integer;
+  Distance1: Double;
+  Distance2: Double;
+  Point1, Point2: TPoint2D;
+  SegmentDistance: double;
+begin
+  if (GlobalCurrentSegment = nil) or (GlobalCurrentScreenObject = nil)
+    or (GlobalCurrentScreenObject.PointPositionValues = nil) then
+  begin
+    result := 0;
+  end
+  else
+  begin
+    Assert(Length(Values) >= 1);
+    VertexValueName := PString(Values[0])^;
+    LocalPPV := GlobalCurrentScreenObject.PointPositionValues;
+
+    BeforeValue := 0;
+    BeforePosition := -1;
+    AfterValue := 0;
+    AfterPosition := -1;
+
+    for Index := 0 to LocalPPV.Count - 1 do
+    begin
+      Item := LocalPPV.Items[Index] as TPointValuesItem;
+      VVIndex := Item.IndexOfName(VertexValueName);
+      if VVIndex >= 0 then
+      begin
+        AValue := Item.Value[VVIndex];
+        if Item.Position <= GlobalCurrentSegment.VertexIndex then
+        begin
+          BeforeValue := AValue;
+          BeforePosition := Item.Position;
+        end
+        else
+        begin
+          AfterValue := AValue;
+          AfterPosition := Item.Position;
+          break;
+        end;
+      end;
+    end;
+
+    if BeforePosition = -1 then
+    begin
+      if AfterPosition = -1 then
+      begin
+        result := 0;
+      end
+      else
+      begin
+        result := AfterValue;
+      end;
+    end
+    else
+    begin
+      if AfterPosition = -1 then
+      begin
+        result := BeforeValue;
+      end
+      else
+      begin
+        Point1 := GlobalCurrentScreenObject.Points[
+          GlobalCurrentSegment.VertexIndex];
+        if (BeforePosition = GlobalCurrentSegment.VertexIndex)
+          and (GlobalCurrentSegment.X1 = Point1.X)
+          and (GlobalCurrentSegment.Y1 = Point1.Y) then
+        begin
+          result := BeforeValue;
+          Exit;
+        end;
+
+        Point2 := GlobalCurrentScreenObject.Points[
+          GlobalCurrentSegment.VertexIndex+1];
+        if (AfterPosition = GlobalCurrentSegment.VertexIndex+1)
+          and (GlobalCurrentSegment.X2 = Point2.X)
+          and (GlobalCurrentSegment.Y2 = Point2.Y) then
+        begin
+           result := AfterValue;
+           Exit;
+        end;
+
+        Distance1 := NodeDistances(BeforePosition);
+        Distance2 := NodeDistances(AfterPosition);
+        if Distance1 = Distance2 then
+        begin
+          result := (BeforeValue + AfterValue)/2;
+        end
+        else
+        begin
+          Point2.X := (GlobalCurrentSegment.X1 + GlobalCurrentSegment.X2) / 2;
+          Point2.Y := (GlobalCurrentSegment.Y1 + GlobalCurrentSegment.Y2) / 2;
+          SegmentDistance := (Sqrt(Sqr(Point1.X - Point2.X) + Sqr(Point1.Y - Point2.Y))
+            + NodeDistances(GlobalCurrentSegment.VertexIndex));
+          result := (SegmentDistance - Distance1)/(Distance2 - Distance1)
+            * (AfterValue - BeforeValue) + BeforeValue;
+        end;
+      end;
+    end;
+  end;
+end;
+
 function _FractionOfObjectLength(Values: array of pointer): double;
 var
   Point1, Point2: TPoint2D;
@@ -798,7 +929,7 @@ begin
   end;
 end;
 
-function _ObjectNodeCount(Values: array of pointer): double;
+function _ObjectNodeCount(Values: array of pointer): integer;
 begin
   result := 0;
   if (GlobalCurrentScreenObject = nil) then
@@ -843,6 +974,50 @@ end;
 function _Row(Values: array of pointer): integer;
 begin
   Result := GlobalRow;
+end;
+
+function _ColumnCenter(Values: array of pointer): double;
+var
+  Col: Integer;
+begin
+  if Values[0] <> nil then
+  begin
+    Col := PInteger(Values[0])^ - 1;
+  end
+  else
+  begin
+    Col := GlobalColumn - 1;
+  end;
+  if (Col < 0) or (Col > frmGoPhast.Grid.ColumnCount-1) then
+  begin
+    result := 0;
+  end
+  else
+  begin
+    result := frmGoPhast.Grid.ColumnCenter(Col);
+  end;
+end;
+
+function _RowCenter(Values: array of pointer): double;
+var
+  Row: Integer;
+begin
+  if Values[0] <> nil then
+  begin
+    Row := PInteger(Values[0])^ - 1;
+  end
+  else
+  begin
+    Row := GlobalRow - 1;
+  end;
+  if (Row < 0) or (Row > frmGoPhast.Grid.RowCount-1) then
+  begin
+    result := 0;
+  end
+  else
+  begin
+    result := frmGoPhast.Grid.RowCenter(Row);
+  end;
 end;
 
 function _ElevationToModelLayer(Values: array of pointer): integer;
@@ -1407,15 +1582,17 @@ begin
   end;
 end;
 
-function GetLayerPosition(const Lay, Row, Col: Integer): Double;
+function GetLayerPosition(const Lay, Row, Col: Integer; var InvalidIndex: boolean): Double;
 begin
   result := 0;
+  InvalidIndex := False;
   case frmGoPhast.ModelSelection of
     msPhast:
       begin
         if (Lay < 0) or (Lay > frmGoPhast.PhastGrid.LayerCount) then
         begin
           Result := 0;
+          InvalidIndex := True;
         end
         else
         begin
@@ -1429,6 +1606,7 @@ begin
          or (Col < 0) or (Col > frmGoPhast.ModflowGrid.ColumnCount-1) then
         begin
           Result := 0;
+          InvalidIndex := True;
         end
         else
         begin
@@ -1445,9 +1623,35 @@ var
   Col: integer;
   Row: integer;
   Lay: integer;
+  DummyInvalidIndex: boolean;
 begin
   ExtractColRowLayer(Lay, Row, Col, Values);
-  Result := GetLayerPosition(Lay, Row, Col);
+  Result := GetLayerPosition(Lay, Row, Col, DummyInvalidIndex);
+end;
+
+function _LayerCenter(Values: array of pointer): double;
+var
+  Col: integer;
+  Row: integer;
+  Lay: integer;
+  InvalidIndex: boolean;
+  BelowValue: Double;
+  AboveValue: Double;
+begin
+  ExtractColRowLayer(Lay, Row, Col, Values);
+  BelowValue := GetLayerPosition(Lay, Row, Col, InvalidIndex);
+  if InvalidIndex then
+  begin
+    result := 0;
+    Exit
+  end;
+  AboveValue := GetLayerPosition(Lay+1, Row, Col, InvalidIndex);
+  if InvalidIndex then
+  begin
+    result := 0;
+    Exit
+  end;
+  result := (BelowValue + AboveValue)/2;
 end;
 
 function _LayerCount(Values: array of pointer): integer;
@@ -2097,10 +2301,11 @@ procedure GetLayerTopAndBottom(Head: double; Layer, Row, Column: Integer;
 var
   LayerGroup: TLayerGroup;
   PhastModel: TPhastModel;
+  DummyInvalidIndex: boolean;
 begin
   PhastModel := frmGoPhast.PhastModel;
-  LayerTop := GetLayerPosition(Layer, Row, Column);
-  LayerBottom := GetLayerPosition(Layer + 1, Row, Column);
+  LayerTop := GetLayerPosition(Layer, Row, Column, DummyInvalidIndex);
+  LayerBottom := GetLayerPosition(Layer + 1, Row, Column, DummyInvalidIndex);
   LayerGroup := PhastModel.LayerStructure.GetLayerGroupByLayer(Layer);
   if (LayerGroup.AquiferType <> 0) and UseHead then
   begin
@@ -3335,6 +3540,38 @@ initialization
   LayerPositionFunction.Prototype :=
     'Grid|LayerBoundaryPosition({{Column, Row,} Layer})';
 
+  LayerCenterFunction.ResultType := rdtDouble;
+  LayerCenterFunction.RFunctionAddr := _LayerCenter;
+  SetLength(LayerCenterFunction.InputDataTypes, 3);
+  LayerCenterFunction.InputDataTypes[0] := rdtInteger;
+  LayerCenterFunction.InputDataTypes[1] := rdtInteger;
+  LayerCenterFunction.InputDataTypes[2] := rdtInteger;
+  LayerCenterFunction.OptionalArguments := 3;
+  LayerCenterFunction.CanConvertToConstant := False;
+  LayerCenterFunction.Name := 'LayerCenter';
+  LayerCenterFunction.Prototype :=
+    'Grid|LayerCenter({{Column, Row,} Layer})';
+
+  ColumnCenterFunction.ResultType := rdtDouble;
+  ColumnCenterFunction.RFunctionAddr := _ColumnCenter;
+  SetLength(ColumnCenterFunction.InputDataTypes, 1);
+  ColumnCenterFunction.InputDataTypes[0] := rdtInteger;
+  ColumnCenterFunction.OptionalArguments := 1;
+  ColumnCenterFunction.CanConvertToConstant := False;
+  ColumnCenterFunction.Name := 'ColumnCenter';
+  ColumnCenterFunction.Prototype :=
+    'Grid|ColumnCenter({Column})';
+
+  RowCenterFunction.ResultType := rdtDouble;
+  RowCenterFunction.RFunctionAddr := _RowCenter;
+  SetLength(RowCenterFunction.InputDataTypes, 1);
+  RowCenterFunction.InputDataTypes[0] := rdtInteger;
+  RowCenterFunction.OptionalArguments := 1;
+  RowCenterFunction.CanConvertToConstant := False;
+  RowCenterFunction.Name := 'RowCenter';
+  RowCenterFunction.Prototype :=
+    'Grid|RowCenter({Row})';
+
   ColumnCountFunction.ResultType := rdtInteger;
   ColumnCountFunction.IFunctionAddr := _ColumnCount;
   SetLength(ColumnCountFunction.InputDataTypes, 0);
@@ -3515,8 +3752,19 @@ initialization
   FractionOfObjectLengthFunction.Name := 'FractionOfObjectLength';
   FractionOfObjectLengthFunction.Prototype := 'Object|FractionOfObjectLength';
 
-  NodeCountFunction.ResultType := rdtDouble;
-  NodeCountFunction.RFunctionAddr := _ObjectNodeCount;
+  InterpolationedValuesFunction.ResultType := rdtDouble;
+  InterpolationedValuesFunction.RFunctionAddr := _InterpolatedVertexValues;
+  SetLength(InterpolationedValuesFunction.InputDataTypes, 1);
+  InterpolationedValuesFunction.InputDataTypes[0] := rdtString;
+  InterpolationedValuesFunction.OptionalArguments := 1;
+  InterpolationedValuesFunction.CanConvertToConstant := False;
+  InterpolationedValuesFunction.Name := StrInterpolatedVertexValues;
+  InterpolationedValuesFunction.Prototype := 'Object|'
+    + StrInterpolatedVertexValues + '(Key)';
+  InterpolationedValuesFunction.Hidden := False;
+
+  NodeCountFunction.ResultType := rdtInteger;
+  NodeCountFunction.IFunctionAddr := _ObjectNodeCount;
   NodeCountFunction.OptionalArguments := 0;
   NodeCountFunction.CanConvertToConstant := False;
   NodeCountFunction.Name := 'ObjectVertexCount';

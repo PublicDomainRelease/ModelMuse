@@ -41,6 +41,11 @@ Copyright: (C) Advanced Interfaces Group,
 
 unit gpc;
 
+{$IFNDEF MyDebug}
+  {$HINTS OFF}
+  {$WARNINGS OFF}
+{$ENDIF}
+
 interface
 uses
   Windows;
@@ -2775,4 +2780,9 @@ end;
 //======================================
 
 end.
+
+{$IFNDEF MyDebug}
+  {$HINTS ON}
+  {$WARNINGS ON}
+{$ENDIF}
 

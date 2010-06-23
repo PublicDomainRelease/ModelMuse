@@ -113,8 +113,10 @@ interface
         function Add: TDep;
         procedure Append(Source: TDepSet);
         procedure Assign(Source: TPersistent); override;
+        procedure ChangeGroupNames(OldGroup, NewGroup: string);
 //        procedure Empty;
         function NumDepByGroup(GpName: string): integer;
+        procedure SetGpDefault(const DepCat: TDepCat);
    end;  // end of TDepSet
 
     TObservationSetup = class(TComponent)
@@ -880,6 +882,21 @@ begin
     inherited;
 end;
 
+procedure TDepSet.ChangeGroupNames(OldGroup, NewGroup: string);
+var
+  I, AttPos: integer;
+begin
+  AttPos := DepAttPos(datGroupName);
+  if self.Count > 0 then
+    begin
+      for I := 0 to Count - 1 do
+        begin
+          if Items[I].AllAtts.Items[AttPos].Text = OldGroup then
+            Items[I].AllAtts.Items[AttPos].Text := NewGroup;
+        end;
+    end;
+end;
+
 constructor TDepSet.Create;
 begin
   inherited Create(TDep);
@@ -922,6 +939,27 @@ begin
         end;
     end;
   result := K;
+end;
+
+procedure TDepSet.SetGpDefault(const DepCat: TDepCat);
+var
+  AttPos: integer;
+  Def: string;
+begin
+  case DepCat of
+    dcObs: Def := 'DefaultObs';
+    dcPred: Def := 'DefaultPreds';
+    dcUnknown: Def := 'DefaultUnknown';
+  end;
+  if Count = 0 then
+    begin
+      Add;
+      Items[0].Initialize(Def,Def,DepCat);
+      AttPos := DepAttPos(datUseFlag);
+      Items[0].AllAtts.Items[AttPos].Text := 'Yes';
+      AttPos := DepAttPos(datNonDetect);
+      Items[0].AllAtts.Items[AttPos].Text := 'No';
+    end;
 end;
 
 procedure TDepSet.SetItem(Index: integer; const Value: TDep);

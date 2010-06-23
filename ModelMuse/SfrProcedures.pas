@@ -2,6 +2,11 @@ unit SfrProcedures;
 
 interface
 
+{$IFNDEF MyDebug}
+  {$HINTS OFF}
+  {$WARNINGS OFF}
+{$ENDIF}
+
 uses FastGeo, TripackTypes;
 
 procedure ARCINT (const B,X1,X2,Y1,Y2,H1,H2,HX1,HX2,HY1,
@@ -7609,5 +7614,10 @@ begin
 //      RETURN
 //      END
 end;
+
+{$IFNDEF MyDebug}
+  {$HINTS ON}
+  {$WARNINGS ON}
+{$ENDIF}
 
 end.

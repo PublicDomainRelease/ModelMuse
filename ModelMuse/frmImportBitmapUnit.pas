@@ -101,7 +101,7 @@ type
     // @name initializes @classname.
     procedure FormCreate(Sender: TObject); override;
     // @name destroys @link(FBitMap).
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     // @name calls @link(LabelColumns).
     procedure rgViewDirectionClick(Sender: TObject);
     procedure ZoomBoxImage32MouseUp(Sender: TObject; Button: TMouseButton;

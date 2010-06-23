@@ -38,6 +38,9 @@ type
     fedModpath: TJvFilenameEdit;
     lblModelMonitor: TLabel;
     fedModelMonitor: TJvFilenameEdit;
+    htlblZoneBudger: TJvHTLabel;
+    fedZonebudget: TJvFilenameEdit;
+    lblZoneBudget: TLabel;
     procedure fedModflowChange(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
@@ -87,6 +90,7 @@ begin
   fedTextEditor.FileName := Locations.TextEditorLocation;
   fedModpath.FileName := Locations.ModPathLocation;
   fedModelMonitor.FileName := Locations.ModelMonitorLocation;
+  fedZonebudget.FileName := Locations.ZoneBudgetLocation;
 end;
 
 procedure TfrmProgramLocations.SetData;
@@ -100,6 +104,7 @@ begin
     Locations.TextEditorLocation := fedTextEditor.FileName;
     Locations.ModPathLocation := fedModpath.FileName;
     Locations.ModelMonitorLocation := fedModelMonitor.FileName;
+    Locations.ZoneBudgetLocation := fedZonebudget.FileName;
     Undo := TUndoChangeProgramLocations.Create(Locations);
     frmGoPhast.UndoStack.Submit(Undo);
   finally

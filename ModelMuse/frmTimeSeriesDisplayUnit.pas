@@ -62,6 +62,8 @@ type
     procedure seCyclesChange(Sender: TObject);
     procedure jsColorExponentChanged(Sender: TObject);
     procedure comboTimeToPlotChange(Sender: TObject);
+    procedure fedModpathFileBeforeDialog(Sender: TObject; var AName: string;
+      var AAction: Boolean);
   private
     procedure GetData;
     procedure SetData;
@@ -116,6 +118,31 @@ procedure TfrmTimeSeriesDisplay.comboTimeToPlotChange(Sender: TObject);
 begin
   inherited;
   udTimeToPlot.Position := 0;
+end;
+
+procedure TfrmTimeSeriesDisplay.fedModpathFileBeforeDialog(Sender: TObject;
+  var AName: string; var AAction: Boolean);
+begin
+  inherited;
+  if AName = '' then
+  begin
+    if frmGoPhast.sdModpathInput.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdModpathInput.FileName,
+        fedModpathFile.DefaultExt);
+    end
+    else if frmGoPhast.sdModflowInput.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdModflowInput.FileName,
+        fedModpathFile.DefaultExt);
+    end
+    else if frmGoPhast.sdSaveDialog.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdSaveDialog.FileName,
+        fedModpathFile.DefaultExt);
+    end;
+  end;
+
 end;
 
 procedure TfrmTimeSeriesDisplay.fedModpathFileChange(Sender: TObject);
@@ -173,13 +200,21 @@ var
   ARow: Integer;
   ColorParameters: TColorParameters;
 begin
+  if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
+  begin
+    fedModpathFile.DefaultExt := '.ts_bin';
+  end
+  else
+  begin
+    fedModpathFile.DefaultExt := '.ts';
+  end;
   TimeSeries := frmGoPhast.PhastModel.TimeSeries;
   fedModpathFile.FileName := TimeSeries.FileName;
   Times := TimeSeries.Times;
   AssignTimesToComboBox(Times);
   udTimeToPlot.Position := TimeSeries.TimeIndex;
   comboTimeToPlot.ItemIndex := TimeSeries.TimeIndex;
-  cbShowPathlines.Checked := TimeSeries.DisplayTimeSeries;
+  cbShowPathlines.Checked := TimeSeries.Visible;
 
   DisplayLimits := TimeSeries.DisplayLimits;
   cbLimitToCurrentIn2D.Checked := DisplayLimits.LimitToCurrentIn2D;
@@ -268,6 +303,7 @@ begin
         end;
       end;
   end;
+  udTimeToPlot.ControlStyle := udTimeToPlot.ControlStyle - [csCaptureMouse];
 end;
 
 procedure TfrmTimeSeriesDisplay.rdgLimitsSelectCell(Sender: TObject; ACol,
@@ -410,7 +446,7 @@ begin
         end;
       end;
       TimeSeries.TimeIndex := comboTimeToPlot.ItemIndex;
-      TimeSeries.DisplayTimeSeries := cbShowPathlines.Checked;
+      TimeSeries.Visible := cbShowPathlines.Checked;
 
       Limits := TimeSeries.DisplayLimits;
       Limits.LimitToCurrentIn2D := cbLimitToCurrentIn2D.Checked;

@@ -18,7 +18,7 @@ type
     procedure btnOKClick(Sender: TObject);
     procedure cbSpecifyContoursClick(Sender: TObject);
     procedure btnEditContoursClick(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure virttreecomboDataSetsChange(Sender: TObject);
     procedure virttreecomboDataSetsDropDownTreeChange(Sender: TBaseVirtualTree;
       Node: PVirtualNode);
@@ -27,15 +27,17 @@ type
     procedure cbLogTransformClick(Sender: TObject);
   private
     FContours: TContours;
+    FGettingData: Boolean;
     procedure GetData;
     procedure SetData;
     procedure UpdateTopFrontAndSideItems;
     procedure HandleSelectedObject(AnObject: TObject);
+    procedure SetMinMaxLabels;
   protected
     function GetSelectedArray: TDataArray; override;
     { Private declarations }
   public
-    procedure SetMinMaxLabels;
+    procedure UpdateLabelsAndLegend;
     procedure UpdateContours;
     { Public declarations }
   end;
@@ -50,7 +52,7 @@ implementation
 uses
   PhastModelUnit, frmGoPhastUnit, GoPhastTypes, frmProgressUnit,
   frmErrorsAndWarningsUnit, ColorSchemes, frmSpecifyContoursUnit, 
-  frmCustomGoPhastUnit, ClassificationUnit, Math;
+  frmCustomGoPhastUnit, ClassificationUnit, Math, LegendUnit;
 
 {$R *.dfm}
 
@@ -87,7 +89,7 @@ begin
   inherited;
   SetData;
 
-  SetMinMaxLabels;
+  UpdateLabelsAndLegend;
 end;
 
 procedure TfrmContourData.cbLogTransformClick(Sender: TObject);
@@ -138,6 +140,9 @@ end;
 procedure TfrmContourData.FormCreate(Sender: TObject);
 begin
   inherited;
+  FLegend := frmGoPhast.PhastModel.ContourLegend;
+  FLegend.LegendType := ltContour;
+
   AdjustFormPosition(dpBottomLeft);
 
   cbSpecifyContours.Parent := tabSelection;
@@ -157,21 +162,27 @@ var
   ContourColors: TColorParameters;
   VirtNoneNode: PVirtualNode;
 begin
-  virttreecomboDataSets.Tree.Clear;
-  FFrontItems.Clear;
-  FSideItems.Clear;
-  FTopItems.Clear;
+  FGettingData := True;
+  try
+    virttreecomboDataSets.Tree.Clear;
+    FFrontItems.Clear;
+    FSideItems.Clear;
+    FTopItems.Clear;
 
-  VirtNoneNode := virttreecomboDataSets.Tree.AddChild(nil);
-  virttreecomboDataSets.Tree.Selected[VirtNoneNode] := True;
+    VirtNoneNode := virttreecomboDataSets.Tree.AddChild(nil);
+    virttreecomboDataSets.Tree.Selected[VirtNoneNode] := True;
 
-  if csDestroying in frmGoPhast.PhastModel.ComponentState then
-  begin
-    Exit;
+    if csDestroying in frmGoPhast.PhastModel.ComponentState then
+    begin
+      Exit;
+    end;
+
+    GetDataSets;
+    UpdateTopFrontAndSideItems;
+  finally
+    FGettingData := False;
   end;
 
-  GetDataSets;
-  UpdateTopFrontAndSideItems;
 
   virttreecomboDataSetsChange(nil);
 
@@ -216,6 +227,7 @@ begin
       frmGoPhast.Grid.FrontContourDataSet := nil;
       frmGoPhast.Grid.SideContourDataSet := nil;
       frmGoPhast.Grid.ThreeDContourDataSet := nil;
+      FLegend.ValueSource := nil;
     end
     else if (AnObject is TDataArray) then
     begin
@@ -228,6 +240,11 @@ begin
         FContours.SpecifyContours := cbSpecifyContours.Checked;
       end;
       DataSet.Contours := FContours;
+
+      if frmGoPhast.Grid.ThreeDContourDataSet <> DataSet then
+      begin
+        comboMethod.ItemIndex := 0;
+      end;
 
       frmGoPhast.Grid.ThreeDContourDataSet := DataSet;
       if FTopItems.IndexOfObject(AnObject) >= 0 then
@@ -256,6 +273,8 @@ begin
       begin
         frmGoPhast.Grid.SideContourDataSet := nil;
       end;
+      FLegend.ValueSource := DataSet;
+      FLegend.ColoringLimits := DataSet.ContourLimits;
     end;
 
     frmGoPhast.PhastModel.Grid.GridChanged;
@@ -265,6 +284,9 @@ begin
     ContourColors.ColorCycles := seCycles.AsInteger;
     ContourColors.ColorExponent := seColorExponent.Value;
 
+    tabLegend.TabVisible := FLegend.ValueSource <> nil;
+    FLegend.ColorParameters := ContourColors;
+
     if (AnObject <> nil) and frmErrorsAndWarnings.HasMessages then
     begin
       frmErrorsAndWarnings.Show;
@@ -273,6 +295,17 @@ begin
   finally
     Screen.Cursor := crDefault;
   end;
+end;
+
+procedure TfrmContourData.UpdateLabelsAndLegend;
+begin
+  if FGettingData or (frmGoPhast.PhastModel = nil)
+    or (csDestroying in frmGoPhast.PhastModel.ComponentState) then
+  begin
+    Exit;
+  end;
+  SetMinMaxLabels;
+  UpdateLegend;
 end;
 
 procedure TfrmContourData.SetMinMaxLabels;
@@ -361,7 +394,7 @@ begin
     Contours := DataSet.Contours;
     cbSpecifyContours.Checked := (Contours <> nil) and Contours.SpecifyContours;
   end;
-  SetMinMaxLabels;
+  UpdateLabelsAndLegend;
 end;
 
 procedure TfrmContourData.UpdateTopFrontAndSideItems;

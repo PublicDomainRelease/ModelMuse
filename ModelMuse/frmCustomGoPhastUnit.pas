@@ -9,11 +9,12 @@ unit frmCustomGoPhastUnit;
 interface
 
 uses
-  CommDlg, RbwDataGrid4, Spin, Windows, Forms, SysUtils, Types, Classes,
-  Graphics, Controls, Dialogs, StdCtrls, Grids, HtmlHelpViewer, ImageDLLLoader,
-  ICOLoader, JPEGLoader, PNGLoader, HIPSLoader, BMPLoader, PCXLoader, WMFLoader,
-  LinarBitmap, FileUtils, ehshelprouter, JvSpin, VirtualTrees, DataSetUnit,
-  ClassificationUnit, TntExDropDownVirtualStringTree;
+  EdgeDisplayUnit, CommDlg, RbwDataGrid4, Spin, Windows, Forms, SysUtils, Types,
+  Classes, Graphics, Controls, Dialogs, StdCtrls, Grids, HtmlHelpViewer,
+  ImageDLLLoader, ICOLoader, JPEGLoader, PNGLoader, HIPSLoader, BMPLoader,
+  PCXLoader, WMFLoader, LinarBitmap, FileUtils, ehshelprouter, JvSpin,
+  VirtualTrees, DataSetUnit, ClassificationUnit, TntExDropDownVirtualStringTree,
+  GLWin32Viewer;
 
 type
   // @name is used in @link(TfrmCustomGoPhast.AdjustFormPosition)
@@ -36,13 +37,17 @@ type
     procedure btnHelpClick(Sender: TObject);
     function FormHelp(Command: Word; Data: Integer;
       var CallHelp: Boolean): Boolean;
+    procedure FormDestroy(Sender: TObject); virtual;
   private
     function CallHelpRouter: boolean;
+    procedure DestroyGLSceneViewers(ParentComponent: TComponent);
   protected
     {@name adjusts the position of Form to the left or right of the main form,
      if possible.  If there isn't room for it at the desired position it will
-     try the other side.  If there isn't room there either, it will have it overlap
-     the form on the desired side.  A side effect is that it sets Form.Position to
+     try the other side.  If there isn't room there either,
+     it will have it overlap
+     the form on the desired side.
+     A side effect is that it sets Form.Position to
      poDesigned.}
     procedure AdjustFormPosition(DesiredPosition: TDesiredPosition);
     // @name checks that at least one of the TCheckBoxes in CheckBoxArray is
@@ -55,9 +60,18 @@ type
     // @link(GlobalFont) and @link(GlobalColor) should be set in the
     // Applications OnCreate event handler.
     procedure SetAppearance;
-    // @name changes the color of all TSpinEdits on the form depending
-    // on whether or not the TSpinEdit is enabled or not.
-//    procedure SetSpinColor;
+    procedure FillTreeComboWithBoundaryConditions(SelectedDataArray: TDataArray;
+      SelectedTimeList: TCustomTimeList;
+      SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
+      LocalBoundaryClassifications: TList; EdgeEdits: TList;
+      VirtTreeCombo: TTntExDropDownVirtualStringTree);
+  // @name changes the color of all TSpinEdits on the form depending
+  // on whether or not the TSpinEdit is enabled or not.
+  //    procedure SetSpinColor;
+
+  //
+    procedure UpdateTreeComboText(SelectedNode: PVirtualNode;
+      TreeCombo: TTntExDropDownVirtualStringTree);
   public
     procedure MouseClick;
     procedure UpdateSubComponents(AComponent: TComponent);
@@ -100,8 +114,8 @@ procedure FillDataSetLists(HufDataArrays: TClassificationList;
   ClassificationObjects: TClassificationList;
   ClassificationObjectOwnerList: TList);
   
-procedure UpdateTreeComboText(SelectedNode: PVirtualNode;
-  TreeCombo: TTntExDropDownVirtualStringTree);
+//procedure UpdateTreeComboText(SelectedNode: PVirtualNode;
+//  TreeCombo: TTntExDropDownVirtualStringTree);
 
 procedure GetNodeCaption(Node: PVirtualNode; var CellText: WideString;
   Sender: TBaseVirtualTree);
@@ -118,7 +132,8 @@ var
 
 implementation
 
-uses frmGoPhastUnit, PhastModelUnit;
+uses SubscriptionUnit, GoPhastTypes, ModflowPackagesUnit,
+  ModflowPackageSelectionUnit, frmGridColorUnit, frmGoPhastUnit, PhastModelUnit;
 
 {$R *.dfm}
 
@@ -147,6 +162,33 @@ begin
 //  HelpKeyWord := 'files\' + HelpKeyWord + '.htm';
 end;
 
+procedure TfrmCustomGoPhast.DestroyGLSceneViewers(ParentComponent: TComponent);
+var
+  Index: Integer;
+  AComponent: TComponent;
+begin
+  // It seems that some TGLSceneViewer's are causing errors when
+  // the form is being destroyed.  This is an attempt
+  // to get around that.
+  for Index := ParentComponent.ComponentCount - 1 downto 0 do
+  begin
+    AComponent := ParentComponent.Components[Index];
+    if AComponent is TGLSceneViewer then
+    begin
+      AComponent.Free;
+    end
+    else
+    begin
+      DestroyGLSceneViewers(AComponent);
+    end;
+  end;
+end;
+
+procedure TfrmCustomGoPhast.FormDestroy(Sender: TObject);
+begin
+  DestroyGLSceneViewers(self);
+end;
+
 function TfrmCustomGoPhast.CallHelpRouter: boolean;
 var
   KeyWord: string;
@@ -173,7 +215,8 @@ end;
 function TfrmCustomGoPhast.FormHelp(Command: Word; Data: Integer;
   var CallHelp: Boolean): Boolean;
 begin
-  if (Command in [HELP_CONTEXT, HELP_INDEX, HELP_FORCEFILE, HH_DISPLAY_SEARCH, 15])
+  if (Command in [HELP_CONTEXT, HELP_INDEX, HELP_FORCEFILE,
+    HH_DISPLAY_SEARCH, 15])
     {or (Command = HELP_COMMAND)} then
   begin
     // 15 = help contents.
@@ -347,7 +390,8 @@ begin
   Mouse_Event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 end;
 
-procedure TfrmCustomGoPhast.AdjustFormPosition(DesiredPosition: TDesiredPosition);
+procedure TfrmCustomGoPhast.AdjustFormPosition(
+  DesiredPosition: TDesiredPosition);
 var
   NewLeft: integer;
   NewTop: integer;
@@ -807,7 +851,7 @@ begin
   end;
 end;
 
-procedure UpdateTreeComboText(SelectedNode: PVirtualNode;
+procedure TfrmCustomGoPhast.UpdateTreeComboText(SelectedNode: PVirtualNode;
   TreeCombo: TTntExDropDownVirtualStringTree);
 var
   CellText: WideString;
@@ -850,6 +894,152 @@ begin
   end;
 end;
 
+procedure TfrmCustomGoPhast.FillTreeComboWithBoundaryConditions(
+  SelectedDataArray: TDataArray;
+  SelectedTimeList: TCustomTimeList;
+  SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
+  LocalBoundaryClassifications: TList; EdgeEdits: TList;
+  VirtTreeCombo: TTntExDropDownVirtualStringTree);
+var
+  Index: Integer;
+  DataSet: TDataArray;
+  ClassificationPosition: Integer;
+  List: TStringList;
+  EdgeEdit: TEdgeDisplayEdit;
+  TimeList: TCustomTimeList;
+  DummyClassification: TDummyClassification;
+  DummyRootClassification: TDummyClassification;
+  RootNode: PVirtualNode;
+  NodeData: PClassificationNodeData;
+  Classifications: TStringList;
+  VirtualNode: PVirtualNode;
+  AnObject: TObject;
+  ParentNode: PVirtualNode;
+  VirtualClassificationNode: PVirtualNode;
+  BoundaryIndex: Integer;
+  BounddaryClassification: TBoundaryClassification;
+begin
+  LocalBoundaryClassifications.Clear;
+
+  DummyRootClassification := TDummyClassification.Create(StrBoundaryConditions);
+  LocalBoundaryClassifications.Add(DummyRootClassification);
+  RootNode := VirtTreeCombo.Tree.AddChild(nil);
+  NodeData := VirtTreeCombo.Tree.GetNodeData(RootNode);
+  NodeData.ClassificationObject := DummyRootClassification;
+  Classifications := TStringList.Create;
+  try
+    if frmGoPhast.PhastModel.ModelSelection = msPhast then
+    begin
+      for Index := 0 to frmGoPhast.PhastModel.BoundaryDataSetCount - 1 do
+      begin
+        DataSet := frmGoPhast.PhastModel.BoundaryDataSets[Index];
+        ClassificationPosition :=
+          Classifications.IndexOf(DataSet.Classification);
+        if ClassificationPosition < 0 then
+        begin
+          List := TStringList.Create;
+          Classifications.AddObject(DataSet.Classification, List);
+        end
+        else
+        begin
+          List := Classifications.Objects[ClassificationPosition]
+            as TStringList;
+        end;
+        List.AddObject(DataSet.Name, DataSet);
+      end;
+    end;
+    EdgeEdits.Clear;
+    if (frmGoPhast.PhastModel.ModelSelection = msModflow)
+      and frmGoPhast.PhastModel.ModflowPackages.HfbPackage.IsSelected then
+    begin
+      List := TStringList.Create;
+      Classifications.AddObject('MODFLOW Horizontal Flow Barrier', List);
+      for Index := 0 to frmGoPhast.PhastModel.
+        HfbDisplayer.RealValueTypeCount - 1 do
+      begin
+        EdgeEdit := TEdgeDisplayEdit.Create;
+        EdgeEdits.Add(EdgeEdit);
+        EdgeEdit.DataIndex := Index;
+        EdgeEdit.Edge := frmGoPhast.PhastModel.HfbDisplayer;
+        List.AddObject(EdgeEdit.Edge.RealDescription[Index], EdgeEdit);
+      end;
+    end;
+    for Index := 0 to frmGoPhast.PhastModel.TimeListCount - 1 do
+    begin
+      TimeList := frmGoPhast.PhastModel.TimeLists[Index];
+      if TimeList.UsedByModel then
+      begin
+        ClassificationPosition :=
+          Classifications.IndexOf(TimeList.Classification);
+        if ClassificationPosition < 0 then
+        begin
+          List := TStringList.Create;
+          Classifications.AddObject(TimeList.Classification, List);
+        end
+        else
+        begin
+          List := Classifications.Objects[ClassificationPosition]
+            as TStringList;
+        end;
+        List.AddObject(TimeList.Name, TimeList);
+      end;
+    end;
+    Classifications.Sort;
+    for Index := 0 to Classifications.Count - 1 do
+    begin
+      DummyClassification := TDummyClassification.
+        Create(Classifications[Index]);
+      LocalBoundaryClassifications.Add(DummyClassification);
+      VirtualClassificationNode := VirtTreeCombo.Tree.AddChild(RootNode);
+      NodeData := VirtTreeCombo.Tree.GetNodeData(VirtualClassificationNode);
+      NodeData.ClassificationObject := DummyClassification;
+      List := Classifications.Objects[Index] as TStringList;
+      List.Sort;
+      for BoundaryIndex := 0 to List.Count - 1 do
+      begin
+        BounddaryClassification := TBoundaryClassification.
+          Create(List[BoundaryIndex], List.Objects[BoundaryIndex]);
+        LocalBoundaryClassifications.Add(BounddaryClassification);
+        VirtualNode := VirtTreeCombo.Tree.AddChild(VirtualClassificationNode);
+        NodeData := VirtTreeCombo.Tree.GetNodeData(VirtualNode);
+        NodeData.ClassificationObject := BounddaryClassification;
+        AnObject := BounddaryClassification.ClassifiedObject;
+        if AnObject is TEdgeDisplayEdit then
+        begin
+          EdgeEdit := TEdgeDisplayEdit(AnObject);
+          VirtTreeCombo.Tree.Selected[VirtualNode] :=
+            (EdgeEdit.Edge = SelectedEdgeDisplay)
+            and (EdgeEdit.DataIndex = SelectedEdgeDisplay.DataToPlot);
+        end
+        else
+        begin
+          VirtTreeCombo.Tree.Selected[VirtualNode] :=
+            (AnObject = SelectedDataArray) or (AnObject = SelectedTimeList);
+        end;
+        if VirtTreeCombo.Tree.Selected[VirtualNode] then
+        begin
+          ParentNode := VirtualNode.Parent;
+          while ParentNode <> nil do
+          begin
+            VirtTreeCombo.Tree.Expanded[ParentNode] := True;
+            if ParentNode = RootNode then
+            begin
+              break;
+            end;
+            ParentNode := ParentNode.Parent;
+          end;
+        end;
+      end;
+    end;
+  finally
+    for Index := 0 to Classifications.Count - 1 do
+    begin
+      Classifications.Objects[Index].Free;
+    end;
+    Classifications.Free;
+  end;
+end;
+
 initialization
   HelpRouter := THelpRouter.Create(Application);
   HelpRouter.HelpType := htHTMLhelp;
@@ -858,3 +1048,4 @@ initialization
 finalization
 
 end.
+

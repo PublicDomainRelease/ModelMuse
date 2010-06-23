@@ -1157,6 +1157,7 @@ begin
   P := Item.FIDHash and FAndMask;
   Iter := FIDArray[P];
   if Iter = Item then FIDArray[P] := Item.FIDNext else begin
+    Prev := nil;
     repeat
       Assert(Assigned(Iter));
       Prev := Iter;
@@ -1168,6 +1169,7 @@ begin
   P := Item.FNameHash and FAndMask;
   Iter := FNameArray[P];
   if Iter = Item then FNameArray[P] := Item.FNameNext else begin
+    Prev := nil;
     repeat
       Assert(Assigned(Iter));
       Prev := Iter;
@@ -1403,6 +1405,7 @@ begin
   P := Item.FNameHash and FAndMask;
   Iter := FNameArray[P];
   if Iter = Item then FNameArray[P] := Item.FNameNext else begin
+    Prev := nil;
     repeat
       Assert(Assigned(Iter));
       Prev := Iter;
@@ -1620,6 +1623,7 @@ begin
   P := Item.FIDHash and FAndMask;
   Iter := FIDArray[P];
   if Iter = Item then FIDArray[P] := Item.FIDNext else begin
+    Prev := nil;
     repeat
       Assert(Assigned(Iter));
       Prev := Iter;

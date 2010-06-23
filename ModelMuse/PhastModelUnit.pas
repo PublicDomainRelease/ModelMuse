@@ -26,7 +26,7 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   ModflowBoundaryDisplayUnit, ModflowBoundaryUnit, ClassificationUnit,
   ModflowHfbDisplayUnit, EdgeDisplayUnit, ModflowUnitNumbers, HufDefinition,
   ModelMateClassesUnit, ModflowHobUnit, EZDSLHsh, FormulaManagerUnit,
-  PathlineReader;
+  PathlineReader, LegendUnit, DisplaySettingsUnit;
 
 const
   // @name is the name of the @link(TDataArray) that specifies whether an
@@ -339,12 +339,14 @@ type
     FModPathLocation: string;
     FModelMonitorLocation: string;
     FPhastLocation: string;
+    FZoneBudgetLocation: string;
     function GetTextEditorLocation: string;
     procedure SetModflowLocation(const Value: string);
     function RemoveQuotes(const Value: string): string;
     procedure SetModPathLocation(const Value: string);
     procedure SetModelMonitorLocation(const Value: string);
     procedure SetPhastLocation(const Value: string);
+    procedure SetZoneBudgetLocation(const Value: string);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
@@ -360,6 +362,8 @@ type
     property ModelMonitorLocation: string read FModelMonitorLocation
       write SetModelMonitorLocation;
     property PhastLocation: string read FPhastLocation write SetPhastLocation;
+    property ZoneBudgetLocation: string read FZoneBudgetLocation
+      write SetZoneBudgetLocation;
   end;
 
   {
@@ -1484,6 +1488,9 @@ that affects the model output should also have a comment. }
     FHufKzNotifier: TObserver;
     FHufSyNotifier: TObserver;
     FHufSsNotifier: TObserver;
+    FColorLegend: TLegend;
+    FContourLegend: TLegend;
+    FDisplaySettings: TDisplaySettingsCollection;
     // See @link(UpToDate).
     procedure SetUpToDate(const Value: boolean);
     function AlwaysUsed(Sender: TObject): boolean;
@@ -1770,6 +1777,8 @@ that affects the model output should also have a comment. }
     function OptionalDataSet(Sender: TObject): boolean;
     function HufStorageUsed(Sender: TObject): boolean;
     procedure CreateInitialDataSetsForPhastTimeLists;
+    function ZoneBudgetSelected(Sender: TObject): boolean;
+    procedure SetDisplaySettings(const Value: TDisplaySettingsCollection);
   protected
     // @name is used to store DataSet in @link(FBoundaryDataSets).
     function AddBoundaryDataSet(const DataSet: TDataArray): Integer;
@@ -1777,6 +1786,7 @@ that affects the model output should also have a comment. }
     procedure Loaded; override;
   public
     DataArrayCreationRecords: array of TDataSetCreationData;
+    procedure UpdateFormulas(OldNames, NewNames: TStringList);
     function CheckWetting: boolean;
     function FixFileName(AFileName: string): string;
     property HufKxNotifier: TObserver read FHufKxNotifier;
@@ -1801,6 +1811,7 @@ that affects the model output should also have a comment. }
     function ModelLayerDataArrayUsed(Sender: TObject): boolean;
     function SubsidenceDataArrayUsed(Sender: TObject): boolean;
     procedure AddDataSetToCache(DataArray: TDataArray);
+    procedure DontCache(DataArray: TDataArray);
     procedure CacheDataArrays;
     procedure CreateInitialDataSets;
     // @name fills LayerGroupsDataSets with the @link(TDataArray)s used by
@@ -2131,6 +2142,7 @@ that affects the model output should also have a comment. }
     property TimeListCount: integer read GetTimeListCount;
     // @name provides access to all the @link(TCustomTimeList)s in the model.
     property TimeLists[Index: integer]: TCustomTimeList read GetTimeLists;
+    function GetTimeListByName(const AName: string): TCustomTimeList;
     // @name indicates what type of 2D boundary condition (if any)
     // is present on the top face of each grid cell.
     property Top2DBoundaryType: TDataArray read FTop2DBoundaryType;
@@ -2285,6 +2297,7 @@ that affects the model output should also have a comment. }
     procedure ExportModflowModel(FileName: string; RunModel: boolean);
     procedure ExportModpathModel(FileName: string;
       RunModel, NewBudgetFile: boolean);
+    procedure ExportZoneBudgetModel(FileName: string; RunModel: boolean);
     procedure UpdateActive(Sender: TObject);
     procedure UpdateWetDry(Sender: TObject);
     procedure UpdateLakeId(Sender: TObject);
@@ -2395,6 +2408,8 @@ that affects the model output should also have a comment. }
     property FormulaManager: TFormulaManager read FFormulaManager;
     procedure ClearScreenObjectCollection;
     function PackageGeneratedExternally(const PackageName: string): boolean;
+    property ColorLegend: TLegend read FColorLegend;
+    property ContourLegend: TLegend read FContourLegend;
   published
     // @name represents a series of bitmaps that can be displayed on
     // the top, front, or side view of the model.
@@ -2546,15 +2561,18 @@ that affects the model output should also have a comment. }
     property HufParameters: THufModflowParameters read FHufParameters
       write SetHufParameters;
     property BatchFileAdditionsBeforeModel: TStrings
-      read FBatchFileAdditionsBeforeModel write SetBatchFileAdditionsBeforeModel;
+      read FBatchFileAdditionsBeforeModel
+      write SetBatchFileAdditionsBeforeModel;
     property BatchFileAdditionsAfterModel: TStrings
       read FBatchFileAdditionsAfterModel write SetBatchFileAdditionsAfterModel;
     property PathLine: TPathLineReader read GetPathLine write SetPathLine
       stored StorePathLine;
     property EndPoints: TEndPointReader read GetEndPoints Write SetEndPoints
       stored StoreEndPoints;
-    property TimeSeries: TTimeSeriesReader read GetTimeSeries write SetTimeSeries
-      stored StoreTimeSeries;
+    property TimeSeries: TTimeSeriesReader read GetTimeSeries
+      write SetTimeSeries stored StoreTimeSeries;
+    property DisplaySettings: TDisplaySettingsCollection read FDisplaySettings
+      write SetDisplaySettings;
   end;
 
   procedure EnableLighting;
@@ -3013,8 +3031,111 @@ const
   //     Bug fix: Importing a model no longer causes an access violation
   //       when the previous model had objects that defined an SFR stream
   //       with unsaturated properties.
+  //   '2.4.0.0' No additional changes.
+  //   '2.4.0.1' Enhancement: It is now posssible to copy and paste multiple
+  //       cells in the parameter grids in the Packages and Programs dialog box.
+  //     Enhancement: The helpfile has increased functionality.
+  //     Enhancement: Support for ZONEBUDGET added.
+  //   '2.4.0.2' Bug fix: The number of observations in the Flow observations
+  //       packages was calculated incorrectly when both observation and
+  //       predictions were used.
+  //   '2.4.0.3' Bug fix: FractionOfObjectLength was calculated incorrectly
+  //       if an object had more than one section.
+  //     Enhancement: Added new function InterpolatedVertexValues that allows
+  //       numeric values associated with individual vertices to be interpolated
+  //       along the length of the object.
+  //   '2.4.0.4' Bug fix: ObjectLength was calculated incorrectly if an
+  //       object had more than one section.
+  //     Bug fix: ObjectVertexDistance was calculated incorrectly if an
+  //       object had more than one section.
+  //     Enhancement: Antialiasing used to improve appearance.
+  //     Bug fix: Importing a MODFLOW-2005 model failed if LAYVKA in the
+  //       LPF package was anything besidea a zero or one.
+  //     Bug fix: If there VKA is less than or equal to zero
+  //       but there is only one layer, ModelMuse no longer reports
+  //       and error while exporting the LPF package.
+  //     Bug fix: Unchecking the MODPATH initial particle placement checkbox
+  //       didn't work.
+  //     Bug fix: Editing more than one object at a time
+  //       could result in an assertion failure.
+  //     Enhancement: When coloring grid only on the active areas, inactive
+  //       areas are shaded.
+  //     Enhancement: Additional options for displaying grid lines have been
+  //       added. It is now possible to show just the outline of the active
+  //       area or just the gridlines inside the active avea.
+  //   '2.4.0.5' Bug fix; Sample DEM imported data at the wrong
+  //       locations if the grid angle was not zero.
+  //   '2.4.0.6' Enhancement: Legends have been added to the Color Grid and
+  //       Contour Data dialog boxes.
+  //     Enhancement: Added three new functions ColumnCenter, RowCenter,
+  //       and LayerCenter.  See help for details.
+  //   '2.4.0.7' Bug fix: When deleting time-varying data from objects
+  //       for the RCH, EVT, or ETS packages, sometimes not all the data
+  //       would be deleted properly.
+  //     Bug fix: In the LPF package, LAYTYP was not set to a negative
+  //       value properly when the THICKSTRT option was used.
+  //   '2.4.0.8' No change
+  //   '2.4.0.9' Fixed bug editing LPF parameters that could cause an
+  //       assertion failure.
+  //   '2.4.0.10' Enhancement: The Export Image dialog box has been added.
+  //       It allows the user to export an image of the top, front, or
+  //       side view of the model as an Enhanced Windows Metafile.
+  //     Enhancement: When a formula results in a value that is infinite or
+  //       not a number, the maximum double-precision real number is
+  //       substituted for it.
+  //   '2.4.0.11' Bug fix for Export Image dialog box.
+  //   '2.4.0.12' Bug fix: Under certain circumstances extra LPF parameters
+  //       would be added incorrectly.
+  //   '2.4.0.13' Bug fix: Attempting to open a model containing a UZF gage
+  //       caused an access violation.
+  //   '2.4.0.14' Bug fix: Transient UZF data were not displayed properly.
+  //       This was not a bug in the released version.
+  //     Bug fix: If the user edited something in the MODFLOW Packages
+  //       and Programs dialog box that caused the grid to be recolored,
+  //       the MODFLOW Packages and Programs dialog box might not close
+  //       properly. This was not a bug in the released version.
+  //   '2.4.0.15' Bug fix: closing the model while the Color Grid or
+  //       Contour Data dialog boxes were visible could result in an
+  //       access violation.
+  //       This was not a bug in the released version.
+  //   '2.4.0.16' Change: Changed default options for ZONEBUDGET.
+  //   '2.4.0.17' Bug fix: ModelMuse could not always read the budget file
+  //       if there was only one column in the model.
+  //   '2.4.0.18' Enhancement: Enabled MadExcept.
+  //   '2.4.0.19' Second attempt at enabling MadExcept.
+  //   '2.4.0.20' Bug fix: If a parameter or layer group was renamed, formulas
+  //       that used data sets related to those parameters were not updated
+  //       properly.
+  //   '2.4.0.21' Bug fix: Using the up-down controls on the Color Grid or
+  //       Contour Data dialog boxes would cause selected data set
+  //       to change when clicking on another control until the
+  //       dialog box was closed.
+  //     Bug fix: When importing MODFLOW models that contained the lake package
+  //       the Lake_ID data set was not being set properly.
+  //     Bug fix: Fixed bug that caused access violations when closing a model.
+  //     Enhancement: Improved speed of opening Object Properties dialog box.
+  //   '2.4.0.22' Bug fix: Failure to define unsaturated flow properties
+  //       in the SFR package when they are required now results
+  //       in an error message instead of an assertion failure.
+  //     Bug fix: Added support for contour legends with
+  //       boolean and string data.
+  //   '2.4.0.23' - '2.4.0.24' Bug fix: Attempted to work around problem
+  //       that causes range check errors when closing ModelMuse
+  //       on some machines.
+  //   '2.4.0.25' Change: Data set values are now saved to file
+  //       with the data set if the data set values are up to date.
+  //       This improves the speed of opening some large models.
+  //   '2.4.0.26' Bug fix: Fixed bug that could cause an access violation
+  //       when showing the MODFLOW Packages and Programs dialog
+  //       box if one of the packages in the dialog box had been deactivated
+  //       and then the cancel button was pressed.
+  //     Bug fix: Fixed bug that could cause extra parameters to be added
+  //       when a parameter value was edited.
+  //     Enhancement: When selecting a MODPATH output file, the most likely
+  //       name of the output file is selected automatically.
+  //   '2.5.0.0' No additional changes.
 
-  ModelVersion = '2.4.0.0';
+  ModelVersion = '2.5.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -3024,6 +3145,8 @@ const
   StrConfinedStorageCoe = 'Confined_Storage_Coefficient';
   StrVerticalConductance = 'Vertical_Conductance';
   StrTransmissivity = 'Transmissivity';
+  StrZonebudget = 'ZoneBudget';
+  StrZones = 'Zones';
 
 implementation
 
@@ -3049,7 +3172,7 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   AbZipper, AbArcTyp, PriorInfoUnit, frmErrorsAndWarningsUnit,
   ModflowHUF_WriterUnit, ModflowKDEP_WriterUnit, ModflowLVDA_WriterUnit,
   ModflowMNW2_WriterUnit, ModflowBCF_WriterUnit, ModflowSubsidenceDefUnit,
-  ModflowSUB_Writer;
+  ModflowSUB_Writer, ZoneBudgetWriterUnit;
 
 resourcestring
   StrProgramLocations = 'Program Locations';
@@ -3058,10 +3181,11 @@ resourcestring
   StrMODPATH = 'MODPATH';
   StrModelMonitor = 'ModelMonitor';
   StrMpathDefaultPath = 'C:\WRDAPP\Mpath.5_0\setup\Mpathr5_0.exe';
-  StrModflowDefaultPath = 'C:\WRDAPP\MF2005.1_7\Bin\mf2005.exe';
+  StrModflowDefaultPath = 'C:\WRDAPP\MF2005.1_8\Bin\mf2005.exe';
   StrModelMonitorDefaultPath = 'ModelMonitor.exe';
   StrPHAST = 'PHAST';
   StrPhastDefaultPath = 'C:\Program Files\USGS\phast-1.5.1\bin\phast.bat';
+  StrZoneBudgetDefaultPath = 'C:\WRDAPP\Zonbud.3_01\Bin\zonbud.exe';
 
 const
   StrAndNegatedAtCons = ' and negated at constant head cell';
@@ -3366,6 +3490,13 @@ end;
 constructor TPhastModel.Create(AnOwner: TComponent);
 begin
   inherited;
+  FDisplaySettings := TDisplaySettingsCollection.Create(self);
+  FColorLegend := TLegend.Create(nil);
+  FColorLegend.ValueAssignmentMethod := vamAutomatic;
+  FContourLegend := TLegend.Create(nil);
+  FContourLegend.ValueAssignmentMethod := vamAutomatic;
+
+
   FBatchFileAdditionsBeforeModel := TStringList.Create;
   FBatchFileAdditionsAfterModel := TStringList.Create;
   FHufParameters := THufModflowParameters.Create(self);
@@ -3608,7 +3739,14 @@ begin
         begin
           Zipper.AddFiles(ArchiveFiles[FileIndex], 0);
         end;
+        try
         Zipper.Save;
+        except on E: EFOpenError do
+          begin
+            Beep;
+            MessageDlg(E.Message, mtError, [mbOK], 0);
+          end;
+        end;
       finally
         Zipper.Free;
       end;
@@ -3865,6 +4003,9 @@ begin
     FFormulaManager.Free;
     FBatchFileAdditionsAfterModel.Free;
     FBatchFileAdditionsBeforeModel.Free;
+    FColorLegend.Free;
+    FContourLegend.Free;
+    FDisplaySettings.Free;
   finally
     FreeAndNil(frmFileProgress);
   end;
@@ -4390,6 +4531,7 @@ begin
     BatchFileAdditionsBeforeModel.Clear;
     BatchFileAdditionsAfterModel.Clear;
     FormulaManager.Clear;
+    FDisplaySettings.Clear;
 
     Invalidate;
 
@@ -4853,6 +4995,12 @@ end;
 function TPhastModel.OptionalDataSet(Sender: TObject): boolean;
 begin
   result := False;
+end;
+
+function TPhastModel.ZoneBudgetSelected(Sender: TObject): boolean;
+begin
+  result := (ModelSelection = msModflow)
+    and ModflowPackages.ZoneBudget.IsSelected
 end;
 
 function TPhastModel.HufSelected(Sender: TObject): boolean;
@@ -6390,9 +6538,68 @@ begin
   result := FTimeSeries;
 end;
 
+function TPhastModel.GetTimeListByName(const AName: string): TCustomTimeList;
+var
+  Index: Integer;
+  AList: TCustomTimeList;
+begin
+  result := nil;
+  for Index := 0 to TimeListCount - 1 do
+  begin
+    AList := TimeLists[Index];
+    if AList.Name = AName then
+    begin
+      result := AList;
+      Exit;
+    end;
+  end;
+end;
+
 function TPhastModel.GetTimeListCount: integer;
 begin
   result := FTimeLists.Count;
+end;
+
+procedure TPhastModel.UpdateFormulas(OldNames, NewNames: TStringList);
+var
+  CompilerList: TList;
+  CompilerIndex: Integer;
+  Compiler: TRbwParser;
+  VariableIndex: Integer;
+  VarIndex: Integer;
+begin
+  FormulaManager.RemoveSubscriptions(OldNames, NewNames);
+  CompilerList := TList.Create;
+  try
+    FillCompilerList(CompilerList);
+    for CompilerIndex := 0 to CompilerList.Count - 1 do
+    begin
+      Compiler := CompilerList[CompilerIndex];
+      for VariableIndex := 0 to OldNames.Count - 1 do
+      begin
+        VarIndex := Compiler.IndexOfVariable(OldNames[VariableIndex]);
+        if VarIndex >= 0 then
+        begin
+          Compiler.RenameVariable(VarIndex, NewNames[VariableIndex]);
+        end;
+      end;
+    end;
+    FormulaManager.ResetFormulas;
+    for CompilerIndex := 0 to CompilerList.Count - 1 do
+    begin
+      Compiler := CompilerList[CompilerIndex];
+      for VariableIndex := 0 to OldNames.Count - 1 do
+      begin
+        VarIndex := Compiler.IndexOfVariable(NewNames[VariableIndex]);
+        if VarIndex >= 0 then
+        begin
+          Compiler.RenameVariable(VarIndex, OldNames[VariableIndex]);
+        end;
+      end;
+    end;
+  finally
+    CompilerList.Free;
+  end;
 end;
 
 procedure TPhastModel.UpdateFrontTimeDataSet(const TimeList: TCustomTimeList;
@@ -7439,6 +7646,12 @@ begin
   FDiffusivitySet := True;
 end;
 
+procedure TPhastModel.SetDisplaySettings(
+  const Value: TDisplaySettingsCollection);
+begin
+  FDisplaySettings.Assign(Value);
+end;
+
 procedure TPhastModel.SetDrainObservations(const Value: TFluxObservationGroups);
 begin
   FDrainObservations.Assign(Value);
@@ -7457,6 +7670,11 @@ end;
 function TPhastModel.InitialWaterTableUsed(Sender: TObject): boolean;
 begin
   result := (ModelSelection = msPhast) and FreeSurface and UseWaterTable;
+end;
+
+procedure TPhastModel.DontCache(DataArray: TDataArray);
+begin
+  FDataSetsToCache.Remove(DataArray);
 end;
 
 procedure TPhastModel.CacheDataArrays;
@@ -8296,6 +8514,78 @@ begin
     + '                  ' + UcodeDelimiter);
 end;
 
+procedure TPhastModel.ExportZoneBudgetModel(FileName: string; RunModel: boolean);
+var
+  NumberOfSteps: Integer;
+  ZoneFileWriter: TZoneBudgetZoneFileWriter;
+  ResponseFileWriter: TZoneBudgetResponseFileWriter;
+  BatchFileLocation: string;
+begin
+  SetCurrentDir(ExtractFileDir(FileName));
+  FileName := FixFileName(FileName);
+  if frmProgress = nil then
+  begin
+    frmProgress := TfrmProgress.Create(nil);
+  end;
+  try
+    frmProgress.Prefix := 'File ';
+    frmProgress.Caption := 'Exporting ZONEBUDGET input files';
+    frmProgress.btnAbort.Visible := True;
+    frmProgress.ShouldContinue := True;
+    frmProgress.Show;
+
+    // Export ZoneFile;
+    // Export Response File;
+    // Export Batch File;
+    NumberOfSteps := 3;
+
+    frmProgress.pbProgress.Max := NumberOfSteps;
+    frmProgress.pbProgress.Position := 0;
+
+    ZoneFileWriter := TZoneBudgetZoneFileWriter.Create(self);
+    try
+      ZoneFileWriter.WriteFile(FileName);
+    finally
+      ZoneFileWriter.Free;
+    end;
+    CacheDataArrays;
+    if not frmProgress.ShouldContinue then
+    begin
+      Exit;
+    end;
+    frmProgress.StepIt;
+
+    ResponseFileWriter := TZoneBudgetResponseFileWriter.Create(self);
+    try
+      ResponseFileWriter.WriteFile(FileName);
+    finally
+      ResponseFileWriter.Free;
+    end;
+    CacheDataArrays;
+    if not frmProgress.ShouldContinue then
+    begin
+      Exit;
+    end;
+    frmProgress.StepIt;
+
+    BatchFileLocation := WriteZoneBudgetBatchFile(self, FileName, RunModel);
+
+    if RunModel then
+    begin
+      WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
+    end;
+//
+
+  finally
+    frmProgress.btnAbort.Visible := False;
+    frmProgress.Hide;
+    if frmProgress.Owner = nil then
+    begin
+      FreeAndNil(frmProgress);
+    end;
+  end;
+end;
+
 procedure TPhastModel.ExportModflowModel(FileName: string; RunModel: boolean);
 var
   NameWriter: TNameFileWriter;
@@ -8342,7 +8632,6 @@ var
 begin
   CheckWetting;
 
-
   PValFile.Clear;
   Template.Clear;
 
@@ -8358,7 +8647,7 @@ begin
   end;
   try
     frmProgress.Prefix := 'File ';
-    frmProgress.Caption := 'Exporting MODFLOW input files'; 
+    frmProgress.Caption := 'Exporting MODFLOW input files';
     frmProgress.btnAbort.Visible := True;
     frmProgress.ShouldContinue := True;
     frmProgress.Show;
@@ -8370,7 +8659,7 @@ begin
     // 4. Output Control,
     // 5. Zone Arrays,
     // 6. Multiplier Arrays
-    NumberOfSteps := 6;
+    NumberOfSteps := 3;
 
     NumberOfSteps := NumberOfSteps + ModflowPackages.SelectedPackageCount;
     if ModflowPackages.SfrPackage.IsSelected
@@ -10072,7 +10361,7 @@ procedure TPhastModel.DefinePackageDataArrays;
 var
   Index: integer;
 begin
-  SetLength(DataArrayCreationRecords, 55);
+  SetLength(DataArrayCreationRecords, 56);
   Index := 0;
 
   DataArrayCreationRecords[Index].DataSetType := TDataArray;
@@ -10793,7 +11082,7 @@ begin
   DataArrayCreationRecords[Index].Orientation := dso3D;
   DataArrayCreationRecords[Index].DataType := rdtDouble;
   DataArrayCreationRecords[Index].Name := 'HUF_Kx';
-  DataArrayCreationRecords[Index].Formula := StrHufKx + '(' + rsModflow_Initial_Head + ')';;
+  DataArrayCreationRecords[Index].Formula := StrHufKx + '(' + rsModflow_Initial_Head + ')';
   DataArrayCreationRecords[Index].Classification := StrHUF;
   DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
   DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
@@ -10806,7 +11095,7 @@ begin
   DataArrayCreationRecords[Index].Orientation := dso3D;
   DataArrayCreationRecords[Index].DataType := rdtDouble;
   DataArrayCreationRecords[Index].Name := 'HUF_Ky';
-  DataArrayCreationRecords[Index].Formula := StrHufKy + '(' + rsModflow_Initial_Head + ')';;
+  DataArrayCreationRecords[Index].Formula := StrHufKy + '(' + rsModflow_Initial_Head + ')';
   DataArrayCreationRecords[Index].Classification := StrHUF;
   DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
   DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
@@ -10819,7 +11108,7 @@ begin
   DataArrayCreationRecords[Index].Orientation := dso3D;
   DataArrayCreationRecords[Index].DataType := rdtDouble;
   DataArrayCreationRecords[Index].Name := 'HUF_Interlayer_Kz';
-  DataArrayCreationRecords[Index].Formula := StrHufKz + '(' + rsModflow_Initial_Head + ')';;
+  DataArrayCreationRecords[Index].Formula := StrHufKz + '(' + rsModflow_Initial_Head + ')';
   DataArrayCreationRecords[Index].Classification := StrHUF;
   DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
   DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
@@ -10833,7 +11122,7 @@ begin
   DataArrayCreationRecords[Index].Orientation := dso3D;
   DataArrayCreationRecords[Index].DataType := rdtDouble;
   DataArrayCreationRecords[Index].Name := 'HUF_SS';
-  DataArrayCreationRecords[Index].Formula := StrHufSs + '(' + rsModflow_Initial_Head + ')';;
+  DataArrayCreationRecords[Index].Formula := StrHufSs + '(' + rsModflow_Initial_Head + ')';
   DataArrayCreationRecords[Index].Classification := StrHUF;
   DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
   DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
@@ -10847,7 +11136,7 @@ begin
   DataArrayCreationRecords[Index].Orientation := dso3D;
   DataArrayCreationRecords[Index].DataType := rdtDouble;
   DataArrayCreationRecords[Index].Name := 'HUF_Average_SY';
-  DataArrayCreationRecords[Index].Formula := StrHufAverageSy + '(' + rsModflow_Initial_Head + ')';;
+  DataArrayCreationRecords[Index].Formula := StrHufAverageSy + '(' + rsModflow_Initial_Head + ')';
   DataArrayCreationRecords[Index].Classification := StrHUF;
   DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
   DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
@@ -10861,7 +11150,7 @@ begin
   DataArrayCreationRecords[Index].Orientation := dso3D;
   DataArrayCreationRecords[Index].DataType := rdtDouble;
   DataArrayCreationRecords[Index].Name := 'HUF_SY';
-  DataArrayCreationRecords[Index].Formula := StrHufSy + '(' + rsModflow_Initial_Head + ')';;
+  DataArrayCreationRecords[Index].Formula := StrHufSy + '(' + rsModflow_Initial_Head + ')';
   DataArrayCreationRecords[Index].Classification := StrHUF;
   DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
   DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
@@ -10869,6 +11158,20 @@ begin
   DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   DataArrayCreationRecords[Index].AssociatedDataSets :=
     'displays HUF Sy values for a cell';
+  Inc(Index);
+
+  DataArrayCreationRecords[Index].DataSetType := TDataArray;
+  DataArrayCreationRecords[Index].Orientation := dso3D;
+  DataArrayCreationRecords[Index].DataType := rdtInteger;
+  DataArrayCreationRecords[Index].Name := StrZones;
+  DataArrayCreationRecords[Index].Formula := '0';
+  DataArrayCreationRecords[Index].Classification := StrZonebudget;
+  DataArrayCreationRecords[Index].DataSetNeeded := ZoneBudgetSelected;
+  DataArrayCreationRecords[Index].DataSetShouldBeCreated := ZoneBudgetSelected;
+  DataArrayCreationRecords[Index].Lock := StandardLock;
+  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  DataArrayCreationRecords[Index].AssociatedDataSets :=
+    'ZONEBUDGET Zone array (IZONE)';
   Inc(Index);
 
   Assert(Length(DataArrayCreationRecords) = Index);
@@ -13036,6 +13339,7 @@ begin
     ModPathLocation := SourceLocations.ModPathLocation;
     ModelMonitorLocation := SourceLocations.ModelMonitorLocation;
     PhastLocation := SourceLocations.PhastLocation;
+    ZoneBudgetLocation := SourceLocations.ZoneBudgetLocation;
   end
   else
   begin
@@ -13049,6 +13353,8 @@ var
 begin
   FModflowLocation := StrModflowDefaultPath;
   FModPathLocation := StrMpathDefaultPath;
+  PhastLocation := StrPhastDefaultPath;
+  ZoneBudgetLocation := StrZoneBudgetDefaultPath;
   ADirectory := GetCurrentDir;
   try
     SetCurrentDir(ExtractFileDir(ParamStr(0)));
@@ -13072,6 +13378,8 @@ begin
     StrMpathDefaultPath);
   PhastLocation := IniFile.ReadString(StrProgramLocations, StrPHAST,
     StrPhastDefaultPath);
+  ZoneBudgetLocation := IniFile.ReadString(StrProgramLocations, StrZonebudget,
+    StrZoneBudgetDefaultPath);
   ADirectory := GetCurrentDir;
   try
     SetCurrentDir(ExtractFileDir(ParamStr(0)));
@@ -13135,6 +13443,11 @@ begin
   FPhastLocation := RemoveQuotes(Value);
 end;
 
+procedure TProgramLocations.SetZoneBudgetLocation(const Value: string);
+begin
+  FZoneBudgetLocation := RemoveQuotes(Value);;
+end;
+
 procedure TProgramLocations.WriteToIniFile(IniFile: TMemInifile);
 begin
   IniFile.WriteString(StrProgramLocations, StrMODFLOW2005, ModflowLocation);
@@ -13142,6 +13455,7 @@ begin
   IniFile.WriteString(StrProgramLocations, StrMODPATH, ModPathLocation);
   IniFile.WriteString(StrProgramLocations, StrModelMonitor, ModelMonitorLocation);
   IniFile.WriteString(StrProgramLocations, StrPHAST, PhastLocation);
+  IniFile.WriteString(StrProgramLocations, StrZonebudget, ZoneBudgetLocation);
 end;
 
 { TDataSetClassification }

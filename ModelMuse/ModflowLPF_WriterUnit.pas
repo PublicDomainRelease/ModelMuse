@@ -293,15 +293,18 @@ begin
           end
           else
           begin
-          frmProgress.AddMessage('  Writing Data Set 12 for layer '
-            + IntToStr(MFLayerIndex));
+            frmProgress.AddMessage('  Writing Data Set 12 for layer '
+              + IntToStr(MFLayerIndex));
             DataArray := PhastModel.GetDataSetByName(rsKz);
             Assert(DataArray <> nil);
             WriteArray(DataArray, ArrayIndex, 'VKA ' + Group.AquiferName
               + ' Layer ' + IntToStr(MFLayerIndex));
-            CheckArray(DataArray, ArrayIndex, 'Negative '
-              + rsKz + ' value',
-              cvmGreaterEqual, 0, etError);
+            if PhastModel.Grid.LayerCount > 1 then
+            begin
+              CheckArray(DataArray, ArrayIndex, 'Negative '
+                + rsKz + ' value',
+                cvmGreaterEqual, 0, etError);
+            end;
           end;
         end
         else
@@ -315,15 +318,18 @@ begin
           end
           else
           begin
-          frmProgress.AddMessage('  Writing Data Set 12 for layer '
-            + IntToStr(MFLayerIndex));
+            frmProgress.AddMessage('  Writing Data Set 12 for layer '
+              + IntToStr(MFLayerIndex));
             DataArray := PhastModel.GetDataSetByName(rsVerticalAnisotropy);
             Assert(DataArray <> nil);
             WriteArray(DataArray, ArrayIndex, 'VKA ' + Group.AquiferName
               + ' Layer ' + IntToStr(MFLayerIndex));
-            CheckArray(DataArray, ArrayIndex, 'Negative or zero '
-              + rsVerticalAnisotropy + ' value',
-              cvmGreater, 0, etError);
+            if PhastModel.Grid.LayerCount > 1 then
+            begin
+              CheckArray(DataArray, ArrayIndex, 'Negative or zero '
+                + rsVerticalAnisotropy + ' value',
+                cvmGreater, 0, etError);
+            end;
           end;
         end;
         if not frmProgress.ShouldContinue then

@@ -15,7 +15,8 @@ uses
   arcball, GLWidget, frame3DViewUnit, IniFiles, MostRecentlyUsedFiles,
   ToolWin, frmUndoUnit, ImageDLLLoader, FileUtils,ModflowGridUnit,
   AbstractGridUnit, JvExExtCtrls, JvNetscapeSplitter, frmRunModflowUnit,
-  frmRunPhastUnit, ModelMateClassesUnit, SyncObjs, frmRunModpathUnit;  
+  frmRunPhastUnit, ModelMateClassesUnit, SyncObjs, frmRunModpathUnit,
+  frmRunZoneBudgetUnit;  
 
   { TODO : 
 Consider making CurrentTool a property of TframeView instead of 
@@ -213,8 +214,7 @@ type
     miScaleRotateorMoveObjects: TMenuItem;
     miMergeObjects: TMenuItem;
     tbShow2DGrid: TToolButton;
-    acShowGridLines2D: TAction;
-    Show2DGridlines1: TMenuItem;
+    miShow2DGridlines: TMenuItem;
     // @name separates @link(frameSideView) from @link(frameTopView)
     // and can be used to resize them.  See @link(splitVertTopMoved).
     splitVertTop: TJvNetscapeSplitter;
@@ -229,7 +229,6 @@ type
     tbRun: TToolButton;
     acRunModflow: TAction;
     RestoreDefault2DView1: TMenuItem;
-    acRestoreDefault2DView: TAction;
     tbRestoreDefault2DView: TToolButton;
     tbPositionUndo: TToolButton;
     tbPositionRedo: TToolButton;
@@ -252,8 +251,6 @@ type
     acContourData: TAction;
     ContourData1: TMenuItem;
     ToolButton1: TToolButton;
-    acModelMateInteraction: TAction;
-    miModelMateInteraction: TMenuItem;
     acExportModelMate: TAction;
     ModelMateFile1: TMenuItem;
     acImportModelMate: TAction;
@@ -278,6 +275,28 @@ type
     miConfigureTimeSeries: TMenuItem;
     SurferGridFile1: TMenuItem;
     SampleDEMData1: TMenuItem;
+    ZONEBUDGETInputFiles1: TMenuItem;
+    sdZonebudgetInput: TSaveDialog;
+    tbVertexValue: TToolButton;
+    acVertexValue: TAction;
+    EditVertexValues1: TMenuItem;
+    sdModelMate: TSaveDialog;
+    menuGridLineChoice: TPopupMenu;
+    Showall1: TMenuItem;
+    Showexterior1: TMenuItem;
+    Showactive1: TMenuItem;
+    ShowAll2: TMenuItem;
+    Showexterior2: TMenuItem;
+    Showactive2: TMenuItem;
+    acShowAllGridLines: TAction;
+    acShowExteriorGridLines: TAction;
+    acShowActiveGridLines: TAction;
+    Showactiveedge1: TMenuItem;
+    acShowActiveEdge: TAction;
+    Showactiveedge2: TMenuItem;
+    acRestoreDefault2DView: TAction;
+    acExportImage: TAction;
+    ExportImage1: TMenuItem;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -319,7 +338,6 @@ type
     procedure miModelResultsClick(Sender: TObject);
     procedure miScaleRotateorMoveObjectsClick(Sender: TObject);
     procedure miMergeObjectsClick(Sender: TObject);
-    procedure acShowGridLines2DExecute(Sender: TObject);
     procedure miModflowNameFileClick(Sender: TObject);
     procedure miReverseSelectedObjectsClick(Sender: TObject);
     procedure RestoreDefault2DView1Click(Sender: TObject);
@@ -343,7 +361,6 @@ type
     procedure acContourDataExecute(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
-    procedure acModelMateInteractionExecute(Sender: TObject);
     procedure acExportModelMateExecute(Sender: TObject);
     procedure acImportModelMateExecute(Sender: TObject);
     procedure miObservationsClick(Sender: TObject);
@@ -361,6 +378,11 @@ type
     procedure sbMainDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
       const Rect: TRect);
     procedure SampleDEMData1Click(Sender: TObject);
+    procedure ZONEBUDGETInputFiles1Click(Sender: TObject);
+    procedure sdZonebudgetInputShow(Sender: TObject);
+    procedure sdZonebudgetInputClose(Sender: TObject);
+    procedure acVertexValueExecute(Sender: TObject);
+    procedure acExportImageExecute(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -371,9 +393,11 @@ type
     FSynchronizeCount: integer;
     FRunModflowForm: TfrmRunModflow;
     FRunModpathForm: TfrmRunModpath;
+    FRunZoneBudgetForm: TfrmRunZoneBudget;
     FRunModflow: Boolean;
     FRunModpath: Boolean;
     FCreateNewCompositeBudgetFile: boolean;
+    FRunZoneBudget: Boolean;
     FRunPhastForm: TfrmRunPhast;
     FRunPhast: boolean;
     FPositionList: TPositionList;
@@ -390,7 +414,7 @@ type
     // @link(TScreenObject)(s).
     procedure DeleteLastPointInScreenObject;
     // @name deletes the selected @link(TScreenObject)(s).
-    procedure DeleteSelectedScreenObjects;
+    procedure DeleteSelectedNotesOrSelectedScreenObjects;
     procedure CreatePhastModel;
     procedure UpdateDisplay(Sender: TObject);
     procedure UpdatePermanantDialogBoxAppearances;
@@ -971,7 +995,7 @@ type
     }
     procedure FormCreate(Sender: TObject); override;
     // @name cleans up by destroying the model and other objects.
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     // When the form is resized, synchronize the rulers with the views
     // of the model.
     procedure FormResize(Sender: TObject);
@@ -1202,6 +1226,7 @@ type
     // set to @nil.
     procedure ToolButtonMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure SetGridLineDrawingChoice(Sender: TObject);
   private
     // @name: boolean;
     // See @link(CanDraw).
@@ -1583,11 +1608,12 @@ uses
   frmSelectResultToImportUnit, frmScaleRotateMoveUnit, RbwInternetUtilities,
   frmModflowNameFileUnit, frmImportGriddedDataUnit, FluxObservationUnit,
   frmManageFluxObservationsUnit, TempFiles, frmContourDataUnit, ZLib,
-  frmModelMateInterfaceUnit, GlobalTypesUnit, JupiterUnit, CheckInternetUnit, 
+  GlobalTypesUnit, JupiterUnit, CheckInternetUnit, 
   frmHUF_LayersUnit, frmBatchFileAdditionsUnit, frmSelectObjectsForEditingUnit, 
   frmDataSetValuesUnit, frmExportShapefileObjectsUnit, frmDeleteImageUnit,
   frmModpathDisplayUnit, frmPhastLocationUnit, frmEndPointDisplayUnit,
-  frmTimeSeriesDisplayUnit, frmImportSurferGrdFileUnitUnit, frmImportDEMUnit;
+  frmTimeSeriesDisplayUnit, frmImportSurferGrdFileUnitUnit, frmImportDEMUnit,
+  frmExportImageUnit;
 
 resourcestring
   StrModelMate = 'ModelMate';
@@ -1872,8 +1898,7 @@ begin
     FrontGridChanged := True;
     SideGridChanged := True;
     InvalidateAllViews;
-    PhastGrid.DrawInteriorGridLines2D := acShowGridLines2D.Checked;
-    ModflowGrid.DrawInteriorGridLines2D := acShowGridLines2D.Checked;
+//    SetGridLineDrawingChoice;
 
     if Sender = miModflow2005Model then
     begin
@@ -2078,6 +2103,44 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.ZONEBUDGETInputFiles1Click(Sender: TObject);
+var
+  FileName: string;
+begin
+  inherited;
+  if (sdZonebudgetInput.FileName = '') and (sdSaveDialog.FileName <> '') then
+  begin
+    sdZonebudgetInput.FileName := ChangeFileExt(sdSaveDialog.FileName,
+      sdZonebudgetInput.DefaultExt);
+  end;
+  if sdZonebudgetInput.Execute then
+  begin
+    if not FileExists(PhastModel.ProgramLocations.ZoneBudgetLocation) then
+    begin
+      ShowAForm(TfrmProgramLocations);
+      if not FileExists(PhastModel.ProgramLocations.ZoneBudgetLocation) then
+      begin
+        Beep;
+        if MessageDlg('ZONEBUDGET does not exist at the location you specified.  '
+          + 'Do you still want to export the ZONEBUDGET input files?', mtWarning,
+          [mbYes, mbNo], 0) <> mrYes then
+        begin
+          Exit;
+        end;
+      end;
+    end;
+
+    FileName := sdZonebudgetInput.FileName;
+    PhastModel.ExportZoneBudgetModel(FileName, FRunZoneBudget);
+
+    if frmErrorsAndWarnings.HasMessages then
+    begin
+      frmErrorsAndWarnings.Show;
+    end;
+  end;
+
+end;
+
 procedure TfrmGoPhast.AdjustToolbarPositions(FirstToolBar,
   SecondToolBar: TToolBar);
 begin
@@ -2126,6 +2189,7 @@ begin
   FPositionList.OnNewPosition := NewPosition;
   FRunModflow := True;
   FRunModpath := True;
+  FRunZoneBudget := True;
   FRunPhast := True;
   FSynchronizeCount := 0;
   FCreatingMainForm := True;
@@ -2374,6 +2438,13 @@ begin
                     PhastModel.ExportModpathModel(
                       ChangeFileExt(FileName, '.mpn'), False, True);
                   end;
+                  if PhastModel.ModflowPackages.ZoneBudget.IsSelected then
+                  begin
+                    PhastModel.ExportZoneBudgetModel(
+                      ChangeFileExt(FileName, '.zon'), False);
+                  end;
+
+
                 end;
               else Assert(False);
             end;
@@ -2458,6 +2529,7 @@ begin
 When maximizing, make non modal forms (TfrmSelectedObjects,
 TfrmShowHideObjects) stay on top (or else give the user the ability to 
 make them stay on top). See TForm.FormStyle}
+  inherited;
 end;
 
 procedure TfrmGoPhast.tbPanClick(Sender: TObject);
@@ -2614,7 +2686,7 @@ begin
   inherited;
   // allow cut, copy, and paste on other non-modal forms to work properly
   // by deactivating shortcuts when the main form becomes inactive.
-  // Re-enable the Shortcuts in FormActivate.  
+  // Re-enable the Shortcuts in FormActivate.
   acCut.ShortCut := 0;
   acCopy.ShortCut := 0;
   acPaste.ShortCut := 0;
@@ -2631,7 +2703,7 @@ begin
   FPositionList.Free;
 
   // Hide doesn't work when the application is shutting down.
-  
+
   {
   // It might take a while to completely get rid of the grid and objects
   // so hide the forms first.
@@ -2656,6 +2728,7 @@ begin
   FPhastModel := nil;
   FDeletedDataSets.Free;
   FPhastModel := nil;
+  inherited;
 //  OutputDebugString('SAMPLING OFF');
 end;
 
@@ -2784,11 +2857,6 @@ begin
   end;
 end;
 
-procedure TfrmGoPhast.acModelMateInteractionExecute(Sender: TObject);
-begin
-  ShowAForm(TfrmModelMateInterface)
-end;
-
 procedure TfrmGoPhast.ModelSelectionChange(Sender: TObject);
 begin
   case PhastModel.ModelSelection of
@@ -2858,7 +2926,6 @@ begin
   miPackages.Enabled := PhastModel.ModelSelection = msModflow;
   miProgramLocations.Enabled := PhastModel.ModelSelection = msModflow;
   miModflowNameFile.Enabled := PhastModel.ModelSelection = msModflow;
-  acModelMateInteraction.Enabled := PhastModel.ModelSelection = msModflow;
   EnableLinkStreams;
   EnableManageObservations;
   miObservationType.Enabled := PhastModel.ModelSelection = msModflow;
@@ -3265,6 +3332,7 @@ begin
   AList.Add(tbAddPartsToObject);
   AList.Add(tbAddLinesToObjects);
   AList.Add(tbAddPointsToObject);
+  AList.Add(tbVertexValue);
 end;
 
 procedure TfrmGoPhast.SetButtonsUp(const CurrentButton: TObject);
@@ -3459,6 +3527,32 @@ begin
   UndoStack.UndoEvent(Sender);
 end;
 
+procedure TfrmGoPhast.acVertexValueExecute(Sender: TObject);
+begin
+  inherited;
+  SetActionChecked(Sender);
+
+  if not (Sender is TToolButton) then
+  begin
+    tbVertexValue.OnMouseDown(tbSelectPoint, mbLeft, [ssLeft], 0, 0);
+  end;
+
+  if tbVertexValue.Down then
+  begin
+    // Make sure all buttons except the current one are up.
+    SetButtonsUp(tbVertexValue);
+    // Set the cursors.
+    SetZB_Cursors(crVertexValue);
+    // don't draw a rectangle around the selected screen objects.
+    CurrentTool := EditVertexValueTool;
+  end
+  else
+  begin
+    CurrentTool := nil;
+  end;
+  SelectDefaultButton;
+end;
+
 procedure TfrmGoPhast.dcSubdivideDrawCursor(Sender: TObject; const ABitMap,
   AMask: TBitmap);
 begin
@@ -3527,6 +3621,43 @@ begin
   Grid.GridChanged;
 end;
 
+procedure TfrmGoPhast.SetGridLineDrawingChoice(Sender: TObject);
+begin
+  if acShowAllGridLines.Checked then
+  begin
+    PhastGrid.GridLineDrawingChoice := gldcAll;
+    ModflowGrid.GridLineDrawingChoice := gldcAll;
+    tbShow2DGrid.ImageIndex := acShowAllGridLines.ImageIndex;
+    miShow2DGridlines.ImageIndex := acShowAllGridLines.ImageIndex;
+  end
+  else if acShowExteriorGridLines.Checked then
+  begin
+    PhastGrid.GridLineDrawingChoice := gldcExterior;
+    ModflowGrid.GridLineDrawingChoice := gldcExterior;
+    tbShow2DGrid.ImageIndex := acShowExteriorGridLines.ImageIndex;
+    miShow2DGridlines.ImageIndex := acShowExteriorGridLines.ImageIndex;
+  end
+  else if acShowActiveGridLines.Checked then
+  begin
+    PhastGrid.GridLineDrawingChoice := gldcActive;
+    ModflowGrid.GridLineDrawingChoice := gldcActive;
+    tbShow2DGrid.ImageIndex := acShowActiveGridLines.ImageIndex;
+    miShow2DGridlines.ImageIndex := acShowActiveGridLines.ImageIndex;
+  end
+  else if acShowActiveEdge.Checked then
+  begin
+    PhastGrid.GridLineDrawingChoice := gldcActiveEdge;
+    ModflowGrid.GridLineDrawingChoice := gldcActiveEdge;
+    tbShow2DGrid.ImageIndex := acShowActiveEdge.ImageIndex;
+    miShow2DGridlines.ImageIndex := acShowActiveEdge.ImageIndex;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+  UpdateDisplay(nil);
+end;
+
 procedure TfrmGoPhast.CancelCurrentScreenObject;
 begin
   if CurrentTool is TCustomCreateScreenObjectTool then
@@ -3555,7 +3686,6 @@ procedure TfrmGoPhast.SetVisibilityOfModelMateActions;
 begin
   acImportModelMate.Visible := FShowUcodeInterface;
   acExportModelMate.Visible := FShowUcodeInterface;
-  acModelMateInteraction.Visible := FShowUcodeInterface;
 end;
 
 procedure TfrmGoPhast.InitializeModflowInputDialog;
@@ -4278,7 +4408,7 @@ procedure TfrmGoPhast.SetTopScreenObjectsChanged(const Value: boolean);
 begin
   // When the top screen objects have changed redraw.
   FTopScreenObjectsChanged := Value;
-  if FTopScreenObjectsChanged then
+  if FTopScreenObjectsChanged and not (csDestroying in ComponentState) then
   begin
     frameTopView.ZoomBox.Image32.Invalidate;
   end;
@@ -4556,7 +4686,7 @@ begin
   end
   else if AScreenObject = nil then
   begin
-    DeleteSelectedScreenObjects;
+    DeleteSelectedNotesOrSelectedScreenObjects;
   end;
 end;
 
@@ -4633,7 +4763,7 @@ begin
         end
         else
         begin
-          DeleteSelectedScreenObjects;
+          DeleteSelectedNotesOrSelectedScreenObjects;
         end;
       end;
     Key_Left:
@@ -4830,7 +4960,7 @@ end;
 procedure TfrmGoPhast.SetFrontScreenObjectsChanged(const Value: boolean);
 begin
   FFrontScreenObjectsChanged := Value;
-  if FFrontScreenObjectsChanged then
+  if FFrontScreenObjectsChanged  and not (csDestroying in ComponentState) then
   begin
     frameFrontView.ZoomBox.Image32.Invalidate;
   end;
@@ -4944,7 +5074,7 @@ end;
 procedure TfrmGoPhast.SetSideScreenObjectsChanged(const Value: boolean);
 begin
   FSideScreenObjectsChanged := Value;
-  if FSideScreenObjectsChanged then
+  if FSideScreenObjectsChanged  and not (csDestroying in ComponentState) then
   begin
     frameSideView.ZoomBox.Image32.Invalidate;
   end;
@@ -5016,7 +5146,7 @@ begin
     and (PhastModel.Grid = PhastModel.PhastGrid);
 end;
 
-procedure TfrmGoPhast.DeleteSelectedScreenObjects;
+procedure TfrmGoPhast.DeleteSelectedNotesOrSelectedScreenObjects;
 var
   SelectedScreenObjects: TScreenObjectList;
   DeleteNodes: Boolean;
@@ -5655,6 +5785,7 @@ var
   Extension: string;
   DecompressionStream: TDecompressionStream;
   DataArray: TDataArray;
+  Index: Integer;
 begin
   FreeAndNil(frmModflowPackages);
   frmErrorsAndWarnings.Clear;
@@ -5783,6 +5914,11 @@ begin
       if not Assigned(DataArray.OnUpToDateSet) then
       begin
         DataArray.OnUpToDateSet := PhastModel.OnActiveDataSetChanged;
+      end;
+
+      for Index := 0 to PhastModel.DataSetCount - 1 do
+      begin
+        PhastModel.DataSets[Index].RestoreUpToDataStatus;
       end;
 
       PhastModel.UpToDate := True;
@@ -6386,6 +6522,20 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.sdZonebudgetInputClose(Sender: TObject);
+begin
+  inherited;
+  FRunZoneBudget := FRunZoneBudgetForm.cbRun.Checked;
+  FRunZoneBudgetForm.free;
+end;
+
+procedure TfrmGoPhast.sdZonebudgetInputShow(Sender: TObject);
+begin
+  inherited;
+  FRunZoneBudgetForm := TfrmRunZoneBudget.createfordialog(sdZonebudgetInput);
+  FRunZoneBudgetForm.cbRun.Checked := FRunZoneBudget;
+end;
+
 procedure TfrmGoPhast.ExportFile(const FileName: string; RunModel: boolean);
 begin
   Screen.Cursor := crHourGlass;
@@ -6472,6 +6622,17 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.acExportImageExecute(Sender: TObject);
+begin
+  inherited;
+  if frmExportImage = nil then
+  begin
+    Application.CreateForm(TfrmExportImage, frmExportImage);
+  end;
+    frmExportImage.Show;
+//  ShowAForm(TfrmExportImage)
+end;
+
 procedure TfrmGoPhast.acExportModelMateExecute(Sender: TObject);
 var
   TempProject: TProject;
@@ -6495,114 +6656,121 @@ begin
     Exit;
   end;
 
-  if PhastModel.ModelMateProjectFileName = '' then
+  sdModelMate.FileName := PhastModel.ModelMateProjectFileName;
+  if sdModelMate.Execute then
   begin
-    ShowAForm(TfrmModelMateInterface);
-    if PhastModel.ModelMateProjectFileName = '' then
+    PhastModel.ModelMateProjectFileName := sdModelMate.FileName;
+
+  //  end;
+  //  if PhastModel.ModelMateProjectFileName = '' then
+  //  begin
+  //    ShowAForm(TfrmModelMateInterface);
+  //    if PhastModel.ModelMateProjectFileName = '' then
+  //    begin
+  //      Exit;
+  //    end;
+  //  end;
+
+
+    PhastModel.ModelMateProject := nil;
+    TempProject := TProject.Create(nil);
+    try
+      TempProject.ModelID := midModflow2005;
+      PhastModel.ModelMateProject := TempProject;
+    finally
+      TempProject.Free;
+    end;
+    InitializeModflowInputDialog;
+
+    if FileExists(PhastModel.ModelMateProjectFileName) then
     begin
-      Exit;
-    end;
-  end;
-
-
-  PhastModel.ModelMateProject := nil;
-  TempProject := TProject.Create(nil);
-  try
-    TempProject.ModelID := midModflow2005;
-    PhastModel.ModelMateProject := TempProject;
-  finally
-    TempProject.Free;
-  end;
-  InitializeModflowInputDialog;
-
-  if FileExists(PhastModel.ModelMateProjectFileName) then
-  begin
-    ReadModelMateProject(PhastModel.ModelMateProjectFileName,
-      PhastModel.ModelMateProject);
-  end;
-
-  CurrentDir := GetCurrentDir;
-  try
-    SetCurrentDir(ExtractFileDir(sdSaveDialog.FileName));
-    if PhastModel.ModelMateProject.ProjName = '' then
-    begin
-      PhastModel.ModelMateProject.ProjName := ChangeFileExt(
-        ExtractFileName(sdSaveDialog.FileName), '');
+      ReadModelMateProject(PhastModel.ModelMateProjectFileName,
+        PhastModel.ModelMateProject);
     end;
 
-    NameFile := ExtractRelativePath(sdSaveDialog.FileName,
-      ChangeFileExt(sdSaveDialog.FileName, '.nam'));
-    case PhastModel.ObservationPurpose of
-      ofObserved:
-        begin
-          PhastModel.ModelMateProject.ModflowNameFile := NameFile
-        end;
-      ofPredicted:
-        begin
-          PhastModel.ModelMateProject.ModflowNameFilePred := NameFile
-        end;
-      ofInacative:
-        begin
-        end;
-      else Assert(False);
-    end;
-
-
-    ModelFile := ExtractRelativePath(sdSaveDialog.FileName,
-      ChangeFileExt(sdSaveDialog.FileName, StrPvalExt));
-    AppFile := ExtractRelativePath(sdSaveDialog.FileName,
-      ChangeFileExt(sdSaveDialog.FileName, StrJtf));
-    FoundPair := nil;
-
-    InputFiles := nil;
-    case PhastModel.ObservationPurpose of
-      ofObserved: InputFiles := PhastModel.ModelMateProject.MIFiles;
-      ofPredicted: InputFiles := PhastModel.ModelMateProject.MIFilesPred;
-      ofInacative: ;
-      else Assert(False);
-    end;
-
-    if InputFiles <> nil then
-    begin
-      for Index := 0 to InputFiles.Count - 1 do
+    CurrentDir := GetCurrentDir;
+    try
+      SetCurrentDir(ExtractFileDir(sdSaveDialog.FileName));
+      if PhastModel.ModelMateProject.ProjName = '' then
       begin
-        ModelPair := InputFiles.Items[Index];
-        if SameText(ExtractFileExt(ModelPair.ModelFile), StrPvalExt) then
-        begin
-          FoundPair := ModelPair;
-          break;
-        end;
+        PhastModel.ModelMateProject.ProjName := ChangeFileExt(
+          ExtractFileName(sdSaveDialog.FileName), '');
       end;
-      if FoundPair = nil then
+
+      NameFile := ExtractRelativePath(sdSaveDialog.FileName,
+        ChangeFileExt(sdSaveDialog.FileName, '.nam'));
+      case PhastModel.ObservationPurpose of
+        ofObserved:
+          begin
+            PhastModel.ModelMateProject.ModflowNameFile := NameFile
+          end;
+        ofPredicted:
+          begin
+            PhastModel.ModelMateProject.ModflowNameFilePred := NameFile
+          end;
+        ofInacative:
+          begin
+          end;
+        else Assert(False);
+      end;
+
+
+      ModelFile := ExtractRelativePath(sdSaveDialog.FileName,
+        ChangeFileExt(sdSaveDialog.FileName, StrPvalExt));
+      AppFile := ExtractRelativePath(sdSaveDialog.FileName,
+        ChangeFileExt(sdSaveDialog.FileName, StrJtf));
+      FoundPair := nil;
+
+      InputFiles := nil;
+      case PhastModel.ObservationPurpose of
+        ofObserved: InputFiles := PhastModel.ModelMateProject.MIFiles;
+        ofPredicted: InputFiles := PhastModel.ModelMateProject.MIFilesPred;
+        ofInacative: ;
+        else Assert(False);
+      end;
+
+      if InputFiles <> nil then
       begin
-        FoundPair := InputFiles.Add as TModelIOPair;
+        for Index := 0 to InputFiles.Count - 1 do
+        begin
+          ModelPair := InputFiles.Items[Index];
+          if SameText(ExtractFileExt(ModelPair.ModelFile), StrPvalExt) then
+          begin
+            FoundPair := ModelPair;
+            break;
+          end;
+        end;
+        if FoundPair = nil then
+        begin
+          FoundPair := InputFiles.Add as TModelIOPair;
+        end;
+        FoundPair.ModelFile := ModelFile;
+        FoundPair.AppFile := AppFile;
       end;
-      FoundPair.ModelFile := ModelFile;
-      FoundPair.AppFile := AppFile;
+
+      CommandLine := ExtractRelativePath(sdSaveDialog.FileName,
+        PhastModel.ProgramLocations.ModflowLocation)
+        + ' ' + ExtractRelativePath(sdSaveDialog.FileName,
+        ChangeFileExt(ExtractFileName(sdSaveDialog.FileName), '.nam'));
+      case PhastModel.ObservationPurpose of
+        ofObserved:
+          begin
+            PhastModel.ModelMateProject.MCLForward := CommandLine;
+
+          end;
+        ofPredicted:
+          begin
+            PhastModel.ModelMateProject.MCLPred := CommandLine;
+          end;
+        else Assert(False);
+      end;
+
+      PhastModel.UpdateModelMateProject;
+
+      SaveModelMateProject;
+    finally
+      SetCurrentDir(CurrentDir);
     end;
-
-    CommandLine := ExtractRelativePath(sdSaveDialog.FileName,
-      PhastModel.ProgramLocations.ModflowLocation)
-      + ' ' + ExtractRelativePath(sdSaveDialog.FileName,
-      ChangeFileExt(ExtractFileName(sdSaveDialog.FileName), '.nam'));
-    case PhastModel.ObservationPurpose of
-      ofObserved:
-        begin
-          PhastModel.ModelMateProject.MCLForward := CommandLine;
-
-        end;
-      ofPredicted:
-        begin
-          PhastModel.ModelMateProject.MCLPred := CommandLine;
-        end;
-      else Assert(False);
-    end;
-
-    PhastModel.UpdateModelMateProject;
-
-    SaveModelMateProject;
-  finally
-    SetCurrentDir(CurrentDir);
   end;
 end;
 
@@ -6616,22 +6784,22 @@ begin
     sdModpathInput.FileName := ChangeFileExt(sdSaveDialog.FileName,
       sdModpathInput.DefaultExt);
   end;
-    if sdModpathInput.Execute then
+  if sdModpathInput.Execute then
+  begin
+    if not FileExists(PhastModel.ProgramLocations.ModPathLocation) then
     begin
+      ShowAForm(TfrmProgramLocations);
       if not FileExists(PhastModel.ProgramLocations.ModPathLocation) then
       begin
-        ShowAForm(TfrmProgramLocations);
-        if not FileExists(PhastModel.ProgramLocations.ModPathLocation) then
+        Beep;
+        if MessageDlg('MODPATH does not exist at the location you specified.  '
+          + 'Do you still want to export the MODPATH input files?', mtWarning,
+          [mbYes, mbNo], 0) <> mrYes then
         begin
-          Beep;
-          if MessageDlg('MODPATH does not exist at the location you specified.  '
-            + 'Do you still want to export the MODPATH input files?', mtWarning,
-            [mbYes, mbNo], 0) <> mrYes then
-          begin
-            Exit;
-          end;
+          Exit;
         end;
       end;
+    end;
 
 
     FileName := sdModpathInput.FileName;
@@ -6903,22 +7071,6 @@ end;
 procedure TfrmGoPhast.tbShellClick(Sender: TObject);
 begin
   frame3DView.glWidModelView.Invalidate;
-end;
-
-procedure TfrmGoPhast.acShowGridLines2DExecute(Sender: TObject);
-begin
-  inherited;
-  ModflowGrid.DrawInteriorGridLines2D := acShowGridLines2D.Checked;
-  PhastGrid.DrawInteriorGridLines2D := acShowGridLines2D.Checked;
-  if acShowGridLines2D.Checked then
-  begin
-    acShowGridLines2D.Caption := 'Hide 2-D Grid';
-  end
-  else
-  begin
-    acShowGridLines2D.Caption := 'Show 2-D Grid';
-  end;
-  UpdateDisplay(nil);
 end;
 
 procedure TfrmGoPhast.acShowGridShellExecute(Sender: TObject);

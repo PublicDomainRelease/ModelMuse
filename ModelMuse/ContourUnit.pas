@@ -879,6 +879,7 @@ begin
         Contours.ContourValues := ContourValues;
         Contours.LineThicknesses := LineThicknesses;
         Contours.ContourColors := ContourColors;
+        Contours.ContourStringValues := DSValues;
         DataSet.Contours := Contours;
       finally
         Contours.Free;
@@ -1023,7 +1024,7 @@ begin
   if DataSet.DataType = rdtString then
   begin
     MinValue := 0;
-    MinValue := DSValues.Count - 1;
+    MaxValue := DSValues.Count - 1;
   end;
 end;
 

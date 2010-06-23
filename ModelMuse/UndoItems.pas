@@ -13,7 +13,8 @@ unit UndoItems;
 interface
 
 uses Classes, Contnrs, Controls, Forms, RbwParser, Undo, GoPhastTypes, AbstractGridUnit,
-  DataSetUnit, PhastDataSets, FluxObservationUnit, FormulaManagerUnit;
+  DataSetUnit, PhastDataSets, FluxObservationUnit, FormulaManagerUnit,
+  DisplaySettingsUnit;
 
 type
   {@abstract(@name is an abstract base class used as an ancestor
@@ -702,7 +703,18 @@ type
     procedure Undo; override;
   end;
 
-
+  TUndoEditDisplaySettings = class(TCustomUndo)
+  private
+    FOldSettings: TDisplaySettingsCollection;
+    FNewSettings: TDisplaySettingsCollection;
+  protected
+    function Description: string; override;
+  public
+    Constructor Create(var NewSettings: TDisplaySettingsCollection);
+    Destructor Destroy; override;
+    procedure DoCommand; override;
+    procedure Undo; override;
+  end;
 
 implementation
 
@@ -2383,6 +2395,41 @@ begin
   FNewRvobObservations.Free;
   FNewRvobObservations := TFluxObservationGroups.Create(nil);
   FNewRvobObservations.Assign(NewRvobObservations);
+end;
+
+{ TUndoEditDisplaySettings }
+
+constructor TUndoEditDisplaySettings.Create(
+  var NewSettings: TDisplaySettingsCollection);
+begin
+  FNewSettings := NewSettings;
+  NewSettings := nil;
+  FOldSettings := TDisplaySettingsCollection.Create(nil);
+  FOldSettings.Assign(frmGoPhast.PhastModel.DisplaySettings);
+end;
+
+function TUndoEditDisplaySettings.Description: string;
+begin
+  result := 'change image settings';
+end;
+
+destructor TUndoEditDisplaySettings.Destroy;
+begin
+  FNewSettings.Free;
+  FOldSettings.Free;
+  inherited;
+end;
+
+procedure TUndoEditDisplaySettings.DoCommand;
+begin
+  inherited;
+  frmGoPhast.PhastModel.DisplaySettings.Assign(FNewSettings);
+end;
+
+procedure TUndoEditDisplaySettings.Undo;
+begin
+  inherited;
+  frmGoPhast.PhastModel.DisplaySettings.Assign(FOldSettings);
 end;
 
 end.

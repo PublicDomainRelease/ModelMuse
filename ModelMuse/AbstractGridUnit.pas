@@ -94,6 +94,8 @@ type
   }
   TCellColors = array of array of array of TColor;
 
+  TGridLineDrawingChoice = (gldcAll, gldcExterior, gldcActive, gldcActiveEdge);
+
   TLimit = record
     MinX: double;
     MaxX: double;
@@ -259,15 +261,17 @@ side views of the model.}
     // @name is the number of elements in a grid.
     // (In MODFLOW, @name is the number of cells in the grid.)
     FElementCount: integer;
-    FDrawInteriorGridLines2D: boolean;
+    FGridLineDrawingChoice: TGridLineDrawingChoice;
     FTopContourDataSet: TDataArray;
     FThreeDContourDataSet: TDataArray;
     FFrontContourDataSet: TDataArray;
     FSideContourDataSet: TDataArray;
     FDrawing3DGrid: Boolean;
     FCanDraw: boolean;
+    FDraw3DAllowed: boolean;
     FBlockGridCache: TMemoryStream;
     FNodeGridCache: TMemoryStream;
+    FDrawColoredGridLines: boolean;
     // See @link(ColWidths).
     function GetColWidths: TOneDRealArray;
     // See @link(RowWidths).
@@ -363,7 +367,7 @@ side views of the model.}
     // @name is called from @link(ContourGrid) and @link(GlGrid).
     function PrivateGlGrid(EvaluatedAt: TEvaluatedAt;
       ModelSelection: TModelSelection):TGrid;
-    procedure SetDrawInteriorGridLines2D(const Value: boolean);
+    procedure SetGridLineDrawingChoice(const Value: TGridLineDrawingChoice);
     procedure SetFrontContourDataSet(const Value: TDataArray);
     procedure SetSideContourDataSet(const Value: TDataArray);
     procedure SetThreeDContourDataSet(const Value: TDataArray);
@@ -382,6 +386,24 @@ side views of the model.}
       Col: integer): boolean;
     function ValueOK(DataSet: TDataArray; const Layer, Row,
       Col: integer): boolean;
+    procedure DrawOrdinaryTopRows(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2);
+    procedure DrawOrdinaryTopColumns(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2);
+    procedure InitializeMinMax(const Layer, Row, Col: integer;
+      DataSet: TDataArray; var MinMaxInitialized: boolean; var RMin, RMax,
+      RMinPositive: real; var IMin, IMax: integer; var BMin, BMax: boolean;
+      var SMin, SMax: string);
+    procedure UpdateMinMax(const Layer, Row, Col: integer; DataSet: TDataArray;
+      var MinMaxInitialized: boolean; var RMin, RMax, RMinPositive: real;
+      var IMin, IMax: integer; var BMin, BMax: boolean; var SMin, SMax: string;
+      StringValues: TStringList);
+    procedure SetMinMax(DataSet: TDataArray; var MinMaxInitialized: boolean;
+      var RMin, RMax, RMinPositive: real; var IMin, IMax: integer; var BMin,
+      BMax: boolean; var SMin, SMax: string; StringValues: TStringList;
+      LayerCount, RowCount, ColCount: integer);
+    procedure GetCounts(DataSet: TDataArray; var LayerCount, RowCount,
+      ColCount: integer);
   protected
     // @name is used to indicate whether or not the display lists
     // @link(FGridShellGLIndex), @link(FTopGridGLIndex),
@@ -583,7 +605,13 @@ side views of the model.}
       const BitMap: TBitmap32);
     procedure DrawSideContours(const ZoomBox: TQRbwZoomBox2;
       const BitMap: TBitmap32);
+    function IsElementActive(const Layer, Row, Col: integer): boolean;
   public
+    procedure GetRealMinMax(DataSet: TDataArray; var RMin, RMax,
+      RMinPositive: real);
+    procedure GetIntegerMinMax(DataSet: TDataArray; var IMin, IMax: integer);
+    procedure GetBooleanMinMax(DataSet: TDataArray; var BMin, BMax: boolean);
+    procedure GetStringMinMax(DataSet: TDataArray; var SMin, SMax: string);
     property Drawing3DGrid: boolean read FDrawing3DGrid;
     // @name creates and caches a @link(T2DGrid) which can then be used
     // in drawing contour lines in @link(TContourCreator.DrawContour).
@@ -610,6 +638,7 @@ side views of the model.}
     property CanDraw: boolean read FCanDraw write SetCanDraw;
     // @name is used to determine whether or not a grid can be drawn in 3D.
     function CanDraw3D: boolean;
+    property Draw3DAllowed: boolean read FDraw3DAllowed write FDraw3DAllowed;
     { @name is an abstract property that represents the elevation of
       the boundary between the cell at Row, Column between Layer and Layer-1.
       There are LayerCount + 1 layers of elevations in the grid.  }
@@ -656,11 +685,12 @@ side views of the model.}
       const ViewDirection: TViewDirection);
     { @name draws the grid in the current OpenGL rendering context.}
     procedure Draw3D; virtual;
-    // If @name is @true, the grid will be displayed with all it's grid
-    // lines in 2D views of the model. Otherwise, it will only include
-    // the first, last selected grid lines.
-    property DrawInteriorGridLines2D: boolean read FDrawInteriorGridLines2D
-      write SetDrawInteriorGridLines2D;
+    // If @name is @true, the grid will be displayed with (1) all it's grid
+    // lines in 2D views of the model (2) only
+    // the first, last and selected grid lines, or (3) only grid lines
+    // next to active elements.
+    property GridLineDrawingChoice: TGridLineDrawingChoice
+      read FGridLineDrawingChoice write SetGridLineDrawingChoice;
     {@name is used to retrieve or set the color of a element or
      node in a front view of the grid.  Whether the color is the
      color of a cell
@@ -955,6 +985,8 @@ side views of the model.}
     // @name returns the extent of the grid in grid coordinates;
     function GridLimits(ViewDirection: TViewDirection): TLimit;
     function GridOutline(ViewDirection: TViewDirection): TPolygon2D;
+    property DrawColoredGridLines: boolean read FDrawColoredGridLines
+      write FDrawColoredGridLines;
   published
     { @name is the number of columns in the grid.
       Each column has a width that is greater than or equal to 0.}
@@ -1027,7 +1059,16 @@ procedure WriteIntegerArray(const Writer: TWriter;
 
 // @name returns @True if all members of AnArray are the same.
 function IsUniform(const AnArray: TOneDRealArray): boolean;
-  
+
+function ConvertTop2D_Point(const ZoomBox: TQRbwZoomBox2;
+  const APoint: TPoint2D): TPoint;
+
+function Convert2D_FrontPoint(const ZoomBox: TQRbwZoomBox2;
+  const APoint: TPoint2D): TPoint;
+
+function Convert2D_SidePoint(const ZoomBox: TQRbwZoomBox2;
+  const APoint: TPoint2D): TPoint;
+
 const
   // @name is the thickness of thin grid lines when drawn in the top, front,
   // or side views.
@@ -1060,9 +1101,10 @@ uses GR32_Polygons, Math, RealListUnit, frmGoPhastUnit, BigCanvasMethods,
   ModelMuseUtilities, PhastDataSets, ScreenObjectUnit, PhastModelUnit, InteractiveTools,
   EdgeDisplayUnit, ZLib, IntListUnit;
 
-const  
+const
   // @name is the number of OpenGL display lists used to display the grid.
   NumberOfLists = 6;
+  InactiveGridColor = clSilver;
 
 function IsUniform(const AnArray: TOneDRealArray): boolean;
 var
@@ -1234,7 +1276,9 @@ end;
 constructor TCustomGrid.Create;
 begin
   inherited;
-  FDrawInteriorGridLines2D := True;
+  FDrawColoredGridLines := True;
+  FDraw3DAllowed := True;
+  FGridLineDrawingChoice := gldcAll;
   FElementCount := 0;
   FNeedToRedraw3d := True;
   FRecordedSideGrid := False;
@@ -1316,7 +1360,27 @@ begin
   else
     Assert(False);
   end;
+end;
 
+function ConvertTop2D_Point(const ZoomBox: TQRbwZoomBox2;
+  const APoint: TPoint2D): TPoint;
+begin
+  result.X := ZoomBox.XCoord(APoint.X);
+  result.Y := ZoomBox.YCoord(APoint.Y);
+end;
+
+function Convert2D_FrontPoint(const ZoomBox: TQRbwZoomBox2;
+  const APoint: TPoint2D): TPoint;
+begin
+  result.X := ZoomBox.XCoord(APoint.X);
+  result.Y := ZoomBox.YCoord(APoint.Y);
+end;
+
+function Convert2D_SidePoint(const ZoomBox: TQRbwZoomBox2;
+  const APoint: TPoint2D): TPoint;
+begin
+  result.X := ZoomBox.XCoord(APoint.Y);
+  result.Y := ZoomBox.YCoord(APoint.X);
 end;
 
 procedure TCustomGrid.DrawTop(const BitMap: TBitmap32;
@@ -1331,15 +1395,8 @@ var
   PointCount: integer;
   ColumnLimit, RowLimit: integer;
   LineWidth: single;
-  LocalEvalAt: TEvaluatedAt;
-  LocalLineColor: TColor32;
   Polygon: TPolygon32;
   MultiplePolygons: boolean;
-  function ConvertTop2D_Point(const APoint: TPoint2D): TPoint;
-  begin
-    result.X := ZoomBox.XCoord(APoint.X);
-    result.Y := ZoomBox.YCoord(APoint.Y);
-  end;
   procedure CalculatePoint1;
   var
     X1: double;
@@ -1367,33 +1424,33 @@ var
     Point1.X := X1 - X2;
     Point1.Y := TempValue;
   end;
-  procedure CalculatePoint2;
-  var
-    X1: double;
-    Y1: double;
-    X2: double;
-    Y2: double;
-    Angle: double;
-  begin
-    Angle := GridAngle;
-    X1 := Cos(Angle) * ColumnPosition[ColumnIndex];
-    Y1 := Sin(Angle) * ColumnPosition[ColumnIndex];
-    X2 := X1 - TempValue;
-    try
-      if (Angle = 0) or (Angle = Pi) or (Angle = -Pi) then
-      begin
-        Y2 := 0;
-      end
-      else
-      begin
-        Y2 := Cot(Angle) * X2;
-      end;
-    except
-      Y2 := 0;
-    end;
-    Point1.X := TempValue;
-    Point1.Y := Y1 + Y2;
-  end;
+//  procedure CalculatePoint2;
+//  var
+//    X1: double;
+//    Y1: double;
+//    X2: double;
+//    Y2: double;
+//    Angle: double;
+//  begin
+//    Angle := GridAngle;
+//    X1 := Cos(Angle) * ColumnPosition[ColumnIndex];
+//    Y1 := Sin(Angle) * ColumnPosition[ColumnIndex];
+//    X2 := X1 - TempValue;
+//    try
+//      if (Angle = 0) or (Angle = Pi) or (Angle = -Pi) then
+//      begin
+//        Y2 := 0;
+//      end
+//      else
+//      begin
+//        Y2 := Cot(Angle) * X2;
+//      end;
+//    except
+//      Y2 := 0;
+//    end;
+//    Point1.X := TempValue;
+//    Point1.Y := Y1 + Y2;
+//  end;
   procedure CalculatePoint3;
   var
     X1: double;
@@ -1421,33 +1478,33 @@ var
     Point1.X := TempValue;
     Point1.Y := Y1 + Y2;
   end;
-  procedure CalculatePoint4;
-  var
-    X1: double;
-    Y1: double;
-    X2: double;
-    Y2: double;
-    Angle: double;
-  begin
-    Angle := GridAngle;
-    X1 := Sin(Angle) * RowPosition[RowIndex];
-    Y1 := Cos(Angle) * RowPosition[RowIndex];
-    Y2 := TempValue - Y1;
-    try
-      if (Angle = 0) or (Angle = Pi) or (Angle = -Pi) then
-      begin
-        X2 := 0;
-      end
-      else
-      begin
-        X2 := Cot(Angle) * Y2;
-      end;
-    except
-      X2 := 0;
-    end;
-    Point1.X := X2 - X1;
-    Point1.Y := TempValue;
-  end;
+//  procedure CalculatePoint4;
+//  var
+//    X1: double;
+//    Y1: double;
+//    X2: double;
+//    Y2: double;
+//    Angle: double;
+//  begin
+//    Angle := GridAngle;
+//    X1 := Sin(Angle) * RowPosition[RowIndex];
+//    Y1 := Cos(Angle) * RowPosition[RowIndex];
+//    Y2 := TempValue - Y1;
+//    try
+//      if (Angle = 0) or (Angle = Pi) or (Angle = -Pi) then
+//      begin
+//        X2 := 0;
+//      end
+//      else
+//      begin
+//        X2 := Cot(Angle) * Y2;
+//      end;
+//    except
+//      X2 := 0;
+//    end;
+//    Point1.X := X2 - X1;
+//    Point1.Y := TempValue;
+//  end;
   function GetNodeBasedCorner(Col, Row: integer): TPoint2D;
   begin
     if (Col = 0) or (Col > ColumnLimit) then
@@ -1495,7 +1552,7 @@ begin
   Polygon := nil;
   MultiplePolygons := False;
   SetLength(BoxCoordinates, 4);
-  with ZoomBox do
+//  with ZoomBox do
   begin
     if (ColumnCount <= 0)
       or (RowCount <= 0)
@@ -1504,7 +1561,7 @@ begin
       LineWidth := OrdinaryGridLineThickness;
       for ColumnIndex := 0 to ColumnCount do
       begin
-        if Not DrawInteriorGridLines2D and (ColumnIndex <> 0)
+        if (GridLineDrawingChoice = gldcExterior) and (ColumnIndex <> 0)
           and (ColumnIndex <> ColumnCount) then
         begin
           Continue;
@@ -1512,14 +1569,14 @@ begin
 
         PointCount := 0;
 
-        TempValue := Y(Image32.Height);
+        TempValue := ZoomBox.Y(ZoomBox.Image32.Height);
         CalculatePoint1;
-        BoxCoordinates[PointCount] := ConvertTop2D_Point(Point1);
+        BoxCoordinates[PointCount] := ConvertTop2D_Point(ZoomBox, Point1);
         Inc(PointCount);
 
-        TempValue := Y(0);
+        TempValue := ZoomBox.Y(0);
         CalculatePoint1;
-        BoxCoordinates[PointCount] := ConvertTop2D_Point(Point1);
+        BoxCoordinates[PointCount] := ConvertTop2D_Point(ZoomBox, Point1);
         //Inc(PointCount);
 
         DrawBigPolyline32(BitMap, clBlack32, LineWidth, BoxCoordinates,
@@ -1528,21 +1585,21 @@ begin
 
       for RowIndex := 0 to RowCount do
       begin
-        if Not DrawInteriorGridLines2D and (RowIndex <> 0)
+        if (GridLineDrawingChoice = gldcExterior) and (RowIndex <> 0)
           and (RowIndex <> RowCount) then
         begin
           Continue;
         end;
         PointCount := 0;
 
-        TempValue := X(Image32.Width);
+        TempValue := ZoomBox.X(ZoomBox.Image32.Width);
         CalculatePoint3;
-        BoxCoordinates[PointCount] := ConvertTop2D_Point(Point1);
+        BoxCoordinates[PointCount] := ConvertTop2D_Point(ZoomBox, Point1);
         Inc(PointCount);
 
-        TempValue := X(0);
+        TempValue := ZoomBox.X(0);
         CalculatePoint3;
-        BoxCoordinates[PointCount] := ConvertTop2D_Point(Point1);
+        BoxCoordinates[PointCount] := ConvertTop2D_Point(ZoomBox, Point1);
         //Inc(PointCount);
 
         DrawBigPolyline32(BitMap, clBlack32, LineWidth, BoxCoordinates,
@@ -1574,8 +1631,6 @@ begin
 
         for ColumnIndex := 0 to ColumnLimit do
         begin
-          if RowCount > 0 then
-          begin
             PriorRow := 0;
             AColor := TopCellColors[ColumnIndex, 0];
             NewColor := AColor;
@@ -1604,10 +1659,10 @@ begin
                   else
                     Assert(False);
                   end;
-                  BoxCoordinates[0] := ConvertTop2D_Point(Point1);
-                  BoxCoordinates[1] := ConvertTop2D_Point(Point2);
-                  BoxCoordinates[2] := ConvertTop2D_Point(Point3);
-                  BoxCoordinates[3] := ConvertTop2D_Point(Point4);
+                  BoxCoordinates[0] := ConvertTop2D_Point(ZoomBox, Point1);
+                  BoxCoordinates[1] := ConvertTop2D_Point(ZoomBox, Point2);
+                  BoxCoordinates[2] := ConvertTop2D_Point(ZoomBox, Point3);
+                  BoxCoordinates[3] := ConvertTop2D_Point(ZoomBox, Point4);
                   DrawBigPolygon32(BitMap, Color32(AColor), Color32(AColor),
                     0, BoxCoordinates, Polygon, MultiplePolygons, True);
                 end;
@@ -1637,63 +1692,18 @@ begin
               else
                 Assert(False);
               end;
-              BoxCoordinates[0] := ConvertTop2D_Point(Point1);
-              BoxCoordinates[1] := ConvertTop2D_Point(Point2);
-              BoxCoordinates[2] := ConvertTop2D_Point(Point3);
-              BoxCoordinates[3] := ConvertTop2D_Point(Point4);
+              BoxCoordinates[0] := ConvertTop2D_Point(ZoomBox, Point1);
+              BoxCoordinates[1] := ConvertTop2D_Point(ZoomBox, Point2);
+              BoxCoordinates[2] := ConvertTop2D_Point(ZoomBox, Point3);
+              BoxCoordinates[3] := ConvertTop2D_Point(ZoomBox, Point4);
               DrawBigPolygon32(BitMap, Color32(NewColor), Color32(NewColor),
                 0, BoxCoordinates, Polygon, MultiplePolygons, True);
             end;
-          end;
+//          end;
         end;
       end;
-
-      SetLocalEvalAt(vdTop, LocalEvalAt);
-      for ColumnIndex := 0 to ColumnCount do
-      begin
-        if (ColumnIndex mod 10 = 0) or (ColumnIndex = ColumnCount) then
-        begin
-          LineWidth := ThickGridLineThickness;
-        end
-        else
-        begin
-          LineWidth := OrdinaryGridLineThickness;
-        end;
-        SetColumnLineColor(ColumnIndex, LocalEvalAt, LocalLineColor, LineWidth);
-        if Not DrawInteriorGridLines2D and (ColumnIndex <> 0)
-          and (ColumnIndex <> ColumnCount) and (LocalLineColor = clBlack32) then
-        begin
-          Continue;
-        end;
-        Point1 := TwoDElementCorner(ColumnIndex, 0);
-        Point2 := TwoDElementCorner(ColumnIndex, RowCount);
-
-        DrawBigPolyline32(BitMap, LocalLineColor, LineWidth,
-          [ConvertTop2D_Point(Point1), ConvertTop2D_Point(Point2)], True);
-      end;
-
-      for RowIndex := 0 to RowCount do
-      begin
-        if (RowIndex mod 10 = 0) or (RowIndex = RowCount) then
-        begin
-          LineWidth := ThickGridLineThickness;
-        end
-        else
-        begin
-          LineWidth := OrdinaryGridLineThickness;
-        end;
-        SetRowLineColor(RowIndex, LocalEvalAt, LocalLineColor, LineWidth);
-        if Not DrawInteriorGridLines2D and (RowIndex <> 0)
-          and (RowIndex <> RowCount) and (LocalLineColor = clBlack32) then
-        begin
-          Continue;
-        end;
-        Point1 := TwoDElementCorner(0, RowIndex);
-        Point2 := TwoDElementCorner(ColumnCount, RowIndex);
-
-        DrawBigPolyline32(BitMap, LocalLineColor, LineWidth,
-          [ConvertTop2D_Point(Point1), ConvertTop2D_Point(Point2)], True);
-      end;
+      DrawOrdinaryTopColumns(BitMap, ZoomBox);
+      DrawOrdinaryTopRows(BitMap, ZoomBox);
 
     end;
   end;
@@ -2901,9 +2911,9 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetDrawInteriorGridLines2D(const Value: boolean);
+procedure TCustomGrid.SetGridLineDrawingChoice(const Value: TGridLineDrawingChoice);
 begin
-  FDrawInteriorGridLines2D := Value;
+  FGridLineDrawingChoice := Value;
 end;
 
 procedure TCustomGrid.SetGridAngle(Value: real);
@@ -3855,7 +3865,253 @@ begin
   end;
 end;
 
-procedure TCustomGrid.RestoreGlGrid(var AGlGrid: TGrid; GridCacheStream: TMemoryStream);
+procedure TCustomGrid.DrawOrdinaryTopColumns(const BitMap: TBitmap32;
+  const ZoomBox: TQRbwZoomBox2);
+var
+  ColumnIndex: Integer;
+  Point1: TPoint2D;
+  Point2: TPoint2D;
+  LineColor: TColor32;
+  LineWidth: Single;
+  EvalAt: TEvaluatedAt;
+  RowIndex: Integer;
+  Layer: Integer;
+//  IsEdge: Boolean;
+  LocalLineWidth: single;
+  function IsActive: boolean;
+  begin
+    result := ((ColumnIndex < ColumnCount) and
+      IsElementActive(Layer,RowIndex, ColumnIndex))
+      or ((ColumnIndex > 0)
+      and IsElementActive(Layer,RowIndex, ColumnIndex-1))
+  end;
+  function IsEdge: boolean;
+  begin
+    result := ((ColumnIndex < ColumnCount) and
+      IsElementActive(Layer,RowIndex, ColumnIndex))
+      <> ((ColumnIndex > 0)
+      and IsElementActive(Layer,RowIndex, ColumnIndex-1));
+  end;
+begin
+  SetLocalEvalAt(vdTop, EvalAt);
+  for ColumnIndex := 0 to ColumnCount do
+  begin
+    if (ColumnIndex mod 10 = 0) or (ColumnIndex = ColumnCount) then
+    begin
+      LineWidth := ThickGridLineThickness;
+    end
+    else
+    begin
+      LineWidth := OrdinaryGridLineThickness;
+    end;
+    SetColumnLineColor(ColumnIndex, EvalAt, LineColor, LineWidth);
+    case GridLineDrawingChoice of
+      gldcAll:
+        begin
+          Point1 := TwoDElementCorner(ColumnIndex, 0);
+          Point2 := TwoDElementCorner(ColumnIndex, RowCount);
+          DrawBigPolyline32(BitMap, LineColor, LineWidth,
+            [ConvertTop2D_Point(ZoomBox, Point1),
+            ConvertTop2D_Point(ZoomBox, Point2)], True);
+        end;
+      gldcExterior:
+        begin
+          if (ColumnIndex <> 0) and (ColumnIndex <> ColumnCount)
+            and (LineColor = clBlack32) then
+          begin
+            Continue;
+          end;
+          Point1 := TwoDElementCorner(ColumnIndex, 0);
+          Point2 := TwoDElementCorner(ColumnIndex, RowCount);
+          DrawBigPolyline32(BitMap, LineColor, LineWidth,
+            [ConvertTop2D_Point(ZoomBox, Point1),
+            ConvertTop2D_Point(ZoomBox, Point2)], True);
+        end;
+      gldcActive:
+        begin
+          Layer := SelectedLayer;
+          if Layer >= LayerCount then
+          begin
+            Dec(Layer);
+          end;
+          for RowIndex := 0 to RowCount - 1 do
+          begin
+            if IsActive then
+            begin
+              if IsEdge then
+              begin
+                LocalLineWidth := ThickGridLineThickness;
+              end
+              else
+              begin
+                LocalLineWidth := LineWidth;
+              end;
+              Point1 := TwoDElementCorner(ColumnIndex, RowIndex);
+              Point2 := TwoDElementCorner(ColumnIndex, RowIndex+1);
+              DrawBigPolyline32(BitMap, LineColor, LocalLineWidth,
+                [ConvertTop2D_Point(ZoomBox, Point1),
+                ConvertTop2D_Point(ZoomBox, Point2)], True);
+            end;
+          end;
+        end;
+      gldcActiveEdge:
+        begin
+          if LineColor = clBlack32 then
+          begin
+            LineWidth := OrdinaryGridLineThickness;
+          end
+          else
+          begin
+            LineWidth := ThickGridLineThickness;
+          end;
+          Layer := SelectedLayer;
+          if Layer >= LayerCount then
+          begin
+            Dec(Layer);
+          end;
+          for RowIndex := 0 to RowCount - 1 do
+          begin
+            if ((LineColor <> clBlack32) and IsActive)
+              or IsEdge then
+            begin
+              Point1 := TwoDElementCorner(ColumnIndex, RowIndex);
+              Point2 := TwoDElementCorner(ColumnIndex, RowIndex+1);
+              DrawBigPolyline32(BitMap, LineColor, LineWidth,
+                [ConvertTop2D_Point(ZoomBox, Point1),
+                ConvertTop2D_Point(ZoomBox, Point2)], True);
+            end;
+          end;
+        end;
+      else
+        Assert(False);
+    end;
+  end;
+end;
+
+procedure TCustomGrid.DrawOrdinaryTopRows(const BitMap: TBitmap32;
+  const ZoomBox: TQRbwZoomBox2);
+var
+  RowIndex: Integer;
+  Point1: TPoint2D;
+  Point2: TPoint2D;
+  LineWidth: single;
+  LineColor: TColor32;
+  LocalEvalAt: TEvaluatedAt;
+  ColumnIndex: Integer;
+  Layer: Integer;
+  LocalLineWidth: single;
+  function IsActive: boolean;
+  begin
+    result := ((RowIndex < RowCount) and
+      IsElementActive(Layer,RowIndex, ColumnIndex))
+      or ((RowIndex > 0)
+      and IsElementActive(Layer,RowIndex-1, ColumnIndex))
+  end;
+  function IsEdge: boolean;
+  begin
+    result := ((RowIndex < RowCount) and
+      IsElementActive(Layer,RowIndex, ColumnIndex))
+      <> ((RowIndex > 0)
+      and IsElementActive(Layer,RowIndex-1, ColumnIndex));
+  end;
+begin
+  SetLocalEvalAt(vdTop, LocalEvalAt);
+  for RowIndex := 0 to RowCount do
+  begin
+    if (RowIndex mod 10 = 0) or (RowIndex = RowCount) then
+    begin
+      LineWidth := ThickGridLineThickness;
+    end
+    else
+    begin
+      LineWidth := OrdinaryGridLineThickness;
+    end;
+    SetRowLineColor(RowIndex, LocalEvalAt, LineColor, LineWidth);
+    case GridLineDrawingChoice of
+      gldcAll:
+        begin
+          Point1 := TwoDElementCorner(0, RowIndex);
+          Point2 := TwoDElementCorner(ColumnCount, RowIndex);
+          DrawBigPolyline32(BitMap, LineColor, LineWidth,
+            [ConvertTop2D_Point(ZoomBox, Point1),
+            ConvertTop2D_Point(ZoomBox, Point2)], True);
+        end;
+      gldcExterior:
+        begin
+          if (RowIndex <> 0) and (RowIndex <> RowCount)
+            and (LineColor = clBlack32) then
+          begin
+            Continue;
+          end;
+          Point1 := TwoDElementCorner(0, RowIndex);
+          Point2 := TwoDElementCorner(ColumnCount, RowIndex);
+          DrawBigPolyline32(BitMap, LineColor, LineWidth,
+            [ConvertTop2D_Point(ZoomBox, Point1),
+            ConvertTop2D_Point(ZoomBox, Point2)], True);
+        end;
+      gldcActive:
+        begin
+          Layer := SelectedLayer;
+          if Layer >= LayerCount then
+          begin
+            Layer := Layer-1;
+          end;
+          for ColumnIndex := 0 to ColumnCount - 1 do
+          begin
+            if IsActive then
+            begin
+              if IsEdge then
+              begin
+                LocalLineWidth := ThickGridLineThickness;
+              end
+              else
+              begin
+                LocalLineWidth := LineWidth;
+              end;
+              Point1 := TwoDElementCorner(ColumnIndex, RowIndex);
+              Point2 := TwoDElementCorner(ColumnIndex+1, RowIndex);
+              DrawBigPolyline32(BitMap, LineColor, LocalLineWidth,
+                [ConvertTop2D_Point(ZoomBox, Point1),
+                  ConvertTop2D_Point(ZoomBox, Point2)], True);
+            end;
+          end;
+        end;
+      gldcActiveEdge:
+        begin
+          if LineColor = clBlack32 then
+          begin
+            LineWidth := OrdinaryGridLineThickness;
+          end
+          else
+          begin
+            LineWidth := ThickGridLineThickness;
+          end;
+          Layer := SelectedLayer;
+          if Layer >= LayerCount then
+          begin
+            Layer := Layer-1;
+          end;
+          for ColumnIndex := 0 to ColumnCount - 1 do
+          begin
+            if ((LineColor <> clBlack32) and IsActive)
+              or IsEdge then
+            begin
+              Point1 := TwoDElementCorner(ColumnIndex, RowIndex);
+              Point2 := TwoDElementCorner(ColumnIndex+1, RowIndex);
+              DrawBigPolyline32(BitMap, LineColor, LineWidth,
+                [ConvertTop2D_Point(ZoomBox, Point1),
+                ConvertTop2D_Point(ZoomBox, Point2)], True);
+            end;
+          end;
+        end
+      else
+        Assert(False);
+    end;
+  end;
+end;
+
+procedure TCustomGrid.RestoreGlGrid(var AGlGrid: TGrid;
+  GridCacheStream: TMemoryStream);
 var
   RowIndex: Integer;
   ColIndex: Integer;
@@ -4296,6 +4552,373 @@ begin
   end;
 end;
 
+procedure TCustomGrid.InitializeMinMax(const Layer, Row, Col: integer;
+  DataSet: TDataArray; var MinMaxInitialized: boolean;
+  var RMin, RMax, RMinPositive: real; var IMin, IMax: integer;
+  var BMin, BMax: boolean; var SMin, SMax: string);
+begin
+  if not DataSet.IsValue[Layer, Row, Col] then
+    Exit;
+  if not IsActiveOK(DataSet, Layer, Row, Col) then
+    Exit;
+  if not ValueOK(DataSet, Layer, Row, Col) then
+    Exit;
+  MinMaxInitialized := True;
+  case DataSet.Datatype of
+    rdtDouble:
+      begin
+        RMin := DataSet.RealData[Layer, Row, Col];
+        RMax := RMin;
+        if DataSet.Limits.LowerLimit.UseLimit then
+        begin
+          RMin := DataSet.Limits.LowerLimit.RealLimitValue;
+        end;
+        if DataSet.Limits.UpperLimit.UseLimit then
+        begin
+          RMax := DataSet.Limits.UpperLimit.RealLimitValue;
+        end;
+        if RMin > 0 then
+        begin
+          RMinPositive := RMin;
+        end;
+      end;
+    rdtInteger:
+      begin
+        if DataSet.DisplayRealValue then
+        begin
+          RMin := DataSet.RealData[Layer, Row, Col];
+          RMax := Rmin;
+          if DataSet.Limits.LowerLimit.UseLimit then
+          begin
+            RMin := DataSet.Limits.LowerLimit.IntegerLimitValue;
+          end;
+          if DataSet.Limits.UpperLimit.UseLimit then
+          begin
+            RMax := DataSet.Limits.UpperLimit.IntegerLimitValue;
+          end;
+        end
+        else
+        begin
+          IMin := DataSet.IntegerData[Layer, Row, Col];
+          IMax := IMin;
+          if DataSet.Limits.LowerLimit.UseLimit then
+          begin
+            IMin := DataSet.Limits.LowerLimit.IntegerLimitValue;
+          end;
+          if DataSet.Limits.UpperLimit.UseLimit then
+          begin
+            IMax := DataSet.Limits.UpperLimit.IntegerLimitValue;
+          end;
+        end;
+      end;
+    rdtBoolean:
+      begin
+        BMin := False;
+        BMax := True;
+        if DataSet.Limits.LowerLimit.UseLimit then
+        begin
+          BMin := DataSet.Limits.LowerLimit.BooleanLimitValue;
+        end;
+        if DataSet.Limits.UpperLimit.UseLimit then
+        begin
+          BMax := DataSet.Limits.UpperLimit.BooleanLimitValue;
+        end;
+      end;
+    rdtString:
+      begin
+        if DataSet.Limits.LowerLimit.UseLimit then
+        begin
+          SMin := DataSet.Limits.LowerLimit.StringLimitValue;
+        end;
+        if DataSet.Limits.UpperLimit.UseLimit then
+        begin
+          SMax := DataSet.Limits.UpperLimit.StringLimitValue;
+        end;
+      end;
+  else
+    Assert(False);
+  end;
+end;
+
+procedure TCustomGrid.UpdateMinMax(const Layer, Row, Col: integer;
+  DataSet: TDataArray; var MinMaxInitialized: boolean;
+  var RMin, RMax, RMinPositive: real; var IMin, IMax: integer;
+  var BMin, BMax: boolean; var SMin, SMax: string; StringValues: TStringList);
+var
+  RTemp: Double;
+  ITemp: Integer;
+  UseString: Boolean;
+  TempString: string;
+begin
+  if not DataSet.IsValue[Layer, Row, Col] then
+    Exit;
+  if not IsActiveOK(DataSet, Layer, Row, Col) then
+    Exit;
+  if not ValueOK(DataSet, Layer, Row, Col) then
+    Exit;
+  if not MinMaxInitialized then
+  begin
+    InitializeMinMax(Layer, Row, Col, DataSet, MinMaxInitialized,
+      RMin, RMax, RMinPositive, IMin, IMax, BMin, BMax, SMin, SMax);
+  end
+  else
+  begin
+    case DataSet.Datatype of
+      rdtDouble:
+        begin
+          RTemp := DataSet.RealData[Layer, Row, Col];
+          if (RTemp > RMax) and not DataSet.Limits.UpperLimit.UseLimit then
+          begin
+            RMax := RTemp;
+          end
+          else if (RTemp < RMin) and not DataSet.Limits.LowerLimit.UseLimit
+            then
+          begin
+            RMin := RTemp;
+          end;
+          if (RTemp > 0) then
+          begin
+            if (RMinPositive = 0) or (RTemp < RMinPositive) then
+            begin
+              RMinPositive := RTemp;
+            end;
+          end;
+        end;
+      rdtInteger:
+        begin
+          if DataSet.DisplayRealValue then
+          begin
+            RTemp := DataSet.RealData[Layer, Row, Col];
+            if (RTemp > RMax) and not DataSet.Limits.UpperLimit.UseLimit then
+            begin
+              RMax := RTemp;
+            end
+            else if (RTemp < RMin) and not DataSet.Limits.LowerLimit.UseLimit
+              then
+            begin
+              RMin := RTemp;
+            end;
+          end
+          else
+          begin
+            ITemp := DataSet.IntegerData[Layer, Row, Col];
+            if (ITemp > IMax) and not DataSet.Limits.UpperLimit.UseLimit then
+            begin
+              IMax := ITemp;
+            end
+            else if (ITemp < IMin) and not DataSet.Limits.LowerLimit.UseLimit
+              then
+            begin
+              IMin := ITemp;
+            end;
+          end;
+        end;
+      rdtBoolean:
+        begin
+          Exit;
+        end;
+      rdtString:
+        begin
+          UseString := True;
+          TempString := DataSet.StringData[Layer, Row, Col];
+          if DataSet.Limits.UpperLimit.UseLimit then
+          begin
+            if TempString > SMax then
+            begin
+              UseString := False;
+            end;
+          end;
+          if DataSet.Limits.LowerLimit.UseLimit then
+          begin
+            if TempString < SMin then
+            begin
+              UseString := False;
+            end;
+          end;
+          if UseString then
+          begin
+            StringValues.Add(TempString);
+          end;
+        end;
+    else
+      Assert(False);
+    end;
+  end;
+end;
+
+procedure TCustomGrid.SetMinMax(DataSet: TDataArray;
+  var MinMaxInitialized: boolean; var RMin, RMax, RMinPositive: real;
+  var IMin, IMax: integer; var BMin, BMax: boolean; var SMin, SMax: string;
+  StringValues: TStringList; LayerCount, RowCount, ColCount: integer);
+var
+  LayerIndex: integer;
+  RowIndex: integer;
+  ColIndex: integer;
+begin
+  for LayerIndex := 0 to LayerCount - 1 do
+  begin
+    for RowIndex := 0 to RowCount - 1 do
+    begin
+      for ColIndex := 0 to ColCount - 1 do
+      begin
+        UpdateMinMax(LayerIndex, RowIndex, ColIndex, DataSet,
+          MinMaxInitialized, RMin, RMax, RMinPositive, IMin, IMax,
+          BMin, BMax, SMin, SMax, StringValues);
+      end;
+    end;
+  end;
+end;
+
+procedure TCustomGrid.GetRealMinMax(DataSet: TDataArray;
+  var RMin, RMax, RMinPositive: real);
+var
+  LayerCount, RowCount, ColCount: integer;
+  MinMaxInitialized: boolean;
+  IMin, IMax: integer;
+  BMin, BMax: boolean;
+  SMin, SMax: string;
+  StringValues: TStringList;
+begin
+  Assert(DataSet.DataType = rdtDouble);
+  GetCounts(DataSet, LayerCount, RowCount, ColCount);
+  MinMaxInitialized := False;
+  StringValues := nil;
+  SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
+    IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+    LayerCount, RowCount, ColCount);
+end;
+
+procedure TCustomGrid.GetIntegerMinMax(DataSet: TDataArray;
+  var IMin, IMax: integer);
+var
+  LayerCount, RowCount, ColCount: integer;
+  MinMaxInitialized: boolean;
+  RMin, RMax, RMinPositive: real;
+  BMin, BMax: boolean;
+  SMin, SMax: string;
+  StringValues: TStringList;
+begin
+  Assert(DataSet.DataType = rdtInteger);
+  GetCounts(DataSet, LayerCount, RowCount, ColCount);
+  MinMaxInitialized := False;
+  StringValues := nil;
+  SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
+    IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+    LayerCount, RowCount, ColCount);
+end;
+
+procedure TCustomGrid.GetBooleanMinMax(DataSet: TDataArray;
+  var BMin, BMax: boolean);
+var
+  LayerCount, RowCount, ColCount: integer;
+  MinMaxInitialized: boolean;
+  RMin, RMax, RMinPositive: real;
+  IMin, IMax: integer;
+  SMin, SMax: string;
+  StringValues: TStringList;
+begin
+  Assert(DataSet.DataType = rdtBoolean);
+  GetCounts(DataSet, LayerCount, RowCount, ColCount);
+  MinMaxInitialized := False;
+  StringValues := nil;
+  SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
+    IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+    LayerCount, RowCount, ColCount);
+end;
+
+procedure TCustomGrid.GetStringMinMax(DataSet: TDataArray;
+  var SMin, SMax: string);
+var
+  LayerCount, RowCount, ColCount: integer;
+  MinMaxInitialized: boolean;
+  RMin, RMax, RMinPositive: real;
+  IMin, IMax: integer;
+  BMin, BMax: boolean;
+  StringValues: TStringList;
+begin
+  Assert(DataSet.DataType = rdtString);
+  GetCounts(DataSet, LayerCount, RowCount, ColCount);
+  MinMaxInitialized := False;
+
+  StringValues := TStringList.Create;
+  try
+    SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
+      IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+      LayerCount, RowCount, ColCount);
+
+  finally
+    StringValues.Free;
+  end;
+end;
+
+procedure TCustomGrid.GetCounts(DataSet: TDataArray; var LayerCount, RowCount, ColCount: integer);
+begin
+  case DataSet.EvaluatedAt of
+    eaBlocks:
+      begin
+        LayerCount := DataSet.LayerCount;
+        RowCount := DataSet.RowCount;
+        ColCount := DataSet.ColumnCount;
+      end;
+    eaNodes:
+      begin
+        case DataSet.Orientation of
+          dsoTop:
+            begin
+              { TODO : This is a clumsy hack. It should be updated. }
+              if (DataSet = frmGoPhast.PhastModel.
+                GetDataSetByName(rsInitial_Water_Table)) then
+              begin
+                LayerCount := ThreeDDataSet.LayerCount;
+              end
+              else if
+                ((DataSet is TSparseArrayPhastInterpolationDataSet) and
+                ((frmGoPhast.PhastModel.RiverHead.
+                IndexOfDataSet(TSparseArrayPhastInterpolationDataSet(
+                DataSet)) >= 0)
+                or (frmGoPhast.PhastModel.RiverAssociatedSolution.
+                IndexOfDataSet(TSparseArrayPhastInterpolationDataSet(
+                DataSet)) >= 0)))
+                or (frmGoPhast.PhastModel.RiverDataSets.IndexOf(
+                DataSet) >= 0) then
+              begin
+                LayerCount := frmGoPhast.PhastModel.PhastGrid.LayerCount + 1;
+              end
+              else
+              begin
+                LayerCount := DataSet.LayerCount;
+              end;
+              RowCount := DataSet.RowCount + 1;
+              ColCount := DataSet.ColumnCount + 1;
+            end;
+          dsoFront:
+            begin
+              LayerCount := DataSet.LayerCount + 1;
+              RowCount := DataSet.RowCount;
+              ColCount := DataSet.ColumnCount + 1;
+            end;
+          dsoSide:
+            begin
+              LayerCount := DataSet.LayerCount + 1;
+              RowCount := DataSet.RowCount + 1;
+              ColCount := DataSet.ColumnCount;
+            end;
+          dso3D:
+            begin
+              LayerCount := DataSet.LayerCount + 1;
+              RowCount := DataSet.RowCount + 1;
+              ColCount := DataSet.ColumnCount + 1;
+            end;
+        else
+          Assert(False);
+        end;
+      end;
+  else
+    Assert(False);
+  end;
+end;
+
+
 procedure TCustomGrid.UpdateCellColors(
   const ViewDirection: TViewDirection);
 var
@@ -4314,270 +4937,6 @@ var
   LogRMin: double;
   LogRMax: double;
   LogRTemp: double;
-  procedure GetCounts;
-  begin
-    case DataSet.EvaluatedAt of
-      eaBlocks:
-        begin
-          LayerCount := DataSet.LayerCount;
-          RowCount := DataSet.RowCount;
-          ColCount := DataSet.ColumnCount;
-        end;
-      eaNodes:
-        begin
-          case DataSet.Orientation of
-            dsoTop:
-              begin
-                { TODO : This is a clumsy hack. It should be updated. }
-                if (DataSet = frmGoPhast.PhastModel.
-                  GetDataSetByName(rsInitial_Water_Table)) then
-                begin
-                  LayerCount := ThreeDDataSet.LayerCount;
-                end
-                else if
-                  ((DataSet is TSparseArrayPhastInterpolationDataSet) and
-                  ((frmGoPhast.PhastModel.RiverHead.
-                  IndexOfDataSet(TSparseArrayPhastInterpolationDataSet(
-                  DataSet)) >= 0)
-                  or (frmGoPhast.PhastModel.RiverAssociatedSolution.
-                  IndexOfDataSet(TSparseArrayPhastInterpolationDataSet(
-                  DataSet)) >= 0)))
-                  or (frmGoPhast.PhastModel.RiverDataSets.IndexOf(
-                  DataSet) >= 0) then
-                begin
-                  LayerCount := frmGoPhast.PhastModel.PhastGrid.LayerCount + 1;
-                end
-                else
-                begin
-                  LayerCount := DataSet.LayerCount;
-                end;
-                RowCount := DataSet.RowCount + 1;
-                ColCount := DataSet.ColumnCount + 1;
-              end;
-            dsoFront:
-              begin
-                LayerCount := DataSet.LayerCount + 1;
-                RowCount := DataSet.RowCount;
-                ColCount := DataSet.ColumnCount + 1;
-              end;
-            dsoSide:
-              begin
-                LayerCount := DataSet.LayerCount + 1;
-                RowCount := DataSet.RowCount + 1;
-                ColCount := DataSet.ColumnCount;
-              end;
-            dso3D:
-              begin
-                LayerCount := DataSet.LayerCount + 1;
-                RowCount := DataSet.RowCount + 1;
-                ColCount := DataSet.ColumnCount + 1;
-              end;
-          else
-            Assert(False);
-          end;
-        end;
-    else
-      Assert(False);
-    end;
-
-  end;
-  procedure InitializeMinMax(const Layer, Row, Col: integer);
-  begin
-    if not DataSet.IsValue[Layer, Row, Col] then
-      Exit;
-    if not IsActiveOK(DataSet, Layer, Row, Col) then
-      Exit;
-    if not ValueOK(DataSet, Layer, Row, Col) then
-      Exit;
-    MinMaxInitialized := True;
-    case DataSet.Datatype of
-      rdtDouble:
-        begin
-          RMin := DataSet.RealData[Layer, Row, Col];
-          RMax := RMin;
-          if DataSet.Limits.LowerLimit.UseLimit then
-          begin
-            RMin := DataSet.Limits.LowerLimit.RealLimitValue;
-          end;
-          if DataSet.Limits.UpperLimit.UseLimit then
-          begin
-            RMax := DataSet.Limits.UpperLimit.RealLimitValue;
-          end;
-          if RMin > 0 then
-          begin
-            RMinPositive := RMin;
-          end;
-        end;
-      rdtInteger:
-        begin
-          if DataSet.DisplayRealValue then
-          begin
-            RMin := DataSet.RealData[Layer, Row, Col];
-            RMax := Rmin;
-            if DataSet.Limits.LowerLimit.UseLimit then
-            begin
-              RMin := DataSet.Limits.LowerLimit.IntegerLimitValue;
-            end;
-            if DataSet.Limits.UpperLimit.UseLimit then
-            begin
-              RMax := DataSet.Limits.UpperLimit.IntegerLimitValue;
-            end;
-          end
-          else
-          begin
-            IMin := DataSet.IntegerData[Layer, Row, Col];
-            IMax := IMin;
-            if DataSet.Limits.LowerLimit.UseLimit then
-            begin
-              IMin := DataSet.Limits.LowerLimit.IntegerLimitValue;
-            end;
-            if DataSet.Limits.UpperLimit.UseLimit then
-            begin
-              IMax := DataSet.Limits.UpperLimit.IntegerLimitValue;
-            end;
-          end;
-        end;
-      rdtBoolean:
-        begin
-          BMin := False;
-          BMax := True;
-          if DataSet.Limits.LowerLimit.UseLimit then
-          begin
-            BMin := DataSet.Limits.LowerLimit.BooleanLimitValue;
-          end;
-          if DataSet.Limits.UpperLimit.UseLimit then
-          begin
-            BMax := DataSet.Limits.UpperLimit.BooleanLimitValue;
-          end;
-        end;
-      rdtString:
-        begin
-          if DataSet.Limits.LowerLimit.UseLimit then
-          begin
-            SMin := DataSet.Limits.LowerLimit.StringLimitValue;
-          end;
-          if DataSet.Limits.UpperLimit.UseLimit then
-          begin
-            SMax := DataSet.Limits.UpperLimit.StringLimitValue;
-          end;
-        end;
-    else
-      Assert(False);
-    end;
-  end;
-  procedure UpdateMinMax(const Layer, Row, Col: integer);
-  begin
-    if not DataSet.IsValue[Layer, Row, Col] then
-      Exit;
-    if not IsActiveOK(DataSet, Layer, Row, Col) then
-      Exit;
-    if not ValueOK(DataSet, Layer, Row, Col) then
-      Exit;
-    if not MinMaxInitialized then
-    begin
-      InitializeMinMax(Layer, Row, Col);
-    end
-    else
-    begin
-      case DataSet.Datatype of
-        rdtDouble:
-          begin
-            RTemp := DataSet.RealData[Layer, Row, Col];
-            if (RTemp > RMax) and not DataSet.Limits.UpperLimit.UseLimit then
-            begin
-              RMax := RTemp;
-            end
-            else if (RTemp < RMin) and not DataSet.Limits.LowerLimit.UseLimit
-              then
-            begin
-              RMin := RTemp;
-            end;
-            if (RTemp > 0) then
-            begin
-              if (RMinPositive = 0) or (RTemp < RMinPositive) then
-              begin
-                RMinPositive := RTemp;
-              end;
-            end;
-          end;
-        rdtInteger:
-          begin
-            if DataSet.DisplayRealValue then
-            begin
-              RTemp := DataSet.RealData[Layer, Row, Col];
-              if (RTemp > RMax) and not DataSet.Limits.UpperLimit.UseLimit then
-              begin
-                RMax := RTemp;
-              end
-              else if (RTemp < RMin) and not DataSet.Limits.LowerLimit.UseLimit
-                then
-              begin
-                RMin := RTemp;
-              end;
-            end
-            else
-            begin
-              ITemp := DataSet.IntegerData[Layer, Row, Col];
-              if (ITemp > IMax) and not DataSet.Limits.UpperLimit.UseLimit then
-              begin
-                IMax := ITemp;
-              end
-              else if (ITemp < IMin) and not DataSet.Limits.LowerLimit.UseLimit
-                then
-              begin
-                IMin := ITemp;
-              end;
-            end;
-          end;
-        rdtBoolean:
-          begin
-            Exit;
-          end;
-        rdtString:
-          begin
-            UseString := True;
-            TempString := DataSet.StringData[Layer, Row, Col];
-            if DataSet.Limits.UpperLimit.UseLimit then
-            begin
-              if TempString > SMax then
-              begin
-                UseString := False;
-              end;
-            end;
-            if DataSet.Limits.LowerLimit.UseLimit then
-            begin
-              if TempString < SMin then
-              begin
-                UseString := False;
-              end;
-            end;
-            if UseString then
-            begin
-              StringValues.Add(TempString);
-            end;
-          end;
-      else
-        Assert(False);
-      end;
-    end;
-  end;
-  procedure SetMinMax;
-  var
-    LayerIndex: integer;
-    RowIndex: integer;
-    ColIndex: integer;
-  begin
-    for LayerIndex := 0 to LayerCount - 1 do
-    begin
-      for RowIndex := 0 to RowCount - 1 do
-      begin
-        for ColIndex := 0 to ColCount - 1 do
-        begin
-          UpdateMinMax(LayerIndex, RowIndex, ColIndex);
-        end;
-      end;
-    end;
-  end;
 begin
   RMinPositive := 0;
   MinMaxInitialized := False;
@@ -4592,12 +4951,14 @@ begin
           DataSet := TopDataSet;
           if DataSet = nil then
             Exit;
-          GetCounts;
+          GetCounts(DataSet, LayerCount, RowCount, ColCount);
           if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
           begin
             Exit;
           end;
-          SetMinMax;
+          SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
+            IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+            LayerCount, RowCount, ColCount);
           if DataSet.Limits.LogTransform and (RMinPositive > 0) then
           begin
             LogRMin := Log10(RMinPositive);
@@ -4623,7 +4984,13 @@ begin
               case DataSet.Datatype of
                 rdtDouble:
                   begin
-                    if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                    if DataSet.Limits.ActiveOnly
+                      and DataSet.Limits.ShadeInactiveArea
+                      and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                    begin
+                      TopCellColors[ColIndex, RowIndex] := InactiveGridColor;
+                    end
+                    else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                       or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                       or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
                     begin
@@ -4665,7 +5032,13 @@ begin
                   begin
                     if DataSet.DisplayRealValue then
                     begin
-                      if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                      if DataSet.Limits.ActiveOnly
+                        and DataSet.Limits.ShadeInactiveArea
+                        and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                      begin
+                        TopCellColors[ColIndex, RowIndex] := InactiveGridColor;
+                      end
+                      else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                         or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                         or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
                       begin
@@ -4694,7 +5067,13 @@ begin
                     end
                     else
                     begin
-                      if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                      if DataSet.Limits.ActiveOnly
+                        and DataSet.Limits.ShadeInactiveArea
+                        and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                      begin
+                        TopCellColors[ColIndex, RowIndex] := InactiveGridColor;
+                      end
+                      else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                         or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                         or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
                       begin
@@ -4724,7 +5103,13 @@ begin
                   end;
                 rdtBoolean:
                   begin
-                    if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                    if DataSet.Limits.ActiveOnly
+                      and DataSet.Limits.ShadeInactiveArea
+                      and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                    begin
+                      TopCellColors[ColIndex, RowIndex] := InactiveGridColor;
+                    end
+                    else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                       or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                       or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
                     begin
@@ -4757,7 +5142,13 @@ begin
                   end;
                 rdtString:
                   begin
-                    if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                    if DataSet.Limits.ActiveOnly
+                      and DataSet.Limits.ShadeInactiveArea
+                      and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                    begin
+                      TopCellColors[ColIndex, RowIndex] := InactiveGridColor;
+                    end
+                    else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                       or (StringValues.Count = 0)
                       or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                       or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
@@ -4782,7 +5173,7 @@ begin
                       if SIndex >= 0 then
                       begin
                         TopCellColors[ColIndex, RowIndex] :=
-                          GridFracToRainbow(SIndex / (StringValues.Count - 1));
+                          GridFracToRainbow(1-(SIndex / (StringValues.Count - 1)));
                       end;
                     end;
                   end;
@@ -4798,12 +5189,14 @@ begin
           DataSet := FrontDataSet;
           if DataSet = nil then
             Exit;
-          GetCounts;
+          GetCounts(DataSet, LayerCount, RowCount, ColCount);
           if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
           begin
             Exit;
           end;
-          SetMinMax;
+          SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
+            IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+            LayerCount, RowCount, ColCount);
           if DataSet.Limits.LogTransform and (RMinPositive > 0) then
           begin
             LogRMin := Log10(RMinPositive);
@@ -4829,7 +5222,13 @@ begin
               case DataSet.Datatype of
                 rdtDouble:
                   begin
-                    if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                    if DataSet.Limits.ActiveOnly
+                      and DataSet.Limits.ShadeInactiveArea
+                      and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                    begin
+                      FrontCellColors[ColIndex, LayerIndex] := InactiveGridColor;
+                    end
+                    else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                       or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                       or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
                     begin
@@ -4871,7 +5270,13 @@ begin
                   begin
                     if DataSet.DisplayRealValue then
                     begin
-                      if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                      if DataSet.Limits.ActiveOnly
+                        and DataSet.Limits.ShadeInactiveArea
+                        and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                      begin
+                        FrontCellColors[ColIndex, LayerIndex] := InactiveGridColor;
+                      end
+                      else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                         or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                         or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
                       begin
@@ -4900,7 +5305,13 @@ begin
                     end
                     else
                     begin
-                      if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                      if DataSet.Limits.ActiveOnly
+                        and DataSet.Limits.ShadeInactiveArea
+                        and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                      begin
+                        FrontCellColors[ColIndex, LayerIndex] := InactiveGridColor;
+                      end
+                      else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                         or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                         or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
                       begin
@@ -4930,8 +5341,13 @@ begin
                   end;
                 rdtBoolean:
                   begin
-
-                    if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                    if DataSet.Limits.ActiveOnly
+                      and DataSet.Limits.ShadeInactiveArea
+                      and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                    begin
+                      FrontCellColors[ColIndex, LayerIndex] := InactiveGridColor;
+                    end
+                    else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                       or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                       or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
                     begin
@@ -4964,7 +5380,13 @@ begin
                   end;
                 rdtString:
                   begin
-                    if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                    if DataSet.Limits.ActiveOnly
+                      and DataSet.Limits.ShadeInactiveArea
+                      and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                    begin
+                      FrontCellColors[ColIndex, LayerIndex] := InactiveGridColor;
+                    end
+                    else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                       or (StringValues.Count = 0)
                       or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                       or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
@@ -4989,7 +5411,7 @@ begin
                       if SIndex >= 0 then
                       begin
                         FrontCellColors[ColIndex, LayerIndex] :=
-                          GridFracToRainbow(SIndex / (StringValues.Count - 1));
+                          GridFracToRainbow(1-(SIndex / (StringValues.Count - 1)));
                       end;
                     end;
                   end;
@@ -5005,12 +5427,14 @@ begin
           DataSet := SideDataSet;
           if DataSet = nil then
             Exit;
-          GetCounts;
+          GetCounts(DataSet, LayerCount, RowCount, ColCount);
           if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
           begin
             Exit;
           end;
-          SetMinMax;
+          SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
+            IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+            LayerCount, RowCount, ColCount);
           if DataSet.Limits.LogTransform and (RMinPositive > 0) then
           begin
             LogRMin := Log10(RMinPositive);
@@ -5036,7 +5460,13 @@ begin
               case DataSet.Datatype of
                 rdtDouble:
                   begin
-                    if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                    if DataSet.Limits.ActiveOnly
+                      and DataSet.Limits.ShadeInactiveArea
+                      and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                    begin
+                      SideCellColors[RowIndex, LayerIndex] := InactiveGridColor;
+                    end
+                    else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                       or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                       or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
                     begin
@@ -5078,7 +5508,13 @@ begin
                   begin
                     if DataSet.DisplayRealValue then
                     begin
-                      if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                      if DataSet.Limits.ActiveOnly
+                        and DataSet.Limits.ShadeInactiveArea
+                        and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                      begin
+                        SideCellColors[RowIndex, LayerIndex] := InactiveGridColor;
+                      end
+                      else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                         or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                         or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
                       begin
@@ -5107,7 +5543,13 @@ begin
                     end
                     else
                     begin
-                      if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                      if DataSet.Limits.ActiveOnly
+                        and DataSet.Limits.ShadeInactiveArea
+                        and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                      begin
+                        SideCellColors[RowIndex, LayerIndex] := InactiveGridColor;
+                      end
+                      else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                         or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                         or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
                       begin
@@ -5137,7 +5579,13 @@ begin
                   end;
                 rdtBoolean:
                   begin
-                    if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                    if DataSet.Limits.ActiveOnly
+                      and DataSet.Limits.ShadeInactiveArea
+                      and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                    begin
+                      SideCellColors[RowIndex, LayerIndex] := InactiveGridColor;
+                    end
+                    else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                       or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                       or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
                     begin
@@ -5170,7 +5618,13 @@ begin
                   end;
                 rdtString:
                   begin
-                    if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                    if DataSet.Limits.ActiveOnly
+                      and DataSet.Limits.ShadeInactiveArea
+                      and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                    begin
+                      SideCellColors[RowIndex, LayerIndex] := InactiveGridColor;
+                    end
+                    else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                       or (StringValues.Count = 0)
                       or not IsActiveOK(DataSet, LayerIndex, RowIndex, ColIndex)
                       or not ValueOK(DataSet, LayerIndex, RowIndex, ColIndex) then
@@ -5195,7 +5649,7 @@ begin
                       if SIndex >= 0 then
                       begin
                         SideCellColors[RowIndex, LayerIndex] :=
-                          GridFracToRainbow(SIndex / (StringValues.Count - 1));
+                          GridFracToRainbow(1-(SIndex / (StringValues.Count - 1)));
                       end;
                     end;
                   end;
@@ -5219,6 +5673,19 @@ begin
   result := DataSet.ColorGridValueOK(Layer, Row, Col);
 end;
 
+function TCustomGrid.IsElementActive(const Layer, Row, Col: integer): boolean;
+var
+  ActiveDataSet: TDataArray;
+begin
+  result := True;
+  ActiveDataSet := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+  if ActiveDataSet <> nil then
+  begin
+    ActiveDataSet.Initialize;
+    result := ActiveDataSet.BooleanData[Layer, Row, Col];
+  end;
+end;
+
 function TCustomGrid.IsActiveOk(const DataSet: TDataArray;
   const Layer, Row, Col: integer): boolean;
 var
@@ -5232,7 +5699,6 @@ var
   LayerIndex: integer;
   RowIndex: integer;
   ColIndex: integer;
-//  Index: Integer;
 begin
   result := True;
   if DataSet.Limits.ActiveOnly then
@@ -5257,28 +5723,16 @@ begin
                   begin
                     LayerIndicies.Clear;
                     LayerIndicies.Add(SelectedLayer);
-//                    for Index := 0 to LayerCount - 1 do
-//                    begin
-//                      LayerIndicies.Add(Index)
-//                    end;
                   end;
                 dsoFront:
                   begin
                     RowIndicies.Clear;
                     RowIndicies.Add(SelectedRow)
-//                    for Index := 0 to RowCount - 1 do
-//                    begin
-//                      RowIndicies.Add(Index)
-//                    end;
                   end;
                 dsoSide:
                   begin
                     ColumnIndicies.Clear;
                     ColumnIndicies.Add(SelectedColumn);
-//                    for Index := 0 to ColumnCount - 1 do
-//                    begin
-//                      ColumnIndicies.Add(Index)
-//                    end;
                   end;
                 dso3D:
                   begin
@@ -5286,7 +5740,6 @@ begin
                   end
                 else Assert(False);
               end;
-//              result := ActiveDataSet.BooleanData[Layer, Row, Col];
             end;
           eaNodes:
             begin
@@ -5319,28 +5772,16 @@ begin
                   begin
                     LayerIndicies.Clear;
                     LayerIndicies.Add(SelectedLayer);
-//                    for Index := 0 to LayerCount do
-//                    begin
-//                      LayerIndicies.Add(Index)
-//                    end;
                   end;
                 dsoFront:
                   begin
                     RowIndicies.Clear;
                     RowIndicies.Add(SelectedRow)
-//                    for Index := 0 to RowCount do
-//                    begin
-//                      RowIndicies.Add(Index)
-//                    end;
                   end;
                 dsoSide:
                   begin
                     ColumnIndicies.Clear;
                     ColumnIndicies.Add(SelectedColumn);
-//                    for Index := 0 to ColumnCount do
-//                    begin
-//                      ColumnIndicies.Add(Index)
-//                    end;
                   end;
                 dso3D:
                   begin
@@ -5375,7 +5816,6 @@ begin
   end;
 end;
 
-
 procedure TCustomGrid.Update3DCellColors(var CellColors: TCellColors);
 var
   DataSet: TDataArray;
@@ -5386,260 +5826,11 @@ var
   BMin, BMax, BTemp: boolean;
   SMin, SMax, STemp: string;
   SIndex: integer;
-  UseString: boolean;
-  TempString: string;
   StringValues: TStringList;
   MinMaxInitialized: boolean;
   LogRMin: double;
   LogRMax: double;
   LogRTemp: double;
-  procedure GetCounts;
-  begin
-    case DataSet.EvaluatedAt of
-      eaBlocks:
-        begin
-          LayerCount := DataSet.LayerCount;
-          RowCount := DataSet.RowCount;
-          ColCount := DataSet.ColumnCount;
-        end;
-      eaNodes:
-        begin
-          case DataSet.Orientation of
-            dsoTop:
-              begin
-                { TODO : This is a clumsy hack. It should be updated. }
-                if (DataSet = frmGoPhast.PhastModel.
-                  GetDataSetByName(rsInitial_Water_Table)) then
-                begin
-                  LayerCount := ThreeDDataSet.LayerCount;
-                end
-                else if
-                  ((DataSet is TSparseArrayPhastInterpolationDataSet) and
-                  ((frmGoPhast.PhastModel.RiverHead.
-                  IndexOfDataSet(TSparseArrayPhastInterpolationDataSet(
-                  DataSet)) >= 0)
-                  or (frmGoPhast.PhastModel.RiverAssociatedSolution.
-                  IndexOfDataSet(TSparseArrayPhastInterpolationDataSet(
-                  DataSet)) >= 0)))
-                  or (frmGoPhast.PhastModel.RiverDataSets.IndexOf(
-                  DataSet) >= 0) then
-                begin
-                  LayerCount := frmGoPhast.PhastModel.PhastGrid.LayerCount + 1;
-                end
-                else
-                begin
-                  LayerCount := ThreeDDataSet.LayerCount;
-                end;
-                //LayerCount := DataSet.LayerCount;
-                RowCount := DataSet.RowCount + 1;
-                ColCount := DataSet.ColumnCount + 1;
-              end;
-            dsoFront:
-              begin
-                LayerCount := DataSet.LayerCount + 1;
-                RowCount := DataSet.RowCount;
-                ColCount := DataSet.ColumnCount + 1;
-              end;
-            dsoSide:
-              begin
-                LayerCount := DataSet.LayerCount + 1;
-                RowCount := DataSet.RowCount + 1;
-                ColCount := DataSet.ColumnCount;
-              end;
-            dso3D:
-              begin
-                LayerCount := DataSet.LayerCount + 1;
-                RowCount := DataSet.RowCount + 1;
-                ColCount := DataSet.ColumnCount + 1;
-              end;
-          else
-            Assert(False);
-          end;
-        end;
-    else
-      Assert(False);
-    end;
-  end;
-  procedure InitializeMinMax(const Layer, Row, Col: integer);
-  begin
-    if not DataSet.IsValue[Layer, Row, Col] then
-      Exit;
-    if not IsActiveOk(DataSet, Layer, Row, Col) then
-      Exit;
-    if not ValueOk(DataSet, Layer, Row, Col) then
-      Exit;
-    MinMaxInitialized := True;
-    case DataSet.Datatype of
-      rdtDouble:
-        begin
-          RMin := DataSet.RealData[Layer, Row, Col];
-          RMax := RMin;
-          if DataSet.Limits.LowerLimit.UseLimit then
-          begin
-            RMin := DataSet.Limits.LowerLimit.RealLimitValue;
-          end;
-          if DataSet.Limits.UpperLimit.UseLimit then
-          begin
-            RMax := DataSet.Limits.UpperLimit.RealLimitValue;
-          end;
-          if RMin > 0 then
-          begin
-            RMinPositive := RMin;
-          end;
-        end;
-      rdtInteger:
-        begin
-          if DataSet.DisplayRealValue then
-          begin
-            RMin := DataSet.RealData[Layer, Row, Col];
-            RMax := Rmin;
-            if DataSet.Limits.LowerLimit.UseLimit then
-            begin
-              RMin := DataSet.Limits.LowerLimit.IntegerLimitValue;
-            end;
-            if DataSet.Limits.UpperLimit.UseLimit then
-            begin
-              RMax := DataSet.Limits.UpperLimit.IntegerLimitValue;
-            end;
-          end
-          else
-          begin
-            IMin := DataSet.IntegerData[Layer, Row, Col];
-            IMax := IMin;
-            if DataSet.Limits.LowerLimit.UseLimit then
-            begin
-              IMin := DataSet.Limits.LowerLimit.IntegerLimitValue;
-            end;
-            if DataSet.Limits.UpperLimit.UseLimit then
-            begin
-              IMax := DataSet.Limits.UpperLimit.IntegerLimitValue;
-            end;
-          end;
-        end;
-      rdtBoolean:
-        begin
-          BMin := False;
-          BMax := True;
-          if DataSet.Limits.LowerLimit.UseLimit then
-          begin
-            BMin := DataSet.Limits.LowerLimit.BooleanLimitValue;
-          end;
-          if DataSet.Limits.UpperLimit.UseLimit then
-          begin
-            BMax := DataSet.Limits.UpperLimit.BooleanLimitValue;
-          end;
-        end;
-      rdtString:
-        begin
-          if DataSet.Limits.LowerLimit.UseLimit then
-          begin
-            SMin := DataSet.Limits.LowerLimit.StringLimitValue;
-          end;
-          if DataSet.Limits.UpperLimit.UseLimit then
-          begin
-            SMax := DataSet.Limits.UpperLimit.StringLimitValue;
-          end;
-        end;
-    else
-      Assert(False);
-    end;
-  end;
-  procedure UpdateMinMax(const Layer, Row, Col: integer);
-  begin
-    if not DataSet.IsValue[Layer, Row, Col] then
-      Exit;
-    if not IsActiveOk(DataSet, Layer, Row, Col) then
-      Exit;
-    if not ValueOk(DataSet, Layer, Row, Col) then
-      Exit;
-    if not MinMaxInitialized then
-    begin
-      InitializeMinMax(Layer, Row, Col);
-    end
-    else
-    begin
-      case DataSet.Datatype of
-        rdtDouble:
-          begin
-            RTemp := DataSet.RealData[Layer, Row, Col];
-            if (RTemp > RMax) and not DataSet.Limits.UpperLimit.UseLimit then
-            begin
-              RMax := RTemp;
-            end
-            else if (RTemp < RMin) and not DataSet.Limits.LowerLimit.UseLimit
-              then
-            begin
-              RMin := RTemp;
-            end;
-            if RTemp > 0 then
-            begin
-               if (RMinPositive = 0) or (RTemp < RMinPositive) then
-               begin
-                 RMinPositive := RTemp;
-               end;
-            end;
-          end;
-        rdtInteger:
-          begin
-            if DataSet.DisplayRealValue then
-            begin
-              RTemp := DataSet.RealData[Layer, Row, Col];
-              if (RTemp > RMax) and not DataSet.Limits.UpperLimit.UseLimit then
-              begin
-                RMax := RTemp;
-              end
-              else if (RTemp < RMin) and not DataSet.Limits.LowerLimit.UseLimit
-                then
-              begin
-                RMin := RTemp;
-              end;
-            end
-            else
-            begin
-              ITemp := DataSet.IntegerData[Layer, Row, Col];
-              if (ITemp > IMax) and not DataSet.Limits.UpperLimit.UseLimit then
-              begin
-                IMax := ITemp;
-              end
-              else if (ITemp < IMin) and not DataSet.Limits.LowerLimit.UseLimit
-                then
-              begin
-                IMin := ITemp;
-              end;
-            end;
-          end;
-        rdtBoolean:
-          begin
-            Exit;
-          end;
-        rdtString:
-          begin
-            UseString := True;
-            TempString := DataSet.StringData[Layer, Row, Col];
-            if DataSet.Limits.UpperLimit.UseLimit then
-            begin
-              if TempString > SMax then
-              begin
-                UseString := False;
-              end;
-            end;
-            if DataSet.Limits.LowerLimit.UseLimit then
-            begin
-              if TempString < SMin then
-              begin
-                UseString := False;
-              end;
-            end;
-            if UseString then
-            begin
-              StringValues.Add(TempString);
-            end;
-          end;
-      else
-        Assert(False);
-      end;
-    end;
-  end;
 begin
   RMinPositive := 0;
   MinMaxInitialized := False;
@@ -5653,21 +5844,16 @@ begin
     if DataSet = nil then
       Exit;
 
-    GetCounts;
+    GetCounts(DataSet, LayerCount, RowCount, ColCount);
     if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
     begin
       Exit;
     end;
-    for LayerIndex := 0 to LayerCount - 1 do
-    begin
-      for RowIndex := 0 to RowCount - 1 do
-      begin
-        for ColIndex := 0 to ColCount - 1 do
-        begin
-          UpdateMinMax(LayerIndex, RowIndex, ColIndex);
-        end;
-      end;
-    end;
+
+    SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
+      IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+      LayerCount, RowCount, ColCount);
+
     if DataSet.Limits.LogTransform and (RMinPositive > 0) then
     begin
       LogRMin := Log10(RMinPositive);
@@ -5687,7 +5873,13 @@ begin
           case DataSet.Datatype of
             rdtDouble:
               begin
-                if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                if DataSet.Limits.ActiveOnly
+                  and DataSet.Limits.ShadeInactiveArea
+                  and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                begin
+                  CellColors[LayerIndex, RowIndex, ColIndex] := InactiveGridColor;
+                end
+                else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                   or not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex)
                   or not ValueOk(DataSet, LayerIndex, RowIndex, ColIndex) then
                 begin
@@ -5737,7 +5929,13 @@ begin
               begin
                 if DataSet.DisplayRealValue then
                 begin
-                  if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                  if DataSet.Limits.ActiveOnly
+                    and DataSet.Limits.ShadeInactiveArea
+                    and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                  begin
+                    CellColors[LayerIndex, RowIndex, ColIndex] := InactiveGridColor;
+                  end
+                  else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                     or not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) 
                     or not ValueOk(DataSet, LayerIndex, RowIndex, ColIndex) then
                   begin
@@ -5774,7 +5972,13 @@ begin
                 end
                 else
                 begin
-                  if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                  if DataSet.Limits.ActiveOnly
+                    and DataSet.Limits.ShadeInactiveArea
+                    and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                  begin
+                    CellColors[LayerIndex, RowIndex, ColIndex] := InactiveGridColor;
+                  end
+                  else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                     or not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) 
                     or not ValueOk(DataSet, LayerIndex, RowIndex, ColIndex) then
                   begin
@@ -5804,7 +6008,13 @@ begin
               end;
             rdtBoolean:
               begin
-                if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                if DataSet.Limits.ActiveOnly
+                  and DataSet.Limits.ShadeInactiveArea
+                  and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                begin
+                  CellColors[LayerIndex, RowIndex, ColIndex] := InactiveGridColor;
+                end
+                else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                   or not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) 
                   or not ValueOk(DataSet, LayerIndex, RowIndex, ColIndex) then
                 begin
@@ -5840,7 +6050,13 @@ begin
               end;
             rdtString:
               begin
-                if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
+                if DataSet.Limits.ActiveOnly
+                  and DataSet.Limits.ShadeInactiveArea
+                  and not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) then
+                begin
+                  CellColors[LayerIndex, RowIndex, ColIndex] := InactiveGridColor;
+                end
+                else if not DataSet.IsValue[LayerIndex, RowIndex, ColIndex]
                   or (StringValues.Count = 0)
                   or not IsActiveOk(DataSet, LayerIndex, RowIndex, ColIndex) 
                   or not ValueOk(DataSet, LayerIndex, RowIndex, ColIndex) then
@@ -5868,7 +6084,7 @@ begin
                   if SIndex >= 0 then
                   begin
                     CellColors[LayerIndex, RowIndex, ColIndex] :=
-                      GridFracToRainbow(SIndex / (StringValues.Count - 1));
+                      GridFracToRainbow(1-(SIndex / (StringValues.Count - 1)));
                   end
                   else
                   begin
@@ -6616,7 +6832,7 @@ end;
 
 function TCustomGrid.CanDraw3D: boolean;
 begin
-  result := (ColumnCount >= 1) and (RowCount >= 1) and (LayerCount >= 1)
+  result := FDraw3DAllowed and (ColumnCount >= 1) and (RowCount >= 1) and (LayerCount >= 1)
     and (FLayerUpdate = 0) and (FColumnUpdate = 0) and (FGridUpdate = 0)
     and (FRowUpdate = 0) and frmGoPhast.CanDraw;
 end;
@@ -7541,8 +7757,8 @@ begin
   case LocalEvalAt of
     eaBlocks:
       begin
-        if (LayerIndex = SelectedLayer)
-          or (LayerIndex = SelectedLayer + 1) then
+        if DrawColoredGridLines and ((LayerIndex = SelectedLayer)
+          or (LayerIndex = SelectedLayer + 1)) then
         begin
           LocalLineColor := Color32(ExistingLayerSelectionCellColor);
           LineWidth := ThickGridLineThickness;
@@ -7554,7 +7770,7 @@ begin
       end;
     eaNodes:
       begin
-        if (LayerIndex = SelectedLayer) then
+        if DrawColoredGridLines and (LayerIndex = SelectedLayer) then
         begin
           LocalLineColor := Color32(ExistingLayerSelectionCellColor);
           LineWidth := ThickGridLineThickness;
@@ -7578,7 +7794,8 @@ begin
   case LocalEvalAt of
     eaBlocks:
       begin
-        if (ColIndex = SelectedColumn) or (ColIndex = SelectedColumn + 1) then
+        if DrawColoredGridLines and ((ColIndex = SelectedColumn)
+          or (ColIndex = SelectedColumn + 1)) then
         begin
           LocalLineColor := Color32(ExistingColumnSelectionCellColor);
           LineWidth := ThickGridLineThickness;
@@ -7590,7 +7807,7 @@ begin
       end;
     eaNodes:
       begin
-        if (ColIndex = SelectedColumn) then
+        if DrawColoredGridLines and (ColIndex = SelectedColumn) then
         begin
           LocalLineColor := Color32(ExistingColumnSelectionCellColor);
           LineWidth := ThickGridLineThickness;
@@ -7614,7 +7831,8 @@ begin
   case LocalEvalAt of
     eaBlocks:
       begin
-        if (RowIndex = SelectedRow) or (RowIndex = SelectedRow + 1) then
+        if DrawColoredGridLines and ((RowIndex = SelectedRow)
+          or (RowIndex = SelectedRow + 1)) then
         begin
           LocalLineColor := Color32(ExistingRowSelectionCellColor);
           LineWidth := ThickGridLineThickness;
@@ -7626,7 +7844,7 @@ begin
       end;
     eaNodes:
       begin
-        if (RowIndex = SelectedRow) then
+        if DrawColoredGridLines and (RowIndex = SelectedRow) then
         begin
           LocalLineColor := Color32(ExistingRowSelectionCellColor);
           LineWidth := ThickGridLineThickness;

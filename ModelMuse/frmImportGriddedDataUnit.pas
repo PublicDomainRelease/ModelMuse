@@ -40,7 +40,7 @@ type
     combotreeDataSets: TTntExDropDownVirtualStringTree;
     procedure comboMethodChange(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure rdgListEndUpdate(Sender: TObject);
     procedure seNumberOfRowsChange(Sender: TObject);
     procedure sbAddRowClick(Sender: TObject);

@@ -31,10 +31,14 @@ type
     Constructor Create;
     Destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    property IntValues[Index: integer]: integer read GetIntValues write SetIntValues;
-    property RealValues[Index: integer]: double read GetRealValues write SetRealValues;
-    property BooleanValues[Index: integer]: boolean read GetBooleanValues write SetBooleanValues;
-    property StringValues[Index: integer]: string read GetStringValues write SetStringValues;
+    property IntValues[Index: integer]: integer read GetIntValues
+      write SetIntValues;
+    property RealValues[Index: integer]: double read GetRealValues
+      write SetRealValues;
+    property BooleanValues[Index: integer]: boolean read GetBooleanValues
+      write SetBooleanValues;
+    property StringValues[Index: integer]: string read GetStringValues
+      write SetStringValues;
     procedure Add; overload;
     procedure Add(Value: double); overload;
     procedure Add(Value: integer); overload;

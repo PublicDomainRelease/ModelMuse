@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
+<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+  <title translate="true">Executing ModelMuse from the Command Line</title>
+  <body>
+    <header>
+      <para styleclass="Heading1"><text styleclass="Heading1" translate="true">Executing ModelMuse from the Command Line</text></para>
+    </header>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">It is possible to execute ModelMuse from the command line. &#160;This capability can be useful when testing ModelMuse after making changes to the source code or using ModelMuse with an automatic calibration tool such as UCODE (Poeter and Hill, 1998). &#160;When executing ModelMuse from the command line, the first argument must be the name of the file to be opened. &#160;The second argument on the command line can be “-e”. &#160;If present, this option causes ModelMuse to export the PHAST transport input file or MODFLOW input files with the default file name(s). &#160;The third argument on the command line can be “c”. &#160;If present, this option causes ModelMuse to close after exporting the PHAST transport input file or MODFLOW input files. &#160;An example is shown below.</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">ModelMuse ex1.gpt -e </text><text styleclass="Normal" translate="true">–</text><text styleclass="Normal" translate="true">c</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">This command would cause ModelMuse to open ex1.gpt, export the PHAST transport data file or MODFLOW input files, and then close.</text></para>
+  </body>
+</topic>

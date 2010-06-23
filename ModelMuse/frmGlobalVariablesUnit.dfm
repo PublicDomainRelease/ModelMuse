@@ -3,8 +3,8 @@ inherited frmGlobalVariables: TfrmGlobalVariables
   HelpKeyword = 'Global_Variables_Dialog_Box'
   Caption = 'Global Variables'
   ClientWidth = 494
-  OnDestroy = FormDestroy
   ExplicitWidth = 502
+  ExplicitHeight = 240
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel

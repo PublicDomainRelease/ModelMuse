@@ -227,8 +227,14 @@ type
   end;
 
   TPhastCollectionItem = class(TCollectionItem)
+  protected
+    procedure SetRealProperty(var AField: double; const NewValue: double);
+    procedure SetBooleanProperty(var AField: boolean; const NewValue: boolean);
+    procedure SetIntegerProperty(var AField: integer; const NewValue: integer);
+    procedure SetStringProperty(var AField: string; const NewValue: string);
   public
     procedure InvalidateModel;
+    function Model: TComponent;
   end;
 
   TPointArray = array of TPoint;
@@ -252,7 +258,9 @@ type
     procedure InvalidateModel; virtual;
     procedure SetBooleanProperty(var AField: boolean; const NewValue: boolean);
     procedure SetIntegerProperty(var AField: integer; const NewValue: integer);
+    procedure SetRealProperty(var AField: double; const NewValue: double);
     procedure SetStringProperty(var AField: string; const NewValue: string);
+    procedure SetPointProperty(var AField: TPoint; const NewValue: TPoint);
   public
     Constructor Create(Model: TObject);
   end;
@@ -470,6 +478,23 @@ begin
   end;
 end;
 
+procedure TGoPhastPersistent.SetPointProperty(var AField: TPoint;
+  const NewValue: TPoint);
+begin
+  SetIntegerProperty(AField.X, NewValue.X);
+  SetIntegerProperty(AField.Y, NewValue.Y);
+end;
+
+procedure TGoPhastPersistent.SetRealProperty(var AField: double;
+  const NewValue: double);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
+end;
+
 procedure TGoPhastPersistent.SetStringProperty(var AField: string;
   const NewValue: string);
 begin
@@ -598,6 +623,51 @@ begin
     Start := 1;
   end;
   result := Copy(Source, Start, LengthToCopy);
+end;
+
+function TPhastCollectionItem.Model: TComponent;
+begin
+  result := (Collection as TPhastCollection).Model;
+end;
+
+procedure TPhastCollectionItem.SetBooleanProperty(var AField: boolean;
+  const NewValue: boolean);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
+end;
+
+procedure TPhastCollectionItem.SetIntegerProperty(var AField: integer;
+  const NewValue: integer);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
+end;
+
+procedure TPhastCollectionItem.SetRealProperty(var AField: double;
+  const NewValue: double);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
+end;
+
+procedure TPhastCollectionItem.SetStringProperty(var AField: string;
+  const NewValue: string);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
 end;
 
 end.

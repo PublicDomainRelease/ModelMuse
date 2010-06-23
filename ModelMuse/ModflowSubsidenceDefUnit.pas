@@ -777,7 +777,7 @@ end;
 
 procedure TCustomSubLayerItem.SetName(const Value: string);
 begin
-  SetStringProperty(FName, Value);
+  SetCaseSensitiveStringProperty(FName, Value);
   SetArrayNames(FName);
 end;
 

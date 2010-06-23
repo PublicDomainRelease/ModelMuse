@@ -5316,7 +5316,14 @@ begin
       Inc(LayerIndex);
     end;
     Assert(LayerIndex >= 0);
-    LayerGroup.VerticalHydraulicConductivityMethod := LAYVKA[LayerIndex];
+    if LAYVKA[LayerIndex] = 0 then
+    begin
+      LayerGroup.VerticalHydraulicConductivityMethod := 0;
+    end
+    else
+    begin
+      LayerGroup.VerticalHydraulicConductivityMethod := 1;
+    end;
   end;
 end;
 
@@ -14223,6 +14230,8 @@ var
   RowIndex: Integer;
   ColIndex: Integer;
   BottomFormula: string;
+  LakeIdDataArray: TDataArray;
+  DataArrayIndex: Integer;
 begin
   if FCurrentStressPeriod < FModel.ModflowStressPeriods.Count-1 then
   begin
@@ -14294,6 +14303,9 @@ begin
         LakeBoundary.InitialStage := Stages[LakeIndex];
         LakeBoundary.CenterLake := 0;
         Lakes.Add(LakeBoundary);
+        LakeIdDataArray := FModel.GetDataSetByName(rsLakeID);
+        DataArrayIndex := ScreenObject.AddDataSet(LakeIdDataArray);
+        ScreenObject.DataSetFormulas[DataArrayIndex] := IntToStr(LakeID);
 
         LakeItem := nil;
         for TimeIndex := 0 to FLakeStressPeriodValues.ArrayLength - 1 do

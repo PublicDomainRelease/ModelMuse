@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../../helpproject.xsl" ?>
+<topic class="popup" template="Popup" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../helpproject.xsd">
+  <title translate="true">SwfFormat Codes</title>
+  <body>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">Format codes for IZCFM, IGLFM, IESTFM, IPCSFM, ISTFM, Ifm1, Ifm2, Ifm3, … Ifm13 are as follows:</text></para>
+    <para styleclass="Table Header"><snippet src="Format_Codes"/></para>
+  </body>
+</topic>

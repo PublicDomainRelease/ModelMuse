@@ -831,10 +831,6 @@ Consider creating descendants that each only handle one view of the model. }
     // changed from unselected to selected or vice versa.
     function SelectPointsWithLine(const AScreenObject: TScreenObject;
       const AddToSelection: boolean; out Changed: boolean): boolean;
-    // @name returns the index of the first vertex in AScreenObject
-    // that is within @link(SelectionWidth) of X,Y.
-    function FindNodeInSelectedScreenObjects(const X, Y: integer;
-      const AScreenObject: TScreenObject): integer;
   protected
     procedure DrawOnBitMap32(Sender: TObject; Buffer: TBitmap32); override;
     // Used to define @link(TCustomInteractiveTool.Hint)
@@ -908,6 +904,18 @@ Consider creating descendants that each only handle one view of the model. }
       read FShouldDrawSelectionRectangle write FShouldDrawSelectionRectangle;
   end;
 
+  TEditVertexValueTool = class(TCustomInteractiveTool)
+  private
+    FDoubleClicked: boolean;
+    procedure EditPoint(const X, Y: integer);
+  public
+    procedure DoubleClick(Sender: TObject); override;
+    procedure MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: Integer); override;
+  end;
+
 {$REGION 'Global_Variables'}
   var
     // @name is the instance of @link(TZoomTool) used in GoPhast.
@@ -952,6 +960,7 @@ Consider creating descendants that each only handle one view of the model. }
     AddLinePartTool: TAddLinePartTool;
     AddPolygonPartTool: TAddPolygonPartTool;
     AddPointPartTool: TAddPointPartTool;
+    EditVertexValueTool: TEditVertexValueTool;
 
 {$ENDREGION}
 
@@ -967,7 +976,7 @@ implementation
 
 uses Math, CursorsFoiledAgain, GR32_Polygons, frmGoPhastUnit, frmSubdivideUnit,
   frmSetSpacingUnit, frmScreenObjectPropertiesUnit, BigCanvasMethods,
-  LayerStructureUnit, DataSetUnit, ZoomBox2, Contnrs;
+  LayerStructureUnit, DataSetUnit, ZoomBox2, Contnrs, frmPointValuesUnit;
 
 function ConvertSidePoint(APoint: TPoint2D): TPoint2D;
 begin
@@ -4832,7 +4841,7 @@ begin
       for Index := frmGoPhast.PhastModel.ScreenObjectCount - 1 downto 0 do
       begin
         AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
-  
+
         if (AScreenObject.ViewDirection = ViewDirection) and
           AScreenObject.Selected then
         begin
@@ -5019,26 +5028,6 @@ begin
           AScreenObject.SelectedVertices[PointIndex] := False;
         end;
       end;
-    end;
-  end;
-end;
-  
-function TSelectPointTool.FindNodeInSelectedScreenObjects(const X, Y: integer;
-  const AScreenObject: TScreenObject): integer;
-var
-  PointIndex: integer;
-  APoint: TPoint;
-begin
-  result := -1;
-  Assert(AScreenObject.Selected);
-  for PointIndex := 0 to AScreenObject.Count - 1 do
-  begin
-    APoint := AScreenObject.CanvasCoordinates[PointIndex];
-    if (Abs(X - APoint.X) < SelectionWidth)
-      and (Abs(Y - APoint.Y) < SelectionWidth) then
-    begin
-      result := PointIndex;
-      Exit;
     end;
   end;
 end;
@@ -6033,6 +6022,65 @@ begin
   end;
 end;
 
+{ TEditVertexValueTool }
+
+procedure TEditVertexValueTool.DoubleClick(Sender: TObject);
+begin
+  inherited;
+  FDoubleClicked := True;
+end;
+
+procedure TEditVertexValueTool.EditPoint(const X, Y: integer);
+var
+  Index: Integer;
+  AScreenObject: TScreenObject;
+  SelectedPoint: Integer;
+begin
+  for Index := frmGoPhast.PhastModel.ScreenObjectCount - 1 downto 0 do
+  begin
+    AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
+
+    if (AScreenObject.ViewDirection = ViewDirection) and
+      AScreenObject.Selected then
+    begin
+      SelectedPoint := FindNodeInSelectedScreenObjects(X, Y, AScreenObject);
+      if SelectedPoint >= 0 then
+      begin
+        with TfrmPointValues.Create(nil) do
+        begin
+          try
+            GetData(AScreenObject,SelectedPoint);
+            ShowModal;
+          finally
+            Free;
+          end;
+        end;
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+procedure TEditVertexValueTool.MouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  inherited;
+  Cursor := crVertexValue;
+end;
+
+procedure TEditVertexValueTool.MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
+  if FDoubleClicked then
+  begin
+    EditPoint(X, Y);
+  end;
+  FDoubleClicked := False;
+//  FX := X;
+//  FY := Y;
+end;
+
 initialization
   ZoomTool := TZoomTool.Create(nil);
   ZoomInTool := TZoomInTool.Create(nil);
@@ -6057,6 +6105,7 @@ initialization
   AddLinePartTool:= TAddLinePartTool.Create(nil);
   AddPolygonPartTool:= TAddPolygonPartTool.Create(nil);
   AddPointPartTool := TAddPointPartTool.Create(nil);
+  EditVertexValueTool := TEditVertexValueTool.Create(nil);
 
 finalization
   ZoomTool.Free;
@@ -6081,5 +6130,6 @@ finalization
   AddLinePartTool.Free;
   AddPolygonPartTool.Free;
   AddPointPartTool.Free;
+  EditVertexValueTool.Free;
 
 end.

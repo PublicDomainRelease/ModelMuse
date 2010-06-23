@@ -3,18 +3,18 @@ inherited frmFilesToArchive: TfrmFilesToArchive
   HelpKeyword = 'Files_to_Archive_Dialog_Box'
   Caption = ' Files To Archive'
   ClientWidth = 512
-  OnDestroy = FormDestroy
   ExplicitWidth = 520
   ExplicitHeight = 274
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 167
+    Top = 161
     Width = 512
     Height = 73
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 167
     DesignSize = (
       512
       73)
@@ -79,7 +79,7 @@ inherited frmFilesToArchive: TfrmFilesToArchive
     Left = 0
     Top = 0
     Width = 512
-    Height = 167
+    Height = 161
     Align = alClient
     AutoSize = False
     TabOrder = 1

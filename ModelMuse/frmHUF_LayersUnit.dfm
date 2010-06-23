@@ -4,7 +4,6 @@ inherited frmHUF_Layers: TfrmHUF_Layers
   Caption = 'MODFLOW Hydrogeologic Units'
   ClientHeight = 353
   ClientWidth = 525
-  OnDestroy = FormDestroy
   ExplicitWidth = 533
   ExplicitHeight = 387
   PixelsPerInch = 96
@@ -181,6 +180,10 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       HelpType = htKeyword
       HelpKeyword = 'Properties_TabHUF'
       Caption = 'Properties'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         375
         279)
@@ -239,7 +242,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
         Font.Name = 'Arial'
         Font.Pitch = fpVariable
         Font.Style = []
-        ItemHeight = 18
+        ItemHeight = 0
         ParentFont = False
         TabOrder = 1
         Text = '1'
@@ -286,7 +289,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
         Font.Name = 'Arial'
         Font.Pitch = fpVariable
         Font.Style = []
-        ItemHeight = 18
+        ItemHeight = 0
         ParentFont = False
         TabOrder = 3
         Text = '1'
@@ -301,6 +304,10 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       HelpKeyword = 'Parameters_Tab'
       Caption = 'Parameters'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgParameters: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -420,6 +427,10 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       HelpKeyword = 'Print_Tab'
       Caption = 'Print'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblPrintFormat: TLabel
         Left = 103
         Top = 7

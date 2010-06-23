@@ -16,6 +16,7 @@ object frmCustomGoPhast: TfrmCustomGoPhast
   Position = poMainFormCenter
   Scaled = False
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnHelp = FormHelp
   OnShow = FormShow
   PixelsPerInch = 96

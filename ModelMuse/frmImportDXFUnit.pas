@@ -27,7 +27,7 @@ type
     // @name calls @link(SetData).
     procedure btnOKClick(Sender: TObject);
     // @name frees @link(FDxfObject).
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
   private
     // @name: DXF_Object;
     // @name represents the contents of the DXF file.

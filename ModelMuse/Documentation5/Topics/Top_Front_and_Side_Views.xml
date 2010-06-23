@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
+<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+  <title translate="true">Top, Front, and Side Views</title>
+  <body>
+    <header>
+      <para styleclass="Heading2"><text styleclass="Heading1" translate="true">Top, Front, and Side Views</text></para>
+    </header>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">The main ModelMuse window includes four panes.  Three of these panes contain the top, front, and side views of the model.  The other pane is a 3-D view of the model.  Each pane can be resized by clicking on the space between the panes, moving the mouse while holding the mouse button down, and releasing the mouse button at the new position. </text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">The top, front, and side views of the model are each composed of several parts (fig. 6):</text></para>
+    <list id="1" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="The_Selection_Cube" styleclass="Normal" translate="true">Selection Cube</link><text styleclass="Normal" translate="true">,</text></li>
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="The_Ruler" styleclass="Normal" translate="true">Rulers</link><text styleclass="Normal" translate="true">, and </text></li>
+      <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="The_Working_Area" styleclass="Normal" translate="true">Working Area</link><text styleclass="Normal" translate="true">.</text></li>
+    </list>
+    <para styleclass="Normal" style="text-align:center;"><table rowcount="2" colcount="1" style="cell-padding:0px; cell-spacing:0px; border-width:0px; cell-border-width:0px;">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Image Caption"><image src="TopView.ipp" scale="100.00%" styleclass="Image Caption"><title translate="true">Top view of model with working area, ruler and selection cube labeled</title></image></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Image Caption"><text styleclass="Image Number" translate="true">Figure 6.</text><text styleclass="Image Caption" translate="true"> The parts of the top, front, or side views of the model.</text></para>
+        </td>
+      </tr>
+    </table></para>
+  </body>
+</topic>

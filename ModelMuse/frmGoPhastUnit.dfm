@@ -1,8 +1,8 @@
 inherited frmGoPhast: TfrmGoPhast
   Left = 91
   Top = 50
-  Width = 682
-  Height = 655
+  Width = 723
+  Height = 580
   HelpType = htKeyword
   HelpKeyword = 'Main_Window'
   VertScrollBar.Range = 157
@@ -13,19 +13,18 @@ inherited frmGoPhast: TfrmGoPhast
   ShowHint = True
   OnActivate = FormActivate
   OnClose = FormClose
-  OnDestroy = FormDestroy
   OnDeactivate = FormDeactivate
   OnKeyUp = FormKeyUp
   OnMouseMove = pnlLowerRightMouseMove
   OnResize = FormResize
-  ExplicitWidth = 682
-  ExplicitHeight = 655
+  ExplicitWidth = 723
+  ExplicitHeight = 580
   PixelsPerInch = 96
   TextHeight = 18
   object splitHoriz: TJvNetscapeSplitter
     Left = 0
-    Top = 430
-    Width = 674
+    Top = 355
+    Width = 715
     Height = 10
     Cursor = crVSplit
     Hint = 'Click and drag to resize the windows.'
@@ -41,16 +40,17 @@ inherited frmGoPhast: TfrmGoPhast
   object pnlTop: TPanel
     Left = 0
     Top = 68
-    Width = 674
-    Height = 362
+    Width = 715
+    Height = 287
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
+    ExplicitHeight = 307
     object splitVertTop: TJvNetscapeSplitter
-      Left = 435
+      Left = 476
       Top = 0
-      Height = 362
+      Height = 287
       Hint = 'Click and drag to resize the windows.'
       Align = alRight
       MinSize = 1
@@ -65,38 +65,38 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameTopView: TframeView
       Left = 0
       Top = 0
-      Width = 435
-      Height = 362
+      Width = 476
+      Height = 287
       HorzScrollBar.Range = 36
       VertScrollBar.Range = 40
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 435
-      ExplicitHeight = 362
+      ExplicitWidth = 476
+      ExplicitHeight = 307
       inherited rulVertical: TRbwRuler
-        Height = 308
+        Height = 233
         ExplicitTop = 39
         ExplicitHeight = 173
       end
       inherited Panel1: TPanel
-        Width = 435
-        ExplicitWidth = 435
+        Width = 476
+        ExplicitWidth = 476
         inherited rulHorizontal: TRbwRuler
-          Width = 386
+          Width = 427
           ExplicitWidth = 351
         end
       end
       inherited ZoomBox: TQRbwZoomBox2
-        Width = 386
-        Height = 308
+        Width = 427
+        Height = 233
         Image32.Top = 0
-        Image32.Width = 386
-        Image32.Height = 308
-        Image32.ExplicitWidth = 386
-        Image32.ExplicitHeight = 308
-        ExplicitWidth = 386
-        ExplicitHeight = 308
+        Image32.Width = 427
+        Image32.Height = 233
+        Image32.ExplicitWidth = 427
+        Image32.ExplicitHeight = 233
+        ExplicitWidth = 427
+        ExplicitHeight = 253
       end
       inherited OrderMenu: TPopupMenu
         Left = 80
@@ -104,21 +104,21 @@ inherited frmGoPhast: TfrmGoPhast
       end
     end
     inline frameSideView: TframeView
-      Left = 445
+      Left = 486
       Top = 0
       Width = 229
-      Height = 362
+      Height = 287
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alRight
       TabOrder = 1
       TabStop = True
-      ExplicitLeft = 445
+      ExplicitLeft = 486
       ExplicitWidth = 229
-      ExplicitHeight = 362
+      ExplicitHeight = 307
       inherited rulVertical: TRbwRuler
         Left = 180
-        Height = 308
+        Height = 233
         Align = alRight
         RulerPosition = rpRight
         ExplicitLeft = 194
@@ -152,17 +152,17 @@ inherited frmGoPhast: TfrmGoPhast
       inherited ZoomBox: TQRbwZoomBox2
         Left = 0
         Width = 180
-        Height = 308
+        Height = 233
         ExaggerationDirection = edHorizontal
         HorizontalDirection = hdLeft
         Image32.Top = 0
         Image32.Width = 180
-        Image32.Height = 308
+        Image32.Height = 233
         Image32.ExplicitWidth = 180
-        Image32.ExplicitHeight = 308
+        Image32.ExplicitHeight = 233
         ExplicitLeft = 0
         ExplicitWidth = 180
-        ExplicitHeight = 308
+        ExplicitHeight = 253
       end
       inherited OrderMenu: TPopupMenu
         Left = 48
@@ -172,16 +172,17 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 440
-    Width = 674
+    Top = 365
+    Width = 715
     Height = 133
     Align = alBottom
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
     OnMouseMove = pnlLowerRightMouseMove
+    ExplicitTop = 385
     object splitVertBottom: TJvNetscapeSplitter
-      Left = 435
+      Left = 476
       Top = 0
       Height = 133
       Hint = 'Click and drag to resize the windows.'
@@ -197,14 +198,14 @@ inherited frmGoPhast: TfrmGoPhast
     inline frameFrontView: TframeView
       Left = 0
       Top = 0
-      Width = 435
+      Width = 476
       Height = 133
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alClient
       TabOrder = 0
       TabStop = True
-      ExplicitWidth = 435
+      ExplicitWidth = 476
       ExplicitHeight = 133
       inherited rulVertical: TRbwRuler
         Top = 0
@@ -214,10 +215,10 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited Panel1: TPanel
         Top = 79
-        Width = 435
+        Width = 476
         Align = alBottom
         ExplicitTop = 79
-        ExplicitWidth = 435
+        ExplicitWidth = 476
         inherited ModelCube: TRbwModelCube
           Hint = 
             'Click to change row|Click to change the selected row forward or ' +
@@ -228,7 +229,7 @@ inherited frmGoPhast: TfrmGoPhast
           ExplicitTop = 6
         end
         inherited rulHorizontal: TRbwRuler
-          Width = 386
+          Width = 427
           RulerLinePosition = 25
           RulerMajorTickLength = -10
           RulerMinorTickLength = -5
@@ -240,27 +241,27 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited ZoomBox: TQRbwZoomBox2
         Top = 0
-        Width = 386
+        Width = 427
         Height = 79
         Image32.Top = 0
-        Image32.Width = 386
+        Image32.Width = 427
         Image32.Height = 79
-        Image32.ExplicitWidth = 386
+        Image32.ExplicitWidth = 427
         Image32.ExplicitHeight = 79
         ExplicitTop = 0
-        ExplicitWidth = 386
+        ExplicitWidth = 427
         ExplicitHeight = 79
       end
     end
     inline frame3DView: Tframe3DView
-      Left = 445
+      Left = 486
       Top = 0
       Width = 229
       Height = 133
       Align = alRight
       TabOrder = 1
       TabStop = True
-      ExplicitLeft = 445
+      ExplicitLeft = 486
       ExplicitWidth = 229
       ExplicitHeight = 133
       inherited glWidModelView: TGLWidget
@@ -273,8 +274,8 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object sbMain: TStatusBar
     Left = 0
-    Top = 573
-    Width = 674
+    Top = 498
+    Width = 715
     Height = 28
     Hint = 'Drag with the mouse to resize status bar panels'
     Panels = <
@@ -297,11 +298,12 @@ inherited frmGoPhast: TfrmGoPhast
     OnMouseMove = sbMainMouseMove
     OnMouseUp = sbMainMouseUp
     OnDrawPanel = sbMainDrawPanel
+    ExplicitTop = 518
   end
   object cbControlBar: TControlBar
     Left = 0
     Top = 0
-    Width = 674
+    Width = 715
     Height = 68
     Align = alTop
     AutoSize = True
@@ -311,7 +313,7 @@ inherited frmGoPhast: TfrmGoPhast
     TabOrder = 3
     OnMouseMove = pnlLowerRightMouseMove
     object tbarEdit: TToolBar
-      Left = 126
+      Left = 139
       Top = 2
       Width = 123
       Height = 28
@@ -363,7 +365,7 @@ inherited frmGoPhast: TfrmGoPhast
     object tbarFile: TToolBar
       Left = 11
       Top = 2
-      Width = 102
+      Width = 115
       Height = 28
       ButtonHeight = 23
       Caption = 'File'
@@ -399,14 +401,14 @@ inherited frmGoPhast: TfrmGoPhast
       object tbPrint: TToolButton
         Left = 92
         Top = 0
-        Action = acFilePrint
+        Action = acExportImage
         OnMouseMove = pnlLowerRightMouseMove
       end
     end
     object tbarEditScreenObjects: TToolBar
-      Left = 262
+      Left = 275
       Top = 2
-      Width = 210
+      Width = 234
       Height = 28
       ButtonHeight = 23
       Caption = 'Edit objects'
@@ -482,8 +484,19 @@ inherited frmGoPhast: TfrmGoPhast
         OnMouseDown = tbPointMouseDown
         OnMouseMove = pnlLowerRightMouseMove
       end
-      object tbSeparator2: TToolButton
+      object tbVertexValue: TToolButton
         Left = 123
+        Top = 0
+        Action = acVertexValue
+        AllowAllUp = True
+        Grouped = True
+        Style = tbsCheck
+        OnMouseDown = tbPointMouseDown
+        OnMouseMove = pnlLowerRightMouseMove
+        OnMouseUp = ToolButtonMouseUp
+      end
+      object tbSeparator2: TToolButton
+        Left = 146
         Top = 0
         Width = 8
         Caption = 'tbSeparator2'
@@ -491,23 +504,26 @@ inherited frmGoPhast: TfrmGoPhast
         Style = tbsSeparator
       end
       object tbShowHideObjects: TToolButton
-        Left = 131
-        Top = 0
-        Action = acShowHideObjects
-      end
-      object tbColorGrid: TToolButton
         Left = 154
         Top = 0
-        Action = acColorGrid
+        Action = acShowHideObjects
+        OnMouseMove = pnlLowerRightMouseMove
       end
-      object ToolButton1: TToolButton
+      object tbColorGrid: TToolButton
         Left = 177
         Top = 0
+        Action = acColorGrid
+        OnMouseMove = pnlLowerRightMouseMove
+      end
+      object ToolButton1: TToolButton
+        Left = 200
+        Top = 0
         Action = acContourData
+        OnMouseMove = pnlLowerRightMouseMove
       end
     end
     object tbarView: TToolBar
-      Left = 485
+      Left = 535
       Top = 2
       Width = 158
       Height = 28
@@ -566,17 +582,19 @@ inherited frmGoPhast: TfrmGoPhast
         Left = 92
         Top = 0
         Action = acPositionBackward
+        OnMouseMove = pnlLowerRightMouseMove
       end
       object tbRestoreDefault2DView: TToolButton
         Left = 115
         Top = 0
-        Hint = 'Restore default 2D view'
         Action = acRestoreDefault2DView
+        OnMouseMove = pnlLowerRightMouseMove
       end
       object tbPositionRedo: TToolButton
         Left = 138
         Top = 0
         Action = acPositionForward
+        OnMouseMove = pnlLowerRightMouseMove
       end
     end
     object tbarEditGrid: TToolBar
@@ -653,6 +671,7 @@ inherited frmGoPhast: TfrmGoPhast
         Action = acSetSpacing
         Style = tbsCheck
         OnMouseDown = tbPointMouseDown
+        OnMouseMove = pnlLowerRightMouseMove
         OnMouseUp = ToolButtonMouseUp
       end
       object tbGridAngle: TToolButton
@@ -668,6 +687,7 @@ inherited frmGoPhast: TfrmGoPhast
         Left = 161
         Top = 0
         Action = acGenerateGrid
+        OnMouseMove = pnlLowerRightMouseMove
       end
       object tbSelectColRowLayer: TToolButton
         Left = 184
@@ -812,6 +832,7 @@ inherited frmGoPhast: TfrmGoPhast
         Action = acShowGridShell
         AllowAllUp = True
         Style = tbsCheck
+        OnMouseMove = pnlLowerRightMouseMove
       end
       object tbTopGrid: TToolButton
         Left = 23
@@ -819,6 +840,7 @@ inherited frmGoPhast: TfrmGoPhast
         Action = acShowTopGrid
         AllowAllUp = True
         Style = tbsCheck
+        OnMouseMove = pnlLowerRightMouseMove
       end
       object tbFrontGrid: TToolButton
         Left = 46
@@ -826,6 +848,7 @@ inherited frmGoPhast: TfrmGoPhast
         Action = acShowFrontGrid
         AllowAllUp = True
         Style = tbsCheck
+        OnMouseMove = pnlLowerRightMouseMove
       end
       object tbSideGrid: TToolButton
         Left = 69
@@ -833,12 +856,14 @@ inherited frmGoPhast: TfrmGoPhast
         Action = acShowSideGrid
         AllowAllUp = True
         Style = tbsCheck
+        OnMouseMove = pnlLowerRightMouseMove
       end
       object tb3DColors: TToolButton
         Left = 92
         Top = 0
         Action = acColoredGrid
         Style = tbsCheck
+        OnMouseMove = pnlLowerRightMouseMove
       end
       object tb3DObjects: TToolButton
         Left = 115
@@ -846,13 +871,17 @@ inherited frmGoPhast: TfrmGoPhast
         Action = acShow3DObjects
         AllowAllUp = True
         Style = tbsCheck
+        OnMouseMove = pnlLowerRightMouseMove
       end
       object tbShow2DGrid: TToolButton
         Left = 138
         Top = 0
-        Action = acShowGridLines2D
-        AllowAllUp = True
-        Style = tbsCheck
+        Hint = 'Show or hide 2D gridlines|Show or hide gridlines in 2D views.'
+        Caption = 'Show or Hide 2-D Grid'
+        Down = True
+        DropdownMenu = menuGridLineChoice
+        ImageIndex = 71
+        OnMouseMove = pnlLowerRightMouseMove
       end
     end
   end
@@ -969,6 +998,10 @@ inherited frmGoPhast: TfrmGoPhast
         object miExportModpath: TMenuItem
           Action = acExportModpath
         end
+        object ZONEBUDGETInputFiles1: TMenuItem
+          Caption = '&ZONEBUDGET Input Files'
+          OnClick = ZONEBUDGETInputFiles1Click
+        end
         object ExportShapefile1: TMenuItem
           Caption = '&Grid Data to Shapefile...'
           Hint = 'Export data sets or boundaries as Shapefiles'
@@ -977,6 +1010,9 @@ inherited frmGoPhast: TfrmGoPhast
         object miObjectstoShapefile: TMenuItem
           Caption = 'Objects to Shapefile...'
           OnClick = miObjectstoShapefileClick
+        end
+        object ExportImage1: TMenuItem
+          Action = acExportImage
         end
         object ModelMateFile1: TMenuItem
           Action = acExportModelMate
@@ -1244,6 +1280,9 @@ inherited frmGoPhast: TfrmGoPhast
           Hint = 'Revers the order of the verticies in the selected objects'
           OnClick = miReverseSelectedObjectsClick
         end
+        object EditVertexValues1: TMenuItem
+          Action = acVertexValue
+        end
       end
       object N1: TMenuItem
         Caption = '-'
@@ -1352,9 +1391,28 @@ inherited frmGoPhast: TfrmGoPhast
       object miShow3DObjects: TMenuItem
         Action = acShow3DObjects
       end
-      object Show2DGridlines1: TMenuItem
-        Action = acShowGridLines2D
+      object miShow2DGridlines: TMenuItem
         AutoCheck = True
+        Caption = 'Show or Hide 2-D Grid'
+        Checked = True
+        Hint = 'Show or hide 2D gridlines|Show or hide gridlines in 2D views.'
+        ImageIndex = 71
+        object ShowAll2: TMenuItem
+          Action = acShowAllGridLines
+          AutoCheck = True
+        end
+        object Showexterior2: TMenuItem
+          Action = acShowExteriorGridLines
+          AutoCheck = True
+        end
+        object Showactive2: TMenuItem
+          Action = acShowActiveGridLines
+          AutoCheck = True
+        end
+        object Showactiveedge2: TMenuItem
+          Action = acShowActiveEdge
+          AutoCheck = True
+        end
       end
       object miRestoreDefaultView: TMenuItem
         Action = acRestoreDefaultView
@@ -1476,11 +1534,6 @@ inherited frmGoPhast: TfrmGoPhast
         GroupIndex = 1
         Hint = 'Add additional lines to the MODFLOW name file'
         OnClick = miModflowNameFileClick
-      end
-      object miModelMateInteraction: TMenuItem
-        Action = acModelMateInteraction
-        Caption = 'ModelMate Interface...'
-        GroupIndex = 1
       end
       object miObservationType: TMenuItem
         Caption = 'Observation Type'
@@ -1738,7 +1791,7 @@ inherited frmGoPhast: TfrmGoPhast
       OnExecute = miVerticalExaggerationClick
     end
     object acZoomIn: TAction
-      Category = 'View'
+      Category = 'Navigation'
       Caption = 'Zoom &In'
       HelpContext = 2270
       HelpKeyword = 'Changing_the_Magnification'
@@ -1748,7 +1801,7 @@ inherited frmGoPhast: TfrmGoPhast
       OnExecute = miZoomInClick
     end
     object acZoomOut: TAction
-      Category = 'View'
+      Category = 'Navigation'
       Caption = 'Zoom &Out'
       HelpContext = 2270
       HelpKeyword = 'Changing_the_Magnification'
@@ -1758,7 +1811,7 @@ inherited frmGoPhast: TfrmGoPhast
       OnExecute = tbZoomOutClick
     end
     object acZoom: TAction
-      Category = 'View'
+      Category = 'Navigation'
       Caption = '&Zoom'
       HelpContext = 2270
       HelpKeyword = 'Changing_the_Magnification'
@@ -1769,7 +1822,7 @@ inherited frmGoPhast: TfrmGoPhast
       OnExecute = tbZoomClick
     end
     object acPan: TAction
-      Category = 'View'
+      Category = 'Navigation'
       Caption = '&Pan'
       HelpContext = 2260
       HelpKeyword = 'View'
@@ -1778,7 +1831,7 @@ inherited frmGoPhast: TfrmGoPhast
       OnExecute = tbPanClick
     end
     object acMoveTo: TAction
-      Category = 'View'
+      Category = 'Navigation'
       Caption = '&Go To...'
       HelpContext = 2280
       HelpKeyword = 'Go_To_Dialog_Box'
@@ -2068,7 +2121,7 @@ inherited frmGoPhast: TfrmGoPhast
       OnExecute = acShowSideGridExecute
     end
     object acRestoreDefaultView: TAction
-      Category = 'View'
+      Category = 'Navigation'
       Caption = '&Restore Default 3D View'
       HelpContext = 2260
       HelpKeyword = 'View'
@@ -2213,15 +2266,6 @@ inherited frmGoPhast: TfrmGoPhast
       ShortCut = 49219
       OnExecute = acColorGridExecute
     end
-    object acShowGridLines2D: TAction
-      Category = 'View'
-      AutoCheck = True
-      Caption = 'Hide 2-D Grid'
-      Checked = True
-      Hint = 'Show or hide 2D gridlines|Show or hide gridlines in 2D views.'
-      ImageIndex = 71
-      OnExecute = acShowGridLines2DExecute
-    end
     object acRunModflow: TAction
       Category = 'File'
       Caption = '&MODFLOW Input Files'
@@ -2229,23 +2273,15 @@ inherited frmGoPhast: TfrmGoPhast
       ImageIndex = 72
       OnExecute = miExportModflowClick
     end
-    object acRestoreDefault2DView: TAction
-      Category = 'View'
-      Caption = 'Restore Default 2D View'
-      Hint = 'Restore default view of model'
-      ImageIndex = 73
-      ShortCut = 16466
-      OnExecute = RestoreDefault2DView1Click
-    end
     object acPositionForward: TAction
-      Category = 'View'
+      Category = 'Navigation'
       Caption = 'Redo Position'
       Hint = 'Redo change in view'
       ImageIndex = 74
       OnExecute = acPositionForwardExecute
     end
     object acPositionBackward: TAction
-      Category = 'View'
+      Category = 'Navigation'
       Caption = 'Undo Position'
       Hint = 'Undo change in view'
       ImageIndex = 75
@@ -2263,12 +2299,6 @@ inherited frmGoPhast: TfrmGoPhast
       Hint = 'Contour data|Contour data set values'
       ImageIndex = 76
       OnExecute = acContourDataExecute
-    end
-    object acModelMateInteraction: TAction
-      Category = 'Model'
-      Caption = 'ModelMate Interaction...'
-      Hint = 'Specify the name of a linked ModelMate file'
-      OnExecute = acModelMateInteractionExecute
     end
     object acExportModelMate: TAction
       Category = 'File'
@@ -2292,13 +2322,71 @@ inherited frmGoPhast: TfrmGoPhast
         'he selected objects'
       OnExecute = miEditSelectedObjectsClick
     end
+    object acVertexValue: TAction
+      Category = 'Object'
+      Caption = '&Vertex Values'
+      HelpKeyword = 'Vertex_Values_Dialog_Box'
+      Hint = 
+        'Edit vertex values|Double-click on the vertex of a selected obje' +
+        'ct to edit the values associated with that vertex.'
+      ImageIndex = 77
+      OnExecute = acVertexValueExecute
+    end
+    object acShowAllGridLines: TAction
+      Category = 'View'
+      AutoCheck = True
+      Caption = 'Show all'
+      Checked = True
+      GroupIndex = 2
+      ImageIndex = 71
+      OnExecute = SetGridLineDrawingChoice
+    end
+    object acShowExteriorGridLines: TAction
+      Category = 'View'
+      AutoCheck = True
+      Caption = 'Show exterior'
+      GroupIndex = 2
+      ImageIndex = 78
+      OnExecute = SetGridLineDrawingChoice
+    end
+    object acShowActiveGridLines: TAction
+      Category = 'View'
+      AutoCheck = True
+      Caption = 'Show active'
+      GroupIndex = 2
+      ImageIndex = 80
+      OnExecute = SetGridLineDrawingChoice
+    end
+    object acShowActiveEdge: TAction
+      Category = 'View'
+      AutoCheck = True
+      Caption = 'Show active edge'
+      GroupIndex = 2
+      ImageIndex = 79
+      OnExecute = SetGridLineDrawingChoice
+    end
+    object acRestoreDefault2DView: TAction
+      Category = 'Navigation'
+      Caption = 'Restore Default 2D View'
+      Hint = 'Restore default 2D view|Restore default view of model'
+      ImageIndex = 73
+      ShortCut = 16466
+      OnExecute = RestoreDefault2DView1Click
+    end
+    object acExportImage: TAction
+      Category = 'File'
+      Caption = '&Image...'
+      Hint = 'Export image|Export an image of the top, front, or side view'
+      ImageIndex = 83
+      OnExecute = acExportImageExecute
+    end
   end
   object ilDisabledImageList: TImageList
     Left = 200
     Top = 152
     Bitmap = {
-      494C010147004800040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
-      0000000000003600000028000000400000002001000001002000000000000020
+      494C010148004A00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      0000000000003600000028000000400000003001000001002000000000000030
       0100000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -2319,6 +2407,134 @@ inherited frmGoPhast: TfrmGoPhast
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000FF000000FF00
       0000FF000000FF00000000FFFF0000FFFF0000FFFF0000FFFF000000FF000000
       FF000000FF000000FF0000000000000000000000000000000000000000000000
@@ -2338,7 +2554,7 @@ inherited frmGoPhast: TfrmGoPhast
       0000000000000000000000000000000000000000000000000000FF000000FF00
       0000FF000000FF00000000FFFF0000FFFF0000FFFF0000FFFF000000FF000000
       FF000000FF000000FF0000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000FFFFFF00000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -2346,7 +2562,7 @@ inherited frmGoPhast: TfrmGoPhast
       0000000000000000000000000000000000000000000000000000FF000000FF00
       0000FF000000FF00000000FFFF0000FFFF0000FFFF0000FFFF000000FF000000
       FF000000FF000000FF0000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000FFFFFF00FFFFFF00FFFFFF000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -2354,7 +2570,15 @@ inherited frmGoPhast: TfrmGoPhast
       000000000000000000000000000000000000000000000000000000FFFF0000FF
       FF0000FFFF0000FFFF0040C0E00040C0E00040C0E00040C0E000FFFF0000FFFF
       0000FFFF0000FFFF000000000000000000000000000000000000000000000000
+      0000000000000000000000000000FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
+      FF00000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000000000000000000000FFFF0000FF
+      FF0000FFFF0000FFFF0040C0E00040C0E00040C0E00040C0E000FFFF0000FFFF
+      0000FFFF0000FFFF000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000FFFFFF00FFFFFF00FFFFFF000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -2362,15 +2586,7 @@ inherited frmGoPhast: TfrmGoPhast
       000000000000000000000000000000000000000000000000000000FFFF0000FF
       FF0000FFFF0000FFFF0040C0E00040C0E00040C0E00040C0E000FFFF0000FFFF
       0000FFFF0000FFFF000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      000000000000000000000000000000000000000000000000000000FFFF0000FF
-      FF0000FFFF0000FFFF0040C0E00040C0E00040C0E00040C0E000FFFF0000FFFF
-      0000FFFF0000FFFF000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000FFFFFF00000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -4604,12 +4820,16 @@ inherited frmGoPhast: TfrmGoPhast
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000424D3E000000000000003E000000
-      2800000040000000200100000100010000000000000900000000000000000000
-      000000000000000000000000FFFFFF00FFFFFFFFFFFF00009FFFFFFF80010000
-      E7FFFFFF80010000F9FFFCFF80010000FE7FFCFF80010000FF9FFF9F80010000
-      FFE7F99F800100009FF9F9F380010000E7FFFF3380010000F9FFF33F80010000
-      FE7FF3E780010000FF9FFE6780010000FFE7FE7F80010000FFF9FFCF80010000
-      FFFFFFCF80010000FFFFFFFFFFFF0000FFFFFFFFFFFFFFFF801FFFFFFC3FFF3F
+      2800000040000000300100000100010000000000800900000000000000000000
+      000000000000000000000000FFFFFF0000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000FFFFFFFFFFFFFFFF9FFFFFFF8001FFFF
+      E7FFFFFF8001FFFFF9FFFCFF8001FFBFFE7FFCFF8001FF1FFF9FFF9F8001FE0F
+      FFE7F99F8001FC079FF9F9F38001EE0FE7FFFF338001EF1FF9FFF33F8001EFBF
+      FE7FF3E78001EFFFFF9FFE678001EFFFFFE7FE7F8001AFFFFFF9FFCF8001CFFF
+      FFFFFFCF8001EFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF801FFFFFFC3FFF3F
       800FE3FFFC3FFECF80078BFFFC3FFEF38003A3FFFC3FFDFC8001BFFFFC3FFE7D
       8001BFE38001FF9B8001B00B8001FFE78001B7E38001E7FF8001B63F8001D9FF
       800180BFFC3FDE7FC001BE3FFC3FBF9FE001A3FFFC3FCFBFF0018BFFFC3FF37F
@@ -4808,9 +5028,393 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 176
     Top = 80
     Bitmap = {
-      494C01014D004E00040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
-      0000000000003600000028000000400000004001000001002000000000000040
+      494C010154005900040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      0000000000003600000028000000400000007001000001002000000000000070
       0100000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000000000006C676800979696001C1C
+      1C0000000000000000000000000000000000C8C6C600A3A1A1009E9C9C00C7C5
+      C5000606060000000000000000000000000000000000F0E8F000E8E0E600DFD7
+      DA00D6CED000CEC6C600C8C0BE00C1B9B600B8B0AA00ABA19800A79D9300AEA5
+      9D00B0A8A000B0A8A0007A61580000000000000000008E8A8A009D999C00C9C2
+      C600DAD2D400D2CACA00CAC2C200C4BCB900B2A9A300968A7E0091857900A398
+      8F00AFA69E00B0A8A00092827A00000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000070606006F6A6B00626262002C2C
+      2C0058545500A9A6A700A29F9F00ABA9A9002F2F2F0003030300060606000808
+      08009C9A9A00777374000F0F0F000000000000000000A2A2A200505050009693
+      9500DFD7DA00D6CED000CEC6C600BDB3AE0093857800D4D2D000B6B0AA00877A
+      6D00ACA39A00B0A8A000705850000000000000000000858585005C5C5C006160
+      6100E3DBE000DAD2D400D2CACA00BAB0AB00ABA19800D2D0CE00D0CDCB009E95
+      8C009F948900AFA79F0090807800000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000F0E0E006F6A6B00606060002D2D
+      2D005353530058575700ACABAB008180800014140E0049523A005A5E59001614
+      14000E0E0E00BEBCBC00B8B3B4000404040000000000A2A2A200505050005050
+      5000E8E0E600DFD7DA00D6CED0009F918300CFCECD00423A3200817B7400DAD9
+      D80093877A00B0A8A000705850000000000000000000858585005C5C5C005050
+      5000ECE4EB00E3DBE000DAD2D400AB9F9300BFBCBB007F695100826F5700C5C3
+      C20093887D00ACA39B0090807800000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000141313006E696A00606060002B2B
+      2B0054545400D8D6D600CECCCC000A0A0A002F3324001B284300242A3A002E34
+      3F0006050500A5A4A400ACA8A9003C3A3A0000000000A2A2A200505050005050
+      5000F0E8F000E8E0E600DBD3D500DDDCDC00443C3300E5AC6B00DFB07300DDDC
+      DC007B6E5F00B0A8A000705850000000000000000000858585005C5C5C005050
+      5000F0E8F000ECE4EB00E1D9DD00B5ACA2008E8A8500CD935A00E8B574009791
+      8C00A79E9500ADA49C0090807800000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000151414006E696A00626262002D2D
+      2D0053535300DBD9D900BCBBBB00484848001E1D1D002A3248001F5378003147
+      610006060600AAA9A900908B8C005652530000000000A2A2A200505050005050
+      5000F0E8F000F0E8F000E8E0E600CBC7C200736C6500B47D4C0063503F00DDDC
+      DC008D7E7100B5ADA600705850000000000000000000858585005C5C5C005050
+      5000F0E8F000F0E8F000ECE4EB00B0A59B00C0BEBC00735B460077624D00C5C3
+      C2009C908500B6ADA70091817A00000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000151414006F6A6B00606060002C2C
+      2C0053535300DAD9D9007E797A00ABA9A900060606001D1C1D001F2630000A09
+      0A00D3D0D100B8B6B600999496005856560000000000A2A2A200505050005050
+      5000F0E8F000F0E8F000F0E8F000A2938500DFDFDF00DBDADA00DEDEDE00A397
+      8B00BDB4B000BBB3AE00705850000000000000000000858585005C5C5C005050
+      5000F0E8F000F0E8F000F0E8F000D7CECF00B4AAA000D5D2D000D3D0CD00ACA1
+      9700B6ACA600BDB5B20094847E00000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000151414006F6A6B00616161002C2C
+      2C0054545400DAD8D8009794950087848400A4A3A3008D8C8C00B9B7B7009D9C
+      9C00BDBBBB003D393A00B7B2B4005E5C5C0000000000A2A2A200505050005050
+      5000F0E8F000F0E8F000F0E8F000F0E8F000BCAFA9008D7B67009A8A7A00CBC3
+      C200C8C0BE00C1B9B600705850000000000000000000858585005C5C5C005050
+      5000F0E8F000F4EEF300F4EEF300F0E8F000E0D7DB00BCAFA900B7AAA200CAC1
+      BF00D0C8C700CDC5C30097878200000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000141313006B666700686767002D2D
+      2D00DAD7D700D9D7D700DBD9D900918C8D008D878800D4D1D100CAC6C7009E98
+      9900534F5000BBB7B800B7B2B4005551520000000000A2A2A200505050005050
+      5000F0E8F000B0B0B000F8F4F700F0E8F000F0E8F000E8E0E600E4B57700F0CE
+      9900C5824100D7CFCF00705850000000000000000000858585005C5C5C006261
+      6200F0E8F00081818100D4D2D300F0E8F000F0E8F000ECE4EB00DDBDA000EECA
+      9300DCAA6D00C8A387009B8B8600000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000A0A0A0064606000929191009592
+      930085848400A9A7A7007C7B7B00A9A7A7004D4A4B0018161600262324003B38
+      39008E8D8D001A1818001B1919000B0A0A00000000005050500050505000D7D0
+      D700F0E8F00057575700F8F4F700F0E8F000F0E8F000F0E8F000B0704000E4B5
+      7700F0CE9900D7CFCF007058500000000000000000007C797600A09CA000D4CD
+      D400F0E8F000A19DA100D6D1D500F0E8F000F0E8F000F0E8F000DEC8C200DDBD
+      A000E7D2B900D7C5B50094857F00000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000202020032313100F0F0F0003E3E
+      3E004A464700DBD9D9008F8E8E00DBD9D900636161006F6F6F00717070006967
+      67005C5A5A00C0BBBC00827E7F003D3A3B00000000009088800090888000B0A8
+      A000686868009088800090888000908880009088800090888000908880009088
+      8000908880009088800000000000000000000000000000000000000000008787
+      850072706E000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000000000004A4748009D9C9C008C8A
+      8A0073727200929191008E8D8D0086828300AFACAD00D7D6D600DFDEDE00C2C0
+      C1004B4849009F9FA00006060600000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000BEBCBC004343
+      430045444400BEBABA009391910005050500DAD7D700D7D4D400C1BDBE00A6A1
+      A2002A2828000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -4845,7 +5449,7 @@ inherited frmGoPhast: TfrmGoPhast
       00000000000000000000000000000000000000000000FF000000000000000000
       000000000000000000000000000000FF000000FF000000FF000000FF000000FF
       000000FF000000FF000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000FFFFFF00000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -4853,7 +5457,7 @@ inherited frmGoPhast: TfrmGoPhast
       000000000000000000000000000000000000FF000000FF000000000000000000
       000000000000000000000000000000FF00000000000000000000000000000000
       0000000000000000000000FF0000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000FFFFFF00FFFFFF00FFFFFF000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -4861,15 +5465,15 @@ inherited frmGoPhast: TfrmGoPhast
       000000000000000000000000000000000000FF00000000000000000000000000
       00000000000000FF000000FF0000000000000000000000000000000000000000
       000000000000000000000000000000FF00000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
+      FF00000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000FF00000000000000000000000000
       00000000000000FF000000000000000000000000000000000000000000000000
       000000000000000000000000000000FF00000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000FFFFFF00FFFFFF00FFFFFF000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -4877,7 +5481,7 @@ inherited frmGoPhast: TfrmGoPhast
       000000000000000000000000000000000000FF00000000000000000000000000
       000000FF00000000000000000000000000000000000000000000000000000000
       FF000000FF000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000FFFFFF00000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -7371,12 +7975,24 @@ inherited frmGoPhast: TfrmGoPhast
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000424D3E000000000000003E000000
-      2800000040000000400100000100010000000000000A00000000000000000000
-      000000000000000000000000FFFFFF00FFFF000000000000F000000000000000
-      C7FE0000000000009FFF000000000000BE030000000000003EFD000000000000
-      79FE0000000000007BFE00000000000077E700000000000077DB000000000000
-      77BD00000000000037BD000000000000BBDB000000000000BBE7000000000000
-      9CFF000000000000DF7F000000000000FBFF8001FFF9FFF9F9FF8001FFF1FFF1
+      2800000040000000700100000100010000000000800B00000000000000000000
+      000000000000000000000000FFFFFF0000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000FFFFFFFFFFFFFFFF83FFFFFFFFFFFFFF
+      BBFF8F0780018001BBFF000180018001BBFF0000800180018003000080018001
+      BBBB000080018001BBBB000080018001BBBB0000800180018003000080018001
+      BBBF000080018001BBBF00008003E7FFBBBF8001FFFFFFFF803FC007FFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFF800383FF
+      C7FEFFFFBFFBBBFF9FFFFFBFBFFBBBFFBE03FF1FBFFBBBFF3EFDFE0FBFFBB803
+      79FEFC07BFFBBFFB7BFEEE0FBFFBBFFB77E7EF1FBFFBBFFB77DBEFBFBFFBBF83
+      77BDEFFFBFFBBFBF37BDEFFFBFFBBFBFBBDBAFFFBFFBBFBFBBE7CFFF8003803F
+      9CFFEFFFFFFFFFFFDF7FFFFFFFFFFFFFFBFF8001FFF9FFF9F9FF8001FFF1FFF1
       F8FF8001FFE3FFE3F87F8001FFC7FFC7F83F8001FC8FFC8FF81F8001F01FF01F
       F80F8001F03FF03FF8078001E01FE01FF8078003E01FE01FF80F8007F03FF03F
       F81F800FF03FF03FF83F801FFCFBDCFFF87FFFFFFFFDBFFFF8FFDFFB80000001
@@ -7466,8 +8082,48 @@ inherited frmGoPhast: TfrmGoPhast
     Top = 112
   end
   object odModelMate: TOpenDialog
+    DefaultExt = '.mtc'
     Filter = 'ModelMate Files (*.mtc)|*.mtc'
     Left = 328
     Top = 80
+  end
+  object sdZonebudgetInput: TSaveDialog
+    OnClose = sdZonebudgetInputClose
+    OnShow = sdZonebudgetInputShow
+    DefaultExt = '.zb_zones'
+    Filter = 
+      'ZONEBUDGET Zone Files (*.zb_zones)|*.zb_zones|All Files (*.*)|*.' +
+      '*'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
+    Title = 'Save ZONEBUDGET input files'
+    Left = 280
+    Top = 112
+  end
+  object sdModelMate: TSaveDialog
+    DefaultExt = '.mtc'
+    Filter = 'ModelMate Files (*.mtc)|*.mtc'
+    Left = 312
+    Top = 112
+  end
+  object menuGridLineChoice: TPopupMenu
+    Images = ilImageList
+    Left = 344
+    Top = 112
+    object Showall1: TMenuItem
+      Action = acShowAllGridLines
+      AutoCheck = True
+    end
+    object Showexterior1: TMenuItem
+      Action = acShowExteriorGridLines
+      AutoCheck = True
+    end
+    object Showactive1: TMenuItem
+      Action = acShowActiveGridLines
+      AutoCheck = True
+    end
+    object Showactiveedge1: TMenuItem
+      Action = acShowActiveEdge
+      AutoCheck = True
+    end
   end
 end

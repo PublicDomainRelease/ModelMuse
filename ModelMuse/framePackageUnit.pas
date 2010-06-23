@@ -36,6 +36,7 @@ type
     property SelectionType: TSelectionType read FSelectionType
       write FSelectionType;
     constructor Create(AOwner: TComponent); override;
+    procedure NilNode;
   published
     property OnSelectedChange: TNotifyEvent read FOnSelectedChange
       write FOnSelectedChange;
@@ -159,6 +160,11 @@ begin
       ControlsToMoveDown.Free;
     end;
   end;
+end;
+
+procedure TframePackage.NilNode;
+begin
+  Node := nil;
 end;
 
 end.

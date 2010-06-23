@@ -79,6 +79,8 @@ function SteppedSequential(Fraction, ColorAdjustmentFactor: real): TColor;
 
 type
   TColorParameters = class(TPersistent)
+  private
+    procedure Changed;
   strict private
     FColorScheme: integer;
     FColorExponent: real;
@@ -673,6 +675,14 @@ begin
   end;
 end;
 
+procedure TColorParameters.Changed;
+begin
+  if Assigned(OnChange) then
+  begin
+    OnChange(self);
+  end;
+end;
+
 procedure TColorParameters.SetColorCycles(Value: integer);
 begin
   if Value < 1 then
@@ -682,10 +692,7 @@ begin
   if FColorCycles <> Value then
   begin
     FColorCycles := Value;
-    if Assigned(OnChange) then
-    begin
-      OnChange(self);
-    end;
+    Changed;
   end;
 end;
 
@@ -694,10 +701,7 @@ begin
   if FColorExponent <> Value then
   begin
     FColorExponent := Value;
-    if Assigned(OnChange) then
-    begin
-      OnChange(self);
-    end;
+    Changed;
   end;
 end;
 
@@ -706,10 +710,7 @@ begin
   if FColorScheme <> Value then
   begin
     FColorScheme := Value;
-    if Assigned(OnChange) then
-    begin
-      OnChange(self);
-    end;
+    Changed;
   end;
 end;
 

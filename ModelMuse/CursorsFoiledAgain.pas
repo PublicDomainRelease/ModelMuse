@@ -110,6 +110,8 @@ const
   // @name represents a cursor shaped like a large arrowhead.
   crSnapSelectPoint = 37;
 
+  crVertexValue = 38;
+
 implementation
 
 // Force GExperts' "Backup Project" to backup ModelMuseCursors.res.
@@ -269,6 +271,7 @@ initialization
   LoadACursor('CRSNAPMULTIPARTPOLYGON', crSnapMultiPartPolygon);
   LoadACursor('CRZOOMBYY', crZoomByY);
   LoadACursor('CRSNAPSELECTPOINT', crSnapSelectPoint);
+  LoadACursor('CRVERTEXVALUE', crVertexValue);
 
 {
   CreateMaskedCursor('CRHANDFLAT', 'MASKHANDFLAT', crHandFlat, 14, 11);

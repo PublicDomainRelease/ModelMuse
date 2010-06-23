@@ -35,7 +35,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
         Top = 32
         Width = 56
         Height = 24
-        ItemHeight = 13
+        ItemHeight = 0
         TabOrder = 0
         Text = '1'
         OnChange = rdeSegmentNumberChange
@@ -748,7 +748,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Height = 22
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 13
+          ItemHeight = 0
           TabOrder = 0
           OnChange = rdeNetworkChange
           Max = 1.000000000000000000
@@ -1123,7 +1123,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Height = 22
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 13
+          ItemHeight = 0
           TabOrder = 0
           OnChange = rdeFlowFormulaChange
           Max = 1.000000000000000000
@@ -1354,7 +1354,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
             Height = 22
             Color = clBtnFace
             Enabled = False
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 0
             OnChange = rdeUpstreamFormulaChange
             Max = 1.000000000000000000
@@ -1568,7 +1568,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
             Height = 22
             Color = clBtnFace
             Enabled = False
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 0
             OnChange = rdeDownstreamFormulaChange
             Max = 1.000000000000000000
@@ -1744,7 +1744,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
             Height = 22
             Color = clBtnFace
             Enabled = False
-            ItemHeight = 13
+            ItemHeight = 0
             TabOrder = 0
             OnChange = rdeChannelFormulaChange
             Max = 1.000000000000000000
@@ -1967,7 +1967,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Height = 22
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 13
+          ItemHeight = 0
           TabOrder = 0
           OnChange = rdeEquationFormulaChange
           Max = 1.000000000000000000

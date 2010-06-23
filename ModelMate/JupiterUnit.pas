@@ -171,7 +171,7 @@ interface
   procedure J_Free;
   procedure J_Initialize;
   procedure J_KeyItem(const BlockLabel: string; var KeyItem: string; var Index: integer);
-  function J_Valid_Name(Name: string): boolean;
+//  function J_Valid_Name(Name: string): boolean;
 
   var
     { KeyItems and NKeyItems are public to allow other units
@@ -329,16 +329,10 @@ begin
 end;  // function TKeyVal.GetStr
 
 procedure TKeyVal.setName(Str: String);
-var
-  mess: string;
+//var
+//  mess: string;
 begin
-  if J_Valid_Name(Str) then
   fName := Str
-  else
-    begin
-      mess := Str + ' is not a valid name';
-      ShowMessage(mess);
-    end;
 end;
 
 procedure TKeyVal.SetNameVal(Index: Integer; NamStr: string; D: Double);
@@ -958,43 +952,43 @@ end; // procedure J_KeyItem.
 
 //###################################################################
 
-function J_Valid_Name(Name: string): boolean;
-// Check Name argument for conformance with JUPITER naming convention
-type
-  setChar = set of Char;
-var
-  Ch: Char;
-  I, LenName: integer;
-  Letters, Digits, Symbols, JChars: setChar;
-begin
-  // Initialize character sets
-  Letters := [ 'A' .. 'Z', 'a' .. 'z' ];
-  Digits := [ '0' .. '9' ];
-  Symbols := [ '_', '.', ':', '&', '#', '@' ];
-  JChars := Letters + Digits + Symbols;
-  //
-  result := True;
-  LenName := Length(Name);
-  if LenName > 0 then
-    begin
-      Ch := Name[1];  //bad when LenName=0
-      if Ch in Letters then
-        begin
-          for I := 2 to LenName do
-            begin
-              Ch := Name[I];
-              if not (Ch in JChars) then
-                result := False;
-            end;
-        end
-      else
-        result := False;
-    end
-  else
-    begin
-      result := False;
-    end;
-end; // function J_Valid_Name
+//function J_Valid_Name(Name: string): boolean;
+//// Check Name argument for conformance with JUPITER naming convention
+//type
+//  setChar = set of Char;
+//var
+//  Ch: Char;
+//  I, LenName: integer;
+//  Letters, Digits, Symbols, JChars: setChar;
+//begin
+//  // Initialize character sets
+//  Letters := [ 'A' .. 'Z', 'a' .. 'z' ];
+//  Digits := [ '0' .. '9' ];
+//  Symbols := [ '_', '.', ':', '&', '#', '@' ];
+//  JChars := Letters + Digits + Symbols;
+//  //
+//  result := True;
+//  LenName := Length(Name);
+//  if LenName > 0 then
+//    begin
+//      Ch := Name[1];  //bad when LenName=0
+//      if Ch in Letters then
+//        begin
+//          for I := 2 to LenName do
+//            begin
+//              Ch := Name[I];
+//              if not (Ch in JChars) then
+//                result := False;
+//            end;
+//        end
+//      else
+//        result := False;
+//    end
+//  else
+//    begin
+//      result := False;
+//    end;
+//end; // function J_Valid_Name
 
 //###################################################################
 

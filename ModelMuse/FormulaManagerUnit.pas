@@ -9,8 +9,6 @@ type
     Subject: TObject; const AName: string);
   PChangeSubscription = ^TChangeSubscription;
 
-//  TFormulaManager = class;
-
   TFormulaObject = class(TComponent)
   private
     FPosition: integer;
@@ -24,7 +22,6 @@ type
     FOnRestoreSubscriptionList: TList;
     FReferenceCountList: TIntegerList;
     FSubjectList: TList;
-//    FFormulaManager: TFormulaManager;
     procedure SetFormula(Value: string);
     procedure SetParser(const Value: TRbwParser);
     procedure CompileFormula(var Value: string);
@@ -81,7 +78,6 @@ type
       OnRestoreSubscription: TChangeSubscription; Subject: TObject);
     procedure Pack;
     procedure Clear;
-//    property CompileFormulas: boolean read FCompileFormulas write SetCompileFormulas;
   end;
 
 implementation
@@ -187,7 +183,6 @@ begin
                 begin
                   Continue;
                 end;
-//                RestoreEvent^(self, Subject, UsedVariables[VariableIndex]);
                 if RestoreEvent = Addr(GlobalDataArrayRestoreSubscription) then
                 begin
                   GlobalDataArrayRestoreSubscription(self, Subject, UsedVariables[VariableIndex]);
@@ -508,7 +503,6 @@ var
 begin
   if (FExpression <> nil) and FNotifies then
   begin
-//    if FExpression.VariablesUsed.Count > 0 then
     begin
       FExpression.Notifier.RemoveFreeNotification(self);
     end;
@@ -533,14 +527,9 @@ begin
       FParser.Compile(Value);
       FExpression := FParser.CurrentExpression;
       Assert(FExpression <> nil);
-//      if FExpression.VariablesUsed.Count > 0 then
       begin
         FNotifies := True;
         FExpression.Notifier.FreeNotification(self);
-//      end
-//      else
-//      begin
-//        FNotifies := False;
       end;
     except on ERbwParserError do
       begin
@@ -611,7 +600,6 @@ begin
   else
   begin
     FormulaObject := TFormulaObject.Create(nil);
-//    FormulaObject.FFormulaManager:= self;
     FormulaObject.Parser := Parser;
     FormulaObject.SetFormula(NewFormula);
     if FSortedList.Find(FormulaObject.Formula, AnObject)
@@ -893,10 +881,5 @@ begin
     end;
   end;
 end;
-
-//procedure TFormulaManager.SetCompileFormulas(const Value: boolean);
-//begin
-//  FCompileFormulas := Value;
-//end;
 
 end.

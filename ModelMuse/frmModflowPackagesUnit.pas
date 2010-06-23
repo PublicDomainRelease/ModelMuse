@@ -34,7 +34,8 @@ uses
   framePackageLayerChoiceUnit, framePackageUZFUnit, frameGmgUnit, frameSipUnit,
   frameDe4Unit, JvExComCtrls, JvComCtrls, RequiredDataSetsUndoUnit,
   framePackageHobUnit, framePackageLpfUnit, frameModpathSelectionUnit,
-  framePackageHufUnit, HufDefinition, framePackageMnw2Unit, framePackageSubUnit;
+  framePackageHufUnit, HufDefinition, framePackageMnw2Unit, framePackageSubUnit,
+  frameZoneBudgetUnit;
 
 type
   TfrmModflowPackages = class(TfrmCustomGoPhast)
@@ -130,9 +131,11 @@ type
     framePkgBCF: TframePackage;
     jvspSUB: TJvStandardPage;
     framePkgSUB: TframePackageSub;
+    jvspZoneBudget: TJvStandardPage;
+    frameZoneBudget: TframeZoneBudget;
     procedure tvPackagesChange(Sender: TObject; Node: TTreeNode);
     procedure btnOKClick(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure tvLpfParameterTypesChange(Sender: TObject; Node: TTreeNode);
     procedure frameParameterDefinition_seNumberOfParametersChange(
       Sender: TObject);
@@ -1029,6 +1032,7 @@ begin
   ActiveFrame.seNumberOfParametersChange(nil);
   if not IsLoaded then
   begin
+    ActiveFrame.PriorNumberOfParameters := ActiveFrame.seNumberOfParameters.AsInteger;
     Exit;
   end;
 
@@ -1062,18 +1066,22 @@ begin
     ActiveFrame.seNumberOfParameters.AsInteger+1 do
   begin
     Parameter := ActiveGrid.Objects[0, RowIndex] as TModflowParameter;
-    if Parameter is TModflowSteadyParameter then
+    if Parameter <> nil then
     begin
-      SteadyParameters.Remove(Parameter);
-    end
-    else if Parameter is TModflowTransientListParameter then
-    begin
-      TransientListParameters.Remove(Parameter);
-    end
-    else
-    begin
-      Assert(Parameter is THufParameter);
-      HufParameters.Remove(Parameter);
+      
+      if Parameter is TModflowSteadyParameter then
+      begin
+        SteadyParameters.Remove(Parameter);
+      end
+      else if Parameter is TModflowTransientListParameter then
+      begin
+        TransientListParameters.Remove(Parameter);
+      end
+      else
+      begin
+        Assert(Parameter is THufParameter);
+        HufParameters.Remove(Parameter);
+      end;
     end;
   end;
 
@@ -1301,9 +1309,14 @@ begin
     AddNode(StrSolver, StrSolver, PriorNode);
     AddNode(StrSubSidence, StrSubSidence, PriorNode);
     AddNode(StrObservations, StrObservations, PriorNode);
-    AddNode(StrMODPATH, StrMODPATH, PriorNode);
+    AddNode(StrPostProcessors, StrPostProcessors, PriorNode);
 
-
+    for Index := 0 to PackageList.Count - 1 do
+    begin
+      APackage := PackageList[Index];
+      Frame := APackage.Frame;
+      Frame.NilNode;
+    end;
 
     for Index := 0 to PackageList.Count - 1 do
     begin
@@ -1404,7 +1417,9 @@ begin
   end;
 end;
 
-procedure TfrmModflowPackages.UpdateFlowParamGrid(Node: TTreeNode; ParameterFrame: TframeListParameterDefinition; ParameterCollection: TCollection; ParameterFrameController: TRbwController);
+procedure TfrmModflowPackages.UpdateFlowParamGrid(Node: TTreeNode;
+  ParameterFrame: TframeListParameterDefinition;
+  ParameterCollection: TCollection; ParameterFrameController: TRbwController);
 var
   Parameter: TModflowParameter;
   Index: Integer;
@@ -1412,9 +1427,11 @@ var
   ALabel: TLabel;
   RowIndex: Integer;
   ActiveGrid: TRbwDataGrid4;
+  ActiveFrame: TframeListParameterDefinition;
 const
   FormatStr = 'Number of %s parameters';
 begin
+  ActiveFrame := ParameterFrame;
   ActiveGrid := ParameterFrame.dgParameters;
   for RowIndex := 1 to ActiveGrid.RowCount - 1 do
   begin
@@ -1488,6 +1505,7 @@ begin
           ParamList.Add(Parameter);
         end;
       end;
+      ActiveFrame.PriorNumberOfParameters := ParamList.Count;
       Assert(ActiveGrid <> nil);
       if ParamList.Count = 0 then
       begin
@@ -2014,6 +2032,9 @@ begin
 
   Packages.RvobPackage.Frame := framePkgRVOB;
   PackageList.Add(Packages.RvobPackage);
+
+  Packages.ZoneBudget.Frame := frameZoneBudget;
+  PackageList.Add(Packages.ZoneBudget);
 
 end;
 

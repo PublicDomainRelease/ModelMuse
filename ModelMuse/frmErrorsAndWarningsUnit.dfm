@@ -2,7 +2,6 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
   HelpType = htKeyword
   HelpKeyword = 'Errors_and_Warnings_Dialog_Box'
   Caption = 'Errors and Warnings'
-  OnDestroy = FormDestroy
   OnResize = FormResize
   ExplicitWidth = 442
   ExplicitHeight = 274

@@ -478,7 +478,10 @@ begin
             begin
               if Counts[RowIndex,ColIndex] > 0  then
               begin
-                AScreenObject.AddPoint(CenterPoints[RowIndex,ColIndex], True);
+                Point2D := CenterPoints[RowIndex,ColIndex];
+                Point2D := Grid.
+                  RotateFromGridCoordinatesToRealWorldCoordinates(Point2D);
+                AScreenObject.AddPoint(Point2D, True);
                 Item.Values.RealValues[ValueIndex] := Values[RowIndex,ColIndex];
                 Inc(ValueIndex);
               end;

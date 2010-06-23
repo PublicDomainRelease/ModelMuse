@@ -67,7 +67,7 @@ type
     // @name calls @link(GetData).
     procedure FormCreate(Sender: TObject); override;
     // @name causes the grid to be redrawn.
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     // @name calls @link(EnableOK).
     procedure rdeChange(Sender: TObject);
     // @name updates SpacingGridTool.@link(TSpacingGridTool.FFirstSpacingColumn)

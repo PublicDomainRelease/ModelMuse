@@ -4,7 +4,6 @@ inherited frmExportShapefile: TfrmExportShapefile
   Caption = 'Export Grid Data to Shapefile'
   ClientHeight = 470
   ClientWidth = 456
-  OnDestroy = FormDestroy
   ExplicitWidth = 464
   ExplicitHeight = 504
   PixelsPerInch = 96

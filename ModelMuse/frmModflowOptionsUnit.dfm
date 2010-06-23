@@ -4,7 +4,6 @@ inherited frmModflowOptions: TfrmModflowOptions
   Caption = 'MODFLOW Options'
   ClientHeight = 314
   ClientWidth = 543
-  OnDestroy = FormDestroy
   ExplicitWidth = 551
   ExplicitHeight = 348
   PixelsPerInch = 96
@@ -22,6 +21,10 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpType = htKeyword
       HelpKeyword = 'Description_Tab'
       Caption = 'Description'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         535
         240)
@@ -95,6 +98,10 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Options_Tab'
       Caption = 'Options'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label5: TLabel
         Left = 3
         Top = 103
@@ -172,7 +179,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         Top = 126
         Width = 145
         Height = 22
-        ItemHeight = 18
+        ItemHeight = 0
         TabOrder = 1
         Text = '-1e20'
         OnExit = rdeHNOFLOExit
@@ -186,7 +193,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         Width = 145
         Height = 26
         Style = csDropDownList
-        ItemHeight = 18
+        ItemHeight = 0
         TabOrder = 2
         Text = 'seconds (1)'
         OnChange = comboTimeUnitChange
@@ -205,7 +212,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         Width = 145
         Height = 26
         Style = csDropDownList
-        ItemHeight = 18
+        ItemHeight = 0
         TabOrder = 3
         Text = 'meters (2)'
         OnChange = comboLengthUnitChange
@@ -221,7 +228,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         Top = 177
         Width = 145
         Height = 22
-        ItemHeight = 18
+        ItemHeight = 0
         TabOrder = 4
         Text = '-2e20'
         OnExit = rdeHDRYExit
@@ -253,6 +260,10 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Wetting_Tab'
       Caption = 'Wetting'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblWetFact: TLabel
         Left = 8
         Top = 35
@@ -281,7 +292,7 @@ inherited frmModflowOptions: TfrmModflowOptions
       object lblWettingDataSets: TLabel
         Left = 245
         Top = 3
-        Width = 260
+        Width = 243
         Height = 90
         Caption = 
           'You will need to have at least one unconfined or convertible lay' +
@@ -299,7 +310,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         HelpContext = 290
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 18
+        ItemHeight = 0
         TabOrder = 0
         Text = '0.5'
         OnChange = rdeWettingFactChange

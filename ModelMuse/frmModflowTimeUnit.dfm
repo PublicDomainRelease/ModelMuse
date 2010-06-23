@@ -4,7 +4,6 @@ inherited frmModflowTime: TfrmModflowTime
   Caption = 'MODFLOW Time'
   ClientHeight = 327
   ClientWidth = 754
-  OnDestroy = FormDestroy
   OnResize = FormResize
   ExplicitWidth = 762
   ExplicitHeight = 361

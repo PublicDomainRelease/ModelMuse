@@ -36,7 +36,7 @@ type
     sdShapefile: TSaveDialog;
     XBaseShapeFile: TXBase;
     procedure FormCreate(Sender: TObject); override;
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure vstDataSetsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
     procedure FormResize(Sender: TObject);
@@ -416,7 +416,7 @@ begin
       AScreenObject.CopyPoints(InputPoints, 0,
         AScreenObject.SectionStart[SectionIndex], CopyCount);
       ConvexHull2(InputPoints, InputOrientation, OutputPoints);
-//      PointPosition := -1;
+      PointPosition := -1;
       if InputOrientation = Clockwise then
       begin
         PointPosition := 0;

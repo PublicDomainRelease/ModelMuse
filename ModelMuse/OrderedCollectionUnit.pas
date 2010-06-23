@@ -2,7 +2,7 @@ unit OrderedCollectionUnit;
 
 interface
 
-uses DataSetUnit, Classes, GoPhastTypes;
+uses DataSetUnit, Classes, GoPhastTypes, SysUtils;
 
 type
   {@name defines the types of parameters used in MODFLOW.
@@ -128,6 +128,11 @@ type
     // and @link(TGlobalVariableItem).
     property AlwaysAssignForeignId: boolean read FAlwaysAssignForeignId
       write FAlwaysAssignForeignId;
+    procedure SetBooleanProperty(var AField: boolean; const NewValue: boolean);
+    procedure SetIntegerProperty(var AField: Integer; const NewValue: Integer);
+    procedure SetRealProperty(var AField: double; const NewValue: double);
+    procedure SetCaseSensitiveStringProperty(var AField: string; const NewValue: string);
+    procedure SetCaseInsensitiveStringProperty(var AField: string; NewValue: string);
   public
     // @name copies Source to the current @classname.  It will also assign
     // @link(FForeignId) if @link(AlwaysAssignForeignId) is @true or
@@ -136,10 +141,6 @@ type
     // @name creates and instance of @classname and
     // sets @link(FForeignId) to -1.
     constructor Create(Collection: TCollection); override;
-    procedure SetBooleanProperty(var AField: boolean; const NewValue: boolean);
-    procedure SetIntegerProperty(var AField: Integer; const NewValue: Integer);
-    procedure SetRealProperty(var AField: double; const NewValue: double);
-    procedure SetStringProperty(var AField: string; const NewValue: string);
   end;
 
   // @name is a base class for collections that avoid deleting their collection
@@ -812,7 +813,17 @@ begin
   end;
 end;
 
-procedure TOrderedItem.SetStringProperty(var AField: string;
+procedure TOrderedItem.SetCaseInsensitiveStringProperty(var AField: string;
+  NewValue: string);
+begin
+  if CompareText(AField, NewValue) <> 0 then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
+end;
+
+procedure TOrderedItem.SetCaseSensitiveStringProperty(var AField: string;
   const NewValue: string);
 begin
   if AField <> NewValue then

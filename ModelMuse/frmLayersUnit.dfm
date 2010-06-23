@@ -4,7 +4,6 @@ inherited frmLayers: TfrmLayers
   Caption = 'MODFLOW Layer Groups'
   ClientHeight = 424
   ClientWidth = 562
-  OnDestroy = FormDestroy
   ExplicitWidth = 570
   ExplicitHeight = 458
   PixelsPerInch = 96
@@ -21,7 +20,7 @@ inherited frmLayers: TfrmLayers
     Top = 0
     Width = 420
     Height = 383
-    ActivePage = tabNoDelay
+    ActivePage = tabBasics
     Align = alClient
     TabOrder = 0
     OnChange = pcLayerGroupsChange

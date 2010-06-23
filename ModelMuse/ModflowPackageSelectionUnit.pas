@@ -1061,6 +1061,78 @@ Type
     property BackwardsTrackingReleaseTime: double read FBackwardsTrackingReleaseTime write SetBackwardsTrackingReleaseTime;
   end;
 
+  ZZoneItem = class(TOrderedItem)
+  private
+    FZoneNumber: integer;
+    procedure SetZoneNumber(const Value: integer);
+  public
+    procedure Assign(Source: TPersistent); override;
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+  published
+    property ZoneNumber: integer read FZoneNumber write SetZoneNumber;
+  end;
+
+  TCompositeZone = class(TOrderedCollection)
+  private
+    FZoneName: string;
+    function GetItem(Index: integer): ZZoneItem;
+    procedure SetItem(Index: integer; const Value: ZZoneItem);
+    procedure SetZoneName(Value: string);
+  public
+    procedure Assign(Source: TPersistent); override;
+    constructor Create(Model: TObject);
+    function IsSame(AnOrderedCollection: TOrderedCollection): boolean; override;
+    property Items[Index: integer]: ZZoneItem read GetItem
+      write SetItem; default;
+  published
+    property ZoneName: string read FZoneName write SetZoneName;
+  end;
+
+  TCompositeZoneItem = class(TOrderedItem)
+  private
+    FCompositeZone: TCompositeZone;
+    procedure SetCompositeZone(const Value: TCompositeZone);
+  public
+    procedure Assign(Source: TPersistent); override;
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    constructor Create(Collection: TCollection); override;
+    Destructor Destroy; override;
+  published
+    property CompositeZone: TCompositeZone read FCompositeZone write SetCompositeZone;
+  end;
+
+  TCompositeZoneCollection = class(TOrderedCollection)
+  private
+    function GetItem(Index: integer): TCompositeZoneItem;
+    procedure SetItem(Index: integer; const Value: TCompositeZoneItem);
+  public
+    constructor Create(Model: TObject);
+    property Items[Index: integer]: TCompositeZoneItem read GetItem
+      write SetItem; default;
+  end;
+
+  TZoneBudgetSelect = class(TModflowPackageSelection)
+  private
+    FCompositeZones: TCompositeZoneCollection;
+    FExportZBLST: boolean;
+    FExportCSV2: boolean;
+    FExportCSV: boolean;
+    procedure SetCompositeZones(const Value: TCompositeZoneCollection);
+    procedure SetExportCSV(const Value: boolean);
+    procedure SetExportCSV2(const Value: boolean);
+    procedure SetExportZBLST(const Value: boolean);
+  public
+    procedure InitializeVariables;
+    Constructor Create(Model: TObject);
+    Destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
+  published
+    property CompositeZones: TCompositeZoneCollection read FCompositeZones write SetCompositeZones;
+    property ExportZBLST: boolean read FExportZBLST write SetExportZBLST Stored True;
+    property ExportCSV: boolean read FExportCSV write SetExportCSV Stored True;
+    property ExportCSV2: boolean read FExportCSV2 write SetExportCSV2 Stored True;
+  end;
+
   TMnw2PrintOption = (mpoNone, mpoIntermediate, mpoMost);
 
   TMultinodeWellSelection = class(TModflowPackageSelection)
@@ -1384,8 +1456,11 @@ begin
   begin            
     InvalidateModel;
     FIsSelected := Value;
-    UpdateFrmGridColor;
-    UpdateFrmContourData;
+    if FModel <> nil then
+    begin
+      UpdateFrmGridColor;
+      UpdateFrmContourData;
+    end;
   end;
 end;
 
@@ -6339,8 +6414,6 @@ begin
   begin
     inherited;
   end;
-
-
 end;
 
 procedure TSubPrintFormats.SetCompactionByInterbedSystemFormat(
@@ -6375,6 +6448,212 @@ end;
 procedure TSubPrintFormats.SetVerticalDisplacementFormat(const Value: integer);
 begin
   SetIntegerProperty(FVerticalDisplacementFormat, Value);
+end;
+
+{ ZZoneItem }
+
+procedure ZZoneItem.Assign(Source: TPersistent);
+begin
+  if Source is ZZoneItem then
+  begin
+    ZoneNumber := ZZoneItem(Source).ZoneNumber;
+  end;
+  inherited;
+end;
+
+function ZZoneItem.IsSame(AnotherItem: TOrderedItem): boolean;
+begin
+  result := AnotherItem is ZZoneItem;
+  if result then
+  begin
+    result := ZoneNumber = ZZoneItem(AnotherItem).ZoneNumber;
+  end;
+end;
+
+procedure ZZoneItem.SetZoneNumber(const Value: integer);
+begin
+  if FZoneNumber <> Value then
+  begin
+    FZoneNumber := Value;
+    InvalidateModel;
+  end;
+end;
+
+{ TCompositeZone }
+
+procedure TCompositeZone.Assign(Source: TPersistent);
+begin
+  if Source is TCompositeZone then
+  begin
+    ZoneName := TCompositeZone(Source).ZoneName;
+  end;
+  inherited;
+end;
+
+constructor TCompositeZone.Create(Model: TObject);
+begin
+  inherited Create(ZZoneItem, Model);
+end;
+
+function TCompositeZone.GetItem(Index: integer): ZZoneItem;
+begin
+  result := inherited Items[Index] as ZZoneItem;
+end;
+
+function TCompositeZone.IsSame(
+  AnOrderedCollection: TOrderedCollection): boolean;
+begin
+  result := AnOrderedCollection is TCompositeZone;
+  if result then
+  begin
+    result := ZoneName = TCompositeZone(AnOrderedCollection).ZoneName;
+  end;
+  if result then
+  begin
+    result := inherited IsSame(AnOrderedCollection);
+  end;
+end;
+
+procedure TCompositeZone.SetItem(Index: integer; const Value: ZZoneItem);
+begin
+  inherited Items[Index] := Value;
+end;
+
+procedure TCompositeZone.SetZoneName(Value: string);
+begin
+  Value := ValidName(Value);
+  if FZoneName <> Value then
+  begin
+    FZoneName := Value;
+    InvalidateModel;
+  end;
+end;
+
+{ TCompositeZoneItem }
+
+procedure TCompositeZoneItem.Assign(Source: TPersistent);
+begin
+  if Source is TCompositeZoneItem then
+  begin
+    CompositeZone := TCompositeZoneItem(Source).CompositeZone;
+  end;
+  inherited;
+end;
+
+constructor TCompositeZoneItem.Create(Collection: TCollection);
+begin
+  inherited;
+  FCompositeZone:= TCompositeZone.Create(Model);
+end;
+
+destructor TCompositeZoneItem.Destroy;
+begin
+  FCompositeZone.Free;
+  inherited;
+end;
+
+function TCompositeZoneItem.IsSame(AnotherItem: TOrderedItem): boolean;
+begin
+  result := AnotherItem is TCompositeZoneItem;
+  if result then
+  begin
+    result := TCompositeZoneItem(AnotherItem).CompositeZone.
+      IsSame(CompositeZone);
+  end;
+end;
+
+procedure TCompositeZoneItem.SetCompositeZone(const Value: TCompositeZone);
+begin
+  FCompositeZone.Assign(Value);
+end;
+
+{ TCompositeZoneCollection }
+
+constructor TCompositeZoneCollection.Create(Model: TObject);
+begin
+  inherited Create(TCompositeZoneItem, Model);
+end;
+
+function TCompositeZoneCollection.GetItem(Index: integer): TCompositeZoneItem;
+begin
+  result := inherited Items[Index] as TCompositeZoneItem;
+end;
+
+procedure TCompositeZoneCollection.SetItem(Index: integer;
+  const Value: TCompositeZoneItem);
+begin
+  inherited Items[Index] := Value;
+end;
+
+{ TZoneBudgetSelect }
+
+procedure TZoneBudgetSelect.Assign(Source: TPersistent);
+var
+  SourceBudget: TZoneBudgetSelect;
+begin
+  if Source is TZoneBudgetSelect then
+  begin
+    SourceBudget := TZoneBudgetSelect(Source);
+    CompositeZones := SourceBudget.CompositeZones;
+    ExportZBLST := SourceBudget.ExportZBLST;
+    ExportCSV := SourceBudget.ExportCSV;
+    ExportCSV2 := SourceBudget.ExportCSV2;
+  end;
+  inherited;
+end;
+
+constructor TZoneBudgetSelect.Create(Model: TObject);
+begin
+  inherited;
+  FCompositeZones := TCompositeZoneCollection.Create(Model);
+  InitializeVariables;
+end;
+
+destructor TZoneBudgetSelect.Destroy;
+begin
+  FCompositeZones.Free;
+  inherited;
+end;
+
+procedure TZoneBudgetSelect.InitializeVariables;
+begin
+  FExportZBLST := True;
+  FExportCSV2 := True;
+  FExportCSV := True;
+  FCompositeZones.Clear
+end;
+
+procedure TZoneBudgetSelect.SetCompositeZones(
+  const Value: TCompositeZoneCollection);
+begin
+  FCompositeZones.Assign(Value);
+end;
+
+procedure TZoneBudgetSelect.SetExportCSV(const Value: boolean);
+begin
+  if FExportCSV <> Value then
+  begin
+    FExportCSV := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TZoneBudgetSelect.SetExportCSV2(const Value: boolean);
+begin
+  if FExportCSV2 <> Value then
+  begin
+    FExportCSV2 := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TZoneBudgetSelect.SetExportZBLST(const Value: boolean);
+begin
+  if FExportZBLST <> Value then
+  begin
+    FExportZBLST := Value;
+    InvalidateModel;
+  end;
 end;
 
 end.

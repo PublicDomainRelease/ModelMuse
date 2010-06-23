@@ -132,18 +132,21 @@ type
   (XCoordinate,YCoordinate) is at the center of the view.
 }
 procedure SetTopPosition(const XCoordinate, YCoordinate: real);
+procedure SetTopCornerPosition(const XCoordinate, YCoordinate: real);
 
 {
   @name moves the front view of the model so that the point
   (XCoordinate,ZCoordinate) is at the center of the view.
 }
 procedure SetFrontPosition(const XCoordinate, ZCoordinate: real);
+procedure SetFrontCornerPosition(const XCoordinate, ZCoordinate: real);
 
 {
   @name moves the side view of the model so that the point
   (YCoordinate,ZCoordinate) is at the center of the view.
 }
 procedure SetSidePosition(const YCoordinate, ZCoordinate: real);
+procedure SetSideCornerPosition(const YCoordinate, ZCoordinate: real);
 
 // @name moves the top view of the model to the cell at Column, Row.
 procedure MoveToTopCell(const Column, Row: integer);
@@ -173,6 +176,24 @@ begin
     DeltaY := (Y(0) - Y(Image32.Height)) / 2;
     OriginX := XCoordinate - DeltaX;
     OriginY := YCoordinate - DeltaY;
+    frmGoPhast.frameTopView.InvalidateScreenObjectCoordinates;
+    frmGoPhast.TopGridChanged := True;
+    Image32.Invalidate;
+    frmGoPhast.AdjustScales;
+    frmGoPhast.SynchronizeViews(vdTop);
+  end;
+end;
+
+procedure SetTopCornerPosition(const XCoordinate, YCoordinate: real);
+var
+  DeltaY: double;
+begin
+  with frmGoPhast.frameTopView.ZoomBox do
+  begin
+    DeltaY := (Y(0) - Y(Image32.Height));
+    OriginX := XCoordinate;
+    OriginY := YCoordinate - DeltaY;
+    frmGoPhast.frameTopView.InvalidateScreenObjectCoordinates;
     frmGoPhast.TopGridChanged := True;
     Image32.Invalidate;
     frmGoPhast.AdjustScales;
@@ -190,12 +211,31 @@ begin
     DeltaY := (Y(0) - Y(Image32.Height)) / 2;
     OriginX := XCoordinate - DeltaX;
     OriginY := ZCoordinate - DeltaY;
+    frmGoPhast.frameFrontView.InvalidateScreenObjectCoordinates;
     frmGoPhast.FrontGridChanged := True;
     Image32.Invalidate;
     frmGoPhast.AdjustScales;
     frmGoPhast.SynchronizeViews(vdFront);
   end;
 end;
+
+procedure SetFrontCornerPosition(const XCoordinate, ZCoordinate: real);
+var
+  DeltaY: double;
+begin
+  with frmGoPhast.frameFrontView.ZoomBox do
+  begin
+    DeltaY := (Y(0) - Y(Image32.Height));
+    OriginX := XCoordinate;
+    OriginY := ZCoordinate - DeltaY;
+    frmGoPhast.frameFrontView.InvalidateScreenObjectCoordinates;
+    frmGoPhast.FrontGridChanged := True;
+    Image32.Invalidate;
+    frmGoPhast.AdjustScales;
+    frmGoPhast.SynchronizeViews(vdFront);
+  end;
+end;
+
 
 procedure SetSidePosition(const YCoordinate, ZCoordinate: real);
 var
@@ -207,6 +247,25 @@ begin
     DeltaY := (Y(0) - Y(Image32.Height)) / 2;
     OriginX := ZCoordinate + DeltaX;
     OriginY := YCoordinate - DeltaY;
+    frmGoPhast.frameSideView.InvalidateScreenObjectCoordinates;
+    frmGoPhast.SideGridChanged := True;
+    Image32.Invalidate;
+    frmGoPhast.AdjustScales;
+    frmGoPhast.SynchronizeViews(vdSide);
+  end;
+end;
+
+procedure SetSideCornerPosition(const YCoordinate, ZCoordinate: real);
+var
+  DeltaX, DeltaY: double;
+begin
+  with frmGoPhast.frameSideView.ZoomBox do
+  begin
+    DeltaX := (X(Image32.Width) - X(0));
+    DeltaY := (Y(0) - Y(Image32.Height));
+    OriginX := ZCoordinate + DeltaX;
+    OriginY := YCoordinate - DeltaY;
+    frmGoPhast.frameSideView.InvalidateScreenObjectCoordinates;
     frmGoPhast.SideGridChanged := True;
     Image32.Invalidate;
     frmGoPhast.AdjustScales;

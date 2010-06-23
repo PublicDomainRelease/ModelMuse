@@ -166,7 +166,14 @@ end;
 
 function TSfrTablelItem.BoundaryFormulaCount: integer;
 begin
-  result := 3;
+  if (SfrTable <> nil) and (SfrTable.Count = 0) then
+  begin
+    result := 0;
+  end
+  else
+  begin
+    result := 3;
+  end;
 end;
 
 constructor TSfrTablelItem.Create(Collection: TCollection);

@@ -20,7 +20,7 @@ type
     odAddFiles: TOpenDialog;
     JvLinkLabel1: TJvLinkLabel;
     procedure FormCreate(Sender: TObject); override;
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
     procedure reFilesToSaveChange(Sender: TObject);
     procedure btnArchiveClick(Sender: TObject);

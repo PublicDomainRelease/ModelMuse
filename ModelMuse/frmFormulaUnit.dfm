@@ -11,7 +11,6 @@ inherited frmFormula: TfrmFormula
   Caption = 'Formula Editor'
   Font.Height = 16
   Position = poOwnerFormCenter
-  OnDestroy = FormDestroy
   ExplicitWidth = 787
   ExplicitHeight = 508
   PixelsPerInch = 96

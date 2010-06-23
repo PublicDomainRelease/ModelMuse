@@ -2,7 +2,6 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
   Caption = 'frmCustomSelectObjects'
   ClientHeight = 414
   ClientWidth = 422
-  OnDestroy = FormDestroy
   ExplicitWidth = 430
   ExplicitHeight = 448
   PixelsPerInch = 96

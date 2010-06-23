@@ -11,7 +11,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
   OldCreateOrder = True
   Position = poScreenCenter
   OnActivate = ListClick
-  OnDestroy = FormDestroy
   OnResize = FormResize
   ExplicitWidth = 691
   ExplicitHeight = 425
@@ -111,6 +110,10 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObservationsTimes: TTabSheet
         Caption = 'Observations times and values'
         OnResize = tabObservationsTimesResize
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         DesignSize = (
           544
           252)
@@ -326,7 +329,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
           Top = 3
           Width = 61
           Height = 22
-          ItemHeight = 18
+          ItemHeight = 0
           TabOrder = 4
           Text = '0'
           OnChange = rdeMultiValueEditChange
@@ -379,6 +382,10 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObjects: TTabSheet
         Caption = 'Objects'
         ImageIndex = 1
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         DesignSize = (
           544
           252)

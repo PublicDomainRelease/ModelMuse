@@ -2,7 +2,7 @@ unit GlobalTypesUnit;
 
 interface
 
-  uses Classes, GlobalBasicData, Utilities;
+  uses Classes, GlobalBasicData, SysUtils, Utilities;
 
 type
 { Data types found to be supported by Delphi-Fortran mixed-
@@ -32,6 +32,8 @@ type
     TModelID = (midModflow2000, midModflow2005, midGeneric);
     // Model Use (calibration or prediction)
     TModelUse = (muCalib, muPred);
+    // Group use.
+    TGrpUse = (guParGroup, guObsGroup, guPredGroup, guPriGroup, guUnknown);
 
     // Parameter Attribute types
     TParamAttType = (
@@ -89,6 +91,8 @@ type
         fGWChartLocation: string;
         fResidAnalysisLocation: string;
         fResidAnalysisAdvLocation: string;
+        function RemoveQuotes(const Value: string): string;
+        procedure SetModflow2005Location(const Value: string);
       public
         constructor Create;
         procedure Assign(Source: TPersistent); override;
@@ -104,6 +108,13 @@ type
                                                write fResidAnalysisLocation;
         property ResidAnalysisAdvLocation: string read fResidAnalysisAdvLocation
                                                   write fResidAnalysisAdvLocation;
+    end;
+
+    // Grid cell
+    type GridCell = record
+      Row, Column: integer;
+      Checked: boolean;
+      TextOld, TextNew: string;
     end;
 
 var
@@ -210,6 +221,30 @@ begin
   fGWChartLocation := '';
   fResidAnalysisLocation := 'C:\WRDAPP\UCODE_2005_1.019\bin\residual_analysis.exe';
   fResidAnalysisAdvLocation := 'C:\WRDAPP\UCODE_2005_1.019\bin\residual_analysis_adv.exe';
+end;
+
+function TProgramLocations.RemoveQuotes(const Value: string): string;
+begin
+  result := Trim(Value);
+  if Length(result) > 0 then
+  begin
+    if result[1] = '"' then
+    begin
+      result := Copy(result, 2, MAXINT);
+    end;
+    if Length(result) > 0 then
+    begin
+      if result[Length(result)] = '"' then
+      begin
+        result := Copy(result, 1, Length(result) - 1);
+      end;
+    end;
+  end;
+end;
+
+procedure TProgramLocations.SetModflow2005Location(const Value: string);
+begin
+//
 end;
 
 //###################################################################

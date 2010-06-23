@@ -5,7 +5,6 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
   ClientWidth = 617
   OnResize = FormResize
   ExplicitWidth = 625
-  ExplicitHeight = 240
   PixelsPerInch = 96
   TextHeight = 18
   object Splitter1: TSplitter [0]
@@ -52,6 +51,7 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
       Top = 46
       Width = 89
       Height = 33
+      Anchors = [akTop, akRight]
       TabOrder = 2
       Kind = bkCancel
     end
@@ -60,7 +60,7 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
       Top = 13
       Width = 105
       Height = 27
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 3
       Text = '-99900000'
       DataType = dtInteger

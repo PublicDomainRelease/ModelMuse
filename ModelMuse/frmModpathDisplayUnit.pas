@@ -53,6 +53,8 @@ type
       const Value: string);
     procedure rdgLimitsStateChange(Sender: TObject; ACol, ARow: Integer;
       const Value: TCheckBoxState);
+    procedure fedModpathFileBeforeDialog(Sender: TObject; var AName: string;
+      var AAction: Boolean);
   private
     procedure GetData;
     procedure SetData;
@@ -105,6 +107,30 @@ begin
   pbColorScheme.Invalidate;
 end;
 
+procedure TfrmModpathDisplay.fedModpathFileBeforeDialog(Sender: TObject;
+  var AName: string; var AAction: Boolean);
+begin
+  inherited;
+  if AName = '' then
+  begin
+    if frmGoPhast.sdModpathInput.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdModpathInput.FileName,
+        fedModpathFile.DefaultExt);
+    end
+    else if frmGoPhast.sdModflowInput.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdModflowInput.FileName,
+        fedModpathFile.DefaultExt);
+    end
+    else if frmGoPhast.sdSaveDialog.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdSaveDialog.FileName,
+        fedModpathFile.DefaultExt);
+    end;
+  end;
+end;
+
 procedure TfrmModpathDisplay.FormCreate(Sender: TObject);
 var
   Index: TPathlineLimits;
@@ -150,10 +176,18 @@ var
   ALimitRow: TPathlineLimits;
   ARow: Integer;
 begin
+  if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
+  begin
+    fedModpathFile.DefaultExt := '.path_bin';
+  end
+  else
+  begin
+    fedModpathFile.DefaultExt := '.path';
+  end;
   PathLine := frmGoPhast.PhastModel.PathLine;
   fedModpathFile.FileName := PathLine.FileName;
 
-  cbShowPathlines.Checked := PathLine.DisplayPathLines;
+  cbShowPathlines.Checked := PathLine.Visible;
   Limits := PathLine.DisplayLimits;
 
   cbLimitToCurrentIn2D.Checked := Limits.LimitToCurrentIn2D;
@@ -363,7 +397,7 @@ begin
           end;
         end;
       end;
-      PathLine.DisplayPathLines := cbShowPathlines.Checked;
+      PathLine.Visible := cbShowPathlines.Checked;
 
       Limits := PathLine.DisplayLimits;
 

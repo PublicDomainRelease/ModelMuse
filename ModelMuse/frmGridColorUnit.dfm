@@ -20,18 +20,7 @@ inherited frmGridColor: TfrmGridColor
     Caption = 'Time'
     ExplicitLeft = 492
   end
-  object comboTime3D: TJvComboBox [1]
-    Left = 492
-    Top = 24
-    Width = 85
-    Height = 26
-    Anchors = [akTop, akRight]
-    ItemHeight = 18
-    TabOrder = 0
-    Text = '0'
-    OnChange = comboTime3DChange
-  end
-  object udTime: TJvUpDown [2]
+  object udTime: TJvUpDown [1]
     Left = 576
     Top = 24
     Width = 17
@@ -45,17 +34,75 @@ inherited frmGridColor: TfrmGridColor
   inherited pcChoices: TPageControl
     TabOrder = 2
     inherited tabSelection: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 29
+      ExplicitWidth = 598
+      ExplicitHeight = 335
+      inherited lblDataSet: TLabel
+        Margins.Bottom = 0
+      end
+      inherited lblColorScheme: TLabel
+        Margins.Bottom = 0
+      end
+      inherited lblCycles: TLabel
+        Margins.Bottom = 0
+      end
+      inherited lblColorAdjustment: TLabel
+        Margins.Bottom = 0
+      end
+      inherited lblComment: TLabel
+        Margins.Bottom = 0
+      end
       inherited virttreecomboDataSets: TTntExDropDownVirtualStringTree
         Anchors = [akLeft, akTop, akRight]
         Tree.OnGetNodeDataSize = virttreecomboDataSetsDropDownTreeGetNodeDataSize
       end
-      inherited udDataSets: TJvUpDown
-        Anchors = [akTop, akRight]
-      end
     end
     inherited tabFilters: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 29
+      ExplicitWidth = 598
+      ExplicitHeight = 335
       inherited lblLowerLimit: TLabel
+        Margins.Bottom = 0
         Anchors = [akLeft, akTop, akBottom]
+      end
+      inherited lblUpperLimit: TLabel
+        Margins.Bottom = 0
+      end
+      inherited lblValuesToIgnore: TLabel
+        Margins.Bottom = 0
+      end
+      inherited lblNumberOfValuesToIgnore: TLabel
+        Margins.Bottom = 0
+      end
+      inherited lblEpsilon: TLabel
+        Margins.Bottom = 0
+      end
+    end
+    inherited tabLegend: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 29
+      ExplicitWidth = 598
+      ExplicitHeight = 335
+      inherited imLegend: TImage
+        AlignWithMargins = True
+        Left = 221
+        Top = 3
+        Width = 374
+        Height = 329
+        ExplicitLeft = 221
+        ExplicitTop = 3
+        ExplicitWidth = 374
+        ExplicitHeight = 329
+      end
+      inherited Panel2: TPanel
+        inherited lblMethod: TLabel
+          Margins.Bottom = 0
+        end
+        inherited lblColorLegendRows: TLabel
+          Margins.Bottom = 0
+        end
       end
     end
   end
@@ -63,5 +110,16 @@ inherited frmGridColor: TfrmGridColor
     inherited btnOK: TBitBtn
       OnClick = btnOKClick
     end
+  end
+  object comboTime3D: TJvComboBox [4]
+    Left = 492
+    Top = 24
+    Width = 85
+    Height = 26
+    Anchors = [akTop, akRight]
+    ItemHeight = 18
+    TabOrder = 0
+    Text = '0'
+    OnChange = comboTime3DChange
   end
 end

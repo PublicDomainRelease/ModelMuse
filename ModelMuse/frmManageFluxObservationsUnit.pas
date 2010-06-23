@@ -91,7 +91,7 @@ located at http://jvcl.sourceforge.net
     procedure btnAddObservationClick(Sender: TObject);
     procedure btnDeleteObservationClick(Sender: TObject);
     procedure edObservationNameChange(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure rdgFluxObsTimesExit(Sender: TObject);
     procedure seNumObsTimesChange(Sender: TObject);
     procedure btnDeleteClick(Sender: TObject);

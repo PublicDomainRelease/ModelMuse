@@ -602,7 +602,6 @@ program ModelMuse;
 {%TogetherDiagram 'ModelSupport_ModelMuse\frameSubBedsUnit\default.txaPackage'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\FormulaManagerUnit\default.txaPackage'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\frameScreenObjectMNW2Unit\default.txaPackage'}
-{%TogetherDiagram 'ModelSupport_ModelMuse\frmModelMateInterfaceUnit\default.txaPackage'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\frmModpathDisplayUnit\default.txaPackage'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\ModelMateUtilities\default.txaPackage'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\frmPhastLocationUnit\default.txaPackage'}
@@ -627,7 +626,6 @@ program ModelMuse;
 {%TogetherDiagram 'ModelSupport_ModelMuse\framePackageHufUnit\default.txvpck'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\CheckInternetUnit\default.txvpck'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\frmTimeSeriesDisplayUnit\default.txvpck'}
-{%TogetherDiagram 'ModelSupport_ModelMuse\frmModelMateInterfaceUnit\default.txvpck'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\ModflowBCF_WriterUnit\default.txvpck'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\ModflowGageUnit\default.txvpck'}
 {%TogetherDiagram 'ModelSupport_ModelMuse\frameSubBedsUnit\default.txvpck'}
@@ -694,6 +692,11 @@ uses
   FastObj in 'FastObj.pas',
   FastSys in 'FastSys.pas',
   RtlVclOptimize in 'RtlVclOptimize.pas',
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   TempFiles in 'TempFiles.pas',
   Forms,
   frmGoPhastUnit in 'frmGoPhastUnit.pas' {frmGoPhast},
@@ -967,7 +970,6 @@ uses
   JupiterUnit in '..\ModelMate\JupiterUnit.pas',
   DependentsUnit in '..\ModelMate\DependentsUnit.pas',
   Utilities in '..\ModelMate\Utilities.pas',
-  frmModelMateInterfaceUnit in 'frmModelMateInterfaceUnit.pas' {frmModelMateInterface},
   ModelMateUtilities in '..\ModelMate\ModelMateUtilities.pas',
   GlobalData in '..\ModelMate\GlobalData.pas',
   GlobalBasicData in '..\ModelMate\GlobalBasicData.pas',
@@ -1018,7 +1020,17 @@ uses
   frmImportSurferGrdFileUnitUnit in 'frmImportSurferGrdFileUnitUnit.pas' {frmImportSurferGrdFile},
   frmCustomImportSimpleFileUnit in 'frmCustomImportSimpleFileUnit.pas' {frmCustomImportSimpleFile},
   DemReaderUnit in 'DemReaderUnit.pas',
-  frmImportDEMUnit in 'frmImportDEMUnit.pas' {frmImportDEM};
+  frmImportDEMUnit in 'frmImportDEMUnit.pas' {frmImportDEM},
+  frameZoneBudgetUnit in 'frameZoneBudgetUnit.pas' {frameZoneBudget: TFrame},
+  ZoneBudgetWriterUnit in 'ZoneBudgetWriterUnit.pas',
+  frmRunZoneBudgetUnit in 'frmRunZoneBudgetUnit.pas' {frmRunZoneBudget},
+  frmPointValuesUnit in 'frmPointValuesUnit.pas' {frmPointValues},
+  frmExportImageUnit in 'frmExportImageUnit.pas' {frmExportImage},
+  DisplaySettingsUnit in 'DisplaySettingsUnit.pas',
+  LegendUnit in 'LegendUnit.pas',
+  InPlaceEditUnit in 'InPlaceEditUnit.pas',
+  DrawTextUnit in 'DrawTextUnit.pas',
+  frmManageSettingsUnit in 'frmManageSettingsUnit.pas' {frmManageSettings};
 
 {$R *.res}
 

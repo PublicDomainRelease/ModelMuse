@@ -8,7 +8,6 @@ inherited frmDataSets: TfrmDataSets
   VertScrollBar.Range = 253
   Caption = 'Data Sets'
   Font.Height = 19
-  OnDestroy = FormDestroy
   ExplicitWidth = 656
   ExplicitHeight = 507
   PixelsPerInch = 96
@@ -333,7 +332,7 @@ inherited frmDataSets: TfrmDataSets
       end
       object reDefaultFormula: TJvRichEdit
         Left = 3
-        Top = 270
+        Top = 271
         Width = 275
         Height = 89
         AutoSize = False

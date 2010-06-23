@@ -222,7 +222,7 @@ many will be displayed at one time. }
     procedure TimerSetSelection(Sender: TObject);
     procedure tvItemsChange(Sender: TObject; Node: TTreeNode);
     procedure tvItemsDblClick(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure tvFormulaDiagramCollapsed(Sender: TObject; Node: TTreeNode);
     procedure tvFormulaDiagramExpanded(Sender: TObject; Node: TTreeNode);
     // @name sets @link(FClickSelectionStart).

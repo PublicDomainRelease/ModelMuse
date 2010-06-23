@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
+<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+  <title translate="true">Comments Tab</title>
+  <body>
+    <header>
+      <para styleclass="Heading1"><text styleclass="Heading1" translate="true">Comments Tab</text></para>
+    </header>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">Sometimes an object may be unusual in some way or do something that isn&apos;t obvious. &#160;Later on, you may not remember why it is set up the way it is. &#160;You can use the </text><text styleclass="Strong" translate="true">Comments</text><text styleclass="Normal" translate="true"> tab to explain features that need explanation.</text></para>
+  </body>
+</topic>

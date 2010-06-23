@@ -37,6 +37,9 @@ type
     procedure dgParametersExit(Sender: TObject);
     procedure dgParametersStateChange(Sender: TObject; ACol, ARow: Integer;
       const Value: TCheckBoxState);
+    procedure dgParametersMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure dgParametersEndUpdate(Sender: TObject);
   private
     { Private declarations }
     procedure ClearFirstRow;
@@ -99,6 +102,25 @@ begin
 
 end;
 
+procedure TframeListParameterDefinition.dgParametersEndUpdate(Sender: TObject);
+var
+  NumParam: Integer;
+begin
+  NumParam := dgParameters.RowCount -1;
+  if NumParam = 1 then
+  begin
+    if (dgParameters.Cells[0,1] = '') and (dgParameters.Cells[1,1] = '') then
+    begin
+      NumParam := 0;
+    end;
+  end;
+  seNumberOfParameters.AsInteger := NumParam;
+  if Assigned(seNumberOfParameters.OnChange) then
+  begin
+    seNumberOfParameters.OnChange(seNumberOfParameters);
+  end;
+end;
+
 procedure TframeListParameterDefinition.dgParametersExit(Sender: TObject);
 var
   RowIndex: Integer;
@@ -112,6 +134,20 @@ begin
       dgParameters.Cells[0,RowIndex] := Parameter.ParameterName;
     end;
   end;
+end;
+
+procedure TframeListParameterDefinition.dgParametersMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if ([ssShift, ssCtrl] * Shift) = [] then
+  begin
+    dgParameters.Options := dgParameters.Options + [goEditing];
+  end
+  else
+  begin
+    dgParameters.Options := dgParameters.Options - [goEditing];
+  end;
+
 end;
 
 procedure TframeListParameterDefinition.dgParametersSelectCell(Sender: TObject;

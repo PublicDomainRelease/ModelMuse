@@ -69,7 +69,7 @@ var
 
 procedure SetTopRange;
 begin
-  TopRange := Max(Screen.Width, Screen.Height);
+  TopRange := Max(Screen.Width, Screen.Height) * 3 div 2;
   Bounds := Rect(BottomRange, BottomRange, TopRange, TopRange);
 end;
 
@@ -257,8 +257,10 @@ begin
 
 //  FirstLine := True;
   Polygon := TPolygon32.Create;
-  Polygon.Closed := False;
   try
+    Polygon.Antialiased := True;
+    Polygon.AntialiasMode := am16times;
+    Polygon.Closed := False;
     SetTopRange;
     InterpolateArray(Points, NewPoints, StartIndex, NumPts);
     Count := 0;
@@ -512,6 +514,8 @@ begin
       if Polygon = nil then
       begin
         Polygon := TPolygon32.Create;
+        Polygon.Antialiased := True;
+        Polygon.AntialiasMode := am16times;
         Polygon.FillMode := pfAlternate;
       end
       else
@@ -526,6 +530,8 @@ begin
     begin
       Assert(Polygon = nil);
       Polygon := TPolygon32.Create;
+      Polygon.Antialiased := True;
+      Polygon.AntialiasMode := am16times;
     end;
     try
       if (I2 > 3) then

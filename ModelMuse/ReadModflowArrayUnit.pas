@@ -93,28 +93,30 @@ var
   TOTIM_Double: TModflowDouble;
   function ValidDescription: boolean;
   begin
+    // If these values are changed, update the
+    // MODFLOW Online Guide with the new values.
     result := (Description = '            HEAD')
-      or (Description = '        DRAWDOWN')
-      or (Description = '      SUBSIDENCE')
-      or (Description = '      COMPACTION')
-      or (Description = '   CRITICAL HEAD')
-      or (Description = '     HEAD IN HGU')
-      or (Description = '      SUBSIDENCE')
-      or (Description = 'NDSYS COMPACTION')
-      or (Description = '  Z DISPLACEMENT')
-      or (Description = ' D CRITICAL HEAD')
-      or (Description = 'LAYER COMPACTION')
-      or (Description = ' DSYS COMPACTION')
-      or (Description = 'ND CRITICAL HEAD')
-      or (Description = 'LAYER COMPACTION')
-      or (Description = 'SYSTM COMPACTION')
-      or (Description = 'PRECONSOL STRESS')
-      or (Description = 'CHANGE IN PCSTRS')
-      or (Description = 'EFFECTIVE STRESS')
-      or (Description = 'CHANGE IN EFF-ST')
-      or (Description = '      VOID RATIO')
-      or (Description = '       THICKNESS')
-      or (Description = 'CENTER ELEVATION');
+           or (Description = '        DRAWDOWN')
+           or (Description = '      SUBSIDENCE')
+           or (Description = '      COMPACTION')
+           or (Description = '   CRITICAL HEAD')
+           or (Description = '     HEAD IN HGU')
+           or (Description = '      SUBSIDENCE')
+           or (Description = 'NDSYS COMPACTION')
+           or (Description = '  Z DISPLACEMENT')
+           or (Description = ' D CRITICAL HEAD')
+           or (Description = 'LAYER COMPACTION')
+           or (Description = ' DSYS COMPACTION')
+           or (Description = 'ND CRITICAL HEAD')
+           or (Description = 'LAYER COMPACTION')
+           or (Description = 'SYSTM COMPACTION')
+           or (Description = 'PRECONSOL STRESS')
+           or (Description = 'CHANGE IN PCSTRS')
+           or (Description = 'EFFECTIVE STRESS')
+           or (Description = 'CHANGE IN EFF-ST')
+           or (Description = '      VOID RATIO')
+           or (Description = '       THICKNESS')
+           or (Description = 'CENTER ELEVATION');
   end;
 begin
   Assert(AFile.Position = 0);
@@ -451,6 +453,16 @@ begin
       begin
         result := mpDouble;
       end
+      else if (FirstDescription = '   CONSTANT HEAD')
+        and (SecondDescription = 'FLOW FRONT FACE ') then
+      begin
+        Assert(result = mpDouble);
+      end
+      else if (FirstDescription = '   CONSTANT HEAD')
+        and (SecondDescription = 'FLOW LOWER FACE ') then
+      begin
+        Assert(result = mpDouble);
+      end
       else if (FirstDescription = 'FLOW RIGHT FACE ')
         and (SecondDescription = 'FLOW FRONT FACE ') then
       begin
@@ -486,6 +498,16 @@ begin
       end
       else if (FirstDescription = '   CONSTANT HEAD')
         and (SecondDescription = 'FLOW RIGHT FACE ') then
+      begin
+        Assert(result = mpSingle);
+      end
+      else if (FirstDescription = '   CONSTANT HEAD')
+        and (SecondDescription = 'FLOW FRONT FACE ') then
+      begin
+        Assert(result = mpSingle);
+      end
+      else if (FirstDescription = '   CONSTANT HEAD')
+        and (SecondDescription = 'FLOW LOWER FACE ') then
       begin
         Assert(result = mpSingle);
       end

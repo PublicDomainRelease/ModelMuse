@@ -28,6 +28,8 @@ type
   end;
 
 procedure ZipAFile(const FileName: string; InStream: TMemoryStream);
+// @name reads the data associated with FileName into OutStream and
+// sets the position of OutStream to 0.
 procedure ExtractAFile(const FileName: string; OutStream: TMemoryStream);
 
 implementation
@@ -386,25 +388,10 @@ begin
   InStream.Position := 0;
   InStream.SaveToStream(StoredStream);
   CurrentTempItems.SetDirtyFile(FileName);
-
-//  Zipper := TAbZipper.Create(nil);
-//  try
-//    Zipper.FileName := ArchiveName;
-//    Zipper.BaseDirectory := ExtractFileDir(ArchiveName);
-//    Zipper.StoreOptions := Zipper.StoreOptions + [soReplace];
-//    Zipper.DeleteFiles(FileName);
-//    Zipper.AddFromStream(FileName, InStream);
-//    Zipper.Save;
-//  finally
-//    Zipper.Free;
-//  end;
-
 end;
 
 procedure ExtractAFile(const FileName: string; OutStream: TMemoryStream);
 var
-//  Unzipper: TAbUnZipper;
-//  ArchiveName: string;
   StoredStream: TMemoryStream;
 begin
   UpdateCurrentTempItems(FileName);
@@ -413,19 +400,7 @@ begin
   StoredStream.Position := 0;
   OutStream.Position := 0;
   StoredStream.SaveToStream(OutStream);
-//  CurrentTempItems.SetDirtyFile(FileName);
-
-//  ArchiveName := ZipfileName(FileName);
-//  FileName := ExtractFileName(FileName);
-//  Unzipper := TAbUnZipper.Create(nil);
-//  try
-//    Unzipper.OpenArchive(ArchiveName);
-//    Unzipper.BaseDirectory := ExtractFileDir(ArchiveName);
-//    Unzipper.ExtractOptions := [];
-//    Unzipper.ExtractToStream(FileName, OutStream);
-//  finally
-//    Unzipper.Free;
-//  end;
+  OutStream.Position := 0;
 end;
 
 

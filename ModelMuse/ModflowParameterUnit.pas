@@ -51,6 +51,7 @@ type
     procedure CreateNewDataSetVariables(const OldName, NewName: string);
     procedure RemoveOldDataSetVariables;
     procedure UpdateHfbParameterNames(const Value: string);
+    procedure UpdateFormulas(const OldName, NewName: string);
   protected
     // Besides setting the name of the parameter, @name also updates the
     // names of the @link(TDataArray)s used to define multiplier and zone
@@ -247,6 +248,11 @@ begin
       begin
         if DataArray <> nil then
         begin
+          if (FMultiplierName <> '') and (Value <> '') and
+            (FMultiplierName <> Value) then
+          begin
+            UpdateFormulas(FMultiplierName, Value);
+          end;
           CreateNewDataSetVariables(DataArray.Name, Value);
           DataArray.Name := Value;
           DataArray.Lock := DataArray.Lock + [dcName];
@@ -344,6 +350,28 @@ begin
     FillArrayNameList(FZoneArrayNames, '_Z', 'ZONE_');
   end;
   result := FZoneArrayNames[ModflowLayer-1];
+end;
+
+procedure TModflowSteadyParameter.UpdateFormulas(const OldName, NewName: string);
+var
+  OldNames: TStringList;
+  NewNames: TStringList;
+//  CompilerList: TList;
+//  CompilerIndex: Integer;
+//  Compiler: TRbwParser;
+//  VariableIndex: Integer;
+//  VarIndex: Integer;
+begin
+  NewNames := TStringList.Create;
+  OldNames := TStringList.Create;
+  try
+    NewNames.Add(NewName);
+    OldNames.Add(OldName);
+    frmGoPhast.PhastModel.UpdateFormulas(OldNames, NewNames);
+  finally
+    OldNames.Free;
+    NewNames.Free;
+  end;
 end;
 
 procedure TModflowSteadyParameter.UpdateHfbParameterNames(const Value: string);
@@ -499,6 +527,11 @@ begin
       begin
         if DataArray <> nil then
         begin
+          if (FZoneName <> '') and (Value <> '') and
+            (FZoneName <> Value) then
+          begin
+            UpdateFormulas(FZoneName, Value);
+          end;
           CreateNewDataSetVariables(DataArray.Name, Value);
           DataArray.Name := Value;
           DataArray.Lock := DataArray.Lock + [dcName];

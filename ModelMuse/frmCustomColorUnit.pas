@@ -9,7 +9,7 @@ uses
   JvExControls, JvxSlider, Buttons, DataSetUnit, SubscriptionUnit,
   ClassificationUnit, frmGoPhastUnit, PhastModelUnit, TntStdCtrls,
   TntExDropDownEdit, TntExDropDownVirtualStringTree, VirtualTrees, JvExComCtrls,
-  JvUpDown, Grids, RbwDataGrid4, RbwParser, ArgusDataEntry;
+  JvUpDown, Grids, RbwDataGrid4, RbwParser, ArgusDataEntry, LegendUnit, Math;
 
 type
   TfrmCustomColor = class(TfrmCustomGoPhast)
@@ -46,7 +46,6 @@ type
     // Clicking @name closes the @classname without changing anything.
     btnCancel: TBitBtn;
     virttreecomboDataSets: TTntExDropDownVirtualStringTree;
-    udDataSets: TJvUpDown;
     pcChoices: TPageControl;
     tabSelection: TTabSheet;
     tabFilters: TTabSheet;
@@ -61,6 +60,16 @@ type
     cbLogTransform: TCheckBox;
     lblEpsilon: TLabel;
     rdeEpsilon: TRbwDataEntry;
+    tabLegend: TTabSheet;
+    imLegend: TImage;
+    Panel2: TPanel;
+    lblMethod: TLabel;
+    lblColorLegendRows: TLabel;
+    comboMethod: TComboBox;
+    seLegendRows: TJvSpinEdit;
+    rdgLegend: TRbwDataGrid4;
+    udDataSets: TJvUpDown;
+    timerLegend: TTimer;
     // @name gives a preview of the color scheme
     // selected in @link(comboColorScheme).
     procedure pbColorSchemePaint(Sender: TObject);
@@ -71,7 +80,7 @@ type
     procedure jsColorExponentChange(Sender: TObject);
     procedure seColorExponentChange(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure virttreecomboDataSetsDropDownTreeGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: WideString);
@@ -85,14 +94,27 @@ type
     procedure seNumberOfValuesToIgnoreChange(Sender: TObject);
     procedure virttreecomboDataSetsClosedUp(Sender: TObject);
     procedure virttreecomboDataSetsDropDownTreeEnter(Sender: TObject);
+    procedure seLegendRowsChange(Sender: TObject);
+    procedure comboMethodChange(Sender: TObject);
+    procedure rdgLegendSetEditText(Sender: TObject; ACol, ARow: Integer;
+      const Value: string);
+    procedure rdgLegendEndUpdate(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure timerLegendTimer(Sender: TObject);
+    procedure rdgLegendStateChange(Sender: TObject; ACol, ARow: Integer;
+      const Value: TCheckBoxState);
   private
     // @name is implemented as a TObjectList.
     FDataSetDummyObjects: TList;
     FSelectedVirtNode: PVirtualNode;
     FShouldClick: Boolean;
+    FUpdatingLegend: Boolean;
+    FStartTime: TDateTime;
+    procedure UpdateLegendAfterDelay;
 
   { Private declarations }
   protected
+    FLegend: TLegend;
     // @name stores a list of the @link(TDataArray)s or boundary conditions
     // that can be displayed on the front view of the model.  The Objects
     // property of @name contains either the corresponding @link(TDataArray)
@@ -120,6 +142,7 @@ type
     procedure RetrieveSelectedObject(var AnObject: TObject);
     procedure AssignLimits(DataType: TRbwDataType; Limits: TColoringLimits);
     procedure ReadLimits(DataType: TRbwDataType; Limits: TColoringLimits);
+    procedure UpdateLegend;
   public
     procedure ResetTreeText;
     property SelectedVirtNode: PVirtualNode read FSelectedVirtNode;
@@ -133,6 +156,9 @@ uses
   Contnrs, frmGridColorUnit, Clipbrd, ModelMuseUtilities;
 
 {$R *.dfm}
+
+const
+  OneSecond = 1/24/3600;
 
 procedure TfrmCustomColor.AssignLimits(DataType: TRbwDataType;
   Limits: TColoringLimits);
@@ -204,6 +230,22 @@ begin
   pbColorScheme.Invalidate;
 end;
 
+procedure TfrmCustomColor.comboMethodChange(Sender: TObject);
+begin
+  inherited;
+  rdgLegend.Enabled := comboMethod.ItemIndex = 1;
+  seLegendRows.Enabled := rdgLegend.Enabled;
+  if rdgLegend.Enabled then
+  begin
+    rdgLegend.Color := clWindow;
+  end
+  else
+  begin
+    rdgLegend.Color := clBtnFace;
+  end;
+  UpdateLegend;
+end;
+
 procedure TfrmCustomColor.jsColorExponentChange(Sender: TObject);
 begin
   inherited;
@@ -238,6 +280,27 @@ begin
   end;
 end;
 
+procedure TfrmCustomColor.rdgLegendEndUpdate(Sender: TObject);
+begin
+  inherited;
+  seLegendRows.AsInteger := rdgLegend.RowCount -1;
+end;
+
+procedure TfrmCustomColor.rdgLegendSetEditText(Sender: TObject; ACol,
+  ARow: Integer; const Value: string);
+begin
+  inherited;
+  UpdateLegendAfterDelay;
+//  UpdateLegend;
+end;
+
+procedure TfrmCustomColor.rdgLegendStateChange(Sender: TObject; ACol,
+  ARow: Integer; const Value: TCheckBoxState);
+begin
+  inherited;
+  UpdateLegendAfterDelay;
+end;
+
 procedure TfrmCustomColor.rdgValuesToIgnoreEndUpdate(Sender: TObject);
 var
   NewCount: integer;
@@ -256,6 +319,16 @@ begin
   inherited;
   jsColorExponent.Value := Round(seColorExponent.Value * 100);
   pbColorScheme.Invalidate
+end;
+
+procedure TfrmCustomColor.seLegendRowsChange(Sender: TObject);
+begin
+  inherited;
+  if rdgLegend.RowCount <> seLegendRows.AsInteger + 1 then
+  begin
+    rdgLegend.RowCount := seLegendRows.AsInteger + 1;
+    UpdateLegendAfterDelay;
+  end;
 end;
 
 procedure TfrmCustomColor.seCyclesKeyUp(Sender: TObject; var Key: Word;
@@ -332,6 +405,9 @@ end;
 procedure TfrmCustomColor.FormCreate(Sender: TObject);
 begin
   inherited;
+//  FLegend := TLegend.Create(nil);
+//  FLegend.ValueAssignmentMethod := vamAutomatic;
+
   FSelectedVirtNode := nil;
   FDataSetDummyObjects := TObjectList.Create;
 
@@ -347,6 +423,8 @@ begin
   rdgValuesToIgnore.Cells[0,0] := 'Values to ignore';
   rdgValuesToIgnore.FixedRows := 1;
 
+  rdgLegend.Cells[0,0] := 'Values';
+
   pcChoices.ActivePageIndex := 0;
 end;
 
@@ -357,6 +435,13 @@ begin
   FFrontItems.Free;
   FSideItems.Free;
   FDataSetDummyObjects.Free;
+//  FLegend.Free;
+end;
+
+procedure TfrmCustomColor.FormResize(Sender: TObject);
+begin
+  inherited;
+  UpdateLegend;
 end;
 
 procedure TfrmCustomColor.FormShow(Sender: TObject);
@@ -407,6 +492,16 @@ begin
   end;
 end;
 
+procedure TfrmCustomColor.timerLegendTimer(Sender: TObject);
+begin
+  inherited;
+  if Now - FStartTime > OneSecond then
+  begin
+    timerLegend.Enabled := False;
+    UpdateLegend;
+  end;
+end;
+
 procedure TfrmCustomColor.udDataSetsChangingEx(Sender: TObject;
   var AllowChange: Boolean; NewValue: Smallint; Direction: TUpDownDirection);
 var
@@ -442,6 +537,146 @@ begin
       btnOK.OnClick(nil);
     end;
   end;
+  udDataSets.ControlStyle := udDataSets.ControlStyle - [csCaptureMouse];
+
+end;
+
+procedure TfrmCustomColor.UpdateLegend;
+var
+  BitMap: TBitmap;
+  Index: Integer;
+  DummyRect: TRect;
+begin
+  if FUpdatingLegend or (csDestroying in ComponentState)
+    or (frmGoPhast = nil) or (frmGoPhast.PhastModel = nil)
+    or frmGoPhast.PhastModel.Clearing
+    or (csDestroying in frmGoPhast.PhastModel.ComponentState) then
+  begin
+    Exit;
+  end;
+  FUpdatingLegend := True;
+  try
+    tabLegend.TabVisible := FLegend.ValueSource <> nil;
+    if tabLegend.TabVisible then
+    begin
+      FLegend.ValueAssignmentMethod :=
+        TValueAssignmentMethod(comboMethod.ItemIndex + 1);
+      rdgLegend.BeginUpdate;
+      try
+        case FLegend.ValueAssignmentMethod of
+          vamNoLegend: Exit;
+          vamAutomatic:
+            begin
+              FLegend.AutoAssignValues;
+              case FLegend.Values.DataType of
+                rdtDouble: rdgLegend.Columns[0].Format := rcf4Real;
+                rdtInteger: rdgLegend.Columns[0].Format := rcf4Integer;
+                rdtBoolean: rdgLegend.Columns[0].Format := rcf4Boolean;
+                rdtString: rdgLegend.Columns[0].Format := rcf4String;
+                else Assert(False);
+              end;
+              seLegendRows.AsInteger := FLegend.Values.Count;
+              seLegendRowsChange(nil);
+              for Index := 0 to FLegend.Values.Count - 1 do
+              begin
+                case FLegend.Values.DataType of
+                  rdtDouble:
+                    begin
+                      if FLegend.ColoringLimits.LogTransform then
+                      begin
+                        rdgLegend.Cells[0,Index + 1] :=
+                          FloatToStr(FLegend.Values.RealValues[Index]);
+//                        rdgLegend.Cells[0,Index + 1] :=
+//                          FloatToStr(Power(10,FLegend.Values.RealValues[Index]));
+                      end
+                      else
+                      begin
+                        rdgLegend.Cells[0,Index + 1] :=
+                          FloatToStr(FLegend.Values.RealValues[Index]);
+                      end;
+                    end;
+                  rdtInteger:
+                    begin
+                      rdgLegend.Cells[0,Index + 1] :=
+                        IntToStr(FLegend.Values.IntValues[Index]);
+                    end;
+                  rdtBoolean:
+                    begin
+                      rdgLegend.Cells[0,Index + 1] := '';
+                      rdgLegend.Checked[0,Index + 1] :=
+                        FLegend.Values.BooleanValues[Index];
+                    end;
+                  rdtString:
+                    begin
+                      rdgLegend.Cells[0,Index + 1] :=
+                        FLegend.Values.StringValues[Index];
+                    end;
+                  else Assert(False);
+                end;
+              end;
+            end;
+          vamManual:
+            begin
+              FLegend.Values.Count := seLegendRows.AsInteger;
+              for Index := 0 to FLegend.Values.Count - 1 do
+              begin
+                case FLegend.Values.DataType of
+                  rdtDouble:
+                    begin
+                      if cbLogTransform.Checked then
+                      begin
+                        FLegend.Values.RealValues[Index] :=
+                          StrToFloatDef(rdgLegend.Cells[0,Index + 1], 0);
+//                        FLegend.Values.RealValues[Index] := Log10(
+//                          StrToFloatDef(rdgLegend.Cells[0,Index + 1], 1));
+                      end
+                      else
+                      begin
+                        FLegend.Values.RealValues[Index] :=
+                          StrToFloatDef(rdgLegend.Cells[0,Index + 1], 0);
+                      end;
+                    end;
+                  rdtInteger:
+                    begin
+                      FLegend.Values.IntValues[Index] :=
+                        StrToIntDef(rdgLegend.Cells[0,Index + 1], 0);
+                    end;
+                  rdtBoolean:
+                    begin
+                      FLegend.Values.BooleanValues[Index] :=
+                        rdgLegend.Checked[0,Index + 1];
+                    end;
+                  rdtString:
+                    begin
+                      FLegend.Values.StringValues[Index] :=
+                        rdgLegend.Cells[0,Index + 1];
+                    end;
+                  else Assert(False);
+                end;
+              end;
+
+            end;
+          else Assert(False);
+        end;
+      finally
+        rdgLegend.EndUpdate;
+      end;
+
+      FLegend.AssignFractions;
+      BitMap := TBitMap.Create;
+      try
+        BitMap.Canvas.Font := Font;
+        BitMap.Width := imLegend.Width;
+        BitMap.Height := imLegend.Height;
+        FLegend.Draw(BitMap.Canvas, 10, 10, DummyRect);
+        imLegend.Picture.Assign(BitMap);
+      finally
+        BitMap.Free;
+      end;
+    end;
+  finally
+    FUpdatingLegend := False;
+  end;
 end;
 
 procedure TfrmCustomColor.FinalizeList(List: TStringList);
@@ -454,6 +689,12 @@ end;
 procedure TfrmCustomColor.ResetTreeText;
 begin
   UpdateTreeComboText(SelectedVirtNode, virttreecomboDataSets);
+end;
+
+procedure TfrmCustomColor.UpdateLegendAfterDelay;
+begin
+  FStartTime := Now;
+  timerLegend.Enabled := True;
 end;
 
 procedure TfrmCustomColor.SetSelectedNode(Sender: TBaseVirtualTree; Node: PVirtualNode);

@@ -43,7 +43,7 @@ type
     procedure rdgParametersSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure btnOKClick(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure rdeHorizontalAnisotropyChange(Sender: TObject);
     procedure edHydrogeologicUnitNameChange(Sender: TObject);
     procedure rdeVerticalAnisotropyChange(Sender: TObject);

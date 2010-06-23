@@ -305,14 +305,21 @@ begin
   glLightfv(GL_LIGHT0, GL_POSITION, @light_position);
 
   if not frmGoPhast.CanDraw then
+  begin
     Exit;
+  end;
 
   if (frmGoPhast.PhastModel = nil)
     or (csReading in frmGoPhast.PhastModel.ComponentState) then
+  begin
     Exit;
+  end;
 
-  if frmGoPhast.PhastModel.Grid = nil then
+  if (frmGoPhast.PhastModel.Grid = nil)
+    or not frmGoPhast.PhastModel.Grid.CanDraw3D then
+  begin
     Exit;
+  end;
 
   //  glEnable(GL_CULL_FACE);
 

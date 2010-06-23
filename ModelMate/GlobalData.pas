@@ -37,10 +37,10 @@ interface
   procedure InitializeGlobalMemoryObjects;
   procedure FreeGlobalData;
   function GetObsHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
-  function GetPredHint(const aGrid: TDataGrid; const aCol: Integer): string;
+  function GetPredHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
   function GetParHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
   function GetParHintOld(const aGrid: TDataGrid; const aCol: Integer): string;
-  function GetPriHint(const aGrid: TDataGrid; const aCol: Integer): string;
+  function GetPriHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
   procedure InitializeGlobalData;
 
 implementation
@@ -80,35 +80,35 @@ begin
   Caption := aGrid.Cells[aCol,0];
   result := '';
   for I := 0 to ObservationSetupCurrent.NumAtt - 1 do
-  begin
-    TestStr := ObservationSetupCurrent.ObsAttributes[I].Caption;
-    if TestStr = Caption then
     begin
-      Str := ObservationSetupCurrent.ObsAttributes[I].Caption + ': ' +
-             ObservationSetupCurrent.ObsAttributes[I].Hint(dcObs);
-      result := Str;
+      TestStr := ObservationSetupCurrent.ObsAttributes[I].Caption;
+      if TestStr = Caption then
+        begin
+          Str := ObservationSetupCurrent.ObsAttributes[I].Caption + ': ' +
+                 ObservationSetupCurrent.ObsAttributes[I].Hint(dcObs);
+          result := Str;
+        end;
     end;
-  end;
 end;
 
-function GetPredHint(const aGrid: TDataGrid; const aCol: Integer): string;
+function GetPredHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
 var
   Str, TestStr, Caption: string;
   I: Integer;
 begin
   // Need to determine attribute type, given Caption.
-  Caption := aGrid.Columns[aCol].Title.Caption;
+  Caption := aGrid.Cells[aCol,0];
   result := '';
   for I := 0 to PredictionSetupCurrent.NumAtt - 1 do
-  begin
-    TestStr := PredictionSetupCurrent.PredAttributes[I].Caption;
-    if TestStr = Caption then
     begin
-      Str := PredictionSetupCurrent.PredAttributes[I].Caption + ': ' +
-             PredictionSetupCurrent.PredAttributes[I].Hint(dcPred);
-      result := Str;
+      TestStr := PredictionSetupCurrent.PredAttributes[I].Caption;
+      if TestStr = Caption then
+        begin
+          Str := PredictionSetupCurrent.PredAttributes[I].Caption + ': ' +
+                 PredictionSetupCurrent.PredAttributes[I].Hint(dcPred);
+          result := Str;
+        end;
     end;
-  end;
 end;
 
 //###################################################################
@@ -162,13 +162,13 @@ end;
 
 //###################################################################
 
-  function GetPriHint(const aGrid: TDataGrid; const aCol: Integer): string;
+  function GetPriHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
 var
   Str, TestStr, Caption: string;
   I: Integer;
 begin
   // Need to determine attribute type, given Caption.
-  Caption := aGrid.Columns[aCol].Title.Caption;
+  Caption := aGrid.Cells[aCol,0];
   result := '';
   for I := 0 to PriorSetupCurrent.NumAtt - 1 do
   begin

@@ -51,7 +51,7 @@ type
     procedure rdeMultiplierChange(Sender: TObject);
     procedure comboSteadyTransientChange(Sender: TObject);
     procedure dgTimeBeforeDrawCell(Sender: TObject; ACol, ARow: Integer);
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
     procedure dgTimeHorizontalScroll(Sender: TObject);
     procedure FormResize(Sender: TObject);

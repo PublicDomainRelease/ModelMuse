@@ -6,7 +6,6 @@ inherited frmImportGriddedData: TfrmImportGriddedData
   ClientWidth = 436
   Constraints.MinHeight = 432
   Constraints.MinWidth = 444
-  OnDestroy = FormDestroy
   OnResize = FormResize
   ExplicitWidth = 444
   ExplicitHeight = 432
@@ -186,7 +185,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             135
             32)
           object sbAddRow: TSpeedButton
-            Left = 11
+            Left = 10
             Top = 5
             Width = 23
             Height = 22
@@ -204,10 +203,11 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             ParentShowHint = False
             ShowHint = True
             OnClick = sbAddRowClick
+            ExplicitLeft = 11
             ExplicitTop = 6
           end
           object sbInsertRow: TSpeedButton
-            Left = 56
+            Left = 54
             Top = 5
             Width = 23
             Height = 22
@@ -225,11 +225,10 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             ParentShowHint = False
             ShowHint = True
             OnClick = sbInsertRowClick
-            ExplicitLeft = 54
             ExplicitTop = 6
           end
           object sbDeleteRow: TSpeedButton
-            Left = 101
+            Left = 100
             Top = 5
             Width = 23
             Height = 22

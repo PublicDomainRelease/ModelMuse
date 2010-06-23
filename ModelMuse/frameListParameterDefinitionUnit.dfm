@@ -88,11 +88,12 @@ object frameListParameterDefinition: TframeListParameterDefinition
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
     TabOrder = 1
     OnExit = dgParametersExit
+    OnMouseDown = dgParametersMouseDown
     OnSelectCell = dgParametersSelectCell
     OnSetEditText = dgParametersSetEditText
-    AutoDistributeText = False
+    AutoDistributeText = True
     AutoIncreaseColCount = False
-    AutoIncreaseRowCount = False
+    AutoIncreaseRowCount = True
     SelectedRowOrColumnColor = clAqua
     UnselectableColor = clBtnFace
     OnBeforeDrawCell = dgParametersBeforeDrawCell
@@ -142,9 +143,6 @@ object frameListParameterDefinition: TframeListParameterDefinition
         WordWrapCells = False
         AutoAdjustColWidths = True
       end>
-    ExplicitLeft = 0
-    ExplicitTop = 0
-    ExplicitWidth = 320
-    ExplicitHeight = 192
+    OnEndUpdate = dgParametersEndUpdate
   end
 end

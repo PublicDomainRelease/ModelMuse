@@ -5,7 +5,7 @@ unit CompressedImageUnit;
 
 interface
 
-uses SysUtils, Classes, Graphics, GoPhastTypes;
+uses SysUtils, Classes, Graphics, GoPhastTypes, GR32, Dialogs;
 
 type
   {@abstract(@name reads and writes bitmaps to and from streams using a
@@ -165,6 +165,7 @@ type
     property Y: double read GetY;
     property CanShow: boolean read FCanShow write FCanShow;
     property DisplayMessage: boolean read FDisplayMessage write FDisplayMessage;
+    procedure DrawCompressedImage(Destination: TBitMap32);
   published
     // @name is the bitmap that will be drawn.
     property Bitmap: TCompressedBitmap read FBitmap write SetBitmap;
@@ -387,6 +388,63 @@ begin
   FBitmap.Free;
   FMeasurementPoints.Free;
   inherited;
+end;
+
+procedure TCompressedBitmapItem.DrawCompressedImage(Destination: TBitMap32);
+var
+//  X, Y: double;
+  NewBmp: TBitmap;
+  XMult, YMult: double;
+  NewWidth, NewHeight: integer;
+  NewBitMap32: TBitmap32;
+begin
+    // @name will draw an imported image () on a bitmap (Dest)
+    // at its proper location.
+//  Assert(( <> nil) {and (Dest <> nil)});
+
+//  X := .X;
+//  Y := .Y;
+  XMult := ScaleX;
+  YMult := ScaleY;
+
+  NewBmp := TBitmap.Create;
+  try
+    NewWidth := Round(BitMap.Width * XMult);
+    NewHeight := Round(BitMap.Height * YMult);
+
+    if (NewWidth < 2) or (NewHeight < 2) then
+      Exit;
+
+    if (NewWidth > 5000) or (NewHeight > 5000) then
+    begin
+      Visible := False;
+      MessageDlg('The ' + Name
+        + ' image can not be shown at this magnification '
+        + 'and has been turned off. You can turn it back on later '
+        + 'after decreasing the magnification.',
+        mtInformation, [mbOK], 0);
+    end
+    else
+    begin
+      NewBmp.Width := NewWidth;
+      NewBmp.Height := NewHeight;
+      NewBmp.Canvas.StretchDraw(Rect(0, 0, NewWidth, NewHeight),
+        BitMap);
+
+      NewBitMap32 := TBitmap32.Create;
+      try
+        NewBitMap32.Assign(NewBmp);
+        { TODO : rotate bitmap? }
+        Destination.Draw(Round(X), Round(Y), NewBitMap32);
+      finally
+        NewBitMap32.Free;
+      end;
+    end;
+  finally
+    NewBmp.Free;
+  end;
+  DisplayMessage := True;
+//  FPreviousMagnification := ZoomBox.Magnification;
 end;
 
 function TCompressedBitmapItem.GetScaleX: double;

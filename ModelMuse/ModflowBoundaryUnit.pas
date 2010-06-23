@@ -651,6 +651,7 @@ function SortBoundaryItems(Item1, Item2: pointer): integer;
 var
   Bound1: TCustomModflowBoundaryItem;
   Bound2: TCustomModflowBoundaryItem;
+  Index: Integer;
 begin
   Bound1 := Item1;
   Bound2 := Item2;
@@ -658,6 +659,25 @@ begin
   if result = 0 then
   begin
     result := Sign(Bound1.EndTime - Bound2.EndTime);
+  end;
+  if result = 0 then
+  begin
+    for Index := 0 to Bound1.BoundaryFormulaCount - 1 do
+    begin
+      if Bound1.BoundaryFormula[Index] <> Bound2.BoundaryFormula[Index] then
+      begin
+        if Bound1.BoundaryFormula[Index] = '' then
+        begin
+          result := 1;
+          Exit;
+        end
+        else if Bound2.BoundaryFormula[Index] = '' then
+        begin
+          result := -1;
+          Exit;
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -2251,7 +2271,7 @@ begin
   if (LocalScreenObject <> nil) and LocalScreenObject.CanInvalidateModel then
   begin
     PhastModel := Model as TPhastModel;
-    if not (csDestroying in PhastModel.ComponentState) then
+    if not PhastModel.Clearing and not (csDestroying in PhastModel.ComponentState) then
     begin
       for Index := 0 to FObserverList.Count - 1 do
       begin
@@ -2288,22 +2308,17 @@ end;
 
 procedure TCustomBoundaryStorage.RestoreData;
 var
-//  TempFile: TTempFileStream;
   DecompressionStream: TDecompressionStream;
   Annotations: TStringList;
   MemStream: TMemoryStream;
 begin
-//  ExtractAFile(FTempFileName);
-//  Assert(FileExists(FTempFileName));
   Assert(FCached);
   Assert(FCleared);
   Annotations := TStringList.Create;
   MemStream := TMemoryStream.Create;
-//  TempFile := TTempFileStream.Create(FTempFileName, fmOpenRead);
-//  DecompressionStream := TDecompressionStream.Create(TempFile);
   try
     ExtractAFile(FTempFileName, MemStream);
-    MemStream.Position := 0;
+//    MemStream.Position := 0;
     DecompressionStream := TDecompressionStream.Create(MemStream);
     try
       Annotations.Sorted := True;
@@ -2314,9 +2329,7 @@ begin
   finally
     MemStream.Free;
     Annotations.Free;
-//    TempFile.Free;
     FCleared := False;
-//    DeleteFile(FTempFileName);
   end;
 end;
 

@@ -2,19 +2,20 @@ inherited frmProgramLocations: TfrmProgramLocations
   HelpType = htKeyword
   HelpKeyword = 'MODFLOW_Program_Locations_Dialog_Box'
   Caption = 'MODFLOW Program Locations'
-  ClientHeight = 284
+  ClientHeight = 342
   ClientWidth = 623
   ExplicitWidth = 631
-  ExplicitHeight = 318
+  ExplicitHeight = 376
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 243
+    Top = 301
     Width = 623
     Height = 41
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 243
     DesignSize = (
       623
       41)
@@ -52,12 +53,13 @@ inherited frmProgramLocations: TfrmProgramLocations
     Left = 0
     Top = 0
     Width = 623
-    Height = 243
+    Height = 301
     Align = alClient
     TabOrder = 1
+    ExplicitHeight = 243
     DesignSize = (
       623
-      243)
+      301)
     object lblModflow: TLabel
       Left = 16
       Top = 17
@@ -77,7 +79,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object lblTextEditor: TLabel
       Left = 16
-      Top = 126
+      Top = 182
       Width = 73
       Height = 18
       Caption = 'Text editor'
@@ -93,7 +95,7 @@ inherited frmProgramLocations: TfrmProgramLocations
         'l</a>'
     end
     object lblModpath: TLabel
-      Left = 16
+      Left = 20
       Top = 72
       Width = 79
       Height = 18
@@ -101,10 +103,27 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object lblModelMonitor: TLabel
       Left = 16
-      Top = 177
+      Top = 233
       Width = 95
       Height = 18
       Caption = 'ModelMonitor'
+    end
+    object htlblZoneBudger: TJvHTLabel
+      Left = 135
+      Top = 127
+      Width = 448
+      Height = 19
+      Caption = 
+        '<a href="http://water.usgs.gov/nrp/gwsoftware/zonebud3/zonebudge' +
+        't3.html">http://water.usgs.gov/nrp/gwsoftware/zonebud3/zonebudge' +
+        't3.html</a>'
+    end
+    object lblZoneBudget: TLabel
+      Left = 20
+      Top = 127
+      Width = 109
+      Height = 18
+      Caption = 'ZONEBUDGET'
     end
     object fedModflow: TJvFilenameEdit
       Left = 16
@@ -120,7 +139,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object fedTextEditor: TJvFilenameEdit
       Left = 16
-      Top = 146
+      Top = 202
       Width = 588
       Height = 26
       Filter = 
@@ -144,7 +163,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object fedModelMonitor: TJvFilenameEdit
       Left = 16
-      Top = 197
+      Top = 253
       Width = 588
       Height = 26
       Filter = 
@@ -152,6 +171,18 @@ inherited frmProgramLocations: TfrmProgramLocations
         '.*)|*.*'
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 3
+      OnChange = fedModflowChange
+    end
+    object fedZonebudget: TJvFilenameEdit
+      Left = 16
+      Top = 150
+      Width = 588
+      Height = 26
+      Filter = 
+        'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
+        '.*)|*.*'
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 4
       OnChange = fedModflowChange
     end
   end

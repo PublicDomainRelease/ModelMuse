@@ -696,20 +696,15 @@ end;
 
 procedure T3DSparseRealArray.Restore;
 var
-//  TempFile: TTempFileStream;
   MemStream: TMemoryStream;
   DecompressionStream: TDecompressionStream;
 begin
-//  ExtractAFile(FTempFileName);
-//  Assert(FileExists(FTempFileName));
   Assert(FCached);
   Assert(FCleared);
   MemStream := TMemoryStream.Create;
-//  TempFile := TTempFileStream.Create(FTempFileName, fmOpenRead);
-//  DecompressionStream := TDecompressionStream.Create(TempFile);
   try
     ExtractAFile(FTempFileName, MemStream);
-    MemStream.Position := 0;
+//    MemStream.Position := 0;
     DecompressionStream := TDecompressionStream.Create(MemStream);
   try
     ReadData(DecompressionStream);
@@ -720,7 +715,6 @@ begin
   finally
     MemStream.Free;
   end;
-//  DeleteFile(FTempFileName);
   FCleared := False;
 end;
 

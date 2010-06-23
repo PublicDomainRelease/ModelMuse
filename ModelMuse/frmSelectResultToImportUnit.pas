@@ -28,7 +28,7 @@ type
     rgDisplayChoice: TRadioGroup;
     procedure clDataClickCheck(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
     procedure odSelectFilesTypeChange(Sender: TObject);
     procedure btnSelectAllClick(Sender: TObject);
@@ -627,6 +627,7 @@ end;
 
 procedure TfrmSelectResultToImport.btnOKClick(Sender: TObject);
 begin
+  inherited;
   SetData;
 end;
 

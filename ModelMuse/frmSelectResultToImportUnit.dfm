@@ -4,7 +4,6 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
   Caption = ' Select Model Results to Import'
   ClientHeight = 370
   ClientWidth = 512
-  OnDestroy = FormDestroy
   ExplicitWidth = 520
   ExplicitHeight = 404
   PixelsPerInch = 96
@@ -65,7 +64,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akRight, akBottom]
-    ItemHeight = 18
+    ItemHeight = 0
     TabOrder = 4
   end
   object btnSelectAll: TButton

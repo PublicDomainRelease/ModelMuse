@@ -38,7 +38,6 @@ inherited frmContourData: TfrmContourData
     OnClick = btnEditContoursClick
   end
   inherited pcChoices: TPageControl
-    ActivePage = tabSelection
     TabOrder = 2
     inherited tabSelection: TTabSheet
       ExplicitLeft = 4
@@ -69,15 +68,15 @@ inherited frmContourData: TfrmContourData
         ExplicitTop = 29
         ExplicitWidth = 337
       end
+      inherited cbLogTransform: TCheckBox
+        OnClick = cbLogTransformClick
+      end
       inherited udDataSets: TJvUpDown
         Left = 351
         Top = 27
         Anchors = [akTop, akRight]
         ExplicitLeft = 351
         ExplicitTop = 27
-      end
-      inherited cbLogTransform: TCheckBox
-        OnClick = cbLogTransformClick
       end
     end
     inherited tabFilters: TTabSheet
@@ -117,11 +116,22 @@ inherited frmContourData: TfrmContourData
         ExplicitHeight = 224
       end
     end
+    inherited tabLegend: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 29
+      ExplicitWidth = 598
+      ExplicitHeight = 335
+      inherited Panel2: TPanel
+        inherited lblMethod: TLabel
+          Margins.Bottom = 0
+        end
+        inherited lblColorLegendRows: TLabel
+          Margins.Bottom = 0
+        end
+      end
+    end
   end
   inherited Panel1: TPanel
-    inherited btnHelp: TBitBtn
-      OnClick = btnHelpClick
-    end
     inherited btnOK: TBitBtn
       OnClick = btnOKClick
     end

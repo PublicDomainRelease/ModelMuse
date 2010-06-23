@@ -110,9 +110,12 @@ inherited frmTimeSeriesDisplay: TfrmTimeSeriesDisplay
         Top = 29
         Width = 449
         Height = 26
+        OnBeforeDialog = fedModpathFileBeforeDialog
+        DefaultExt = '.ts'
         Filter = 
           'MODPATH Time Series files (*.ts, *.ts_bin)|*.ts;*.ts_bin|All fil' +
           'es (*.*)|*.*'
+        DialogOptions = [ofHideReadOnly, ofFileMustExist]
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         OnChange = fedModpathFileChange
@@ -219,10 +222,6 @@ inherited frmTimeSeriesDisplay: TfrmTimeSeriesDisplay
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         458
         324)

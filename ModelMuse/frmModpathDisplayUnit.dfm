@@ -53,15 +53,11 @@ inherited frmModpathDisplay: TfrmModpathDisplay
     Top = 0
     Width = 467
     Height = 327
-    ActivePage = tabOptions
+    ActivePage = tabBasic
     Align = alClient
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         459
         294)
@@ -107,9 +103,12 @@ inherited frmModpathDisplay: TfrmModpathDisplay
         Top = 29
         Width = 440
         Height = 26
+        OnBeforeDialog = fedModpathFileBeforeDialog
+        DefaultExt = '.path'
         Filter = 
           'MODPATH Pathline files (*.path;*.path_bin)|*.path;*.path_bin|All' +
           ' files (*.*)|*.*'
+        DialogOptions = [ofHideReadOnly, ofFileMustExist]
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
       end
@@ -137,7 +136,7 @@ inherited frmModpathDisplay: TfrmModpathDisplay
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
         DropDownCount = 12
-        ItemHeight = 0
+        ItemHeight = 18
         ItemIndex = 0
         TabOrder = 3
         Text = 'Rainbow'

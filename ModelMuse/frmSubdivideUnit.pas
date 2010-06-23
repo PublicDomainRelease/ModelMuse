@@ -66,7 +66,7 @@ type
     // @name initializes @classname.
     procedure FormCreate(Sender: TObject); override;
     // @name causes the view of the grid to be redrawn.
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     // @name updates @link(SubdivideGridTool) and causes
     // the grid to be redrawn.
     procedure seCol1Changed(Sender: TObject);

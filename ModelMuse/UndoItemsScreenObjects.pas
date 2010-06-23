@@ -645,6 +645,7 @@ type
     // @name is a list of the @link(TScreenObject)s from which vertices will
     // be deleted.
     FScreenObjects: TList;
+    FVertexValues: TList;
   protected
     // @name tells what @classname does.
     function Description: string; override;
@@ -691,7 +692,7 @@ implementation
 
 uses Math, frmGoPhastUnit, frmSelectedObjectsUnit, frmShowHideObjectsUnit,
   InteractiveTools, PhastDataSets, DataSetUnit, CountObjectsUnit, 
-  ModflowSfrReachUnit, frmErrorsAndWarningsUnit;
+  ModflowSfrReachUnit, frmErrorsAndWarningsUnit, IntListUnit;
 
 { TCustomUpdateScreenObjectDisplayUndo }
 
@@ -2126,9 +2127,12 @@ constructor TUndoDeleteVertices.Create(const ListOfScreenObjects: TScreenObjectL
 var
   Index: integer;
   AScreenObject: TScreenObject;
+  PointPositionValues: TPointPositionValues;
+  OldPointPositionValues: TPointPositionValues;
 begin
   inherited Create;
   FScreenObjects := TList.Create;
+  FVertexValues := TObjectList.Create;
   FScreenObjects.Capacity := ListOfScreenObjects.Count;
   for Index := 0 to ListOfScreenObjects.Count - 1 do
   begin
@@ -2136,6 +2140,17 @@ begin
     if AScreenObject.SelectedVertexCount > 0 then
     begin
       FScreenObjects.Add(AScreenObject);
+      PointPositionValues := AScreenObject.PointPositionValues;
+      if PointPositionValues = nil then
+      begin
+        FVertexValues.Add(nil)
+      end
+      else
+      begin
+        OldPointPositionValues:= TPointPositionValues.Create(nil);
+        OldPointPositionValues.Assign(PointPositionValues);
+        FVertexValues.Add(OldPointPositionValues);
+      end;
     end;
   end;
   SetLength(FPoints, FScreenObjects.Count);
@@ -2158,6 +2173,7 @@ destructor TUndoDeleteVertices.Destroy;
 var
   Index: Integer;
 begin
+  FVertexValues.Free;
   FScreenObjects.Free;
   for Index := 0 to Length(FSectionStarts) - 1 do
   begin
@@ -2186,7 +2202,6 @@ var
   CurrentStart: integer;
   CurrentEnd: integer;
   TempIndex: integer;
-//  CurrentSection: integer;
 begin
   FCanDeleteVertices := True;
   for Index := 0 to FScreenObjects.Count - 1 do
@@ -2205,7 +2220,6 @@ begin
 
         TempScreenObject := frmGoPhast.PhastModel.ScreenObjectClass.Create(nil);
         try
-
           PointCount := 0;
           SectionIndex := AScreenObject.SectionCount -1;
           NextEnd := AScreenObject.SectionEnd[SectionIndex];
@@ -2272,6 +2286,38 @@ begin
 
         if FCanDeleteVertices then
         begin
+//          PointPositionValues := AScreenObject.PointPositionValues;
+//          if PointPositionValues <> nil then
+//          begin
+//            PointPositionValues.Sort;
+//            Assert(PointPositionValues.Count > 0);
+//            PointPositionIndex := 0;
+//            Item := PointPositionValues.Items[PointPositionIndex]
+//              as TPointValuesItem;
+//            AmountToReduce := 0;
+//            for VertexIndex := 0 to AScreenObject.Count - 1 do
+//            begin
+//              if AScreenObject.SelectedVertices[VertexIndex] then
+//              begin
+//                Inc(AmountToReduce);
+//              end;
+//              if Item.Position = VertexIndex then
+//              begin
+//                Item.Position := Item.Position - AmountToReduce;
+//                Inc(PointPositionIndex);
+//                if PointPositionIndex < PointPositionValues.Count then
+//                begin
+//                  Item := PointPositionValues.Items[PointPositionIndex]
+//                    as TPointValuesItem;
+//                end
+//                else
+//                begin
+//                  break;
+//                end;
+//              end;
+//            end;
+//          end;
+
           SectionIndex := AScreenObject.SectionCount -1;
           NextEnd := AScreenObject.SectionEnd[SectionIndex];
           CurrentStart := AScreenObject.SectionStart[SectionIndex];
@@ -2310,10 +2356,6 @@ begin
               AScreenObject.InsertPoint(CurrentEnd+1, LastPoint);
             end;
           end;
-//          if CloseScreenObject then
-//          begin
-//            AScreenObject.AddPoint(AScreenObject.Points[0], False);
-//          end;
         end;
       end;
     end;
@@ -2344,6 +2386,7 @@ var
   Index: integer;
   AScreenObject: TScreenObject;
   DataSetIndex: integer;
+  OldPointPositionValues: TPointPositionValues;
 begin
   if FCanDeleteVertices then
   begin
@@ -2359,6 +2402,8 @@ begin
         AScreenObject.Count := Length(FPoints[Index]);
         AScreenObject.MoveToPoints(FPoints[Index]);
         AScreenObject.SectionStarts := FSectionStarts[Index];
+        OldPointPositionValues := FVertexValues[Index];
+        AScreenObject.PointPositionValues := OldPointPositionValues;
       end;
       for DataSetIndex := 0 to AScreenObject.DataSetCount - 1 do
       begin

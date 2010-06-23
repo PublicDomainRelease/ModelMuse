@@ -424,7 +424,7 @@ type
     // @name initialized @classname.
     procedure FormCreate(Sender: TObject); override;
     // @name destroys @link(FGeometryFile).
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     // @name changes the captions of @link(cbEnclosedCells),
     // @link(cbIntersectedCells), and @link(cbInterpolation).
     procedure rgEvaluatedAtClick(Sender: TObject);

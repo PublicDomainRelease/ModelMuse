@@ -27,7 +27,7 @@ type
     procedure rdgGlobalVariablesSetEditText(Sender: TObject; ACol,
       ARow: Integer; const Value: string);
     procedure btnDeleteClick(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure rdgGlobalVariablesMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure rdgGlobalVariablesEndUpdate(Sender: TObject);
@@ -596,42 +596,43 @@ begin
 end;
 
 procedure TUndoGlobalVariables.UpdateFormulas(NewNames: TStringList; OldNames: TStringList);
-var
-  CompilerList: TList;
-  VarIndex: Integer;
-  VariableIndex: Integer;
-  Compiler: TRbwParser;
-  CompilerIndex: Integer;
+//var
+//  CompilerList: TList;
+//  VarIndex: Integer;
+//  VariableIndex: Integer;
+//  Compiler: TRbwParser;
+//  CompilerIndex: Integer;
 begin
   Assert(OldNames.Count = NewNames.Count);
   if OldNames.Count > 0 then
   begin
-    frmGoPhast.PhastModel.FormulaManager.RemoveSubscriptions(OldNames, NewNames);
-    CompilerList := TList.Create;
-    try
-      frmGoPhast.PhastModel.FillCompilerList(CompilerList);
-      for CompilerIndex := 0 to CompilerList.Count - 1 do
-      begin
-        Compiler := CompilerList[CompilerIndex];
-        for VariableIndex := 0 to OldNames.Count - 1 do
-        begin
-          VarIndex := Compiler.IndexOfVariable(OldNames[VariableIndex]);
-          Compiler.RenameVariable(VarIndex, NewNames[VariableIndex]);
-        end;
-      end;
-      frmGoPhast.PhastModel.FormulaManager.ResetFormulas;
-      for CompilerIndex := 0 to CompilerList.Count - 1 do
-      begin
-        Compiler := CompilerList[CompilerIndex];
-        for VariableIndex := 0 to OldNames.Count - 1 do
-        begin
-          VarIndex := Compiler.IndexOfVariable(NewNames[VariableIndex]);
-          Compiler.RenameVariable(VarIndex, OldNames[VariableIndex]);
-        end;
-      end;
-    finally
-      CompilerList.Free;
-    end;
+    frmGoPhast.PhastModel.UpdateFormulas(OldNames, NewNames);
+//    frmGoPhast.PhastModel.FormulaManager.RemoveSubscriptions(OldNames, NewNames);
+//    CompilerList := TList.Create;
+//    try
+//      frmGoPhast.PhastModel.FillCompilerList(CompilerList);
+//      for CompilerIndex := 0 to CompilerList.Count - 1 do
+//      begin
+//        Compiler := CompilerList[CompilerIndex];
+//        for VariableIndex := 0 to OldNames.Count - 1 do
+//        begin
+//          VarIndex := Compiler.IndexOfVariable(OldNames[VariableIndex]);
+//          Compiler.RenameVariable(VarIndex, NewNames[VariableIndex]);
+//        end;
+//      end;
+//      frmGoPhast.PhastModel.FormulaManager.ResetFormulas;
+//      for CompilerIndex := 0 to CompilerList.Count - 1 do
+//      begin
+//        Compiler := CompilerList[CompilerIndex];
+//        for VariableIndex := 0 to OldNames.Count - 1 do
+//        begin
+//          VarIndex := Compiler.IndexOfVariable(NewNames[VariableIndex]);
+//          Compiler.RenameVariable(VarIndex, OldNames[VariableIndex]);
+//        end;
+//      end;
+//    finally
+//      CompilerList.Free;
+//    end;
   end;
 end;
 

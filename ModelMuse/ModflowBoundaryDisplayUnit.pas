@@ -315,6 +315,7 @@ begin
   if Value and not UpToDate then
   begin
     FDataCached := False;
+    FDimensionsChanged := False;
   end;
   inherited;
 end;

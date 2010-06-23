@@ -28,7 +28,7 @@ type
     ilCheckImages: TImageList;
     rgExportObjectType: TRadioGroup;
     procedure FormCreate(Sender: TObject); override;
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure tvExportItemsMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure seTimeCountChange(Sender: TObject);

@@ -131,9 +131,9 @@ interface
         destructor Destroy; override;
         function Add: TParam;
         procedure Assign(Source: TPersistent); override;
+        procedure ChangeGroupNames(OldGroup, NewGroup: string);
         function CountDerivedParameters: integer;
         procedure SetGpDefault;
-//        procedure Empty;
         function NumParsByGroup(GpName: string): integer;
     end;  // end of TParamset
 
@@ -219,7 +219,10 @@ interface
         procedure DefinePredSetup;
         procedure ExportOmitFile(FileName: string);
         function ExportUcodeFile(ModelUse: TModelUse): boolean;
+        function GetTemplateFile(const MIOFile: TFileName; const ModelUse: TModelUse): string;
         function LocateModflowNameFile(ModelUse: TModelUse): boolean;
+        function MakeUcodeBatchFile(ModelUseLocal: TModelUse;
+                   var BatchFileLocation: string; var ErrMess: string): boolean;
         procedure NormalizePaths();
         function NumAdjustable(): integer;
         procedure WriteToStream(SStream: TStringStream);
@@ -429,6 +432,7 @@ begin
     UseObsGps := PrjSource.UseObsGps;
     UsePredGps := PrjSource.UsePredGps;
     UseParGps := PrjSource.UseParGps;
+    UsePriGps := PrjSource.UsePriGps;
     UsePriorInfo := PrjSource.UsePriorInfo;
     LinkTemplateToParamsTable := PrjSource.LinkTemplateToParamsTable;
   end;
@@ -630,8 +634,10 @@ begin
       for I := 0 to NR - 1 do
         // Store a model-file/app-file pair of file names
         begin
-          bdModelIOFiles.KeyValMatrix[0].SetVal(I,MFiles.Items[I].ModelFile);
-          bdModelIOFiles.KeyValMatrix[1].SetVal(I,MFiles.Items[I].AppFile);
+//          bdModelIOFiles.KeyValMatrix[0].SetVal(I,MFiles.Items[I].ModelFile);
+//          bdModelIOFiles.KeyValMatrix[1].SetVal(I,MFiles.Items[I].AppFile);
+          bdModelIOFiles.KeyValMatrix[0].SetVal(I,MFiles.Items[I].AbsModelFile);
+          bdModelIOFiles.KeyValMatrix[1].SetVal(I,MFiles.Items[I].AbsAppFile);
           if NC > 2 then
             case ModelUse of
               muCalib: bdModelIOFiles.KeyValMatrix[2].SetVal(I,'Obs');
@@ -1970,6 +1976,29 @@ begin
   end;
 end;
 
+function TProject.GetTemplateFile(const MIOFile: TFileName;
+  const ModelUse: TModelUse): string;
+var
+  I: integer;
+  MIOPairs: TModelIOPairs;
+begin
+  result := '';
+  case ModelUse of
+    // pointer assignment.
+    muCalib: MIOPairs := self.MIFiles;
+    muPred: MIOPairs := self.MIFilesPred;
+    else MIOPairs := self.MIFiles;
+  end;
+  for I := 0 to MIOPairs.Count - 1 do
+    begin
+      if (AnsiSameText(MIOPairs.Items[I].AbsModelFile,MIOFile))
+          or (AnsiSameText(MIOPairs.Items[I].ModelFile,MIOFile)) then
+        begin
+          result := MIOPairs.Items[I].AppFile;
+        end;
+    end;
+end;
+
 function TProject.LocateModflowNameFile(ModelUse: TModelUse): boolean;
 var
   AbsPath: string;
@@ -2001,6 +2030,42 @@ begin
     begin
       result := False;
     end;
+end;
+
+function TProject.MakeUcodeBatchFile(ModelUseLocal: TModelUse;
+  var BatchFileLocation: string; var ErrMess: string): boolean;
+var
+  AbsAppDir, AbsMIF, AbsModelDir, BatchBase, CmdLineOptions, OutPrefix: string;
+  OK: boolean;
+begin
+  OK := True;
+  AbsAppDir := AbsAppDirectory(ModelUseLocal);
+  if DirectoryExists(AbsAppDir) then
+    begin
+      AbsMIF := UcProject.AbsMainInputFileName(ModelUseLocal);
+      case ModelUseLocal of
+        muCalib: OutPrefix := UcProject.OutputPrefix;
+        muPred: OutPrefix := UcProject.OutputPrefixPred;
+      end;
+      BatchBase := 'RunUcode_' + ProjName;
+      AbsModelDir := AbsModelDirectory(ModelUseLocal);
+      if AnsiSameText(AbsAppDir, AbsModelDir) then
+        begin
+          CmdLineOptions := AbsMIF + ' ' + OutPrefix;
+          BatchFileLocation := WriteBatchFile(ProgramLocations.UcodeLocation, CmdLineOptions, BatchBase);
+        end
+      else
+        begin
+          BatchFileLocation := WriteCustomBatchFile(ProgramLocations.UcodeLocation, AbsMIF, OutPrefix, BatchBase, AbsModelDir);
+        end;
+    end
+  else
+    begin
+      OK := False;
+      ErrMess := 'UCODE batch file was not created because directory "' +
+                        AbsAppDir + '" does not exist.';
+    end;
+  result := OK;
 end;
 
 procedure TProject.NormalizePaths;
@@ -2582,6 +2647,22 @@ begin
     end
   else
     inherited;
+end;
+
+
+procedure TParamSet.ChangeGroupNames(OldGroup, NewGroup: string);
+var
+  I, AttPos: integer;
+begin
+  AttPos := ParAttPos(patGroupName);
+  if self.Count > 0 then
+    begin
+      for I := 0 to Count - 1 do
+        begin
+          if Items[I].AllAtts.Items[AttPos].Text = OldGroup then
+            Items[I].AllAtts.Items[AttPos].Text := NewGroup;
+        end;
+    end;
 end;
 
 function TParamSet.CountDerivedParameters: integer;

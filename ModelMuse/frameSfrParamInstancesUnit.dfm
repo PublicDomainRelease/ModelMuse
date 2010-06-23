@@ -8,22 +8,23 @@ object frameSfrParamInstances: TframeSfrParamInstances
   TabStop = True
   object pnlSfrInstancesBottom: TPanel
     Left = 0
-    Top = 263
+    Top = 240
     Width = 451
-    Height = 41
+    Height = 64
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitTop = 269
     DesignSize = (
       451
-      41)
+      64)
     object lblInstanceCount: TLabel
       Left = 71
-      Top = 9
-      Width = 98
-      Height = 13
-      Caption = 'Number of instances'
+      Top = 6
+      Width = 141
+      Height = 39
+      Caption = 
+        'Number of instances'#13#10'Specify at least one instance '#13#10'for each SF' +
+        'R parameter.'
     end
     object seInstanceCount: TJvSpinEdit
       Left = 8
@@ -99,7 +100,7 @@ object frameSfrParamInstances: TframeSfrParamInstances
     Left = 0
     Top = 25
     Width = 451
-    Height = 238
+    Height = 215
     Align = alClient
     ColCount = 3
     FixedCols = 0
@@ -180,6 +181,7 @@ object frameSfrParamInstances: TframeSfrParamInstances
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = rdgSfrParamInstancesEndUpdate
+    ExplicitHeight = 238
   end
   object pnlLabel: TPanel
     Left = 0

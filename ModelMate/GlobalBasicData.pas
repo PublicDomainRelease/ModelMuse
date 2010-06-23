@@ -8,8 +8,15 @@ interface
     NumParAttributes: integer = 20;
     NumDepAttributes: integer = 16;
     NumPriAttributes: integer = 10;
+    MaxLenParName: integer = 12;
+    MaxLenDepName: integer = 20;
+
+
 
   var
+
+//    TGrpUse = (guParGroup, guObsGroup, guPredGroup, guPriGroup, guUnknown);
+
 
     // Intrinsic types
 

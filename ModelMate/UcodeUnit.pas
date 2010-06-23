@@ -644,10 +644,16 @@ begin
         KeyValMatrix[2].SetVal(0,self.ModelMassUnits);
         KeyValMatrix[3].SetVal(0,self.ModelTimeUnits);
         // Sensitivities is a special case.
-        if self.Sensitivities or self.PredictionSensitivities then
-          KeyValMatrix[4].SetVal(0,True)
-        else
-          KeyValMatrix[4].SetVal(0,False);
+        case UcMode of
+          umFwd: ;
+          umSensAnal: KeyValMatrix[4].SetVal(0,True);
+          umParEst: KeyValMatrix[4].SetVal(0,True);
+          umTestLin: ;
+          umPred: KeyValMatrix[4].SetVal(0,PredictionSensitivities);
+          umAdvTestLin: ;
+          umNonlinUncert: ;
+          umInvObjFunc: ;
+        end;
         KeyValMatrix[5].SetVal(0,self.Optimize);
         KeyValMatrix[6].SetVal(0,self.Linearity);
         KeyValMatrix[7].SetVal(0,self.Prediction);

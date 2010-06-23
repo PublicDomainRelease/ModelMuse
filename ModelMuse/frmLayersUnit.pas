@@ -85,7 +85,7 @@ type
     procedure pnlPaintboxParentResize(Sender: TObject);
     procedure pbSubLayersMouseEnter(Sender: TObject);
     procedure pbSubLayersMouseLeave(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
     procedure edNameChange(Sender: TObject);
     procedure rdeGrowthRateExit(Sender: TObject);
@@ -540,7 +540,7 @@ begin
     begin
       SelectedUnit := FSelectedUnits[Index];
       if SelectedUnit.Simulated
-        and (SelectedUnit.AquiferType = 0) then
+        and (SelectedUnit.AquiferType = 1) then
       begin
         SelectedUnit.UseStartingHeadForSaturatedThickness :=
           cbComputeSaturatedThickness.Checked;
@@ -1019,7 +1019,6 @@ end;
 
 procedure TfrmLayers.UpdateSelectedUnits;
 var
-  StartIndex: integer;
   Index: Integer;
   NodeItem: TTreeNode;
 begin
@@ -1028,25 +1027,15 @@ begin
   FSelectedTreeNodes.Clear;
   if tvLayerGroups.Selected <> nil then
   begin
-    NodeItem := tvLayerGroups.Selected;
-    if NodeItem.Data <> nil then
+    for Index := 0 to tvLayerGroups.Items.Count - 1 do
     begin
-      FSelectedUnits.Add(NodeItem.Data);
-      FSelectedTreeNodes.Add(NodeItem);
-    end;
-    if tvLayerGroups.Selected <> nil then
-    begin
-      StartIndex := NodeItem.Index;
-      for Index := Succ(StartIndex) to tvLayerGroups.Items.Count - 1 do
+      NodeItem := tvLayerGroups.Items[Index];
+      if NodeItem.Selected then
       begin
-        NodeItem := tvLayerGroups.Items[Index];
-        if NodeItem.Selected then
+        if NodeItem.Data <> nil then
         begin
-          if NodeItem.Data <> nil then
-          begin
-            FSelectedUnits.Add(NodeItem.Data);
-            FSelectedTreeNodes.Add(NodeItem);
-          end;
+          FSelectedUnits.Add(NodeItem.Data);
+          FSelectedTreeNodes.Add(NodeItem);
         end;
       end;
     end;
@@ -1624,25 +1613,25 @@ end;
 
 procedure TfrmLayers.EnableComputeSatThick;
 var
-  ConfinedLayer: Boolean;
+  UnConfinedLayer: Boolean;
   Index: Integer;
   SelectedUnit: TLayerGroup;
 begin
-  ConfinedLayer := False;
+  UnConfinedLayer := False;
   if FUseSaturatedThickness and
     (FSelectedUnits.Count >= 1) then
   begin
     for Index := 0 to FSelectedUnits.Count - 1 do
     begin
       SelectedUnit := FSelectedUnits[Index];
-      if (SelectedUnit.AquiferType = 0) then
+      if (SelectedUnit.AquiferType = 1) then
       begin
-        ConfinedLayer := True;
+        UnConfinedLayer := True;
         break;
       end;
     end;
   end;
-  cbComputeSaturatedThickness.Enabled := ConfinedLayer
+  cbComputeSaturatedThickness.Enabled := UnConfinedLayer
     and frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected;
 end;
 

@@ -60,6 +60,8 @@ type
     procedure rdgLimitsSetEditText(Sender: TObject; ACol, ARow: Integer;
       const Value: string);
     procedure btnOKClick(Sender: TObject);
+    procedure fedModpathFileBeforeDialog(Sender: TObject; var AName: string;
+      var AAction: Boolean);
   private
     procedure GetData;
     procedure SetData;
@@ -110,6 +112,31 @@ begin
   pbColorScheme.Invalidate;
 end;
 
+procedure TfrmEndPointDisplay.fedModpathFileBeforeDialog(Sender: TObject;
+  var AName: string; var AAction: Boolean);
+begin
+  inherited;
+  if AName = '' then
+  begin
+    if frmGoPhast.sdModpathInput.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdModpathInput.FileName,
+        fedModpathFile.DefaultExt);
+    end
+    else if frmGoPhast.sdModflowInput.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdModflowInput.FileName,
+        fedModpathFile.DefaultExt);
+    end
+    else if frmGoPhast.sdSaveDialog.FileName <> '' then
+    begin
+      AName := ChangeFileExt(frmGoPhast.sdSaveDialog.FileName,
+        fedModpathFile.DefaultExt);
+    end;
+  end;
+
+end;
+
 procedure TfrmEndPointDisplay.FormCreate(Sender: TObject);
 var
   Index: TEndLimits;
@@ -153,10 +180,18 @@ var
   ALimitRow: TEndLimits;
   ARow: Integer;
 begin
+  if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
+  begin
+    fedModpathFile.DefaultExt := '.ts_bin';
+  end
+  else
+  begin
+    fedModpathFile.DefaultExt := '.ts';
+  end;
   EndPoints := frmGoPhast.PhastModel.EndPoints;
   fedModpathFile.FileName := EndPoints.FileName;
 
-  cbShowPathlines.Checked := EndPoints.DisplayEndPoints;
+  cbShowPathlines.Checked := EndPoints.Visible;
   Limits := EndPoints.DisplayLimits;
 
   cbLimitToCurrentIn2D.Checked := Limits.LimitToCurrentIn2D;
@@ -353,7 +388,7 @@ begin
           end;
         end;
       end;
-      EndPoints.DisplayEndPoints := cbShowPathlines.Checked;
+      EndPoints.Visible := cbShowPathlines.Checked;
 
       Limits := EndPoints.DisplayLimits;
 

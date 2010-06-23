@@ -3,9 +3,7 @@ inherited frmDataSetValues: TfrmDataSetValues
   HelpKeyword = 'Data_Set_Values_Dialog_Box'
   Caption = 'Data Set Values'
   ClientWidth = 548
-  OnDestroy = FormDestroy
   ExplicitWidth = 556
-  ExplicitHeight = 268
   PixelsPerInch = 96
   TextHeight = 18
   object Panel1: TPanel

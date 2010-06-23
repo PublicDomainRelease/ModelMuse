@@ -68,11 +68,15 @@ type
     FExportTime: Extended;
     // @name writes a header for DataArray using either
     // @link(WriteConstantU2DINT) or @link(WriteU2DRELHeader).
-    procedure WriteHeader(const DataArray: TDataArray; const ArrayName: string);
+    procedure WriteHeader(const DataArray: TDataArray;
+      const ArrayName: string);
     // @name updates FExportTime if it has been at least 1/10
     // second since the last time FExportTime has been updated.
     procedure UpdateExportTime;
   protected
+    // @name generates a comment line for a MODFLOW input file indentifying
+    // the package.
+    function PackageID_Comment(APackage: TModflowPackageSelection): string;
     {@name is the model to be exported.}
     property PhastModel: TPhastModel read FPhastModel;
     // @name closes the MODFLOW input file that is being exported.
@@ -95,7 +99,7 @@ type
     // @seealso(CloseFile)
     procedure OpenFile(const FileName: string);
     // @name converts AFileName to use the correct extension for the file.
-    class function FileName(const AFileName: string): string; 
+    class function FileName(const AFileName: string): string;
     // @name returns the extension (including the initial period) for the
     // MODFLOW input file to be exported.
     class function Extension: string; virtual; abstract;
@@ -177,7 +181,7 @@ type
     procedure WriteIface(const Value: TIface);
     // @name writes the header for the U2DINT array reader in MODFLOW.
     // @param(Comment is used to identify the array being written.)
-    Procedure WriteU2DINTHeader(const Comment: string);
+    Procedure WriteU2DINTHeader(const Comment: string); virtual;
     // @name writes the header for the U2DINT array reader in MODFLOW.
     // @param(Comment is used to identify the array being written.)
     Procedure WriteU2DRELHeader(const Comment: string);
@@ -194,9 +198,6 @@ type
   TCustomPackageWriter = class(TCustomModflowWriter)
   protected
     procedure SetTimeListsUpToDate(TimeLists: TModflowBoundListOfTimeLists);
-    // @name generates a comment line for a MODFLOW input file indentifying
-    // the package.
-    function PackageID_Comment(APackage: TModflowPackageSelection): string;
     // @name identifies the package that is being exported.
     function Package: TModflowPackageSelection; virtual; abstract;
     // @name writes the comments for the current package.
@@ -610,6 +611,9 @@ function WriteModPathBatchFile(ProgramLocations: TProgramLocations;
   FileName: string; ListFile: string; OpenListFile: boolean;
   const LargeBudgetFileResponse: string): string;
 
+function WriteZoneBudgetBatchFile(Model: TPhastModel;
+  FileName: string; OpenListFile: boolean): string;
+
 const
   // @name is the comment assigned to locations in a @link(TDataArray) where
   // no value has been assigned but a value is still needed.
@@ -621,12 +625,13 @@ implementation
 
 uses ModflowEVT_WriterUnit, ModflowRCH_WriterUnit, frmErrorsAndWarningsUnit,
   ModflowUnitNumbers, frmGoPhastUnit, frmProgressUnit, GlobalVariablesUnit,
-  frmFormulaErrorsUnit, GIS_Functions;
+  frmFormulaErrorsUnit, GIS_Functions, ZoneBudgetWriterUnit;
 
 var
   NameFile: TStringList;
 
-procedure AddOpenListFileLine(ListFile: string; OpenListFile: Boolean; BatchFile: TStringList; ProgramLocations: TProgramLocations);
+procedure AddOpenListFileLine(ListFile: string; OpenListFile: Boolean;
+  BatchFile: TStringList; ProgramLocations: TProgramLocations);
 var
   IsNotePad: Boolean;
   TextEditor: string;
@@ -782,6 +787,77 @@ begin
   end;
 end;
 
+function WriteZoneBudgetBatchFile(Model: TPhastModel;
+  FileName: string; OpenListFile: boolean): string;
+var
+  BatchFile: TStringList;
+  AFileName: string;
+  ResponseFile: string;
+  ZoneBudBatName: string;
+  ProgramLocations: TProgramLocations;
+  ListFile: string;
+  ZoneBudget: TZoneBudgetSelect;
+  ZoneBudgetLocation: string;
+  ADirectory: string;
+begin
+  ZoneBudget := Model.ModflowPackages.ZoneBudget;
+  if ZoneBudget.ExportCSV2 then
+  begin
+    ListFile := ChangeFileExt(FileName, '.2.csv');
+    Model.AddFileToArchive(ListFile);
+  end;
+  if ZoneBudget.ExportCSV then
+  begin
+    ListFile := ChangeFileExt(FileName, '.csv');
+    Model.AddFileToArchive(ListFile);
+  end;
+  if ZoneBudget.ExportZBLST then
+  begin
+    ListFile := ChangeFileExt(FileName, '.zblst');
+    Model.AddFileToArchive(ListFile);
+  end;
+
+  ProgramLocations := Model.ProgramLocations;
+
+  ZoneBudgetLocation := ProgramLocations.ZoneBudgetLocation;
+  Model.AddFileToArchive(ZoneBudgetLocation);
+  if (Length(ZoneBudgetLocation) > 0)
+    and (ZoneBudgetLocation[1] <> '"')
+    and (Pos(' ', ZoneBudgetLocation) > 0) then
+  begin
+    ZoneBudgetLocation := '"'
+      + ProgramLocations.ZoneBudgetLocation + '"';
+  end;
+
+  ADirectory := IncludeTrailingPathDelimiter(ExtractFileDir(FileName));
+
+  ResponseFile := ChangeFileExt(FileName, TZoneBudgetResponseFileWriter.Extension);
+  Model.AddFileToArchive(ZoneBudgetLocation);
+  ResponseFile := ExtractFileName(ResponseFile);
+
+  ZoneBudBatName := ADirectory + 'ZB.bat';
+  BatchFile := TStringList.Create;
+  try
+    AFileName :=  ZoneBudgetLocation;
+    BatchFile.Add(AFileName + ' <' + ResponseFile);
+    BatchFile.SaveToFile(ZoneBudBatName);
+  finally
+    BatchFile.Free;
+  end;
+
+  result := ADirectory + 'RunZoneBudget.Bat';
+
+  FileName := ExtractFileName(FileName);
+  BatchFile := TStringList.Create;
+  try
+    BatchFile.Add('call ZB.bat /wait');
+    AddOpenListFileLine(ListFile, OpenListFile, BatchFile, ProgramLocations);
+    BatchFile.Add('pause');
+    BatchFile.SaveToFile(result);
+  finally
+    BatchFile.Free;
+  end;
+end;
 
 { TCustomModflowWriter }
 
@@ -2799,7 +2875,7 @@ begin
   end;
 end;
 
-function TCustomPackageWriter.PackageID_Comment(
+function TCustomModflowWriter.PackageID_Comment(
   APackage: TModflowPackageSelection): string;
 begin
   result := APackage.PackageIdentifier + ' file created on '
@@ -3168,7 +3244,16 @@ begin
     Exit;
   end;
 
-  NQ_Pkg := Observations.Count;
+  NQ_Pkg := 0;
+  for ObsIndex := 0 to Observations.Count - 1 do
+  begin
+    ObservationGroup := Observations[ObsIndex];
+    if Purpose = ObservationGroup.Purpose then
+    begin
+      Inc(NQ_Pkg);
+    end;
+  end;
+
   NQC_Pkg := 0;
   NQT_Pkg := 0;
 

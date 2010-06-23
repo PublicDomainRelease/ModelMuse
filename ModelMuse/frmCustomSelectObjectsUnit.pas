@@ -56,7 +56,7 @@ type
     procedure vstObjectsChecking(Sender: TBaseVirtualTree; Node: PVirtualNode;
       var NewState: TCheckState; var Allowed: Boolean);
     procedure FormCreate(Sender: TObject); override;
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
   private
     // See @link(CanEdit).
     FCanEdit: boolean;

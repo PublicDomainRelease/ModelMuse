@@ -42,6 +42,14 @@ type
       const WarningRoot: string);
     procedure GetMinAndMax(const AnArray: TOneDRealArray; out MinValue,
       MaxValue: double; out MinIndex, MaxIndex: integer);
+    procedure DrawOrdinaryFrontColumns(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2; FrontPoints: T2DRealPointArray);
+    procedure DrawOrdinaryFrontLayers(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2; FrontPoints: T2DRealPointArray);
+    procedure DrawOrdinarySideRows(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2; SidePoints: T2DRealPointArray);
+    procedure DrawOrdinarySideLayers(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2; SidePoints: T2DRealPointArray);
   protected
     // @name creates an OpenGL display list using @link(FCellsGLIndex)
     // to show colored grid cells or elements.
@@ -750,6 +758,538 @@ begin
   frmGoPhast.PhastModel.CacheDataArrays;
 end;
 
+procedure TModflowGrid.DrawOrdinarySideLayers(const BitMap: TBitmap32;
+  const ZoomBox: TQRbwZoomBox2; SidePoints: T2DRealPointArray);
+var
+  APoint: TPoint2D;
+  LineColor: TColor32;
+  LineWidth: Single;
+  UnitIndex: Integer;
+  LocalEvalAt: TEvaluatedAt;
+  DividedUnits: Boolean;
+  LayerBoundaries: TOneDIntegerArray;
+  Points: array of TPoint;
+  LayerIndex: Integer;
+  Column: Integer;
+  RowIndex: Integer;
+  LocalLineWidth: single;
+  function IsActive: boolean;
+  begin
+    result := ((LayerIndex < LayerCount) and
+      IsElementActive(LayerIndex,RowIndex, Column))
+      or ((LayerIndex > 0)
+      and IsElementActive(LayerIndex-1,RowIndex, Column))
+  end;
+  function IsEdge: boolean;
+  begin
+    result := ((LayerIndex < LayerCount) and
+      IsElementActive(LayerIndex,RowIndex, Column))
+      <> ((LayerIndex > 0)
+      and IsElementActive(LayerIndex-1,RowIndex, Column))
+  end;
+begin
+  if GridLineDrawingChoice in [gldcActive, gldcActiveEdge] then
+  begin
+    SetLength(Points, 3);
+  end
+  else
+  begin
+    SetLength(Points, Length(SidePoints));
+  end;
+  IdentifyDividedUnitBoundaries(LayerBoundaries, DividedUnits);
+  SetLocalEvalAt(vdSide, LocalEvalAt);
+  UnitIndex := 0;
+  for LayerIndex := 0 to Length(SidePoints[0]) - 1 do
+  begin
+    SetLayerLineWidth(LineWidth, LayerIndex, UnitIndex, DividedUnits,
+      LayerBoundaries);
+    SetLayerLineColor(LayerIndex, LocalEvalAt, LineColor, LineWidth);
+    case GridLineDrawingChoice of
+      gldcAll:
+        begin
+          for RowIndex := 0 to Length(SidePoints) - 1 do
+          begin
+            APoint := SidePoints[RowIndex, LayerIndex];
+            Points[RowIndex] := Convert2D_SidePoint(ZoomBox, APoint);
+          end;
+          DrawBigPolyline32(BitMap, LineColor, LineWidth, Points, True);
+        end;
+      gldcExterior:
+        begin
+          if (LayerIndex <> 0) and (LayerIndex <> LayerCount)
+            and (LineColor = clBlack32) then
+          begin
+            Continue;
+          end;
+          for RowIndex := 0 to Length(SidePoints) - 1 do
+          begin
+            APoint := SidePoints[RowIndex, LayerIndex];
+            Points[RowIndex] := Convert2D_SidePoint(ZoomBox, APoint);
+          end;
+          DrawBigPolyline32(BitMap, LineColor, LineWidth, Points, True);
+        end;
+      gldcActive:
+        begin
+          Column := SelectedColumn;
+          if Column >= ColumnCount then
+          begin
+            Dec(Column);
+          end;
+          for RowIndex := 0 to RowCount - 1 do
+          begin
+            if IsActive then
+            begin
+              if IsEdge then
+              begin
+                LocalLineWidth := ThickGridLineThickness;
+              end
+              else
+              begin
+                LocalLineWidth := LineWidth;
+              end;
+              APoint := SidePoints[RowIndex*2, LayerIndex];
+              Points[0] := Convert2D_SidePoint(ZoomBox, APoint);
+              APoint := SidePoints[RowIndex*2+1, LayerIndex];
+              Points[1] := Convert2D_SidePoint(ZoomBox, APoint);
+              APoint := SidePoints[RowIndex*2+2, LayerIndex];
+              Points[2] := Convert2D_SidePoint(ZoomBox, APoint);
+              DrawBigPolyline32(BitMap, LineColor, LocalLineWidth, Points, True);
+            end;
+          end;
+        end;
+      gldcActiveEdge:
+        begin
+          if LineColor = clBlack32 then
+          begin
+            LineWidth := OrdinaryGridLineThickness;
+          end
+          else
+          begin
+            LineWidth := ThickGridLineThickness;
+          end;
+          Column := SelectedColumn;
+          if Column >= ColumnCount then
+          begin
+            Dec(Column);
+          end;
+          for RowIndex := 0 to RowCount - 1 do
+          begin
+            if ((LineColor <> clBlack32) and IsActive)
+              or IsEdge then
+            begin
+              APoint := SidePoints[RowIndex*2, LayerIndex];
+              Points[0] := Convert2D_SidePoint(ZoomBox, APoint);
+              APoint := SidePoints[RowIndex*2+1, LayerIndex];
+              Points[1] := Convert2D_SidePoint(ZoomBox, APoint);
+              APoint := SidePoints[RowIndex*2+2, LayerIndex];
+              Points[2] := Convert2D_SidePoint(ZoomBox, APoint);
+              DrawBigPolyline32(BitMap, LineColor, LineWidth, Points, True);
+            end;
+          end;
+        end;
+      else
+        Assert(False);
+    end;
+  end;
+end;
+
+procedure TModflowGrid.DrawOrdinarySideRows(const BitMap: TBitmap32;
+  const ZoomBox: TQRbwZoomBox2; SidePoints: T2DRealPointArray);
+var
+  RowIndex: Integer;
+  LayerIndex: Integer;
+  APoint: TPoint2D;
+  LineColor: TColor32;
+  LineWidth: Single;
+  LocalEvalAt: TEvaluatedAt;
+  Points: array of TPoint;
+  Column: Integer;
+  LocalLineWidth: single;
+  function IsActive: boolean;
+  begin
+    result := ((RowIndex < RowCount) and
+      IsElementActive(LayerIndex,RowIndex, Column))
+      or ((RowIndex > 0)
+      and IsElementActive(LayerIndex,RowIndex-1, Column))
+  end;
+  function IsEdge: boolean;
+  begin
+    result := ((RowIndex < RowCount) and
+      IsElementActive(LayerIndex,RowIndex, Column))
+      <> ((RowIndex > 0)
+      and IsElementActive(LayerIndex,RowIndex-1, Column));
+  end;
+begin
+  if GridLineDrawingChoice in [gldcActive, gldcActiveEdge] then
+  begin
+    SetLength(Points, 2);
+  end
+  else
+  begin
+    SetLength(Points, Length(SidePoints[0]));
+  end;
+  SetLocalEvalAt(vdSide, LocalEvalAt);
+  for RowIndex := 0 to RowCount do
+  begin
+    if (RowIndex mod 10 = 0) or (RowIndex = RowCount) then
+    begin
+      LineWidth := ThickGridLineThickness;
+    end
+    else
+    begin
+      LineWidth := OrdinaryGridLineThickness;
+    end;
+    SetRowLineColor(RowIndex, LocalEvalAt, LineColor, LineWidth);
+    case GridLineDrawingChoice of
+      gldcAll:
+        begin
+          for LayerIndex := 0 to Length(SidePoints[0]) - 1 do
+          begin
+            APoint := SidePoints[RowIndex * 2, LayerIndex];
+            Points[LayerIndex] := Convert2D_SidePoint(ZoomBox, APoint);
+          end;
+          DrawBigPolyline32(BitMap, LineColor, LineWidth, Points, True);
+        end;
+      gldcExterior:
+        begin
+          if (RowIndex <> 0) and (RowIndex <> RowCount)
+            and (LineColor = clBlack32) then
+          begin
+            Continue;
+          end;
+          for LayerIndex := 0 to Length(SidePoints[0]) - 1 do
+          begin
+            APoint := SidePoints[RowIndex * 2, LayerIndex];
+            Points[LayerIndex] := Convert2D_SidePoint(ZoomBox, APoint);
+          end;
+          DrawBigPolyline32(BitMap, LineColor, LineWidth, Points, True);
+        end;
+      gldcActive:
+        begin
+          Column := SelectedColumn;
+          if Column >= ColumnCount then
+          begin
+            Dec(Column);
+          end;
+          for LayerIndex := 0 to LayerCount - 1 do
+          begin
+            if IsActive then
+            begin
+              if IsEdge then
+              begin
+                LocalLineWidth := ThickGridLineThickness;
+              end
+              else
+              begin
+                LocalLineWidth := LineWidth;
+              end;
+              APoint := SidePoints[RowIndex * 2, LayerIndex];
+              Points[0] := Convert2D_SidePoint(ZoomBox, APoint);
+              APoint := SidePoints[RowIndex * 2, LayerIndex+1];
+              Points[1] := Convert2D_SidePoint(ZoomBox, APoint);
+              DrawBigPolyline32(BitMap, LineColor, LocalLineWidth, Points, True);
+            end;
+          end;
+        end;
+      gldcActiveEdge:
+        begin
+          if LineColor = clBlack32 then
+          begin
+            LineWidth := OrdinaryGridLineThickness;
+          end
+          else
+          begin
+            LineWidth := ThickGridLineThickness;
+          end;
+          Column := SelectedColumn;
+          if Column >= ColumnCount then
+          begin
+            Dec(Column);
+          end;
+          for LayerIndex := 0 to LayerCount - 1 do
+          begin
+            if ((LineColor <> clBlack32) and IsActive)
+              or IsEdge then
+            begin
+              APoint := SidePoints[RowIndex * 2, LayerIndex];
+              Points[0] := Convert2D_SidePoint(ZoomBox, APoint);
+              APoint := SidePoints[RowIndex * 2, LayerIndex+1];
+              Points[1] := Convert2D_SidePoint(ZoomBox, APoint);
+              DrawBigPolyline32(BitMap, LineColor, LineWidth, Points, True);
+            end;
+          end;
+        end;
+      else
+        Assert(False);
+    end;
+  end;
+end;
+
+procedure TModflowGrid.DrawOrdinaryFrontLayers(const BitMap: TBitmap32;
+  const ZoomBox: TQRbwZoomBox2; FrontPoints: T2DRealPointArray);
+var
+  LayerIndex: Integer;
+  Points: array of TPoint;
+  LayerBoundaries: TOneDIntegerArray;
+  DividedUnits: Boolean;
+  LocalEvalAt: TEvaluatedAt;
+  UnitIndex: Integer;
+  LineWidth: Single;
+  LineColor: TColor32;
+  ColIndex: Integer;
+  APoint: TPoint2D;
+  Row: Integer;
+  LocalLineWidth: single;
+  function IsActive: boolean;
+  begin
+    result := ((LayerIndex < LayerCount) and
+      IsElementActive(LayerIndex,Row, ColIndex))
+      or ((LayerIndex > 0)
+      and IsElementActive(LayerIndex-1,Row, ColIndex))
+  end;
+  function IsEdge: boolean;
+  begin
+    result := ((LayerIndex < LayerCount) and
+      IsElementActive(LayerIndex,Row, ColIndex))
+      <> ((LayerIndex > 0)
+      and IsElementActive(LayerIndex-1,Row, ColIndex));
+  end;
+begin
+  if GridLineDrawingChoice in [gldcActive, gldcActiveEdge] then
+  begin
+    SetLength(Points, 3);
+  end
+  else
+  begin
+    SetLength(Points, Length(FrontPoints));
+  end;
+  IdentifyDividedUnitBoundaries(LayerBoundaries, DividedUnits);
+  SetLocalEvalAt(vdFront, LocalEvalAt);
+  UnitIndex := 0;
+  for LayerIndex := 0 to Length(FrontPoints[0]) - 1 do
+  begin
+    SetLayerLineWidth(LineWidth, LayerIndex, UnitIndex, DividedUnits,
+      LayerBoundaries);
+    SetLayerLineColor(LayerIndex, LocalEvalAt, LineColor, LineWidth);
+    case GridLineDrawingChoice of
+      gldcAll:
+        begin
+          for ColIndex := 0 to Length(FrontPoints) - 1 do
+          begin
+            APoint := FrontPoints[ColIndex, LayerIndex];
+            Points[ColIndex] := Convert2D_FrontPoint(ZoomBox, APoint);
+          end;
+          DrawBigPolyline32(BitMap, LineColor, LineWidth, Points, True);
+        end;
+      gldcExterior:
+        begin
+          if (LayerIndex <> 0) and (LayerIndex <> (Length(FrontPoints[0]) - 1))
+            and (LineColor = clBlack32) then
+          begin
+            Continue;
+          end;
+          for ColIndex := 0 to Length(FrontPoints) - 1 do
+          begin
+            APoint := FrontPoints[ColIndex, LayerIndex];
+            Points[ColIndex] := Convert2D_FrontPoint(ZoomBox, APoint);
+          end;
+          DrawBigPolyline32(BitMap, LineColor, LineWidth, Points, True);
+        end;
+      gldcActive:
+        begin
+          Row := SelectedRow;
+          if Row >= RowCount then
+          begin
+            Dec(Row);
+          end;
+          for ColIndex := 0 to ColumnCount-1 do
+          begin
+            if IsActive then
+            begin
+              if IsEdge then
+              begin
+                LocalLineWidth := ThickGridLineThickness;
+              end
+              else
+              begin
+                LocalLineWidth := LineWidth;
+              end;
+              APoint := FrontPoints[ColIndex*2, LayerIndex];
+              Points[0] := Convert2D_FrontPoint(ZoomBox, APoint);
+              APoint := FrontPoints[ColIndex*2+1, LayerIndex];
+              Points[1] := Convert2D_FrontPoint(ZoomBox, APoint);
+              APoint := FrontPoints[ColIndex*2+2, LayerIndex];
+              Points[2] := Convert2D_FrontPoint(ZoomBox, APoint);
+              DrawBigPolyline32(BitMap, LineColor, LocalLineWidth, Points, True);
+            end;
+          end;
+        end;
+      gldcActiveEdge:
+        begin
+          if LineColor = clBlack32 then
+          begin
+            LineWidth := OrdinaryGridLineThickness;
+          end
+          else
+          begin
+            LineWidth := ThickGridLineThickness;
+          end;
+          Row := SelectedRow;
+          if Row >= RowCount then
+          begin
+            Dec(Row);
+          end;
+          for ColIndex := 0 to ColumnCount-1 do
+          begin
+            if ((LineColor <> clBlack32) and IsActive)
+              or IsEdge then
+            begin
+              APoint := FrontPoints[ColIndex*2, LayerIndex];
+              Points[0] := Convert2D_FrontPoint(ZoomBox, APoint);
+              APoint := FrontPoints[ColIndex*2+1, LayerIndex];
+              Points[1] := Convert2D_FrontPoint(ZoomBox, APoint);
+              APoint := FrontPoints[ColIndex*2+2, LayerIndex];
+              Points[2] := Convert2D_FrontPoint(ZoomBox, APoint);
+              DrawBigPolyline32(BitMap, LineColor, LineWidth, Points, True);
+            end;
+          end;
+        end;
+      else Assert(False);
+    end;
+  end;
+end;
+
+procedure TModflowGrid.DrawOrdinaryFrontColumns(const BitMap: TBitmap32;
+  const ZoomBox: TQRbwZoomBox2; FrontPoints: T2DRealPointArray);
+var
+  LineWidth: Single;
+  LineColor: TColor32;
+  APoint: TPoint2D;
+  ColIndex: Integer;
+  LocalEvalAt: TEvaluatedAt;
+  Points: array of TPoint;
+  LayerIndex: Integer;
+  Row: Integer;
+  LocalLineWidth: Extended;
+  function IsActive: boolean;
+  begin
+    result := ((ColIndex < ColumnCount) and
+      IsElementActive(LayerIndex,Row, ColIndex))
+      or ((ColIndex > 0)
+      and IsElementActive(LayerIndex,Row, ColIndex-1))
+  end;
+  function IsEdge: boolean;
+  begin
+    result := ((ColIndex < ColumnCount) and
+      IsElementActive(LayerIndex,Row, ColIndex))
+      <> ((ColIndex > 0)
+      and IsElementActive(LayerIndex,Row, ColIndex-1));
+  end;
+begin
+  SetLocalEvalAt(vdFront, LocalEvalAt);
+  if GridLineDrawingChoice in [gldcActive, gldcActiveEdge] then
+  begin
+    SetLength(Points, 2);
+  end
+  else
+  begin
+    SetLength(Points, Length(FrontPoints[0]));
+  end;
+  for ColIndex := 0 to ColumnCount do
+  begin
+    if (ColIndex mod 10 = 0) or (ColIndex = ColumnCount) then
+    begin
+      LineWidth := ThickGridLineThickness;
+    end
+    else
+    begin
+      LineWidth := OrdinaryGridLineThickness;
+    end;
+    SetColumnLineColor(ColIndex, LocalEvalAt, LineColor, LineWidth);
+    case GridLineDrawingChoice of
+      gldcAll:
+        begin
+          for LayerIndex := 0 to Length(FrontPoints[0]) - 1 do
+          begin
+            APoint := FrontPoints[ColIndex * 2, LayerIndex];
+            Points[LayerIndex] := Convert2D_FrontPoint(ZoomBox, APoint);
+          end;
+          DrawBigPolyline32(BitMap, LineColor, LineWidth, Points, True);
+        end;
+      gldcExterior:
+        begin
+          if (ColIndex <> 0) and (ColIndex <> ColumnCount)
+            and (LineColor = clBlack32) then
+          begin
+            Continue;
+          end;
+          for LayerIndex := 0 to Length(FrontPoints[0]) - 1 do
+          begin
+            APoint := FrontPoints[ColIndex * 2, LayerIndex];
+            Points[LayerIndex] := Convert2D_FrontPoint(ZoomBox, APoint);
+          end;
+          DrawBigPolyline32(BitMap, LineColor, LineWidth, Points, True);
+        end;
+      gldcActive:
+        begin
+          Row := SelectedRow;
+          if Row >= RowCount then
+          begin
+            Dec(Row);
+          end;
+          for LayerIndex := 0 to LayerCount - 1 do
+          begin
+            if IsActive then
+            begin
+              if IsEdge then
+              begin
+                LocalLineWidth := ThickGridLineThickness;
+              end
+              else
+              begin
+                LocalLineWidth := LineWidth;
+              end;
+              APoint := FrontPoints[ColIndex*2, LayerIndex];
+              Points[0] := Convert2D_FrontPoint(ZoomBox, APoint);
+              APoint := FrontPoints[ColIndex*2, LayerIndex+1];
+              Points[1] := Convert2D_FrontPoint(ZoomBox, APoint);
+              DrawBigPolyline32(BitMap, LineColor, LocalLineWidth, Points, True);
+            end;
+          end;
+        end;
+      gldcActiveEdge:
+        begin
+          if LineColor = clBlack32 then
+          begin
+            LineWidth := OrdinaryGridLineThickness;
+          end
+          else
+          begin
+            LineWidth := ThickGridLineThickness;
+          end;
+          Row := SelectedRow;
+          if Row >= RowCount then
+          begin
+            Dec(Row);
+          end;
+          for LayerIndex := 0 to LayerCount - 1 do
+          begin
+            if ((LineColor <> clBlack32) and IsActive)
+              or IsEdge then
+            begin
+              APoint := FrontPoints[ColIndex*2, LayerIndex];
+              Points[0] := Convert2D_FrontPoint(ZoomBox, APoint);
+              APoint := FrontPoints[ColIndex*2, LayerIndex+1];
+              Points[1] := Convert2D_FrontPoint(ZoomBox, APoint);
+              DrawBigPolyline32(BitMap, LineColor, LineWidth, Points, True);
+            end;
+          end;
+        end;
+      else Assert(False);
+    end;
+  end;
+end;
+
 procedure TModflowGrid.CheckRowHeights;
 begin
   CheckSizeRatios(RowWidths, 'rows');
@@ -819,28 +1359,14 @@ procedure TModflowGrid.DrawFront(const BitMap: TBitmap32;
   const ZoomBox: TQRbwZoomBox2);
 var
   FrontPoints: T2DRealPointArray;
-  Points: array of TPoint;
   LayerIndex: Integer;
-  APoint: TPoint2D;
-  LineWidth: single;
-  ColIndex: Integer;
-  DividedUnits: boolean;
-  LayerBoundaries: TOneDIntegerArray;
-  UnitIndex: Integer;
   CellOutline: TPointArray;
   AColor, NewColor: TColor;
   PriorLayer: integer;
   ColumnIndex: integer;
   ColumnLimit, LayerLimit: integer;
-  LocalEvalAt: TEvaluatedAt;
-  LocalLineColor: TColor32;
   P: TPolygon32;
   MultiplePolygons: boolean;
-  function Convert2D_FrontPoint(const APoint: TPoint2D): TPoint;
-  begin
-    result.X := ZoomBox.XCoord(APoint.X);
-    result.Y := ZoomBox.YCoord(APoint.Y);
-  end;
 begin
   // for the time being, don't worry about coloring the grid.
   FrontPoints := FrontCellPoints(SelectedRow);
@@ -890,12 +1416,12 @@ begin
               case FrontDataSet.EvaluatedAt of
                 eaBlocks:
                   begin
-                    CellOutline[0] := Convert2D_FrontPoint(FrontPoints[ColumnIndex*2,PriorLayer]);
-                    CellOutline[1] := Convert2D_FrontPoint(FrontPoints[ColumnIndex*2+1,PriorLayer]);
-                    CellOutline[2] := Convert2D_FrontPoint(FrontPoints[ColumnIndex*2+2,PriorLayer]);
-                    CellOutline[3] := Convert2D_FrontPoint(FrontPoints[ColumnIndex*2+2,LayerIndex]);
-                    CellOutline[4] := Convert2D_FrontPoint(FrontPoints[ColumnIndex*2+1,LayerIndex]);
-                    CellOutline[5] := Convert2D_FrontPoint(FrontPoints[ColumnIndex*2,LayerIndex]);
+                    CellOutline[0] := Convert2D_FrontPoint(ZoomBox, FrontPoints[ColumnIndex*2,PriorLayer]);
+                    CellOutline[1] := Convert2D_FrontPoint(ZoomBox,FrontPoints[ColumnIndex*2+1,PriorLayer]);
+                    CellOutline[2] := Convert2D_FrontPoint(ZoomBox,FrontPoints[ColumnIndex*2+2,PriorLayer]);
+                    CellOutline[3] := Convert2D_FrontPoint(ZoomBox,FrontPoints[ColumnIndex*2+2,LayerIndex]);
+                    CellOutline[4] := Convert2D_FrontPoint(ZoomBox,FrontPoints[ColumnIndex*2+1,LayerIndex]);
+                    CellOutline[5] := Convert2D_FrontPoint(ZoomBox,FrontPoints[ColumnIndex*2,LayerIndex]);
                   end;
                 eaNodes:
                   begin
@@ -920,12 +1446,12 @@ begin
           case FrontDataSet.EvaluatedAt of
             eaBlocks:
               begin
-                CellOutline[0] := Convert2D_FrontPoint(FrontPoints[ColumnIndex*2,PriorLayer]);
-                CellOutline[1] := Convert2D_FrontPoint(FrontPoints[ColumnIndex*2+1,PriorLayer]);
-                CellOutline[2] := Convert2D_FrontPoint(FrontPoints[ColumnIndex*2+2,PriorLayer]);
-                CellOutline[3] := Convert2D_FrontPoint(FrontPoints[ColumnIndex*2+2,LayerCount]);
-                CellOutline[4] := Convert2D_FrontPoint(FrontPoints[ColumnIndex*2+1,LayerCount]);
-                CellOutline[5] := Convert2D_FrontPoint(FrontPoints[ColumnIndex*2,LayerCount]);
+                CellOutline[0] := Convert2D_FrontPoint(ZoomBox,FrontPoints[ColumnIndex*2,PriorLayer]);
+                CellOutline[1] := Convert2D_FrontPoint(ZoomBox,FrontPoints[ColumnIndex*2+1,PriorLayer]);
+                CellOutline[2] := Convert2D_FrontPoint(ZoomBox,FrontPoints[ColumnIndex*2+2,PriorLayer]);
+                CellOutline[3] := Convert2D_FrontPoint(ZoomBox,FrontPoints[ColumnIndex*2+2,LayerCount]);
+                CellOutline[4] := Convert2D_FrontPoint(ZoomBox,FrontPoints[ColumnIndex*2+1,LayerCount]);
+                CellOutline[5] := Convert2D_FrontPoint(ZoomBox,FrontPoints[ColumnIndex*2,LayerCount]);
               end;
             eaNodes:
               begin
@@ -942,56 +1468,8 @@ begin
       end;
     end;
   end;
-
-  SetLength(Points, Length(FrontPoints));
-
-  IdentifyDividedUnitBoundaries(LayerBoundaries, DividedUnits);
-  SetLocalEvalAt(vdFront, LocalEvalAt);
-
-  UnitIndex := 0;
-  for LayerIndex := 0 to Length(FrontPoints[0]) - 1 do
-  begin
-    SetLayerLineWidth(LineWidth, LayerIndex, UnitIndex,
-      DividedUnits, LayerBoundaries);
-    SetLayerLineColor(LayerIndex, LocalEvalAt, LocalLineColor, LineWidth);
-    if Not DrawInteriorGridLines2D and (LayerIndex <> 0)
-      and (LayerIndex <> (Length(FrontPoints[0]) - 1))
-      and (LocalLineColor = clBlack32) then
-    begin
-      Continue;
-    end;
-    for ColIndex := 0 to Length(FrontPoints) - 1 do
-    begin
-      APoint := FrontPoints[ColIndex,LayerIndex];
-      Points[ColIndex] := Convert2D_FrontPoint(APoint);
-    end;
-    DrawBigPolyline32(BitMap, LocalLineColor, LineWidth, Points, True);
-  end;
-  SetLength(Points, Length(FrontPoints[0]));
-  for ColIndex := 0 to ColumnCount do
-  begin
-    if (ColIndex mod 10 = 0) or (ColIndex = ColumnCount) then
-    begin
-      LineWidth := ThickGridLineThickness;
-    end
-    else
-    begin
-      LineWidth := OrdinaryGridLineThickness;
-    end;
-    SetColumnLineColor(ColIndex, LocalEvalAt, LocalLineColor, LineWidth);
-    if Not DrawInteriorGridLines2D and (ColIndex <> 0)
-      and (ColIndex <> ColumnCount)
-      and (LocalLineColor = clBlack32) then
-    begin
-      Continue;
-    end;
-    for LayerIndex := 0 to Length(FrontPoints[0]) - 1 do
-    begin
-      APoint := FrontPoints[ColIndex*2,LayerIndex];
-      Points[LayerIndex] := Convert2D_FrontPoint(APoint);
-    end;
-    DrawBigPolyline32(BitMap, LocalLineColor, LineWidth, Points, True);
-  end;
+  DrawOrdinaryFrontLayers(BitMap, ZoomBox, FrontPoints);
+  DrawOrdinaryFrontColumns(BitMap, ZoomBox, FrontPoints);
   DrawFrontContours(ZoomBox, BitMap);
 end;
 
@@ -1024,27 +1502,14 @@ procedure TModflowGrid.DrawSide(const BitMap: TBitmap32;
   const ZoomBox: TQRbwZoomBox2);
 var
   SidePoints: T2DRealPointArray;
-  Points: array of TPoint;
   LayerIndex: Integer;
-  APoint: TPoint2D;
-  LineWidth: single;
   RowIndex: Integer;
-  LayerBoundaries: TOneDIntegerArray;
-  DividedUnits: Boolean;
-  UnitIndex: Integer;
   CellOutline: TPointArray;
   AColor, NewColor: TColor;
   PriorLayer: integer;
   RowLimit, LayerLimit: integer;
-  LocalEvalAt: TEvaluatedAt;
-  LocalLineColor: TColor32;
   P: TPolygon32;
   MultiplePolygons: boolean;
-  function Convert2D_SidePoint(const APoint: TPoint2D): TPoint;
-  begin
-    result.X := ZoomBox.XCoord(APoint.Y);
-    result.Y := ZoomBox.YCoord(APoint.X);
-  end;
 begin
   // for the time being, don't worry about coloring the grid.
   SidePoints := SideCellPoints(SelectedColumn);
@@ -1094,12 +1559,12 @@ begin
               case SideDataSet.EvaluatedAt of
                 eaBlocks:
                   begin
-                    CellOutline[0] := Convert2D_SidePoint(SidePoints[RowIndex*2,PriorLayer]);
-                    CellOutline[1] := Convert2D_SidePoint(SidePoints[RowIndex*2+1,PriorLayer]);
-                    CellOutline[2] := Convert2D_SidePoint(SidePoints[RowIndex*2+2,PriorLayer]);
-                    CellOutline[3] := Convert2D_SidePoint(SidePoints[RowIndex*2+2,LayerIndex]);
-                    CellOutline[4] := Convert2D_SidePoint(SidePoints[RowIndex*2+1,LayerIndex]);
-                    CellOutline[5] := Convert2D_SidePoint(SidePoints[RowIndex*2,LayerIndex]);
+                    CellOutline[0] := Convert2D_SidePoint(ZoomBox, SidePoints[RowIndex*2,PriorLayer]);
+                    CellOutline[1] := Convert2D_SidePoint(ZoomBox, SidePoints[RowIndex*2+1,PriorLayer]);
+                    CellOutline[2] := Convert2D_SidePoint(ZoomBox, SidePoints[RowIndex*2+2,PriorLayer]);
+                    CellOutline[3] := Convert2D_SidePoint(ZoomBox, SidePoints[RowIndex*2+2,LayerIndex]);
+                    CellOutline[4] := Convert2D_SidePoint(ZoomBox, SidePoints[RowIndex*2+1,LayerIndex]);
+                    CellOutline[5] := Convert2D_SidePoint(ZoomBox, SidePoints[RowIndex*2,LayerIndex]);
                   end;
                 eaNodes:
                   begin
@@ -1123,12 +1588,12 @@ begin
           case SideDataSet.EvaluatedAt of
             eaBlocks:
               begin
-                CellOutline[0] := Convert2D_SidePoint(SidePoints[RowIndex*2,PriorLayer]);
-                CellOutline[1] := Convert2D_SidePoint(SidePoints[RowIndex*2+1,PriorLayer]);
-                CellOutline[2] := Convert2D_SidePoint(SidePoints[RowIndex*2+2,PriorLayer]);
-                CellOutline[3] := Convert2D_SidePoint(SidePoints[RowIndex*2+2,LayerCount]);
-                CellOutline[4] := Convert2D_SidePoint(SidePoints[RowIndex*2+1,LayerCount]);
-                CellOutline[5] := Convert2D_SidePoint(SidePoints[RowIndex*2,LayerCount]);
+                CellOutline[0] := Convert2D_SidePoint(ZoomBox, SidePoints[RowIndex*2,PriorLayer]);
+                CellOutline[1] := Convert2D_SidePoint(ZoomBox, SidePoints[RowIndex*2+1,PriorLayer]);
+                CellOutline[2] := Convert2D_SidePoint(ZoomBox, SidePoints[RowIndex*2+2,PriorLayer]);
+                CellOutline[3] := Convert2D_SidePoint(ZoomBox, SidePoints[RowIndex*2+2,LayerCount]);
+                CellOutline[4] := Convert2D_SidePoint(ZoomBox, SidePoints[RowIndex*2+1,LayerCount]);
+                CellOutline[5] := Convert2D_SidePoint(ZoomBox, SidePoints[RowIndex*2,LayerCount]);
               end;
             eaNodes:
               begin
@@ -1145,57 +1610,8 @@ begin
       end;
     end;
   end;
-
-  SetLength(Points, Length(SidePoints));
-  IdentifyDividedUnitBoundaries(LayerBoundaries, DividedUnits);
-  SetLocalEvalAt(vdSide, LocalEvalAt);
-
-  UnitIndex := 0;
-  for LayerIndex := 0 to Length(SidePoints[0]) - 1 do
-  begin
-    SetLayerLineWidth(LineWidth, LayerIndex, UnitIndex,
-      DividedUnits, LayerBoundaries);
-    SetLayerLineColor(LayerIndex, LocalEvalAt, LocalLineColor, LineWidth);
-    if Not DrawInteriorGridLines2D and (LayerIndex <> 0)
-      and (LayerIndex <> LayerCount)
-      and (LocalLineColor = clBlack32) then
-    begin
-      Continue;
-    end;
-    for RowIndex := 0 to Length(SidePoints) - 1 do
-    begin
-      APoint := SidePoints[RowIndex,LayerIndex];
-      Points[RowIndex] :=
-      Convert2D_SidePoint(APoint);
-    end;
-    DrawBigPolyline32(BitMap, LocalLineColor, LineWidth, Points, True);
-  end;
-  SetLength(Points, Length(SidePoints[0]));
-  for RowIndex := 0 to RowCount do
-  begin
-    if (RowIndex mod 10 = 0) or (RowIndex = RowCount) then
-    begin
-      LineWidth := ThickGridLineThickness;
-    end
-    else
-    begin
-      LineWidth := OrdinaryGridLineThickness;
-    end;
-    SetRowLineColor(RowIndex, LocalEvalAt, LocalLineColor, LineWidth);
-    if Not DrawInteriorGridLines2D and (RowIndex <> 0)
-      and (RowIndex <> RowCount)
-      and (LocalLineColor = clBlack32) then
-    begin
-      Continue;
-    end;
-    for LayerIndex := 0 to Length(SidePoints[0]) - 1 do
-    begin
-      APoint := SidePoints[RowIndex*2,LayerIndex];
-      Points[LayerIndex] :=
-      Convert2D_SidePoint(APoint);
-    end;
-    DrawBigPolyline32(BitMap, LocalLineColor, LineWidth, Points, True);
-  end;
+  DrawOrdinarySideLayers(BitMap, ZoomBox, SidePoints);
+  DrawOrdinarySideRows(BitMap, ZoomBox, SidePoints);
   DrawSideContours(ZoomBox, BitMap);
 end;
 

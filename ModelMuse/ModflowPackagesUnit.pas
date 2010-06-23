@@ -37,6 +37,7 @@ type
     FMnw2Package: TMultinodeWellSelection;
     FBcfPackage: TModflowPackageSelection;
     FSubPackage: TSubPackageSelection;
+    FZoneBudget: TZoneBudgetSelect;
     procedure SetChdBoundary(const Value: TChdPackage);
     procedure SetLpfPackage(const Value: TLpfSelection);
     procedure SetPcgPackage(const Value: TPcgSelection);
@@ -66,6 +67,7 @@ type
     procedure SetMnw2Package(const Value: TMultinodeWellSelection);
     procedure SetBcfPackage(const Value: TModflowPackageSelection);
     procedure SetSubPackage(const Value: TSubPackageSelection);
+    procedure SetZoneBudget(const Value: TZoneBudgetSelect);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TObject);
@@ -124,6 +126,8 @@ type
       read FBcfPackage write SetBcfPackage;
     property SubPackage: TSubPackageSelection
       read FSubPackage write SetSubPackage;
+    property ZoneBudget: TZoneBudgetSelect
+      read FZoneBudget write SetZoneBudget;
     // Assign, Create, Destroy, SelectedPackageCount
     // and Reset must be updated each time a new package is added.
   end;
@@ -142,7 +146,7 @@ const
   StrHUF_Identifier = 'HUF2: Hydrogeologic Unit Flow package';
   StrSFR_Identifier = 'SFR: Stream-Flow Routing package';
   StrObservations = 'Observations';
-  StrMODPATH = 'MODPATH';
+  StrPostProcessors = 'Post processors';
 //  StrFlowFeature = 'Flow Feature';
 
 implementation
@@ -188,6 +192,7 @@ begin
     Mnw2Package := SourcePackages.Mnw2Package;
     BcfPackage := SourcePackages.BcfPackage;
     SubPackage := SourcePackages.SubPackage;
+    ZoneBudget := SourcePackages.ZoneBudget;
   end
   else
   begin
@@ -295,7 +300,7 @@ begin
 
   FModPath := TModpathSelection.Create(Model);
   FModPath.PackageIdentifier := 'MODPATH';
-  FModPath.Classification := StrMODPATH;
+  FModPath.Classification := StrPostProcessors;
   FModPath.SelectionType := stCheckBox;
 
   FChobPackage := TModflowPackageSelection.Create(Model);
@@ -332,10 +337,16 @@ begin
   FSubPackage.PackageIdentifier := 'SUB: Subsidence and Aquifer-System Compaction Package';
   FSubPackage.Classification := 'Subsidence';
   FSubPackage.SelectionType := stCheckBox;
+
+  FZoneBudget := TZoneBudgetSelect.Create(Model);
+  FZoneBudget.PackageIdentifier := 'ZONEBUDGET';
+  FZoneBudget.Classification := StrPostProcessors;
+  FZoneBudget.SelectionType := stCheckBox;
 end;
 
 destructor TModflowPackages.Destroy;
 begin
+  FZoneBudget.Free;
   FSubPackage.Free;
   FBcfPackage.Free;
   FRvobPackage.Free;
@@ -398,6 +409,7 @@ begin
   HufPackage.IsSelected := False;
   BcfPackage.IsSelected := False;
   SubPackage.IsSelected := False;
+  ZoneBudget.IsSelected := False;
 
   DrtPackage.Comments.Clear;
   DrnPackage.Comments.Clear;
@@ -427,6 +439,7 @@ begin
   HufPackage.Comments.Clear;
   BcfPackage.Comments.Clear;
   SubPackage.Comments.Clear;
+  ZoneBudget.Comments.Clear;
 
   PcgPackage.InitializeVariables;
   GmgPackage.InitializeVariables;
@@ -436,6 +449,7 @@ begin
   ModPath.InitializeVariables;
   HufPackage.InitializeVariables;
   SubPackage.InitializeVariables;
+  ZoneBudget.InitializeVariables;
 end;
 
 function TModflowPackages.SelectedPackageCount: integer;
@@ -564,6 +578,10 @@ begin
     Inc(Result);
   end;
   if SubPackage.IsSelected then
+  begin
+    Inc(Result);
+  end;
+  if ZoneBudget.IsSelected then
   begin
     Inc(Result);
   end;
@@ -727,6 +745,11 @@ end;
 procedure TModflowPackages.SetWelPackage(const Value: TWellPackage);
 begin
   FWelPackage.Assign(Value);
+end;
+
+procedure TModflowPackages.SetZoneBudget(const Value: TZoneBudgetSelect);
+begin
+  FZoneBudget.Assign(Value);
 end;
 
 end.

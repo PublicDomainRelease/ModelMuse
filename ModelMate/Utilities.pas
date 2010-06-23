@@ -5,12 +5,16 @@ interface
   uses Classes, Dialogs, SysUtils, Windows, StdCtrls, Forms, StrUtils,
        GlobalBasicData, RbwDataGrid4, Grids;
 
-  procedure AllowEditing(const RbwGrid: TRbwDataGrid4; Allow: boolean);
-  procedure AllowRowSelect(const RbwGrid: TRbwDataGrid4; Allow: boolean);
+  procedure AllowEditing(RbwGrid: TRbwDataGrid4; Allow: boolean);
+  procedure SetColorSelectedRow(RbwGrid: TRbwDataGrid4; Allow: boolean);
   function BooleanToYesOrNo(const Bool: boolean): string;
   function BuildCommand(const ProgName, ArgList: string; const Quote: boolean): string;
   procedure CenterForm(aForm: TForm);
+  function CheckNamesInColumn(RbwGrid: TRbwDataGrid4; Column: integer;
+               MaxLen: integer; var ErrName: string; var ErrRow: integer): boolean;
+  procedure ClearAllSelections(RbwGrid: TRbwDataGrid4);
   function ComputerName: String;
+  function CountSelectedRows(const RbwGrid: TRbwDataGrid4): integer;
   function DirectoryIsLocal(const Dir: string): boolean;
   function DirFilToAbsPath(const Dir, FName: string): string;
   function ExclTrailingBackslash(const SourceDir: string): string;
@@ -22,8 +26,10 @@ interface
   function GetNextDataString(const slSource: TStringList; var Index: integer): string;
   function GetNextString(const slSource: TStringList; var Index: integer): string;
   function GetQuotedString(const Str: string; var StrRem: string): string;
+  function IsBlank(const Str: string): boolean;
   function IsNonBlank(const Str: string): boolean;
   function IsUNC(const Directory: string): boolean;
+  function J_Valid_Name(Name: string; MaxLen: integer): boolean;
   function LastPos(const Str: string; const SubStr: string): integer;
   function LongInt2Bool(const IBool: LongInt): boolean;
   function MyExtractRelativePath(const BaseName, DestName: string): string;
@@ -41,6 +47,8 @@ interface
   function TrimLeadingBlanks(const Str: string): string;
   function TrimTrailingBlanks(const Str: string): string;
   function WriteBatchFile(ProgramLocation, CmdLineOption, BatchName: string): string;
+  function WriteCustomBatchFile(ProgramLocation, AbsMIF, OutPrefix, BatchName,
+                                ModelDir: string): string;
   function YesOrNoToBoolean(const Str: string): boolean;
 
 
@@ -48,7 +56,7 @@ implementation
 
 //###################################################################
 
-procedure AllowEditing(const RbwGrid: TRbwDataGrid4; Allow: boolean);
+procedure AllowEditing(RbwGrid: TRbwDataGrid4; Allow: boolean);
 begin
   if Allow then
     begin
@@ -63,19 +71,6 @@ begin
         begin
           RbwGrid.Options := RbwGrid.Options - [goEditing];
         end;
-    end;
-end;
-//###################################################################
-
-procedure AllowRowSelect(const RbwGrid: TRbwDataGrid4; Allow: boolean);
-begin
-  if Allow then
-    begin
-      RbwGrid.ColorSelectedRow := True;
-    end
-  else
-    begin
-      RbwGrid.ColorSelectedRow := False;
     end;
 end;
 
@@ -136,6 +131,48 @@ end;
 
 //###################################################################
 
+function CheckNamesInColumn(RbwGrid: TRbwDataGrid4; Column: integer; MaxLen: integer;
+                            var ErrName: string; var ErrRow: integer): boolean;
+var
+  I: Integer;
+begin
+  // Validate contents of one column of a TRbwDataGrid4 as valid JUPITER names
+  result := True;
+  ErrName := '';
+  ErrRow := -1;
+  for I := 1 to RbwGrid.RowCount - 1 do
+  begin
+    if not J_Valid_Name(RbwGrid.Cells[Column, I],MaxLen) then
+    begin
+      ErrName := RbwGrid.Cells[Column, I];
+      ErrRow := I;
+      result := False;
+      Break;
+    end;
+  end;
+end;
+
+//###################################################################
+
+procedure ClearAllSelections(RbwGrid: TRbwDataGrid4);
+var
+  DummyRect: TGridRect;
+begin
+  // Set selections to be invisible and invalid
+  RbwGrid.ClearSelection;  // Affects range selection.
+  DummyRect.Left := -1;
+  DummyRect.Top := -1;
+  DummyRect.Right := -1;
+  DummyRect.Bottom := -1;
+  //
+//  DummyRect.Left := 0;
+//  DummyRect.Top := 0;
+//  DummyRect.Right := 0;
+//  DummyRect.Bottom := 0;
+  RbwGrid.Selection := DummyRect;
+end;
+//###################################################################
+
 function ComputerName: String;
 var
   buffer: array[0..Max_ComputerName_Length-1] of char;
@@ -148,6 +185,25 @@ begin
     Result := ''
 end;
 
+//###################################################################
+
+function CountSelectedRows(const RbwGrid: TRbwDataGrid4): integer;
+var
+  I, J: integer;
+begin
+  result := 0;
+  for I := 0 to RbwGrid.RowCount - 1 do
+    begin
+      for J := 0 to RbwGrid.ColCount - 1 do
+        begin
+          if RbwGrid.IsSelectedCell(J,I) then
+            begin
+              result := result + 1;
+              Break;
+            end;
+        end;
+    end;
+end;
 //###################################################################
 
 function DirectoryIsLocal(const Dir: string): boolean;
@@ -391,6 +447,13 @@ end;
 
 //###################################################################
 
+function IsBlank(const Str: string): boolean;
+begin
+  result := not IsNonBlank(Str);
+end;
+
+//###################################################################
+
 function IsNonBlank(const Str: string): boolean;
 var
   S: string;
@@ -408,6 +471,46 @@ begin
   else
     result := False;
 end;
+
+//###################################################################
+
+function J_Valid_Name(Name: string; MaxLen: integer): boolean;
+// Check Name argument for conformance with JUPITER naming convention
+type
+  setChar = set of Char;
+var
+  Ch: Char;
+  I, LenName: integer;
+  Letters, Digits, Symbols, JChars: setChar;
+begin
+  // Initialize character sets
+  Letters := [ 'A' .. 'Z', 'a' .. 'z' ];
+  Digits := [ '0' .. '9' ];
+  Symbols := [ '_', '.', ':', '&', '#', '@' ];
+  JChars := Letters + Digits + Symbols;
+  //
+  result := True;
+  LenName := Length(Name);
+  if (LenName > 0) and (LenName <= MaxLen) then
+    begin
+      Ch := Name[1];  //bad when LenName=0
+      if Ch in Letters then
+        begin
+          for I := 2 to LenName do
+            begin
+              Ch := Name[I];
+              if not (Ch in JChars) then
+                result := False;
+            end;
+        end
+      else
+        result := False;
+    end
+  else
+    begin
+      result := False;
+    end;
+end; // function J_Valid_Name
 
 //###################################################################
 
@@ -763,6 +866,21 @@ begin
         end;
     end;
 end;
+
+//###################################################################
+
+procedure SetColorSelectedRow(RbwGrid: TRbwDataGrid4; Allow: boolean);
+begin
+  if Allow then
+    begin
+      RbwGrid.ColorSelectedRow := True;
+    end
+  else
+    begin
+      RbwGrid.ColorSelectedRow := False;
+    end;
+end;
+
 //###################################################################
 
 function StrToBoolean(const Str: string): boolean;
@@ -855,6 +973,42 @@ begin
   BatchFile := TStringList.Create;
   try
     BatchFile.Add(ProgramLocation + ' ' + CmdLineOption + ' /wait');
+    BatchFile.Add('pause');
+    BatchFile.SaveToFile(result);
+  finally
+    BatchFile.Free;
+  end;
+end;
+
+//###################################################################
+
+function WriteCustomBatchFile(ProgramLocation, AbsMIF, OutPrefix, BatchName,
+                              ModelDir: string): string;
+var
+  BatchFile: TStringList;
+  AbsAppDir, AbsPrefix, Path: string;
+begin
+  if (Length(ProgramLocation) > 0) and (ProgramLocation[1] <> '"') then
+  begin
+    ProgramLocation := '"' + ProgramLocation + '"';
+  end;
+  Path := IncludeTrailingPathDelimiter(ExtractFileDir(AbsMIF));
+  if Path = '\' then Path := '';
+  result := Path + BatchName + '.bat';
+  AbsAppDir := ExtractFileDir(AbsMIF);
+  AbsPrefix := AbsAppDir + '\' + OutPrefix;
+  BatchFile := TStringList.Create;
+  try
+    BatchFile.Add('@echo off');
+    BatchFile.Add('REM  CD to directory from which process model is invoked');
+    BatchFile.Add('cd ' + ModelDir);
+    BatchFile.Add('');
+    BatchFile.Add('REM  Invoke analysis application');
+    BatchFile.Add(ProgramLocation + ' ' + AbsMIF + ' ' + AbsPrefix + ' /wait');
+    BatchFile.Add('');
+    BatchFile.Add('REM  Return to directory where analysis-application files reside');
+    BatchFile.Add('cd ' + AbsAppDir);
+    BatchFile.Add('');
     BatchFile.Add('pause');
     BatchFile.SaveToFile(result);
   finally

@@ -105,8 +105,9 @@ interface
         function Add: TPri;
         procedure Append(Source: TPriSet);
         procedure Assign(Source: TPersistent); override;
-//        procedure Empty;
+        procedure ChangeGroupNames(OldGroup, NewGroup: string);
         function NumPriByGroup(GpName: string): integer;
+        procedure SetGpDefault;
    end;  // end of TPriSet
 
     TPriorSetup = class(TComponent)
@@ -657,7 +658,7 @@ begin
       Index := self.Count;
       self.Add;
       self.Items[Index].Assign(Source.Items[I]);
-    end;  
+    end;
 end;
 
 procedure TPriSet.Assign(Source: TPersistent);
@@ -677,6 +678,21 @@ begin
     end
   else
     inherited;
+end;
+
+procedure TPriSet.ChangeGroupNames(OldGroup, NewGroup: string);
+var
+  I, AttPos: integer;
+begin
+  AttPos := PriAttPos(piatGroupName);
+  if self.Count > 0 then
+    begin
+      for I := 0 to Count - 1 do
+        begin
+          if Items[I].AllAtts.Items[AttPos].Text = OldGroup then
+            Items[I].AllAtts.Items[AttPos].Text := NewGroup;
+        end;
+    end;
 end;
 
 constructor TPriSet.Create;
@@ -721,6 +737,19 @@ begin
         end;
     end;
   result := K;
+end;
+
+procedure TPriSet.SetGpDefault;
+var
+  AttPos: integer;
+begin
+  if Count = 0 then
+    begin
+      Add;
+      Items[0].Initialize('DefaultPrior','DefaultPrior');
+      AttPos := PriAttPos(piatUseFlag);
+      Items[0].AllAtts.Items[AttPos].Text := 'Yes';
+    end;
 end;
 
 procedure TPriSet.SetItem(Index: integer; const Value: TPri);

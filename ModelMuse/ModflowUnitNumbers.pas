@@ -69,6 +69,7 @@ const
   StrSub_VD_Out = 'SUB_VD_OUT';
   StrSub_NDPCH_Out = 'SUB_NDPCH_OUT';
   StrSub_DPCH_Out = 'SUB_DPCH_OUT';
+  StrZoneBudget = 'ZONEBUDGET';
 
   Solvers: array[0..3] of string = (StrPCG, StrGMG, StrSIP, StrDE4);
   FlowPackages: array[0..2] of string = (StrLPF, StrHUF2, StrBCF);

@@ -74,6 +74,11 @@ unit TripackProcedures;
 
 interface
 
+{$IFNDEF MyDebug}
+  {$HINTS OFF}
+  {$WARNINGS OFF}
+{$ENDIF}
+
 uses FastGeo, TripackTypes;
 
 procedure ADDCST (const NCC: longint; const LCC: TNcmaxIntArray;
@@ -8894,5 +8899,10 @@ begin
 //!     .        ' range ***')
 //      END
 end;
+
+{$IFNDEF MyDebug}
+  {$HINTS ON}
+  {$WARNINGS ON}
+{$ENDIF}
 
 end.

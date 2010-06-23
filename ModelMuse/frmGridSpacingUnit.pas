@@ -545,6 +545,9 @@ var
   Grid: TRbwDataGrid4;
 begin
   // Move to next row when the user depresses the return key.
+
+  // It isn't clear that this works.  The ActiveControl may never be
+  // a TInplaceEdit.
   if Key = #13 then
   begin
     if ActiveControl is TInplaceEdit then

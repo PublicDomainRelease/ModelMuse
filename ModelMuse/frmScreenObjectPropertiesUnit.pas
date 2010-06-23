@@ -9,7 +9,7 @@ unit frmScreenObjectPropertiesUnit;
 
 interface
 
-uses        
+uses Windows,       
   SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls,
   frmCustomGoPhastUnit, ExtCtrls, Buttons, ScreenObjectUnit, ClassificationUnit,
   Grids, RbwDataGrid4, ComCtrls, RbwParser, DataSetUnit, Contnrs,
@@ -1055,7 +1055,7 @@ type
     procedure FormCreate(Sender: TObject); override;
     // @name destroy variables.
 
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
 
     // See @link(FInitialWidth).
     procedure FormResize(Sender: TObject);
@@ -1331,6 +1331,7 @@ type
     FDeletingPhastTime: Boolean;
     FPriorElevationCount: integer;
     FModpath_Node: Pointer;
+    FCanFillTreeView: Boolean;
     Function GenerateNewDataSetFormula(DataArray: TDataArray): string;
     // @name assigns new formulas for @link(TDataArray)s for each
     // @link(TScreenObject) in @link(FNewProperties).
@@ -1685,7 +1686,7 @@ type
     procedure StoreModflowBoundaryValues(Frame: TframeScreenObjectNoParam;
       Times: TTimeArray; Boundary: TModflowBoundary);
     procedure StoreMF_BoundColl(ColumnOffset: Integer;
-      BoundaryValues: TCustomMF_BoundColl; Times: TTimeArray;
+      BoundaryValues: TCustomMF_BoundColl; const Times: TTimeArray;
       Frame: TframeScreenObjectNoParam);
     procedure GetMF_BoundaryTimes(var Times: TTimeArray;
       Frame: TframeScreenObjectNoParam);
@@ -1845,7 +1846,7 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
   ModflowEtsUnit, ModflowLakUnit, frameCrossSectionUnit, frameFlowTableUnit,
   ModflowUzfUnit, ModflowSfrUnit, ModflowHobUnit, ModflowHfbUnit, 
   LayerStructureUnit, ModpathParticleUnit, IntListUnit, 
-  frmManageFluxObservationsUnit, ModflowGageUnit, ModflowMnw2Unit;
+  frmManageFluxObservationsUnit, ModflowGageUnit, ModflowMnw2Unit, JvGroupBox;
 
 {$R *.dfm}
 
@@ -2519,6 +2520,7 @@ var
   Index: Integer;
   ValueItem: TValueArrayItem;
 begin
+  FCanFillTreeView := False;
   tabImportedData.TabVisible := True;
   memoComments.Text := AScreenObject.Comment;
   SetCheckBoxCaptions;
@@ -2600,7 +2602,11 @@ begin
     SetElevationDataForSingleObject;
     SetGridCellSizeDataForSingleObject;
 
-    FillDataSetsTreeView(List);
+    if (FNewProperties = nil) or (FNewProperties.Count <= 1) then
+    begin
+      FCanFillTreeView := True;
+      FillDataSetsTreeView(List);
+    end;
 
   finally
     List.Free;
@@ -2617,7 +2623,10 @@ begin
   List := TList.Create;
   try
     List.Add(AScreenObject);
-    FillPropertyCollection(FNewProperties, List);
+    if FNewProperties.Count = 0 then
+    begin
+      FillPropertyCollection(FNewProperties, List);
+    end;
     GetModflowBoundaries(List);
   finally
     List.Free;
@@ -3676,13 +3685,15 @@ var
   Compiler: TRbwParser;
   FirstScreenObject: TScreenObject;
 begin
+  FCanFillTreeView := False;
+  OutputDebugString('SAMPLING ON');
   if FNewProperties = nil then
   begin
     FNewProperties := TScreenObjectEditCollection.Create;
     FNewProperties.OwnScreenObject := True;
   end;
   FillPropertyCollection(FNewProperties, AScreenObjectList);
-  
+
   IsLoaded := False;
   TempList := TStringList.Create;
   try
@@ -3690,6 +3701,7 @@ begin
     begin
       // get data for first screen object
       GetData(AScreenObjectList[0]);
+      FCanFillTreeView := False;
       IsLoaded := False;
     end;
     if AScreenObjectList.Count > 1 then
@@ -3766,7 +3778,11 @@ begin
 
     end;
     FScreenObject := nil;
-    FillDataSetsTreeView(AScreenObjectList);
+    FCanFillTreeView := True;
+    if AScreenObjectList.Count > 1 then
+    begin
+      FillDataSetsTreeView(AScreenObjectList);
+    end;
   finally
     TempList.Free;
   end;
@@ -3795,6 +3811,7 @@ begin
   EmphasizeValueChoices;
   UpdateSubComponents(self);
   UpdateCurrentEdit;
+  OutputDebugString('SAMPLING OFF');
 end;
 
 procedure TfrmScreenObjectProperties.ClearExpressionsAndVariables();
@@ -5376,6 +5393,7 @@ var
   HydrogeologicUnitNames: TStringList;
   HufDataArrays: TClassificationList;
 begin
+
   { TODO : Nearly the same code is use in TfrmFormulaUnit, TFrmGridColor,
   TfrmScreenObjectProperties, and TfrmDataSets. Find a way to combine them. }
   // depends on rgEvaluatedAt.ItemIndex
@@ -5383,7 +5401,7 @@ begin
   // depends on edZ.Text
   // depends on edHighZ.Text
   // depends on edLowZ.Text
-  if FDataEdits.Count = 0 then
+  if not FCanFillTreeView or (FDataEdits.Count = 0) then
   begin
     Exit;
   end;
@@ -8179,7 +8197,7 @@ begin
 end;
 
 procedure TfrmScreenObjectProperties.StoreMF_BoundColl(ColumnOffset: Integer;
-  BoundaryValues: TCustomMF_BoundColl; Times: TTimeArray;
+  BoundaryValues: TCustomMF_BoundColl; const Times: TTimeArray;
   Frame: TframeScreenObjectNoParam);
 var
   RowIndex: Integer;
@@ -8217,7 +8235,7 @@ begin
       end;
     end;
   end;
-  for RowIndex := DataGrid.RowCount-1  to BoundaryValues.Count -1 do
+  for RowIndex := DataGrid.RowCount  to BoundaryValues.Count do
   begin
     for BoundIndex := 0 to BoundaryValues.TimeListCount - 1 do
     begin
@@ -9074,6 +9092,7 @@ var
   VariableName: string;
   Edit: TScreenObjectDataEdit;
 begin
+  Assert(Expression <> nil);
   Used := TStringList.Create;
   try
     Edit := FDataEdits[EditIndex];
@@ -13526,6 +13545,18 @@ begin
     ParamType := ptRCH;
     StoreModflowBoundary(Frame, ParamType, FRCH_Node);
 
+    if frmGoPhast.PhastModel.ModflowTransientParameters.
+      CountParam(ptRCH) > 0 then
+    begin
+      for Index := 0 to FNewProperties.Count - 1 do
+      begin
+        Item := FNewProperties[Index];
+        Item.ScreenObject.CreateRchBoundary;
+        Boundary := Item.ScreenObject.ModflowRchBoundary;
+        Boundary.Values.Clear;
+      end;
+    end;
+
     if frmGoPhast.PhastModel.ModflowPackages.
       RchPackage.TimeVaryingLayers then
     begin
@@ -13566,6 +13597,18 @@ begin
     Frame := frameEvtParam;
     ParamType := ptEVT;
     StoreModflowBoundary(Frame, ParamType, FEVT_Node);
+
+    if frmGoPhast.PhastModel.ModflowTransientParameters.
+      CountParam(ptEVT) > 0 then
+    begin
+      for Index := 0 to FNewProperties.Count - 1 do
+      begin
+        Item := FNewProperties[Index];
+        Item.ScreenObject.CreateEvtBoundary;
+        Boundary := Item.ScreenObject.ModflowEvtBoundary;
+        Boundary.Values.Clear;
+      end;
+    end;
 
     GetMF_BoundaryTimes(Times, Frame);
     if frmGoPhast.PhastModel.ModflowPackages.
@@ -13623,6 +13666,18 @@ begin
     Frame := frameEtsParam;
     ParamType := ptETS;
     StoreModflowBoundary(Frame, ParamType, FETS_Node);
+
+    if frmGoPhast.PhastModel.ModflowTransientParameters.
+      CountParam(ptETS) > 0 then
+    begin
+      for Index := 0 to FNewProperties.Count - 1 do
+      begin
+        Item := FNewProperties[Index];
+        Item.ScreenObject.CreateEtsBoundary;
+        Boundary := Item.ScreenObject.ModflowEtsBoundary;
+        Boundary.Values.Clear;
+      end;
+    end;
 
     GetMF_BoundaryTimes(Times, Frame);
     if frmGoPhast.PhastModel.ModflowPackages.
@@ -14460,11 +14515,21 @@ procedure TfrmScreenObjectProperties.frameModpathParticlesgbParticlesCheckBoxCli
   Sender: TObject);
 var
   Check: TCheckBox;
+  Index: Integer;
+  GB: TJvGroupBox;
 begin
   inherited;
+  GB := frameModpathParticles.gbParticles;
+  Check := GB.Components[0] as TCheckBox;
+  for Index := 0 to GB.ControlCount - 1 do
+  begin
+    if GB.Controls[Index] <> Check then
+    begin
+      GB.Controls[Index].Enabled := Check.State <> cbUnChecked;
+    end;
+  end;
   if IsLoaded then
   begin
-    Check := frameModpathParticles.gbParticles.Components[0] as TCheckBox;
     Check.AllowGrayed := False;
     frameModpathParticles.CreateParticles;
     StoreModPath;
@@ -14512,11 +14577,14 @@ begin
       ScreenObject := Item.ScreenObject;
       Particles := ScreenObject.ModpathParticles;
       CheckBox := frameModpathParticles.gbParticles.Components[0] as TCheckBox;
-      if frameModpathParticles.gbParticles.Checked or
-        ((CheckBox.State = cbGrayed)
-        and Particles.Used) then
+      case CheckBox.State of
+        cbUnchecked: Particles.Used := False;
+        cbChecked: Particles.Used := True;
+        cbGrayed: ; // do nothing
+        else Assert(False);
+      end;
+      if Particles.Used then
       begin
-        Particles.Used := True;
         if frameModpathParticles.rgChoice.ItemIndex >= 0 then
         begin
           Particles.ParticleDistribution :=

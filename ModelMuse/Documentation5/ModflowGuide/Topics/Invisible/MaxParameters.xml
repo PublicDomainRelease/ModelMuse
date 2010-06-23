@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../../helpproject.xsl" ?>
+<topic class="popup" template="Popup" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../helpproject.xsd">
+  <title translate="true">MaxParameters</title>
+  <body>
+    <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="topiclink" href="Miscellaneous" styleclass="Normal" translate="true">In MODFLOW-2000, the maximum number of parameters in all packages taken together is 999.  In MODFLOW-2005, the maximum number of parameters in all packages taken together is 2000.</link></para>
+  </body>
+</topic>

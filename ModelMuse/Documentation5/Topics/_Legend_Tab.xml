@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
+<topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+  <title translate="true">Legend Tab</title>
+  <body>
+    <header>
+      <para styleclass="Heading1"><text styleclass="Heading1" translate="true">Legend Tab</text></para>
+    </header>
+    <para styleclass="Heading2"><text styleclass="Heading2" translate="true">Legend Tab</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">The legend tab shows how the displayed colors relate to their values. &#160;Note that cell values are also displayed on the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Hints_and_the_Status_Bar" styleclass="Strong" translate="true">Status Bar</link><text styleclass="Normal" translate="true"> of the main ModelMuse window and in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Grid_Value_Dialog_Box" styleclass="Strong" translate="true">Grid Value</link><text styleclass="Normal" translate="true"> dialog box.</text></para>
+  </body>
+</topic>

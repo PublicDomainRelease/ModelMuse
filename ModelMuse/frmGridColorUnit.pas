@@ -17,7 +17,7 @@ uses
   Buttons, ExtCtrls,  JvComponent, EdgeDisplayUnit, JvExStdCtrls, JvRichEdit,
   DataSetUnit, JvCombobox, JvExComCtrls, JvUpDown, TntStdCtrls,
   TntExDropDownEdit, TntExDropDownVirtualStringTree, VirtualTrees,
-  ClassificationUnit, Grids, RbwDataGrid4, RbwParser;
+  ClassificationUnit, Grids, RbwDataGrid4, RbwParser, LegendUnit;
 
 type
   TEdgeDisplayEdit = class(TObject)
@@ -40,7 +40,7 @@ type
     // @name initializes some variables and calls @link(GetData).
     procedure FormCreate(Sender: TObject); override;
     // @name destroys private variables.
-    procedure FormDestroy(Sender: TObject);
+    procedure FormDestroy(Sender: TObject); override;
     procedure comboTime3DChange(Sender: TObject);
     procedure udTimeChangingEx(Sender: TObject; var AllowChange: Boolean;
       NewValue: Smallint; Direction: TUpDownDirection);
@@ -56,6 +56,7 @@ type
   private
     FEdgeEdits: TList;
     FBoundaryClassifications: TList;
+    FGettingData: Boolean;
     procedure GetData;
     // @name sets the @link(TDataArray) used to color the @link(TPhastGrid).
     procedure SetData;
@@ -65,11 +66,12 @@ type
     procedure StoreBoundaryDataSetsInLists;
     procedure StoreTimelistsInLists;
     procedure HandleSelectedObject(AnObject: TObject);
+    procedure SetMinMaxLabels;
   protected
     function GetSelectedArray: TDataArray; override;
     { Private declarations }
   public
-    procedure SetMinMaxLabels;
+    procedure UpdateLabelsAndLegend;
     { Public declarations }
   end;
 
@@ -117,6 +119,9 @@ end;
 procedure TfrmGridColor.FormCreate(Sender: TObject);
 begin
   inherited;
+  FLegend := frmGoPhast.PhastModel.ColorLegend;
+  FLegend.LegendType := ltColor;
+
   FBoundaryClassifications := TObjectList.Create;
   AdjustFormPosition(dpRight);
 
@@ -134,23 +139,28 @@ var
   GridColors: TColorParameters;
   VirtNoneNode: PVirtualNode;
 begin
-  virttreecomboDataSets.Tree.Clear;
+  FGettingData := True;
+  try
+    virttreecomboDataSets.Tree.Clear;
 
-  FFrontItems.Clear;
-  FSideItems.Clear;
-  FTopItems.Clear;
+    FFrontItems.Clear;
+    FSideItems.Clear;
+    FTopItems.Clear;
 
-  VirtNoneNode := virttreecomboDataSets.Tree.AddChild(nil);
-  virttreecomboDataSets.Tree.Selected[VirtNoneNode] := True;
+    VirtNoneNode := virttreecomboDataSets.Tree.AddChild(nil);
+    virttreecomboDataSets.Tree.Selected[VirtNoneNode] := True;
 
-  if csDestroying in frmGoPhast.PhastModel.ComponentState then
-  begin
-    Exit;
+    if csDestroying in frmGoPhast.PhastModel.ComponentState then
+    begin
+      Exit;
+    end;
+
+    GetDataSets;
+    GetBoundaryConditions;
+    UpdateTopFrontAndSideItems;
+  finally
+    FGettingData := False;
   end;
-
-  GetDataSets;
-  GetBoundaryConditions;
-  UpdateTopFrontAndSideItems;
 
   virttreecomboDataSetsChange(nil);
 
@@ -170,7 +180,7 @@ procedure TfrmGridColor.btnOKClick(Sender: TObject);
 begin
   inherited;
   SetData;
-  SetMinMaxLabels;
+  UpdateLabelsAndLegend;
 end;
 
 procedure TfrmGridColor.SetData;
@@ -215,6 +225,8 @@ begin
       frmGoPhast.Grid.ThreeDDataSet := nil;
       frmGoPhast.PhastModel.ThreeDTimeList := nil;
       frmGoPhast.PhastModel.EdgeDisplay := nil;
+      comboMethod.ItemIndex := 0;
+      FLegend.ValueSource := nil;
     end
     else if (AnObject is TDataArray) then
     begin
@@ -223,6 +235,11 @@ begin
       DataSet := TDataArray(AnObject);
 
       AssignLimits(DataSet.DataType, DataSet.Limits);
+
+      if frmGoPhast.Grid.ThreeDDataSet <> DataSet then
+      begin
+        comboMethod.ItemIndex := 0;
+      end;
 
       frmGoPhast.Grid.ThreeDDataSet := DataSet;
       frmGoPhast.PhastModel.ThreeDTimeList := nil;
@@ -255,6 +272,9 @@ begin
         frmGoPhast.Grid.SideDataSet := nil;
       end;
       frmGoPhast.PhastModel.SideTimeList := nil;
+
+      FLegend.ValueSource := DataSet;
+      FLegend.ColoringLimits := DataSet.Limits;
     end
     else if AnObject is TCustomTimeList then
     begin
@@ -272,6 +292,13 @@ begin
       end;
 
       Time := StrToFloat(comboTime3D.Text);
+
+      if (frmGoPhast.PhastModel.ThreeDTimeList <> TimeList)
+        or (Time <> frmGoPhast.PhastModel.ThreeDDisplayTime) then
+      begin
+        comboMethod.ItemIndex := 0;
+      end;
+
       frmGoPhast.PhastModel.UpdateThreeDTimeDataSet(TimeList, Time);
       if FTopItems.IndexOfObject(AnObject) >= 0 then
       begin
@@ -300,6 +327,26 @@ begin
         frmGoPhast.Grid.SideDataSet := nil;
         frmGoPhast.PhastModel.SideTimeList := nil;
       end;
+
+      ADataArray := nil;
+      if frmGoPhast.Grid.TopDataSet <> nil then
+      begin
+        ADataArray := frmGoPhast.Grid.TopDataSet;
+      end
+      else if frmGoPhast.Grid.FrontDataSet <> nil then
+      begin
+        ADataArray := frmGoPhast.Grid.FrontDataSet;
+      end
+      else if frmGoPhast.Grid.SideDataSet <> nil then
+      begin
+        ADataArray := frmGoPhast.Grid.SideDataSet;
+      end;
+
+      FLegend.ValueSource := ADataArray;
+      if ADataArray <> nil then
+      begin
+        FLegend.ColoringLimits := ADataArray.Limits;
+      end;
     end
     else
     begin
@@ -316,8 +363,18 @@ begin
 
       AssignLimits(rdtDouble, EdgeEdit.Edge.Limits[EdgeEdit.DataIndex]);
 
+      if (frmGoPhast.PhastModel.EdgeDisplay <> EdgeEdit.Edge)
+        or (EdgeEdit.Edge.DataToPlot <> EdgeEdit.DataIndex) then
+      begin
+        comboMethod.ItemIndex := 0;
+      end;
+
       EdgeEdit.Edge.DataToPlot := EdgeEdit.DataIndex;
       frmGoPhast.PhastModel.EdgeDisplay := EdgeEdit.Edge;
+
+      FLegend.ValueSource := EdgeEdit.Edge;
+      FLegend.ColoringLimits := EdgeEdit.Edge.Limits[EdgeEdit.DataIndex];
+      FLegend.EdgeDataToPlot := EdgeEdit.DataIndex;
     end;
 
     frmGoPhast.acColoredGrid.Enabled := (frmGoPhast.Grid.ThreeDDataSet <> nil)
@@ -340,6 +397,9 @@ begin
     GridColors.ColorCycles := seCycles.AsInteger;
     GridColors.ColorExponent := seColorExponent.Value;
 
+    tabLegend.TabVisible := FLegend.ValueSource <> nil;
+    FLegend.ColorParameters := GridColors;
+
     if (AnObject <> nil) and frmErrorsAndWarnings.HasMessages then
     begin
       frmErrorsAndWarnings.Show;
@@ -352,151 +412,10 @@ begin
 end;
 
 procedure TfrmGridColor.GetBoundaryConditions;
-var
-  BoundaryIndex: Integer;
-  TimeList: TCustomTimeList;
-  List: TStringList;
-  ClassificationPosition: Integer;
-  DataSet: TDataArray;
-  Index: Integer;
-  Classifications: TStringList;
-  SelectedTimeList: TCustomTimeList;
-  SelectedDataArray: TDataArray;
-  EdgeEdit: TEdgeDisplayEdit;
-  DummyRootClassification: TDummyClassification;
-  RootNode: PVirtualNode;
-  NodeData: PClassificationNodeData;
-  DummyClassification: TDummyClassification;
-  VirtualClassificationNode: PVirtualNode;
-  BounddaryClassification: TBoundaryClassification;
-  VirtualNode: PVirtualNode;
-  ParentNode: PVirtualNode;
-  SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
-  AnObject: TObject;
 begin
-  FBoundaryClassifications.Clear;
-
-  SelectedDataArray := frmGoPhast.Grid.ThreeDDataSet;
-  SelectedTimeList := frmGoPhast.PhastModel.ThreeDTimeList;
-  SelectedEdgeDisplay := frmGoPhast.PhastModel.EdgeDisplay;
-
-  DummyRootClassification := TDummyClassification.Create(StrBoundaryConditions);
-  FBoundaryClassifications.Add(DummyRootClassification);
-  RootNode := virttreecomboDataSets.Tree.AddChild(nil);
-  NodeData := virttreecomboDataSets.Tree.GetNodeData(RootNode);
-  NodeData.ClassificationObject := DummyRootClassification;
-
-  Classifications := TStringList.Create;
-  try
-    if frmGoPhast.PhastModel.ModelSelection = msPhast then
-    begin
-      for Index := 0 to frmGoPhast.PhastModel.BoundaryDataSetCount - 1 do
-      begin
-        DataSet := frmGoPhast.PhastModel.BoundaryDataSets[Index];
-        ClassificationPosition := Classifications.IndexOf(DataSet.Classification);
-        if ClassificationPosition < 0 then
-        begin
-          List := TStringList.Create;
-          Classifications.AddObject(DataSet.Classification, List);
-        end
-        else
-        begin
-          List := Classifications.Objects[ClassificationPosition] as TStringList;
-        end;
-        List.AddObject(DataSet.Name, DataSet);
-      end;
-    end;
-    FEdgeEdits.Clear;
-    if (frmGoPhast.PhastModel.ModelSelection = msModflow)
-      and frmGoPhast.PhastModel.ModflowPackages.HfbPackage.IsSelected then
-    begin
-      List := TStringList.Create;
-      Classifications.AddObject('MODFLOW Horizontal Flow Barrier', List);
-      for Index := 0 to
-        frmGoPhast.PhastModel.HfbDisplayer.RealValueTypeCount - 1 do
-      begin
-        EdgeEdit := TEdgeDisplayEdit.Create;
-        FEdgeEdits.Add(EdgeEdit);
-        EdgeEdit.DataIndex := Index;
-        EdgeEdit.Edge := frmGoPhast.PhastModel.HfbDisplayer;
-        List.AddObject(EdgeEdit.Edge.RealDescription[Index], EdgeEdit);
-      end;
-    end;
-    for Index := 0 to frmGoPhast.PhastModel.TimeListCount - 1 do
-    begin
-      TimeList := frmGoPhast.PhastModel.TimeLists[Index];
-      if TimeList.UsedByModel then
-      begin
-        ClassificationPosition := Classifications.IndexOf(
-          TimeList.Classification);
-        if ClassificationPosition < 0 then
-        begin
-          List := TStringList.Create;
-          Classifications.AddObject(TimeList.Classification, List);
-        end
-        else
-        begin
-          List := Classifications.Objects[ClassificationPosition] as TStringList;
-        end;
-        List.AddObject(TimeList.Name, TimeList);
-      end;
-    end;
-    Classifications.Sort;
-    for Index := 0 to Classifications.Count - 1 do
-    begin
-      DummyClassification := TDummyClassification.Create(Classifications[Index]);
-      FBoundaryClassifications.Add(DummyClassification);
-      VirtualClassificationNode := virttreecomboDataSets.Tree.AddChild(RootNode);
-      NodeData := virttreecomboDataSets.Tree.GetNodeData(VirtualClassificationNode);
-      NodeData.ClassificationObject := DummyClassification;
-
-      List := Classifications.Objects[Index] as TStringList;
-      List.Sort;
-
-      for BoundaryIndex := 0 to List.Count - 1 do
-      begin
-        BounddaryClassification := TBoundaryClassification.Create(List[BoundaryIndex], List.Objects[BoundaryIndex]);
-        FBoundaryClassifications.Add(BounddaryClassification);
-        VirtualNode := virttreecomboDataSets.Tree.AddChild(VirtualClassificationNode);
-        NodeData := virttreecomboDataSets.Tree.GetNodeData(VirtualNode);
-        NodeData.ClassificationObject := BounddaryClassification;
-        AnObject := BounddaryClassification.ClassifiedObject;
-
-        if AnObject is TEdgeDisplayEdit then
-        begin
-          EdgeEdit := TEdgeDisplayEdit(AnObject);
-          virttreecomboDataSets.Tree.Selected[VirtualNode] :=
-            (EdgeEdit.Edge = SelectedEdgeDisplay)
-            and (EdgeEdit.DataIndex = SelectedEdgeDisplay.DataToPlot)
-        end
-        else
-        begin
-          virttreecomboDataSets.Tree.Selected[VirtualNode] :=
-            (AnObject = SelectedDataArray)
-            or (AnObject = SelectedTimeList);
-        end;
-        if virttreecomboDataSets.Tree.Selected[VirtualNode] then
-        begin
-          ParentNode := VirtualNode.Parent;
-          while ParentNode <> nil do
-          begin
-            virttreecomboDataSets.Tree.Expanded[ParentNode] := True;
-            if ParentNode = RootNode then
-            begin
-              break;
-            end;
-            ParentNode := ParentNode.Parent;
-          end;
-        end;
-      end;
-    end;
-  finally
-    for Index := 0 to Classifications.Count - 1 do
-    begin
-      Classifications.Objects[Index].Free;
-    end;
-    Classifications.Free;
-  end;
+  FillTreeComboWithBoundaryConditions(frmGoPhast.Grid.ThreeDDataSet,
+    frmGoPhast.PhastModel.ThreeDTimeList, frmGoPhast.PhastModel.EdgeDisplay,
+    FBoundaryClassifications, FEdgeEdits, virttreecomboDataSets);
 end;
 
 procedure TfrmGridColor.UpdateTopFrontAndSideItems;
@@ -532,6 +451,17 @@ procedure TfrmGridColor.virttreecomboDataSetsDropDownTreeGetNodeDataSize(
 begin
   inherited;
   NodeDataSize := SizeOf(TClassificationNodeData);
+end;
+
+procedure TfrmGridColor.UpdateLabelsAndLegend;
+begin
+  if FGettingData or (frmGoPhast.PhastModel = nil)
+    or (csDestroying in frmGoPhast.PhastModel.ComponentState) then
+  begin
+    Exit;
+  end;
+  SetMinMaxLabels;
+  UpdateLegend;
 end;
 
 procedure TfrmGridColor.SetMinMaxLabels;
@@ -657,7 +587,7 @@ begin
     cbLogTransform.Enabled := True;
     ReadLimits(rdtDouble, GridDisplay.Edge.Limits[GridDisplay.DataIndex]);
   end;
-  SetMinMaxLabels;
+  UpdateLabelsAndLegend;
 end;
 
 procedure TfrmGridColor.StoreTimelistsInLists;
@@ -810,6 +740,7 @@ begin
     comboTime3D.ItemIndex := NewIndex;
     btnOKClick(nil);
   end;
+  udTime.ControlStyle := udTime.ControlStyle - [csCaptureMouse];
 end;
 
 procedure TfrmGridColor.comboTime3DChange(Sender: TObject);
