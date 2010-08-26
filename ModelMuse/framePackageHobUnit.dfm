@@ -7,10 +7,10 @@ inherited framePackageHob: TframePackageHob
   object lblDryHead: TLabel [2]
     Left = 16
     Top = 164
-    Width = 121
+    Width = 173
     Height = 13
     Anchors = [akLeft, akBottom]
-    Caption = 'Head printed for dry cells'
+    Caption = 'Head printed for dry cells (HOBDRY)'
   end
   inherited memoComments: TMemo
     Anchors = [akLeft, akTop, akRight, akBottom]

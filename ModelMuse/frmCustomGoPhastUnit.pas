@@ -106,13 +106,17 @@ procedure LayoutControls(Grid: TRbwDataGrid4; Control: TControl;
 
 Procedure UpdateDialogBoxFileName(Dialog: TOpenDialog; NewFileName: string);
 
+type TDataSetAllowedEvent = function (DataArray: TDataArray): boolean of object;
+
 Procedure FillVirtualStringTreeWithDataSets(Tree : TVirtualStringTree;
-  ClassificationObjectOwnerList: TList; SelectedDataArray: TDataArray);
+  ClassificationObjectOwnerList: TList; SelectedDataArray: TDataArray;
+  DataSetAllowed: TDataSetAllowedEvent = nil);
 
 procedure FillDataSetLists(HufDataArrays: TClassificationList;
   LayerGroupList: TClassificationList;
   ClassificationObjects: TClassificationList;
-  ClassificationObjectOwnerList: TList);
+  ClassificationObjectOwnerList: TList;
+  DataSetAllowed: TDataSetAllowedEvent = nil);
   
 //procedure UpdateTreeComboText(SelectedNode: PVirtualNode;
 //  TreeCombo: TTntExDropDownVirtualStringTree);
@@ -725,7 +729,8 @@ end;
 procedure FillDataSetLists(HufDataArrays: TClassificationList;
   LayerGroupList: TClassificationList;
   ClassificationObjects: TClassificationList;
-  ClassificationObjectOwnerList: TList);
+  ClassificationObjectOwnerList: TList;
+  DataSetAllowed: TDataSetAllowedEvent = nil);
 var
   Index: Integer;
   DataSet: TDataArray;
@@ -758,6 +763,10 @@ begin
     for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
     begin
       DataSet := frmGoPhast.PhastModel.DataSets[Index];
+      if Assigned(DataSetAllowed) and not DataSetAllowed(DataSet) then
+      begin
+        Continue;
+      end;
       ClassificationObject := TDataSetClassification.Create(DataSet);
       ClassificationObjects.Add(ClassificationObject);
       ClassificationObjectOwnerList.Add(ClassificationObject);
@@ -779,7 +788,8 @@ begin
 end;
 
 Procedure FillVirtualStringTreeWithDataSets(Tree : TVirtualStringTree;
-  ClassificationObjectOwnerList: TList; SelectedDataArray: TDataArray);
+  ClassificationObjectOwnerList: TList; SelectedDataArray: TDataArray;
+  DataSetAllowed: TDataSetAllowedEvent = nil);
 var
   ClassificationList: TStringList;
   ClassificationObjects: TClassificationList;
@@ -813,7 +823,7 @@ begin
     FillDataSetLists(HufDataArrays,
       LayerGroupList,
       ClassificationObjects,
-      ClassificationObjectOwnerList);
+      ClassificationObjectOwnerList, DataSetAllowed);
 
     ClassificationList := TStringList.Create;
     try
@@ -1048,4 +1058,5 @@ initialization
 finalization
 
 end.
+
 

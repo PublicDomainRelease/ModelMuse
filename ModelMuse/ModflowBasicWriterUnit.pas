@@ -7,6 +7,7 @@ uses SysUtils, PhastModelUnit, DataSetUnit, CustomModflowWriterUnit;
 type
   TModflowBasicWriter = class(TCustomModflowWriter)
   private
+    FNameOfFile: string;
     XSECTION: boolean;
     procedure CheckStartingHeads;
     procedure WriteDataSet0;
@@ -25,6 +26,10 @@ type
 implementation
 
 uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmProgressUnit;
+
+resourcestring
+  StrFileForTheInitial = 'File for the initial heads does not exist.';
+  StrWrongExtension = 'File for the initial heads has wrong extension.';
 
 { TModflowBasicWriter }
 
@@ -150,26 +155,85 @@ procedure TModflowBasicWriter.WriteDataSet4;
 var
   DataArray: TDataArray;
   DataSetName: string;
+  RelativeFileName: string;
+  UnitNumber: Integer;
+  LayerIndex: Integer;
 begin
-  DataArray := PhastModel.GetDataSetByName(rsModflow_Initial_Head);
-  DataSetName := 'STRT';
-  WriteDataSet(DataSetName, DataArray);
-  PhastModel.AddDataSetToCache(DataArray);
-  PhastModel.CacheDataArrays;
+  if PhastModel.ModflowOptions.InitialHeadFileName = '' then
+  begin
+    DataArray := PhastModel.GetDataSetByName(rsModflow_Initial_Head);
+    DataSetName := 'STRT';
+    WriteDataSet(DataSetName, DataArray);
+    PhastModel.AddDataSetToCache(DataArray);
+    PhastModel.CacheDataArrays;
+  end
+  else
+  begin
+    if not FileExists(PhastModel.ModflowOptions.InitialHeadFileName) then
+    begin
+      frmErrorsAndWarnings.AddError(StrFileForTheInitial, 'The file '
+        + PhastModel.ModflowOptions.InitialHeadFileName
+        + ' does not exist.');
+      Exit;
+    end;
+    RelativeFileName := ExtractRelativePath(
+      IncludeTrailingPathDelimiter(ExtractFileDir(FNameOfFile)),
+      PhastModel.ModflowOptions.InitialHeadFileName);
+    UnitNumber := PhastModel.UnitNumbers.UnitNumber(BAS_InitialHeads);
+    if SameText(ExtractFileExt(PhastModel.ModflowOptions.InitialHeadFileName), '.bhd') then
+    begin
+      WriteToNameFile(StrDATABINARY, UnitNumber, RelativeFileName,
+        foInput, True);
+    end
+    else
+    begin
+      frmErrorsAndWarnings.AddError(StrWrongExtension, 'The file '
+        + PhastModel.ModflowOptions.InitialHeadFileName
+        + ' must have an extension equal to ".bhd".');
+      Exit;
+    end;
+
+    if XSECTION then
+    begin
+      WriteString('EXTERNAL');
+      WriteInteger(UnitNumber);
+      WriteInteger(1);
+      WriteString(' (BINARY)');
+      WriteInteger(IPRN_Real);
+      NewLine;
+    end
+    else
+    begin
+      for LayerIndex := 0 to PhastModel.ModflowGrid.LayerCount - 1 do
+      begin
+        if PhastModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+        begin
+          WriteString('EXTERNAL');
+          WriteInteger(UnitNumber);
+          WriteInteger(1);
+          WriteString(' (BINARY)');
+          WriteInteger(IPRN_Real);
+          NewLine;
+        end;
+      end;
+    end;
+  end;
+
 end;
 
 procedure TModflowBasicWriter.WriteFile(const AFileName: string);
-var
-  NameOfFile: string;
 begin
-  NameOfFile := FileName(AFileName);
+  frmErrorsAndWarnings.RemoveErrorGroup(StrFileForTheInitial);
+  frmErrorsAndWarnings.RemoveErrorGroup(StrWrongExtension);
+
+  FNameOfFile := FileName(AFileName);
   if PhastModel.PackageGeneratedExternally(StrBAS) then
   begin
     Exit;
   end;
   WriteToNameFile(StrBAS, PhastModel.UnitNumbers.UnitNumber(StrBAS),
-    NameOfFile, foInput);
-  OpenFile(NameOfFile);
+    FNameOfFile, foInput);
+  OpenFile(FNameOfFile);
   try
     frmProgress.AddMessage('Writing Basic Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');

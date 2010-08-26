@@ -216,6 +216,11 @@ begin
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrWEL, PhastModel.UnitNumbers.UnitNumber(StrWEL), NameOfFile, foInput);
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
+  ClearTimeLists;
   OpenFile(FileName(AFileName));
   try
     frmProgress.AddMessage('Writing WEL Package input.');

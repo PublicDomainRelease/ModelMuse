@@ -2593,6 +2593,15 @@ var
   TempScreenObject: TScreenObject;
   PointIndex: Integer;
   TempPoints: TRealPointArray;
+  LocalEpsilon: double;
+  function NearlyTheSame(const A, B: real): boolean;
+  begin
+    result := A = B;
+    if not result then
+    begin
+      result := Abs(A - B) / (Abs(A) + Abs(B)) < LocalEpsilon;
+    end;
+  end;
 begin
   inherited;
   FScreenObjects:= TList.Create;
@@ -2617,6 +2626,7 @@ begin
     SetLength(FOldPoints[Index], ScreenObject.Count);
     ScreenObject.MovePoints(FOldPoints[Index]);
   end;
+  LocalEpsilon := 0;
   if FScreenObjects.Count > 0 then
   begin
     ScreenObject := FScreenObjects[0];
@@ -2636,6 +2646,10 @@ begin
     FQuadTree.XMin := MinX;
     FQuadTree.YMax := MaxY;
     FQuadTree.YMin := MinY;
+    LocalEpsilon := Max(Abs(MaxX), Abs(MinX));
+    LocalEpsilon := Max(LocalEpsilon, Abs(MaxY));
+    LocalEpsilon := Max(LocalEpsilon, Abs(MinY));
+    LocalEpsilon := LocalEpsilon/1E14;
   end;
   for Index := 0 to FScreenObjects.Count - 1 do
   begin
@@ -2646,7 +2660,8 @@ begin
     if FQuadTree.Count > 0 then
     begin
       FQuadTree.FindClosestPointsData(X, Y, StoredObjects);
-      if (X = APoint.x) and (Y = APoint.y) and (Length(StoredObjects) > 0) then
+      if NearlyTheSame(X, APoint.x) and NearlyTheSame(Y, APoint.y)
+        and (Length(StoredObjects) > 0) then
       begin
         OriginalCount := ScreenObject.Count;
         try
@@ -2739,7 +2754,8 @@ begin
       if FQuadTree.Count > 0 then
       begin
         FQuadTree.FindClosestPointsData(X, Y, StoredObjects);
-        if (X = APoint.x) and (Y = APoint.y) and (Length(StoredObjects) > 0) then
+        if NearlyTheSame(X, APoint.x) and NearlyTheSame(Y, APoint.y)
+          and (Length(StoredObjects) > 0) then
         begin
           OriginalCount := ScreenObject.Count;
           try
@@ -2952,6 +2968,7 @@ begin
   begin
     AScreenObject := FNewScreenObjects[Index];
     frmGoPhast.PhastModel.AddScreenObject(AScreenObject);
+    AScreenObject.ImportedValues.CacheData;
   end;
   SetPostSelection;
 end;

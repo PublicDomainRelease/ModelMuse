@@ -401,6 +401,7 @@ type
     FFormulaObject: TFormulaObject;
     FHash: longint;
     FReadDataFromFile: Boolean;
+    FUpdatingProgress: Boolean;
     // See @link(TwoDInterpolatorClass).
     function GetTwoDInterpolatorClass: string;
     // @name is called if an invalid formula has been specified.
@@ -1315,7 +1316,7 @@ implementation
 uses Contnrs, frmGoPhastUnit, frmConvertChoiceUnit, GIS_Functions,
   ScreenObjectUnit, frmFormulaErrorsUnit, InterpolationUnit, SparseArrayUnit,
   PhastModelUnit, AbstractGridUnit, frmGridColorUnit, frmContourDataUnit,
-  frmErrorsAndWarningsUnit;
+  frmErrorsAndWarningsUnit, frmProgressUnit;
 
 resourcestring
   StrUnassigned = 'Unassigned';
@@ -1822,11 +1823,27 @@ var
     end;
   end;
 begin
+  if FUpdatingProgress then
+  begin
+    Exit;
+  end;
+
   if UpToDate and not DimensionsChanged then
   begin
     CheckRestoreData;
     Exit;
   end;
+
+  if (Name <> '') and (frmProgress <> nil) then
+  begin
+    FUpdatingProgress := True;
+    try
+      frmProgress.AddMessage('      Evaluating data set: "' + Name + '."', False);
+    finally
+      FUpdatingProgress := False;
+    end;
+  end;
+
   FDataCached := False;
   FEvalTime := Now;
 
@@ -3789,6 +3806,7 @@ begin
           or (Grid.SideDataSet = self)
           or (Grid.ThreeDDataSet = self) then
         begin
+          frmGridColor.LegendDataSource := self;
           frmGridColor.UpdateLabelsAndLegend;
         end;
       end;
@@ -3799,6 +3817,7 @@ begin
           or (Grid.SideContourDataSet = self)
           or (Grid.ThreeDContourDataSet = self) then
         begin
+          frmContourData.LegendDataSource := self;
           frmContourData.UpdateLabelsAndLegend;
         end;
       end;
@@ -3876,7 +3895,6 @@ begin
           begin
             for Index := 0 to Count - 1 do
             begin
-              ValueLength := Length(StringValue);
               DecompressionStream.Read(ValueLength, SizeOf(ValueLength));
               SetString(StringValue, nil, ValueLength);
               DecompressionStream.Read(Pointer(StringValue)^, ValueLength * SizeOf(Char));
@@ -5883,9 +5901,6 @@ begin
       FDataCached := True;
       FCleared := True;
     end;
-//    DataType := TDataArray(Source).DataType;
-//    Orientation := TDataArray(Source).Orientation;
-//    TwoDInterpolator := TDataArray(Source).TwoDInterpolator;
   end
   else
   begin
@@ -6145,12 +6160,20 @@ begin
   finally
     MemStream.Free;
   end;
+  CacheData;
 end;
 
 procedure TDataArray.DefineProperties(Filer: TFiler);
   function StoreCompressedData: boolean;
+  var
+    Model: TPhastModel;
   begin
-    result := UpToDate and (IsUniform <> iuTrue)
+    result := UpToDate and (IsUniform <> iuTrue);
+    if result then
+    begin
+      Model := FPhastModel as TPhastModel;
+      result := Model.StoreCachedData;
+    end;
   end;
 begin
 //  inherited;

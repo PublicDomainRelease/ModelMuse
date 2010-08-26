@@ -35,7 +35,7 @@ uses
   ModflowEtsUnit, ModflowResUnit, ModflowLakUnit, ModflowSfrUnit,
   ModflowUzfUnit, ModflowHobUnit, ValueArrayStorageUnit, QuadTreeClass,
   ModflowHfbUnit, ModpathParticleUnit, GPC_Classes, ModflowGageUnit,
-  FormulaManagerUnit, ModflowMnw2Unit;
+  FormulaManagerUnit, ModflowMnw2Unit, ModflowHydmodUnit;
 
 type
   //
@@ -429,8 +429,11 @@ type
     constructor CreateFromCell(Cell: TCellAssignment);
   public
     property AssignmentMethod: TAssignmentMethod read FAssignmentMethod;
+    // @name starts at zero.
     property Layer: integer read FLayer;
+    // @name starts at zero.
     property Row: integer read FRow;
+    // @name starts at zero.
     property Column: integer read FColumn;
     property Segment: TCellElementSegment read FSegment;
     property Section: integer read GetSection;
@@ -1303,6 +1306,7 @@ view. }
     FModflowHfbBoundary: THfbBoundary;
     FModflowGage: TStreamGage;
     FModflowMnw2Boundary: TMnw2Boundary;
+    FModflowHydmodData: THydmodData;
   public
     Destructor Destroy; override;
     property ModflowChdBoundary: TChdBoundary read FModflowChdBoundary
@@ -1338,6 +1342,8 @@ view. }
     property ModflowGage: TStreamGage read FModflowGage Write FModflowGage;
     property ModflowMnw2Boundary: TMnw2Boundary read FModflowMnw2Boundary
       write FModflowMnw2Boundary;
+    property ModflowHydmodData: THydmodData read FModflowHydmodData
+      write FModflowHydmodData;
   end;
 
   TModflowDelegate = class;
@@ -2256,6 +2262,9 @@ view. }
     procedure SetPointPositionValues(const Value: TPointPositionValues);
     function GetPointPositionValues: TPointPositionValues;
     function ShouldStorePointPositionValues: Boolean;
+    function GetModflowHydmodData: THydmodData;
+    procedure SetModflowHydmodData(const Value: THydmodData);
+    function StoreModflowHydmodData: Boolean;
     property SubPolygonCount: integer read GetSubPolygonCount;
     property SubPolygons[Index: integer]: TSubPolygon read GetSubPolygon;
     procedure DeleteExtraSections;
@@ -3108,6 +3117,8 @@ having them take care of the subscriptions. }
     procedure UpdateCellCache(CellList: TCellAssignmentList;
       EvalAt: TEvaluatedAt; Orientation: TDataSetOrientation;
       AssignmentLocation: TAssignmentLocation);
+    procedure CreateHydmodData;
+    procedure CacheValueArrays;
   published
     // If @Link(CellSizeUsed) is true, @name is the size of the cells
     // to be created in the vicinity of the object.
@@ -3320,6 +3331,8 @@ SectionStarts.}
     property PointPositionValues: TPointPositionValues
       read GetPointPositionValues write SetPointPositionValues
       stored ShouldStorePointPositionValues;
+    property ModflowHydmodData: THydmodData read GetModflowHydmodData
+      write SetModflowHydmodData stored StoreModflowHydmodData;
   end;
 
   TScreenObjectList = class(TObject)
@@ -5522,6 +5535,7 @@ begin
   ModflowHfbBoundary := AScreenObject.ModflowHfbBoundary;
   ModflowStreamGage := AScreenObject.ModflowStreamGage;
   ModflowMnw2Boundary := AScreenObject.ModflowMnw2Boundary;
+  ModflowHydmodData := AScreenObject.ModflowHydmodData;
 
   // avoid creating AScreenObject.FPointPositionValues if it
   // hasn't been created yet.
@@ -9656,6 +9670,23 @@ begin
   end;
 end;
 
+procedure TScreenObject.SetModflowHydmodData(const Value: THydmodData);
+begin
+  if (Value = nil) or not Value.Used then
+  begin
+    if ModflowBoundaries.FModflowHydmodData <> nil then
+    begin
+      InvalidateModel;
+    end;
+    FreeAndNil(ModflowBoundaries.FModflowHydmodData);
+  end
+  else
+  begin
+    CreateHydmodData;
+    ModflowBoundaries.FModflowHydmodData.Assign(Value);
+  end;
+end;
+
 procedure TScreenObject.SetModflowLakBoundary(const Value: TLakBoundary);
 begin
   if (Value = nil) or not Value.Used then
@@ -12767,6 +12798,27 @@ begin
   end;
 end;
 
+procedure TScreenObject.CacheValueArrays;
+begin
+  ImportedValues.CacheData;
+  if FSectionStarts <> nil then
+  begin
+    SectionStarts.CacheData;
+  end;
+  if FImportedSectionElevations <> nil then
+  begin
+    ImportedSectionElevations.CacheData;
+  end;
+  if FImportedHigherSectionElevations <> nil then
+  begin
+    ImportedHigherSectionElevations.CacheData;
+  end;
+  if FImportedLowerSectionElevations <> nil then
+  begin
+    ImportedLowerSectionElevations.CacheData;
+  end;
+end;
+
 procedure TScreenObject.UpdateCellCache(CellList: TCellAssignmentList;
   EvalAt: TEvaluatedAt; Orientation: TDataSetOrientation;
   AssignmentLocation: TAssignmentLocation);
@@ -13457,6 +13509,27 @@ begin
     and not ModflowBoundaries.FModflowHfbBoundary.Used then
   begin
     FreeAndNil(ModflowBoundaries.FModflowHfbBoundary);
+  end;
+  if (ModflowBoundaries.FModflowGage <> nil)
+    and not ModflowBoundaries.FModflowGage.Used then
+  begin
+    FreeAndNil(ModflowBoundaries.FModflowGage);
+  end;
+  if (ModflowBoundaries.FModflowMnw2Boundary <> nil)
+    and not ModflowBoundaries.FModflowMnw2Boundary.Used then
+  begin
+    FreeAndNil(ModflowBoundaries.FModflowMnw2Boundary);
+  end;
+  if (ModflowBoundaries.FModflowHydmodData <> nil)
+    and not ModflowBoundaries.FModflowHydmodData.Used then
+  begin
+    FreeAndNil(ModflowBoundaries.FModflowHydmodData);
+  end;
+
+
+  if ModflowBoundaries.FModflowHydmodData <> nil then
+  begin
+    ModflowBoundaries.FModflowHydmodData.Loaded;
   end;
   UpdateUzfGage1and2;
   UpdateUzfGage3;
@@ -16504,14 +16577,10 @@ begin
     end;
     SectionStarts := TValueArrayStorage.Create;
     try
-      SectionStarts.DataType := rdtInteger;
-      for SectionIndex := 0 to ScreenObject.SectionCount - 1 do
-      begin
-        SectionStarts.Add(ScreenObject.SectionStart[SectionIndex]);
-      end;
+      SectionStarts.Assign(ScreenObject.SectionStarts);
       ScreenObject.SectionStarts.Clear;
       ScreenObject.ClearPoints;
-      SectionIndex := 0;
+      SectionIndex := -1;
       NextStart := 0;
       ScreenObject.BeginUpdate;
       try
@@ -16594,6 +16663,9 @@ begin
     end;
     ScreenObject.UpdateMixtureExpression;
     ScreenObject.UpdateFormulaExpression;
+    ScreenObject.CacheValueArrays;
+//    ScreenObject.CacheSegments;
+//    ScreenObject.CacheElevationArrays;
   finally
     ScreenObject.FIsUpdating := False;
   end;
@@ -20919,8 +20991,6 @@ begin
   end;
 end;
 
-
-
 procedure TModflowDelegate.AssignValuesToDataSet(const Grid: TCustomGrid;
   const DataSet: TDataArray; OtherData: TObject;
   AssignmentLocation: TAssignmentLocation = alAll);
@@ -22609,474 +22679,477 @@ begin
           IncrementedSectionIndex := True;
         end;
 
-        FirstPointInCell := PreviousPoint;
-        FirstHorizontalIndex := GetColOrRow(Grid, PreviousPoint,
-          GridMinHorizontal, GridMaxHorizontal);
-        LastHorizontalIndex := GetColOrRow(Grid, APoint,
-          GridMinHorizontal, GridMaxHorizontal);
+        try
+          FirstPointInCell := PreviousPoint;
+          FirstHorizontalIndex := GetColOrRow(Grid, PreviousPoint,
+            GridMinHorizontal, GridMaxHorizontal);
+          LastHorizontalIndex := GetColOrRow(Grid, APoint,
+            GridMinHorizontal, GridMaxHorizontal);
 
-        // If the line segment is completely outside the grid,
-        // skip this segment.
-        if (FirstHorizontalIndex < 0) and (LastHorizontalIndex < 0) then
-        begin
-          Continue;
-        end;
-        if (FirstHorizontalIndex >= HorizontalLimit)
-          and (LastHorizontalIndex >= HorizontalLimit) then
-        begin
-          Continue;
-        end;
+          // If the line segment is completely outside the grid,
+          // skip this segment.
+          if (FirstHorizontalIndex < 0) and (LastHorizontalIndex < 0) then
+          begin
+            Continue;
+          end;
+          if (FirstHorizontalIndex >= HorizontalLimit)
+            and (LastHorizontalIndex >= HorizontalLimit) then
+          begin
+            Continue;
+          end;
 
-        MaxXIndex := Length(CellOutlines)-1;
-        MaxYIndex := Length(CellOutlines[0])-1;
-        // Identify first cell intersected by segment - if there is one.
-        if FirstHorizontalIndex < 0 then
-        begin
-          FirstHorizontalIndex := 0;
-          if LastHorizontalIndex >= HorizontalLimit then
+          MaxXIndex := Length(CellOutlines)-1;
+          MaxYIndex := Length(CellOutlines[0])-1;
+          // Identify first cell intersected by segment - if there is one.
+          if FirstHorizontalIndex < 0 then
           begin
-            LastHorizontalIndex := HorizontalLimit -1;
-          end;
-          // Check if the segment intersects the edge and HorizontalIndex = 0.
-          // If if doesn't, check the
-          // top or bottom surface (depending on whether the segment passes
-          // above or below the edge.
-          EdgeSegment := EquateSegment(CellOutlines[0,0],
-            CellOutlines[0,MaxYIndex]);
-          ObjectSegment := EquateSegment(PreviousPoint.X, PreviousPoint.Y,
-            APoint.X, APoint.Y);
-          Y := IntersectionPoint(EdgeSegment, ObjectSegment).Y;
-          if Y > CellOutlines[0,0].Y then
-          begin
-            // Segment goes above the top of the edge
-            if not FindIntersectionSurface(FirstHorizontalIndex,
-              LastHorizontalIndex, 0, PreviousPoint, APoint,
-              FirstPointInCell, CellOutlines, HorizontalIndex) then
+            FirstHorizontalIndex := 0;
+            if LastHorizontalIndex >= HorizontalLimit then
             begin
-              // It never intersects the top surface so go on to the
-              // next segment in the TScreenObject
-              Continue;
+              LastHorizontalIndex := HorizontalLimit -1;
             end;
-            LayerIndex := 0;
-          end
-          else if Y < CellOutlines[0,MaxYIndex].Y then
-          begin
-            // Segment goes below the bottom of the edge
-            if not FindIntersectionSurface(FirstHorizontalIndex,
-              LastHorizontalIndex, MaxYIndex, PreviousPoint, APoint,
-              FirstPointInCell, CellOutlines, HorizontalIndex) then
+            // Check if the segment intersects the edge and HorizontalIndex = 0.
+            // If if doesn't, check the
+            // top or bottom surface (depending on whether the segment passes
+            // above or below the edge.
+            EdgeSegment := EquateSegment(CellOutlines[0,0],
+              CellOutlines[0,MaxYIndex]);
+            ObjectSegment := EquateSegment(PreviousPoint.X, PreviousPoint.Y,
+              APoint.X, APoint.Y);
+            Y := IntersectionPoint(EdgeSegment, ObjectSegment).Y;
+            if Y > CellOutlines[0,0].Y then
             begin
-              // It never intersects the bottom surface so go on to the
-              // next segment in the TScreenObject
-              Continue;
-            end;
-            LayerIndex := Grid.LayerCount -1;
-          end
-          else
-          begin
-            // Segment intersects the edge
-            HorizontalIndex := 0;
-            LayerIndex := FindLayerOnEdge(APoint, PreviousPoint,
-              FirstPointInCell, CellOutlines, 0);
-          end;
-        end
-        else if FirstHorizontalIndex >= HorizontalLimit then
-        begin
-          FirstHorizontalIndex := HorizontalLimit -1;
-          if LastHorizontalIndex < 0 then
-          begin
-            LastHorizontalIndex := 0;
-          end;
-          // Check if the segment intersects the edge
-          // at HorizontalIndex = HorizontalLimit-1.
-          // If if doesn't, check the
-          // top or bottom surface (depending on whether the segment passes
-          // above or below the edge.
-          EdgeSegment := EquateSegment(CellOutlines[MaxXIndex,0],
-            CellOutlines[MaxXIndex,MaxYIndex]);
-          ObjectSegment := EquateSegment(PreviousPoint.X, PreviousPoint.Y,
-            APoint.X, APoint.Y);
-          Y := IntersectionPoint(EdgeSegment, ObjectSegment).Y;
-          if Y > CellOutlines[MaxXIndex,0].Y then
-          begin
-            // Segment goes above the top of the edge
-            if not FindIntersectionSurface(FirstHorizontalIndex,
-              LastHorizontalIndex, 0, PreviousPoint, APoint,
-              FirstPointInCell, CellOutlines, HorizontalIndex) then
-            begin
-              // It never intersects the top surface so go on to the
-              // next segment in the TScreenObject
-              Continue;
-            end;
-            LayerIndex := 0;
-          end
-          else if Y < CellOutlines[MaxXIndex,MaxYIndex].Y then
-          begin
-            // Segment goes below the bottom of the edge
-            if not FindIntersectionSurface(FirstHorizontalIndex,
-              LastHorizontalIndex, MaxYIndex, PreviousPoint, APoint,
-              FirstPointInCell, CellOutlines, HorizontalIndex) then
-            begin
-              // It never intersects the bottom surface so go on to the
-              // next segment in the TScreenObject
-              Continue;
-            end;
-            LayerIndex := Grid.LayerCount -1;
-          end
-          else
-          begin
-            // Segment intersects the edge
-            HorizontalIndex := Grid.ColumnCount-1;
-            LayerIndex := FindLayerOnEdge(APoint, PreviousPoint,
-              FirstPointInCell, CellOutlines, HorizontalIndex*2+2);
-          end;
-        end
-        else
-        begin
-          // The first point is inside the left and right boundaries
-          // of the grid.  However, it may be above or below the grid.
-          if LastHorizontalIndex >= HorizontalLimit then
-          begin
-            LastHorizontalIndex := HorizontalLimit -1;
-          end
-          else if LastHorizontalIndex < 0 then
-          begin
-            LastHorizontalIndex := 0;
-          end;
-          // identify the layer for the column containg the first point
-          LayerIndex := FindLayer(FirstHorizontalIndex, PreviousPoint,
-            CellOutlines, APoint.Y > PreviousPoint.Y);
-          if LayerIndex < 0 then
-          begin
-            // First point is above the top of the grid.
-            if not FindIntersectionSurface(FirstHorizontalIndex,
-              LastHorizontalIndex, 0, PreviousPoint, APoint,
-              FirstPointInCell, CellOutlines, HorizontalIndex) then
-            begin
-              // It never intersects the top surface so go on to the
-              // next segment in the TScreenObject
-              Continue;
-            end;
-            LayerIndex := 0;
-          end
-          else if LayerIndex >= Grid.LayerCount then
-          begin
-            // First point is below the bottom of the grid.
-            if not FindIntersectionSurface(FirstHorizontalIndex,
-              LastHorizontalIndex, MaxYIndex, PreviousPoint, APoint,
-              FirstPointInCell, CellOutlines, HorizontalIndex) then
-            begin
-              // It never intersects the bottom surface so go on to the
-              // next segment in the TScreenObject
-              Continue;
-            end;
-            LayerIndex := Grid.LayerCount -1;
-          end
-          else
-          begin
-            // The first point is inside the grid.
-              HorizontalIndex := FirstHorizontalIndex;
-          end;
-        end;
-
-        if APoint.Y > PreviousPoint.Y then
-        begin
-          if APoint.X > PreviousPoint.X then
-          begin
-            SegmentDirection := sdUpRight;
-          end
-          else if APoint.X < PreviousPoint.X then
-          begin
-            SegmentDirection := sdUpLeft;
-          end
-          else
-          begin
-            SegmentDirection := sdUp;
-          end;
-        end
-        else
-        begin
-          if APoint.X > PreviousPoint.X then
-          begin
-            SegmentDirection := sdDownRight;
-          end
-          else if APoint.X < PreviousPoint.X then
-          begin
-            SegmentDirection := sdDownLeft;
-          end
-          else
-          begin
-            SegmentDirection := sdDown;
-          end;
-        end;
-
-        // HorizontalIndex and LayerIndex now indicate the first cell intersected by
-        // the segment;  (If no cell intersects the segment, you don't get here.
-        // FirstPointInCell is the location where the segment intersects the
-        // cell.
-        repeat
-          for PointIndex := 0 to 11 do
-          begin
-            NextHorizontalIndex[PointIndex] := -1;
-            NextLayer[PointIndex] := -1;
-          end;
-          PointCount := 0;
-          TempPoints1[0] := FirstPointInCell;
-          HandleTopLeftCorner;
-          HandleTopRightCorner;
-          HandleBottomRightCorner;
-          HandleBottomLeftCorner;
-          Inc(PointCount);
-
-          TempPoints1[1] := APoint;
-          HandleTopLeftCorner;
-          HandleTopRightCorner;
-          HandleBottomRightCorner;
-          HandleBottomLeftCorner;
-          Inc(PointCount);
-
-          FirstPoint := EquatePoint(PreviousPoint.X, PreviousPoint.Y);
-          SecondPoint := EquatePoint(APoint.X, APoint.Y);
-          for EdgeIndex := 0 to 5 do
-          begin
-            if CountIntersectPointsOnEdge(HorizontalIndex, LayerIndex,
-              EdgeIndex, FirstPoint, SecondPoint, CellOutlines,
-              PointsOnEdge) > 0 then
-            begin
-              for PointIndex := 0 to Length(PointsOnEdge) - 1 do
+              // Segment goes above the top of the edge
+              if not FindIntersectionSurface(FirstHorizontalIndex,
+                LastHorizontalIndex, 0, PreviousPoint, APoint,
+                FirstPointInCell, CellOutlines, HorizontalIndex) then
               begin
-                Assert(PointCount < 12);
-                TempPoints1[PointCount].X := PointsOnEdge[PointIndex].X;
-                TempPoints1[PointCount].Y := PointsOnEdge[PointIndex].Y;
-                // One of these points will be the last point in the
-                // current cell.  Store the indices of the neighboring cell
-                // so it can be easily identified when we get to it.
-                case EdgeIndex of
-                  0, 1: // Top edge
-                    begin
-                      if not HandleTopLeftCorner
-                        and not HandleTopRightCorner then
+                // It never intersects the top surface so go on to the
+                // next segment in the TScreenObject
+                Continue;
+              end;
+              LayerIndex := 0;
+            end
+            else if Y < CellOutlines[0,MaxYIndex].Y then
+            begin
+              // Segment goes below the bottom of the edge
+              if not FindIntersectionSurface(FirstHorizontalIndex,
+                LastHorizontalIndex, MaxYIndex, PreviousPoint, APoint,
+                FirstPointInCell, CellOutlines, HorizontalIndex) then
+              begin
+                // It never intersects the bottom surface so go on to the
+                // next segment in the TScreenObject
+                Continue;
+              end;
+              LayerIndex := Grid.LayerCount -1;
+            end
+            else
+            begin
+              // Segment intersects the edge
+              HorizontalIndex := 0;
+              LayerIndex := FindLayerOnEdge(APoint, PreviousPoint,
+                FirstPointInCell, CellOutlines, 0);
+            end;
+          end
+          else if FirstHorizontalIndex >= HorizontalLimit then
+          begin
+            FirstHorizontalIndex := HorizontalLimit -1;
+            if LastHorizontalIndex < 0 then
+            begin
+              LastHorizontalIndex := 0;
+            end;
+            // Check if the segment intersects the edge
+            // at HorizontalIndex = HorizontalLimit-1.
+            // If if doesn't, check the
+            // top or bottom surface (depending on whether the segment passes
+            // above or below the edge.
+            EdgeSegment := EquateSegment(CellOutlines[MaxXIndex,0],
+              CellOutlines[MaxXIndex,MaxYIndex]);
+            ObjectSegment := EquateSegment(PreviousPoint.X, PreviousPoint.Y,
+              APoint.X, APoint.Y);
+            Y := IntersectionPoint(EdgeSegment, ObjectSegment).Y;
+            if Y > CellOutlines[MaxXIndex,0].Y then
+            begin
+              // Segment goes above the top of the edge
+              if not FindIntersectionSurface(FirstHorizontalIndex,
+                LastHorizontalIndex, 0, PreviousPoint, APoint,
+                FirstPointInCell, CellOutlines, HorizontalIndex) then
+              begin
+                // It never intersects the top surface so go on to the
+                // next segment in the TScreenObject
+                Continue;
+              end;
+              LayerIndex := 0;
+            end
+            else if Y < CellOutlines[MaxXIndex,MaxYIndex].Y then
+            begin
+              // Segment goes below the bottom of the edge
+              if not FindIntersectionSurface(FirstHorizontalIndex,
+                LastHorizontalIndex, MaxYIndex, PreviousPoint, APoint,
+                FirstPointInCell, CellOutlines, HorizontalIndex) then
+              begin
+                // It never intersects the bottom surface so go on to the
+                // next segment in the TScreenObject
+                Continue;
+              end;
+              LayerIndex := Grid.LayerCount -1;
+            end
+            else
+            begin
+              // Segment intersects the edge
+              HorizontalIndex := Grid.ColumnCount-1;
+              LayerIndex := FindLayerOnEdge(APoint, PreviousPoint,
+                FirstPointInCell, CellOutlines, HorizontalIndex*2+2);
+            end;
+          end
+          else
+          begin
+            // The first point is inside the left and right boundaries
+            // of the grid.  However, it may be above or below the grid.
+            if LastHorizontalIndex >= HorizontalLimit then
+            begin
+              LastHorizontalIndex := HorizontalLimit -1;
+            end
+            else if LastHorizontalIndex < 0 then
+            begin
+              LastHorizontalIndex := 0;
+            end;
+            // identify the layer for the column containg the first point
+            LayerIndex := FindLayer(FirstHorizontalIndex, PreviousPoint,
+              CellOutlines, APoint.Y > PreviousPoint.Y);
+            if LayerIndex < 0 then
+            begin
+              // First point is above the top of the grid.
+              if not FindIntersectionSurface(FirstHorizontalIndex,
+                LastHorizontalIndex, 0, PreviousPoint, APoint,
+                FirstPointInCell, CellOutlines, HorizontalIndex) then
+              begin
+                // It never intersects the top surface so go on to the
+                // next segment in the TScreenObject
+                Continue;
+              end;
+              LayerIndex := 0;
+            end
+            else if LayerIndex >= Grid.LayerCount then
+            begin
+              // First point is below the bottom of the grid.
+              if not FindIntersectionSurface(FirstHorizontalIndex,
+                LastHorizontalIndex, MaxYIndex, PreviousPoint, APoint,
+                FirstPointInCell, CellOutlines, HorizontalIndex) then
+              begin
+                // It never intersects the bottom surface so go on to the
+                // next segment in the TScreenObject
+                Continue;
+              end;
+              LayerIndex := Grid.LayerCount -1;
+            end
+            else
+            begin
+              // The first point is inside the grid.
+                HorizontalIndex := FirstHorizontalIndex;
+            end;
+          end;
+
+          if APoint.Y > PreviousPoint.Y then
+          begin
+            if APoint.X > PreviousPoint.X then
+            begin
+              SegmentDirection := sdUpRight;
+            end
+            else if APoint.X < PreviousPoint.X then
+            begin
+              SegmentDirection := sdUpLeft;
+            end
+            else
+            begin
+              SegmentDirection := sdUp;
+            end;
+          end
+          else
+          begin
+            if APoint.X > PreviousPoint.X then
+            begin
+              SegmentDirection := sdDownRight;
+            end
+            else if APoint.X < PreviousPoint.X then
+            begin
+              SegmentDirection := sdDownLeft;
+            end
+            else
+            begin
+              SegmentDirection := sdDown;
+            end;
+          end;
+
+          // HorizontalIndex and LayerIndex now indicate the first cell intersected by
+          // the segment;  (If no cell intersects the segment, you don't get here.
+          // FirstPointInCell is the location where the segment intersects the
+          // cell.
+          repeat
+            for PointIndex := 0 to 11 do
+            begin
+              NextHorizontalIndex[PointIndex] := -1;
+              NextLayer[PointIndex] := -1;
+            end;
+            PointCount := 0;
+            TempPoints1[0] := FirstPointInCell;
+            HandleTopLeftCorner;
+            HandleTopRightCorner;
+            HandleBottomRightCorner;
+            HandleBottomLeftCorner;
+            Inc(PointCount);
+
+            TempPoints1[1] := APoint;
+            HandleTopLeftCorner;
+            HandleTopRightCorner;
+            HandleBottomRightCorner;
+            HandleBottomLeftCorner;
+            Inc(PointCount);
+
+            FirstPoint := EquatePoint(PreviousPoint.X, PreviousPoint.Y);
+            SecondPoint := EquatePoint(APoint.X, APoint.Y);
+            for EdgeIndex := 0 to 5 do
+            begin
+              if CountIntersectPointsOnEdge(HorizontalIndex, LayerIndex,
+                EdgeIndex, FirstPoint, SecondPoint, CellOutlines,
+                PointsOnEdge) > 0 then
+              begin
+                for PointIndex := 0 to Length(PointsOnEdge) - 1 do
+                begin
+                  Assert(PointCount < 12);
+                  TempPoints1[PointCount].X := PointsOnEdge[PointIndex].X;
+                  TempPoints1[PointCount].Y := PointsOnEdge[PointIndex].Y;
+                  // One of these points will be the last point in the
+                  // current cell.  Store the indices of the neighboring cell
+                  // so it can be easily identified when we get to it.
+                  case EdgeIndex of
+                    0, 1: // Top edge
                       begin
-                        NextHorizontalIndex[PointCount] := HorizontalIndex;
-                        NextLayer[PointCount] := LayerIndex -1;
+                        if not HandleTopLeftCorner
+                          and not HandleTopRightCorner then
+                        begin
+                          NextHorizontalIndex[PointCount] := HorizontalIndex;
+                          NextLayer[PointCount] := LayerIndex -1;
+                        end;
                       end;
-                    end;
-                  2: // left edge
-                    begin
-                      if not HandleTopRightCorner
-                        and not HandleBottomRightCorner then
+                    2: // left edge
                       begin
-                        NextHorizontalIndex[PointCount] := HorizontalIndex+1;
-                        NextLayer[PointCount] := LayerIndex;
+                        if not HandleTopRightCorner
+                          and not HandleBottomRightCorner then
+                        begin
+                          NextHorizontalIndex[PointCount] := HorizontalIndex+1;
+                          NextLayer[PointCount] := LayerIndex;
+                        end;
                       end;
-                    end;
-                  3,4: // bottom edge
-                    begin
-                      if not HandleBottomRightCorner
-                        and not HandleBottomLeftCorner then
+                    3,4: // bottom edge
                       begin
-                        NextHorizontalIndex[PointCount] := HorizontalIndex;
-                        NextLayer[PointCount] := LayerIndex +1;
+                        if not HandleBottomRightCorner
+                          and not HandleBottomLeftCorner then
+                        begin
+                          NextHorizontalIndex[PointCount] := HorizontalIndex;
+                          NextLayer[PointCount] := LayerIndex +1;
+                        end;
                       end;
-                    end;
-                  5: // right edge
-                    begin
-                      if not HandleBottomLeftCorner
-                        and not HandleTopLeftCorner then
+                    5: // right edge
                       begin
-                        NextHorizontalIndex[PointCount] := HorizontalIndex-1;
-                        NextLayer[PointCount] := LayerIndex;
+                        if not HandleBottomLeftCorner
+                          and not HandleTopLeftCorner then
+                        begin
+                          NextHorizontalIndex[PointCount] := HorizontalIndex-1;
+                          NextLayer[PointCount] := LayerIndex;
+                        end;
                       end;
-                    end;
-                  else Assert(False);
+                    else Assert(False);
+                  end;
+                  Inc(PointCount);
                 end;
-                Inc(PointCount);
               end;
             end;
-          end;
 
-          // First get appropriate epsilons (margin of error).
-          AssignEpsilon;
+            // First get appropriate epsilons (margin of error).
+            AssignEpsilon;
 
-          FScreenObject.SortPoints(TempPoints1, TempPoints2,
-            APoint, PreviousPoint, PointCount, EpsilonX, EpsilonY);
-          // Look at each segment defined by a pair of points in TempPoints2.
-          // Skip segments that occur before FirstPointInCell.
-          // Start checking the midpoints of the remainder of the segments.
-          // If the midepont is in the cell, include that segment.
-          // Continue until you either reach the end
-          // of the array or have reached a segment that isn't in the cell.
-          MinDistance := Distance(PreviousPoint, FirstPointInCell);
-          for PointIndex := 0 to Length(TempPoints2) - 2 do
-          begin
-            Point1 := TempPoints2[PointIndex];
-            PointDistance := Distance(PreviousPoint, Point1);
-            if (PointDistance >= MinDistance) or
-              IsEqual(MinDistance, PointDistance, Max(EpsilonX, EpsilonY)) then
+            FScreenObject.SortPoints(TempPoints1, TempPoints2,
+              APoint, PreviousPoint, PointCount, EpsilonX, EpsilonY);
+            // Look at each segment defined by a pair of points in TempPoints2.
+            // Skip segments that occur before FirstPointInCell.
+            // Start checking the midpoints of the remainder of the segments.
+            // If the midepont is in the cell, include that segment.
+            // Continue until you either reach the end
+            // of the array or have reached a segment that isn't in the cell.
+            MinDistance := Distance(PreviousPoint, FirstPointInCell);
+            for PointIndex := 0 to Length(TempPoints2) - 2 do
             begin
-              Point2 := TempPoints2[PointIndex+1];
-              TestPoint := MidPoint(Point1,Point2);
-              if InCell(HorizontalIndex, LayerIndex, TestPoint,
-                CellOutlines) then
+              Point1 := TempPoints2[PointIndex];
+              PointDistance := Distance(PreviousPoint, Point1);
+              if (PointDistance >= MinDistance) or
+                IsEqual(MinDistance, PointDistance, Max(EpsilonX, EpsilonY)) then
               begin
-                if EndSection then
+                Point2 := TempPoints2[PointIndex+1];
+                TestPoint := MidPoint(Point1,Point2);
+                if InCell(HorizontalIndex, LayerIndex, TestPoint,
+                  CellOutlines) then
                 begin
-                  SecIndex := SectionIndex-1;
+                  if EndSection then
+                  begin
+                    SecIndex := SectionIndex-1;
+                  end
+                  else
+                  begin
+                    SecIndex := SectionIndex;
+                  end;
+                  CreateSegment(Point1, Point2, LayerIndex,
+                    PerpendicularIndex, HorizontalIndex, Index - 1, SecIndex);
+                  FirstPointInCell := Point2;
                 end
                 else
                 begin
-                  SecIndex := SectionIndex;
+                  break;
                 end;
-                CreateSegment(Point1, Point2, LayerIndex,
-                  PerpendicularIndex, HorizontalIndex, Index - 1, SecIndex);
-                FirstPointInCell := Point2;
+              end;
+            end;
+            // At this point, the TCellElementSegment's for the current cell
+            // intersected by this segment of the TScreenObject have been created.
+            // The next thing to do is to identify the next cell intersected by
+            // this segment of the TScreenObject (if there is one).
+            // FirstPointInCell has been updated to be the last point in the
+            // previous cell.  It may either be the last point in this segment
+            // of the TScreenObject or a point of intersection between
+            // the cell outline and the segment of the  TScreenObject.
+            // The intersection points have been stored in TempPoints1.
+            // For each intersection point in TempPoints1,
+            // the next cell has been indicated by
+            // the corresponding values in NextHorizontalIndex and NextLayer.
+
+            // If FirstPointInCell is the last point of this segment of the
+            // TScreenObject, go to the next segment.
+            if IsEqual(FirstPointInCell.X, APoint.X, 0)
+              and IsEqual(FirstPointInCell.Y, APoint.Y, 0) then
+            begin
+              break;
+            end;
+
+            // The last point in the cell must be on the edge of the cell.
+            // Identify the next cell.
+            FoundEdgePoint := False;
+            for PointIndex := 0 to PointCount - 1 do
+            begin
+              if IsEqual(FirstPointInCell.X, TempPoints1[PointIndex].X, EpsilonX)
+                and IsEqual(FirstPointInCell.Y, TempPoints1[PointIndex].Y,
+                EpsilonY) then
+              begin
+                FoundEdgePoint := True;
+                HorizontalIndex := NextHorizontalIndex[PointIndex];
+                LayerIndex := NextLayer[PointIndex];
+                break;
+              end;
+            end;
+            Assert(FoundEdgePoint);
+
+            if (HorizontalIndex < 0) or (HorizontalIndex >= HorizontalLimit) then
+            begin
+              // The segment is extending outside the grid and can not re-enter it
+              // so go on to the next segment.
+              break;
+            end;
+            if (LayerIndex < 0) or (LayerIndex >= Grid.LayerCount) then
+            begin
+              // Segment is extending outside the grid.  It might or might not
+              // re-enter the grid.  It might re-enter the grid in the
+              // other half of the same cell or in a different cell.
+
+              // Indicate top or bottom surface.
+              if LayerIndex < 0 then
+              begin
+                LayerIndicator := 0;
               end
               else
               begin
-                break;
+                LayerIndicator := Grid.LayerCount;
               end;
-            end;
-          end;
-          // At this point, the TCellElementSegment's for the current cell
-          // intersected by this segment of the TScreenObject have been created.
-          // The next thing to do is to identify the next cell intersected by
-          // this segment of the TScreenObject (if there is one).
-          // FirstPointInCell has been updated to be the last point in the
-          // previous cell.  It may either be the last point in this segment
-          // of the TScreenObject or a point of intersection between
-          // the cell outline and the segment of the  TScreenObject.
-          // The intersection points have been stored in TempPoints1.
-          // For each intersection point in TempPoints1,
-          // the next cell has been indicated by
-          // the corresponding values in NextHorizontalIndex and NextLayer.
 
-          // If FirstPointInCell is the last point of this segment of the
-          // TScreenObject, go to the next segment.
-          if IsEqual(FirstPointInCell.X, APoint.X, 0)
-            and IsEqual(FirstPointInCell.Y, APoint.Y, 0) then
-          begin
-            break;
-          end;
-
-          // The last point in the cell must be on the edge of the cell.
-          // Identify the next cell.
-          FoundEdgePoint := False;
-          for PointIndex := 0 to PointCount - 1 do
-          begin
-            if IsEqual(FirstPointInCell.X, TempPoints1[PointIndex].X, EpsilonX)
-              and IsEqual(FirstPointInCell.Y, TempPoints1[PointIndex].Y,
-              EpsilonY) then
-            begin
-              FoundEdgePoint := True;
-              HorizontalIndex := NextHorizontalIndex[PointIndex];
-              LayerIndex := NextLayer[PointIndex];
-              break;
-            end;
-          end;
-          Assert(FoundEdgePoint);
-
-          if (HorizontalIndex < 0) or (HorizontalIndex >= HorizontalLimit) then
-          begin
-            // The segment is extending outside the grid and can not re-enter it
-            // so go on to the next segment.
-            break;
-          end;
-          if (LayerIndex < 0) or (LayerIndex >= Grid.LayerCount) then
-          begin
-            // Segment is extending outside the grid.  It might or might not
-            // re-enter the grid.  It might re-enter the grid in the
-            // other half of the same cell or in a different cell.
-
-            // Indicate top or bottom surface.
-            if LayerIndex < 0 then
-            begin
-              LayerIndicator := 0;
-            end
-            else
-            begin
-              LayerIndicator := Grid.LayerCount;
-            end;
-
-            // Test if it re-enters the other half of the same cell.
-            ObjectSegment := EquateSegment(PreviousPoint.X, PreviousPoint.Y,
-              APoint.X, APoint.Y);
-            OtherEdgeAssigned := False;
-            if (FirstPointInCell.X >
-              CellOutlines[HorizontalIndex*2+1,LayerIndicator].X)
-             and (APoint.X < PreviousPoint.X) then
-            begin
-              EdgeSegment :=
-                EquateSegment(CellOutlines[HorizontalIndex*2+1,LayerIndicator],
-                CellOutlines[HorizontalIndex*2+2,LayerIndicator]);
-              OtherEdgeAssigned := True;
-            end
-            else if (FirstPointInCell.X <
-              CellOutlines[HorizontalIndex*2+1,LayerIndicator].X)
-             and (APoint.X > PreviousPoint.X) then
-            begin
-              EdgeSegment :=
-                EquateSegment(CellOutlines[HorizontalIndex*2+1,LayerIndicator],
-                CellOutlines[HorizontalIndex*2,LayerIndicator]);
-              OtherEdgeAssigned := True;
-            end;
-            if OtherEdgeAssigned and Intersect(ObjectSegment,EdgeSegment) then
-            begin
-              Int := IntersectionPoint(ObjectSegment,EdgeSegment);
-              FirstPointInCell.X := Int.X;
-              FirstPointInCell.Y := Int.Y;
-              // The segment of the TScreenObject has re-entered the
-              // other half of the same cell so you don't need to
-              // update HorizontalIndex.
-            end
-            else
-            begin
-              UpdateHorizontalRangeOfCellsToCheck(FirstHorizontalIndex,
-                LastHorizontalIndex, HorizontalIndex, HorizontalLimit,
-                APoint, PreviousPoint);
-              // Don't try to test beyond the edge of the grid
-              if (FirstHorizontalIndex < 0)
-                or (FirstHorizontalIndex >= HorizontalLimit) then
+              // Test if it re-enters the other half of the same cell.
+              ObjectSegment := EquateSegment(PreviousPoint.X, PreviousPoint.Y,
+                APoint.X, APoint.Y);
+              OtherEdgeAssigned := False;
+              if (FirstPointInCell.X >
+                CellOutlines[HorizontalIndex*2+1,LayerIndicator].X)
+               and (APoint.X < PreviousPoint.X) then
               begin
-                break;
-              end;
-
-              // If it doesn't re-enter the grid, go on to next segment
-              // of the TScreenObject.
-              if not FindIntersectionSurface(FirstHorizontalIndex,
-                LastHorizontalIndex, LayerIndicator, PreviousPoint, APoint,
-                FirstPointInCell, CellOutlines, HorizontalIndex) then
+                EdgeSegment :=
+                  EquateSegment(CellOutlines[HorizontalIndex*2+1,LayerIndicator],
+                  CellOutlines[HorizontalIndex*2+2,LayerIndicator]);
+                OtherEdgeAssigned := True;
+              end
+              else if (FirstPointInCell.X <
+                CellOutlines[HorizontalIndex*2+1,LayerIndicator].X)
+               and (APoint.X > PreviousPoint.X) then
               begin
-                break;
+                EdgeSegment :=
+                  EquateSegment(CellOutlines[HorizontalIndex*2+1,LayerIndicator],
+                  CellOutlines[HorizontalIndex*2,LayerIndicator]);
+                OtherEdgeAssigned := True;
               end;
-            end;
-            // At this point LayerIndex is outside the valid range.
-            // it indicates a a layer above the top layer or below
-            // the bottom layer.  Fix it so it is within the grid.
-            if LayerIndex < 0 then
-            begin
-              LayerIndex := 0;
-            end
-            else
-            begin
-              LayerIndex := Grid.LayerCount-1;
-            end;
-            // If you get here, the current segment of TScreenObject
-            // has reenterd the grid.
-            // FirstPointInCell, ColIndex and LayerIndex have
-            // all been updated to the values they will have for the next cell.
-          end;
+              if OtherEdgeAssigned and Intersect(ObjectSegment,EdgeSegment) then
+              begin
+                Int := IntersectionPoint(ObjectSegment,EdgeSegment);
+                FirstPointInCell.X := Int.X;
+                FirstPointInCell.Y := Int.Y;
+                // The segment of the TScreenObject has re-entered the
+                // other half of the same cell so you don't need to
+                // update HorizontalIndex.
+              end
+              else
+              begin
+                UpdateHorizontalRangeOfCellsToCheck(FirstHorizontalIndex,
+                  LastHorizontalIndex, HorizontalIndex, HorizontalLimit,
+                  APoint, PreviousPoint);
+                // Don't try to test beyond the edge of the grid
+                if (FirstHorizontalIndex < 0)
+                  or (FirstHorizontalIndex >= HorizontalLimit) then
+                begin
+                  break;
+                end;
 
-          // At this point, the next cell intersected by
-          // the current segment of TScreenObject is identified by
-          // HorizontalIndex and LayerIndex
-          // The first point at which the segment intersects
-          // that cell is indicated by FirstPointInCell.
-        until (False);
-        if PerpendicularIndex <> PerpendicularLimit then
-        begin
-          if IncrementedSectionIndex then
+                // If it doesn't re-enter the grid, go on to next segment
+                // of the TScreenObject.
+                if not FindIntersectionSurface(FirstHorizontalIndex,
+                  LastHorizontalIndex, LayerIndicator, PreviousPoint, APoint,
+                  FirstPointInCell, CellOutlines, HorizontalIndex) then
+                begin
+                  break;
+                end;
+              end;
+              // At this point LayerIndex is outside the valid range.
+              // it indicates a a layer above the top layer or below
+              // the bottom layer.  Fix it so it is within the grid.
+              if LayerIndex < 0 then
+              begin
+                LayerIndex := 0;
+              end
+              else
+              begin
+                LayerIndex := Grid.LayerCount-1;
+              end;
+              // If you get here, the current segment of TScreenObject
+              // has reenterd the grid.
+              // FirstPointInCell, ColIndex and LayerIndex have
+              // all been updated to the values they will have for the next cell.
+            end;
+
+            // At this point, the next cell intersected by
+            // the current segment of TScreenObject is identified by
+            // HorizontalIndex and LayerIndex
+            // The first point at which the segment intersects
+            // that cell is indicated by FirstPointInCell.
+          until (False);
+        finally
+          if PerpendicularIndex <> PerpendicularLimit then
           begin
-            Dec(SectionIndex);
+            if IncrementedSectionIndex then
+            begin
+              Dec(SectionIndex);
+            end;
           end;
         end;
       end;
@@ -23939,6 +24012,12 @@ begin
     and (ModflowHeadObservations <> nil) and ModflowHeadObservations.Used;
 end;
 
+function TScreenObject.StoreModflowHydmodData: Boolean;
+begin
+  result := (FModflowBoundaries <> nil)
+    and (ModflowHydmodData <> nil) and ModflowHydmodData.Used;
+end;
+
 function TScreenObject.StoreModflowLakBoundary: Boolean;
 begin
   result := (FModflowBoundaries <> nil)
@@ -24290,6 +24369,8 @@ begin
         end;
     end;
     SetGeometryUpToDate;
+    CacheValueArrays;
+
   finally
     UsedVariables.Free;
     CacheSegments;
@@ -24464,6 +24545,24 @@ begin
   begin
     result := ModflowBoundaries.FModflowHfbBoundary;
   end;
+end;
+
+function TScreenObject.GetModflowHydmodData: THydmodData;
+begin
+  if (FModel = nil)
+    or ((FModel <> nil) and (csLoading in FModel.ComponentState)) then
+  begin
+    CreateHydmodData;
+  end;
+  if FModflowBoundaries = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ModflowBoundaries.FModflowHydmodData;
+  end;
+
 end;
 
 function TScreenObject.GetModflowLakBoundary: TLakBoundary;
@@ -28015,6 +28114,14 @@ begin
   end;
 end;
 
+procedure TScreenObject.CreateHydmodData;
+begin
+  if (ModflowBoundaries.FModflowHydmodData = nil) then
+  begin
+    ModflowBoundaries.FModflowHydmodData := THydmodData.Create(FModel, self);
+  end;
+end;
+
 procedure TScreenObject.CreateLakBoundary;
 begin
   if (ModflowBoundaries.FModflowLakBoundary = nil) then
@@ -30200,6 +30307,7 @@ end;
 
 destructor TModflowBoundaries.Destroy;
 begin
+  FModflowHydmodData.Free;
   FModflowMnw2Boundary.Free;
   FModflowGage.Free;
   FModflowHfbBoundary.Free;
@@ -31010,5 +31118,6 @@ initialization
   RegisterClass(TScreenObjectClipboard);
 
 end.
+
 
 

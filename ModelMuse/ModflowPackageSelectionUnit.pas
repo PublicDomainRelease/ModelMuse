@@ -1191,24 +1191,34 @@ Type
     property SummarizeByNode: Boolean read FSummarizeByNode write SetSummarizeByNode;
   end;
 
-  TSubPrintItem = class(TOrderedItem)
+  TCustomPrintItem = class(TOrderedItem)
+  private
+    FStartTime: double;
+    FEndTime: double;
+    procedure SetStartTime(const Value: double);
+    procedure SetEndTime(const Value: double);
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property StartTime: double read FStartTime write SetStartTime;
+    property EndTime: double read FEndTime write SetEndTime;
+  end;
+
+  TSubPrintItem = class(TCustomPrintItem)
   private
     FPrintVerticalDisplacement: boolean;
     FSaveCompactionByInterbedSystem: boolean;
     FSaveCriticalHeadDelay: boolean;
-    FStartTime: double;
     FPrintCompactionByInterbedSystem: boolean;
     FPrintCriticalHeadDelay: boolean;
     FSaveCriticalHeadNoDelay: boolean;
     FPrintDelayBudgets: boolean;
-    FEndTime: double;
     FPrintCriticalHeadNoDelay: boolean;
     FSaveSubsidence: boolean;
     FSaveCompactionByModelLayer: boolean;
     FPrintSubsidence: boolean;
     FPrintCompactionByModelLayer: boolean;
     FSaveVerticalDisplacement: boolean;
-    procedure SetEndTime(const Value: double);
     procedure SetPrintCompactionByInterbedSystem(const Value: boolean);
     procedure SetPrintCompactionByModelLayer(const Value: boolean);
     procedure SetPrintCriticalHeadDelay(const Value: boolean);
@@ -1221,14 +1231,11 @@ Type
     procedure SetSaveCriticalHeadDelay(const Value: boolean);
     procedure SetSaveCriticalHeadNoDelay(const Value: boolean);
     procedure SetSaveSubsidence(const Value: boolean);
-    procedure SetStartTime(const Value: double);
     procedure SetSaveVerticalDisplacement(const Value: boolean);
   public
     procedure Assign(Source: TPersistent); override;
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
   published
-    property StartTime: double read FStartTime write SetStartTime;
-    property EndTime: double read FEndTime write SetEndTime;
     // Ifl1
     property PrintSubsidence: boolean read FPrintSubsidence
       write SetPrintSubsidence;
@@ -1299,6 +1306,7 @@ Type
     procedure SetVerticalDisplacementFormat(const Value: integer);
   public
     procedure Assign(Source: TPersistent); override;
+    procedure InitializeVariables;
   published
     property SubsidenceFormat : integer read FSubsidenceFormat
       write SetSubsidenceFormat;
@@ -1369,6 +1377,369 @@ Type
       read FSubBinaryOutputChoice write SetSubBinaryOutputChoice;
   end;
 
+  TSwtPrintItem = class(TCustomPrintItem)
+  private
+    FSaveDeltaGeostaticStress: boolean;
+    FPrintGeostaticStress: boolean;
+    FPrintVerticalDisplacement: boolean;
+    FSavePreconsolidationStress: boolean;
+    FSaveCompactionByInterbedSystem: boolean;
+    FPrintVoidRatio: boolean;
+    FPrintDeltaEffectiveStress: boolean;
+    FPrintDeltaGeostaticStress: boolean;
+    FSaveDeltaPreconsolidationStress: boolean;
+    FPrintPreconsolidationStress: boolean;
+    FPrintCompactionByInterbedSystem: boolean;
+    FPrintDeltaPreconsolidationStress: boolean;
+    FSaveThicknessCompressibleSediments: boolean;
+    FSaveSubsidence: boolean;
+    FSaveEffectiveStress: boolean;
+    FSaveCompactionByModelLayer: boolean;
+    FSaveLayerCenterElevation: boolean;
+    FPrintThicknessCompressibleSediments: boolean;
+    FSaveGeostaticStress: boolean;
+    FSaveVerticalDisplacement: boolean;
+    FSaveVoidRatio: boolean;
+    FPrintSubsidence: boolean;
+    FSaveDeltaEffectiveStress: boolean;
+    FPrintEffectiveStress: boolean;
+    FPrintCompactionByModelLayer: boolean;
+    FPrintLayerCenterElevation: boolean;
+    procedure SetPrintCompactionByInterbedSystem(const Value: boolean);
+    procedure SetPrintCompactionByModelLayer(const Value: boolean);
+    procedure SetPrintDeltaEffectiveStress(const Value: boolean);
+    procedure SetPrintDeltaGeostaticStress(const Value: boolean);
+    procedure SetPrintDeltaPreconsolidationStress(const Value: boolean);
+    procedure SetPrintEffectiveStress(const Value: boolean);
+    procedure SetPrintGeostaticStress(const Value: boolean);
+    procedure SetPrintLayerCenterElevation(const Value: boolean);
+    procedure SetPrintPreconsolidationStress(const Value: boolean);
+    procedure SetPrintSubsidence(const Value: boolean);
+    procedure SetPrintThicknessCompressibleSediments(const Value: boolean);
+    procedure SetPrintVerticalDisplacement(const Value: boolean);
+    procedure SetPrintVoidRatio(const Value: boolean);
+    procedure SetSaveCompactionByInterbedSystem(const Value: boolean);
+    procedure SetSaveCompactionByModelLayer(const Value: boolean);
+    procedure SetSaveDeltaEffectiveStress(const Value: boolean);
+    procedure SetSaveDeltaGeostaticStress(const Value: boolean);
+    procedure SetSaveDeltaPreconsolidationStress(const Value: boolean);
+    procedure SetSaveEffectiveStress(const Value: boolean);
+    procedure SetSaveGeostaticStress(const Value: boolean);
+    procedure SetSaveLayerCenterElevation(const Value: boolean);
+    procedure SetSavePreconsolidationStress(const Value: boolean);
+    procedure SetSaveSubsidence(const Value: boolean);
+    procedure SetSaveThicknessCompressibleSediments(const Value: boolean);
+    procedure SetSaveVerticalDisplacement(const Value: boolean);
+    procedure SetSaveVoidRatio(const Value: boolean);
+  public
+    procedure Assign(Source: TPersistent); override;
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+  published
+    // Ifl1
+    property PrintSubsidence: boolean read FPrintSubsidence
+      write SetPrintSubsidence;
+    // Ifl2
+    property SaveSubsidence: boolean read FSaveSubsidence
+      write SetSaveSubsidence;
+    // Ifl3
+    property PrintCompactionByModelLayer: boolean
+      read FPrintCompactionByModelLayer write SetPrintCompactionByModelLayer;
+    // Ifl4
+    property SaveCompactionByModelLayer: boolean
+      read FSaveCompactionByModelLayer write SetSaveCompactionByModelLayer;
+    // Ifl5
+    property PrintCompactionByInterbedSystem: boolean
+      read FPrintCompactionByInterbedSystem
+      write SetPrintCompactionByInterbedSystem;
+    // Ifl6
+    property SaveCompactionByInterbedSystem: boolean
+      read FSaveCompactionByInterbedSystem
+      write SetSaveCompactionByInterbedSystem;
+    // Ifl7
+    property PrintVerticalDisplacement: boolean read FPrintVerticalDisplacement
+      write SetPrintVerticalDisplacement;
+    // Ifl8
+    property SaveVerticalDisplacement: boolean read FSaveVerticalDisplacement
+      write SetSaveVerticalDisplacement;
+    // Ifl9
+    property PrintPreconsolidationStress: boolean
+      read FPrintPreconsolidationStress write SetPrintPreconsolidationStress;
+    // Ifl10
+    property SavePreconsolidationStress: boolean
+      read FSavePreconsolidationStress write SetSavePreconsolidationStress;
+    // Ifl11
+    property PrintDeltaPreconsolidationStress: boolean
+      read FPrintDeltaPreconsolidationStress
+      write SetPrintDeltaPreconsolidationStress;
+    // Ifl12
+    property SaveDeltaPreconsolidationStress: boolean
+      read FSaveDeltaPreconsolidationStress
+      write SetSaveDeltaPreconsolidationStress;
+    // Ifl13
+    property PrintGeostaticStress: boolean read FPrintGeostaticStress
+      write SetPrintGeostaticStress;
+    // Ifl14
+    property SaveGeostaticStress: boolean read FSaveGeostaticStress
+      write SetSaveGeostaticStress;
+    // Ifl15
+    property PrintDeltaGeostaticStress: boolean read FPrintDeltaGeostaticStress
+      write SetPrintDeltaGeostaticStress;
+    // Ifl16
+    property SaveDeltaGeostaticStress: boolean read FSaveDeltaGeostaticStress
+      write SetSaveDeltaGeostaticStress;
+    // Ifl17
+    property PrintEffectiveStress: boolean read FPrintEffectiveStress
+      write SetPrintEffectiveStress;
+    // Ifl18
+    property SaveEffectiveStress: boolean read FSaveEffectiveStress
+      write SetSaveEffectiveStress;
+    // Ifl19
+    property PrintDeltaEffectiveStress: boolean read FPrintDeltaEffectiveStress
+      write SetPrintDeltaEffectiveStress;
+    // Ifl20
+    property SaveDeltaEffectiveStress: boolean read FSaveDeltaEffectiveStress
+      write SetSaveDeltaEffectiveStress;
+    // Ifl21
+    property PrintVoidRatio: boolean read FPrintVoidRatio
+      write SetPrintVoidRatio;
+    // Ifl22
+    property SaveVoidRatio: boolean read FSaveVoidRatio write SetSaveVoidRatio;
+    // Ifl23
+    property PrintThicknessCompressibleSediments: boolean
+      read FPrintThicknessCompressibleSediments
+      write SetPrintThicknessCompressibleSediments;
+    // Ifl24
+    property SaveThicknessCompressibleSediments: boolean
+      read FSaveThicknessCompressibleSediments
+      write SetSaveThicknessCompressibleSediments;
+    // Ifl25
+    property PrintLayerCenterElevation: boolean read FPrintLayerCenterElevation
+      write SetPrintLayerCenterElevation;
+    // Ifl26
+    property SaveLayerCenterElevation: boolean read FSaveLayerCenterElevation
+      write SetSaveLayerCenterElevation;
+  end;
+
+  TSwtPrintCollection = class(TOrderedCollection)
+  private
+    function GetItem(Index: integer): TSwtPrintItem;
+    procedure SetItem(Index: integer; const Value: TSwtPrintItem);
+  public
+    constructor Create(Model: TObject);
+    property Items[Index: integer]: TSwtPrintItem read GetItem
+      write SetItem; default;
+    procedure ReportErrors;
+  end;
+
+  TSwtInitialPrint = class(TGoPhastPersistent)
+  private
+    FPrintInitialLayerCenterElevations: boolean;
+    FPrintInitialEquivalentStorageProperties: boolean;
+    FInitialEquivalentStoragePropertiesFormat: integer;
+    FPrintInitialGeostaticStress: boolean;
+    FInitialLayerCenterElevationFormat: integer;
+    FInitialGeostaticStressFormat: integer;
+    FPrintInitialPreconsolidationStress: boolean;
+    FInitialPreconsolidationStressFormat: integer;
+    FPrintInitialEffectiveStress: boolean;
+    FInitialEffectiveStressFormat: integer;
+    procedure SetInitialEquivalentStoragePropertiesFormat(const Value: integer);
+    procedure SetInitialGeostaticStressFormat(const Value: integer);
+    procedure SetInitialLayerCenterElevationFormat(const Value: integer);
+    procedure SetInitialPreconsolidationStressFormat(const Value: integer);
+    procedure SetPrintInitialEquivalentStorageProperties(const Value: boolean);
+    procedure SetPrintInitialGeostaticStress(const Value: boolean);
+    procedure SetPrintInitialLayerCenterElevations(const Value: boolean);
+    procedure SetPrintInitialPreconsolidationStress(const Value: boolean);
+    procedure SetInitialEffectiveStressFormat(const Value: integer);
+    procedure SetPrintInitialEffectiveStress(const Value: boolean);
+  public
+    procedure Assign(Source: TPersistent); override;
+    procedure InitializeVariables;
+  published
+    // IZCFL
+    property PrintInitialLayerCenterElevations: boolean
+      read FPrintInitialLayerCenterElevations
+      write SetPrintInitialLayerCenterElevations;
+    // IZCFM
+    property InitialLayerCenterElevationFormat: integer
+      read FInitialLayerCenterElevationFormat
+      write SetInitialLayerCenterElevationFormat;
+    // IGLFL
+    property PrintInitialGeostaticStress: boolean
+      read FPrintInitialGeostaticStress write SetPrintInitialGeostaticStress;
+    // IGLFM
+    property InitialGeostaticStressFormat: integer
+      read FInitialGeostaticStressFormat write SetInitialGeostaticStressFormat;
+    // IESTFL
+    property PrintInitialEffectiveStress: boolean
+      read FPrintInitialEffectiveStress write SetPrintInitialEffectiveStress;
+    // IESTFM
+    property InitialEffectiveStressFormat: integer
+      read FInitialEffectiveStressFormat write SetInitialEffectiveStressFormat;
+    // IPCSFL
+    property PrintInitialPreconsolidationStress: boolean
+      read FPrintInitialPreconsolidationStress
+      write SetPrintInitialPreconsolidationStress;
+    // IPCSFM
+    property InitialPreconsolidationStressFormat: integer
+      read FInitialPreconsolidationStressFormat
+      write SetInitialPreconsolidationStressFormat;
+    // ISTFL
+    property PrintInitialEquivalentStorageProperties: boolean
+      read FPrintInitialEquivalentStorageProperties
+      write SetPrintInitialEquivalentStorageProperties;
+    // ISTFM
+    property InitialEquivalentStoragePropertiesFormat: integer
+      read FInitialEquivalentStoragePropertiesFormat
+      write SetInitialEquivalentStoragePropertiesFormat;
+  end;
+
+  TSwtPrintFormats = class(TGoPhastPersistent)
+  private
+    FVerticalDisplacementFormat: integer;
+    FCompactionByInterbedSystemFormat: integer;
+    FSubsidenceFormat: integer;
+    FCompactionByModelLayerFormat: integer;
+    FThicknessCompressibleSediments: integer;
+    FEffectiveStress: integer;
+    FLayerCenterElevation: integer;
+    FGeostaticStress: integer;
+    FVoidRatio: integer;
+    FDeltaEffectiveStress: integer;
+    FDeltaGeostaticStress: integer;
+    FPreconsolidationStress: integer;
+    FDeltaPreconsolidationStress: integer;
+    procedure SetCompactionByInterbedSystemFormat(const Value: integer);
+    procedure SetCompactionByModelLayerFormat(const Value: integer);
+    procedure SetSubsidenceFormat(const Value: integer);
+    procedure SetVerticalDisplacementFormat(const Value: integer);
+    procedure SetDeltaEffectiveStress(const Value: integer);
+    procedure SetDeltaGeostaticStress(const Value: integer);
+    procedure SetDeltaPreconsolidationStress(const Value: integer);
+    procedure SetEffectiveStress(const Value: integer);
+    procedure SetGeostaticStress(const Value: integer);
+    procedure SetLayerCenterElevation(const Value: integer);
+    procedure SetPreconsolidationStress(const Value: integer);
+    procedure SetThicknessCompressibleSediments(const Value: integer);
+    procedure SetVoidRatio(const Value: integer);
+  public
+    procedure Assign(Source: TPersistent); override;
+    procedure InitializeVariables;
+  published
+    // Ifm1
+    property SubsidenceFormat : integer read FSubsidenceFormat
+      write SetSubsidenceFormat;
+    // Ifm2
+    property CompactionByModelLayerFormat: integer
+      read FCompactionByModelLayerFormat write SetCompactionByModelLayerFormat;
+    // Ifm3
+    property CompactionByInterbedSystemFormat: integer
+      read FCompactionByInterbedSystemFormat
+      write SetCompactionByInterbedSystemFormat;
+    // Ifm4
+    property VerticalDisplacementFormat: integer
+      read FVerticalDisplacementFormat write SetVerticalDisplacementFormat;
+    // Ifm5
+    property PreconsolidationStress: integer read FPreconsolidationStress
+      write SetPreconsolidationStress;
+    // Ifm6
+    property DeltaPreconsolidationStress: integer
+      read FDeltaPreconsolidationStress write SetDeltaPreconsolidationStress;
+    // Ifm7
+    property GeostaticStress: integer read FGeostaticStress
+      write SetGeostaticStress;
+    // Ifm8
+    property DeltaGeostaticStress: integer read FDeltaGeostaticStress
+      write SetDeltaGeostaticStress;
+    // Ifm9
+    property EffectiveStress: integer read FEffectiveStress
+      write SetEffectiveStress;
+    // Ifm10
+    property DeltaEffectiveStress: integer read FDeltaEffectiveStress
+      write SetDeltaEffectiveStress;
+    // Ifm11
+    property VoidRatio: integer read FVoidRatio write SetVoidRatio;
+    // Ifm12
+    property ThicknessCompressibleSediments: integer
+      read FThicknessCompressibleSediments
+      write SetThicknessCompressibleSediments;
+    // Ifm13
+    property LayerCenterElevation: integer read FLayerCenterElevation
+      write SetLayerCenterElevation;
+  end;
+
+  TThickResponse = (trConstant, trVariable);
+  TVoidRatioResponse = (vrrConstant, vrrVariable);
+  TPreconsolidationSource = (pcSpecified, pcOffsets);
+  TCompressionSource = (csCompressionReComp, csSpecificStorage);
+
+  TSwtPackageSelection = class(TModflowPackageSelection)
+  private
+    FInitialPrint: TSwtInitialPrint;
+    FThickResponse: TThickResponse;
+    FPrintChoices: TSwtPrintCollection;
+    FCompressionSource: TCompressionSource;
+    FPreconsolidationSource: TPreconsolidationSource;
+    FVoidRatioResponse: TVoidRatioResponse;
+    FPrintFormats: TSwtPrintFormats;
+    FSubBinaryOutputChoice: TSubBinaryOutputChoice;
+    procedure SetCompressionSource(const Value: TCompressionSource);
+    procedure SetInitialPrint(const Value: TSwtInitialPrint);
+    procedure SetPreconsolidationSource(const Value: TPreconsolidationSource);
+    procedure SetPrintChoices(const Value: TSwtPrintCollection);
+    procedure SetPrintFormats(const Value: TSwtPrintFormats);
+    procedure SetThickResponse(const Value: TThickResponse);
+    procedure SetVoidRatioResponse(const Value: TVoidRatioResponse);
+    procedure SetSubBinaryOutputChoice(const Value: TSubBinaryOutputChoice);
+  public
+    procedure Assign(Source: TPersistent); override;
+    procedure InitializeVariables;
+    Constructor Create(Model: TObject);
+    Destructor Destroy; override;
+  published
+    // Data set 1, ITHK
+    property ThickResponse: TThickResponse read FThickResponse
+      write SetThickResponse;
+    // Data set 1, IVOID
+    property VoidRatioResponse: TVoidRatioResponse read FVoidRatioResponse
+      write SetVoidRatioResponse;
+    // Data set 1, ISTPCS
+    property PreconsolidationSource: TPreconsolidationSource
+      read FPreconsolidationSource write SetPreconsolidationSource
+      default pcSpecified;
+    // Data set 1, ICRCC
+    property CompressionSource: TCompressionSource read FCompressionSource
+      write SetCompressionSource;
+    //  Data set 16
+    property PrintFormats: TSwtPrintFormats read FPrintFormats
+      write SetPrintFormats;
+    // data set 17
+    property PrintChoices: TSwtPrintCollection read FPrintChoices
+      write SetPrintChoices;
+    // Data set 3
+    property InitialPrint: TSwtInitialPrint read FInitialPrint
+      write SetInitialPrint;
+    property BinaryOutputChoice: TSubBinaryOutputChoice
+      read FSubBinaryOutputChoice write SetSubBinaryOutputChoice;
+  end;
+
+  THydPackageSelection = class(TModflowPackageSelection)
+  private
+    FStoredHYDNOH: TRealStorage;
+    procedure SetStoredHYDNOH(const Value: TRealStorage);
+    function GetHYDNOH: double;
+    procedure SetHYDNOH(const Value: double);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TObject);
+    Destructor Destroy; override;
+    property HYDNOH: double read GetHYDNOH write SetHYDNOH;
+    procedure InitializeVariables;
+  published
+    property StoredHYDNOH: TRealStorage read FStoredHYDNOH write SetStoredHYDNOH;
+  end;
+
 implementation
 
 uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
@@ -1380,7 +1751,8 @@ uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
   ModflowETS_WriterUnit, ModflowEtsUnit, ModflowUzfWriterUnit, ModflowUzfUnit,
   ModflowSfrWriterUnit, ModflowSfrUnit, ModflowSfrReachUnit, ModflowSfrFlows, 
   ModflowSfrChannelUnit, ModflowSfrEquationUnit, ModflowSfrSegment, 
-  ModflowSfrUnsatSegment, ModflowMNW2_WriterUnit, ModflowMnw2Unit;
+  ModflowSfrUnsatSegment, ModflowMNW2_WriterUnit, ModflowMnw2Unit,
+  LayerStructureUnit, ModflowSubsidenceDefUnit;
 
 
 { TModflowPackageSelection }
@@ -6103,8 +6475,6 @@ begin
   if Source is TSubPrintItem then
   begin
     SourceItem := TSubPrintItem(Source);
-    StartTime := SourceItem.StartTime;
-    EndTime := SourceItem.EndTime;
     PrintSubsidence := SourceItem.PrintSubsidence;
     SaveSubsidence := SourceItem.SaveSubsidence;
     PrintCompactionByModelLayer := SourceItem.PrintCompactionByModelLayer;
@@ -6150,11 +6520,6 @@ begin
   begin
     result := False;
   end;
-end;
-
-procedure TSubPrintItem.SetEndTime(const Value: double);
-begin
-  SetRealProperty(FEndTime, Value);
 end;
 
 procedure TSubPrintItem.SetPrintCompactionByInterbedSystem(
@@ -6223,13 +6588,7 @@ begin
   SetBooleanProperty(FSaveVerticalDisplacement, Value);
 end;
 
-procedure TSubPrintItem.SetStartTime(const Value: double);
-begin
-  SetRealProperty(FStartTime, Value);
-end;
-
 { TSubPrintCollection }
-
 constructor TSubPrintCollection.Create(Model: TObject);
 begin
   inherited Create(TSubPrintItem, Model);
@@ -6293,9 +6652,9 @@ end;
 constructor TSubPackageSelection.Create(Model: TObject);
 begin
   inherited;
-  InitializeVariables;
   FPrintChoices := TSubPrintCollection.Create(Model);
   FPrintFormats := TSubPrintFormats.Create(Model);
+  InitializeVariables;
 end;
 
 destructor TSubPackageSelection.Destroy;
@@ -6314,6 +6673,8 @@ begin
   FSaveDelayRestart := False;
   FReadDelayRestartFileName := '';
   FSubBinaryOutputChoice := sbocSingleFile;
+  PrintFormats.InitializeVariables;
+  PrintChoices.Clear;
 end;
 
 procedure TSubPackageSelection.SetAccelerationParameter1(const Value: double);
@@ -6364,11 +6725,34 @@ begin
 end;
 
 procedure TSubPackageSelection.SetReadDelayRestartFileName(const Value: string);
+var
+  LayerStructure: TLayerStructure;
+  LayerIndex: Integer;
+  LayerGroup: TLayerGroup;
+  Index: Integer;
+  DelayItem: TSubDelayBedLayerItem;
 begin
   if FReadDelayRestartFileName <> Value then
   begin
     FReadDelayRestartFileName := Value;
     InvalidateModel;
+    if FModel <> nil then
+    begin
+      // ensure that related data sets have been created.
+      LayerStructure := (FModel as TPhastModel).LayerStructure;
+      for LayerIndex := 0 to LayerStructure.Count - 1 do
+      begin
+        LayerGroup := LayerStructure[LayerIndex];
+        for Index := 0 to LayerGroup.SubDelayBedLayers.Count - 1 do
+        begin
+          DelayItem := LayerGroup.SubDelayBedLayers[Index];
+          DelayItem.InterbedStartingHeadDataArrayName :=
+            DelayItem.InterbedStartingHeadDataArrayName;
+          DelayItem.InterbedPreconsolidationHeadDataArrayName :=
+            DelayItem.InterbedPreconsolidationHeadDataArrayName;
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -6414,6 +6798,16 @@ begin
   begin
     inherited;
   end;
+end;
+
+procedure TSubPrintFormats.InitializeVariables;
+begin
+  SubsidenceFormat := 0;
+  CompactionByModelLayerFormat := 0;
+  CompactionByInterbedSystemFormat := 0;
+  VerticalDisplacementFormat := 0;
+  NoDelayPreconsolidationHeadFormat := 0;
+  DelayPreconsolidationHeadFormat := 0;
 end;
 
 procedure TSubPrintFormats.SetCompactionByInterbedSystemFormat(
@@ -6652,6 +7046,705 @@ begin
   if FExportZBLST <> Value then
   begin
     FExportZBLST := Value;
+    InvalidateModel;
+  end;
+end;
+
+{ TSwtPrintFormats }
+
+procedure TSwtPrintFormats.Assign(Source: TPersistent);
+var
+  SwtPrintSource: TSwtPrintFormats;
+begin
+  if Source is TSwtPrintFormats then
+  begin
+    SwtPrintSource := TSwtPrintFormats(Source);
+    SubsidenceFormat := SwtPrintSource.SubsidenceFormat;
+    CompactionByModelLayerFormat := SwtPrintSource.CompactionByModelLayerFormat;
+    CompactionByInterbedSystemFormat :=
+      SwtPrintSource.CompactionByInterbedSystemFormat;
+    VerticalDisplacementFormat := SwtPrintSource.VerticalDisplacementFormat;
+    PreconsolidationStress := SwtPrintSource.PreconsolidationStress;
+    DeltaPreconsolidationStress := SwtPrintSource.DeltaPreconsolidationStress;
+    GeostaticStress := SwtPrintSource.GeostaticStress;
+    DeltaGeostaticStress := SwtPrintSource.DeltaGeostaticStress;
+    EffectiveStress := SwtPrintSource.EffectiveStress;
+    DeltaEffectiveStress := SwtPrintSource.DeltaEffectiveStress;
+    VoidRatio := SwtPrintSource.VoidRatio;
+    ThicknessCompressibleSediments := SwtPrintSource.ThicknessCompressibleSediments;
+    LayerCenterElevation := SwtPrintSource.LayerCenterElevation;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+procedure TSwtPrintFormats.InitializeVariables;
+begin
+  SubsidenceFormat := 0;
+  CompactionByModelLayerFormat := 0;
+  CompactionByInterbedSystemFormat := 0;
+  VerticalDisplacementFormat := 0;
+  PreconsolidationStress := 0;
+  DeltaPreconsolidationStress := 0;
+  GeostaticStress := 0;
+  DeltaGeostaticStress := 0;
+  EffectiveStress := 0;
+  DeltaEffectiveStress := 0;
+  VoidRatio := 0;
+  ThicknessCompressibleSediments := 0;
+  LayerCenterElevation := 0;
+end;
+
+procedure TSwtPrintFormats.SetCompactionByInterbedSystemFormat(
+  const Value: integer);
+begin
+  SetIntegerProperty(FCompactionByInterbedSystemFormat, Value);
+end;
+
+procedure TSwtPrintFormats.SetCompactionByModelLayerFormat(
+  const Value: integer);
+begin
+  SetIntegerProperty(FCompactionByModelLayerFormat, Value);
+end;
+
+procedure TSwtPrintFormats.SetDeltaEffectiveStress(const Value: integer);
+begin
+  SetIntegerProperty(FDeltaEffectiveStress, Value);
+end;
+
+procedure TSwtPrintFormats.SetDeltaGeostaticStress(const Value: integer);
+begin
+  SetIntegerProperty(FDeltaGeostaticStress, Value);
+end;
+
+procedure TSwtPrintFormats.SetDeltaPreconsolidationStress(const Value: integer);
+begin
+  SetIntegerProperty(FDeltaPreconsolidationStress, Value);
+end;
+
+procedure TSwtPrintFormats.SetEffectiveStress(const Value: integer);
+begin
+  SetIntegerProperty(FEffectiveStress, Value);
+end;
+
+procedure TSwtPrintFormats.SetGeostaticStress(const Value: integer);
+begin
+  SetIntegerProperty(FGeostaticStress, Value);
+end;
+
+procedure TSwtPrintFormats.SetLayerCenterElevation(const Value: integer);
+begin
+  SetIntegerProperty(FLayerCenterElevation, Value);
+end;
+
+procedure TSwtPrintFormats.SetPreconsolidationStress(const Value: integer);
+begin
+  SetIntegerProperty(FPreconsolidationStress, Value);
+end;
+
+procedure TSwtPrintFormats.SetSubsidenceFormat(const Value: integer);
+begin
+  SetIntegerProperty(FSubsidenceFormat, Value);
+end;
+
+procedure TSwtPrintFormats.SetThicknessCompressibleSediments(
+  const Value: integer);
+begin
+  SetIntegerProperty(FThicknessCompressibleSediments, Value);
+end;
+
+procedure TSwtPrintFormats.SetVerticalDisplacementFormat(const Value: integer);
+begin
+  SetIntegerProperty(FVerticalDisplacementFormat, Value);
+end;
+
+procedure TSwtPrintFormats.SetVoidRatio(const Value: integer);
+begin
+  SetIntegerProperty(FVoidRatio, Value);
+end;
+
+{ TSwtPrintItem }
+
+procedure TSwtPrintItem.Assign(Source: TPersistent);
+var
+  SourceItem: TSwtPrintItem;
+begin
+  if Source is TSwtPrintItem then
+  begin
+    SourceItem := TSwtPrintItem(Source);
+    PrintSubsidence := SourceItem.PrintSubsidence;
+    SaveSubsidence := SourceItem.SaveSubsidence;
+    PrintCompactionByModelLayer := SourceItem.PrintCompactionByModelLayer;
+    SaveCompactionByModelLayer := SourceItem.SaveCompactionByModelLayer;
+    PrintCompactionByInterbedSystem := SourceItem.PrintCompactionByInterbedSystem;
+    SaveCompactionByInterbedSystem := SourceItem.SaveCompactionByInterbedSystem;
+    PrintVerticalDisplacement := SourceItem.PrintVerticalDisplacement;
+    SaveVerticalDisplacement := SourceItem.SaveVerticalDisplacement;
+    PrintPreconsolidationStress := SourceItem.PrintPreconsolidationStress;
+    SavePreconsolidationStress := SourceItem.SavePreconsolidationStress;
+    PrintDeltaPreconsolidationStress := SourceItem.PrintDeltaPreconsolidationStress;
+    SaveDeltaPreconsolidationStress := SourceItem.SaveDeltaPreconsolidationStress;
+    PrintGeostaticStress := SourceItem.PrintGeostaticStress;
+    SaveGeostaticStress := SourceItem.SaveGeostaticStress;
+    PrintDeltaGeostaticStress := SourceItem.PrintDeltaGeostaticStress;
+    SaveDeltaGeostaticStress := SourceItem.SaveDeltaGeostaticStress;
+    PrintEffectiveStress := SourceItem.PrintEffectiveStress;
+    SaveEffectiveStress := SourceItem.SaveEffectiveStress;
+    PrintDeltaEffectiveStress := SourceItem.PrintDeltaEffectiveStress;
+    SaveDeltaEffectiveStress := SourceItem.SaveDeltaEffectiveStress;
+    PrintVoidRatio := SourceItem.PrintVoidRatio;
+    SaveVoidRatio := SourceItem.SaveVoidRatio;
+    PrintThicknessCompressibleSediments := SourceItem.PrintThicknessCompressibleSediments;
+    SaveThicknessCompressibleSediments := SourceItem.SaveThicknessCompressibleSediments;
+    PrintLayerCenterElevation := SourceItem.PrintLayerCenterElevation;
+    SaveLayerCenterElevation := SourceItem.SaveLayerCenterElevation;
+  end;
+  inherited;
+end;
+
+function TSwtPrintItem.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  SourceItem: TSwtPrintItem;
+begin
+  if AnotherItem is TSwtPrintItem then
+  begin
+    SourceItem := TSwtPrintItem(AnotherItem);
+    result := (StartTime = SourceItem.StartTime)
+      and (EndTime = SourceItem.EndTime)
+      and (PrintSubsidence = SourceItem.PrintSubsidence)
+      and (SaveSubsidence = SourceItem.SaveSubsidence)
+      and (PrintCompactionByModelLayer = SourceItem.PrintCompactionByModelLayer)
+      and (SaveCompactionByModelLayer = SourceItem.SaveCompactionByModelLayer)
+      and (PrintCompactionByInterbedSystem = SourceItem.PrintCompactionByInterbedSystem)
+      and (SaveCompactionByInterbedSystem = SourceItem.SaveCompactionByInterbedSystem)
+      and (PrintVerticalDisplacement = SourceItem.PrintVerticalDisplacement)
+      and (SaveVerticalDisplacement = SourceItem.SaveVerticalDisplacement)
+      and (PrintPreconsolidationStress = SourceItem.PrintPreconsolidationStress)
+      and (SavePreconsolidationStress = SourceItem.SavePreconsolidationStress)
+      and (PrintDeltaPreconsolidationStress = SourceItem.PrintDeltaPreconsolidationStress)
+      and (SaveDeltaPreconsolidationStress = SourceItem.SaveDeltaPreconsolidationStress)
+      and (PrintGeostaticStress = SourceItem.PrintGeostaticStress)
+      and (SaveGeostaticStress = SourceItem.SaveGeostaticStress)
+      and (PrintDeltaGeostaticStress = SourceItem.PrintDeltaGeostaticStress)
+      and (SaveDeltaGeostaticStress = SourceItem.SaveDeltaGeostaticStress)
+      and (PrintEffectiveStress = SourceItem.PrintEffectiveStress)
+      and (SaveEffectiveStress = SourceItem.SaveEffectiveStress)
+      and (PrintDeltaEffectiveStress = SourceItem.PrintDeltaEffectiveStress)
+      and (SaveDeltaEffectiveStress = SourceItem.SaveDeltaEffectiveStress)
+      and (PrintVoidRatio = SourceItem.PrintVoidRatio)
+      and (SaveVoidRatio = SourceItem.SaveVoidRatio)
+      and (PrintThicknessCompressibleSediments = SourceItem.PrintThicknessCompressibleSediments)
+      and (SaveThicknessCompressibleSediments = SourceItem.SaveThicknessCompressibleSediments)
+      and (PrintLayerCenterElevation = SourceItem.PrintLayerCenterElevation)
+      and (SaveLayerCenterElevation = SourceItem.SaveLayerCenterElevation)
+  end
+  else
+  begin
+    result := False;
+  end;
+end;
+
+procedure TSwtPrintItem.SetPrintCompactionByInterbedSystem(
+  const Value: boolean);
+begin
+  SetBooleanProperty(FPrintCompactionByInterbedSystem, Value);
+end;
+
+procedure TSwtPrintItem.SetPrintCompactionByModelLayer(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintCompactionByModelLayer, Value);
+end;
+
+procedure TSwtPrintItem.SetPrintDeltaEffectiveStress(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintDeltaEffectiveStress, Value);
+end;
+
+procedure TSwtPrintItem.SetPrintDeltaGeostaticStress(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintDeltaGeostaticStress, Value);
+end;
+
+procedure TSwtPrintItem.SetPrintDeltaPreconsolidationStress(
+  const Value: boolean);
+begin
+  SetBooleanProperty(FPrintDeltaPreconsolidationStress, Value);
+end;
+
+procedure TSwtPrintItem.SetPrintEffectiveStress(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintEffectiveStress, Value);
+end;
+
+procedure TSwtPrintItem.SetPrintGeostaticStress(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintGeostaticStress, Value);
+end;
+
+procedure TSwtPrintItem.SetPrintLayerCenterElevation(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintLayerCenterElevation, Value);
+end;
+
+procedure TSwtPrintItem.SetPrintPreconsolidationStress(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintPreconsolidationStress, Value);
+end;
+
+procedure TSwtPrintItem.SetPrintSubsidence(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintSubsidence, Value);
+end;
+
+procedure TSwtPrintItem.SetPrintThicknessCompressibleSediments(
+  const Value: boolean);
+begin
+  SetBooleanProperty(FPrintThicknessCompressibleSediments, Value);
+end;
+
+procedure TSwtPrintItem.SetPrintVerticalDisplacement(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintVerticalDisplacement, Value);
+end;
+
+procedure TSwtPrintItem.SetPrintVoidRatio(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintVoidRatio, Value);
+end;
+
+procedure TSwtPrintItem.SetSaveCompactionByInterbedSystem(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveCompactionByInterbedSystem, Value);
+end;
+
+procedure TSwtPrintItem.SetSaveCompactionByModelLayer(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveCompactionByModelLayer, Value);
+end;
+
+procedure TSwtPrintItem.SetSaveDeltaEffectiveStress(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveDeltaEffectiveStress, Value);
+end;
+
+procedure TSwtPrintItem.SetSaveDeltaGeostaticStress(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveDeltaGeostaticStress, Value);
+end;
+
+procedure TSwtPrintItem.SetSaveDeltaPreconsolidationStress(
+  const Value: boolean);
+begin
+  SetBooleanProperty(FSaveDeltaPreconsolidationStress, Value);
+end;
+
+procedure TSwtPrintItem.SetSaveEffectiveStress(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveEffectiveStress, Value);
+end;
+
+procedure TSwtPrintItem.SetSaveGeostaticStress(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveGeostaticStress, Value);
+end;
+
+procedure TSwtPrintItem.SetSaveLayerCenterElevation(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveLayerCenterElevation, Value);
+end;
+
+procedure TSwtPrintItem.SetSavePreconsolidationStress(const Value: boolean);
+begin
+  SetBooleanProperty(FSavePreconsolidationStress, Value);
+end;
+
+procedure TSwtPrintItem.SetSaveSubsidence(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveSubsidence, Value);
+end;
+
+procedure TSwtPrintItem.SetSaveThicknessCompressibleSediments(
+  const Value: boolean);
+begin
+  SetBooleanProperty(FSaveThicknessCompressibleSediments, Value);
+end;
+
+procedure TSwtPrintItem.SetSaveVerticalDisplacement(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveVerticalDisplacement, Value);
+end;
+
+procedure TSwtPrintItem.SetSaveVoidRatio(const Value: boolean);
+begin
+  SetBooleanProperty(FSaveVoidRatio, Value);
+end;
+
+{ TSwtPrintCollection }
+
+constructor TSwtPrintCollection.Create(Model: TObject);
+begin
+  inherited Create(TSwtPrintItem, Model);
+end;
+
+function TSwtPrintCollection.GetItem(Index: integer): TSwtPrintItem;
+begin
+  result := inherited Items[Index] as TSwtPrintItem;
+end;
+
+procedure TSwtPrintCollection.ReportErrors;
+const
+  ErrorRoot = 'In the Subsidence and Aquifer-System Compaction Package '
+  + 'for Water-Table Aquifers, one or more starting time '
+    + 'is after the ending time';
+var
+  Index: Integer;
+  PrintChoice: TSwtPrintItem;
+begin
+  for Index := 0 to Count -1 do
+  begin
+    PrintChoice := Items[Index];
+    if PrintChoice.StartTime > PrintChoice.EndTime then
+    begin
+      frmErrorsAndWarnings.AddError(ErrorRoot,
+        'StartingTime: ' + FloatToStr(PrintChoice.StartTime)
+        + '; EndingTime: ' + FloatToStr(PrintChoice.EndTime));
+    end;
+  end;
+end;
+
+procedure TSwtPrintCollection.SetItem(Index: integer;
+  const Value: TSwtPrintItem);
+begin
+  inherited Items[Index] := Value;
+end;
+
+{ TSwtInitialPrint }
+
+procedure TSwtInitialPrint.Assign(Source: TPersistent);
+var
+  SwtInitialPrintSource: TSwtInitialPrint;
+begin
+  if Source is TSwtInitialPrint then
+  begin
+    SwtInitialPrintSource := TSwtInitialPrint(Source);
+    PrintInitialLayerCenterElevations :=
+      SwtInitialPrintSource.PrintInitialLayerCenterElevations;
+    InitialLayerCenterElevationFormat :=
+      SwtInitialPrintSource.InitialLayerCenterElevationFormat;
+    PrintInitialGeostaticStress :=
+      SwtInitialPrintSource.PrintInitialGeostaticStress;
+    InitialGeostaticStressFormat :=
+      SwtInitialPrintSource.InitialGeostaticStressFormat;
+    PrintInitialEffectiveStress :=
+      SwtInitialPrintSource.PrintInitialEffectiveStress;
+    InitialEffectiveStressFormat :=
+      SwtInitialPrintSource.InitialEffectiveStressFormat;
+    PrintInitialPreconsolidationStress :=
+      SwtInitialPrintSource.PrintInitialPreconsolidationStress;
+    InitialPreconsolidationStressFormat :=
+      SwtInitialPrintSource.InitialPreconsolidationStressFormat;
+    PrintInitialEquivalentStorageProperties :=
+      SwtInitialPrintSource.PrintInitialEquivalentStorageProperties;
+    InitialEquivalentStoragePropertiesFormat :=
+      SwtInitialPrintSource.InitialEquivalentStoragePropertiesFormat;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+procedure TSwtInitialPrint.InitializeVariables;
+begin
+  PrintInitialLayerCenterElevations := False;
+  InitialLayerCenterElevationFormat := 0;
+
+  PrintInitialGeostaticStress := False;
+  InitialGeostaticStressFormat := 0;
+
+  PrintInitialEffectiveStress := False;
+  InitialEffectiveStressFormat := 0;
+
+  PrintInitialPreconsolidationStress := False;
+  InitialPreconsolidationStressFormat := 0;
+
+  PrintInitialEquivalentStorageProperties := False;
+  InitialEquivalentStoragePropertiesFormat := 0;
+end;
+
+procedure TSwtInitialPrint.SetInitialEffectiveStressFormat(
+  const Value: integer);
+begin
+  SetIntegerProperty(FInitialEffectiveStressFormat, Value);
+end;
+
+procedure TSwtInitialPrint.SetInitialEquivalentStoragePropertiesFormat(
+  const Value: integer);
+begin
+  SetIntegerProperty(FInitialEquivalentStoragePropertiesFormat, Value);
+end;
+
+procedure TSwtInitialPrint.SetInitialGeostaticStressFormat(
+  const Value: integer);
+begin
+  SetIntegerProperty(FInitialGeostaticStressFormat, Value);
+end;
+
+procedure TSwtInitialPrint.SetInitialLayerCenterElevationFormat(
+  const Value: integer);
+begin
+  SetIntegerProperty(FInitialLayerCenterElevationFormat, Value);
+end;
+
+procedure TSwtInitialPrint.SetInitialPreconsolidationStressFormat(
+  const Value: integer);
+begin
+  SetIntegerProperty(FInitialPreconsolidationStressFormat, Value);
+end;
+
+procedure TSwtInitialPrint.SetPrintInitialEffectiveStress(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintInitialEffectiveStress, Value);
+end;
+
+procedure TSwtInitialPrint.SetPrintInitialEquivalentStorageProperties(
+  const Value: boolean);
+begin
+  SetBooleanProperty(FPrintInitialEquivalentStorageProperties, Value);
+end;
+
+procedure TSwtInitialPrint.SetPrintInitialGeostaticStress(const Value: boolean);
+begin
+  SetBooleanProperty(FPrintInitialGeostaticStress, Value);
+end;
+
+procedure TSwtInitialPrint.SetPrintInitialLayerCenterElevations(
+  const Value: boolean);
+begin
+  SetBooleanProperty(FPrintInitialLayerCenterElevations, Value);
+end;
+
+procedure TSwtInitialPrint.SetPrintInitialPreconsolidationStress(
+  const Value: boolean);
+begin
+  SetBooleanProperty(FPrintInitialPreconsolidationStress, Value);
+end;
+
+{ TSwtPackageSelection }
+
+procedure TSwtPackageSelection.Assign(Source: TPersistent);
+var
+  SwtSource: TSwtPackageSelection;
+begin
+  if Source is TSwtPackageSelection then
+  begin
+    SwtSource := TSwtPackageSelection(Source);
+    ThickResponse := SwtSource.ThickResponse;
+    VoidRatioResponse := SwtSource.VoidRatioResponse;
+    PreconsolidationSource := SwtSource.PreconsolidationSource;
+    CompressionSource := SwtSource.CompressionSource;
+    PrintFormats := SwtSource.PrintFormats;
+    PrintChoices := SwtSource.PrintChoices;
+    InitialPrint := SwtSource.InitialPrint;
+    BinaryOutputChoice := SwtSource.BinaryOutputChoice;
+  end;
+  inherited;
+end;
+
+constructor TSwtPackageSelection.Create(Model: TObject);
+begin
+  inherited;
+  FPrintChoices := TSwtPrintCollection.Create(Model);
+  FInitialPrint := TSwtInitialPrint.Create(Model);
+  FPrintFormats := TSwtPrintFormats.Create(Model);
+  InitializeVariables;
+end;
+
+destructor TSwtPackageSelection.Destroy;
+begin
+  FPrintFormats.Free;
+  FInitialPrint.Free;
+  FPrintChoices.Free;
+  inherited;
+end;
+
+procedure TSwtPackageSelection.InitializeVariables;
+begin
+  FThickResponse := trConstant;
+  FCompressionSource := csSpecificStorage;
+  FPreconsolidationSource := pcSpecified;
+  FVoidRatioResponse := vrrConstant;
+  FSubBinaryOutputChoice := sbocSingleFile;
+  PrintFormats.InitializeVariables;
+  PrintChoices.Clear;
+  InitialPrint.InitializeVariables;
+end;
+
+procedure TSwtPackageSelection.SetCompressionSource(
+  const Value: TCompressionSource);
+var
+  LayerStructure: TLayerStructure;
+  LayerIndex: Integer;
+  LayerGroup: TLayerGroup;
+  Index: Integer;
+  WtItem: TSwtWaterTableItem;
+begin
+  if FCompressionSource <> Value then
+  begin
+    FCompressionSource := Value;
+    InvalidateModel;
+    if FModel <> nil then
+    begin
+      // ensure that related data sets have been created.
+      LayerStructure := (FModel as TPhastModel).LayerStructure;
+      for LayerIndex := 0 to LayerStructure.Count - 1 do
+      begin
+        LayerGroup := LayerStructure[LayerIndex];
+        for Index := 0 to LayerGroup.WaterTableLayers.Count - 1 do
+        begin
+          WtItem := LayerGroup.WaterTableLayers[Index];
+          WtItem.WaterTableInitialElasticSkeletalSpecificStorageDataArrayName :=
+            WtItem.WaterTableInitialElasticSkeletalSpecificStorageDataArrayName;
+          WtItem.WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName :=
+            WtItem.WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName;
+          WtItem.WaterTableRecompressionIndexDataArrayName :=
+            WtItem.WaterTableRecompressionIndexDataArrayName;
+          WtItem.WaterTableCompressionIndexDataArrayName :=
+            WtItem.WaterTableCompressionIndexDataArrayName;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TSwtPackageSelection.SetInitialPrint(const Value: TSwtInitialPrint);
+begin
+  FInitialPrint.Assign(Value);
+end;
+
+procedure TSwtPackageSelection.SetPreconsolidationSource(
+  const Value: TPreconsolidationSource);
+begin
+  if FPreconsolidationSource <> Value then
+  begin
+    FPreconsolidationSource := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwtPackageSelection.SetPrintChoices(
+  const Value: TSwtPrintCollection);
+begin
+  FPrintChoices.Assign(Value);
+end;
+
+procedure TSwtPackageSelection.SetPrintFormats(const Value: TSwtPrintFormats);
+begin
+  FPrintFormats.Assign(Value);
+end;
+
+procedure TSwtPackageSelection.SetSubBinaryOutputChoice(
+  const Value: TSubBinaryOutputChoice);
+begin
+  if FSubBinaryOutputChoice <> Value then
+  begin
+    FSubBinaryOutputChoice := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwtPackageSelection.SetThickResponse(const Value: TThickResponse);
+begin
+  if FThickResponse <> Value then
+  begin
+    FThickResponse := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TSwtPackageSelection.SetVoidRatioResponse(
+  const Value: TVoidRatioResponse);
+begin
+  if FVoidRatioResponse <> Value then
+  begin
+    FVoidRatioResponse := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TCustomPrintItem.SetStartTime(const Value: double);
+begin
+  SetRealProperty(FStartTime, Value);
+end;
+
+procedure TCustomPrintItem.Assign(Source: TPersistent);
+var
+  SourceItem: TCustomPrintItem;
+begin
+  inherited;
+  if Source is TCustomPrintItem then
+  begin
+    SourceItem := TCustomPrintItem(Source);
+    StartTime := SourceItem.StartTime;
+    EndTime := SourceItem.EndTime;
+  end;
+end;
+
+procedure TCustomPrintItem.SetEndTime(const Value: double);
+begin
+  SetRealProperty(FEndTime, Value);
+end;
+
+{ THydPackageSelection }
+
+procedure THydPackageSelection.Assign(Source: TPersistent);
+begin
+  if Source is THydPackageSelection then
+  begin
+    StoredHYDNOH := THydPackageSelection(Source).StoredHYDNOH;
+  end;
+  inherited;
+end;
+
+constructor THydPackageSelection.Create(Model: TObject);
+begin
+  inherited;
+  FStoredHYDNOH := TRealStorage.Create;
+  InitializeVariables;
+end;
+
+destructor THydPackageSelection.Destroy;
+begin
+  FStoredHYDNOH.Free;
+  inherited;
+end;
+
+procedure THydPackageSelection.InitializeVariables;
+begin
+  HYDNOH := -1E+20;
+end;
+
+function THydPackageSelection.GetHYDNOH: double;
+begin
+  result := StoredHYDNOH.Value;
+end;
+
+procedure THydPackageSelection.SetHYDNOH(const Value: double);
+begin
+  if StoredHYDNOH.Value <> Value then
+  begin
+    StoredHYDNOH.Value := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure THydPackageSelection.SetStoredHYDNOH(const Value: TRealStorage);
+begin
+  if FStoredHYDNOH.Value <> Value.Value then
+  begin
+    FStoredHYDNOH.Assign(Value);
     InvalidateModel;
   end;
 end;

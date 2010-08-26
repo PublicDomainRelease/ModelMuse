@@ -69,6 +69,8 @@ type
     frameSubNoDelayBeds: TframeSubBeds;
     tabDelay: TTabSheet;
     frameSubDelayBeds: TframeSubBeds;
+    tabSWT: TTabSheet;
+    frameSwt: TframeSubBeds;
     procedure rdeVDiscretizationChange(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure rdeGrowthRateChange(Sender: TObject);
@@ -118,7 +120,7 @@ type
     procedure GetData;
     Procedure SetData;
     procedure SetSpacing(const GrowthRate: real;
-      const GrowthMethod: TGrowthMethod; const SubLayers: integer;
+      GrowthMethod: TGrowthMethod; const SubLayers: integer;
       out Fractions: TRealArray);
     procedure UpdateStringGrid;
     procedure GetLayerPostions(const Fractions: TRealArray;
@@ -243,8 +245,10 @@ begin
   rdgSubLayerBoundaries.Cells[0,0] := 'Layer boundary';
   frameSubNoDelayBeds.OnGetSelectedSubLayers := GetSubsidenceLayers;
   frameSubDelayBeds.OnGetSelectedSubLayers := GetSubsidenceLayers;
+  frameSwt.OnGetSelectedSubLayers := GetSubsidenceLayers;
   frameSubNoDelayBeds.OnGetNewName := GetNewSubsidenceName;
   frameSubDelayBeds.OnGetNewName := GetNewSubsidenceName;
+  frameSwt.OnGetNewName := GetNewSubsidenceName;
   GetData;
   EnableComputeSatThick;
 
@@ -326,6 +330,8 @@ begin
     ModflowPackages.SubPackage.IsSelected;
   tabDelay.TabVisible := frmGoPhast.PhastModel.
     ModflowPackages.SubPackage.IsSelected;
+  tabSwt.TabVisible := frmGoPhast.PhastModel.
+    ModflowPackages.SwtPackage.IsSelected;
 
   SetUpLayerTypeOptions;
   SetUpAveragingOptions;
@@ -354,6 +360,9 @@ begin
   end;
 
   sbDeleteUnit.Enabled := FLayerStructure.Count > 1;
+
+  UpdateSelectedUnits;
+  SetControlValues;
 end;
 
 procedure TfrmLayers.GetLayerPostions(const Fractions: TRealArray;
@@ -380,6 +389,10 @@ begin
   begin
     NewName := 'D_SYS_' + IntToStr(FLayerStructure.DelayCount);
   end
+  else if Sender = frameSwt then
+  begin
+    NewName := 'WT_' + IntToStr(FLayerStructure.WaterTableCount);
+  end
   else
   begin
     Assert(False);
@@ -403,6 +416,10 @@ begin
     else if Sender = frameSubDelayBeds then
     begin
       SubLayers := SelectedUnit.SubDelayBedLayers;
+    end
+    else if Sender = frameSwt then
+    begin
+      SubLayers := SelectedUnit.WaterTableLayers;
     end
     else
     begin
@@ -1565,6 +1582,18 @@ var
     InitializeSubsidenceGrid(frameSubDelayBeds);
     AssignSubFrame(FirstUnit.SubDelayBedLayers, frameSubDelayBeds);
   end;
+  procedure AssignSwtBeds;
+  begin
+    if FSelectedUnits.Count > 1 then
+    begin
+      tabSWT.TabVisible := False;
+      Exit;
+    end;
+    tabSWT.TabVisible := frmGoPhast.PhastModel.
+      ModflowPackages.SwtPackage.IsSelected;;
+    InitializeSubsidenceGrid(frameSwt);
+    AssignSubFrame(FirstUnit.WaterTableLayers, frameSwt);
+  end;
 begin
   if csDestroying in ComponentState then Exit;
 
@@ -1605,6 +1634,7 @@ begin
     AssignHorizontalAnisotropy;
     AssignNoDelayBeds;
     AssignDelayBeds;
+    AssignSwtBeds;
   finally
     FSettingUnit := False;
   end;
@@ -1716,7 +1746,7 @@ begin
 end;
 
 procedure TfrmLayers.SetSpacing(const GrowthRate: real;
-  const GrowthMethod: TGrowthMethod; const SubLayers: integer;
+  GrowthMethod: TGrowthMethod; const SubLayers: integer;
   out Fractions: TRealArray);
 var
   Index: Integer;
@@ -1733,149 +1763,157 @@ begin
     begin
       SetLength(Fractions, SubLayers-1);
 
-      case GrowthMethod of
-        gmUniform:
+      RealList := TRealList.Create;
+      try
+        if GrowthMethod = gmCustom then
+        begin
+          for Index := 1 to rdgSubLayerBoundaries.RowCount - 1 do
           begin
-            for Index := 0 to SubLayers - 2 do
-            begin
-              Fractions[SubLayers - 2 - Index] := (Index+1)/SubLayers;
-            end;
-          end;
-        gmUp:
-          begin
-            Sum := 1;
-            CurrentLength := 1;
-            for Index := 0 to SubLayers-2 do
-            begin
-              Fractions[SubLayers - 2 - Index] := Sum;
-              CurrentLength := CurrentLength * GrowthRate;
-              Sum := Sum + CurrentLength;
-            end;
-            for Index := 0 to SubLayers - 2 do
-            begin
-              Fractions[Index] := Fractions[Index]/ Sum;
-            end;
-          end;
-        gmDown:
-          begin
-            Sum := 1;
-            CurrentLength := 1;
-            for Index := 0 to SubLayers-2 do
-            begin
-              Fractions[SubLayers - 2 - Index] := Sum;
-              CurrentLength := CurrentLength / GrowthRate;
-             Sum := Sum + CurrentLength;
-            end;
-            for Index := 0 to SubLayers - 2 do
-            begin
-              Fractions[Index] := Fractions[Index]/ Sum;
-            end;
-          end;
-        gmMiddle, gmEdge:
-          begin
-            if Odd(SubLayers) then
-            begin
-              StopIndex := (SubLayers div 2);
-            end
-            else
-            begin
-              StopIndex := (SubLayers div 2)-1;
-            end;
-
-            Sum := 1;
-            CurrentLength := 1;
-            for Index := 0 to StopIndex-1 do
-            begin
-              Fractions[SubLayers - 2 - Index] := Sum;
-              case GrowthMethod of
-                gmMiddle:
-                  begin
-                    CurrentLength := CurrentLength * GrowthRate;
-                  end;
-                gmEdge:
-                  begin
-                    CurrentLength := CurrentLength / GrowthRate;
-                  end;
-                else Assert(False);
-              end;
-              Sum := Sum + CurrentLength;
-            end;
-            StartIndex := StopIndex;
-            if not Odd(SubLayers) then
-            begin
-              Fractions[SubLayers - 2 - StartIndex] := Sum;
-              Sum := Sum + CurrentLength;
-              Inc(StartIndex);
-            end;
-            for Index := StartIndex to SubLayers-2 do
-            begin
-              Fractions[SubLayers - 2 - Index] := Sum;
-              case GrowthMethod of
-                gmMiddle:
-                  begin
-                    CurrentLength := CurrentLength / GrowthRate;
-                  end;
-                gmEdge:
-                  begin
-                    CurrentLength := CurrentLength * GrowthRate;
-                  end;
-                else Assert(False);
-              end;
-              Sum := Sum + CurrentLength;
-            end;
-            for Index := 0 to SubLayers - 2 do
-            begin
-              Fractions[Index] := Fractions[Index]/ Sum;
-            end;
-          end;
-        gmCustom:
-          begin
-            RealList := TRealList.Create;
             try
-              for Index := 0 to rdgSubLayerBoundaries.RowCount - 1 do
+              if rdgSubLayerBoundaries.Cells[0,Index+1] <> '' then
               begin
-                try
-                  if rdgSubLayerBoundaries.Cells[0,Index+1] <> '' then
-                  begin
-                    RealList.Add(StrToFloat(rdgSubLayerBoundaries.Cells[0,Index+1]));
-                  end;
-                except on E: EConvertError do
-                  begin
-                    // ignore
-                  end;
-                end;
+                RealList.Add(StrToFloat(rdgSubLayerBoundaries.Cells[0,Index+1]));
               end;
-              RealList.Sort;
-              for Index := RealList.Count - 1 downto 0 do
+            except on E: EConvertError do
               begin
-                Value := RealList[Index];
-                if (Value >= 1) or (Value <= 0) then
-                begin
-                  RealList.Delete(Index);
-                  Continue;
+                // ignore
+              end;
+            end;
+          end;
+          if RealList.Count = 0 then
+          begin
+            GrowthMethod := gmUniform;
+          end;
+        end;
+
+        case GrowthMethod of
+          gmUniform:
+            begin
+              for Index := 0 to SubLayers - 2 do
+              begin
+                Fractions[SubLayers - 2 - Index] := (Index+1)/SubLayers;
+              end;
+            end;
+          gmUp:
+            begin
+              Sum := 1;
+              CurrentLength := 1;
+              for Index := 0 to SubLayers-2 do
+              begin
+                Fractions[SubLayers - 2 - Index] := Sum;
+                CurrentLength := CurrentLength * GrowthRate;
+                Sum := Sum + CurrentLength;
+              end;
+              for Index := 0 to SubLayers - 2 do
+              begin
+                Fractions[Index] := Fractions[Index]/ Sum;
+              end;
+            end;
+          gmDown:
+            begin
+              Sum := 1;
+              CurrentLength := 1;
+              for Index := 0 to SubLayers-2 do
+              begin
+                Fractions[SubLayers - 2 - Index] := Sum;
+                CurrentLength := CurrentLength / GrowthRate;
+               Sum := Sum + CurrentLength;
+              end;
+              for Index := 0 to SubLayers - 2 do
+              begin
+                Fractions[Index] := Fractions[Index]/ Sum;
+              end;
+            end;
+          gmMiddle, gmEdge:
+            begin
+              if Odd(SubLayers) then
+              begin
+                StopIndex := (SubLayers div 2);
+              end
+              else
+              begin
+                StopIndex := (SubLayers div 2)-1;
+              end;
+
+              Sum := 1;
+              CurrentLength := 1;
+              for Index := 0 to StopIndex-1 do
+              begin
+                Fractions[SubLayers - 2 - Index] := Sum;
+                case GrowthMethod of
+                  gmMiddle:
+                    begin
+                      CurrentLength := CurrentLength * GrowthRate;
+                    end;
+                  gmEdge:
+                    begin
+                      CurrentLength := CurrentLength / GrowthRate;
+                    end;
+                  else Assert(False);
                 end;
-                if Index > 0 then
+                Sum := Sum + CurrentLength;
+              end;
+              StartIndex := StopIndex;
+              if not Odd(SubLayers) then
+              begin
+                Fractions[SubLayers - 2 - StartIndex] := Sum;
+                Sum := Sum + CurrentLength;
+                Inc(StartIndex);
+              end;
+              for Index := StartIndex to SubLayers-2 do
+              begin
+                Fractions[SubLayers - 2 - Index] := Sum;
+                case GrowthMethod of
+                  gmMiddle:
+                    begin
+                      CurrentLength := CurrentLength / GrowthRate;
+                    end;
+                  gmEdge:
+                    begin
+                      CurrentLength := CurrentLength * GrowthRate;
+                    end;
+                  else Assert(False);
+                end;
+                Sum := Sum + CurrentLength;
+              end;
+              for Index := 0 to SubLayers - 2 do
+              begin
+                Fractions[Index] := Fractions[Index]/ Sum;
+              end;
+            end;
+          gmCustom:
+            begin
+                RealList.Sort;
+                for Index := RealList.Count - 1 downto 0 do
                 begin
-                  if Value = RealList[Index-1] then
+                  Value := RealList[Index];
+                  if (Value >= 1) or (Value <= 0) then
                   begin
                     RealList.Delete(Index);
+                    Continue;
+                  end;
+                  if Index > 0 then
+                  begin
+                    if Value = RealList[Index-1] then
+                    begin
+                      RealList.Delete(Index);
+                    end;
                   end;
                 end;
-              end;
-              SetLength(Fractions, RealList.Count);
-              for Index := 0 to RealList.Count - 1 do
-              begin
-                Fractions[RealList.Count - 1-  Index] := RealList[Index];
-              end;
-            finally
-              RealList.Free;
+                SetLength(Fractions, RealList.Count);
+                for Index := 0 to RealList.Count - 1 do
+                begin
+                  Fractions[RealList.Count - 1-  Index] := RealList[Index];
+                end;
             end;
-          end;
-        else
-          begin
-            // multiple layers selected
-            // do nothing
-          end;
+          else
+            begin
+              // multiple layers selected
+              // do nothing
+            end;
+        end;
+      finally
+        RealList.Free;
       end;
     end;
   except on E: EConvertError do

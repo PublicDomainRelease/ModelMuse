@@ -126,6 +126,8 @@ begin
         Boundary.GetEvapotranspirationLayerCells(FLayers);
       end;
       Boundary.GetEvapotranspirationSurfaceDepthCells(FDepthSurface);
+      Boundary.EvapotranspirationLayers.ClearBoundaries;
+      Boundary.EtsSurfDepthCollection.ClearBoundaries;
     end;
   end;
 end;
@@ -181,12 +183,15 @@ var
   DefArrayList: TList;
   EvapotranspirationLayerTimes : TModflowBoundaryDisplayTimeList;
   EvapLayerArray: TModflowBoundaryDisplayDataArray;
+  ErrorString: string;
 const
   D7PNameIname = '';
   D7PName = '';
 begin
   frmErrorsAndWarnings.RemoveErrorGroup(EtsSurfaceError);
   frmErrorsAndWarnings.RemoveErrorGroup(EtsDepthError);
+
+
   if not Package.IsSelected then
   begin
     UpdateNotUsedDisplay(TimeLists);
@@ -195,6 +200,11 @@ begin
   ParameterValues := TList.Create;
   try
     Evaluate;
+    if not frmProgress.ShouldContinue then
+    begin
+      Exit;
+    end;
+    ClearTimeLists;
     ParamDefArrays := TObjectList.Create;
     DepthFractionList := TList.Create;
     EtFractionList := TList.Create;
@@ -203,6 +213,22 @@ begin
       NPETS := ParameterCount;
       NETSOP := Ord(PhastModel.ModflowPackages.EtsPackage.LayerOption) + 1;
       NETSEG := PhastModel.ModflowPackages.EtsPackage.SegmentCount;
+
+      for SegmentIndex := 2 to NETSEG - 1 do
+      begin
+        ErrorString := 'In the ETS package, depth fraction of each succeeding '
+        + 'segment should be greater than the depth fraction of the previous '
+        + 'segment.  At the following locations in segment '
+        + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
+        frmErrorsAndWarnings.RemoveErrorGroup(ErrorString);
+
+        ErrorString := 'In the ETS package, rate fraction of each succeeding '
+          + 'segment should be less than the rate fraction of the previous '
+          + 'segment.  At the following locations in segment '
+          + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
+        frmErrorsAndWarnings.RemoveErrorGroup(ErrorString);
+      end;
+
       EvapRateTimes := TimeLists[0];
       EvapotranspirationSurfaceTimes := TimeLists[1];
       EvapotranspirationDepthTimes := TimeLists[2];
@@ -245,7 +271,7 @@ begin
         ParametersUsed := TStringList.Create;
         try
           RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
-            ParametersUsed, ParameterValues);
+            ParametersUsed, ParameterValues, True);
           List := Values[TimeIndex];
           List.CheckRestore;
 
@@ -299,7 +325,7 @@ begin
               TimeVaryingLayers and (ParameterCount > 0)  then
             begin
               RetrieveParametersForStressPeriod(D7PNameIname, D7PName, 0,
-                ParametersUsed, ParameterValues);
+                ParametersUsed, ParameterValues, True);
               List := Values[0];
             end;
             // data set 9
@@ -371,11 +397,11 @@ var
 begin
   if FPriorRateFractionArray <> nil then
   begin
-    ErrorRoot := 'In the ETS package, rate fraction of each succeeding '
-      + 'segment should be less than the rate fraction of the previous '
-      + 'segment.  At the following locations in segment '
-      + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
-    frmErrorsAndWarnings.RemoveErrorGroup(ErrorRoot);
+//    ErrorRoot := 'In the ETS package, rate fraction of each succeeding '
+//      + 'segment should be less than the rate fraction of the previous '
+//      + 'segment.  At the following locations in segment '
+//      + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
+//    frmErrorsAndWarnings.RemoveErrorGroup(ErrorRoot);
     Assert(NewArray.UpToDate);
     for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
     begin
@@ -406,11 +432,11 @@ var
 begin
   if FPriorDepthFractionArray <> nil then
   begin
-    ErrorRoot := 'In the ETS package, depth fraction of each succeeding '
-    + 'segment should be greater than the depth fraction of the previous '
-    + 'segment.  At the following locations in segment '
-    + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
-    frmErrorsAndWarnings.RemoveErrorGroup(ErrorRoot);
+//    ErrorRoot := 'In the ETS package, depth fraction of each succeeding '
+//    + 'segment should be greater than the depth fraction of the previous '
+//    + 'segment.  At the following locations in segment '
+//    + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
+//    frmErrorsAndWarnings.RemoveErrorGroup(ErrorRoot);
     Assert(NewArray.UpToDate);
     for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
     begin
@@ -460,8 +486,8 @@ end;
 
 procedure TModflowETS_Writer.WriteDataSets4To11;
 const
-  D7PName =      ' # Data Set 7: PARNAM';
-  D7PNameIname = ' # Data Set 7: PARNAM Iname';
+  D7PName =      ' # Data Set 7: PARNAM IETSPF';
+  D7PNameIname = ' # Data Set 7: PARNAM Iname IETSPF';
   DS5 = ' # Data Set 4: INETSS INETSR INETSX [INIETS [INSGDF]]';
   DataSetIdentifier = 'Data Set 6:';
   VariableIdentifiers = 'ETSR';
@@ -489,6 +515,11 @@ begin
   WriteToNameFile(StrETS, PhastModel.UnitNumbers.UnitNumber(StrETS),
     NameOfFile, foInput);
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
+  ClearTimeLists;
   OpenFile(FileName(AFileName));
   try
     frmProgress.AddMessage('Writing ETS Package input.');
@@ -613,7 +644,7 @@ procedure TModflowETS_Writer.WriteStressPeriods(const VariableIdentifiers,
   DataSetIdentifier, DS5, D7PNameIname, D7PName: string);
 var
   NP: Integer;
-  List: TValueCellList;
+  EtRateList, PriorEtRateList: TValueCellList;
   ParameterValues: TList;
   ParamIndex: Integer;
   ParametersUsed: TStringList;
@@ -621,10 +652,26 @@ var
   INETSR, INIETS, INSGDF: Integer;
   INETSS: Integer;
   INETSX: Integer;
-  DepthSurfaceCellList: TList;
+  DepthSurfaceCellList, PriorListDepthSurfaceCellList: TValueCellList;
   Comment: string;
   SegmentIndex: integer;
+  ErrorString: string;
 begin
+  for SegmentIndex := 2 to NETSEG - 1 do
+  begin
+    ErrorString := 'In the ETS package, depth fraction of each succeeding '
+    + 'segment should be greater than the depth fraction of the previous '
+    + 'segment.  At the following locations in segment '
+    + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
+    frmErrorsAndWarnings.RemoveErrorGroup(ErrorString);
+
+    ErrorString := 'In the ETS package, rate fraction of each succeeding '
+      + 'segment should be less than the rate fraction of the previous '
+      + 'segment.  At the following locations in segment '
+      + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
+    frmErrorsAndWarnings.RemoveErrorGroup(ErrorString);
+  end;
+
   ParameterValues := TList.Create;
   try
     Comment := 'Data Set 9: IETS';
@@ -646,21 +693,79 @@ begin
       ParametersUsed := TStringList.Create;
       try
         RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
-          ParametersUsed, ParameterValues);
+          ParametersUsed, ParameterValues, True);
         NP := ParametersUsed.Count;
-        List := Values[TimeIndex];
+        EtRateList := Values[TimeIndex];
 
         // data set 4;
-        INETSS := 1;
+
+//        DepthSurfaceCellList := nil;
+        if (TimeIndex > 0) and (FDepthSurface.Count > 0) then
+        begin
+          PriorListDepthSurfaceCellList := FDepthSurface[TimeIndex-1];
+          DepthSurfaceCellList := FDepthSurface[TimeIndex];
+          if PriorListDepthSurfaceCellList.AreRealValuesIdentical(DepthSurfaceCellList, 0) then
+          begin
+            INETSS := -1;
+//            DepthSurfaceCellList.Cache;
+          end
+          else
+          begin
+            INETSS := 1;
+          end;
+//          PriorListDepthSurfaceCellList.Cache;
+        end
+        else
+        begin
+          INETSS := 1;
+        end;
+
         if NPETS > 0 then
         begin
           INETSR := NP;
         end
         else
         begin
-          INETSR := 1;
+         if (TimeIndex > 0) then
+          begin
+            PriorEtRateList := Values[TimeIndex-1];
+            if PriorEtRateList.AreRealValuesIdentical(EtRateList, 0) then
+            begin
+              INETSR := -1;
+              EtRateList.Cache;
+            end
+            else
+            begin
+              INETSR := 1;
+            end;
+            PriorEtRateList.Cache;
+          end
+          else
+          begin
+            INETSR := 1;
+          end;
         end;
-        INETSX := 1;
+
+        if (TimeIndex > 0) and (FDepthSurface.Count > 0) then
+        begin
+          PriorListDepthSurfaceCellList := FDepthSurface[TimeIndex-1];
+          DepthSurfaceCellList := FDepthSurface[TimeIndex];
+          if PriorListDepthSurfaceCellList.AreRealValuesIdentical(DepthSurfaceCellList, 1) then
+          begin
+            INETSX := -1;
+//            DepthSurfaceCellList.Cache;
+          end
+          else
+          begin
+            INETSX := 1;
+          end;
+          PriorListDepthSurfaceCellList.Cache;
+        end
+        else
+        begin
+          INETSX := 1;
+        end;
+
         if NETSOP = 2 then
         begin
           INIETS  := 1;
@@ -680,75 +785,91 @@ begin
         NewLine;
 
         // data set 5
-        if FDepthSurface.Count > 0 then
+        if INETSS > 0 then
         begin
-          DepthSurfaceCellList := FDepthSurface[TimeIndex];
-          WriteEvapotranspirationSurface(DepthSurfaceCellList);
-          if not frmProgress.ShouldContinue then
+          if FDepthSurface.Count > 0 then
           begin
-            List.Cache;
-            Exit;
+            DepthSurfaceCellList := FDepthSurface[TimeIndex];
+            WriteEvapotranspirationSurface(DepthSurfaceCellList);
+            if not frmProgress.ShouldContinue then
+            begin
+              EtRateList.Cache;
+              Exit;
+            end;
+//            if (INETSX < 0) and (TimeIndex = Values.Count - 1) then
+//            begin
+//              DepthSurfaceCellList.Cache
+//            end;
+          end
+          else
+          begin
+//            DepthSurfaceCellList := nil;
+            frmErrorsAndWarnings.AddError(EtsSurfaceError, EtsSurfaceErrorMessage);
           end;
-        end
-        else
-        begin
-          DepthSurfaceCellList := nil;
-          frmErrorsAndWarnings.AddError(EtsSurfaceError, EtsSurfaceErrorMessage);
         end;
 
-        if NPETS = 0 then
+        if INETSR > 0 then
         begin
-          // data set 6
-          WriteCells(List, DataSetIdentifier, VariableIdentifiers);
-        end
-        else
-        begin
-          // data set 7
-          for ParamIndex := 0 to ParametersUsed.Count - 1 do
+          if NPETS = 0 then
           begin
-            WriteString(ParametersUsed[ParamIndex]);
-            NewLine;
+            // data set 6
+            WriteCells(EtRateList, DataSetIdentifier, VariableIdentifiers);
+          end
+          else
+          begin
+            // data set 7
+            for ParamIndex := 0 to ParametersUsed.Count - 1 do
+            begin
+              WriteString(ParametersUsed[ParamIndex]);
+              NewLine;
+            end;
           end;
-        end;
-        if not frmProgress.ShouldContinue then
-        begin
-          List.Cache;
-          Exit;
+          if not frmProgress.ShouldContinue then
+          begin
+            EtRateList.Cache;
+            Exit;
+          end;
         end;
 
         // data set 8
-        if FDepthSurface.Count > 0 then
-        begin
-          WriteExtinctionDepth(DepthSurfaceCellList);
-          if not frmProgress.ShouldContinue then
-          begin
-            List.Cache;
-            Exit;
-          end;
-        end
-        else
-        begin
-          frmErrorsAndWarnings.AddError(EtsDepthError, EtsDepthErrorMessage);
-        end;
 
+        if INETSX > 0 then
+        begin
+          if FDepthSurface.Count > 0 then
+          begin
+            DepthSurfaceCellList := FDepthSurface[TimeIndex];
+            WriteExtinctionDepth(DepthSurfaceCellList);
+            if not frmProgress.ShouldContinue then
+            begin
+              EtRateList.Cache;
+              Exit;
+            end;
+          end
+          else
+          begin
+            frmErrorsAndWarnings.AddError(EtsDepthError, EtsDepthErrorMessage);
+          end;
+
+        end;
         // data set 9
-        WriteLayerSelection(List, ParameterValues, TimeIndex, Comment);
+        WriteLayerSelection(EtRateList, ParameterValues, TimeIndex, Comment);
         if not frmProgress.ShouldContinue then
         begin
-          List.Cache;
+          EtRateList.Cache;
           Exit;
         end;
 
         FPriorDepthFractionArray := nil;
         FPriorRateFractionArray := nil;
         try
+          DepthSurfaceCellList := FDepthSurface[TimeIndex];
           for SegmentIndex := 1 to NETSEG - 1 do
           begin
             // data set 10
             WriteDepthFraction(DepthSurfaceCellList, SegmentIndex);
             if not frmProgress.ShouldContinue then
             begin
-              List.Cache;
+              EtRateList.Cache;
               Exit;
             end;
 
@@ -756,7 +877,7 @@ begin
             WriteRateFraction(DepthSurfaceCellList, SegmentIndex);
             if not frmProgress.ShouldContinue then
             begin
-              List.Cache;
+              EtRateList.Cache;
               Exit;
             end;
           end;
@@ -766,7 +887,14 @@ begin
           FPriorDepthFractionArray := nil;
           FPriorRateFractionArray := nil;
         end;
-        List.Cache;
+        if (TimeIndex = Values.Count - 1) then
+        begin
+          if DepthSurfaceCellList <> nil then
+          begin
+            DepthSurfaceCellList.Cache;
+          end;
+          EtRateList.Cache;
+        end;
       finally
         ParametersUsed.Free;
       end;

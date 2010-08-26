@@ -54,6 +54,7 @@ type
     FHorizontalAnisotropy: double;
     FSubNoDelayBedLayers: TSubNoDelayBedLayers;
     FSubDelayBedLayers: TSubDelayBedLayers;
+    FWaterTableLayers: TWaterTableLayers;
     procedure SetDataArrayName(const NewName : string);
     procedure SetAquiferName(const Value : string);
     procedure SetGrowthMethod(const Value: TGrowthMethod);
@@ -71,6 +72,7 @@ type
     procedure SetSubDelayBedLayers(const Value: TSubDelayBedLayers);
     procedure SetSubNoDelayBedLayers(const Value: TSubNoDelayBedLayers);
     function SubsidenceLayerCount(SubLayers: TCustomSubLayer): integer;
+    procedure SetWaterTableLayers(const Value: TWaterTableLayers);
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
   public
@@ -81,8 +83,10 @@ type
     function ModflowLayerCount: integer;
     procedure WriteLAYCB(const DiscretizationWriter: TObject);
     function SubsidenceDefined: boolean;
+    function SwtDefined: boolean;
     function DelayCount: integer;
     function NoDelayCount: integer;
+    function WaterTableCount: integer;
   published
     property AquiferName : string read FAquiferName write SetAquiferName;
     {@name can take on the following values:
@@ -117,6 +121,8 @@ type
       read FSubNoDelayBedLayers write SetSubNoDelayBedLayers;
     property SubDelayBedLayers: TSubDelayBedLayers
       read FSubDelayBedLayers write SetSubDelayBedLayers;
+    property WaterTableLayers: TWaterTableLayers read FWaterTableLayers
+      write SetWaterTableLayers;
   end;
 
   TLayerStructure = class(TLayerOwnerCollection)
@@ -159,8 +165,10 @@ type
     property AquiferTypeNotifier: TObserver read FAquiferTypeNotifier;
     procedure StopTalkingToAnyone;
     function SubsidenceDefined: boolean;
+    function SwtDefined: boolean;
     function DelayCount: integer;
     function NoDelayCount: integer;
+    function WaterTableCount: integer;
   end;
 
 resourcestring
@@ -202,6 +210,7 @@ begin
     HorizontalAnisotropy := AnotherLayerGroup.HorizontalAnisotropy;
     SubNoDelayBedLayers := AnotherLayerGroup.SubNoDelayBedLayers;
     SubDelayBedLayers := AnotherLayerGroup.SubDelayBedLayers;
+    WaterTableLayers := AnotherLayerGroup.WaterTableLayers;
   end;
 end;
 
@@ -216,6 +225,7 @@ begin
   FLayerCollection:= TLayerCollection.Create(self);
   FSubNoDelayBedLayers := TSubNoDelayBedLayers.Create(Model);
   FSubDelayBedLayers := TSubDelayBedLayers.Create(Model);
+  FWaterTableLayers := TWaterTableLayers.Create(Model);
   AquiferName := 'New Layer Group';
   FGrowthRate := 1.2;
   FHorizontalAnisotropy := 1;
@@ -232,6 +242,7 @@ var
   Model: TPhastModel;
   DataArray: TDataArray;
 begin
+  FWaterTableLayers.Free;
   FSubDelayBedLayers.Free;
   FSubNoDelayBedLayers.Free;
   if Collection.Model <> nil then
@@ -288,7 +299,8 @@ begin
     and (AnotherLayerGroup.HorizontalAnisotropy = HorizontalAnisotropy)
     and AnotherLayerGroup.LayerCollection.IsSame(LayerCollection)
     and AnotherLayerGroup.SubNoDelayBedLayers.IsSame(SubNoDelayBedLayers)
-    and AnotherLayerGroup.SubDelayBedLayers.IsSame(SubDelayBedLayers);
+    and AnotherLayerGroup.SubDelayBedLayers.IsSame(SubDelayBedLayers)
+    and AnotherLayerGroup.WaterTableLayers.IsSame(WaterTableLayers);
 end;
 
 function TLayerGroup.LayerCount: integer;
@@ -318,6 +330,7 @@ begin
   Model.ThreeDGridObserver.StopsTalkingTo(DataArray);
   SubNoDelayBedLayers.Loaded;
   SubDelayBedLayers.Loaded;
+  WaterTableLayers.Loaded;
 end;
 
 function TLayerGroup.ModflowLayerCount: integer;
@@ -607,10 +620,26 @@ begin
   end;
 end;
 
+procedure TLayerGroup.SetWaterTableLayers(const Value: TWaterTableLayers);
+begin
+  FWaterTableLayers.Assign(Value);
+end;
+
 function TLayerGroup.SubsidenceDefined: boolean;
 begin
   result := Simulated and
     ((SubNoDelayBedLayers.Count > 0) or (SubDelayBedLayers.Count > 0));
+end;
+
+function TLayerGroup.SwtDefined: boolean;
+begin
+  result := Simulated and
+    (WaterTableLayers.Count > 0) ;
+end;
+
+function TLayerGroup.WaterTableCount: integer;
+begin
+  result := SubsidenceLayerCount(WaterTableLayers);
 end;
 
 procedure TLayerGroup.WriteLAYCB(const DiscretizationWriter: TObject);
@@ -1059,9 +1088,39 @@ begin
   end;
 end;
 
+function TLayerStructure.SwtDefined: boolean;
+var
+  Index: Integer;
+  Group: TLayerGroup;
+begin
+  result := False;
+  for Index := 0 to Count - 1 do
+  begin
+    Group := LayerGroups[Index];
+    result := Group.SwtDefined;
+    if result then
+    begin
+      Exit;
+    end;
+  end;
+end;
+
 function TLayerStructure.Trpy: TOneDRealArray;
 begin
   result := FloatArray(ftmTrpy);
+end;
+
+function TLayerStructure.WaterTableCount: integer;
+var
+  Index: Integer;
+  Group: TLayerGroup;
+begin
+  result := 0;
+  for Index := 0 to Count - 1 do
+  begin
+    Group := LayerGroups[Index];
+    result := result + Group.WaterTableCount;
+  end;
 end;
 
 procedure TLayerStructure.WriteLAYCB(const DiscretizationWriter: TObject);

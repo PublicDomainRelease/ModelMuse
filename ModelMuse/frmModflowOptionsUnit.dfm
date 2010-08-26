@@ -2,18 +2,18 @@ inherited frmModflowOptions: TfrmModflowOptions
   HelpType = htKeyword
   HelpKeyword = 'MODFLOW_Options_Dialog_Box'
   Caption = 'MODFLOW Options'
-  ClientHeight = 314
+  ClientHeight = 361
   ClientWidth = 543
   ExplicitWidth = 551
-  ExplicitHeight = 348
+  ExplicitHeight = 395
   PixelsPerInch = 96
   TextHeight = 18
   object pcOptions: TPageControl
     Left = 0
     Top = 0
     Width = 543
-    Height = 273
-    ActivePage = tabWetting
+    Height = 320
+    ActivePage = TabSheet2
     Align = alClient
     TabOrder = 0
     OnChange = pcOptionsChange
@@ -21,13 +21,9 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpType = htKeyword
       HelpKeyword = 'Description_Tab'
       Caption = 'Description'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         535
-        240)
+        287)
       object Label3: TLabel
         Left = 8
         Top = 1
@@ -85,7 +81,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         Left = 8
         Top = 132
         Width = 520
-        Height = 101
+        Height = 148
         Anchors = [akLeft, akTop, akRight, akBottom]
         ScrollBars = ssBoth
         TabOrder = 3
@@ -98,10 +94,9 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Options_Tab'
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      DesignSize = (
+        535
+        287)
       object Label5: TLabel
         Left = 3
         Top = 103
@@ -129,6 +124,13 @@ inherited frmModflowOptions: TfrmModflowOptions
         Width = 307
         Height = 18
         Caption = 'Head value for cells that become dry (HDRY)'
+      end
+      object lblInitialHeads: TLabel
+        Left = 3
+        Top = 237
+        Width = 299
+        Height = 18
+        Caption = 'Binary file containing initial heads (optional)'
       end
       object GroupBox1: TGroupBox
         Left = 3
@@ -179,7 +181,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         Top = 126
         Width = 145
         Height = 22
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 1
         Text = '-1e20'
         OnExit = rdeHNOFLOExit
@@ -193,7 +195,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         Width = 145
         Height = 26
         Style = csDropDownList
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 2
         Text = 'seconds (1)'
         OnChange = comboTimeUnitChange
@@ -212,7 +214,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         Width = 145
         Height = 26
         Style = csDropDownList
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 3
         Text = 'meters (2)'
         OnChange = comboLengthUnitChange
@@ -228,7 +230,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         Top = 177
         Width = 145
         Height = 22
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 4
         Text = '-2e20'
         OnExit = rdeHDRYExit
@@ -254,16 +256,22 @@ inherited frmModflowOptions: TfrmModflowOptions
         HotTrackFont.Pitch = fpVariable
         HotTrackFont.Style = []
       end
+      object feInitialHeads: TJvFilenameEdit
+        Left = 3
+        Top = 258
+        Width = 484
+        Height = 26
+        Filter = 'Binary head files (*.bhd)|*.bhd'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 6
+        OnExit = feInitialHeadsExit
+      end
     end
     object tabWetting: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'Wetting_Tab'
       Caption = 'Wetting'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblWetFact: TLabel
         Left = 8
         Top = 35
@@ -310,7 +318,7 @@ inherited frmModflowOptions: TfrmModflowOptions
         HelpContext = 290
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 0
         Text = '0.5'
         OnChange = rdeWettingFactChange
@@ -373,7 +381,7 @@ inherited frmModflowOptions: TfrmModflowOptions
   end
   object Panel1: TPanel
     Left = 0
-    Top = 273
+    Top = 320
     Width = 543
     Height = 41
     Align = alBottom

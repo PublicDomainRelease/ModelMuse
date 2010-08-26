@@ -41,7 +41,7 @@ inherited frmModflowPackages: TfrmModflowPackages
     Top = 0
     Width = 605
     Height = 503
-    ActivePage = jvspLPF
+    ActivePage = jvspHydmod
     PropagateEnable = False
     Align = alClient
     OnChange = jvplPackagesChange
@@ -2342,6 +2342,9 @@ inherited frmModflowPackages: TfrmModflowPackages
         object tabSfrParameters: TTabSheet
           Caption = 'Parameters'
           ImageIndex = 1
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object splitSFR: TSplitter
             Left = 0
             Top = 257
@@ -3523,13 +3526,11 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboEvtSink: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboRchSource: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited rdeBeginningTime: TRbwDataEntry
@@ -3605,7 +3606,6 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboTrackingDirection: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboWeakSinkTreatment: TJvImageComboBox
@@ -3622,7 +3622,6 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboWhichEndpoints: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited rdeErrorTolerance: TRbwDataEntry
@@ -3676,7 +3675,6 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboTimeMethod: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited rdeParticleInterval: TRbwDataEntry
@@ -3972,7 +3970,6 @@ inherited frmModflowPackages: TfrmModflowPackages
           Top = 368
           Height = 28
           ItemHeight = 22
-          ItemIndex = -1
           ExplicitTop = 368
           ExplicitHeight = 28
         end
@@ -4101,8 +4098,8 @@ inherited frmModflowPackages: TfrmModflowPackages
           inherited tabControls: TTabSheet
             ExplicitLeft = 4
             ExplicitTop = 29
-            ExplicitWidth = 436
-            ExplicitHeight = 250
+            ExplicitWidth = 597
+            ExplicitHeight = 351
             inherited lblNumberOfNodes: TLabel
               Width = 287
               Height = 18
@@ -4155,11 +4152,11 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited feReadRestart: TJvFilenameEdit
               Left = 14
               Top = 163
-              Width = 573
+              Width = 734
               Height = 26
               ExplicitLeft = 14
               ExplicitTop = 163
-              ExplicitWidth = 573
+              ExplicitWidth = 734
               ExplicitHeight = 26
             end
             inherited comboOutputChoice: TJvImageComboBox
@@ -4170,39 +4167,11 @@ inherited frmModflowPackages: TfrmModflowPackages
               ExplicitHeight = 28
             end
           end
-          inherited tabFormat: TTabSheet
+          inherited tabPrintSave: TTabSheet
             ExplicitLeft = 4
             ExplicitTop = 29
             ExplicitWidth = 436
             ExplicitHeight = 250
-            inherited rdgFormats: TRbwDataGrid4
-              Left = 13
-              Top = 40
-              Width = 734
-              Height = 392
-              ExplicitLeft = 13
-              ExplicitTop = 40
-              ExplicitWidth = 734
-              ExplicitHeight = 392
-              ColWidths = (
-                83
-                64
-                64
-                64
-                64
-                64)
-            end
-            inherited comboMultiFomat: TJvImageComboBox
-              Height = 28
-              ItemHeight = 22
-              ExplicitHeight = 28
-            end
-          end
-          inherited tabPrintSave: TTabSheet
-            ExplicitLeft = 4
-            ExplicitTop = 29
-            ExplicitWidth = 597
-            ExplicitHeight = 351
             inherited lblNumExportPeriods: TLabel
               Top = 427
               Width = 176
@@ -4212,21 +4181,21 @@ inherited frmModflowPackages: TfrmModflowPackages
               ExplicitHeight = 18
             end
             inherited sbAdd: TSpeedButton
-              Left = 667
-              Top = 428
-              ExplicitLeft = 506
+              Left = 510
+              Top = 327
+              ExplicitLeft = 510
               ExplicitTop = 327
             end
             inherited sbInsert: TSpeedButton
-              Left = 696
-              Top = 428
-              ExplicitLeft = 535
+              Left = 539
+              Top = 327
+              ExplicitLeft = 539
               ExplicitTop = 327
             end
             inherited sbDelete: TSpeedButton
-              Left = 725
-              Top = 428
-              ExplicitLeft = 564
+              Left = 568
+              Top = 327
+              ExplicitLeft = 568
               ExplicitTop = 327
             end
             inherited cbMultiPrintSave: TCheckBox
@@ -4234,20 +4203,23 @@ inherited frmModflowPackages: TfrmModflowPackages
               ExplicitWidth = 209
             end
             inherited rdgOutput: TRbwDataGrid4
-              Left = 13
               Top = 40
-              Width = 573
-              Height = 297
-              ExplicitLeft = 13
+              Width = 574
+              Height = 281
               ExplicitTop = 40
-              ExplicitWidth = 573
-              ExplicitHeight = 297
+              ExplicitWidth = 574
+              ExplicitHeight = 281
             end
             inherited seNumExportPeriods: TJvSpinEdit
               Top = 424
               Height = 26
               ExplicitTop = 424
               ExplicitHeight = 26
+            end
+            inherited comboMultiFomat: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ExplicitHeight = 28
             end
           end
         end
@@ -4278,9 +4250,6 @@ inherited frmModflowPackages: TfrmModflowPackages
               Control = framePkgSUB.feReadRestart
             end
             item
-              Control = framePkgSUB.rdgFormats
-            end
-            item
               Control = framePkgSUB.rdgOutput
             end
             item
@@ -4291,6 +4260,12 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
             item
               Control = framePkgSUB.sbInsert
+            end
+            item
+              Control = framePkgSUB.comboOutputChoice
+            end
+            item
+              Control = framePkgSUB.lblOutputChoice
             end>
         end
       end
@@ -4395,6 +4370,912 @@ inherited frmModflowPackages: TfrmModflowPackages
             end
             item
               Control = frameZoneBudget.seNumberOfZones
+            end>
+        end
+      end
+    end
+    object jvspSWT: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 605
+      Height = 503
+      HelpType = htKeyword
+      HelpKeyword = 'SWT_Package'
+      Caption = 'jvspSWT'
+      inline framePkgSwt: TframePackageSwt
+        Left = 0
+        Top = 0
+        Width = 605
+        Height = 503
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        ExplicitWidth = 605
+        ExplicitHeight = 503
+        inherited lblComments: TLabel
+          Top = 55
+          Width = 76
+          Height = 18
+          ExplicitTop = 55
+          ExplicitWidth = 76
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          WordWrap = True
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited memoComments: TMemo
+          Top = 78
+          Width = 574
+          Height = 52
+          ExplicitTop = 78
+          ExplicitWidth = 574
+          ExplicitHeight = 52
+        end
+        inherited pcSWT: TPageControl
+          Top = 136
+          Width = 605
+          Height = 367
+          ActivePage = framePkgSwt.tabControls
+          ExplicitTop = 136
+          ExplicitWidth = 605
+          ExplicitHeight = 367
+          inherited tabControls: TTabSheet
+            ExplicitLeft = 4
+            ExplicitTop = 29
+            ExplicitWidth = 597
+            ExplicitHeight = 334
+            inherited lblIvoid: TLabel
+              Top = 92
+              Width = 210
+              Height = 18
+              ExplicitTop = 92
+              ExplicitWidth = 210
+              ExplicitHeight = 18
+            end
+            inherited lblIstpcs: TLabel
+              Top = 151
+              Width = 379
+              Height = 18
+              ExplicitTop = 151
+              ExplicitWidth = 379
+              ExplicitHeight = 18
+            end
+            inherited lblIcrcc: TLabel
+              Top = 210
+              Width = 493
+              Height = 18
+              ExplicitTop = 210
+              ExplicitWidth = 493
+              ExplicitHeight = 18
+            end
+            inherited lblOutputChoice: TLabel
+              Top = 273
+              Width = 140
+              Height = 18
+              ExplicitTop = 273
+              ExplicitWidth = 140
+              ExplicitHeight = 18
+            end
+            inherited gbIthk: TGroupBox
+              Top = 0
+              Width = 573
+              Height = 86
+              ExplicitTop = 0
+              ExplicitWidth = 573
+              ExplicitHeight = 86
+              inherited rgIthkConstant: TRadioButton
+                Width = 567
+                ExplicitWidth = 567
+              end
+              inherited rbIthkVariable: TRadioButton
+                Top = 39
+                Width = 567
+                ExplicitTop = 39
+                ExplicitWidth = 567
+              end
+            end
+            inherited comboOutputChoice: TJvImageComboBox
+              Top = 297
+              Height = 28
+              ItemHeight = 22
+              ExplicitTop = 297
+              ExplicitHeight = 28
+            end
+            inherited comboIvoid: TJvImageComboBox
+              Top = 114
+              Height = 28
+              ItemHeight = 22
+              ExplicitTop = 114
+              ExplicitHeight = 28
+            end
+            inherited comboIstpcs: TJvImageComboBox
+              Top = 173
+              Height = 28
+              ItemHeight = 22
+              ExplicitTop = 173
+              ExplicitHeight = 28
+            end
+            inherited comboIcrcc: TJvImageComboBox
+              Top = 236
+              Height = 28
+              ItemHeight = 22
+              ExplicitTop = 236
+              ExplicitHeight = 28
+            end
+          end
+          inherited tabPrintSave: TTabSheet
+            ExplicitLeft = 4
+            ExplicitTop = 29
+            ExplicitWidth = 597
+            ExplicitHeight = 334
+            inherited sbAdd: TSpeedButton
+              Left = 505
+              Top = 335
+              ExplicitLeft = 505
+              ExplicitTop = 335
+            end
+            inherited sbInsert: TSpeedButton
+              Left = 534
+              Top = 335
+              ExplicitLeft = 534
+              ExplicitTop = 335
+            end
+            inherited sbDelete: TSpeedButton
+              Left = 563
+              Top = 335
+              ExplicitLeft = 563
+              ExplicitTop = 335
+            end
+            inherited lblNumExportPeriods: TLabel
+              Top = 335
+              Width = 176
+              Height = 18
+              ExplicitTop = 335
+              ExplicitWidth = 176
+              ExplicitHeight = 18
+            end
+            inherited rdgInitialPrintChoices: TRbwDataGrid4
+              Width = 574
+              FixedCols = 0
+              ExplicitWidth = 574
+              ColWidths = (
+                64
+                64
+                64)
+            end
+            inherited rdgOutput: TRbwDataGrid4
+              Top = 204
+              Width = 574
+              Height = 117
+              Columns = <
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = True
+                  Format = rcf4String
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = True
+                  Format = rcf4String
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  PickList.Strings = (
+                    '11G10.3'
+                    '9G13.6'
+                    '15F7.1'
+                    '15F7.2'
+                    '15F7.3'
+                    '15F7.4'
+                    '20F5.0'
+                    '20F5.1'
+                    '20F5.2'
+                    '20F5.3'
+                    '20F5.4'
+                    '10G11.4')
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = True
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end
+                item
+                  AutoAdjustRowHeights = False
+                  ButtonCaption = '...'
+                  ButtonFont.Charset = DEFAULT_CHARSET
+                  ButtonFont.Color = clWindowText
+                  ButtonFont.Height = -11
+                  ButtonFont.Name = 'Tahoma'
+                  ButtonFont.Style = []
+                  ButtonUsed = False
+                  ButtonWidth = 20
+                  CheckMax = False
+                  CheckMin = False
+                  ComboUsed = False
+                  Format = rcf4Boolean
+                  LimitToList = False
+                  MaxLength = 0
+                  ParentButtonFont = False
+                  WordWrapCaptions = True
+                  WordWrapCells = False
+                  AutoAdjustColWidths = True
+                end>
+              ExplicitTop = 204
+              ExplicitWidth = 574
+              ExplicitHeight = 117
+            end
+            inherited seNumExportPeriods: TJvSpinEdit
+              Top = 331
+              Height = 26
+              ExplicitTop = 331
+              ExplicitHeight = 26
+            end
+            inherited comboMultiFomat: TJvImageComboBox
+              Height = 28
+              ItemHeight = 22
+              ExplicitHeight = 28
+            end
+          end
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = framePkgSwt.lblComments
+            end
+            item
+              Control = framePkgSwt.memoComments
+            end
+            item
+              Control = framePkgSwt.rgIthkConstant
+            end
+            item
+              Control = framePkgSwt.rbIthkVariable
+            end
+            item
+              Control = framePkgSwt.comboIvoid
+            end
+            item
+              Control = framePkgSwt.comboIstpcs
+            end
+            item
+              Control = framePkgSwt.comboIcrcc
+            end
+            item
+              Control = framePkgSwt.comboOutputChoice
+            end
+            item
+              Control = framePkgSwt.rdgInitialPrintChoices
+            end
+            item
+              Control = framePkgSwt.rdgOutput
+            end
+            item
+              Control = framePkgSwt.seNumExportPeriods
+            end
+            item
+              Control = framePkgSwt.sbAdd
+            end
+            item
+              Control = framePkgSwt.sbInsert
+            end>
+        end
+      end
+    end
+    object jvspHydmod: TJvStandardPage
+      Left = 0
+      Top = 0
+      Width = 605
+      Height = 503
+      HelpType = htKeyword
+      HelpKeyword = 'HYD_HYDMOD_Package'
+      Caption = 'jvspHydmod'
+      inline framePkgHydmod: TframePkgHydmod
+        Left = 0
+        Top = 0
+        Width = 605
+        Height = 503
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        ExplicitWidth = 605
+        ExplicitHeight = 503
+        inherited lblComments: TLabel
+          Width = 76
+          Height = 18
+          ExplicitWidth = 76
+          ExplicitHeight = 18
+        end
+        inherited lblPackage: TLabel
+          Width = 78
+          Height = 18
+          ExplicitWidth = 78
+          ExplicitHeight = 18
+        end
+        inherited lblHYDNOH: TLabel
+          Top = 451
+          Width = 397
+          Height = 18
+          ExplicitTop = 451
+          ExplicitWidth = 397
+          ExplicitHeight = 18
+        end
+        inherited memoComments: TMemo
+          Width = 574
+          Height = 383
+          ExplicitWidth = 574
+          ExplicitHeight = 383
+        end
+        inherited rdeHYDNOH: TRbwDataEntry
+          Top = 470
+          ItemHeight = 18
+          ExplicitTop = 470
+        end
+        inherited rcSelectionController: TRbwController
+          ControlList = <
+            item
+              Control = framePkgHydmod.lblComments
+            end
+            item
+              Control = framePkgHydmod.memoComments
+            end
+            item
+              Control = framePkgHydmod.lblHYDNOH
+            end
+            item
+              Control = framePkgHydmod.rdeHYDNOH
             end>
         end
       end

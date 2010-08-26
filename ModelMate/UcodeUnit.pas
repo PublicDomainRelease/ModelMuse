@@ -60,6 +60,8 @@ uses Classes, Dialogs, SysUtils, Windows,
         fSosFile: string255;
         fSosSurface: string12;
         fStdErrOne: boolean;
+        fWriteDerivedParams: boolean;
+        fWritePriorInfo: boolean;
         fEigenValues: boolean;
         fStartRes: string12;
         fIntermedRes: string12;
@@ -136,6 +138,8 @@ uses Classes, Dialogs, SysUtils, Windows,
         property SosMethod: TSosMethod read fSosMethod write fSosMethod;
         property SosFile: string255 read fSosFile write fSosFile;
         property StdErrOne: boolean read fStdErrOne write fStdErrOne;
+        property WriteDerivedParams: boolean read fWriteDerivedParams write fWriteDerivedParams;
+        property WritePriorInfo: boolean read fWritePriorInfo write fWritePriorInfo;
         property EigenValues: boolean read fEigenValues write fEigenValues;
         property StartRes: string12 read fStartRes write fStartRes;
         property IntermedRes: string12 read fIntermedRes write fIntermedRes;
@@ -194,6 +198,7 @@ uses Classes, Dialogs, SysUtils, Windows,
                                            PRBlock: TStringList): boolean;
         procedure BuildUcodeControlDataBlock(UCDBlock: TStringList);
         procedure BuildRegGNControlsBlock(RGNCBlock: TStringList);
+        procedure CorrectRelativePaths(OrigProjDir: string);
         procedure ExportOmitFile(const Directory: string);
         function FindMainInputFileName: string;
         function GetModelInfo(ModelInfo: TUcModelInfo): boolean;
@@ -215,7 +220,7 @@ uses Classes, Dialogs, SysUtils, Windows,
     TempUcProject: TUcProject;
     UcModelInfo: TUcModelInfo;
     ParallelUcodeModes: set of TUcodeMode;
-    // TODO 1 : Add procedures to read _dm, _pa, _ss.
+    // TODO 2 : Add procedures to read _dm, _pa, _ss.
 //    procedure Read_dm;
 //    function Read_pa(): boolean;
 //    procedure Read_ss;
@@ -284,6 +289,8 @@ begin
     SosMethod := PrjSource.SosMethod;
     SosFile := PrjSource.SosFile;
     StdErrOne := PrjSource.StdErrOne;
+    WriteDerivedParams := PrjSource.WriteDerivedParams;
+    WritePriorInfo := PrjSource.WritePriorInfo;
     EigenValues := PrjSource.EigenValues;
     StartRes := PrjSource.StartRes;
     IntermedRes := PrjSource.IntermedRes;
@@ -585,8 +592,8 @@ var
   Defaults: TBlockData;
   bdUcodeControlData: TBlockData;        // UCODE_Control_Data
 begin
-  Defaults := TBlockData.CreateAndAllocate(1,22);
-  bdUcodeControlData := TBlockData.CreateAndAllocate(1,22); // Max 22 keywords
+  Defaults := TBlockData.CreateAndAllocate(1,24);
+  bdUcodeControlData := TBlockData.CreateAndAllocate(1,24); // Max 24 keywords
   try
     with Defaults do
       begin
@@ -618,23 +625,27 @@ begin
         KeyValMatrix[12].Vtype := vtBool;
         KeyValMatrix[12].SetNameVal(0,'StdErrOne',False);
         KeyValMatrix[13].Vtype := vtBool;
-        KeyValMatrix[13].SetNameVal(0,'EigenValues',True);
-        KeyValMatrix[14].Vtype := vtStr;
-        KeyValMatrix[14].SetNameVal(0,'StartRes','yes');
-        KeyValMatrix[15].Vtype := vtStr;
-        KeyValMatrix[15].SetNameVal(0,'IntermedRes','no');
+        KeyValMatrix[13].SetNameVal(0,'WriteDerivedParams',True);
+        KeyValMatrix[14].Vtype := vtBool;
+        KeyValMatrix[14].SetNameVal(0,'WritePriorInfo',True);
+        KeyValMatrix[15].Vtype := vtBool;
+        KeyValMatrix[15].SetNameVal(0,'EigenValues',True);
         KeyValMatrix[16].Vtype := vtStr;
-        KeyValMatrix[16].SetNameVal(0,'FinalRes','yes');
+        KeyValMatrix[16].SetNameVal(0,'StartRes','yes');
         KeyValMatrix[17].Vtype := vtStr;
-        KeyValMatrix[17].SetNameVal(0,'StartSens','dss');
+        KeyValMatrix[17].SetNameVal(0,'IntermedRes','no');
         KeyValMatrix[18].Vtype := vtStr;
-        KeyValMatrix[18].SetNameVal(0,'IntermedSens','none');
+        KeyValMatrix[18].SetNameVal(0,'FinalRes','yes');
         KeyValMatrix[19].Vtype := vtStr;
-        KeyValMatrix[19].SetNameVal(0,'FinalSens','dss');
-        KeyValMatrix[20].Vtype := vtBool;
-        KeyValMatrix[20].SetNameVal(0,'DataExchange',True);
-        KeyValMatrix[21].Vtype := vtBool;
-        KeyValMatrix[21].SetNameVal(0,'CreateInitFiles',False);
+        KeyValMatrix[19].SetNameVal(0,'StartSens','dss');
+        KeyValMatrix[20].Vtype := vtStr;
+        KeyValMatrix[20].SetNameVal(0,'IntermedSens','none');
+        KeyValMatrix[21].Vtype := vtStr;
+        KeyValMatrix[21].SetNameVal(0,'FinalSens','dss');
+        KeyValMatrix[22].Vtype := vtBool;
+        KeyValMatrix[22].SetNameVal(0,'DataExchange',True);
+        KeyValMatrix[23].Vtype := vtBool;
+        KeyValMatrix[23].SetNameVal(0,'CreateInitFiles',False);
       end;
     bdUcodeControlData.Assign(Defaults);
     with bdUcodeControlData do
@@ -662,15 +673,17 @@ begin
         KeyValMatrix[10].SetVal(0,self.SosSurface);
         KeyValMatrix[11].SetVal(0,self.SosFile);
         KeyValMatrix[12].SetVal(0,self.StdErrOne);
-        KeyValMatrix[13].SetVal(0,self.EigenValues);
-        KeyValMatrix[14].SetVal(0,self.StartRes);
-        KeyValMatrix[15].SetVal(0,self.IntermedRes);
-        KeyValMatrix[16].SetVal(0,self.FinalRes);
-        KeyValMatrix[17].SetVal(0,self.StartSens);
-        KeyValMatrix[18].SetVal(0,self.IntermedSens);
-        KeyValMatrix[19].SetVal(0,self.FinalSens);
-        KeyValMatrix[20].SetVal(0,self.DataExchange);
-        KeyValMatrix[21].SetVal(0,self.CreateInitFiles);
+        KeyValMatrix[13].SetVal(0,self.WriteDerivedParams);
+        KeyValMatrix[14].SetVal(0,self.WritePriorInfo);
+        KeyValMatrix[15].SetVal(0,self.EigenValues);
+        KeyValMatrix[16].SetVal(0,self.StartRes);
+        KeyValMatrix[17].SetVal(0,self.IntermedRes);
+        KeyValMatrix[18].SetVal(0,self.FinalRes);
+        KeyValMatrix[19].SetVal(0,self.StartSens);
+        KeyValMatrix[20].SetVal(0,self.IntermedSens);
+        KeyValMatrix[21].SetVal(0,self.FinalSens);
+        KeyValMatrix[22].SetVal(0,self.DataExchange);
+        KeyValMatrix[23].SetVal(0,self.CreateInitFiles);
       end;
     J_BuildInputBlockExclDef('UCODE_Control_Data',bdUcodeControlData,
                                      Defaults, UCDBlock, False);
@@ -678,6 +691,60 @@ begin
     Defaults.Free;
     bdUcodeControlData.Free;
   end;
+end;
+
+procedure TUcProject.CorrectRelativePaths(OrigProjDir: string);
+var
+  OldRelPath: string;
+  I: Integer;
+begin
+  if MainInputFileName <> '' then
+    begin
+      OldRelPath := MainInputFileName;
+      MainInputFileName := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+    end;
+  if MainInputFileNamePred <> '' then
+    begin
+      OldRelPath := MainInputFileNamePred;
+      MainInputFileNamePred := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+    end;
+  if FileExists(DerivativesInterface) then
+    begin
+      OldRelPath := DerivativesInterface;
+      DerivativesInterface := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+    end;
+  if FileExists(PathToMergedFile) then
+    begin
+      OldRelPath := PathToMergedFile;
+      PathToMergedFile := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+    end;
+  if FileExists(PathToFile) then
+    begin
+      OldRelPath := PathToFile;
+      PathToFile := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+    end;
+  if ParallelRunners.Count > 0 then
+    begin
+      for I := 0 to ParallelRunners.Count - 1 do
+        begin
+          if DirectoryExists(ParallelRunners.Items[I].Directory) then
+            begin
+              OldRelPath := ParallelRunners.Items[I].Directory;
+              ParallelRunners.Items[I].Directory := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+            end;
+        end;
+    end;
+  if RunnerFiles.Count > 0 then
+    begin
+      for I := 0 to RunnerFiles.Count - 1 do
+        begin
+          if FileExists(RunnerFiles.Items[I].FileName) then
+            begin
+              OldRelPath := RunnerFiles.Items[I].FileName;
+              RunnerFiles.Items[I].FileName := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+            end;
+        end;
+    end;
 end;
 
 constructor TUcProject.Create(aOwner: TComponent);
@@ -728,6 +795,8 @@ begin
   SosMethod := smKeywords;
   SosFile := '';
   StdErrOne := False;
+  WriteDerivedParams := True;
+  WritePriorInfo := True;
   EigenValues := True;
   StartRes := 'yes';
   IntermedRes := 'no';

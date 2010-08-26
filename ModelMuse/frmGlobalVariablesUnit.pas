@@ -499,10 +499,10 @@ begin
   FNewGlobals.Assign(frmGoPhast.PhastModel.GlobalVariables);
   seGlobalVariableCount.AsInteger := frmGoPhast.PhastModel.GlobalVariables.Count;
   seGlobalVariableCountChange(nil);
-  for Index := 0 to frmGoPhast.PhastModel.GlobalVariables.Count - 1 do
+  for Index := 0 to FNewGlobals.Count - 1 do
   begin
     RowIndex := Index+1;
-    GlobalVariable := frmGoPhast.PhastModel.GlobalVariables[Index];
+    GlobalVariable := FNewGlobals[Index];
     rdgGlobalVariables.Cells[Ord(gvName), RowIndex] := GlobalVariable.Name;
     rdgGlobalVariables.Cells[Ord(gvType), RowIndex] :=
       rdgGlobalVariables.Columns[Ord(gvType)].PickList[Ord(GlobalVariable.Format)];
@@ -559,6 +559,8 @@ begin
   OldNames := nil;
   FNewNames := NewNames;
   NewNames := nil;
+  FNewNames.CaseSensitive := False;
+  FNewNames.Sort;
 end;
 
 function TUndoGlobalVariables.Description: string;

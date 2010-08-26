@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
-<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+<topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
   <title translate="true">HFB: Horizontal Flow Barrier Package Pane</title>
   <body>
     <header>
@@ -11,5 +11,6 @@
     <para styleclass="Normal"><text styleclass="Normal" translate="true">Faults and slurry walls are both features that might be simulated with the Horizontal Flow Barrier package.</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">Parameters used in the Horizontal Flow Barrier package are defined in this pane. The only allowed parameter type is HFB, which defines values of the hydraulic characteristic of the barrier.</text></para>
     <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><snippet src="Parameter_Names_and_Values"/></para>
+    <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><snippet src="LinkToManageParameters"/></para>
   </body>
 </topic>

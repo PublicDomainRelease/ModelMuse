@@ -18,7 +18,7 @@ type
     procedure WriteDataSet5or6(AquiferType: Integer; Layer: Integer);
     procedure WriteDataSet7(Layer: Integer; GroupIndex: Integer;
       Group: TLayerGroup; LayerIndex: Integer);
-    procedure WriteDataSet8(AquiferType: Integer; Layer: Integer);
+    procedure WriteDataSet8(AquiferType: Integer; TransientModel: Boolean; Layer: Integer);
     procedure WriteDataSet9(AquiferType: Integer; Layer: Integer);
   protected
     function Package: TModflowPackageSelection; override;
@@ -166,7 +166,7 @@ begin
           Exit;
         end;
 
-        WriteDataSet8(AquiferType, Layer);
+        WriteDataSet8(AquiferType, TransientModel, Layer);
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -246,11 +246,11 @@ begin
 end;
 
 procedure TModflowBCF_Writer.WriteDataSet8(AquiferType: Integer;
-  Layer: Integer);
+  TransientModel: Boolean; Layer: Integer);
 var
   DataArray: TDataArray;
 begin
-  if AquiferType in [2, 3] then
+  if TransientModel and (AquiferType in [2, 3]) then
   begin
     DataArray := PhastModel.GetDataSetByName(rsSpecificYield);
     Assert(DataArray <> nil);

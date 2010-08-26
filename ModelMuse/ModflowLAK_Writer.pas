@@ -480,6 +480,10 @@ begin
   end;
   FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrLAK, PhastModel.UnitNumbers.UnitNumber(StrLAK), FNameOfFile, foInput);
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
   Evaluate;
   OpenFile(FileName(AFileName));
   try

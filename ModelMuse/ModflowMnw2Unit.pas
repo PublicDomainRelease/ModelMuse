@@ -28,8 +28,9 @@ type
     PAnnotation: string;
     CellToWellConductanceAnnotation: string;
     PartialPenetrationAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList);
   end;
 
   TMnw2Array = array of TMnw2Record;
@@ -287,9 +288,10 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property WellRadius: double read GetWellRadius;
     property SkinRadius: double read GetSkinRadius;
@@ -2441,7 +2443,7 @@ end;
 
 { TMnw2Record }
 
-procedure TMnw2Record.Cache(Comp: TCompressionStream);
+procedure TMnw2Record.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
 
@@ -2454,14 +2456,26 @@ begin
   WriteCompReal(Comp, CellToWellConductance);
   WriteCompReal(Comp, PartialPenetration);
 
-  WriteCompString(Comp, WellRadiusAnnotation);
-  WriteCompString(Comp, SkinRadiusAnnotation);
-  WriteCompString(Comp, SkinKAnnotation);
-  WriteCompString(Comp, BAnnotation);
-  WriteCompString(Comp, CAnnotation);
-  WriteCompString(Comp, PAnnotation);
-  WriteCompString(Comp, CellToWellConductanceAnnotation);
-  WriteCompString(Comp, PartialPenetrationAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(WellRadiusAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(SkinRadiusAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(SkinKAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(BAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(CAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(PAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(CellToWellConductanceAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(PartialPenetrationAnnotation));
+end;
+
+procedure TMnw2Record.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(WellRadiusAnnotation);
+  Strings.Add(SkinRadiusAnnotation);
+  Strings.Add(SkinKAnnotation);
+  Strings.Add(BAnnotation);
+  Strings.Add(CAnnotation);
+  Strings.Add(PAnnotation);
+  Strings.Add(CellToWellConductanceAnnotation);
+  Strings.Add(PartialPenetrationAnnotation);
 end;
 
 procedure TMnw2Record.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -2477,14 +2491,14 @@ begin
   CellToWellConductance := ReadCompReal(Decomp);
   PartialPenetration := ReadCompReal(Decomp);
 
-  WellRadiusAnnotation := ReadCompString(Decomp, Annotations);
-  SkinRadiusAnnotation := ReadCompString(Decomp, Annotations);
-  SkinKAnnotation := ReadCompString(Decomp, Annotations);
-  BAnnotation := ReadCompString(Decomp, Annotations);
-  CAnnotation := ReadCompString(Decomp, Annotations);
-  PAnnotation := ReadCompString(Decomp, Annotations);
-  CellToWellConductanceAnnotation := ReadCompString(Decomp, Annotations);
-  PartialPenetrationAnnotation := ReadCompString(Decomp, Annotations);
+  WellRadiusAnnotation := Annotations[ReadCompInt(Decomp)];
+  SkinRadiusAnnotation := Annotations[ReadCompInt(Decomp)];
+  SkinKAnnotation := Annotations[ReadCompInt(Decomp)];
+  BAnnotation := Annotations[ReadCompInt(Decomp)];
+  CAnnotation := Annotations[ReadCompInt(Decomp)];
+  PAnnotation := Annotations[ReadCompInt(Decomp)];
+  CellToWellConductanceAnnotation := Annotations[ReadCompInt(Decomp)];
+  PartialPenetrationAnnotation := Annotations[ReadCompInt(Decomp)];
 end;
 
 { TMnw2Storage }
@@ -2521,12 +2535,32 @@ procedure TMnw2Storage.Store(Compressor: TCompressionStream);
 var
   Index: Integer;
   Count: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FMnw2Array);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FMnw2Array[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FMnw2Array);
+    for Index := 0 to Count - 1 do
+    begin
+      FMnw2Array[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FMnw2Array[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
   end;
 end;
 
@@ -2569,10 +2603,10 @@ end;
 
 { TMnw2_Cell }
 
-procedure TMnw2_Cell.Cache(Comp: TCompressionStream);
+procedure TMnw2_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -2718,6 +2752,12 @@ end;
 function TMnw2_Cell.GetWellRadiusAnnotation: string;
 begin
   result := Values.WellRadiusAnnotation;
+end;
+
+procedure TMnw2_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
 end;
 
 procedure TMnw2_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);

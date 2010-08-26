@@ -199,16 +199,20 @@ begin
 end;
 
 procedure TObserver.SetUpToDate(const Value: boolean);
+var
+  Changed: boolean;
 begin
+  Changed := False;
   if FUpToDate <> Value then
   begin
     FUpToDate := Value;
+    Changed := True;
   end;
   if Assigned(FOnUpToDateSet) then
   begin
     FOnUpToDateSet(self);
   end;
-  if not FUpToDate then
+  if not FUpToDate and Changed then
   begin
     ObserverList.NotifyOnChange(self);
   end;

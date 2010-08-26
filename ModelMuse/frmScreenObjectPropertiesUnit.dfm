@@ -21,7 +21,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
     Top = 0
     Width = 786
     Height = 513
-    ActivePage = tabModflowBoundaryConditions
+    ActivePage = tabProperties
     Align = alClient
     TabHeight = 28
     TabOrder = 0
@@ -247,7 +247,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Top = 302
         Width = 337
         Height = 49
-        Caption = 'Associated third-dimension formulas'
+        Caption = 'Number of Z formulas'
         Columns = 3
         ItemIndex = 0
         Items.Strings = (
@@ -394,6 +394,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpKeyword = 'Data_Sets_Tab'
       Caption = 'Data Sets'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object gbPhastInterpolation: TGroupBox
         Left = 0
         Top = 299
@@ -573,6 +577,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             Top = 32
             Width = 475
             Height = 139
+            AutoSize = False
             Anchors = [akLeft, akTop, akRight, akBottom]
             Enabled = False
             TabOrder = 0
@@ -664,6 +669,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpKeyword = 'PHAST_Boundary_Conditions_Tab'
       Caption = 'PHAST Boundary Conditions'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pcPhastBoundaries: TJvPageList
         Left = 0
         Top = 201
@@ -708,7 +717,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Width = 273
               Height = 27
               Style = csDropDownList
-              ItemHeight = 0
+              ItemHeight = 19
               ItemIndex = 0
               TabOrder = 0
               Text = 'Associated solution'
@@ -1668,7 +1677,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Width = 105
               Height = 27
               Style = csDropDownList
-              ItemHeight = 0
+              ItemHeight = 19
               ItemIndex = 0
               TabOrder = 4
               Text = 'Elevation'
@@ -2130,6 +2139,10 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       HelpKeyword = 'MODFLOW_Features_Tab'
       Caption = 'MODFLOW Features'
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object JvNetscapeSplitter1: TJvNetscapeSplitter
         Left = 185
         Top = 0
@@ -3421,7 +3434,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Width = 145
               Height = 27
               Style = csDropDownList
-              ItemHeight = 0
+              ItemHeight = 19
               TabOrder = 0
               OnChange = comboDrtLocationChoiceChange
               Items.Strings = (
@@ -3499,7 +3512,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 0
+                  ItemHeight = 19
                   TabOrder = 0
                   Text = '0'
                   OnChange = comboDrtReturnObjectChange
@@ -3516,7 +3529,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 0
+                  ItemHeight = 19
                   TabOrder = 1
                   Text = '0'
                   OnChange = comboDrtReturnObjectChange
@@ -3533,7 +3546,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 0
+                  ItemHeight = 19
                   TabOrder = 2
                   Text = '0'
                   OnChange = comboDrtReturnObjectChange
@@ -3579,7 +3592,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 0
+                  ItemHeight = 19
                   TabOrder = 0
                   Text = '1'
                   OnChange = comboDrtReturnObjectChange
@@ -3598,7 +3611,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 0
+                  ItemHeight = 19
                   TabOrder = 1
                   Text = '1'
                   OnChange = comboDrtReturnObjectChange
@@ -3617,7 +3630,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 0
+                  ItemHeight = 19
                   TabOrder = 2
                   Text = '1'
                   OnChange = comboDrtReturnObjectChange
@@ -7354,6 +7367,99 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             end
           end
         end
+        object jvspHYDMOD: TJvStandardPage
+          Left = 0
+          Top = 0
+          Width = 583
+          Height = 475
+          HelpType = htKeyword
+          HelpKeyword = 'HYD_HYDMOD_Package_Pane'
+          Caption = 'jvspHYDMOD'
+          inline frameHydmod: TframeScreenObjectHydmod
+            Left = 0
+            Top = 0
+            Width = 583
+            Height = 475
+            Align = alClient
+            TabOrder = 0
+            TabStop = True
+            ExplicitWidth = 583
+            ExplicitHeight = 475
+            inherited lblHYDLBL: TLabel
+              Width = 204
+              Height = 19
+              ExplicitWidth = 204
+              ExplicitHeight = 19
+            end
+            inherited pnlCaption: TPanel
+              Width = 583
+              ExplicitWidth = 583
+            end
+            inherited edHYDLBL: TRbwEdit
+              Height = 27
+              ExplicitHeight = 27
+            end
+            inherited gbBasic: TGroupBox
+              inherited clbBasic: TCheckListBox
+                Top = 21
+                Height = 87
+                OnClickCheck = frameHydmodclbBasicClickCheck
+                ItemHeight = 19
+                ExplicitTop = 21
+                ExplicitHeight = 87
+              end
+            end
+            inherited gbSubsidence: TGroupBox
+              inherited lblLayerGroup: TLabel
+                Width = 89
+                Height = 19
+                ExplicitWidth = 89
+                ExplicitHeight = 19
+              end
+              inherited lblNoDelayBed: TLabel
+                Width = 97
+                Height = 19
+                ExplicitWidth = 97
+                ExplicitHeight = 19
+              end
+              inherited lblLayer: TLabel
+                Width = 50
+                Height = 19
+                ExplicitWidth = 50
+                ExplicitHeight = 19
+              end
+              inherited clbSub: TCheckListBox
+                Top = 21
+                OnClickCheck = frameHydmodclbSubClickCheck
+                ItemHeight = 19
+                ExplicitTop = 21
+              end
+              inherited comboLayerGroup: TJvImageComboBox
+                Height = 29
+                ItemHeight = 23
+                ExplicitHeight = 29
+              end
+              inherited comboNoDelayBed: TJvImageComboBox
+                Height = 29
+                ItemHeight = 23
+                ExplicitHeight = 29
+              end
+              inherited clbLayer: TCheckListBox
+                ItemHeight = 19
+              end
+            end
+            inherited gbSFR: TGroupBox
+              inherited clbSFR: TCheckListBox
+                Top = 21
+                Height = 87
+                OnClickCheck = frameHydmodclbSFRClickCheck
+                ItemHeight = 19
+                ExplicitTop = 21
+                ExplicitHeight = 87
+              end
+            end
+          end
+        end
       end
     end
     object tabNodes: TTabSheet
@@ -7382,13 +7488,15 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
         ParentFont = False
         TabOrder = 0
+        OnEnter = dgVerticiesEnter
         OnMouseDown = dgVerticiesMouseDown
         AutoDistributeText = True
         AutoIncreaseColCount = False
-        AutoIncreaseRowCount = False
+        AutoIncreaseRowCount = True
         SelectedRowOrColumnColor = clAqua
         UnselectableColor = clBtnFace
         OnBeforeDrawCell = dgVerticiesBeforeDrawCell
+        OnStateChange = dgVerticiesStateChange
         ColorRangeSelection = False
         ColorSelectedRow = True
         Columns = <

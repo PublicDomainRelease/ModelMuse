@@ -84,6 +84,8 @@ begin
     begin
       Boundary.GetEvapotranspirationLayerCells(FLayers);
       Boundary.GetEvapotranspirationSurfaceDepthCells(FDepthSurface);
+      Boundary.EvtSurfDepthCollection.ClearBoundaries;
+      Boundary.EvapotranspirationLayers.ClearBoundaries;
     end;
   end;
 end;
@@ -157,6 +159,11 @@ begin
   ParameterValues := TList.Create;
   try
     Evaluate;
+    if not frmProgress.ShouldContinue then
+    begin
+      Exit;
+    end;
+    ClearTimeLists;
     ParamDefArrays := TObjectList.Create;
     try
       EvaluateParameterDefinitions(ParamDefArrays, ErrorRoot);
@@ -193,7 +200,7 @@ begin
         ParametersUsed := TStringList.Create;
         try
           RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
-            ParametersUsed, ParameterValues);
+            ParametersUsed, ParameterValues, True);
           List := Values[TimeIndex];
           List.CheckRestore;
 
@@ -249,7 +256,7 @@ begin
             begin
               List.Cache;
               RetrieveParametersForStressPeriod(D7PNameIname, D7PName, 0,
-                ParametersUsed, ParameterValues);
+                ParametersUsed, ParameterValues, True);
               List := Values[0];
               List.CheckRestore;
             end;
@@ -321,8 +328,8 @@ end;
 
 procedure TModflowEVT_Writer.WriteDataSets5To10;
 const
-  D7PName =      ' # Data Set 8: PARNAM';
-  D7PNameIname = ' # Data Set 8: PARNAM Iname';
+  D7PName =      ' # Data Set 8: PARNAM IEVTPF';
+  D7PNameIname = ' # Data Set 8: PARNAM Iname IEVTPF';
   DS5 = ' # Data Set 5: INSURF INEVTR INEXDP INIEVT';
   DataSetIdentifier = 'Data Set 7:';
   VariableIdentifiers = 'EVTR';
@@ -350,6 +357,11 @@ begin
   WriteToNameFile(StrEVT, PhastModel.UnitNumbers.UnitNumber(StrEVT),
     NameOfFile, foInput);
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
+  ClearTimeLists;
   OpenFile(FileName(AFileName));
   try
     frmProgress.AddMessage('Writing EVT Package input.');
@@ -442,7 +454,7 @@ procedure TModflowEVT_Writer.WriteStressPeriods(const VariableIdentifiers,
   DataSetIdentifier, DS5, D7PNameIname, D7PName: string);
 var
   NP: Integer;
-  List: TValueCellList;
+  EtRateList, PriorEtRateList: TValueCellList;
   ParameterValues: TValueCellList;
   ParamIndex: Integer;
   ParametersUsed: TStringList;
@@ -450,7 +462,7 @@ var
   INEVTR, INIEVT: Integer;
   INSURF: Integer;
   INEXDP: Integer;
-  DepthSurfaceCellList: TValueCellList;
+  DepthSurfaceCellList, PriorListDepthSurfaceCellList: TValueCellList;
   Comment: string;
 begin
   ParameterValues := TValueCellList.Create(CellType);
@@ -473,20 +485,76 @@ begin
       ParametersUsed := TStringList.Create;
       try
         RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
-          ParametersUsed, ParameterValues);
+          ParametersUsed, ParameterValues, True);
         NP := ParametersUsed.Count;
-        List := Values[TimeIndex];
+        EtRateList := Values[TimeIndex];
         // data set 5;
-        INSURF := 1;
+        if (TimeIndex > 0) and (FDepthSurface.Count > 0) then
+        begin
+          PriorListDepthSurfaceCellList := FDepthSurface[TimeIndex-1];
+          DepthSurfaceCellList := FDepthSurface[TimeIndex];
+          if PriorListDepthSurfaceCellList.AreRealValuesIdentical(DepthSurfaceCellList, 0) then
+          begin
+            INSURF := -1;
+//            DepthSurfaceCellList.Cache;
+          end
+          else
+          begin
+            INSURF := 1;
+          end;
+          PriorListDepthSurfaceCellList.Cache;
+        end
+        else
+        begin
+          INSURF := 1;
+        end;
+
         if NPEVT > 0 then
         begin
           INEVTR := NP;
         end
         else
         begin
-          INEVTR := 1;
+          if (TimeIndex > 0) then
+          begin
+            PriorEtRateList := Values[TimeIndex-1];
+            if PriorEtRateList.AreRealValuesIdentical(EtRateList, 0) then
+            begin
+              INEVTR := -1;
+//              EtRateList.Cache;
+            end
+            else
+            begin
+              INEVTR := 1;
+            end;
+            PriorEtRateList.Cache;
+          end
+          else
+          begin
+            INEVTR := 1;
+          end;
         end;
-        INEXDP := 1;
+
+        if (TimeIndex > 0) and (FDepthSurface.Count > 0) then
+        begin
+          PriorListDepthSurfaceCellList := FDepthSurface[TimeIndex-1];
+          DepthSurfaceCellList := FDepthSurface[TimeIndex];
+          if PriorListDepthSurfaceCellList.AreRealValuesIdentical(DepthSurfaceCellList, 1) then
+          begin
+            INEXDP := -1;
+//            DepthSurfaceCellList.Cache;
+          end
+          else
+          begin
+            INEXDP := 1;
+          end;
+          PriorListDepthSurfaceCellList.Cache;
+        end
+        else
+        begin
+          INEXDP := 1;
+        end;
+
         if NEVTOP = 2 then
         begin
           INIEVT := 1;
@@ -504,31 +572,41 @@ begin
         NewLine;
         if not frmProgress.ShouldContinue then
         begin
-          List.Cache;
+          EtRateList.Cache;
           Exit;
         end;
 
         // data set 6
-        if FDepthSurface.Count > 0 then
+        if INSURF > 0 then
         begin
-          DepthSurfaceCellList := FDepthSurface[TimeIndex];
-          WriteEvapotranspirationSurface(DepthSurfaceCellList);
-          if not frmProgress.ShouldContinue then
+          if FDepthSurface.Count > 0 then
           begin
-            List.Cache;
-            Exit;
+            DepthSurfaceCellList := FDepthSurface[TimeIndex];
+            WriteEvapotranspirationSurface(DepthSurfaceCellList);
+            if not frmProgress.ShouldContinue then
+            begin
+              EtRateList.Cache;
+              Exit;
+            end;
+            if (INEXDP < 0) and (TimeIndex = Values.Count - 1) then
+            begin
+              DepthSurfaceCellList.Cache;
+            end;
+          end
+          else
+          begin
+            DepthSurfaceCellList := nil;
+            frmErrorsAndWarnings.AddError(EtSurfaceError, EtSurfaceErrorMessage);
           end;
-        end
-        else
-        begin
-          DepthSurfaceCellList := nil;
-          frmErrorsAndWarnings.AddError(EtSurfaceError, EtSurfaceErrorMessage);
-        end;
 
+        end;
         if NPEVT = 0 then
         begin
           // data set 7
-          WriteCells(List, DataSetIdentifier, VariableIdentifiers);
+          if INEVTR > 0 then
+          begin
+            WriteCells(EtRateList, DataSetIdentifier, VariableIdentifiers);
+          end;
         end
         else
         begin
@@ -541,34 +619,41 @@ begin
         end;
         if not frmProgress.ShouldContinue then
         begin
-          List.Cache;
+          EtRateList.Cache;
           Exit;
         end;
 
         // data set 9
-        if FDepthSurface.Count > 0 then
+        if INEXDP > 0 then
         begin
-          WriteExtinctionDepth(DepthSurfaceCellList);
-          if not frmProgress.ShouldContinue then
+          if FDepthSurface.Count > 0 then
           begin
-            List.Cache;
-            Exit;
+            DepthSurfaceCellList := FDepthSurface[TimeIndex];
+            WriteExtinctionDepth(DepthSurfaceCellList);
+            if not frmProgress.ShouldContinue then
+            begin
+              EtRateList.Cache;
+              Exit;
+            end;
+            if  (TimeIndex = Values.Count - 1) then
+            begin
+              DepthSurfaceCellList.Cache;
+            end;
+          end
+          else
+          begin
+            frmErrorsAndWarnings.AddError(EtDepthError, EtDepthErrorMessage);
           end;
-          DepthSurfaceCellList.Cache;
-        end
-        else
-        begin
-          frmErrorsAndWarnings.AddError(EtDepthError, EtDepthErrorMessage);
         end;
 
         // data set 10
-        WriteLayerSelection(List, ParameterValues, TimeIndex, Comment);
+        WriteLayerSelection(EtRateList, ParameterValues, TimeIndex, Comment);
         if not frmProgress.ShouldContinue then
         begin
-          List.Cache;
+          EtRateList.Cache;
           Exit;
         end;
-        List.Cache;
+        EtRateList.Cache;
       finally
         ParametersUsed.Free;
       end;

@@ -4,7 +4,6 @@ inherited frmGlobalVariables: TfrmGlobalVariables
   Caption = 'Global Variables'
   ClientWidth = 494
   ExplicitWidth = 502
-  ExplicitHeight = 240
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel

@@ -60,7 +60,7 @@ inherited frmImportPoints: TfrmImportPoints
     Top = 0
     Width = 357
     Height = 480
-    ActivePage = tabData
+    ActivePage = tabControls
     Align = alClient
     TabOrder = 1
     object tabControls: TTabSheet
@@ -139,7 +139,7 @@ inherited frmImportPoints: TfrmImportPoints
           Top = 90
           Width = 337
           Height = 49
-          Caption = 'Associated third-dimension formulas'
+          Caption = 'Number of Z formulas'
           Columns = 3
           ItemIndex = 0
           Items.Strings = (

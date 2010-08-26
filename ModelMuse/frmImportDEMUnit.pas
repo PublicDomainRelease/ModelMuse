@@ -32,6 +32,7 @@ type
     procedure DemProgress(Sender: TObject; FractionDone: double);
     procedure ImportProgress(Sender: TObject; FractionDone: double);
     procedure DisplayCornerCoordinates;
+    procedure InvalidDem;
     { Private declarations }
   public
     function GetData: boolean;
@@ -132,6 +133,15 @@ begin
   Application.ProcessMessages;
 end;
 
+procedure TfrmImportDEM.InvalidDem;
+begin
+  Beep;
+MessageDlg('There was an error reading the DEM file.  Please check that the '
+  + 'format of the DEM is a format that ModelMuse supports.  Check the '
+  + 'ModelMuse help to see what formats ModelMuse supports.  For further '
+  + 'assistance contact rbwinst@usgs.gov.', mtError, [mbOK], 0);
+end;
+
 function TfrmImportDEM.GetData: boolean;
 var
   Grid: TCustomGrid;
@@ -154,7 +164,14 @@ begin
     GetInterpolators;
     UpdateEvalAt;
     SetCheckBoxCaptions;
-    DisplayCornerCoordinates;
+    try
+      DisplayCornerCoordinates;
+    except on EConvertError do
+      begin
+        result := False;
+        InvalidDem
+      end;
+    end;
   end;
 end;
 
@@ -312,12 +329,19 @@ begin
         Assert(False);
     end;
     FirstFile := OpenDialogFile.Files[0];
-    DemReader := TDemReader.Create;
     try
-      DemReader.ReadHeader(FirstFile);
-      CentralMeridian := DemReader.CentralMeridianRadians;
-    finally
-      DemReader.Free;
+      DemReader := TDemReader.Create;
+      try
+        DemReader.ReadHeader(FirstFile);
+        CentralMeridian := DemReader.CentralMeridianRadians;
+      finally
+        DemReader.Free;
+      end;
+    except on EConvertError do
+      begin
+        InvalidDEM;
+        Exit;
+      end;
     end;
 
     MinX := Grid.ColumnPosition[0];
@@ -328,88 +352,94 @@ begin
     EnsureMinMax(MinY, MaxY);
 
     IgnoreValue := StrToInt(rdeIgnore.Text);
-
-    for DemIndex := 0 to OpenDialogFile.Files.Count - 1 do
-    begin
-      FDemIndex := DemIndex;
-      DemReader := TDemReader.Create;
-      try
-        DemReader.OnProgress := DemProgress;
-        DemReader.CentralMeridianRadians := CentralMeridian;
-        DemReader.ReadFile(OpenDialogFile.Files[DemIndex], False);
-        for PointIndex := 0 to DemReader.PointCount - 1 do
-        begin
-          APoint := DemReader.Points[PointIndex];
-          if cbIgnore.Checked and (IgnoreValue = APoint.Value) then
+    try
+      for DemIndex := 0 to OpenDialogFile.Files.Count - 1 do
+      begin
+        FDemIndex := DemIndex;
+        DemReader := TDemReader.Create;
+        try
+          DemReader.OnProgress := DemProgress;
+          DemReader.CentralMeridianRadians := CentralMeridian;
+          DemReader.ReadFile(OpenDialogFile.Files[DemIndex], False);
+          for PointIndex := 0 to DemReader.PointCount - 1 do
           begin
-            Continue
-          end;
-
-          Point2D.x := APoint.X;
-          Point2D.y := APoint.Y;
-          Point2D := Grid.
-            RotateFromRealWorldCoordinatesToGridCoordinates(Point2D);
-          if (Point2D.x >= MinX) and (Point2D.x <= MaxX)
-            and (Point2D.y >= MinY) and (Point2D.y <= MaxY) then
-          begin
-            ACol := -1;
-            ARow := -1;
-            case EvalAt of
-              eaBlocks:
-                begin
-                  ACol := Grid.GetContainingColumn(Point2D.x);
-                  ARow := Grid.GetContainingRow(Point2D.y);
-                end;
-              eaNodes:
-                begin
-                  ACol := Grid.NearestColumnPosition(Point2D.x);
-                  ARow := Grid.NearestRowPosition(Point2D.y);
-                end
-              else Assert(False);
-            end;
-            if Counts[ARow, ACol] = 0 then
+            APoint := DemReader.Points[PointIndex];
+            if cbIgnore.Checked and (IgnoreValue = APoint.Value) then
             begin
-              Counts[ARow, ACol] := 1;
-              Values[ARow, ACol] := APoint.Elevation;
-              if ImportMethod = imClosest then
+              Continue
+            end;
+
+            Point2D.x := APoint.X;
+            Point2D.y := APoint.Y;
+            Point2D := Grid.
+              RotateFromRealWorldCoordinatesToGridCoordinates(Point2D);
+            if (Point2D.x >= MinX) and (Point2D.x <= MaxX)
+              and (Point2D.y >= MinY) and (Point2D.y <= MaxY) then
+            begin
+              ACol := -1;
+              ARow := -1;
+              case EvalAt of
+                eaBlocks:
+                  begin
+                    ACol := Grid.GetContainingColumn(Point2D.x);
+                    ARow := Grid.GetContainingRow(Point2D.y);
+                  end;
+                eaNodes:
+                  begin
+                    ACol := Grid.NearestColumnPosition(Point2D.x);
+                    ARow := Grid.NearestRowPosition(Point2D.y);
+                  end
+                else Assert(False);
+              end;
+              if Counts[ARow, ACol] = 0 then
               begin
-                Distances[ARow, ACol] := Distance(Point2D, CenterPoints[ARow, ACol]);
+                Counts[ARow, ACol] := 1;
+                Values[ARow, ACol] := APoint.Elevation;
+                if ImportMethod = imClosest then
+                begin
+                  Distances[ARow, ACol] := Distance(Point2D, CenterPoints[ARow, ACol]);
+                end;
+              end;
+              case ImportMethod of
+                imLowest:
+                  begin
+                    if Values[ARow, ACol] > APoint.Elevation then
+                    begin
+                      Values[ARow, ACol] := APoint.Elevation;
+                    end;
+                  end;
+                imHighest:
+                  begin
+                    if Values[ARow, ACol] < APoint.Elevation then
+                    begin
+                      Values[ARow, ACol] := APoint.Elevation;
+                    end;
+                  end;
+                imAverage:
+                  begin
+                    Values[ARow, ACol] := Values[ARow, ACol] + APoint.Elevation;
+                    Counts[ARow, ACol] := Counts[ARow, ACol] + 1;
+                  end;
+                imClosest:
+                  begin
+                    ADistance := Distance(Point2D, CenterPoints[ARow, ACol]);
+                    if Distances[ARow, ACol] > ADistance then
+                    begin
+                      Values[ARow, ACol] := APoint.Elevation;
+                      Distances[ARow, ACol] := ADistance;
+                    end;
+                  end;
               end;
             end;
-            case ImportMethod of
-              imLowest:
-                begin
-                  if Values[ARow, ACol] > APoint.Elevation then
-                  begin
-                    Values[ARow, ACol] := APoint.Elevation;
-                  end;
-                end;
-              imHighest:
-                begin
-                  if Values[ARow, ACol] < APoint.Elevation then
-                  begin
-                    Values[ARow, ACol] := APoint.Elevation;
-                  end;
-                end;
-              imAverage:
-                begin
-                  Values[ARow, ACol] := Values[ARow, ACol] + APoint.Elevation;
-                  Counts[ARow, ACol] := Counts[ARow, ACol] + 1;
-                end;
-              imClosest:
-                begin
-                  ADistance := Distance(Point2D, CenterPoints[ARow, ACol]);
-                  if Distances[ARow, ACol] > ADistance then
-                  begin
-                    Values[ARow, ACol] := APoint.Elevation;
-                    Distances[ARow, ACol] := ADistance;
-                  end;
-                end;
-            end;
           end;
+        finally
+          DemReader.Free;
         end;
-      finally
-        DemReader.Free;
+      end;
+    except on EConvertError do
+      begin
+        InvalidDEM;
+        Exit;
       end;
     end;
     if ImportMethod = imAverage then

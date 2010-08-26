@@ -168,7 +168,7 @@
           <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Edit|Merge Objects</text></para>
         </td>
         <td style="vertical-align:top; width:453px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When two or more objects are selected and some of the selected objects have end points at the same location, the objects are merged into a single object by adding the vertices of one object to the other. The objects to be merged may not no more than a single section each. &#160;The merged object will have all the properties of only one of the objects. &#160;The properties of the other object are ignored.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">When two or more objects are selected and some of the selected objects have end points at the same location, the objects are merged into a single object by adding the vertices of one object to the other. The objects to be merged may have no more than a single section each. &#160;The merged object will have all the properties of only one of the objects. &#160;The properties of the other object are ignored.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

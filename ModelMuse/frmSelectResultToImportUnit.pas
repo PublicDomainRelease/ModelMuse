@@ -619,6 +619,8 @@ begin
       end;
     end;
     NewFormula := NewFormula + ')';
+    NewFormula := 'If((Layer <= ' + IntToStr(Grid.LayerCount)
+      + '), ' + NewFormula + ', 0)'
   end;
   New3DArray.Formula := NewFormula;
   LayerDataSets.Clear;
@@ -737,6 +739,7 @@ begin
   FMaxStep := frmGoPhast.PhastModel.ModflowStressPeriods.MaxStepsInAnyStressPeriod;
   FMaxLayer := frmGoPhast.PhastModel.LayerStructure.ModflowLayerCount;
   try
+    Assert(FileExists(FFileName));
     OpenResultFile(Precision, HufFormat);
     EndReached := False;
     KPER := -1;
@@ -1083,6 +1086,44 @@ begin
   FSteps := TIntegerList.Create;
   FDescriptions := TStringList.Create;
   FAskedUser := False;
+
+  odSelectFiles.Filter := 'All supported file types|*.bhd;*.bdn;*.fhd;*.fdn;'
+    + '*.cbc;*.huf_fhd;*.huf_bhd;*.huf_flow;*.Sub_Out;*.Swt_Out;*.SubSubOut;'
+    + '*.SubComMlOut;*.SubComIsOut;*.SubVdOut;*.SubNdCritHeadOut;'
+    + '*.SubDCritHeadOut;*.SwtSubOut;*.SwtSubOut;*.SwtComMLOut;*.SwtComIsOut;'
+    + '*.SwtVDOut;*.SwtPreConStrOut;*.SwtDeltaPreConStrOut;*.SwtGeoStatOut;'
+    + '*.SwtDeltaGeoStatOut;*.SwtEffStressOut;*.SwtDeltaEffStressOut;'
+    + '*.SwtVoidRatioOut;*.SwtThickCompSedOut;*.SwtLayerCentElevOut|'
+
+    + 'Formatted head files (*.fhd)|*.fhd|'
+    + 'Formatted drawdown files (*.fdn)|*.fdn|'
+    + 'Binary head files (*.bhd)|*.bhd|'
+    + 'Binary drawdown files (*.bdn)|*.bdn|'
+    + 'Binary flow files (*.cbc)|*.cbc|'
+    + 'Formatted HUF head files (*.huf_fhd)|*.huf_fhd|'
+    + 'Binary HUF head files (*.huf_bhd)|*.huf_bhd|'
+    + 'HUF flow files (*.huf_flow)|*.huf_flow|'
+    + 'Combined SUB output file (*.Sub_Out)|*.Sub_Out|'
+    + 'Combined SWT output file (*.Swt_Out)|*.Swt_Out|'
+    + 'SUB Subsidence (*.SubSubOut)|*.SubSubOut|'
+    + 'SUB Compaction by model layer (*.SubComMlOut)|*.SubComMlOut|'
+    + 'SUB Compaction by interbed system (*.SubComIsOut)|*.SubComIsOut|'
+    + 'SUB Vertical displacement (*.SubVdOut)|*.SubVdOut|'
+    + 'SUB Critical head for no-delay interbeds (*.SubNdCritHeadOut)|*.SubNdCritHeadOut|'
+    + 'SUB Critical head for delay interbeds (*.SubDCritHeadOut)|*.SubDCritHeadOut|'
+    + 'SWT Subsidence (*.SwtSubOut)|*.SwtSubOut|'
+    + 'SWT Compaction by model layer (*.SwtComMLOut)|*.SwtComMLOut|'
+    + 'SWT Compaction by interbed system (*.SwtComIsOut)|*.SwtComIsOut|'
+    + 'SWT Vertical displacement (*.SwtVDOut)|*.SwtVDOut|'
+    + 'SWT Preconsolidation stress (*.SwtPreConStrOut)|*.SwtPreConStrOut|'
+    + 'SWT Change in preconsolidation stress (*.SwtDeltaPreConStrOut)|*.SwtDeltaPreConStrOut|'
+    + 'SWT Geostatic stress (*.SwtGeoStatOut)|*.SwtGeoStatOut|'
+    + 'SWT Change in geostatic stress (*.SwtDeltaGeoStatOut)|*.SwtDeltaGeoStatOut|'
+    + 'SWT Effective stress (*.SwtEffStressOut)|*.SwtEffStressOut|'
+    + 'SWT Change in effective stress (*.SwtDeltaEffStressOut)|*.SwtDeltaEffStressOut|'
+    + 'SWT Void ratio (*.SwtVoidRatioOut)|*.SwtVoidRatioOut|'
+    + 'SWT Thickness of compressible sediments (*.SwtThickCompSedOut)|*.SwtThickCompSedOut|'
+    + 'SWT Layer-center elevation (*.SwtLayerCentElevOut)|*.SwtLayerCentElevOut'
 end;
 
 procedure TfrmSelectResultToImport.FormDestroy(Sender: TObject);
@@ -1193,6 +1234,14 @@ begin
   begin
     try
       FFileName := odSelectFiles.FileName;
+      if not FileExists(FFileName) then
+      begin
+        result := False;
+        Beep;
+        MessageDlg(FFileName + ' does not exist.', mtError, [mbOK], 0);
+        Exit;
+      end;
+
       FFileStream := nil;
       FFileVariable := nil;
       OpenResultFile(Precision, HufFormat);
@@ -1637,6 +1686,10 @@ begin
   begin
     FResultFormat := mfSubBinary;
   end
+  else if (SameText(Extension, '.Swt_Out')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
   else if (SameText(Extension, '.SubSubOut')) then
   begin
     FResultFormat := mfSubBinary;
@@ -1661,6 +1714,59 @@ begin
   begin
     FResultFormat := mfSubBinary;
   end
+  else if (SameText(Extension, '.SwtSubOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SwtComMLOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SwtComIsOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SwtVDOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SwtPreConStrOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SwtDeltaPreConStrOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SwtGeoStatOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SwtDeltaGeoStatOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SwtEffStressOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SwtDeltaEffStressOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SwtVoidRatioOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SwtThickCompSedOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+  else if (SameText(Extension, '.SwtLayerCentElevOut')) then
+  begin
+    FResultFormat := mfSubBinary;
+  end
+
   else
   begin
     Assert(False);

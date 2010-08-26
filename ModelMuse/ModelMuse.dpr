@@ -1030,7 +1030,16 @@ uses
   LegendUnit in 'LegendUnit.pas',
   InPlaceEditUnit in 'InPlaceEditUnit.pas',
   DrawTextUnit in 'DrawTextUnit.pas',
-  frmManageSettingsUnit in 'frmManageSettingsUnit.pas' {frmManageSettings};
+  frmManageSettingsUnit in 'frmManageSettingsUnit.pas' {frmManageSettings},
+  framePackageSwtUnit in 'framePackageSwtUnit.pas' {framePackageSwt: TFrame},
+  MODFLOW_SwtWriterUnit in 'MODFLOW_SwtWriterUnit.pas',
+  framePkgHydmodUnit in 'framePkgHydmodUnit.pas' {framePkgHydmod: TFrame},
+  frameScreenObjectHydmodUnit in 'frameScreenObjectHydmodUnit.pas' {frameScreenObjectHydmod: TFrame},
+  ModflowHydmodUnit in 'ModflowHydmodUnit.pas',
+  ModflowHydmodWriterUnit in 'ModflowHydmodWriterUnit.pas',
+  frmManageParametersUnit in 'frmManageParametersUnit.pas' {frmManageParameters},
+  frmManageHeadObservationsUnit in 'frmManageHeadObservationsUnit.pas' {frmManageHeadObservations},
+  frmRunModelMateUnit in 'frmRunModelMateUnit.pas' {frmRunModelMate};
 
 {$R *.res}
 
@@ -1040,6 +1049,7 @@ begin
   Application.CreateForm(TfrmProgress, frmProgress);
   Application.CreateForm(TfrmSelectedObjects, frmSelectedObjects);
   Application.CreateForm(TfrmColors, frmColors);
+  Application.CreateForm(TfrmRunModelMate, frmRunModelMate);
   Application.Run;
 end.
 

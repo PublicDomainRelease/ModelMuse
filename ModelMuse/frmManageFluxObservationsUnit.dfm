@@ -42,7 +42,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       41)
     object btnHelp: TBitBtn
       Left = 402
-      Top = 6
+      Top = 7
       Width = 87
       Height = 27
       Anchors = [akRight, akBottom]
@@ -61,7 +61,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
     end
     object OkBtn: TBitBtn
       Left = 497
-      Top = 6
+      Top = 7
       Width = 87
       Height = 27
       Anchors = [akRight, akBottom]
@@ -82,7 +82,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
     end
     object btnAddObservation: TButton
       Left = 5
-      Top = 6
+      Top = 7
       Width = 77
       Height = 27
       Anchors = [akLeft, akBottom]
@@ -110,10 +110,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObservationsTimes: TTabSheet
         Caption = 'Observations times and values'
         OnResize = tabObservationsTimesResize
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           544
           252)
@@ -329,7 +325,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
           Top = 3
           Width = 61
           Height = 22
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 4
           Text = '0'
           OnChange = rdeMultiValueEditChange
@@ -382,10 +378,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObjects: TTabSheet
         Caption = 'Objects'
         ImageIndex = 1
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         DesignSize = (
           544
           252)
@@ -602,7 +594,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
     OnChange = tvFluxObservationsChange
   end
   object rparserThreeDFormulaElements: TRbwParser
-    Left = 264
-    Top = 64
+    Left = 272
+    Top = 40
   end
 end

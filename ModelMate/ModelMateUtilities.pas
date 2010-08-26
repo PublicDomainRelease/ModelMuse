@@ -12,7 +12,7 @@ interface
   procedure AssignCurrentParamObjects(Prj: TProject);
   procedure AssignCurrentPredObjects(Prj: TProject);
   procedure AssignCurrentPriorObjects(Prj: TProject);
-  procedure FileBaseName(const FileName: TFileName; var BaseName: string);
+  function FileBaseName(const FileName: TFileName): string;
   function PosCap(Cap: string): integer;
   function UniqueGroupName(const GroupName: string; const GpUse: TGrpUse): boolean;
   procedure UpdateCurrentProject;
@@ -55,12 +55,15 @@ begin
   PriSetCurrent.Assign(Prj.PriSet);
 end;
 
-procedure FileBaseName(const FileName: TFileName; var BaseName: string);
+function FileBaseName(const FileName: TFileName): string;
 { Return the base name part of a file name.  Note that TFileName is
   defined as AnsiString }
+var
+  BaseName: string;
 begin
   BaseName := ChangeFileExt(FileName, '');
   BaseName := ExtractFileName(BaseName);
+  result := BaseName;
 end;
 
 function PosCap(Cap: string): integer;

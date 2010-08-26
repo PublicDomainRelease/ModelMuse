@@ -596,7 +596,6 @@ end;
 
 procedure T3DSparseRealArray.Cache;
 var
-//  TempFile: TTempFileStream;
   Compressor: TCompressionStream;
   MemStream: TMemoryStream;
 begin
@@ -608,11 +607,8 @@ begin
     end;
     MemStream := TMemoryStream.Create;
     try
-//    TempFile := TTempFileStream.Create(FTempFileName, fmOpenReadWrite);
-//    Compressor := TCompressionStream.Create(clDefault, TempFile);
       Compressor := TCompressionStream.Create(clDefault, MemStream);
       try
-  //      TempFile.Position := 0;
         MemStream.Position := 0;
         StoreData(Compressor);
       finally
@@ -621,11 +617,9 @@ begin
       MemStream.Position := 0;
       ZipAFile(FTempFileName, MemStream);
     finally
-//      TempFile.Free;
       MemStream.Free
     end;
     FCached := True;
-//    ZipAFile(FTempFileName);
   end;
   Clear;
   FCleared := True;
@@ -704,7 +698,6 @@ begin
   MemStream := TMemoryStream.Create;
   try
     ExtractAFile(FTempFileName, MemStream);
-//    MemStream.Position := 0;
     DecompressionStream := TDecompressionStream.Create(MemStream);
   try
     ReadData(DecompressionStream);

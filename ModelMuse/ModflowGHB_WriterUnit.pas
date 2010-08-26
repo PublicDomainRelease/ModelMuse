@@ -30,6 +30,7 @@ type
       const DataSetIdentifier, VariableIdentifiers: string); override;
     class function ObservationExtension: string; override;
     class function ObservationOutputExtension: string; override;
+    function ObsNameWarningString: string; override;
   public
     procedure WriteFile(const AFileName: string);
     procedure WriteFluxObservationFile(const AFileName: string;
@@ -72,6 +73,11 @@ end;
 function TModflowGHB_Writer.ObservationPackage: TModflowPackageSelection;
 begin
   result := PhastModel.ModflowPackages.GbobPackage;
+end;
+
+function TModflowGHB_Writer.ObsNameWarningString: string;
+begin
+  result := 'The following GHB observation names may be valid for MODFLOW but they are not valid for UCODE.';
 end;
 
 function TModflowGHB_Writer.Package: TModflowPackageSelection;
@@ -192,6 +198,11 @@ begin
   if ShouldWriteFile or ShouldWriteObservationFile then
   begin
     Evaluate;
+    if not frmProgress.ShouldContinue then
+    begin
+      Exit;
+    end;
+    ClearTimeLists;
   end;
   if not ShouldWriteFile then
   begin

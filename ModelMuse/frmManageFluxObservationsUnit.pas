@@ -160,6 +160,7 @@ located at http://jvcl.sourceforge.net
       const StartCol, EndCol: integer);
     procedure SetSelectedGroupAndObservation(TreeView: TTreeView);
     procedure HideUcodeColumns;
+    procedure SetStatFlagLabels;
   public
     procedure SetButtons;
   end;
@@ -189,6 +190,28 @@ begin
   IncAllBtn.Enabled := not SrcEmpty;
   ExclBtn.Enabled := not DstEmpty and (DstList.SelCount > 0);
   ExclAllBtn.Enabled := not DstEmpty;
+end;
+
+type TRbwDataGrid4Crack = class(TRbwDataGrid4);
+
+procedure TfrmManageFluxObservations.SetStatFlagLabels;
+begin
+  Assert(FSelectedObservation <> nil);
+  case FSelectedObservation.Purpose of
+    ofObserved, ofInacative:
+      begin
+        rdgFluxObsTimes.Columns[Ord(fcStatFlag)].PickList :=
+          ObservationStatFlagLabels;
+      end;
+    ofPredicted:
+      begin
+        rdgFluxObsTimes.Columns[Ord(fcStatFlag)].PickList :=
+          PredictionStatFlagLabels;
+      end;
+  else
+    Assert(False);
+  end;
+  TRbwDataGrid4Crack(rdgFluxObsTimes).HideEditor;
 end;
 
 procedure TfrmManageFluxObservations.HideUcodeColumns;
@@ -430,12 +453,26 @@ begin
 end;
 
 procedure TfrmManageFluxObservations.comboTreatmentChange(Sender: TObject);
+var
+  Index: Integer;
 begin
   inherited;
   if (FSelectedObservation <> nil) then
   begin
     FSelectedObservation.Purpose :=
       TObservationPurpose(comboTreatment.ItemIndex);
+    SetStatFlagLabels;
+    if FSelectedObservation.Purpose = ofPredicted then
+    begin
+      for Index := 1 to rdgFluxObsTimes.RowCount - 1 do
+      begin
+        if rdgFluxObsTimes.ItemIndex[Ord(fcStatFlag), Index] < 0 then
+        begin
+          rdgFluxObsTimes.ItemIndex[Ord(fcStatFlag), Index] := 0;
+        end;
+      end;
+      rdgFluxObsTimesExit(nil);
+    end;
   end;
 end;
 
@@ -651,16 +688,18 @@ begin
           rdgFluxObsTimes.Objects[Ord(fcName),Index] := nil;
         end;
         seNumObsTimes.AsInteger := 0;
+        rdgFluxObsTimes.Invalidate;
       end
       else
       begin
+        seNumObsTimes.Enabled := True;
         rdgFluxObsTimes.Enabled := True;
         edObservationName.Enabled := True;
         comboTreatment.Enabled := True;
         edObservationName.Text := FSelectedObservation.ObservationName;
         comboTreatment.ItemIndex := Ord(FSelectedObservation.Purpose);
+        SetStatFlagLabels;
 
-        seNumObsTimes.Enabled := True;
         btnInsert.Enabled := True;
         SrcList.Enabled := True;
         DstList.Enabled := True;
@@ -755,6 +794,7 @@ begin
             ObsTime.Comment;
           rdgFluxObsTimes.Objects[Ord(fcName),Index+1] := ObsTime;
         end;
+        rdgFluxObsTimes.Invalidate;
       end;
     finally
       FSettingObservation := False;

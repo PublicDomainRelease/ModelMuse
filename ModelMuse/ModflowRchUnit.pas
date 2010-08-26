@@ -25,8 +25,9 @@ type
     StartingTime: double;
     EndingTime: double;
     RechargeRateAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList);
   end;
 
   TRchLayerRecord = record
@@ -35,9 +36,11 @@ type
     StartingTime: double;
     EndingTime: double;
     RechargeLayerAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList);
   end;
+
   // @name is an array of @link(TRchRecord)s.
   TRchArray = array of TRchRecord;
   TRchLayerArray = array of TRchLayerRecord;
@@ -222,9 +225,10 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property StressPeriod: integer read FStressPeriod write FStressPeriod;
     property Values: TRchRecord read FValues write FValues;
@@ -244,9 +248,10 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   end;
 
 
@@ -544,10 +549,10 @@ end;
 
 { TRch_Cell }
 
-procedure TRch_Cell.Cache(Comp: TCompressionStream);
+procedure TRch_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -616,6 +621,12 @@ end;
 function TRch_Cell.GetSection: integer;
 begin
   result := Values.Cell.Section;
+end;
+
+procedure TRch_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
 end;
 
 procedure TRch_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -836,6 +847,7 @@ begin
       end;
     end;
   end;
+  ClearBoundaries
 end;
 
 function TRchBoundary.GetTimeVaryingRechargeLayers: boolean;
@@ -1144,10 +1156,10 @@ end;
 
 { TRechargeLayerCell }
 
-procedure TRechargeLayerCell.Cache(Comp: TCompressionStream);
+procedure TRechargeLayerCell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -1203,6 +1215,12 @@ begin
   result := Values.Cell.Section;
 end;
 
+procedure TRechargeLayerCell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
+end;
+
 procedure TRechargeLayerCell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
@@ -1222,12 +1240,32 @@ procedure TRchStorage.Store(Compressor: TCompressionStream);
 var
   Count: Integer;
   Index: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FRchArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FRchArray[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FRchArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FRchArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FRchArray[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
   end;
 end;
 
@@ -1265,12 +1303,32 @@ procedure TRchLayerStorage.Store(Compressor: TCompressionStream);
 var
   Count: Integer;
   Index: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FRchLayerArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FRchLayerArray[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FRchLayerArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FRchLayerArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FRchLayerArray[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
   end;
 end;
 
@@ -1298,13 +1356,19 @@ end;
 
 { TRchRecord }
 
-procedure TRchRecord.Cache(Comp: TCompressionStream);
+procedure TRchRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompReal(Comp, RechargeRate);
   WriteCompReal(Comp, StartingTime);
   WriteCompReal(Comp, EndingTime);
-  WriteCompString(Comp, RechargeRateAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(RechargeRateAnnotation));
+//  WriteCompString(Comp, RechargeRateAnnotation);
+end;
+
+procedure TRchRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(RechargeRateAnnotation);
 end;
 
 procedure TRchRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -1313,18 +1377,25 @@ begin
   RechargeRate := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  RechargeRateAnnotation := ReadCompString(Decomp, Annotations);
+  RechargeRateAnnotation := Annotations[ReadCompInt(Decomp)];
+//  RechargeRateAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TRchLayerRecord }
 
-procedure TRchLayerRecord.Cache(Comp: TCompressionStream);
+procedure TRchLayerRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompInt(Comp, RechargeLayer);
   WriteCompReal(Comp, StartingTime);
   WriteCompReal(Comp, EndingTime);
-  WriteCompString(Comp, RechargeLayerAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(RechargeLayerAnnotation));
+//  WriteCompString(Comp, RechargeLayerAnnotation);
+end;
+
+procedure TRchLayerRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(RechargeLayerAnnotation);
 end;
 
 procedure TRchLayerRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -1333,7 +1404,8 @@ begin
   RechargeLayer := ReadCompInt(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  RechargeLayerAnnotation := ReadCompString(Decomp, Annotations);
+  RechargeLayerAnnotation := Annotations[ReadCompInt(Decomp)];
+//  RechargeLayerAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 end.

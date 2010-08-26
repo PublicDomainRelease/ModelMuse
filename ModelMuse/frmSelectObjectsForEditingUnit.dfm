@@ -5,7 +5,9 @@ inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
   PixelsPerInch = 96
   TextHeight = 18
   inherited pnlBottom: TPanel
+    TabOrder = 2
     inherited btnClose: TBitBtn
+      TabOrder = 3
       Kind = bkCancel
     end
     inherited btnHelp: TBitBtn
@@ -31,9 +33,8 @@ inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
       Height = 33
       Anchors = [akTop, akRight]
       Caption = '&Delete'
-      Default = True
       ModalResult = 1
-      TabOrder = 3
+      TabOrder = 1
       OnClick = btnDeleteClick
       Glyph.Data = {
         42020000424D40020000000000008E0000002800000018000000180000000100
@@ -77,7 +78,7 @@ inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
       'Top'
       'Front'
       'Side')
-    TabOrder = 2
+    TabOrder = 0
     OnClick = rgViewDirectionClick
   end
 end

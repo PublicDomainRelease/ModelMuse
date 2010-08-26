@@ -56,8 +56,6 @@ var
   ScreenObject: TScreenObject;
   Boundary: TRchBoundary;
 begin
-
-
   inherited;
   for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
   begin
@@ -70,6 +68,7 @@ begin
     if Boundary <> nil then
     begin
       Boundary.GetRechargeLayerCells(FLayers);
+      Boundary.RechargeLayers.ClearBoundaries;
     end;
   end;
 end;
@@ -130,6 +129,11 @@ begin
   ParameterValues := TList.Create;
   try
     Evaluate;
+    if not frmProgress.ShouldContinue then
+    begin
+      Exit;
+    end;
+    ClearTimeLists;
     ParamDefArrays := TObjectList.Create;
     try
       EvaluateParameterDefinitions(ParamDefArrays, ErrorRoot);
@@ -161,7 +165,7 @@ begin
         ParametersUsed := TStringList.Create;
         try
           RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
-            ParametersUsed, ParameterValues);
+            ParametersUsed, ParameterValues, True);
           List := Values[TimeIndex];
           List.CheckRestore;
 
@@ -187,7 +191,7 @@ begin
               TimeVaryingLayers and (ParameterCount > 0) then
             begin
               RetrieveParametersForStressPeriod(D7PNameIname, D7PName, 0,
-                ParametersUsed, ParameterValues);
+                ParametersUsed, ParameterValues, True);
               List := Values[0];
             end;
             UpdateLayerDisplay(List, ParameterValues, TimeIndex,
@@ -254,8 +258,8 @@ end;
 
 procedure TModflowRCH_Writer.WriteDataSets5To8;
 const
-  D7PName =      ' # Data Set 7: PARNAM';
-  D7PNameIname = ' # Data Set 7: PARNAM Iname';
+  D7PName =      ' # Data Set 7: PARNAM IRCHPF';
+  D7PNameIname = ' # Data Set 7: PARNAM Iname IRCHPF';
   DS5 = ' # Data Set 5: INRECH INIRCH';
   DataSetIdentifier = 'Data Set 6:';
   VariableIdentifiers = 'RECH';
@@ -281,6 +285,11 @@ begin
   WriteToNameFile(StrRCH, PhastModel.UnitNumbers.UnitNumber(StrRCH),
     NameOfFile, foInput);
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
+  ClearTimeLists;
   OpenFile(FileName(AFileName));
   try
     frmProgress.AddMessage('Writing RCH Package input.');
@@ -341,7 +350,7 @@ procedure TModflowRCH_Writer.WriteStressPeriods(const VariableIdentifiers,
   DataSetIdentifier, DS5, D7PNameIname, D7PName: string);
 var
   NP: Integer;
-  List: TValueCellList;
+  RechRateList, PriorRechRateList: TValueCellList;
   ParameterValues: TValueCellList;
   ParamIndex: Integer;
   ParametersUsed: TStringList;
@@ -369,9 +378,9 @@ begin
       ParametersUsed := TStringList.Create;
       try
         RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
-          ParametersUsed, ParameterValues);
+          ParametersUsed, ParameterValues, True);
         NP := ParametersUsed.Count;
-        List := Values[TimeIndex];
+        RechRateList := Values[TimeIndex];
         // data set 5;
         if NPRCH > 0 then
         begin
@@ -379,7 +388,24 @@ begin
         end
         else
         begin
-          INRECH := 1;
+         if (TimeIndex > 0) then
+          begin
+            PriorRechRateList := Values[TimeIndex-1];
+            if PriorRechRateList.AreRealValuesIdentical(RechRateList, 0) then
+            begin
+              INRECH := -1;
+//              RechRateList.Cache;
+            end
+            else
+            begin
+              INRECH := 1;
+            end;
+            PriorRechRateList.Cache;
+          end
+          else
+          begin
+            INRECH := 1;
+          end;
         end;
         INIRCH := 1;
 
@@ -392,34 +418,40 @@ begin
           Exit;
         end;
 
-        if NPRCH = 0 then
+        if INRECH > 0 then
         begin
-          // data set 6
-          WriteCells(List, DataSetIdentifier, VariableIdentifiers);
-        end
-        else
-        begin
-          // data set 7
-          for ParamIndex := 0 to ParametersUsed.Count - 1 do
+          if NPRCH = 0 then
           begin
-            WriteString(ParametersUsed[ParamIndex]);
-            NewLine;
+            // data set 6
+            WriteCells(RechRateList, DataSetIdentifier, VariableIdentifiers);
+          end
+          else
+          begin
+            // data set 7
+            for ParamIndex := 0 to ParametersUsed.Count - 1 do
+            begin
+              WriteString(ParametersUsed[ParamIndex]);
+              NewLine;
+            end;
           end;
-        end;
-        if not frmProgress.ShouldContinue then
-        begin
-          List.Cache;
-          Exit;
+          if not frmProgress.ShouldContinue then
+          begin
+            RechRateList.Cache;
+            Exit;
+          end;
         end;
 
         // Data set 8
-        WriteLayerSelection(List, ParameterValues, TimeIndex, Comment);
+        WriteLayerSelection(RechRateList, ParameterValues, TimeIndex, Comment);
         if not frmProgress.ShouldContinue then
         begin
-          List.Cache;
+          RechRateList.Cache;
           Exit;
         end;
-        List.Cache;
+        if TimeIndex = Values.Count - 1 then
+        begin
+          RechRateList.Cache;
+        end;
       finally
         ParametersUsed.Free;
       end;

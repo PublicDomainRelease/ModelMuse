@@ -271,7 +271,7 @@ type
   function ValidName(const OriginalName: string): string;
   function RightCopy(const Source: string; LengthToCopy: integer): string;
 
-resourcestring
+const
   StrModelTop = 'Model_Top';
 
   {@name is used when writing the PHAST input file to insert a consistent
@@ -357,7 +357,12 @@ resourcestring
   StrStartingTime = 'Starting time';
   StrEndingTime = 'Ending time';
 
-const
+  StrVariance = 'Variance (0)';
+  StrStdDev = 'Standard dev. (1)';
+  StrCoefVar = 'Coef. of var. (2)';
+  StrWt = 'Weight (3)';
+  StrSqRtWt = 'Sq. rt. of weight (4)';
+
   // @name represents the characters used to define the end of a line.
   EndOfLine =
 {$IFDEF MSWINDOWS}#13#10;
@@ -376,12 +381,33 @@ const
   clTransparent32: TColor32 = 0;
   SelectEpsilon = 5;
 
+var
+  ObservationStatFlagLabels: TStringList = nil;
+  PredictionStatFlagLabels: TStringList = nil;
+
+function StrToStatFlag(Const AStatFlagLabel: string): TStatFlag;
+function StatFlatToStr(AStatFlag: TStatFlag): string;
+
 implementation
 
 
 {$IFNDEF Testing}
 uses frmGoPhastUnit, PhastModelUnit;
 {$ENDIF}
+
+function StrToStatFlag(Const AStatFlagLabel: string): TStatFlag;
+var
+  Position: integer;
+begin
+  Position := ObservationStatFlagLabels.IndexOf(AStatFlagLabel);
+  Assert(Position >= 0);
+  result := TStatFlag(Position);
+end;
+
+function StatFlatToStr(AStatFlag: TStatFlag): string;
+begin
+  result := ObservationStatFlagLabels[Ord(AStatFlag)];
+end;
 
 { TPhastCollection }
 
@@ -669,6 +695,28 @@ begin
     InvalidateModel;
   end;
 end;
+
+procedure InitializeStatTypeLabels;
+begin
+  ObservationStatFlagLabels := TStringList.Create;
+  PredictionStatFlagLabels := TStringList.Create;
+
+  ObservationStatFlagLabels.Add(StrVariance);
+  ObservationStatFlagLabels.Add(StrStdDev);
+  ObservationStatFlagLabels.Add(StrCoefVar);
+  ObservationStatFlagLabels.Add(StrWt);
+  ObservationStatFlagLabels.Add(StrSqRtWt);
+
+  PredictionStatFlagLabels.Add(StrVariance);
+  PredictionStatFlagLabels.Add(StrStdDev);
+end;
+
+initialization
+  InitializeStatTypeLabels;
+
+finalization
+  ObservationStatFlagLabels.Free;
+  PredictionStatFlagLabels.Free;
 
 end.
 

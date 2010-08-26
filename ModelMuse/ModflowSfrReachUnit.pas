@@ -29,8 +29,9 @@ type
     InitialWaterContentAnnotation: string;
     BrooksCoreyExponentAnnotation: string;
     VerticalKAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList);
   end;
 
   TSrfArray = array of TSfrRecord;
@@ -204,9 +205,10 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property Values: TSfrRecord read FValues write FValues;
     property StressPeriod: integer read FStressPeriod write FStressPeriod;
@@ -1321,10 +1323,10 @@ end;
 
 { TSfr_Cell }
 
-procedure TSfr_Cell.Cache(Comp: TCompressionStream);
+procedure TSfr_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -1485,6 +1487,12 @@ begin
   result := Values.VerticalKAnnotation;
 end;
 
+procedure TSfr_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
+end;
+
 procedure TSfr_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
@@ -1494,7 +1502,7 @@ end;
 
 { TSfrRecord }
 
-procedure TSfrRecord.Cache(Comp: TCompressionStream);
+procedure TSfrRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompReal(Comp, ReachLength);
@@ -1511,16 +1519,39 @@ begin
   WriteCompReal(Comp, StartingTime);
   WriteCompReal(Comp, EndingTime);
 
-  WriteCompString(Comp, ReachLengthAnnotation);
-  WriteCompString(Comp, StreamSlopeAnnotation);
-  WriteCompString(Comp, StreambedElevationAnnotation);
-  WriteCompString(Comp, StreamBedThicknessAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(ReachLengthAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(StreamSlopeAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(StreambedElevationAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(StreamBedThicknessAnnotation));
+//  WriteCompString(Comp, ReachLengthAnnotation);
+//  WriteCompString(Comp, StreamSlopeAnnotation);
+//  WriteCompString(Comp, StreambedElevationAnnotation);
+//  WriteCompString(Comp, StreamBedThicknessAnnotation);
 
-  WriteCompString(Comp, HydraulicConductivityAnnotation);
-  WriteCompString(Comp, SaturatedWaterContentAnnotation);
-  WriteCompString(Comp, InitialWaterContentAnnotation);
-  WriteCompString(Comp, BrooksCoreyExponentAnnotation);
-  WriteCompString(Comp, VerticalKAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(HydraulicConductivityAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(SaturatedWaterContentAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(InitialWaterContentAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(BrooksCoreyExponentAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(VerticalKAnnotation));
+//  WriteCompString(Comp, HydraulicConductivityAnnotation);
+//  WriteCompString(Comp, SaturatedWaterContentAnnotation);
+//  WriteCompString(Comp, InitialWaterContentAnnotation);
+//  WriteCompString(Comp, BrooksCoreyExponentAnnotation);
+//  WriteCompString(Comp, VerticalKAnnotation);
+end;
+
+procedure TSfrRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(ReachLengthAnnotation);
+  Strings.Add(StreamSlopeAnnotation);
+  Strings.Add(StreambedElevationAnnotation);
+  Strings.Add(StreamBedThicknessAnnotation);
+
+  Strings.Add(HydraulicConductivityAnnotation);
+  Strings.Add(SaturatedWaterContentAnnotation);
+  Strings.Add(InitialWaterContentAnnotation);
+  Strings.Add(BrooksCoreyExponentAnnotation);
+  Strings.Add(VerticalKAnnotation);
 end;
 
 procedure TSfrRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -1540,16 +1571,25 @@ begin
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
 
-  ReachLengthAnnotation := ReadCompString(Decomp, Annotations);
-  StreamSlopeAnnotation := ReadCompString(Decomp, Annotations);
-  StreambedElevationAnnotation := ReadCompString(Decomp, Annotations);
-  StreamBedThicknessAnnotation := ReadCompString(Decomp, Annotations);
+  ReachLengthAnnotation := Annotations[ReadCompInt(Decomp)];
+  StreamSlopeAnnotation := Annotations[ReadCompInt(Decomp)];
+  StreambedElevationAnnotation := Annotations[ReadCompInt(Decomp)];
+  StreamBedThicknessAnnotation := Annotations[ReadCompInt(Decomp)];
+//  ReachLengthAnnotation := ReadCompString(Decomp, Annotations);
+//  StreamSlopeAnnotation := ReadCompString(Decomp, Annotations);
+//  StreambedElevationAnnotation := ReadCompString(Decomp, Annotations);
+//  StreamBedThicknessAnnotation := ReadCompString(Decomp, Annotations);
 
-  HydraulicConductivityAnnotation := ReadCompString(Decomp, Annotations);
-  SaturatedWaterContentAnnotation := ReadCompString(Decomp, Annotations);
-  InitialWaterContentAnnotation := ReadCompString(Decomp, Annotations);
-  BrooksCoreyExponentAnnotation := ReadCompString(Decomp, Annotations);
-  VerticalKAnnotation := ReadCompString(Decomp, Annotations);
+  HydraulicConductivityAnnotation := Annotations[ReadCompInt(Decomp)];
+  SaturatedWaterContentAnnotation := Annotations[ReadCompInt(Decomp)];
+  InitialWaterContentAnnotation := Annotations[ReadCompInt(Decomp)];
+  BrooksCoreyExponentAnnotation := Annotations[ReadCompInt(Decomp)];
+  VerticalKAnnotation := Annotations[ReadCompInt(Decomp)];
+//  HydraulicConductivityAnnotation := ReadCompString(Decomp, Annotations);
+//  SaturatedWaterContentAnnotation := ReadCompString(Decomp, Annotations);
+//  InitialWaterContentAnnotation := ReadCompString(Decomp, Annotations);
+//  BrooksCoreyExponentAnnotation := ReadCompString(Decomp, Annotations);
+//  VerticalKAnnotation := ReadCompString(Decomp, Annotations);
 
 
 end;
@@ -1566,12 +1606,32 @@ procedure TSfrStorage.Store(Compressor: TCompressionStream);
 var
   Index: Integer;
   Count: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FSfrArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FSfrArray[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FSfrArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FSfrArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FSfrArray[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
   end;
 end;
 

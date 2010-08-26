@@ -35,7 +35,7 @@ uses
   frameDe4Unit, JvExComCtrls, JvComCtrls, RequiredDataSetsUndoUnit,
   framePackageHobUnit, framePackageLpfUnit, frameModpathSelectionUnit,
   framePackageHufUnit, HufDefinition, framePackageMnw2Unit, framePackageSubUnit,
-  frameZoneBudgetUnit;
+  frameZoneBudgetUnit, framePackageSwtUnit, framePkgHydmodUnit;
 
 type
   TfrmModflowPackages = class(TfrmCustomGoPhast)
@@ -133,6 +133,10 @@ type
     framePkgSUB: TframePackageSub;
     jvspZoneBudget: TJvStandardPage;
     frameZoneBudget: TframeZoneBudget;
+    jvspSWT: TJvStandardPage;
+    framePkgSwt: TframePackageSwt;
+    jvspHydmod: TJvStandardPage;
+    framePkgHydmod: TframePkgHydmod;
     procedure tvPackagesChange(Sender: TObject; Node: TTreeNode);
     procedure btnOKClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
@@ -210,18 +214,12 @@ type
     { Public declarations }
   end;
 
-  TUndoChangePackageSelection = class(TCustomCreateRequiredDataSetsUndo)
+  TUndoChangePackageSelection = class(TCustomUndoChangeParameters)
   private
     FOldPackages: TModflowPackages;
     FNewPackages: TModflowPackages;
-    FNewSteadyParameters: TModflowSteadyParameters;
-    FOldSteadyParameters: TModflowSteadyParameters;
-    FNewTransientParameters: TModflowTransientListParameters;
-    FOldTransientParameters: TModflowTransientListParameters;
     FOldSfrParameterInstances: TSfrParamInstances;
     FNewSfrParameterInstances: TSfrParamInstances;
-    FOldHufModflowParameters: THufModflowParameters;
-    FNewHufModflowParameters: THufModflowParameters;
     FOldHydroGeologicUnits: THydrogeologicUnits;
     FOldInterBlockTransmissivity: array of integer;
     FOldAquiferType: array of integer;
@@ -530,6 +528,7 @@ var
   NeedToDefineFluxObservations: Boolean;
   ModflowPackages: TModflowPackages;
   SubPackage: TSubPackageSelection;
+  SwtPackage: TSwtPackageSelection;
 begin
   inherited;
   CheckLpfParameters;
@@ -566,6 +565,12 @@ begin
     SubPackage.PrintChoices.ReportErrors;
   end;
 
+  SwtPackage := ModflowPackages.SwtPackage;
+  if SwtPackage.IsSelected then
+  begin
+    SwtPackage.PrintChoices.ReportErrors;
+  end;
+
   if NeedToDefineFluxObservations then
   begin
     Hide;
@@ -578,8 +583,10 @@ begin
     frmGoPhast.miMF_HydrogeologicUnitsClick(nil);
   end;
 
-  if frmGoPhast.PhastModel.ModflowPackages.SubPackage.IsSelected
-    and not frmGoPhast.PhastModel.LayerStructure.SubsidenceDefined then
+  if (frmGoPhast.PhastModel.ModflowPackages.SubPackage.IsSelected
+    and not frmGoPhast.PhastModel.LayerStructure.SubsidenceDefined)
+    or (frmGoPhast.PhastModel.ModflowPackages.SwtPackage.IsSelected
+    and not frmGoPhast.PhastModel.LayerStructure.SwtDefined) then
   begin
     frmGoPhast.acLayersExecute(nil);
   end;
@@ -1309,6 +1316,7 @@ begin
     AddNode(StrSolver, StrSolver, PriorNode);
     AddNode(StrSubSidence, StrSubSidence, PriorNode);
     AddNode(StrObservations, StrObservations, PriorNode);
+    AddNode(StrOutput, StrOutput, PriorNode);
     AddNode(StrPostProcessors, StrPostProcessors, PriorNode);
 
     for Index := 0 to PackageList.Count - 1 do
@@ -1874,7 +1882,7 @@ begin
     Param := SteadyParameters[ParamIndex];
     case Param.ParameterType of
       ptLPF_HK, ptLPF_HANI, ptLPF_VK,
-        ptLPF_VANI, ptLPF_SS, ptLPF_SY, ptLPF_VKCB, ptHUF_LVDA: ;  // do nothing
+        ptLPF_VANI, ptLPF_SS, ptLPF_SY, ptLPF_VKCB, ptHUF_SYTP, ptHUF_LVDA: ;  // do nothing
       ptHFB: ActiveFrame := frameHFBParameterDefinition;
       else Assert(False);
     end;
@@ -2015,6 +2023,9 @@ begin
   Packages.SubPackage.Frame := framePkgSub;
   PackageList.Add(Packages.SubPackage);
 
+  Packages.SwtPackage.Frame := framePkgSwt;
+  PackageList.Add(Packages.SwtPackage);
+
   Packages.HobPackage.Frame := framePkgHOB;
   PackageList.Add(Packages.HobPackage);
 
@@ -2035,6 +2046,9 @@ begin
 
   Packages.ZoneBudget.Frame := frameZoneBudget;
   PackageList.Add(Packages.ZoneBudget);
+
+  Packages.HydmodPackage.Frame := framePkgHydmod;
+  PackageList.Add(Packages.HydmodPackage);
 
 end;
 
@@ -2074,7 +2088,9 @@ var
   Index: Integer;
   LayerGroup: TLayerGroup;
 begin
-  inherited Create;
+  inherited Create(NewSteadyParameters, NewTransientParameters,
+    NewHufModflowParameters);
+
   SetLength(FOldInterBlockTransmissivity, frmGoPhast.PhastModel.LayerStructure.Count);
   SetLength(FOldAquiferType, frmGoPhast.PhastModel.LayerStructure.Count);
   for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
@@ -2091,32 +2107,13 @@ begin
   FNewPackages := TModflowPackages.Create(nil);
   FOldPackages.Assign(frmGoPhast.PhastModel.ModflowPackages);
 
-  FNewSteadyParameters:= NewSteadyParameters;
-  // TUndoDefineLayers takes ownership of NewSteadyParameters.
-  NewSteadyParameters := nil;
-
-  FNewTransientParameters := NewTransientParameters;
-  // TUndoDefineLayers takes ownership of NewTransientParameters.
-  NewTransientParameters := nil;
-
   FNewSfrParameterInstances := SfrParameterInstances;
   // TUndoDefineLayers takes ownership of SfrParameterInstances.
   SfrParameterInstances := nil;
 
-  // TUndoDefineLayers takes ownership of NewHufModflowParameters.
-  FNewHufModflowParameters := NewHufModflowParameters;
-  NewHufModflowParameters := nil;
-
-  FOldSteadyParameters:= TModflowSteadyParameters.Create(nil);
-  FOldSteadyParameters.Assign(frmGoPhast.PhastModel.ModflowSteadyParameters);
-  FOldTransientParameters:= TModflowTransientListParameters.Create(nil);
-  FOldTransientParameters.Assign(frmGoPhast.PhastModel.ModflowTransientParameters);
   FOldSfrParameterInstances := TSfrParamInstances.Create(nil);
   FOldSfrParameterInstances.Assign(
     frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances);
-
-  FOldHufModflowParameters := THufModflowParameters.Create(nil);
-  FOldHufModflowParameters.Assign(frmGoPhast.PhastModel.HufParameters);
 end;
 
 function TUndoChangePackageSelection.Description: string;
@@ -2127,12 +2124,6 @@ end;
 destructor TUndoChangePackageSelection.Destroy;
 begin
   FOldHydroGeologicUnits.Free;
-  FOldHufModflowParameters.Free;
-  FNewHufModflowParameters.Free;
-  FNewSteadyParameters.Free;
-  FOldSteadyParameters.Free;
-  FNewTransientParameters.Free;
-  FOldTransientParameters.Free;
   FOldPackages.Free;
   FNewPackages.Free;
   FOldSfrParameterInstances.Free;
@@ -2142,7 +2133,6 @@ end;
 
 procedure TUndoChangePackageSelection.DoCommand;
 begin
-  inherited;
   frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := False;
   try
     UpdateLayerGroupProperties(FNewPackages.BcfPackage);
@@ -2151,15 +2141,10 @@ begin
     frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := True;
   end;
   frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances := FNewSfrParameterInstances;
-  frmGoPhast.PhastModel.ModflowSteadyParameters.ClearNewDataSets;
-  frmGoPhast.PhastModel.ModflowSteadyParameters := FNewSteadyParameters;
-  frmGoPhast.PhastModel.ModflowSteadyParameters.RemoveOldDataSetVariables;
-  frmGoPhast.PhastModel.ModflowTransientParameters := FNewTransientParameters;
-  frmGoPhast.PhastModel.ModflowSteadyParameters.NewDataSets := nil;
-  frmGoPhast.PhastModel.HufParameters := FNewHufModflowParameters;
-  UpdatedRequiredDataSets;
+  inherited;
   frmGoPhast.EnableLinkStreams;
-  frmGoPhast.EnableManageObservations;
+  frmGoPhast.EnableManageFlowObservations;
+  frmGoPhast.EnableManageHeadObservations;
   frmGoPhast.EnableHufMenuItems;
 end;
 
@@ -2168,7 +2153,6 @@ var
   Index: Integer;
   LayerGroup: TLayerGroup;
 begin
-  inherited;
   frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := False;
   try
     for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
@@ -2182,17 +2166,12 @@ begin
     frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := True;
   end;
   frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances := FOldSfrParameterInstances;
-  frmGoPhast.PhastModel.ModflowSteadyParameters  := FOldSteadyParameters;
-  frmGoPhast.PhastModel.ModflowSteadyParameters.RemoveNewDataSets;
-  frmGoPhast.PhastModel.ModflowSteadyParameters.RemoveOldDataSetVariables;
-  frmGoPhast.PhastModel.ModflowTransientParameters := FOldTransientParameters;
-  frmGoPhast.PhastModel.ModflowSteadyParameters.NewDataSets := nil;
-  frmGoPhast.PhastModel.HufParameters := FOldHufModflowParameters;
+  inherited;
   frmGoPhast.PhastModel.HydrogeologicUnits.Assign(FOldHydroGeologicUnits);
-  UpdatedRequiredDataSets;
   frmGoPhast.EnableLinkStreams;
   frmGoPhast.EnableHufMenuItems;
-  frmGoPhast.EnableManageObservations;
+  frmGoPhast.EnableManageFlowObservations;
+  frmGoPhast.EnableManageHeadObservations;
 end;
 
 procedure TUndoChangePackageSelection.UpdateLayerGroupProperties(BcfPackage: TModflowPackageSelection);

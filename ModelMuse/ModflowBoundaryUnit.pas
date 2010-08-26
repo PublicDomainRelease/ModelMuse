@@ -148,6 +148,9 @@ type
     // See @link(Items).
     function GetItem(Index: Integer): TCustomModflowBoundaryItem;
   protected
+    // @name is the @link(TScreenObject) for this boundary.
+    // @name provides access to @link(TCustomModflowBoundaryItem) representing
+    // the boundary conditions for different time periods.
     property ScreenObject: TObject read FScreenObject;
     // @name is the @link(TModflowBoundary) that owns @classname.
     property BoundaryGroup: TModflowBoundary read FBoundary;
@@ -233,9 +236,6 @@ type
     // @name is used to set the capacity of @link(FBoundaries)
     // before calling @link(AddBoundary).
     procedure SetBoundaryCapacity(Value: integer);
-    // @name frees all the @link(TCustomBoundaryStorage) owned by
-    // @classname.
-    procedure ClearBoundaries;
     // @name sets the @link(TCustomBoundaryStorage.StartingTime
     // TCustomBoundaryStorage.StartingTime) and
     // @link(TCustomBoundaryStorage.StartingTime
@@ -250,11 +250,11 @@ type
     // for the item in @link(Boundaries) at ItemIndex.
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); virtual;
-
-  // @name is the @link(TScreenObject) for this boundary.
-  // @name provides access to @link(TCustomModflowBoundaryItem) representing
-  // the boundary conditions for different time periods.
+    procedure ClearTimeLists;
   public
+    // @name frees all the @link(TCustomBoundaryStorage) owned by
+    // @classname.
+    procedure ClearBoundaries;
     // @name copies @link(ParamName) from Source and calls inherited Assign.
     procedure Assign(Source: TPersistent);override;
     // @name provides access to @link(TCustomBoundaryStorage) for different
@@ -490,8 +490,20 @@ type
   TModflowParametersClass = class of TModflowParameters;
 
   TModflowScreenObjectProperty = class(TPersistent)
+  protected
+    // See @link(PhastModel).
+    FPhastModel: TObject;
+    // See @link(ScreenObject).
+    FScreenObject: TObject;
+    procedure InvalidateModel;
   public
     function Used: boolean; virtual; abstract;
+    // @name is either nil or the the current @link(TPhastModel).
+    property PhastModel: TObject read FPhastModel;
+    // @name is either @nil or the @link(TScreenObject) that owns
+    // this @classname.
+    property ScreenObject: TObject read FScreenObject;
+    Constructor Create(Model, ScreenObject: TObject);
   end;
 
   // @name represents the MODFLOW boundaries associated with
@@ -499,10 +511,6 @@ type
   // @seealso(TCustomMF_BoundColl)
   TModflowBoundary = class(TModflowScreenObjectProperty)
   private
-    // See @link(PhastModel).
-    FPhastModel: TObject;
-    // See @link(ScreenObject).
-    FScreenObject: TObject;
 
     // See @link(Values).
     FValues: TCustomMF_BoundColl;
@@ -513,7 +521,6 @@ type
   protected
     procedure AddBoundaryTimes(BoundCol: TCustomNonSpatialBoundColl;
       Times: TRealList); virtual;
-    procedure InvalidateModel;
     // In descendants, @name fills ValueTimeList with a series of TObjectLists
     // - one for
     // each stress period.  Each such TObjectList is filled with
@@ -525,7 +532,9 @@ type
     // @name is used in @link(Create) to create @link(FValues).
     class function BoundaryCollectionClass: TMF_BoundCollClass;
       virtual; abstract;
+    procedure ClearBoundaries; virtual;
   public
+    procedure ClearTimeLists; virtual;
     procedure Assign(Source: TPersistent); override;
     // @name creates an instance of @classname.
     Constructor Create(Model, ScreenObject: TObject);
@@ -553,11 +562,6 @@ type
     // Those represent parameter boundary conditions.
     procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
       virtual; abstract;
-    // @name is either nil or the the current @link(TPhastModel).
-    property PhastModel: TObject read FPhastModel;
-    // @name is either @nil or the @link(TScreenObject) that owns
-    // this @classname.
-    property ScreenObject: TObject read FScreenObject;
 
     function NonParameterColumns: integer; virtual;
     procedure UpdateTimes(Times: TRealList); virtual;
@@ -584,7 +588,9 @@ type
     class function ModflowParamItemClass: TModflowParamItemClass;
       virtual; abstract;
     function ParameterType: TParameterType; virtual; abstract;
+    procedure ClearBoundaries; override;
   public
+    procedure ClearTimeLists; override;
     // @name copies @link(Values) and @link(Parameters) from the Source
     // @classname to this @classname.
     procedure Assign(Source: TPersistent); override;
@@ -645,7 +651,7 @@ implementation
 
 uses Math, Contnrs, ScreenObjectUnit, PhastModelUnit, ModflowGridUnit,
   frmFormulaErrorsUnit, frmGoPhastUnit, SparseArrayUnit, GlobalVariablesUnit,
-  GIS_Functions, IntListUnit;
+  GIS_Functions, IntListUnit, ModflowCellUnit, frmProgressUnit;
 
 function SortBoundaryItems(Item1, Item2: pointer): integer;
 var
@@ -859,6 +865,16 @@ end;
 procedure TCustomMF_BoundColl.ClearBoundaries;
 begin
   FBoundaries.Clear;
+end;
+
+procedure TCustomMF_BoundColl.ClearTimeLists;
+var
+  Index: Integer;
+begin
+  for Index := 0 to TimeListCount - 1 do
+  begin
+    TimeLists[Index].Clear;
+  end;
 end;
 
 constructor TCustomMF_BoundColl.Create(Boundary: TModflowBoundary;
@@ -1585,6 +1601,10 @@ var
   Time1: Double;
   Time2: Double;
 begin
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
   if UpToDate then
     Exit;
 
@@ -1606,6 +1626,10 @@ begin
 
     for Index := 0 to Length(BoundaryValues) - 1 do
     begin
+      if not frmProgress.ShouldContinue then
+      begin
+        Exit;
+      end;
       Time := BoundaryValues[Index].Time;
       Formula := BoundaryValues[Index].Formula;
       DataArray := nil;
@@ -1968,6 +1992,32 @@ begin
   Parameters.Clear;
 end;
 
+procedure TModflowParamBoundary.ClearBoundaries;
+var
+  Index: Integer;
+  ParamItem: TModflowParamItem;
+begin
+  inherited;
+  for Index := 0 to Parameters.Count - 1 do
+  begin
+    ParamItem := Parameters[Index];
+    ParamItem.Param.ClearBoundaries;
+  end;
+end;
+
+procedure TModflowParamBoundary.ClearTimeLists;
+var
+  Index: Integer;
+  ParamItem: TModflowParamItem;
+begin
+  inherited;
+  for Index := 0 to Parameters.Count - 1 do
+  begin
+    ParamItem := Parameters[Index];
+    ParamItem.Param.ClearTimeLists;
+  end;
+end;
+
 constructor TModflowParamBoundary.Create(Model, ScreenObject: TObject);
 begin
   inherited Create(Model, ScreenObject);
@@ -2079,12 +2129,23 @@ begin
   Values.Clear;
 end;
 
+procedure TModflowBoundary.ClearBoundaries;
+begin
+  FValues.ClearBoundaries;
+end;
+
+procedure TModflowBoundary.ClearTimeLists;
+begin
+  Values.ClearTimeLists;
+end;
+
 constructor TModflowBoundary.Create(Model, ScreenObject: TObject);
 begin
-  Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
-  FScreenObject := ScreenObject;
-  Assert((Model = nil) or (Model is TPhastModel));
-  FPhastModel := Model;
+  inherited;
+//  Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
+//  FScreenObject := ScreenObject;
+//  Assert((Model = nil) or (Model is TPhastModel));
+//  FPhastModel := Model;
   FValues:= BoundaryCollectionClass.Create(self, Model,
     ScreenObject);
 end;
@@ -2113,16 +2174,6 @@ end;
 procedure TModflowBoundary.InvalidateDisplay;
 begin
   // do nothing
-end;
-
-procedure TModflowBoundary.InvalidateModel;
-begin
-  if (ScreenObject <> nil)
-      and (ScreenObject as TScreenObject).CanInvalidateModel
-      and (FPhastModel <> nil) then
-  begin
-    (FPhastModel as TPhastModel).Invalidate
-  end;
 end;
 
 procedure TModflowBoundary.SetValues(const Value: TCustomMF_BoundColl);
@@ -2213,9 +2264,7 @@ constructor TCustomNonSpatialBoundColl.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(ItemClass, Model);
-//  FTimeLists := TList.Create;
   FBoundary := Boundary;
-//  FBoundaries:= TObjectList.Create;
   Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
   FScreenObject := ScreenObject;
 end;
@@ -2311,6 +2360,8 @@ var
   DecompressionStream: TDecompressionStream;
   Annotations: TStringList;
   MemStream: TMemoryStream;
+  Count: Integer;
+  Index: Integer;
 begin
   Assert(FCached);
   Assert(FCleared);
@@ -2318,10 +2369,17 @@ begin
   MemStream := TMemoryStream.Create;
   try
     ExtractAFile(FTempFileName, MemStream);
-//    MemStream.Position := 0;
     DecompressionStream := TDecompressionStream.Create(MemStream);
     try
       Annotations.Sorted := True;
+      Annotations.Duplicates := dupIgnore;
+      DecompressionStream.Read(Count, SizeOf(Count));
+      Annotations.Capacity := Count;
+      for Index := 0 to Count - 1 do
+      begin
+        Annotations.Add(ReadCompStringSimple(DecompressionStream));
+      end;
+
       Restore(DecompressionStream, Annotations);
     finally
       DecompressionStream.Free;
@@ -2335,7 +2393,6 @@ end;
 
 procedure TCustomBoundaryStorage.CacheData;
 var
-//  TempFile: TTempFileStream;
   MemStream: TMemoryStream;
   Compressor: TCompressionStream;
 begin
@@ -2347,12 +2404,9 @@ begin
     end;
     MemStream:= TMemoryStream.Create;
     try
-//    TempFile := TTempFileStream.Create(FTempFileName, fmOpenReadWrite);
-//    Compressor := TCompressionStream.Create(clDefault, TempFile);
       Compressor := TCompressionStream.Create(clDefault, MemStream);
       try
         MemStream.Position := 0;
-  //      TempFile.Position := 0;
         Store(Compressor);
       finally
         Compressor.Free;
@@ -2361,9 +2415,7 @@ begin
       ZipAFile(FTempFileName, MemStream);
     finally
       MemStream.Free;
-//      TempFile.Free;
     end;
-//    ZipAFile(FTempFileName);
     FCached := True;
   end;
   Clear;
@@ -2509,6 +2561,27 @@ begin
   result.AddSubscriptionEvents(
     GlobalRemoveModflowBoundarySubscription,
     GlobalRestoreModflowBoundarySubscription, self);
+end;
+
+{ TModflowScreenObjectProperty }
+
+constructor TModflowScreenObjectProperty.Create(Model, ScreenObject: TObject);
+begin
+  inherited Create;
+  Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
+  FScreenObject := ScreenObject;
+  Assert((Model = nil) or (Model is TPhastModel));
+  FPhastModel := Model;
+end;
+
+procedure TModflowScreenObjectProperty.InvalidateModel;
+begin
+  if (ScreenObject <> nil)
+      and (ScreenObject as TScreenObject).CanInvalidateModel
+      and (FPhastModel <> nil) then
+  begin
+    (FPhastModel as TPhastModel).Invalidate
+  end;
 end;
 
 end.

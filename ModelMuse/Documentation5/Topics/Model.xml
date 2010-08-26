@@ -8,7 +8,7 @@
     </header>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The items under </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Model</text><text styleclass="Normal" translate="true"> are used to select the model that is being edited (MODFLOW or PHAST) and to set options specific to a particular model (Table 13). &#160;The commands under this menu are used to change whether MODFLOW for PHAST is active and to specify data that is specific to a particular model.</text></para>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 13. Model Menu</text></para>
-    <para styleclass="Normal" style="text-align:center;"><table rowcount="25" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal" style="text-align:center;"><table rowcount="27" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td style="vertical-align:top; width:387px;">
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Menu Item</text></para>
@@ -101,6 +101,22 @@
         </td>
         <td style="vertical-align:top; width:485px;">
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Display the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Link_Streams_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Link Streams dialog box</link><text styleclass="Table Cell" translate="true"> is used to change the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Network_Tab" anchor="OUTSEG" styleclass="Table Cell" style="font-weight:bold;" translate="true">Outflow segment</link><text styleclass="Table Cell" translate="true"> of SFR segments to the number of the nearest stream or lake to the downstream end of the segment being edited. </text><text styleclass="Normal" translate="true">&#32;</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top; width:387px;">
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Manage Parameters...</text></para>
+        </td>
+        <td style="vertical-align:top; width:485px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Display the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Manage_Parameters_Dialog_Box" styleclass="Strong" translate="true">Manage Parameters</link><text styleclass="Table Cell" translate="true"> dialog box which is used to create, delete, or change the name, type or value of MODFLOW parameters. &#160;(This can also be done in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MODFLOW_Packages_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">MODFLOW Packages and Programs</link><text styleclass="Table Cell" translate="true"> dialog box.)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top; width:387px;">
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Manage Head Observations...</text></para>
+        </td>
+        <td style="vertical-align:top; width:485px;">
+          <para styleclass="Table Cell"></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

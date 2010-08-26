@@ -48,6 +48,9 @@ implementation
 uses ModflowUnitNumbers, ScreenObjectUnit, DataSetUnit,
   frmErrorsAndWarningsUnit, frmProgressUnit;
 
+const
+  ObsNameWarning = 'The following Head observation names may be valid for MODFLOW but they are not valid for UCODE.';
+
 { TModflowHobWriter }
 
 constructor TModflowHobWriter.Create(Model: TPhastModel);
@@ -87,6 +90,7 @@ begin
   NH := 0;
   MOBS := 0;
   MAXM := 2;
+  frmErrorsAndWarnings.RemoveWarningGroup(ObsNameWarning);
   frmErrorsAndWarnings.RemoveWarningGroup(HeadOffGrid);
   frmErrorsAndWarnings.RemoveErrorGroup(NoHeads);
   frmErrorsAndWarnings.RemoveErrorGroup(InvalidStartObsTime);
@@ -655,6 +659,7 @@ var
   TOFFSET: Double;
   Item: THobItem;
   ObservationTimeCount: Integer;
+  ScreenObject: TScreenObject;
 begin
   if CellList.Count = 0 then
   begin
@@ -662,6 +667,12 @@ begin
   end;
   Cell := CellList[0];
   OBSNAM := Observations.ObservationName;
+  if not UcodeObsNameOK(OBSNAM) then
+  begin
+    ScreenObject := Observations.ScreenObject as TScreenObject;
+    frmErrorsAndWarnings.AddWarning(ObsNameWarning, OBSNAM
+      + ' defined by object ' + ScreenObject.Name);
+  end;
   if CellList.Count > 1 then
   begin
     LAYER := -CellList.Count;

@@ -82,6 +82,7 @@ type
     FvstModflowMnw2Node: PVirtualNode;
     FvstModflowGhbNode: PVirtualNode;
     FvstModflowUzfNode: PVirtualNode;
+    FvstModflowHydmodNode: PVirtualNode;
     // @name holds a PVirtualNode for each @link(TScreenObject)
     // that specifies a PHAST specified head boundary.
     FvstSpecifiedHeadNode: PVirtualNode;
@@ -130,6 +131,7 @@ type
     FHobList: TList;
     FDrnList: TList;
     FRivList: TList;
+    FHydmodList: TList;
     // @name holds a list of all the @link(TScreenObject)s.
     FAllObjectsList: TList;
     FLakList: TList;
@@ -197,8 +199,8 @@ type
     // @link(FvstWellNode), and
     // @link(FvstOtherObjectsNode), etc. to nil.
     procedure NilBaseNodes;
-    procedure HandleChecked(AScreenObject: TScreenObject);virtual; abstract;
-    procedure HandleUnchecked(AScreenObject: TScreenObject);virtual; abstract;
+    procedure HandleChecked(AScreenObject: TScreenObject); virtual; abstract;
+    procedure HandleUnchecked(AScreenObject: TScreenObject); virtual; abstract;
     procedure HandleChildren(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure SetCanEdit(const Value: boolean); virtual;
     // @name sorts the lists of @link(TScreenObject)s in a modified
@@ -434,6 +436,11 @@ begin
     else if Node = FvstModpathRoot then
     begin
       Data.Caption := Packages.ModPath.PackageIdentifier;
+      Node.CheckType := ctTriStateCheckBox;
+    end
+    else if Node = FvstModflowHydmodNode then
+    begin
+      Data.Caption := Packages.HydmodPackage.PackageIdentifier;
       Node.CheckType := ctTriStateCheckBox;
     end;
 
@@ -814,6 +821,12 @@ begin
       InitializeData(FvstModflowEtsNode);
     end;
 
+    if (AScreenObject.ModflowHydmodData <> nil)
+      and AScreenObject.ModflowHydmodData.Used then
+    begin
+      InitializeData(FvstModflowHydmodNode);
+    end;
+
     if (AScreenObject.ModflowSfrBoundary <> nil)
       and AScreenObject.ModflowSfrBoundary.Used then
     begin
@@ -918,6 +931,7 @@ begin
   vstCheckDeleteNode(FvstModflowResNode);
   vstCheckDeleteNode(FvstModflowEvtNode);
   vstCheckDeleteNode(FvstModflowEtsNode);
+  vstCheckDeleteNode(FvstModflowHydmodNode);
   vstCheckDeleteNode(FvstModflowSfrNode);
   vstCheckDeleteNode(FvstModflowGagNode);
   vstCheckDeleteNode(FvstModflowUzfNode);
@@ -1189,10 +1203,11 @@ begin
   InitializeMF_BoundaryNode(FvstModflowEtsNode, PriorNode, FEtsList);
   InitializeMF_BoundaryNode(FvstModflowEvtNode, PriorNode, FEvtList);
   InitializeMF_BoundaryNode(FvstModflowGhbNode, PriorNode, FGhbList);
+
+  InitializeMF_BoundaryNode(FvstModflowHydmodNode, PriorNode, FHydmodList);
+
   InitializeMF_BoundaryNode(FvstModflowLakNode, PriorNode, FLakList);
-
   InitializeMF_BoundaryNode(FvstModflowMnw2Node, PriorNode, FMnw2List);
-
   InitializeMF_BoundaryNode(FvstModflowRchNode, PriorNode, FRchList);
   InitializeMF_BoundaryNode(FvstModflowResNode, PriorNode, FResList);
   InitializeMF_BoundaryNode(FvstModflowRivNode, PriorNode, FRivList);
@@ -1309,6 +1324,7 @@ begin
   FWellList.Free;
   FChdList.Free;
   FGhbList.Free;
+  FHydmodList.Free;
   FLakList.Free;
   FMnw2List.Free;
   FMfWellList.Free;
@@ -1346,6 +1362,7 @@ begin
   FWellList:= TList.Create;
   FChdList := TList.Create;
   FGhbList := TList.Create;
+  FHydmodList := TList.Create;
   FLakList := TList.Create;
   FMnw2List := TList.Create;
   FMfWellList := TList.Create;
@@ -1395,6 +1412,7 @@ begin
   FvstOtherObjectsNode := nil;
   FvstModflowChdNode := nil;
   FvstModflowGhbNode := nil;
+  FvstModflowHydmodNode := nil;
   FvstModflowLakNode := nil;
   FvstModflowMnw2Node := nil;
   FvstModflowWellNode := nil;
@@ -1494,6 +1512,7 @@ begin
 
   FChdList.Sort(ScreenObjectCompare);
   FGhbList.Sort(ScreenObjectCompare);
+  FHydmodList.Sort(ScreenObjectCompare);
   FLakList.Sort(ScreenObjectCompare);
   FMnw2List.Sort(ScreenObjectCompare);
   FMfWellList.Sort(ScreenObjectCompare);

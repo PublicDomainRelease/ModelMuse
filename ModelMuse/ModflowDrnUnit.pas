@@ -15,8 +15,9 @@ type
     EndingTime: double;
     ConductanceAnnotation: string;
     ElevationAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList);
   end;
 
   TDrnArray = array of TDrnRecord;
@@ -141,14 +142,16 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property Conductance: double read GetConductance;
     property Elevation: double read GetElevation;
     property ConductanceAnnotation: string read GetConductanceAnnotation;
     property ElevationAnnotation: string read GetElevationAnnotation;
+    function IsIdentical(AnotherCell: TValueCell): boolean; override;
   end;
 
   // @name represents the MODFLOW Drain boundaries associated with
@@ -573,10 +576,10 @@ begin
   Assert(False);
 end;
 
-procedure TDrn_Cell.Cache(Comp: TCompressionStream);
+procedure TDrn_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -628,6 +631,27 @@ end;
 function TDrn_Cell.GetSection: integer;
 begin
   result := Values.Cell.Section;
+end;
+
+function TDrn_Cell.IsIdentical(AnotherCell: TValueCell): boolean;
+var
+  DRN_Cell: TDrn_Cell;
+begin
+  result := AnotherCell is TDrn_Cell;
+  if result then
+  begin
+    DRN_Cell := TDrn_Cell(AnotherCell);
+    result :=
+      (Conductance = DRN_Cell.Conductance)
+      and (Elevation = DRN_Cell.Elevation)
+      and (IFace = DRN_Cell.IFace);
+  end;
+end;
+
+procedure TDrn_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
 end;
 
 procedure TDrn_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -848,15 +872,23 @@ end;
 
 { TDrnRecord }
 
-procedure TDrnRecord.Cache(Comp: TCompressionStream);
+procedure TDrnRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompReal(Comp, Conductance);
   WriteCompReal(Comp, Elevation);
   WriteCompReal(Comp, StartingTime);
   WriteCompReal(Comp, EndingTime);
-  WriteCompString(Comp, ConductanceAnnotation);
-  WriteCompString(Comp, ElevationAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(ConductanceAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(ElevationAnnotation));
+//  WriteCompString(Comp, ConductanceAnnotation);
+//  WriteCompString(Comp, ElevationAnnotation);
+end;
+
+procedure TDrnRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(ConductanceAnnotation);
+  Strings.Add(ElevationAnnotation);
 end;
 
 procedure TDrnRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -866,8 +898,10 @@ begin
   Elevation := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  ConductanceAnnotation := ReadCompString(Decomp, Annotations);
-  ElevationAnnotation := ReadCompString(Decomp, Annotations);
+  ConductanceAnnotation := Annotations[ReadCompInt(Decomp)];
+  ElevationAnnotation := Annotations[ReadCompInt(Decomp)];
+//  ConductanceAnnotation := ReadCompString(Decomp, Annotations);
+//  ElevationAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TDrnStorage }
@@ -882,12 +916,32 @@ procedure TDrnStorage.Store(Compressor: TCompressionStream);
 var
   Index: Integer;
   Count: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FDrnArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FDrnArray[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FDrnArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FDrnArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FDrnArray[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
   end;
 end;
 

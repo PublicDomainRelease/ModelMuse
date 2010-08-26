@@ -35,8 +35,6 @@ type
     procedure rdgSubBedStateChange(Sender: TObject; ACol, ARow: Integer;
       const Value: TCheckBoxState);
   private
-//    FOnDeleteRow: TChangeCountEvent;
-//    FOnInsertRow: TChangeCountEvent;
     FOldCount: Integer;
     FOnGetSelectedSubLayers: TGetSelectedSubLayers;
     FOnGetNewName: TGetNewName;

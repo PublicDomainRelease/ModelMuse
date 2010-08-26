@@ -38,6 +38,8 @@ type
     FBcfPackage: TModflowPackageSelection;
     FSubPackage: TSubPackageSelection;
     FZoneBudget: TZoneBudgetSelect;
+    FSwtPackage: TSwtPackageSelection;
+    FHydmodPackage: THydPackageSelection;
     procedure SetChdBoundary(const Value: TChdPackage);
     procedure SetLpfPackage(const Value: TLpfSelection);
     procedure SetPcgPackage(const Value: TPcgSelection);
@@ -68,6 +70,8 @@ type
     procedure SetBcfPackage(const Value: TModflowPackageSelection);
     procedure SetSubPackage(const Value: TSubPackageSelection);
     procedure SetZoneBudget(const Value: TZoneBudgetSelect);
+    procedure SetSwtPackage(const Value: TSwtPackageSelection);
+    procedure SetHydmodPackage(const Value: THydPackageSelection);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TObject);
@@ -128,6 +132,10 @@ type
       read FSubPackage write SetSubPackage;
     property ZoneBudget: TZoneBudgetSelect
       read FZoneBudget write SetZoneBudget;
+    property SwtPackage: TSwtPackageSelection
+      read FSwtPackage write SetSwtPackage;
+    property HydmodPackage: THydPackageSelection
+      read FHydmodPackage write SetHydmodPackage;
     // Assign, Create, Destroy, SelectedPackageCount
     // and Reset must be updated each time a new package is added.
   end;
@@ -147,7 +155,8 @@ const
   StrSFR_Identifier = 'SFR: Stream-Flow Routing package';
   StrObservations = 'Observations';
   StrPostProcessors = 'Post processors';
-//  StrFlowFeature = 'Flow Feature';
+  StrSubsidence = 'Subsidence';
+  StrOutput = 'Output';
 
 implementation
 
@@ -193,6 +202,8 @@ begin
     BcfPackage := SourcePackages.BcfPackage;
     SubPackage := SourcePackages.SubPackage;
     ZoneBudget := SourcePackages.ZoneBudget;
+    SwtPackage := SourcePackages.SwtPackage;
+    HydmodPackage := SourcePackages.HydmodPackage;
   end
   else
   begin
@@ -335,17 +346,29 @@ begin
 
   FSubPackage := TSubPackageSelection.Create(Model);
   FSubPackage.PackageIdentifier := 'SUB: Subsidence and Aquifer-System Compaction Package';
-  FSubPackage.Classification := 'Subsidence';
+  FSubPackage.Classification := StrSubsidence;
   FSubPackage.SelectionType := stCheckBox;
+
+  FSwtPackage := TSwtPackageSelection.Create(Model);
+  FSwtPackage.PackageIdentifier := 'SWT: Subsidence and Aquifer-System Compaction Package for Water-Table Aquifers';
+  FSwtPackage.Classification := StrSubsidence;
+  FSwtPackage.SelectionType := stCheckBox;
 
   FZoneBudget := TZoneBudgetSelect.Create(Model);
   FZoneBudget.PackageIdentifier := 'ZONEBUDGET';
   FZoneBudget.Classification := StrPostProcessors;
   FZoneBudget.SelectionType := stCheckBox;
+
+  FHydmodPackage := THydPackageSelection.Create(Model);
+  FHydmodPackage.PackageIdentifier := 'HYD: HYDMOD Package';
+  FHydmodPackage.Classification := StrOutput;
+  FHydmodPackage.SelectionType := stCheckBox;
 end;
 
 destructor TModflowPackages.Destroy;
 begin
+  FHydmodPackage.Free;
+  FSwtPackage.Free;
   FZoneBudget.Free;
   FSubPackage.Free;
   FBcfPackage.Free;
@@ -410,6 +433,8 @@ begin
   BcfPackage.IsSelected := False;
   SubPackage.IsSelected := False;
   ZoneBudget.IsSelected := False;
+  SwtPackage.IsSelected := False;
+  HydmodPackage.IsSelected := False;
 
   DrtPackage.Comments.Clear;
   DrnPackage.Comments.Clear;
@@ -440,6 +465,8 @@ begin
   BcfPackage.Comments.Clear;
   SubPackage.Comments.Clear;
   ZoneBudget.Comments.Clear;
+  SwtPackage.Comments.Clear;
+  HydmodPackage.Comments.Clear;
 
   PcgPackage.InitializeVariables;
   GmgPackage.InitializeVariables;
@@ -450,6 +477,8 @@ begin
   HufPackage.InitializeVariables;
   SubPackage.InitializeVariables;
   ZoneBudget.InitializeVariables;
+  SwtPackage.InitializeVariables;
+  HydmodPackage.InitializeVariables;
 end;
 
 function TModflowPackages.SelectedPackageCount: integer;
@@ -581,10 +610,20 @@ begin
   begin
     Inc(Result);
   end;
-  if ZoneBudget.IsSelected then
+  if SwtPackage.IsSelected then
   begin
     Inc(Result);
   end;
+  if HydmodPackage.IsSelected then
+  begin
+    Inc(Result);
+  end;
+
+  // Don't count ZoneBudget because it is exported seperately from MODFLOW.
+//  if ZoneBudget.IsSelected then
+//  begin
+//    Inc(Result);
+//  end;
 end;
 
 procedure TModflowPackages.SetBcfPackage(const Value: TModflowPackageSelection);
@@ -667,6 +706,11 @@ begin
   FHufPackage.Assign(Value);
 end;
 
+procedure TModflowPackages.SetHydmodPackage(const Value: THydPackageSelection);
+begin
+  FHydmodPackage.Assign(Value);
+end;
+
 procedure TModflowPackages.SetLakPackage(const Value: TLakePackageSelection);
 begin
   FLakPackage.Assign(Value);
@@ -735,6 +779,11 @@ end;
 procedure TModflowPackages.SetSubPackage(const Value: TSubPackageSelection);
 begin
   FSubPackage.Assign(Value);
+end;
+
+procedure TModflowPackages.SetSwtPackage(const Value: TSwtPackageSelection);
+begin
+  FSwtPackage.Assign(Value);
 end;
 
 procedure TModflowPackages.SetUzfPackage(const Value: TUzfPackageSelection);

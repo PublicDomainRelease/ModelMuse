@@ -37,7 +37,8 @@ uses ModflowGridUnit, AbstractGridUnit, ScreenObjectUnit, GoPhastTypes,
   ModflowSfrEquationUnit, ModflowSfrSegment, ModflowSfrUnsatSegment, 
   ModflowHobUnit, ModflowHfbUnit, ModflowLakUnit, ModflowDrtUnit, 
   ModflowEtsUnit, ModflowResUnit, ModflowUzfUnit, ModflowGageUnit, 
-  HufDefinition, FluxObservationUnit, ModflowMnw2Unit, ModflowSubsidenceDefUnit;
+  HufDefinition, FluxObservationUnit, ModflowMnw2Unit, ModflowSubsidenceDefUnit,
+  ModflowHydmodUnit;
 
 resourcestring
   StrHydCondAlongRows = 'HYD. COND. ALONG ROWS';
@@ -89,6 +90,17 @@ resourcestring
   StrDELAYPRECOLSOLHEA = 'DELAY PRECOLSOL. HEAD';
   StrDELAYINITIALCOMPAC = 'DELAY INITIAL COMPACTION';
   StrDELAYINTERBEDTHICK = 'DELAY INTERBED THICKNESS';
+  StrMF_GEOSTATICSTRESS = 'GEOSTATIC STRESS';
+  StrMOISTSPECIFICGRAVI = 'MOIST SPECIFIC GRAVITY';
+  StrSATSPECIFICGRAVIT = 'SAT. SPECIFIC GRAVITY';
+  StrSILTANDCLAYTHICKN = 'SILT AND CLAY THICKNESS';
+  StrELASTICSPECIFICSTO = 'ELASTIC SPECIFIC STORAGE';
+  StrRECOMPRESSIONINDEX = 'RECOMPRESSION INDEX';
+  StrINELASSPECIFICSTO = 'INELAS. SPECIFIC STORAGE';
+  StrCOMPRESSIONINDEX = 'COMPRESSION INDEX';
+  StrVOIDRATIO = 'VOID RATIO';
+  StrPRECONSOLSTRESS = 'PRECONSOL.   STRESS';
+  StrNDSys = 'ND_Sys';
 
 const
   StrConstant1DRealArray = 'CONSTANT 1D REAL ARRAY:';
@@ -324,6 +336,11 @@ Type
 
   TArrayImporter = class(TPackageImporter)
   protected
+    procedure GetTimeStepStartAndEndTimes(TimeStepEndLists: TList; TimeStepStartLists: TList);
+    procedure Import2DDataSet(ImportName, ImportArrayName: string;
+      const TwoDConstRecord: TRealConstantRecord;
+      const TwoDRealArray: T2DDoubleArray;
+      const LayerFormulaSuffix: string = '');
     procedure InitializeConstArray(ConstArray: TRealConstantRecordArray);
     procedure InitializeConstIntArray(ConstArray: TIntegerConstantArray);
     procedure ImportDataSet(ImportName: string; ImportArrayName: string;
@@ -891,6 +908,12 @@ Type
       CellList: TList);
     function ParameterType: TParameterType; virtual; abstract;
     procedure ReleaseMemory;
+    procedure HandleNonParamLocation(StressPeriodIndex: Integer;
+      Boundary: TLocation); virtual;
+    procedure HandleParamLocation(UsedStressPeriods: TIntegerList;
+      Boundary: TLocation); virtual;
+//    procedure HandleNonParamLocation; virtual;
+//    procedure HandleParamLocation; virtual;
   public
     Constructor Create(Importer: TModflow2005Importer;
       const PackageIdentifier: string);
@@ -1035,6 +1058,7 @@ Type
     procedure ReadConstantIboundForLayer;
     procedure ReleaseMemory;
   private
+    FInitialCHDLocations: array of array of array of boolean;
     procedure ImportSpecifiedHeads;
   protected
     procedure ReadData(const ALabel: string); override;
@@ -1050,6 +1074,7 @@ Type
     MXACTC: integer;
     FChdPackage: TModflowPackageSelection;
     FReadData: Boolean;
+    FBasImporter: TBasImporter;
     function CreateScreenObject(List: TList;
       var ScreenObjectIndex: Integer; LayerIndex,
       StressPeriodIndex: integer): TScreenObject; override;
@@ -1061,8 +1086,13 @@ Type
   protected
     procedure ReadData(const ALabel: string); override;
     procedure HandlePackage; override;
+    procedure HandleNonParamLocation(StressPeriodIndex: Integer;
+      Boundary: TLocation); override;
+    procedure HandleParamLocation(UsedStressPeriods: TIntegerList;
+      Boundary: TLocation); override;
   public
-    Constructor Create(Importer: TModflow2005Importer);
+    Constructor Create(Importer: TModflow2005Importer;
+      BasImporter: TBasImporter);
     Destructor Destroy; override;
   end;
 
@@ -1810,6 +1840,8 @@ Type
     NUMTIM: integer;
     WEIGHT: double;
     FLWTOL: double;
+    FSegmentStorage: TList;
+    FItemStorage: TList;
     procedure ReadBasicData;
     procedure ReadIsfropt;
     procedure ReadUnsatParameters;
@@ -2629,6 +2661,155 @@ Type
     Destructor Destroy; override;
   end;
 
+  TSwtPrintRecord = record
+    ISP1: integer;
+    ISP2: integer;
+    ITS1: integer;
+    ITS2: integer;
+    Ifl: array[0..25] of integer;
+  end;
+
+  TSwtPrintRecordArray = array of TSwtPrintRecord;
+
+  TSwtImporter = class(TArrayImporter)
+  private
+    FInterBeds: TSubLayerAssignments;
+    ICRCC: Integer;
+    ISTPCS: Integer;
+    IVOID: Integer;
+    ITHK: Integer;
+    NSYSTM: Integer;
+    ISWTOC: Integer;
+    IZCFL: integer;
+    IZCFM: integer;
+    IGLFL: integer;
+    IGLFM: integer;
+    IESTFL: integer;
+    IESTFM: integer;
+    IPCSFL: integer;
+    IPCSFM: integer;
+    ISTFL: integer;
+    ISTFM: integer;
+    GL0Const: TRealConstantRecord;
+    GL0Variable: T2DDoubleArray;
+    SGMConst: TRealConstantRecord;
+    SGMVariable: T2DDoubleArray;
+    SGSConst: TRealConstantRecord;
+    SGSVariable: T2DDoubleArray;
+    FThickIndex: Integer;
+    FConstTHICK: TRealConstantRecordArray;
+    FTHICK: T3DDoubleArray;
+    FSseIndex: Integer;
+    FConstSse : TRealConstantRecordArray;
+    FSse: T3DDoubleArray;
+    FCrIndex: Integer;
+    FConstCr : TRealConstantRecordArray;
+    FCr: T3DDoubleArray;
+    FSsvIndex: Integer;
+    FConstSsv : TRealConstantRecordArray;
+    FSsv: T3DDoubleArray;
+    FCcIndex: Integer;
+    FConstCc : TRealConstantRecordArray;
+    FCc: T3DDoubleArray;
+    FVoidIndex: Integer;
+    FConstVoid : TRealConstantRecordArray;
+    FVoid: T3DDoubleArray;
+    FSubIndex: Integer;
+    FConstSub : TRealConstantRecordArray;
+    FSub: T3DDoubleArray;
+    FPcsIndex: Integer;
+    FConstPcs : TRealConstantRecordArray;
+    FPcs: T3DDoubleArray;
+    Ifm: array [0..12] of integer;
+    Iun: array [0..12] of integer;
+    FSwtPrintRecordArray: TSwtPrintRecordArray;
+    FPrintIndex: integer;
+    FSwtPackage: TSwtPackageSelection;
+    procedure ReadDataSet1;
+    procedure ReadDataSet2;
+    procedure ReadDataSet3;
+    procedure ReadConstRealArrayForLayer;
+    procedure ReadVariableRealArrayForLayer;
+    procedure Read1LayerConstDataSets(Value: Double; const ID: string);
+    procedure Read1LayerVariableDataSets(const ID: string);
+    procedure ReadMultilayerConstantArrays(Value: Double; const ID: string);
+    procedure ReadMultiLayerVariableArrays(const ID: string);
+    procedure ReadDataSet16;
+    procedure ReadDataSet17;
+    procedure ImportDataSet1;
+    procedure ImportTHICK(Index: Integer; WtItem: TSwtWaterTableItem;
+      var ScreenObject: TScreenObject);
+    procedure ImportSse(Index: Integer; WtItem: TSwtWaterTableItem;
+      var ScreenObject: TScreenObject);
+    procedure ImportLayerGroupData(Index: Integer; WtItem: TSwtWaterTableItem;
+      var ScreenObject: TScreenObject; const Name: string;
+      const ConstArray: TRealConstantRecordArray;
+      const ImportedData: T3DDoubleArray);
+    procedure ImportSsv(Index: Integer; WtItem: TSwtWaterTableItem;
+      var ScreenObject: TScreenObject);
+    procedure ImportCr(Index: Integer; WtItem: TSwtWaterTableItem;
+      var ScreenObject: TScreenObject);
+    procedure ImportCc(Index: Integer; WtItem: TSwtWaterTableItem;
+      var ScreenObject: TScreenObject);
+    procedure ImportVOID(Index: Integer; WtItem: TSwtWaterTableItem;
+      var ScreenObject: TScreenObject);
+    procedure ImportSUB(Index: Integer; WtItem: TSwtWaterTableItem;
+      var ScreenObject: TScreenObject);
+    procedure ImportLayerData;
+    procedure ImportDataSet3;
+    procedure ImportDataSet16;
+    procedure ImportInitialConditions;
+    procedure ImportPrintChoices;
+  protected
+    procedure ReadData(const ALabel: string); override;
+    procedure HandlePackage; override;
+  public
+    Constructor Create(Importer: TModflow2005Importer);
+    Destructor Destroy; override;
+  end;
+
+  THydModLocation = class(TArrayMember)
+    PCKG: string;
+    ARR: string;
+    INTYP: string;
+    KLAY: integer;
+    XL: double;
+    YL: double;
+    HYDLBL: string;
+  end;
+
+  THydmodLocationArray = class(TObjectArray)
+  private
+    function GetLocations(Index: integer): THydModLocation;
+  protected
+    function ArrayMemberClass: TArrayMemberClass; override;
+  published
+  public
+    property Locations[Index: integer]: THydModLocation read GetLocations; default;
+  end;
+
+  THydmodImporter = class(TPackageImporter)
+  private
+    FLocations: THydmodLocationArray;
+    FLocationIndex: integer;
+    HYDNOH: Double;
+    FSfrImporter: TSfrImporter;
+    FSubImporter: TSubImporter;
+    FHydmodPackage: THydPackageSelection;
+    procedure ReadDataSet1;
+    function GetObservationLocation(Location: THydModLocation): TPoint2D;
+    procedure StoreCommonData(Z: Real; APoint: TPoint2D;
+      Location: THydModLocation; Index: Integer; var HydModData: THydmodData);
+  protected
+    procedure ReadData(const ALabel: string); override;
+    procedure HandlePackage; override;
+  public
+    Constructor Create(Importer: TModflow2005Importer;
+      SfrImporter: TSfrImporter; SubImporter: TSubImporter);
+    Destructor Destroy; override;
+  end;
+
+
 var
   GlobalCellCenterScreenObject: TScreenObject = nil;
 
@@ -2666,6 +2847,7 @@ var
   Chd: TChdImporter;
   Mnw2: TMnw2Importer;
   Nam: TNamImporter;
+  Sub: TSubImporter;
 begin
   inherited Create;
   FPointsComputed := False;
@@ -2695,7 +2877,7 @@ begin
     TLvdaImporter.Create(self, HufImporter));
   FPackageIdentifiers.AddObject('HFB:', THfbImporter.Create(self));
   FPackageIdentifiers.AddObject('UZF:', TUzfImporter.Create(self));
-  Chd := TChdImporter.Create(self);
+  Chd := TChdImporter.Create(self, Bas);
   FPackageIdentifiers.AddObject('CHD:', Chd);
   FPackageIdentifiers.AddObject('FHB:', nil);
   FPackageIdentifiers.AddObject('RCH:', TRchImporter.Create(self, MZImporter));
@@ -2727,8 +2909,9 @@ begin
   FPackageIdentifiers.AddObject('GAG:', FGageImporter);
   FPackageIdentifiers.AddObject('OC:', nil);
   FPackageIdentifiers.AddObject('IBS:', nil);
-  FPackageIdentifiers.AddObject('SUB:', TSubImporter.Create(self, Nam));
-  FPackageIdentifiers.AddObject('SWT:', nil);
+  Sub := TSubImporter.Create(self, Nam);
+  FPackageIdentifiers.AddObject('SUB:', Sub);
+  FPackageIdentifiers.AddObject('SWT:', TSwtImporter.Create(self));
   FPackageIdentifiers.AddObject('HOB:', THobImporter.Create(self));
   FChobImporter := TChdObsImporter.Create(self, Chd, Bas);
   FPackageIdentifiers.AddObject('CHOB:', FChobImporter);
@@ -2736,7 +2919,8 @@ begin
   FPackageIdentifiers.AddObject('GBOB:', TGhbObsImporter.Create(self, GHB));
   FPackageIdentifiers.AddObject('RVOB:', TRivObsImporter.Create(self, Riv));
   FPackageIdentifiers.AddObject('LMT6:', nil);
-  FPackageIdentifiers.AddObject('HYD:', nil);
+  FPackageIdentifiers.AddObject('HYD:', THydmodImporter.Create(self,
+    SfrImporter, Sub));
 end;
 
 destructor TModflow2005Importer.Destroy;
@@ -2781,6 +2965,7 @@ var
   PackageImporter: TPackageImporter;
   KPER: integer;
   StressPeriodString: string;
+  Index: Integer;
 begin
   StressPeriodString := '';
   Assert(FileExists(FListFileName));
@@ -2858,6 +3043,10 @@ begin
   finally
     CloseFile(FFile);
     GlobalCellCenterScreenObject := nil;
+  end;
+  for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+  begin
+    frmGoPhast.PhastModel.ScreenObjects[Index].CacheValueArrays;
   end;
   frmGoPhast.PhastModel.FormulaManager.Pack;
 end;
@@ -3575,6 +3764,7 @@ begin
     ImportedValues.Values.RealValues[Index] :=
       ImportedData[Index];
   end;
+  ImportedValues.Values.CacheData;
 end;
 
 procedure TPackageImporter.AssignIntegerValuesToCellCenters(
@@ -3675,6 +3865,7 @@ end;
 constructor TBasImporter.Create(Importer: TModflow2005Importer);
 begin
   inherited Create(Importer, 'BAS:');
+  SetLength(FInitialCHDLocations, 0, 0, 0);
   FSpecifiedHeadsList := TObjectList.Create;
 end;
 
@@ -3995,7 +4186,7 @@ var
   Item: TChdItem;
   GroupIndex: Integer;
   ModelStartTime: Double;
-  ModelEndTime: Double;
+  FirstPeriodlEndTime: Double;
   RowIndex: Integer;
   ColIndex: Integer;
   LayerIndex: Integer;
@@ -4015,9 +4206,15 @@ begin
   InstanceCount := 0;
   SpecifiedHeadLocations := nil;
 
+  // Only define CHD objects in first stress period.  The constant
+  // head boundary will persist into later stress periods where it
+  // may be overriden by objects in the CHD package.
+  // If the CHD objects based on negative IBOUND are defined for
+  // all stress periods, the specified heads might incorrectly include
+  // the sum of specified heads initially defined in the CHD pacakge and
+  // those defined in the BAS package.
   ModelStartTime := FModel.ModflowStressPeriods[0].StartTime;
-  ModelEndTime := FModel.ModflowStressPeriods[
-    FModel.ModflowStressPeriods.Count - 1].EndTime;
+  FirstPeriodlEndTime := FModel.ModflowStressPeriods[0].EndTime;
   LayerIndex := -1;
   ObjectIndex := 0;
 
@@ -4034,7 +4231,9 @@ begin
         begin
           for ColIndex := 0 to FGrid.ColumnCount - 1 do
           begin
-            if FIbound[LayerIndex, RowIndex, ColIndex] < 0 then
+            if (FIbound[LayerIndex, RowIndex, ColIndex] < 0)
+              and ((FInitialCHDLocations = nil) or
+              not FInitialCHDLocations[LayerIndex, RowIndex, ColIndex]) then
             begin
               Boundary:= TChdLocationObject.Create;
               List.Add(Boundary);
@@ -4054,10 +4253,10 @@ begin
           begin
             FModel.ModflowPackages.ChdBoundary.IsSelected := True;
             FModel.CreateInitialDataSets;
-            SpecifiedHeadLocations := FModel.GetDataSetByName(
-              rsModflowSpecifiedHead);
-            Assert(SpecifiedHeadLocations <> nil);
           end;
+          SpecifiedHeadLocations := FModel.GetDataSetByName(
+            rsModflowSpecifiedHead);
+          Assert(SpecifiedHeadLocations <> nil);
 
           for ListIndex := 0 to List.Count - 1 do
           begin
@@ -4086,7 +4285,7 @@ begin
             Item := ScreenObject.ModflowChdBoundary.Values.Add as TChdItem;
 
             Inc(InstanceCount);
-            SetItemValues(Item, Storage.FList, ModelEndTime,
+            SetItemValues(Item, Storage.FList, FirstPeriodlEndTime,
               ModelStartTime, ScreenObject, IntToStr(InstanceCount));
 
             Assert(SpecifiedHeadLocations <> nil);
@@ -4331,6 +4530,7 @@ begin
       end;
     end;
     GlobalCellCenterScreenObject.Name := 'Imported_Arrays';
+    GlobalCellCenterScreenObject.SectionStarts.CacheData;
   end;
   ScreenObject := GlobalCellCenterScreenObject;
 end;
@@ -4727,6 +4927,41 @@ begin
   inherited Create(Importer, 'LPF:');
   FIsSelected := False;
   FNextParameterIndex := -1;
+end;
+
+procedure TArrayImporter.Import2DDataSet(ImportName: string;
+  ImportArrayName: string; const TwoDConstRecord: TRealConstantRecord;
+  const TwoDRealArray: T2DDoubleArray; const LayerFormulaSuffix: string = '');
+var
+  DataArrayName: string;
+  ScreenObject: TScreenObject;
+  DataSetFormula: string;
+  DataArray: TDataArray;
+begin
+  ScreenObject := nil;
+  DataArray := FModel.GetDataSetByName(ImportArrayName);
+  if TwoDConstRecord.IsConstant then
+  begin
+    DataArray.Formula := FloatToStr(TwoDConstRecord.RealValue);
+  end
+  else
+  begin
+    Assert(TwoDRealArray <> nil);
+    CreateOrRetrieveCellCenterScreenObject(ScreenObject);
+    DataArrayName := 'Imported_' + ImportName;
+    CreateDataArrayAndAssignValues(ScreenObject, DataArrayName,
+      TwoDRealArray);
+    if LayerFormulaSuffix <> '' then
+    begin
+      DataSetFormula := DataSetFormula + '(';
+    end;
+    DataSetFormula := DataSetFormula + DataArrayName;
+    if LayerFormulaSuffix <> '' then
+    begin
+      DataSetFormula := DataSetFormula + LayerFormulaSuffix + ')';
+    end;
+    DataArray.Formula := DataSetFormula;
+  end;
 end;
 
 procedure TArrayImporter.ImportDataSet(ImportName: string;
@@ -6413,9 +6648,11 @@ end;
 
 { TChdImporter }
 
-constructor TChdImporter.Create(Importer: TModflow2005Importer);
+constructor TChdImporter.Create(Importer: TModflow2005Importer;
+  BasImporter: TBasImporter);
 begin
   inherited Create(Importer, 'CHD:');
+  FBasImporter := BasImporter;
   FStressPeriods:= TChdStressPeriodArray.Create;
   FParameters:= TChdParamArray.Create;
   FReadData := False;
@@ -6548,6 +6785,9 @@ end;
 procedure TChdImporter.HandlePackage;
 var
   ScreenObjectIndex: integer;
+  LayerIndex: Integer;
+  RowIndex: Integer;
+  ColIndex: Integer;
 begin
   if (FCurrentStressPeriod < 0) or
     (FCurrentStressPeriod < FStressPeriods.ArrayLength-1) then
@@ -6555,6 +6795,20 @@ begin
     Exit;
   end;
   inherited;
+  SetLength(FBasImporter.FInitialCHDLocations,
+    FModel.LayerStructure.ModflowLayerCount, FModel.Grid.RowCount,
+    FModel.Grid.ColumnCount);
+  for LayerIndex := 0 to FModel.LayerStructure.ModflowLayerCount - 1 do
+  begin
+    for RowIndex := 0 to FModel.Grid.RowCount - 1 do
+    begin
+      for ColIndex := 0 to FModel.Grid.ColumnCount - 1 do
+      begin
+        FBasImporter.FInitialCHDLocations[LayerIndex, RowIndex, ColIndex]
+          := false;
+      end;
+    end;
+  end;
   FChdPackage := FModel.ModflowPackages.ChdBoundary;
   FChdPackage.IsSelected := True;
   FChdPackage.Comments := FComments;
@@ -6569,6 +6823,26 @@ begin
     FObsImporter.HandlePackage;
   end;
   ReleaseMemory;
+end;
+
+procedure TChdImporter.HandleParamLocation(UsedStressPeriods: TIntegerList;
+  Boundary: TLocation);
+begin
+  if UsedStressPeriods[0] = 0 then
+  begin
+    FBasImporter.FInitialCHDLocations[Boundary.Layer-1, Boundary.Row-1,
+      Boundary.Column-1] := True;
+  end;
+end;
+
+procedure TChdImporter.HandleNonParamLocation(StressPeriodIndex: Integer;
+  Boundary: TLocation);
+begin
+  if StressPeriodIndex = 0 then
+  begin
+    FBasImporter.FInitialCHDLocations[Boundary.Layer-1, Boundary.Row-1,
+      Boundary.Column-1] := True;
+  end;
 end;
 
 procedure TChdImporter.ReadData(const ALabel: string);
@@ -6750,6 +7024,7 @@ begin
     PumpingValues.RealValues[Index] := WelBoundary.PumpingRate;
   end;
   WelItem.PumpingRate := rsObjectImportedValuesR + '("' + PumpName + '")';
+  PumpingValues.CacheData;
 end;
 
 procedure TWelImporter.ReadNonParameterLocations;
@@ -7116,12 +7391,26 @@ begin
   end;
   result.ElevationFormula := rsObjectImportedValuesR
     + '("' + StrImportedElevations + '")';
+  ImportedElevations.CacheData;
+  result.SectionStarts.CacheData;
 end;
 
 destructor TListImporter.Destroy;
 begin
   FAuxillaryVariables.Free;
   inherited;
+end;
+
+procedure TListImporter.HandleParamLocation(UsedStressPeriods: TIntegerList;
+  Boundary: TLocation);
+begin
+  // do nothing.
+end;
+
+procedure TListImporter.HandleNonParamLocation(StressPeriodIndex: Integer;
+  Boundary: TLocation);
+begin
+  // do nothing
 end;
 
 procedure TListImporter.AssignObsGroupsToCells(CellList: TList);
@@ -7335,7 +7624,7 @@ begin
           end;
           ScreenObject := CreateScreenObject(LocationsToUse, ScreenObjectIndex,
             Boundary.Layer, StressPeriodIndex);
-
+          HandleNonParamLocation(StressPeriodIndex, Boundary);
           // Assign values to the TScreenObject
           // for the current stress period(s).
           SO_Boundary := GetBoundary(ScreenObject);
@@ -7505,6 +7794,8 @@ begin
               AnotherBoundary.Used := True;
             end;
           end;
+        HandleParamLocation(UsedStressPeriods, Boundary);
+
           ScreenObject := CreateScreenObject(LocationsToUse, ScreenObjectIndex,
             Boundary.Layer, InstanceIndex);
           SO_Boundary := GetBoundary(ScreenObject);
@@ -8056,6 +8347,8 @@ begin
   GhbItem.Conductance := rsObjectImportedValuesR + '("' + ConductanceName
     + '")';
   AssignObservationFactors(ScreenObject, ParamName, Boundaries);
+  GhbHeadValues.CacheData;
+  GhbConductanceValues.CacheData;
 end;
 
 { TDrnInstanceObject }
@@ -8201,6 +8494,7 @@ begin
       Factor.Factor := rsObjectImportedValuesR + '("'
         + ObservationNames[ObservationIndex] + '")';
     end;
+    ScreenObject.ImportedValues.CacheData;
   finally
     ObservationNames.Free;
     ObservationFactors.Free;
@@ -8514,6 +8808,8 @@ begin
     + '("' + ConductanceName + '")';
 
   AssignObservationFactors(ScreenObject, ParamName, Boundaries);
+  DrnHeadValues.CacheData;
+  DrnConductanceValues.CacheData;
 end;
 
 { TRivInstanceObject }
@@ -8856,6 +9152,9 @@ begin
     + ConductanceName + '")';
   RivItem.RiverBottom := rsObjectImportedValuesR + '("' + BottomName + '")';
   AssignObservationFactors(ScreenObject, ParamName, Boundaries);
+  RivStageValues.CacheData;
+  RivConductanceValues.CacheData;
+  RivBottomValues.CacheData;
 end;
 
 { TRchImporter }
@@ -11801,6 +12100,8 @@ begin
   ChdItem.StartHead := rsObjectImportedValuesR + '("' + StartName + '")';
   ChdItem.EndHead := rsObjectImportedValuesR + '("' + EndName + '")';
   AssignObservationFactors(ScreenObject, ParamName, Boundaries);
+  StartValues.CacheData;
+  EndValues.CacheData;
 end;
 
 { TSfrImporter }
@@ -11808,6 +12109,8 @@ end;
 constructor TSfrImporter.Create(Importer: TModflow2005Importer);
 begin
   inherited Create(Importer, 'SFR');
+  FSegmentStorage:= TList.Create;
+  FItemStorage:= TList.Create;
   FStressPeriods:= TSfrStressPeriodArray.Create;
   FParameters:= TSfrParamArray.Create;
   DLEAK := 0.0001;
@@ -11972,6 +12275,7 @@ begin
   end;
   result.ElevationFormula := rsObjectImportedValuesR
     + '("' + StrImportedElevations + '")';
+  result.SectionStarts.CacheData;
 
   result.CreateSfrBoundary;
   FSfrBoundary := result.ModflowSfrBoundary;
@@ -11979,6 +12283,7 @@ begin
   FSfrBoundary.SegementNumber := Reach.SegmentNumber;
   AssignStartAndEndTimes;
   AssignReachValues(List, Result);
+  ImportedElevations.CacheData;
 end;
 
 destructor TSfrImporter.Destroy;
@@ -11987,6 +12292,8 @@ begin
   FReaches.Free;
   FParameters.Free;
   FStressPeriods.Free;
+  FSegmentStorage.Free;
+  FItemStorage.Free;
   inherited;
 end;
 
@@ -12018,7 +12325,6 @@ begin
         if InstanceName = '' then
         begin
           Instance := Param.Instances[0] as TSfrInstanceObject;
-//          IcalcIndex := 0;
         end
         else
         begin
@@ -12320,6 +12626,8 @@ var
 begin
   Item := FSfrBoundary.ParamIcalc.Items[IcalcIndex];
   Item.ICalc := Segment.ICALC;
+//  FSegmentStorage.Add(Segment);
+//  FItemStorage.Add(Item);
   Item.OutflowSegment := Segment.OUTSEG;
   Item.DiversionSegment := Segment.IUPSEG;
   if Item.DiversionSegment > 0 then
@@ -12617,6 +12925,7 @@ begin
       Item.VerticalK := FloatToStr(Reach.UHC);
     end;
   end;
+  ScreenObject.ImportedValues.CacheData;
 end;
 
 procedure TSfrImporter.ReadFirstDataSet5WithParameters;
@@ -13008,6 +13317,8 @@ var
   Location: TSfrLocationObject;
   ScreenObjectIndex: integer;
   ParameterSegments: TIntegerList;
+//  Segment: TSegment;
+//  Item: TSfrParamIcalcItem;
 begin
   if FImportedPackage or (FCurrentStressPeriod < 0) or
     (FCurrentStressPeriod < FStressPeriods.ArrayLength -1) then
@@ -13093,6 +13404,17 @@ begin
           LocationList.Clear;
         end;
       end;
+//      for Index := 0 to FSegmentStorage.Count - 1 do
+//      begin
+//        Segment := FSegmentStorage[Index];
+//        Item := FItemStorage[Index];
+//        Item.OutflowSegment := Segment.OUTSEG;
+//        Item.DiversionSegment := Segment.IUPSEG;
+//        if Item.DiversionSegment > 0 then
+//        begin
+//          Item.IPRIOR := Segment.IPRIOR;
+//        end;
+//      end;
     finally
       LocationList.Free;
     end;
@@ -13296,6 +13618,7 @@ begin
     end
     else
     begin
+      ShowMessage(ALabel);
       Assert(False);
     end;
   end;
@@ -13519,6 +13842,8 @@ begin
   inherited;
   FHobPackage := FModel.ModflowPackages.HobPackage;
   FHobPackage.IsSelected := True;
+  frmGoPhast.EnableManageHeadObservations;
+
   FHobPackage.Comments := FComments;
   FHobPackage.DryHead := HOBDRY;
   FHeadObservations.ArrayLength := FCurrentObsIndex+1;
@@ -15546,6 +15871,8 @@ begin
     DrainReturn := ScreenObject.ModflowDrtBoundary.DrainReturn;
     DrainReturn.ReturnChoice := rtNone;
   end;
+  DrtHeadValues.CacheData;
+  DrtConductanceValues.CacheData;
 
 end;
 
@@ -17023,6 +17350,7 @@ begin
               CenterPoints[RowIndex, ColIndex], True);
           end;
         end;
+        AScreenObject.SectionStarts.CacheData;
         AScreenObject.SetValuesOfIntersectedCells := True;
         AScreenObject.SetValuesByInterpolation := False;
 
@@ -19210,7 +19538,7 @@ begin
     inherited;
     FModel.ModflowPackages.DrobPackage.IsSelected := FIsActive;
     FModel.DrainObservations := FFlowObsGroups;
-    frmGoPhast.EnableManageObservations;
+    frmGoPhast.EnableManageFlowObservations;
   end;
 end;
 
@@ -19287,7 +19615,7 @@ begin
     inherited;
     FModel.ModflowPackages.GbobPackage.IsSelected := FIsActive;
     FModel.GhbObservations := FFlowObsGroups;
-    frmGoPhast.EnableManageObservations;
+    frmGoPhast.EnableManageFlowObservations;
   end;
 end;
 
@@ -19314,7 +19642,7 @@ begin
     inherited;
     FModel.ModflowPackages.RvobPackage.IsSelected := FIsActive;
     FModel.RiverObservations := FFlowObsGroups;
-    frmGoPhast.EnableManageObservations;
+    frmGoPhast.EnableManageFlowObservations;
   end;
 end;
 
@@ -19342,12 +19670,13 @@ begin
     (FChdImporter.ImportedPackage or not FChdImporter.FReadData)
     and FBasImporter.ImportedPackage then
   begin
+
     CreateObservationGroups;
     FBasImporter.ImportSpecifiedHeads;
     inherited;
     FModel.ModflowPackages.ChobPackage.IsSelected := FIsActive;
     FModel.HeadFluxObservations := FFlowObsGroups;
-    frmGoPhast.EnableManageObservations;
+    frmGoPhast.EnableManageFlowObservations;
   end;
 end;
 
@@ -19638,6 +19967,7 @@ begin
     ImportedPData[CellIndex] := ACell.P;
     ImportedCWCData[CellIndex] := ACell.CWC;
   end;
+  AScreenObject.SectionStarts.CacheData;
   SpatialItem := nil;
   if AWell.LossType in [mltThiem, mltSkin, mltEquation] then
   begin
@@ -19761,6 +20091,11 @@ begin
       SpatialItem.CellToWellConductance := rsObjectImportedValuesR
         + '("' + ImportedValues.Name + '")';
     end;
+  end;
+  AScreenObject.ImportedValues.CacheData;
+  if ImportedElevations <> nil then
+  begin
+    ImportedElevations.CacheData;
   end;
 end;
 
@@ -21245,6 +21580,35 @@ begin
   inherited;
 end;
 
+procedure TArrayImporter.GetTimeStepStartAndEndTimes(TimeStepEndLists: TList; TimeStepStartLists: TList);
+var
+  StepIndex: Integer;
+  TimeStepEndTimes: TRealList;
+  TimeStepStartTimes: TRealList;
+  Time: Double;
+  TimeStepLength: Double;
+  StressPeriod: TModflowStressPeriod;
+  PeriodIndex: Integer;
+begin
+  for PeriodIndex := 0 to FModel.ModflowStressPeriods.Count - 1 do
+  begin
+    StressPeriod := FModel.ModflowStressPeriods[PeriodIndex];
+    TimeStepStartTimes := TRealList.Create;
+    TimeStepStartLists.Add(TimeStepStartTimes);
+    TimeStepEndTimes := TRealList.Create;
+    TimeStepEndLists.Add(TimeStepEndTimes);
+    TimeStepLength := StressPeriod.LengthOfFirstTimeStep;
+    Time := StressPeriod.StartTime;
+    for StepIndex := 0 to StressPeriod.NumberOfSteps - 1 do
+    begin
+      TimeStepStartTimes.Add(Time);
+      Time := Time + TimeStepLength;
+      TimeStepEndTimes.Add(Time);
+      TimeStepLength := TimeStepLength * StressPeriod.TimeStepMultiplier;
+    end;
+  end;
+end;
+
 procedure TSubImporter.ImportMaterialZone(DelayItem: TSubDelayBedLayerItem;
   Index: Integer; var ScreenObject: TScreenObject);
 var
@@ -21599,17 +21963,12 @@ procedure TSubImporter.ImportPrintChoices(SubPackage: TSubPackageSelection);
 var
   TimeStepEndTimes: TRealList;
   TimeStepStartTimes: TRealList;
-  StressPeriod: TModflowStressPeriod;
-  PeriodIndex: Integer;
   TimeStepEndLists: TList;
   TimeStepStartLists: TList;
   Defaults: array[0..12] of Boolean;
   Index: Integer;
   SubPrintItem: TSubPrintItem;
   SubOCItem: TSubOC;
-  StepIndex: Integer;
-  Time: Double;
-  TimeStepLength: Double;
   function GetBoolValue(OCIndex: integer): boolean;
   begin
     if SubOCItem.Ifl[OCIndex] < 0 then
@@ -21636,23 +21995,7 @@ begin
   TimeStepStartLists := TObjectList.Create;
   TimeStepEndLists := TObjectList.Create;
   try
-    for PeriodIndex := 0 to FModel.ModflowStressPeriods.Count - 1 do
-    begin
-      StressPeriod := FModel.ModflowStressPeriods[PeriodIndex];
-      TimeStepStartTimes := TRealList.Create;
-      TimeStepStartLists.Add(TimeStepStartTimes);
-      TimeStepEndTimes := TRealList.Create;
-      TimeStepEndLists.Add(TimeStepEndTimes);
-      TimeStepLength := StressPeriod.LengthOfFirstTimeStep;
-      Time := StressPeriod.StartTime;
-      for StepIndex := 0 to StressPeriod.NumberOfSteps - 1 do
-      begin
-        TimeStepStartTimes.Add(Time);
-        Time := Time + TimeStepLength;
-        TimeStepEndTimes.Add(Time);
-        TimeStepLength := TimeStepLength * StressPeriod.TimeStepMultiplier;
-      end;
-    end;
+    GetTimeStepStartAndEndTimes(TimeStepEndLists, TimeStepStartLists);
     for Index := 0 to FSubOutputs.ArrayLength - 1 do
     begin
       SubOCItem := FSubOutputs[Index];
@@ -21714,14 +22057,29 @@ begin
   end;
 end;
 
+function ConvertFormat(Ifm: integer): integer;
+begin
+  if Ifm = 0 then
+  begin
+    Ifm := 12;
+  end;
+  result := Abs(Ifm) -1;
+end;
+
 procedure TSubImporter.ImportPrintFormat(SubPackage: TSubPackageSelection);
 begin
-  SubPackage.PrintFormats.SubsidenceFormat := Ifm1;
-  SubPackage.PrintFormats.CompactionByModelLayerFormat := Ifm2;
-  SubPackage.PrintFormats.CompactionByInterbedSystemFormat := Ifm3;
-  SubPackage.PrintFormats.VerticalDisplacementFormat := Ifm4;
-  SubPackage.PrintFormats.NoDelayPreconsolidationHeadFormat := Ifm5;
-  SubPackage.PrintFormats.DelayPreconsolidationHeadFormat := Ifm6;
+  SubPackage.PrintFormats.SubsidenceFormat
+    := ConvertFormat(Ifm1);
+  SubPackage.PrintFormats.CompactionByModelLayerFormat
+    := ConvertFormat(Ifm2);
+  SubPackage.PrintFormats.CompactionByInterbedSystemFormat
+    := ConvertFormat(Ifm3);
+  SubPackage.PrintFormats.VerticalDisplacementFormat
+    := ConvertFormat(Ifm4);
+  SubPackage.PrintFormats.NoDelayPreconsolidationHeadFormat
+    := ConvertFormat(Ifm5);
+  SubPackage.PrintFormats.DelayPreconsolidationHeadFormat
+    := ConvertFormat(Ifm6);
 end;
 
 procedure TSubImporter.ImportDataSet1(SubPackage: TSubPackageSelection);
@@ -22122,7 +22480,7 @@ begin
     LayerItem := FNoDelayBeds[Index];
     Group := FModel.LayerStructure[LayerItem.Layer];
     NoDelayItem := Group.SubNoDelayBedLayers.Add;
-    NoDelayItem.Name := 'ND_Sys' + IntToStr(Index + 1);
+    NoDelayItem.Name := StrNDSys + IntToStr(Index + 1);
     ImportPreconsolidatonHead(Index, NoDelayItem, ScreenObject);
     ImportSfe(Index, NoDelayItem, ScreenObject);
     ImportSfv(Index, NoDelayItem, ScreenObject);
@@ -22276,6 +22634,1091 @@ begin
     FUnitNumbers.Add(UnitNumber);
     FFileNames.Add(FileName);
   end;
+end;
+
+{ TSwtImporter }
+
+constructor TSwtImporter.Create(Importer: TModflow2005Importer);
+begin
+  inherited Create(Importer, 'SWT');
+  FInterBeds:= TSubLayerAssignments.Create;
+end;
+
+destructor TSwtImporter.Destroy;
+begin
+  FInterBeds.Free;
+  inherited;
+end;
+
+procedure TSwtImporter.ImportPrintChoices;
+var
+  InnerIndex: Integer;
+  OuterIndex: Integer;
+  PrintChoices: TSwtPrintCollection;
+  TimeStepStartLists: TList;
+  TimeStepEndLists: TList;
+  Index: Integer;
+  SwtOCItem: TSwtPrintRecord;
+  SwtPrintItem: TSwtPrintItem;
+  TimeStepStartTimes: TRealList;
+  TimeStepEndTimes: TRealList;
+  function GetBoolValue(OCIndex: integer): boolean;
+  begin
+    if SwtOCItem.Ifl[OCIndex] < 0 then
+    begin
+      result := False;
+      Assert(False);
+    end
+    else if SwtOCItem.Ifl[OCIndex] = 0 then
+    begin
+      result := False;
+    end
+    else
+    begin
+      result := True;
+    end;
+  end;
+begin
+  if Length(FSwtPrintRecordArray) > 0 then
+  begin
+    for InnerIndex := 0 to Length(FSwtPrintRecordArray[0].Ifl) - 1 do
+    begin
+      if FSwtPrintRecordArray[0].Ifl[InnerIndex] < 0 then
+      begin
+        FSwtPrintRecordArray[0].Ifl[InnerIndex] := 0;
+      end;
+    end;
+  end;
+  for OuterIndex := 1 to Length(FSwtPrintRecordArray) - 1 do
+  begin
+    for InnerIndex := 0 to Length(FSwtPrintRecordArray[OuterIndex].Ifl) - 1 do
+    begin
+      if FSwtPrintRecordArray[OuterIndex].Ifl[InnerIndex] < 0 then
+      begin
+        FSwtPrintRecordArray[OuterIndex].Ifl[InnerIndex] := FSwtPrintRecordArray[OuterIndex - 1].Ifl[InnerIndex];
+      end;
+    end;
+  end;
+  PrintChoices := FSwtPackage.PrintChoices;
+  TimeStepStartLists := TObjectList.Create;
+  TimeStepEndLists := TObjectList.Create;
+  try
+    GetTimeStepStartAndEndTimes(TimeStepEndLists, TimeStepStartLists);
+    for Index := 0 to Length(FSwtPrintRecordArray) - 1 do
+    begin
+      SwtOCItem := FSwtPrintRecordArray[Index];
+      SwtPrintItem := PrintChoices.Add as TSwtPrintItem;
+      if SwtOCItem.ISP1 < 1 then
+      begin
+        SwtOCItem.ISP1 := 1;
+      end;
+      if SwtOCItem.ISP1 > FModel.ModflowStressPeriods.Count then
+      begin
+        SwtOCItem.ISP1 := FModel.ModflowStressPeriods.Count;
+      end;
+      if SwtOCItem.ISP2 < 1 then
+      begin
+        SwtOCItem.ISP2 := 1;
+      end;
+      if SwtOCItem.ISP2 > FModel.ModflowStressPeriods.Count then
+      begin
+        SwtOCItem.ISP2 := FModel.ModflowStressPeriods.Count;
+      end;
+      TimeStepStartTimes := TimeStepStartLists[SwtOCItem.ISP1 - 1];
+      TimeStepEndTimes := TimeStepEndLists[SwtOCItem.ISP2 - 1];
+      if SwtOCItem.ITS1 < 1 then
+      begin
+        SwtOCItem.ITS1 := 1;
+      end;
+      if SwtOCItem.ITS1 > TimeStepStartTimes.Count then
+      begin
+        SwtOCItem.ITS1 := TimeStepStartTimes.Count;
+      end;
+      if SwtOCItem.ITS2 < 1 then
+      begin
+        SwtOCItem.ITS2 := 1;
+      end;
+      if SwtOCItem.ITS2 > TimeStepEndTimes.Count then
+      begin
+        SwtOCItem.ITS2 := TimeStepEndTimes.Count;
+      end;
+      SwtPrintItem.StartTime := TimeStepStartTimes[SwtOCItem.ITS1 - 1];
+      SwtPrintItem.EndTime := TimeStepEndTimes[SwtOCItem.ITS2 - 1];
+      SwtPrintItem.PrintSubsidence := GetBoolValue(0);
+      SwtPrintItem.SaveSubsidence := GetBoolValue(1);
+      SwtPrintItem.PrintCompactionByModelLayer := GetBoolValue(2);
+      SwtPrintItem.SaveCompactionByModelLayer := GetBoolValue(3);
+      SwtPrintItem.PrintCompactionByInterbedSystem := GetBoolValue(4);
+      SwtPrintItem.SaveCompactionByInterbedSystem := GetBoolValue(5);
+      SwtPrintItem.PrintVerticalDisplacement := GetBoolValue(6);
+      SwtPrintItem.SaveVerticalDisplacement := GetBoolValue(7);
+      SwtPrintItem.PrintPreconsolidationStress := GetBoolValue(8);
+      SwtPrintItem.SavePreconsolidationStress := GetBoolValue(9);
+      SwtPrintItem.PrintDeltaPreconsolidationStress := GetBoolValue(10);
+      SwtPrintItem.SaveDeltaPreconsolidationStress := GetBoolValue(11);
+      SwtPrintItem.PrintGeostaticStress := GetBoolValue(12);
+      SwtPrintItem.SaveGeostaticStress := GetBoolValue(13);
+      SwtPrintItem.PrintDeltaGeostaticStress := GetBoolValue(14);
+      SwtPrintItem.SaveDeltaGeostaticStress := GetBoolValue(15);
+      SwtPrintItem.PrintEffectiveStress := GetBoolValue(16);
+      SwtPrintItem.SaveEffectiveStress := GetBoolValue(17);
+      SwtPrintItem.PrintDeltaEffectiveStress := GetBoolValue(18);
+      SwtPrintItem.SaveDeltaEffectiveStress := GetBoolValue(19);
+      SwtPrintItem.PrintVoidRatio := GetBoolValue(20);
+      SwtPrintItem.SaveVoidRatio := GetBoolValue(21);
+      SwtPrintItem.PrintThicknessCompressibleSediments := GetBoolValue(22);
+      SwtPrintItem.SaveThicknessCompressibleSediments := GetBoolValue(23);
+      SwtPrintItem.PrintLayerCenterElevation := GetBoolValue(24);
+      SwtPrintItem.SaveLayerCenterElevation := GetBoolValue(25);
+    end;
+  finally
+    TimeStepStartLists.Free;
+    TimeStepEndLists.Free;
+  end;
+end;
+
+procedure TSwtImporter.ImportInitialConditions;
+begin
+  if ISTPCS = 0 then
+  begin
+    ImportDataSet(StrInitialPreconsolida, StrInitialPreconsolida, FConstPcs, FPcs);
+  end
+  else
+  begin
+    ImportDataSet(StrInitialPreOffsets, StrInitialPreOffsets, FConstPcs, FPcs);
+  end;
+end;
+
+procedure TSwtImporter.ImportDataSet16;
+var
+  PrintFormats: TSwtPrintFormats;
+begin
+  PrintFormats := FSwtPackage.PrintFormats;
+  PrintFormats.SubsidenceFormat := ConvertFormat(Ifm[0]);
+  PrintFormats.CompactionByModelLayerFormat := ConvertFormat(Ifm[1]);
+  PrintFormats.CompactionByInterbedSystemFormat := ConvertFormat(Ifm[2]);
+  PrintFormats.VerticalDisplacementFormat := ConvertFormat(Ifm[3]);
+  PrintFormats.PreconsolidationStress := ConvertFormat(Ifm[4]);
+  PrintFormats.DeltaPreconsolidationStress := ConvertFormat(Ifm[5]);
+  PrintFormats.GeostaticStress := ConvertFormat(Ifm[6]);
+  PrintFormats.DeltaGeostaticStress := ConvertFormat(Ifm[7]);
+  PrintFormats.EffectiveStress := ConvertFormat(Ifm[8]);
+  PrintFormats.DeltaEffectiveStress := ConvertFormat(Ifm[9]);
+  PrintFormats.VoidRatio := ConvertFormat(Ifm[10]);
+  PrintFormats.ThicknessCompressibleSediments := ConvertFormat(Ifm[11]);
+  PrintFormats.LayerCenterElevation := ConvertFormat(Ifm[12]);
+end;
+
+procedure TSwtImporter.ImportDataSet3;
+var
+  InitialPrint: TSwtInitialPrint;
+begin
+  InitialPrint := FSwtPackage.InitialPrint;
+  InitialPrint.PrintInitialLayerCenterElevations := IZCFL <> 0;
+  InitialPrint.InitialLayerCenterElevationFormat := ConvertFormat(IZCFM);
+  InitialPrint.PrintInitialGeostaticStress := IGLFL <> 0;
+  InitialPrint.InitialGeostaticStressFormat := ConvertFormat(IGLFM);
+  InitialPrint.PrintInitialEffectiveStress := IESTFL <> 0;
+  InitialPrint.InitialEffectiveStressFormat := ConvertFormat(IESTFM);
+  InitialPrint.PrintInitialPreconsolidationStress := IPCSFL <> 0;
+  InitialPrint.InitialPreconsolidationStressFormat := ConvertFormat(IPCSFM);
+  InitialPrint.PrintInitialEquivalentStorageProperties := ISTFL <> 0;
+  InitialPrint.InitialEquivalentStoragePropertiesFormat := ConvertFormat(ISTFM);
+end;
+
+procedure TSwtImporter.ImportLayerData;
+var
+  Index: Integer;
+  Layer: Integer;
+  Group: TLayerGroup;
+  WtItem: TSwtWaterTableItem;
+  ScreenObject: TScreenObject;
+begin
+  ScreenObject := nil;
+  for Index := 0 to FInterBeds.ArrayLength - 1 do
+  begin
+    Layer := FInterBeds[Index].Layer;
+    Group := FModel.LayerStructure[Layer];
+    WtItem := Group.WaterTableLayers.Add;
+    WtItem.Name := 'WT_' + IntToStr(Index + 1);
+    ImportTHICK(Index, WtItem, ScreenObject);
+    if ICRCC <> 0 then
+    begin
+      ImportSSe(Index, WtItem, ScreenObject);
+      ImportSSv(Index, WtItem, ScreenObject);
+    end
+    else
+    begin
+      ImportCr(Index, WtItem, ScreenObject);
+      ImportCc(Index, WtItem, ScreenObject);
+    end;
+    ImportVOID(Index, WtItem, ScreenObject);
+    ImportSUB(Index, WtItem, ScreenObject);
+  end;
+end;
+
+procedure TSwtImporter.ImportDataSet1;
+var
+  CombinedOutput: Boolean;
+  OuterIndex: Integer;
+  InnerIndex: Integer;
+begin
+  if ITHK <= 0 then
+  begin
+    FSwtPackage.ThickResponse := trConstant;
+  end
+  else
+  begin
+    FSwtPackage.ThickResponse := trVariable;
+  end;
+  if IVOID < -0 then
+  begin
+    FSwtPackage.VoidRatioResponse := vrrConstant;
+  end
+  else
+  begin
+    FSwtPackage.VoidRatioResponse := vrrVariable;
+  end;
+  if ISTPCS <> 0 then
+  begin
+    FSwtPackage.PreconsolidationSource := pcOffsets;
+  end
+  else
+  begin
+    FSwtPackage.PreconsolidationSource := pcSpecified;
+  end;
+  if ICRCC <> 0 then
+  begin
+    FSwtPackage.CompressionSource := csSpecificStorage;
+  end
+  else
+  begin
+    FSwtPackage.CompressionSource := csCompressionReComp;
+  end;
+  CombinedOutput := True;
+  for OuterIndex := 0 to Length(Iun) - 2 do
+  begin
+    if Iun[OuterIndex] <> 0 then
+    begin
+      for InnerIndex := OuterIndex + 1 to Length(Iun) - 1 do
+      begin
+        if Iun[InnerIndex] <> 0 then
+        begin
+          CombinedOutput := Iun[OuterIndex] = Iun[InnerIndex];
+          if not CombinedOutput then
+          begin
+            break;
+          end;
+        end;
+      end;
+      break;
+    end;
+  end;
+  if CombinedOutput then
+  begin
+    FSwtPackage.BinaryOutputChoice := sbocSingleFile;
+  end
+  else
+  begin
+    FSwtPackage.BinaryOutputChoice := sbocMultipleFiles;
+  end;
+end;
+
+procedure TSwtImporter.ImportSse(Index: Integer; WtItem: TSwtWaterTableItem;
+  var ScreenObject: TScreenObject);
+begin
+  ImportLayerGroupData(Index, WtItem, ScreenObject,
+    WtItem.WaterTableInitialElasticSkeletalSpecificStorageDataArrayName,
+    FConstSse, FSse);
+end;
+
+procedure TSwtImporter.ImportSsv(Index: Integer; WtItem: TSwtWaterTableItem;
+  var ScreenObject: TScreenObject);
+begin
+  ImportLayerGroupData(Index, WtItem, ScreenObject,
+    WtItem.WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName,
+    FConstSsv, FSsv);
+end;
+
+procedure TSwtImporter.ImportCr(Index: Integer; WtItem: TSwtWaterTableItem;
+  var ScreenObject: TScreenObject);
+begin
+  ImportLayerGroupData(Index, WtItem, ScreenObject,
+    WtItem.WaterTableRecompressionIndexDataArrayName,
+    FConstCr, FCr);
+end;
+
+procedure TSwtImporter.ImportCc(Index: Integer; WtItem: TSwtWaterTableItem;
+  var ScreenObject: TScreenObject);
+begin
+  ImportLayerGroupData(Index, WtItem, ScreenObject,
+    WtItem.WaterTableCompressionIndexDataArrayName,
+    FConstCc, FCc);
+end;
+
+procedure TSwtImporter.ImportVOID(Index: Integer; WtItem: TSwtWaterTableItem;
+  var ScreenObject: TScreenObject);
+begin
+  ImportLayerGroupData(Index, WtItem, ScreenObject,
+    WtItem.WaterTableInitialVoidRatioDataArrayName,
+    FConstVoid, FVoid);
+end;
+
+procedure TSwtImporter.ImportSUB(Index: Integer; WtItem: TSwtWaterTableItem;
+  var ScreenObject: TScreenObject);
+begin
+  ImportLayerGroupData(Index, WtItem, ScreenObject,
+    WtItem.WaterTableInitialCompactionDataArrayName,
+    FConstSub, FSub);
+end;
+
+procedure TSwtImporter.ImportLayerGroupData(Index: Integer; WtItem: TSwtWaterTableItem;
+  var ScreenObject: TScreenObject; Const Name: string;
+  const ConstArray: TRealConstantRecordArray; const ImportedData: T3DDoubleArray);
+var
+  DataArray: TDataArray;
+  DataArrayName: string;
+begin
+  DataArray := FModel.GetDataSetByName(Name);
+  Assert(DataArray <> nil);
+  if ConstArray[Index].IsConstant then
+  begin
+    DataArray.Formula := FloatToStr(ConstArray[Index].RealValue);
+  end
+  else
+  begin
+    Assert(ImportedData <> nil);
+    if ScreenObject = nil then
+    begin
+      CreateOrRetrieveCellCenterScreenObject(ScreenObject);
+    end;
+    DataArrayName := 'Imported_' + Name;
+    CreateDataArrayAndAssignValues(ScreenObject, DataArrayName,
+      ImportedData[Index]);
+    DataArray.Formula := DataArrayName;
+  end;
+end;
+
+procedure TSwtImporter.ImportTHICK(Index: Integer; WtItem: TSwtWaterTableItem;
+  var ScreenObject: TScreenObject);
+begin
+  ImportLayerGroupData(Index, WtItem, ScreenObject,
+    WtItem.WaterTableCompressibleThicknessDataArrayName, FConstTHICK, FTHICK);
+end;
+
+procedure TSwtImporter.ReadDataSet17;
+var
+  Index: Integer;
+begin
+  Inc(FPrintIndex);
+  Read(FImporter.FFile, FSwtPrintRecordArray[FPrintIndex].ISP1);
+  Read(FImporter.FFile, FSwtPrintRecordArray[FPrintIndex].ISP2);
+  Read(FImporter.FFile, FSwtPrintRecordArray[FPrintIndex].ITS1);
+  Read(FImporter.FFile, FSwtPrintRecordArray[FPrintIndex].ITS2);
+  for Index := 0 to Length(FSwtPrintRecordArray[FPrintIndex].Ifl) - 1 do
+  begin
+    Read(FImporter.FFile, FSwtPrintRecordArray[FPrintIndex].Ifl[Index]);
+  end;
+  Readln(FImporter.FFile);
+end;
+
+procedure TSwtImporter.ReadDataSet16;
+var
+  Index: Integer;
+begin
+  for Index := 0 to Length(Ifm) - 1 do
+  begin
+    Read(FImporter.FFile, Ifm[Index]);
+    Read(FImporter.FFile, Iun[Index]);
+  end;
+  Readln(FImporter.FFile);
+end;
+
+procedure TSwtImporter.ReadMultiLayerVariableArrays(const ID: string);
+var
+  Index: Integer;
+  ConstArray: TRealConstantRecordArray;
+  ThreeDArray: T3DDoubleArray;
+begin
+  Index := -1;
+  if ID = StrSILTANDCLAYTHICKN then
+  begin
+    Inc(FThickIndex);
+    ConstArray := FConstTHICK;
+    Index := FThickIndex;
+    if FTHICK = nil then
+    begin
+      SetLength(FTHICK, FInterBeds.ArrayLength);
+    end;
+    ThreeDArray := FTHICK;
+  end
+  else if ID = StrELASTICSPECIFICSTO then
+  begin
+    Inc(FSseIndex);
+    ConstArray := FConstSse;
+    Index := FSseIndex;
+    if FSse = nil then
+    begin
+      SetLength(FSse, FInterBeds.ArrayLength);
+    end;
+    ThreeDArray := FSse;
+  end
+  else if ID = StrRECOMPRESSIONINDEX then
+  begin
+    Inc(FCrIndex);
+    ConstArray := FConstCr;
+    Index := FCrIndex;
+    if FCr = nil then
+    begin
+      SetLength(FCr, FInterBeds.ArrayLength);
+    end;
+    ThreeDArray := FCr;
+  end
+  else if ID = StrINELASSPECIFICSTO then
+  begin
+    Inc(FSsvIndex);
+    ConstArray := FConstSsv;
+    Index := FSsvIndex;
+    if FSsv = nil then
+    begin
+      SetLength(FSsv, FInterBeds.ArrayLength);
+    end;
+    ThreeDArray := FSsv;
+  end
+  else if ID = StrCOMPRESSIONINDEX then
+  begin
+    Inc(FCcIndex);
+    ConstArray := FConstCc;
+    Index := FCcIndex;
+    if FCc = nil then
+    begin
+      SetLength(FCc, FInterBeds.ArrayLength);
+    end;
+    ThreeDArray := FCc;
+  end
+  else if ID = StrVOIDRATIO then
+  begin
+    Inc(FVoidIndex);
+    ConstArray := FConstVoid;
+    Index := FVoidIndex;
+    if FVoid = nil then
+    begin
+      SetLength(FVoid, FInterBeds.ArrayLength);
+    end;
+    ThreeDArray := FVoid;
+  end
+  else if ID = StrSTARTINGCOMPACTION then
+  begin
+    Inc(FSubIndex);
+    ConstArray := FConstSub;
+    Index := FSubIndex;
+    if FSub = nil then
+    begin
+      SetLength(FSub, FInterBeds.ArrayLength);
+    end;
+    ThreeDArray := FSub;
+  end
+  else if ID = StrPRECONSOLSTRESS then
+  begin
+    Inc(FPCSIndex);
+    ConstArray := FConstPCS;
+    Index := FPCSIndex;
+    if FPcs = nil then
+    begin
+      SetLength(FPcs, FInterBeds.ArrayLength);
+    end;
+    ThreeDArray := FPcs;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+  if ThreeDArray[Index] = nil then
+  begin
+    SetLength(ThreeDArray[Index], FGrid.RowCount, FGrid.ColumnCount);
+  end;
+  Read2DRealArray(ThreeDArray[Index]);
+  ConstArray[Index].IsConstant := False;
+end;
+
+procedure TSwtImporter.ReadMultilayerConstantArrays(Value: Double; const ID: string);
+var
+  ConstArray: TRealConstantRecordArray;
+  Index: Integer;
+begin
+  Index := -1;
+  if ID = StrSILTANDCLAYTHICKN then
+  begin
+    Inc(FThickIndex);
+    ConstArray := FConstTHICK;
+    Index := FThickIndex;
+  end
+  else if ID = StrELASTICSPECIFICSTO then
+  begin
+    Inc(FSseIndex);
+    ConstArray := FConstSse;
+    Index := FSseIndex;
+  end
+  else if ID = StrRECOMPRESSIONINDEX then
+  begin
+    Inc(FCrIndex);
+    ConstArray := FConstCr;
+    Index := FCrIndex;
+  end
+  else if ID = StrINELASSPECIFICSTO then
+  begin
+    Inc(FSsvIndex);
+    ConstArray := FConstSsv;
+    Index := FSsvIndex;
+  end
+  else if ID = StrCOMPRESSIONINDEX then
+  begin
+    Inc(FCcIndex);
+    ConstArray := FConstCc;
+    Index := FCcIndex;
+  end
+  else if ID = StrVOIDRATIO then
+  begin
+    Inc(FVoidIndex);
+    ConstArray := FConstVoid;
+    Index := FVoidIndex;
+  end
+  else if ID = StrSTARTINGCOMPACTION then
+  begin
+    Inc(FSubIndex);
+    ConstArray := FConstSub;
+    Index := FSubIndex;
+  end
+  else if ID = StrPRECONSOLSTRESS then
+  begin
+    Inc(FPCSIndex);
+    ConstArray := FConstPCS;
+    Index := FPCSIndex;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+  ConstArray[Index].IsConstant := True;
+  ConstArray[Index].RealValue := Value;
+end;
+
+procedure TSwtImporter.Read1LayerVariableDataSets(const ID: string);
+var
+  TwoDArray: T2DDoubleArray;
+  ConstValue: TRealConstantRecord;
+begin
+  ConstValue.IsConstant := False;
+  SetLength(TwoDArray, FGrid.RowCount, FGrid.ColumnCount);
+  Read2DRealArray(TwoDArray);
+  if ID = StrMF_GEOSTATICSTRESS then
+  begin
+    GL0Const := ConstValue;
+    GL0Variable := TwoDArray;
+  end
+  else if ID = StrMOISTSPECIFICGRAVI then
+  begin
+    SGMConst := ConstValue;
+    SGMVariable := TwoDArray;
+  end
+  else if ID = StrSATSPECIFICGRAVIT then
+  begin
+    SGSConst := ConstValue;
+    SGSVariable := TwoDArray;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+end;
+
+procedure TSwtImporter.Read1LayerConstDataSets(Value: Double; const ID: string);
+begin
+  if ID = StrMF_GEOSTATICSTRESS then
+  begin
+    GL0Const.IsConstant := True;
+    GL0Const.RealValue := Value;
+  end
+  else if ID = StrMOISTSPECIFICGRAVI then
+  begin
+    SGMConst.IsConstant := True;
+    SGMConst.RealValue := Value;
+  end
+  else if ID = StrSATSPECIFICGRAVIT then
+  begin
+    SGSConst.IsConstant := True;
+    SGSConst.RealValue := Value;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+end;
+
+procedure TSwtImporter.ReadDataSet3;
+begin
+  Read(FImporter.FFile, IZCFL);
+  Read(FImporter.FFile, IZCFM);
+  Read(FImporter.FFile, IGLFL);
+  Read(FImporter.FFile, IGLFM);
+  Read(FImporter.FFile, IESTFL);
+  Read(FImporter.FFile, IESTFM);
+  Read(FImporter.FFile, IPCSFL);
+  Read(FImporter.FFile, IPCSFM);
+  Read(FImporter.FFile, ISTFL);
+  Read(FImporter.FFile, ISTFM);
+  Readln(FImporter.FFile);
+end;
+
+procedure TSwtImporter.ReadVariableRealArrayForLayer;
+var
+  ID: string;
+  Layer: integer;
+begin
+  ReadLn(FImporter.FFile, ID);
+  ID := Trim(ID);
+  ReadLn(FImporter.FFile, Layer);
+  if (ID = StrMF_GEOSTATICSTRESS)
+    or (ID = StrMOISTSPECIFICGRAVI)
+    or (ID = StrSATSPECIFICGRAVIT) then
+  begin
+    Assert(Layer = 1);
+    Read1LayerVariableDataSets(ID);
+  end
+  else
+  begin
+    ReadMultiLayerVariableArrays(ID);
+  end;
+end;
+
+procedure TSwtImporter.ReadDataSet2;
+var
+  Index: Integer;
+  ALayer: Integer;
+begin
+  for Index := 0 to FInterBeds.ArrayLength - 1 do
+  begin
+    Read(FImporter.FFile, ALayer);
+    FInterBeds[Index].Layer := ALayer;
+  end;
+  Readln(FImporter.FFile);
+end;
+
+procedure TSwtImporter.HandlePackage;
+begin
+  inherited;
+  FSwtPackage := FModel.ModflowPackages.SwtPackage;
+  FSwtPackage.IsSelected := True;
+
+  ImportDataSet1;
+  FModel.CreateInitialDataSets;
+
+  ImportDataSet3;
+  ImportLayerData;
+
+  Import2DDataSet(StrGeostaticStress, StrGeostaticStress,
+    GL0Const, GL0Variable);
+  Import2DDataSet(StrSpecificGravityUns, StrSpecificGravityUns,
+    SGMConst, SGMVariable);
+  Import2DDataSet(StrSpecificGravitySat, StrSpecificGravitySat,
+    SGSConst, SGSVariable);
+  ImportInitialConditions;
+  ImportDataSet16;
+  ImportPrintChoices;
+
+
+end;
+
+procedure TSwtImporter.ReadDataSet1;
+var
+  ISWTCB: Integer;
+begin
+  Read(FImporter.FFile, ISWTCB);
+  Read(FImporter.FFile, ISWTOC);
+  Read(FImporter.FFile, NSYSTM);
+  Read(FImporter.FFile, ITHK);
+  Read(FImporter.FFile, IVOID);
+  Read(FImporter.FFile, ISTPCS);
+  Read(FImporter.FFile, ICRCC);
+  Readln(FImporter.FFile);
+
+  FInterBeds.ArrayLength := NSYSTM;
+
+  SetLength(FConstTHICK, NSYSTM);
+  FThickIndex := -1;
+
+  if ICRCC <> 0 then
+  begin
+    SetLength(FConstSse, NSYSTM);
+    SetLength(FConstSsv, NSYSTM);
+  end
+  else
+  begin
+    SetLength(FConstCr, NSYSTM);
+    SetLength(FConstCc, NSYSTM);
+  end;
+  FSseIndex := -1;
+  FCrIndex := -1;
+  FSsvIndex := -1;
+  FCcIndex := -1;
+
+  SetLength(FConstVoid, NSYSTM);
+  FVoidIndex := -1;
+
+  SetLength(FConstSub, NSYSTM);
+  FSubIndex := -1;
+
+  SetLength(FConstPcs, NSYSTM);
+  FPcsIndex := -1;
+
+  SetLength(FSwtPrintRecordArray, ISWTOC);
+  FPrintIndex := -1;
+end;
+
+
+
+procedure TSwtImporter.ReadConstRealArrayForLayer;
+var
+  ID: string;
+  Value: double;
+  Layer: integer;
+begin
+  ReadLn(FImporter.FFile, ID);
+  ID := Trim(ID);
+  ReadLn(FImporter.FFile, Layer);
+  Readln(FImporter.FFile, Value);
+  if (ID = StrMF_GEOSTATICSTRESS)
+    or (ID = StrMOISTSPECIFICGRAVI)
+    or (ID = StrSATSPECIFICGRAVIT) then
+  begin
+    Assert(Layer = 1);
+    Read1LayerConstDataSets(Value, ID);
+  end
+  else
+  begin
+    ReadMultilayerConstantArrays(Value, ID);
+  end;
+end;
+
+procedure TSwtImporter.ReadData(const ALabel: string);
+begin
+  inherited;
+  if ALabel = 'ISWTCB ISWTOC NSYSTM ITHK IVOID ISTPCS ICRCC:' then
+  begin
+    ReadDataSet1;
+  end
+  else if ALabel = '(LNWT(N),N=1,NSYSTM):' then
+  begin
+    ReadDataSet2;
+  end
+  else if ALabel = 'IZCFL IZCFM IGLFL IGLFM IESTFL IESTFM IPCSFL IPCSFM ISTFL ISTFM:' then
+  begin
+    ReadDataSet3;
+  end
+  else if ALabel = StrConstant2DRealArrayForLayer then
+  begin
+    ReadConstRealArrayForLayer;
+  end
+  else if ALabel = StrVariable2DRealArrayForLayer then
+  begin
+    ReadVariableRealArrayForLayer;
+  end
+  else if ALabel = '(ISWOCF(N),ISWOCU(N),N=1,13):' then
+  begin
+    ReadDataSet16;
+  end
+  else if ALabel = 'ISP1,ISP2 , JTS1, JTS2 (IFL2(N),N=1,26):' then
+  begin
+    ReadDataSet17;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+end;
+
+{ THydmodImporter }
+
+constructor THydmodImporter.Create(Importer: TModflow2005Importer;
+  SfrImporter: TSfrImporter; SubImporter: TSubImporter);
+begin
+  inherited Create(Importer, 'HYD');
+  FLocations := THydmodLocationArray.Create;
+  FLocationIndex := -1;
+  FSfrImporter := SfrImporter;
+  FSubImporter := SubImporter;
+end;
+
+procedure THydmodImporter.ReadDataSet1;
+var
+  NHYDM: Integer;
+  IHYDMUN: Integer;
+begin
+  Read(FImporter.FFile, NHYDM);
+  FLocations.ArrayLength := NHYDM;
+  Read(FImporter.FFile, IHYDMUN);
+  Read(FImporter.FFile, HYDNOH);
+  Readln(FImporter.FFile);
+end;
+
+destructor THydmodImporter.Destroy;
+begin
+  FLocations.Free;
+  inherited;
+end;
+
+procedure THydmodImporter.StoreCommonData(Z: Real; APoint: TPoint2D;
+  Location: THydModLocation; Index: Integer; var HydModData: THydmodData);
+var
+  ScreenObject: TScreenObject;
+begin
+  ScreenObject := CreateScreenObject('ImportedHydmod' + IntToStr(Index + 1));
+  ScreenObject.SetValuesOfEnclosedCells := False;
+  ScreenObject.SetValuesOfIntersectedCells := True;
+  ScreenObject.ElevationFormula := FloatToStr(Z);
+  APoint := FModel.Grid.RotateFromGridCoordinatesToRealWorldCoordinates(APoint);
+  ScreenObject.AddPoint(APoint, True);
+  ScreenObject.CreateHydmodData;
+  HydModData := ScreenObject.ModflowHydmodData;
+  HydModData.IsUsed := True;
+  if Location.INTYP = 'C' then
+  begin
+    HydModData.AssignmentMethod := amCell;
+  end
+  else if Location.INTYP = 'I' then
+  begin
+    HydModData.AssignmentMethod := amInterpolate;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+  HydModData.HydrographLabel := Location.HYDLBL;
+end;
+
+function THydmodImporter.GetObservationLocation(Location: THydModLocation): TPoint2D;
+begin
+  Assert((Location.PCKG = 'BAS') or (Location.PCKG = 'SUB'));
+  result.x := Location.XL + FModel.Grid.ColumnPosition[0];
+  result.y := Location.YL + FModel.Grid.RowPosition[FModel.Grid.RowCount];
+end;
+
+procedure THydmodImporter.HandlePackage;
+var
+  Index: Integer;
+  Location: THydModLocation;
+  APoint: TPoint2D;
+  ACell: T2DTopCell;
+  Z: Real;
+  HydModData: THydmodData;
+  LayerItem: TSubLayerAssignment;
+  Group: TLayerGroup;
+  Segment: integer;
+  Reach: integer;
+  ReachIndex: Integer;
+  AReach: TSfrLocationObject;
+  SelectedReach: TSfrLocationObject;
+  Layer: Integer;
+begin
+//  inherited;
+  if FImportedPackage then
+  begin
+    Exit;
+  end;
+  if (FLocationIndex < 0)
+    or (FLocationIndex < FLocations.ArrayLength-1) then
+  begin
+    Exit;
+  end;
+  if (FModel.ModflowPackages.SfrPackage.IsSelected
+    or (FSfrImporter.FReaches.ArrayLength > 0))
+    and not FSfrImporter.FImportedPackage then
+  begin
+    Exit;
+  end;
+  if (FModel.ModflowPackages.SubPackage.IsSelected
+    or (FSubImporter.FNoDelayBeds.ArrayLength > 0))
+    and not FSubImporter.FImportedPackage then
+  begin
+    Exit;
+  end;
+  inherited;
+
+  FHydmodPackage := FModel.ModflowPackages.HydmodPackage;
+  FHydmodPackage.IsSelected := True;
+
+  FHydmodPackage.HYDNOH := HYDNOH;
+
+  for Index := 0 to FLocations.ArrayLength - 1 do
+  begin
+    Location := FLocations[Index];
+    if Location.PCKG = 'IBS' then
+    begin
+      Continue;
+    end
+    else if Location.PCKG = 'STR' then
+    begin
+      Continue;
+    end
+    else if Location.PCKG = 'BAS' then
+    begin
+      APoint := GetObservationLocation(Location);
+      ACell := FModel.Grid.TopContainingCell(APoint, eaBlocks, False);
+      Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer(Location.KLAY);
+      Z := FModel.Grid.LayerCenter(ACell.Col, ACell.Row,Layer);
+      StoreCommonData(Z, APoint, Location, Index, HydModData);
+      if Location.ARR = 'HD' then
+      begin
+        HydModData.Head := True;
+      end
+      else if Location.ARR = 'DD' then
+      begin
+        HydModData.Drawdown := True;
+      end
+      else
+      begin
+        Assert(False);
+      end;
+    end
+    else if Location.PCKG = 'SUB' then
+    begin
+      APoint := GetObservationLocation(Location);
+      ACell := FModel.Grid.TopContainingCell(APoint, eaBlocks, False);
+      Z := FModel.Grid.LayerCenter(ACell.Col, ACell.Row,0);
+      StoreCommonData(Z, APoint, Location, Index, HydModData);
+
+      LayerItem := FSubImporter.FNoDelayBeds[Location.KLAY-1];
+      Group := FModel.LayerStructure[LayerItem.Layer];
+      HydModData.SubLayerGroup := Group.AquiferName;
+      HydModData.SubNoDelayBed := StrNDSys + IntToStr(Location.KLAY);
+
+      if Location.ARR = 'HC' then
+      begin
+        HydModData.SubPreconsolidationHead := True;
+      end
+      else if Location.ARR = 'CP' then
+      begin
+        HydModData.SubCompaction := True;
+      end
+      else if Location.ARR = 'SB' then
+      begin
+        HydModData.SubSubsidence := True;
+      end
+      else
+      begin
+        Assert(False);
+      end;
+    end
+    else if Location.PCKG = 'SFR' then
+    begin
+      Segment := Round(Location.XL);
+      Reach := Round(Location.YL);
+
+      SelectedReach := nil;
+      for ReachIndex := 0 to FSfrImporter.FReaches.ArrayLength - 1 do
+      begin
+        AReach := FSfrImporter.FReaches[ReachIndex];
+        if (AReach.SegmentNumber = Segment)
+          and (AReach.ReachNumber = Reach) then
+        begin
+          SelectedReach := AReach;
+          break;
+        end;
+      end;
+      Assert(SelectedReach <> nil);
+
+      APoint := FModel.Grid.UnrotatedTwoDElementCenter(
+        SelectedReach.Column-1, SelectedReach.Row-1);
+      Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer(
+        SelectedReach.Layer);
+      Z := FModel.Grid.LayerCenter(
+        SelectedReach.Column-1, SelectedReach.Row-1,Layer);
+      StoreCommonData(Z, APoint, Location, Index, HydModData);
+
+      if Location.ARR = 'ST' then
+      begin
+        HydModData.SfrStage := True;
+      end
+      else if Location.ARR = 'SI' then
+      begin
+        HydModData.SfrInFlow := True;
+      end
+      else if Location.ARR = 'SO' then
+      begin
+        HydModData.SfrOutFlow := True;
+      end
+      else if Location.ARR = 'SA' then
+      begin
+        HydModData.SfrAquiferExchange := True;
+      end
+      else
+      begin
+        Assert(False);
+      end;
+    end
+    else
+    begin
+      Assert(False);
+    end;
+  end;
+end;
+
+procedure THydmodImporter.ReadData(const ALabel: string);
+var
+  PCKG: string;
+  ARR: string;
+  INTYP: string;
+  HYDLBL: string;
+begin
+  inherited;
+  if ALabel = 'NHYDM,IHYDMUN,HYDNOH:' then
+  begin
+    ReadDataSet1;
+  end
+  else if ALabel = 'PCKG:' then
+  begin
+    Inc(FLocationIndex);
+    Readln(FImporter.FFile, PCKG);
+    FLocations[FLocationIndex].PCKG := Trim(PCKG)
+  end
+  else if ALabel = 'ARR:' then
+  begin
+    Readln(FImporter.FFile, ARR);
+    FLocations[FLocationIndex].ARR := Trim(ARR)
+  end
+  else if ALabel = 'INTYP:' then
+  begin
+    Readln(FImporter.FFile, INTYP);
+    FLocations[FLocationIndex].INTYP := Trim(INTYP)
+  end
+  else if ALabel = 'KLAY XL YL:' then
+  begin
+    Read(FImporter.FFile, FLocations[FLocationIndex].KLAY);
+    Read(FImporter.FFile, FLocations[FLocationIndex].XL);
+    Read(FImporter.FFile, FLocations[FLocationIndex].YL);
+    Readln(FImporter.FFile);
+  end
+  else if ALabel = 'HYDLBL:' then
+  begin
+    Readln(FImporter.FFile, HYDLBL);
+    FLocations[FLocationIndex].HYDLBL := Trim(HYDLBL)
+  end
+  else
+  begin
+    Assert(False);
+  end;
+end;
+
+{ THydmodLocationArray }
+
+function THydmodLocationArray.ArrayMemberClass: TArrayMemberClass;
+begin
+  result := THydModLocation;
+end;
+
+function THydmodLocationArray.GetLocations(Index: integer): THydModLocation;
+begin
+  result := Objects[Index] as THydModLocation;
 end;
 
 end.

@@ -10,6 +10,7 @@ interface
   function BooleanToYesOrNo(const Bool: boolean): string;
   function BuildCommand(const ProgName, ArgList: string; const Quote: boolean): string;
   procedure CenterForm(aForm: TForm);
+  function ChangeRelPath(OldBaseDir, NewBaseDir, OldRelPath: string): string;
   function CheckNamesInColumn(RbwGrid: TRbwDataGrid4; Column: integer;
                MaxLen: integer; var ErrName: string; var ErrRow: integer): boolean;
   procedure ClearAllSelections(RbwGrid: TRbwDataGrid4);
@@ -47,8 +48,8 @@ interface
   function TrimLeadingBlanks(const Str: string): string;
   function TrimTrailingBlanks(const Str: string): string;
   function WriteBatchFile(ProgramLocation, CmdLineOption, BatchName: string): string;
-  function WriteCustomBatchFile(ProgramLocation, AbsMIF, OutPrefix, BatchName,
-                                ModelDir: string): string;
+  function WriteCustomBatchFile(ProgramLocation, AbsMIF, OutPrefix, OutPrefixPred,
+                                 BatchName, ModelDir: string): string;
   function YesOrNoToBoolean(const Str: string): boolean;
 
 
@@ -127,6 +128,16 @@ begin
     if y + h > Screen.Height then
       y := Screen.Height - aForm.Height;
   aForm.Top := y;
+end;
+
+//###################################################################
+
+function ChangeRelPath(OldBaseDir, NewBaseDir, OldRelPath: string): string;
+var
+  AbsPath: string;
+begin
+  AbsPath := PathToAbsPath(OldBaseDir, OldRelPath);
+  result := MyExtractRelativePath(NewBaseDir,AbsPath);
 end;
 
 //###################################################################
@@ -553,18 +564,26 @@ end;
 function MyExtractRelativePath(const BaseName, DestName: string): string;
 var
   Len: integer;
-  BName: string;
+  BName, Dot: string;
 begin
-  Len := length(BaseName);
-  if BaseName[Len] <> '\' then
+  Dot := '.';
+  if (BaseName = DestName) then
     begin
-      BName := BaseName + '\';
+      result := Dot;
     end
   else
     begin
-      BName := BaseName;
+      Len := length(BaseName);
+      if BaseName[Len] <> '\' then
+        begin
+          BName := BaseName + '\';
+        end
+      else
+        begin
+          BName := BaseName;
+        end;
+      result := ExtractRelativePath(BName, DestName);
     end;
-  result := ExtractRelativePath(BName, DestName);
 end;
 
 //###################################################################
@@ -644,9 +663,11 @@ end;
 
 function PathToAbsPath(const SourceDir, RelPath: string): string;
 var
-  AbsDir, RelDir, ResultTemp, Separator: string;
+  AbsDir, Dot, FName, RelDir, ResultTemp, Separator: string;
   Done: boolean;
 begin
+  Dot := '.';
+  FName := '';
   Separator := '\';
   Done := False;
   //
@@ -663,7 +684,9 @@ begin
     begin
       RelDir := ExtractFileDir(RelPath);
       AbsDir := ExcludeTrailingPathDelimiter(RelDirToAbsDir(SourceDir, RelDir));
-      ResultTemp := AbsDir + Separator + ExtractFileName(RelPath);
+      if RelPath <> Dot then
+        FName := ExtractFileName(RelPath);
+      ResultTemp := AbsDir + Separator + FName;
     end;
   result := ExcludeTrailingPathDelimiter(ResultTemp);
 end;
@@ -781,11 +804,12 @@ end;
 function RelDirToAbsDir(const SourceDir, RelDir: string): string;
 var
   Len, PosColon, PSepR, PSepS: integer;
-  Colon, SrcDirStr, RelDirName, RelDirStr, DSep, ResultTemp: string;
+  Colon, Dot, SrcDirStr, RelDirName, RelDirStr, DSep, ResultTemp: string;
   Done: boolean;
 begin
   Done := False;
   Colon := ':';
+  Dot := '.';
   DSep := '\';
   if SourceDir = DSep then
     begin
@@ -811,6 +835,11 @@ begin
         end
       else
         begin
+          if (PSepR = 0) and (PosEx(Dot,RelDirStr)>0) then
+            begin
+              RelDirStr := RelDirStr + DSep;
+              PSepR := PosEx(DSep, RelDirStr); // Position of the directory separator in RelDirStr
+            end;
           if PSepR > 1 then
             begin
               RelDirName := LeftStr(RelDirStr, PSepR-1);
@@ -823,8 +852,6 @@ begin
                   if RelDirName = '..' then
                     begin
                       PSepS := LastPos(SrcDirStr, DSep); // Position of dir. separator in SrcDirStr
-                      //Len := length(SrcDirStr);
-                      //Delete(SrcDirStr, 1, Len-PSepS); // Delete last subdirectory in SrcDirStr
                       SrcDirStr := LeftStr(SrcDirStr, PSepS-1);
                     end;
                   PSepR := PosEx(DSep, RelDirStr); // Position of the dir. separator in RelDirStr
@@ -982,11 +1009,11 @@ end;
 
 //###################################################################
 
-function WriteCustomBatchFile(ProgramLocation, AbsMIF, OutPrefix, BatchName,
-                              ModelDir: string): string;
+function WriteCustomBatchFile(ProgramLocation, AbsMIF, OutPrefix, OutPrefixPred,
+                               BatchName, ModelDir: string): string;
 var
   BatchFile: TStringList;
-  AbsAppDir, AbsPrefix, Path: string;
+  AbsAppDir, AbsPrefix, AbsPrefixPred, Path: string;
 begin
   if (Length(ProgramLocation) > 0) and (ProgramLocation[1] <> '"') then
   begin
@@ -997,6 +1024,7 @@ begin
   result := Path + BatchName + '.bat';
   AbsAppDir := ExtractFileDir(AbsMIF);
   AbsPrefix := AbsAppDir + '\' + OutPrefix;
+  AbsPrefixPred := AbsAppDir + '\' + OutPrefixPred;
   BatchFile := TStringList.Create;
   try
     BatchFile.Add('@echo off');
@@ -1004,7 +1032,7 @@ begin
     BatchFile.Add('cd ' + ModelDir);
     BatchFile.Add('');
     BatchFile.Add('REM  Invoke analysis application');
-    BatchFile.Add(ProgramLocation + ' ' + AbsMIF + ' ' + AbsPrefix + ' /wait');
+    BatchFile.Add(ProgramLocation + ' ' + AbsMIF + ' ' + AbsPrefix + ' ' + AbsPrefixPred + ' /wait');
     BatchFile.Add('');
     BatchFile.Add('REM  Return to directory where analysis-application files reside');
     BatchFile.Add('cd ' + AbsAppDir);

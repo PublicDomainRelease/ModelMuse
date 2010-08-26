@@ -98,7 +98,7 @@
       <config-value name="deffont">font-family:'MS Sans Serif'; font-size:8pt; color:#000000;</config-value>
       <config-value name="contents"></config-value>
       <config-value name="topicprefix"></config-value>
-      <config-value name="autohelpstart">3579</config-value>
+      <config-value name="autohelpstart">3587</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">1</config-value>
       <config-value name="searchpath">.\;.\Used Images\;.\ScreenShots\;.\ModflowGuide\</config-value>
@@ -111,9 +111,8 @@
         <config-value name="user3">User defined 3</config-value>
       </config-group>
       <config-value name="imageshortcuts_includebaggage">1</config-value>
-      <config-value name="make0include">CHM,OPT_ATOC,OPT_BREADTRAIL,OPT_FB,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
+      <config-value name="make0include">CHM,OPT_3FRAME,OPT_ATOC,OPT_BREADTRAIL,OPT_FB,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
       <config-value name="make0status">*</config-value>
-      <config-group name="bookmarks"/>
     </config-group>
     <config-group name="hlp">
       <config-value name="citation" translate="true"></config-value>
@@ -718,6 +717,8 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="HOB_Head_Observation_Package_P" value="3377"/>
       <helpcontext-number href="Huf_Head_In_Formula" value="3556"/>
       <helpcontext-number href="HUF2_Hydrogeologic_Unit_Flow" value="3514"/>
+      <helpcontext-number href="HYD_HYDMOD_Package" value="3582"/>
+      <helpcontext-number href="HYD_HYDMOD_Package_Pane" value="3583"/>
       <helpcontext-number href="If" value="610"/>
       <helpcontext-number href="IfB" value="620"/>
       <helpcontext-number href="IfI" value="630"/>
@@ -761,6 +762,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Link_Streams_Dialog_Box" value="3372"/>
       <helpcontext-number href="Link_to_SFR_Packages_pane_for_" value="3340"/>
       <helpcontext-number href="Link_to_SFR_Packages_pane_for2" value="3350"/>
+      <helpcontext-number href="LinkToManageParameters" value="3585"/>
       <helpcontext-number href="List_of_Data_Sets_and_Function" value="1840"/>
       <helpcontext-number href="Ln" value="760"/>
       <helpcontext-number href="Log10" value="770"/>
@@ -773,7 +775,9 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Main_Window" value="120"/>
       <helpcontext-number href="Main_Window#Figure5" value="3439"/>
       <helpcontext-number href="Manage_Flux_Observations" value="3468"/>
+      <helpcontext-number href="Manage_Head_Observations" value="3586"/>
       <helpcontext-number href="Manage_Image_Settings" value="3576"/>
+      <helpcontext-number href="Manage_Parameters_Dialog_Box" value="3584"/>
       <helpcontext-number href="Math" value="660"/>
       <helpcontext-number href="Max" value="790"/>
       <helpcontext-number href="MaxI" value="800"/>
@@ -860,6 +864,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Options_Tab" value="2470"/>
       <helpcontext-number href="Options_Tab#HDRY" value="3390"/>
       <helpcontext-number href="Options_Tab#HNOFLO" value="3388"/>
+      <helpcontext-number href="Output" value="3581"/>
       <helpcontext-number href="Parameter_Names_and_Values" value="3320"/>
       <helpcontext-number href="Parameters_Tab" value="3517"/>
       <helpcontext-number href="PCG_Preconditioned_Conjugate_Gradiant" value="2770"/>
@@ -993,8 +998,10 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Straight-Lines" value="1500"/>
       <helpcontext-number href="SUB_Subsidence_and_Aquifer_Sys" value="3558"/>
       <helpcontext-number href="Subdivide_Columns_Rows_and_Layers" value="1670"/>
-      <helpcontext-number href="Subsidence" value="3557"/>
+      <helpcontext-number href="Subsidence_MM" value="3557"/>
       <helpcontext-number href="Summary" value="3250"/>
+      <helpcontext-number href="SWT_Package" value="3579"/>
+      <helpcontext-number href="SWT_Tab" value="3580"/>
       <helpcontext-number href="Tan" value="1430"/>
       <helpcontext-number href="Tanh" value="1440"/>
       <helpcontext-number href="Text" value="1160"/>
@@ -1482,6 +1489,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <file-mod href="Vertex_Values_Dialog_Box.xml" build="CHM,HTML,HXS,HLP,DEMO,USER2,USER3"/>
       <file-mod href="InterpolatedVertexValue.xml" build="CHM,HTML,HXS,HLP,DEMO,USER2,USER3"/>
       <file-mod href="_Legend_Tab.xml"/>
+      <file-mod href="LinkToManageParameters.xml"/>
     </file>
     <file href="Topics/Invisible/*.xml" build="ALL" filetype="topic"/>
     <file href="Baggage/*.*" build="ALL" filetype="baggage"/>

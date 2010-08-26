@@ -30,6 +30,7 @@ type
       const DataSetIdentifier, VariableIdentifiers: string); override;
     procedure WriteParameterCells(CellList: TValueCellList; NLST: Integer;
       const VariableIdentifiers, DataSetIdentifier: string); override;
+    function ObsNameWarningString: string; override;
   public
     procedure WriteFile(const AFileName: string);
     procedure WriteFluxObservationFile(const AFileName: string;
@@ -73,6 +74,11 @@ end;
 function TModflowDRN_Writer.ObservationPackage: TModflowPackageSelection;
 begin
   result := PhastModel.ModflowPackages.DrobPackage;
+end;
+
+function TModflowDRN_Writer.ObsNameWarningString: string;
+begin
+  result := 'The following Drain observation names may be valid for MODFLOW but they are not valid for UCODE.';
 end;
 
 function TModflowDRN_Writer.Package: TModflowPackageSelection;
@@ -194,6 +200,11 @@ begin
   if ShouldWriteFile or ShouldWriteObservationFile then
   begin
     Evaluate;
+    if not frmProgress.ShouldContinue then
+    begin
+      Exit;
+    end;
+    ClearTimeLists;
   end;
   if not ShouldWriteFile then
   begin

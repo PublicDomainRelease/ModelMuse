@@ -21,8 +21,9 @@ type
     DepthFractionAnnotations: array of string;
     EtFractionAnnotations: array of string;
     procedure Assign(const Item: TEtsSurfDepthRecord);
-    procedure Cache(Comp: TCompressionStream);
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); 
+    procedure RecordStrings(Strings: TStringList);
   end;
 
   // @name is an array of @link(TEtsSurfDepthRecord)s.
@@ -197,9 +198,10 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property EvapotranspirationSurface: double read GetEvapotranspirationSurface;
     property EvapotranspirationDepth: double read GetEvapotranspirationDepth;
@@ -569,6 +571,7 @@ begin
       end;
     end;
   end;
+  ClearBoundaries;
 end;
 
 function TEtsBoundary.GetTimeVaryingEvapotranspirationLayers: boolean;
@@ -1266,10 +1269,10 @@ end;
 
 { TEtsSurfDepth_Cell }
 
-procedure TEtsSurfDepth_Cell.Cache(Comp: TCompressionStream);
+procedure TEtsSurfDepth_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -1387,6 +1390,12 @@ begin
   result := Values.Cell.Section;
 end;
 
+procedure TEtsSurfDepth_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
+end;
+
 procedure TEtsSurfDepth_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
@@ -1405,7 +1414,7 @@ begin
   SetLength(EtFractionAnnotations, Length(EtFractionAnnotations));
 end;
 
-procedure TEtsSurfDepthRecord.Cache(Comp: TCompressionStream);
+procedure TEtsSurfDepthRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 var
   Count: integer;
   Index: Integer;
@@ -1425,15 +1434,39 @@ begin
   end;
   WriteCompReal(Comp, StartingTime);
   WriteCompReal(Comp, EndingTime);
-  WriteCompString(Comp, EvapotranspirationSurfaceAnnotation);
-  WriteCompString(Comp, EvapotranspirationDepthAnnotation);
+
+  WriteCompInt(Comp, Strings.IndexOf(EvapotranspirationSurfaceAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(EvapotranspirationDepthAnnotation));
+
+//  WriteCompString(Comp, EvapotranspirationSurfaceAnnotation);
+//  WriteCompString(Comp, EvapotranspirationDepthAnnotation);
   for Index := 0 to Count - 1 do
   begin
-    WriteCompString(Comp, DepthFractionAnnotations[Index]);
+    WriteCompInt(Comp, Strings.IndexOf(DepthFractionAnnotations[Index]));
+//    WriteCompString(Comp, DepthFractionAnnotations[Index]);
   end;
   for Index := 0 to Count - 1 do
   begin
-    WriteCompString(Comp, EtFractionAnnotations[Index]);
+    WriteCompInt(Comp, Strings.IndexOf(EtFractionAnnotations[Index]));
+//    WriteCompString(Comp, EtFractionAnnotations[Index]);
+  end;
+end;
+
+procedure TEtsSurfDepthRecord.RecordStrings(Strings: TStringList);
+var
+  Index: Integer;
+  Count: Integer;
+begin
+  Count := Length(DepthFractions);
+  Strings.Add(EvapotranspirationSurfaceAnnotation);
+  Strings.Add(EvapotranspirationDepthAnnotation);
+  for Index := 0 to Count - 1 do
+  begin
+    Strings.Add(DepthFractionAnnotations[Index]);
+  end;
+  for Index := 0 to Count - 1 do
+  begin
+    Strings.Add(EtFractionAnnotations[Index]);
   end;
 end;
 
@@ -1458,17 +1491,23 @@ begin
   end;
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  EvapotranspirationSurfaceAnnotation := ReadCompString(Decomp, Annotations);
-  EvapotranspirationDepthAnnotation := ReadCompString(Decomp, Annotations);
+
+  EvapotranspirationSurfaceAnnotation := Annotations[ReadCompInt(Decomp)];
+  EvapotranspirationDepthAnnotation := Annotations[ReadCompInt(Decomp)];
+
+//  EvapotranspirationSurfaceAnnotation := ReadCompString(Decomp, Annotations);
+//  EvapotranspirationDepthAnnotation := ReadCompString(Decomp, Annotations);
   SetLength(DepthFractionAnnotations, Count);
   for Index := 0 to Count - 1 do
   begin
-    DepthFractionAnnotations[Index] := ReadCompString(Decomp, Annotations);
+    DepthFractionAnnotations[Index] := Annotations[ReadCompInt(Decomp)];
+//    DepthFractionAnnotations[Index] := ReadCompString(Decomp, Annotations);
   end;
   SetLength(EtFractionAnnotations, Count);
   for Index := 0 to Count - 1 do
   begin
-    EtFractionAnnotations[Index] := ReadCompString(Decomp, Annotations);
+    EtFractionAnnotations[Index] := Annotations[ReadCompInt(Decomp)];
+//    EtFractionAnnotations[Index] := ReadCompString(Decomp, Annotations);
   end;
 end;
 
@@ -1745,12 +1784,32 @@ procedure TEtsSurfDepthStorage.Store(Compressor: TCompressionStream);
 var
   Index: Integer;
   Count: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FEtsSurfDepthArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FEtsSurfDepthArray[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FEtsSurfDepthArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FEtsSurfDepthArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FEtsSurfDepthArray[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
   end;
 end;
 

@@ -45,7 +45,7 @@ type
     property Items[Index: integer]: TMaterialZoneIdItem read GetItem; default;
   end;
 
-  TModflowSUB_Writer = class(TCustomPackageWriter)
+  TModflowSUB_Writer = class(TCustomSubWriter)
   private
     // model layer assignments for each system of no-delay interbeds
     FLN: TIntegerList;
@@ -105,7 +105,7 @@ implementation
 uses
   UnitCRC, Contnrs, LayerStructureUnit, ModflowSubsidenceDefUnit, DataSetUnit,
   GoPhastTypes, RbwParser, ModflowUnitNumbers, frmProgressUnit,
-  frmErrorsAndWarningsUnit, ModflowTimeUnit;
+  frmErrorsAndWarningsUnit;
 
 function TMaterialZone.ID: Integer;
 begin
@@ -263,18 +263,23 @@ begin
       for SubsidenceIndex := 0 to Group.SubNoDelayBedLayers.Count - 1 do
       begin
         NoDelayItem := Group.SubNoDelayBedLayers[SubsidenceIndex];
+
         PreconsolidationHeadDataArray := PhastModel.GetDataSetByName(
           NoDelayItem.PreconsolidationHeadDataArrayName);
         Assert(PreconsolidationHeadDataArray <> nil);
+
         ElasticSkeletalStorageCoefficientDataArray := PhastModel.GetDataSetByName(
           NoDelayItem.ElasticSkeletalStorageCoefficientDataArrayName);
         Assert(ElasticSkeletalStorageCoefficientDataArray <> nil);
+
         InelasticSkeletalStorageCoefficientDataArray := PhastModel.GetDataSetByName(
           NoDelayItem.InelasticSkeletalStorageCoefficientDataArrayName);
         Assert(InelasticSkeletalStorageCoefficientDataArray <> nil);
+
         InitialCompactionDataArray := PhastModel.GetDataSetByName(
           NoDelayItem.InitialCompactionDataArrayName);
         Assert(InitialCompactionDataArray <> nil);
+        
         if Group.LayerCount = 1 then
         begin
           FLN.Add(MFLayer_Group+1);
@@ -316,30 +321,45 @@ begin
       for SubsidenceIndex := 0 to Group.SubDelayBedLayers.Count - 1 do
       begin
         DelayItem := Group.SubDelayBedLayers[SubsidenceIndex];
+
         EquivNumberDataArray := PhastModel.GetDataSetByName(
           DelayItem.EquivNumberDataArrayName);
         Assert(EquivNumberDataArray <> nil);
+
         VerticalHydraulicConductivityDataArray := PhastModel.GetDataSetByName(
           DelayItem.VerticalHydraulicConductivityDataArrayName);
         Assert(VerticalHydraulicConductivityDataArray <> nil);
+
         ElasticSpecificStorageDataArray := PhastModel.GetDataSetByName(
           DelayItem.ElasticSpecificStorageDataArrayName);
         Assert(ElasticSpecificStorageDataArray <> nil);
+
         InelasticSpecificStorageDataArray := PhastModel.GetDataSetByName(
           DelayItem.InelasticSpecificStorageDataArrayName);
         Assert(InelasticSpecificStorageDataArray <> nil);
+
         InterbedStartingHeadDataArray := PhastModel.GetDataSetByName(
           DelayItem.InterbedStartingHeadDataArrayName);
-        Assert(InterbedStartingHeadDataArray <> nil);
+        if FSubPackage.ReadDelayRestartFileName = '' then
+        begin
+          Assert(InterbedStartingHeadDataArray <> nil);
+        end;
+
         InterbedPreconsolidationHeadDataArray := PhastModel.GetDataSetByName(
           DelayItem.InterbedPreconsolidationHeadDataArrayName);
-        Assert(InterbedPreconsolidationHeadDataArray <> nil);
+        if FSubPackage.ReadDelayRestartFileName = '' then
+        begin
+          Assert(InterbedPreconsolidationHeadDataArray <> nil);
+        end;
+
         InterbedStartingCompactionDataArray := PhastModel.GetDataSetByName(
           DelayItem.InterbedStartingCompactionDataArrayName);
         Assert(InterbedStartingCompactionDataArray <> nil);
+
         InterbedEquivalentThicknessDataArray := PhastModel.GetDataSetByName(
           DelayItem.InterbedEquivalentThicknessDataArrayName);
         Assert(InterbedEquivalentThicknessDataArray <> nil);
+
         if Group.LayerCount = 1 then
         begin
           FLDN.Add(MFLayer_Group+1);
@@ -543,7 +563,7 @@ begin
         break;
       end;
     end;
-    Ifm1 := FSubPackage.PrintFormats.SubsidenceFormat;
+    Ifm1 := FSubPackage.PrintFormats.SubsidenceFormat+1;
     SubFileName := '';
     Iun1 := 0;
     if Save1 then
@@ -564,7 +584,7 @@ begin
       end;
     end;
 
-    Ifm2 := FSubPackage.PrintFormats.CompactionByModelLayerFormat;
+    Ifm2 := FSubPackage.PrintFormats.CompactionByModelLayerFormat+1;
     Iun2 := 0;
     if Save2 then
     begin
@@ -584,7 +604,7 @@ begin
       end;
     end;
 
-    Ifm3 := FSubPackage.PrintFormats.CompactionByInterbedSystemFormat;
+    Ifm3 := FSubPackage.PrintFormats.CompactionByInterbedSystemFormat+1;
     Iun3 := 0;
     if Save3 then
     begin
@@ -604,7 +624,7 @@ begin
       end;
     end;
 
-    Ifm4 := FSubPackage.PrintFormats.VerticalDisplacementFormat;
+    Ifm4 := FSubPackage.PrintFormats.VerticalDisplacementFormat+1;
     Iun4 := 0;
     if Save4 then
     begin
@@ -624,7 +644,7 @@ begin
       end;
     end;
 
-    Ifm5 := FSubPackage.PrintFormats.NoDelayPreconsolidationHeadFormat;
+    Ifm5 := FSubPackage.PrintFormats.NoDelayPreconsolidationHeadFormat+1;
     Iun5 := 0;
     if Save5 then
     begin
@@ -644,7 +664,7 @@ begin
       end;
     end;
 
-    Ifm6 := FSubPackage.PrintFormats.DelayPreconsolidationHeadFormat;
+    Ifm6 := FSubPackage.PrintFormats.DelayPreconsolidationHeadFormat+1;
     Iun6 := 0;
     if Save6 then
     begin
@@ -681,28 +701,11 @@ begin
   end;
 end;
 
-const
-  Epsilon = 1e-6;
-
-function StartTimeOK(Time: double; PrintChoice: TSubPrintItem): boolean;
-begin
-  result := PrintChoice.StartTime + Abs(PrintChoice.StartTime)*Epsilon <= Time
-end;
-
-function EndTimeOK(Time: double; PrintChoice: TSubPrintItem): boolean;
-begin
-  result := Time >= PrintChoice.EndTime - Abs(PrintChoice.EndTime)*Epsilon;
-end;
-
 procedure TModflowSUB_Writer.WriteDataSet16;
 var
   PrintChoice: TSubPrintItem;
   ISP1, ISP2, ITS1, ITS2: integer;
-  StressPeriod: TModflowStressPeriod;
-  LengthOfTimeStep: Double;
   PrintChoiceIndex: Integer;
-  StressPeriodIndex: Integer;
-  TimeStepIndex: Integer;
   Ifl1: Integer;
   Ifl2: Integer;
   Ifl3: Integer;
@@ -716,7 +719,6 @@ var
   Ifl11: Integer;
   Ifl12: Integer;
   Ifl13: Integer;
-  Time: double;
 begin
   FSubPackage.PrintChoices.ReportErrors;
   for PrintChoiceIndex := 0 to FSubPackage.PrintChoices.Count -1 do
@@ -724,106 +726,7 @@ begin
     PrintChoice := FSubPackage.PrintChoices[PrintChoiceIndex];
     if PrintChoice.StartTime <= PrintChoice.EndTime then
     begin
-      ISP1 := 0;
-      ITS1 := 0;
-      ISP2 := 0;
-      ITS2 := 0;
-      StressPeriod := PhastModel.ModflowFullStressPeriods[0];
-      if StartTimeOK(StressPeriod.StartTime, PrintChoice) then
-//      if PrintChoice.StartTime <= StressPeriod.StartTime then
-      begin
-        ISP1 := 1;
-        ITS1 := 1;
-      end
-      else
-      begin
-        for StressPeriodIndex := 0 to PhastModel.ModflowFullStressPeriods.Count - 1 do
-        begin
-          StressPeriod := PhastModel.ModflowFullStressPeriods[StressPeriodIndex];
-          if StressPeriod.EndTime > PrintChoice.StartTime then
-          begin
-            ISP1 := StressPeriodIndex+1;
-            if StartTimeOK(StressPeriod.StartTime, PrintChoice) then
-//            if PrintChoice.StartTime <= StressPeriod.StartTime then
-            begin
-              ITS1 := 1;
-            end
-            else
-            begin
-              Time := StressPeriod.StartTime;
-              LengthOfTimeStep := StressPeriod.LengthOfFirstTimeStep;
-              for TimeStepIndex := 0 to StressPeriod.NumberOfSteps - 1 do
-              begin
-                Time := Time + LengthOfTimeStep;
-                if StartTimeOK(Time, PrintChoice) then
-//                if PrintChoice.StartTime <= Time then
-                begin
-                  ITS1 := TimeStepIndex;
-                  if ITS1 = 0 then
-                  begin
-                    ITS1 := 1;
-                  end;
-                  break;
-                end;
-                LengthOfTimeStep := LengthOfTimeStep 
-                  * StressPeriod.TimeStepMultiplier;
-              end;
-              if ITS1 = 0 then
-              begin
-                ITS1 := StressPeriod.NumberOfSteps;
-              end;
-            end;
-            break;
-          end;
-        end;
-      end;
-
-
-      StressPeriod := PhastModel.ModflowFullStressPeriods[
-        PhastModel.ModflowFullStressPeriods.Count-1];
-      if PrintChoice.EndTime >= StressPeriod.EndTime then
-      begin
-        ISP2 := PhastModel.ModflowFullStressPeriods.Count;
-        ITS2 := StressPeriod.NumberOfSteps;
-      end
-      else
-      begin
-        for StressPeriodIndex := ISP1-1 to PhastModel.ModflowFullStressPeriods.Count - 1 do
-        begin
-          StressPeriod := PhastModel.ModflowFullStressPeriods[StressPeriodIndex];
-          if EndTimeOK(StressPeriod.EndTime, PrintChoice) then
-//          if StressPeriod.EndTime >= PrintChoice.EndTime then
-          begin
-            ISP2 := StressPeriodIndex+1;
-            if StressPeriod.EndTime = PrintChoice.EndTime then
-            begin
-              ITS2 := StressPeriod.NumberOfSteps;
-            end
-            else
-            begin
-              Time := StressPeriod.StartTime;
-              LengthOfTimeStep := StressPeriod.LengthOfFirstTimeStep;
-              for TimeStepIndex := 0 to StressPeriod.NumberOfSteps - 1 do
-              begin
-                Time := Time + LengthOfTimeStep;
-                if EndTimeOK(Time, PrintChoice) then
-//                if Time >= PrintChoice.EndTime then
-                begin
-                  ITS2 := TimeStepIndex + 1;
-                  break;
-                end;
-                LengthOfTimeStep := LengthOfTimeStep
-                  * StressPeriod.TimeStepMultiplier;
-              end;
-              if ITS2 = 0 then
-              begin
-                ITS2 := StressPeriod.NumberOfSteps;
-              end;
-            end;
-            break;
-          end;
-        end;
-      end;
+      GetStartAndEndTimeSteps(ITS2, ISP2, ITS1, ISP1, PrintChoice);
       Ifl1 := Ord(PrintChoice.PrintSubsidence);
       Ifl2  := Ord(PrintChoice.SaveSubsidence);
       Ifl3 := Ord(PrintChoice.PrintCompactionByModelLayer);
@@ -836,7 +739,7 @@ begin
       Ifl10 := Ord(PrintChoice.SaveCriticalHeadNoDelay);
       Ifl11 := Ord(PrintChoice.PrintCriticalHeadDelay);
       Ifl12 := Ord(PrintChoice.SaveCriticalHeadDelay);
-      Ifl13 := Ord(PrintChoice.PrintDelayBudgets); 
+      Ifl13 := Ord(PrintChoice.PrintDelayBudgets);
       WriteInteger(ISP1);
       WriteInteger(ISP2);
       WriteInteger(ITS1);
@@ -934,7 +837,7 @@ var
 begin
   for Index := 0 to FDstart_List.Count - 1 do
   begin
-    if self.FSubPackage.ReadDelayRestartFileName = '' then
+    if FSubPackage.ReadDelayRestartFileName = '' then
     begin
       DataArray := FDstart_List[Index];
       WriteArray(DataArray, 0, 'Dstart');
@@ -998,6 +901,10 @@ begin
   WriteToNameFile(StrSUB, PhastModel.UnitNumbers.UnitNumber(StrSUB),
     FNameOfFile, foInput);
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
   OpenFile(FNameOfFile);
   try
     frmProgress.AddMessage('Writing SUB Package input.');

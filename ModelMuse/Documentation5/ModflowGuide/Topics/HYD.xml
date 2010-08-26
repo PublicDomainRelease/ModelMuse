@@ -3,17 +3,17 @@
 <topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
   <title translate="true">HYD - HYDMOD Package</title>
   <keywords>
-    <keyword translate="true">HYD</keyword>
-    <keyword translate="true">NHYD</keyword>
-    <keyword translate="true">IHYDUN</keyword>
-    <keyword translate="true">HYDNOH</keyword>
-    <keyword translate="true">PCKG</keyword>
     <keyword translate="true">ARR</keyword>
+    <keyword translate="true">HYD</keyword>
+    <keyword translate="true">HYDLBL</keyword>
+    <keyword translate="true">HYDNOH</keyword>
+    <keyword translate="true">IHYDUN</keyword>
     <keyword translate="true">INTYP</keyword>
     <keyword translate="true">KLAY</keyword>
+    <keyword translate="true">NHYD</keyword>
+    <keyword translate="true">PCKG</keyword>
     <keyword translate="true">XL</keyword>
     <keyword translate="true">YL</keyword>
-    <keyword translate="true">HYDLBL</keyword>
   </keywords>
   <body>
     <header>
@@ -69,11 +69,11 @@
         </td>
         <td>
           <para styleclass="Normal"><anchor id="NHYD" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">NHYD IHYDUN HYDNOH </text><text styleclass="New Materials" translate="true">(free format)</text></para>
-          <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="New Materials"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
+          <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="New Materials"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[NHYD]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[NHYD]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
@@ -81,7 +81,7 @@
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[IHYDUN]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[IHYDUN]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
@@ -89,7 +89,7 @@
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[HYDNOH]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[HYDNOH]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
@@ -109,11 +109,11 @@
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">PCKG ARR INTYP KLAY XL YL HYDLBL </text><text styleclass="New Materials" translate="true">(free format)</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">(Input item 2 consists of one record for each hydrograph. No more than </text><link displaytype="text" defaultstyle="true" type="topiclink" href="HYD" anchor="NHYD" styleclass="Normal" translate="true">NHYD</link><text styleclass="Normal" translate="true"> hydrograph records will be read.)</text></para>
-          <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
+          <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
               <td>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[PCKG]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[PCKG]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
@@ -129,7 +129,7 @@
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[ARR]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[ARR]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
@@ -164,8 +164,8 @@
                             <para styleclass="Normal"><text styleclass="Normal" translate="true">HC</text></para>
                           </td>
                           <td>
-                            <para styleclass="Normal"><text styleclass="Normal" translate="true">(MODFLOW-2000)Preconsolidation-head (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="IBS" styleclass="Normal" translate="true">IBS1</link><text styleclass="Normal" translate="true"> package)</text></para>
-                            <para styleclass="Normal"><text styleclass="Normal" translate="true">(MODFLOW-2005)Preconsolidation-head (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SUB" styleclass="Normal" translate="true">SUB</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="IBS" styleclass="Normal" translate="true">IBS1</link><text styleclass="Normal" translate="true"> packages)</text></para>
+                            <para styleclass="Normal"><text styleclass="Normal" translate="true">(MODFLOW-2000) Preconsolidation-head (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="IBS" styleclass="Normal" translate="true">IBS1</link><text styleclass="Normal" translate="true"> package)</text></para>
+                            <para styleclass="Normal"><text styleclass="Normal" translate="true">(MODFLOW-2005) Preconsolidation-head (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SUB" styleclass="Normal" translate="true">SUB</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="IBS" styleclass="Normal" translate="true">IBS1</link><text styleclass="Normal" translate="true"> packages)</text></para>
                           </td>
                         </tr>
                         <tr style="vertical-align:top">
@@ -207,8 +207,8 @@
                             <para styleclass="Normal"><text styleclass="Normal" translate="true">SO</text></para>
                           </td>
                           <td>
-                            <para styleclass="Normal"><text styleclass="Normal" translate="true">(MODFLOW-2000)Streamflow out of reach (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" styleclass="Normal" translate="true">STR</link><text styleclass="Normal" translate="true"> Package)</text></para>
-                            <para styleclass="Normal"><text styleclass="Normal" translate="true">(MODFLOW-2005)Streamflow out of reach (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">SFR</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" styleclass="Normal" translate="true">STR</link><text styleclass="Normal" translate="true"> packages)</text></para>
+                            <para styleclass="Normal"><text styleclass="Normal" translate="true">(MODFLOW-2000) Streamflow out of reach (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" styleclass="Normal" translate="true">STR</link><text styleclass="Normal" translate="true"> Package)</text></para>
+                            <para styleclass="Normal"><text styleclass="Normal" translate="true">(MODFLOW-2005) Streamflow out of reach (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">SFR</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" styleclass="Normal" translate="true">STR</link><text styleclass="Normal" translate="true"> packages)</text></para>
                           </td>
                         </tr>
                         <tr style="vertical-align:top">
@@ -216,23 +216,23 @@
                             <para styleclass="Normal"><text styleclass="Normal" translate="true">SA</text></para>
                           </td>
                           <td>
-                            <para styleclass="Normal"><text styleclass="Normal" translate="true">(MODFLOW-2000)Streamflow into or out of aquifer array (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" styleclass="Normal" translate="true">STR</link><text styleclass="Normal" translate="true"> Package)</text></para>
-                            <para styleclass="Normal"><text styleclass="Normal" translate="true">(MODFLOW-2005)Streamflow into or out of aquifer array (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">SFR</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" styleclass="Normal" translate="true">STR</link><text styleclass="Normal" translate="true"> packages)</text></para>
+                            <para styleclass="Normal"><text styleclass="Normal" translate="true">(MODFLOW-2000) Streamflow into or out of aquifer array (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" styleclass="Normal" translate="true">STR</link><text styleclass="Normal" translate="true"> Package)</text></para>
+                            <para styleclass="Normal"><text styleclass="Normal" translate="true">(MODFLOW-2005) Streamflow into or out of aquifer array (</text><link displaytype="text" defaultstyle="true" type="topiclink" href="SFR" styleclass="Normal" translate="true">SFR</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="STR" styleclass="Normal" translate="true">STR</link><text styleclass="Normal" translate="true"> packages)</text></para>
                           </td>
                         </tr>
                       </table></para>
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[INTYP]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[INTYP]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">INTYP is a 1-character value to indicate how the data from the specified feature are to be accessed. The two options are I for interpolated value or C for cell value. Interpolated value indicates that the value is linearly interpolated from values at the 4 nodes surrounding the hydrograph location. Cell value means the value at the node closest to the hydrograph location. INTYP must be C for STR and SFR hydrographs.</text></para>
+                      <para styleclass="Normal"><anchor id="INTYP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">INTYP is a 1-character value to indicate how the data from the specified feature are to be accessed. The two options are I for interpolated value or C for cell value. Interpolated value indicates that the value is linearly interpolated from values at the 4 nodes surrounding the hydrograph location. Cell value means the value at the node closest to the hydrograph location. INTYP must be C for STR and SFR hydrographs.</text></para>
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[KLAY]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[KLAY]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
@@ -240,7 +240,7 @@
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[XL]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[XL]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
@@ -249,7 +249,7 @@
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[YL]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[YL]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
@@ -258,11 +258,11 @@
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[HYDLBL]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[HYDLBL]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">HYDLBL is used to form a label for the hydrograph. The purpose of the label is to identify output and allow users to reorder, add, or subtract from the input list and still maintain location identity. HYDLBL is up to 14 characters for the BAS, IBS, and SUB Packages. An additional 6 characters are added as a prefix to make a 20-character label. The first two characters of the prefix are the ARR characters. The third character is the INTYP value. Characters 4 through 6 are the KLAY value. For stream hydrographs, HYDLBL is up to 12 characters. The constructed prefix consists of the 2-character ARR value, the 3-digit stream-segment number (character locations 3 to 5), and the 3-digit stream-reach number (character locations 6 to 8). The prefix is added to HYDLBL to again make a 20-character hydrograph label.</text></para>
+                      <para styleclass="Normal"><anchor id="HYDLBL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">HYDLBL is used to form a label for the hydrograph. The purpose of the label is to identify output and allow users to reorder, add, or subtract from the input list and still maintain location identity. HYDLBL is up to 14 characters for the BAS, IBS, and SUB Packages. An additional 6 characters are added as a prefix to make a 20-character label. The first two characters of the prefix are the ARR characters. The third character is the INTYP value. Characters 4 through 6 are the KLAY value. For stream hydrographs, HYDLBL is up to 12 characters. The constructed prefix consists of the 2-character ARR value, the 3-digit stream-segment number (character locations 3 to 5), and the 3-digit stream-reach number (character locations 6 to 8). The prefix is added to HYDLBL to again make a 20-character hydrograph label.</text></para>
                     </td>
                   </tr>
                 </table></para>

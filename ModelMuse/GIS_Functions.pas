@@ -145,6 +145,15 @@ type
     procedure Evaluate; override;
   end;
 
+  TGlobalValues = record
+    GlobalX, GlobalY, GlobalZ: real;
+    GlobalXPrime, GlobalYPrime: real;
+    GlobalColumn, GlobalRow, GlobalLayer: integer;
+    GlobalCurrentScreenObject: TScreenObject;
+    GlobalCurrentSegment: TCellElementSegment;
+    GlobalSection: integer;
+  end;
+
 
 var
   NodeDistancesSet: boolean;
@@ -156,6 +165,8 @@ var
   GlobalCurrentScreenObject: TScreenObject;
   GlobalCurrentSegment: TCellElementSegment;
   GlobalSection: integer;
+
+  GlobalStack: array of TGlobalValues;
 
   XFunction: TFunctionRecord;
   YFunction: TFunctionRecord;
@@ -242,6 +253,44 @@ var
 
   HufSY: TFunctionClass;
   HufSYSpecialImplementor: TSpecialImplementor;
+
+procedure PushGlobalStack;
+var
+  Position : integer;
+begin
+  Position := Length(GlobalStack);
+  SetLength(GlobalStack, Position + 1);
+  GlobalStack[Position].GlobalX := GlobalX;
+  GlobalStack[Position].GlobalY := GlobalY;
+  GlobalStack[Position].GlobalZ := GlobalZ;
+  GlobalStack[Position].GlobalXPrime := GlobalXPrime;
+  GlobalStack[Position].GlobalYPrime := GlobalYPrime;
+  GlobalStack[Position].GlobalColumn := GlobalColumn;
+  GlobalStack[Position].GlobalRow := GlobalRow;
+  GlobalStack[Position].GlobalLayer := GlobalLayer;
+  GlobalStack[Position].GlobalCurrentScreenObject := GlobalCurrentScreenObject;
+  GlobalStack[Position].GlobalCurrentSegment := GlobalCurrentSegment;
+  GlobalStack[Position].GlobalSection := GlobalSection;
+end;
+
+procedure PopGlobalStack;
+var
+  Position: Integer;
+begin
+  Position := Length(GlobalStack) -1;
+  GlobalX := GlobalStack[Position].GlobalX;
+  GlobalY := GlobalStack[Position].GlobalY;
+  GlobalZ := GlobalStack[Position].GlobalZ;
+  GlobalXPrime := GlobalStack[Position].GlobalXPrime;
+  GlobalYPrime := GlobalStack[Position].GlobalYPrime;
+  GlobalColumn := GlobalStack[Position].GlobalColumn;
+  GlobalRow := GlobalStack[Position].GlobalRow;
+  GlobalLayer := GlobalStack[Position].GlobalLayer;
+  GlobalCurrentScreenObject := GlobalStack[Position].GlobalCurrentScreenObject;
+  GlobalCurrentSegment := GlobalStack[Position].GlobalCurrentSegment;
+  GlobalSection := GlobalStack[Position].GlobalSection;
+  SetLength(GlobalStack, Position);
+end;
 
 procedure AddGIS_Functions(const Parser: TRbwParser;
   ModelSelection: TModelSelection);
@@ -1850,7 +1899,12 @@ var
 begin
   DataArray := frmGoPhast.PhastModel.GetDataSetByName(DataSetName);
   Assert(DataArray <> nil);
-  DataArray.Initialize;
+  PushGlobalStack;
+  try
+    DataArray.Initialize;
+  finally
+    PopGlobalStack;
+  end;
   ArrayLength := Length(Values);
   Assert(ArrayLength = 1);
   Layer := PInteger(Values[0])^ - 1;
@@ -1874,7 +1928,12 @@ var
 begin
   DataArray := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
   Assert(DataArray <> nil);
-  DataArray.Initialize;
+  PushGlobalStack;
+  try
+    DataArray.Initialize;
+  finally
+    PopGlobalStack;
+  end;
   ArrayLength := Length(Values);
   Assert(ArrayLength = 1);
   Layer := PInteger(Values[0])^ - 1;
@@ -2059,7 +2118,12 @@ begin
   PhastModel := frmGoPhast.PhastModel;
   DataArray := PhastModel.GetDataSetByName(DataSetName);
   Assert(DataArray <> nil);
-  DataArray.Initialize;
+  PushGlobalStack;
+  try
+    DataArray.Initialize;
+  finally
+    PopGlobalStack;
+  end;
   result := DataArray.RealData[Layer, Row, Column];
 end;
 
@@ -2076,7 +2140,12 @@ begin
   begin
     ZoneArray := PhastModel.GetDataSetByName(Param.ZoneDataSetName);
     Assert(ZoneArray <> nil);
-    ZoneArray.Initialize;
+    PushGlobalStack;
+    try
+      ZoneArray.Initialize;
+    finally
+      PopGlobalStack;
+    end;
     if not ZoneArray.BooleanData[0, Row, Column] then
     begin
       Exit;
@@ -2136,14 +2205,24 @@ begin
   begin
     KzNonSimDataArray := PhastModel.GetDataSetByName(rsModflow_CBKz);
     Assert(KzNonSimDataArray <> nil);
-    KzNonSimDataArray.Initialize;
+    PushGlobalStack;
+    try
+      KzNonSimDataArray.Initialize;
+    finally
+      PopGlobalStack;
+    end;
     Inc(Layer);
   end;
   BottomLayer := Layer;
 
   KzDataArray := PhastModel.GetDataSetByName(rsKz);
   Assert(KzDataArray <> nil);
-  KzDataArray.Initialize;
+  PushGlobalStack;
+  try
+    KzDataArray.Initialize;
+  finally
+    PopGlobalStack;
+  end;
 
   ASum := 0.0;
   for LayerIndex := TopLayer to BottomLayer do

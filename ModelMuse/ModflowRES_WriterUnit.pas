@@ -396,6 +396,11 @@ begin
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrRES, PhastModel.UnitNumbers.UnitNumber(StrRES), NameOfFile, foInput);
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
+  ClearTimeLists;
   OpenFile(FileName(AFileName));
   try
 //    WriteDataSet0;

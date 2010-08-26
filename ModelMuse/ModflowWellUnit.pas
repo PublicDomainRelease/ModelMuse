@@ -25,8 +25,9 @@ type
     StartingTime: double;
     EndingTime: double;
     PumpingRateAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); 
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList); 
   end;
 
   // @name is an array of @link(TWellRecord)s.
@@ -136,12 +137,14 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property PumpingRate: double read GetPumpingRate;
     property PumpingRateAnnotation: string read GetPumpingRateAnnotation;
+    function IsIdentical(AnotherCell: TValueCell): boolean; override;
   end;
 
   // @name represents the MODFLOW Well boundaries associated with
@@ -614,10 +617,10 @@ end;
 
 { TWell_Cell }
 
-procedure TWell_Cell.Cache(Comp: TCompressionStream);
+procedure TWell_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -679,6 +682,26 @@ end;
 function TWell_Cell.GetSection: integer;
 begin
   result := Values.Cell.Section;
+end;
+
+function TWell_Cell.IsIdentical(AnotherCell: TValueCell): boolean;
+var
+  WEL_Cell: TWell_Cell;
+begin
+  result := AnotherCell is TWell_Cell;
+  if result then
+  begin
+    WEL_Cell := TWell_Cell(AnotherCell);
+    result :=
+      (PumpingRate = WEL_Cell.PumpingRate)
+      and (IFace = WEL_Cell.IFace);
+  end;
+end;
+
+procedure TWell_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
 end;
 
 procedure TWell_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -854,13 +877,19 @@ end;
 
 { TWellRecord }
 
-procedure TWellRecord.Cache(Comp: TCompressionStream);
+procedure TWellRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompReal(Comp, PumpingRate);
   WriteCompReal(Comp, StartingTime);
   WriteCompReal(Comp, EndingTime);
-  WriteCompString(Comp, PumpingRateAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(PumpingRateAnnotation));
+//  WriteCompString(Comp, PumpingRateAnnotation);
+end;
+
+procedure TWellRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(PumpingRateAnnotation);
 end;
 
 procedure TWellRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -869,7 +898,8 @@ begin
   PumpingRate := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  PumpingRateAnnotation := ReadCompString(Decomp, Annotations);
+  PumpingRateAnnotation := Annotations[ReadCompInt(Decomp)];
+//  PumpingRateAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TWellStorage }
@@ -884,12 +914,32 @@ procedure TWellStorage.Store(Compressor: TCompressionStream);
 var
   Index: Integer;
   Count: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FWellArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FWellArray[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FWellArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FWellArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FWellArray[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
   end;
 end;
 

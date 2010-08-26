@@ -17,8 +17,9 @@ type
     ConductanceAnnotation: string;
     RiverStageAnnotation: string;
     RiverBottomAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); 
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList); 
   end;
 
   TRivArray = array of TRivRecord;
@@ -156,9 +157,10 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property Conductance: double read GetConductance;
     property RiverBottom: double read GetRiverBottom;
@@ -166,6 +168,7 @@ type
     property ConductanceAnnotation: string read GetConductanceAnnotation;
     property RiverBottomAnnotation: string read GetRiverBottomAnnotation;
     property RiverStageAnnotation: string read GetRiverStageAnnotation;
+    function IsIdentical(AnotherCell: TValueCell): boolean; override;
   end;
 
   // @name represents the MODFLOW River boundaries associated with
@@ -659,10 +662,10 @@ begin
   result := Values.RiverStageAnnotation;
 end;
 
-procedure TRiv_Cell.Cache(Comp: TCompressionStream);
+procedure TRiv_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -706,6 +709,28 @@ end;
 function TRiv_Cell.GetSection: integer;
 begin
   result := Values.Cell.Section;
+end;
+
+function TRiv_Cell.IsIdentical(AnotherCell: TValueCell): boolean;
+var
+  RIV_Cell: TRiv_Cell;
+begin
+  result := AnotherCell is TRiv_Cell;
+  if result then
+  begin
+    RIV_Cell := TRiv_Cell(AnotherCell);
+    result :=
+      (Conductance = RIV_Cell.Conductance)
+      and (RiverBottom = RIV_Cell.RiverBottom)
+      and (RiverStage = RIV_Cell.RiverStage)
+      and (IFace = RIV_Cell.IFace);
+  end;
+end;
+
+procedure TRiv_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
 end;
 
 procedure TRiv_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -934,7 +959,7 @@ end;
 
 { TRivRecord }
 
-procedure TRivRecord.Cache(Comp: TCompressionStream);
+procedure TRivRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompReal(Comp, Conductance);
@@ -942,9 +967,19 @@ begin
   WriteCompReal(Comp, RiverBottom);
   WriteCompReal(Comp, StartingTime);
   WriteCompReal(Comp, EndingTime);
-  WriteCompString(Comp, ConductanceAnnotation);
-  WriteCompString(Comp, RiverStageAnnotation);
-  WriteCompString(Comp, RiverBottomAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(ConductanceAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(RiverStageAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(RiverBottomAnnotation));
+//  WriteCompString(Comp, ConductanceAnnotation);
+//  WriteCompString(Comp, RiverStageAnnotation);
+//  WriteCompString(Comp, RiverBottomAnnotation);
+end;
+
+procedure TRivRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(ConductanceAnnotation);
+  Strings.Add(RiverStageAnnotation);
+  Strings.Add(RiverBottomAnnotation);
 end;
 
 procedure TRivRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -955,9 +990,12 @@ begin
   RiverBottom := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  ConductanceAnnotation := ReadCompString(Decomp, Annotations);
-  RiverStageAnnotation := ReadCompString(Decomp, Annotations);
-  RiverBottomAnnotation := ReadCompString(Decomp, Annotations);
+  ConductanceAnnotation := Annotations[ReadCompInt(Decomp)];
+  RiverStageAnnotation := Annotations[ReadCompInt(Decomp)];
+  RiverBottomAnnotation := Annotations[ReadCompInt(Decomp)];
+//  ConductanceAnnotation := ReadCompString(Decomp, Annotations);
+//  RiverStageAnnotation := ReadCompString(Decomp, Annotations);
+//  RiverBottomAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TRivStorage }
@@ -972,12 +1010,32 @@ procedure TRivStorage.Store(Compressor: TCompressionStream);
 var
   Index: Integer;
   Count: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FRivArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FRivArray[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FRivArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FRivArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FRivArray[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
   end;
 end;
 

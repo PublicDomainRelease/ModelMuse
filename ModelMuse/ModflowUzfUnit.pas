@@ -27,8 +27,9 @@ type
     StartingTime: double;
     EndingTime: double;
     ExtinctionDepthAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList);
   end;
 
   {
@@ -49,8 +50,9 @@ type
     StartingTime: double;
     EndingTime: double;
     MinimumWaterContentAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); 
+    procedure RecordStrings(Strings: TStringList);
   end;
 
   // @name is an array of @link(TUzfExtinctionDepthRecord)s.
@@ -244,9 +246,10 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property ExtinctionDepth: double read GetExtinctionDepth;
     property ExtinctionDepthAnnotation: string read GetExtinctionDepthAnnotation;
@@ -268,9 +271,10 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property WaterContent: double read GetWaterContent;
     property WaterContentAnnotation: string read GetWaterContentAnnotation;
@@ -1202,10 +1206,10 @@ end;
 
 { TUzfExtinctionDepthCell }
 
-procedure TUzfExtinctionDepthCell.Cache(Comp: TCompressionStream);
+procedure TUzfExtinctionDepthCell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -1269,6 +1273,12 @@ begin
   result := Values.Cell.Section;
 end;
 
+procedure TUzfExtinctionDepthCell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
+end;
+
 procedure TUzfExtinctionDepthCell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
@@ -1278,10 +1288,10 @@ end;
 
 { TUzfWaterContentCell }
 
-procedure TUzfWaterContentCell.Cache(Comp: TCompressionStream);
+procedure TUzfWaterContentCell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -1345,6 +1355,12 @@ begin
   result := Values.MinimumWaterContentAnnotation;
 end;
 
+procedure TUzfWaterContentCell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
+end;
+
 procedure TUzfWaterContentCell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
@@ -1354,13 +1370,19 @@ end;
 
 { TUzfExtinctionDepthRecord }
 
-procedure TUzfExtinctionDepthRecord.Cache(Comp: TCompressionStream);
+procedure TUzfExtinctionDepthRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompReal(Comp, ExtinctionDepth);
   WriteCompReal(Comp, StartingTime);
   WriteCompReal(Comp, EndingTime);
-  WriteCompString(Comp, ExtinctionDepthAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(ExtinctionDepthAnnotation));
+//  WriteCompString(Comp, ExtinctionDepthAnnotation);
+end;
+
+procedure TUzfExtinctionDepthRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(ExtinctionDepthAnnotation);
 end;
 
 procedure TUzfExtinctionDepthRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -1369,18 +1391,25 @@ begin
   ExtinctionDepth := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  ExtinctionDepthAnnotation := ReadCompString(Decomp, Annotations);
+  ExtinctionDepthAnnotation := Annotations[ReadCompInt(Decomp)];
+//  ExtinctionDepthAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TUzfWaterContentRecord }
 
-procedure TUzfWaterContentRecord.Cache(Comp: TCompressionStream);
+procedure TUzfWaterContentRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompReal(Comp, MinimumWaterContent);
   WriteCompReal(Comp, StartingTime);
   WriteCompReal(Comp, EndingTime);
-  WriteCompString(Comp, MinimumWaterContentAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(MinimumWaterContentAnnotation));
+//  WriteCompString(Comp, MinimumWaterContentAnnotation);
+end;
+
+procedure TUzfWaterContentRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(MinimumWaterContentAnnotation);
 end;
 
 procedure TUzfWaterContentRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -1389,7 +1418,8 @@ begin
   MinimumWaterContent := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  MinimumWaterContentAnnotation := ReadCompString(Decomp, Annotations);
+  MinimumWaterContentAnnotation := Annotations[ReadCompInt(Decomp)];
+//  MinimumWaterContentAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TUzfExtinctDepthStorage }
@@ -1404,12 +1434,32 @@ procedure TUzfExtinctDepthStorage.Store(Compressor: TCompressionStream);
 var
   Index: Integer;
   Count: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FExtinctDepthArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FExtinctDepthArray[Index].Cache(Compressor);
+
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FExtinctDepthArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FExtinctDepthArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FExtinctDepthArray[Index].Cache(Compressor, Strings);
+    end;
+  finally
+    Strings.Free;
   end;
 end;
 
@@ -1447,12 +1497,31 @@ procedure TUzfWaterContentStorage.Store(Compressor: TCompressionStream);
 var
   Index: Integer;
   Count: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FWaterContentArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FWaterContentArray[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FWaterContentArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FWaterContentArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FWaterContentArray[Index].Cache(Compressor, Strings);
+    end;
+  finally
+    Strings.Free;
   end;
 end;
 

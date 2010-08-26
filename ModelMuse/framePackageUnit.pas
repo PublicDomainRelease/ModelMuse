@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, JvExStdCtrls, JvCheckBox,
-  ModflowPackageSelectionUnit, RbwController;
+  ModflowPackageSelectionUnit, RbwController, Grids, RbwDataGrid4;
 
 type
   TframePackage = class(TFrame)
@@ -28,6 +28,9 @@ type
     // tab of ParentPageControl.
     // @name is used in @link(TframeGMG).
     procedure MoveControlsToTab(ParentPageControl: TPageControl);
+    procedure ChangeGridOptions(DataGrid: TRbwDataGrid4; Shift: TShiftState);
+    procedure EnableMultiEditControl(Control: TControl;
+      DataGrid: TRbwDataGrid4);
   public
     property CanSelect: boolean read FCanSelect write SetCanSelect;
     procedure GetData(Package: TModflowPackageSelection); virtual;
@@ -165,6 +168,45 @@ end;
 procedure TframePackage.NilNode;
 begin
   Node := nil;
+end;
+
+procedure TframePackage.ChangeGridOptions(DataGrid: TRbwDataGrid4;
+  Shift: TShiftState);
+begin
+  if ([ssShift, ssCtrl] * Shift) = [] then
+  begin
+    DataGrid.Options := DataGrid.Options + [goEditing];
+  end
+  else
+  begin
+    DataGrid.Options := DataGrid.Options - [goEditing];
+  end;
+end;
+
+procedure TframePackage.EnableMultiEditControl(Control: TControl;
+  DataGrid: TRbwDataGrid4);
+var
+  RowIndex: Integer;
+  ShouldEnable: Boolean;
+  ColIndex: Integer;
+begin
+  ShouldEnable := False;
+  for RowIndex := DataGrid.FixedRows to DataGrid.RowCount - 1 do
+  begin
+    for ColIndex := 2 to DataGrid.ColCount - 1 do
+    begin
+      ShouldEnable := DataGrid.IsSelectedCell(ColIndex, RowIndex);
+      if ShouldEnable then
+      begin
+        break;
+      end;
+    end;
+    if ShouldEnable then
+    begin
+      break;
+    end;
+  end;
+  Control.Enabled := ShouldEnable;
 end;
 
 end.

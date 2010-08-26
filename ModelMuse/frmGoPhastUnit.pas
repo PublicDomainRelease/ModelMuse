@@ -16,7 +16,7 @@ uses
   ToolWin, frmUndoUnit, ImageDLLLoader, FileUtils,ModflowGridUnit,
   AbstractGridUnit, JvExExtCtrls, JvNetscapeSplitter, frmRunModflowUnit,
   frmRunPhastUnit, ModelMateClassesUnit, SyncObjs, frmRunModpathUnit,
-  frmRunZoneBudgetUnit;  
+  frmRunZoneBudgetUnit, RbwModelCube, frmRunModelMateUnit;  
 
   { TODO : 
 Consider making CurrentTool a property of TframeView instead of 
@@ -297,6 +297,8 @@ type
     acRestoreDefault2DView: TAction;
     acExportImage: TAction;
     ExportImage1: TMenuItem;
+    miManageParameters: TMenuItem;
+    miManageHeadObservations: TMenuItem;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -383,6 +385,10 @@ type
     procedure sdZonebudgetInputClose(Sender: TObject);
     procedure acVertexValueExecute(Sender: TObject);
     procedure acExportImageExecute(Sender: TObject);
+    procedure miManageParametersClick(Sender: TObject);
+    procedure miManageHeadObservationsClick(Sender: TObject);
+    procedure sdModelMateShow(Sender: TObject);
+    procedure sdModelMateClose(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -406,6 +412,10 @@ type
     FStartTime: TDateTime;
     FFileStream: TFileStream;
     FFileSize: Int64;
+    FRunModelMateForm: TfrmRunModelMate;
+    FRunModelMate: boolean;
+    FObservationFileName: string;
+    FPredictionFileName: string;
     procedure SetCreateArchive(const Value: Boolean);
     property CreateArchive: Boolean read FCreateArchive write SetCreateArchive;
     procedure WMMenuSelect(var Msg: TWMMenuSelect); message WM_MENUSELECT;
@@ -427,6 +437,7 @@ type
     procedure SetVisibilityOfModelMateActions;
     procedure EnableDeleteImage;
     procedure CancelCurrentScreenObject;
+    procedure InternalSaveFile(FileName: string);
   published
     // @name is the TAction for @link(miAddVerticalGridLine)
     // and @link(tbAddVerticalBoundary).
@@ -1425,6 +1436,8 @@ type
     procedure SetShowUcodeInterface(const Value: boolean);
     procedure OnOpenFile(Sender: TObject);
     procedure SetCanDraw(const Value: boolean);
+    function GetObservationFileName: string;
+    function GetPredictionFileName: string;
     { Private declarations }
   protected
     // @name is used to specify the format of the files that
@@ -1434,12 +1447,14 @@ type
     // undo/redo menu items.
     procedure OnAppIdle(Sender: TObject; var Done: Boolean);
   public
+    FCubeControl: TRbwModelCube;
     procedure EnableHufMenuItems;
     property ShowUcodeInterface: boolean read FShowUcodeInterface
       write SetShowUcodeInterface;
     property ChangingSelection: boolean read FChangingSelection
       write SetChangingSelection;
-    procedure EnableManageObservations;
+    procedure EnableManageFlowObservations;
+    procedure EnableManageHeadObservations;
     // @name reads an ini file containing the most recently used files.
     // @seealso(WriteIniFile)
     procedure ReadIniFile;
@@ -1569,6 +1584,8 @@ type
     property CreateNewCompositeBudgetFile: boolean
       read FCreateNewCompositeBudgetFile write FCreateNewCompositeBudgetFile;
     { Public declarations }
+    property ObservationFileName: string read GetObservationFileName;
+    property PredictionFileName: string read GetPredictionFileName;
   end;
 
 
@@ -1585,7 +1602,7 @@ implementation
 
 uses
   Math, frmVerticalExaggerationUnit, CursorsFoiledAgain, frmSubdivideUnit,
-  frmGridAngleUnit, RbwModelCube, frmGridSpacingUnit, frmSmoothGridUnit,
+  frmGridAngleUnit, frmGridSpacingUnit, frmSmoothGridUnit,
   frmAboutUnit, frmHintDelayUnit, UndoItemsScreenObjects,
   frmRearrangeObjectsUnit, frmSelectColRowLayerUnit, frmSetSpacingUnit,
   frmScreenObjectPropertiesUnit, frmDataSetsUnits, frmGridColorUnit,
@@ -1613,7 +1630,7 @@ uses
   frmDataSetValuesUnit, frmExportShapefileObjectsUnit, frmDeleteImageUnit,
   frmModpathDisplayUnit, frmPhastLocationUnit, frmEndPointDisplayUnit,
   frmTimeSeriesDisplayUnit, frmImportSurferGrdFileUnitUnit, frmImportDEMUnit,
-  frmExportImageUnit;
+  frmExportImageUnit, frmManageParametersUnit, frmManageHeadObservationsUnit;
 
 resourcestring
   StrModelMate = 'ModelMate';
@@ -2062,16 +2079,24 @@ begin
     if Msg.MenuFlag and MF_POPUP = MF_POPUP then
     begin
       hSubMenu := GetSubMenu(Msg.Menu, Msg.IDItem);
-      menuItem := Self.Menu.FindItem(hSubMenu, fkHandle);
+      try
+        menuItem := Self.Menu.FindItem(hSubMenu, fkHandle);
+      except on ERangeError do
+        menuItem := nil;
+      end;
     end
     else
     begin
-      menuItem := Self.Menu.FindItem(Msg.IDItem, fkCommand);
+      try
+        menuItem := Self.Menu.FindItem(Msg.IDItem, fkCommand);
+      except on ERangeError do
+        menuItem := nil;
+      end;
     end;
     // Modified from http://delphi.about.com/od/vclusing/a/menuitemhints.htm
     // Only display hint windows for menu items for
     // the most recently opened files.
-    if not (menuItem is TRecentFileMenuItem) then
+    if (menuItem <> nil) and not (menuItem is TRecentFileMenuItem) then
     begin
       menuItem := nil;
     end;
@@ -2191,6 +2216,7 @@ begin
   FRunModpath := True;
   FRunZoneBudget := True;
   FRunPhast := True;
+  FRunModelMate := True;
   FSynchronizeCount := 0;
   FCreatingMainForm := True;
   try
@@ -2925,9 +2951,11 @@ begin
   miOutputControl.Enabled := PhastModel.ModelSelection = msModflow;
   miPackages.Enabled := PhastModel.ModelSelection = msModflow;
   miProgramLocations.Enabled := PhastModel.ModelSelection = msModflow;
+  miManageParameters.Enabled := PhastModel.ModelSelection = msModflow;
   miModflowNameFile.Enabled := PhastModel.ModelSelection = msModflow;
   EnableLinkStreams;
-  EnableManageObservations;
+  EnableManageFlowObservations;
+  EnableManageHeadObservations;
   miObservationType.Enabled := PhastModel.ModelSelection = msModflow;
 
   miTitleAndUnits.Enabled := PhastModel.ModelSelection = msPhast;
@@ -2945,7 +2973,18 @@ end;
 procedure TfrmGoPhast.miMF_HydrogeologicUnitsClick(Sender: TObject);
 begin
   inherited;
-  ShowAForm(TfrmHUF_Layers);
+  if PhastModel.HufParameters.Count > 0 then
+  begin
+    ShowAForm(TfrmHUF_Layers);
+  end
+  else
+  begin
+    Beep;
+    MessageDlg('You must define some parameters for the HUF package in the '
+      + 'Model|MODFLOW Packages and programs dialog box before you can '
+      + 'display the MODFLOW Hydrogeologic Units dialog box.',
+      mtWarning, [mbOK], 0);
+  end;
 end;
 
 procedure TfrmGoPhast.miModflowNameFileClick(Sender: TObject);
@@ -3534,7 +3573,7 @@ begin
 
   if not (Sender is TToolButton) then
   begin
-    tbVertexValue.OnMouseDown(tbSelectPoint, mbLeft, [ssLeft], 0, 0);
+    tbVertexValue.OnMouseDown(tbVertexValue, mbLeft, [ssLeft], 0, 0);
   end;
 
   if tbVertexValue.Down then
@@ -3621,6 +3660,55 @@ begin
   Grid.GridChanged;
 end;
 
+procedure TfrmGoPhast.InternalSaveFile(FileName: string);
+var
+  CompressionStream: TCompressionStream;
+  FileStream: TFileStream;
+  MemStream: TMemoryStream;
+begin
+  MemStream := TMemoryStream.Create;
+  FileStream := TFileStream.Create(FileName, fmCreate or fmShareDenyWrite,
+    ReadWritePermissions);
+  try
+    case FileFormat of
+      ffAscii:
+        begin
+          MemStream.WriteComponent(PhastModel);
+          PhastModel.ClearScreenObjectCollection;
+          MemStream.Position := 0;
+          ObjectBinaryToText(MemStream, FileStream);
+        end;
+      ffBinary:
+        begin
+          FileStream.WriteComponent(PhastModel);
+          PhastModel.ClearScreenObjectCollection;
+        end;
+      ffXML:
+        begin
+          MemStream.WriteComponent(PhastModel);
+          PhastModel.ClearScreenObjectCollection;
+          MemStream.Position := 0;
+          rwObjectBinaryToXML(MemStream, FileStream);
+        end;
+      ffZLib:
+        begin
+          CompressionStream := TCompressionStream.Create(clMax, FileStream);
+          try
+            CompressionStream.WriteComponent(PhastModel);
+          finally
+            CompressionStream.Free;
+          end;
+          PhastModel.ClearScreenObjectCollection;
+        end;
+    else
+      Assert(False);
+    end;
+  finally
+    FileStream.Free;
+    MemStream.Free;
+  end;
+end;
+
 procedure TfrmGoPhast.SetGridLineDrawingChoice(Sender: TObject);
 begin
   if acShowAllGridLines.Checked then
@@ -3690,12 +3778,11 @@ end;
 
 procedure TfrmGoPhast.InitializeModflowInputDialog;
 begin
-  if (sdModflowInput.FileName = '') and (sdSaveDialog.FileName <> '') then
-  begin
-    sdModflowInput.FileName :=
-      ChangeFileExt(sdSaveDialog.FileName, sdModflowInput.DefaultExt);
+  case PhastModel.ObservationPurpose of
+    ofObserved: sdModflowInput.FileName := ObservationFileName;
+    ofPredicted: sdModflowInput.FileName := PredictionFileName;
+    else Assert(False);
   end;
-  sdModflowInput.FileName := PhastModel.FixFileName(sdModflowInput.FileName);
 end;
 
 procedure TfrmGoPhast.ReadModelMateProject(FileName: string; ModelMateProject: TProject);
@@ -3805,7 +3892,7 @@ begin
   LaunchURL(FBrowser, URL);
 end;
 
-procedure TfrmGoPhast.EnableManageObservations;
+procedure TfrmGoPhast.EnableManageFlowObservations;
 begin
   miManageFluxObservations.Enabled :=
     (PhastModel.ModelSelection = msModflow)
@@ -3813,6 +3900,13 @@ begin
     or PhastModel.ModflowPackages.DrobPackage.IsSelected
     or PhastModel.ModflowPackages.GbobPackage.IsSelected
     or PhastModel.ModflowPackages.RvobPackage.IsSelected);
+end;
+
+procedure TfrmGoPhast.EnableManageHeadObservations;
+begin
+  miManageHeadObservations.Enabled :=
+    (PhastModel.ModelSelection = msModflow)
+    and PhastModel.ModflowPackages.HobPackage.IsSelected
 end;
 
 procedure TfrmGoPhast.EnableLinkStreams;
@@ -5264,6 +5358,17 @@ begin
   end
 end;
 
+function TfrmGoPhast.GetObservationFileName: string;
+begin
+  result := FObservationFileName;
+  if (result = '') and (PhastModel.ModelFileName <> '') then
+  begin
+    result := ChangeFileExt(PhastModel.ModelFileName,
+      sdModflowInput.DefaultExt);
+  end;
+  result := PhastModel.FixFileName(result);
+end;
+
 function TfrmGoPhast.IsOverStatusPanelDivider(const X: integer): boolean;
 var
   Index: integer;
@@ -5291,6 +5396,18 @@ procedure TfrmGoPhast.miManageFluxObservationsClick(Sender: TObject);
 begin
   inherited;
   ShowAForm(TfrmManageFluxObservations);
+end;
+
+procedure TfrmGoPhast.miManageHeadObservationsClick(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmManageHeadObservations);
+end;
+
+procedure TfrmGoPhast.miManageParametersClick(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmManageParameters);
 end;
 
 procedure TfrmGoPhast.miMergeObjectsClick(Sender: TObject);
@@ -5626,14 +5743,11 @@ end;
 
 procedure TfrmGoPhast.SaveAFile(FileName: string);
 var
-  FileStream: TFileStream;
-  MemStream: TMemoryStream;
   TempHeadFlux: TFluxObservationGroups;
   TempDrainFlux: TFluxObservationGroups;
   TempGhbFlux: TFluxObservationGroups;
   TempRivFlux: TFluxObservationGroups;
   BackUpName: string;
-  CompressionStream: TCompressionStream;
 begin
   Screen.Cursor := crHourGlass;
 
@@ -5647,7 +5761,7 @@ begin
     RenameFile(FileName, BackUpName);
   end;
 
-  MemStream := TMemoryStream.Create;
+//  ReclaimMemory;
   try
     AddMostRecentlyUsedFile(FileName);
 
@@ -5668,45 +5782,14 @@ begin
       PhastModel.GhbObservations.EliminatedDeletedScreenObjects;
       PhastModel.RiverObservations.EliminatedDeletedScreenObjects;
 
-      FileStream := TFileStream.Create(FileName,
-        fmCreate or fmShareDenyWrite, ReadWritePermissions);
+      PhastModel.StoreCachedData := true;
       try
-        case FileFormat of
-          ffAscii:
-            begin
-              MemStream.WriteComponent(PhastModel);
-              PhastModel.ClearScreenObjectCollection;
-              MemStream.Position := 0;
-              ObjectBinaryToText(MemStream, FileStream);
-            end;
-          ffBinary:
-            begin
-              FileStream.WriteComponent(PhastModel);
-              PhastModel.ClearScreenObjectCollection;
-            end;
-          ffXML:
-            begin
-              MemStream.WriteComponent(PhastModel);
-              PhastModel.ClearScreenObjectCollection;
-              MemStream.Position := 0;
-              rwObjectBinaryToXML(MemStream, FileStream);
-            end;
-          ffZLib:
-            begin
-              CompressionStream := TCompressionStream.Create(clMax, FileStream);
-              try
-                CompressionStream.WriteComponent(PhastModel);
-              finally
-                CompressionStream.Free;
-              end;
-              PhastModel.ClearScreenObjectCollection;
-            end
-        else
-          Assert(False);
+        InternalSaveFile(FileName);
+      except on EOutOfMemory do
+        begin
+          PhastModel.StoreCachedData := False;
+          InternalSaveFile(FileName);
         end;
-
-      finally
-        FileStream.Free;
       end;
     finally
       PhastModel.HeadFluxObservations.Assign(TempHeadFlux);
@@ -5720,7 +5803,6 @@ begin
     end;
     PhastModel.UpToDate := True;
   finally
-    MemStream.Free;
     WriteIniFile;
     Screen.Cursor := crDefault;
   end;
@@ -5808,7 +5890,12 @@ begin
   end
   else
   begin
-    Assert(False);
+    Beep;
+    MessageDlg('ModelMuse files must have one of the following extensions: '
+      + '".gpt", ".gpb", ".xml", or ".mmZLib".  The file you tried to open, "'
+      + FileName + ' does not have one of those extensions.',
+      mtWarning, [mbOK], 0);
+    Exit;
   end;
   sdModflowInput.FileName := '';
   AddMostRecentlyUsedFile(FileName);
@@ -5967,7 +6054,8 @@ begin
   frameFrontView.ZoomBoxResize(nil);
   frameSideView.ZoomBoxResize(nil);
   EnableLinkStreams;
-  EnableManageObservations;
+  EnableManageFlowObservations;
+  EnableManageHeadObservations;
   EnableHufMenuItems;
 
   NewTop := Top;
@@ -6044,6 +6132,7 @@ begin
       sdPhastInput.DefaultExt);
     sdModflowInput.FileName :=
       ChangeFileExt(sdSaveDialog.FileName, sdModflowInput.DefaultExt);
+    PhastModel.ModelFileName := sdSaveDialog.FileName;
   end;
 end;
 
@@ -6057,6 +6146,17 @@ begin
   begin
     result := PhastModel.PhastGrid;
   end
+end;
+
+function TfrmGoPhast.GetPredictionFileName: string;
+begin
+  result := FPredictionFileName;
+  if (result = '') and (PhastModel.ModelFileName <> '') then
+  begin
+    result := ChangeFileExt(PhastModel.ModelFileName,
+      '_pred' + sdModflowInput.DefaultExt);
+  end;
+  result := PhastModel.FixFileName(result);
 end;
 
 procedure TfrmGoPhast.GetZoomBox(Sender: TObject; VD: TViewDirection;
@@ -6330,6 +6430,20 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.sdModelMateClose(Sender: TObject);
+begin
+  inherited;
+  FRunModelMate := FRunModelMateForm.cbOpen.Checked;
+  FRunModelMateForm.free;
+end;
+
+procedure TfrmGoPhast.sdModelMateShow(Sender: TObject);
+begin
+  inherited;
+  FRunModelMateForm := TfrmRunModelMate.createfordialog(sdModelMate);
+  FRunModelMateForm.cbOpen.Checked := FRunModelMate;
+end;
+
 procedure TfrmGoPhast.sdModflowInputClose(Sender: TObject);
 begin
   inherited;
@@ -6571,6 +6685,19 @@ begin
   InitializeModflowInputDialog;
   if sdModflowInput.Execute then
   begin
+    if sdModflowInput.FileName <>
+      PhastModel.FixFileName(sdModflowInput.FileName) then
+    begin
+      Beep;
+      MessageDlg('Space characters are not allowed in the names of '
+        + 'MODFLOW input files.', mtError, [mbOK], 0);
+      Exit;
+    end;
+    case PhastModel.ObservationPurpose of
+      ofObserved: FObservationFileName := sdModflowInput.FileName;
+      ofPredicted: FPredictionFileName := sdModflowInput.FileName;
+      else Assert(False);
+    end;
     // erase the list of model input files to be stored in the archive.
     frmGoPhast.PhastModel.ClearModelInputFiles;
 
@@ -6630,7 +6757,6 @@ begin
     Application.CreateForm(TfrmExportImage, frmExportImage);
   end;
     frmExportImage.Show;
-//  ShowAForm(TfrmExportImage)
 end;
 
 procedure TfrmGoPhast.acExportModelMateExecute(Sender: TObject);
@@ -6659,18 +6785,13 @@ begin
   sdModelMate.FileName := PhastModel.ModelMateProjectFileName;
   if sdModelMate.Execute then
   begin
+    if not DirectoryExists(ExtractFileDir(sdModelMate.FileName)) then
+    begin
+      Beep;
+      MessageDlg('The directory for the ModelMate file does not exist', mtError, [mbOK], 0);
+      Exit;
+    end;
     PhastModel.ModelMateProjectFileName := sdModelMate.FileName;
-
-  //  end;
-  //  if PhastModel.ModelMateProjectFileName = '' then
-  //  begin
-  //    ShowAForm(TfrmModelMateInterface);
-  //    if PhastModel.ModelMateProjectFileName = '' then
-  //    begin
-  //      Exit;
-  //    end;
-  //  end;
-
 
     PhastModel.ModelMateProject := nil;
     TempProject := TProject.Create(nil);
@@ -6697,28 +6818,34 @@ begin
           ExtractFileName(sdSaveDialog.FileName), '');
       end;
 
-      NameFile := ExtractRelativePath(sdSaveDialog.FileName,
-        ChangeFileExt(sdSaveDialog.FileName, '.nam'));
+//      NameFile := ExtractRelativePath(sdSaveDialog.FileName,
+//        ChangeFileExt(sdSaveDialog.FileName, '.nam'));
       case PhastModel.ObservationPurpose of
         ofObserved:
           begin
+            NameFile := ExtractRelativePath(PhastModel.ModelFileName,
+              ObservationFileName);
             PhastModel.ModelMateProject.ModflowNameFile := NameFile
           end;
         ofPredicted:
           begin
+            NameFile := ExtractRelativePath(PhastModel.ModelFileName,
+              PredictionFileName);
             PhastModel.ModelMateProject.ModflowNameFilePred := NameFile
           end;
         ofInacative:
           begin
+            NameFile := '';
           end;
         else Assert(False);
       end;
 
+      NameFile := ExpandFileName(NameFile);
 
-      ModelFile := ExtractRelativePath(sdSaveDialog.FileName,
-        ChangeFileExt(sdSaveDialog.FileName, StrPvalExt));
-      AppFile := ExtractRelativePath(sdSaveDialog.FileName,
-        ChangeFileExt(sdSaveDialog.FileName, StrJtf));
+      ModelFile := ExtractRelativePath(PhastModel.ModelFileName,
+        ChangeFileExt(NameFile, StrPvalExt));
+      AppFile := ExtractRelativePath(PhastModel.ModelFileName,
+        ChangeFileExt(NameFile, StrJtf));
       FoundPair := nil;
 
       InputFiles := nil;
@@ -6748,10 +6875,9 @@ begin
         FoundPair.AppFile := AppFile;
       end;
 
-      CommandLine := ExtractRelativePath(sdSaveDialog.FileName,
+      CommandLine := ExtractRelativePath(NameFile,
         PhastModel.ProgramLocations.ModflowLocation)
-        + ' ' + ExtractRelativePath(sdSaveDialog.FileName,
-        ChangeFileExt(ExtractFileName(sdSaveDialog.FileName), '.nam'));
+        + ' ' + ExtractFileName(NameFile);
       case PhastModel.ObservationPurpose of
         ofObserved:
           begin
@@ -6768,6 +6894,19 @@ begin
       PhastModel.UpdateModelMateProject;
 
       SaveModelMateProject;
+      if FRunModelMate then
+      begin
+        if not FileExists(PhastModel.ProgramLocations.ModelMateLocation) then
+        begin
+          miProgramLocationsClick(nil);
+        end;
+
+        if FileExists(PhastModel.ProgramLocations.ModelMateLocation) then
+        begin
+          WinExec(PChar('"' + PhastModel.ProgramLocations.ModelMateLocation
+            + '" "' + PhastModel.ModelMateProjectFileName + '"'), SW_SHOW);
+        end;
+      end;
     finally
       SetCurrentDir(CurrentDir);
     end;
@@ -6779,6 +6918,14 @@ var
   FileName: string;
 begin
   inherited;
+  if not PhastModel.ModflowPackages.ModPath.IsSelected then
+  begin
+    Beep;
+    MessageDlg('You must activate MODPATH in the MODFLOW Packages and '
+      + 'Programs dialog box before running MODPATH.',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
   if (sdModpathInput.FileName = '') and (sdSaveDialog.FileName <> '') then
   begin
     sdModpathInput.FileName := ChangeFileExt(sdSaveDialog.FileName,

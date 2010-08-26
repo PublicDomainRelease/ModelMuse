@@ -43,7 +43,8 @@ type
     procedure UpdateArrayNames(NewNames: TStringList); virtual; abstract;
     procedure UpdateAssociatedDataSetNames(NewNames: TStringList);
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
-    procedure SetDataArrayName(var OldName: string; NewName: string);
+    procedure SetDataArrayName(var StoredName: string; NewName: string;
+      CreateDataArray: boolean);
     procedure SetArrayNames(NewName: string);
   public
     procedure Assign(Source: TPersistent); override;
@@ -128,7 +129,8 @@ type
     procedure SetInterbedPreconsolidationHeadDataArrayName(const Value: string);
     procedure SetInterbedStartingCompactionDataArrayName(const Value: string);
     procedure SetInterbedStartingHeadDataArrayName(const Value: string);
-    procedure SetVerticalHydraulicConductivityDataArrayName(const Value: string);
+    procedure SetVerticalHydraulicConductivityDataArrayName
+      (const Value: string);
     procedure Loaded;
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
@@ -182,13 +184,84 @@ type
     procedure Loaded;
   end;
 
+  TSwtWaterTableItem = class(TCustomSubLayerItem)
+  private
+    FWaterTableCompressibleThicknessDataArrayName: string;
+    FWaterTableInitialVoidRatioDataArrayName: string;
+    FWaterTableInitialElasticSkeletalSpecificStorageDataArrayName: string;
+    FWaterTableInitialCompactionDataArrayName: string;
+    FWaterTableCompressionIndexDataArrayName: string;
+    FWaterTableRecompressionIndexDataArrayName: string;
+    FWaterTableInitialInelasticSkeletalSpecificStorageDataArrayName: string;
+    procedure SetWaterTableCompressibleThicknessDataArrayName(
+      const Value: string);
+    procedure SetWaterTableCompressionIndexDataArrayName(const Value: string);
+    procedure SetWaterTableInitialCompactionDataArrayName(const Value: string);
+    procedure SetWaterTableInitialElasticSkeletalSpecificStorageDataArrayName(
+      const Value: string);
+    procedure SetWaterTableInitialInelasticSkeletalSpecificStorageDataArrayName(
+      const Value: string);
+    procedure SetWaterTableInitialVoidRatioDataArrayName(const Value: string);
+    procedure SetWaterTableRecompressionIndexDataArrayName(const Value: string);
+    procedure Loaded;
+  protected
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Collection: TCollection); override;
+    procedure UpdateArrayNames(NewNames: TStringList); override;
+  published
+    // data set 7 THICK.
+    property WaterTableCompressibleThicknessDataArrayName: string
+      read FWaterTableCompressibleThicknessDataArrayName
+      write SetWaterTableCompressibleThicknessDataArrayName;
+    // data set 8 Sse
+    property WaterTableInitialElasticSkeletalSpecificStorageDataArrayName: string
+      read FWaterTableInitialElasticSkeletalSpecificStorageDataArrayName
+      write SetWaterTableInitialElasticSkeletalSpecificStorageDataArrayName;
+    // data set 9 Ssv
+    property WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName: string
+      read FWaterTableInitialInelasticSkeletalSpecificStorageDataArrayName
+      write SetWaterTableInitialInelasticSkeletalSpecificStorageDataArrayName;
+    // data set 10 Cr
+    property WaterTableRecompressionIndexDataArrayName: string
+      read FWaterTableRecompressionIndexDataArrayName
+      write SetWaterTableRecompressionIndexDataArrayName;
+    // data set 11 Cc
+    property WaterTableCompressionIndexDataArrayName: string
+      read FWaterTableCompressionIndexDataArrayName
+      write SetWaterTableCompressionIndexDataArrayName;
+    // data set 12 Void
+    property WaterTableInitialVoidRatioDataArrayName: string
+      read FWaterTableInitialVoidRatioDataArrayName
+      write SetWaterTableInitialVoidRatioDataArrayName;
+    // data set 13 Sub
+    property WaterTableInitialCompactionDataArrayName: string
+      read FWaterTableInitialCompactionDataArrayName
+      write SetWaterTableInitialCompactionDataArrayName;
+  end;
+
+  TWaterTableLayers = class(TCustomSubLayer)
+  private
+    function GetItem(Index: integer): TSwtWaterTableItem;
+    procedure SetItem(Index: integer; const Value: TSwtWaterTableItem);
+  public
+    function Add: TSwtWaterTableItem;
+    constructor Create(Model: TObject);
+    property Items[Index: integer]: TSwtWaterTableItem read GetItem
+      write SetItem; default;
+    procedure Loaded;
+  end;
+
+
 const
   StrSubSidence = 'Subsidence';
 
 implementation
 
 uses
-  PhastModelUnit, DataSetUnit, RbwParser, IntListUnit;
+  PhastModelUnit, DataSetUnit, RbwParser, IntListUnit,
+  ModflowPackageSelectionUnit;
 
 { TSubNoDelayBedLayers }
 
@@ -200,7 +273,8 @@ begin
   if Source is TSubNoDelayBedLayerItem then
   begin
     SubSource := TSubNoDelayBedLayerItem(Source);
-    PreconsolidationHeadDataArrayName := SubSource.PreconsolidationHeadDataArrayName;
+    PreconsolidationHeadDataArrayName :=
+      SubSource.PreconsolidationHeadDataArrayName;
     ElasticSkeletalStorageCoefficientDataArrayName :=
       SubSource.ElasticSkeletalStorageCoefficientDataArrayName;
     InelasticSkeletalStorageCoefficientDataArrayName :=
@@ -233,12 +307,14 @@ begin
   begin
      SubItem := TSubNoDelayBedLayerItem(AnotherItem);
      result :=
-       (PreconsolidationHeadDataArrayName = SubItem.PreconsolidationHeadDataArrayName)
+       (PreconsolidationHeadDataArrayName =
+         SubItem.PreconsolidationHeadDataArrayName)
        and (ElasticSkeletalStorageCoefficientDataArrayName =
          SubItem.ElasticSkeletalStorageCoefficientDataArrayName)
        and (InelasticSkeletalStorageCoefficientDataArrayName =
          SubItem.InelasticSkeletalStorageCoefficientDataArrayName)
-       and (InitialCompactionDataArrayName = SubItem.InitialCompactionDataArrayName)
+       and (InitialCompactionDataArrayName =
+         SubItem.InitialCompactionDataArrayName)
   end;
 end;
 
@@ -274,28 +350,30 @@ begin
   end;
 end;
 
-procedure TSubNoDelayBedLayerItem.SetElasticSkeletalStorageCoefficientDataArrayName(
-  const Value: string);
+procedure TSubNoDelayBedLayerItem.
+  SetElasticSkeletalStorageCoefficientDataArrayName(const Value: string);
 begin
-  SetDataArrayName(FElasticSkeletalStorageCoefficientDataArrayName, Value);
+  SetDataArrayName(FElasticSkeletalStorageCoefficientDataArrayName,
+    Value, True);
 end;
 
 procedure TSubNoDelayBedLayerItem.
   SetInelasticSkeletalStorageCoefficientDataArrayName(const Value: string);
 begin
-  SetDataArrayName(FInelasticSkeletalStorageCoefficientDataArrayName, Value);
+  SetDataArrayName(FInelasticSkeletalStorageCoefficientDataArrayName, Value,
+    True);
 end;
 
 procedure TSubNoDelayBedLayerItem.SetInitialCompactionDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FInitialCompactionDataArrayName, Value);
+  SetDataArrayName(FInitialCompactionDataArrayName, Value, True);
 end;
 
 procedure TSubNoDelayBedLayerItem.SetPreconsolidationHeadDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FPreconsolidationHeadDataArrayName, Value);
+  SetDataArrayName(FPreconsolidationHeadDataArrayName, Value, True);
 end;
 
 procedure TSubNoDelayBedLayerItem.UpdateArrayNames(NewNames: TStringList);
@@ -431,48 +509,58 @@ end;
 procedure TSubDelayBedLayerItem.SetElasticSpecificStorageDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FElasticSpecificStorageDataArrayName, Value);
+  SetDataArrayName(FElasticSpecificStorageDataArrayName, Value, True);
 end;
 
-procedure TSubDelayBedLayerItem.SetEquivNumberDataArrayName(const Value: string);
+procedure TSubDelayBedLayerItem.
+  SetEquivNumberDataArrayName(const Value: string);
 begin
-  SetDataArrayName(FEquivNumberDataArrayName, Value);
+  SetDataArrayName(FEquivNumberDataArrayName, Value, True);
 end;
 
 procedure TSubDelayBedLayerItem.SetInelasticSpecificStorageDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FInelasticSpecificStorageDataArrayName, Value);
+  SetDataArrayName(FInelasticSpecificStorageDataArrayName, Value, True);
 end;
 
 procedure TSubDelayBedLayerItem.SetInterbedEquivalentThicknessDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FInterbedEquivalentThicknessDataArrayName, Value);
+  SetDataArrayName(FInterbedEquivalentThicknessDataArrayName, Value, True);
 end;
 
 procedure TSubDelayBedLayerItem.SetInterbedPreconsolidationHeadDataArrayName(
   const Value: string);
+var
+  CreateDataArray: Boolean;
 begin
-  SetDataArrayName(FInterbedPreconsolidationHeadDataArrayName, Value);
+  CreateDataArray := (Model <> nil) and ((Model as TPhastModel).ModflowPackages.
+    SubPackage.ReadDelayRestartFileName = '');
+  SetDataArrayName(FInterbedPreconsolidationHeadDataArrayName, Value,
+    CreateDataArray);
 end;
 
 procedure TSubDelayBedLayerItem.SetInterbedStartingCompactionDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FInterbedStartingCompactionDataArrayName, Value);
+  SetDataArrayName(FInterbedStartingCompactionDataArrayName, Value, True);
 end;
 
 procedure TSubDelayBedLayerItem.SetInterbedStartingHeadDataArrayName(
   const Value: string);
+var
+  CreateDataArray: Boolean;
 begin
-  SetDataArrayName(FInterbedStartingHeadDataArrayName, Value);
+  CreateDataArray := (Model <> nil) and ((Model as TPhastModel).ModflowPackages.
+    SubPackage.ReadDelayRestartFileName = '');
+  SetDataArrayName(FInterbedStartingHeadDataArrayName, Value, CreateDataArray);
 end;
 
 procedure TSubDelayBedLayerItem.SetVerticalHydraulicConductivityDataArrayName(
   const Value: string);
 begin
-  SetDataArrayName(FVerticalHydraulicConductivityDataArrayName, Value);
+  SetDataArrayName(FVerticalHydraulicConductivityDataArrayName, Value, True);
 end;
 
 procedure TSubDelayBedLayerItem.UpdateArrayNames(NewNames: TStringList);
@@ -686,90 +774,93 @@ begin
   end;
 end;
 
-procedure TCustomSubLayerItem.SetDataArrayName(var OldName: string;
-  NewName: string);
+procedure TCustomSubLayerItem.SetDataArrayName(var StoredName: string;
+  NewName: string; CreateDataArray: boolean);
 var
-  Model: TPhastModel;
+  LocalModel: TPhastModel;
   DataArray: TDataArray;
-//  UnitAbove, UnitBelow: TLayerGroup;
   NewFormula: string;
   Compiler: TRbwParser;
   Position: Integer;
   LocalCollection: TCustomSubLayer;
 begin
-  if OldName <> NewName then
-  begin
-    LocalCollection := Collection as TCustomSubLayer;
-    try
-      if LocalCollection.Model <> nil then
+  LocalCollection := Collection as TCustomSubLayer;
+  try
+    if LocalCollection.Model <> nil then
+    begin
+      LocalModel := Model as TPhastModel;
+      if not (csLoading in LocalModel.ComponentState) then
       begin
-        Model := LocalCollection.Model as TPhastModel;
-        if not (csLoading in Model.ComponentState) then
+        if StoredName = '' then
         begin
-          if OldName = '' then
-          begin
-            DataArray := nil;
-          end
-          else
-          begin
-            DataArray := Model.GetDataSetByName(OldName);
-          end;
-          if DataArray = nil then
-          begin
-            DataArray := Model.GetDataSetByName(NewName);
-            if DataArray <> nil then
-            begin
-              DataArray.OnDataSetUsed := Model.SubsidenceDataArrayUsed;
-              LocalCollection.AddOwnedDataArray(DataArray);
-            end;
-          end;
+          DataArray := nil;
+        end
+        else
+        begin
+          DataArray := LocalModel.GetDataSetByName(StoredName);
+        end;
+        if DataArray = nil then
+        begin
+          DataArray := LocalModel.GetDataSetByName(NewName);
           if DataArray <> nil then
           begin
-            // rename data array.
-            Model.TopGridObserver.StopsTalkingTo(DataArray);
-            DataArray.StopsTalkingTo(Model.ThreeDGridObserver);
-            DataArray.Name := NewName;
-            DataArray.Classification := StrSubSidence + '|' + Name;
-            Compiler := Model.GetCompiler(DataArray.Orientation,
-              DataArray.EvaluatedAt);
-            Position := Compiler.IndexOfVariable(OldName);
-            if Position >= 0 then
-            begin
-              Compiler.RenameVariable(Position, NewName);
-            end;
-            Compiler := Model.GetCompiler(dso3D,
-              DataArray.EvaluatedAt);
-            Position := Compiler.IndexOfVariable(OldName);
-            if Position >= 0 then
-            begin
-              Compiler.RenameVariable(Position, NewName);
-            end;
-          end
-          else
-          begin
-            // create a new data array.
-
-            // First get formula for new layer.
-            NewFormula := '0.';
-
-            // create new data array.
-            DataArray := Model.CreateNewDataArray(TDataArray, NewName, NewFormula,
-              [dcName, dcType, dcOrientation, dcEvaluatedAt], rdtDouble,
-              eaBlocks, dsoTop, StrSubSidence + '|' + Name);
-            DataArray.OnDataSetUsed := Model.SubsidenceDataArrayUsed;
-
+            DataArray.OnDataSetUsed := LocalModel.SubsidenceDataArrayUsed;
             LocalCollection.AddOwnedDataArray(DataArray);
           end;
-          Model.TopGridObserver.TalksTo(DataArray);
-          DataArray.TalksTo(Model.ThreeDGridObserver);
-          Model.ThreeDGridObserver.StopsTalkingTo(DataArray);
+        end;
+        if DataArray <> nil then
+        begin
+          // rename data array.
+          LocalModel.TopGridObserver.StopsTalkingTo(DataArray);
+          DataArray.StopsTalkingTo(LocalModel.ThreeDGridObserver);
+          DataArray.Name := NewName;
+          DataArray.Classification := StrSubSidence + '|' + Name;
+          Compiler := LocalModel.GetCompiler(DataArray.Orientation,
+            DataArray.EvaluatedAt);
+          Position := Compiler.IndexOfVariable(StoredName);
+          if Position >= 0 then
+          begin
+            Compiler.RenameVariable(Position, NewName);
+          end;
+          Compiler := LocalModel.GetCompiler(dso3D,
+            DataArray.EvaluatedAt);
+          Position := Compiler.IndexOfVariable(StoredName);
+          if Position >= 0 then
+          begin
+            Compiler.RenameVariable(Position, NewName);
+          end;
+        end
+        else if CreateDataArray then
+        begin
+          // create a new data array.
 
-          DataArray.UpdateDimensions(Model.Grid.LayerCount,
-            Model.Grid.RowCount, Model.Grid.ColumnCount);
+          // First get formula for new layer.
+          NewFormula := '0.';
+
+          // create new data array.
+          DataArray := LocalModel.CreateNewDataArray(TDataArray, NewName,
+            NewFormula, [dcName, dcType, dcOrientation, dcEvaluatedAt],
+            rdtDouble, eaBlocks, dsoTop, StrSubSidence + '|' + Name);
+          DataArray.OnDataSetUsed := LocalModel.SubsidenceDataArrayUsed;
+
+          LocalCollection.AddOwnedDataArray(DataArray);
+        end;
+        if DataArray <> nil then
+        begin
+          LocalModel.TopGridObserver.TalksTo(DataArray);
+          DataArray.TalksTo(LocalModel.ThreeDGridObserver);
+          LocalModel.ThreeDGridObserver.StopsTalkingTo(DataArray);
+
+          DataArray.UpdateDimensions(LocalModel.Grid.LayerCount,
+            LocalModel.Grid.RowCount, LocalModel.Grid.ColumnCount);
+//          DataArray.AssociatedDataSets := AssociatedDataSets;
         end;
       end;
-    finally
-      OldName := NewName;
+    end;
+  finally
+    if StoredName <> NewName then
+    begin
+      StoredName := NewName;
       InvalidateModel;
     end;
   end;
@@ -792,7 +883,8 @@ begin
   SetBooleanProperty(FUseInAllLayers, Value);
 end;
 
-procedure TCustomSubLayerItem.UpdateAssociatedDataSetNames(NewNames: TStringList);
+procedure TCustomSubLayerItem.UpdateAssociatedDataSetNames(
+  NewNames: TStringList);
 var
   LocalCollection: TCustomSubLayer;
   Model : TPhastModel;
@@ -819,4 +911,234 @@ begin
 
 end;
 
+{ TSubWaterTableItem }
+
+procedure TSwtWaterTableItem.Assign(Source: TPersistent);
+var
+  SubItem: TSwtWaterTableItem;
+begin
+  inherited;
+  if Source is TSwtWaterTableItem then
+  begin
+     SubItem := TSwtWaterTableItem(Source);
+     WaterTableCompressibleThicknessDataArrayName :=
+       SubItem.WaterTableCompressibleThicknessDataArrayName;
+     WaterTableInitialElasticSkeletalSpecificStorageDataArrayName :=
+       SubItem.WaterTableInitialElasticSkeletalSpecificStorageDataArrayName;
+     WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName :=
+       SubItem.WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName;
+     WaterTableRecompressionIndexDataArrayName :=
+       SubItem.WaterTableRecompressionIndexDataArrayName;
+     WaterTableCompressionIndexDataArrayName :=
+       SubItem.WaterTableCompressionIndexDataArrayName;
+     WaterTableInitialVoidRatioDataArrayName :=
+       SubItem.WaterTableInitialVoidRatioDataArrayName;
+     WaterTableInitialCompactionDataArrayName :=
+       SubItem.WaterTableInitialCompactionDataArrayName;
+  end;
+end;
+
+constructor TSwtWaterTableItem.Create(Collection: TCollection);
+begin
+  inherited;
+  FDataArrayTypes.Add('Compressible_Thickness');
+  FDataArrayTypes.Add('Initial_Elastic_Skeletal_Specific_Storage');
+  FDataArrayTypes.Add('Initial_Inelastic_Skeletal_Specific_Storage');
+  FDataArrayTypes.Add('Recompression_Index');
+  FDataArrayTypes.Add('Compression_Index');
+  FDataArrayTypes.Add('Initial_Void_Ratio');
+  FDataArrayTypes.Add('Initial_Compaction');
+
+  FAssociatedModelDataSetNames.Add('MODFLOW SWT: THICK (Data Set 7)');
+  FAssociatedModelDataSetNames.Add('MODFLOW SWT: Sse (Data Set 8)');
+  FAssociatedModelDataSetNames.Add('MODFLOW SWT: Ssv (Data Set 9)');
+  FAssociatedModelDataSetNames.Add('MODFLOW SWT: Cr (Data Set 10)');
+  FAssociatedModelDataSetNames.Add('MODFLOW SWT: Cc (Data Set 11)');
+  FAssociatedModelDataSetNames.Add('MODFLOW SWT: VOID (Data Set 12)');
+  FAssociatedModelDataSetNames.Add('MODFLOW SWT: SUB (Data Set 13)');
+end;
+
+function TSwtWaterTableItem.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  SubItem: TSwtWaterTableItem;
+begin
+  result := (AnotherItem is TSwtWaterTableItem)
+    and inherited IsSame(AnotherItem);
+  if result then
+  begin
+     SubItem := TSwtWaterTableItem(AnotherItem);
+     result :=
+       (WaterTableCompressibleThicknessDataArrayName =
+         SubItem.WaterTableCompressibleThicknessDataArrayName)
+       and (WaterTableInitialElasticSkeletalSpecificStorageDataArrayName =
+         SubItem.WaterTableInitialElasticSkeletalSpecificStorageDataArrayName)
+       and (WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName =
+         SubItem.WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName)
+       and (WaterTableRecompressionIndexDataArrayName =
+         SubItem.WaterTableRecompressionIndexDataArrayName)
+       and (WaterTableCompressionIndexDataArrayName =
+         SubItem.WaterTableCompressionIndexDataArrayName)
+       and (WaterTableInitialVoidRatioDataArrayName =
+         SubItem.WaterTableInitialVoidRatioDataArrayName)
+       and (WaterTableInitialCompactionDataArrayName =
+         SubItem.WaterTableInitialCompactionDataArrayName)
+  end;
+end;
+
+procedure TSwtWaterTableItem.Loaded;
+var
+  PhastModel: TPhastModel;
+  Names: TStringList;
+  procedure UpdateTalksTo(Const ArrayName: string);
+  var
+    DataArray: TDataArray;
+  begin
+    DataArray := PhastModel.GetDataSetByName(ArrayName);
+    if( DataArray <> nil) then
+    begin
+      PhastModel.TopGridObserver.TalksTo(DataArray);
+      DataArray.OnDataSetUsed := PhastModel.SubsidenceDataArrayUsed;
+    end;
+  end;
+begin
+  PhastModel := Model as TPhastModel;
+  UpdateTalksTo(WaterTableCompressibleThicknessDataArrayName);
+  UpdateTalksTo(WaterTableInitialElasticSkeletalSpecificStorageDataArrayName);
+  UpdateTalksTo(WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName);
+  UpdateTalksTo(WaterTableRecompressionIndexDataArrayName);
+  UpdateTalksTo(WaterTableCompressionIndexDataArrayName);
+  UpdateTalksTo(WaterTableInitialVoidRatioDataArrayName);
+  UpdateTalksTo(WaterTableInitialCompactionDataArrayName);
+
+  Names := TStringList.Create;
+  try
+    Names.Add(WaterTableCompressibleThicknessDataArrayName);
+    Names.Add(WaterTableInitialElasticSkeletalSpecificStorageDataArrayName);
+    Names.Add(WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName);
+    Names.Add(WaterTableRecompressionIndexDataArrayName);
+    Names.Add(WaterTableCompressionIndexDataArrayName);
+    Names.Add(WaterTableInitialVoidRatioDataArrayName);
+    Names.Add(WaterTableInitialCompactionDataArrayName);
+    UpdateAssociatedDataSetNames(Names);
+  finally
+    Names.Free;
+  end;
+
+end;
+
+procedure TSwtWaterTableItem.SetWaterTableCompressibleThicknessDataArrayName(
+  const Value: string);
+begin
+  SetDataArrayName(FWaterTableCompressibleThicknessDataArrayName, Value, True);
+end;
+
+procedure TSwtWaterTableItem.SetWaterTableCompressionIndexDataArrayName(
+  const Value: string);
+var
+  CreateDataArray: Boolean;
+begin
+  CreateDataArray := (Model <> nil) and ((Model as TPhastModel).ModflowPackages.
+    SwtPackage.CompressionSource = csCompressionReComp);
+  SetDataArrayName(FWaterTableCompressionIndexDataArrayName, Value,
+    CreateDataArray);
+end;
+
+procedure TSwtWaterTableItem.SetWaterTableInitialCompactionDataArrayName(
+  const Value: string);
+begin
+  SetDataArrayName(FWaterTableInitialCompactionDataArrayName, Value, True);
+end;
+
+procedure TSwtWaterTableItem.
+  SetWaterTableInitialElasticSkeletalSpecificStorageDataArrayName(
+  const Value: string);
+var
+  CreateDataArray: Boolean;
+begin
+  CreateDataArray := (Model <> nil) and ((Model as TPhastModel).ModflowPackages.
+    SwtPackage.CompressionSource = csSpecificStorage);
+  SetDataArrayName(
+    FWaterTableInitialElasticSkeletalSpecificStorageDataArrayName, Value,
+      CreateDataArray);
+end;
+
+procedure TSwtWaterTableItem.
+  SetWaterTableInitialInelasticSkeletalSpecificStorageDataArrayName(
+  const Value: string);
+var
+  CreateDataArray: Boolean;
+begin
+  CreateDataArray := (Model <> nil) and ((Model as TPhastModel).ModflowPackages.
+    SwtPackage.CompressionSource = csSpecificStorage);
+  SetDataArrayName(
+    FWaterTableInitialInelasticSkeletalSpecificStorageDataArrayName, Value,
+      CreateDataArray);
+end;
+
+procedure TSwtWaterTableItem.SetWaterTableInitialVoidRatioDataArrayName(
+  const Value: string);
+begin
+  SetDataArrayName(FWaterTableInitialVoidRatioDataArrayName, Value, True);
+end;
+
+procedure TSwtWaterTableItem.SetWaterTableRecompressionIndexDataArrayName(
+  const Value: string);
+var
+  CreateDataArray: Boolean;
+begin
+  CreateDataArray := (Model <> nil) and ((Model as TPhastModel).ModflowPackages.
+    SwtPackage.CompressionSource = csCompressionReComp);
+  SetDataArrayName(FWaterTableRecompressionIndexDataArrayName, Value,
+    CreateDataArray);
+end;
+
+procedure TSwtWaterTableItem.UpdateArrayNames(NewNames: TStringList);
+begin
+  Assert(NewNames.Count= 7);
+  WaterTableCompressibleThicknessDataArrayName := NewNames[0];
+  WaterTableInitialElasticSkeletalSpecificStorageDataArrayName := NewNames[1];
+  WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName := NewNames[2];
+  WaterTableRecompressionIndexDataArrayName := NewNames[3];
+  WaterTableCompressionIndexDataArrayName := NewNames[4];
+  WaterTableInitialVoidRatioDataArrayName := NewNames[5];
+  WaterTableInitialCompactionDataArrayName := NewNames[6];
+
+  UpdateAssociatedDataSetNames(NewNames);
+
+end;
+
+{ TWaterTableLayers }
+
+function TWaterTableLayers.Add: TSwtWaterTableItem;
+begin
+  result := inherited Add as TSwtWaterTableItem
+end;
+
+constructor TWaterTableLayers.Create(Model: TObject);
+begin
+  inherited Create(TSwtWaterTableItem, Model);
+end;
+
+function TWaterTableLayers.GetItem(Index: integer): TSwtWaterTableItem;
+begin
+  result := inherited Items[Index] as TSwtWaterTableItem
+end;
+
+procedure TWaterTableLayers.Loaded;
+var
+  Index: Integer;
+begin
+  for Index := 0 to Count - 1 do
+  begin
+    Items[Index].Loaded;
+  end;
+end;
+
+procedure TWaterTableLayers.SetItem(Index: integer;
+  const Value: TSwtWaterTableItem);
+begin
+  inherited Items[Index] := Value;
+end;
+
 end.
+

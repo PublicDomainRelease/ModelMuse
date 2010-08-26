@@ -21,6 +21,7 @@ type
     Row: integer;
     Column: integer;
     Section: integer;
+    class operator Equal(ACell, BCELL: TCellLocation): boolean;
   end;
 
   TValueCell = class(TObject)
@@ -36,10 +37,11 @@ type
     function GetRealValue(Index: integer): double; virtual; abstract;
     function GetRealAnnotation(Index: integer): string; virtual; abstract;
     function GetIntegerAnnotation(Index: integer): string; virtual; abstract;
-    procedure Cache(Comp: TCompressionStream); virtual;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); virtual;
     procedure Restore(Decomp: TDecompressionStream;
       Annotations: TStringList); virtual;
     function GetSection: integer; virtual; abstract;
+    procedure RecordStrings(Strings: TStringList); virtual; abstract;
   public
     Constructor Create; virtual; 
     // @name is the layer number for this cell. Valid values range from 0 to
@@ -63,6 +65,9 @@ type
     // Rivers, and constant head cells.).
     property ScreenObject: TObject read FScreenObject write SetScreenObject;
     property Section: integer read GetSection;
+    function IsIdentical(AnotherCell: TValueCell): boolean; virtual;
+    function AreRealValuesIdentical(AnotherCell: TValueCell; DataIndex: integer): boolean;
+    function AreIntegerValuesIdentical(AnotherCell: TValueCell; DataIndex: integer): boolean;
   end;
 
   TValueCellType = class of TValueCell;
@@ -89,6 +94,8 @@ type
     property Count: integer read GetCount write SetCount;
     property Items[Index: integer]: TValueCell read GetItem write SetItem; default;
     Destructor Destroy; override;
+    function AreRealValuesIdentical(AnotherList: TValueCellList; DataIndex: integer): boolean;
+    function AreIntegerValuesIdentical(AnotherList: TValueCellList; DataIndex: integer): boolean;
   end;
 
 procedure WriteCompInt(Stream: TStream; Value: integer);
@@ -98,6 +105,7 @@ procedure WriteCompCell(Stream: TStream; Cell: TCellLocation);
 
 function ReadCompInt(Stream: TStream): integer;
 function ReadCompReal(Stream: TStream): double;
+function ReadCompStringSimple(Stream: TStream): string;
 function ReadCompString(Stream: TStream; Annotations: TStringList): string;
 function ReadCompCell(Stream: TStream): TCellLocation;
 
@@ -137,14 +145,20 @@ begin
   Stream.WriteBuffer(Pointer(Value)^, StringLength * SizeOf(Char));
 end;
 
-function ReadCompString(Stream: TStream; Annotations: TStringList): string;
+function ReadCompStringSimple(Stream: TStream): string;
 var
   CommentLength: Integer;
-  StringPostion: integer;
 begin
   Stream.Read(CommentLength, SizeOf(CommentLength));
   SetString(result, nil, CommentLength);
   Stream.Read(Pointer(result)^, CommentLength * SizeOf(Char));
+end;
+
+function ReadCompString(Stream: TStream; Annotations: TStringList): string;
+var
+  StringPostion: integer;
+begin
+  result := ReadCompStringSimple(Stream);
   StringPostion := Annotations.IndexOf(result);
   if StringPostion < 0 then
   begin
@@ -211,6 +225,46 @@ begin
   end;
 end;
 
+function TValueCellList.AreIntegerValuesIdentical(AnotherList: TValueCellList;
+  DataIndex: integer): boolean;
+var
+  Index: Integer;
+begin
+  result := Count = AnotherList.Count;
+  if result then
+  begin
+    for Index := 0 to Count - 1 do
+    begin
+      result := Items[Index].AreIntegerValuesIdentical(
+        AnotherList.Items[Index], DataIndex);
+      if not result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+function TValueCellList.AreRealValuesIdentical(AnotherList: TValueCellList;
+  DataIndex: integer): boolean;
+var
+  Index: Integer;
+begin
+  result := Count = AnotherList.Count;
+  if result then
+  begin
+    for Index := 0 to Count - 1 do
+    begin
+      result := Items[Index].AreRealValuesIdentical(
+        AnotherList.Items[Index], DataIndex);
+      if not result then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
 procedure TValueCellList.Cache;
 var
   TempFile: TTempFileStream;
@@ -219,6 +273,8 @@ var
   Cell: TValueCell;
   LocalCount: integer;
   NewTempFileName: string;
+  Strings: TStringList;
+  StringIndex: Integer;
 begin
   LocalCount := inherited Count;
   if LocalCount > 0 then
@@ -234,11 +290,31 @@ begin
     Compressor := TCompressionStream.Create(clDefault, TempFile);
     try
       FCachedCount := FCachedCount + LocalCount;
-      WriteCompInt(Compressor, LocalCount);
-      for Index := 0 to LocalCount - 1 do
-      begin
-        Cell := inherited Items[Index] as TValueCell;
-        Cell.Cache(Compressor);
+
+      Strings := TStringList.Create;
+      try
+        Strings.Sorted := True;
+        Strings.Duplicates := dupIgnore;
+        for Index := 0 to LocalCount - 1 do
+        begin
+          Cell := inherited Items[Index] as TValueCell;
+          Cell.RecordStrings(Strings);
+        end;
+
+        WriteCompInt(Compressor, Strings.Count);
+        for StringIndex := 0 to Strings.Count - 1 do
+        begin
+          WriteCompString(Compressor, Strings[StringIndex])
+        end;
+
+        WriteCompInt(Compressor, LocalCount);
+        for Index := 0 to LocalCount - 1 do
+        begin
+          Cell := inherited Items[Index] as TValueCell;
+          Cell.Cache(Compressor, Strings);
+        end;
+      finally
+        Strings.Free;
       end;
     finally
       Compressor.Free;
@@ -309,13 +385,15 @@ var
   CellIndex: Integer;
   SumOfLocalCounts: integer;
   Annotations: TStringList;
+  StringIndex: Integer;
+  StringCount: Integer;
 begin
   Assert(FCached);
   Assert(FCleared);
 
   Annotations := TStringList.Create;
   try
-    Annotations.Sorted := True;
+//    Annotations.Sorted := True;
     Capacity := FCachedCount;
     SumOfLocalCounts := 0;
     for Index := Start to FTempFileNames.Count -1 do
@@ -325,6 +403,14 @@ begin
       TempFile := TTempFileStream.Create(CacheFileName, fmOpenRead);
       DecompressionStream := TDecompressionStream.Create(TempFile);
       try
+        StringCount := ReadCompInt(DecompressionStream);
+        Annotations.Clear;
+        Annotations.Capacity := StringCount;
+        for StringIndex := 0 to StringCount - 1 do
+        begin
+          Annotations.Add(ReadCompStringSimple(DecompressionStream));
+        end;
+
         LocalCount := ReadCompInt(DecompressionStream);
         SumOfLocalCounts := SumOfLocalCounts + LocalCount;
         for CellIndex := 0 to LocalCount - 1 do
@@ -366,7 +452,19 @@ end;
 
 { TValueCell }
 
-procedure TValueCell.Cache(Comp: TCompressionStream);
+function TValueCell.AreIntegerValuesIdentical(AnotherCell: TValueCell;
+  DataIndex: integer): boolean;
+begin
+  result := IntegerValue[DataIndex] = AnotherCell.IntegerValue[DataIndex];
+end;
+
+function TValueCell.AreRealValuesIdentical(AnotherCell: TValueCell;
+  DataIndex: integer): boolean;
+begin
+  result := RealValue[DataIndex] = AnotherCell.RealValue[DataIndex];
+end;
+
+procedure TValueCell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   Comp.Write(FIface, SizeOf(FIface));
   if ScreenObject = nil then
@@ -384,13 +482,18 @@ begin
 
 end;
 
+function TValueCell.IsIdentical(AnotherCell: TValueCell): boolean;
+begin
+  result := False;
+end;
+
 procedure TValueCell.Restore(Decomp: TDecompressionStream;
   Annotations: TStringList);
 var
   ScreenObjectName: string;
 begin
   Decomp.Read(FIFace, SizeOf(FIFace));
-  ScreenObjectName := ReadCompString(Decomp, Annotations);
+  ScreenObjectName := ReadCompStringSimple(Decomp);
   if ScreenObjectName = '' then
   begin
     ScreenObject := nil;
@@ -410,6 +513,16 @@ begin
     Assert(Value is TScreenObject)
   end;
   FScreenObject := Value;
+end;
+
+{ TCellLocation }
+
+class operator TCellLocation.Equal(ACell, BCell: TCellLocation): boolean;
+begin
+  result :=
+    (ACell.Layer = BCell.Layer)
+    and (ACell.Row = BCell.Row)
+    and (ACell.Column = BCell.Column)
 end;
 
 end.

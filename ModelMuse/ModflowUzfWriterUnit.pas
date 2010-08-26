@@ -136,6 +136,10 @@ begin
     Exit;
   end;
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
   if Values.Count = 0 then
   begin
     SetTimeListsUpToDate(TimeLists);
@@ -475,6 +479,10 @@ begin
   frmProgress.AddMessage('Writing UZF Package input.');
 //  frmProgress.AddMessage('  Evaluating data.');
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
 
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrUZF, PhastModel.UnitNumbers.UnitNumber(StrUZF), NameOfFile, foInput);

@@ -170,6 +170,11 @@ begin
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrDRT, PhastModel.UnitNumbers.UnitNumber(StrDRT), NameOfFile, foInput);
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
+  ClearTimeLists;
   OpenFile(FileName(AFileName));
   try
     frmProgress.AddMessage('Writing DRN Package input.');

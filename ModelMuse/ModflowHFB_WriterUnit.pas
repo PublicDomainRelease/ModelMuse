@@ -412,6 +412,10 @@ var
   ScreenObject: TScreenObject;
 begin
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
   PhastModel.HfbDisplayer.Clear;
   for ParmIndex := 0 to FParameterScreenObjectList.Count - 1 do
   begin
@@ -577,6 +581,10 @@ begin
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrHFB, PhastModel.UnitNumbers.UnitNumber(StrHFB), NameOfFile, foInput);
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
   OpenFile(FileName(AFileName));
   try
     frmProgress.AddMessage('Writing HFB6 Package input.');

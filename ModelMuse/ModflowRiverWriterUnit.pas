@@ -29,6 +29,7 @@ type
       const DataSetIdentifier, VariableIdentifiers: string); override;
     class function ObservationExtension: string; override;
     class function ObservationOutputExtension: string; override;
+    function ObsNameWarningString: string; override;
   public
     procedure WriteFile(const AFileName: string);
     procedure WriteFluxObservationFile(const AFileName: string;
@@ -71,6 +72,11 @@ end;
 function TModflowRIV_Writer.ObservationPackage: TModflowPackageSelection;
 begin
   result := PhastModel.ModflowPackages.RvobPackage;
+end;
+
+function TModflowRIV_Writer.ObsNameWarningString: string;
+begin
+  result := 'The following River observation names may be valid for MODFLOW but they are not valid for UCODE.';
 end;
 
 function TModflowRIV_Writer.Package: TModflowPackageSelection;
@@ -192,6 +198,11 @@ begin
   if ShouldWriteFile or ShouldWriteObservationFile then
   begin
     Evaluate;
+    if not frmProgress.ShouldContinue then
+    begin
+      Exit;
+    end;
+    ClearTimeLists;
   end;
   if not ShouldWriteFile then
   begin

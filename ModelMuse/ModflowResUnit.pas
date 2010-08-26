@@ -13,8 +13,9 @@ type
     StartingTime: double;
     EndingTime: double;
     ResIDAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList);
   end;
 
   TResArray = array of TResRecord;
@@ -84,9 +85,10 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property ResID: integer read GetResID;
     property ResIdAnnotation: string read GetResIdAnnotation;
@@ -497,10 +499,10 @@ end;
 
 { TRes_Cell }
 
-procedure TRes_Cell.Cache(Comp: TCompressionStream);
+procedure TRes_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -564,6 +566,12 @@ begin
   result := Values.Cell.Section;
 end;
 
+procedure TRes_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
+end;
+
 procedure TRes_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
@@ -573,13 +581,19 @@ end;
 
 { TResRecord }
 
-procedure TResRecord.Cache(Comp: TCompressionStream);
+procedure TResRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompInt(Comp, ResID);
   WriteCompReal(Comp, StartingTime);
   WriteCompReal(Comp, EndingTime);
-  WriteCompString(Comp, ResIDAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(ResIDAnnotation));
+//  WriteCompString(Comp, ResIDAnnotation);
+end;
+
+procedure TResRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(ResIDAnnotation);
 end;
 
 procedure TResRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -588,7 +602,8 @@ begin
   ResID := ReadCompInt(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  ResIDAnnotation := ReadCompString(Decomp, Annotations);
+  ResIDAnnotation := Annotations[ReadCompInt(Decomp)];
+//  ResIDAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TResStorage }
@@ -603,12 +618,32 @@ procedure TResStorage.Store(Compressor: TCompressionStream);
 var
   Index: Integer;
   Count: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FResArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FResArray[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FResArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FResArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FResArray[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
   end;
 end;
 

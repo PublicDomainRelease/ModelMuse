@@ -111,6 +111,10 @@ type
     FUpdatingLegend: Boolean;
     FStartTime: TDateTime;
     procedure UpdateLegendAfterDelay;
+    function GetLegendDataSource: TPersistent;
+//    procedure ResetTreeText;
+    procedure SetLegendDataSource(const Value: TPersistent);
+    function CanColorDataSet(DataArray: TDataArray): boolean;
 
   { Private declarations }
   protected
@@ -144,6 +148,8 @@ type
     procedure ReadLimits(DataType: TRbwDataType; Limits: TColoringLimits);
     procedure UpdateLegend;
   public
+    property LegendDataSource: TPersistent read GetLegendDataSource
+      write SetLegendDataSource;
     procedure ResetTreeText;
     property SelectedVirtNode: PVirtualNode read FSelectedVirtNode;
     { Public declarations }
@@ -453,10 +459,32 @@ begin
 
 end;
 
+function TfrmCustomColor.CanColorDataSet(DataArray: TDataArray): boolean;
+begin
+  result := False;
+  case DataArray.EvaluatedAt of
+    eaBlocks: result := True;
+    eaNodes: result := frmGoPhast.PhastModel.ModelSelection = msPhast;
+    else Assert(False);
+  end;
+end;
+
 procedure TfrmCustomColor.GetDataSets;
 begin
   FillVirtualStringTreeWithDataSets(virttreecomboDataSets.Tree,
-    FDataSetDummyObjects, GetSelectedArray);
+    FDataSetDummyObjects, GetSelectedArray, CanColorDataSet);
+end;
+
+function TfrmCustomColor.GetLegendDataSource: TPersistent;
+begin
+  if FLegend = nil then
+  begin
+    result := nil 
+  end
+  else
+  begin
+    result := FLegend.ValueSource;
+  end;
 end;
 
 procedure TfrmCustomColor.StoreDataSetsInLists;
@@ -697,6 +725,14 @@ begin
   timerLegend.Enabled := True;
 end;
 
+procedure TfrmCustomColor.SetLegendDataSource(const Value: TPersistent);
+begin
+  if FLegend <> nil then
+  begin
+    FLegend.ValueSource := Value;
+  end;
+end;
+
 procedure TfrmCustomColor.SetSelectedNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   SelectOnlyLeaves(Node, virttreecomboDataSets, Sender, FSelectedVirtNode);
@@ -723,6 +759,10 @@ begin
       else if NodeData.ClassificationObject is TDataSetClassification then
       begin
         AnObject := TDataSetClassification(NodeData.ClassificationObject).DataArray;
+      end
+      else
+      begin
+        AnObject := nil;
       end;
     end
     else

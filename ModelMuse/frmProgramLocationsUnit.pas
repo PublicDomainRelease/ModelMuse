@@ -41,6 +41,8 @@ type
     htlblZoneBudger: TJvHTLabel;
     fedZonebudget: TJvFilenameEdit;
     lblZoneBudget: TLabel;
+    lblModelMate: TLabel;
+    fedModelMate: TJvFilenameEdit;
     procedure fedModflowChange(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
@@ -91,6 +93,7 @@ begin
   fedModpath.FileName := Locations.ModPathLocation;
   fedModelMonitor.FileName := Locations.ModelMonitorLocation;
   fedZonebudget.FileName := Locations.ZoneBudgetLocation;
+  fedModelMate.FileName := Locations.ModelMateLocation;
 end;
 
 procedure TfrmProgramLocations.SetData;
@@ -105,6 +108,7 @@ begin
     Locations.ModPathLocation := fedModpath.FileName;
     Locations.ModelMonitorLocation := fedModelMonitor.FileName;
     Locations.ZoneBudgetLocation := fedZonebudget.FileName;
+    Locations.ModelMateLocation := fedModelMate.FileName;
     Undo := TUndoChangeProgramLocations.Create(Locations);
     frmGoPhast.UndoStack.Submit(Undo);
   finally
@@ -137,6 +141,7 @@ var
   end;
 begin
   CheckControl(fedModelMonitor);
+  CheckControl(fedModelMate);
   FilesExist := CheckControl(fedModflow)
     and (CheckControl(fedModpath)
     or not frmGoPhast.PhastModel.ModflowPackages.ModPath.IsSelected)

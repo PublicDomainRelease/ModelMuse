@@ -64,7 +64,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akRight, akBottom]
-    ItemHeight = 0
+    ItemHeight = 18
     TabOrder = 4
   end
   object btnSelectAll: TButton

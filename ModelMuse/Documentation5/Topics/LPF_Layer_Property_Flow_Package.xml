@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
-<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+<topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
   <title translate="true">LPF: Layer Property Flow Package Pane</title>
   <body>
     <header>
@@ -16,7 +16,7 @@
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The remaining options are used to promote model convergence by disabling or simplifying some calculations regarding vertical flow.</text></para>
     <para styleclass="Strong"><text styleclass="Strong" translate="true">Use cell thickness to compute vertical conductance in unconfined cells (CONSTANTCV)</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">CONSTANTCV indicates that vertical conductance for an unconfined cell is computed from the cell thickness rather than the saturated thickness.</text></para>
-    <para styleclass="Strong"><text styleclass="Strong" translate="true">Use vertical flow correction </text><text styleclass="Strong" translate="true">(inverse of </text><text styleclass="Strong" translate="true">NOCVCORRECTION)</text></para>
+    <para styleclass="Strong"><text styleclass="Strong" translate="true">Use vertical flow correction (inverse of NOCVCORRECTION)</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">NOCVCORRECTION indicates that vertical conductance is not corrected when the vertical flow correction is applied. &#160;The NOCVCORRECTION option is used when the checkbox is </text><text styleclass="Normal" style="font-style:italic;" translate="true">NOT</text><text styleclass="Normal" translate="true"> checked.</text></para>
     <para styleclass="Strong"><text styleclass="Strong" translate="true">Use vertical flow correction under dewatered conditions (inverse of NOVFC)</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The NOVFC option turns off the vertical flow calculation described on p. 5-8 of USGS Techniques and Methods Report 6-A16 and the vertical conductance correction described on p. 5-18 of that report. The NOVFC option is used when the checkbox is </text><text styleclass="Normal" style="font-style:italic;" translate="true">NOT</text><text styleclass="Normal" translate="true"> checked. </text></para>
@@ -34,5 +34,6 @@
     <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><snippet src="Parameter_Names_and_Values"/></para>
     <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><snippet src="Multiplier_and_Zone_Arrays"/></para>
     <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><snippet src="Additive_Parameters"/></para>
+    <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><snippet src="LinkToManageParameters"/></para>
   </body>
 </topic>

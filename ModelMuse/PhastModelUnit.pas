@@ -340,6 +340,7 @@ type
     FModelMonitorLocation: string;
     FPhastLocation: string;
     FZoneBudgetLocation: string;
+    FModelMateLocation: string;
     function GetTextEditorLocation: string;
     procedure SetModflowLocation(const Value: string);
     function RemoveQuotes(const Value: string): string;
@@ -347,6 +348,7 @@ type
     procedure SetModelMonitorLocation(const Value: string);
     procedure SetPhastLocation(const Value: string);
     procedure SetZoneBudgetLocation(const Value: string);
+    procedure SetModelMateLocation(const Value: string);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
@@ -364,6 +366,8 @@ type
     property PhastLocation: string read FPhastLocation write SetPhastLocation;
     property ZoneBudgetLocation: string read FZoneBudgetLocation
       write SetZoneBudgetLocation;
+    property ModelMateLocation: string read FModelMateLocation
+      write SetModelMateLocation;
   end;
 
   {
@@ -1491,6 +1495,7 @@ that affects the model output should also have a comment. }
     FColorLegend: TLegend;
     FContourLegend: TLegend;
     FDisplaySettings: TDisplaySettingsCollection;
+    FStoreCachedData: boolean;
     // See @link(UpToDate).
     procedure SetUpToDate(const Value: boolean);
     function AlwaysUsed(Sender: TObject): boolean;
@@ -1779,13 +1784,17 @@ that affects the model output should also have a comment. }
     procedure CreateInitialDataSetsForPhastTimeLists;
     function ZoneBudgetSelected(Sender: TObject): boolean;
     procedure SetDisplaySettings(const Value: TDisplaySettingsCollection);
+    function SwtSelected(Sender: TObject): boolean;
+    function SwtOffsetsUsed(Sender: TObject): boolean;
+    function SwtSpecifiedUsed(Sender: TObject): boolean;
+    function ModflowInitialHeadUsed(Sender: TObject): boolean;
   protected
     // @name is used to store DataSet in @link(FBoundaryDataSets).
     function AddBoundaryDataSet(const DataSet: TDataArray): Integer;
     // @name is used to fix up the model after @name is loaded from a file.
     procedure Loaded; override;
   public
-    DataArrayCreationRecords: array of TDataSetCreationData;
+    FDataArrayCreationRecords: array of TDataSetCreationData;
     procedure UpdateFormulas(OldNames, NewNames: TStringList);
     function CheckWetting: boolean;
     function FixFileName(AFileName: string): string;
@@ -2410,6 +2419,8 @@ that affects the model output should also have a comment. }
     function PackageGeneratedExternally(const PackageName: string): boolean;
     property ColorLegend: TLegend read FColorLegend;
     property ContourLegend: TLegend read FContourLegend;
+    property StoreCachedData: boolean read FStoreCachedData
+      write FStoreCachedData;
   published
     // @name represents a series of bitmaps that can be displayed on
     // the top, front, or side view of the model.
@@ -3134,8 +3145,106 @@ const
   //     Enhancement: When selecting a MODPATH output file, the most likely
   //       name of the output file is selected automatically.
   //   '2.5.0.0' No additional changes.
+  //   '2.5.0.1'  Change: The "Object|Edit|Merge Objects" command now operates when
+  //       very small differences exist between the endpoints of the objects
+  //       being merged. Previously, the match had to be exact.
+  //     Enhancement: In the Object Properties dialog box, if you paste
+  //       a group of vertices, the table will expand to accommodate the
+  //       new vertices.
+  //   '2.5.0.2' Bug fix: Editing an object in a new model after having
+  //       previously closed a previous model without restarting ModelMuse
+  //       caused an Assertion failure.
+  //     Bug fix: Eliminated an assertion failure that occurred under certain
+  //       circumstances when attempting to draw an object.
+  //   '2.5.0.3' Bug fix: Eliminated Range Check Error that sometimes
+  //       occured when a menu item was selected.
+  //   '2.5.0.4' Bug fix: Fixed bugs in deleting all print/save choices in
+  //       Subsidence package.
+  //     Bug fix: Fixed layout of Subsidence package controls in
+  //       MODFLOW Packags and Programs dialog box.
+  //     Bug fix: The Formula Editor was displaying the ActiveOnLayer function
+  //       in cases where it wouldn't work.
+  //     Bug fix: The ActiveOnLayer function sometimes returned
+  //       an incorrect value.
+  //   '2.5.0.5' Bug fix: When closing a model, a stack overflow could occur
+  //       under unusual circumstances.
+  //   '2.5.0.6' Bug fix: If "Boundary Conditions, Observations,
+  //       and Other Features" was selected in the "Color Grid" dialog box,
+  //       an access violation could occur.
+  //     Bug fix: Fixed problem that sometimes prevented the discretization
+  //       from begin specified.
+  //     Enhancement: Added support for SWT package.
+  //     Bug fix: Export of format codes in SUB package was incorrect.
+  //     Bug fix: Format codes in SUB package imported incorrectly.
+  //     Enhancement: Added support for HYDMOD package.
+  //     Bug fix: When more than one object was being edited in the
+  //       Object Properties dialog box, switching to the SFR|Network tab and
+  //       clicking the button under OUTSET and IUPSEG would cause an
+  //       Assertion failure. Now it gives a more meaningful error message.
+  //   '2.5.0.7' Bug fix: Changing the discretization when the grid was
+  //        colored with transient data caused an access violation.
+  //   '2.5.0.8' Bug fix: Attempting to export the MODPATH input files before
+  //       MODPATH has been activated now results in a warning message instead
+  //       of an assertion failure.
+  //     Bug fix: It is now possible to select the "Edit vertex values" button
+  //       when the "Select vertices" button is pressed.
+  //     Bug fix: When exporting the BCF package, sometimes an attempt was made
+  //       to export data set 8 when it shouldn't have been exported.
+  //   '2.5.0.9' Bug fix: If a HUF SYTP parameter was defined, attempting to
+  //       open the MODFLOW packages and programs dialog box would result in an
+  //       assertion failure.
+  //     Enhancement: The Manage Parameters dialog box has been added.
+  //     Enhancement: The Global Variables are now alphabetized.
+  //     Enhancement: Initial heads can now be read from a binary head file
+  //       generated by another MODFLOW model.
+  //   '2.5.0.10' Bug fix: Fixed sorting of global variables
+  //     (bug was not in released version.)
+  //   '2.5.0.11' Enhancement: The selection cube now responds
+  //       to the mouse wheel.
+  //     Change: When importing model results, the formulas used for the
+  //       3D data sets have been changed to keep the formulas valid if
+  //       the number of layers is increased.
+  //     Bug fix: Attempting to contour a data set that is uniform no longer
+  //       results in a range-check error.
+  //     Bug fix: When attempting to export the MODFLOW input files, if a file
+  //       can't be created because it is in use, an error message will be
+  //       displayed.
+  //   '2.5.0.12' Enhancement: The Manage Head Observations dialog box has
+  //       been added.
+  //     Change: If an invalid formula is encountered when exporting the MODFLOW
+  //       input files the Formula Errors dialog box is not displayed until the
+  //       export is complete.
+  //   '2.5.0.13' Change: Items in "Search for Objects" dialog box
+  //       are now listed in a tree component.
+  //     Bug fix: When parameters are used in the RCH, EVT, and ETS packages,
+  //       the print codes for the paramters are set correctly.
+  //   '2.5.0.14' Enhancement: When saving a ModelMate file, the user can
+  //       choose to have the ModelMate file opened with ModelMate.
+  //     Bug fix: fixed problem that could make it opening the Object
+  //       Properties dialog box slow.
+  //     Bug fix: Attempting to open a Shapefile that is already open
+  //       now generates an error message but not a bug report.
+  //     Enhancement: A warning is now issued if an observation name is not
+  //       valid when used in UCODE.
+  //     Change: ModelMate program locations are now saved to an ini file.
+  //     Bug fix: In MODFLOW models, if a data set is evaluated at nodes,
+  //       the user can no longer attempt to color the grid with the data set
+  //       values or contour the data set values.
+  //     Bug fix: MODFLOW models in which the same cells are defined as
+  //       constant head cells through both the BAS and CHD packages are
+  //       now imported correctly.
+  //   '2.5.0.15' Enhancement: ModelMate interaction improved.
+  //   '2.5.0.16' Enhancement: When the nonparameter data in the CHD, DRN, DRT,
+  //       EVT, ETS, GHB, RCH, RIV, or WEL packages for one stress period
+  //       repeat the data from a previous stress period, the package instructs
+  //       MODFLOW to reuse the data from the previous stress period rather
+  //       than exporting another copy of the same data.
+  //   '2.5.0.17' Enhancement: Reduced memory usage when opening files.
+  //     Enhancement: Attempting to read an invalid DEM now results in an
+  //       error message instead of generating a bug report.
+  //   '2.6.0.0' No further changes.
 
-  ModelVersion = '2.5.0.0';
+  ModelVersion = '2.6.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -3147,6 +3256,12 @@ const
   StrTransmissivity = 'Transmissivity';
   StrZonebudget = 'ZoneBudget';
   StrZones = 'Zones';
+  StrGeostaticStress = 'Geostatic_Stress';
+  StrSpecificGravitySat = 'Specific_Gravity_Saturated';
+  StrSpecificGravityUns = 'Specific_Gravity_Unsaturated';
+  StrInitialPreOffsets = 'Initial_Preconsolidation_Stress_Offset';
+  StrInitialPreconsolida = 'Initial_Preconsolidation_Stress';
+
 
 implementation
 
@@ -3172,7 +3287,8 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   AbZipper, AbArcTyp, PriorInfoUnit, frmErrorsAndWarningsUnit,
   ModflowHUF_WriterUnit, ModflowKDEP_WriterUnit, ModflowLVDA_WriterUnit,
   ModflowMNW2_WriterUnit, ModflowBCF_WriterUnit, ModflowSubsidenceDefUnit,
-  ModflowSUB_Writer, ZoneBudgetWriterUnit;
+  ModflowSUB_Writer, ZoneBudgetWriterUnit, MODFLOW_SwtWriterUnit,
+  ModflowHydmodWriterUnit, IniFileUtilities, TempFiles;
 
 resourcestring
   StrProgramLocations = 'Program Locations';
@@ -3186,7 +3302,8 @@ resourcestring
   StrPHAST = 'PHAST';
   StrPhastDefaultPath = 'C:\Program Files\USGS\phast-1.5.1\bin\phast.bat';
   StrZoneBudgetDefaultPath = 'C:\WRDAPP\Zonbud.3_01\Bin\zonbud.exe';
-
+  StrModelMateDefaultPath = 'C:\WRDAPP\ModelMate_0_23_1\Bin\ModelMate.exe';
+  StrModelMate = 'ModelMate';
 const
   StrAndNegatedAtCons = ' and negated at constant head cell';
   StrAndMadePositiveA = ' and made positive at constant head cell';
@@ -3741,10 +3858,20 @@ begin
         end;
         try
         Zipper.Save;
-        except on E: EFOpenError do
+        except
+          on E: EFOpenError do
           begin
             Beep;
             MessageDlg(E.Message, mtError, [mbOK], 0);
+          end;
+          on E: EInvalidCast do
+          begin
+            // If the size of the archive exceeds the maximum size of a
+            // long integer, TAbZipper doesn't handle it properly in
+            // TAbZipArchive.SaveArchive and raises an EInvalidCast.
+            Beep;
+            MessageDlg('Error saving archive.  The archive may be too big.',
+              mtError, [mbOK], 0);
           end;
         end;
       finally
@@ -4964,6 +5091,11 @@ begin
   result := ModelSelection = msModflow;
 end;
 
+function TPhastModel.ModflowInitialHeadUsed(Sender: TObject): boolean;
+begin
+  result := ModflowUsed(Sender) and (ModflowOptions.InitialHeadFileName = '');
+end;
+
 function TPhastModel.HorizontalAnisotropyUsed(Sender: TObject): boolean;
 begin
   result := (ModelSelection = msModflow)
@@ -5002,6 +5134,25 @@ begin
   result := (ModelSelection = msModflow)
     and ModflowPackages.ZoneBudget.IsSelected
 end;
+
+function TPhastModel.SwtSelected(Sender: TObject): boolean;
+begin
+  result := (ModelSelection = msModflow)
+    and ModflowPackages.SwtPackage.IsSelected
+end;
+
+function TPhastModel.SwtOffsetsUsed(Sender: TObject): boolean;
+begin
+  result := SwtSelected(Sender)
+    and (ModflowPackages.SwtPackage.PreconsolidationSource = pcOffsets);
+end;
+
+function TPhastModel.SwtSpecifiedUsed(Sender: TObject): boolean;
+begin
+  result := SwtSelected(Sender)
+    and (ModflowPackages.SwtPackage.PreconsolidationSource = pcSpecified);
+end;
+
 
 function TPhastModel.HufSelected(Sender: TObject): boolean;
 begin
@@ -7769,6 +7920,7 @@ var
   SubDataSetIndex: Integer;
   NoDelayItem: TSubNoDelayBedLayerItem;
   DelayItem: TSubDelayBedLayerItem;
+  WT_Item: TSwtWaterTableItem;
 begin
   result := (ModelSelection = msModflow)
     and ModflowPackages.SubPackage.IsSelected;
@@ -7799,13 +7951,55 @@ begin
           or (DelayItem.VerticalHydraulicConductivityDataArrayName = DataArray.Name)
           or (DelayItem.ElasticSpecificStorageDataArrayName = DataArray.Name)
           or (DelayItem.InelasticSpecificStorageDataArrayName = DataArray.Name)
-          or (DelayItem.InterbedStartingHeadDataArrayName = DataArray.Name)
-          or (DelayItem.InterbedPreconsolidationHeadDataArrayName = DataArray.Name)
           or (DelayItem.InterbedStartingCompactionDataArrayName = DataArray.Name)
           or (DelayItem.InterbedEquivalentThicknessDataArrayName = DataArray.Name)
           then
         begin
           result := True;
+          Exit;
+        end
+        else if (DelayItem.InterbedStartingHeadDataArrayName = DataArray.Name)
+          or (DelayItem.InterbedPreconsolidationHeadDataArrayName = DataArray.Name)
+          then
+        begin
+          result := ModflowPackages.SubPackage.ReadDelayRestartFileName = '';
+          Exit;
+        end;
+      end;
+    end;
+  end;
+  result := (ModelSelection = msModflow)
+    and ModflowPackages.SwtPackage.IsSelected;
+  if result then
+  begin
+    result := False;
+    DataArray := Sender as TDataArray;
+    for Index := 0 to LayerStructure.Count - 1 do
+    begin
+      Group := LayerStructure[Index];
+      for SubDataSetIndex := 0 to Group.WaterTableLayers.Count - 1 do
+      begin
+        WT_Item := Group.WaterTableLayers[SubDataSetIndex];
+        if (WT_Item.WaterTableCompressibleThicknessDataArrayName = DataArray.Name)
+          or (WT_Item.WaterTableInitialVoidRatioDataArrayName = DataArray.Name)
+          or (WT_Item.WaterTableInitialCompactionDataArrayName = DataArray.Name)
+          then
+        begin
+          result := True;
+          Exit;
+        end;
+        if (WT_Item.WaterTableInitialElasticSkeletalSpecificStorageDataArrayName = DataArray.Name)
+          or (WT_Item.WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName = DataArray.Name)
+          then
+        begin
+          result := ModflowPackages.SwtPackage.CompressionSource = csSpecificStorage;
+          Exit;
+        end;
+        if (WT_Item.WaterTableRecompressionIndexDataArrayName = DataArray.Name)
+          or (WT_Item.WaterTableCompressionIndexDataArrayName = DataArray.Name)
+          then
+        begin
+          result := ModflowPackages.SwtPackage.CompressionSource = csCompressionReComp;
           Exit;
         end;
       end;
@@ -7914,6 +8108,7 @@ begin
     begin
       FreeAndNil(frmProgress);
     end;
+//    ReclaimMemory;
   end;
 end;
 
@@ -8316,11 +8511,22 @@ var
   GroupIndex: Integer;
   Group: TDep;
   GroupUsed: Boolean;
+  IniFName: string;
+  IniFile: TMemIniFile;
 begin
   if FileExists(ProgramLocations.ModflowLocation) then
   begin
-    ModelMateProject.ProgramLocations.Modflow2005Location
-      := ProgramLocations.ModflowLocation;
+    IniFName := IniFileName(frmGoPhast.Handle, 'ModelMate.exe');
+    IniFile:= TMemInifile.Create(IniFName);
+    try
+      GlobalProgramLocations.ReadFromIniFile(IniFile);
+      GlobalProgramLocations.Modflow2005Location
+        := ProgramLocations.ModflowLocation;
+      GlobalProgramLocations.WriteToIniFile(IniFile);
+      IniFile.UpdateFile;
+    finally
+      IniFile.Free;
+    end;
   end;
   case ModflowOptions.TimeUnit of
     0: ;// do nothing
@@ -8583,6 +8789,7 @@ begin
     begin
       FreeAndNil(frmProgress);
     end;
+//    ReclaimMemory;
   end;
 end;
 
@@ -8629,6 +8836,8 @@ var
   StressPeriod: TModflowStressPeriod;
   NumberOfSteps: Integer;
   SubWriter: TModflowSUB_Writer;
+  SwtWriter: TModflowSWT_Writer;
+  HydModWriter: TModflowHydmodWriter;
 begin
   CheckWetting;
 
@@ -8646,611 +8855,654 @@ begin
     frmProgress := TfrmProgress.Create(nil);
   end;
   try
-    frmProgress.Prefix := 'File ';
-    frmProgress.Caption := 'Exporting MODFLOW input files';
-    frmProgress.btnAbort.Visible := True;
-    frmProgress.ShouldContinue := True;
-    frmProgress.Show;
-
-    // The following tasks are always required.
-    // 1. Full Stress periods,
-    // 2. Discretization,
-    // 3. Basic,
-    // 4. Output Control,
-    // 5. Zone Arrays,
-    // 6. Multiplier Arrays
-    NumberOfSteps := 3;
-
-    NumberOfSteps := NumberOfSteps + ModflowPackages.SelectedPackageCount;
-    if ModflowPackages.SfrPackage.IsSelected
-      or ModflowPackages.LakPackage.IsSelected then
-    begin
-      // gages
-      Inc(NumberOfSteps)
-    end;
-    frmProgress.pbProgress.Max := NumberOfSteps;
-    frmProgress.pbProgress.Position := 0;
-
-    UpdateModflowFullStressPeriods;
-
-    if not frmProgress.ShouldContinue then
-    begin
-      Exit;
-    end;
-    frmProgress.StepIt;
-
-    StepCount := 0;
-    for Index := 0 to FModflowFullStressPeriods.Count - 1 do
-    begin
-      StressPeriod := FModflowFullStressPeriods.Items[Index];
-      StepCount := StepCount + StressPeriod.NumberOfSteps;
-    end;
-    if StepCount > 1000 then
-    begin
-      if MessageDlg('Your model has ' + IntToStr(StepCount)
-        + ' time steps. Do you want to continue?', mtWarning,
-        [mbYes, mbNo], 0) <> mrYes then
-      begin
-        Exit;
-      end;
-    end;
-
-    UsedMultiplierArrayNames.Clear;
-    UsedZoneArrayNames.Clear;
-    UsedMultiplierArrayNames.Sorted := True;
-    UsedZoneArrayNames.Sorted := True;
-    Gages := TStringList.Create;
-    NameWriter := TNameFileWriter.Create(self);
+    frmFormulaErrors.DelayShowing := True;
     try
-      NameWriter.InitilizeNameFile(FileName, ListFileName);
-      DisWriter := TModflowDiscretizationWriter.Create(self);
-      try
-        DisWriter.WriteFile(FileName);
-      finally
-        DisWriter.Free;
+      frmProgress.Prefix := 'File ';
+      frmProgress.Caption := 'Exporting MODFLOW input files';
+      frmProgress.btnAbort.Visible := True;
+      frmProgress.ShouldContinue := True;
+      frmProgress.Show;
+
+      // The following tasks are always required.
+      // 1. Full Stress periods,
+      // 2. Discretization,
+      // 3. Basic,
+      // 4. Output Control,
+      // 5. Zone Arrays,
+      // 6. Multiplier Arrays
+      NumberOfSteps := 3;
+
+      NumberOfSteps := NumberOfSteps + ModflowPackages.SelectedPackageCount;
+      if ModflowPackages.SfrPackage.IsSelected
+        or ModflowPackages.LakPackage.IsSelected then
+      begin
+        // gages
+        Inc(NumberOfSteps)
       end;
-      CacheDataArrays;
+      frmProgress.pbProgress.Max := NumberOfSteps;
+      frmProgress.pbProgress.Position := 0;
+
+      UpdateModflowFullStressPeriods;
+
       if not frmProgress.ShouldContinue then
       begin
         Exit;
       end;
       frmProgress.StepIt;
 
-      BasicWriter := TModflowBasicWriter.Create(self);
-      try
-        BasicWriter.WriteFile(FileName);
-      finally
-        BasicWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
+      StepCount := 0;
+      for Index := 0 to FModflowFullStressPeriods.Count - 1 do
       begin
-        Exit;
+        StressPeriod := FModflowFullStressPeriods.Items[Index];
+        StepCount := StepCount + StressPeriod.NumberOfSteps;
       end;
-      frmProgress.StepIt;
-
-      OCWriter := TOutputControlWriter.Create(self);
-      try
-        OCWriter.WriteFile(FileName);
-      finally
-        OCWriter.Free;
-      end;
-      if not frmProgress.ShouldContinue then
+      if StepCount > 1000 then
       begin
-        Exit;
-      end;
-      frmProgress.StepIt;
-
-      PcgWriter := TPcgWriter.Create(self);
-      try
-        PcgWriter.WriteFile(FileName);
-      finally
-        PcgWriter.Free;
-      end;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.PcgPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      GmgWriter := TGmgWriter.Create(self);
-      try
-        GmgWriter.WriteFile(FileName);
-      finally
-        GmgWriter.Free;
-      end;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.GmgPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      SipWriter := TSipWriter.Create(self);
-      try
-        SipWriter.WriteFile(FileName);
-      finally
-        SipWriter.Free;
-      end;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.SipPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      De4Writer := TDe4Writer.Create(self);
-      try
-        De4Writer.WriteFile(FileName);
-      finally
-        De4Writer.Free;
-      end;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.De4Package.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      LPF_Writer := TModflowLPF_Writer.Create(self);
-      try
-        LPF_Writer.WriteFile(FileName);
-      finally
-        LPF_Writer.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.LpfPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      BCF_Writer := TModflowBCF_Writer.Create(self);
-      try
-        BCF_Writer.WriteFile(FileName);
-      finally
-        BCF_Writer.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.BcfPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      HUF_Writer := TModflowHUF_Writer.Create(self);
-      try
-        HUF_Writer.WriteFile(FileName);
-      finally
-        HUF_Writer.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.HufPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      KDEP_Writer := TModflowKDEP_Writer.Create(self);
-      try
-        KDEP_Writer.WriteFile(FileName);
-      finally
-        KDEP_Writer.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.HufPackage.IsSelected
-        and (HufParameters.CountParameters([ptHUF_KDEP]) > 0) then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      LVDA_Writer := TModflowLVDA_Writer.Create(self);
-      try
-        LVDA_Writer.WriteFile(FileName);
-      finally
-        LVDA_Writer.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.HufPackage.IsSelected
-        and (ModflowSteadyParameters.CountParameters([ptHUF_LVDA]) > 0) then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      ChdWriter := TModflowCHD_Writer.Create(self);
-      try
-        ChdWriter.WriteFile(FileName);
-        ChdWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
-      finally
-        ChdWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.ChdBoundary.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      GhbWriter := TModflowGHB_Writer.Create(self);
-      try
-        GhbWriter.WriteFile(FileName);
-        GhbWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
-      finally
-        GhbWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.GhbBoundary.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      WellWriter := TModflowWEL_Writer.Create(self);
-      try
-        WellWriter.WriteFile(FileName);
-      finally
-        WellWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.WelPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      RivWriter := TModflowRIV_Writer.Create(self);
-      try
-        RivWriter.WriteFile(FileName);
-        RivWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
-      finally
-        RivWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.RivPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      DrnWriter := TModflowDRN_Writer.Create(self);
-      try
-        DrnWriter.WriteFile(FileName);
-        DrnWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
-      finally
-        DrnWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.DrnPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      DrtWriter := TModflowDRT_Writer.Create(self);
-      try
-        DrtWriter.WriteFile(FileName);
-      finally
-        DrtWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.DrtPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      RchWriter := TModflowRCH_Writer.Create(self);
-      try
-        RchWriter.WriteFile(FileName);
-      finally
-        RchWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.RchPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      EvtWriter := TModflowEVT_Writer.Create(self);
-      try
-        EvtWriter.WriteFile(FileName);
-      finally
-        EvtWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.EvtPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      EtsWriter := TModflowETS_Writer.Create(self);
-      try
-        EtsWriter.WriteFile(FileName);
-      finally
-        EtsWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.EtsPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      ResWriter := TModflowRES_Writer.Create(self);
-      try
-        ResWriter.WriteFile(FileName);
-      finally
-        ResWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.ResPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      Mnw2Writer := TModflowMNW2_Writer.Create(self);
-      try
-        Mnw2Writer.WriteFile(FileName);
-        Mnw2Writer.WriteMnwiFile(FileName, GageUnitNumber);
-      finally
-        Mnw2Writer.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.Mnw2Package.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      LakWriter := TModflowLAK_Writer.Create(self);
-      try
-        LakWriter.WriteFile(FileName, GageUnitNumber, Gages);
-      finally
-        LakWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.LakPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      // SfrWriter requires that LakWriter be completed first
-      // so that TScreenObject.ModflowLakBoundary.TrueLakeID
-      // is set properly.
-      SfrWriter := TModflowSFR_Writer.Create(self);
-      try
-        SfrWriter.WriteFile(FileName, GageUnitNumber, Gages);
-        CacheDataArrays;
-        if not frmProgress.ShouldContinue then
+        if MessageDlg('Your model has ' + IntToStr(StepCount)
+          + ' time steps. Do you want to continue?', mtWarning,
+          [mbYes, mbNo], 0) <> mrYes then
         begin
           Exit;
         end;
-        if ModflowPackages.SfrPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
+      end;
 
-        // GagWriter requires that LakWriter and SfrWriter be completed first
-        // so that the data in Gages is set.
-        GagWriter := TModflowGAG_Writer.Create(self);
+      UsedMultiplierArrayNames.Clear;
+      UsedZoneArrayNames.Clear;
+      UsedMultiplierArrayNames.Sorted := True;
+      UsedZoneArrayNames.Sorted := True;
+      Gages := TStringList.Create;
+      NameWriter := TNameFileWriter.Create(self);
+      try
+        NameWriter.InitilizeNameFile(FileName, ListFileName);
+        DisWriter := TModflowDiscretizationWriter.Create(self);
         try
-          GagWriter.WriteFile(FileName, Gages, SfrWriter, GageUnitNumber);
+          DisWriter.WriteFile(FileName);
         finally
-          GagWriter.Free;
+          DisWriter.Free;
         end;
         CacheDataArrays;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
         end;
-        if ModflowPackages.SfrPackage.IsSelected
-          or ModflowPackages.LakPackage.IsSelected then
+        frmProgress.StepIt;
+
+        BasicWriter := TModflowBasicWriter.Create(self);
+        try
+          BasicWriter.WriteFile(FileName);
+        finally
+          BasicWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        frmProgress.StepIt;
+
+        OCWriter := TOutputControlWriter.Create(self);
+        try
+          OCWriter.WriteFile(FileName);
+        finally
+          OCWriter.Free;
+        end;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        frmProgress.StepIt;
+
+        PcgWriter := TPcgWriter.Create(self);
+        try
+          PcgWriter.WriteFile(FileName);
+        finally
+          PcgWriter.Free;
+        end;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.PcgPackage.IsSelected then
         begin
           frmProgress.StepIt;
         end;
 
-      finally
-        SfrWriter.Free;
-      end;
+        GmgWriter := TGmgWriter.Create(self);
+        try
+          GmgWriter.WriteFile(FileName);
+        finally
+          GmgWriter.Free;
+        end;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.GmgPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        SipWriter := TSipWriter.Create(self);
+        try
+          SipWriter.WriteFile(FileName);
+        finally
+          SipWriter.Free;
+        end;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.SipPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        De4Writer := TDe4Writer.Create(self);
+        try
+          De4Writer.WriteFile(FileName);
+        finally
+          De4Writer.Free;
+        end;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.De4Package.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        LPF_Writer := TModflowLPF_Writer.Create(self);
+        try
+          LPF_Writer.WriteFile(FileName);
+        finally
+          LPF_Writer.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.LpfPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        BCF_Writer := TModflowBCF_Writer.Create(self);
+        try
+          BCF_Writer.WriteFile(FileName);
+        finally
+          BCF_Writer.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.BcfPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        HUF_Writer := TModflowHUF_Writer.Create(self);
+        try
+          HUF_Writer.WriteFile(FileName);
+        finally
+          HUF_Writer.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.HufPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        KDEP_Writer := TModflowKDEP_Writer.Create(self);
+        try
+          KDEP_Writer.WriteFile(FileName);
+        finally
+          KDEP_Writer.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.HufPackage.IsSelected
+          and (HufParameters.CountParameters([ptHUF_KDEP]) > 0) then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        LVDA_Writer := TModflowLVDA_Writer.Create(self);
+        try
+          LVDA_Writer.WriteFile(FileName);
+        finally
+          LVDA_Writer.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.HufPackage.IsSelected
+          and (ModflowSteadyParameters.CountParameters([ptHUF_LVDA]) > 0) then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        ChdWriter := TModflowCHD_Writer.Create(self);
+        try
+          ChdWriter.WriteFile(FileName);
+          ChdWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
+        finally
+          ChdWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.ChdBoundary.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        GhbWriter := TModflowGHB_Writer.Create(self);
+        try
+          GhbWriter.WriteFile(FileName);
+          GhbWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
+        finally
+          GhbWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.GhbBoundary.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        WellWriter := TModflowWEL_Writer.Create(self);
+        try
+          WellWriter.WriteFile(FileName);
+        finally
+          WellWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.WelPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        RivWriter := TModflowRIV_Writer.Create(self);
+        try
+          RivWriter.WriteFile(FileName);
+          RivWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
+        finally
+          RivWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.RivPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        DrnWriter := TModflowDRN_Writer.Create(self);
+        try
+          DrnWriter.WriteFile(FileName);
+          DrnWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
+        finally
+          DrnWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.DrnPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        DrtWriter := TModflowDRT_Writer.Create(self);
+        try
+          DrtWriter.WriteFile(FileName);
+        finally
+          DrtWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.DrtPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        RchWriter := TModflowRCH_Writer.Create(self);
+        try
+          RchWriter.WriteFile(FileName);
+        finally
+          RchWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.RchPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        EvtWriter := TModflowEVT_Writer.Create(self);
+        try
+          EvtWriter.WriteFile(FileName);
+        finally
+          EvtWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.EvtPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        EtsWriter := TModflowETS_Writer.Create(self);
+        try
+          EtsWriter.WriteFile(FileName);
+        finally
+          EtsWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.EtsPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        ResWriter := TModflowRES_Writer.Create(self);
+        try
+          ResWriter.WriteFile(FileName);
+        finally
+          ResWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.ResPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        Mnw2Writer := TModflowMNW2_Writer.Create(self);
+        try
+          Mnw2Writer.WriteFile(FileName);
+          Mnw2Writer.WriteMnwiFile(FileName, GageUnitNumber);
+        finally
+          Mnw2Writer.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.Mnw2Package.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        LakWriter := TModflowLAK_Writer.Create(self);
+        try
+          LakWriter.WriteFile(FileName, GageUnitNumber, Gages);
+        finally
+          LakWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.LakPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        // SfrWriter requires that LakWriter be completed first
+        // so that TScreenObject.ModflowLakBoundary.TrueLakeID
+        // is set properly.
+        SfrWriter := TModflowSFR_Writer.Create(self);
+        try
+          SfrWriter.WriteFile(FileName, GageUnitNumber, Gages);
+          CacheDataArrays;
+          if not frmProgress.ShouldContinue then
+          begin
+            Exit;
+          end;
+          if ModflowPackages.SfrPackage.IsSelected then
+          begin
+            frmProgress.StepIt;
+          end;
+
+          HydModWriter := TModflowHydmodWriter.Create(self);
+          try
+            HydModWriter.WriteFile(FileName, SfrWriter);
+          finally
+            HydModWriter.Free;
+          end;
+          CacheDataArrays;
+          if not frmProgress.ShouldContinue then
+          begin
+            Exit;
+          end;
+          if ModflowPackages.HydmodPackage.IsSelected then
+          begin
+            frmProgress.StepIt;
+          end;
 
 
-      HfbWriter := TModflowHfb_Writer.Create(Self);
-      try
-        HfbWriter.WriteFile(FileName);
-      finally
-        HfbWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.HfbPackage.IsSelected then
-      begin
+          // GagWriter requires that LakWriter and SfrWriter be completed first
+          // so that the data in Gages is set.
+          GagWriter := TModflowGAG_Writer.Create(self);
+          try
+            GagWriter.WriteFile(FileName, Gages, SfrWriter, GageUnitNumber);
+          finally
+            GagWriter.Free;
+          end;
+          CacheDataArrays;
+          if not frmProgress.ShouldContinue then
+          begin
+            Exit;
+          end;
+          if ModflowPackages.SfrPackage.IsSelected
+            or ModflowPackages.LakPackage.IsSelected then
+          begin
+            frmProgress.StepIt;
+          end;
+
+        finally
+          SfrWriter.Free;
+        end;
+
+
+        HfbWriter := TModflowHfb_Writer.Create(Self);
+        try
+          HfbWriter.WriteFile(FileName);
+        finally
+          HfbWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.HfbPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        UzfWriter := TModflowUzfWriter.Create(Self);
+        try
+          UzfWriter.WriteFile(FileName, GageUnitNumber);
+        finally
+          UzfWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.UzfPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        SubWriter := TModflowSUB_Writer.Create(Self);
+        try
+          SubWriter.WriteFile(FileName);
+        finally
+          SubWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.SubPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        SwtWriter := TModflowSWT_Writer.Create(Self);
+        try
+          SwtWriter.WriteFile(FileName);
+        finally
+          SwtWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.SwtPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+        // It is important that the TModflowZoneWriter not be used
+        // until after all the zones have been identified through the
+        // export of TModflowLPF_Writer and any other packages that use
+        // zone arrays.
+        ZoneWriter := TModflowZoneWriter.Create(self);
+        try
+          ZoneWriter.WriteFile(FileName);
+        finally
+          ZoneWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
         frmProgress.StepIt;
-      end;
 
-      UzfWriter := TModflowUzfWriter.Create(Self);
-      try
-        UzfWriter.WriteFile(FileName, GageUnitNumber);
-      finally
-        UzfWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.UzfPackage.IsSelected then
-      begin
+        // It is important that the TModflowMultiplierWriter not be used
+        // until after all the multiplier arrays have been identified through the
+        // export of TModflowLPF_Writer and any other packages that use
+        // multiplier arrays.
+        MultiplierWriter := TModflowMultiplierWriter.Create(self);
+        try
+          MultiplierWriter.WriteFile(FileName);
+        finally
+          MultiplierWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
         frmProgress.StepIt;
+
+        HobWriter := TModflowHobWriter.Create(Self);
+        try
+          HobWriter.WriteFile(FileName, ObservationPurpose);
+        finally
+          HobWriter.Free;
+        end;
+        CacheDataArrays;
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.HobPackage.IsSelected then
+        begin
+          frmProgress.StepIt;
+        end;
+
+        FinalizePvalAndTemplate(FileName);
+
+        NameWriter.SaveNameFile(FileName);
+      finally
+        NameWriter.Free;
+        Gages.Free;
       end;
 
-      SubWriter := TModflowSUB_Writer.Create(Self);
-      try
-        SubWriter.WriteFile(FileName);
-      finally
-        SubWriter.Free;
-      end;
-      CacheDataArrays;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
       end;
-      if ModflowPackages.SubPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-      // It is important that the TModflowZoneWriter not be used
-      // until after all the zones have been identified through the
-      // export of TModflowLPF_Writer and any other packages that use
-      // zone arrays.
-      ZoneWriter := TModflowZoneWriter.Create(self);
-      try
-        ZoneWriter.WriteFile(FileName);
-      finally
-        ZoneWriter.Free;
-      end;
-      CacheDataArrays;
+
+      BatchFileLocation := WriteModflowBatchFile(
+        ProgramLocations,
+        ChangeFileExt(FileName, '.nam'), ListFileName,
+        ModflowOptions.OpenInTextEditor, BatchFileAdditionsBeforeModel,
+        BatchFileAdditionsAfterModel);
+
       if not frmProgress.ShouldContinue then
       begin
         Exit;
       end;
-      frmProgress.StepIt;
 
-      // It is important that the TModflowMultiplierWriter not be used
-      // until after all the multiplier arrays have been identified through the
-      // export of TModflowLPF_Writer and any other packages that use
-      // multiplier arrays.
-      MultiplierWriter := TModflowMultiplierWriter.Create(self);
-      try
-        MultiplierWriter.WriteFile(FileName);
-      finally
-        MultiplierWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
+      if RunModel then
       begin
-        Exit;
+        WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
       end;
-      frmProgress.StepIt;
-
-      HobWriter := TModflowHobWriter.Create(Self);
-      try
-        HobWriter.WriteFile(FileName, ObservationPurpose);
-      finally
-        HobWriter.Free;
-      end;
-      CacheDataArrays;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.HobPackage.IsSelected then
-      begin
-        frmProgress.StepIt;
-      end;
-
-      FinalizePvalAndTemplate(FileName);
-
-      NameWriter.SaveNameFile(FileName);
     finally
-      NameWriter.Free;
-      Gages.Free;
+      frmProgress.btnAbort.Visible := False;
+      frmProgress.Hide;
+      if frmProgress.Owner = nil then
+      begin
+        FreeAndNil(frmProgress);
+      end;
+      frmFormulaErrors.DelayShowing := False;
+//      ReclaimMemory;
     end;
-
-    if not frmProgress.ShouldContinue then
+  except on E: EFCreateError do
     begin
-      Exit;
-    end;
-
-    BatchFileLocation := WriteModflowBatchFile(
-      ProgramLocations,
-      ChangeFileExt(FileName, '.nam'), ListFileName,
-      ModflowOptions.OpenInTextEditor, BatchFileAdditionsBeforeModel,
-      BatchFileAdditionsAfterModel);
-
-    if not frmProgress.ShouldContinue then
-    begin
-      Exit;
-    end;
-
-    if RunModel then
-    begin
-      WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
-    end;
-  finally
-    frmProgress.btnAbort.Visible := False;
-    frmProgress.Hide;
-    if frmProgress.Owner = nil then
-    begin
-      FreeAndNil(frmProgress);
+      Beep;
+      MessageDlg(E.Message, mtError, [mbOK], 0);
     end;
   end;
 end;
@@ -9336,6 +9588,8 @@ procedure TPhastModel.ImportFromModelMateProject(Project: TProject);
 var
   ParameterList: TStringList;
   ObservationList: TStringList;
+  IniFName: string;
+  IniFile: TMemIniFile;
 begin
   if Project.UcProject.ModelName <> '' then
   begin
@@ -9356,10 +9610,18 @@ begin
     ObservationList.Free;
   end;
 
-  if FileExists(Project.ProgramLocations.Modflow2005Location) then
+  IniFName := IniFileName(frmGoPhast.Handle, 'ModelMate.exe');
+  IniFile:= TMemInifile.Create(IniFName);
+  try
+    GlobalProgramLocations.ReadFromIniFile(IniFile);
+  finally
+    IniFile.Free;
+  end;
+
+  if FileExists(GlobalProgramLocations.Modflow2005Location) then
   begin
     ProgramLocations.ModflowLocation := ExpandFileName(
-      Project.ProgramLocations.Modflow2005Location);
+      GlobalProgramLocations.Modflow2005Location);
   end;
 end;
 
@@ -9438,6 +9700,7 @@ var
   Index: Integer;
   DepSet: TDepSet;
   Method: TMultiObsMethod;
+  ObsVersion: string;
 begin
   // flux observations
   ObservationList.CaseSensitive := False;
@@ -9546,6 +9809,28 @@ begin
       end;
     end;
   end;
+  case Operation of
+    mmoImport:
+      begin
+        if ObservationList.Count > 0 then
+        begin
+          case ObservationPurpose of
+            ofObserved: ObsVersion := 'observation';
+            ofPredicted: ObsVersion := 'prediction';
+            else Assert(False);
+          end;
+          Beep;
+          MessageDlg('One or more ' + ObsVersion + 's from the '
+            + 'ModelMate file are not present in the ModelMuse '
+            + 'file and have been ignored. If an ' + ObsVersion + ' has been '
+            + 'renamed, change the ' + ObsVersion + ' name so that it matches '
+            + 'in ModelMuse and ModelMate and then try importing again.'#13#10#13#10
+            + ObservationList.Text, mtWarning, [mbOK], 0);
+        end;
+      end;
+    mmoExport: ;
+    else Assert(False);
+  end;
 end;
 
 procedure TPhastModel.HandleModelMateParameters(Operation: TModelMateOperation;
@@ -9575,6 +9860,24 @@ begin
   begin
     ModelMuseParam := HufParameters[Index];
     UpdateModelMateParameter(ParameterList, ModelMuseParam, Project, Operation);
+  end;
+
+  case Operation of
+    mmoImport:
+      begin
+        if ParameterList.Count > 0 then
+        begin
+          Beep;
+          MessageDlg('One or more parameters from the '
+            + 'ModelMate file are not present in the ModelMuse '
+            + 'file and have been ignored. If a parameter has been '
+            + 'renamed, change the parameter name so that it matches '
+            + 'in ModelMuse and ModelMate and then try importing again.'#13#10#13#10
+            + ParameterList.Text, mtWarning, [mbOK], 0);
+        end;
+      end;
+    mmoExport: ;
+    else Assert(False);
   end;
 end;
 
@@ -10361,619 +10664,620 @@ procedure TPhastModel.DefinePackageDataArrays;
 var
   Index: integer;
 begin
-  SetLength(DataArrayCreationRecords, 56);
+  SetLength(FDataArrayCreationRecords, 61);
   Index := 0;
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtBoolean;
-  DataArrayCreationRecords[Index].Name := rsActive;
-  DataArrayCreationRecords[Index].Formula := 'True';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := AlwaysUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtBoolean;
+  FDataArrayCreationRecords[Index].Name := rsActive;
+  FDataArrayCreationRecords[Index].Formula := 'True';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := AlwaysUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: MEDIA-active'#13#10'MODFLOW BAS: IBOUND';
-  NoCheck(DataArrayCreationRecords[Index]);
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsKx;
-  DataArrayCreationRecords[Index].Formula := '0.0001';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := AquiferPropertiesUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsKx;
+  FDataArrayCreationRecords[Index].Formula := '0.0001';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := AquiferPropertiesUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: MEDIA-Kx'#13#10'MODFLOW LPF: HK'#13#10'MODFLOW BCF: TRAN,HY';
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsKy;
-  DataArrayCreationRecords[Index].Formula := rsKx;
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := KyUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsKy;
+  FDataArrayCreationRecords[Index].Formula := rsKx;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := KyUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: MEDIA-Ky'#13#10'MODFLOW LPF: HANI'#13#10'MODFLOW HUF and BCF: (not used)';
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsKz;
-  DataArrayCreationRecords[Index].Formula := rsKx + ' / 10';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := KzUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsKz;
+  FDataArrayCreationRecords[Index].Formula := rsKx + ' / 10';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := KzUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: MEDIA-Kz'#13#10'MODFLOW LPF: VKA'#13#10'MODFLOW BCF: Vcont';
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsPorosity;
-  DataArrayCreationRecords[Index].Formula := '0.25';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := PorosityUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsPorosity;
+  FDataArrayCreationRecords[Index].Formula := '0.25';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := PorosityUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: MEDIA-porosity'#13#10'MODPATH: POR';
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsSpecific_Storage;
-  DataArrayCreationRecords[Index].Formula := '1e-5';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := SpecificStorageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsSpecific_Storage;
+  FDataArrayCreationRecords[Index].Formula := '1e-5';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := SpecificStorageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: MEDIA-specific_storage'#13#10'MODFLOW LPF: Ss'#13#10'MODFLOW BCF: Sf1';
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsLong_Dispersivity;
-  DataArrayCreationRecords[Index].Formula := '10.';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsLong_Dispersivity;
+  FDataArrayCreationRecords[Index].Formula := '10.';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: MEDIA-longitudinal_dispersivity';
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsHorizontal_Transv_Dispersivity;
-  DataArrayCreationRecords[Index].Formula := '1.';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsHorizontal_Transv_Dispersivity;
+  FDataArrayCreationRecords[Index].Formula := '1.';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: MEDIA-horizontal_dispersivity';
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsVertical_Transv_Dispersivity;
-  DataArrayCreationRecords[Index].Formula := '1.';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsVertical_Transv_Dispersivity;
+  FDataArrayCreationRecords[Index].Formula := '1.';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: MEDIA-vertical_dispersivity';
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsInitial_Head;
-  DataArrayCreationRecords[Index].Formula := '0.';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := InitialHeadUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsInitial_Head;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := InitialHeadUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: HEAD_IC-head';
-  NoCheck(DataArrayCreationRecords[Index]);
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsInitial_Water_Table;
-  DataArrayCreationRecords[Index].Formula := '0.';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := InitialWaterTableUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsInitial_Water_Table;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := InitialWaterTableUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: HEAD_IC-water_table';
-  NoCheck(DataArrayCreationRecords[Index]);
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := rsChemistry_Initial_Solution;
-  DataArrayCreationRecords[Index].Formula := '0';
-  DataArrayCreationRecords[Index].Classification := StrChemistry;
-  DataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Solution;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: CHEMISTRY_IC-solution';
-  NoCheck(DataArrayCreationRecords[Index]);
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := rsChemistry_Initial_Equilibrium_Phases;
-  DataArrayCreationRecords[Index].Formula := '-1';
-  DataArrayCreationRecords[Index].Classification := StrChemistry;
-  DataArrayCreationRecords[Index].DataSetNeeded := EquilibriumPhasesUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Equilibrium_Phases;
+  FDataArrayCreationRecords[Index].Formula := '-1';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := EquilibriumPhasesUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: CHEMISTRY_IC-equilibrium_phases';
-  NoCheck(DataArrayCreationRecords[Index]);
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := rsChemistry_Initial_Surface;
-  DataArrayCreationRecords[Index].Formula := '-1';
-  DataArrayCreationRecords[Index].Classification := StrChemistry;
-  DataArrayCreationRecords[Index].DataSetNeeded := SurfacesUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Surface;
+  FDataArrayCreationRecords[Index].Formula := '-1';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := SurfacesUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: CHEMISTRY_IC-surface';
-  NoCheck(DataArrayCreationRecords[Index]);
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := rsChemistry_Initial_Exchange;
-  DataArrayCreationRecords[Index].Formula := '-1';
-  DataArrayCreationRecords[Index].Classification := StrChemistry;
-  DataArrayCreationRecords[Index].DataSetNeeded := ExchangeUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Exchange;
+  FDataArrayCreationRecords[Index].Formula := '-1';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ExchangeUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: CHEMISTRY_IC-exchange';
-  NoCheck(DataArrayCreationRecords[Index]);
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := rsChemistry_Initial_Gas_Phase;
-  DataArrayCreationRecords[Index].Formula := '-1';
-  DataArrayCreationRecords[Index].Classification := StrChemistry;
-  DataArrayCreationRecords[Index].DataSetNeeded := GasPhaseUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Gas_Phase;
+  FDataArrayCreationRecords[Index].Formula := '-1';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := GasPhaseUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: CHEMISTRY_IC-gas_phase';
-  NoCheck(DataArrayCreationRecords[Index]);
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := rsChemistry_Initial_Solid_Solutions;
-  DataArrayCreationRecords[Index].Formula := '-1';
-  DataArrayCreationRecords[Index].Classification := StrChemistry;
-  DataArrayCreationRecords[Index].DataSetNeeded := SolidSolutionUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Solid_Solutions;
+  FDataArrayCreationRecords[Index].Formula := '-1';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := SolidSolutionUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: CHEMISTRY_IC-solid_solutions';
-  NoCheck(DataArrayCreationRecords[Index]);
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := rsChemistry_Initial_Kinetics;
-  DataArrayCreationRecords[Index].Formula := '-1';
-  DataArrayCreationRecords[Index].Classification := StrChemistry;
-  DataArrayCreationRecords[Index].DataSetNeeded := KineticsUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Kinetics;
+  FDataArrayCreationRecords[Index].Formula := '-1';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := KineticsUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: CHEMISTRY_IC-kinetics';
-  NoCheck(DataArrayCreationRecords[Index]);
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := rsPrint_Chemistry;
-  DataArrayCreationRecords[Index].Formula := '1';
-  DataArrayCreationRecords[Index].Classification := StrOutput;
-  DataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsPrint_Chemistry;
+  FDataArrayCreationRecords[Index].Formula := '1';
+  FDataArrayCreationRecords[Index].Classification := StrOutput;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: PRINT_LOCATIONS-chemistry';
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := rsPrint_XYZ_Chemistry;
-  DataArrayCreationRecords[Index].Formula := '1';
-  DataArrayCreationRecords[Index].Classification := StrOutput;
-  DataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsPrint_XYZ_Chemistry;
+  FDataArrayCreationRecords[Index].Formula := '1';
+  FDataArrayCreationRecords[Index].Classification := StrOutput;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'PHAST: PRINT_LOCATIONS-xyz_chemistry';
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
   Inc(Index);
 
   // Reservoir layers
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := rsResLayer;
-  DataArrayCreationRecords[Index].Formula := '1';
-  DataArrayCreationRecords[Index].Classification := rsResClassificaton;
-  DataArrayCreationRecords[Index].DataSetNeeded := ReservoirLayerUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'RES: ISRESL';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsResLayer;
+  FDataArrayCreationRecords[Index].Formula := '1';
+  FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ReservoirLayerUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'RES: ISRESL';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsResBottom;
-  DataArrayCreationRecords[Index].Formula := '0.';
-  DataArrayCreationRecords[Index].Classification := rsResClassificaton;
-  DataArrayCreationRecords[Index].DataSetNeeded := ReservoirPackageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'RES: BRES';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsResBottom;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ReservoirPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'RES: BRES';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsResKv;
-  DataArrayCreationRecords[Index].Formula := '100.';
-  DataArrayCreationRecords[Index].Classification := rsResClassificaton;
-  DataArrayCreationRecords[Index].DataSetNeeded := ReservoirPackageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'RES: HCres';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsResKv;
+  FDataArrayCreationRecords[Index].Formula := '100.';
+  FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ReservoirPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'RES: HCres';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsResBedThickness;
-  DataArrayCreationRecords[Index].Formula := '1.';
-  DataArrayCreationRecords[Index].Classification := rsResClassificaton;
-  DataArrayCreationRecords[Index].DataSetNeeded := ReservoirPackageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'RES: Rbthck';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsResBedThickness;
+  FDataArrayCreationRecords[Index].Formula := '1.';
+  FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ReservoirPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'RES: Rbthck';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
   // Lake Layers
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := rsLakeID;
-  DataArrayCreationRecords[Index].Formula := '0';
-  DataArrayCreationRecords[Index].Classification := rsLakeClassificaton;
-  DataArrayCreationRecords[Index].DataSetNeeded := LakePackageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LAK: LKARR';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsLakeID;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := rsLakeClassificaton;
+  FDataArrayCreationRecords[Index].DataSetNeeded := LakePackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LAK: LKARR';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsLakeLeakance;
-  DataArrayCreationRecords[Index].Formula := '100.';
-  DataArrayCreationRecords[Index].Classification := rsLakeClassificaton;
-  DataArrayCreationRecords[Index].DataSetNeeded := LakePackageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LAK: BDLKNC';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsLakeLeakance;
+  FDataArrayCreationRecords[Index].Formula := '100.';
+  FDataArrayCreationRecords[Index].Classification := rsLakeClassificaton;
+  FDataArrayCreationRecords[Index].DataSetNeeded := LakePackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LAK: BDLKNC';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
   // UZF layers
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := StrUzfLandSurface;
-  DataArrayCreationRecords[Index].Formula := '0.';
-  DataArrayCreationRecords[Index].Classification := strUzfClassification;
-  DataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrUzfLandSurface;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'UZF: IUZFBND (via the formula for ' + StrUzfLayer + ')';
-  NoCheck(DataArrayCreationRecords[Index]);
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtBoolean;
-  DataArrayCreationRecords[Index].Name := rsModflowSpecifiedHead;
-  DataArrayCreationRecords[Index].Formula := 'False';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := ModflowUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'BAS: IBOUND';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtBoolean;
+  FDataArrayCreationRecords[Index].Name := rsModflowSpecifiedHead;
+  FDataArrayCreationRecords[Index].Formula := 'False';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ModflowUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BAS: IBOUND';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := StrUzfLayer;
-  DataArrayCreationRecords[Index].Formula :=
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := StrUzfLayer;
+  FDataArrayCreationRecords[Index].Formula :=
     'If((ActiveOnLayer(ElevationToLayer('
       + StrUzfLandSurface + ')) AND NOT SpecifiedHeadOnLayer(ElevationToLayer('
       + StrUzfLandSurface + '))), ElevationToModelLayer('
       + StrUzfLandSurface + '), 0)';
-  DataArrayCreationRecords[Index].Classification := strUzfClassification;
-  DataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IUZFBND';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IUZFBND';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := StrUzfDischargeRouting;
-  DataArrayCreationRecords[Index].Formula := '0';
-  DataArrayCreationRecords[Index].Classification := strUzfClassification;
-  DataArrayCreationRecords[Index].DataSetNeeded := RouteUzfDischarge;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IRUNBND';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := StrUzfDischargeRouting;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := RouteUzfDischarge;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IRUNBND';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := StrUzfVerticalK;
-  DataArrayCreationRecords[Index].Formula := '1.';
-  DataArrayCreationRecords[Index].Classification := strUzfClassification;
-  DataArrayCreationRecords[Index].DataSetNeeded := UzfUnsatVertKUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: VKS';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrUzfVerticalK;
+  FDataArrayCreationRecords[Index].Formula := '1.';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := UzfUnsatVertKUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: VKS';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := StrUzfBrooksCoreyEpsilon;
-  DataArrayCreationRecords[Index].Formula := '3.5';
-  DataArrayCreationRecords[Index].Classification := strUzfClassification;
-  DataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: EPS';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrUzfBrooksCoreyEpsilon;
+  FDataArrayCreationRecords[Index].Formula := '3.5';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: EPS';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := StrUzfSaturatedWaterContent;
-  DataArrayCreationRecords[Index].Formula := '0.3';
-  DataArrayCreationRecords[Index].Classification := strUzfClassification;
-  DataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: THTS';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrUzfSaturatedWaterContent;
+  FDataArrayCreationRecords[Index].Formula := '0.3';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: THTS';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := StrUzfInitialUnsaturatedWaterContent;
-  DataArrayCreationRecords[Index].Formula := '0.3';
-  DataArrayCreationRecords[Index].Classification := strUzfClassification;
-  DataArrayCreationRecords[Index].DataSetNeeded := UzfInitialInfiltrationUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: THTI';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrUzfInitialUnsaturatedWaterContent;
+  FDataArrayCreationRecords[Index].Formula := '0.3';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := UzfInitialInfiltrationUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: THTI';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := StrUzfGage_1_and_2;
-  DataArrayCreationRecords[Index].Formula := '0';
-  DataArrayCreationRecords[Index].Classification := strUzfClassification;
-  DataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IUZOPT';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := StrUzfGage_1_and_2;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IUZOPT';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := StrUzfGage3;
-  DataArrayCreationRecords[Index].Formula := '0';
-  DataArrayCreationRecords[Index].Classification := strUzfClassification;
-  DataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IUZOPT';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := StrUzfGage3;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IUZOPT';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsModflow_Initial_Head;
-  DataArrayCreationRecords[Index].Formula := '0';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := ModflowUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'BAS: STRT';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsModflow_Initial_Head;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ModflowInitialHeadUsed;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := ModflowUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BAS: STRT';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsModflow_CBKz;
-  DataArrayCreationRecords[Index].Formula := rsKz;
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := ConfiningBedKzUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: VKCB; BCF: VCONT';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsModflow_CBKz;
+  FDataArrayCreationRecords[Index].Formula := rsKz;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ConfiningBedKzUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: VKCB; BCF: VCONT';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsVerticalAnisotropy;
-  DataArrayCreationRecords[Index].Formula :=
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsVerticalAnisotropy;
+  FDataArrayCreationRecords[Index].Formula :=
     'If((' + rsKz + ' = 0.), 0, (' + rsKx + ' / ' + rsKz + '))';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := VerticalAnisotropyUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: VKA';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := VerticalAnisotropyUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: VKA';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsHorizontalAnisotropy;
-  DataArrayCreationRecords[Index].Formula :=
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsHorizontalAnisotropy;
+  FDataArrayCreationRecords[Index].Formula :=
     'If((' + rsKx + ' = 0.), 1., (' + rsKy + ' / ' + rsKx + '))';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := HorizontalAnisotropyUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: HANI';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := HorizontalAnisotropyUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: HANI';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsSpecificYield;
-  DataArrayCreationRecords[Index].Formula := '0.2';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := SpecificYieldUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: Sy; BCF: Sf1';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsSpecificYield;
+  FDataArrayCreationRecords[Index].Formula := '0.2';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := SpecificYieldUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: Sy; BCF: Sf1';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsWetDryThreshold;
-  DataArrayCreationRecords[Index].Formula := StrLayerHeight + ' * 0.1';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := WetDryUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsWetDryThreshold;
+  FDataArrayCreationRecords[Index].Formula := StrLayerHeight + ' * 0.1';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := WetDryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := rsWetDryFlag;
-  DataArrayCreationRecords[Index].Formula := 'IfI(' + rsActive + ', -1, 0)';
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := WetDryUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].CheckMax := True;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Max := 1;
-  DataArrayCreationRecords[Index].Min := -1;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY'
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsWetDryFlag;
+  FDataArrayCreationRecords[Index].Formula := 'IfI(' + rsActive + ', -1, 0)';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := WetDryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].CheckMax := True;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Max := 1;
+  FDataArrayCreationRecords[Index].Min := -1;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY'
     + #13#10#13#10'A value < 0 indicates that only the cell below the '
       + 'dry cell can cause the dry cell to become active again.'
     + #13#10#13#10'A value > 0 indicates that the cell below the dry cell '
@@ -10983,198 +11287,273 @@ begin
       +'active again.';
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := rsWetDry;
-  DataArrayCreationRecords[Index].Formula := rsWetDryThreshold
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsWetDry;
+  FDataArrayCreationRecords[Index].Formula := rsWetDryThreshold
     + ' * ' + rsWetDryFlag;
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := WetDryUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY';
-  NoCheck(DataArrayCreationRecords[Index]);
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := WetDryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY';
+  NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := StrModpathZone;
-  DataArrayCreationRecords[Index].Formula := '1';
-  DataArrayCreationRecords[Index].Classification := 'MODPATH';
-  DataArrayCreationRecords[Index].DataSetNeeded := ModpathUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Max := 1;
-  DataArrayCreationRecords[Index].Min := 0;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'MODPATH: IBOUND';
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := StrModpathZone;
+  FDataArrayCreationRecords[Index].Formula := '1';
+  FDataArrayCreationRecords[Index].Classification := 'MODPATH';
+  FDataArrayCreationRecords[Index].DataSetNeeded := ModpathUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Max := 1;
+  FDataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'MODPATH: IBOUND';
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dsoTop;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := StrHufReferenceSurface;
-  DataArrayCreationRecords[Index].Formula := '0.';
-  DataArrayCreationRecords[Index].Classification := StrHUF;
-  DataArrayCreationRecords[Index].DataSetNeeded := HufReferenceSurfaceNeeded;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := False;
-  DataArrayCreationRecords[Index].Max := 1;
-  DataArrayCreationRecords[Index].Min := 0;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'MODFLOW, KDEP package: RS';
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrHufReferenceSurface;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := HufReferenceSurfaceNeeded;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := False;
+  FDataArrayCreationRecords[Index].Max := 1;
+  FDataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'MODFLOW, KDEP package: RS';
   Inc(Index);
 
   // BCF data sets.
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := StrTransmissivity;
-  DataArrayCreationRecords[Index].Formula := rsKx + ' * ' + StrLayerHeight;
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := BcfUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Max := 1;
-  DataArrayCreationRecords[Index].Min := 0;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: Tran';
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrTransmissivity;
+  FDataArrayCreationRecords[Index].Formula := rsKx + ' * ' + StrLayerHeight;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := BcfUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Max := 1;
+  FDataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: Tran';
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := StrVerticalConductance;
-  DataArrayCreationRecords[Index].Formula := StrBcfVCONT;
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := BcfUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Max := 1;
-  DataArrayCreationRecords[Index].Min := 0;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: VCONT';
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrVerticalConductance;
+  FDataArrayCreationRecords[Index].Formula := StrBcfVCONT;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := BcfUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Max := 1;
+  FDataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: VCONT';
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := StrConfinedStorageCoe;
-  DataArrayCreationRecords[Index].Formula := rsSpecific_Storage + ' * ' + StrLayerHeight;
-  DataArrayCreationRecords[Index].Classification := StrHydrology;
-  DataArrayCreationRecords[Index].DataSetNeeded := ConfinedStorageCoefUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].CheckMax := False;
-  DataArrayCreationRecords[Index].CheckMin := True;
-  DataArrayCreationRecords[Index].Max := 1;
-  DataArrayCreationRecords[Index].Min := 0;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: Sf1';
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrConfinedStorageCoe;
+  FDataArrayCreationRecords[Index].Formula := rsSpecific_Storage + ' * ' + StrLayerHeight;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ConfinedStorageCoefUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Max := 1;
+  FDataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: Sf1';
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := 'HUF_Kx';
-  DataArrayCreationRecords[Index].Formula := StrHufKx + '(' + rsModflow_Initial_Head + ')';
-  DataArrayCreationRecords[Index].Classification := StrHUF;
-  DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
-  DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'displays HUF Kx values';
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := 'HUF_Kx';
+  FDataArrayCreationRecords[Index].Formula := StrHufKx + '(' + rsModflow_Initial_Head + ')';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'displays HUF Kx values';
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := 'HUF_Ky';
-  DataArrayCreationRecords[Index].Formula := StrHufKy + '(' + rsModflow_Initial_Head + ')';
-  DataArrayCreationRecords[Index].Classification := StrHUF;
-  DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
-  DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets := 'displays HUF Ky values';
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := 'HUF_Ky';
+  FDataArrayCreationRecords[Index].Formula := StrHufKy + '(' + rsModflow_Initial_Head + ')';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'displays HUF Ky values';
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := 'HUF_Interlayer_Kz';
-  DataArrayCreationRecords[Index].Formula := StrHufKz + '(' + rsModflow_Initial_Head + ')';
-  DataArrayCreationRecords[Index].Classification := StrHUF;
-  DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
-  DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := 'HUF_Interlayer_Kz';
+  FDataArrayCreationRecords[Index].Formula := StrHufKz + '(' + rsModflow_Initial_Head + ')';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'displays HUF Kz values between one layer and the layer beneath';
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := 'HUF_SS';
-  DataArrayCreationRecords[Index].Formula := StrHufSs + '(' + rsModflow_Initial_Head + ')';
-  DataArrayCreationRecords[Index].Classification := StrHUF;
-  DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
-  DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := 'HUF_SS';
+  FDataArrayCreationRecords[Index].Formula := StrHufSs + '(' + rsModflow_Initial_Head + ')';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'displays HUF SS values';
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := 'HUF_Average_SY';
-  DataArrayCreationRecords[Index].Formula := StrHufAverageSy + '(' + rsModflow_Initial_Head + ')';
-  DataArrayCreationRecords[Index].Classification := StrHUF;
-  DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
-  DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := 'HUF_Average_SY';
+  FDataArrayCreationRecords[Index].Formula := StrHufAverageSy + '(' + rsModflow_Initial_Head + ')';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'displays average HUF Sy values for a cell';
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtDouble;
-  DataArrayCreationRecords[Index].Name := 'HUF_SY';
-  DataArrayCreationRecords[Index].Formula := StrHufSy + '(' + rsModflow_Initial_Head + ')';
-  DataArrayCreationRecords[Index].Classification := StrHUF;
-  DataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
-  DataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := 'HUF_SY';
+  FDataArrayCreationRecords[Index].Formula := StrHufSy + '(' + rsModflow_Initial_Head + ')';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'displays HUF Sy values for a cell';
   Inc(Index);
 
-  DataArrayCreationRecords[Index].DataSetType := TDataArray;
-  DataArrayCreationRecords[Index].Orientation := dso3D;
-  DataArrayCreationRecords[Index].DataType := rdtInteger;
-  DataArrayCreationRecords[Index].Name := StrZones;
-  DataArrayCreationRecords[Index].Formula := '0';
-  DataArrayCreationRecords[Index].Classification := StrZonebudget;
-  DataArrayCreationRecords[Index].DataSetNeeded := ZoneBudgetSelected;
-  DataArrayCreationRecords[Index].DataSetShouldBeCreated := ZoneBudgetSelected;
-  DataArrayCreationRecords[Index].Lock := StandardLock;
-  DataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  DataArrayCreationRecords[Index].AssociatedDataSets :=
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := StrZones;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrZonebudget;
+  FDataArrayCreationRecords[Index].DataSetNeeded := ZoneBudgetSelected;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := ZoneBudgetSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
     'ZONEBUDGET Zone array (IZONE)';
   Inc(Index);
 
-  Assert(Length(DataArrayCreationRecords) = Index);
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrGeostaticStress;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
+  FDataArrayCreationRecords[Index].DataSetNeeded := SwtSelected;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := SwtSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWT: GL0 (data set 4)';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrSpecificGravityUns;
+  FDataArrayCreationRecords[Index].Formula := '1.7';
+  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
+  FDataArrayCreationRecords[Index].DataSetNeeded := SwtSelected;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := SwtSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWT: SGM (data set 5)';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrSpecificGravitySat;
+  FDataArrayCreationRecords[Index].Formula := '2.';
+  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
+  FDataArrayCreationRecords[Index].DataSetNeeded := SwtSelected;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := SwtSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWT: SGS (data set 6)';
+  Inc(Index);
+
+
+
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrInitialPreOffsets;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
+  FDataArrayCreationRecords[Index].DataSetNeeded := SwtOffsetsUsed;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := SwtOffsetsUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWT: PCSOFF (data set 14)';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrInitialPreconsolida;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
+  FDataArrayCreationRecords[Index].DataSetNeeded := SwtSpecifiedUsed;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := SwtSpecifiedUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWT: PCS (data set 15)';
+  Inc(Index);
+
+
+
+  Assert(Length(FDataArrayCreationRecords) = Index);
 end;
 
 procedure TPhastModel.InvalidateMfSfrDownstreamUnsaturatedWaterContent(
@@ -12131,16 +12510,16 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
 
   // See DefinePackageDataArrays for the definition of the
   // contents of DataArrayCreationRecords.
-  for Index := 0 to Length(DataArrayCreationRecords) - 1 do
+  for Index := 0 to Length(FDataArrayCreationRecords) - 1 do
   begin
-    DataSetName := DataArrayCreationRecords[Index].Name;
-    Orientation := DataArrayCreationRecords[Index].Orientation;
-    DataType := DataArrayCreationRecords[Index].DataType;
-    ArrayNeeded := DataArrayCreationRecords[Index].DataSetNeeded;
-    ArrayArrayShouldBeCreated := DataArrayCreationRecords[Index].DataSetShouldBeCreated;
-    NewFormula := DataArrayCreationRecords[Index].Formula;
-    Classification := DataArrayCreationRecords[Index].Classification;
-    Lock := DataArrayCreationRecords[Index].Lock;
+    DataSetName := FDataArrayCreationRecords[Index].Name;
+    Orientation := FDataArrayCreationRecords[Index].Orientation;
+    DataType := FDataArrayCreationRecords[Index].DataType;
+    ArrayNeeded := FDataArrayCreationRecords[Index].DataSetNeeded;
+    ArrayArrayShouldBeCreated := FDataArrayCreationRecords[Index].DataSetShouldBeCreated;
+    NewFormula := FDataArrayCreationRecords[Index].Formula;
+    Classification := FDataArrayCreationRecords[Index].Classification;
+    Lock := FDataArrayCreationRecords[Index].Lock;
 
     DataArray := GetDataSetByName(DataSetName);
     Assert(Assigned(ArrayNeeded));
@@ -12156,15 +12535,15 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
       and ArrayArrayShouldBeCreated(self)) then
     begin
       DataArray := CreateNewDataArray(
-        DataArrayCreationRecords[Index].DataSetType, DataSetName, NewFormula,
-        Lock, DataType, DataArrayCreationRecords[Index].EvaluatedAt,
+        FDataArrayCreationRecords[Index].DataSetType, DataSetName, NewFormula,
+        Lock, DataType, FDataArrayCreationRecords[Index].EvaluatedAt,
         Orientation, Classification);
       DataArray.OnDataSetUsed := ArrayNeeded;
       DataArray.Lock := Lock;
-      DataArray.CheckMax := DataArrayCreationRecords[Index].CheckMax;
-      DataArray.CheckMin := DataArrayCreationRecords[Index].CheckMin;
-      DataArray.Max := DataArrayCreationRecords[Index].Max;
-      DataArray.Min := DataArrayCreationRecords[Index].Min;
+      DataArray.CheckMax := FDataArrayCreationRecords[Index].CheckMax;
+      DataArray.CheckMin := FDataArrayCreationRecords[Index].CheckMin;
+      DataArray.Max := FDataArrayCreationRecords[Index].Max;
+      DataArray.Min := FDataArrayCreationRecords[Index].Min;
     end;
     if DataArray <> nil then
     begin
@@ -12173,7 +12552,7 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
         DataArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
           Grid.ColumnCount);
       end;
-      DataArray.AssociatedDataSets := DataArrayCreationRecords[
+      DataArray.AssociatedDataSets := FDataArrayCreationRecords[
         Index].AssociatedDataSets;
     end;
   end;
@@ -13340,6 +13719,7 @@ begin
     ModelMonitorLocation := SourceLocations.ModelMonitorLocation;
     PhastLocation := SourceLocations.PhastLocation;
     ZoneBudgetLocation := SourceLocations.ZoneBudgetLocation;
+    ModelMateLocation := SourceLocations.ModelMateLocation;
   end
   else
   begin
@@ -13380,6 +13760,9 @@ begin
     StrPhastDefaultPath);
   ZoneBudgetLocation := IniFile.ReadString(StrProgramLocations, StrZonebudget,
     StrZoneBudgetDefaultPath);
+  ModelMateLocation := IniFile.ReadString(StrProgramLocations, StrModelMate,
+    StrModelMateDefaultPath);
+
   ADirectory := GetCurrentDir;
   try
     SetCurrentDir(ExtractFileDir(ParamStr(0)));
@@ -13423,6 +13806,11 @@ begin
   end;
 end;
 
+procedure TProgramLocations.SetModelMateLocation(const Value: string);
+begin
+  FModelMateLocation := RemoveQuotes(Value);
+end;
+
 procedure TProgramLocations.SetModelMonitorLocation(const Value: string);
 begin
   FModelMonitorLocation := RemoveQuotes(Value);
@@ -13456,6 +13844,7 @@ begin
   IniFile.WriteString(StrProgramLocations, StrModelMonitor, ModelMonitorLocation);
   IniFile.WriteString(StrProgramLocations, StrPHAST, PhastLocation);
   IniFile.WriteString(StrProgramLocations, StrZonebudget, ZoneBudgetLocation);
+  IniFile.WriteString(StrProgramLocations, StrModelMate, ModelMateLocation);
 end;
 
 { TDataSetClassification }

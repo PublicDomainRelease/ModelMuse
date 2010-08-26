@@ -15,8 +15,9 @@ type
     EndingTime: double;
     ConductanceAnnotation: string;
     BoundaryHeadAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList);
   end;
 
   TGhbArray = array of TGhbRecord;
@@ -141,14 +142,16 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property Conductance: double read GetConductance;
     property BoundaryHead: double read GetBoundaryHead;
     property ConductanceAnnotation: string read GetConductanceAnnotation;
     property BoundaryHeadAnnotation: string read GetBoundaryHeadAnnotation;
+    function IsIdentical(AnotherCell: TValueCell): boolean; override;
   end;
 
   // @name represents the MODFLOW General-Head boundaries associated with
@@ -569,10 +572,10 @@ end;
 
 { TGhb_Cell }
 
-procedure TGhb_Cell.Cache(Comp: TCompressionStream);
+procedure TGhb_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -657,6 +660,27 @@ end;
 function TGhb_Cell.GetSection: integer;
 begin
   result := Values.Cell.Section;
+end;
+
+function TGhb_Cell.IsIdentical(AnotherCell: TValueCell): boolean;
+var
+  GHB_Cell: TGhb_Cell;
+begin
+  result := AnotherCell is TGhb_Cell;
+  if result then
+  begin
+    GHB_Cell := TGhb_Cell(AnotherCell);
+    result :=
+      (Conductance = GHB_Cell.Conductance)
+      and (BoundaryHead = GHB_Cell.BoundaryHead)
+      and (IFace = GHB_Cell.IFace);
+  end;
+end;
+
+procedure TGhb_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
 end;
 
 procedure TGhb_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -884,15 +908,23 @@ end;
 
 { TGhbRecord }
 
-procedure TGhbRecord.Cache(Comp: TCompressionStream);
+procedure TGhbRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompReal(Comp, Conductance);
   WriteCompReal(Comp, BoundaryHead);
   WriteCompReal(Comp, StartingTime);
   WriteCompReal(Comp, EndingTime);
-  WriteCompString(Comp, ConductanceAnnotation);
-  WriteCompString(Comp, BoundaryHeadAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(ConductanceAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(BoundaryHeadAnnotation));
+//  WriteCompString(Comp, ConductanceAnnotation);
+//  WriteCompString(Comp, BoundaryHeadAnnotation);
+end;
+
+procedure TGhbRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(ConductanceAnnotation);
+  Strings.Add(BoundaryHeadAnnotation);
 end;
 
 procedure TGhbRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -902,8 +934,10 @@ begin
   BoundaryHead := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  ConductanceAnnotation := ReadCompString(Decomp, Annotations);
-  BoundaryHeadAnnotation := ReadCompString(Decomp, Annotations);
+  ConductanceAnnotation := Annotations[ReadCompInt(Decomp)];
+  BoundaryHeadAnnotation := Annotations[ReadCompInt(Decomp)];
+//  ConductanceAnnotation := ReadCompString(Decomp, Annotations);
+//  BoundaryHeadAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TGhbStorage }
@@ -919,12 +953,32 @@ procedure TGhbStorage.Store(Compressor: TCompressionStream);
 var
   Index: Integer;
   Count: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FGhbArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FGhbArray[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FGhbArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FGhbArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FGhbArray[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
   end;
 end;
 

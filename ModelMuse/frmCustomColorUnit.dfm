@@ -2,7 +2,6 @@ inherited frmCustomColor: TfrmCustomColor
   Caption = 'frmCustomColor'
   ClientHeight = 417
   ClientWidth = 606
-  OnDestroy = FormDestroy
   OnResize = FormResize
   ExplicitWidth = 614
   ExplicitHeight = 451

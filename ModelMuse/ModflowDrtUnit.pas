@@ -21,8 +21,9 @@ type
     ElevationAnnotation: string;
     ReturnFractionAnnotation: string;
     ReturnCell: TCellLocation;
-    procedure Cache(Comp: TCompressionStream);
-    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); 
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
+    procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList);
   end;
 
   TDrtArray = array of TDrtRecord;
@@ -140,9 +141,10 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property Conductance: double read GetConductance;
     property Elevation: double read GetElevation;
@@ -151,6 +153,7 @@ type
     property ConductanceAnnotation: string read GetConductanceAnnotation;
     property ElevationAnnotation: string read GetElevationAnnotation;
     property ReturnFractionAnnotation: string read GetReturnFractionAnnotation;
+    function IsIdentical(AnotherCell: TValueCell): boolean; override;
   end;
 
 
@@ -674,10 +677,10 @@ begin
   Assert(False);
 end;
 
-procedure TDrt_Cell.Cache(Comp: TCompressionStream);
+procedure TDrt_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -746,6 +749,29 @@ end;
 function TDrt_Cell.GetSection: integer;
 begin
   result := Values.Cell.Section;
+end;
+
+function TDrt_Cell.IsIdentical(AnotherCell: TValueCell): boolean;
+var
+  DRT_Cell: TDrt_Cell;
+begin
+  result := AnotherCell is TDrt_Cell;
+  if result then
+  begin
+    DRT_Cell := TDrt_Cell(AnotherCell);
+    result :=
+      (Conductance = DRT_Cell.Conductance)
+      and (Elevation = DRT_Cell.Elevation)
+      and (ReturnFraction = DRT_Cell.ReturnFraction)
+      and (ReturnCell = DRT_Cell.ReturnCell)
+      and (IFace = DRT_Cell.IFace);
+  end;
+end;
+
+procedure TDrt_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
 end;
 
 procedure TDrt_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -1231,7 +1257,7 @@ end;
 
 { TDrtRecord }
 
-procedure TDrtRecord.Cache(Comp: TCompressionStream);
+procedure TDrtRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompReal(Comp, Conductance);
@@ -1239,10 +1265,20 @@ begin
   WriteCompReal(Comp, ReturnFraction);
   WriteCompReal(Comp, StartingTime);
   WriteCompReal(Comp, EndingTime);
-  WriteCompString(Comp, ConductanceAnnotation);
-  WriteCompString(Comp, ElevationAnnotation);
-  WriteCompString(Comp, ReturnFractionAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(ConductanceAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(ElevationAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(ReturnFractionAnnotation));
+//  WriteCompString(Comp, ConductanceAnnotation);
+//  WriteCompString(Comp, ElevationAnnotation);
+//  WriteCompString(Comp, ReturnFractionAnnotation);
   WriteCompCell(Comp, ReturnCell);
+end;
+
+procedure TDrtRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(ConductanceAnnotation);
+  Strings.Add(ElevationAnnotation);
+  Strings.Add(ReturnFractionAnnotation);
 end;
 
 procedure TDrtRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -1253,9 +1289,12 @@ begin
   ReturnFraction := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  ConductanceAnnotation := ReadCompString(Decomp, Annotations);
-  ElevationAnnotation := ReadCompString(Decomp, Annotations);
-  ReturnFractionAnnotation := ReadCompString(Decomp, Annotations);
+  ConductanceAnnotation := Annotations[ReadCompInt(Decomp)];
+  ElevationAnnotation := Annotations[ReadCompInt(Decomp)];
+  ReturnFractionAnnotation := Annotations[ReadCompInt(Decomp)];
+//  ConductanceAnnotation := ReadCompString(Decomp, Annotations);
+//  ElevationAnnotation := ReadCompString(Decomp, Annotations);
+//  ReturnFractionAnnotation := ReadCompString(Decomp, Annotations);
   ReturnCell := ReadCompCell(Decomp);
 end;
 
@@ -1271,12 +1310,32 @@ procedure TDrtStorage.Store(Compressor: TCompressionStream);
 var
   Index: Integer;
   Count: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FDrtArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FDrtArray[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FDrtArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FDrtArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FDrtArray[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
   end;
 end;
 

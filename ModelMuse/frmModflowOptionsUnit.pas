@@ -7,7 +7,7 @@ uses
   Dialogs, frmCustomGoPhastUnit, StdCtrls, JvExStdCtrls, JvCheckBox, JvCombobox,
   ExtCtrls, ArgusDataEntry, ComCtrls, Buttons, ModflowOptionsUnit, UndoItems,
   JvListComb, Mask, JvExMask, JvSpin, JvExControls, JvComponent, JvXPCore,
-  JvXPCheckCtrls, RbwController, RequiredDataSetsUndoUnit;
+  JvXPCheckCtrls, RbwController, RequiredDataSetsUndoUnit, JvToolEdit;
 
 type
   TfrmModflowOptions = class(TfrmCustomGoPhast)
@@ -48,6 +48,8 @@ type
     cbWetting: TCheckBox;
     cbOpenInTextEditor: TJvCheckBox;
     lblWettingDataSets: TLabel;
+    feInitialHeads: TJvFilenameEdit;
+    lblInitialHeads: TLabel;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure cbCHTOCHClick(Sender: TObject);
@@ -67,6 +69,7 @@ type
     procedure comboWettingEquationChange(Sender: TObject);
     procedure pcOptionsChange(Sender: TObject);
     procedure cbOpenInTextEditorClick(Sender: TObject);
+    procedure feInitialHeadsExit(Sender: TObject);
   private
     FModflowOptions: TModflowOptions;
     FWettingOptions: TWettingOptions;
@@ -153,6 +156,7 @@ begin
   comboTimeUnit.ItemIndex := FModflowOptions.TimeUnit;
   comboLengthUnit.ItemIndex := FModflowOptions.LengthUnit;
   cbOpenInTextEditor.Checked := FModflowOptions.OpenInTextEditor;
+  feInitialHeads.FileName := FModflowOptions.InitialHeadFileName;
 
   FWettingOptions.Assign(frmGoPhast.PhastModel.ModflowWettingOptions);
   cbWetting.Checked := FWettingOptions.WettingActive;
@@ -231,6 +235,13 @@ begin
   inherited;
   if FModflowOptions = nil then Exit;
   FModflowOptions.ProjectName := edProjectName.Text;
+end;
+
+procedure TfrmModflowOptions.feInitialHeadsExit(Sender: TObject);
+begin
+  inherited;
+  if FModflowOptions = nil then Exit;
+  FModflowOptions.InitialHeadFileName := feInitialHeads.Text;
 end;
 
 procedure TfrmModflowOptions.rdeHDRYExit(Sender: TObject);

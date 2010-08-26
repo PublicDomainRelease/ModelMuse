@@ -430,6 +430,18 @@ begin
     dgCredit.Cells[0, Row] := 'UnitList.pas, UnitCRC.pas';
     dgCredit.Cells[1, Row] := 'ContinuIT BV';
     dgCredit.Cells[2, Row] := 'http://www.continuit.nl/index.php?LANGUAGE=EN&PAGE=FREEWARE';
+
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'rmControls';
+    dgCredit.Cells[1, Row] := 'Ryan Mills';
+    dgCredit.Cells[2, Row] := 'http://www.mills-enterprise.ca/download/rmctl192.zip';
+
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'MadExcept version 3';
+    dgCredit.Cells[1, Row] := 'Mathias Rauen';
+    dgCredit.Cells[2, Row] := 'http://www.madshi.net/madExceptDescription.htm';
   finally
     dgCredit.EndUpdate
   end;

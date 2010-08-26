@@ -234,6 +234,10 @@ begin
   DataSets := TList.Create;
   try
     Evaluate;
+    if not frmProgress.ShouldContinue then
+    begin
+      Exit;
+    end;
 
     if FWells.Count = 0 then
     begin
@@ -472,6 +476,10 @@ begin
   WriteToNameFile(StrMNW2, PhastModel.UnitNumbers.UnitNumber(StrMNW2),
     FNameOfFile, foInput);
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
   OpenFile(FNameOfFile);
   try
     frmProgress.AddMessage('Writing MNW2 Package input.');

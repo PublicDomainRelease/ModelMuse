@@ -835,7 +835,15 @@ begin
       if FDataBaseFileName <> '' then
       begin
         xbShapeDataBase.FileName := FDataBaseFileName;
+        try
         xbShapeDataBase.Active := True;
+        Except on E: EFOpenError do
+          begin
+            Beep;
+            MessageDlg(E.message, mtError, [mbOK], 0);
+            Exit;
+          end;
+        end;
         Assert(xbShapeDataBase.RecordCount = FGeometryFile.Count);
         xbShapeDataBase.GotoBOF;
         ValidFields := TStringList.Create;

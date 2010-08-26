@@ -154,9 +154,41 @@ begin
     Ord(hocStatFlag), Ord(hocStatFlag));
 end;
 
+type TRbwDataGrid4Crack = class(TRbwDataGrid4);
+
 procedure TframeHeadObservations.comboTreatmentChange(Sender: TObject);
+var
+  Purpose: TObservationPurpose;
+  Index: Integer;
 begin
   FChanged := True;
+  if comboTreatment.ItemIndex >= 0 then
+  begin
+    Purpose := TObservationPurpose(comboTreatment.ItemIndex)
+  end
+  else
+  begin
+    Purpose := ofObserved;
+  end;
+  TRbwDataGrid4Crack(rdgHeads).HideEditor;
+  case Purpose of
+    ofObserved, ofInacative:
+      begin
+        rdgHeads.Columns[Ord(hocStatFlag)].PickList := ObservationStatFlagLabels;
+      end;
+    ofPredicted:
+      begin
+        rdgHeads.Columns[Ord(hocStatFlag)].PickList := PredictionStatFlagLabels;
+        for Index := 1 to rdgHeads.RowCount - 1 do
+        begin
+          if rdgHeads.ItemIndex[Ord(hocStatFlag), Index] < 0 then
+          begin
+            rdgHeads.ItemIndex[Ord(hocStatFlag), Index] := 0;
+          end;
+        end;
+      end;
+    else Assert(False);
+  end;
 end;
 
 procedure TframeHeadObservations.GetData(List: TScreenObjectEditCollection);

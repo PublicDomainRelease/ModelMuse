@@ -2780,9 +2780,115 @@ end;
 
 function TModflowGrid.ThreeDElementCorner(const Column, Row,
   Layer: integer): T3DRealPoint;
+var
+  Z1: Real;
+  Z2: Real;
+  Distance1: Real;
+  Distance2: Real;
+  TotalDistance: Real;
+  Z3: Real;
+  Z4: Real;
 begin
-  { TODO : Implement this? }
-  Assert(False);
+  result.X := ColumnPosition[Column];
+  result.Y := RowPosition[Row];
+
+  if Column = ColumnCount then
+  begin
+    if Row = RowCount then
+    begin
+      result.Z := CellElevation[Column-1, Row-1, Layer];
+      Exit;
+    end
+    else
+    begin
+      Z1 := CellElevation[Column-1, Row, Layer];
+    end;
+  end
+  else
+  begin
+    if Row = RowCount then
+    begin
+      Z1 := CellElevation[Column, Row-1, Layer];
+      if Column > 0 then
+      begin
+        Z2 := CellElevation[Column-1, Row-1, Layer];
+        Distance1 := ColumnWidth[Column];
+        Distance2 := ColumnWidth[Column-1];
+        TotalDistance := Distance1 + Distance2;
+        if TotalDistance = 0 then
+        begin
+          Z1 := (Z1+Z2)/2;
+        end
+        else
+        begin
+          Z1 := Z1 + Distance1/TotalDistance*(Z2-Z1);
+        end;
+      end;
+      result.Z := Z1;
+      Exit;
+    end
+    else
+    begin
+      Z1 := CellElevation[Column, Row, Layer];
+      if Column > 0 then
+      begin
+        Z2 := CellElevation[Column-1, Row, Layer];
+        Distance1 := ColumnWidth[Column];
+        Distance2 := ColumnWidth[Column-1];
+        TotalDistance := Distance1 + Distance2;
+        if TotalDistance = 0 then
+        begin
+          Z1 := (Z1+Z2)/2;
+        end
+        else
+        begin
+          Z1 := Z1 + Distance1/TotalDistance*(Z2-Z1);
+        end;
+      end;
+    end;
+  end;
+
+  if Row > 0 then
+  begin
+    if Column = ColumnCount then
+    begin
+      Z3 := CellElevation[Column-1, Row-1, Layer];
+    end
+    else
+    begin
+      Z3 := CellElevation[Column, Row-1, Layer];
+      if Column > 0 then
+      begin
+        Z4 := CellElevation[Column-1, Row-1, Layer];
+        Distance1 := ColumnWidth[Column];
+        Distance2 := ColumnWidth[Column-1];
+        TotalDistance := Distance1 + Distance2;
+        if TotalDistance = 0 then
+        begin
+          Z3 := (Z3+Z4)/2;
+        end
+        else
+        begin
+          Z3 := Z3 + Distance1/TotalDistance*(Z4-Z3);
+        end;
+      end;
+    end;
+    Distance1 := RowWidth[Row];
+    Distance2 := RowWidth[Row-1];
+    TotalDistance := Distance1 + Distance2;
+    if TotalDistance = 0 then
+    begin
+      result.Z := (Z1+Z3)/2;
+    end
+    else
+    begin
+      result.Z := Z1 + Distance1/TotalDistance*(Z3-Z1);
+    end;
+  end
+  else
+  begin
+    result.Z := Z1;
+  end;
 end;
 
 procedure TModflowGrid.SetLayerLineWidth(var LineWidth: single;

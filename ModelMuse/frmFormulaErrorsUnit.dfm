@@ -11,12 +11,12 @@ inherited frmFormulaErrors: TfrmFormulaErrors
   FormStyle = fsStayOnTop
   OnResize = FormResize
   ExplicitWidth = 556
-  ExplicitHeight = 274
+  ExplicitHeight = 268
   PixelsPerInch = 96
   TextHeight = 19
   object pnlBottom: TPanel
     Left = 0
-    Top = 195
+    Top = 189
     Width = 548
     Height = 45
     Align = alBottom
@@ -90,7 +90,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
     Left = 0
     Top = 65
     Width = 548
-    Height = 130
+    Height = 124
     Align = alClient
     ColCount = 4
     DefaultColWidth = 100
@@ -125,7 +125,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
         ParentButtonFont = False
         WordWrapCaptions = False
         WordWrapCells = False
-        AutoAdjustColWidths = False
+        AutoAdjustColWidths = True
       end
       item
         AutoAdjustRowHeights = False

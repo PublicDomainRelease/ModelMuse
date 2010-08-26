@@ -2,7 +2,7 @@ unit GlobalTypesUnit;
 
 interface
 
-  uses Classes, GlobalBasicData, SysUtils, Utilities;
+  uses Classes, GlobalBasicData, IniFiles, SysUtils, Utilities;
 
 type
 { Data types found to be supported by Delphi-Fortran mixed-
@@ -58,7 +58,7 @@ type
       datPredName, datRefValue, datMeasStatistic, datMeasStatFlag,
       datGroupName, datEquation, datUseFlag, datPlotSymbol,
       datWtMultiplier, datCovMatrix,
-      { Attribute types defined for observations and predictions in UCODE_2005 }
+      { Attribute types defined for observations and predictions in UCODE }
       datNonDetect, datWtOSConstant
       { Attribute types defined for ... }
     );
@@ -85,7 +85,7 @@ type
     // Program locations.
     TProgramLocations = class(TPersistent)
       private
-        fUcodeLocation: string;
+        fUcode2005Location: string;
         fModflow2005Location: string;
         fModflow2000Location: string;
         fGWChartLocation: string;
@@ -96,8 +96,10 @@ type
       public
         constructor Create;
         procedure Assign(Source: TPersistent); override;
+        procedure WriteToIniFile(IniFile: TMemInifile);
+        procedure ReadFromIniFile(IniFile: TMemInifile);
       published
-        property UcodeLocation : string read fUcodeLocation write fUcodeLocation;
+        property Ucode2005Location : string read fUcode2005Location write fUcode2005Location;
         property Modflow2005Location: string read fModflow2005Location
                                              write fModflow2005Location;
         property Modflow2000Location: string read fModflow2000Location
@@ -119,6 +121,7 @@ type
 
 var
   setATBoolean: set of TParamAttType;
+  GlobalProgramLocations: TProgramLocations;
 
   function GT_ParAttKeyword(PAT: TParamAttType): string;
   function GT_DepAttKeyword(DAT: TDepAttType): string;
@@ -126,6 +129,21 @@ var
   procedure InitializeGlobalTypesUnit;
 
 implementation
+
+resourcestring
+  StrProgramLocations = 'Program Locations';
+  StrMODFLOW2000 = 'MODFLOW-2000';
+  StrModflow2000DefaultPath = 'C:\WRDAPP\mf2k.1_19\bin\mf2005.exe';
+  StrMODFLOW2005 = 'MODFLOW-2005';
+  StrModflow2005DefaultPath = 'C:\WRDAPP\MF2005.1_8\Bin\mf2005.exe';
+  StrUCODE2005 = 'UCODE2005';
+  StrUCODE2005DefaultPath = 'C:\WRDAPP\ucode_2005_1.019\bin\ucode_2005.exe';
+  StrGWChart = 'GWChart';
+  StrGWChartDefaultPath = 'C:\WRDAPP\GW_Chart\Gw_chart.exe';
+  StrResidAnalysis = 'ResidAnalysis';
+  StrResidAnalysisDefaultPath = 'C:\WRDAPP\ucode_2005_1.019\bin\residual_analysis.exe';
+  StrResidAnalysisAdv = 'ResidAnalysisAdv';
+  StrResidAnalysisAdvDefaultPath = 'C:\WRDAPP\ucode_2005_1.019\bin\residual_analysis_adv.exe';
 
 function GT_ParAttKeyword(PAT: TParamAttType): string;
 begin
@@ -202,7 +220,7 @@ begin
     begin
       Modflow2000Location := TProgramLocations(Source).Modflow2000Location;
       Modflow2005Location := TProgramLocations(Source).Modflow2005Location;
-      UcodeLocation := TProgramLocations(Source).UcodeLocation;
+      Ucode2005Location := TProgramLocations(Source).Ucode2005Location;
       GWChartLocation := TProgramLocations(Source).GWChartLocation;
       ResidAnalysisLocation := TProgramLocations(Source).ResidAnalysisLocation;
       ResidAnalysisAdvLocation := TProgramLocations(Source).ResidAnalysisAdvLocation;
@@ -215,12 +233,41 @@ end;
 
 constructor TProgramLocations.Create;
 begin
-  fModflow2000Location := 'C:\WRDAPP\MF2K.1_19\bin\mf2k.exe';
-  fModflow2005Location := 'C:\WRDAPP\MF2005.1_8\bin\mf2005.exe';
-  fUcodeLocation := 'C:\WRDAPP\UCODE_2005_1.019\bin\ucode_2005.exe';
-  fGWChartLocation := '';
-  fResidAnalysisLocation := 'C:\WRDAPP\UCODE_2005_1.019\bin\residual_analysis.exe';
-  fResidAnalysisAdvLocation := 'C:\WRDAPP\UCODE_2005_1.019\bin\residual_analysis_adv.exe';
+  fModflow2000Location := StrModflow2000DefaultPath;
+  fModflow2005Location := StrModflow2005DefaultPath;
+  fUcode2005Location := StrUCODE2005DefaultPath;
+  fGWChartLocation := StrGWChartDefaultPath;
+  fResidAnalysisLocation := StrResidAnalysisDefaultPath;
+  fResidAnalysisAdvLocation := StrResidAnalysisAdvDefaultPath;
+end;
+
+procedure TProgramLocations.ReadFromIniFile(IniFile: TMemInifile);
+//var
+//  ADirectory: string;
+//  DefaultLocation: string;
+begin
+  Modflow2000Location := IniFile.ReadString(StrProgramLocations, StrMODFLOW2000,
+    StrModflow2000DefaultPath);
+  Modflow2005Location := IniFile.ReadString(StrProgramLocations, StrMODFLOW2005,
+    StrModflow2005DefaultPath);
+  Ucode2005Location := IniFile.ReadString(StrProgramLocations, StrUcode2005,
+    StrUcode2005DefaultPath);
+  GWChartLocation := IniFile.ReadString(StrProgramLocations, StrGWChart,
+    StrGWChartDefaultPath);
+  ResidAnalysisLocation := IniFile.ReadString(StrProgramLocations, StrResidAnalysis,
+    StrResidAnalysisDefaultPath);
+  ResidAnalysisAdvLocation := IniFile.ReadString(StrProgramLocations, StrResidAnalysisAdv,
+    StrResidAnalysisAdvDefaultPath);
+//  ADirectory := GetCurrentDir;
+//  try
+//    SetCurrentDir(ExtractFileDir(ParamStr(0)));
+//    DefaultLocation :=
+//      ExpandFileName(StrModelMonitorDefaultPath);
+//    ModelMonitorLocation := IniFile.ReadString(StrProgramLocations,
+//      StrModelMonitor, DefaultLocation);
+//  finally
+//    SetCurrentDir(ADirectory);
+//  end;
 end;
 
 function TProgramLocations.RemoveQuotes(const Value: string): string;
@@ -247,14 +294,28 @@ begin
 //
 end;
 
+procedure TProgramLocations.WriteToIniFile(IniFile: TMemInifile);
+begin
+  IniFile.WriteString(StrProgramLocations, StrUCODE2005, Ucode2005Location);
+  IniFile.WriteString(StrProgramLocations, StrMODFLOW2005, Modflow2005Location);
+  IniFile.WriteString(StrProgramLocations, StrMODFLOW2000, Modflow2000Location);
+  IniFile.WriteString(StrProgramLocations, StrGWChart, GWChartLocation);
+  IniFile.WriteString(StrProgramLocations, StrResidAnalysis, ResidAnalysisLocation);
+  IniFile.WriteString(StrProgramLocations, StrResidAnalysisAdv, ResidAnalysisAdvLocation);
+end;
+
 //###################################################################
 
 procedure InitializeGlobalTypesUnit;
 begin
   setATBoolean := [patAdjustable, patConstrain, patTransform, patConstrain];
+  GlobalProgramLocations := TProgramLocations.Create;
 end;
 
 initialization
   InitializeGlobalTypesUnit;
+
+finalization
+  GlobalProgramLocations.Free;  
 
 end.

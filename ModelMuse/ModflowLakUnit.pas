@@ -21,8 +21,9 @@ type
     EvaporationAnnotation: string;
     OverlandRunoffAnnotation: string;
     WithdrawalAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList);
   end;
 
   TLakArray = array of TLakRecord;
@@ -117,9 +118,10 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property MinimumStage: double read GetMinimumStage;
     property MaximumStage: double read GetMaximumStage;
@@ -615,10 +617,10 @@ end;
 
 { TLak_Cell }
 
-procedure TLak_Cell.Cache(Comp: TCompressionStream);
+procedure TLak_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -740,6 +742,12 @@ end;
 function TLak_Cell.GetWithdrawalAnnotation: string;
 begin
   result := Values.WithdrawalAnnotation;
+end;
+
+procedure TLak_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
 end;
 
 procedure TLak_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -1282,7 +1290,7 @@ end;
 
 { TLakRecord }
 
-procedure TLakRecord.Cache(Comp: TCompressionStream);
+procedure TLakRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompReal(Comp, MinimumStage);
@@ -1292,12 +1300,28 @@ begin
   WriteCompReal(Comp, OverlandRunoff);
   WriteCompReal(Comp, Withdrawal);
 
-  WriteCompString(Comp, MinimumStageAnnotation);
-  WriteCompString(Comp, MaximumStageAnnotation);
-  WriteCompString(Comp, PrecipitationAnnotation);
-  WriteCompString(Comp, EvaporationAnnotation);
-  WriteCompString(Comp, OverlandRunoffAnnotation);
-  WriteCompString(Comp, WithdrawalAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(MinimumStageAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(MaximumStageAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(PrecipitationAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(EvaporationAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(OverlandRunoffAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(WithdrawalAnnotation));
+//  WriteCompString(Comp, MinimumStageAnnotation);
+//  WriteCompString(Comp, MaximumStageAnnotation);
+//  WriteCompString(Comp, PrecipitationAnnotation);
+//  WriteCompString(Comp, EvaporationAnnotation);
+//  WriteCompString(Comp, OverlandRunoffAnnotation);
+//  WriteCompString(Comp, WithdrawalAnnotation);
+end;
+
+procedure TLakRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(MinimumStageAnnotation);
+  Strings.Add(MaximumStageAnnotation);
+  Strings.Add(PrecipitationAnnotation);
+  Strings.Add(EvaporationAnnotation);
+  Strings.Add(OverlandRunoffAnnotation);
+  Strings.Add(WithdrawalAnnotation);
 end;
 
 procedure TLakRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -1310,12 +1334,18 @@ begin
   OverlandRunoff := ReadCompReal(Decomp);
   Withdrawal := ReadCompReal(Decomp);
 
-  MinimumStageAnnotation := ReadCompString(Decomp, Annotations);
-  MaximumStageAnnotation := ReadCompString(Decomp, Annotations);
-  PrecipitationAnnotation := ReadCompString(Decomp, Annotations);
-  EvaporationAnnotation := ReadCompString(Decomp, Annotations);
-  OverlandRunoffAnnotation := ReadCompString(Decomp, Annotations);
-  WithdrawalAnnotation := ReadCompString(Decomp, Annotations);
+  MinimumStageAnnotation := Annotations[ReadCompInt(Decomp)];
+  MaximumStageAnnotation := Annotations[ReadCompInt(Decomp)];
+  PrecipitationAnnotation := Annotations[ReadCompInt(Decomp)];
+  EvaporationAnnotation := Annotations[ReadCompInt(Decomp)];
+  OverlandRunoffAnnotation := Annotations[ReadCompInt(Decomp)];
+  WithdrawalAnnotation := Annotations[ReadCompInt(Decomp)];
+//  MinimumStageAnnotation := ReadCompString(Decomp, Annotations);
+//  MaximumStageAnnotation := ReadCompString(Decomp, Annotations);
+//  PrecipitationAnnotation := ReadCompString(Decomp, Annotations);
+//  EvaporationAnnotation := ReadCompString(Decomp, Annotations);
+//  OverlandRunoffAnnotation := ReadCompString(Decomp, Annotations);
+//  WithdrawalAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TLakStorage }
@@ -1329,12 +1359,32 @@ procedure TLakStorage.Store(Compressor: TCompressionStream);
 var
   Index: Integer;
   Count: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FLakArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FLakArray[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    Count := Length(FLakArray);
+    for Index := 0 to Count - 1 do
+    begin
+      FLakArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FLakArray[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
   end;
 end;
 

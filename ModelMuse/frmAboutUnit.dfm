@@ -3135,7 +3135,7 @@ inherited frmAbout: TfrmAbout
     Align = alClient
     ColCount = 3
     FixedCols = 0
-    RowCount = 43
+    RowCount = 45
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
     TabOrder = 2
     AutoDistributeText = False

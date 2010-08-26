@@ -183,6 +183,8 @@ type
     procedure FrameMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure ZoomBoxMagnificationChanged(Sender: TObject);
+    procedure ModelCubeMouseEnter(Sender: TObject);
+    procedure ModelCubeMouseLeave(Sender: TObject);
   private
     MouseStartX: integer;
     MouseStartY: integer;
@@ -192,6 +194,7 @@ type
     FPaintingLayer: Boolean;
     FNeedToRedraw: Boolean;
     FPreviousMagnification: double;
+    FLastMoveTime: TDateTime;
     procedure UpdateStatusBarCoordinates(APoint: TPoint2D);
     procedure UpdateStatusBarForTopBlockDataSet(Column, Row, X, Y: Integer);
     procedure UpdateStatusBarForTopNodeDataSet(Column:
@@ -1977,22 +1980,71 @@ end;
 
 procedure TframeView.FrameMouseWheel(Sender: TObject; Shift: TShiftState;
   WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+const
+  TenthOfASecond = 1/24/3600/10;
 var
   ctrl : TWinControl;
   APoint: TPoint;
+  Increment: Integer;
 begin
   ctrl := FindVCLWindow(MousePos) ;
-  if (ctrl <> nil) and (ctrl.Parent is TQRbwZoomBox2) then
+  if (ctrl <> nil) then
   begin
-    APoint := ctrl.ScreenToClient(MousePos);
-    Handled := True;
-    if WheelDelta > 0 then
+    if (ctrl.Parent is TQRbwZoomBox2) then
     begin
-      ZoomInTool.MouseUp(Sender, mbLeft, Shift, APoint.X, APoint.Y);
+      APoint := ctrl.ScreenToClient(MousePos);
+      Handled := True;
+      if WheelDelta > 0 then
+      begin
+        ZoomInTool.MouseUp(Sender, mbLeft, Shift, APoint.X, APoint.Y);
+      end
+      else
+      begin
+        ZoomOutTool.MouseUp(Sender, mbLeft, Shift, APoint.X, APoint.Y);
+      end;
     end
     else
     begin
-      ZoomOutTool.MouseUp(Sender, mbLeft, Shift, APoint.X, APoint.Y);
+      if (frmGoPhast.FCubeControl <> nil) then
+      begin
+        if Now - FLastMoveTime < TenthOfASecond then
+        begin
+          Exit;
+        end;
+        FLastMoveTime := Now;
+        if ssShift in Shift then
+        begin
+          Increment := 10;
+        end
+        else
+        begin
+          Increment := 1;
+        end;
+        case frmGoPhast.FCubeControl.SelectedFace of
+          faTop:
+            begin
+              frmGoPhast.Grid.DisplayLayer :=
+                frmGoPhast.Grid.DisplayLayer - Sign(WheelDelta)*Increment;
+              frmGoPhast.sbMain.Panels[1].Text := 'Selected Layer: '
+                + IntToStr(frmGoPhast.Grid.SelectedLayer + 1);
+            end;
+          faFront:
+            begin
+              frmGoPhast.Grid.DisplayRow :=
+                frmGoPhast.Grid.DisplayRow - Sign(WheelDelta)*Increment;
+              frmGoPhast.sbMain.Panels[1].Text := 'Selected Row: '
+                + IntToStr(frmGoPhast.Grid.SelectedRow + 1);
+            end;
+          faSide:
+            begin
+              frmGoPhast.Grid.DisplayColumn :=
+                frmGoPhast.Grid.DisplayColumn + Sign(WheelDelta)*Increment;
+              frmGoPhast.sbMain.Panels[1].Text := 'Selected Col: '
+                + IntToStr(frmGoPhast.Grid.SelectedColumn + 1);
+            end;
+          else Assert(False);
+        end;
+      end;
     end;
   end;
 end;
@@ -2009,6 +2061,16 @@ begin
   UndoMoveDown := TUndoMoveDown.Create(ViewDirection);
   UndoMoveDown.SetPostSelection;
   frmGoPhast.UndoStack.Submit(UndoMoveDown);
+end;
+
+procedure TframeView.ModelCubeMouseEnter(Sender: TObject);
+begin
+  frmGoPhast.FCubeControl := ModelCube;
+end;
+
+procedure TframeView.ModelCubeMouseLeave(Sender: TObject);
+begin
+  frmGoPhast.FCubeControl := nil;
 end;
 
 procedure TframeView.ModelCubePaint(Sender: TObject);

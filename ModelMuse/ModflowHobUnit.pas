@@ -11,8 +11,9 @@ type
     Head: double;
     Time: double;
     HeadAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); 
+    procedure RecordStrings(Strings: TStringList);
   end;
 
   TMultiObsMethod = (momAllHeads, momHeadAndDrawdown);
@@ -93,9 +94,10 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property Head: double read GetHead;
     property Time: double read GetTime;
@@ -147,9 +149,9 @@ type
   // a single @link(TScreenObject).
   THobBoundary = class(TModflowScreenObjectProperty)
   private
-    FPhastModel: TObject;
+//    FPhastModel: TObject;
     FValues: THobCollection;
-    FScreenObject: TObject;
+//    FScreenObject: TObject;
     FObservationName: string;
     FLayerFractions: TMultiHeadCollection;
     FMultiObsMethod: TMultiObsMethod;
@@ -162,7 +164,6 @@ type
     function GetCellListCount: integer;
     procedure SetPurpose(const Value: TObservationPurpose);
   public
-    procedure InvalidateModel;
     procedure Assign(Source: TPersistent); override;
     // @name creates an instance of @classname.
     Constructor Create(Model, ScreenObject: TObject);
@@ -173,11 +174,6 @@ type
     // and, if so, calls @link(THobCollection.EvaluateHeadObservations
     // Values.EvaluateHeadObservations)
     procedure EvaluateHeadObservations(Purpose: TObservationPurpose);
-    // @name is either nil or the the current @link(TPhastModel).
-    property PhastModel: TObject read FPhastModel;
-    // @name is either @nil or the @link(TScreenObject) that owns
-    // this @classname.
-    property ScreenObject: TObject read FScreenObject;
     function Used: boolean; override;
     procedure Clear; virtual;
     property CellLists[Index: integer]: TObsCellList read GetCellList;
@@ -189,6 +185,7 @@ type
     property Values: THobCollection read FValues write SetValues;
     property LayerFractions: TMultiHeadCollection read FLayerFractions
       write SetLayerFractions;
+    // ITT
     property MultiObsMethod: TMultiObsMethod read FMultiObsMethod
       write SetMultiObsMethod default momHeadAndDrawdown;
     property Purpose: TObservationPurpose read FPurpose
@@ -236,10 +233,10 @@ uses RbwParser, ScreenObjectUnit, PhastModelUnit, ModflowGridUnit, FastGEO,
 
 { THob_Cell }
 
-procedure THob_Cell.Cache(Comp: TCompressionStream);
+procedure THob_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
 end;
 
 function THob_Cell.GetColumn: integer;
@@ -307,6 +304,12 @@ begin
   result := Values.Time;
 end;
 
+procedure THob_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
+end;
+
 procedure THob_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
@@ -341,11 +344,11 @@ end;
 
 constructor THobBoundary.Create(Model, ScreenObject: TObject);
 begin
-  inherited Create;
-  Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
-  FScreenObject := ScreenObject;
-  Assert((Model = nil) or (Model is TPhastModel));
-  FPhastModel := Model;
+  inherited;
+//  Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
+//  FScreenObject := ScreenObject;
+//  Assert((Model = nil) or (Model is TPhastModel));
+//  FPhastModel := Model;
   FValues:= THobCollection.Create(self, Model,
     ScreenObject);
   FLayerFractions := TMultiHeadCollection.Create(self, Model,
@@ -379,15 +382,6 @@ begin
   result := Values.FObservationHeads.FCellList.Count;
 end;
 
-procedure THobBoundary.InvalidateModel;
-begin
-  if (ScreenObject <> nil)
-      and (ScreenObject as TScreenObject).CanInvalidateModel
-      and (FPhastModel <> nil) then
-  begin
-    (FPhastModel as TPhastModel).Invalidate
-  end;
-end;
 
 procedure THobBoundary.SetLayerFractions(const Value: TMultiHeadCollection);
 begin
@@ -896,12 +890,18 @@ end;
 
 { THobRecord }
 
-procedure THobRecord.Cache(Comp: TCompressionStream);
+procedure THobRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompReal(Comp, Head);
   WriteCompReal(Comp, Time);
-  WriteCompString(Comp, HeadAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(HeadAnnotation));
+//  WriteCompString(Comp, HeadAnnotation);
+end;
+
+procedure THobRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(HeadAnnotation);
 end;
 
 procedure THobRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -909,7 +909,8 @@ begin
   Cell := ReadCompCell(Decomp);
   Head := ReadCompReal(Decomp);
   Time := ReadCompReal(Decomp);
-  HeadAnnotation := ReadCompString(Decomp, Annotations);
+//  HeadAnnotation := ReadCompString(Decomp, Annotations);
+  HeadAnnotation := Annotations[ReadCompInt(Decomp)];
 end;
 
 end.

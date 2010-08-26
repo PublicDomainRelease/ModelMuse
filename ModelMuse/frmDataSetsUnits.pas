@@ -2026,9 +2026,20 @@ var
   HufUnit: THydrogeologicUnit;
   HufParamIndex: Integer;
   HufParam: THufUsedParameter;
+  ActiveDataSet: TDataArray;
 begin
   OK_Var.SpecifiedHeadOK := FSelectedEdit.Name <> rsModflowSpecifiedHead;
   OK_Var.ActiveOK := FSelectedEdit.Name <> rsActive;
+
+  if FSelectedEdit.FDataArray <> nil then
+  begin
+    ActiveDataSet := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+    if ActiveDataSet.IsListeningTo(FSelectedEdit.FDataArray) then
+    begin
+      OK_Var.ActiveOK := False;
+    end;
+  end;
+
   OK_Var.GetVContOK := (EvaluatedAt = eaBlocks)
     and (FSelectedEdit.Name <> rsKz)
     and (FSelectedEdit.Name <> rsModflow_CBKz);

@@ -1670,10 +1670,10 @@ begin
   if FFormat <> Value then
   begin
     FFormat := Value;
-    if FFormat = rcf4Boolean then
-    begin
-      ComboUsed := False;
-    end;
+//    if FFormat = rcf4Boolean then
+//    begin
+//      ComboUsed := False;
+//    end;
     Changed(False);
   end;
 end;
@@ -2013,7 +2013,10 @@ end;
 
 procedure TCustomRowOrColumn.SetPickList(const Value: TStrings);
 begin
-  FPickList.Assign(Value);
+  if FPickList <> Value then
+  begin
+    FPickList.Assign(Value);
+  end;
 end;
 
 procedure TCustomRowOrColumn.SetButtonWidth(const Value: integer);
@@ -3153,7 +3156,8 @@ begin
         FOtherPoint := FAnchor;
       end;
     end;
-    if (GetCellFormat(ACol, ARow) = rcf4Boolean) and (ACol >= FixedCols) and (ARow >= FixedRows) then
+    if (GetCellFormat(ACol, ARow) = rcf4Boolean)
+      and (ACol >= FixedCols) and (ARow >= FixedRows) then
     begin
       EditorMode := False;
       HideEditor;
@@ -3204,7 +3208,7 @@ function TCustomRBWDataGrid.TextRect(const ACol, ARow: integer): TRect;
 begin
   result := CellRect(ACol, ARow);
   InflateRect(result, -2, -2);
-  if (CollectionItem(ACol,ARow).Format = rcf4Boolean)
+  if (GetCellFormat(ACol,ARow) = rcf4Boolean)
     and (ARow >= FixedRows) and (ACol >= FixedCols) then
   begin
     Inc(result.Left,CheckBoxSize + 2);
@@ -3796,7 +3800,7 @@ begin
     if not FDeletingRow and not FDistributingText then
     begin
       ColumnOrRow := CollectionItem(ACol,ARow);
-      if (ColumnOrRow = nil) or (ColumnOrRow.Format = rcf4Boolean)
+      if (ColumnOrRow = nil) or (GetCellFormat(ACol,ARow) = rcf4Boolean)
         then
       begin
         result := False;
@@ -3817,7 +3821,7 @@ begin
     if (dgColumn >=0) and (dgColumn < ColCount) then
     begin
       ColumnOrRow := CollectionItem(dgColumn,dgRow);
-      result := (ColumnOrRow <> nil) and (ColumnOrRow.Format <> rcf4Boolean);
+      result := (ColumnOrRow <> nil) and (GetCellFormat(dgColumn,dgRow) <> rcf4Boolean);
     end;
   end;
 end;
@@ -4070,7 +4074,7 @@ begin
       try
         CellCaption := Cells[ACol, ARow];
         AvailableWidth := ColWidths[ACol]-4;
-        if CollectionItem(ACol, ARow).Format = rcf4Boolean then
+        if GetCellFormat(ACol, ARow) = rcf4Boolean then
         begin
           Dec(AvailableWidth,CheckBoxSize+2);
         end
@@ -4252,7 +4256,7 @@ begin
       CellCaption := Cells[ACol, ARow];
       AvailableWidth := ColWidths[ACol] - 4;
       if (ARow >= FixedRows)
-        and (CollectionItem(ACol, ARow).Format = rcf4Boolean) then
+        and (GetCellFormat(ACol, ARow) = rcf4Boolean) then
       begin
         Dec(AvailableWidth,CheckBoxSize+2);
       end;
@@ -4290,7 +4294,7 @@ begin
     result := WidthNeededToFitText(ACol, ARow);
     if not IsCaptionCell(ACol, ARow) then
     begin
-      if CollectionItem(ACol, ARow).Format = rcf4Boolean then
+      if GetCellFormat(ACol, ARow) = rcf4Boolean then
       begin
         Inc(result, CheckBoxSize + 2);
       end
@@ -4357,6 +4361,7 @@ function TCustomRBWDataGrid.GetUseSpecialFormat(ACol, ARow: Integer): boolean;
 begin
   ResizeSpecialFormat;
   result := (ACol < ColCount) and (ARow < RowCount)
+    and (ACol >= 0) and (ARow >= 0)
     and Assigned(FSpecialFormat[ACol, ARow]);
   if result then
   begin

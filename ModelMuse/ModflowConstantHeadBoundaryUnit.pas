@@ -43,8 +43,9 @@ type
     EndingTime: double;
     StartAnnotation: string;
     EndAnnotation: string;
-    procedure Cache(Comp: TCompressionStream);
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList);
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
+    procedure RecordStrings(Strings: TStringList);
   end;
 
   TChdArray = array of TChdRecord;
@@ -103,14 +104,16 @@ type
     function GetRealValue(Index: integer): double; override;
     function GetRealAnnotation(Index: integer): string; override;
     function GetIntegerAnnotation(Index: integer): string; override;
-    procedure Cache(Comp: TCompressionStream); override;
+    procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
+    procedure RecordStrings(Strings: TStringList); override;
   public
     property StartingHead: double read GetStartingHead;
     property EndingHead: double read GetEndingHead;
     property StartingHeadAnnotation: string read GetStartingHeadAnnotation;
     property EndingHeadAnnotation: string read GetEndingHeadAnnotation;
+    function IsIdentical(AnotherCell: TValueCell): boolean; override;
   end;
 
 
@@ -654,10 +657,10 @@ end;
 
 { TCHD_Cell }
 
-procedure TCHD_Cell.Cache(Comp: TCompressionStream);
+procedure TCHD_Cell.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   inherited;
-  Values.Cache(Comp);
+  Values.Cache(Comp, Strings);
   WriteCompInt(Comp, StressPeriod);
 end;
 
@@ -733,6 +736,28 @@ begin
   result := Values.StartAnnotation;
 end;
 
+function TCHD_Cell.IsIdentical(AnotherCell: TValueCell): boolean;
+var
+  CHD_Cell: TCHD_Cell;
+begin
+  result := AnotherCell is TCHD_Cell;
+  if result then
+  begin
+    CHD_Cell := TCHD_Cell(AnotherCell);
+    result :=
+      (StartingHead = CHD_Cell.StartingHead)
+      and (EndingHead = CHD_Cell.EndingHead)
+      and (IFace = CHD_Cell.IFace);
+//      and (EndingHead = StartingHead);
+  end;
+end;
+
+procedure TCHD_Cell.RecordStrings(Strings: TStringList);
+begin
+  inherited;
+  Values.RecordStrings(Strings);
+end;
+
 procedure TCHD_Cell.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
 begin
   inherited;
@@ -742,15 +767,23 @@ end;
 
 { TChdRecord }
 
-procedure TChdRecord.Cache(Comp: TCompressionStream);
+procedure TChdRecord.Cache(Comp: TCompressionStream; Strings: TStringList);
 begin
   WriteCompCell(Comp, Cell);
   WriteCompReal(Comp, StartingHead);
   WriteCompReal(Comp, EndingHead);
   WriteCompReal(Comp, StartingTime);
   WriteCompReal(Comp, EndingTime);
-  WriteCompString(Comp, StartAnnotation);
-  WriteCompString(Comp, EndAnnotation);
+  WriteCompInt(Comp, Strings.IndexOf(StartAnnotation));
+  WriteCompInt(Comp, Strings.IndexOf(EndAnnotation));
+//  WriteCompString(Comp, StartAnnotation);
+//  WriteCompString(Comp, EndAnnotation);
+end;
+
+procedure TChdRecord.RecordStrings(Strings: TStringList);
+begin
+  Strings.Add(StartAnnotation);
+  Strings.Add(EndAnnotation);
 end;
 
 procedure TChdRecord.Restore(Decomp: TDecompressionStream; Annotations: TStringList);
@@ -760,8 +793,10 @@ begin
   EndingHead := ReadCompReal(Decomp);
   StartingTime := ReadCompReal(Decomp);
   EndingTime := ReadCompReal(Decomp);
-  StartAnnotation := ReadCompString(Decomp, Annotations);
-  EndAnnotation := ReadCompString(Decomp, Annotations);
+  StartAnnotation := Annotations[ReadCompInt(Decomp)];
+  EndAnnotation := Annotations[ReadCompInt(Decomp)];
+//  StartAnnotation := ReadCompString(Decomp, Annotations);
+//  EndAnnotation := ReadCompString(Decomp, Annotations);
 end;
 
 { TChdStorage }
@@ -776,12 +811,32 @@ procedure TChdStorage.Store(Compressor: TCompressionStream);
 var
   Count: Integer;
   Index: Integer;
+  Strings: TStringList;
 begin
-  Count := Length(FChdArray);
-  Compressor.Write(Count, SizeOf(Count));
-  for Index := 0 to Count - 1 do
-  begin
-    FChdArray[Index].Cache(Compressor);
+  Strings := TStringList.Create;
+  try
+    Count := Length(FChdArray);
+    Strings.Sorted := true;
+    Strings.Duplicates := dupIgnore;
+    for Index := 0 to Count - 1 do
+    begin
+      FChdArray[Index].RecordStrings(Strings);
+    end;
+    WriteCompInt(Compressor, Strings.Count);
+
+    for Index := 0 to Strings.Count - 1 do
+    begin
+      WriteCompString(Compressor, Strings[Index]);
+    end;
+
+    Compressor.Write(Count, SizeOf(Count));
+    for Index := 0 to Count - 1 do
+    begin
+      FChdArray[Index].Cache(Compressor, Strings);
+    end;
+
+  finally
+    Strings.Free;
   end;
 end;
 

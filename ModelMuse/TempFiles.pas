@@ -32,14 +32,18 @@ procedure ZipAFile(const FileName: string; InStream: TMemoryStream);
 // sets the position of OutStream to 0.
 procedure ExtractAFile(const FileName: string; OutStream: TMemoryStream);
 
+function MemoryUsed(out FileCount: integer): Int64;
+
+//procedure ReclaimMemory;
+
 implementation
 
-uses RTLConsts, Contnrs, Forms;
+uses RTLConsts, Contnrs, Forms, ModelMuseUtilities;
 
 var MaxItems: integer = 1000;
 
 type
-  TInt64Array = array of Int64;
+//  TInt64Array = array of Int64;
 
   TBooleanItem = class(TObject)
     Value: boolean;
@@ -78,6 +82,9 @@ type
 //    procedure ReadHeader(var Positions: TInt64Array; TempFileNames: TStringList; FileStream: TFileStream);
     procedure RestoreAStream(const FileName: string; OutStream: TMemoryStream);
     property IsDirty[Index: integer]: boolean read GetIsDirty write SetIsDirty;
+  private
+    function GetCount: integer;
+  published
   public
     procedure StoreStreams;
     Constructor Create(Const ArchiveName: string);
@@ -86,6 +93,8 @@ type
       RestoreIfCached: boolean): TMemoryStream;
     Procedure SetDirtyFile(const FileName: string);
     property CanStore: boolean read FCanStore write FCanStore;
+    function MemoryUsed: int64;
+    property Count: integer read GetCount;
   end;
 
 var
@@ -100,6 +109,49 @@ var
   CurrentTempItems: TTempItems = nil;
   PriorTempItems: TTempItems = nil;
   LastCreatedTempItems: TTempItems = nil;
+
+function MemoryUsed(out FileCount: integer): Int64;
+var
+  Index: Integer;
+  TempItem: TTempItems;
+  MemUsed: Int64;
+begin
+  result := 0;
+  FileCount := 0;
+  for Index := 0 to TempItemList.Count - 1 do
+  begin
+    TempItem := TempItemList[Index];
+    MemUsed := TempItem.MemoryUsed;
+    if MemUsed > 0 then
+    begin
+      Inc(FileCount);
+    end;
+    result := result + MemUsed;
+  end;
+end;
+
+//procedure ReclaimMemory;
+//begin
+////  Exit;
+//  if PriorTempItems <> nil then
+//  begin
+//    PriorTempItems.CanStore := PriorTempItems.CanStore
+//      or (PriorTempItems.Count > 0);
+//    PriorTempItems.StoreStreams;
+//  end;
+//  if CurrentTempItems <> nil then
+//  begin
+//    CurrentTempItems.CanStore := CurrentTempItems.CanStore
+//      or (CurrentTempItems.Count > 0);
+//    CurrentTempItems.StoreStreams;
+//  end;
+//  if LastCreatedTempItems <> nil then
+//  begin
+//    LastCreatedTempItems.CanStore := LastCreatedTempItems.CanStore
+//      or (LastCreatedTempItems.Count > 0);
+//    LastCreatedTempItems.StoreStreams;
+//  end;
+//end;
 
 function CreateZipFile(const DirName: string): string;
 var
@@ -354,6 +406,7 @@ var
 begin
   TempDir := IncludeTrailingPathDelimiter(ExtractFileDir(FileName));
   Position := Directories.IndexOf(TempDir);
+  Assert(Position >= 0);
   result := TempItemList[Position];
 end;
 
@@ -426,74 +479,56 @@ begin
   inherited;
 end;
 
+function TTempItems.GetCount: integer;
+begin
+  result := FFileList.Count;
+end;
+
 function TTempItems.GetIsDirty(Index: integer): boolean;
 begin
   result := FIsDirty[Index];
 end;
 
+function TTempItems.MemoryUsed: int64;
+var
+  Index: Integer;
+  MemStream: TMemoryStream;
+begin
+  result := 0;
+  for Index := 0 to FStreamList.Count - 1 do
+  begin
+    MemStream := FStreamList[Index];
+    result := result + MemStream.Size;
+  end;
+end;
+
 procedure TTempItems.RestoreAStream(const FileName: string; OutStream: TMemoryStream);
 var
   FileStream: TFileStream;
-//  FileStreamSize: Int64;
-//  TempFileNames: TStringList;
-//  Positions: TInt64Array;
   StreamIndex: Integer;
-//  Count: Integer;
-//  StreamIndex: Integer;
   StreamSize: Int64;
-  ByteArray: TInt64Array;
-//var
-//  Unzipper: TAbUnZipper;
+//  ByteArray: TInt64Array;
 begin
   if FileExists(FArchiveName) then
   begin
     FileStream := TFileStream.Create(FArchiveName, fmOpenRead);
     try
-//      FileStreamSize := FileStream.Size;
-//      TempFileNames := TStringList.Create;
-//      try
-//        ReadHeader(Positions, TempFileNames, FileStream);
-//        Count := Length(FPositions)-1;
-//        StreamIndex := TempFileNames.IndexOf(FileName);
-//        Assert(StreamIndex >= 0);
-
-        StreamIndex := FFileList.IndexOf(FileName);
-        Assert(StreamIndex >= 0);
-        Assert(OutStream = FStreamList[StreamIndex]);
-        if (OutStream.Size = 0) and not IsDirty[StreamIndex] then
+      StreamIndex := FFileList.IndexOf(FileName);
+      Assert(StreamIndex >= 0);
+      Assert(OutStream = FStreamList[StreamIndex]);
+      if (OutStream.Size = 0) and not IsDirty[StreamIndex] then
+      begin
+        StreamSize := FPositions[StreamIndex + 1] - FPositions[StreamIndex];
+        if StreamSize > 0 then
         begin
-//          if StreamIndex = Count - 1 then
-//          begin
-//            StreamSize := FileStreamSize - Positions[StreamIndex];
-//          end
-//          else
-//          begin
-            StreamSize := FPositions[StreamIndex + 1] - FPositions[StreamIndex];
-//          end;
-          SetLength(ByteArray, StreamSize);
           FileStream.Position := FPositions[StreamIndex];
-          FileStream.Read(ByteArray[0], Length(ByteArray) * SizeOf(Byte));
-          OutStream.Position := 0;
-          OutStream.Write(ByteArray[0], Length(ByteArray) * SizeOf(Byte));
+          OutStream.CopyFrom(FileStream, StreamSize * SizeOf(Byte))
         end;
-
-//      finally
-//        TempFileNames.Free;
-//      end;
+      end;
     finally
       FileStream.Free;
     end;
   end;
-
-//  Unzipper := TAbUnZipper.Create(nil);
-//  try
-//    Unzipper.OpenArchive(FArchiveName);
-//    Unzipper.BaseDirectory := ExtractFileDir(FArchiveName);
-//    Unzipper.ExtractOptions := [];
-//    Unzipper.ExtractToStream(FileName, OutStream);
-//  finally
-//    Unzipper.Free;
-//  end;
 end;
 
 procedure TTempItems.SetDirtyFile(const FileName: string);
@@ -513,13 +548,11 @@ end;
 procedure TTempItems.StoreStreams;
 var
   FileIndex: Integer;
-//  FileName: string;
   InStream: TMemoryStream;
   NeedToSave: Boolean;
   FileStream: TFileStream;
   Count: Integer;
   Position: Int64;
-//  FileNameSize: Integer;
 begin
   if not CanStore then
   begin
@@ -551,23 +584,7 @@ begin
         Count := FFileList.Count;
         SetLength(FPositions, Count+1);
 
-//        FileStream.Write(Count, SizeOf(Count));
-
-//        Position := 0;
-//        for FileIndex := 0 to FFileList.Count - 1 do
-//        begin
-//          InStream := FStreamList[FileIndex];
-//          FileStream.Write(Position, SizeOf(Position));
-//
-//          FileName := FFileList[FileIndex];
-//          FileNameSize := Length(FileName);
-//          FileStream.Write(FileNameSize, SizeOf(FileNameSize));
-//          FileStream.WriteBuffer(Pointer(FileName)^,
-//            Length(FileName) * SizeOf(Char));
-//
-//        end;
-
-        Position := 0;  
+        Position := 0;
         for FileIndex := 0 to FFileList.Count - 1 do
         begin
           FPositions[FileIndex] := Position;
@@ -600,6 +617,7 @@ begin
     end;
     FFileList.Clear;
   end;
+  DSiTrimWorkingSet;
 end;
 
 function TTempItems.StreamFromFileName(const FileName: string; RestoreIfCached: boolean): TMemoryStream;
@@ -655,7 +673,7 @@ var
 //  FileStreamSize: Int64;
   FileStream: TFileStream;
 //  TempFileNames: TStringList;
-  ByteArray: TInt64Array;
+//  ByteArray: TInt64Array;
   StreamSize: Int64;
   InStream: TMemoryStream;
 //  Position: Int64;
@@ -665,27 +683,21 @@ begin
   begin
     FileStream := TFileStream.Create(FArchiveName, fmOpenRead);
     try
-//      FileStreamSize := FileStream.Size;
-//      TempFileNames := TStringList.Create;
-//      try
-//        ReadHeader(Positions, TempFileNames, FileStream);
-        Count := Length(FPositions)-1;
-        for StreamIndex := 0 to Count - 1 do
+      Count := Length(FPositions)-1;
+      for StreamIndex := 0 to Count - 1 do
+      begin
+        InStream := FStreamList[StreamIndex];
+        if (Instream.Size = 0) and not IsDirty[StreamIndex] then
         begin
-          InStream := FStreamList[StreamIndex];
-          if (Instream.Size = 0) and not IsDirty[StreamIndex] then
-          begin
-            StreamSize := FPositions[StreamIndex + 1] - FPositions[StreamIndex];
-            SetLength(ByteArray, StreamSize);
-            FileStream.Position := FPositions[StreamIndex];
-            FileStream.Read(ByteArray[0], Length(ByteArray) * SizeOf(Byte));
-            Instream.Position := 0;
-            Instream.Write(ByteArray[0], Length(ByteArray) * SizeOf(Byte));
-          end;
+          StreamSize := FPositions[StreamIndex + 1] - FPositions[StreamIndex];
+//          SetLength(ByteArray, StreamSize);
+          FileStream.Position := FPositions[StreamIndex];
+          Instream.CopyFrom(FileStream, StreamSize * SizeOf(Byte));
+//          FileStream.Read(ByteArray[0], Length(ByteArray) * SizeOf(Byte));
+//          Instream.Position := 0;
+//          Instream.Write(ByteArray[0], Length(ByteArray) * SizeOf(Byte));
         end;
-//      finally
-//        TempFileNames.Free;
-//      end;
+      end;
     finally
       FileStream.Free;
     end;

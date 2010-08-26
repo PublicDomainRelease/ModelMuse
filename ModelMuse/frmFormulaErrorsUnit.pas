@@ -54,11 +54,15 @@ type
   private
     // @name is the number of errors that have been added.
     FErrorCount: integer;
+    FDelayShowing: boolean;
+    FErrorAdded: Boolean;
+    procedure SetDelayShowing(const Value: boolean);
     { Private declarations }
   public
     // @name adds an error message to @classname.
     procedure AddError(const ObjectName, DataSetName, Formula, ErrorMessage:
       string);
+    property DelayShowing: boolean read FDelayShowing write SetDelayShowing;
     { Public declarations }
   end;
 
@@ -97,14 +101,18 @@ end;
 procedure TfrmFormulaErrors.AddError(const ObjectName, DataSetName, Formula,
   ErrorMessage: string);
 begin
+  FErrorAdded := True;
   Inc(FErrorCount);
   sgErrors.RowCount := FErrorCount + 1;
   sgErrors.Cells[0, FErrorCount] := ObjectName;
   sgErrors.Cells[1, FErrorCount] := DataSetName;
   sgErrors.Cells[2, FErrorCount] := Formula;
   sgErrors.Cells[3, FErrorCount] := ErrorMessage;
-  Beep;
-  Timer.Enabled := True;
+  if not DelayShowing then
+  begin
+    Beep;
+    Timer.Enabled := True;
+  end;
 end;
 
 procedure TfrmFormulaErrors.FormCreate(Sender: TObject);
@@ -170,6 +178,33 @@ procedure TfrmFormulaErrors.FormShow(Sender: TObject);
 begin
   inherited;
   SetAppearance;
+end;
+
+procedure TfrmFormulaErrors.SetDelayShowing(const Value: boolean);
+var
+  ColIndex: Integer;
+begin
+  FDelayShowing := Value;
+  if FDelayShowing then
+  begin
+    FErrorAdded := False;
+    for ColIndex := 0 to sgErrors.ColCount - 1 do
+    begin
+      sgErrors.Columns[ColIndex].AutoAdjustColWidths := False;
+    end;
+  end
+  else
+  begin
+    for ColIndex := 0 to sgErrors.ColCount - 1 do
+    begin
+      sgErrors.Columns[ColIndex].AutoAdjustColWidths := True;
+    end;
+    if FErrorAdded then
+    begin
+      Beep;
+      Show;
+    end;
+  end;
 end;
 
 procedure TfrmFormulaErrors.FormResize(Sender: TObject);

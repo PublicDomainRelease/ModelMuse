@@ -84,7 +84,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     Top = 0
     Width = 789
     Height = 505
-    ActivePage = tabCoordinateConversion
+    ActivePage = tabOptions
     Align = alClient
     TabOrder = 1
     object tabOptions: TTabSheet
@@ -284,7 +284,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         Top = 248
         Width = 337
         Height = 49
-        Caption = 'Associated third-dimension formulas'
+        Caption = 'Number of Z formulas'
         Columns = 3
         ItemIndex = 0
         Items.Strings = (

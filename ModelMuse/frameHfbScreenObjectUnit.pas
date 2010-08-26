@@ -25,7 +25,8 @@ type
     btnEditHfbThicknessyFormula: TButton;
     procedure comboHfbParametersChange(Sender: TObject);
   private
-    procedure FillListOfScreenObjects(ListOfScreenObjects: TList; List: TScreenObjectEditCollection);
+    procedure FillListOfScreenObjects(ListOfScreenObjects: TList;
+      List: TScreenObjectEditCollection);
     procedure FillListOfParameterNames(ParameterNames: TStringList);
     { Private declarations }
   protected
@@ -256,7 +257,8 @@ begin
   end;
 end;
 
-procedure TframeHfbScreenObject.FillListOfScreenObjects(ListOfScreenObjects: TList; List: TScreenObjectEditCollection);
+procedure TframeHfbScreenObject.FillListOfScreenObjects(
+  ListOfScreenObjects: TList; List: TScreenObjectEditCollection);
 var
   Index: Integer;
   ScreenObject: TScreenObject;

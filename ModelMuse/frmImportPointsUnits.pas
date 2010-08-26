@@ -396,6 +396,14 @@ end;
 procedure TfrmImportPoints.rgViewDirectionClick(Sender: TObject);
 begin
   inherited;
+  case rgViewDirection.ItemIndex of
+    0: rgElevationCount.Caption := 'Number of Z formulas';
+    1: rgElevationCount.Caption := 'Number of Y formulas';
+    2: rgElevationCount.Caption := 'Number of X formulas';
+    else Assert(False);
+  end;
+
+
   UpdateDimensionColumns;
   UpdateDataSets;
 end;

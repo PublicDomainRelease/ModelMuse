@@ -19,6 +19,7 @@ Type
     FHNoFlow: real;
     FHDry: real;
     FOpenInTextEditor: boolean;
+    FInitialHeadFileName: string;
     procedure InvalidateModel;
     procedure SetComputeFluxesBetweenConstantHeadCells(const Value: boolean);
     procedure SetDescription(const Value: TStrings);
@@ -31,6 +32,7 @@ Type
     procedure SetTimeUnit(const Value: integer);
     procedure SetHDry(const Value: real);
     procedure SetOpenInTextEditor(const Value: boolean);
+    procedure SetInitialHeadFileName(const Value: string);
   protected
     // @name stores a value for @link(HNoFlow) when @link(HNoFlow) is zero.
     procedure DefineProperties(Filer: TFiler); override;
@@ -44,7 +46,9 @@ Type
     destructor Destroy; override;
     procedure Clear;
   published
-    property ComputeFluxesBetweenConstantHeadCells: boolean read FComputeFluxesBetweenConstantHeadCells write SetComputeFluxesBetweenConstantHeadCells default True;
+    property ComputeFluxesBetweenConstantHeadCells: boolean
+      read FComputeFluxesBetweenConstantHeadCells
+      write SetComputeFluxesBetweenConstantHeadCells default True;
     property Description: TStrings read FDescription write SetDescription;
     property HDry: real read FHDry write SetHDry;
     property HNoFlow: real read FHNoFlow write SetHNoFlow;
@@ -54,7 +58,10 @@ Type
     property ProjectName: string read FProjectName write SetProjectName;
     property ProjectDate: string read FProjectDate write SetProjectDate;
     property TimeUnit: integer read FTimeUnit write SetTimeUnit default 1;
-    property OpenInTextEditor: boolean read FOpenInTextEditor write SetOpenInTextEditor default True;
+    property OpenInTextEditor: boolean read FOpenInTextEditor
+      write SetOpenInTextEditor default True;
+    property InitialHeadFileName: string read FInitialHeadFileName
+      write SetInitialHeadFileName;
   end;
 
   TWettingOptions = class(TPersistent)
@@ -108,6 +115,7 @@ begin
 //    ShowProgress := SourceModel.ShowProgress;
     TimeUnit := SourceModel.TimeUnit;
     OpenInTextEditor := SourceModel.OpenInTextEditor;
+    InitialHeadFileName := SourceModel.InitialHeadFileName;
   end
   else
   begin
@@ -157,6 +165,7 @@ begin
   FModeler := '';
   FComputeFluxesBetweenConstantHeadCells := True;
   FOpenInTextEditor := True;
+  FInitialHeadFileName := '';
 end;
 
 procedure TModflowOptions.InvalidateModel;
@@ -206,6 +215,15 @@ begin
   if FHNoFlow <> Value then
   begin
     FHNoFlow := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TModflowOptions.SetInitialHeadFileName(const Value: string);
+begin
+  if FInitialHeadFileName <> Value then
+  begin
+    FInitialHeadFileName := Value;
     InvalidateModel;
   end;
 end;

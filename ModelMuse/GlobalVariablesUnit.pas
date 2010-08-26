@@ -74,6 +74,7 @@ type
   protected
     procedure FreeSearchList;
   public
+    procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TComponent);
     Destructor Destroy; override;
     function IndexOfVariable(Name: string): integer;
@@ -367,6 +368,32 @@ begin
 end;
 
 { TGlobalVariables }
+
+procedure TGlobalVariables.Assign(Source: TPersistent);
+var
+  List: TStringList;
+  ItemIndex: Integer;
+  Item: TGlobalVariableItem;
+begin
+  inherited;
+  List := TStringList.Create;
+  try
+    List.CaseSensitive := False;
+    for ItemIndex := 0 to Count - 1 do
+    begin
+      Item := Items[ItemIndex] as TGlobalVariableItem;
+      List.AddObject(Item.Variable.Name, Item);
+    end;
+    List.Sort;
+    for ItemIndex := 0 to List.Count - 1 do
+    begin
+      Item := List.Objects[ItemIndex] as TGlobalVariableItem;
+      Item.Index := ItemIndex;
+    end;
+  finally
+    List.Free;
+  end;
+end;
 
 constructor TGlobalVariables.Create(Model: TComponent);
 begin

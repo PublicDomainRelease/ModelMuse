@@ -22,7 +22,8 @@ uses Windows,
   frameScreenObjectSFR_Unit, JvComCtrls, JvExStdCtrls, JvRichEdit,
   frameHeadObservationsUnit, frameHfbScreenObjectUnit, Mask, JvExMask, JvSpin,
   ValueArrayStorageUnit, frameIfaceUnit, frameModpathParticlesUnit,
-  frameFluxObsUnit, ModflowPackageSelectionUnit, frameScreenObjectMNW2Unit;
+  frameFluxObsUnit, ModflowPackageSelectionUnit, frameScreenObjectMNW2Unit,
+  frameScreenObjectHydmodUnit;
 
   { TODO : Consider making this a property sheet like the Object Inspector that
   could stay open at all times.  Boundary conditions and vertices might be
@@ -247,6 +248,8 @@ type
     tabComments: TTabSheet;
     memoComments: TMemo;
     lblComments: TLabel;
+    jvspHYDMOD: TJvStandardPage;
+    frameHydmod: TframeScreenObjectHydmod;
     // @name changes which check image is displayed for the selected item
     // in @link(jvtlModflowBoundaryNavigator).
     procedure jvtlModflowBoundaryNavigatorMouseDown(Sender: TObject;
@@ -421,6 +424,12 @@ type
     procedure frameMNW2pcMnw2Change(Sender: TObject);
     procedure rdgImportedDataMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure dgVerticiesStateChange(Sender: TObject; ACol, ARow: Integer;
+      const Value: TCheckBoxState);
+    procedure dgVerticiesEnter(Sender: TObject);
+    procedure frameHydmodclbBasicClickCheck(Sender: TObject);
+    procedure frameHydmodclbSubClickCheck(Sender: TObject);
+    procedure frameHydmodclbSFRClickCheck(Sender: TObject);
   published
     // Clicking @name closes the @classname without changing anything.
     // See @link(btnCancelClick),
@@ -1328,10 +1337,13 @@ type
     FSelectedDataArrayName: string;
     FHOB_Node: TJvPageIndexNode;
     FHFB_Node: TJvPageIndexNode;
+    FHydmod_Node: TJvPageIndexNode;
     FDeletingPhastTime: Boolean;
     FPriorElevationCount: integer;
     FModpath_Node: Pointer;
     FCanFillTreeView: Boolean;
+    FSettingVerticies: Boolean;
+    FVertexRowCount: Integer;
     Function GenerateNewDataSetFormula(DataArray: TDataArray): string;
     // @name assigns new formulas for @link(TDataArray)s for each
     // @link(TScreenObject) in @link(FNewProperties).
@@ -1656,6 +1668,8 @@ type
     procedure StoreMnw2Boundary;
     procedure GetMnw2Boundary(const ScreenObjectList: TList);
     procedure Mnw2Changed(Sender: TObject);
+    procedure CreateHydmodNode(AScreenObject: TScreenObject);
+    procedure GetHydmod(const ScreenObjectList: TList);
 
     // @name is set to @true when the @classname has stored values of the
     // @link(TScreenObject)s being editted.
@@ -1817,6 +1831,8 @@ type
     // must be updated.
     procedure UpdateVertices;
     procedure SetFrameData;
+    procedure UpdateVertexNumbers;
+    procedure UpdateSectionNumbers;
     { Private declarations }
   public
     procedure ClearExpressionsAndVariables;
@@ -1846,7 +1862,8 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
   ModflowEtsUnit, ModflowLakUnit, frameCrossSectionUnit, frameFlowTableUnit,
   ModflowUzfUnit, ModflowSfrUnit, ModflowHobUnit, ModflowHfbUnit, 
   LayerStructureUnit, ModpathParticleUnit, IntListUnit, 
-  frmManageFluxObservationsUnit, ModflowGageUnit, ModflowMnw2Unit, JvGroupBox;
+  frmManageFluxObservationsUnit, ModflowGageUnit, ModflowMnw2Unit, JvGroupBox,
+  ModflowHydmodUnit;
 
 {$R *.dfm}
 
@@ -2000,6 +2017,7 @@ var
   ActiveOK: boolean;
   SpecifiedHeadOK: boolean;
   DsIndex: integer;
+  ActiveDataArray: TDataArray;
 begin
   inherited;
 
@@ -2039,8 +2057,9 @@ begin
     begin
       try
         IncludeGIS_Functions;
-        ActiveOK := False;
-        SpecifiedHeadOK := False;
+        ActiveDataArray := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+        ActiveOK := not ActiveDataArray.IsListeningTo(FCurrentEdit.FDataArray);
+        SpecifiedHeadOK := True;
         PopupParent := self;
 
         // register the appropriate variables with the
@@ -2051,11 +2070,11 @@ begin
           rbFormulaParser.RegisterVariable(Variable);
           if UpperCase(Variable.Name) = UpperCase(rsActive) then
           begin
-            ActiveOK := True;
+            ActiveOK := False;
           end;
           if UpperCase(Variable.Name) = UpperCase(rsModflowSpecifiedHead) then
           begin
-            SpecifiedHeadOK := True;
+            SpecifiedHeadOK := False;
           end;
         end;
         if not ActiveOK then
@@ -2396,6 +2415,10 @@ begin
     begin
       // do nothing
     end
+    else if jvtlModflowBoundaryNavigator.Selected = FHydmod_Node then
+    begin
+      // do nothing
+    end
     else
     begin
       Assert(False);
@@ -2480,6 +2503,7 @@ begin
   CreateGhbNode;
   CreateGbobNode;
   CreateHfbNode(AScreenObject);
+  CreateHydmodNode(AScreenObject);
   CreateHobNode(AScreenObject);
   CreateLakNode;
   CreateMnw2Node;
@@ -2520,6 +2544,14 @@ var
   Index: Integer;
   ValueItem: TValueArrayItem;
 begin
+
+  case AScreenObject.ViewDirection of
+    vdTop: rgElevationCount.Caption := 'Number of Z formulas';
+    vdFront: rgElevationCount.Caption := 'Number of Y formulas';
+    vdSide: rgElevationCount.Caption := 'Number of X formulas';
+    else Assert(False);
+  end;
+
   FCanFillTreeView := False;
   tabImportedData.TabVisible := True;
   memoComments.Text := AScreenObject.Comment;
@@ -3359,6 +3391,7 @@ begin
   begin
     FOldProperties.Clear;
   end;
+  FDataEdits.Clear;
 end;
 
 procedure TfrmScreenObjectProperties.FormCreate(Sender: TObject);
@@ -3814,6 +3847,51 @@ begin
   OutputDebugString('SAMPLING OFF');
 end;
 
+procedure TfrmScreenObjectProperties.UpdateSectionNumbers;
+var
+  SectionIndex: Integer;
+  TempString: string;
+  Index: Integer;
+begin
+  if FSettingVerticies then
+  begin
+    Exit;
+  end;
+  SectionIndex := 0;
+  TempString := '0';
+  dgVerticies.BeginUpdate;
+  try
+    for Index := 1 to dgVerticies.RowCount - 1 do
+    begin
+      if dgVerticies.Checked[Ord(vcNewSection), Index] then
+      begin
+        Inc(SectionIndex);
+        TempString := IntToStr(SectionIndex);
+      end;
+      dgVerticies.Cells[Ord(vcSection), Index] := TempString;
+    end;
+  finally
+    dgVerticies.EndUpdate;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.UpdateVertexNumbers;
+var
+  Index: Integer;
+  TempString: string;
+begin
+  dgVerticies.BeginUpdate;
+  try
+    for Index := 1 to dgVerticies.RowCount - 1 do
+    begin
+      TempString := IntToStr(Index);
+      dgVerticies.Cells[Ord(vcN), Index] := TempString;
+    end;
+  finally
+    dgVerticies.EndUpdate;
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.ClearExpressionsAndVariables();
 var
   Compiler: TRbwParser;
@@ -3855,6 +3933,12 @@ begin
     ((FHFB_Node <> nil) and (FHFB_Node.StateIndex = 2)),
     ((FHFB_Node = nil) or (FHFB_Node.StateIndex = 1))
     and frmGoPhast.PhastModel.ModflowPackages.HfbPackage.IsSelected);
+
+  frameHydmod.SetData(FNewProperties,
+    ((FHydmod_Node <> nil) and (FHydmod_Node.StateIndex = 2)),
+    ((FHydmod_Node = nil) or (FHydmod_Node.StateIndex = 1))
+    and frmGoPhast.PhastModel.ModflowPackages.HydmodPackage.IsSelected);
+
 end;
 
 procedure TfrmScreenObjectProperties.UpdateVertices;
@@ -3870,6 +3954,13 @@ begin
     dgVerticies.Invalidate;
     if CanSetPoints then
     begin
+      if FNewProperties.Count <> 1 then
+      begin
+        Beep;
+        MessageDlg('If more than one object is being edited, vertices '
+          + 'can not be edited.', mtError, [mbOK], 0);
+        Exit;
+      end;
       Assert(FNewProperties.Count = 1);
       Item := FNewProperties[0];
       Item.ScreenObject.SectionStarts.Clear;
@@ -3940,6 +4031,13 @@ var
 begin
   if FScreenObject = nil then
   begin
+    if FScreenObjectList.Count <> 1 then
+    begin
+      Beep;
+      MessageDlg('Sorry, This function can only be performed when '
+        +'a single object is being edited.', mtError, [mbOK], 0);
+      Exit;
+    end;
     Assert(FScreenObjectList.Count = 1);
     TestScreenObject := FScreenObjectList[0];
   end
@@ -4019,6 +4117,13 @@ var
 begin
   if FScreenObject = nil then
   begin
+    if FScreenObjectList.Count <> 1 then
+    begin
+      Beep;
+      MessageDlg('Sorry, This function can only be performed when '
+        +'a single object is being edited.', mtError, [mbOK], 0);
+      Exit;
+    end;
     Assert(FScreenObjectList.Count = 1);
     TestScreenObject := FScreenObjectList[0];
   end
@@ -4780,6 +4885,7 @@ begin
       Assert(False);
     end;
   end;
+  ValueStorage.CacheData;
 end;
 
 procedure TfrmScreenObjectProperties.SetDisabledElevationFormulas(FirstScreenObject: TScreenObject);
@@ -6400,43 +6506,36 @@ end;
 
 procedure TfrmScreenObjectProperties.GetScreenObjectVerticies;
 var
-  TempString: string;
   APoint: TPoint2D;
   Index: Integer;
-  SectionIndex: Integer;
+  TempString: string;
 begin
   // read vertices of the screen object.
   dgVerticies.RowCount := FScreenObject.Count + 1;
 
   dgVerticies.BeginUpdate;
   try
-    for Index := 1 to dgVerticies.RowCount - 1 do
-    begin
-      APoint := FScreenObject.Points[Index - 1];
-      TempString := IntToStr(Index);
-      dgVerticies.Cells[Ord(vcN), Index] := TempString;
-      TempString := FloatToStr(APoint.X);
-      dgVerticies.Cells[Ord(vcX), Index] := TempString;
-      TempString := FloatToStr(APoint.Y);
-      dgVerticies.Cells[Ord(vcY), Index] := TempString;
-      dgVerticies.Checked[Ord(vcNewSection), Index] := False;
-    end;
-    for Index := 0 to FScreenObject.SectionCount - 1 do
-    begin
-      dgVerticies.Checked[Ord(vcNewSection),
-        FScreenObject.SectionStart[Index] + 1] := True;
-    end;
-    SectionIndex := 0;
-    TempString := '0';
-    for Index := 1 to dgVerticies.RowCount - 1 do
-    begin
-      if dgVerticies.Checked[Ord(vcNewSection), Index] then
+    UpdateVertexNumbers;
+    FSettingVerticies := True;
+    try
+      for Index := 1 to dgVerticies.RowCount - 1 do
       begin
-        Inc(SectionIndex);
-        TempString := IntToStr(SectionIndex);
+        APoint := FScreenObject.Points[Index - 1];
+        TempString := FloatToStr(APoint.X);
+        dgVerticies.Cells[Ord(vcX), Index] := TempString;
+        TempString := FloatToStr(APoint.Y);
+        dgVerticies.Cells[Ord(vcY), Index] := TempString;
+        dgVerticies.Checked[Ord(vcNewSection), Index] := False;
       end;
-      dgVerticies.Cells[Ord(vcSection), Index] := TempString;
+      for Index := 0 to FScreenObject.SectionCount - 1 do
+      begin
+        dgVerticies.Checked[Ord(vcNewSection),
+          FScreenObject.SectionStart[Index] + 1] := True;
+      end;
+    finally
+      FSettingVerticies := False;
     end;
+    UpdateSectionNumbers;
   finally
     dgVerticies.EndUpdate;
   end;
@@ -7157,6 +7256,23 @@ begin
   end;
 end;
 
+procedure TfrmScreenObjectProperties.CreateHydmodNode(AScreenObject: TScreenObject);
+var
+  Node: TJvPageIndexNode;
+begin
+  FHydmod_Node := nil;
+  if frmGoPhast.PhastModel.ModflowPackages.HydmodPackage.IsSelected then
+  begin
+    Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
+      frmGoPhast.PhastModel.ModflowPackages.HydmodPackage.PackageIdentifier)
+      as TJvPageIndexNode;
+    Node.PageIndex := jvspHydmod.PageIndex;
+    frameHydmod.pnlCaption.Caption := Node.Text;
+    Node.ImageIndex := 1;
+    FHydmod_Node := Node;
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.CreateLakNode;
 var
   Node: TJvPageIndexNode;
@@ -7517,6 +7633,31 @@ begin
     FHFB_Node.StateIndex := Ord(State)+1;
   end;
   frameHfbBoundary.GetData(FNewProperties);
+end;
+
+procedure TfrmScreenObjectProperties.GetHydmod(const ScreenObjectList: TList);
+var
+  State: TCheckBoxState;
+  ScreenObjectIndex: integer;
+  AScreenObject: TScreenObject;
+  HydmodData: THydmodData;
+begin
+  if not frmGoPhast.PhastModel.ModflowPackages.HydmodPackage.IsSelected then
+  begin
+    Exit;
+  end;
+  State := cbUnchecked;
+  for ScreenObjectIndex := 0 to ScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := ScreenObjectList[ScreenObjectIndex];
+    HydmodData := AScreenObject.ModflowHydmodData;
+    UpdateBoundaryState(HydmodData, ScreenObjectIndex, State);
+  end;
+  if Fhydmod_Node <> nil then
+  begin
+    Fhydmod_Node.StateIndex := Ord(State)+1;
+  end;
+  frameHydmod.GetData(FNewProperties);
 end;
 
 procedure TfrmScreenObjectProperties.GetHeadObservations(const ScreenObjectList: TList);
@@ -8379,8 +8520,9 @@ begin
   GetMnw2Boundary(AScreenObjectList);
   GetHeadObservations(AScreenObjectList);
   GetHfbBoundary(AScreenObjectList);
-  SetSelectedMfBoundaryNode;
+  GetHydmod(AScreenObjectList);
   GetFluxObservations(AScreenObjectList);
+  SetSelectedMfBoundaryNode;
 end;
 
 procedure TfrmScreenObjectProperties.GetFormulaInterpretation(
@@ -10532,6 +10674,23 @@ procedure TfrmScreenObjectProperties.dgVerticiesEndUpdate(Sender: TObject);
 begin
   inherited;
   UpdateVertices;
+  if FVertexRowCount <> dgVerticies.RowCount then
+  begin
+    FVertexRowCount := dgVerticies.RowCount;
+    dgVerticies.BeginUpdate;
+    try
+      UpdateVertexNumbers;
+      UpdateSectionNumbers;
+    finally
+      dgVerticies.EndUpdate;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.dgVerticiesEnter(Sender: TObject);
+begin
+  inherited;
+  FVertexRowCount := dgVerticies.RowCount;
 end;
 
 procedure TfrmScreenObjectProperties.dgVerticiesMouseDown(Sender: TObject;
@@ -10546,6 +10705,13 @@ begin
   begin
     dgVerticies.Options := dgVerticies.Options - [goEditing];
   end;
+end;
+
+procedure TfrmScreenObjectProperties.dgVerticiesStateChange(Sender: TObject;
+  ACol, ARow: Integer; const Value: TCheckBoxState);
+begin
+  inherited;
+  UpdateSectionNumbers;
 end;
 
 procedure TfrmScreenObjectProperties.UpdateDataSetLinkages(const Expression:
@@ -14375,6 +14541,30 @@ procedure TfrmScreenObjectProperties.frameHfbBoundarybtnEditHfbThicknessyFormula
 begin
   inherited;
   AssignHfbFormulas(frameHfbBoundary.edBarrierThickness);
+end;
+
+procedure TfrmScreenObjectProperties.frameHydmodclbBasicClickCheck(
+  Sender: TObject);
+begin
+  inherited;
+  UpdateNodeState(FHydmod_Node);
+end;
+
+procedure TfrmScreenObjectProperties.frameHydmodclbSFRClickCheck(
+  Sender: TObject);
+begin
+  inherited;
+  frameHydmod.clbSFRClickCheck(Sender);
+  UpdateNodeState(FHydmod_Node);
+
+end;
+
+procedure TfrmScreenObjectProperties.frameHydmodclbSubClickCheck(
+  Sender: TObject);
+begin
+  inherited;
+  UpdateNodeState(FHydmod_Node);
+
 end;
 
 procedure TfrmScreenObjectProperties.frameIfacerbHorizontalClick(

@@ -3,8 +3,8 @@ inherited frmLayers: TfrmLayers
   HelpKeyword = 'MODFLOW_Layer_Groups_Dialog_Box'
   Caption = 'MODFLOW Layer Groups'
   ClientHeight = 424
-  ClientWidth = 562
-  ExplicitWidth = 570
+  ClientWidth = 583
+  ExplicitWidth = 591
   ExplicitHeight = 458
   PixelsPerInch = 96
   TextHeight = 18
@@ -18,9 +18,9 @@ inherited frmLayers: TfrmLayers
   object pcLayerGroups: TPageControl
     Left = 142
     Top = 0
-    Width = 420
+    Width = 441
     Height = 383
-    ActivePage = tabBasics
+    ActivePage = tabSWT
     Align = alClient
     TabOrder = 0
     OnChange = pcLayerGroupsChange
@@ -33,7 +33,7 @@ inherited frmLayers: TfrmLayers
       ExplicitWidth = 0
       ExplicitHeight = 0
       DesignSize = (
-        412
+        433
         350)
       object Label1: TLabel
         Left = 3
@@ -109,12 +109,12 @@ inherited frmLayers: TfrmLayers
       object comboInterblockMethod: TJvImageComboBox
         Left = 3
         Top = 181
-        Width = 406
+        Width = 427
         Height = 28
         Style = csOwnerDrawVariable
         Anchors = [akLeft, akTop, akRight]
         ButtonStyle = fsLighter
-        DroppedWidth = 408
+        DroppedWidth = 427
         ImageHeight = 0
         ImageWidth = 0
         ItemHeight = 22
@@ -141,12 +141,12 @@ inherited frmLayers: TfrmLayers
       object comboVertKMethod: TJvImageComboBox
         Left = 3
         Top = 263
-        Width = 406
+        Width = 427
         Height = 28
         Style = csOwnerDrawVariable
         Anchors = [akLeft, akTop, akRight]
         ButtonStyle = fsLighter
-        DroppedWidth = 408
+        DroppedWidth = 427
         ImageHeight = 0
         ImageWidth = 0
         ItemHeight = 22
@@ -168,7 +168,7 @@ inherited frmLayers: TfrmLayers
       object edName: TRbwEdit
         Left = 3
         Top = 26
-        Width = 406
+        Width = 427
         Height = 26
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
@@ -177,7 +177,7 @@ inherited frmLayers: TfrmLayers
       object cbComputeSaturatedThickness: TJvCheckBox
         Left = 3
         Top = 111
-        Width = 406
+        Width = 427
         Height = 40
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Compute saturated thickness using starting head (LAYTYP)'
@@ -213,12 +213,8 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'Discretization_Tab'
       Caption = 'Discretization'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
-        412
+        433
         350)
       object Label2: TLabel
         Left = 8
@@ -239,7 +235,7 @@ inherited frmLayers: TfrmLayers
         Top = 31
         Width = 57
         Height = 22
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 0
         Text = '1'
         OnChange = rdeVDiscretizationChange
@@ -254,7 +250,7 @@ inherited frmLayers: TfrmLayers
         Top = 82
         Width = 57
         Height = 22
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 1
         Text = '1.2'
         OnChange = rdeGrowthRateChange
@@ -286,24 +282,23 @@ inherited frmLayers: TfrmLayers
       object pnlDiscritization: TPanel
         Left = 248
         Top = 0
-        Width = 163
+        Width = 184
         Height = 348
         Anchors = [akLeft, akTop, akRight, akBottom]
         BevelOuter = bvNone
         TabOrder = 3
         object Splitter2: TSplitter
-          Left = 75
+          Left = 96
           Top = 41
           Height = 307
           Align = alRight
-          ExplicitLeft = 96
           ExplicitTop = 96
           ExplicitHeight = 100
         end
         object rdgSubLayerBoundaries: TRbwDataGrid4
           Left = 0
           Top = 41
-          Width = 75
+          Width = 96
           Height = 307
           Align = alClient
           ColCount = 1
@@ -348,7 +343,7 @@ inherited frmLayers: TfrmLayers
         object Panel2: TPanel
           Left = 0
           Top = 0
-          Width = 163
+          Width = 184
           Height = 41
           Align = alTop
           BevelOuter = bvNone
@@ -356,17 +351,19 @@ inherited frmLayers: TfrmLayers
           object Label4: TLabel
             Left = 0
             Top = 0
-            Width = 142
-            Height = 36
+            Width = 184
+            Height = 41
             Align = alClient
             Alignment = taCenter
             Caption = 'Discretization within layer group'
             Layout = tlCenter
             WordWrap = True
+            ExplicitWidth = 179
+            ExplicitHeight = 36
           end
         end
         object pnlPaintboxParent: TPanel
-          Left = 78
+          Left = 99
           Top = 41
           Width = 85
           Height = 307
@@ -597,21 +594,33 @@ inherited frmLayers: TfrmLayers
       inline frameSubNoDelayBeds: TframeSubBeds
         Left = 0
         Top = 0
-        Width = 412
+        Width = 433
         Height = 350
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 412
+        ExplicitWidth = 433
         inherited lblCount: TLabel
           Width = 55
           Height = 18
           ExplicitWidth = 55
           ExplicitHeight = 18
         end
+        inherited sbAdd: TSpeedButton
+          Left = 431
+          ExplicitLeft = 431
+        end
+        inherited sbInsert: TSpeedButton
+          Left = 460
+          ExplicitLeft = 460
+        end
+        inherited sbDelete: TSpeedButton
+          Left = 489
+          ExplicitLeft = 489
+        end
         inherited rdgSubBed: TRbwDataGrid4
-          Width = 412
-          ExplicitWidth = 412
+          Width = 433
+          ExplicitWidth = 433
         end
         inherited seCount: TJvSpinEdit
           Height = 26
@@ -631,12 +640,12 @@ inherited frmLayers: TfrmLayers
       inline frameSubDelayBeds: TframeSubBeds
         Left = 0
         Top = 0
-        Width = 412
+        Width = 433
         Height = 350
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 412
+        ExplicitWidth = 433
         inherited lblCount: TLabel
           Width = 55
           Height = 18
@@ -644,20 +653,62 @@ inherited frmLayers: TfrmLayers
           ExplicitHeight = 18
         end
         inherited sbAdd: TSpeedButton
-          Left = 328
+          Left = 349
           ExplicitLeft = 328
         end
         inherited sbInsert: TSpeedButton
-          Left = 357
+          Left = 378
           ExplicitLeft = 357
         end
         inherited sbDelete: TSpeedButton
-          Left = 386
+          Left = 407
           ExplicitLeft = 386
         end
         inherited rdgSubBed: TRbwDataGrid4
-          Width = 412
-          ExplicitWidth = 412
+          Width = 433
+          ExplicitWidth = 433
+        end
+        inherited seCount: TJvSpinEdit
+          Height = 26
+          ExplicitHeight = 26
+        end
+      end
+    end
+    object tabSWT: TTabSheet
+      HelpType = htKeyword
+      HelpKeyword = 'SWT_Tab'
+      Caption = 'SWT'
+      ImageIndex = 4
+      inline frameSwt: TframeSubBeds
+        Left = 0
+        Top = 0
+        Width = 433
+        Height = 350
+        Align = alClient
+        TabOrder = 0
+        TabStop = True
+        ExplicitWidth = 433
+        inherited lblCount: TLabel
+          Width = 55
+          Height = 18
+          ExplicitWidth = 55
+          ExplicitHeight = 18
+        end
+        inherited sbAdd: TSpeedButton
+          Left = 349
+          ExplicitLeft = 349
+        end
+        inherited sbInsert: TSpeedButton
+          Left = 378
+          ExplicitLeft = 378
+        end
+        inherited sbDelete: TSpeedButton
+          Left = 407
+          ExplicitLeft = 407
+        end
+        inherited rdgSubBed: TRbwDataGrid4
+          Width = 433
+          ExplicitWidth = 433
         end
         inherited seCount: TJvSpinEdit
           Height = 26
@@ -669,15 +720,15 @@ inherited frmLayers: TfrmLayers
   object Panel4: TPanel
     Left = 0
     Top = 383
-    Width = 562
+    Width = 583
     Height = 41
     Align = alBottom
     TabOrder = 1
     DesignSize = (
-      562
+      583
       41)
     object btnHelp: TBitBtn
-      Left = 221
+      Left = 242
       Top = 4
       Width = 108
       Height = 33
@@ -687,7 +738,7 @@ inherited frmLayers: TfrmLayers
       Kind = bkHelp
     end
     object btnOK: TBitBtn
-      Left = 335
+      Left = 356
       Top = 4
       Width = 108
       Height = 33
@@ -697,7 +748,7 @@ inherited frmLayers: TfrmLayers
       Kind = bkOK
     end
     object btnCancel: TBitBtn
-      Left = 449
+      Left = 470
       Top = 4
       Width = 108
       Height = 33

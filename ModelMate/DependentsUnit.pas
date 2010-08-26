@@ -114,7 +114,6 @@ interface
         procedure Append(Source: TDepSet);
         procedure Assign(Source: TPersistent); override;
         procedure ChangeGroupNames(OldGroup, NewGroup: string);
-//        procedure Empty;
         function NumDepByGroup(GpName: string): integer;
         procedure SetGpDefault(const DepCat: TDepCat);
    end;  // end of TDepSet

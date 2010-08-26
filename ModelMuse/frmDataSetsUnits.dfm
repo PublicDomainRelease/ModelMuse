@@ -113,10 +113,6 @@ inherited frmDataSets: TfrmDataSets
     TabOrder = 3
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         312
         371)
@@ -312,7 +308,7 @@ inherited frmDataSets: TfrmDataSets
         Width = 128
         Height = 30
         Cursor = crIBeam
-        ItemHeight = 0
+        ItemHeight = 19
         TabOrder = 6
         Text = '1'
         OnChange = rdeAnisotropyChange
@@ -335,7 +331,6 @@ inherited frmDataSets: TfrmDataSets
         Top = 271
         Width = 275
         Height = 89
-        AutoSize = False
         Anchors = [akLeft, akTop, akRight, akBottom]
         TabOrder = 8
         OnExit = reDefaultFormulaExit
@@ -430,7 +425,7 @@ inherited frmDataSets: TfrmDataSets
           Left = 12
           Top = 153
           Height = 30
-          ItemHeight = 19
+          ItemHeight = 0
           OnChange = framePhastInterpolationrdeDistance1Change
           ExplicitLeft = 12
           ExplicitTop = 153
@@ -440,7 +435,7 @@ inherited frmDataSets: TfrmDataSets
           Left = 12
           Top = 211
           Height = 30
-          ItemHeight = 19
+          ItemHeight = 0
           OnChange = framePhastInterpolationrdeDistance2Change
           ExplicitLeft = 12
           ExplicitTop = 211
@@ -450,7 +445,7 @@ inherited frmDataSets: TfrmDataSets
           Left = 184
           Top = 153
           Height = 30
-          ItemHeight = 19
+          ItemHeight = 0
           OnChange = framePhastInterpolationrdeValue1Change
           ExplicitLeft = 184
           ExplicitTop = 153
@@ -460,7 +455,7 @@ inherited frmDataSets: TfrmDataSets
           Left = 184
           Top = 214
           Height = 30
-          ItemHeight = 19
+          ItemHeight = 0
           OnChange = framePhastInterpolationrdeValue2Change
           ExplicitLeft = 184
           ExplicitTop = 214
@@ -529,7 +524,6 @@ inherited frmDataSets: TfrmDataSets
         Top = 23
         Width = 306
         Height = 129
-        AutoSize = False
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         WordWrap = False

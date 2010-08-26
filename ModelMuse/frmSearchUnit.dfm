@@ -6,95 +6,54 @@ inherited frmSearch: TfrmSearch
   HelpType = htKeyword
   HelpKeyword = 'Search_for_Objects_Dialog_Box'
   VertScrollBar.Range = 105
-  ActiveControl = clbChoice
   Caption = 'Search for Objects'
+  ExplicitTop = -9
   ExplicitWidth = 422
   ExplicitHeight = 579
   PixelsPerInch = 96
-  TextHeight = 17
-  object clbChoice: TCheckListBox
-    Left = 0
-    Top = 0
+  TextHeight = 18
+  inherited pnlBottom: TPanel
+    Top = 489
     Width = 414
-    Height = 440
-    Align = alClient
-    ItemHeight = 17
-    TabOrder = 0
-  end
-  object pnlBottom: TPanel
-    Left = 0
-    Top = 440
-    Width = 414
-    Height = 105
-    Align = alBottom
-    ParentColor = True
-    TabOrder = 1
-    object btnOK: TBitBtn
-      Left = 224
-      Top = 60
-      Width = 91
-      Height = 33
-      Caption = 'OK'
-      Default = True
-      TabOrder = 3
-      OnClick = btnOKClick
-      Glyph.Data = {
-        DE010000424DDE01000000000000760000002800000024000000120000000100
-        04000000000068010000120B0000120B00001000000010000000000000000000
-        80000080000000808000800000008000800080800000C0C0C000808080000000
-        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333333333
-        3333333333333333333333330000333333333333333333333333F33333333333
-        00003333344333333333333333388F3333333333000033334224333333333333
-        338338F3333333330000333422224333333333333833338F3333333300003342
-        222224333333333383333338F3333333000034222A22224333333338F338F333
-        8F33333300003222A3A2224333333338F3838F338F33333300003A2A333A2224
-        33333338F83338F338F33333000033A33333A222433333338333338F338F3333
-        0000333333333A222433333333333338F338F33300003333333333A222433333
-        333333338F338F33000033333333333A222433333333333338F338F300003333
-        33333333A222433333333333338F338F00003333333333333A22433333333333
-        3338F38F000033333333333333A223333333333333338F830000333333333333
-        333A333333333333333338330000333333333333333333333333333333333333
-        0000}
-      NumGlyphs = 2
+    Height = 56
+    ExplicitTop = 441
+    ExplicitWidth = 414
+    ExplicitHeight = 56
+    inherited btnClose: TBitBtn
+      Left = 319
+      Top = 16
+      ExplicitLeft = 319
+      ExplicitTop = 16
     end
-    object btnCancel: TBitBtn
-      Left = 320
-      Top = 60
-      Width = 89
-      Height = 33
-      TabOrder = 4
-      Kind = bkCancel
+    inherited btnHelp: TBitBtn
+      Left = 226
+      Top = 16
+      OnClick = btnHelpClick
+      ExplicitLeft = 226
+      ExplicitTop = 16
     end
     object rgDirecton: TRadioGroup
       Left = 8
       Top = 8
-      Width = 113
-      Height = 89
+      Width = 212
+      Height = 41
       Caption = 'Direction'
+      Columns = 3
       ItemIndex = 0
       Items.Strings = (
         'Top'
         'Front'
         'Side')
-      TabOrder = 0
-    end
-    object btnToggle: TButton
-      Left = 127
-      Top = 21
-      Width = 281
-      Height = 33
-      Caption = 'Toggle Selection'
-      TabOrder = 1
-      OnClick = btnToggleClick
-    end
-    object btnHelp: TBitBtn
-      Left = 128
-      Top = 60
-      Width = 91
-      Height = 33
       TabOrder = 2
-      OnClick = btnHelpClick
-      Kind = bkHelp
+      OnClick = rgDirectonClick
     end
+  end
+  inherited vstObjects: TVirtualStringTree
+    Width = 414
+    Height = 489
+    OnChecked = vstObjectsChecked
+    ExplicitTop = 161
+    ExplicitWidth = 414
+    ExplicitHeight = 238
   end
 end

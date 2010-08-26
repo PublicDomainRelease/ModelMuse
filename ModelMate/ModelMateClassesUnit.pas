@@ -147,6 +147,7 @@ interface
         fModelMateVersion: string;
         fName: string255;
         fTitle: string255;
+        fNameLikeProjectFile: boolean;
         fModelDirectory: string;       // Always stored as a relative path.
         fModelDirectoryPred: string;   // Always stored as a relative path.
         //fAppDirectory: string;         // Always stored as a relative path.
@@ -175,7 +176,6 @@ interface
         fMOFiles: TModelIOPairs;
         fMIFilesPred: TModelIOPairs;
         fMOFilesPred: TModelIOPairs;
-        fProgramLocations: TProgramLocations;
         fUcProject: TUcProject;
         fUseObsGps: boolean;
         fUsePredGps: boolean;
@@ -185,7 +185,6 @@ interface
         fLinkTemplateToParamsTable: boolean;
         procedure SetUcProject(const Value: TUcProject);
         procedure SetModelDirectory(const Value: string);
-//        procedure SetAppDirectory(const Value: string);
         procedure SetModflowNameFile(const Value: TFileName);
         procedure SetModflowNameFilePred(const Value: TFileName);
         procedure SetModelDirectoryPred(const Value: string);
@@ -213,6 +212,7 @@ interface
         procedure BuildPredictionGpsBlock(BlkFmt: TBlockFormat; PrGBlock: TStringList);
         function BuildPriorInfoBlock(BlkFmt: TBlockFormat; PriDBlock: TStringList): boolean;
         function BuildPriorInfoGpsBlock(BlkFmt: TBlockFormat; PriGBlock: TStringList): boolean;
+        procedure CorrectRelativePaths(OrigProjDir: string);
         procedure DefineObsGroups;
         procedure DefineObsSetup;
         procedure DefinePredGroups;
@@ -230,8 +230,11 @@ interface
         property ModelMateVersion: string read fModelMateVersion write fModelMateVersion;
         property ProjName: string255 read fName write fName;
         property Title: string255 read fTitle write fTitle;
+        property NameLikeProjectFile: boolean read fNameLikeProjectFile
+                                              write fNameLikeProjectFile;
         property ModelDirectory: string read fModelDirectory write SetModelDirectory;
-        property ModelDirectoryPred: string read fModelDirectoryPred write SetModelDirectoryPred;
+        property ModelDirectoryPred: string read fModelDirectoryPred
+                                            write SetModelDirectoryPred;
         property ModelID: TModelID read fModelID write fModelID;
         property ModflowNameFile: TFileName read fModflowNameFile
                                             write SetModflowNameFile;
@@ -261,8 +264,6 @@ interface
         property MOFiles: TModelIOPairs read fMOFiles write fMOFiles;
         property MIFilesPred: TModelIOPairs read fMIFilesPred write fMIFilesPred;
         property MOFilesPred: TModelIOPairs read fMOFilesPred write fMOFilesPred;
-        property ProgramLocations: TProgramLocations read fProgramLocations
-                                                     write fProgramLocations;
         property UcProject: TUcProject read fUcProject write SetUcProject;
         property UseObsGps: boolean read fUseObsGps write fUseObsGps;
         property UsePredGps: boolean read fUsePredGps write fUsePredGps;
@@ -399,6 +400,7 @@ begin
     // Assign ModelMateVersion only when a file is saved
     ProjName := PrjSource.ProjName;
     Title := PrjSource.Title;
+    NameLikeProjectFile := PrjSource.fNameLikeProjectFile;
     fModelDirectory := PrjSource.ModelDirectory;
     fModelDirectoryPred := PrjSource.ModelDirectoryPred;
 //    fAppDirectory := PrjSource.AppDirectory;
@@ -427,7 +429,6 @@ begin
     MOFiles.Assign(PrjSource.MOFiles);
     MIFilesPred.Assign(PrjSource.MIFilesPred);
     MOFilesPred.Assign(PrjSource.MOFilesPred);
-    ProgramLocations.Assign(PrjSource.ProgramLocations);
     UcProject.Assign(PrjSource.UcProject);
     UseObsGps := PrjSource.UseObsGps;
     UsePredGps := PrjSource.UsePredGps;
@@ -574,9 +575,12 @@ function TProject.BuildModelIOBlock(FileUse: TMIOFileUse; MIOBlock: TStringList;
 var
   I, NC, NR: Integer;
   BLabel, KeyItem, Keyword0, Keyword1, Keyword2, Msg1, Msg2: string;
+  AbsAppDir, AbsAppFile, AbsModelDir, AbsModelFile, RelAppFile, RelModelFile: string;
   MFiles: TModelIOPairs;
   bdModelIOFiles: TBlockData;      // Model_Input_Files OR Model_Output_Files.
 begin
+  AbsAppDir := AbsAppDirectory(ModelUse);
+  AbsModelDir := AbsModelDirectory(ModelUse);
   MIOBlock.Clear;
   MFiles := nil;
   NR := 0;
@@ -634,10 +638,20 @@ begin
       for I := 0 to NR - 1 do
         // Store a model-file/app-file pair of file names
         begin
-//          bdModelIOFiles.KeyValMatrix[0].SetVal(I,MFiles.Items[I].ModelFile);
-//          bdModelIOFiles.KeyValMatrix[1].SetVal(I,MFiles.Items[I].AppFile);
-          bdModelIOFiles.KeyValMatrix[0].SetVal(I,MFiles.Items[I].AbsModelFile);
-          bdModelIOFiles.KeyValMatrix[1].SetVal(I,MFiles.Items[I].AbsAppFile);
+//          if AnsiSameText(AbsAppDir, AbsModelDir) then
+            begin
+              AbsModelFile := PathToAbsPath(ProjectDirectory,MFiles.Items[I].ModelFile);
+              RelModelFile := MyExtractRelativePath(AbsModelDir,AbsModelFile);
+              AbsAppFile := PathToAbsPath(ProjectDirectory,MFiles.Items[I].AppFile);
+              RelAppFile := MyExtractRelativePath(AbsModelDir,AbsAppFile);
+              bdModelIOFiles.KeyValMatrix[0].SetVal(I,RelModelFile);
+              bdModelIOFiles.KeyValMatrix[1].SetVal(I,RelAppFile);
+//            end
+//          else
+//            begin
+//              bdModelIOFiles.KeyValMatrix[0].SetVal(I,MFiles.Items[I].AbsModelFile);
+//              bdModelIOFiles.KeyValMatrix[1].SetVal(I,MFiles.Items[I].AbsAppFile);
+            end;
           if NC > 2 then
             case ModelUse of
               muCalib: bdModelIOFiles.KeyValMatrix[2].SetVal(I,'Obs');
@@ -1603,6 +1617,74 @@ begin
     end;
 end; // TProject.BuildPriorInfoGpsBlock
 
+procedure TProject.CorrectRelativePaths(OrigProjDir: string);
+var
+  OldRelPath: string;
+  I: Integer;
+begin
+  if DirectoryExists(RelDirToAbsDir(OrigProjDir, ModelDirectory)) then
+    begin
+      OldRelPath := ModelDirectory;
+      ModelDirectory := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+    end;
+  if DirectoryExists(RelDirToAbsDir(OrigProjDir, ModelDirectoryPred)) then
+    begin
+      OldRelPath := ModelDirectoryPred;
+      ModelDirectoryPred := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+    end;
+  if FileExists(ModflowNameFile) then
+    begin
+      OldRelPath := ModflowNameFile;
+      ModflowNameFile := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+    end;
+  if ModflowNameFilePred <> '' then
+    begin
+      OldRelPath := ModflowNameFilePred;
+      ModflowNameFilePred := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+    end;
+  if MIFiles.Count > 0 then
+    begin
+      for I := 0 to MIFiles.Count - 1 do
+        begin
+          OldRelPath := MIFiles.Items[I].ModelFile;
+          MIFiles.Items[I].ModelFile := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+          OldRelPath := MIFiles.Items[I].AppFile;
+          MIFiles.Items[I].AppFile := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+        end;
+    end;
+  if MOFiles.Count > 0 then
+    begin
+      for I := 0 to MOFiles.Count - 1 do
+        begin
+          OldRelPath := MOFiles.Items[I].ModelFile;
+          MOFiles.Items[I].ModelFile := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+          OldRelPath := MOFiles.Items[I].AppFile;
+          MOFiles.Items[I].AppFile := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+        end;
+    end;
+  if MIFilesPred.Count > 0 then
+    begin
+      for I := 0 to MIFilesPred.Count - 1 do
+        begin
+          OldRelPath := MIFilesPred.Items[I].ModelFile;
+          MIFilesPred.Items[I].ModelFile := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+          OldRelPath := MIFilesPred.Items[I].AppFile;
+          MIFilesPred.Items[I].AppFile := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+        end;
+    end;
+  if MOFilesPred.Count > 0 then
+    begin
+      for I := 0 to MOFilesPred.Count - 1 do
+        begin
+          OldRelPath := MOFilesPred.Items[I].ModelFile;
+          MOFilesPred.Items[I].ModelFile := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+          OldRelPath := MOFilesPred.Items[I].AppFile;
+          MOFilesPred.Items[I].AppFile := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+        end;
+    end;
+    // Correct paths in UcProject
+    UcProject.CorrectRelativePaths(OrigProjDir);
+end;
 
 constructor TProject.Create(AOwner: TComponent);
 begin
@@ -1610,6 +1692,7 @@ begin
   ModelMateVersion := '';
   ProjName := 'default_project';
   Title := 'Title for unnamed project';
+  NameLikeProjectFile := True;
   fModelDirectory := '\';      // Avoid setter
   fModelDirectoryPred := '\';  // Avoid setter
   FileName := '';
@@ -1641,7 +1724,6 @@ begin
   fMOFiles := TModelIOPairs.Create;
   fMIFilesPred := TModelIOPairs.Create;
   fMOFilesPred := TModelIOPairs.Create;
-  fProgramLocations := TProgramLocations.Create;
   fUcProject := TUcProject.Create(self);
   UcProject.OutputPrefix := ProjName;
   fUseObsGps := False;
@@ -1752,7 +1834,6 @@ begin
   fMOFiles.Free;
   fMIFilesPred.Free;
   fMOFilesPred.Free;
-  fProgramLocations.Free;
   fUcProject.Free;
   inherited;
 end;
@@ -2035,7 +2116,8 @@ end;
 function TProject.MakeUcodeBatchFile(ModelUseLocal: TModelUse;
   var BatchFileLocation: string; var ErrMess: string): boolean;
 var
-  AbsAppDir, AbsMIF, AbsModelDir, BatchBase, CmdLineOptions, OutPrefix: string;
+  AbsAppDir, AbsMIF, AbsModelDir, BatchBase, CmdLineOptions: string;
+  OutPrefix, OutPrefixPred: string;
   OK: boolean;
 begin
   OK := True;
@@ -2043,20 +2125,22 @@ begin
   if DirectoryExists(AbsAppDir) then
     begin
       AbsMIF := UcProject.AbsMainInputFileName(ModelUseLocal);
-      case ModelUseLocal of
-        muCalib: OutPrefix := UcProject.OutputPrefix;
-        muPred: OutPrefix := UcProject.OutputPrefixPred;
-      end;
+//      case ModelUseLocal of
+//        muCalib: OutPrefix := UcProject.OutputPrefix;
+//        muPred: OutPrefix := UcProject.OutputPrefixPred;
+//      end;
+      OutPrefix := UcProject.OutputPrefix;
+      OutPrefixPred := UcProject.OutputPrefixPred;
       BatchBase := 'RunUcode_' + ProjName;
       AbsModelDir := AbsModelDirectory(ModelUseLocal);
       if AnsiSameText(AbsAppDir, AbsModelDir) then
         begin
-          CmdLineOptions := AbsMIF + ' ' + OutPrefix;
-          BatchFileLocation := WriteBatchFile(ProgramLocations.UcodeLocation, CmdLineOptions, BatchBase);
+          CmdLineOptions := AbsMIF + ' ' + OutPrefix + ' ' + OutPrefixPred;
+          BatchFileLocation := WriteBatchFile(GlobalProgramLocations.Ucode2005Location, CmdLineOptions, BatchBase);
         end
       else
         begin
-          BatchFileLocation := WriteCustomBatchFile(ProgramLocations.UcodeLocation, AbsMIF, OutPrefix, BatchBase, AbsModelDir);
+          BatchFileLocation := WriteCustomBatchFile(GlobalProgramLocations.Ucode2005Location, AbsMIF, OutPrefix, OutPrefixPred, BatchBase, AbsModelDir);
         end;
     end
   else

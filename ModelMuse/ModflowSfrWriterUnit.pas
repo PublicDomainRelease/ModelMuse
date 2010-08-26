@@ -87,7 +87,7 @@ uses ModflowUnitNumbers, OrderedCollectionUnit, frmErrorsAndWarningsUnit,
 
 const
   StrSegmentNumber = 'Segment Number in ';
-  StrReachNumber = 'Reach Number in';
+  StrReachNumber = 'Reach Number in ';
   SfrICalcNumber = 'ICALC in ';
   StrDownstreamSegmentNumber = 'Outflow Segment Number in ';
   StrDiversionSegmentNumber = 'Diversion Segment Number in ';
@@ -480,6 +480,10 @@ begin
   end;
 
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
 
   SegmentNumberTimes := TimeLists[0];
   ReachNumberTimes := TimeLists[1];
@@ -1817,6 +1821,10 @@ begin
     for PIndex := 0 to PhastModel.ModflowPackages.
       SfrPackage.ParameterInstances.Count - 1 do
     begin
+      if not frmProgress.ShouldContinue then
+      begin
+        Exit;
+      end;
       Instance := PhastModel.ModflowPackages.
         SfrPackage.ParameterInstances.Items[PIndex];
       Location := Parameters.IndexOf(Instance.ParameterName);
@@ -1837,6 +1845,10 @@ begin
     begin
         frmProgress.AddMessage('    Writing stress period '
           + IntToStr(TimeIndex + 1));
+      if not frmProgress.ShouldContinue then
+      begin
+        Exit;
+      end;
       // data set 5;
       UsedSegments.Clear;
       ParametersUsed.Clear;
@@ -1929,6 +1941,10 @@ begin
       // data set 7
       for ParamIndex := 0 to ParametersUsed.Count - 1 do
       begin
+        if not frmProgress.ShouldContinue then
+        begin
+          Exit;
+        end;
         ParamName := ParametersUsed[ParamIndex];
         Location := Parameters.IndexOf(ParamName);
         Assert(Location >= 0);
@@ -1937,6 +1953,10 @@ begin
         begin
           for InstanceIndex := 0 to InstanceList.Count - 1 do
           begin
+            if not frmProgress.ShouldContinue then
+            begin
+              Exit;
+            end;
             Instance := InstanceList[InstanceIndex];
             if (Instance.StartTime >= StressPeriod.StartTime)
               and (Instance.StartTime < StressPeriod.EndTime) then
@@ -1980,6 +2000,10 @@ begin
   FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrSFR, PhastModel.UnitNumbers.UnitNumber(StrSFR), FNameOfFile, foInput);
   Evaluate;
+  if not frmProgress.ShouldContinue then
+  begin
+    Exit;
+  end;
   OpenFile(FileName(AFileName));
   try
     frmProgress.AddMessage('Writing SFR Package input.');

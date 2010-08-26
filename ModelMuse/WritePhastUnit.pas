@@ -20,7 +20,7 @@ uses Windows, frmGoPhastUnit, PhastModelUnit, PrintFrequency, TimeUnit,
   SpecifiedFluxFrontZone, SpecifiedFluxSideZone, SpecifiedFluxTopZone,
   CustomBoundaryZone, CustomLeakyZone, FrontLeakyZone, SideLeakyZone,
   TopLeakyZone, WriteRiverUnit, ScreenObjectUnit,
-  WriteWellUnit, DataSetUnit, PhastDataSets, frmPhastLocationUnit;
+  WriteWellUnit, DataSetUnit, PhastDataSets, frmPhastLocationUnit, TempFiles;
 
 procedure WriteTime(const Stream: TStringStream; const Time: double);
 begin
@@ -2054,6 +2054,7 @@ begin
     BatchFile.SaveToFile(BatchName);
   finally
     BatchFile.Free;
+//    ReclaimMemory;
   end;
   if RunModel then
   begin

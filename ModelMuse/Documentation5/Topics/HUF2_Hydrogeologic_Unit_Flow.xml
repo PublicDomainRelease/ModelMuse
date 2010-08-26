@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
-<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+<topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
   <title translate="true">HUF2: Hydrogeologic Unit Flow Package Pane</title>
   <body>
     <header>
@@ -28,6 +28,7 @@
     <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><text styleclass="Normal" translate="true">The Use Zone and Use Multiplier options are only available here for the SYTP and LVDA parameters. &#160;For the others, the use of zone or multiplier arrays are specified for each hydrogeologic unit in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MODFLOW_Hydrogeologic_Units" styleclass="Strong" translate="true">MODFLOW Hydrogeologic Units</link><text styleclass="Normal" translate="true"> dialog box</text></para>
     <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><snippet src="Multiplier_and_Zone_Arrays"/></para>
     <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><snippet src="Additive_Parameters"/></para>
+    <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><snippet src="LinkToManageParameters"/></para>
     <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><text styleclass="Normal" translate="true">The input to the HUF2 package can be split into up to three different input files. &#160;If any KDEP parameters are defined, a separate input file will be created with data related to depth-dependent hydraulic conductivity. &#160;If any LVDA parameters are defined, a separate input file will be created with data related to variable-direction horizontal anisotropy. The remainder of the input for the HUF2 package is in the main input file for the HUF2 package.</text></para>
     <para styleclass="Normal" style="text-indent:0px; margin-right:0px; margin-left:0px; tabstops:none;"><text styleclass="Normal" translate="true">If the HUF2 package is selected but hydrogeologic units have not yet been defined, the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MODFLOW_Hydrogeologic_Units" styleclass="Strong" translate="true">MODFLOW Hydrogeologic Units</link><text styleclass="Normal" translate="true"> dialog box will be displayed after the OK button is pressed.</text></para>
   </body>

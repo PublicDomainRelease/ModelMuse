@@ -35,15 +35,12 @@ type
     procedure CreateObserver(ObserverNameRoot: string; var Observer: TObserver);
     function GetUsedObserver: TObserver;
   protected
-    FModel: TObject;
-    FScreenObject: TObject;
     property HydraulicConductivityObserver: TObserver
       read GetHydraulicConductivityObserver;
     property ThicknessObserver: TObserver read GetThicknessObserver;
     property ParameterNameObserver: TObserver read GetParameterNameObserver;
     property AdjustmentMethodObserver: TObserver read GetAdjustmentMethodObserver;
     property UsedObserver: TObserver read GetUsedObserver;
-    procedure InvalidateModel;
   public
     Procedure Assign(Source: TPersistent); override;
     Constructor Create(Model, ScreenObject: TObject);
@@ -89,11 +86,11 @@ end;
 
 constructor THfbBoundary.Create(Model, ScreenObject: TObject);
 begin
-  inherited Create;
-  Assert((Model = nil) or (Model is TPhastModel));
+  inherited;
+//  Assert((Model = nil) or (Model is TPhastModel));
   Assert((ScreenObject <> nil) and (ScreenObject is TScreenObject));
-  FScreenObject := ScreenObject;
-  FModel := Model;
+//  FScreenObject := ScreenObject;
+  FPhastModel := Model;
   if TScreenObject(FScreenObject).CanInvalidateModel then
   begin
     FHfbObserver := TObserver.Create(nil);
@@ -161,14 +158,6 @@ begin
     CreateObserver('HFB_Used_', FUsedObserver);
   end;
   result := FUsedObserver;
-end;
-
-procedure THfbBoundary.InvalidateModel;
-begin
-  if FModel <> nil then
-  begin
-    (FModel as TPhastModel).Invalidate;
-  end;
 end;
 
 procedure THfbBoundary.SetAdjustmentMethod(const Value: TAdjustmentMethod);
@@ -267,7 +256,7 @@ var
   Model: TPhastModel;
 begin
   ScreenObject := FScreenObject as TScreenObject;
-  Model := FModel as TPhastModel;
+  Model := FPhastModel as TPhastModel;
   Assert(ScreenObject.CanInvalidateModel);
   Assert(Model <> nil);
   Observer := TObserver.Create(nil);
@@ -282,7 +271,7 @@ procedure THfbBoundary.HandleChangedValue(Observer: TObserver);
 var
   Model: TPhastModel;
 begin
-  Model := FModel as TPhastModel;
+  Model := FPhastModel as TPhastModel;
   if not (csDestroying in Model.ComponentState) then
   begin
     Observer.UpToDate := True;
@@ -304,7 +293,7 @@ var
   NewUseList: TStringList;
   Compiler: TRbwParser;
 begin
-  Model := FModel as TPhastModel;
+  Model := FPhastModel as TPhastModel;
   InvalidateModel;
   if OldFormula = '' then
   begin
@@ -336,14 +325,14 @@ begin
     end;
     for UseIndex := 0 to OldUseList.Count - 1 do
     begin
-      UsedVariable := (FModel as TPhastModel).
+      UsedVariable := (FPhastModel as TPhastModel).
         GetObserverByName(OldUseList[UseIndex]);
       Assert(UsedVariable <> nil);
       UsedVariable.StopsTalkingTo(Observer);
     end;
     for UseIndex := 0 to NewUseList.Count - 1 do
     begin
-      UsedVariable := (FModel as TPhastModel).
+      UsedVariable := (FPhastModel as TPhastModel).
         GetObserverByName(NewUseList[UseIndex]);
       Assert(UsedVariable <> nil);
       UsedVariable.TalksTo(Observer);

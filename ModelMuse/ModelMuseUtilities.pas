@@ -5,7 +5,7 @@ unit ModelMuseUtilities;
 interface
 
 uses
-  SysUtils, Graphics, OpenGL12x, GoPhastTypes;
+  Windows, SysUtils, Graphics, OpenGL12x, GoPhastTypes;
 
 // @abstract(@name gets the red, green, and blue components from a TColor
 // in a form suitable for use with OpenGL.)
@@ -59,6 +59,8 @@ function TitleCase(AString: string): string;
 // @name converts Value to a string that includes the thousands separator
 // if appropriate.
 function IntToStrFormatted(Value: integer): string;
+
+procedure DSiTrimWorkingSet;
 
 implementation
 
@@ -211,6 +213,18 @@ begin
   begin
     result := '-' + result;
   end;
+end;
+
+// http://stackoverflow.com/questions/2031577/can-memory-be-cleaned-up/2033393#2033393
+procedure DSiTrimWorkingSet;
+var
+  hProcess: THandle;
+begin
+//  Exit;
+  hProcess := OpenProcess(PROCESS_SET_QUOTA, false, GetCurrentProcessId);
+  try
+    SetProcessWorkingSetSize(hProcess, $FFFFFFFF, $FFFFFFFF);
+  finally CloseHandle(hProcess); end;
 end;
 
 end.

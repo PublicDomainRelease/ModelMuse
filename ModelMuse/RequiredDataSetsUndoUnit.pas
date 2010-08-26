@@ -2,7 +2,9 @@ unit RequiredDataSetsUndoUnit;
 
 interface
 
-uses Classes, GoPhastTypes, UndoItems, PhastModelUnit, frmShowHideObjectsUnit;
+uses Classes, GoPhastTypes, UndoItems, PhastModelUnit, frmShowHideObjectsUnit,
+  ModflowParameterUnit, HufDefinition, ModflowTransientListParameterUnit,
+  UndoItemsScreenObjects;
 
 type
   TCustomCreateRequiredDataSetsUndo = class(TCustomUndo)
@@ -29,6 +31,26 @@ type
     // causes all the @link(TDataArray)s that are required to be created
     // if they do not already exist.
     procedure UpdatedRequiredDataSets;
+  end;
+
+  TCustomUndoChangeParameters = class(TCustomCreateRequiredDataSetsUndo)
+  private
+    FNewSteadyParameters: TModflowSteadyParameters;
+    FOldSteadyParameters: TModflowSteadyParameters;
+    FNewTransientParameters: TModflowTransientListParameters;
+    FOldTransientParameters: TModflowTransientListParameters;
+    FOldHufModflowParameters: THufModflowParameters;
+    FNewHufModflowParameters: THufModflowParameters;
+//    FExistingScreenObjects: TScreenObjectEditCollection;
+  protected
+    function Description: string; override;
+  public
+    Constructor Create(var NewSteadyParameters: TModflowSteadyParameters;
+      var NewTransientParameters: TModflowTransientListParameters;
+      var NewHufModflowParameters: THufModflowParameters);
+    Destructor Destroy; override;
+    procedure DoCommand; override;
+    procedure Undo; override;
   end;
 
   TUndoModelSelectionChange = class(TCustomCreateRequiredDataSetsUndo)
@@ -86,14 +108,14 @@ begin
   { TODO : Find a way to extract common code from
 TPhastModel.CreateModflowDataSets and
 TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
-  DataSetName := Model.DataArrayCreationRecords[Index].Name;
-  Orientation := Model.DataArrayCreationRecords[Index].Orientation;
-  DataType := Model.DataArrayCreationRecords[Index].DataType;
-  ArrayNeeded := Model.DataArrayCreationRecords[Index].DataSetNeeded;
-  CreateDataSet := Model.DataArrayCreationRecords[Index].DataSetShouldBeCreated;
-  NewFormula := Model.DataArrayCreationRecords[Index].Formula;
-  Classification := Model.DataArrayCreationRecords[Index].Classification;
-  Lock := Model.DataArrayCreationRecords[Index].Lock;
+  DataSetName := Model.FDataArrayCreationRecords[Index].Name;
+  Orientation := Model.FDataArrayCreationRecords[Index].Orientation;
+  DataType := Model.FDataArrayCreationRecords[Index].DataType;
+  ArrayNeeded := Model.FDataArrayCreationRecords[Index].DataSetNeeded;
+  CreateDataSet := Model.FDataArrayCreationRecords[Index].DataSetShouldBeCreated;
+  NewFormula := Model.FDataArrayCreationRecords[Index].Formula;
+  Classification := Model.FDataArrayCreationRecords[Index].Classification;
+  Lock := Model.FDataArrayCreationRecords[Index].Lock;
 
   DataArray := Model.GetDataSetByName(DataSetName);
 //  DataArray := nil;
@@ -108,21 +130,21 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
     or (Assigned(CreateDataSet) and CreateDataSet(self)) then
   begin
     DataArray := Model.CreateNewDataArray(TDataArray, DataSetName, NewFormula,
-      Lock, DataType, Model.DataArrayCreationRecords[Index].EvaluatedAt,
+      Lock, DataType, Model.FDataArrayCreationRecords[Index].EvaluatedAt,
       Orientation, Classification);
     DataArray.OnDataSetUsed := ArrayNeeded;
     DataArray.Lock := Lock;
-    DataArray.CheckMax := Model.DataArrayCreationRecords[Index].CheckMax;
-    DataArray.CheckMin := Model.DataArrayCreationRecords[Index].CheckMin;
-    DataArray.Max := Model.DataArrayCreationRecords[Index].Max;
-    DataArray.Min := Model.DataArrayCreationRecords[Index].Min;
+    DataArray.CheckMax := Model.FDataArrayCreationRecords[Index].CheckMax;
+    DataArray.CheckMin := Model.FDataArrayCreationRecords[Index].CheckMin;
+    DataArray.Max := Model.FDataArrayCreationRecords[Index].Max;
+    DataArray.Min := Model.FDataArrayCreationRecords[Index].Min;
 
     FNewPackageDataSets.Add(DataArray);
   end;
   if DataArray <> nil then
   begin
     DataArray.AssociatedDataSets :=
-      Model.DataArrayCreationRecords[Index].AssociatedDataSets;
+      Model.FDataArrayCreationRecords[Index].AssociatedDataSets;
   end;
   if (DataArray <> nil) and (Model.Grid <> nil) then
   begin
@@ -139,7 +161,7 @@ var
 begin
   Model:= frmGoPhast.PhastModel;
 
-  for Index := 0 to Length(Model.DataArrayCreationRecords) - 1 do
+  for Index := 0 to Length(Model.FDataArrayCreationRecords) - 1 do
   begin
     UpdateDataArray(Model, Index);
   end;
@@ -188,6 +210,80 @@ procedure TUndoModelSelectionChange.Undo;
 begin
   inherited;
   frmGoPhast.ModelSelection := FOldModelSelection;
+  UpdatedRequiredDataSets;
+end;
+
+{ TUndoChangeParameters }
+
+constructor TCustomUndoChangeParameters.Create(
+  var NewSteadyParameters: TModflowSteadyParameters;
+  var NewTransientParameters: TModflowTransientListParameters;
+  var NewHufModflowParameters: THufModflowParameters);
+begin
+  inherited Create;
+  FNewSteadyParameters:= NewSteadyParameters;
+  // TUndoDefineLayers takes ownership of NewSteadyParameters.
+  NewSteadyParameters := nil;
+
+  FNewTransientParameters := NewTransientParameters;
+  // TUndoDefineLayers takes ownership of NewTransientParameters.
+  NewTransientParameters := nil;
+
+  // TUndoDefineLayers takes ownership of NewHufModflowParameters.
+  FNewHufModflowParameters := NewHufModflowParameters;
+  NewHufModflowParameters := nil;
+
+  FOldSteadyParameters:= TModflowSteadyParameters.Create(nil);
+  FOldSteadyParameters.Assign(frmGoPhast.PhastModel.ModflowSteadyParameters);
+  FOldTransientParameters:= TModflowTransientListParameters.Create(nil);
+  FOldTransientParameters.Assign(frmGoPhast.PhastModel.ModflowTransientParameters);
+  FOldHufModflowParameters := THufModflowParameters.Create(nil);
+  FOldHufModflowParameters.Assign(frmGoPhast.PhastModel.HufParameters);
+
+//  FExistingScreenObjects := TScreenObjectEditCollection.Create;
+//  FExistingScreenObjects.OwnScreenObject := False;
+
+
+end;
+
+function TCustomUndoChangeParameters.Description: string;
+begin
+  result := 'Change parameters';
+end;
+
+destructor TCustomUndoChangeParameters.Destroy;
+begin
+  FOldHufModflowParameters.Free;
+  FNewHufModflowParameters.Free;
+  FNewSteadyParameters.Free;
+  FOldSteadyParameters.Free;
+  FNewTransientParameters.Free;
+  FOldTransientParameters.Free;
+//  FExistingScreenObjects.Free;
+  inherited;
+end;
+
+procedure TCustomUndoChangeParameters.DoCommand;
+begin
+  inherited;
+  frmGoPhast.PhastModel.ModflowSteadyParameters.ClearNewDataSets;
+  frmGoPhast.PhastModel.ModflowSteadyParameters := FNewSteadyParameters;
+  frmGoPhast.PhastModel.ModflowSteadyParameters.RemoveOldDataSetVariables;
+  frmGoPhast.PhastModel.ModflowTransientParameters := FNewTransientParameters;
+  frmGoPhast.PhastModel.ModflowSteadyParameters.NewDataSets := nil;
+  frmGoPhast.PhastModel.HufParameters := FNewHufModflowParameters;
+  UpdatedRequiredDataSets;
+end;
+
+procedure TCustomUndoChangeParameters.Undo;
+begin
+  inherited;
+  frmGoPhast.PhastModel.ModflowSteadyParameters  := FOldSteadyParameters;
+  frmGoPhast.PhastModel.ModflowSteadyParameters.RemoveNewDataSets;
+  frmGoPhast.PhastModel.ModflowSteadyParameters.RemoveOldDataSetVariables;
+  frmGoPhast.PhastModel.ModflowTransientParameters := FOldTransientParameters;
+  frmGoPhast.PhastModel.ModflowSteadyParameters.NewDataSets := nil;
+  frmGoPhast.PhastModel.HufParameters := FOldHufModflowParameters;
   UpdatedRequiredDataSets;
 end;
 

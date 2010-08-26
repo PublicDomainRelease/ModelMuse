@@ -9,10 +9,6 @@ uses
   JvCombobox, JvListComb, Math, ModflowPackageSelectionUnit, Buttons;
 
 type
-  TSubFormatColumns = (sfcSubsidence, sfcCompactModelLayer,
-    sfcCompactByInterbedSystem, sfcVerticalDisplacement,
-    sfcNoDelayPreconsolidationHead, sfcDelayPreconsolidationHead);
-
   TSubOutputColumns = (socStartTime, socEndTime,
     socPrintSubsidence, socSaveSubsidence,
     socPrintCompactModelLayer, socSaveCompactModelLayer,
@@ -36,9 +32,6 @@ type
     cbSaveRestart: TCheckBox;
     lbReadRestart: TLabel;
     feReadRestart: TJvFilenameEdit;
-    tabFormat: TTabSheet;
-    rdgFormats: TRbwDataGrid4;
-    comboMultiFomat: TJvImageComboBox;
     tabPrintSave: TTabSheet;
     cbMultiPrintSave: TCheckBox;
     rdgOutput: TRbwDataGrid4;
@@ -49,18 +42,13 @@ type
     sbDelete: TSpeedButton;
     comboOutputChoice: TJvImageComboBox;
     lblOutputChoice: TLabel;
+    comboMultiFomat: TJvImageComboBox;
     procedure comboMultiFomatChange(Sender: TObject);
     procedure cbMultiPrintSaveClick(Sender: TObject);
-    procedure rdgFormatsColSize(Sender: TObject; ACol, PriorWidth: Integer);
     procedure rdgOutputColSize(Sender: TObject; ACol, PriorWidth: Integer);
-    procedure rdgFormatsHorizontalScroll(Sender: TObject);
     procedure rdgOutputHorizontalScroll(Sender: TObject);
     procedure FrameResize(Sender: TObject);
-    procedure rdgFormatsMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure rdgOutputMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure rdgFormatsMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure rdgOutputMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -70,16 +58,14 @@ type
     procedure sbDeleteClick(Sender: TObject);
     procedure rcSelectionControllerEnabledChange(Sender: TObject);
     procedure rdgOutputEndUpdate(Sender: TObject);
+    procedure rdgOutputSelectCell(Sender: TObject; ACol, ARow: Integer;
+      var CanSelect: Boolean);
   private
     FChangingRowCount: Boolean;
-    procedure LayoutFormatControls;
     procedure LayoutPrintSaveControls;
-    procedure ChangeGridOptions(DataGrid: TRbwDataGrid4; Shift: TShiftState);
-    procedure EnableMultiEditControl(Control: TControl; DataGrid: TRbwDataGrid4);
     procedure EnableDeleteButton;
     { Private declarations }
   public
-    constructor Create(AOwner: TComponent); override;
     procedure GetData(Package: TModflowPackageSelection); override;
     procedure SetData(Package: TModflowPackageSelection); override;
     procedure Loaded; override;
@@ -96,6 +82,10 @@ uses
 
 {$R *.dfm}
 
+const
+  FormatRow = 1;
+  FirstStateRow = FormatRow+1;
+
 { TframePackageSub }
 
 procedure TframePackageSub.cbMultiPrintSaveClick(Sender: TObject);
@@ -103,118 +93,52 @@ var
   ColIndex: Integer;
   RowIndex: Integer;
 begin
-  for RowIndex := rdgOutput.FixedRows to rdgOutput.RowCount - 1 do
-  begin
-    for ColIndex := Ord(socPrintSubsidence) to rdgOutput.ColCount - 1 do
+  rdgOutput.BeginUpdate;
+  try
+    for RowIndex := FirstStateRow to rdgOutput.RowCount - 1 do
     begin
-      if rdgOutput.IsSelectedCell(ColIndex, RowIndex) then
+      for ColIndex := Ord(socPrintSubsidence) to rdgOutput.ColCount - 1 do
       begin
-        rdgOutput.Checked[ColIndex, RowIndex] := cbMultiPrintSave.Checked;
-        if Assigned(rdgOutput.OnStateChange) then
+        if rdgOutput.IsSelectedCell(ColIndex, RowIndex) then
         begin
-          rdgOutput.OnStateChange(rdgOutput, ColIndex, RowIndex, cbMultiPrintSave.State);
+          rdgOutput.Checked[ColIndex, RowIndex] := cbMultiPrintSave.Checked;
+          if Assigned(rdgOutput.OnStateChange) then
+          begin
+            rdgOutput.OnStateChange(rdgOutput, ColIndex, RowIndex, cbMultiPrintSave.State);
+          end;
         end;
       end;
     end;
+  finally
+    rdgOutput.EndUpdate;
   end;
 end;
 
 procedure TframePackageSub.comboMultiFomatChange(Sender: TObject);
 var
   ColIndex: Integer;
-  RowIndex: Integer;
 begin
-  rdgFormats.BeginUpdate;
+  rdgOutput.BeginUpdate;
   try
-    for RowIndex := rdgFormats.FixedRows to rdgFormats.RowCount - 1 do
+    for ColIndex := 0 to rdgOutput.ColCount - 1 do
     begin
-      for ColIndex := 0 to rdgFormats.ColCount - 1 do
+      if rdgOutput.IsSelectedCell(ColIndex, FormatRow) then
       begin
-        if rdgFormats.IsSelectedCell(ColIndex, RowIndex) then
+        rdgOutput.Cells[ColIndex, FormatRow] := comboMultiFomat.Text;
+        if Assigned(rdgOutput.OnSetEditText) then
         begin
-          rdgFormats.Cells[ColIndex, RowIndex] := comboMultiFomat.Text;
-          if Assigned(rdgFormats.OnSetEditText) then
-          begin
-            rdgFormats.OnSetEditText(rdgFormats, ColIndex, RowIndex, comboMultiFomat.Text);
-          end;
+          rdgOutput.OnSetEditText(rdgOutput, ColIndex, FormatRow, comboMultiFomat.Text);
         end;
       end;
     end;
   finally
-    rdgFormats.EndUpdate;
-  end;
-end;
-
-constructor TframePackageSub.Create(AOwner: TComponent);
-begin
-  inherited;
-  rdgFormats.Cells[Ord(sfcSubsidence), 0] := 'Format for printing subsidence (Ifm1)';
-  rdgFormats.Cells[Ord(sfcCompactModelLayer), 0] := 'Format for printing compaction by model layer (Ifm2)';
-  rdgFormats.Cells[Ord(sfcCompactByInterbedSystem), 0] := 'Format for printing compaction by interbed system (Ifm3)';
-  rdgFormats.Cells[Ord(sfcVerticalDisplacement), 0] := 'Format for printing vertical displacement (Ifm4)';
-  rdgFormats.Cells[Ord(sfcNoDelayPreconsolidationHead), 0] := 'Format for printing no-delay preconsolidation head (Ifm5)';
-  rdgFormats.Cells[Ord(sfcDelayPreconsolidationHead), 0] := 'Format for printing delay preconsolidation head (Ifm6)';
-
-  rdgOutput.Cells[Ord(socStartTime), 0] := StrStartingTime;
-  rdgOutput.Cells[Ord(socEndTime), 0] := StrEndingTime;
-  rdgOutput.Cells[Ord(socPrintSubsidence), 0] := 'Print subsidence (Ifl1)';
-  rdgOutput.Cells[Ord(socSaveSubsidence), 0] := 'Save subsidence (Ifl2)';
-  rdgOutput.Cells[Ord(socPrintCompactModelLayer), 0] := 'Print compaction by model layer (Ifl3)';
-  rdgOutput.Cells[Ord(socSaveCompactModelLayer), 0] := 'Save compaction by model layer (Ifl4)';
-  rdgOutput.Cells[Ord(socPrintCompactByInterbedSystem), 0] := 'Print compaction by interbed system (Ifl5)';
-  rdgOutput.Cells[Ord(socSaveCompactByInterbedSystem), 0] := 'Save compaction by interbed system (Ifl6)';
-  rdgOutput.Cells[Ord(socPrintVerticalDisplacement), 0] := 'Print vertical displacement (Ifl7)';
-  rdgOutput.Cells[Ord(socSaveVerticalDisplacement), 0] := 'Save vertical displacement (Ifl8)';
-  rdgOutput.Cells[Ord(socPrintNoDelayPreconsolidationHead), 0] := 'Print critical head for no-delay interbeds (Ifl9)';
-  rdgOutput.Cells[Ord(socSaveNoDelayPreconsolidationHead), 0] := 'Save critical head for no-delay interbeds (Ifl10)';
-  rdgOutput.Cells[Ord(socPrintDelayPreconsolidationHead), 0] := 'Print critical head for delay interbeds (Ifl11)';
-  rdgOutput.Cells[Ord(socSaveDelayPreconsolidationHead), 0] := 'Save critical head for delay interbeds (Ifl12)';
-  rdgOutput.Cells[Ord(socPrintDelayInterbedBudget), 0] := 'Print volumetric budget for delay interbeds (Ifl13)';
-
-  pcSub.ActivePageIndex := 0;
-end;
-
-procedure TframePackageSub.EnableMultiEditControl(Control: TControl; DataGrid: TRbwDataGrid4);
-var
-  RowIndex: Integer;
-  ShouldEnable: Boolean;
-  ColIndex: Integer;
-begin
-  ShouldEnable := False;
-  for RowIndex := DataGrid.FixedRows to DataGrid.RowCount - 1 do
-  begin
-    for ColIndex := 2 to DataGrid.ColCount - 1 do
-    begin
-      ShouldEnable := DataGrid.IsSelectedCell(ColIndex, RowIndex);
-      if ShouldEnable then
-      begin
-        break;
-      end;
-    end;
-    if ShouldEnable then
-    begin
-      break;
-    end;
-  end;
-  Control.Enabled := ShouldEnable;
-end;
-
-procedure TframePackageSub.ChangeGridOptions(DataGrid: TRbwDataGrid4; Shift: TShiftState);
-begin
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    DataGrid.Options := DataGrid.Options + [goEditing];
-  end
-  else
-  begin
-    DataGrid.Options := DataGrid.Options - [goEditing];
+    rdgOutput.EndUpdate;
   end;
 end;
 
 procedure TframePackageSub.FrameResize(Sender: TObject);
 begin
   inherited;
-  LayoutFormatControls;
   LayoutPrintSaveControls;
 end;
 
@@ -225,12 +149,24 @@ var
   StressPeriod: TModflowStressPeriod;
   Index: Integer;
   Item: TSubPrintItem;
+  StartCell: TGridRect;
 begin
   inherited;
   pcSub.ActivePageIndex := 0;
 
+  StartCell.Left := 0;
+  StartCell.Right := 0;
+  StartCell.Top := 2;
+  StartCell.Bottom := 2;
+
+  rdgOutput.Selection := StartCell;
+
   rdgOutput.Columns[Ord(socStartTime)].PickList.Clear;
   rdgOutput.Columns[Ord(socEndTime)].PickList.Clear;
+  rdgOutput.Columns[Ord(socStartTime)].PickList.Capacity :=
+    frmGoPhast.PhastModel.ModflowStressPeriods.Count;
+  rdgOutput.Columns[Ord(socEndTime)].PickList.Capacity :=
+    frmGoPhast.PhastModel.ModflowStressPeriods.Count;
   for TimeIndex := 0 to frmGoPhast.PhastModel.ModflowStressPeriods.Count - 1 do
   begin
     StressPeriod := frmGoPhast.PhastModel.ModflowStressPeriods[TimeIndex];
@@ -249,58 +185,61 @@ begin
   feReadRestart.FileName := SubPackage.ReadDelayRestartFileName;
   comboOutputChoice.ItemIndex := Ord(SubPackage.BinaryOutputChoice);
 
-  rdgFormats.BeginUpdate;
-  try
-    rdgFormats.ItemIndex[Ord(sfcSubsidence), 1] :=
-      SubPackage.PrintFormats.SubsidenceFormat;
-    rdgFormats.ItemIndex[Ord(sfcCompactModelLayer), 1] :=
-      SubPackage.PrintFormats.CompactionByModelLayerFormat;
-    rdgFormats.ItemIndex[Ord(sfcCompactByInterbedSystem), 1] :=
-      SubPackage.PrintFormats.CompactionByInterbedSystemFormat;
-    rdgFormats.ItemIndex[Ord(sfcVerticalDisplacement), 1] :=
-      SubPackage.PrintFormats.VerticalDisplacementFormat;
-    rdgFormats.ItemIndex[Ord(sfcNoDelayPreconsolidationHead), 1] :=
-      SubPackage.PrintFormats.NoDelayPreconsolidationHeadFormat;
-    rdgFormats.ItemIndex[Ord(sfcDelayPreconsolidationHead), 1] :=
-      SubPackage.PrintFormats.DelayPreconsolidationHeadFormat;
-  finally
-    rdgFormats.EndUpdate;
-  end;
-
   rdgOutput.BeginUpdate;
   try
     seNumExportPeriods.AsInteger := SubPackage.PrintChoices.Count;
     seNumExportPeriodsChange(nil);
+
+    rdgOutput.ItemIndex[Ord(socPrintSubsidence), FormatRow] :=
+      SubPackage.PrintFormats.SubsidenceFormat;
+
+    rdgOutput.ItemIndex[Ord(socPrintCompactModelLayer), FormatRow] :=
+      SubPackage.PrintFormats.CompactionByModelLayerFormat;
+
+    rdgOutput.ItemIndex[Ord(socPrintCompactByInterbedSystem), FormatRow] :=
+      SubPackage.PrintFormats.CompactionByInterbedSystemFormat;
+
+    rdgOutput.ItemIndex[Ord(socPrintVerticalDisplacement), FormatRow] :=
+      SubPackage.PrintFormats.VerticalDisplacementFormat;
+
+    rdgOutput.ItemIndex[Ord(socPrintNoDelayPreconsolidationHead), FormatRow] :=
+      SubPackage.PrintFormats.NoDelayPreconsolidationHeadFormat;
+
+    rdgOutput.ItemIndex[Ord(socPrintDelayPreconsolidationHead), FormatRow] :=
+      SubPackage.PrintFormats.DelayPreconsolidationHeadFormat;
+
     for Index := 0 to SubPackage.PrintChoices.Count - 1 do
     begin
       Item := SubPackage.PrintChoices[Index];
-      rdgOutput.Cells[Ord(socStartTime),Index+1] := FloatToStr(Item.StartTime);
-      rdgOutput.Cells[Ord(socEndTime),Index+1] := FloatToStr(Item.EndTime);
-      rdgOutput.Checked[Ord(socPrintSubsidence),Index+1]
+      rdgOutput.Cells[Ord(socStartTime),Index+FirstStateRow]
+        := FloatToStr(Item.StartTime);
+      rdgOutput.Cells[Ord(socEndTime),Index+FirstStateRow]
+        := FloatToStr(Item.EndTime);
+      rdgOutput.Checked[Ord(socPrintSubsidence),Index+FirstStateRow]
         := Item.PrintSubsidence;
-      rdgOutput.Checked[Ord(socSaveSubsidence),Index+1]
+      rdgOutput.Checked[Ord(socSaveSubsidence),Index+FirstStateRow]
         := Item.SaveSubsidence;
-      rdgOutput.Checked[Ord(socPrintCompactModelLayer),Index+1]
+      rdgOutput.Checked[Ord(socPrintCompactModelLayer),Index+FirstStateRow]
         := Item.PrintCompactionByModelLayer;
-      rdgOutput.Checked[Ord(socSaveCompactModelLayer),Index+1]
+      rdgOutput.Checked[Ord(socSaveCompactModelLayer),Index+FirstStateRow]
         := Item.SaveCompactionByModelLayer;
-      rdgOutput.Checked[Ord(socPrintCompactByInterbedSystem),Index+1]
+      rdgOutput.Checked[Ord(socPrintCompactByInterbedSystem),Index+FirstStateRow]
         := Item.PrintCompactionByInterbedSystem;
-      rdgOutput.Checked[Ord(socSaveCompactByInterbedSystem),Index+1]
+      rdgOutput.Checked[Ord(socSaveCompactByInterbedSystem),Index+FirstStateRow]
         := Item.SaveCompactionByInterbedSystem;
-      rdgOutput.Checked[Ord(socPrintVerticalDisplacement),Index+1]
+      rdgOutput.Checked[Ord(socPrintVerticalDisplacement),Index+FirstStateRow]
         := Item.PrintVerticalDisplacement;
-      rdgOutput.Checked[Ord(socSaveVerticalDisplacement),Index+1]
+      rdgOutput.Checked[Ord(socSaveVerticalDisplacement),Index+FirstStateRow]
         := Item.SaveVerticalDisplacement;
-      rdgOutput.Checked[Ord(socPrintNoDelayPreconsolidationHead),Index+1]
+      rdgOutput.Checked[Ord(socPrintNoDelayPreconsolidationHead),Index+FirstStateRow]
         := Item.PrintCriticalHeadNoDelay;
-      rdgOutput.Checked[Ord(socSaveNoDelayPreconsolidationHead),Index+1]
+      rdgOutput.Checked[Ord(socSaveNoDelayPreconsolidationHead),Index+FirstStateRow]
         := Item.SaveCriticalHeadNoDelay;
-      rdgOutput.Checked[Ord(socPrintDelayPreconsolidationHead),Index+1]
+      rdgOutput.Checked[Ord(socPrintDelayPreconsolidationHead),Index+FirstStateRow]
         := Item.PrintCriticalHeadDelay;
-      rdgOutput.Checked[Ord(socSaveDelayPreconsolidationHead),Index+1]
+      rdgOutput.Checked[Ord(socSaveDelayPreconsolidationHead),Index+FirstStateRow]
         := Item.SaveCriticalHeadDelay;
-      rdgOutput.Checked[Ord(socPrintDelayInterbedBudget),Index+1]
+      rdgOutput.Checked[Ord(socPrintDelayInterbedBudget),Index+FirstStateRow]
         := Item.PrintDelayBudgets;
     end;
   finally
@@ -309,21 +248,29 @@ begin
 end;
 
 procedure TframePackageSub.LayoutPrintSaveControls;
+var
+  Column: integer;
 begin
   if [csLoading, csReading] * ComponentState <> [] then
   begin
     Exit
-  end;  
+  end;
+  Column := Max(Ord(socPrintSubsidence), rdgOutput.LeftCol);
+  LayoutControls(rdgOutput, comboMultiFomat, nil,
+    Column, rdgOutput.Left);
+  comboMultiFomat.Width := rdgOutput.ColWidths[Column];
+  Inc(Column);
   LayoutControls(rdgOutput, cbMultiPrintSave, nil,
-    Max(Ord(socPrintSubsidence), rdgOutput.LeftCol), rdgOutput.Left);
+    Column, rdgOutput.Left + 3);
   cbMultiPrintSave.Width := 200;
 end;
 
 procedure TframePackageSub.Loaded;
+var
+  ColIndex: Integer;
 begin
   inherited;
   MoveControlsToTab(pcSub);
-  rdgFormats.Height := tabFormat.Height - rdgFormats.Top - 20;
   seNumExportPeriods.Top := tabPrintSave.Height
     - seNumExportPeriods.Height -8;
   lblNumExportPeriods.Top := seNumExportPeriods.Top + 3;
@@ -333,56 +280,45 @@ begin
   sbDelete.Top := sbAdd.Top;
   rdgOutput.Height := tabPrintSave.Height - rdgOutput.Top -
     (tabPrintSave.Height - seNumExportPeriods.Top + 8);
-end;
 
-procedure TframePackageSub.LayoutFormatControls;
-var
-  Column: Integer;
-begin
-  if rdgFormats = nil then
+  for ColIndex := 0 to rdgOutput.ColCount - 1 do
   begin
-    Exit;
+    rdgOutput.SpecialFormat[ColIndex,FormatRow] := rcf4String;
+    rdgOutput.UseSpecialFormat[ColIndex,FormatRow] := True;
   end;
-  if [csLoading, csReading] * ComponentState <> [] then
+  for ColIndex := Ord(socPrintSubsidence) to rdgOutput.ColCount - 1 do
   begin
-    Exit
-  end;  
-  Column := Max(Ord(sfcSubsidence), rdgFormats.LeftCol);
-  LayoutControls(rdgFormats, comboMultiFomat, nil,
-    Column, rdgFormats.Left);
-  comboMultiFomat.Width := rdgFormats.ColWidths[Column];
+    rdgOutput.Columns[ColIndex].ComboUsed := True;
+    rdgOutput.Columns[ColIndex].PickList :=
+      rdgOutput.Columns[Ord(socPrintSubsidence)].PickList;
+  end;
+
+  rdgOutput.Cells[Ord(socStartTime), 0] := StrStartingTime;
+  rdgOutput.Cells[Ord(socEndTime), 0] := StrEndingTime;
+  rdgOutput.Cells[Ord(socPrintSubsidence), 0] := 'Print subsidence (Ifm1, Ifl1)';
+  rdgOutput.Cells[Ord(socSaveSubsidence), 0] := 'Save subsidence (Ifl2)';
+  rdgOutput.Cells[Ord(socPrintCompactModelLayer), 0] := 'Print compaction by model layer (Ifm2, Ifl3)';
+  rdgOutput.Cells[Ord(socSaveCompactModelLayer), 0] := 'Save compaction by model layer (Ifl4)';
+  rdgOutput.Cells[Ord(socPrintCompactByInterbedSystem), 0] := 'Print compaction by interbed system (Ifm3, Ifl5)';
+  rdgOutput.Cells[Ord(socSaveCompactByInterbedSystem), 0] := 'Save compaction by interbed system (Ifl6)';
+  rdgOutput.Cells[Ord(socPrintVerticalDisplacement), 0] := 'Print vertical displacement (Ifm4, Ifl7)';
+  rdgOutput.Cells[Ord(socSaveVerticalDisplacement), 0] := 'Save vertical displacement (Ifl8)';
+  rdgOutput.Cells[Ord(socPrintNoDelayPreconsolidationHead), 0] := 'Print critical head for no-delay interbeds (Ifm5, Ifl9)';
+  rdgOutput.Cells[Ord(socSaveNoDelayPreconsolidationHead), 0] := 'Save critical head for no-delay interbeds (Ifl10)';
+  rdgOutput.Cells[Ord(socPrintDelayPreconsolidationHead), 0] := 'Print critical head for delay interbeds (Ifm6, Ifl11)';
+  rdgOutput.Cells[Ord(socSaveDelayPreconsolidationHead), 0] := 'Save critical head for delay interbeds (Ifl12)';
+  rdgOutput.Cells[Ord(socPrintDelayInterbedBudget), 0] := 'Print volumetric budget for delay interbeds (Ifl13)';
+
+  rdgOutput.Cells[Ord(socStartTime), FormatRow] := 'Format';
+
+  pcSub.ActivePageIndex := 0;
+
 end;
 
 procedure TframePackageSub.rcSelectionControllerEnabledChange(Sender: TObject);
 begin
   inherited;
   EnableDeleteButton;
-end;
-
-procedure TframePackageSub.rdgFormatsColSize(Sender: TObject; ACol,
-  PriorWidth: Integer);
-begin
-  inherited;
-  LayoutFormatControls;
-end;
-
-procedure TframePackageSub.rdgFormatsHorizontalScroll(Sender: TObject);
-begin
-  inherited;
-  LayoutFormatControls;
-end;
-
-procedure TframePackageSub.rdgFormatsMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  ChangeGridOptions(rdgFormats, Shift);
-end;
-
-procedure TframePackageSub.rdgFormatsMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  EnableMultiEditControl(comboMultiFomat, rdgFormats);
 end;
 
 procedure TframePackageSub.rdgOutputColSize(Sender: TObject; ACol,
@@ -393,11 +329,20 @@ begin
 end;
 
 procedure TframePackageSub.rdgOutputEndUpdate(Sender: TObject);
+var
+  NumRows: Integer;
 begin
   inherited;
   if not FChangingRowCount then
   begin
-    seNumExportPeriods.AsInteger := rdgOutput.RowCount -1;
+    NumRows := rdgOutput.RowCount - FirstStateRow;
+    if (NumRows = FirstStateRow-1)
+      and (rdgOutput.Cells[Ord(socStartTime),FirstStateRow] = '')
+      and (rdgOutput.Cells[Ord(socEndTime),FirstStateRow] = '') then
+    begin
+      NumRows := 0;
+    end;
+    seNumExportPeriods.AsInteger := NumRows;
   end;
 end;
 
@@ -418,7 +363,24 @@ procedure TframePackageSub.rdgOutputMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
+  EnableMultiEditControl(comboMultiFomat, rdgOutput);
   EnableMultiEditControl(cbMultiPrintSave, rdgOutput);
+end;
+
+procedure TframePackageSub.rdgOutputSelectCell(Sender: TObject; ACol,
+  ARow: Integer; var CanSelect: Boolean);
+var
+  ColType: TSubOutputColumns;
+begin
+  inherited;
+  if ARow = FormatRow then
+  begin
+    Assert((ACol >= 0) and (ACol <= Ord(High(TSubOutputColumns))));
+    ColType := TSubOutputColumns(ACol);
+    CanSelect := ColType in [socPrintSubsidence, socPrintCompactModelLayer,
+      socPrintCompactByInterbedSystem, socPrintVerticalDisplacement,
+      socPrintNoDelayPreconsolidationHead, socPrintDelayPreconsolidationHead];
+  end;
 end;
 
 procedure TframePackageSub.sbAddClick(Sender: TObject);
@@ -439,11 +401,15 @@ begin
   end
   else
   begin
-    if (rdgOutput.Row >= 1) and (rdgOutput.Row < rdgOutput.RowCount) then
+    if (rdgOutput.Row >= FirstStateRow)
+      and (rdgOutput.Row < rdgOutput.RowCount) then
     begin
-      rdgOutput.DeleteRow(rdgOutput.Row);
-      seNumExportPeriods.AsInteger := seNumExportPeriods.AsInteger - 1;
-      seNumExportPeriodsChange(nil);
+      rdgOutput.BeginUpdate;
+      try
+        rdgOutput.DeleteRow(rdgOutput.Row);
+      finally
+        rdgOutput.EndUpdate;
+      end;
     end;
   end;
 end;
@@ -457,9 +423,15 @@ begin
   end
   else
   begin
-    if (rdgOutput.Row >= 1) and (rdgOutput.Row < rdgOutput.RowCount) then
+    if (rdgOutput.Row >= FirstStateRow)
+      and (rdgOutput.Row < rdgOutput.RowCount) then
     begin
-      rdgOutput.InsertRow(rdgOutput.Row);
+      rdgOutput.BeginUpdate;
+      try
+        rdgOutput.InsertRow(rdgOutput.Row);
+      finally
+        rdgOutput.EndUpdate;
+      end;
     end;
   end;
 end;
@@ -467,22 +439,34 @@ end;
 procedure TframePackageSub.seNumExportPeriodsChange(Sender: TObject);
 var
   NumRows: Integer;
+  ColIndex: Integer;
 begin
   inherited;
   FChangingRowCount := True;
   try
-  NumRows := seNumExportPeriods.AsInteger + 1;
-  if NumRows = 1 then
-  begin
-    NumRows := 2;
-  end;
-  rdgOutput.BeginUpdate;
-  try
-    rdgOutput.RowCount := NumRows;
-  finally
-    rdgOutput.EndUpdate;
-  end;
-  EnableDeleteButton;
+    NumRows := seNumExportPeriods.AsInteger + FirstStateRow;
+    if NumRows = FirstStateRow then
+    begin
+      NumRows := FirstStateRow+1;
+    end;
+    rdgOutput.BeginUpdate;
+    try
+      rdgOutput.RowCount := NumRows;
+      if seNumExportPeriods.AsInteger = 0 then
+      begin
+        for ColIndex := Ord(socStartTime) to Ord(socEndTime) do
+        begin
+          rdgOutput.Cells[ColIndex,FirstStateRow] := '';
+        end;
+        for ColIndex := Ord(socPrintSubsidence) to Ord(High(TSubOutputColumns)) do
+        begin
+          rdgOutput.Checked[ColIndex,FirstStateRow] := False;
+        end;
+      end;
+    finally
+      rdgOutput.EndUpdate;
+    end;
+    EnableDeleteButton;
   finally
     FChangingRowCount := False;
   end;
@@ -509,66 +493,78 @@ begin
     TSubBinaryOutputChoice(comboOutputChoice.ItemIndex);
 
   SubPackage.PrintFormats.SubsidenceFormat :=
-    rdgFormats.ItemIndex[Ord(sfcSubsidence), 1];
+    rdgOutput.ItemIndex[Ord(socPrintSubsidence), FormatRow];
+
   SubPackage.PrintFormats.CompactionByModelLayerFormat :=
-    rdgFormats.ItemIndex[Ord(sfcCompactModelLayer), 1];
+    rdgOutput.ItemIndex[Ord(socPrintCompactModelLayer), FormatRow];
+
   SubPackage.PrintFormats.CompactionByInterbedSystemFormat :=
-    rdgFormats.ItemIndex[Ord(sfcCompactByInterbedSystem), 1];
+    rdgOutput.ItemIndex[Ord(socPrintCompactByInterbedSystem), FormatRow];
+
   SubPackage.PrintFormats.VerticalDisplacementFormat :=
-    rdgFormats.ItemIndex[Ord(sfcVerticalDisplacement), 1];
+    rdgOutput.ItemIndex[Ord(socPrintVerticalDisplacement), FormatRow];
+
   SubPackage.PrintFormats.NoDelayPreconsolidationHeadFormat :=
-    rdgFormats.ItemIndex[Ord(sfcNoDelayPreconsolidationHead), 1];
+    rdgOutput.ItemIndex[Ord(socPrintNoDelayPreconsolidationHead), FormatRow];
+
   SubPackage.PrintFormats.DelayPreconsolidationHeadFormat :=
-    rdgFormats.ItemIndex[Ord(sfcDelayPreconsolidationHead), 1];
+    rdgOutput.ItemIndex[Ord(socPrintDelayPreconsolidationHead), FormatRow];
 
   PrintChoiceCount := 0;
-  for Index := 1 to rdgOutput.RowCount - 1 do
+  if seNumExportPeriods.AsInteger = 0 then
   begin
-    if TryStrToFloat(rdgOutput.Cells[Ord(socStartTime),Index], StartTime)
-      and TryStrToFloat(rdgOutput.Cells[Ord(socEndTime),Index], EndTime) then
+    SubPackage.PrintChoices.Clear;
+  end
+  else
+  begin
+    for Index := FirstStateRow to rdgOutput.RowCount - 1 do
     begin
-      Inc(PrintChoiceCount);
-      if SubPackage.PrintChoices.Count < PrintChoiceCount then
+      if TryStrToFloat(rdgOutput.Cells[Ord(socStartTime),Index], StartTime)
+        and TryStrToFloat(rdgOutput.Cells[Ord(socEndTime),Index], EndTime) then
       begin
-        Item := SubPackage.PrintChoices.Add as TSubPrintItem;
-      end
-      else
-      begin
-        Item := SubPackage.PrintChoices[PrintChoiceCount-1];
+        Inc(PrintChoiceCount);
+        if SubPackage.PrintChoices.Count < PrintChoiceCount then
+        begin
+          Item := SubPackage.PrintChoices.Add as TSubPrintItem;
+        end
+        else
+        begin
+          Item := SubPackage.PrintChoices[PrintChoiceCount-1];
+        end;
+        Item.StartTime := StartTime;
+        Item.EndTime := EndTime;
+        Item.PrintSubsidence :=
+          rdgOutput.Checked[Ord(socPrintSubsidence),Index];
+        Item.SaveSubsidence :=
+          rdgOutput.Checked[Ord(socSaveSubsidence),Index];
+        Item.PrintCompactionByModelLayer :=
+          rdgOutput.Checked[Ord(socPrintCompactModelLayer),Index];
+        Item.SaveCompactionByModelLayer :=
+          rdgOutput.Checked[Ord(socSaveCompactModelLayer),Index];
+        Item.PrintCompactionByInterbedSystem :=
+          rdgOutput.Checked[Ord(socPrintCompactByInterbedSystem),Index];
+        Item.SaveCompactionByInterbedSystem :=
+          rdgOutput.Checked[Ord(socSaveCompactByInterbedSystem),Index];
+        Item.PrintVerticalDisplacement :=
+          rdgOutput.Checked[Ord(socPrintVerticalDisplacement),Index];
+        Item.SaveVerticalDisplacement :=
+          rdgOutput.Checked[Ord(socSaveVerticalDisplacement),Index];
+        Item.PrintCriticalHeadNoDelay :=
+          rdgOutput.Checked[Ord(socPrintNoDelayPreconsolidationHead),Index];
+        Item.SaveCriticalHeadNoDelay :=
+          rdgOutput.Checked[Ord(socSaveNoDelayPreconsolidationHead),Index];
+        Item.PrintCriticalHeadDelay :=
+          rdgOutput.Checked[Ord(socPrintDelayPreconsolidationHead),Index];
+        Item.SaveCriticalHeadDelay :=
+          rdgOutput.Checked[Ord(socSaveDelayPreconsolidationHead),Index];
+        Item.PrintDelayBudgets :=
+          rdgOutput.Checked[Ord(socPrintDelayInterbedBudget),Index];
       end;
-      Item.StartTime := StartTime;
-      Item.EndTime := EndTime;
-      Item.PrintSubsidence :=
-        rdgOutput.Checked[Ord(socPrintSubsidence),Index];
-      Item.SaveSubsidence :=
-        rdgOutput.Checked[Ord(socSaveSubsidence),Index];
-      Item.PrintCompactionByModelLayer := 
-        rdgOutput.Checked[Ord(socPrintCompactModelLayer),Index];
-      Item.SaveCompactionByModelLayer :=
-        rdgOutput.Checked[Ord(socSaveCompactModelLayer),Index];
-      Item.PrintCompactionByInterbedSystem :=
-        rdgOutput.Checked[Ord(socPrintCompactByInterbedSystem),Index];
-      Item.SaveCompactionByInterbedSystem :=
-        rdgOutput.Checked[Ord(socSaveCompactByInterbedSystem),Index];
-      Item.PrintVerticalDisplacement :=
-        rdgOutput.Checked[Ord(socPrintVerticalDisplacement),Index];
-      Item.SaveVerticalDisplacement :=
-        rdgOutput.Checked[Ord(socSaveVerticalDisplacement),Index];
-      Item.PrintCriticalHeadNoDelay :=
-        rdgOutput.Checked[Ord(socPrintNoDelayPreconsolidationHead),Index];
-      Item.SaveCriticalHeadNoDelay :=
-        rdgOutput.Checked[Ord(socSaveNoDelayPreconsolidationHead),Index];
-      Item.PrintCriticalHeadDelay :=
-        rdgOutput.Checked[Ord(socPrintDelayPreconsolidationHead),Index];
-      Item.SaveCriticalHeadDelay :=
-        rdgOutput.Checked[Ord(socSaveDelayPreconsolidationHead),Index];
-      Item.PrintDelayBudgets :=
-        rdgOutput.Checked[Ord(socPrintDelayInterbedBudget),Index];
     end;
-  end;
-  while SubPackage.PrintChoices.Count > PrintChoiceCount do
-  begin
-    SubPackage.PrintChoices.Delete(SubPackage.PrintChoices.Count-1);
+    while SubPackage.PrintChoices.Count > PrintChoiceCount do
+    begin
+      SubPackage.PrintChoices.Delete(SubPackage.PrintChoices.Count-1);
+    end;
   end;
 end;
 

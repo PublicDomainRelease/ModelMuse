@@ -60,8 +60,10 @@ const
   StrMNWI_SummarizeByNode = 'MNWI_SummarizeByNode';
   StrBCF = 'BCF6';
   StrSUB = 'SUB';
+  StrSWT = 'SWT';
   StrSUBSaveRestart = 'SUB_SaveRestart';
   StrSUBReadRestart = 'SUB_ReadRestart';
+  StrHydmodOut = 'HYDMOD_OUT';
 
   StrSubSUB_Out = 'SUB_SUB_OUT';
   StrSubCOM_ML_Out = 'SUB_COM_ML_OUT';
@@ -70,6 +72,22 @@ const
   StrSub_NDPCH_Out = 'SUB_NDPCH_OUT';
   StrSub_DPCH_Out = 'SUB_DPCH_OUT';
   StrZoneBudget = 'ZONEBUDGET';
+  StrHYD = 'HYD';
+
+  StrSwtSUB_Out             = 'SWT_SUB_OUT';
+  StrSwtComML_Out           = 'SWT_COM_ML_OUT';
+  StrSwtCOM_IS_Out          = 'SWT_COM_IS_OUT';
+  StrSwt_VD_Out             = 'SWT_VD_OUT';
+  StrSwt_PreCon_Out         = 'SWT_PreCon_OUT';
+  StrSwt_DeltaPreCon_Out    = 'SWT_DeltaPreCon_OUT';
+  StrSwt_GeoStat_Out        = 'SWT_GeoStat_OUT';
+  StrSwt_DeltaGeoStat_Out   = 'SWT_DeltaGeoStat_OUT';
+  StrSwt_EffStress_Out      = 'SWT_EffStress_OUT';
+  StrSwt_DeltaEffStress_Out = 'SWT_DeltaEffStress_OUT';
+  StrSwt_VoidRatio_Out      = 'SWT_VoidRatio_OUT';
+  StrSwt_ThickCompSed_Out   = 'SWT_ThickCompSed_OUT';
+  StrSwt_LayerCentElev_Out  = 'SWT_LayerCentElev_OUT';
+  BAS_InitialHeads          = 'BAS_InitialHeads';
 
   Solvers: array[0..3] of string = (StrPCG, StrGMG, StrSIP, StrDE4);
   FlowPackages: array[0..2] of string = (StrLPF, StrHUF2, StrBCF);
@@ -207,6 +225,12 @@ const
   SubUnit = 65;
   SubUnitSave = 66;
   SubUnitRead = 67;
+  SWT_Unit = 68;
+  HYD_Unit = 69;
+
+  // Unit numbers 70 - 95 are reserved for the user.
+  // If the reserved unit numbers are changed, the documentation
+  // for the MODFLOW Name File dialog box must be updated.
 
   SubSUB_Out = 110;
   SubCOM_ML_Out = 111;
@@ -215,12 +239,27 @@ const
   Sub_NDPCH_Out = 114;
   Sub_DPCH_Out = 115;
 
+  SwtSUB_Out = 116;
+  SwtComML_Out = 117;
+  SwtCOM_IS_Out = 118;
+  Swt_VD_Out = 119;
+  Swt_PreCon_Out = 120;
+  Swt_DeltaPreCon_Out = 121;
+  Swt_GeoStat_Out = 122;
+  Swt_DeltaGeoStat_Out = 123;
+  Swt_EffStress_Out = 124;
+  Swt_DeltaEffStress_Out = 125;
+  Swt_VoidRatio_Out = 126;
+  Swt_ThickCompSed_Out = 127;
+  Swt_LayerCentElev_Out = 128;
 
-  // Unit numbers 70 - 95 are reserved for the user.
-  // If the reserved unit numbers are changed, the documentation
-  // for the MODFLOW Name File dialog box must be updated.
+  Hydmod_Out = 129;
+  BasInitialHeads = 130;
 
-  GageOutputStartUnit = 105;
+
+
+
+  GageOutputStartUnit = 205;
 
 
 { TUnitNumbers }
@@ -324,6 +363,11 @@ begin
   AddItem(StrSUB, SubUnit);
   AddItem(StrSUBSaveRestart, SubUnitSave);
   AddItem(StrSUBReadRestart, SubUnitRead);
+  AddItem(StrHydmodOut, Hydmod_Out);
+  AddItem(StrHYD, HYD_Unit);
+  AddItem(StrSWT, SWT_Unit);
+
+
 
   AddItem(StrSubSUB_Out, SubSUB_Out);
   AddItem(StrSubCOM_ML_Out, SubCOM_ML_Out);
@@ -331,6 +375,22 @@ begin
   AddItem(StrSub_VD_Out, Sub_VD_Out);
   AddItem(StrSub_NDPCH_Out, Sub_NDPCH_Out);
   AddItem(StrSub_DPCH_Out, Sub_DPCH_Out);
+
+  AddItem(StrSwtSUB_Out            ,SwtSUB_Out            );
+  AddItem(StrSwtComML_Out          ,SwtComML_Out          );
+  AddItem(StrSwtCOM_IS_Out         ,SwtCOM_IS_Out         );
+  AddItem(StrSwt_VD_Out            ,Swt_VD_Out            );
+  AddItem(StrSwt_PreCon_Out        ,Swt_PreCon_Out        );
+  AddItem(StrSwt_DeltaPreCon_Out   ,Swt_DeltaPreCon_Out   );
+  AddItem(StrSwt_GeoStat_Out       ,Swt_GeoStat_Out       );
+  AddItem(StrSwt_DeltaGeoStat_Out  ,Swt_DeltaGeoStat_Out  );
+  AddItem(StrSwt_EffStress_Out     ,Swt_EffStress_Out     );
+  AddItem(StrSwt_DeltaEffStress_Out,Swt_DeltaEffStress_Out);
+  AddItem(StrSwt_VoidRatio_Out     ,Swt_VoidRatio_Out     );
+  AddItem(StrSwt_ThickCompSed_Out  ,Swt_ThickCompSed_Out  );
+  AddItem(StrSwt_LayerCentElev_Out ,Swt_LayerCentElev_Out );
+
+  AddItem(BAS_InitialHeads, BasInitialHeads);
 
 end;
 

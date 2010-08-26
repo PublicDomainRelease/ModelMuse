@@ -133,6 +133,10 @@ begin
                   end
                   else
                   begin
+                    if Contours.Count = 0 then
+                    begin
+                      Exit;
+                    end;
                     MinReal := Contours.ContourValues[0];
                     MaxReal := Contours.ContourValues[
                       Length(Contours.ContourValues)-1];
@@ -660,6 +664,7 @@ end;
 constructor TLegend.Create(Model: TObject);
 begin
   inherited;
+  FValueSource := nil;
   FValues := TValueArrayStorage.Create;
   FFractions := TValueArrayStorage.Create;
   FFractions.DataType := rdtDouble;

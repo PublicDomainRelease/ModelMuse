@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
-<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+<topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
   <title translate="true">HOB: Head Observation Package Pane</title>
   <body>
     <header>
@@ -14,5 +14,6 @@
     <para styleclass="Normal"><text styleclass="Normal" translate="true">For a multilayer head observation, specify the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Properties_Tab" anchor="HigherZ" styleclass="Strong" translate="true">Higher Z-coordinate</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Properties_Tab" anchor="HigherZ" styleclass="Strong" translate="true">Lower Z-coordinate</link><text styleclass="Normal" translate="true"> to the top and bottom elevation of the well screen.</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">For multilayer observations, the simulated head is calculated using a weighted average of the heads in all the layers making up the multilayer observation. The user can specify the weights used in the calculation. &#160;If the weights do not add up to 1, ModelMuse will scale them so that they do add up to 1 in the MODFLOW input file. &#160;If no weights are specified for a multilayer observation, the heads in all the layers will be weighted equally. &#160;However, specifying a weight for a layer does not make that layer part of the multilayer observation. &#160;Instead, the cells that are part of the multilayer observation are those that are intersected by the object.</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">See: </text><link displaytype="text" defaultstyle="true" type="topiclink" href="HOB_Head_Observation_Package" styleclass="Normal" translate="true">HOB: Head Observation package</link><text styleclass="Normal" translate="true">.</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">See also: </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Manage_Head_Observations" styleclass="Strong" translate="true">Manage Head Observations</link><text styleclass="Normal" translate="true"> dialog box.</text></para>
   </body>
 </topic>

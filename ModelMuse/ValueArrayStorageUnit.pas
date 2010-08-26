@@ -12,6 +12,10 @@ type
     FBooleanValues: array of boolean;
     FStringValues: TStringList;
     FDataType: TRbwDataType;
+    FCached: boolean;
+    FCleared: boolean;
+//    FCachedData: TMemoryStream;
+    FTempFileName: string;
     function GetBooleanValues(Index: integer): boolean;
     function GetCount: integer;
     function GetIntValues(Index: integer): integer;
@@ -27,6 +31,7 @@ type
     procedure WriteValues(Writer: TWriter);
   protected
     procedure DefineProperties(Filer: TFiler); override;
+    procedure RestoreData;
   public
     Constructor Create;
     Destructor Destroy; override;
@@ -47,6 +52,7 @@ type
     procedure Delete(Index: integer);
     procedure Insert(Index: integer);
     procedure Clear;
+    procedure CacheData;
   published
     property DataType: TRbwDataType read FDataType write SetDataType;
     property Count: integer read GetCount write SetCount;
@@ -62,6 +68,7 @@ type
     procedure Assign(Source: TPersistent); override;
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
+    procedure CacheData;
   published
     property Name: string read FName write SetName;
     property Values: TValueArrayStorage read FValues write SetValues;
@@ -74,6 +81,7 @@ type
     function GetItem(Index: Integer): TValueArrayItem;
     procedure SetItem(Index: Integer; const Value: TValueArrayItem);
   public
+    procedure CacheData;
     constructor Create;
     property Items[Index: Integer]: TValueArrayItem read GetItem write SetItem;
     function ValuesByName(AName: string): TValueArrayStorage;
@@ -81,7 +89,7 @@ type
 
 implementation
 
-uses SysUtils;
+uses SysUtils, ZLib, TempFiles;
 
 { TValueArrayStorage }
 
@@ -93,7 +101,6 @@ begin
   Count := Reader.ReadInteger;
   for Index := 0 to Count - 1 do
   begin
-//    Reader.ReadString;
     case DataType of
       rdtDouble: RealValues[Index] := Reader.ReadFloat;
       rdtInteger: IntValues[Index] := Reader.ReadInteger;
@@ -103,6 +110,61 @@ begin
     end;
   end;
   Reader.ReadListEnd;
+  CacheData;
+end;
+
+procedure TValueArrayStorage.RestoreData;
+var
+  DecompressionStream: TDecompressionStream;
+  LocalCount: integer;
+  ValueLength: Integer;
+  Index: Integer;
+  StringValue: string;
+  CachedData: TMemoryStream;
+begin
+  if not FCached or not FCleared then
+  begin
+    Exit;
+  end;
+  CachedData := TMemoryStream.Create;
+  try
+    CachedData.Position := 0;
+    ExtractAFile(FTempFileName, CachedData);
+    DecompressionStream := TDecompressionStream.Create(CachedData);
+    try
+      DecompressionStream.Read(LocalCount, SizeOf(LocalCount));
+      Count := LocalCount;
+      case DataType of
+        rdtDouble:
+          begin
+            DecompressionStream.Read(FRealValues[0], LocalCount*SizeOf(double));
+          end;
+        rdtInteger:
+          begin
+            DecompressionStream.Read(FIntValues[0], LocalCount*SizeOf(integer));
+          end;
+        rdtBoolean:
+          begin
+            DecompressionStream.Read(FBooleanValues[0], LocalCount*SizeOf(boolean));
+          end;
+        rdtString:
+          begin
+            for Index := 0 to LocalCount - 1 do
+            begin
+              DecompressionStream.Read(ValueLength, SizeOf(ValueLength));
+              SetString(StringValue, nil, ValueLength);
+              DecompressionStream.Read(Pointer(StringValue)^, ValueLength * SizeOf(Char));
+              FStringValues[Index] := StringValue;
+            end;
+          end;
+      end;
+    finally
+      DecompressionStream.Free;
+    end;
+  finally
+    CachedData.Free;
+  end;
+  FCleared := False;
 end;
 
 procedure TValueArrayStorage.WriteValues(Writer: TWriter);
@@ -113,7 +175,6 @@ begin
   Writer.WriteInteger(Count);
   for Index := 0 to Count - 1 do
   begin
-//    Writer.WriteString('Value=');
     case DataType of
       rdtDouble: Writer.WriteFloat(RealValues[Index]);
       rdtInteger: Writer.WriteInteger(IntValues[Index]);
@@ -123,6 +184,7 @@ begin
     end;
   end;
   Writer.WriteListEnd;
+  CacheData;
 end;
 
 procedure TValueArrayStorage.Add;
@@ -169,14 +231,27 @@ begin
     SourceStorage := TValueArrayStorage(Source);
     Count := 0;
     DataType := SourceStorage.DataType;
-    case DataType of
-      rdtDouble: FRealValues := SourceStorage.FRealValues;
-      rdtInteger: FIntValues := SourceStorage.FIntValues;
-      rdtBoolean: FBooleanValues := SourceStorage.FBooleanValues;
-      rdtString: FStringValues.Assign(SourceStorage.FStringValues);
-      else Assert(False);
+    if SourceStorage.FCached and SourceStorage.FCleared
+      and (SourceStorage.FTempFileName <> '') then
+    begin
+      FCached := True;
+      FCleared := True;
+      FTempFileName := SourceStorage.FTempFileName;
+    end
+    else
+    begin
+      Count := SourceStorage.Count;
+      case DataType of
+        rdtDouble: FRealValues := SourceStorage.FRealValues;
+        rdtInteger: FIntValues := SourceStorage.FIntValues;
+        rdtBoolean: FBooleanValues := SourceStorage.FBooleanValues;
+        rdtString: FStringValues.Assign(SourceStorage.FStringValues);
+        else Assert(False);
+      end;
+      Count := SourceStorage.Count;
+      CacheData;
+      SourceStorage.CacheData;
     end;
-    Count := SourceStorage.Count;
   end
   else
   begin
@@ -184,14 +259,84 @@ begin
   end;
 end;
 
+procedure TValueArrayStorage.CacheData;
+var
+  Compressor: TCompressionStream;
+  LocalCount: Integer;
+  Index: Integer;
+  StringValue: string;
+  ValueLength: Integer;
+  CachedData: TMemoryStream;
+begin
+  if FCached then
+  begin
+    Clear;
+    FCached := True;
+    Exit;
+  end;
+  if (Count = 0) then
+  begin
+    Exit;
+  end;
+  CachedData := TMemoryStream.Create;
+  try
+    if FTempFileName = '' then
+    begin
+      FTempFileName := TempFileName;
+    end;
+    Compressor := TCompressionStream.Create(clDefault, CachedData);
+    try
+      CachedData.Position := 0;
+      LocalCount := Count;
+      Compressor.Write(LocalCount, SizeOf(LocalCount));
+      case DataType of
+        rdtDouble:
+          begin
+            Compressor.Write(FRealValues[0], LocalCount*SizeOf(double));
+          end;
+        rdtInteger:
+          begin
+            Compressor.Write(FIntValues[0], LocalCount*SizeOf(integer));
+          end;
+        rdtBoolean:
+          begin
+            Compressor.Write(FBooleanValues[0], LocalCount*SizeOf(boolean));
+          end;
+        rdtString:
+          begin
+            for Index := 0 to FStringValues.Count - 1 do
+            begin
+              StringValue := FStringValues[Index];
+              ValueLength := Length(StringValue);
+              Compressor.Write(ValueLength, SizeOf(ValueLength));
+              Compressor.WriteBuffer(Pointer(StringValue)^,
+                Length(StringValue) * SizeOf(Char));
+            end;
+          end;
+      end;
+
+    finally
+      Compressor.Free;
+    end;
+    CachedData.Position := 0;
+    ZipAFile(FTempFileName, CachedData);
+  finally
+    CachedData.Free;
+  end;
+  Clear;
+  FCached := True;
+end;
+
 procedure TValueArrayStorage.Clear;
 begin
   Count := 0;
+  FCleared := True;
 end;
 
 constructor TValueArrayStorage.Create;
 begin
-  FStringValues := TStringList.Create
+  FStringValues := TStringList.Create;
+  FCached := False;
 end;
 
 procedure TValueArrayStorage.DefineProperties(Filer: TFiler);
@@ -244,11 +389,13 @@ end;
 
 function TValueArrayStorage.GetBooleanValues(Index: integer): boolean;
 begin
+  RestoreData;
   result := FBooleanValues[Index];
 end;
 
 function TValueArrayStorage.GetCount: integer;
 begin
+  RestoreData;
   result := 0;
   case DataType of
     rdtDouble: result := length(FRealValues);
@@ -261,16 +408,19 @@ end;
 
 function TValueArrayStorage.GetIntValues(Index: integer): integer;
 begin
+  RestoreData;
   result := FIntValues[Index];
 end;
 
 function TValueArrayStorage.GetRealValues(Index: integer): double;
 begin
+  RestoreData;
   result := FRealValues[Index];
 end;
 
 function TValueArrayStorage.GetStringValues(Index: integer): string;
 begin
+  RestoreData;
   result := FStringValues[Index];
 end;
 
@@ -312,7 +462,9 @@ end;
 procedure TValueArrayStorage.SetBooleanValues(Index: integer;
   const Value: boolean);
 begin
+  RestoreData;
   FBooleanValues[Index] := Value;
+  FCached := False;
 end;
 
 procedure TValueArrayStorage.SetCount(const Value: integer);
@@ -335,6 +487,7 @@ begin
       end
     else Assert(False);
   end;
+  FCached := False;
 end;
 
 procedure TValueArrayStorage.SetDataType(const Value: TRbwDataType);
@@ -347,18 +500,23 @@ begin
     Count := 0;
     FDataType := Value;
     Count := TempCount;
+    FCached := False;
   end;
 end;
 
 procedure TValueArrayStorage.SetIntValues(Index: integer; const Value: integer);
 begin
+  RestoreData;
   FIntValues[Index] := Value;
+  FCached := False;
 end;
 
 procedure TValueArrayStorage.SetRealValues(Index: integer;
   const Value: double);
 begin
+  RestoreData;
   FRealValues[Index] := Value;
+  FCached := False;
 end;
 
 procedure TValueArrayStorage.SetStringValues(Index: integer;
@@ -378,7 +536,9 @@ begin
       Value := Copy(Value, 1, Length(Value)-1);
     end;
   end;
+  RestoreData;
   FStringValues[Index] := Value;
+  FCached := False;
 end;
 
 { TValueArrayItem }
@@ -397,6 +557,11 @@ begin
   begin
     inherited;
   end;
+end;
+
+procedure TValueArrayItem.CacheData;
+begin
+  FValues.CacheData;
 end;
 
 constructor TValueArrayItem.Create(Collection: TCollection);
@@ -422,6 +587,16 @@ begin
 end;
 
 { TValueCollection }
+
+procedure TValueCollection.CacheData;
+var
+  Index: Integer;
+begin
+  for Index := 0 to Count - 1 do
+  begin
+    Items[Index].CacheData;
+  end;
+end;
 
 constructor TValueCollection.Create;
 begin

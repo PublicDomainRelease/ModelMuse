@@ -57,13 +57,13 @@ type
     // @name advances @link(pbProgress) and sets the caption of
     // @link(lblProgress) based on @link(Prefix) and the amount of progress.
     procedure StepIt;
-    procedure AddMessage(Const AMessage: string);
+    procedure AddMessage(Const AMessage: string; AllowUpdate: boolean = True);
     { Public declarations }
   end;
 
 var
   // @name is the instance of @link(TfrmProgress).
-  frmProgress: TfrmProgress;
+  frmProgress: TfrmProgress = nil;
   frmFileProgress: TfrmProgress;
 
 implementation
@@ -82,10 +82,11 @@ begin
     + IntToStr(pbProgress.Max) + '.';
 end;
 
-procedure TfrmProgress.AddMessage(const AMessage: string);
+procedure TfrmProgress.AddMessage(const AMessage: string;
+  AllowUpdate: boolean = True);
 begin
   memoMessages.Lines.Add(AMessage);
-  if Now - LastMessageTime > HalfSecond then
+  if AllowUpdate and (Now - LastMessageTime > HalfSecond) then
   begin
     Application.ProcessMessages;
     LastMessageTime := Now;

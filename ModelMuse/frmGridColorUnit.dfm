@@ -32,27 +32,13 @@ inherited frmGridColor: TfrmGridColor
     OnChangingEx = udTimeChangingEx
   end
   inherited pcChoices: TPageControl
+    ActivePage = tabSelection
     TabOrder = 2
     inherited tabSelection: TTabSheet
       ExplicitLeft = 4
       ExplicitTop = 29
       ExplicitWidth = 598
       ExplicitHeight = 335
-      inherited lblDataSet: TLabel
-        Margins.Bottom = 0
-      end
-      inherited lblColorScheme: TLabel
-        Margins.Bottom = 0
-      end
-      inherited lblCycles: TLabel
-        Margins.Bottom = 0
-      end
-      inherited lblColorAdjustment: TLabel
-        Margins.Bottom = 0
-      end
-      inherited lblComment: TLabel
-        Margins.Bottom = 0
-      end
       inherited virttreecomboDataSets: TTntExDropDownVirtualStringTree
         Anchors = [akLeft, akTop, akRight]
         Tree.OnGetNodeDataSize = virttreecomboDataSetsDropDownTreeGetNodeDataSize
@@ -64,20 +50,7 @@ inherited frmGridColor: TfrmGridColor
       ExplicitWidth = 598
       ExplicitHeight = 335
       inherited lblLowerLimit: TLabel
-        Margins.Bottom = 0
         Anchors = [akLeft, akTop, akBottom]
-      end
-      inherited lblUpperLimit: TLabel
-        Margins.Bottom = 0
-      end
-      inherited lblValuesToIgnore: TLabel
-        Margins.Bottom = 0
-      end
-      inherited lblNumberOfValuesToIgnore: TLabel
-        Margins.Bottom = 0
-      end
-      inherited lblEpsilon: TLabel
-        Margins.Bottom = 0
       end
     end
     inherited tabLegend: TTabSheet
@@ -95,14 +68,6 @@ inherited frmGridColor: TfrmGridColor
         ExplicitTop = 3
         ExplicitWidth = 374
         ExplicitHeight = 329
-      end
-      inherited Panel2: TPanel
-        inherited lblMethod: TLabel
-          Margins.Bottom = 0
-        end
-        inherited lblColorLegendRows: TLabel
-          Margins.Bottom = 0
-        end
       end
     end
   end
