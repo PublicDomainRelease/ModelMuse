@@ -1795,6 +1795,10 @@ that affects the model output should also have a comment. }
     procedure Loaded; override;
   public
     FDataArrayCreationRecords: array of TDataSetCreationData;
+    // @name updatds and invalidates data sets that may have been calculated
+    // incorrectly in previous versions of ModelMuse.
+    procedure FixOldModel;
+    procedure UpdateDataSetDimensions;
     procedure UpdateFormulas(OldNames, NewNames: TStringList);
     function CheckWetting: boolean;
     function FixFileName(AFileName: string): string;
@@ -2421,6 +2425,8 @@ that affects the model output should also have a comment. }
     property ContourLegend: TLegend read FContourLegend;
     property StoreCachedData: boolean read FStoreCachedData
       write FStoreCachedData;
+    function FileVersionEqualOrEarlier(TestVersion: string): boolean;
+    procedure InvalidateAllDataSets;
   published
     // @name represents a series of bitmaps that can be displayed on
     // the top, front, or side view of the model.
@@ -3006,7 +3012,7 @@ const
   //       an Assertion error when no data set was selected.  The button
   //       is now disabled when no data set is selected.
   //   '2.3.0.26' Bug fix: When performing coordinate conversions on Shapefiles,
-  //       you can no longer select a UTM zone until you have choosen to
+  //       you can no longer select a UTM zone until you have chosen to
   //       perform the conversion.
   //     Enhancement: In the Show or Hide Objects dialog box, any collapsed
   //       branch that contains a selected object is shown with a bold font.
@@ -3157,8 +3163,8 @@ const
   //     Bug fix: Eliminated an assertion failure that occurred under certain
   //       circumstances when attempting to draw an object.
   //   '2.5.0.3' Bug fix: Eliminated Range Check Error that sometimes
-  //       occured when a menu item was selected.
-  //   '2.5.0.4' Bug fix: Fixed bugs in deleting all print/save choices in
+  //       occurred when a menu item was selected.
+  //   '2.5.0.4' Bug fix: Fixed bugs in deleting all print/save choices in the
   //       Subsidence package.
   //     Bug fix: Fixed layout of Subsidence package controls in
   //       MODFLOW Packags and Programs dialog box.
@@ -3217,7 +3223,7 @@ const
   //   '2.5.0.13' Change: Items in "Search for Objects" dialog box
   //       are now listed in a tree component.
   //     Bug fix: When parameters are used in the RCH, EVT, and ETS packages,
-  //       the print codes for the paramters are set correctly.
+  //       the print codes for the parameters are set correctly.
   //   '2.5.0.14' Enhancement: When saving a ModelMate file, the user can
   //       choose to have the ModelMate file opened with ModelMate.
   //     Bug fix: fixed problem that could make it opening the Object
@@ -3243,8 +3249,105 @@ const
   //     Enhancement: Attempting to read an invalid DEM now results in an
   //       error message instead of generating a bug report.
   //   '2.6.0.0' No further changes.
+  //   '2.6.0.1' Enhancement: When coloring the grid causes a data set to be
+  //       recalculated, there will be form displaying the steps involved
+  //       in calculating the values.
+  //     Bug fix: Postprocessing for Geostatic Stress and changes in Geostatic
+  //       stress has been fixed.
+  //     Bug fix: Opening an object in the Object Properties dialog box no
+  //       longer causes causes transient data to be recalculated.
+  //     Enhancement: Channel cross sections in the SFR package can now be
+  //       imported from Shapefiles.
+  //   '2.6.0.2' Enhancement: When importing SFR data from Shapefiles, formulas
+  //       can now be used for SLOPE, STRTOP, STRTHICK, STRHC1, THTS, THTI,
+  //       EPS, and UHC.
+  //     Enhancement: Improved error handling when importing an image.
+  //     Bug fix: Attempting to write a locked file or attempting to open a
+  //       file that doesn't exist now results in an error message instead of
+  //       a bug report.
+  //     Bug fix: Exporting locations of MODPATH and ZONEBUDGET sometimes
+  //       were not enclosed in quotes when quotes were required.
+  //     Enhancement: Reduced flicker when drawing new objects. This may also
+  //       have fixed a intermittent bug that caused access violations when
+  //       coloring the grid.
+  //     Bug fix: Fixed coloring the grid when integer values were being used
+  //       to color the grid and limits were used to filter what cells
+  //       would be colored.
+  //   '2.6.0.3' -----
+  //   '2.6.0.4' Bug fix: VertexInterpolate didn't work properly
+  //       if the grid was rotated.
+  //   '2.6.0.5' Enhancement: Images can now be exported as .bmp files as
+  //       well as .emf files.
+  //     Bug fix: Pasting objects didn't work properly if the object
+  //       had associated vertex values.
+  //     Bug fix: Sometimes changing the number of Z formulas
+  //       could lead to an assertion failure.
+  //     Enhancement: Improved speed of opening the Global Variables
+  //       dialog box.
+  //     Bug fix: Opening the Object Properties dialog box would sometimes
+  //       cause an access violation if another model had been opened
+  //       previously.
+  //     Enhancement: In the Select Objects by Name dialog box, the objects
+  //       are sorted alphabetically.
+  //     Bug fix: In the Select Objects by Name dialog box, the objects are
+  //       now placed on the correct tab instead of always being put on the
+  //       tab for the top view if the model.
+  //   '2.6.0.6' Enhancement: In the Color Grid and Contour Data dialog boxes,
+  //       when the user changes the data set used to color or contour the grid,
+  //       the same limits as in the data set that is currently displayed
+  //       can be used with a newly selected data set.
+  //   '2.6.0.7' Bug fix: in the SFR package, NSTRAIL, ISUZN, and NSFRSETS
+  //       were written when ISFROPT > 0 instead of when ISFROPT > 1.
+  //   '2.6.0.8' Bug fix: Deleting the last vertex of an object
+  //       no longer causes an error.
+  //     Bug fix: When the grid was colored with horizontal flow barriers,
+  //       changing an object that defines a horizontal flow barrier
+  //       now causes the displayed barriers to be updated correctly.
+  //     Editing multiple objects in a new model no longer causes an error.
+  //     Bug fix: Inactive cells are no longer included in head observations.
+  //   '2.6.0.9' Bug fix: on the Import Image dialog box, it is no longer
+  //       possible to set the number of rows in the table to less than 1.
+  //     Bug fix: Previously, the MODPATH zone was incorrectly limited to
+  //       values greater than or equal to zero even for specified head cells.
+  //   '2.6.0.10' Bug fix: Attempting to import model head or drawdown results
+  //       from a file in which the number of layers is greater than the number
+  //       of simulated layers now results in an error message instead of
+  //       generating an error report.
+  //   '2.6.0.11' Enhancement: The macros "%SP", "%TS", and "%ET" can now be
+  //       used in text on the Export Image dialog box.  They will be replaced
+  //       by the stress period number, time step number, and elapsed time
+  //       respectively if those data are in the comment for the data set.
+  //     Change: The elapased time is now included in the data set comment
+  //       when importing MODFLOW results.
+  //   '2.6.0.12' Bug fix: MODPATH results were not cleared when opening
+  //       a new model.
+  //   '2.6.0.13' Bug fix: Fixed macros in Import Image dialog box so that
+  //       they work with the title too. (Bug not in released version.)
+  //   '2.6.0.14' Enhancement: Contours can now be exported to a Shapefile.
+  //     Change: All the commands for exporting Shapefiles have been moved to
+  //       a submenu.
+  //     Enhancement: Pathlines can now be exported to a Shapefile.
+  //     Enhancement: Endpoints can now be exported to a Shapefile.
+  //     Bug fix: Previously, the display of MODPATH times series points was
+  //       incorrect when there was more than one release time.
+  //     Enhancement: TimeSeries can now be exported to a Shapefile.
+  //   '2.6.0.15' Bug fix: when opening a new model, bitmaps from the previous
+  //       model are now removed.
+  //     Enhancement: ModelMuse now can create a series of bitmaps that
+  //       can be used to create a video.
+  //   '2.6.0.16' Enhancement: ModelMuse now will warn the user if a CHD, DRN,
+  //       DRT, GHB, RIV, SFR, or WEL cell is in an inactive cell.
+  //   '2.6.0.17' Enhancement: When coloring the grid with transient data,
+  //       only the data for the time being used to color the grid is evaluated.
+  //     Bug fix: Sometimes moving an object did not cause the data sets
+  //       that depend on it to be updated.
+  //     Bug fix: When importing a shape file, the interpretation algorithm
+  //       is now set correctly.
+  //     Bug fix: When exporting .emf files, sometimes the image size was
+  //       set to an incorrect value.
+  //   '2.7.0.0' Change: Updated memory manager to latest version.
 
-  ModelVersion = '2.6.0.0';
+  ModelVersion = '2.7.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -3304,6 +3407,10 @@ resourcestring
   StrZoneBudgetDefaultPath = 'C:\WRDAPP\Zonbud.3_01\Bin\zonbud.exe';
   StrModelMateDefaultPath = 'C:\WRDAPP\ModelMate_0_23_1\Bin\ModelMate.exe';
   StrModelMate = 'ModelMate';
+  StrAnyTimesAfterThe = 'Any times after the end of the last defined stress ' +
+  'period will be ignored.';
+  StrAnyTimesBeforeThe = 'Any times before the beginning of the first define' +
+  'd stress period will be ignored.';
 const
   StrAndNegatedAtCons = ' and negated at constant head cell';
   StrAndMadePositiveA = ' and made positive at constant head cell';
@@ -3593,11 +3700,14 @@ end;
 
 procedure TPhastModel.UpdateHfb(Sender: TObject);
 begin
+  frmProgress.Caption := 'Progress';
+  frmProgress.Show;
   if FHfbWriter = nil then
   begin
     FHfbWriter := TModflowHfb_Writer.Create(Self);
   end;
   (FHfbWriter as TModflowHfb_Writer).UpdateDisplay;
+  frmProgress.Hide;
   if frmErrorsAndWarnings.HasMessages then
   begin
     frmErrorsAndWarnings.Show;
@@ -3781,10 +3891,15 @@ begin
 
   FHydrogeologicUnits := THydrogeologicUnits.Create(self);
   FHufKxNotifier := TObserver.Create(nil);
+  FHufKxNotifier.Name := 'HufKxNotifier';
   FHufKyNotifier := TObserver.Create(nil);
+  FHufKyNotifier.Name := 'HufKyNotifier';
   FHufKzNotifier := TObserver.Create(nil);
+  FHufKzNotifier.Name := 'HufKzNotifier';
   FHufSsNotifier := TObserver.Create(nil);
+  FHufSsNotifier.Name := 'HufSsNotifier';
   FHufSyNotifier := TObserver.Create(nil);
+  FHufSyNotifier.Name := 'HufSyNotifier';
 end;
 
 procedure TPhastModel.CreateArchive(const FileName: string);
@@ -4533,6 +4648,7 @@ var
 begin
   FClearing := True;
   try
+    Bitmaps.Clear;
     ClearViewedItems;
 
     if PhastGrid <> nil then
@@ -4659,6 +4775,10 @@ begin
     BatchFileAdditionsAfterModel.Clear;
     FormulaManager.Clear;
     FDisplaySettings.Clear;
+
+    FreeAndNil(FPathline);
+    FreeAndNil(FEndPoints);
+    FreeAndNil(FTimeSeries);
 
     Invalidate;
 
@@ -5279,6 +5399,7 @@ end;
 procedure TPhastModel.GetMfHobHeadsUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
+  NewUseList.Add(rsActive);
   // do nothing
 end;
 
@@ -6101,6 +6222,45 @@ begin
     UpdateLpfDataArrayParameterUsed(rsModflow_CBKz, ptLPF_VKCB);
     UpdateLpfDataArrayParameterUsed(rsVerticalAnisotropy, ptLPF_VANI);
   end;
+end;
+
+procedure TPhastModel.UpdateDataSetDimensions;
+var
+  Index: integer;
+  DataSet: TDataArray;
+begin
+  if Grid = nil then
+  begin
+    for Index := 0 to DataSetCount - 1 do
+    begin
+      DataSet := DataSets[Index];
+      DataSet.UpdateDimensions(-1, -1, -1);
+    end;
+    for Index := 0 to BoundaryDataSetCount - 1 do
+    begin
+      DataSet := BoundaryDataSets[Index];
+      DataSet.UpdateDimensions(-1, -1, -1);
+    end;
+  end
+  else
+  begin
+    for Index := 0 to DataSetCount - 1 do
+    begin
+      DataSet := DataSets[Index];
+      DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+        Grid.ColumnCount);
+    end;
+    for Index := 0 to BoundaryDataSetCount - 1 do
+    begin
+      DataSet := BoundaryDataSets[Index];
+      DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+        Grid.ColumnCount);
+    end;
+    Grid.NeedToRecalculateTopCellColors := True;
+    Grid.NeedToRecalculateFrontCellColors := True;
+    Grid.NeedToRecalculateSideCellColors := True;
+  end;
+
 end;
 
 procedure TPhastModel.UpdateDataSets;
@@ -6957,6 +7117,9 @@ begin
   begin
     Exit;
   end;
+  frmErrorsAndWarnings.RemoveWarningGroup(StrAnyTimesAfterThe);
+  frmErrorsAndWarnings.RemoveWarningGroup(StrAnyTimesBeforeThe);
+
   FModflowFullStressPeriods.Clear;
   TimeList := TRealList.Create;
   try
@@ -7005,7 +7168,7 @@ begin
     if DeletedTimes then
     begin
       frmErrorsAndWarnings.AddWarning(
-        'Any times begore the beginning of the first defined stress period will be ignored.',
+        StrAnyTimesBeforeThe,
         'The beginning of the first stress period is '
         + FloatToStr(StressPeriod.StartTime)
         + '. The first defined time is '
@@ -7050,7 +7213,7 @@ begin
     if EndTime > StressPeriod.EndTime then
     begin
       frmErrorsAndWarnings.AddWarning(
-        'Any times after the end of the last defined stress period will be ignored.',
+        StrAnyTimesAfterThe,
         'The end of the last stress period is '
         + FloatToStr(StressPeriod.EndTime)
         + '. The last defined time is '
@@ -8037,6 +8200,33 @@ begin
   end;
 end;
 
+procedure TPhastModel.FixOldModel;
+var
+  ModpathZone: TDataArray;
+begin
+  if (Grid.GridAngle <> 0)
+    and FileVersionEqualOrEarlier('2.6.0.3')
+    and (FormulaManager.FunctionUsed(StrVertexInterpolate)
+    or FormulaManager.FunctionUsed(StrNodeInterpolate)) then
+  begin
+    // The VertexInterpolate function gave incorrect results in
+    // versions '2.6.0.3' and earlier if the grid was rotated.
+    // NodeInterpolate is a synonym for VertexInterpolate.
+    InvalidateAllDataSets;
+  end;
+  if FileVersionEqualOrEarlier('2.6.0.8') then
+  begin
+    // Modpath zone incorrectly limited to values >= 0 in
+    // version 2.6.0.8 and earlier.
+    ModpathZone := GetDataSetByName(StrModpathZone);
+    if ModpathZone <> nil then
+    begin
+      ModpathZone.CheckMin := False;
+      ModpathZone.Invalidate;
+    end;
+  end;
+end;
+
 procedure TPhastModel.ExportModpathModel(FileName: string;
   RunModel, NewBudgetFile: boolean);
 var
@@ -8053,56 +8243,61 @@ begin
     frmProgress := TfrmProgress.Create(nil);
   end;
   try
-
-    frmProgress.ShouldContinue := True;
-    UpdateModflowFullStressPeriods;
-    SetCurrentDir(ExtractFileDir(FileName));
-    FileName := FixFileName(FileName);
-
-    NameFileWriter := TModpathNameFileWriter.Create;
     try
-      NameFileWriter.WriteFile(FileName, self);
-    finally
-      NameFileWriter.Free;
-    end;
+      frmProgress.ShouldContinue := True;
+      UpdateModflowFullStressPeriods;
+      SetCurrentDir(ExtractFileDir(FileName));
+      FileName := FixFileName(FileName);
 
-    MainFileWriter := TModpathMainFileWriter.Create(Self);
-    try
-      MainFileWriter.WriteFile(FileName);
-    finally
-      MainFileWriter.Free;
-    end;
-    StartLocations := TModpathStartingLocationsWriter.Create(Self);
-    try
-      StartLocations.WriteFile(FileName);
-    finally
-      StartLocations.Free;
-    end;
-    if ModflowPackages.ModPath.ShouldCreateTimeFile then
-    begin
-      TimeFileWriter := TModpathTimeFileWriter.Create(Self);
+      NameFileWriter := TModpathNameFileWriter.Create;
       try
-        TimeFileWriter.WriteFile(FileName);
+        NameFileWriter.WriteFile(FileName, self);
       finally
-        TimeFileWriter.Free;
+        NameFileWriter.Free;
+      end;
+
+      MainFileWriter := TModpathMainFileWriter.Create(Self);
+      try
+        MainFileWriter.WriteFile(FileName);
+      finally
+        MainFileWriter.Free;
+      end;
+      StartLocations := TModpathStartingLocationsWriter.Create(Self);
+      try
+        StartLocations.WriteFile(FileName);
+      finally
+        StartLocations.Free;
+      end;
+      if ModflowPackages.ModPath.ShouldCreateTimeFile then
+      begin
+        TimeFileWriter := TModpathTimeFileWriter.Create(Self);
+        try
+          TimeFileWriter.WriteFile(FileName);
+        finally
+          TimeFileWriter.Free;
+        end;
+      end;
+      Responses := TModpathResponseFileWriter.Create(Self);
+      try
+        Responses.WriteFile(FileName, NewBudgetFile);
+        LargeBudgetFileResponse := Responses.FLargeBudgetFileResponse;
+      finally
+        Responses.Free;
+      end;
+
+      BatchFileLocation := WriteModpathBatchFile(ProgramLocations, FileName,
+        ChangeFileExt(FileName,'.mplst'), RunModel, LargeBudgetFileResponse);
+
+      if RunModel then
+      begin
+        WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
+      end;
+    except on E: EFCreateError do
+      begin
+        Beep;
+        MessageDlg(E.Message, mtError, [mbOK], 0);
       end;
     end;
-    Responses := TModpathResponseFileWriter.Create(Self);
-    try
-      Responses.WriteFile(FileName, NewBudgetFile);
-      LargeBudgetFileResponse := Responses.FLargeBudgetFileResponse;
-    finally
-      Responses.Free;
-    end;
-
-    BatchFileLocation := WriteModpathBatchFile(ProgramLocations, FileName,
-      ChangeFileExt(FileName,'.mplst'), RunModel, LargeBudgetFileResponse);
-
-    if RunModel then
-    begin
-      WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
-    end;
-
   finally
     if frmProgress.Owner = nil then
     begin
@@ -8734,54 +8929,61 @@ begin
     frmProgress := TfrmProgress.Create(nil);
   end;
   try
-    frmProgress.Prefix := 'File ';
-    frmProgress.Caption := 'Exporting ZONEBUDGET input files';
-    frmProgress.btnAbort.Visible := True;
-    frmProgress.ShouldContinue := True;
-    frmProgress.Show;
-
-    // Export ZoneFile;
-    // Export Response File;
-    // Export Batch File;
-    NumberOfSteps := 3;
-
-    frmProgress.pbProgress.Max := NumberOfSteps;
-    frmProgress.pbProgress.Position := 0;
-
-    ZoneFileWriter := TZoneBudgetZoneFileWriter.Create(self);
     try
-      ZoneFileWriter.WriteFile(FileName);
-    finally
-      ZoneFileWriter.Free;
-    end;
-    CacheDataArrays;
-    if not frmProgress.ShouldContinue then
-    begin
-      Exit;
-    end;
-    frmProgress.StepIt;
+      frmProgress.Prefix := 'File ';
+      frmProgress.Caption := 'Exporting ZONEBUDGET input files';
+      frmProgress.btnAbort.Visible := True;
+      frmProgress.ShouldContinue := True;
+      frmProgress.Show;
 
-    ResponseFileWriter := TZoneBudgetResponseFileWriter.Create(self);
-    try
-      ResponseFileWriter.WriteFile(FileName);
-    finally
-      ResponseFileWriter.Free;
-    end;
-    CacheDataArrays;
-    if not frmProgress.ShouldContinue then
-    begin
-      Exit;
-    end;
-    frmProgress.StepIt;
+      // Export ZoneFile;
+      // Export Response File;
+      // Export Batch File;
+      NumberOfSteps := 3;
 
-    BatchFileLocation := WriteZoneBudgetBatchFile(self, FileName, RunModel);
+      frmProgress.pbProgress.Max := NumberOfSteps;
+      frmProgress.pbProgress.Position := 0;
 
-    if RunModel then
-    begin
-      WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
+      ZoneFileWriter := TZoneBudgetZoneFileWriter.Create(self);
+      try
+        ZoneFileWriter.WriteFile(FileName);
+      finally
+        ZoneFileWriter.Free;
+      end;
+      CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgress.ShouldContinue then
+      begin
+        Exit;
+      end;
+      frmProgress.StepIt;
+
+      ResponseFileWriter := TZoneBudgetResponseFileWriter.Create(self);
+      try
+        ResponseFileWriter.WriteFile(FileName);
+      finally
+        ResponseFileWriter.Free;
+      end;
+      CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgress.ShouldContinue then
+      begin
+        Exit;
+      end;
+      frmProgress.StepIt;
+
+      BatchFileLocation := WriteZoneBudgetBatchFile(self, FileName, RunModel);
+
+      if RunModel then
+      begin
+        WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
+      end;
+    except on E: EFCreateError do
+      begin
+        Beep;
+        MessageDlg(E.Message, mtError, [mbOK], 0);
+      end;
     end;
-//
-
   finally
     frmProgress.btnAbort.Visible := False;
     frmProgress.Hide;
@@ -8838,6 +9040,13 @@ var
   SubWriter: TModflowSUB_Writer;
   SwtWriter: TModflowSWT_Writer;
   HydModWriter: TModflowHydmodWriter;
+  PIndex: Integer;
+  SteadyParam: TModflowSteadyParameter;
+  MultipliersUsed: Boolean;
+  ZoneUsed: Boolean;
+  HufUnitIndex: integer;
+  HGU: THydrogeologicUnit;
+  HufParam: THufUsedParameter;
 begin
   CheckWetting;
 
@@ -8879,11 +9088,68 @@ begin
         // gages
         Inc(NumberOfSteps)
       end;
+
+      MultipliersUsed := False;
+      ZoneUsed := False;
+      if ModflowTransientParameters.Count > 0 then
+      begin
+        MultipliersUsed := True;
+        ZoneUsed := True;
+      end;
+
+      if not MultipliersUsed then
+      begin
+        if ModflowPackages.LpfPackage.IsSelected then
+        begin
+          for PIndex := 0 to ModflowSteadyParameters.Count - 1 do
+          begin
+            SteadyParam := ModflowSteadyParameters[PIndex];
+            if SteadyParam.UseMultiplier then
+            begin
+              MultipliersUsed := True;
+            end;
+            if SteadyParam.UseZone then
+            begin
+              ZoneUsed := True;
+            end;
+          end;
+        end
+        else if ModflowPackages.HufPackage.IsSelected then
+        begin
+          for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
+          begin
+            HGU := HydrogeologicUnits[HufUnitIndex];
+            for PIndex := 0 to HGU.HufUsedParameters.Count - 1 do
+            begin
+              HufParam := HGU.HufUsedParameters[PIndex];
+              if HufParam.UseMultiplier then
+              begin
+                MultipliersUsed := True;
+              end;
+              if HufParam.UseZone then
+              begin
+                ZoneUsed := True;
+              end;
+            end;
+          end;
+        end;
+
+      end;
+      if MultipliersUsed then
+      begin
+        Inc(NumberOfSteps)
+      end;
+      if ZoneUsed then
+      begin
+        Inc(NumberOfSteps)
+      end;
+
       frmProgress.pbProgress.Max := NumberOfSteps;
       frmProgress.pbProgress.Position := 0;
 
       UpdateModflowFullStressPeriods;
 
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -8921,6 +9187,7 @@ begin
           DisWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -8934,6 +9201,7 @@ begin
           BasicWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -8946,6 +9214,7 @@ begin
         finally
           OCWriter.Free;
         end;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -8958,6 +9227,7 @@ begin
         finally
           PcgWriter.Free;
         end;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -8973,6 +9243,7 @@ begin
         finally
           GmgWriter.Free;
         end;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -8988,6 +9259,7 @@ begin
         finally
           SipWriter.Free;
         end;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9003,6 +9275,7 @@ begin
         finally
           De4Writer.Free;
         end;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9019,6 +9292,7 @@ begin
           LPF_Writer.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9035,6 +9309,7 @@ begin
           BCF_Writer.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9051,6 +9326,7 @@ begin
           HUF_Writer.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9067,6 +9343,7 @@ begin
           KDEP_Writer.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9084,6 +9361,7 @@ begin
           LVDA_Writer.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9102,6 +9380,7 @@ begin
           ChdWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9119,6 +9398,7 @@ begin
           GhbWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9135,6 +9415,7 @@ begin
           WellWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9152,6 +9433,7 @@ begin
           RivWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9169,6 +9451,7 @@ begin
           DrnWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9185,6 +9468,7 @@ begin
           DrtWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9201,6 +9485,7 @@ begin
           RchWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9217,6 +9502,7 @@ begin
           EvtWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9233,6 +9519,7 @@ begin
           EtsWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9249,6 +9536,7 @@ begin
           ResWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9266,6 +9554,7 @@ begin
           Mnw2Writer.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9282,6 +9571,7 @@ begin
           LakWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9298,6 +9588,7 @@ begin
         try
           SfrWriter.WriteFile(FileName, GageUnitNumber, Gages);
           CacheDataArrays;
+          Application.ProcessMessages;
           if not frmProgress.ShouldContinue then
           begin
             Exit;
@@ -9314,6 +9605,7 @@ begin
             HydModWriter.Free;
           end;
           CacheDataArrays;
+          Application.ProcessMessages;
           if not frmProgress.ShouldContinue then
           begin
             Exit;
@@ -9333,6 +9625,7 @@ begin
             GagWriter.Free;
           end;
           CacheDataArrays;
+          Application.ProcessMessages;
           if not frmProgress.ShouldContinue then
           begin
             Exit;
@@ -9355,6 +9648,7 @@ begin
           HfbWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9371,6 +9665,7 @@ begin
           UzfWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9387,6 +9682,7 @@ begin
           SubWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9403,6 +9699,7 @@ begin
           SwtWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9422,11 +9719,15 @@ begin
           ZoneWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
         end;
-        frmProgress.StepIt;
+        if ZoneUsed then
+        begin
+          frmProgress.StepIt;
+        end;
 
         // It is important that the TModflowMultiplierWriter not be used
         // until after all the multiplier arrays have been identified through the
@@ -9439,11 +9740,15 @@ begin
           MultiplierWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
         end;
-        frmProgress.StepIt;
+        if MultipliersUsed then
+        begin
+          frmProgress.StepIt;
+        end;
 
         HobWriter := TModflowHobWriter.Create(Self);
         try
@@ -9452,6 +9757,7 @@ begin
           HobWriter.Free;
         end;
         CacheDataArrays;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -9469,6 +9775,7 @@ begin
         Gages.Free;
       end;
 
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -9480,6 +9787,7 @@ begin
         ModflowOptions.OpenInTextEditor, BatchFileAdditionsBeforeModel,
         BatchFileAdditionsAfterModel);
 
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -9504,6 +9812,40 @@ begin
       Beep;
       MessageDlg(E.Message, mtError, [mbOK], 0);
     end;
+  end;
+end;
+
+function TPhastModel.FileVersionEqualOrEarlier(TestVersion: string): boolean;
+var
+  ProgramNum: Integer;
+  SavedNum: Integer;
+  VIndex: Integer;
+  ProgramVersionList: TStringList;
+  SavedVersionList: TStringList;
+begin
+  result := True;
+  SavedVersionList := TStringList.Create;
+  ProgramVersionList := TStringList.Create;
+  try
+    SavedVersionList.Delimiter := '.';
+    SavedVersionList.DelimitedText := FileVersion;
+    ProgramVersionList.Delimiter := '.';
+    ProgramVersionList.DelimitedText := TestVersion;
+    Assert(SavedVersionList.Count = 4);
+    Assert(ProgramVersionList.Count = 4);
+    for VIndex := 0 to SavedVersionList.Count - 1 do
+    begin
+      SavedNum := StrToInt(SavedVersionList[VIndex]);
+      ProgramNum := StrToInt(ProgramVersionList[VIndex]);
+      result := SavedNum <= ProgramNum;
+      if (not result) or (SavedNum <> ProgramNum) then
+      begin
+        break;
+      end;
+    end;
+  finally
+    ProgramVersionList.Free;
+    SavedVersionList.Free;
   end;
 end;
 
@@ -9975,6 +10317,7 @@ begin
   SelectedRow := Grid.SelectedRow;
   SelectedColumn := Grid.SelectedColumn;
   try
+    FThreeDDisplayTime := Time;
     if not TimeList.UpToDate then
     begin
       TimeList.Initialize;
@@ -9990,7 +10333,6 @@ begin
       Grid.ThreeDDataSet.UpdateMinMaxValues
     end;
     FThreeDTimeList := TimeList;
-    FThreeDDisplayTime := Time;
   finally
     Grid.SelectedLayer := SelectedLayer;
     Grid.SelectedRow := SelectedRow;
@@ -10018,6 +10360,23 @@ end;
 procedure TPhastModel.Invalidate;
 begin
   UpToDate := False;
+end;
+
+procedure TPhastModel.InvalidateAllDataSets;
+var
+  Index: Integer;
+  DS: TDataArray;
+begin
+  for Index := 0 to DataSetCount - 1 do
+  begin
+    DS := DataSets[Index];
+    DS.Invalidate;
+  end;
+  for Index := 0 to BoundaryDataSetCount - 1 do
+  begin
+    DS := BoundaryDataSets[Index];
+    DS.Invalidate;
+  end;
 end;
 
 procedure TPhastModel.InvalidateDataSetLookupList;
@@ -11311,9 +11670,9 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Max := 1;
-  FDataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].CheckMin := False;
+//  FDataArrayCreationRecords[Index].Max := 1;
+//  FDataArrayCreationRecords[Index].Min := 0;
   FDataArrayCreationRecords[Index].AssociatedDataSets := 'MODPATH: IBOUND';
   Inc(Index);
 

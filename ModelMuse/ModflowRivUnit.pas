@@ -394,9 +394,9 @@ constructor TRivCollection.Create(Boundary: TModflowBoundary;
   Model, ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FRiverBottomData := TModflowTimeList.Create(Model);
-  FRiverStageData := TModflowTimeList.Create(Model);
-  FConductanceData := TModflowTimeList.Create(Model);
+  FRiverBottomData := TModflowTimeList.Create(Model, ScreenObject);
+  FRiverStageData := TModflowTimeList.Create(Model, ScreenObject);
+  FConductanceData := TModflowTimeList.Create(Model, ScreenObject);
 
   FRiverStageData.NonParamDescription := 'River stage';
   FRiverStageData.ParamDescription := ' river stage';

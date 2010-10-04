@@ -34,7 +34,9 @@ type
     scFlow, scPtsw, scEtsw,
     scRunoff, scRoughCh, scRoughBk, scCdpth, scFdpth, scAwdth, edBwdth,
     scHcond1, scThickM1, scElevUp, scWidth1, scDepth1, scHcond2, scThickM2,
-    scElevDn, scWidth2, scDepth2);
+    scElevDn, scWidth2, scDepth2,
+    scDist1, scDist2, scDist3, scDist4, scDist5, scDist6, scDist7, scDist8,
+    scZ1, scZ2, scZ3, scZ4, scZ5, scZ6, scZ7, scZ8);
 
   TLakeColumns = (lcStartTime, lcEndTime, lcMinStage, lcMaxStage, lcPrecip,
     lcEvap, lcRunoff, lcWithdrawl);
@@ -505,7 +507,8 @@ type
     procedure AssignBoundary(AScreenObject: TScreenObject);
     procedure AssignAPhastSpecifiedHeadBoundary(AScreenObject: TScreenObject);
     procedure AssignAPhastBoundary(Boundary: TCustomInterpolatedBoundary);
-    function GetRealFormulaFromText(const Text: string; DataSetsOK: boolean = True): string;
+    function GetRealFormulaFromText(const Text: string;
+      DataSetsOK: boolean = True; FormulaOK: boolean = False): string;
     function GetRealValueFromText(const FieldName: string): Extended;
     procedure AssignAPhastLeakyBoundary(AScreenObject: TScreenObject);
     procedure AssignAPhastRiverBoundary(AScreenObject: TScreenObject);
@@ -600,7 +603,7 @@ uses Math, Contnrs , frmGoPhastUnit, GoPhastTypes, frmProgressUnit,
   ModflowSfrEquationUnit, ModflowSfrSegment, ModflowSfrUnit, ModflowTimeUnit, 
   ModflowLakUnit, ModflowDrtUnit, ModflowResUnit, ModflowHfbUnit, 
   ModflowUzfUnit, GlobalVariablesUnit, frameScreenObjectMNW2Unit,
-  ModflowMnw2Unit, frmErrorsAndWarningsUnit;
+  ModflowMnw2Unit, frmErrorsAndWarningsUnit, ModflowSfrTable;
 
 resourcestring
   StrParameterName = 'Parameter name';
@@ -1114,6 +1117,7 @@ begin
     if dgFields.Checked[Ord(fgcImport), Index]
       and (dgFields.Cells[Ord(fgcDataSet), Index] <> rsNewDataSet) then
     begin
+      GetInterpolators(Index);
       DataSetIndex := dgFields.Columns[Ord(fgcDataSet)].PickList.
         IndexOf(dgFields.Cells[Ord(fgcDataSet), Index]);
       if DataSetIndex >= 0 then
@@ -1653,7 +1657,9 @@ var
   CellText: string;
   CachedPosition: Integer;
   FieldStorage: TFieldNumStorage;
+  SFR_Package: TSfrPackageSelection;
 begin
+  SFR_Package := frmGoPhast.PhastModel.ModflowPackages.SfrPackage;
   First := True;
   AScreenObject.CreateSfrBoundary;
   Boundary := AScreenObject.ModflowSfrBoundary;
@@ -1749,21 +1755,29 @@ begin
         end;
         Item.ReachLength := RCHLEN;
         Item.HydraulicConductivity :=
-          GetRealFormulaFromText(comboSfrStreambedKv.Text, False);
+          GetRealFormulaFromText(comboSfrStreambedKv.Text,
+          SFR_Package.Isfropt in [1,2,3], True);
         Item.StreamBedThickness :=
-          GetRealFormulaFromText(comboSfrStreambedThickness.Text, False);
+          GetRealFormulaFromText(comboSfrStreambedThickness.Text,
+          SFR_Package.Isfropt in [1,2,3], True);
         Item.StreambedElevation :=
-          GetRealFormulaFromText(comboSfrStreambedTop.Text, False);
+          GetRealFormulaFromText(comboSfrStreambedTop.Text,
+          SFR_Package.Isfropt in [1,2,3], True);
         Item.StreamSlope :=
-          GetRealFormulaFromText(comboSfrStreamSlope.Text, False);
+          GetRealFormulaFromText(comboSfrStreamSlope.Text,
+          SFR_Package.Isfropt in [1,2,3], True);
         Item.SaturatedWaterContent :=
-          GetRealFormulaFromText(comboSaturatedVolumetricWater.Text, False);
+          GetRealFormulaFromText(comboSaturatedVolumetricWater.Text,
+          SFR_Package.Isfropt in [2,3], True);
         Item.InitialWaterContent :=
-          GetRealFormulaFromText(comboInitialVolumetricWater.Text, False);
+          GetRealFormulaFromText(comboInitialVolumetricWater.Text,
+          SFR_Package.Isfropt in [2,3], True);
         Item.BrooksCoreyExponent :=
-          GetRealFormulaFromText(comboBrooksCoreyExponent.Text, False);
+          GetRealFormulaFromText(comboBrooksCoreyExponent.Text,
+          SFR_Package.Isfropt in [2,3], True);
         Item.VerticalK :=
-          GetRealFormulaFromText(comboaxUnsaturatedKz.Text, False);
+          GetRealFormulaFromText(comboaxUnsaturatedKz.Text,
+          SFR_Package.Isfropt = 3, True);
       end;
 
       IcalcItem := Boundary.ParamIcalc.Add as TSfrParamIcalcItem;
@@ -1828,6 +1842,73 @@ begin
         FieldStorage := TFieldNumStorage(
           rdgBoundaryConditions.Objects[Ord(scRoughBk), Index + 1]);
         ChannelItem.BankRoughness := FieldStorage.RealFormula;
+
+        if ICalc = 2 then
+        begin
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scDist1), Index + 1]);
+          ChannelItem.X[0] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scDist2), Index + 1]);
+          ChannelItem.X[1] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scDist3), Index + 1]);
+          ChannelItem.X[2] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scDist4), Index + 1]);
+          ChannelItem.X[3] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scDist5), Index + 1]);
+          ChannelItem.X[4] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scDist6), Index + 1]);
+          ChannelItem.X[5] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scDist7), Index + 1]);
+          ChannelItem.X[6] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scDist8), Index + 1]);
+          ChannelItem.X[7] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scZ1), Index + 1]);
+          ChannelItem.Z[0] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scZ2), Index + 1]);
+          ChannelItem.Z[1] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scZ3), Index + 1]);
+          ChannelItem.Z[2] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scZ4), Index + 1]);
+          ChannelItem.Z[3] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scZ5), Index + 1]);
+          ChannelItem.Z[4] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scZ6), Index + 1]);
+          ChannelItem.Z[5] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scZ7), Index + 1]);
+          ChannelItem.Z[6] := FieldStorage.RealFormula;
+
+          FieldStorage := TFieldNumStorage(
+            rdgBoundaryConditions.Objects[Ord(scZ8), Index + 1]);
+          ChannelItem.Z[7] := FieldStorage.RealFormula;
+        end;
       end;
 
       if ICalc = 3 then
@@ -2145,14 +2226,14 @@ begin
   comboSfrSegmentNumber.Items := FIntegerFieldNames;
 
   comboSfrReachLength.Items := FRealFieldGlobalsAndDataSetsNames;
-  comboSfrStreambedTop.Items := FRealFieldAndGlobalVariablesNames;
-  comboSfrStreamSlope.Items := FRealFieldAndGlobalVariablesNames;
-  comboSfrStreambedThickness.Items := FRealFieldAndGlobalVariablesNames;
-  comboSfrStreambedKv.Items := FRealFieldAndGlobalVariablesNames;
-  comboSaturatedVolumetricWater.Items := FRealFieldAndGlobalVariablesNames;
-  comboInitialVolumetricWater.Items := FRealFieldAndGlobalVariablesNames;
-  comboBrooksCoreyExponent.Items := FRealFieldAndGlobalVariablesNames;
-  comboaxUnsaturatedKz.Items := FRealFieldAndGlobalVariablesNames;
+  comboSfrStreambedTop.Items := FRealFieldGlobalsAndDataSetsNames;
+  comboSfrStreamSlope.Items := FRealFieldGlobalsAndDataSetsNames;
+  comboSfrStreambedThickness.Items := FRealFieldGlobalsAndDataSetsNames;
+  comboSfrStreambedKv.Items := FRealFieldGlobalsAndDataSetsNames;
+  comboSaturatedVolumetricWater.Items := FRealFieldGlobalsAndDataSetsNames;
+  comboInitialVolumetricWater.Items := FRealFieldGlobalsAndDataSetsNames;
+  comboBrooksCoreyExponent.Items := FRealFieldGlobalsAndDataSetsNames;
+  comboaxUnsaturatedKz.Items := FRealFieldGlobalsAndDataSetsNames;
 
   rdgBoundaryConditions.Enabled := True;
   rdgBoundaryConditions.ColCount := Ord(High(TSfrColumns)) + 1;
@@ -2299,6 +2380,86 @@ begin
   rdgBoundaryConditions.Columns[Ord(scDepth2)].ComboUsed := True;
   rdgBoundaryConditions.Columns[Ord(scDepth2)].Format := rcf4String;
   rdgBoundaryConditions.Columns[Ord(scDepth2)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scDist1), 0] := 'XCPT1';
+  rdgBoundaryConditions.Columns[Ord(scDist1)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scDist1)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scDist1)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scDist2), 0] := 'XCPT2';
+  rdgBoundaryConditions.Columns[Ord(scDist2)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scDist2)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scDist2)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scDist3), 0] := 'XCPT3';
+  rdgBoundaryConditions.Columns[Ord(scDist3)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scDist3)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scDist3)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scDist4), 0] := 'XCPT4';
+  rdgBoundaryConditions.Columns[Ord(scDist4)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scDist4)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scDist4)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scDist5), 0] := 'XCPT5';
+  rdgBoundaryConditions.Columns[Ord(scDist5)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scDist5)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scDist5)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scDist6), 0] := 'XCPT6';
+  rdgBoundaryConditions.Columns[Ord(scDist6)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scDist6)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scDist6)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scDist7), 0] := 'XCPT7';
+  rdgBoundaryConditions.Columns[Ord(scDist7)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scDist7)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scDist7)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scDist8), 0] := 'XCPT8';
+  rdgBoundaryConditions.Columns[Ord(scDist8)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scDist8)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scDist8)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scZ1), 0] := 'ZCPT1';
+  rdgBoundaryConditions.Columns[Ord(scZ1)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scZ1)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scZ1)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scZ2), 0] := 'ZCPT2';
+  rdgBoundaryConditions.Columns[Ord(scZ2)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scZ2)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scZ2)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scZ3), 0] := 'ZCPT3';
+  rdgBoundaryConditions.Columns[Ord(scZ3)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scZ3)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scZ3)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scZ4), 0] := 'ZCPT4';
+  rdgBoundaryConditions.Columns[Ord(scZ4)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scZ4)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scZ4)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scZ5), 0] := 'ZCPT5';
+  rdgBoundaryConditions.Columns[Ord(scZ5)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scZ5)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scZ5)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scZ6), 0] := 'ZCPT6';
+  rdgBoundaryConditions.Columns[Ord(scZ6)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scZ6)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scZ6)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scZ7), 0] := 'ZCPT7';
+  rdgBoundaryConditions.Columns[Ord(scZ7)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scZ7)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scZ7)].PickList := FRealFieldGlobalsAndDataSetsNames;
+
+  rdgBoundaryConditions.Cells[Ord(scZ8), 0] := 'ZCPT8';
+  rdgBoundaryConditions.Columns[Ord(scZ8)].ComboUsed := True;
+  rdgBoundaryConditions.Columns[Ord(scZ8)].Format := rcf4String;
+  rdgBoundaryConditions.Columns[Ord(scZ8)].PickList := FRealFieldGlobalsAndDataSetsNames;
 
 end;
 
@@ -3635,7 +3796,7 @@ begin
 end;
 
 function TfrmImportShapefile.GetRealFormulaFromText(
-  const Text: string; DataSetsOK: boolean = True): string;
+  const Text: string; DataSetsOK: boolean = True; FormulaOK: boolean = False): string;
 var
   FieldNumber: Integer;
   DataArray: TDataArray;
@@ -3644,6 +3805,11 @@ var
   FieldStorage: TFieldNumStorage;
   Value: double;
 begin
+  if Text = '' then
+  begin
+    result := '0.';
+    Exit;
+  end;
   CachedPosition := FFieldNumbers.Indexof(Text);
   if CachedPosition >= 0 then
   begin
@@ -3663,7 +3829,7 @@ begin
     if xbShapeDataBase.GetFieldType(FieldNumber) = xbfChar then
     begin
       result := GetRealFormulaFromText(Trim(
-        GetStringValueFromText(Text)), DataSetsOK);
+        GetStringValueFromText(Text)), DataSetsOK, FormulaOK);
     end
     else
     begin
@@ -3699,6 +3865,13 @@ begin
     Variable := frmGoPhast.PhastModel.GlobalVariables.GetVariableByName(Text);
     if (Variable <> nil) and
       (Variable.Format in [rdtDouble, rdtInteger]) then
+    begin
+      result := Text;
+      FieldStorage.Formula := result;
+      Exit;
+    end;
+
+    if FormulaOK then
     begin
       result := Text;
       FieldStorage.Formula := result;

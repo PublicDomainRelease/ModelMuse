@@ -10,6 +10,19 @@ inherited frmExportImage: TfrmExportImage
   ExplicitHeight = 553
   PixelsPerInch = 96
   TextHeight = 18
+  object JvNetscapeSplitter2: TJvNetscapeSplitter
+    Left = 249
+    Top = 0
+    Height = 454
+    Align = alLeft
+    MinSize = 3
+    Maximized = False
+    Minimized = False
+    ButtonCursor = crDefault
+    ExplicitLeft = 224
+    ExplicitTop = 208
+    ExplicitHeight = 100
+  end
   object pnlControls: TPanel
     Left = 0
     Top = 0
@@ -24,12 +37,12 @@ inherited frmExportImage: TfrmExportImage
       Width = 249
       Height = 454
       Align = alClient
-      ActivePage = opView
+      ActivePage = opAnimation
       object opView: TrmOutlookPage
         Left = 2
         Top = 2
         Width = 245
-        Height = 432
+        Height = 18
         Color = clBtnFace
         Caption = 'View'
         Data = 0
@@ -42,6 +55,7 @@ inherited frmExportImage: TfrmExportImage
           Width = 191
           Height = 18
           Caption = 'Model image height (pixels)'
+          Visible = False
         end
         object lblImageWidth: TLabel
           Left = 3
@@ -49,6 +63,7 @@ inherited frmExportImage: TfrmExportImage
           Width = 185
           Height = 18
           Caption = 'Model image width (pixels)'
+          Visible = False
         end
         object lblSelectedView: TLabel
           Left = 3
@@ -56,6 +71,7 @@ inherited frmExportImage: TfrmExportImage
           Width = 97
           Height = 18
           Caption = 'Selected view'
+          Visible = False
         end
         object comboView: TComboBox
           Left = 3
@@ -67,6 +83,7 @@ inherited frmExportImage: TfrmExportImage
           ItemIndex = 0
           TabOrder = 0
           Text = 'Top'
+          Visible = False
           OnChange = comboViewChange
           Items.Strings = (
             'Top'
@@ -82,6 +99,7 @@ inherited frmExportImage: TfrmExportImage
           ButtonKind = bkClassic
           Increment = 100.000000000000000000
           TabOrder = 1
+          Visible = False
           OnChange = seImageHeightChange
         end
         object seImageWidth: TJvSpinEdit
@@ -93,6 +111,7 @@ inherited frmExportImage: TfrmExportImage
           ButtonKind = bkClassic
           Increment = 100.000000000000000000
           TabOrder = 2
+          Visible = False
           OnChange = seImageWidthChange
         end
         object cbShowColoredGridLines: TCheckBox
@@ -102,6 +121,7 @@ inherited frmExportImage: TfrmExportImage
           Height = 17
           Caption = 'Show colored grid lines'
           TabOrder = 3
+          Visible = False
           OnClick = cbShowColoredGridLinesClick
         end
         object cbColorLegend: TCheckBox
@@ -113,6 +133,7 @@ inherited frmExportImage: TfrmExportImage
           Checked = True
           State = cbChecked
           TabOrder = 4
+          Visible = False
           OnClick = cbColorLegendClick
         end
         object cbContourLegend: TCheckBox
@@ -124,6 +145,7 @@ inherited frmExportImage: TfrmExportImage
           Checked = True
           State = cbChecked
           TabOrder = 5
+          Visible = False
           OnClick = cbContourLegendClick
         end
         object cbHorizontalScale: TCheckBox
@@ -135,6 +157,7 @@ inherited frmExportImage: TfrmExportImage
           Checked = True
           State = cbChecked
           TabOrder = 6
+          Visible = False
           OnClick = cbHorizontalScaleClick
         end
         object cbVerticalScale: TCheckBox
@@ -146,12 +169,13 @@ inherited frmExportImage: TfrmExportImage
           Checked = True
           State = cbChecked
           TabOrder = 7
+          Visible = False
           OnClick = cbVerticalScaleClick
         end
       end
       object opText: TrmOutlookPage
         Left = 2
-        Top = 434
+        Top = 20
         Width = 245
         Height = 18
         Color = clBtnFace
@@ -245,6 +269,195 @@ inherited frmExportImage: TfrmExportImage
           OnClick = btnTitleFontClick
         end
       end
+      object opAnimation: TrmOutlookPage
+        Left = 2
+        Top = 38
+        Width = 245
+        Height = 414
+        Color = clBtnFace
+        Caption = 'Animation'
+        Data = 0
+        ParentColor = False
+        CloseButton = False
+        ImageIndex = -1
+        object Panel2: TPanel
+          Left = 0
+          Top = 0
+          Width = 245
+          Height = 396
+          Align = alClient
+          BevelOuter = bvNone
+          Caption = 'Panel2'
+          TabOrder = 0
+          object JvNetscapeSplitter1: TJvNetscapeSplitter
+            Left = 0
+            Top = 171
+            Width = 245
+            Height = 10
+            Cursor = crVSplit
+            Align = alBottom
+            MinSize = 3
+            Maximized = False
+            Minimized = False
+            ButtonCursor = crDefault
+            ExplicitLeft = 1
+            ExplicitTop = 1
+            ExplicitWidth = 174
+          end
+          object Panel1: TPanel
+            Left = 0
+            Top = 312
+            Width = 245
+            Height = 84
+            Align = alBottom
+            TabOrder = 0
+            object rgDisplayChoice: TRadioGroup
+              Left = 3
+              Top = 6
+              Width = 238
+              Height = 43
+              Caption = 'Display choice'
+              Columns = 2
+              ItemIndex = 0
+              Items.Strings = (
+                'Color grid'
+                'Contour data')
+              TabOrder = 0
+            end
+            object btnPreview: TButton
+              Left = 3
+              Top = 55
+              Width = 75
+              Height = 25
+              Caption = 'Preview'
+              TabOrder = 1
+              OnClick = btnPreviewClick
+            end
+            object btnStop: TButton
+              Left = 166
+              Top = 55
+              Width = 75
+              Height = 25
+              Caption = 'Stop'
+              TabOrder = 3
+              OnClick = btnStopClick
+            end
+            object btnSaveMultipleImages: TBitBtn
+              Left = 84
+              Top = 55
+              Width = 75
+              Height = 25
+              Caption = 'Save'
+              TabOrder = 2
+              OnClick = btnSaveMultipleImagesClick
+              Glyph.Data = {
+                76010000424D7601000000000000760000002800000020000000100000000100
+                04000000000000010000120B0000120B00001000000000000000000000000000
+                800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+                FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00300000000000
+                0000377777777777777703030303030303037F7F7F7F7F7F7F7F000000000000
+                00007777777777777777933393303933337073F37F37F73F3377393393303393
+                379037FF7F37F37FF777379793303379793037777337F3777737339933303339
+                93303377F3F7F3F77F3733993930393993303377F737F7377FF7399993303399
+                999037777337F377777793993330333393307377FF37F3337FF7333993303333
+                993033377F37F33377F7333993303333993033377337F3337737333333303333
+                33303FFFFFF7FFFFFFF700000000000000007777777777777777030303030303
+                03037F7F7F7F7F7F7F7F00000000000000007777777777777777}
+              NumGlyphs = 2
+            end
+          end
+          object rdgDataSets: TRbwDataGrid4
+            Left = 0
+            Top = 181
+            Width = 245
+            Height = 131
+            Align = alBottom
+            ColCount = 2
+            FixedCols = 1
+            RowCount = 2
+            Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowMoving, goEditing, goAlwaysShowEditor]
+            TabOrder = 1
+            AutoDistributeText = True
+            AutoIncreaseColCount = False
+            AutoIncreaseRowCount = True
+            SelectedRowOrColumnColor = clAqua
+            UnselectableColor = clBtnFace
+            ColorRangeSelection = False
+            ColorSelectedRow = True
+            Columns = <
+              item
+                AutoAdjustRowHeights = False
+                ButtonCaption = '...'
+                ButtonFont.Charset = DEFAULT_CHARSET
+                ButtonFont.Color = clWindowText
+                ButtonFont.Height = -11
+                ButtonFont.Name = 'Tahoma'
+                ButtonFont.Style = []
+                ButtonUsed = False
+                ButtonWidth = 20
+                CheckMax = False
+                CheckMin = False
+                ComboUsed = False
+                Format = rcf4String
+                LimitToList = False
+                MaxLength = 0
+                ParentButtonFont = False
+                WordWrapCaptions = False
+                WordWrapCells = False
+                AutoAdjustColWidths = False
+              end
+              item
+                AutoAdjustRowHeights = False
+                ButtonCaption = '...'
+                ButtonFont.Charset = DEFAULT_CHARSET
+                ButtonFont.Color = clWindowText
+                ButtonFont.Height = -11
+                ButtonFont.Name = 'Tahoma'
+                ButtonFont.Style = []
+                ButtonUsed = False
+                ButtonWidth = 20
+                CheckMax = False
+                CheckMin = False
+                ComboUsed = False
+                Format = rcf4String
+                LimitToList = False
+                MaxLength = 0
+                ParentButtonFont = False
+                WordWrapCaptions = False
+                WordWrapCells = False
+                AutoAdjustColWidths = True
+              end>
+            ColWidths = (
+              19
+              64)
+          end
+          object vstDataSets: TVirtualStringTree
+            Left = 0
+            Top = 0
+            Width = 245
+            Height = 171
+            Align = alClient
+            CheckImageKind = ckSystem
+            Header.AutoSizeIndex = 0
+            Header.DefaultHeight = 17
+            Header.Font.Charset = DEFAULT_CHARSET
+            Header.Font.Color = clWindowText
+            Header.Font.Height = -11
+            Header.Font.Name = 'Tahoma'
+            Header.Font.Style = []
+            Header.MainColumn = -1
+            PopupMenu = pmChangeStates
+            TabOrder = 2
+            TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
+            TreeOptions.SelectionOptions = [toMultiSelect]
+            OnChecked = vstDataSetsChecked
+            OnGetText = vstDataSetsGetText
+            OnGetNodeDataSize = vstDataSetsGetNodeDataSize
+            OnInitNode = vstDataSetsInitNode
+            Columns = <>
+          end
+        end
+      end
     end
   end
   object pnlBottom: TPanel
@@ -281,6 +494,7 @@ inherited frmExportImage: TfrmExportImage
       Height = 52
       Anchors = [akTop, akRight]
       TabOrder = 6
+      OnClick = btnCloseClick
       Kind = bkClose
     end
     object btnSaveSettings: TButton
@@ -299,7 +513,7 @@ inherited frmExportImage: TfrmExportImage
       Width = 195
       Height = 26
       AutoComplete = False
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 0
       Text = '(none)'
       OnChange = comboSavedSettingsChange
@@ -367,9 +581,9 @@ inherited frmExportImage: TfrmExportImage
     end
   end
   object scrollBoxPreview: TScrollBox
-    Left = 249
+    Left = 259
     Top = 0
-    Width = 537
+    Width = 527
     Height = 454
     Align = alClient
     TabOrder = 2
@@ -394,8 +608,9 @@ inherited frmExportImage: TfrmExportImage
   end
   object spdSaveImage: TSavePictureDialog
     DefaultExt = '.emf'
-    Filter = 'Enhanced Metafiles (*.emf)|*.emf'
+    Filter = 'Enhanced Metafiles (*.emf)|*.emf|Bitmaps (*.bmp)|*.bmp'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
+    OnTypeChange = spdSaveImageTypeChange
     Left = 304
     Top = 40
   end
@@ -409,5 +624,17 @@ inherited frmExportImage: TfrmExportImage
     OnTimer = timerDrawImageDelayTimer
     Left = 200
     Top = 64
+  end
+  object pmChangeStates: TPopupMenu
+    Left = 304
+    Top = 88
+    object miCheckSelected: TMenuItem
+      Caption = 'Check Selected'
+      OnClick = miCheckSelectedClick
+    end
+    object UncheckSelected1: TMenuItem
+      Caption = 'Uncheck Selected'
+      OnClick = UncheckSelected1Click
+    end
   end
 end

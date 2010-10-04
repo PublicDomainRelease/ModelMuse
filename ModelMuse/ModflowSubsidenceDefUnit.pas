@@ -812,7 +812,7 @@ begin
         begin
           // rename data array.
           LocalModel.TopGridObserver.StopsTalkingTo(DataArray);
-          DataArray.StopsTalkingTo(LocalModel.ThreeDGridObserver);
+//          DataArray.StopsTalkingTo(LocalModel.ThreeDGridObserver);
           DataArray.Name := NewName;
           DataArray.Classification := StrSubSidence + '|' + Name;
           Compiler := LocalModel.GetCompiler(DataArray.Orientation,
@@ -848,8 +848,8 @@ begin
         if DataArray <> nil then
         begin
           LocalModel.TopGridObserver.TalksTo(DataArray);
-          DataArray.TalksTo(LocalModel.ThreeDGridObserver);
-          LocalModel.ThreeDGridObserver.StopsTalkingTo(DataArray);
+//          DataArray.TalksTo(LocalModel.ThreeDGridObserver);
+//          LocalModel.ThreeDGridObserver.StopsTalkingTo(DataArray);
 
           DataArray.UpdateDimensions(LocalModel.Grid.LayerCount,
             LocalModel.Grid.RowCount, LocalModel.Grid.ColumnCount);

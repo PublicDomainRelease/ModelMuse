@@ -70,6 +70,7 @@ type
     rdgLegend: TRbwDataGrid4;
     udDataSets: TJvUpDown;
     timerLegend: TTimer;
+    rgUpdateLimitChoice: TRadioGroup;
     // @name gives a preview of the color scheme
     // selected in @link(comboColorScheme).
     procedure pbColorSchemePaint(Sender: TObject);
@@ -118,6 +119,7 @@ type
 
   { Private declarations }
   protected
+    FStoredLegend: TLegend;
     FLegend: TLegend;
     // @name stores a list of the @link(TDataArray)s or boundary conditions
     // that can be displayed on the front view of the model.  The Objects
@@ -147,6 +149,7 @@ type
     procedure AssignLimits(DataType: TRbwDataType; Limits: TColoringLimits);
     procedure ReadLimits(DataType: TRbwDataType; Limits: TColoringLimits);
     procedure UpdateLegend;
+
   public
     property LegendDataSource: TPersistent read GetLegendDataSource
       write SetLegendDataSource;
@@ -159,7 +162,7 @@ type
 implementation
 
 uses
-  Contnrs, frmGridColorUnit, Clipbrd, ModelMuseUtilities;
+  Contnrs, frmGridColorUnit, Clipbrd, ModelMuseUtilities, frmProgressUnit;
 
 {$R *.dfm}
 
@@ -441,6 +444,7 @@ begin
   FFrontItems.Free;
   FSideItems.Free;
   FDataSetDummyObjects.Free;
+  FStoredLegend.Free;
 //  FLegend.Free;
 end;
 
@@ -582,11 +586,17 @@ begin
   begin
     Exit;
   end;
+
   FUpdatingLegend := True;
   try
     tabLegend.TabVisible := FLegend.ValueSource <> nil;
     if tabLegend.TabVisible then
     begin
+      if FStoredLegend <> nil then
+      begin
+        FLegend.Assign(FStoredLegend);
+        Exit;
+      end;
       FLegend.ValueAssignmentMethod :=
         TValueAssignmentMethod(comboMethod.ItemIndex + 1);
       rdgLegend.BeginUpdate;

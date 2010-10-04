@@ -61,8 +61,10 @@ inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
   inherited vstObjects: TVirtualStringTree
     Top = 57
     Height = 316
+    PopupMenu = pmChangeStates
+    TreeOptions.SelectionOptions = [toMultiSelect]
     OnChecked = vstObjectsChecked
-    ExplicitTop = 57
+    ExplicitTop = 55
     ExplicitHeight = 316
   end
   object rgViewDirection: TRadioGroup
@@ -80,5 +82,17 @@ inherited frmSelectObjectsForEditing: TfrmSelectObjectsForEditing
       'Side')
     TabOrder = 0
     OnClick = rgViewDirectionClick
+  end
+  object pmChangeStates: TPopupMenu
+    Left = 304
+    Top = 88
+    object miCheckSelected: TMenuItem
+      Caption = 'Check Selected'
+      OnClick = miCheckSelectedClick
+    end
+    object UncheckSelected1: TMenuItem
+      Caption = 'Uncheck Selected'
+      OnClick = UncheckSelected1Click
+    end
   end
 end

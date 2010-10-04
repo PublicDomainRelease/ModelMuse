@@ -1295,14 +1295,14 @@ constructor TMnw2SpatialCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited;
-  FWellRadiusData := TModflowTimeList.Create(Model);
-  FSkinRadiusData := TModflowTimeList.Create(Model);
-  FSkinKData := TModflowTimeList.Create(Model);
-  FBData := TModflowTimeList.Create(Model);
-  FCData := TModflowTimeList.Create(Model);
-  FPData := TModflowTimeList.Create(Model);
-  FCellToWellConductanceData := TModflowTimeList.Create(Model);
-  FPartialPenetrationData := TModflowTimeList.Create(Model);
+  FWellRadiusData := TModflowTimeList.Create(Model, ScreenObject);
+  FSkinRadiusData := TModflowTimeList.Create(Model, ScreenObject);
+  FSkinKData := TModflowTimeList.Create(Model, ScreenObject);
+  FBData := TModflowTimeList.Create(Model, ScreenObject);
+  FCData := TModflowTimeList.Create(Model, ScreenObject);
+  FPData := TModflowTimeList.Create(Model, ScreenObject);
+  FCellToWellConductanceData := TModflowTimeList.Create(Model, ScreenObject);
+  FPartialPenetrationData := TModflowTimeList.Create(Model, ScreenObject);
 end;
 
 destructor TMnw2SpatialCollection.Destroy;

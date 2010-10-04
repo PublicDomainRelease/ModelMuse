@@ -6266,16 +6266,19 @@ begin
     // the count by 1.
     Count := Pred(FCount);
     LocalPPV := PointPositionValues;
-    if PointPositionValues <> nil then
+    if (PointPositionValues <> nil) then
     begin
-      Item := LocalPPV.Items[LocalPPV.Count-1] as TPointValuesItem;
-      if Item.Position = Index then
+      if (LocalPPV.Count > 0) then
       begin
-        LocalPPV.Delete(LocalPPV.Count-1);
-        if LocalPPV.Count = 0 then
+        Item := LocalPPV.Items[LocalPPV.Count-1] as TPointValuesItem;
+        if Item.Position = Index then
         begin
-          PointPositionValues := nil;
+          LocalPPV.Delete(LocalPPV.Count-1);
         end;
+      end;
+      if LocalPPV.Count = 0 then
+      begin
+        PointPositionValues := nil;
       end;
     end;
   end
@@ -6751,8 +6754,8 @@ function TScreenObject.GetPointPositionValues: TPointPositionValues;
 begin
   if FPointPositionValues = nil then
   begin
-    if (frmGoPhast.PhastModel <> nil)
-      and (frmGoPhast.PhastModel.ComponentState <> []) then
+    if (frmGoPhast.PhastModel <> nil) then
+//      and (frmGoPhast.PhastModel.ComponentState <> []) then
     begin
       FPointPositionValues := TPointPositionValues.Create(Model);
     end;
@@ -7305,6 +7308,17 @@ begin
     begin
       ModflowUzfBoundary.InvalidateDisplay;
     end;
+//    if ModflowHfbBoundary <> nil then
+//    begin
+//      // causes access violations when creating new objects
+//      // if the grid is colored with the HFB boundary
+//      ModflowHfbBoundary.InvalidateDisplay
+//    end;
+//    if ModflowMnw2Boundary <> nil then
+//    begin
+//      // not finished.
+////      ModflowMnw2Boundary.InvalidateDisplay
+//    end;
   end;
 end;
 
@@ -8904,7 +8918,7 @@ begin
             for Index := 0 to DataSetCount - 1 do
             begin
               DataSet := DataSets[Index];
-              if FElevSubscription <> nil then
+              if (FElevSubscription <> nil) and CanInvalidateModel then
               begin
                 FElevSubscription.StopsTalkingTo(DataSet);
               end;
@@ -8921,12 +8935,12 @@ begin
             for Index := 0 to DataSetCount - 1 do
             begin
               DataSet := DataSets[Index];
-              if FTopElevSubscription <> nil then
+              if (FTopElevSubscription <> nil) and CanInvalidateModel then
               begin
                 FTopElevSubscription.StopsTalkingTo(DataSet);
               end;
 
-              if FBottomElevSubscription <> nil then
+              if (FBottomElevSubscription <> nil) and CanInvalidateModel then
               begin
                 FBottomElevSubscription.StopsTalkingTo(DataSet);
               end;
@@ -8954,14 +8968,17 @@ begin
           end;
         ecOne:
           begin
+            if FElevSubscription = nil then
+            begin
+              CreateElevationSubscription;
+            end;
             for Index := 0 to DataSetCount - 1 do
             begin
               DataSet := DataSets[Index];
-              if FElevSubscription = nil then
+              if CanInvalidateModel then
               begin
-                CreateElevationSubscription;
+                FElevSubscription.TalksTo(DataSet);
               end;
-              FElevSubscription.TalksTo(DataSet);
             end;
             TempElevationFormula := ElevationFormula;
             UpdateElevationSubscriptions(TempElevationFormula, '0');
@@ -8969,21 +8986,27 @@ begin
           end;
         ecTwo:
           begin
+            if FTopElevSubscription = nil then
+            begin
+              CreateTopElevationSubscription;
+            end;
+            if FBottomElevSubscription = nil then
+            begin
+              CreateBottomElevationSubscription;
+            end;
             for Index := 0 to DataSetCount - 1 do
             begin
               DataSet := DataSets[Index];
-              if FTopElevSubscription = nil then
+              if CanInvalidateModel then
               begin
-                CreateTopElevationSubscription;
+                FTopElevSubscription.TalksTo(DataSet);
               end;
-              FTopElevSubscription.TalksTo(DataSet);
 
 
-              if FBottomElevSubscription = nil then
+              if CanInvalidateModel then
               begin
-                CreateBottomElevationSubscription;
+                FBottomElevSubscription.TalksTo(DataSet);
               end;
-              FBottomElevSubscription.TalksTo(DataSet);
             end;
             TempElevationFormula := HigherElevationFormula;
             UpdateHigherElevationSubscriptions(TempElevationFormula, '0');
@@ -9012,7 +9035,10 @@ begin
                 for Index := 0 to List.Count - 1 do
                 begin
                   DataSet := List[Index];
-                  DataSet.StopsTalkingTo(self);
+                  if CanInvalidateModel then
+                  begin
+                    DataSet.StopsTalkingTo(self);
+                  end;
                 end;
               end;
             else Assert(False);
@@ -9027,7 +9053,10 @@ begin
                 for Index := 0 to List.Count - 1 do
                 begin
                   DataSet := List[Index];
-                  DataSet.TalksTo(self);
+                  if CanInvalidateModel then
+                  begin
+                    DataSet.TalksTo(self);
+                  end;
                 end;
               end;
             else Assert(False);
@@ -29560,7 +29589,8 @@ end;
 procedure TCustomPhastBoundaryCollection.Clear;
 begin
   inherited;
-  if TimeList <> nil then
+  if (TimeList <> nil) and (FScreenObject <> nil)
+    and FScreenObject.CanInvalidateModel then
   begin
     TimeList.Invalidate;
   end;

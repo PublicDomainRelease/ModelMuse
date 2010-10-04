@@ -5,18 +5,23 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomSelectObjectsUnit, VirtualTrees, StdCtrls, Buttons,
-  ExtCtrls, ScreenObjectUnit;
+  ExtCtrls, ScreenObjectUnit, Menus;
 
 type
   TfrmSelectObjectsForEditing = class(TfrmCustomSelectObjects)
     btnOK: TBitBtn;
     rgViewDirection: TRadioGroup;
     btnDelete: TBitBtn;
+    pmChangeStates: TPopupMenu;
+    miCheckSelected: TMenuItem;
+    UncheckSelected1: TMenuItem;
     procedure FormCreate(Sender: TObject); override;
     procedure vstObjectsChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure btnOKClick(Sender: TObject);
     procedure rgViewDirectionClick(Sender: TObject);
     procedure btnDeleteClick(Sender: TObject);
+    procedure miCheckSelectedClick(Sender: TObject);
+    procedure UncheckSelected1Click(Sender: TObject);
   private
     FListOfScreenObjects: TList;
     procedure SetData;
@@ -85,6 +90,19 @@ begin
   inherited;
 end;
 
+procedure TfrmSelectObjectsForEditing.UncheckSelected1Click(Sender: TObject);
+begin
+  inherited;
+  vstObjects.BeginUpdate;
+  try
+    UpdateStringTreeViewCheckedState(vstObjects, vstObjects.RootNode, csUnCheckedNormal);
+//    SetStateOfMultipleNodes(vstObjects.RootNode, csCheckedNormal);
+  finally
+    vstObjects.EndUpdate;
+  end;
+
+end;
+
 procedure TfrmSelectObjectsForEditing.UpdateScreenObjectList;
 var
   ScreenObject: TScreenObject;
@@ -127,6 +145,19 @@ procedure TfrmSelectObjectsForEditing.HandleUnchecked(
   AScreenObject: TScreenObject);
 begin
   FListOfScreenObjects.Remove(AScreenObject);
+end;
+
+procedure TfrmSelectObjectsForEditing.miCheckSelectedClick(Sender: TObject);
+begin
+  inherited;
+  vstObjects.BeginUpdate;
+  try
+    UpdateStringTreeViewCheckedState(vstObjects, vstObjects.RootNode, csCheckedNormal);
+//    SetStateOfMultipleNodes(vstObjects.RootNode, csCheckedNormal);
+  finally
+    vstObjects.EndUpdate;
+  end;
+
 end;
 
 procedure TfrmSelectObjectsForEditing.rgViewDirectionClick(Sender: TObject);

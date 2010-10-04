@@ -125,6 +125,8 @@ const
   StrHufSy = 'GetHufSy';
   StrLayerHeight = 'LayerHeight';
   StrInterpolatedVertexValues = 'InterpolatedVertexValue';
+  StrVertexInterpolate = 'VertexInterpolate';
+  StrNodeInterpolate = 'NodeInterpolate';
 
 function GetColumnWidth(Column: Integer): Double;
 function GetRowWidth(Row: Integer): Double;
@@ -2966,7 +2968,10 @@ begin
       TExpression(AVariable).Evaluate;
     end;
     Value1 := AVariable.DoubleResult;
-    Point1 := GlobalCurrentScreenObject.Points[GlobalCurrentSegment.VertexIndex];
+    Point1 := GlobalCurrentScreenObject.Points[
+      GlobalCurrentSegment.VertexIndex];
+    Point1 := frmGoPhast.Grid.
+      RotateFromRealWorldCoordinatesToGridCoordinates(Point1);
     IsFirstPoint := False;
     case GlobalCurrentScreenObject.ViewDirection of
       vdTop, vdFront:
@@ -2997,6 +3002,8 @@ begin
     Value2 := AVariable.DoubleResult;
     Point2 := GlobalCurrentScreenObject.Points[
       GlobalCurrentSegment.VertexIndex + 1];
+    Point2 := frmGoPhast.Grid.
+      RotateFromRealWorldCoordinatesToGridCoordinates(Point2);
     IsLastPoint := False;
     case GlobalCurrentScreenObject.ViewDirection of
       vdTop, vdFront:
@@ -3930,9 +3937,9 @@ initialization
   NodeInterpolate.InputDataCount := 3;
   NodeInterpolate.OptionalArguments := -1;
   NodeInterpolate.RFunctionAddr := _NodeInterpolate;
-  NodeInterpolate.Name := 'VertexInterpolate';
-  NodeInterpolate.Prototype := 'Object|VertexInterpolate(Value1, Value2, ...)';
-  NodeInterpolate.Synonyms.Add('NodeInterpolate');
+  NodeInterpolate.Name := StrVertexInterpolate;
+  NodeInterpolate.Prototype := 'Object|' + StrVertexInterpolate + '(Value1, Value2, ...)';
+  NodeInterpolate.Synonyms.Add(StrNodeInterpolate);
   NodeInterpolate.InputDataTypes[0] := rdtDouble;
   NodeInterpolate.InputDataTypes[1] := rdtDouble;
   NodeInterpolate.InputDataTypes[2] := rdtDouble;

@@ -82,6 +82,7 @@ type
     FNewTimeSeries: TTimeSeriesReader;
     FImportedNewFile: Boolean;
     procedure ForceRedraw;
+    procedure EnableMenuItems;
   public
     Constructor Create(var NewTimeSeries: TTimeSeriesReader; ImportedNewFile: boolean);
     Destructor Destroy; override;
@@ -506,6 +507,7 @@ procedure TfrmTimeSeriesDisplay.AssignTimesToComboBox(Times: TRealList);
 var
   Index: Integer;
 begin
+  comboTimeToPlot.Items.Clear;
   comboTimeToPlot.Items.Capacity := Times.Count;
   for Index := 0 to Times.Count - 1 do
   begin
@@ -551,8 +553,7 @@ end;
 procedure TUndoImportTimeSeries.DoCommand;
 begin
   frmGoPhast.PhastModel.TimeSeries := FNewTimeSeries;
-  frmGoPhast.miConfigureTimeSeries.Enabled :=
-    frmGoPhast.PhastModel.TimeSeries.Series.Count > 0;
+  EnableMenuItems;
   ForceRedraw;
 end;
 
@@ -572,11 +573,18 @@ end;
 procedure TUndoImportTimeSeries.Undo;
 begin
   frmGoPhast.PhastModel.TimeSeries := FExistingTimeSeries;
-  frmGoPhast.miConfigureTimeSeries.Enabled :=
-    frmGoPhast.PhastModel.TimeSeries.Series.Count > 0;
+  EnableMenuItems;
   ForceRedraw;
   inherited;
 
+end;
+
+procedure TUndoImportTimeSeries.EnableMenuItems;
+begin
+  frmGoPhast.miConfigureTimeSeries.Enabled :=
+    frmGoPhast.PhastModel.TimeSeries.Series.Count > 0;
+  frmGoPhast.miTimeSeriestoShapefile.Enabled :=
+    frmGoPhast.miConfigureTimeSeries.Enabled;
 end;
 
 end.

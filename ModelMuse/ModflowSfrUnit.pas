@@ -122,7 +122,8 @@ type
     property Gage5: boolean read FGage5 write SetGage5;
     property Gage6: boolean read FGage6 write SetGage6;
     property Gage7: boolean read FGage7 write SetGage7;
-    property GageLocation: TGageLocation read FGageLocation write SetGageLocation;
+    property GageLocation: TGageLocation read FGageLocation
+      write SetGageLocation;
   end;
 
 const

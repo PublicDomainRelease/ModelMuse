@@ -150,6 +150,8 @@ inherited frmImportBitmap: TfrmImportBitmap
       Width = 65
       Height = 26
       ButtonKind = bkClassic
+      MaxValue = 1000000.000000000000000000
+      MinValue = 1.000000000000000000
       Value = 1.000000000000000000
       TabOrder = 8
       OnChange = seNumRowsChange
@@ -162,13 +164,13 @@ inherited frmImportBitmap: TfrmImportBitmap
       BevelOuter = bvNone
       ColumnCollection = <
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end
         item
-          Value = 33.333333333333330000
+          Value = 33.333333333333340000
         end>
       ControlCollection = <
         item
@@ -195,7 +197,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         135
         32)
       object sbAddRow: TSpeedButton
-        Left = 10
+        Left = 11
         Top = 5
         Width = 23
         Height = 22
@@ -213,11 +215,10 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentShowHint = False
         ShowHint = True
         OnClick = sbAddRowClick
-        ExplicitLeft = 11
         ExplicitTop = 6
       end
       object sbInsertRow: TSpeedButton
-        Left = 54
+        Left = 56
         Top = 5
         Width = 23
         Height = 22
@@ -235,11 +236,10 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentShowHint = False
         ShowHint = True
         OnClick = sbInsertRowClick
-        ExplicitLeft = 56
         ExplicitTop = 6
       end
       object sbDeleteRow: TSpeedButton
-        Left = 100
+        Left = 101
         Top = 5
         Width = 23
         Height = 22
@@ -441,10 +441,6 @@ inherited frmImportBitmap: TfrmImportBitmap
       Image32.ScaleMode = smNormal
       Image32.TabOrder = 0
       Image32.OnMouseUp = ZoomBoxImage32MouseUp
-      Image32.ExplicitLeft = 0
-      Image32.ExplicitTop = 0
-      Image32.ExplicitWidth = 575
-      Image32.ExplicitHeight = 427
       ImmediateResize = True
       Magnification = 1.000000000000000000
       VerticalDirection = vdUp

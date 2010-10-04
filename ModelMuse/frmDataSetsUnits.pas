@@ -988,6 +988,10 @@ begin
   SelectedDataArray := frmGoPhast.Grid.ThreeDDataSet;
   if SelectedDataArray = nil then
   begin
+    SelectedDataArray := frmGoPhast.Grid.ThreeDContourDataSet;
+  end;
+  if SelectedDataArray = nil then
+  begin
     SelectedName := '';
   end
   else

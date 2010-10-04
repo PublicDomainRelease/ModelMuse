@@ -38,7 +38,7 @@ uses ModflowGridUnit, AbstractGridUnit, ScreenObjectUnit, GoPhastTypes,
   ModflowHobUnit, ModflowHfbUnit, ModflowLakUnit, ModflowDrtUnit, 
   ModflowEtsUnit, ModflowResUnit, ModflowUzfUnit, ModflowGageUnit, 
   HufDefinition, FluxObservationUnit, ModflowMnw2Unit, ModflowSubsidenceDefUnit,
-  ModflowHydmodUnit;
+  ModflowHydmodUnit, ContourExport;
 
 resourcestring
   StrHydCondAlongRows = 'HYD. COND. ALONG ROWS';
@@ -1428,23 +1428,6 @@ Type
   end;
 
 
-  TPointList = class(TObject)
-  strict private
-    FPoints: array of TPoint2D;
-    FCount: integer;
-    procedure Grow;
-    function GetCapacity: integer;
-    function GetPoint(Index: integer): TPoint2D;
-    procedure SetCapacity(const Value: integer);
-    procedure SetPoint(Index: integer; const Value: TPoint2D);
-  public
-    function Add(Point: TPoint2D): integer;
-    property Capacity: integer read GetCapacity write SetCapacity;
-    property Count: integer read FCount;
-    property Points[Index: integer]: TPoint2D read GetPoint write SetPoint;
-    procedure Insert(Position: integer; Point: TPoint2D);
-  end;
-
   TTransientArrayImporter = class(TPackageImporter)
   private
     NP: integer;
@@ -1510,6 +1493,7 @@ Type
     Function CreateScreenObjectAroundZones(ZoneArray: T2DIntArray;
       Cluster: TClusterObject; const Name: string): TScreenObject;
     procedure InitializeQuadTree;
+    // @name is the event handler for TContourCreator.OnExtractSegments
     procedure ImportSegments(Sender: TObject; const Segments: TLine2DArray);
     procedure CreateTimeVaryingAssignedLayerDataSet(StressPeriodIndex: Integer;
       const DataSetRoot, ScreenObjectRoot: string;
@@ -1524,6 +1508,7 @@ Type
     procedure CreateScreenObjectsAroundValues(Values: T2DIntArray;
       const Root: string; DataArray: TDataArray;
       ValueList: TIntegerList); overload;
+    procedure InitializeEpsilon;
   public
     Constructor Create(Importer: TModflow2005Importer;
       const PackageIdentifier: string; ZoneImporter: TMultZoneImporter);
@@ -9341,6 +9326,11 @@ begin
   inherited;
 end;
 
+procedure TTransientArrayImporter.InitializeEpsilon;
+begin
+  GlobalInitializeEpsilon(FEpsilon, FGrid);
+end;
+
 procedure TTransientArrayImporter.ImportSharedData(const ALabel: string;
   out Handled: boolean);
 begin
@@ -10080,252 +10070,14 @@ begin
 end;
 
 procedure TTransientArrayImporter.InitializeQuadTree;
-var
-  CornerPoint: TPoint2d;
-  XMin, XMax, YMin, YMax: double;
 begin
-  if FQuadTree = nil then
-  begin
-    FQuadTree := TRbwQuadTree.Create(nil);
-
-    CornerPoint := FGrid.TwoDElementCorner(0,0);
-    XMin := CornerPoint.x;
-    XMax := XMin;
-    YMin := CornerPoint.y;
-    YMax := YMin;
-
-    CornerPoint := FGrid.TwoDElementCorner(FGrid.ColumnCount,0);
-    XMin := Min(XMin, CornerPoint.x);
-    XMax := Max(XMax, CornerPoint.x);
-    YMin := Min(YMin, CornerPoint.y);
-    YMax := Max(YMax, CornerPoint.y);
-
-    CornerPoint := FGrid.TwoDElementCorner(FGrid.ColumnCount,FGrid.RowCount);
-    XMin := Min(XMin, CornerPoint.x);
-    XMax := Max(XMax, CornerPoint.x);
-    YMin := Min(YMin, CornerPoint.y);
-    YMax := Max(YMax, CornerPoint.y);
-
-    CornerPoint := FGrid.TwoDElementCorner(0,FGrid.RowCount);
-    XMin := Min(XMin, CornerPoint.x);
-    XMax := Max(XMax, CornerPoint.x);
-    YMin := Min(YMin, CornerPoint.y);
-    YMax := Max(YMax, CornerPoint.y);
-
-    FQuadTree.XMin := XMin;
-    FQuadTree.XMax := XMax;
-    FQuadTree.YMin := YMin;
-    FQuadTree.YMax := YMax;
-  end
-  else
-  begin
-    FQuadTree.Clear;
-  end;
+  GlobalInitializeQuadTree(FQuadTree, FGrid);
 end;
 
 procedure TTransientArrayImporter.ImportSegments(Sender: TObject;
   const Segments: TLine2DArray);
-var
-  Index: Integer;
-  Segment: TLine2D;
-  Line1, Line2, Line3: TPointList;
-  X1, Y1: double;
-  X2, Y2: double;
-  APoint: TPoint2D;
-  PointIndex: Integer;
-  APointer: Pointer;
-  function SamePoint(X1, X2, Y1, Y2: double): boolean;
-  begin
-    result := Sqr(X1-X2) + Sqr(Y1-Y2) < FEpsilon;
-  end;
 begin
-  for Index := 0 to Length(Segments) - 1 do
-  begin
-    Segment := Segments[Index];
-    X1 := Segment[1].x;
-    Y1 := Segment[1].y;
-    if FQuadTree.Count > 0 then
-    begin
-      FQuadTree.FirstNearestPoint(X1, Y1, APointer);
-      Line1 := APointer;
-    end
-    else
-    begin
-      Line1 := nil;
-    end;
-    if Line1 <> nil then
-    begin
-      if not SamePoint(X1, Segment[1].x, Y1, Segment[1].Y) then
-      begin
-        Line1 := nil;
-      end;
-    end;
-
-    X2 := Segment[2].x;
-    Y2 := Segment[2].y;
-    if FQuadTree.Count > 0 then
-    begin
-      FQuadTree.FirstNearestPoint(X2, Y2, APointer);
-      Line2 := APointer;
-    end
-    else
-    begin
-      Line2 := nil;
-    end;
-    if Line2 <> nil then
-    begin
-      if not SamePoint(X2, Segment[2].x, Y2, Segment[2].Y) then
-      begin
-        Line2 := nil;
-      end;
-    end;
-    if (Line1 = nil) and (Line2 = nil) then
-    begin
-      Line1 := TPointList.Create;
-      FPointLists.Add(Line1);
-      Line1.Add(Segment[1]);
-      Line1.Add(Segment[2]);
-      FQuadTree.AddPoint(Segment[1].x, Segment[1].y, Line1);
-      FQuadTree.AddPoint(Segment[2].x, Segment[2].y, Line1);
-    end
-    else if (Line1 = nil) then
-    begin
-      APoint := Line2.Points[Line2.Count-1];
-      if SamePoint(Segment[2].x, APoint.x, Segment[2].y, APoint.y) then
-      begin
-        Line2.Add(Segment[1]);
-      end
-      else
-      begin
-        APoint := Line2.Points[0];
-        Assert(SamePoint(Segment[2].x, APoint.x, Segment[2].y, APoint.y));
-        Line2.Insert(0, Segment[1]);
-      end;
-      FQuadTree.RemovePoint(X2, Y2, Line2);
-      FQuadTree.AddPoint(Segment[1].x, Segment[1].y, Line2);
-    end
-    else if (Line2 = nil) then
-    begin
-      APoint := Line1.Points[Line1.Count-1];
-      if SamePoint(Segment[1].x, APoint.x, Segment[1].y, APoint.y) then
-      begin
-        Line1.Add(Segment[2]);
-      end
-      else
-      begin
-        APoint := Line1.Points[0];
-        Assert(SamePoint(Segment[1].x, APoint.x, Segment[1].y, APoint.y));
-        Line1.Insert(0, Segment[2]);
-      end;
-      FQuadTree.RemovePoint(X1, Y1, Line1);
-      FQuadTree.AddPoint(Segment[2].x, Segment[2].y, Line1);
-    end
-    else if (Line2 = Line1) then
-    begin
-      APoint := Line1.Points[Line1.Count-1];
-      if SamePoint(Segment[1].x, APoint.x, Segment[1].y, APoint.y) then
-      begin
-        Line1.Add(Segment[2]);
-      end
-      else
-      begin
-        APoint := Line1.Points[0];
-        Assert(SamePoint(Segment[1].x, APoint.x, Segment[1].y, APoint.y));
-        Line1.Insert(0, Segment[2]);
-      end;
-      FQuadTree.RemovePoint(X1, Y1, Line1);
-      FQuadTree.RemovePoint(X2, Y2, Line1);
-    end
-    else
-    begin
-      APoint := Line1.Points[Line1.Count-1];
-      if   (SamePoint(Segment[1].x, APoint.x, Segment[1].y, APoint.y))
-        or (SamePoint(Segment[2].x, APoint.x, Segment[2].y, APoint.y)) then
-      begin
-        // Add to end of line 1
-        if Line1.Capacity < Line1.Count + Line2.Count then
-        begin
-          Line1.Capacity := Line1.Count + Line2.Count
-        end;
-        APoint := Line2.Points[Line2.Count-1];
-        if   (SamePoint(Segment[1].x, APoint.x, Segment[1].y, APoint.y))
-          or (SamePoint(Segment[2].x, APoint.x, Segment[2].y, APoint.y)) then
-        begin
-          APoint := Line2.Points[0];
-          FQuadTree.RemovePoint(APoint.x, APoint.y, Line2);
-          // Add end of line 2 to end of line 1
-          for PointIndex := Line2.Count - 1 downto 0 do
-          begin
-            Line1.Add(Line2.Points[PointIndex]);
-          end;
-        end
-        else
-        begin
-          APoint := Line2.Points[Line2.Count - 1];
-          FQuadTree.RemovePoint(APoint.x, APoint.y, Line2);
-          // Join beginning of line 2 to end of line 1
-          for PointIndex := 0 to Line2.Count - 1 do
-          begin
-            Line1.Add(Line2.Points[PointIndex]);
-          end;
-        end;
-        FQuadTree.RemovePoint(X1, Y1, Line1);
-        FQuadTree.RemovePoint(X2, Y2, Line2);
-        FQuadTree.AddPoint(APoint.x, APoint.y, Line1);
-        FPointLists.Remove(Line2);
-      end
-      else
-      begin
-        APoint := Line2.Points[Line2.Count-1];
-        if   (SamePoint(Segment[1].x, APoint.x, Segment[1].y, APoint.y))
-          or (SamePoint(Segment[2].x, APoint.x, Segment[2].y, APoint.y)) then
-        begin
-          // Add beginning of line 1 to end of line2
-          if Line2.Capacity < Line1.Count + Line2.Count then
-          begin
-            Line2.Capacity := Line1.Count + Line2.Count;
-          end;
-          APoint := Line1.Points[Line1.Count - 1];
-          FQuadTree.RemovePoint(APoint.x, APoint.y, Line1);
-          for PointIndex := 0 to Line1.Count - 1 do
-          begin
-            Line2.Add(Line1.Points[PointIndex]);
-          end;
-          FQuadTree.RemovePoint(X1, Y1, Line1);
-          FQuadTree.RemovePoint(X2, Y2, Line2);
-          FQuadTree.AddPoint(APoint.x, APoint.y, Line2);
-          FPointLists.Remove(Line1);
-        end
-        else
-        begin
-          // Join beginning of line 1 to beginning of line 2
-          Line3 := TPointList.Create;
-          FPointLists.Add(Line3);
-          Line3.Capacity := Line1.Count + Line2.Count;
-          for PointIndex := Line1.Count - 1 downto 0 do
-          begin
-            Line3.Add(Line1.Points[PointIndex]);
-          end;
-          for PointIndex := 0 to Line2.Count - 1 do
-          begin
-            Line3.Add(Line2.Points[PointIndex]);
-          end;
-          FQuadTree.RemovePoint(X1, Y1, Line1);
-          FQuadTree.RemovePoint(X2, Y2, Line2);
-
-          APoint := Line1.Points[Line1.Count - 1];
-          FQuadTree.RemovePoint(APoint.x, APoint.y, Line1);
-          FQuadTree.AddPoint(APoint.x, APoint.y, Line3);
-
-          APoint := Line2.Points[Line2.Count - 1];
-          FQuadTree.RemovePoint(APoint.x, APoint.y, Line2);
-          FQuadTree.AddPoint(APoint.x, APoint.y, Line3);
-          FPointLists.Remove(Line1);
-          FPointLists.Remove(Line2);
-        end;
-      end;
-    end;
-  end;
+  GlobalImportSegments(Sender, Segments, FEpsilon, FQuadTree, FPointLists);
 end;
 
 procedure TTransientArrayImporter.CreateScreenObjectsAroundValues(
@@ -10340,7 +10092,6 @@ var
   MaxRow: Integer;
   MaxCol: Integer;
   ContourCreator: TContourCreator;
-  Index: Integer;
   Capacity: Integer;
   PointListIndex: Integer;
   PointList: TPointList;
@@ -10365,20 +10116,10 @@ begin
   end;
 
   FPointLists:= TObjectList.Create;
-
-  FEpsilon := FGrid.ColumnWidth[0];
-  for Index := 1 to FGrid.ColumnCount - 1 do
-  begin
-    FEpsilon := Min(FEpsilon, FGrid.ColumnWidth[Index]);
-  end;
-  for Index := 0 to FGrid.RowCount - 1 do
-  begin
-    FEpsilon := Min(FEpsilon, FGrid.RowWidth[Index]);
-  end;
-  FEpsilon := Sqr(FEpsilon/4);
-
   ContourCreator:= TContourCreator.Create;
   try
+    InitializeEpsilon;
+
     ContourCreator.EvaluatedAt := eaBlocks;
     ContourCreator.Grid := ContourGrid;
     ContourCreator.OnExtractSegments := ImportSegments;
@@ -10460,7 +10201,6 @@ var
   MaxRow: Integer;
   MaxCol: Integer;
   ContourCreator: TContourCreator;
-  Index: Integer;
   Capacity: Integer;
   PointListIndex: Integer;
   PointList: TPointList;
@@ -10468,8 +10208,6 @@ var
   PointIndex: Integer;
   ValueIndex: Integer;
   DSIndex: Integer;
-//  MinValue: double;
-//  MaxValue: double;
 begin
   ContourGrid := FGrid.ContourGrid(eaBlocks, msModflow, vdTop, 0);
   Assert(ContourGrid <> nil);
@@ -10488,19 +10226,10 @@ begin
 
   FPointLists:= TObjectList.Create;
 
-  FEpsilon := FGrid.ColumnWidth[0];
-  for Index := 1 to FGrid.ColumnCount - 1 do
-  begin
-    FEpsilon := Min(FEpsilon, FGrid.ColumnWidth[Index]);
-  end;
-  for Index := 0 to FGrid.RowCount - 1 do
-  begin
-    FEpsilon := Min(FEpsilon, FGrid.RowWidth[Index]);
-  end;
-  FEpsilon := Sqr(FEpsilon/4);
-
   ContourCreator:= TContourCreator.Create;
   try
+    InitializeEpsilon;
+
     ContourCreator.EvaluatedAt := eaBlocks;
     ContourCreator.Grid := ContourGrid;
     ContourCreator.OnExtractSegments := ImportSegments;
@@ -10581,7 +10310,6 @@ var
   RowIndex: Integer;
   ZoneIndex: Integer;
   ContourCreator: TContourCreator;
-  Index: Integer;
   PointListIndex: Integer;
   Capacity: Integer;
   PointList: TPointList;
@@ -10631,16 +10359,7 @@ begin
   ContourCreator:= TContourCreator.Create;
   try
     ContourCreator.EvaluatedAt := eaBlocks;
-    FEpsilon := FGrid.ColumnWidth[0];
-    for Index := 1 to FGrid.ColumnCount - 1 do
-    begin
-      FEpsilon := Min(FEpsilon, FGrid.ColumnWidth[Index]);
-    end;
-    for Index := 0 to FGrid.RowCount - 1 do
-    begin
-      FEpsilon := Min(FEpsilon, FGrid.RowWidth[Index]);
-    end;
-    FEpsilon := Sqr(FEpsilon/4);
+    InitializeEpsilon;
 
     ContourCreator.Grid := ContourGrid;
     ContourCreator.Value := 1;
@@ -11108,79 +10827,6 @@ function TArrayStressPeriodArray.GetStressPeriod(
   Index: integer): TArrayStressPeriod;
 begin
   result := TArrayStressPeriod(Objects[Index]);
-end;
-
-{ TPointList }
-
-function TPointList.Add(Point: TPoint2D): integer;
-begin
-  if FCount = Capacity then
-  begin
-    Grow;
-  end;
-  FPoints[FCount] := Point;
-  result := FCount;
-  Inc(FCount);
-end;
-
-function TPointList.GetCapacity: integer;
-begin
-  result := Length(FPoints);
-end;
-
-function TPointList.GetPoint(Index: integer): TPoint2D;
-begin
-  result := FPoints[Index];
-end;
-
-procedure TPointList.Grow;
-var
-  Delta: Integer;
-  LocalCapacity: integer;
-begin
-  LocalCapacity := Capacity;
-  if LocalCapacity < 16 then
-  begin
-    Delta := 4;
-  end
-  else
-  begin
-    Delta := LocalCapacity  div 4;
-  end;
-  Capacity := LocalCapacity + Delta;
-end;
-
-procedure TPointList.Insert(Position: integer; Point: TPoint2D);
-var
-  Index: Integer;
-begin
-  if Count = Capacity then
-  begin
-    Grow;
-  end;
-  if Position = Count then
-  begin
-    Add(Point);
-  end
-  else
-  begin
-    for Index := FCount - 1 downto Position do
-    begin
-      FPoints[Index+1] := FPoints[Index];
-    end;
-    FPoints[Position] := Point;
-    Inc(FCount);
-  end;
-end;
-
-procedure TPointList.SetCapacity(const Value: integer);
-begin
-  SetLength(FPoints, Value);
-end;
-
-procedure TPointList.SetPoint(Index: integer; const Value: TPoint2D);
-begin
-  FPoints[Index] := Value;
 end;
 
 { TClusterObject }

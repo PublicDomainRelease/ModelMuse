@@ -86,7 +86,7 @@ inherited frmImportDEM: TfrmImportDEM
     Height = 22
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 18
+    ItemHeight = 0
     TabOrder = 12
     Text = '-32767'
     DataType = dtInteger

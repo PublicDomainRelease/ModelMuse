@@ -520,7 +520,6 @@ type
     procedure SetRowCount(const Value: Longint);
     procedure SetSelectedRowOrColumnColor(const Value: TColor);
     procedure SetUnselectableColor(const Value: TColor);
-    function WidthNeededToFitText(const ACol, ARow: Integer): integer;
     function GetSelection: TGridRect;
     procedure SetSelection(const Value: TGridRect);
     procedure WMHScroll(var Msg: TWMHScroll); message WM_HSCROLL;
@@ -594,6 +593,7 @@ type
     procedure TopLeftChanged(); override;
     procedure KeyUp(var Key: Word; Shift: TShiftState); override;
   public
+    function WidthNeededToFitText(const ACol, ARow: Integer): integer;
     procedure SelectAll;
     procedure ClearSelection;
     procedure CopySelectedCellsToClipboard;

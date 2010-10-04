@@ -41,7 +41,7 @@ implementation
 
 uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
   ModflowTransientListParameterUnit, ModflowUnitNumbers, frmProgressUnit,
-  RbwParser, DataSetUnit;
+  RbwParser, DataSetUnit, Forms;
 
 { TModflowDRN_Writer }
 
@@ -200,6 +200,7 @@ begin
   if ShouldWriteFile or ShouldWriteObservationFile then
   begin
     Evaluate;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -215,6 +216,7 @@ begin
     frmProgress.AddMessage('Writing DRN Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -222,6 +224,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -229,6 +232,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -272,6 +276,7 @@ begin
   begin
     Cell := CellList[CellIndex] as TDrn_Cell;
     WriteCell(Cell, DataSetIdentifier, VariableIdentifiers);
+    CheckCell(Cell, 'DRN');
   end;
   // Dummy inactive cells to fill out data set 4b.
   // Each instance of a parameter is required to have the same

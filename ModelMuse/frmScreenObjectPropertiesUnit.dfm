@@ -577,7 +577,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             Top = 32
             Width = 475
             Height = 139
-            AutoSize = False
             Anchors = [akLeft, akTop, akRight, akBottom]
             Enabled = False
             TabOrder = 0
@@ -4719,7 +4718,8 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               ExplicitHeight = 475
               inherited tabBasic: TTabSheet
                 ExplicitTop = 30
-                ExplicitHeight = 472
+                ExplicitWidth = 575
+                ExplicitHeight = 441
                 inherited Label1: TLabel
                   Width = 186
                   Height = 19
@@ -4870,11 +4870,13 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     ExplicitHeight = 27
                   end
                 end
+                inherited pnlCaption: TPanel
+                  Width = 575
+                  ExplicitWidth = 575
+                end
               end
               inherited tabTime: TTabSheet
-                ExplicitLeft = 4
                 ExplicitTop = 30
-                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited pnlParamTop: TPanel
                   inherited lblParameterChoices: TLabel
@@ -5048,9 +5050,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited tabNetwork: TTabSheet
                 HelpType = htKeyword
                 HelpKeyword = 'Network_Tab'
-                ExplicitLeft = 4
                 ExplicitTop = 30
-                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited pnlNetwork: TPanel
                   inherited lblSegment: TLabel
@@ -5075,9 +5075,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
               end
               inherited tabFlows: TTabSheet
-                ExplicitLeft = 4
                 ExplicitTop = 30
-                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited dgFlowTimes: TRbwDataGrid4
                   Height = 415
@@ -5231,9 +5229,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
               end
               inherited tabSegment: TTabSheet
-                ExplicitLeft = 4
                 ExplicitTop = 30
-                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited Splitter1: TSplitter
                   ExplicitWidth = 575
@@ -5588,9 +5584,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
               end
               inherited tabChannel: TTabSheet
-                ExplicitLeft = 4
                 ExplicitTop = 30
-                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited Splitter3: TSplitter
                   Height = 363
@@ -5713,14 +5707,11 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
                 inherited zbChannel: TQRbwZoomBox2
                   Top = 363
-                  Image32.Top = 0
                   ExplicitTop = 363
                 end
               end
               inherited tabEquation: TTabSheet
-                ExplicitLeft = 4
                 ExplicitTop = 30
-                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited dgSfrEquation: TRbwDataGrid4
                   Height = 415
@@ -5874,9 +5865,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
               end
               inherited tabTable: TTabSheet
-                ExplicitLeft = 4
                 ExplicitTop = 30
-                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited Splitter2: TSplitter
                   Height = 315
@@ -5955,18 +5944,11 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       Row = 0
                     end>
                   ExplicitTop = 315
-                  inherited zbFlowDepthTable: TQRbwZoomBox2
-                    Image32.Top = 0
-                  end
-                  inherited zbFlowWidthTable: TQRbwZoomBox2
-                    Image32.Top = 0
-                  end
                 end
               end
               inherited tabUnsaturatedProperties: TTabSheet
                 ExplicitTop = 30
-                ExplicitWidth = 575
-                ExplicitHeight = 441
+                ExplicitHeight = 472
                 inherited gbUnsatUpstream: TGroupBox
                   Width = 780
                   ExplicitWidth = 780
@@ -6065,7 +6047,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
               end
               inherited tabGage: TTabSheet
-                ExplicitLeft = 4
                 ExplicitTop = 30
                 ExplicitWidth = 575
                 ExplicitHeight = 441

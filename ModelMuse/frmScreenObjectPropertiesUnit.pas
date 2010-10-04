@@ -1835,6 +1835,7 @@ type
     procedure UpdateSectionNumbers;
     { Private declarations }
   public
+    procedure Initialize;
     procedure ClearExpressionsAndVariables;
     // When a @link(TScreenObject) is first created,
     // @name is called to display it's properties.
@@ -2543,7 +2544,9 @@ var
   ACaption: string;
   Index: Integer;
   ValueItem: TValueArrayItem;
+  TreeViewFilled: boolean;
 begin
+  FCurrentEdit := nil;
 
   case AScreenObject.ViewDirection of
     vdTop: rgElevationCount.Caption := 'Number of Z formulas';
@@ -2621,6 +2624,7 @@ begin
 
 
   List := TList.Create;
+  TreeViewFilled := False;
   try
     List.Add(AScreenObject);
     CreateDataSetEdits(List);
@@ -2638,6 +2642,7 @@ begin
     begin
       FCanFillTreeView := True;
       FillDataSetsTreeView(List);
+      TreeViewFilled := True;
     end;
 
   finally
@@ -2742,7 +2747,10 @@ begin
   IsLoaded := True;
   UpdateSubComponents(self);
   frameHeadObservations.HideUcodeColumns;
-  UpdateCurrentEdit;
+  if TreeViewFilled then
+  begin
+    UpdateCurrentEdit;
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.GetChdBoundary(ScreenObjectList: TList);
@@ -3565,6 +3573,14 @@ begin
   end;
 end;
 
+procedure TfrmScreenObjectProperties.Initialize;
+begin
+  FCurrentEdit := nil;
+  FSelectedDataArrayName := '';
+  tvDataSets.Selected := nil;
+  tvDataSetsChange(nil, nil);
+end;
+
 procedure TfrmScreenObjectProperties.tvDataSetsChange(Sender: TObject;
   Node: TTreeNode);
 begin
@@ -3719,7 +3735,7 @@ var
   FirstScreenObject: TScreenObject;
 begin
   FCanFillTreeView := False;
-  OutputDebugString('SAMPLING ON');
+//  OutputDebugString('SAMPLING ON');
   if FNewProperties = nil then
   begin
     FNewProperties := TScreenObjectEditCollection.Create;
@@ -3844,7 +3860,7 @@ begin
   EmphasizeValueChoices;
   UpdateSubComponents(self);
   UpdateCurrentEdit;
-  OutputDebugString('SAMPLING OFF');
+//  OutputDebugString('SAMPLING OFF');
 end;
 
 procedure TfrmScreenObjectProperties.UpdateSectionNumbers;
@@ -5228,10 +5244,14 @@ begin
   try
     reDataSetComment.Lines.Clear;
     reAssocModDataSets.Lines.Clear;
+    // Check that the formula entered for the previous
+    // data set is correct.
     if FCurrentEdit <> nil then
     begin
       ValidateDataSetFormula;
     end;
+    // Change the FCurrentEdit to the one for the new
+    // data set that is being edited.
     if tvDataSets.Selected = nil then
     begin
       reDataSetFormula.Enabled := False;
@@ -5573,7 +5593,8 @@ begin
       ClassifiedDataSets.Delete(0);
       Assert(ClassifiedDataSets.IndexOf(StrDataSets) < 0);
 
-      CreateClassifiedNodes(ClassifiedDataSets, 1, tvDataSets, FSelectedDataArrayName);
+      CreateClassifiedNodes(ClassifiedDataSets, 1, tvDataSets,
+        FSelectedDataArrayName);
 
       for Index := 0 to tvDataSets.Items.Count - 1 do
       begin
@@ -8798,11 +8819,13 @@ begin
     frameRchParam.InitializeFrame(AScreenObject.ModflowRchBoundary);
     if frmGoPhast.PhastModel.ModflowPackages.RchPackage.TimeVaryingLayers then
     begin
-      frameRchParam.dgModflowBoundary.Columns[3].WordWrapCaptions := True;
+//      frameRchParam.dgModflowBoundary.Columns[3].WordWrapCaptions := True;
       frameRchParam.dgModflowBoundary.Columns[3].AutoAdjustColWidths := True;
       TimeList := AScreenObject.ModflowRchBoundary.RechargeLayers.TimeLists[0];
       frameRchParam.dgModflowBoundary.Cells[3, 0] := TimeList.NonParamDescription;
       frameRchParam.dgModflowBoundary.Columns[3].AutoAdjustColWidths := False;
+      frameRchParam.dgModflowBoundary.ColWidths[3] :=
+        frameRchParam.dgModflowBoundary.WidthNeededToFitText(3,0);
     end;
     if (AScreenObject.ModflowRchBoundary <> nil)
       and not AScreenObject.ModflowRchBoundary.Used then
@@ -8822,21 +8845,25 @@ begin
     frameEvtParam.InitializeFrame(AScreenObject.ModflowEvtBoundary);
     if frmGoPhast.PhastModel.ModflowPackages.EvtPackage.TimeVaryingLayers then
     begin
-      frameEvtParam.dgModflowBoundary.Columns[5].WordWrapCaptions := True;
+//      frameEvtParam.dgModflowBoundary.Columns[5].WordWrapCaptions := True;
       frameEvtParam.dgModflowBoundary.Columns[5].AutoAdjustColWidths := True;
       TimeList := AScreenObject.ModflowEvtBoundary.EvapotranspirationLayers.TimeLists[0];
       frameEvtParam.dgModflowBoundary.Cells[5, 0] := TimeList.NonParamDescription;
       frameEvtParam.dgModflowBoundary.Columns[5].AutoAdjustColWidths := False;
+      frameEvtParam.dgModflowBoundary.ColWidths[5] :=
+        frameEvtParam.dgModflowBoundary.WidthNeededToFitText(5,0);
     end;
 
     for Index := 0 to AScreenObject.ModflowEvtBoundary.
       EvtSurfDepthCollection.TimeListCount - 1 do
     begin
       frameEvtParam.dgModflowBoundary.Columns[3+Index].WordWrapCaptions := True;
-      frameEvtParam.dgModflowBoundary.Columns[3+Index].AutoAdjustColWidths := True;
+//      frameEvtParam.dgModflowBoundary.Columns[3+Index].AutoAdjustColWidths := True;
       TimeList := AScreenObject.ModflowEvtBoundary.EvtSurfDepthCollection.TimeLists[Index];
       frameEvtParam.dgModflowBoundary.Cells[3+Index, 0] := TimeList.NonParamDescription;
       frameEvtParam.dgModflowBoundary.Columns[3+Index].AutoAdjustColWidths := False;
+      frameEvtParam.dgModflowBoundary.ColWidths[3+Index] :=
+        frameEvtParam.dgModflowBoundary.WidthNeededToFitText(3+Index,0);
     end;
     if (AScreenObject.ModflowEvtBoundary <> nil)
       and not AScreenObject.ModflowEvtBoundary.Used then
@@ -8861,10 +8888,12 @@ begin
     if frmGoPhast.PhastModel.ModflowPackages.EtsPackage.TimeVaryingLayers then
     begin
       frameEtsParam.dgModflowBoundary.Columns[EtsColCount-1].WordWrapCaptions := True;
-      frameEtsParam.dgModflowBoundary.Columns[EtsColCount-1].AutoAdjustColWidths := True;
+//      frameEtsParam.dgModflowBoundary.Columns[EtsColCount-1].AutoAdjustColWidths := True;
       TimeList := AScreenObject.ModflowEtsBoundary.EvapotranspirationLayers.TimeLists[0];
       frameEtsParam.dgModflowBoundary.Cells[EtsColCount-1, 0] := TimeList.NonParamDescription;
       frameEtsParam.dgModflowBoundary.Columns[EtsColCount-1].AutoAdjustColWidths := False;
+      frameEtsParam.dgModflowBoundary.ColWidths[EtsColCount-1] :=
+        frameEtsParam.dgModflowBoundary.WidthNeededToFitText(EtsColCount-1,0);
     end;
 
     for Index := 0 to AScreenObject.ModflowEtsBoundary.
@@ -8907,28 +8936,34 @@ begin
       frameScreenObjectUZF.dgModflowBoundary.ColCount := 6;
       // UZF ET Rates
       frameScreenObjectUZF.dgModflowBoundary.Columns[3].WordWrapCaptions := True;
-      frameScreenObjectUZF.dgModflowBoundary.Columns[3].AutoAdjustColWidths := True;
+//      frameScreenObjectUZF.dgModflowBoundary.Columns[3].AutoAdjustColWidths := True;
       frameScreenObjectUZF.dgModflowBoundary.Columns[3].AutoAdjustRowHeights := True;
       TimeList := AScreenObject.ModflowUzfBoundary.EvapotranspirationDemand.TimeLists[0];
       frameScreenObjectUZF.dgModflowBoundary.Cells[3, 0] := TimeList.NonParamDescription;
       frameScreenObjectUZF.dgModflowBoundary.Columns[3].AutoAdjustColWidths := False;
       frameScreenObjectUZF.dgModflowBoundary.Columns[3].AutoAdjustRowHeights := False;
+      frameScreenObjectUZF.dgModflowBoundary.ColWidths[3] :=
+        frameScreenObjectUZF.dgModflowBoundary.WidthNeededToFitText(3,0);
       // UZF ET Extinction depth
       frameScreenObjectUZF.dgModflowBoundary.Columns[4].WordWrapCaptions := True;
-      frameScreenObjectUZF.dgModflowBoundary.Columns[4].AutoAdjustColWidths := True;
+//      frameScreenObjectUZF.dgModflowBoundary.Columns[4].AutoAdjustColWidths := True;
       frameScreenObjectUZF.dgModflowBoundary.Columns[4].AutoAdjustRowHeights := True;
       TimeList := AScreenObject.ModflowUzfBoundary.ExtinctionDepth.TimeLists[0];
       frameScreenObjectUZF.dgModflowBoundary.Cells[4, 0] := TimeList.NonParamDescription;
       frameScreenObjectUZF.dgModflowBoundary.Columns[4].AutoAdjustColWidths := False;
       frameScreenObjectUZF.dgModflowBoundary.Columns[4].AutoAdjustRowHeights := False;
+      frameScreenObjectUZF.dgModflowBoundary.ColWidths[4] :=
+        frameScreenObjectUZF.dgModflowBoundary.WidthNeededToFitText(4,0);
       // UZF ET Extinction water content
       frameScreenObjectUZF.dgModflowBoundary.Columns[5].WordWrapCaptions := True;
-      frameScreenObjectUZF.dgModflowBoundary.Columns[5].AutoAdjustColWidths := True;
+//      frameScreenObjectUZF.dgModflowBoundary.Columns[5].AutoAdjustColWidths := True;
       frameScreenObjectUZF.dgModflowBoundary.Columns[5].AutoAdjustRowHeights := True;
       TimeList := AScreenObject.ModflowUzfBoundary.WaterContent.TimeLists[0];
       frameScreenObjectUZF.dgModflowBoundary.Cells[5, 0] := TimeList.NonParamDescription;
       frameScreenObjectUZF.dgModflowBoundary.Columns[5].AutoAdjustColWidths := False;
       frameScreenObjectUZF.dgModflowBoundary.Columns[5].AutoAdjustRowHeights := False;
+      frameScreenObjectUZF.dgModflowBoundary.ColWidths[5] :=
+        frameScreenObjectUZF.dgModflowBoundary.WidthNeededToFitText(5,0);
     end
     else
     begin

@@ -37,7 +37,7 @@ const
 implementation
 
 uses ModflowUnitNumbers, ModflowOutputControlUnit, DataSetUnit,
-  LayerStructureUnit, frmErrorsAndWarningsUnit, frmProgressUnit;
+  LayerStructureUnit, frmErrorsAndWarningsUnit, frmProgressUnit, Forms;
 
 
 { TModflowLPF_Writer }
@@ -212,6 +212,7 @@ begin
   TransientModel := PhastModel.ModflowFullStressPeriods.TransientModel;
   for GroupIndex := 1 to PhastModel.LayerStructure.Count -1 do
   begin
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -222,6 +223,7 @@ begin
     begin
       for LayerIndex := 0 to Group.ModflowLayerCount -1 do
       begin
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -251,6 +253,7 @@ begin
             + rsKx + ' value',
             cvmGreaterEqual, 0, etError);
         end;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -276,6 +279,7 @@ begin
             + rsHorizontalAnisotropy + ' value',
             cvmGreaterEqual, 0, etError);
         end;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -332,6 +336,7 @@ begin
             end;
           end;
         end;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -361,6 +366,7 @@ begin
               cvmGreaterEqual, 0, etError);
           end;
         end;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -389,6 +395,7 @@ begin
               cvmGreaterEqual, 0, etError);
           end;
         end;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -422,6 +429,7 @@ begin
             end;
           end;
         end;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -439,6 +447,7 @@ begin
           WriteArray(DataArray, ArrayIndex, 'WETDRY ' + Group.AquiferName
             + ' Layer ' + IntToStr(MFLayerIndex));
         end;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -468,6 +477,7 @@ begin
     frmProgress.AddMessage('Writing LPF Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -475,6 +485,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -482,6 +493,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -489,6 +501,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 3.');
     WriteDataSet3;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -496,6 +509,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -503,6 +517,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 5.');
     WriteDataSet5;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -510,6 +525,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 6.');
     WriteDataSet6;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -517,12 +533,14 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 7.');
     WriteDataSet7;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
     end;
 
     WriteDataSest8and9;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -591,6 +609,7 @@ begin
       Param := PhastModel.ModflowSteadyParameters.Items[ParamIndex];
       if Param.ParameterType in ValidParamTypes then
       begin
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;

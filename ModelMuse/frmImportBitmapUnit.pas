@@ -298,6 +298,15 @@ var
   MetaFile : TMetafile;
   WorldFileNames: TStringList;
   Index: Integer;
+  procedure ShowError;
+  begin
+    FreeAndNil(FBitMap);
+    Beep;
+    MessageDlg('There was an error reading the file.  The file may be '
+      + 'corrupt or there may be a bug in ModelMuse. Please contact '
+      +  'rbwinst@usgs.gov for futher help with this problem.',
+      mtError, [mbOK], 0);
+  end;
 begin
   inherited;
   if OpenDialogBitmap.Execute then
@@ -315,7 +324,14 @@ instead of converting it to a bitmap so
 there is no loss in resolution at higher magnifications. }
       MetaFile := TMetafile.Create;
       try
-        MetaFile.LoadFromFile(OpenDialogBitmap.FileName);
+        try
+          MetaFile.LoadFromFile(OpenDialogBitmap.FileName);
+        except on E: Exception do
+          begin
+            ShowError;
+            Exit;
+          end;
+        end;
         FBitMap.Height := Metafile.Height;
         FBitMap.Width := Metafile.Width;
         FBitMap.Canvas.Draw(0, 0, MetaFile) ;
@@ -327,7 +343,14 @@ there is no loss in resolution at higher magnifications. }
     begin
       with TLinearBitmap.Create do
       try
-        LoadFromFile(FImageFileName);
+        try
+          LoadFromFile(FImageFileName);
+        except on E: Exception do
+          begin
+            ShowError;
+            Exit;
+          end;
+        end;
         AssignTo(FBitMap);
       finally
         Free;
@@ -367,7 +390,8 @@ there is no loss in resolution at higher magnifications. }
     if not btnOK.Enabled then
     begin
       MessageDlg('Click on the image and assign real-world coordinates to the '
-        + 'points you clicked or fill in the information in the table.', mtInformation, [mbOK], 0);
+        + 'points you clicked or fill in the information in the table.',
+        mtInformation, [mbOK], 0);
     end;
   end;
 end;

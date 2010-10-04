@@ -134,6 +134,7 @@ type
   public
     Constructor Create;
     property Points[Index: integer]: TPathLinePoint read GetPoint; default;
+    function TestGetMaxTime(var Maxtime: double): boolean;
   end;
 
   TPathLine = class(TCollectionItem)
@@ -154,6 +155,8 @@ type
   public
     Constructor Create;
     property Lines[Index: integer]: TPathLine read GetLine; default;
+    procedure ExportShapefile(FileName: string);
+    function TestGetMaxTime(var Maxtime: double): boolean;
   end;
 
   TCustomModpathSettings = class(TPersistent)
@@ -371,6 +374,8 @@ type
   public
     Constructor Create;
     property Points[Index: integer]: TEndPoint read GetPoint; default;
+    procedure ExportShapefileAtStartingLocations(FileName: string);
+    procedure ExportShapefileAtEndingLocations(FileName: string);
   end;
 
   TEndpointColorLimitChoice = (elcNone, elcReleaseTime, elcTrackingTime,
@@ -551,24 +556,29 @@ type
     property Points[Index: integer]: TTimeSeriesPoint read GetPoint; default;
   end;
 
+  // @name respesents the position of a particle at different times.
   TTimeSeries = class(TCollectionItem)
   private
     FPoints: TTimeSeriesPoints;
+    FTimes: TRealList;
     procedure SetPoints(const Value: TTimeSeriesPoints);
+    function GetTimes: TRealList;
+    procedure SetTimes(const Value: TRealList);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
+    property Times: TRealList read GetTimes write SetTimes;
   published
     property Points: TTimeSeriesPoints read FPoints write SetPoints;
   end;
 
   TTimeSeriesCollection = class(TCollection)
   private
-    function GetLine(Index: integer): TTimeSeries;
+    function GetSeries(Index: integer): TTimeSeries;
   public
     Constructor Create;
-    property Series[Index: integer]: TTimeSeries read GetLine; default;
+    property Series[Index: integer]: TTimeSeries read GetSeries; default;
   end;
 
   TTimeSeriesColorLimitChoice = (tscNone, tscParticleNumber,
@@ -620,7 +630,7 @@ type
   private
     FFileName: string;
     FFileDate: TDateTime;
-    FLines: TTimeSeriesCollection;
+    FSeries: TTimeSeriesCollection;
     FMaxTime: double;
     FMinTime: double;
     FTimeIndex: integer;
@@ -643,6 +653,7 @@ type
     procedure Record3DTimeSeries(TimeIndex: integer);
     procedure EnsureGLArrays(ATimeIndex: Integer);
     function GetTimes: TRealList;
+    procedure SetTimes(const Value: TRealList);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create;
@@ -654,12 +665,13 @@ type
       GetRecordedTimeSeries write SetRecordedTimeSeries;
     property TimeSeriesGLIndex[ATimeIndex: integer]: TGLuint
       read GetTimeSeriesGLIndex;
-    property Times: TRealList read GetTimes;
+    property Times: TRealList read GetTimes write SetTimes;
     procedure Invalidate;
+    procedure ExportShapefile(FileName: string);
   published
     property FileName: string read FFileName write FFileName;
     property FileDate: TDateTime read FFileDate write SetFileDate;
-    property Series: TTimeSeriesCollection read FLines write SetLines;
+    property Series: TTimeSeriesCollection read FSeries write SetLines;
     property MaxTime: double read FMaxTime write SetMaxTime;
     property MinTime: double read FMinTime write SetMinTime;
     property TimeIndex: integer read FTimeIndex write SetTimeIndex;
@@ -670,7 +682,36 @@ implementation
 
 uses
   Contnrs, frmGoPhastUnit, FastGEO, ZoomBox2, ModflowGridUnit, BigCanvasMethods,
-  ModelMuseUtilities, PhastModelUnit;
+  ModelMuseUtilities, PhastModelUnit, XBase1, frmExportShapefileUnit, 
+  ShapefileUnit;
+
+resourcestring
+  StrSTARTLAY = 'START_LAY';
+  StrSTARTROW = 'START_ROW';
+  StrSTARTCOL = 'START_COL';
+  StrSTARTTIME = 'START_TIME';
+  StrENDLAY = 'END_LAY';
+  StrENDROW = 'END_ROW';
+  StrENDCOL = 'END_COL';
+  StrENDTIME = 'END_TIME';
+  StrSTARTTS = 'START_TS';
+  StrSTARTZONE = 'START_ZONE';
+  StrENDTS = 'END_TS';
+  StrENDZONE = 'END_ZONE';
+  StrENDX = 'END_X';
+  StrENDY = 'END_Y';
+  StrENDZ = 'END_Z';
+  StrTRACKTIME = 'TRACK_TIME';
+  StrTERMCODE = 'TERM_CODE';
+  StrRELEASET = 'RELEASE_T';
+  StrSTARTX = 'START_X';
+  StrSTARTY = 'START_Y';
+  StrSTARTZ = 'START_Z';
+  StrLAYER = 'LAYER';
+  StrROW = 'ROW';
+  StrCOLUMN = 'COLUMN';
+  StrTIMESTEP = 'TIME_STEP';
+  StrPARTICLE = 'PARTICLE';
 
 procedure ConvertIndicies(NCol, NRow: Integer;
   var I, K, J: Integer);
@@ -1529,6 +1570,15 @@ begin
   result := Items[Index] as TPathLinePoint;
 end;
 
+function TPathLinePoints.TestGetMaxTime(var Maxtime: double): boolean;
+begin
+  result := Count > 0;
+  if result then
+  begin
+    Maxtime := Points[Count -1].Time;
+  end;
+end;
+
 { TPathLines }
 
 constructor TPathLines.Create;
@@ -1536,9 +1586,171 @@ begin
   inherited Create(TPathLine);
 end;
 
+procedure TPathLines.ExportShapefile(FileName: string);
+var
+  ShapeDataBase: TXBase;
+  Fields: TStringList;
+  ShapeFileWriter: TShapefileGeometryWriter;
+  LineIndex: Integer;
+  ALine: TPathLine;
+  FirstPoint: TPathLinePoint;
+  LastPoint: TPathLinePoint;
+  PointIndex: Integer;
+  APoint: TPathLinePoint;
+  Shape: TShapeObject;
+begin
+  ShapeDataBase := TXBase.Create(nil);
+  try
+    Fields := TStringList.Create;
+    try
+      Fields.Add(StrSTARTLAY + '=N');
+      Fields.Add(StrSTARTROW + '=N');
+      Fields.Add(StrSTARTCOL + '=N');
+      Fields.Add(StrSTARTTIME + '=N18,10');
+      Fields.Add(StrENDLAY + '=N');
+      Fields.Add(StrENDROW + '=N');
+      Fields.Add(StrENDCOL + '=N');
+      Fields.Add(StrENDTIME + '=N18,10');
+      InitializeDataBase(FileName, ShapeDataBase, Fields);
+    finally
+      Fields.Free;
+    end;
+
+    ShapeFileWriter := TShapefileGeometryWriter.Create(stPolyLineZ, True);
+    try
+      for LineIndex := 0 to Count - 1 do
+      begin
+        ALine := Lines[LineIndex];
+        if ALine.Points.Count > 0 then
+        begin
+          ShapeDataBase.AppendBlank;
+
+          FirstPoint := ALine.Points[0];
+          ShapeDataBase.UpdFieldInt(StrSTARTLAY, FirstPoint.FLayer);
+          ShapeDataBase.UpdFieldInt(StrSTARTROW, FirstPoint.FRow);
+          ShapeDataBase.UpdFieldInt(StrSTARTCOL, FirstPoint.FColumn);
+          ShapeDataBase.UpdFieldNum(StrSTARTTIME, FirstPoint.FTime);
+
+          LastPoint := ALine.Points[ALine.Points.Count-1];
+          ShapeDataBase.UpdFieldInt(StrENDLAY, LastPoint.FLayer);
+          ShapeDataBase.UpdFieldInt(StrENDROW, LastPoint.FRow);
+          ShapeDataBase.UpdFieldInt(StrENDCOL, LastPoint.FColumn);
+          ShapeDataBase.UpdFieldNum(StrENDTIME, LastPoint.FTime);
+
+          ShapeDataBase.PostChanges;
+
+          Shape := TShapeObject.Create;
+          try
+            Shape.FShapeType := stPolyLineZ;
+            Shape.FNumPoints := ALine.Points.Count;
+            SetLength(Shape.FPoints, ALine.Points.Count);
+            SetLength(Shape.FZArray, ALine.Points.Count);
+            SetLength(Shape.FMArray, ALine.Points.Count);
+            Shape.FNumParts := 1;
+            SetLength(Shape.FParts, 1);
+            Shape.FParts[0] := 0;
+
+            for PointIndex := 0 to ALine.Points.Count - 1 do
+            begin
+              APoint := ALine.Points[PointIndex];
+              Shape.FMArray[PointIndex] := APoint.FTime;
+              Shape.FPoints[PointIndex].X := APoint.FX;
+              Shape.FPoints[PointIndex].Y := APoint.FY;
+              Shape.FZArray[PointIndex] := APoint.FZ;
+
+              if PointIndex = 0 then
+              begin
+                Shape.FBoundingBox.XMin := APoint.FX;
+                Shape.FBoundingBox.YMin := APoint.FY;
+                Shape.FBoundingBox.XMax := APoint.FX;
+                Shape.FBoundingBox.YMax := APoint.FY;
+                Shape.FMMax := APoint.FTime;
+                Shape.FMMin := APoint.FTime;
+                Shape.FZMax := APoint.FZ;
+                Shape.FZMin := APoint.FZ;
+              end
+              else
+              begin
+                if Shape.FBoundingBox.XMin > APoint.FX then
+                begin
+                  Shape.FBoundingBox.XMin := APoint.FX;
+                end;
+                if Shape.FBoundingBox.YMin > APoint.FY then
+                begin
+                  Shape.FBoundingBox.YMin := APoint.FY;
+                end;
+                if Shape.FBoundingBox.XMax < APoint.FX then
+                begin
+                  Shape.FBoundingBox.XMax := APoint.FX;
+                end;
+                if Shape.FBoundingBox.YMax < APoint.FY then
+                begin
+                  Shape.FBoundingBox.YMax := APoint.FY;
+                end;
+                if Shape.FMMin > APoint.FTime then
+                begin
+                  Shape.FMMin := APoint.FTime;
+                end;
+                if Shape.FMMax < APoint.FTime then
+                begin
+                  Shape.FMMax := APoint.FTime;
+                end;
+                if Shape.FZMin > APoint.FZ then
+                begin
+                  Shape.FZMin := APoint.FZ;
+                end;
+                if Shape.FZMax < APoint.FZ then
+                begin
+                  Shape.FZMax := APoint.FZ;
+                end;
+              end;
+            end;
+          except
+            Shape.Free;
+            raise;
+          end;
+          ShapeFileWriter.AddShape(Shape);
+        end;
+      end;
+      ShapeFileWriter.WriteToFile(FileName, ChangeFileExt(FileName, '.shx'));
+    finally
+      ShapeFileWriter.Free;
+    end;
+  finally
+    ShapeDataBase.Active := False;
+    ShapeDataBase.Free;
+  end;
+end;
+
 function TPathLines.GetLine(Index: integer): TPathLine;
 begin
   result := Items[Index] as TPathLine;
+end;
+
+function TPathLines.TestGetMaxTime(var Maxtime: double): boolean;
+var
+  LineIndex: Integer;
+  AValue: double;
+begin
+  result := False;
+  for LineIndex := 0 to Count - 1 do
+  begin
+    if Lines[LineIndex].Points.TestGetMaxTime(AValue) then
+    begin
+      if result then
+      begin
+        if AValue > Maxtime then
+        begin
+          Maxtime := AValue;
+        end
+      end
+      else
+      begin
+        Maxtime := AValue;
+        result := True
+      end;
+    end;
+  end;
 end;
 
 { TPathLineDisplayLimits }
@@ -1732,6 +1944,209 @@ end;
 constructor TEndPoints.Create;
 begin
   inherited Create(TEndPoint)
+end;
+
+procedure TEndPoints.ExportShapefileAtEndingLocations(FileName: string);
+var
+  ShapeDataBase: TXBase;
+  Fields: TStringList;
+  ShapeFileWriter: TShapefileGeometryWriter;
+  PointIndex: Integer;
+  APoint: TEndPoint;
+  Shape: TShapeObject;
+begin
+  ShapeDataBase := TXBase.Create(nil);
+  try
+    Fields := TStringList.Create;
+    try
+      Fields.Add(StrSTARTLAY + '=N');
+      Fields.Add(StrSTARTROW + '=N');
+      Fields.Add(StrSTARTCOL + '=N');
+
+      Fields.Add(StrENDLAY + '=N');
+      Fields.Add(StrENDROW + '=N');
+      Fields.Add(StrENDCOL + '=N');
+
+      Fields.Add(StrSTARTTS + '=N');
+      Fields.Add(StrSTARTZONE + '=N');
+      Fields.Add(StrENDTS + '=N');
+      Fields.Add(StrENDZONE + '=N');
+
+      Fields.Add(StrSTARTX + '=N18,10');
+      Fields.Add(StrSTARTY + '=N18,10');
+      Fields.Add(StrSTARTZ + '=N18,10');
+
+      Fields.Add(StrTRACKTIME + '=N18,10');
+      Fields.Add(StrTERMCODE + '=N');
+      Fields.Add(StrRELEASET + '=N18,10');
+      InitializeDataBase(FileName, ShapeDataBase, Fields);
+    finally
+      Fields.Free;
+    end;
+
+    ShapeFileWriter := TShapefileGeometryWriter.Create(stPointZ, True);
+    try
+      for PointIndex := 0 to Count - 1 do
+      begin
+        APoint := Points[PointIndex];
+
+        ShapeDataBase.AppendBlank;
+
+        ShapeDataBase.UpdFieldInt(StrSTARTLAY, APoint.FStartLayer);
+        ShapeDataBase.UpdFieldInt(StrSTARTROW, APoint.FStartRow);
+        ShapeDataBase.UpdFieldInt(StrSTARTCOL, APoint.FStartColumn);
+
+        ShapeDataBase.UpdFieldInt(StrENDLAY, APoint.FEndLayer);
+        ShapeDataBase.UpdFieldInt(StrENDROW, APoint.FEndRow);
+        ShapeDataBase.UpdFieldInt(StrENDCOL, APoint.FEndColumn);
+
+        ShapeDataBase.UpdFieldInt(StrSTARTTS, APoint.FStartTimeStep);
+        ShapeDataBase.UpdFieldInt(StrSTARTZONE, APoint.FStartZoneCode);
+        ShapeDataBase.UpdFieldInt(StrENDTS, APoint.FEndTimeStep);
+        ShapeDataBase.UpdFieldInt(StrENDZONE, APoint.FEndZoneCode);
+
+        ShapeDataBase.UpdFieldNum(StrSTARTX, APoint.FStartX);
+        ShapeDataBase.UpdFieldNum(StrSTARTY, APoint.FStartY);
+        ShapeDataBase.UpdFieldNum(StrSTARTZ, APoint.FStartZ);
+
+        ShapeDataBase.UpdFieldNum(StrTRACKTIME, APoint.FTrackingTime);
+        ShapeDataBase.UpdFieldInt(StrTERMCODE, APoint.FTerminationCode);
+        ShapeDataBase.UpdFieldNum(StrRELEASET, APoint.FReleaseTime);
+
+        ShapeDataBase.PostChanges;
+
+        Shape := TShapeObject.Create;
+        try
+          Shape.FShapeType := stPointZ;
+
+          Shape.FNumPoints := 1;
+          SetLength(Shape.FPoints, 1);
+          SetLength(Shape.FZArray, 1);
+          SetLength(Shape.FMArray, 1);
+          Shape.FNumParts := 1;
+          SetLength(Shape.FParts, 0);
+          Shape.FMArray[0] := -1e40;
+          Shape.FPoints[0].X := APoint.FEndX;
+          Shape.FPoints[0].Y := APoint.FEndY;
+          Shape.FZArray[0] := APoint.FEndZ;
+
+        except
+          Shape.Free;
+          raise;
+        end;
+        ShapeFileWriter.AddShape(Shape);
+      end;
+      ShapeFileWriter.WriteToFile(FileName, ChangeFileExt(FileName, '.shx'));
+    finally
+      ShapeFileWriter.Free;
+    end;
+
+  finally
+    ShapeDataBase.Active := False;
+    ShapeDataBase.Free;
+  end;
+end;
+
+procedure TEndPoints.ExportShapefileAtStartingLocations(FileName: string);
+var
+  ShapeDataBase: TXBase;
+  Fields: TStringList;
+  ShapeFileWriter: TShapefileGeometryWriter;
+  PointIndex: Integer;
+  APoint: TEndPoint;
+  Shape: TShapeObject;
+begin
+  ShapeDataBase := TXBase.Create(nil);
+  try
+    Fields := TStringList.Create;
+    try
+      Fields.Add(StrSTARTLAY + '=N');
+      Fields.Add(StrSTARTROW + '=N');
+      Fields.Add(StrSTARTCOL + '=N');
+
+      Fields.Add(StrENDLAY + '=N');
+      Fields.Add(StrENDROW + '=N');
+      Fields.Add(StrENDCOL + '=N');
+
+      Fields.Add(StrSTARTTS + '=N');
+      Fields.Add(StrSTARTZONE + '=N');
+      Fields.Add(StrENDTS + '=N');
+      Fields.Add(StrENDZONE + '=N');
+
+      Fields.Add(StrENDX + '=N18,10');
+      Fields.Add(StrENDY + '=N18,10');
+      Fields.Add(StrENDZ + '=N18,10');
+
+      Fields.Add(StrTRACKTIME + '=N18,10');
+      Fields.Add(StrTERMCODE + '=N');
+      Fields.Add(StrRELEASET + '=N18,10');
+
+      InitializeDataBase(FileName, ShapeDataBase, Fields);
+    finally
+      Fields.Free;
+    end;
+
+    ShapeFileWriter := TShapefileGeometryWriter.Create(stPointZ, True);
+    try
+      for PointIndex := 0 to Count - 1 do
+      begin
+        APoint := Points[PointIndex];
+
+        ShapeDataBase.AppendBlank;
+
+        ShapeDataBase.UpdFieldInt(StrSTARTLAY, APoint.FStartLayer);
+        ShapeDataBase.UpdFieldInt(StrSTARTROW, APoint.FStartRow);
+        ShapeDataBase.UpdFieldInt(StrSTARTCOL, APoint.FStartColumn);
+
+        ShapeDataBase.UpdFieldInt(StrENDLAY, APoint.FEndLayer);
+        ShapeDataBase.UpdFieldInt(StrENDROW, APoint.FEndRow);
+        ShapeDataBase.UpdFieldInt(StrENDCOL, APoint.FEndColumn);
+
+        ShapeDataBase.UpdFieldInt(StrSTARTTS, APoint.FStartTimeStep);
+        ShapeDataBase.UpdFieldInt(StrSTARTZONE, APoint.FStartZoneCode);
+        ShapeDataBase.UpdFieldInt(StrENDTS, APoint.FEndTimeStep);
+        ShapeDataBase.UpdFieldInt(StrENDZONE, APoint.FEndZoneCode);
+
+        ShapeDataBase.UpdFieldNum(StrENDX, APoint.FEndX);
+        ShapeDataBase.UpdFieldNum(StrENDY, APoint.FEndY);
+        ShapeDataBase.UpdFieldNum(StrENDZ, APoint.FEndZ);
+
+        ShapeDataBase.UpdFieldNum(StrTRACKTIME, APoint.FTrackingTime);
+        ShapeDataBase.UpdFieldInt(StrTERMCODE, APoint.FTerminationCode);
+        ShapeDataBase.UpdFieldNum(StrRELEASET, APoint.FReleaseTime);
+
+        ShapeDataBase.PostChanges;
+
+        Shape := TShapeObject.Create;
+        try
+          Shape.FShapeType := stPointZ;
+
+          Shape.FNumPoints := 1;
+          SetLength(Shape.FPoints, 1);
+          SetLength(Shape.FZArray, 1);
+          SetLength(Shape.FMArray, 1);
+          Shape.FNumParts := 1;
+          SetLength(Shape.FParts, 0);
+          Shape.FMArray[0] := -1e40;
+          Shape.FPoints[0].X := APoint.FStartX;
+          Shape.FPoints[0].Y := APoint.FStartY;
+          Shape.FZArray[0] := APoint.FStartZ;
+
+        except
+          Shape.Free;
+          raise;
+        end;
+        ShapeFileWriter.AddShape(Shape);
+      end;
+      ShapeFileWriter.WriteToFile(FileName, ChangeFileExt(FileName, '.shx'));
+    finally
+      ShapeFileWriter.Free;
+    end
+  finally
+    ShapeDataBase.Active := False;
+    ShapeDataBase.Free;
+  end;
+
 end;
 
 function TEndPoints.GetPoint(Index: integer): TEndPoint;
@@ -2827,6 +3242,7 @@ begin
     MaxTime := SourceSeries.MaxTime;
     MinTime := SourceSeries.MinTime;
     TimeIndex := SourceSeries.TimeIndex;
+    Times := SourceSeries.Times;
   end;
   inherited;
 end;
@@ -2858,12 +3274,13 @@ end;
 constructor TTimeSeriesReader.Create;
 begin
   inherited;
-  FLines:= TTimeSeriesCollection.Create;
+  FRealList := nil;
+  FSeries:= TTimeSeriesCollection.Create;
 end;
 
 destructor TTimeSeriesReader.Destroy;
 begin
-  FLines.Free;
+  FSeries.Free;
   FRealList.Free;
   inherited;
 end;
@@ -2882,12 +3299,18 @@ var
   AColor: TColor;
   AColor32: TColor32;
   ARect: TRect;
+  TimeToPlot: Double;
+  PlotIndex: Integer;
 begin
   if not Visible then
   begin
     Exit;
   end;
   if TimeIndex < 0 then
+  begin
+    Exit;
+  end;
+  if Series.Count = 0 then
   begin
     Exit;
   end;
@@ -2924,14 +3347,16 @@ begin
   end;
   GetMinMaxValues(MaxValue, MinValue);
 
+  TimeToPlot := Times[TimeIndex];
   for TimeSeriesIndex := 0 to Series.Count - 1 do
   begin
     TimeSeries := Series[TimeSeriesIndex];
-    if TimeSeries.Points.Count > TimeIndex then
+    PlotIndex := TimeSeries.Times.IndexOf(TimeToPlot);
+    if PlotIndex >= 0 then
     begin
       if CheckShowSeries(TimeSeries) then
       begin
-        APoint := TimeSeries.Points[TimeIndex];
+        APoint := TimeSeries.Points[PlotIndex];
         if APoint.ShouldShow(DisplayLimits, Orientation, ColRowOrLayer) then
         begin
           case Orientation of
@@ -2969,6 +3394,10 @@ procedure TTimeSeriesReader.Draw3D;
 var
   Grid: TModflowGrid;
 begin
+  if TimeIndex < 0 then
+  begin
+    Exit;
+  end;
   if FDrawingTimeSeries then
   begin
     Exit;
@@ -3016,22 +3445,12 @@ var
   Index: Integer;
   OldLength: Integer;
   GLIndex: TGLuint;
-  SeriesIndex: Integer;
-  ASeries: TTimeSeries;
   MaxPoints: Integer;
 begin
   Assert(Length(FRecordedTimeSeries) = Length(FTimeSeriesGLIndex));
   if ATimeIndex >= Length(FRecordedTimeSeries) then
   begin
-    MaxPoints := 0;
-    for SeriesIndex := 0 to Series.Count - 1 do
-    begin
-      ASeries := Series[SeriesIndex];
-      if ASeries.Points.Count > MaxPoints then
-      begin
-        MaxPoints := ASeries.Points.Count;
-      end;
-    end;
+    MaxPoints := Times.Count;
     Assert((MaxPoints > ATimeIndex) or (MaxPoints = 0));
     OldLength := Length(FRecordedTimeSeries);
     SetLength(FRecordedTimeSeries, MaxPoints);
@@ -3043,6 +3462,169 @@ begin
       FTimeSeriesGLIndex[Index] := GLIndex;
       Inc(GLIndex);
     end;
+  end;
+end;
+
+procedure TTimeSeriesReader.ExportShapefile(FileName: string);
+var
+  ShapeDataBase: TXBase;
+  Fields: TStringList;
+  ShapeFileWriter: TShapefileGeometryWriter;
+  ATime: Double;
+  SeriesIndex: Integer;
+  ASeries: TTimeSeries;
+  PlotIndex: Integer;
+  APoint: TTimeSeriesPoint;
+  Shape: TShapeObject;
+  PointCount: Integer;
+  Index: Integer;
+  PlotTimeIndex: Integer;
+begin
+  ShapeDataBase := TXBase.Create(nil);
+  try
+    Fields := TStringList.Create;
+    try
+      Fields.Add(StrTRACKTIME + '=N18,10');
+      InitializeDataBase(FileName, ShapeDataBase, Fields);
+    finally
+      Fields.Free;
+    end;
+
+    ShapeFileWriter := TShapefileGeometryWriter.Create(stMultiPointZ, True);
+    try
+      for PlotTimeIndex := 0 to Times.Count - 1 do
+      begin
+        ATime := Times[PlotTimeIndex];
+        Shape := TShapeObject.Create;
+        try
+          Shape.FShapeType := stMultiPointZ;
+          SetLength(Shape.FMArray, Series.Count);
+          SetLength(Shape.FParts, Series.Count);
+          SetLength(Shape.FPoints, Series.Count);
+          SetLength(Shape.FZArray, Series.Count);
+
+          PointCount := 0;
+          APoint := nil;
+          for SeriesIndex := 0 to Series.Count - 1 do
+          begin
+            ASeries := Series[SeriesIndex];
+            PlotIndex := ASeries.Times.IndexOf(ATime);
+            if PlotIndex >= 0 then
+            begin
+              APoint := ASeries.Points[PlotIndex];
+              Shape.FMArray[PointCount] := APoint.FParticleIndex;
+              Shape.FZArray[PointCount] := APoint.FZ;
+              Shape.FParts[PointCount] := PointCount;
+              Shape.FPoints[PointCount].x := APoint.FX;
+              Shape.FPoints[PointCount].y := APoint.FY;
+              Inc(PointCount);
+            end;
+          end;
+          SetLength(Shape.FMArray, PointCount);
+          SetLength(Shape.FParts, PointCount);
+          SetLength(Shape.FPoints, PointCount);
+          SetLength(Shape.FZArray, PointCount);
+          if PointCount > 0 then
+          begin
+            Shape.FNumParts := PointCount;
+            Shape.FNumPoints := PointCount;
+            Shape.FNumPoints := PointCount;
+
+            Shape.FBoundingBox.XMin := Shape.FPoints[0].X;
+            for Index := 1 to PointCount - 1 do
+            begin
+              if Shape.FBoundingBox.XMin > Shape.FPoints[Index].X then
+              begin
+                Shape.FBoundingBox.XMin := Shape.FPoints[Index].X;
+              end;
+            end;
+
+            Shape.FBoundingBox.YMin := Shape.FPoints[0].Y;
+            for Index := 1 to PointCount - 1 do
+            begin
+              if Shape.FBoundingBox.YMin > Shape.FPoints[Index].Y then
+              begin
+                Shape.FBoundingBox.YMin := Shape.FPoints[Index].Y;
+              end;
+            end;
+
+            Shape.FBoundingBox.XMax := Shape.FPoints[0].X;
+            for Index := 1 to PointCount - 1 do
+            begin
+              if Shape.FBoundingBox.XMax < Shape.FPoints[Index].X then
+              begin
+                Shape.FBoundingBox.XMax := Shape.FPoints[Index].X;
+              end;
+            end;
+
+            Shape.FBoundingBox.YMax := Shape.FPoints[0].Y;
+            for Index := 1 to PointCount - 1 do
+            begin
+              if Shape.FBoundingBox.YMax < Shape.FPoints[Index].Y then
+              begin
+                Shape.FBoundingBox.YMax := Shape.FPoints[Index].Y;
+              end;
+            end;
+
+            Shape.FMMin := Shape.FMArray[0];
+            for Index := 1 to PointCount - 1 do
+            begin
+              if Shape.FMMin > Shape.FMArray[Index] then
+              begin
+                Shape.FMMin := Shape.FMArray[Index];
+              end;
+            end;
+
+            Shape.FMMax := Shape.FMArray[0];
+            for Index := 1 to PointCount - 1 do
+            begin
+              if Shape.FMMax < Shape.FMArray[Index] then
+              begin
+                Shape.FMMax := Shape.FMArray[Index];
+              end;
+            end;
+
+            Shape.FZMin := Shape.FZArray[0];
+            for Index := 1 to PointCount - 1 do
+            begin
+              if Shape.FZMin > Shape.FZArray[Index] then
+              begin
+                Shape.FZMin := Shape.FZArray[Index];
+              end;
+            end;
+
+            Shape.FZMax := Shape.FZArray[0];
+            for Index := 1 to PointCount - 1 do
+            begin
+              if Shape.FZMax < Shape.FZArray[Index] then
+              begin
+                Shape.FZMax := Shape.FZArray[Index];
+              end;
+            end;
+
+            Assert(APoint <> nil);
+            ShapeFileWriter.AddShape(Shape);
+
+            ShapeDataBase.AppendBlank;
+            ShapeDataBase.UpdFieldNum(StrTRACKTIME, APoint.FTrackingTime);
+            ShapeDataBase.PostChanges;
+          end
+          else
+          begin
+            Shape.Free;
+          end;
+        except
+          Shape.Free;
+          raise;
+        end;
+      end;
+      ShapeFileWriter.WriteToFile(FileName, ChangeFileExt(FileName, '.shx'));
+    finally
+      ShapeFileWriter.Free;
+    end;
+  finally
+    ShapeDataBase.Active := False;
+    ShapeDataBase.Free;
   end;
 end;
 
@@ -3191,6 +3773,7 @@ var
   Index: Integer;
   ASeries: TTimeSeries;
   APoint: TTimeSeriesPoint;
+  SeriesIndex: Integer;
 begin
   if FRealList = nil then
   begin
@@ -3212,10 +3795,15 @@ begin
       if ASeries.Points.Count > 0 then
       begin
         FRealList.Capacity := ASeries.Points.Count;
-        for Index := 0 to ASeries.Points.Count - 1 do
+        FRealList.Sorted := True;
+        for SeriesIndex := 0 to Series.Count - 1 do
         begin
-          APoint := ASeries.Points[Index];
-          FRealList.Add(APoint.TrackingTime);
+          ASeries := Series[SeriesIndex];
+          for Index := 0 to ASeries.Points.Count - 1 do
+          begin
+            APoint := ASeries.Points[Index];
+            FRealList.AddUnique(APoint.TrackingTime);
+          end;
         end;
       end;
     end;
@@ -3279,12 +3867,12 @@ var
   var
     Point2D: TPoint2D;
   begin
-    While FLines.Count < ParticleIndex do
+    While FSeries.Count < ParticleIndex do
     begin
-      FLines.Add;
+      FSeries.Add;
     end;
 
-    TimeSeries := FLines[ParticleIndex-1];
+    TimeSeries := FSeries[ParticleIndex-1];
 
     APoint := TimeSeries.FPoints.Add as TTimeSeriesPoint;
     ConvertCoordinates(Grid, XPrime, YPrime, Point2D);
@@ -3317,7 +3905,7 @@ begin
   begin
     FileDate := ADate;
   end;
-  FLines.Clear;
+  FSeries.Clear;
   AFile := TFileStream.Create(FFileName, fmOpenRead or fmShareDenyNone);
   try
     AFile.Read(AChar, SizeOf(AChar));
@@ -3454,9 +4042,11 @@ var
   MaxValue: Double;
   MinValue: Double;
   PointIndex: Integer;
-  EndPoint: TTimeSeriesPoint;
+  TimeSeriesPoint: TTimeSeriesPoint;
   AColor: TColor;
   ASeries: TTimeSeries;
+  TimeToPlot: Double;
+  PlotIndex: Integer;
 begin
   if not Visible then
   begin
@@ -3476,6 +4066,10 @@ begin
   begin
     Exit;
   end;
+  if Times.Count = 0 then
+  begin
+    Exit;
+  end;
   ColRowOrLayer := -1;
 
 //    EnableLighting;
@@ -3491,21 +4085,24 @@ begin
       GetMinMaxValues(MaxValue, MinValue);
       glLineWidth(1);
 
+      TimeToPlot := Times[TimeIndex];
+
       glBegin(GL_POINTS);
       for PointIndex := 0 to Series.Count - 1 do
       begin
         ASeries := Series[PointIndex];
+        PlotIndex := ASeries.Times.IndexOf(TimeToPlot);
 
-        if ASeries.Points.Count> TimeIndex then
+        if PlotIndex >= 0 then
         begin
           if CheckShowSeries(ASeries) then
           begin
-            EndPoint := ASeries.Points[TimeIndex];
-            if EndPoint.ShouldShow(DisplayLimits, dso3D, ColRowOrLayer) then
+            TimeSeriesPoint := ASeries.Points[PlotIndex];
+            if TimeSeriesPoint.ShouldShow(DisplayLimits, dso3D, ColRowOrLayer) then
             begin
-              AColor := GetPointColor(MaxValue, MinValue, EndPoint);
+              AColor := GetPointColor(MaxValue, MinValue, TimeSeriesPoint);
               AssignColor(AColor);
-              glVertex3f(EndPoint.X, EndPoint.Y, EndPoint.Z);
+              glVertex3f(TimeSeriesPoint.X, TimeSeriesPoint.Y, TimeSeriesPoint.Z);
             end;
           end;
         end;
@@ -3526,7 +4123,7 @@ end;
 
 procedure TTimeSeriesReader.SetLines(const Value: TTimeSeriesCollection);
 begin
-  FLines.Assign(Value);
+  FSeries.Assign(Value);
 end;
 
 procedure TTimeSeriesReader.SetMaxTime(const Value: double);
@@ -3551,6 +4148,22 @@ begin
   FTimeIndex := Value;
 end;
 
+procedure TTimeSeriesReader.SetTimes(const Value: TRealList);
+begin
+  if (Value = nil) or (Value.Count = 0) then
+  begin
+    FreeAndNil(FRealList);
+  end
+  else
+  begin
+    if FRealList = nil then
+    begin
+      FRealList := TRealList.Create;
+    end;
+    FRealList.Assign(Value);
+  end;
+end;
+
 { TTimeSeries }
 
 procedure TTimeSeries.Assign(Source: TPersistent);
@@ -3561,30 +4174,65 @@ begin
   begin
     SourceSeries := TTimeSeries(Source);
     Points := SourceSeries.Points;
+    Times := SourceSeries.Times;
   end
   else
   begin
     inherited;
   end;
-
-
 end;
 
 constructor TTimeSeries.Create(Collection: TCollection);
 begin
   inherited;
+  FTimes := nil;
   FPoints:= TTimeSeriesPoints.Create;
 end;
 
 destructor TTimeSeries.Destroy;
 begin
   FPoints.Free;
+  FTimes.Free;
   inherited;
 end;
 
 procedure TTimeSeries.SetPoints(const Value: TTimeSeriesPoints);
 begin
   FPoints.Assign(Value);
+end;
+
+procedure TTimeSeries.SetTimes(const Value: TRealList);
+begin
+  if (Value = nil) or (Value.Count = 0) then
+  begin
+    FreeAndNil(FTimes);
+  end
+  else
+  begin
+    if FTimes = nil then
+    begin
+      FTimes := TRealList.Create;
+    end;
+    FTimes.Assign(Value);
+  end;
+end;
+
+function TTimeSeries.GetTimes: TRealList;
+var
+  APoint: TTimeSeriesPoint;
+  PointIndex: Integer;
+begin
+  if FTimes = nil then
+  begin
+    FTimes := TRealList.Create;
+    for PointIndex := 0 to Points.Count - 1 do
+    begin
+      APoint := Points[PointIndex];
+      FTimes.Add(APoint.TrackingTime);
+    end;
+    FTimes.Sorted := True;
+  end;
+  result := FTimes;
 end;
 
 { TTimeSeriesPoint }
@@ -3733,7 +4381,7 @@ begin
   inherited Create(TTimeSeries);
 end;
 
-function TTimeSeriesCollection.GetLine(Index: integer): TTimeSeries;
+function TTimeSeriesCollection.GetSeries(Index: integer): TTimeSeries;
 begin
   result := Items[Index] as TTimeSeries;
 end;

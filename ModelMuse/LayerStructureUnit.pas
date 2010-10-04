@@ -693,7 +693,9 @@ constructor TLayerStructure.Create(Model: TObject);
 begin
   inherited Create(TLayerGroup, Model);
   FSimulatedNotifier := TObserver.Create(nil);
+  FSimulatedNotifier.Name := 'Simulated_Notifyier';
   FAquiferTypeNotifier := TObserver.Create(nil);
+  FAquiferTypeNotifier.Name := 'AquiferType_Notifier'
 end;
 
 function TLayerStructure.GetLayerGroup(const Index: integer): TLayerGroup;

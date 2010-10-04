@@ -25,7 +25,7 @@ type
 
 implementation
 
-uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmProgressUnit;
+uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmProgressUnit, Forms;
 
 resourcestring
   StrFileForTheInitial = 'File for the initial heads does not exist.';
@@ -238,6 +238,7 @@ begin
     frmProgress.AddMessage('Writing Basic Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -245,6 +246,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -252,6 +254,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -259,6 +262,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 3.');
     WriteDataSet3;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -266,6 +270,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;

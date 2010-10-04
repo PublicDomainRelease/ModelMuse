@@ -1038,15 +1038,15 @@ constructor TSfrCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FReachLength := TModflowTimeList.Create(Model);
-  FHydraulicConductivityData := TModflowTimeList.Create(Model);
-  FStreamBedThicknessData := TModflowTimeList.Create(Model);
-  FStreamBedElevationData := TModflowTimeList.Create(Model);
-  FStreamSlopeData := TModflowTimeList.Create(Model);
-  FSaturatedWaterContent := TModflowTimeList.Create(Model);
-  FInitialWaterContent := TModflowTimeList.Create(Model);
-  FBrooksCoreyExponent := TModflowTimeList.Create(Model);
-  FVerticalK := TModflowTimeList.Create(Model);
+  FReachLength := TModflowTimeList.Create(Model, ScreenObject);
+  FHydraulicConductivityData := TModflowTimeList.Create(Model, ScreenObject);
+  FStreamBedThicknessData := TModflowTimeList.Create(Model, ScreenObject);
+  FStreamBedElevationData := TModflowTimeList.Create(Model, ScreenObject);
+  FStreamSlopeData := TModflowTimeList.Create(Model, ScreenObject);
+  FSaturatedWaterContent := TModflowTimeList.Create(Model, ScreenObject);
+  FInitialWaterContent := TModflowTimeList.Create(Model, ScreenObject);
+  FBrooksCoreyExponent := TModflowTimeList.Create(Model, ScreenObject);
+  FVerticalK := TModflowTimeList.Create(Model, ScreenObject);
 
   FReachLength.NonParamDescription := 'Reach length';
   FReachLength.ParamDescription := ' reach length';

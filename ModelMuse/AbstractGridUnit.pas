@@ -5992,6 +5992,10 @@ begin
                     begin
                       CellColors[LayerIndex, RowIndex, ColIndex] :=
                         GridFracToRainbow(0.5);
+                    end
+                    else
+                    begin
+                      CellColors[LayerIndex, RowIndex, ColIndex] := clWhite;
                     end;
                   end
                   else
@@ -6002,6 +6006,10 @@ begin
                     begin
                       CellColors[LayerIndex, RowIndex, ColIndex] :=
                         GridFracToRainbow((IMax - ITemp) / (IMax - IMin));
+                    end
+                    else
+                    begin
+                      CellColors[LayerIndex, RowIndex, ColIndex] := clWhite;
                     end;
                   end;
                 end;
@@ -7889,3 +7897,4 @@ begin
 end;
 
 end.
+

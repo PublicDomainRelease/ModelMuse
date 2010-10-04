@@ -870,12 +870,12 @@ constructor TLakCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FMinimumStageData := TModflowTimeList.Create(Model);
-  FMaximumStageData := TModflowTimeList.Create(Model);
-  FPrecipitationData := TModflowTimeList.Create(Model);
-  FEvaporationData := TModflowTimeList.Create(Model);
-  FOverlandRunoffData := TModflowTimeList.Create(Model);
-  FWithdrawalData := TModflowTimeList.Create(Model);
+  FMinimumStageData := TModflowTimeList.Create(Model, ScreenObject);
+  FMaximumStageData := TModflowTimeList.Create(Model, ScreenObject);
+  FPrecipitationData := TModflowTimeList.Create(Model, ScreenObject);
+  FEvaporationData := TModflowTimeList.Create(Model, ScreenObject);
+  FOverlandRunoffData := TModflowTimeList.Create(Model, ScreenObject);
+  FWithdrawalData := TModflowTimeList.Create(Model, ScreenObject);
 
   FMinimumStageData.NonParamDescription := 'Minimum stage';
   FMinimumStageData.ParamDescription := ' minimum stage';

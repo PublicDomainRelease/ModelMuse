@@ -83,7 +83,8 @@ implementation
 uses ModflowUnitNumbers, OrderedCollectionUnit, frmErrorsAndWarningsUnit,
   ModflowSfrReachUnit, ModflowTransientListParameterUnit, ModflowSfrTable,
   ModflowSfrFlows, ModflowSfrChannelUnit, ModflowSfrEquationUnit,
-  ModflowTimeUnit, frmProgressUnit, IntListUnit, GoPhastTypes;
+  ModflowTimeUnit, frmProgressUnit, IntListUnit, GoPhastTypes, Forms, 
+  ModflowBoundaryUnit;
 
 const
   StrSegmentNumber = 'Segment Number in ';
@@ -135,6 +136,9 @@ var
   Dummy: TStringList;
   Segment: TSegment;
   Index: Integer;
+  Item: TCustomModflowBoundaryItem;
+  StartTime: Double;
+  EndTime: Double;
 begin
   frmErrorsAndWarnings.RemoveErrorGroup(StrIncompleteSFRData);
   frmErrorsAndWarnings.RemoveErrorGroup(DupErrorCategory);
@@ -143,6 +147,10 @@ begin
   frmErrorsAndWarnings.RemoveErrorGroup(BankRoughnessError);
   frmErrorsAndWarnings.RemoveWarningGroup(NoSegmentsWarning);
   frmErrorsAndWarnings.RemoveErrorGroup(UnsatError);
+
+  StartTime := PhastModel.ModflowStressPeriods[0].StartTime;
+  EndTime := PhastModel.ModflowStressPeriods[
+    PhastModel.ModflowStressPeriods.Count-1].EndTime;
 
   frmProgress.AddMessage('Evaluating SFR Package data.');
   ISFROPT := (Package as TSfrPackageSelection).Isfropt;
@@ -165,6 +173,11 @@ begin
         Continue;
       end;
       frmProgress.AddMessage('    Evaluating ' + ScreenObject.Name);
+      Assert(Boundary.Values.Count = 1);
+      Item := Boundary.Values[0];
+      Item.StartTime := StartTime;
+      Item.EndTime := EndTime;
+
       Boundary.GetCellValues(FValues, Dummy);
       if (FValues.Count >= 1) then
       begin
@@ -1500,7 +1513,7 @@ begin
   begin
     WriteInteger(ISFROPT);
   end;
-  if ISFROPT > 0 then
+  if ISFROPT > 1 then
   begin
     WriteInteger(NSTRAIL);
     WriteInteger(ISUZN);
@@ -1556,6 +1569,7 @@ begin
     for ReachIndex := 0 to Segment.FReaches.Count - 1 do
     begin
       Reach := Segment.FReaches[ReachIndex] as TSfr_Cell;
+      CheckCell(Reach, 'SFR');
       LocalLayer := PhastModel.LayerStructure.
         DataSetLayerToModflowLayer(Reach.Layer);
       WriteInteger(LocalLayer);
@@ -1634,6 +1648,7 @@ begin
   Model := PhastModel as TPhastModel;
   for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
   begin
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -1646,6 +1661,7 @@ begin
       try
         for Index := 0 to SfrPackage.ParameterInstances.Count - 1 do
         begin
+          Application.ProcessMessages;
           if not frmProgress.ShouldContinue then
           begin
             Exit;
@@ -1658,6 +1674,7 @@ begin
         end;
         for Index := 0 to FSegments.Count - 1 do
         begin
+          Application.ProcessMessages;
           if not frmProgress.ShouldContinue then
           begin
             Exit;
@@ -1667,6 +1684,7 @@ begin
           Assert(ScreenObject.ModflowSfrBoundary <> nil);
           for ScreenObjectParamIndex := 0 to ScreenObject.ModflowSfrBoundary.ParamIcalc.Count - 1 do
           begin
+            Application.ProcessMessages;
             if not frmProgress.ShouldContinue then
             begin
               Exit;
@@ -1704,6 +1722,7 @@ begin
         // Data set 4a
         for InstanceIndex := 0 to Instances.Count - 1 do
         begin
+          Application.ProcessMessages;
           if not frmProgress.ShouldContinue then
           begin
             Exit;
@@ -1718,6 +1737,7 @@ begin
 
           for Index := 0 to Segments.Count - 1 do
           begin
+            Application.ProcessMessages;
             if not frmProgress.ShouldContinue then
             begin
               Exit;
@@ -1728,6 +1748,7 @@ begin
             SfrBoundary := ScreenObject.ModflowSfrBoundary;
             for ScreenObjectParamIndex := 0 to SfrBoundary.ParamIcalc.Count - 1 do
             begin
+              Application.ProcessMessages;
               if not frmProgress.ShouldContinue then
               begin
                 Exit;
@@ -1741,6 +1762,7 @@ begin
                 // data set 4b
                 WriteDataSet4b6a(InstanceItem.StartTime, Segment,
                   ParamScreenObjectItem, SfrBoundary, True);
+                Application.ProcessMessages;
                 if not frmProgress.ShouldContinue then
                 begin
                   Exit;
@@ -1749,6 +1771,7 @@ begin
                 // data set 4c
                 WriteDataSet4c6b(True, SfrBoundary,
                   ParamScreenObjectItem, InstanceItem.StartTime, 0);
+                Application.ProcessMessages;
                 if not frmProgress.ShouldContinue then
                 begin
                   Exit;
@@ -1757,6 +1780,7 @@ begin
                 // data set 4d
                 WriteDataSet4d6c(True, SfrBoundary,
                   ParamScreenObjectItem, InstanceItem.StartTime, 0);
+                Application.ProcessMessages;
                 if not frmProgress.ShouldContinue then
                 begin
                   Exit;
@@ -1764,6 +1788,7 @@ begin
 
                 // data set 4e
                 WriteDataSet4e6d(True, SfrBoundary, ParamScreenObjectItem, 1);
+                Application.ProcessMessages;
                 if not frmProgress.ShouldContinue then
                 begin
                   Exit;
@@ -1772,6 +1797,7 @@ begin
                 // data set 4f
                 WriteDataSet4f6e(True, SfrBoundary, ParamScreenObjectItem,
                   InstanceItem.StartTime);
+                Application.ProcessMessages;
                 if not frmProgress.ShouldContinue then
                 begin
                   Exit;
@@ -1821,6 +1847,7 @@ begin
     for PIndex := 0 to PhastModel.ModflowPackages.
       SfrPackage.ParameterInstances.Count - 1 do
     begin
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -1845,6 +1872,7 @@ begin
     begin
         frmProgress.AddMessage('    Writing stress period '
           + IntToStr(TimeIndex + 1));
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -1941,6 +1969,7 @@ begin
       // data set 7
       for ParamIndex := 0 to ParametersUsed.Count - 1 do
       begin
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -1953,6 +1982,7 @@ begin
         begin
           for InstanceIndex := 0 to InstanceList.Count - 1 do
           begin
+            Application.ProcessMessages;
             if not frmProgress.ShouldContinue then
             begin
               Exit;
@@ -1988,7 +2018,7 @@ end;
 procedure TModflowSFR_Writer.WriteFile(const AFileName: string;
   var StartUnitNumber: integer; Lines: TStrings);
 begin
-  OutputDebugString('SAMPLING ON') ;
+//  OutputDebugString('SAMPLING ON') ;
   if not Package.IsSelected then
   begin
     Exit
@@ -2000,6 +2030,7 @@ begin
   FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrSFR, PhastModel.UnitNumbers.UnitNumber(StrSFR), FNameOfFile, foInput);
   Evaluate;
+  Application.ProcessMessages;
   if not frmProgress.ShouldContinue then
   begin
     Exit;
@@ -2009,6 +2040,7 @@ begin
     frmProgress.AddMessage('Writing SFR Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -2016,6 +2048,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -2023,6 +2056,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -2030,6 +2064,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Sets 3 and 4.');
     WriteDataSets3and4;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;

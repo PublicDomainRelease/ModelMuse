@@ -5,6 +5,8 @@ interface
 uses Windows, Classes, Graphics;
 
 type
+  TDrawTextEvent = procedure (Sender: TObject; var TextToDraw: string) of object;
+
   TDrawItem = class(TPersistent)
   private
     FRect: TRect;
@@ -13,6 +15,7 @@ type
     FSelected: boolean;
     FEditing: boolean;
     FOnChange: TNotifyEvent;
+    FOnDraw: TDrawTextEvent;
     procedure FontChanged(Sender: TObject);
     procedure SetFont(const Value: TFont);
     procedure SetRect(const Value: TRect);
@@ -32,6 +35,7 @@ type
     property Rect: TRect read FRect write SetRect;
     property Font: TFont read FFont write SetFont;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnDraw: TDrawTextEvent read FOnDraw write FOnDraw;
   end;
 
 implementation
@@ -67,17 +71,35 @@ var
   LineIndex: Integer;
   Extent: TSize;
   ARect: TRect;
+  TextToDraw: string;
+  BackGroundRect: TRect;
 begin
   Lines := TStringList.Create;
   try
-    Lines.Text := Text;
+    TextToDraw := Text;
+    if Assigned(OnDraw) then
+    begin
+      OnDraw(self, TextToDraw);
+    end;
+    Lines.Text := TextToDraw;
     for LineIndex := 0 to Lines.Count - 1 do
     begin
-      ACanvas.Brush.Style := bsClear;
+      ACanvas.Brush.Style := bsSolid;
+      ACanvas.Brush.Color := clWhite;
       ACanvas.Font := Font;
       Extent := ACanvas.TextExtent(Lines[LineIndex]);
       if not Editing then
       begin
+        BackGroundRect.Left := Rect.Left;
+        BackGroundRect.Top := Rect.Top + Extent.cy * LineIndex;
+        BackGroundRect.Right := BackGroundRect.Left + Extent.cx;
+        BackGroundRect.Bottom := BackGroundRect.Top + Extent.cy;
+        InflateRect(BackGroundRect, 2, 2);
+        if LineIndex <> 0 then
+        begin
+          BackGroundRect.Top := BackGroundRect.Top + 2;
+        end;
+        ACanvas.FillRect(BackGroundRect);
         ACanvas.TextOut(Rect.Left, Rect.Top + Extent.cy * LineIndex,
           Lines[LineIndex]);
       end;

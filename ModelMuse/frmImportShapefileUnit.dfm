@@ -84,16 +84,12 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     Top = 0
     Width = 789
     Height = 505
-    ActivePage = tabOptions
+    ActivePage = tabFeatures
     Align = alClient
     TabOrder = 1
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         781
         472)
@@ -368,10 +364,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     end
     object tabData: TTabSheet
       Caption = 'Data'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlData: TPanel
         Left = 0
         Top = 427
@@ -527,10 +519,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       Caption = 'Features'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlBoundaryCondition: TPanel
         Left = 0
         Top = 0
@@ -709,7 +697,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           Top = 217
           Width = 779
           Height = 254
-          ActivePage = jvspModflowHOB
+          ActivePage = jvspModflowSFR
           PropagateEnable = False
           Align = alBottom
           object jvspNone: TJvStandardPage
@@ -773,7 +761,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 14
               Width = 464
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 0
               OnChange = comboRealFieldChange
             end
@@ -782,7 +770,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 56
               Width = 464
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 1
               OnChange = comboRealFieldChange
             end
@@ -835,7 +823,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 13
               Width = 145
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 0
             end
             object comboRiverHydraulicConductivity: TComboBox
@@ -843,7 +831,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 89
               Width = 145
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 1
               OnChange = comboRealFieldChange
             end
@@ -852,7 +840,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 96
               Width = 145
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 2
               OnChange = comboRealFieldChange
             end
@@ -861,7 +849,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 96
               Width = 145
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 3
               OnChange = comboRealFieldChange
             end
@@ -870,7 +858,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 96
               Width = 145
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 4
               OnChange = comboRealFieldChange
             end
@@ -935,7 +923,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 Top = 6
                 Width = 197
                 Height = 26
-                ItemHeight = 0
+                ItemHeight = 18
                 TabOrder = 0
               end
               object comboWellDiameter: TComboBox
@@ -943,7 +931,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 Top = 37
                 Width = 105
                 Height = 26
-                ItemHeight = 0
+                ItemHeight = 18
                 TabOrder = 1
                 OnChange = comboRealFieldChange
               end
@@ -952,7 +940,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 Top = 68
                 Width = 105
                 Height = 26
-                ItemHeight = 0
+                ItemHeight = 18
                 TabOrder = 2
                 OnChange = comboRealFieldChange
               end
@@ -961,7 +949,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 Top = 99
                 Width = 145
                 Height = 26
-                ItemHeight = 0
+                ItemHeight = 18
                 TabOrder = 3
                 OnChange = comboBooleanFieldChange
               end
@@ -1137,10 +1125,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               TabOrder = 0
               object tabSfrBasic: TTabSheet
                 Caption = 'Basic'
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblSfrSegmentNumber: TLabel
                   Left = 13
                   Top = 9
@@ -1188,7 +1172,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 6
                   Width = 145
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 0
                 end
                 object comboSfrReachLength: TComboBox
@@ -1196,7 +1180,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 37
                   Width = 145
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 1
                   Text = 'ObjectIntersectLength'
                 end
@@ -1205,7 +1189,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 6
                   Width = 145
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 2
                 end
                 object comboSfrStreamSlope: TComboBox
@@ -1213,7 +1197,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 68
                   Width = 145
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 3
                 end
                 object comboSfrStreambedThickness: TComboBox
@@ -1221,7 +1205,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 37
                   Width = 145
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 4
                 end
                 object comboSfrStreambedKv: TComboBox
@@ -1229,17 +1213,13 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 68
                   Width = 145
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 5
                 end
               end
               object tabSfrUnsaturated: TTabSheet
                 Caption = 'Unsaturated'
                 ImageIndex = 1
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblSaturatedVolumetricWater: TLabel
                   Left = 3
                   Top = 6
@@ -1273,7 +1253,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 3
                   Width = 145
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 0
                 end
                 object comboInitialVolumetricWater: TComboBox
@@ -1281,7 +1261,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 34
                   Width = 145
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 1
                 end
                 object comboBrooksCoreyExponent: TComboBox
@@ -1289,7 +1269,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 65
                   Width = 145
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 2
                 end
                 object comboaxUnsaturatedKz: TComboBox
@@ -1297,7 +1277,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 96
                   Width = 145
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 3
                 end
               end
@@ -1342,7 +1322,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 6
               Width = 145
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 0
             end
             object comboInitialStage: TComboBox
@@ -1350,7 +1330,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 38
               Width = 145
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 1
             end
             object comboSill: TComboBox
@@ -1358,7 +1338,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 101
               Width = 145
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 2
             end
             object comboCenterLake: TComboBox
@@ -1366,7 +1346,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 70
               Width = 145
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 3
             end
           end
@@ -1432,17 +1412,11 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               object tabDrtNone: TTabSheet
                 Caption = 'tabDrtNone'
                 TabVisible = False
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
               end
               object tabDrtLocation: TTabSheet
                 Caption = 'tabDrtLocation'
                 ImageIndex = 2
                 TabVisible = False
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblDrtX: TLabel
                   Left = 3
                   Top = 7
@@ -1517,9 +1491,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 Caption = 'tabDrtCell'
                 ImageIndex = 3
                 TabVisible = False
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblDrtCol: TLabel
                   Left = 3
                   Top = 7
@@ -1642,7 +1613,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 11
               Width = 145
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 1
             end
             object comboHfbThickness: TComboBox
@@ -1650,7 +1621,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 36
               Width = 145
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 2
             end
           end
@@ -1694,7 +1665,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 6
               Width = 145
               Height = 26
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 0
             end
             object comboHeadObsType: TComboBox
@@ -1716,7 +1687,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 102
               Width = 145
               Height = 22
-              ItemHeight = 0
+              ItemHeight = 18
               TabOrder = 2
               Text = '9999'
               DataType = dtReal
@@ -1755,10 +1726,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 HelpType = htKeyword
                 HelpKeyword = 'MNW2_Basic_Tab'
                 Caption = 'Basic'
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblWellId: TLabel
                   Left = 3
                   Top = 6
@@ -1849,7 +1816,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 3
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 0
                 end
                 object comboMnw2LossType: TComboBox
@@ -1857,7 +1824,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 35
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 1
                 end
                 object comboSpecifyPump: TComboBox
@@ -1865,7 +1832,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 67
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 2
                 end
                 object comboZPump: TComboBox
@@ -1873,7 +1840,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 99
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 3
                 end
                 object comboMnw2PumplocX: TComboBox
@@ -1881,7 +1848,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 131
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 4
                 end
                 object comboMnw2PumplocY: TComboBox
@@ -1889,7 +1856,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 163
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 5
                 end
                 object comboMnw2PumplocZ: TComboBox
@@ -1897,7 +1864,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 195
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 6
                 end
                 object comboConstrainPumping: TComboBox
@@ -1905,7 +1872,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 3
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 7
                 end
                 object comboPartialPenetrationFlag: TComboBox
@@ -1913,7 +1880,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 35
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 8
                 end
                 object comboPartialPenetration: TComboBox
@@ -1921,7 +1888,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 67
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 9
                 end
                 object comboPumpCap: TComboBox
@@ -1929,7 +1896,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 107
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 10
                 end
               end
@@ -1938,10 +1905,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 HelpKeyword = 'MNW2_Loss_Controls_Tab'
                 Caption = 'Loss Controls'
                 ImageIndex = 1
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblWellRadius: TLabel
                   Left = 3
                   Top = 6
@@ -1996,7 +1959,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 3
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 0
                 end
                 object comboSkinRadius: TComboBox
@@ -2004,7 +1967,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 35
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 1
                 end
                 object comboKSkin: TComboBox
@@ -2012,7 +1975,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 67
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 2
                 end
                 object comboBCoefficient: TComboBox
@@ -2020,7 +1983,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 99
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 3
                 end
                 object comboCCoefficient: TComboBox
@@ -2028,7 +1991,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 131
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 4
                 end
                 object comboPCoefficient: TComboBox
@@ -2036,7 +1999,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 163
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 5
                 end
                 object comboCellToWellConductance: TComboBox
@@ -2044,7 +2007,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 195
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 6
                 end
               end
@@ -2053,10 +2016,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 HelpKeyword = 'MNW2_Discharge_Adjustment_Tab'
                 Caption = 'Discharge Adjustment'
                 ImageIndex = 2
-                ExplicitLeft = 0
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblReferenceHead: TLabel
                   Left = 8
                   Top = 6
@@ -2090,7 +2049,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 3
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 0
                 end
                 object comboLiftQ0: TComboBox
@@ -2098,7 +2057,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 35
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 1
                 end
                 object comboLiftQMax: TComboBox
@@ -2106,7 +2065,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 67
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 2
                 end
                 object comboWellTolerance: TComboBox
@@ -2114,7 +2073,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                   Top = 99
                   Width = 115
                   Height = 26
-                  ItemHeight = 0
+                  ItemHeight = 18
                   TabOrder = 3
                 end
               end
@@ -2126,10 +2085,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     object tabCoordinateConversion: TTabSheet
       Caption = 'Coordinate Conversion'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object imageUtmZones: TImage
         Left = 8
         Top = 96

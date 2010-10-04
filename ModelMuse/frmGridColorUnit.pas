@@ -67,11 +67,13 @@ type
     procedure StoreTimelistsInLists;
     procedure HandleSelectedObject(AnObject: TObject);
     procedure SetMinMaxLabels;
+    procedure HandleLimitChoice(DataSet: TDataArray);
   protected
     function GetSelectedArray: TDataArray; override;
     { Private declarations }
   public
     procedure UpdateLabelsAndLegend;
+    procedure ColorGrid(AnObject: TObject);
     { Public declarations }
   end;
 
@@ -92,7 +94,7 @@ type
     property ClassifiedObject: TObject read GetClassifiedObject;
   end;
 
-procedure UpdateFrmGridColor;
+procedure UpdateFrmGridColor(Force: boolean = false);
 
 var
   frmGridColor: TfrmGridColor = nil;
@@ -108,9 +110,9 @@ uses frmGoPhastUnit, PhastDataSets, ModelMuseUtilities,
 
 {$R *.dfm}
 
-procedure UpdateFrmGridColor;
+procedure UpdateFrmGridColor(Force: boolean = false);
 begin
-  if (frmGridColor <> nil) and frmGridColor.Visible then
+  if (frmGridColor <> nil) and (Force or frmGridColor.Visible) then
   begin
     frmGridColor.GetData;
   end;
@@ -138,6 +140,7 @@ procedure TfrmGridColor.GetData;
 var
   GridColors: TColorParameters;
   VirtNoneNode: PVirtualNode;
+  EndTime: Double;
 begin
   FGettingData := True;
   try
@@ -174,6 +177,9 @@ begin
 
   frmGoPhast.PhastModel.ModflowStressPeriods.
     FillStringsWithStartTimes(comboTime3D.Items);
+  EndTime := frmGoPhast.PhastModel.ModflowStressPeriods[
+    frmGoPhast.PhastModel.ModflowStressPeriods.Count-1].EndTime;
+  comboTime3D.Items.Add(FloatToStr(EndTime));
 end;
 
 procedure TfrmGridColor.btnOKClick(Sender: TObject);
@@ -181,224 +187,18 @@ begin
   inherited;
   SetData;
   UpdateLabelsAndLegend;
+  frmProgress.Hide;
 end;
 
 procedure TfrmGridColor.SetData;
 var
   AnObject: TObject;
-  TimeList: TCustomTimeList;
-  Time: double;
-  Is3DSelected: boolean;
-  DataSet: TDataArray;
-  EdgeEdit: TEdgeDisplayEdit;
-  Index: Integer;
-  GridColors: TColorParameters;
-  TimeListIndex: Integer;
-  ADataArray: TDataArray;
 begin
   frmGoPhast.CanDraw := False;
   Screen.Cursor := crHourGlass;
   try
-    Application.ProcessMessages;
-    frmProgress.ShouldContinue := True;
-    Is3DSelected := (frmGoPhast.Grid.ThreeDDataSet <> nil);
     RetrieveSelectedObject(AnObject);
-
-    if AnObject <> nil then
-    begin
-      for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
-      begin
-        frmGoPhast.PhastModel.AddDataSetToCache(frmGoPhast.PhastModel.DataSets[Index]);
-      end;
-      frmGoPhast.PhastModel.CacheDataArrays;
-    end;
-
-
-    if (AnObject = nil) then
-    begin
-      frmGoPhast.Grid.TopDataSet := nil;
-      frmGoPhast.PhastModel.TopTimeList := nil;
-      frmGoPhast.Grid.FrontDataSet := nil;
-      frmGoPhast.PhastModel.FrontTimeList := nil;
-      frmGoPhast.Grid.SideDataSet := nil;
-      frmGoPhast.PhastModel.SideTimeList := nil;
-      frmGoPhast.Grid.ThreeDDataSet := nil;
-      frmGoPhast.PhastModel.ThreeDTimeList := nil;
-      frmGoPhast.PhastModel.EdgeDisplay := nil;
-      comboMethod.ItemIndex := 0;
-      FLegend.ValueSource := nil;
-    end
-    else if (AnObject is TDataArray) then
-    begin
-      frmGoPhast.PhastModel.EdgeDisplay := nil;
-
-      DataSet := TDataArray(AnObject);
-
-      AssignLimits(DataSet.DataType, DataSet.Limits);
-
-      if frmGoPhast.Grid.ThreeDDataSet <> DataSet then
-      begin
-        comboMethod.ItemIndex := 0;
-      end;
-
-      frmGoPhast.Grid.ThreeDDataSet := DataSet;
-      frmGoPhast.PhastModel.ThreeDTimeList := nil;
-      if FTopItems.IndexOfObject(AnObject) >= 0 then
-      begin
-        frmGoPhast.Grid.TopDataSet := DataSet;
-      end
-      else
-      begin
-        frmGoPhast.Grid.TopDataSet := nil;
-      end;
-      frmGoPhast.PhastModel.TopTimeList := nil;
-
-      if FFrontItems.IndexOfObject(AnObject) >= 0 then
-      begin
-        frmGoPhast.Grid.FrontDataSet := DataSet;
-      end
-      else
-      begin
-        frmGoPhast.Grid.FrontDataSet := nil;
-      end;
-      frmGoPhast.PhastModel.FrontTimeList := nil;
-
-      if FSideItems.IndexOfObject(AnObject) >= 0 then
-      begin
-        frmGoPhast.Grid.SideDataSet := DataSet;
-      end
-      else
-      begin
-        frmGoPhast.Grid.SideDataSet := nil;
-      end;
-      frmGoPhast.PhastModel.SideTimeList := nil;
-
-      FLegend.ValueSource := DataSet;
-      FLegend.ColoringLimits := DataSet.Limits;
-    end
-    else if AnObject is TCustomTimeList then
-    begin
-      frmGoPhast.PhastModel.EdgeDisplay := nil;
-
-      TimeList := TCustomTimeList(AnObject);
-      AssignLimits(TimeList.DataType, TimeList.Limits);
-      if TimeList.UpToDate then
-      begin
-        for TimeListIndex := 0 to TimeList.Count - 1 do
-        begin
-          ADataArray := TimeList[TimeListIndex];
-          AssignLimits(ADataArray.DataType, ADataArray.Limits);
-        end;
-      end;
-
-      Time := StrToFloat(comboTime3D.Text);
-
-      if (frmGoPhast.PhastModel.ThreeDTimeList <> TimeList)
-        or (Time <> frmGoPhast.PhastModel.ThreeDDisplayTime) then
-      begin
-        comboMethod.ItemIndex := 0;
-      end;
-
-      frmGoPhast.PhastModel.UpdateThreeDTimeDataSet(TimeList, Time);
-      if FTopItems.IndexOfObject(AnObject) >= 0 then
-      begin
-        frmGoPhast.PhastModel.UpdateTopTimeDataSet(TimeList, Time);
-      end
-      else
-      begin
-        frmGoPhast.Grid.TopDataSet := nil;
-        frmGoPhast.PhastModel.TopTimeList := nil;
-      end;
-      if FFrontItems.IndexOfObject(AnObject) >= 0 then
-      begin
-        frmGoPhast.PhastModel.UpdateFrontTimeDataSet(TimeList, Time);
-      end
-      else
-      begin
-        frmGoPhast.Grid.FrontDataSet := nil;
-        frmGoPhast.PhastModel.FrontTimeList := nil;
-      end;
-      if FSideItems.IndexOfObject(AnObject) >= 0 then
-      begin
-        frmGoPhast.PhastModel.UpdateSideTimeDataSet(TimeList, Time);
-      end
-      else
-      begin
-        frmGoPhast.Grid.SideDataSet := nil;
-        frmGoPhast.PhastModel.SideTimeList := nil;
-      end;
-
-      ADataArray := nil;
-      if frmGoPhast.Grid.TopDataSet <> nil then
-      begin
-        ADataArray := frmGoPhast.Grid.TopDataSet;
-      end
-      else if frmGoPhast.Grid.FrontDataSet <> nil then
-      begin
-        ADataArray := frmGoPhast.Grid.FrontDataSet;
-      end
-      else if frmGoPhast.Grid.SideDataSet <> nil then
-      begin
-        ADataArray := frmGoPhast.Grid.SideDataSet;
-      end;
-
-      FLegend.ValueSource := ADataArray;
-      if ADataArray <> nil then
-      begin
-        FLegend.ColoringLimits := ADataArray.Limits;
-      end;
-    end
-    else
-    begin
-      frmGoPhast.Grid.TopDataSet := nil;
-      frmGoPhast.PhastModel.TopTimeList := nil;
-      frmGoPhast.Grid.FrontDataSet := nil;
-      frmGoPhast.PhastModel.FrontTimeList := nil;
-      frmGoPhast.Grid.SideDataSet := nil;
-      frmGoPhast.PhastModel.SideTimeList := nil;
-      frmGoPhast.Grid.ThreeDDataSet := nil;
-      frmGoPhast.PhastModel.ThreeDTimeList := nil;
-
-      EdgeEdit := AnObject as TEdgeDisplayEdit;
-
-      AssignLimits(rdtDouble, EdgeEdit.Edge.Limits[EdgeEdit.DataIndex]);
-
-      if (frmGoPhast.PhastModel.EdgeDisplay <> EdgeEdit.Edge)
-        or (EdgeEdit.Edge.DataToPlot <> EdgeEdit.DataIndex) then
-      begin
-        comboMethod.ItemIndex := 0;
-      end;
-
-      EdgeEdit.Edge.DataToPlot := EdgeEdit.DataIndex;
-      frmGoPhast.PhastModel.EdgeDisplay := EdgeEdit.Edge;
-
-      FLegend.ValueSource := EdgeEdit.Edge;
-      FLegend.ColoringLimits := EdgeEdit.Edge.Limits[EdgeEdit.DataIndex];
-      FLegend.EdgeDataToPlot := EdgeEdit.DataIndex;
-    end;
-
-    frmGoPhast.acColoredGrid.Enabled := (frmGoPhast.Grid.ThreeDDataSet <> nil)
-      or (frmGoPhast.PhastModel.EdgeDisplay <> nil);
-    if not frmGoPhast.acColoredGrid.Enabled then
-    begin
-      frmGoPhast.acColoredGrid.Checked := False;
-      frmGoPhast.tb3DColors.Down := False;
-    end;
-
-    if frmGoPhast.acColoredGrid.Enabled and not Is3DSelected then
-    begin
-      frmGoPhast.acColoredGrid.Checked := True;
-      frmGoPhast.tb3DColors.Down := True;
-    end;
-    frmGoPhast.PhastModel.Grid.GridChanged;
-
-    GridColors := frmGoPhast.PhastModel.GridColors;
-    GridColors.ColorScheme := comboColorScheme.ItemIndex;
-    GridColors.ColorCycles := seCycles.AsInteger;
-    GridColors.ColorExponent := seColorExponent.Value;
-
-    tabLegend.TabVisible := FLegend.ValueSource <> nil;
-    FLegend.ColorParameters := GridColors;
+    ColorGrid(AnObject);
 
     if (AnObject <> nil) and frmErrorsAndWarnings.HasMessages then
     begin
@@ -464,6 +264,213 @@ begin
   UpdateLegend;
 end;
 
+procedure TfrmGridColor.ColorGrid(AnObject: TObject);
+var
+  GridColors: TColorParameters;
+  EdgeEdit: TEdgeDisplayEdit;
+  Time: Double;
+  ADataArray: TDataArray;
+  TimeListIndex: Integer;
+  TimeList: TCustomTimeList;
+  DataSet: TDataArray;
+  Index: Integer;
+  Is3DSelected: Boolean;
+begin
+  Application.ProcessMessages;
+  frmProgress.ShouldContinue := True;
+  Is3DSelected := (frmGoPhast.Grid.ThreeDDataSet <> nil);
+  FreeAndNil(FStoredLegend);
+  if AnObject <> nil then
+  begin
+    frmProgress.btnAbort.Visible := False;
+    frmProgress.Caption := 'Progress';
+    frmProgress.Show;
+    for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+    begin
+      frmGoPhast.PhastModel.AddDataSetToCache(frmGoPhast.PhastModel.DataSets[Index]);
+    end;
+    frmGoPhast.PhastModel.CacheDataArrays;
+    if (frmGoPhast.Grid.ThreeDDataSet <> nil)
+      and (rgUpdateLimitChoice.ItemIndex = 1) then
+    begin
+      FStoredLegend := TLegend.Create(nil);
+      FStoredLegend.Assign(frmGoPhast.PhastModel.ColorLegend);
+    end;
+  end;
+  if (AnObject = nil) then
+  begin
+    frmGoPhast.Grid.TopDataSet := nil;
+    frmGoPhast.PhastModel.TopTimeList := nil;
+    frmGoPhast.Grid.FrontDataSet := nil;
+    frmGoPhast.PhastModel.FrontTimeList := nil;
+    frmGoPhast.Grid.SideDataSet := nil;
+    frmGoPhast.PhastModel.SideTimeList := nil;
+    frmGoPhast.Grid.ThreeDDataSet := nil;
+    frmGoPhast.PhastModel.ThreeDTimeList := nil;
+    frmGoPhast.PhastModel.EdgeDisplay := nil;
+    comboMethod.ItemIndex := 0;
+    FLegend.ValueSource := nil;
+  end
+  else if (AnObject is TDataArray) then
+  begin
+    frmGoPhast.PhastModel.EdgeDisplay := nil;
+    DataSet := TDataArray(AnObject);
+    AssignLimits(DataSet.DataType, DataSet.Limits);
+    if frmGoPhast.Grid.ThreeDDataSet <> DataSet then
+    begin
+      comboMethod.ItemIndex := 0;
+    end;
+    frmGoPhast.Grid.ThreeDDataSet := DataSet;
+    frmGoPhast.PhastModel.ThreeDTimeList := nil;
+    if FTopItems.IndexOfObject(AnObject) >= 0 then
+    begin
+      frmGoPhast.Grid.TopDataSet := DataSet;
+    end
+    else
+    begin
+      frmGoPhast.Grid.TopDataSet := nil;
+    end;
+    frmGoPhast.PhastModel.TopTimeList := nil;
+    if FFrontItems.IndexOfObject(AnObject) >= 0 then
+    begin
+      frmGoPhast.Grid.FrontDataSet := DataSet;
+    end
+    else
+    begin
+      frmGoPhast.Grid.FrontDataSet := nil;
+    end;
+    frmGoPhast.PhastModel.FrontTimeList := nil;
+    if FSideItems.IndexOfObject(AnObject) >= 0 then
+    begin
+      frmGoPhast.Grid.SideDataSet := DataSet;
+    end
+    else
+    begin
+      frmGoPhast.Grid.SideDataSet := nil;
+    end;
+    frmGoPhast.PhastModel.SideTimeList := nil;
+    FLegend.ValueSource := DataSet;
+    FLegend.ColoringLimits := DataSet.Limits;
+  end
+  else if AnObject is TCustomTimeList then
+  begin
+    frmGoPhast.PhastModel.EdgeDisplay := nil;
+    TimeList := TCustomTimeList(AnObject);
+    AssignLimits(TimeList.DataType, TimeList.Limits);
+
+    Time := StrToFloat(comboTime3D.Text);
+    if (frmGoPhast.PhastModel.ThreeDTimeList <> TimeList)
+      or (Time <> frmGoPhast.PhastModel.ThreeDDisplayTime) then
+    begin
+      comboMethod.ItemIndex := 0;
+      TimeList.Invalidate;
+    end;
+
+    if TimeList.UpToDate then
+    begin
+      for TimeListIndex := 0 to TimeList.Count - 1 do
+      begin
+        ADataArray := TimeList[TimeListIndex];
+        AssignLimits(ADataArray.DataType, ADataArray.Limits);
+      end;
+    end;
+    frmGoPhast.PhastModel.UpdateThreeDTimeDataSet(TimeList, Time);
+    if FTopItems.IndexOfObject(AnObject) >= 0 then
+    begin
+      frmGoPhast.PhastModel.UpdateTopTimeDataSet(TimeList, Time);
+    end
+    else
+    begin
+      frmGoPhast.Grid.TopDataSet := nil;
+      frmGoPhast.PhastModel.TopTimeList := nil;
+    end;
+    if FFrontItems.IndexOfObject(AnObject) >= 0 then
+    begin
+      frmGoPhast.PhastModel.UpdateFrontTimeDataSet(TimeList, Time);
+    end
+    else
+    begin
+      frmGoPhast.Grid.FrontDataSet := nil;
+      frmGoPhast.PhastModel.FrontTimeList := nil;
+    end;
+    if FSideItems.IndexOfObject(AnObject) >= 0 then
+    begin
+      frmGoPhast.PhastModel.UpdateSideTimeDataSet(TimeList, Time);
+    end
+    else
+    begin
+      frmGoPhast.Grid.SideDataSet := nil;
+      frmGoPhast.PhastModel.SideTimeList := nil;
+    end;
+    ADataArray := nil;
+    if frmGoPhast.Grid.TopDataSet <> nil then
+    begin
+      ADataArray := frmGoPhast.Grid.TopDataSet;
+    end
+    else if frmGoPhast.Grid.FrontDataSet <> nil then
+    begin
+      ADataArray := frmGoPhast.Grid.FrontDataSet;
+    end
+    else if frmGoPhast.Grid.SideDataSet <> nil then
+    begin
+      ADataArray := frmGoPhast.Grid.SideDataSet;
+    end;
+    FLegend.ValueSource := ADataArray;
+    if ADataArray <> nil then
+    begin
+      FLegend.ColoringLimits := ADataArray.Limits;
+    end;
+  end
+  else if AnObject is TEdgeDisplayEdit then
+  begin
+    frmGoPhast.Grid.TopDataSet := nil;
+    frmGoPhast.PhastModel.TopTimeList := nil;
+    frmGoPhast.Grid.FrontDataSet := nil;
+    frmGoPhast.PhastModel.FrontTimeList := nil;
+    frmGoPhast.Grid.SideDataSet := nil;
+    frmGoPhast.PhastModel.SideTimeList := nil;
+    frmGoPhast.Grid.ThreeDDataSet := nil;
+    frmGoPhast.PhastModel.ThreeDTimeList := nil;
+    EdgeEdit := TEdgeDisplayEdit(AnObject);
+    AssignLimits(rdtDouble, EdgeEdit.Edge.Limits[EdgeEdit.DataIndex]);
+    if (frmGoPhast.PhastModel.EdgeDisplay <> EdgeEdit.Edge) or (EdgeEdit.Edge.DataToPlot <> EdgeEdit.DataIndex) then
+    begin
+      comboMethod.ItemIndex := 0;
+    end;
+    EdgeEdit.Edge.DataToPlot := EdgeEdit.DataIndex;
+    frmGoPhast.PhastModel.EdgeDisplay := EdgeEdit.Edge;
+    FLegend.ValueSource := EdgeEdit.Edge;
+    FLegend.ColoringLimits := EdgeEdit.Edge.Limits[EdgeEdit.DataIndex];
+    FLegend.EdgeDataToPlot := EdgeEdit.DataIndex;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+  frmGoPhast.acColoredGrid.Enabled := (frmGoPhast.Grid.ThreeDDataSet <> nil) or (frmGoPhast.PhastModel.EdgeDisplay <> nil);
+  if not frmGoPhast.acColoredGrid.Enabled then
+  begin
+    frmGoPhast.acColoredGrid.Checked := False;
+    frmGoPhast.tb3DColors.Down := False;
+  end;
+  if frmGoPhast.acColoredGrid.Enabled and not Is3DSelected then
+  begin
+    frmGoPhast.acColoredGrid.Checked := True;
+    frmGoPhast.tb3DColors.Down := True;
+  end;
+  frmGoPhast.PhastModel.Grid.GridChanged;
+  GridColors := frmGoPhast.PhastModel.GridColors;
+  GridColors.ColorScheme := comboColorScheme.ItemIndex;
+  GridColors.ColorCycles := seCycles.AsInteger;
+  GridColors.ColorExponent := seColorExponent.Value;
+  tabLegend.TabVisible := FLegend.ValueSource <> nil;
+  FLegend.ColorParameters := GridColors;
+  if FStoredLegend <> nil then
+  begin
+    FLegend.Assign(FStoredLegend);
+  end;
+end;
+
 procedure TfrmGridColor.SetMinMaxLabels;
 var
   AnObject: TObject;
@@ -508,6 +515,44 @@ begin
   end;
 end;
 
+procedure TfrmGridColor.HandleLimitChoice(DataSet: TDataArray);
+var
+  ColorDataSet: TDataArray;
+begin
+  case rgUpdateLimitChoice.ItemIndex of
+    0:
+      begin
+        ReadLimits(DataSet.DataType, DataSet.Limits);
+      end;
+    1:
+      begin
+        ColorDataSet := frmGoPhast.Grid.TopDataSet;
+        if ColorDataSet = nil then
+        begin
+          ColorDataSet := frmGoPhast.Grid.FrontDataSet;
+        end;
+        if ColorDataSet = nil then
+        begin
+          ColorDataSet := frmGoPhast.Grid.SideDataSet;
+        end;
+        if ColorDataSet = nil then
+        begin
+          ColorDataSet := frmGoPhast.Grid.ThreeDDataSet;
+        end;
+        if (ColorDataSet <> nil) and (DataSet.DataType = ColorDataSet.DataType) then
+        begin
+          ReadLimits(ColorDataSet.DataType, ColorDataSet.Limits);
+        end
+        else
+        begin
+          ReadLimits(DataSet.DataType, DataSet.Limits);
+        end;
+      end;
+    else
+      Assert(False);
+  end;
+end;
+
 procedure TfrmGridColor.HandleSelectedObject(AnObject: TObject);
 var
   DataSet: TDataArray;
@@ -548,8 +593,7 @@ begin
     comboTime3D.Enabled := False;
     cbLogTransform.Enabled := DataSet.DataType = rdtDouble;
     SetTimeComboColor;
-
-    ReadLimits(DataSet.DataType, DataSet.Limits);
+    HandleLimitChoice(DataSet);
   end
   else if AnObject is TCustomTimeList then
   begin

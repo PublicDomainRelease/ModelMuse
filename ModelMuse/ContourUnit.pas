@@ -65,35 +65,72 @@ type
     procedure ExtractContour;
   end;
 
-  TMultipleContourCreator = class(TObject)
+  TCustomContourCreator = class(TObject)
   private
+    FActiveDataSet: TDataArray;
     FDataSet: TDataArray;
-    FBitMap: TBitmap32;
     FViewDirection: TViewDirection;
     FGrid: T2DGrid;
-    FZoomBox: TQRbwZoomBox2;
-    FActiveDataSet: TDataArray;
-    procedure CreateContours(const ContourValues,
-      LineThicknesses: TOneDRealArray; const ContourColors: TArrayOfColor32);
-    procedure DrawContours(const ContourValues, LineThicknesses: TOneDRealArray;
-      const ContourColors: TArrayOfColor32; SelectedColRowLayer: integer); overload;
-    procedure AssignGridValues(out MinValue, MaxValue: double;
-      SelectedColRowLayer: integer; DSValues: TStringList);
-    procedure EvaluateActive(var Active: T3DBooleanDataSet);
+  protected
+    // @name set Active for the selected column, row, or layer based
+    // on @link(ActiveDataSet)
+    procedure EvaluateActive(var Active: T3DBooleanDataSet); 
+    {If @link(DataSet).DataType is rdtString, DSValues will contain a sorted
+    list of the unigue values in @link(DataSet).  Otherwise,
+    MaxValue and MinValue will be set to the maximum and minimum values in
+    @link(DataSet) where Active is true.}
     procedure EvaluateMinMax(out MaxValue, MinValue: Double;
       DSValues: TStringList; Active: T3DBooleanDataSet;
       SelectedColRowLayer: Integer);
+      // @name calls @link(EvaluateActive) and @link(EvaluateMinMax)
+      // and then assigns values to @link(FGrid).
+    procedure AssignGridValues(out MinValue, MaxValue: double;
+      SelectedColRowLayer: integer; DSValues: TStringList);
   public
-    property DataSet: TDataArray read FDataSet write FDataSet;
     property ActiveDataSet: TDataArray read FActiveDataSet write FActiveDataSet;
-    property BitMap: TBitmap32 read FBitMap write FBitMap;
+    property DataSet: TDataArray read FDataSet write FDataSet;
     property ViewDirection: TViewDirection read FViewDirection
       write FViewDirection;
     property Grid: T2DGrid read FGrid write FGrid;
+  end;
+
+  TMultipleContourCreator = class(TCustomContourCreator)
+  private
+    FBitMap: TBitmap32;
+    FZoomBox: TQRbwZoomBox2;
+    // @name calls @link(TContourCreator.DrawContour) for each memeber of
+    // ContourValues.
+    procedure CreateAndDrawContours(const ContourValues,
+      LineThicknesses: TOneDRealArray; const ContourColors: TArrayOfColor32);
+    // @name initializes the @link(TDataArray)s and then calls
+    // @link(AssignGridValues) and @link(CreateContours).
+    // @name is called if @link(TContours.SpecifyContour
+    // DataSet.Contours.SpecifyContours) is true;
+    procedure DrawContours(const ContourValues, LineThicknesses: TOneDRealArray;
+      const ContourColors: TArrayOfColor32; SelectedColRowLayer: integer); overload;
+    // @name updates MinValue and MaxValue base on limits
+    // in @link(DataSet).ContourLimits.
+    procedure GetSpecifiedMinMax(var MinValue: Double; var MaxValue: Double;
+      DSValues: TStringList);
+    // @name returns the values need to define the contour values.
+    procedure GetContouringParameters(var RequiredSize: Integer;
+      MinValue: Double; MaxValue: Double; var DesiredSpacing: Double;
+      var SmallestContour: Double; var LargestContour: Double);
+    // @name initializes ContourValues.
+    procedure GetContourValues(LargestContour, SmallestContour: Double;
+      RequiredSize: Integer; var ContourValues: TOneDRealArray);
+    // @name initializes LineThicknesses and ContourColors.
+    procedure GetContourColorsAndThicknesses(DesiredSpacing: Double;
+      RequiredSize: Integer; var LineThicknesses: TOneDRealArray;
+      var ContourColors: TArrayOfColor32; ContourValues: TOneDRealArray;
+      ColorParameters: TColorParameters);
+  public
+    property BitMap: TBitmap32 read FBitMap write FBitMap;
     property ZoomBox: TQRbwZoomBox2 read FZoomBox write FZoomBox;
     procedure DrawContours(SelectedColRowLayer: integer;
       ColorParameters: TColorParameters); overload;
   end;
+
 
 implementation
 
@@ -457,10 +494,10 @@ begin
   finally
     DSValues.Free;
   end;
-  CreateContours(ContourValues, LineThicknesses, ContourColors);
+  CreateAndDrawContours(ContourValues, LineThicknesses, ContourColors);
 end;
 
-procedure TMultipleContourCreator.AssignGridValues(out MinValue, MaxValue: double;
+procedure TCustomContourCreator.AssignGridValues(out MinValue, MaxValue: double;
   SelectedColRowLayer: integer; DSValues: TStringList);
 var
   Active: T3DBooleanDataSet;
@@ -509,21 +546,21 @@ begin
 
   for ColIndex := 0 to ColumnLimit - 1 do
   begin
-    if (FViewDirection = vdSide) and (ColIndex <> SelectedColRowLayer)
+    if (ViewDirection = vdSide) and (ColIndex <> SelectedColRowLayer)
       and (DataSet.Orientation <> dsoSide) then
     begin
       Continue;
     end;
     for RowIndex := 0 to RowLimit - 1 do
     begin
-      if (FViewDirection = vdFront) and (RowIndex <> SelectedColRowLayer)
+      if (ViewDirection = vdFront) and (RowIndex <> SelectedColRowLayer)
         and (DataSet.Orientation <> dsoFront) then
       begin
         Continue;
       end;
       for LayerIndex := 0 to LayerLimit - 1 do
       begin
-        if (FViewDirection = vdTop) and (LayerIndex <> SelectedColRowLayer)
+        if (ViewDirection = vdTop) and (LayerIndex <> SelectedColRowLayer)
           and (DataSet.Orientation <> dsoTop) then
         begin
           Continue;
@@ -531,7 +568,7 @@ begin
         Column := -1;
         Row := -1;
         Layer := -1;
-        case FViewDirection of
+        case ViewDirection of
           vdTop:
             begin
               Column := ColIndex;
@@ -605,18 +642,18 @@ begin
           case ViewDirection of
             vdTop:
               begin
-                FGrid[ColIndex+1,RowIndex+1].Value := Value;
-                FGrid[ColIndex+1,RowIndex+1].Active := True;
+                Grid[ColIndex+1,RowIndex+1].Value := Value;
+                Grid[ColIndex+1,RowIndex+1].Active := True;
               end;
             vdFront:
               begin
-                FGrid[ColIndex+1,LayerIndex+1].Value := Value;
-                FGrid[ColIndex+1,LayerIndex+1].Active := True;
+                Grid[ColIndex+1,LayerIndex+1].Value := Value;
+                Grid[ColIndex+1,LayerIndex+1].Active := True;
               end;
             vdSide:
               begin
-                FGrid[RowIndex+1,LayerIndex+1].Value := Value;
-                FGrid[RowIndex+1,LayerIndex+1].Active := True;
+                Grid[RowIndex+1,LayerIndex+1].Value := Value;
+                Grid[RowIndex+1,LayerIndex+1].Active := True;
               end;
           end;
 
@@ -626,15 +663,15 @@ begin
           case ViewDirection of
             vdTop:
               begin
-                FGrid[ColIndex+1,RowIndex+1].Active := False;
+                Grid[ColIndex+1,RowIndex+1].Active := False;
               end;
             vdFront:
               begin
-                FGrid[ColIndex+1,LayerIndex+1].Active := False;
+                Grid[ColIndex+1,LayerIndex+1].Active := False;
               end;
             vdSide:
               begin
-                FGrid[RowIndex+1,LayerIndex+1].Active := False;
+                Grid[RowIndex+1,LayerIndex+1].Active := False;
               end;
           end;
         end;
@@ -642,24 +679,24 @@ begin
     end;
   end;
 
-  Position := Length(FGrid[0])-1;
-  for Index := 1 to Length(FGrid) - 2 do
+  Position := Length(Grid[0])-1;
+  for Index := 1 to Length(Grid) - 2 do
   begin
-    FGrid[Index,0].Value := FGrid[Index,1].Value;
-    FGrid[Index,0].Active := FGrid[Index,1].Active;
+    Grid[Index,0].Value := Grid[Index,1].Value;
+    Grid[Index,0].Active := Grid[Index,1].Active;
 
-    FGrid[Index,Position].Value := FGrid[Index,Position-1].Value;
-    FGrid[Index,Position].Active := FGrid[Index,Position-1].Active;
+    Grid[Index,Position].Value := Grid[Index,Position-1].Value;
+    Grid[Index,Position].Active := Grid[Index,Position-1].Active;
   end;
 
-  Position := Length(FGrid)-1;
-  for Index := 0 to Length(FGrid[0]) - 1 do
+  Position := Length(Grid)-1;
+  for Index := 0 to Length(Grid[0]) - 1 do
   begin
-    FGrid[0,Index].Value := FGrid[1,Index].Value;
-    FGrid[0,Index].Active := FGrid[1,Index].Active;
+    Grid[0,Index].Value := Grid[1,Index].Value;
+    Grid[0,Index].Active := Grid[1,Index].Active;
 
-    FGrid[Position,Index].Value := FGrid[Position-1,Index].Value;
-    FGrid[Position,Index].Active := FGrid[Position-1,Index].Active;
+    Grid[Position,Index].Value := Grid[Position-1,Index].Value;
+    Grid[Position,Index].Active := Grid[Position-1,Index].Active;
   end;
 end;
 
@@ -672,17 +709,12 @@ var
   ContourColors: TArrayOfColor32;
   MaxValue: double;
   MinValue: double;
-  StringValue: string;
-  Position: Integer;
   Index: Integer;
   Contours: TContours;
   DesiredSpacing: Double;
   SmallestContour: double;
   LargestContour: double;
   RequiredSize: integer;
-  ContourIndicator: Double;
-  UsedMin: double;
-  UsedMax: Double;
 begin
   Assert(Assigned(ActiveDataSet));
   Assert(Assigned(DataSet));
@@ -705,7 +737,6 @@ begin
             Contours.ContourColors[Index] :=
               Color32(ColorParameters.FracToColor(
               (MaxValue - Contours.ContourValues[Index])/(MaxValue - MinValue)));
-  //            Color32(ColorParameters.FracToColor(1-(Index/(Length(Contours.ContourValues)-1))));
           end;
           Contours.ContourColors[Length(Contours.ContourValues) - 1] :=
             Color32(ColorParameters.FracToColor(0));
@@ -726,62 +757,7 @@ begin
     DSValues := TStringList.Create;
     try
       AssignGridValues(MinValue, MaxValue, SelectedColRowLayer, DSValues);
-
-      case DataSet.DataType of
-        rdtDouble:
-          begin
-            if DataSet.ContourLimits.UpperLimit.UseLimit then
-            begin
-              MaxValue := DataSet.ContourLimits.UpperLimit.RealLimitValue;
-            end;
-            if DataSet.ContourLimits.LowerLimit.UseLimit then
-            begin
-              MinValue := DataSet.ContourLimits.LowerLimit.RealLimitValue;
-            end;
-          end;
-        rdtInteger:
-          begin
-            if DataSet.ContourLimits.UpperLimit.UseLimit then
-            begin
-              MaxValue := DataSet.ContourLimits.UpperLimit.IntegerLimitValue;
-            end;
-            if DataSet.ContourLimits.LowerLimit.UseLimit then
-            begin
-              MinValue := DataSet.ContourLimits.LowerLimit.IntegerLimitValue;
-            end;
-          end;
-        rdtString:
-          begin
-            if DataSet.ContourLimits.UpperLimit.UseLimit then
-            begin
-              StringValue := DataSet.ContourLimits.UpperLimit.StringLimitValue;
-              MaxValue := DSValues.IndexOf(StringValue);
-              if MaxValue < 0 then
-              begin
-                Position := DSValues.Add(StringValue);
-                MaxValue := Position-0.5;
-                DSValues.Delete(Position);
-              end;
-            end;
-            if DataSet.ContourLimits.LowerLimit.UseLimit then
-            begin
-              StringValue := DataSet.ContourLimits.LowerLimit.StringLimitValue;
-              MinValue := DSValues.IndexOf(StringValue);
-              if MinValue < 0 then
-              begin
-                Position := DSValues.Add(StringValue);
-                MinValue := Position+0.5;
-                DSValues.Delete(Position);
-              end;
-            end;
-          end;
-        rdtBoolean:
-          begin
-            MinValue := 0;
-            MaxValue := 1;
-          end
-        else Assert(False);
-      end;
+      GetSpecifiedMinMax(MinValue, MaxValue, DSValues);
 
       if MaxValue > MinValue then
       begin
@@ -796,74 +772,12 @@ begin
         end
         else
         begin
-          if DataSet.ContourLimits.LogTransform then
-          begin
-            UsedMin := Log10(MinValue);
-            UsedMax := Log10(MaxValue);
-          end
-          else
-          begin
-            UsedMin := MinValue;
-            UsedMax := MaxValue;
-          end;
-
-          DesiredSpacing := (UsedMax - UsedMin)/20;
-          DesiredSpacing := Power(10, Trunc(Log10(DesiredSpacing)));
-
-          SmallestContour := Round(UsedMin/DesiredSpacing) * DesiredSpacing;
-          While (SmallestContour > UsedMin) do
-          begin
-            SmallestContour := SmallestContour - DesiredSpacing;
-          end;
-          While (SmallestContour < UsedMin) do
-          begin
-            SmallestContour := SmallestContour + DesiredSpacing;
-          end;
-
-          LargestContour := Round(UsedMax/DesiredSpacing) * DesiredSpacing;
-          While (LargestContour < UsedMax) do
-          begin
-            LargestContour := LargestContour + DesiredSpacing;
-          end;
-          While (LargestContour > UsedMax) do
-          begin
-            LargestContour := LargestContour - DesiredSpacing;
-          end;
-
-          RequiredSize := Round((LargestContour-SmallestContour)/DesiredSpacing)+1;
-
-          SetLength(ContourValues, RequiredSize);
-          SetLength(ContourColors, RequiredSize);
-          SetLength(LineThicknesses, RequiredSize);
-
-          for Index := 0 to Length(ContourValues) - 2 do
-          begin
-            ContourValues[Index] := SmallestContour
-              + Index*(LargestContour-SmallestContour)/(Length(ContourValues)-1);
-            ContourIndicator := ContourValues[Index]/DesiredSpacing/5;
-            if Abs(Round(ContourIndicator) - ContourIndicator) < 0.01 then
-            begin
-              LineThicknesses[Index] := DefaultMajorLineThickness;
-            end
-            else
-            begin
-              LineThicknesses[Index] := DefaultLineThickness;
-            end;
-            ContourColors[Index] :=
-              Color32(ColorParameters.FracToColor(1-(Index/(Length(ContourValues)-1))));
-          end;
-          ContourValues[Length(ContourValues) - 1] := LargestContour;
-          ContourIndicator := ContourValues[Length(ContourValues) - 1]/DesiredSpacing/5;
-          if Abs(Round(ContourIndicator) - ContourIndicator) < 0.01 then
-          begin
-            LineThicknesses[Length(ContourValues) - 1] := DefaultMajorLineThickness;
-          end
-          else
-          begin
-            LineThicknesses[Length(ContourValues) - 1] := DefaultLineThickness;
-          end;
-          ContourColors[Length(ContourValues) - 1] :=
-            Color32(ColorParameters.FracToColor(0));
+          GetContouringParameters(RequiredSize, MinValue, MaxValue,
+            DesiredSpacing, SmallestContour, LargestContour);
+          GetContourValues(LargestContour, SmallestContour, RequiredSize,
+            ContourValues);
+          GetContourColorsAndThicknesses(DesiredSpacing, RequiredSize,
+            LineThicknesses, ContourColors, ContourValues, ColorParameters);
         end;
       end
       else
@@ -873,7 +787,7 @@ begin
         SetLength(ContourValues,0);
       end;
 
-      CreateContours(ContourValues, LineThicknesses, ContourColors);
+      CreateAndDrawContours(ContourValues, LineThicknesses, ContourColors);
       Contours := TContours.Create;
       try
         Contours.ContourValues := ContourValues;
@@ -896,15 +810,164 @@ begin
   end;
 end;
 
-procedure TMultipleContourCreator.EvaluateMinMax(out MaxValue, MinValue: Double;
+procedure TMultipleContourCreator.GetContourColorsAndThicknesses(
+  DesiredSpacing: Double; RequiredSize: Integer;
+  var LineThicknesses: TOneDRealArray; var ContourColors: TArrayOfColor32;
+  ContourValues: TOneDRealArray; ColorParameters: TColorParameters);
+var
+  ContourIndicator: Double;
+  Index: Integer;
+begin
+  SetLength(ContourColors, RequiredSize);
+  SetLength(LineThicknesses, RequiredSize);
+  for Index := 0 to Length(ContourValues) - 2 do
+  begin
+    ContourIndicator := ContourValues[Index] / DesiredSpacing / 5;
+    if Abs(Round(ContourIndicator) - ContourIndicator) < 0.01 then
+    begin
+      LineThicknesses[Index] := DefaultMajorLineThickness;
+    end
+    else
+    begin
+      LineThicknesses[Index] := DefaultLineThickness;
+    end;
+    ContourColors[Index] := Color32(ColorParameters.FracToColor(1 - (Index / (Length(ContourValues) - 1))));
+  end;
+  ContourIndicator := ContourValues[Length(ContourValues) - 1] / DesiredSpacing / 5;
+  if Abs(Round(ContourIndicator) - ContourIndicator) < 0.01 then
+  begin
+    LineThicknesses[Length(ContourValues) - 1] := DefaultMajorLineThickness;
+  end
+  else
+  begin
+    LineThicknesses[Length(ContourValues) - 1] := DefaultLineThickness;
+  end;
+  ContourColors[Length(ContourValues) - 1] := Color32(ColorParameters.FracToColor(0));
+end;
+
+procedure TMultipleContourCreator.GetContourValues(LargestContour,
+  SmallestContour: Double; RequiredSize: Integer;
+  var ContourValues: TOneDRealArray);
+var
+  Index: Integer;
+begin
+  SetLength(ContourValues, RequiredSize);
+  for Index := 0 to Length(ContourValues) - 2 do
+  begin
+    ContourValues[Index] := SmallestContour
+      + Index * (LargestContour - SmallestContour)
+      / (Length(ContourValues) - 1);
+  end;
+  ContourValues[Length(ContourValues) - 1] := LargestContour;
+end;
+
+procedure TMultipleContourCreator.GetContouringParameters(var RequiredSize: Integer; MinValue: Double; MaxValue: Double; var DesiredSpacing: Double; var SmallestContour: Double; var LargestContour: Double);
+var
+  UsedMin: Double;
+  UsedMax: Double;
+begin
+  if DataSet.ContourLimits.LogTransform then
+  begin
+    UsedMin := Log10(MinValue);
+    UsedMax := Log10(MaxValue);
+  end
+  else
+  begin
+    UsedMin := MinValue;
+    UsedMax := MaxValue;
+  end;
+  DesiredSpacing := (UsedMax - UsedMin) / 20;
+  DesiredSpacing := Power(10, Trunc(Log10(DesiredSpacing)));
+  SmallestContour := Round(UsedMin / DesiredSpacing) * DesiredSpacing;
+  while (SmallestContour > UsedMin) do
+  begin
+    SmallestContour := SmallestContour - DesiredSpacing;
+  end;
+  while (SmallestContour < UsedMin) do
+  begin
+    SmallestContour := SmallestContour + DesiredSpacing;
+  end;
+  LargestContour := Round(UsedMax / DesiredSpacing) * DesiredSpacing;
+  while (LargestContour < UsedMax) do
+  begin
+    LargestContour := LargestContour + DesiredSpacing;
+  end;
+  while (LargestContour > UsedMax) do
+  begin
+    LargestContour := LargestContour - DesiredSpacing;
+  end;
+  RequiredSize := Round((LargestContour - SmallestContour) / DesiredSpacing) + 1;
+end;
+
+procedure TMultipleContourCreator.GetSpecifiedMinMax(var MinValue: Double; var MaxValue: Double; DSValues: TStringList);
+var
+  StringValue: string;
+  Position: Integer;
+begin
+  case DataSet.DataType of
+    rdtDouble:
+      begin
+        if DataSet.ContourLimits.UpperLimit.UseLimit then
+        begin
+          MaxValue := DataSet.ContourLimits.UpperLimit.RealLimitValue;
+        end;
+        if DataSet.ContourLimits.LowerLimit.UseLimit then
+        begin
+          MinValue := DataSet.ContourLimits.LowerLimit.RealLimitValue;
+        end;
+      end;
+    rdtInteger:
+      begin
+        if DataSet.ContourLimits.UpperLimit.UseLimit then
+        begin
+          MaxValue := DataSet.ContourLimits.UpperLimit.IntegerLimitValue;
+        end;
+        if DataSet.ContourLimits.LowerLimit.UseLimit then
+        begin
+          MinValue := DataSet.ContourLimits.LowerLimit.IntegerLimitValue;
+        end;
+      end;
+    rdtString:
+      begin
+        if DataSet.ContourLimits.UpperLimit.UseLimit then
+        begin
+          StringValue := DataSet.ContourLimits.UpperLimit.StringLimitValue;
+          MaxValue := DSValues.IndexOf(StringValue);
+          if MaxValue < 0 then
+          begin
+            Position := DSValues.Add(StringValue);
+            MaxValue := Position - 0.5;
+            DSValues.Delete(Position);
+          end;
+        end;
+        if DataSet.ContourLimits.LowerLimit.UseLimit then
+        begin
+          StringValue := DataSet.ContourLimits.LowerLimit.StringLimitValue;
+          MinValue := DSValues.IndexOf(StringValue);
+          if MinValue < 0 then
+          begin
+            Position := DSValues.Add(StringValue);
+            MinValue := Position + 0.5;
+            DSValues.Delete(Position);
+          end;
+        end;
+      end;
+    rdtBoolean:
+      begin
+        MinValue := 0;
+        MaxValue := 1;
+      end;
+  else
+    Assert(False);
+  end;
+end;
+
+procedure TCustomContourCreator.EvaluateMinMax(out MaxValue, MinValue: Double;
   DSValues: TStringList; Active: T3DBooleanDataSet;
   SelectedColRowLayer: Integer);
 var
-//  Layer: Integer;
   LayerIndex: Integer;
-//  Row: Integer;
   RowIndex: Integer;
-//  Column: Integer;
   ColIndex: Integer;
   FoundFirst: Boolean;
   ActiveColumn, ActiveRow, ActiveLayer: integer;
@@ -1028,7 +1091,7 @@ begin
   end;
 end;
 
-procedure TMultipleContourCreator.EvaluateActive(var Active: T3DBooleanDataSet);
+procedure TCustomContourCreator.EvaluateActive(var Active: T3DBooleanDataSet);
 var
   LayerIndex: Integer;
   RowIndex: Integer;
@@ -1037,11 +1100,13 @@ begin
   case DataSet.EvaluatedAt of
     eaBlocks:
       begin
-        SetLength(Active, ActiveDataSet.ColumnCount, ActiveDataSet.RowCount, ActiveDataSet.LayerCount);
+        SetLength(Active, ActiveDataSet.ColumnCount,
+          ActiveDataSet.RowCount, ActiveDataSet.LayerCount);
       end;
     eaNodes:
       begin
-        SetLength(Active, ActiveDataSet.ColumnCount + 1, ActiveDataSet.RowCount + 1, ActiveDataSet.LayerCount + 1);
+        SetLength(Active, ActiveDataSet.ColumnCount + 1,
+          ActiveDataSet.RowCount + 1, ActiveDataSet.LayerCount + 1);
         for ColIndex := 0 to ActiveDataSet.ColumnCount do
         begin
           for RowIndex := 0 to ActiveDataSet.RowCount do
@@ -1065,7 +1130,8 @@ begin
         case DataSet.EvaluatedAt of
           eaBlocks:
             begin
-              Active[ColIndex, RowIndex, LayerIndex] := ActiveDataSet.BooleanData[LayerIndex, RowIndex, ColIndex];
+              Active[ColIndex, RowIndex, LayerIndex] :=
+                ActiveDataSet.BooleanData[LayerIndex, RowIndex, ColIndex];
             end;
           eaNodes:
             begin
@@ -1089,7 +1155,7 @@ begin
   end;
 end;
 
-procedure TMultipleContourCreator.CreateContours(
+procedure TMultipleContourCreator.CreateAndDrawContours(
   const ContourValues, LineThicknesses: TOneDRealArray;
   const ContourColors: TArrayOfColor32);
 var

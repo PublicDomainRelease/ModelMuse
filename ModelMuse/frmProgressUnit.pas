@@ -88,7 +88,13 @@ begin
   memoMessages.Lines.Add(AMessage);
   if AllowUpdate and (Now - LastMessageTime > HalfSecond) then
   begin
-    Application.ProcessMessages;
+  // Don't call Application.ProcessMessages.
+  // Doing so can cause access violations due to
+  // TPhastModel.UpdateModflowFullStressPeriods being called from
+  // within itself.
+  // The basic problem is that only one view should be updated at a time.
+  //
+//  Application.ProcessMessages;
     LastMessageTime := Now;
   end;
 end;
@@ -117,7 +123,13 @@ end;
 
 function TfrmProgress.GetShouldContinue: Boolean;
 begin
-  Application.ProcessMessages;
+  // Don't call Application.ProcessMessages.
+  // Doing so can cause access violations due to
+  // TPhastModel.UpdateModflowFullStressPeriods being called from
+  // within itself.
+  // The basic problem is that only one view should be updated at a time.
+  //
+//  Application.ProcessMessages;
   Result := FShouldContinue;
 end;
 

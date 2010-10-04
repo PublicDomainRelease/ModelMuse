@@ -2,7 +2,7 @@ inherited frmGoPhast: TfrmGoPhast
   Left = 91
   Top = 50
   Width = 723
-  Height = 660
+  Height = 620
   HelpType = htKeyword
   HelpKeyword = 'Main_Window'
   VertScrollBar.Range = 157
@@ -18,12 +18,12 @@ inherited frmGoPhast: TfrmGoPhast
   OnMouseMove = pnlLowerRightMouseMove
   OnResize = FormResize
   ExplicitWidth = 723
-  ExplicitHeight = 660
+  ExplicitHeight = 620
   PixelsPerInch = 96
   TextHeight = 18
   object splitHoriz: TJvNetscapeSplitter
     Left = 0
-    Top = 435
+    Top = 395
     Width = 715
     Height = 10
     Cursor = crVSplit
@@ -41,15 +41,16 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 0
     Top = 68
     Width = 715
-    Height = 367
+    Height = 327
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
+    ExplicitHeight = 307
     object splitVertTop: TJvNetscapeSplitter
       Left = 476
       Top = 0
-      Height = 367
+      Height = 327
       Hint = 'Click and drag to resize the windows.'
       Align = alRight
       MinSize = 1
@@ -65,16 +66,16 @@ inherited frmGoPhast: TfrmGoPhast
       Left = 0
       Top = 0
       Width = 476
-      Height = 367
+      Height = 327
       HorzScrollBar.Range = 36
       VertScrollBar.Range = 40
       Align = alClient
       TabOrder = 0
       TabStop = True
       ExplicitWidth = 476
-      ExplicitHeight = 367
+      ExplicitHeight = 307
       inherited rulVertical: TRbwRuler
-        Height = 313
+        Height = 273
         ExplicitTop = 39
         ExplicitHeight = 173
       end
@@ -88,14 +89,14 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited ZoomBox: TQRbwZoomBox2
         Width = 427
-        Height = 313
+        Height = 273
         Image32.Top = 0
         Image32.Width = 427
-        Image32.Height = 313
+        Image32.Height = 273
         Image32.ExplicitWidth = 427
-        Image32.ExplicitHeight = 313
+        Image32.ExplicitHeight = 273
         ExplicitWidth = 427
-        ExplicitHeight = 313
+        ExplicitHeight = 253
       end
       inherited OrderMenu: TPopupMenu
         Left = 80
@@ -106,7 +107,7 @@ inherited frmGoPhast: TfrmGoPhast
       Left = 486
       Top = 0
       Width = 229
-      Height = 367
+      Height = 327
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alRight
@@ -114,10 +115,10 @@ inherited frmGoPhast: TfrmGoPhast
       TabStop = True
       ExplicitLeft = 486
       ExplicitWidth = 229
-      ExplicitHeight = 367
+      ExplicitHeight = 307
       inherited rulVertical: TRbwRuler
         Left = 180
-        Height = 313
+        Height = 273
         Align = alRight
         RulerPosition = rpRight
         ExplicitLeft = 194
@@ -151,17 +152,17 @@ inherited frmGoPhast: TfrmGoPhast
       inherited ZoomBox: TQRbwZoomBox2
         Left = 0
         Width = 180
-        Height = 313
+        Height = 273
         ExaggerationDirection = edHorizontal
         HorizontalDirection = hdLeft
         Image32.Top = 0
         Image32.Width = 180
-        Image32.Height = 313
+        Image32.Height = 273
         Image32.ExplicitWidth = 180
-        Image32.ExplicitHeight = 313
+        Image32.ExplicitHeight = 273
         ExplicitLeft = 0
         ExplicitWidth = 180
-        ExplicitHeight = 313
+        ExplicitHeight = 253
       end
       inherited OrderMenu: TPopupMenu
         Left = 48
@@ -171,7 +172,7 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 445
+    Top = 405
     Width = 715
     Height = 133
     Align = alBottom
@@ -179,6 +180,7 @@ inherited frmGoPhast: TfrmGoPhast
     ParentColor = True
     TabOrder = 1
     OnMouseMove = pnlLowerRightMouseMove
+    ExplicitTop = 385
     object splitVertBottom: TJvNetscapeSplitter
       Left = 476
       Top = 0
@@ -272,7 +274,7 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object sbMain: TStatusBar
     Left = 0
-    Top = 578
+    Top = 538
     Width = 715
     Height = 28
     Hint = 'Drag with the mouse to resize status bar panels'
@@ -296,6 +298,7 @@ inherited frmGoPhast: TfrmGoPhast
     OnMouseMove = sbMainMouseMove
     OnMouseUp = sbMainMouseUp
     OnDrawPanel = sbMainDrawPanel
+    ExplicitTop = 518
   end
   object cbControlBar: TControlBar
     Left = 0
@@ -999,14 +1002,41 @@ inherited frmGoPhast: TfrmGoPhast
           Caption = '&ZONEBUDGET Input Files'
           OnClick = ZONEBUDGETInputFiles1Click
         end
-        object ExportShapefile1: TMenuItem
-          Caption = '&Grid Data to Shapefile...'
-          Hint = 'Export data sets or boundaries as Shapefiles'
-          OnClick = ExportShapefile1Click
-        end
-        object miObjectstoShapefile: TMenuItem
-          Caption = 'Objects to Shapefile...'
-          OnClick = miObjectstoShapefileClick
+        object miShapefile: TMenuItem
+          Caption = '&Shapefile'
+          object ExportShapefile1: TMenuItem
+            Caption = '&Grid Data to Shapefile...'
+            Hint = 'Export data sets or boundaries as Shapefiles'
+            OnClick = ExportShapefile1Click
+          end
+          object miObjectstoShapefile: TMenuItem
+            Caption = '&Objects to Shapefile...'
+            OnClick = miObjectstoShapefileClick
+          end
+          object miContourstoShapefile: TMenuItem
+            Caption = '&Contours to Shapefile'
+            OnClick = miContourstoShapefileClick
+          end
+          object miPathlinestoShapefile: TMenuItem
+            Caption = '&Pathlines to Shapefile'
+            Enabled = False
+            OnClick = miPathlinestoShapefileClick
+          end
+          object miEndpointsatStartingLocationstoShapefile: TMenuItem
+            Caption = 'Endpoints at &Starting Locations to Shapefile'
+            Enabled = False
+            OnClick = miEndpointsatStartingLocationstoShapefileClick
+          end
+          object miEndpointsatEndingLocationstoShapefile: TMenuItem
+            Caption = 'Endpoints at &Ending Locations to Shapefile'
+            Enabled = False
+            OnClick = miEndpointsatEndingLocationstoShapefileClick
+          end
+          object miTimeSeriestoShapefile: TMenuItem
+            Caption = '&Time Series to Shapefile'
+            Enabled = False
+            OnClick = miTimeSeriestoShapefileClick
+          end
         end
         object ExportImage1: TMenuItem
           Action = acExportImage
@@ -8134,5 +8164,13 @@ inherited frmGoPhast: TfrmGoPhast
       Action = acShowActiveEdge
       AutoCheck = True
     end
+  end
+  object sdShapefile: TSaveDialog
+    DefaultExt = '.shp'
+    Filter = 'Shapefiles|*.shp'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing]
+    Title = 'Export Contours'
+    Left = 376
+    Top = 112
   end
 end

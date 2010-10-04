@@ -59,8 +59,6 @@ type
     // the @link(TCustomTimeList)s in "TimeLists" to "DataSets".
     procedure GetFieldNames(Names, Fields: TStringList;
       LayerLimit: Integer; TimeLists, DataSets: TList);
-    procedure InitializeDataBase(const ShapeFileName: string;
-      ShapeDataBase: TXBase; Fields: TStringList);
     procedure InitializeControls;
     procedure AssignID_Fields(ID, ColIndex, RowIndex: Integer;
       ShapeDataBase: TXBase);
@@ -71,6 +69,9 @@ type
   public
     { Public declarations }
   end;
+
+  procedure InitializeDataBase(const ShapeFileName: string;
+    ShapeDataBase: TXBase; Fields: TStringList);
 
 var
   frmExportShapefile: TfrmExportShapefile;
@@ -860,6 +861,8 @@ begin
               FieldFormat := 'N';
             rdtString:
               FieldFormat := 'C18';
+            else
+              Assert(False);
           end;
           FieldName := RootName;
           Fields.AddObject(FieldName + '=' + FieldFormat, DataArray);
@@ -955,7 +958,7 @@ begin
   end;
 end;
 
-procedure TfrmExportShapefile.InitializeDataBase(const ShapeFileName: string;
+procedure InitializeDataBase(const ShapeFileName: string;
   ShapeDataBase: TXBase; Fields: TStringList);
 var
   DataBaseFileName: string;

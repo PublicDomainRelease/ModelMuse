@@ -58,6 +58,10 @@ inherited frmEndPointDisplay: TfrmEndPointDisplay
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         460
         284)
@@ -196,6 +200,10 @@ inherited frmEndPointDisplay: TfrmEndPointDisplay
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         460
         284)

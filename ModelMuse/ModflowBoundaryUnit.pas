@@ -368,11 +368,14 @@ type
     // See @link(OnInvalidate).
     FOnInvalidate: TNotifyEvent;
     FVariableInterpretation: boolean;
+    FScreenObject: TObject;
   protected
     // @name calls the inherited @link(TCustomTimeList.SetUpToDate)
     // and then calls @link(OnInvalidate) if @link(OnInvalidate) is assigned.
     procedure SetUpToDate(const Value: boolean); override;
   public
+    procedure Invalidate; override;
+    constructor Create(Model: TObject; ScreenObject: TObject);
     // @name takes the times and formulas in BoundaryValues and uses them
     // to determine the locations and values for those times.  These
     // locations and values are stored in @link(TRealSparseDataSet)s
@@ -930,11 +933,32 @@ var
   TimeIndex: Integer;
   TimeList1: TModflowTimeList;
 begin
-  PhastModel := Model as TPhastModel;
-  FirstUsedTime := PhastModel.ModflowStressPeriods[0].StartTime;
-  LastUsedTime := PhastModel.ModflowStressPeriods[
-    PhastModel.ModflowStressPeriods.Count - 1].EndTime;
+  if Count = 0 then
+  begin
+    Exit;
+  end;
 
+  PhastModel := Model as TPhastModel;
+  FirstUsedTime := PhastModel.ModflowFullStressPeriods[0].StartTime;
+  LastUsedTime := PhastModel.ModflowFullStressPeriods[
+    PhastModel.ModflowFullStressPeriods.Count - 1].EndTime;
+
+  Item := Items[0];
+  if Item.StartTime >= LastUsedTime  then
+  begin
+    Exit;
+  end;
+
+  Item := Items[Count-1];
+  if Item.EndTime <= FirstUsedTime  then
+  begin
+    Exit;
+  end;
+
+  FirstUsedTime := Max(FirstUsedTime,
+    PhastModel.ModflowStressPeriods[0].StartTime);
+  LastUsedTime := Min(LastUsedTime, PhastModel.ModflowStressPeriods[
+    PhastModel.ModflowStressPeriods.Count - 1].EndTime);
 
   ListOfTimeLists := TList.Create;
   DataSets := TList.Create;
@@ -1051,15 +1075,38 @@ begin
     Exit;
   end;
 
+  PhastModel := Model as TPhastModel;
+
+  FirstUsedTime := PhastModel.ModflowFullStressPeriods[0].StartTime;
+  LastUsedTime := PhastModel.ModflowFullStressPeriods[
+    PhastModel.ModflowFullStressPeriods.Count - 1].EndTime;
+
+  AnItem := Items[0];
+  if AnItem.StartTime >= LastUsedTime  then
+  begin
+    Exit;
+  end;
+
+  AnItem := Items[Count-1];
+  if AnItem.EndTime <= FirstUsedTime  then
+  begin
+    Exit;
+  end;
+
   CellList:= TCellAssignmentList.Create;
   UsedVariables:= TStringList.Create;
   EliminateIndicies := TIntegerList.Create;
   try
     ScreenObject := FScreenObject as TScreenObject;
 
-    PhastModel := Model as TPhastModel;
     Grid := PhastModel.ModflowGrid;
     Compiler := PhastModel.rpThreeDFormulaCompiler;
+
+    FirstUsedTime := Max(FirstUsedTime,
+      PhastModel.ModflowStressPeriods[0].StartTime);
+    LastUsedTime := Min(LastUsedTime, PhastModel.ModflowStressPeriods[
+      PhastModel.ModflowStressPeriods.Count - 1].EndTime);
+
 
     ScreenObject.GetCellsToAssign(Grid, '0', nil, nil, CellList, alAll);
 
@@ -1103,10 +1150,6 @@ begin
     end;
 
     ClearBoundaries;
-
-    FirstUsedTime := PhastModel.ModflowStressPeriods[0].StartTime;
-    LastUsedTime := PhastModel.ModflowStressPeriods[
-      PhastModel.ModflowStressPeriods.Count - 1].EndTime;
 
 
     TestIfObservationsPresent(EndOfLastStressPeriod, StartOfFirstStressPeriod,
@@ -1585,6 +1628,12 @@ begin
 end;
 
 { TModflowTimeList }
+constructor TModflowTimeList.Create(Model, ScreenObject: TObject);
+begin
+  inherited Create(Model);
+  FScreenObject := ScreenObject;
+end;
+
 procedure TModflowTimeList.Initialize(BoundaryValues: TBoundaryValueArray;
   ScreenObject: TObject; AssignmentLocation: TAssignmentLocation = alAll);
 var
@@ -1613,9 +1662,14 @@ begin
   PhastModel := LocalScreenObject.Model as TPhastModel;
   Assert(PhastModel <> nil);
 
-  FirstUsedTime := PhastModel.ModflowStressPeriods[0].StartTime;
-  LastUsedTime := PhastModel.ModflowStressPeriods[
-    PhastModel.ModflowStressPeriods.Count - 1].EndTime;
+  FirstUsedTime := PhastModel.ModflowFullStressPeriods[0].StartTime;
+  LastUsedTime := PhastModel.ModflowFullStressPeriods[
+    PhastModel.ModflowFullStressPeriods.Count - 1].EndTime;
+
+  FirstUsedTime := Math.Max(FirstUsedTime,
+    PhastModel.ModflowStressPeriods[0].StartTime);
+  LastUsedTime := Math.Min(LastUsedTime, PhastModel.ModflowStressPeriods[
+    PhastModel.ModflowStressPeriods.Count - 1].EndTime);
 
   StoredUpToDate := PhastModel.UpToDate;
   try
@@ -1686,6 +1740,15 @@ begin
 
   finally
     PhastModel.UpToDate := StoredUpToDate;
+  end;
+end;
+
+procedure TModflowTimeList.Invalidate;
+begin
+  if (FScreenObject <> nil)
+    and (FScreenObject as TScreenObject).CanInvalidateModel then
+  begin
+    inherited;
   end;
 end;
 

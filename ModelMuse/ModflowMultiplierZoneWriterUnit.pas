@@ -79,7 +79,7 @@ type
 implementation
 
 uses frmErrorsAndWarningsUnit, OrderedCollectionUnit, ModflowUnitNumbers, 
-  frmProgressUnit;
+  frmProgressUnit, Forms;
 
 { TCustomMultZoneWriter }
 
@@ -160,6 +160,7 @@ begin
   LayerCount := PhastModel.LayerStructure.ModflowLayerCount;
   for ParamIndex := 0 to PhastModel.ModflowSteadyParameters.Count - 1 do
   begin
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -230,6 +231,7 @@ begin
   TransientList := TransientArrayList;
   for Index := 0 to TransientList.Count - 1 do
   begin
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -290,6 +292,7 @@ begin
     frmProgress.AddMessage('Writing ' + FileType + ' Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -297,6 +300,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;

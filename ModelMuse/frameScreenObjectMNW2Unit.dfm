@@ -239,6 +239,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         end
         inherited comboLocationChoice: TJvImageComboBox
           Left = 173
+          ItemIndex = -1
           OnChange = framePumpLocationMethodcomboLocationChoiceChange
           ExplicitLeft = 173
         end
@@ -250,7 +251,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Height = 22
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 8
         Text = '0'
         OnChange = edWellIdChange
@@ -613,7 +614,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Top = 7
         Width = 172
         Height = 22
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 0
         Text = '0'
         OnChange = edWellIdChange
@@ -626,7 +627,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Top = 35
         Width = 172
         Height = 22
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 1
         Text = '0'
         OnChange = edWellIdChange
@@ -639,7 +640,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Top = 63
         Width = 172
         Height = 22
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 2
         Text = '0'
         OnChange = edWellIdChange
@@ -652,7 +653,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Top = 91
         Width = 172
         Height = 22
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 3
         Text = '0'
         OnChange = edWellIdChange
@@ -1047,7 +1048,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
           Height = 25
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 0
           OnChange = rdeFormulaChange
           Max = 1.000000000000000000
@@ -1377,7 +1378,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
           Height = 25
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 0
           OnChange = rdeWellScreenFormulaChange
           Max = 1.000000000000000000

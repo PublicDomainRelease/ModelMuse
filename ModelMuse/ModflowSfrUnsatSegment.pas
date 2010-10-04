@@ -578,10 +578,10 @@ constructor TSfrUnsatSegmentCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FBrooksCoreyExponentData := TModflowTimeList.Create(Model);
-  FInitialWaterContentData := TModflowTimeList.Create(Model);
-  FSaturatedWaterContentData := TModflowTimeList.Create(Model);
-  FVerticalSaturatedKData := TModflowTimeList.Create(Model);
+  FBrooksCoreyExponentData := TModflowTimeList.Create(Model, ScreenObject);
+  FInitialWaterContentData := TModflowTimeList.Create(Model, ScreenObject);
+  FSaturatedWaterContentData := TModflowTimeList.Create(Model, ScreenObject);
+  FVerticalSaturatedKData := TModflowTimeList.Create(Model, ScreenObject);
 
   FInitialWaterContentData.NonParamDescription := 'Initial water content';
   FInitialWaterContentData.ParamDescription := ' initial water content';

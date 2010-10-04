@@ -410,17 +410,45 @@ end;
 procedure TModflowBoundaryDisplayTimeList.Initialize;
 var
   Model: TPhastModel;
+  TimeIndex: Integer;
+  Index: Integer;
 begin
   If UpToDate then Exit;
   Assert(Assigned(OnGetUseList));
 
   frmProgress.ShouldContinue := True;
+  frmProgress.btnAbort.Visible := False;
+  if not frmProgress.Visible then
+  begin
+    frmProgress.Caption := 'Progress';
+  end;
+  frmProgress.Show;
   Model := frmGoPhast.PhastModel;
   Model.UpdateModflowFullStressPeriods;
+  TimeIndex := Model.ModflowFullStressPeriods.
+    FindStressPeriod(Model.ThreeDDisplayTime);
+  if TimeIndex < 0 then
+  begin
+    TimeIndex := 0;
+  end;
+
+  Model.ModflowFullStressPeriods.BeginUpdate;
+  try
+    for Index := Model.ModflowFullStressPeriods.Count - 1 downto 0 do
+    begin
+      if Index <> TimeIndex then
+      begin
+        Model.ModflowFullStressPeriods.Delete(Index);
+      end;
+    end;
+  finally
+    Model.ModflowFullStressPeriods.EndUpdate;
+  end;
 
   Assert(Assigned(OnInitialize));
   OnInitialize(self);
   SetUpToDate(True);
+  frmProgress.Hide;
 end;
 
 procedure TModflowBoundaryDisplayTimeList.LabelAsSum;

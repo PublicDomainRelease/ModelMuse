@@ -20,15 +20,11 @@ inherited frmGridSpacing: TfrmGridSpacing
     Top = 129
     Width = 447
     Height = 287
-    ActivePage = tabRows
+    ActivePage = tabLayers
     Align = alClient
     TabOrder = 0
     object tabColumns: TTabSheet
       Caption = 'Columns (X'#39')'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlColumns: TPanel
         Left = 0
         Top = 173
@@ -61,7 +57,7 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 1
           Text = '100'
           DataType = dtReal
@@ -157,10 +153,6 @@ inherited frmGridSpacing: TfrmGridSpacing
     object tabRows: TTabSheet
       Caption = 'Rows (Y'#39')'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlRows: TPanel
         Left = 0
         Top = 173
@@ -193,8 +185,8 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 0
-          TabOrder = 0
+          ItemHeight = 18
+          TabOrder = 1
           Text = '100'
           DataType = dtReal
           Max = 1.000000000000000000
@@ -207,7 +199,7 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 26
           ButtonKind = bkClassic
           MaxValue = 2147483647.000000000000000000
-          TabOrder = 1
+          TabOrder = 0
           OnChange = seRowsChange
         end
       end
@@ -289,10 +281,6 @@ inherited frmGridSpacing: TfrmGridSpacing
     object tabLayers: TTabSheet
       Caption = 'Layers (Z)'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlLayers: TPanel
         Left = 0
         Top = 173
@@ -325,8 +313,8 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 0
-          TabOrder = 0
+          ItemHeight = 18
+          TabOrder = 1
           Text = '10'
           DataType = dtReal
           Max = 1.000000000000000000
@@ -339,7 +327,7 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 26
           ButtonKind = bkClassic
           MaxValue = 2147483647.000000000000000000
-          TabOrder = 1
+          TabOrder = 0
           OnChange = seLayersChange
         end
       end
@@ -431,16 +419,16 @@ inherited frmGridSpacing: TfrmGridSpacing
       447
       41)
     object btnCancel: TBitBtn
-      Left = 357
+      Left = 349
       Top = 4
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 0
+      TabOrder = 2
       Kind = bkCancel
     end
     object btnOK: TBitBtn
-      Left = 260
+      Left = 252
       Top = 4
       Width = 91
       Height = 33
@@ -450,12 +438,12 @@ inherited frmGridSpacing: TfrmGridSpacing
       Kind = bkOK
     end
     object btnHelp: TBitBtn
-      Left = 164
+      Left = 156
       Top = 4
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      TabOrder = 0
       OnClick = btnHelpClick
       Kind = bkHelp
     end

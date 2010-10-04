@@ -48,6 +48,7 @@ type
     function Used: boolean; override;
     property HfbObserver: TObserver read FHfbObserver;
     procedure HandleChangedParameterValue;
+    procedure InvalidateDisplay;
   published
     property ParameterName: string read FParameterName write SetParameterName;
     property HydraulicConductivityFormula: string read FHydraulicConductivity
@@ -278,6 +279,15 @@ begin
     Observer.UpToDate := False;
     Model.HfbDisplayer.Invalidate;
     Observer.UpToDate := True;
+  end;
+end;
+
+procedure THfbBoundary.InvalidateDisplay;
+begin
+  if Used and (PhastModel <> nil) then
+  begin
+    HandleChangedValue(HydraulicConductivityObserver);
+    HandleChangedValue(ThicknessObserver);
   end;
 end;
 

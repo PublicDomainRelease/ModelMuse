@@ -1200,7 +1200,7 @@ type
     // @name assigns values to all the @link(TDataArray)s in @classname.
     procedure Initialize; virtual; abstract;
     // @name sets UpToDate to false;
-    procedure Invalidate; 
+    procedure Invalidate; virtual;
 
     // @name is the Name of the @classname.
     property Name: string read FName write SetName;
@@ -1778,6 +1778,7 @@ var
   DataSetIndexes: array of integer;
   InterpAnnString: string;
   AValue: double;
+  HideProgressForm: Boolean;
   procedure GetLimits;
   begin
     case EvaluatedAt of
@@ -1834,10 +1835,17 @@ begin
     Exit;
   end;
 
+  HideProgressForm := False;
   if (Name <> '') and (frmProgress <> nil) then
   begin
     FUpdatingProgress := True;
     try
+      HideProgressForm := not frmProgress.Visible;
+      if HideProgressForm then
+      begin
+        frmProgress.Caption := '';
+        frmProgress.Show;
+      end;
       frmProgress.AddMessage('      Evaluating data set: "' + Name + '."', False);
     finally
       FUpdatingProgress := False;
@@ -2566,6 +2574,10 @@ begin
       FreeAndNil(Stack);
       frmGoPhast.PhastModel.DontCache(self);
       frmGoPhast.PhastModel.CacheDataArrays;
+    end;
+    if HideProgressForm then
+    begin
+      frmProgress.Hide;
     end;
   end;
   PostInitialize;
@@ -5748,7 +5760,10 @@ begin
   FTimes := TRealList.Create;
   FTimes.Sorted := True;
   FData := TObjectList.Create;
-  Invalidate;
+  if FModel <> nil then
+  begin
+    Invalidate
+  end;
 end;
 
 destructor TCustomTimeList.Destroy;

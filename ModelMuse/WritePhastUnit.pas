@@ -4,7 +4,7 @@ unit WritePhastUnit;
 
 interface
 
-uses SysUtils, Classes, GoPhastTypes;
+uses Classes, GoPhastTypes;
 
 {@name writes the transport data input file for PHAST.
  @name initializes data sets as needed and synthesizes all the data from
@@ -14,12 +14,12 @@ procedure WritePhastInput(const FileName: string; RunModel: boolean);
 
 implementation
 
-uses Windows, frmGoPhastUnit, PhastModelUnit, PrintFrequency, TimeUnit,
-  InitialChemistryZone, ZoneUnit, MediaZone, ActiveZone, InitialHeadZone,
-  PrintChemistryXYZ_Zone, PrintChemistryZone, SpecifiedHeadZone,
-  SpecifiedFluxFrontZone, SpecifiedFluxSideZone, SpecifiedFluxTopZone,
-  CustomBoundaryZone, CustomLeakyZone, FrontLeakyZone, SideLeakyZone,
-  TopLeakyZone, WriteRiverUnit, ScreenObjectUnit,
+uses Windows, Dialogs, SysUtils, frmGoPhastUnit, PhastModelUnit, PrintFrequency,
+  TimeUnit, InitialChemistryZone, ZoneUnit, MediaZone, ActiveZone,
+  InitialHeadZone, PrintChemistryXYZ_Zone, PrintChemistryZone,
+  SpecifiedHeadZone, SpecifiedFluxFrontZone, SpecifiedFluxSideZone,
+  SpecifiedFluxTopZone, CustomBoundaryZone, CustomLeakyZone, FrontLeakyZone,
+  SideLeakyZone, TopLeakyZone, WriteRiverUnit, ScreenObjectUnit,
   WriteWellUnit, DataSetUnit, PhastDataSets, frmPhastLocationUnit, TempFiles;
 
 procedure WriteTime(const Stream: TStringStream; const Time: double);
@@ -1937,92 +1937,100 @@ begin
   PriorUpToDate := frmGoPhast.PhastModel.UpToDate;
   OldDecSep := DecimalSeparator;
   try
-    frmGoPhast.PhastModel.ClearModelInputFiles;
-    frmGoPhast.PhastModel.AddModelInputFile(FileName);
-    DecimalSeparator := '.';
-    Input := TStringStream.Create('');
-    SpecifiedHeadZones := nil;
-    TopFluxZones := nil;
-    FrontFluxZones := nil;
-    SideFluxZones := nil;
-    TopLeakyZones := nil;
-    FrontLeakyZones := nil;
-    SideLeakyZones := nil;
-    PrintChemistryZones := nil;
-    PrintChemistryXYZ_Zones := nil;
-    RiverWriter := nil;
-    WellWriter := nil;
     try
-      WriteTitle(Input);
-      WritePrintInitial(Input);
-      WriteSoluteTransport(Input);
-      WriteUnits(Input, TimeUnits);
-      WritePhastGrid(Input);
-      WriteMedia(Input);
-      WriteFreeSurface(Input);
-      WriteSteadyFlow(Input);
-      WriteSolutionMethod(Input);
-      WriteHeadIC(Input);
-      if frmGoPhast.PhastModel.SoluteTransport then
-      begin
-        WriteChemistryIC(Input);
-      end;
-      frmGoPhast.PhastModel.InitializeTimes;
-
-      SpecifiedHeadZones := TSpecifiedHeadZoneGroup.Create;
-      TopFluxZones := TSpecifiedFluxTopGroup.Create;
-      FrontFluxZones := TSpecifiedFluxFrontGroup.Create;
-      SideFluxZones := TSpecifiedFluxSideGroup.Create;
-      TopLeakyZones := TTopLeakyZoneGroup.Create;
-      FrontLeakyZones := TFrontLeakyZoneGroup.Create;
-      SideLeakyZones := TSideLeakyZoneGroup.Create;
-      RiverWriter := TRiverWriter.Create;
-      WellWriter := TWellWriter.Create;
-      if frmGoPhast.PhastModel.SoluteTransport then
-      begin
-        PrintChemistryZones := TPrintChemistryZoneGroup.Create;
-        PrintChemistryXYZ_Zones := TPrintChemistryXYZ_ZoneGroup.Create;
-      end;
+      frmGoPhast.PhastModel.ClearModelInputFiles;
+      frmGoPhast.PhastModel.AddModelInputFile(FileName);
+      DecimalSeparator := '.';
+      Input := TStringStream.Create('');
+      SpecifiedHeadZones := nil;
+      TopFluxZones := nil;
+      FrontFluxZones := nil;
+      SideFluxZones := nil;
+      TopLeakyZones := nil;
+      FrontLeakyZones := nil;
+      SideLeakyZones := nil;
+      PrintChemistryZones := nil;
+      PrintChemistryXYZ_Zones := nil;
+      RiverWriter := nil;
+      WellWriter := nil;
       try
-        WritePrintFrequency(Input);
+        WriteTitle(Input);
+        WritePrintInitial(Input);
+        WriteSoluteTransport(Input);
+        WriteUnits(Input, TimeUnits);
+        WritePhastGrid(Input);
+        WriteMedia(Input);
+        WriteFreeSurface(Input);
+        WriteSteadyFlow(Input);
+        WriteSolutionMethod(Input);
+        WriteHeadIC(Input);
         if frmGoPhast.PhastModel.SoluteTransport then
         begin
-          WritePrintLocations(Input, PrintChemistryZones,
-            PrintChemistryXYZ_Zones);
+          WriteChemistryIC(Input);
         end;
-        WriteLeakyBoundary(Input, TopLeakyZones, FrontLeakyZones,
-          SideLeakyZones);
-        WriteSpecifiedFluxes(Input, TopFluxZones, FrontFluxZones,
-          SideFluxZones);
-        WriteSpecifiedValues(Input, SpecifiedHeadZones);
-        WriteRiver(Input, RiverWriter);
-        WriteWells(Input, WellWriter);
+        frmGoPhast.PhastModel.InitializeTimes;
 
-        WriteTimeControl(Input, TimeUnits);
-        WriteEnd(Input);
+        SpecifiedHeadZones := TSpecifiedHeadZoneGroup.Create;
+        TopFluxZones := TSpecifiedFluxTopGroup.Create;
+        FrontFluxZones := TSpecifiedFluxFrontGroup.Create;
+        SideFluxZones := TSpecifiedFluxSideGroup.Create;
+        TopLeakyZones := TTopLeakyZoneGroup.Create;
+        FrontLeakyZones := TFrontLeakyZoneGroup.Create;
+        SideLeakyZones := TSideLeakyZoneGroup.Create;
+        RiverWriter := TRiverWriter.Create;
+        WellWriter := TWellWriter.Create;
+        if frmGoPhast.PhastModel.SoluteTransport then
+        begin
+          PrintChemistryZones := TPrintChemistryZoneGroup.Create;
+          PrintChemistryXYZ_Zones := TPrintChemistryXYZ_ZoneGroup.Create;
+        end;
+        try
+          WritePrintFrequency(Input);
+          if frmGoPhast.PhastModel.SoluteTransport then
+          begin
+            WritePrintLocations(Input, PrintChemistryZones,
+              PrintChemistryXYZ_Zones);
+          end;
+          WriteLeakyBoundary(Input, TopLeakyZones, FrontLeakyZones,
+            SideLeakyZones);
+          WriteSpecifiedFluxes(Input, TopFluxZones, FrontFluxZones,
+            SideFluxZones);
+          WriteSpecifiedValues(Input, SpecifiedHeadZones);
+          WriteRiver(Input, RiverWriter);
+          WriteWells(Input, WellWriter);
+
+          WriteTimeControl(Input, TimeUnits);
+          WriteEnd(Input);
+        finally
+          PrintChemistryZones.Free;
+          PrintChemistryXYZ_Zones.Free;
+        end;
+        InputFile := TFileStream.Create(FileName, fmCreate or fmShareDenyWrite,
+          ReadWritePermissions);
+        try
+          Input.Position := 0;
+          InputFile.CopyFrom(Input, Input.Size)
+        finally
+          InputFile.Free;
+        end;
       finally
-        PrintChemistryZones.Free;
-        PrintChemistryXYZ_Zones.Free;
+        Input.Free;
+        SpecifiedHeadZones.Free;
+        TopFluxZones.Free;
+        FrontFluxZones.Free;
+        SideFluxZones.Free;
+        TopLeakyZones.Free;
+        FrontLeakyZones.Free;
+        SideLeakyZones.Free;
+        RiverWriter.Free;
+        WellWriter.Free;
       end;
-      InputFile := TFileStream.Create(FileName, fmCreate or fmShareDenyWrite,
-        ReadWritePermissions);
-      try
-        Input.Position := 0;
-        InputFile.CopyFrom(Input, Input.Size)
-      finally
-        InputFile.Free;
+    except on E: EFCreateError do
+      begin
+        Beep;
+        MessageDlg(E.Message, mtError, [mbOK], 0);
+        Exit;
       end;
-    finally
-      Input.Free;
-      SpecifiedHeadZones.Free;
-      TopFluxZones.Free;
-      FrontFluxZones.Free;
-      SideFluxZones.Free;
-      TopLeakyZones.Free;
-      FrontLeakyZones.Free;
-      SideLeakyZones.Free;
-      RiverWriter.Free;
-      WellWriter.Free;
     end;
   finally
     DecimalSeparator := OldDecSep;
@@ -2051,7 +2059,15 @@ begin
     BatchFile.Add('call ' + PhastLocation + ' ' + FileRoot);
     BatchFile.AddStrings(frmGoPhast.PhastModel.BatchFileAdditionsAfterModel);
     BatchFile.Add('pause');
-    BatchFile.SaveToFile(BatchName);
+    try
+      BatchFile.SaveToFile(BatchName);
+    except on E: EFCreateError do
+      begin
+        Beep;
+        MessageDlg(E.Message, mtError, [mbOK], 0);
+        Exit;
+      end;
+    end;
   finally
     BatchFile.Free;
 //    ReclaimMemory;
@@ -2064,7 +2080,6 @@ begin
     finally
       SetCurrentDir(ADir);
     end;
-
   end;
 end;
 

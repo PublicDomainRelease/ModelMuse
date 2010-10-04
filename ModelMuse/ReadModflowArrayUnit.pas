@@ -101,7 +101,6 @@ var
            or (Description = '      COMPACTION')
            or (Description = '   CRITICAL HEAD')
            or (Description = '     HEAD IN HGU')
-           or (Description = '      SUBSIDENCE')
            or (Description = 'NDSYS COMPACTION')
            or (Description = '  Z DISPLACEMENT')
            or (Description = ' D CRITICAL HEAD')
@@ -116,7 +115,9 @@ var
            or (Description = 'CHANGE IN EFF-ST')
            or (Description = '      VOID RATIO')
            or (Description = '       THICKNESS')
-           or (Description = 'CENTER ELEVATION');
+           or (Description = 'CENTER ELEVATION')
+           or (Description = 'GEOSTATIC STRESS')
+           or (Description = 'CHANGE IN G-STRS');
   end;
 begin
   Assert(AFile.Position = 0);

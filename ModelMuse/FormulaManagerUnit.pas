@@ -78,6 +78,7 @@ type
       OnRestoreSubscription: TChangeSubscription; Subject: TObject);
     procedure Pack;
     procedure Clear;
+    function FunctionUsed(AString: string): boolean;
   end;
 
 implementation
@@ -748,6 +749,30 @@ begin
     if FormulaObject <> nil then
     begin
       FormulaObject.FixSubscriptions;
+    end;
+  end;
+end;
+
+function TFormulaManager.FunctionUsed(AString: string): boolean;
+var
+  FunctionIndex: Integer;
+  FormulaObject: TFormulaObject;
+  AFormula: string;
+begin
+  result := False;
+  AString := UpperCase(AString);
+  for FunctionIndex := 0 to FList.Count - 1 do
+  begin
+    FormulaObject := FList[FunctionIndex];
+    if FormulaObject <> nil then
+    begin
+      AFormula := FormulaObject.Formula;
+      AFormula := UpperCase(AFormula);
+      result := Pos(AString, AFormula) >= 1;
+      if result then
+      begin
+        Exit;
+      end;
     end;
   end;
 end;

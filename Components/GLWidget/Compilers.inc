@@ -80,6 +80,24 @@
   {$endif DELPHI.NET_1}
 {$else}
   {$ifdef Win32}
+    {$ifdef VER180}        
+      {$define COMPILER_7}
+      {$define DELPHI}
+      {$define DELPHI_7}
+    {$endif}
+
+    {$ifdef VER170}        
+      {$define COMPILER_7}
+      {$define DELPHI}
+      {$define DELPHI_7}
+    {$endif}
+
+    {$ifdef VER160}        
+      {$define COMPILER_7}
+      {$define DELPHI}
+      {$define DELPHI_7}
+    {$endif}
+
     {$ifdef VER150}        
       {$define COMPILER_7}
       {$define DELPHI}

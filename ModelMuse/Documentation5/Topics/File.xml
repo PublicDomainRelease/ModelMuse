@@ -8,7 +8,7 @@
     </header>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The menu items under File are listed in table 3. &#160;The commands under this menu have to do with opening, saving, importing or exporting files. &#160;Many of the choices under File|Import refer to features of data sets and objects that are described under &#160;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="Data_Sets_Dialog_Box" styleclass="Normal" translate="true">Data Sets Dialog Box</link><text styleclass="Normal" translate="true"> and </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Object_Properties_Dialog_Box" styleclass="Normal" translate="true">Object Properties Dialog Box</link><text styleclass="Normal" translate="true">.</text></para>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 3. File Menu</text></para>
-    <para styleclass="Normal" style="text-align:center;"><table rowcount="32" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal" style="text-align:center;"><table rowcount="38" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="2" style="width:626px;">
           <para styleclass="Normal"><line style="height:1px; color:#000000;" /></para>
@@ -205,10 +205,58 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="width:221px;">
-          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Grid Data to Shapefile...</text></para>
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|Grid Data to Shapefile...</text></para>
         </td>
         <td style="width:405px;">
           <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Export a Shapefile of gridded data. &#160;See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Export_Shapefile_Dialog_Box" styleclass="Table Cell" style="font-weight:bold;" translate="true">Export Grid Data to Shapefile</link><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:221px;">
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|Objects to Shapefile...</text></para>
+        </td>
+        <td style="width:405px;">
+          <para styleclass="Table Cell"><text styleclass="Normal" translate="true">Export the geometry of objects and data set formulas to a Shapefile. See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Export_Objects_to_Shapefile" styleclass="Strong" translate="true">Export Objects to Shapefile</link><text styleclass="Normal" translate="true"> dialog box.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:221px;">
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|Contours to Shapefile</text></para>
+        </td>
+        <td style="width:405px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Export the contours currently displayed on the top view of the model to a Shapefile. You must </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Contour_Data_Dialog_Box" styleclass="Table Cell" translate="true">contour data</link><text styleclass="Table Cell" translate="true"> on the top view of the model to use this command.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:221px;">
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|Pathlines to Shapefile</text></para>
+        </td>
+        <td style="width:405px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Pathlines from MODPATH are exported to a 3D Shapefile. Each pathline is exported as a separate shape.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:221px;">
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|Endpoints at Starting Locations to Shapefile</text></para>
+        </td>
+        <td style="width:405px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Endpoints from MODPATH are exported to a 3D Shapefile. Each particle will be exported as a separate shape plotted at its starting location.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:221px;">
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|Endpoints at Ending Locations to Shapefile</text></para>
+        </td>
+        <td style="width:405px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Endpoints from MODPATH are exported to a 3D Shapefile. Each particle will be exported as a separate shape plotted at its ending location.</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:221px;">
+          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Export|Shapefile|</text></para>
+        </td>
+        <td style="width:405px;">
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Times series from MODPATH are exported to a 3D Shapefile. &#160;All the particles at each time point will be part of the same shape.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

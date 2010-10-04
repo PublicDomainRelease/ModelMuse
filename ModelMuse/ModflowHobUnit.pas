@@ -192,8 +192,8 @@ type
       write SetPurpose;
   end;
 
-  // @name is used to store a series of @link(TDataArray)s for boundary
-  // conditions in MODFLOW.
+  // @name is used to store a series of @link(TDataArray)s for head
+  // observations in MODFLOW.
   TObservationTimeList = class(TCustomTimeList)
   private
     // See @link(OnInvalidate).
@@ -685,6 +685,7 @@ var
   LatestAllowedTime: double;
   EarlyTimes: string;
   LateTimes: string;
+  ActiveDataSet: TDataArray;
 begin
   if UpToDate then
     Exit;
@@ -739,6 +740,9 @@ begin
       DataArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
         Grid.ColumnCount);
 
+      ActiveDataSet := PhastModel.GetDataSetByName(rsActive);
+      ActiveDataSet.Initialize;
+
       LocalScreenObject.AssignNumericValueToDataSet(Grid, DataArray, Value);
       for LayerIndex := 0 to DataArray.LayerCount - 1 do
       begin
@@ -746,7 +750,8 @@ begin
         begin
           for ColIndex := 0 to DataArray.ColumnCount - 1 do
           begin
-            if DataArray.IsValue[LayerIndex, RowIndex,ColIndex] then
+            if DataArray.IsValue[LayerIndex, RowIndex,ColIndex]
+              and ActiveDataSet.BooleanData[LayerIndex, RowIndex,ColIndex] then
             begin
               Cell := THob_Cell.Create;
               CellList.Add(Cell);

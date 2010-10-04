@@ -343,8 +343,8 @@ constructor TChdCollection.Create(Boundary: TModflowBoundary;
   Model, ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FStartData := TModflowTimeList.Create(Model);
-  FEndData := TModflowTimeList.Create(Model);
+  FStartData := TModflowTimeList.Create(Model, ScreenObject);
+  FEndData := TModflowTimeList.Create(Model, ScreenObject);
   FStartData.NonParamDescription := 'Starting head';
   FStartData.ParamDescription := ' starting head multiplier';
   FEndData.NonParamDescription := 'Ending head';

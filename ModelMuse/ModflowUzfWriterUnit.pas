@@ -45,7 +45,7 @@ type
 implementation
 
 uses ModflowUnitNumbers, DataSetUnit, ModflowUzfUnit, frmErrorsAndWarningsUnit, 
-  frmProgressUnit, ModflowCellUnit;
+  frmProgressUnit, ModflowCellUnit, Forms;
 
 { TModflowUzfWriter }
 
@@ -479,6 +479,7 @@ begin
   frmProgress.AddMessage('Writing UZF Package input.');
 //  frmProgress.AddMessage('  Evaluating data.');
   Evaluate;
+  Application.ProcessMessages;
   if not frmProgress.ShouldContinue then
   begin
     Exit;
@@ -491,6 +492,7 @@ begin
   try
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -498,6 +500,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -505,6 +508,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -512,6 +516,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 3.');
     WriteDataSet3;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -519,6 +524,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -526,6 +532,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 5.');
     WriteDataSet5;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -533,6 +540,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 6.');
     WriteDataSet6;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -540,6 +548,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 7.');
     WriteDataSet7;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -547,6 +556,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 8.');
     WriteDataSet8(GageStart);
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -589,10 +599,7 @@ begin
   end;
   for TimeIndex := 0 to Values.Count - 1 do
   begin
-    if not frmProgress.ShouldContinue then
-    begin
-      Exit;
-    end;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -605,6 +612,7 @@ begin
     WriteInteger(TimeIndex + 1);
     WriteString(': NUZF1');
     NewLine;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -613,6 +621,7 @@ begin
     // Data Set 10
     CellList := Values[TimeIndex];
     WriteInfiltrationRates(CellList);
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -626,6 +635,7 @@ begin
       WriteInteger(TimeIndex + 1);
       WriteString(': NUZF2');
       NewLine;
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -634,11 +644,11 @@ begin
       // Data Set 12
       CellList := FEtDemand[TimeIndex];
       WritePotentialEtRates(CellList);
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
       end;
-
 
       // data set 13
       WriteInteger(0);
@@ -646,20 +656,20 @@ begin
       WriteInteger(TimeIndex + 1);
       WriteString(': NUZF3');
       NewLine;
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
       end;
-
 
       // Data Set 14
       CellList := FEExtinctionDepths[TimeIndex];
       WriteExtinctionDepth(CellList);
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
       end;
-
 
       // data set 15
       WriteInteger(0);
@@ -667,15 +677,16 @@ begin
       WriteInteger(TimeIndex + 1);
       WriteString(': NUZF4');
       NewLine;
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
       end;
 
-
       // Data Set 16
       CellList := FExtinctionWaterContent[TimeIndex];
       WriteExtinctionWaterContent(CellList);
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;

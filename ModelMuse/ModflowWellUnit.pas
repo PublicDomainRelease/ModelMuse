@@ -425,7 +425,7 @@ constructor TWellCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FPumpingRateData := TModflowTimeList.Create(Model);
+  FPumpingRateData := TModflowTimeList.Create(Model, ScreenObject);
   FPumpingRateData.NonParamDescription := 'Pumping rate';
   FPumpingRateData.ParamDescription := ' pumping rate multiplier';
   if Model <> nil then

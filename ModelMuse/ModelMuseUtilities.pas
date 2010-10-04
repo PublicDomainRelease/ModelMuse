@@ -62,6 +62,8 @@ function IntToStrFormatted(Value: integer): string;
 
 procedure DSiTrimWorkingSet;
 
+function QuoteFileName(AName: string): string;
+
 implementation
 
 uses ColorSchemes;
@@ -225,6 +227,20 @@ begin
   try
     SetProcessWorkingSetSize(hProcess, $FFFFFFFF, $FFFFFFFF);
   finally CloseHandle(hProcess); end;
+end;
+
+function QuoteFileName(AName: string): string;
+begin
+  if (Length(AName) > 0)
+    and (AName[1] <> '"')
+    and (Pos(' ', AName) > 0) then
+  begin
+    result := '"' + AName + '"';
+  end
+  else
+  begin
+    result := AName;
+  end;
 end;
 
 end.

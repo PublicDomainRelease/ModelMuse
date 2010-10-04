@@ -39,6 +39,7 @@ type
     seCycles: TJvSpinEdit;
     lblCycles: TLabel;
     rdgLimits: TRbwDataGrid4;
+    lblMaxTime: TLabel;
     procedure FormCreate(Sender: TObject); override;
     procedure pbColorSchemePaint(Sender: TObject);
     procedure rgColorByClick(Sender: TObject);
@@ -76,6 +77,7 @@ type
     FNewPathLine: TPathLineReader;
     FImportedNewFile: Boolean;
     procedure ForceRedraw;
+    procedure EnableMenuItems;
   public
     Constructor Create(var NewPathLine: TPathLineReader;
       ImportedNewFile: boolean);
@@ -175,6 +177,7 @@ var
   ColorParameters: TColorParameters;
   ALimitRow: TPathlineLimits;
   ARow: Integer;
+  MaxTime: Double;
 begin
   if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
   begin
@@ -186,6 +189,15 @@ begin
   end;
   PathLine := frmGoPhast.PhastModel.PathLine;
   fedModpathFile.FileName := PathLine.FileName;
+  if PathLine.Lines.TestGetMaxTime(MaxTime) then
+  begin
+    lblMaxTime.Caption := 'Maximum time = '
+      + FloatToStrF(MaxTime, ffGeneral, 7, 0);
+  end
+  else
+  begin
+    lblMaxTime.Caption := 'Maximum time = ?';
+  end;
 
   cbShowPathlines.Checked := PathLine.Visible;
   Limits := PathLine.DisplayLimits;
@@ -506,17 +518,23 @@ end;
 procedure TUndoImportPathline.DoCommand;
 begin
   frmGoPhast.PhastModel.PathLine := FNewPathLine;
-  frmGoPhast.miConfigurePathlines.Enabled :=
-    frmGoPhast.PhastModel.PathLine.Lines.Count > 0;
+  EnableMenuItems;
   ForceRedraw;
 end;
 
 procedure TUndoImportPathline.Undo;
 begin
   frmGoPhast.PhastModel.PathLine := FExistingPathLine;
+  EnableMenuItems;
+  ForceRedraw;
+end;
+
+procedure TUndoImportPathline.EnableMenuItems;
+begin
   frmGoPhast.miConfigurePathlines.Enabled :=
     frmGoPhast.PhastModel.PathLine.Lines.Count > 0;
-  ForceRedraw;
+  frmGoPhast.miPathlinestoShapefile.Enabled :=
+    frmGoPhast.miConfigurePathlines.Enabled;
 end;
 
 procedure TUndoImportPathline.ForceRedraw;

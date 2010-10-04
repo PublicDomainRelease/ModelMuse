@@ -51,9 +51,10 @@ type
     procedure OpenResultFile(out Precision: TModflowPrecision; out HufFormat: boolean);
     procedure ReadArray(var AnArray: TModflowDoubleArray;
       var EndReached: Boolean; var KPER, KSTP, ILAY: Integer;
+      var TOTIM: TModflowDouble;
       var Description: string; Precision: TModflowPrecision);
     procedure CreateOrRetrieveLayerDataSet(const Description: string;
-      KSTP, KPER, ILAY: integer;
+      KSTP, KPER, ILAY: integer; TOTIM: TModflowDouble;
       out LayerData: TDataArray; out OldComment: string; NewDataSets: TList;
       ScreenObjectsToDelete: TScreenObjectList; DataArrayForm: TDataArrayForm = dafLayer);
     procedure CreateScreenObject(LayerIndex: integer;
@@ -62,12 +63,12 @@ type
       AnArray: TModflowDoubleArray; ValuesToIgnore: TOneDRealArray;
       out MinMaxAssigned: boolean);
     procedure CreateOrRetrieve3DDataSet(Description: string;
-      KPER, KSTP: integer;
+      KPER, KSTP: integer; TOTIM: TModflowDouble;
       LayerNumbers: TIntegerList; LayerDataSets: TList;
       out New3DArray: TDataArray; out OldComment: string; FluxData: boolean; NewDataSets: TList);
     procedure CloseFiles;
     procedure Read3DArray(var NLAY: Integer; var EndReached: Boolean;
-      var KPER, KSTP: Integer; var Description: string;
+      var KPER, KSTP: Integer; var TOTIM: TModflowDouble; var Description: string;
       var A3DArray: T3DTModflowArray; Precision: TModflowPrecision; HufFormat: boolean);
     procedure Assign3DValues(ScreenObject: TScreenObject; LayerData: TDataArray;
       AnArray: T3DTModflowArray; LayerIndex: integer; CheckAllLayers: boolean;
@@ -78,8 +79,13 @@ type
       New3DArray: TDataArray; ValuesToIgnore: TOneDRealArray);
     procedure AssignObjectName(var ScreenObject: TScreenObject; LayerData: TDataArray);
     procedure UpdateCombo;
-    procedure GetShouldIgnore(ValuesToIgnore: TOneDRealArray; Temp: TModflowFloat; var ShouldIgnore: Boolean);
+    procedure GetShouldIgnore(ValuesToIgnore: TOneDRealArray;
+      Temp: TModflowFloat; var ShouldIgnore: Boolean);
     function SubsidenceDescription(DESC: string; ILAY: integer): string;
+    // In the label for data sets, TOTIM will be measured from the end of
+    // the first stress period if there are more than one stress period and
+    // the first stress period is a steady-state stress period.
+    procedure AdjustTotalTime(var TOTIM: TModflowDouble);
     { Private declarations }
 
   public
@@ -142,12 +148,13 @@ type
 var
   frmSelectResultToImport: TfrmSelectResultToImport;
 
+
 implementation
 
-uses Math, frmGoPhastUnit, RbwParser, 
+uses Math, frmGoPhastUnit, RbwParser,
   GIS_Functions, ValueArrayStorageUnit, ModelMuseUtilities, PhastModelUnit,
   frmUpdateDataSetsUnit, UndoItemsScreenObjects, frmGridColorUnit,
-  InterpolationUnit, frmContourDataUnit, HufDefinition;
+  InterpolationUnit, frmContourDataUnit, HufDefinition, ModflowTimeUnit;
 
 const
   StrModelResults = 'Model Results';
@@ -171,6 +178,7 @@ end;
 
 procedure TfrmSelectResultToImport.CreateOrRetrieveLayerDataSet(
   const Description: string; KSTP, KPER, ILAY: integer;
+  TOTIM: TModflowDouble;
   out LayerData: TDataArray; out OldComment: string; NewDataSets: TList;
   ScreenObjectsToDelete: TScreenObjectList;
   DataArrayForm: TDataArrayForm = dafLayer);
@@ -246,10 +254,12 @@ begin
       end;
     end;
   end;
+  AdjustTotalTime(TOTIM);
   LayerData.Comment := 'read from file: "' + FFileName
     + '" on ' + DateTimeToStr(Now)
-    + #13#10 + 'Stress Period: ' + IntToStr(KPER)
-    + #13#10 + 'Time Step: ' + IntToStr(KSTP)
+    + #13#10 + StrStressPeriodLabel + IntToStr(KPER)
+    + #13#10 + StrTimeStepLabel + IntToStr(KSTP)
+    + #13#10 + StrElapsedTimeLabel + FloatToStr(TOTIM)
     + #13#10 + 'Layer: ' + IntToStr(ILAY);
 end;
 
@@ -524,7 +534,7 @@ begin
 end;
 
 procedure TfrmSelectResultToImport.CreateOrRetrieve3DDataSet(Description: string;
-  KPER, KSTP: integer; LayerNumbers: TIntegerList;
+  KPER, KSTP: integer; TOTIM: TModflowDouble; LayerNumbers: TIntegerList;
   LayerDataSets: TList; out New3DArray: TDataArray; out OldComment: string; FluxData: boolean;
   NewDataSets: TList);
 var
@@ -572,10 +582,12 @@ begin
     New3DArray := frmGoPhast.PhastModel.GetDataSetByName(NewName);
     OldComment := New3DArray.Comment;
   end;
-  New3DArray.Comment := 'read from file: "' + FFileName 
+  AdjustTotalTime(TOTIM);
+  New3DArray.Comment := 'read from file: "' + FFileName
     + '" on ' + DateTimeToStr(Now)
-    + #13#10 + 'Stress Period: ' + IntToStr(KPER)
-    + #13#10 + 'Time Step: ' + IntToStr(KSTP);
+    + #13#10 + StrStressPeriodLabel + IntToStr(KPER)
+    + #13#10 + StrTimeStepLabel + IntToStr(KSTP)
+    + #13#10 + StrElapsedTimeLabel + FloatToStr(TOTIM);
   if Grid.LayerCount = 1 then
   begin
     LayerPosition := LayerNumbers.IndexOf(1);
@@ -720,6 +732,7 @@ var
   LayerDescription: string;
   ValuesToIgnore: TOneDRealArray;
   MinMaxAssigned: Boolean;
+  TOTIM: TModflowDouble;
 begin
   inherited;
   FGrid := frmGoPhast.PhastModel.ModflowGrid;
@@ -765,7 +778,7 @@ begin
             if Index = 0 then
             begin
               ReadArray(AnArray, EndReached,
-                KPER, KSTP, ILAY, Description, Precision);
+                KPER, KSTP, ILAY, TOTIM, Description, Precision);
             end;
             While (KPER = FPeriods[Index])
               and (KSTP = FSteps[Index])
@@ -788,7 +801,7 @@ begin
                   end;
                   if clData.Checked[Index] then
                   begin
-                    CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
+                    CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
                       LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
                     CreateScreenObject(ILAY-1, ScreenObject);
                     AssignValues(ILAY-1, ScreenObject, LayerData, LayerArray,
@@ -806,7 +819,7 @@ begin
                     if ILAY = FGrid.LayerCount then
                     begin
                       Inc(Count);
-                      CreateOrRetrieve3DDataSet(Description, KPER, KSTP,
+                      CreateOrRetrieve3DDataSet(Description, KPER, KSTP, TOTIM,
                         LayerNumbers, LayerDataSets, New3DArray, OldComment,
                         False, NewDataSets);
                       OldComments.AddObject(OldComment, New3DArray);
@@ -823,12 +836,21 @@ begin
               end
               else
               begin
+                Assert(ILAY > 0);
+                if ILAY > FMaxLayer then
+                begin
+                  Beep;
+                  MessageDlg('The file you are trying to read appears to have '
+                    + 'more simulated layers than does your model. '
+                    + 'Aborting data import.', mtError, [mbOK], 0);
+                  Exit;
+                end;
                 // not a cross section
                 ILAY := frmGoPhast.PhastModel.LayerStructure.
                   ModflowLayerToDataSetLayer(ILAY)+1;
                 if clData.Checked[Index] then
                 begin
-                  CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
+                  CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
                     LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
                   CreateScreenObject(ILAY-1, ScreenObject);
                   AssignValues(ILAY-1, ScreenObject, LayerData, AnArray,
@@ -846,7 +868,7 @@ begin
                   if ILAY = FGrid.LayerCount then
                   begin
                     Inc(Count);
-                    CreateOrRetrieve3DDataSet(Description, KPER, KSTP,
+                    CreateOrRetrieve3DDataSet(Description, KPER, KSTP, TOTIM,
                       LayerNumbers, LayerDataSets, New3DArray, OldComment,
                       False, NewDataSets);
                     OldComments.AddObject(OldComment, New3DArray);
@@ -863,12 +885,12 @@ begin
 
               // read next array
               ReadArray(AnArray, EndReached,
-                KPER, KSTP, ILAY, Description, Precision)
+                KPER, KSTP, ILAY, TOTIM, Description, Precision)
             end;
           end;
         mrFlux:
           begin
-            Read3DArray(NLAY, EndReached, KPER, KSTP, Description, A3DArray,
+            Read3DArray(NLAY, EndReached, KPER, KSTP, TOTIM, Description, A3DArray,
               Precision, HufFormat);
             if clData.Checked[Index] then
             begin
@@ -876,7 +898,7 @@ begin
               begin
                 ILAY := frmGoPhast.PhastModel.LayerStructure.
                   ModflowLayerToDataSetLayer(LayerIndex+1)+1;
-                CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
+                CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
                   LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
                 CreateScreenObject(ILAY-1, ScreenObject);
                 Assign3DValues(ScreenObject, LayerData, A3DArray, LayerIndex,
@@ -891,7 +913,7 @@ begin
                   TUndoCreateScreenObject.Create(ScreenObject))
               end;
               Inc(Count);
-              CreateOrRetrieve3DDataSet(Description, KPER, KSTP, LayerNumbers,
+              CreateOrRetrieve3DDataSet(Description, KPER, KSTP, TOTIM, LayerNumbers,
                 LayerDataSets, New3DArray, OldComment, True, NewDataSets);
               OldComments.AddObject(OldComment, New3DArray);
               DataSetNames.AddObject(New3DArray.Name, New3DArray);
@@ -904,7 +926,7 @@ begin
         mrHufAscii, mrHufBinary:
           begin
             ReadArray(AnArray, EndReached,
-              KPER, KSTP, ILAY, Description, Precision);
+              KPER, KSTP, ILAY, TOTIM, Description, Precision);
             Assert((KPER = FPeriods[Index])
               and (KSTP = FSteps[Index])
               and (Description = FDescriptions[Index]));
@@ -914,7 +936,7 @@ begin
             begin
               HGU := frmGoPhast.PhastModel.HydrogeologicUnits[ILAY-1];
               Description := Description + ' ' + HGU.HufName;
-              CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
+              CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
                 LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
               CreateScreenObject(-1, ScreenObject);
               AssignValues(-1, ScreenObject, LayerData, AnArray,
@@ -931,7 +953,7 @@ begin
           begin
             if (Index = 0) or ((Index mod NLAY) = 0) then
             begin
-              Read3DArray(NLAY, EndReached, KPER, KSTP, Description, A3DArray,
+              Read3DArray(NLAY, EndReached, KPER, KSTP, TOTIM, Description, A3DArray,
                 Precision, HufFormat);
             end;
 
@@ -941,7 +963,7 @@ begin
               ILAY := LayerIndex+1;
               HGU := frmGoPhast.PhastModel.HydrogeologicUnits[ILAY-1];
               LayerDescription := Description + ' ' + HGU.HufName;
-              CreateOrRetrieveLayerDataSet(LayerDescription, KSTP, KPER, ILAY,
+              CreateOrRetrieveLayerDataSet(LayerDescription, KSTP, KPER, ILAY, TOTIM,
                 LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
               CreateScreenObject(-1, ScreenObject);
               Assign3DValues(ScreenObject, LayerData, A3DArray, LayerIndex,
@@ -957,12 +979,12 @@ begin
         mfSubBinary:
           begin
             ReadArray(AnArray, EndReached,
-              KPER, KSTP, ILAY, Description, Precision);
+              KPER, KSTP, ILAY, TOTIM, Description, Precision);
             Description := SubsidenceDescription(Description, ILAY);
             if clData.Checked[Index] then
             begin
               Inc(Count);
-              CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
+              CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
                 LayerData, OldComment, NewDataSets, ScreenObjectsToDelete,
                 dafNone);
               comboColorGrid.Items.Objects[Count] := LayerData;
@@ -1063,7 +1085,8 @@ begin
   else if SameText(result, 'NDSYS COMPACTION')
     or SameText(result, 'ND CRITICAL HEAD')
     or SameText(result, 'DSYS COMPACTION')
-    or SameText(result, 'D CRITICAL HEAD') then
+    or SameText(result, 'D CRITICAL HEAD')
+    or SameText(result, 'SYSTM COMPACTION') then
   begin
     result := result + ' System ' + IntToStr(ILAY);
   end
@@ -1473,6 +1496,20 @@ begin
   end;
 end;
 
+procedure TfrmSelectResultToImport.AdjustTotalTime(var TOTIM: TModflowDouble);
+var
+  FirstStressPeriod: TModflowStressPeriod;
+begin
+  if frmGoPhast.PhastModel.ModflowStressPeriods.Count > 1 then
+  begin
+    FirstStressPeriod := frmGoPhast.PhastModel.ModflowStressPeriods[0];
+    if FirstStressPeriod.StressPeriodType = sptSteadyState then
+    begin
+      TOTIM := TOTIM - FirstStressPeriod.PeriodLength;
+    end;
+  end;
+end;
+
 procedure TfrmSelectResultToImport.GetShouldIgnore(ValuesToIgnore: TOneDRealArray; Temp: TModflowFloat; var ShouldIgnore: Boolean);
 var
   Delta: Double;
@@ -1560,11 +1597,10 @@ begin
 end;
 
 procedure TfrmSelectResultToImport.Read3DArray(var NLAY: Integer;
-   var EndReached: Boolean; var KPER, KSTP: Integer; var Description: string;
+   var EndReached: Boolean; var KPER, KSTP: Integer; var TOTIM: TModflowDouble; var Description: string;
    var A3DArray: T3DTModflowArray; Precision: TModflowPrecision; HufFormat: boolean);
 var
   PERTIM: TModflowDouble;
-  TOTIM: TModflowDouble;
   DESC: TModflowDesc;
   NCOL: Integer;
   NROW: Integer;
@@ -1599,15 +1635,16 @@ begin
 end;
 
 procedure TfrmSelectResultToImport.ReadArray(var AnArray: TModflowDoubleArray;
-  var EndReached: Boolean; var KPER: Integer; var KSTP: Integer;
-  var ILAY: Integer; var Description: string; Precision: TModflowPrecision);
+  var EndReached: Boolean; var KPER, KSTP, ILAY: Integer;
+  var TOTIM: TModflowDouble;
+  var Description: string; Precision: TModflowPrecision);
 var
   NROW: Integer;
   DESC2: TModflowDesc2;
   DESC: TModflowDesc;
   PERTIM: TModflowDouble;
   NCOL: Integer;
-  TOTIM: TModflowDouble;
+
 begin
   case FResultFormat of
     mrBinary, mrHufBinary, mfSubBinary:

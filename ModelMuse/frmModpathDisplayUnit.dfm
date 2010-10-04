@@ -98,6 +98,13 @@ inherited frmModpathDisplay: TfrmModpathDisplay
         Anchors = [akTop, akRight]
         Caption = 'Cycles'
       end
+      object lblMaxTime: TLabel
+        Left = 192
+        Top = 8
+        Width = 79
+        Height = 18
+        Caption = 'lblMaxTime'
+      end
       object fedModpathFile: TJvFilenameEdit
         Left = 8
         Top = 29
@@ -196,6 +203,10 @@ inherited frmModpathDisplay: TfrmModpathDisplay
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         459
         294)

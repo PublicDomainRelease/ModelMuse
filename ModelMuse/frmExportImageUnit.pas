@@ -9,7 +9,8 @@ uses
   TntExDropDownVirtualStringTree, JvExStdCtrls, JvCombobox, VirtualTrees,
   DataSetUnit, RbwDataGrid4, RbwDataGrid, Contnrs, DrawTextUnit,
   InPlaceEditUnit, Types, LegendUnit, GR32, RbwRuler, ExtDlgs, ComCtrls,
-  DisplaySettingsUnit, TntButtons;
+  DisplaySettingsUnit, TntButtons, JvExExtCtrls, JvNetscapeSplitter, Menus,
+  JvToolEdit;
 
 type
   TfrmExportImage = class(TfrmCustomGoPhast)
@@ -49,6 +50,20 @@ type
     btnManageSettings: TButton;
     lblSelectedView: TLabel;
     btnSaveImage: TTntBitBtn;
+    opAnimation: TrmOutlookPage;
+    vstDataSets: TVirtualStringTree;
+    rdgDataSets: TRbwDataGrid4;
+    pmChangeStates: TPopupMenu;
+    miCheckSelected: TMenuItem;
+    UncheckSelected1: TMenuItem;
+    JvNetscapeSplitter2: TJvNetscapeSplitter;
+    Panel2: TPanel;
+    Panel1: TPanel;
+    rgDisplayChoice: TRadioGroup;
+    btnPreview: TButton;
+    btnStop: TButton;
+    btnSaveMultipleImages: TBitBtn;
+    JvNetscapeSplitter1: TJvNetscapeSplitter;
     procedure FormCreate(Sender: TObject); override;
     procedure seImageHeightChange(Sender: TObject);
     procedure seImageWidthChange(Sender: TObject);
@@ -76,6 +91,21 @@ type
     procedure btnRefreshClick(Sender: TObject);
     procedure btnManageSettingsClick(Sender: TObject);
     procedure comboSavedSettingsDropDown(Sender: TObject);
+    procedure spdSaveImageTypeChange(Sender: TObject);
+    procedure vstDataSetsGetNodeDataSize(Sender: TBaseVirtualTree;
+      var NodeDataSize: Integer);
+    procedure vstDataSetsGetText(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+      var CellText: WideString);
+    procedure vstDataSetsInitNode(Sender: TBaseVirtualTree; ParentNode,
+      Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
+    procedure vstDataSetsChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure miCheckSelectedClick(Sender: TObject);
+    procedure UncheckSelected1Click(Sender: TObject);
+    procedure btnPreviewClick(Sender: TObject);
+    procedure btnStopClick(Sender: TObject);
+    procedure btnSaveMultipleImagesClick(Sender: TObject);
+    procedure btnCloseClick(Sender: TObject);
   private
     FShouldDraw: Boolean;
     FTextItems: TList;
@@ -94,6 +124,8 @@ type
     FShouldChange: Boolean;
     FQuerySaveSettings: boolean;
     FCanDraw: Boolean;
+    FDataSetDummyObjects: TList;
+    FShouldStop: Boolean;
     procedure GetData;
     procedure DrawImageAfterDelay;
     procedure DrawTitle(DrawingRect: TRect; ACanvas: TCanvas;
@@ -103,6 +135,8 @@ type
     procedure SetSelectedItem(const Value: TDrawItem);
     procedure DrawContourLegend(ACanvas: TCanvas; var LegendY: Integer;
       out ContourRect: TRect);
+    function CanColorDataSet(DataArray: TDataArray): boolean;
+    procedure GetDataSets;
     property SelectedItem: TDrawItem read FSelectedItem write SetSelectedItem;
     procedure SelectItemToDrag(X: Integer; Y: Integer);
     function DragItem(X, Y: Integer): Boolean;
@@ -136,6 +170,10 @@ type
     procedure ApplyColorDisplaySettings(
       ColorDisplaySettings: TColorDisplaySettings);
     procedure UpdateModelColors;
+    procedure ExpandText(Sender: TObject; var TextToDraw: string);
+    procedure SaveImage(FilterIndex: Integer; FileName: string);
+    procedure SetStateOfMultipleNodes(BaseNode: PVirtualNode;
+      NewState: TCheckState);
     { Private declarations }
   public
     { Public declarations }
@@ -150,7 +188,13 @@ uses
   AbstractGridUnit, BigCanvasMethods, ScreenObjectUnit,
   CompressedImageUnit, frameViewUnit, PhastModelUnit, frmGoToUnit,
   frmContourDataUnit, frmGridColorUnit, UndoItems, frmManageSettingsUnit,
-  UndoItemsScreenObjects;
+  UndoItemsScreenObjects, ClassificationUnit, frmProgressUnit,
+  frmErrorsAndWarningsUnit;
+
+resourcestring
+  StrSP = '%SP';
+  StrTS = '%TS';
+  StrET = '%ET';
 
 {$R *.dfm}
 
@@ -163,6 +207,7 @@ begin
   begin
     Item := TDrawItem.Create;
     Item.OnChange := ItemChanged;
+    Item.OnDraw := ExpandText;
     FTextItems.Add(Item);
     ARect := Item.Rect;
     ARect.Left := FPriorX + scrollBoxPreview.HorzScrollBar.Position;
@@ -176,6 +221,219 @@ begin
     FShouldDraw := True;
     FQuerySaveSettings := True;
   end;
+end;
+
+procedure TfrmExportImage.btnPreviewClick(Sender: TObject);
+const
+  HalfSecond = 1/24/3600/2;
+var
+  Index: Integer;
+  DataSetList: TList;
+  DataArray: TDataArray;
+  PriorDataArray: TDataArray;
+  CurrentTime: TDateTime;
+  Legend: TLegend;
+  RootName: string;
+  FileName: string;
+  Extension: string;
+  ImageIndex: Integer;
+  PadIndex: integer;
+begin
+  inherited;
+  FShouldStop := False;
+  DataSetList := TList.Create;
+  Legend := TLegend.Create(nil);
+  try
+    for Index := 1 to rdgDataSets.RowCount - 1 do
+    begin
+      DataArray := frmGoPhast.PhastModel.GetDataSetByName(rdgDataSets.Cells[1, Index]);
+      if DataArray <> nil then
+      begin
+        DataSetList.Add(DataArray);
+      end;
+    end;
+
+    if Sender = btnSaveMultipleImages then
+    begin
+      Extension := ExtractFileExt(spdSaveImage.FileName);
+      RootName := ChangeFileExt(spdSaveImage.FileName, '');
+    end
+    else
+    begin
+      Extension := '';
+      RootName := '';
+    end;
+
+    PriorDataArray := nil;
+    frmProgress.Caption := 'Progress';
+    frmProgress.Show;
+    for Index := 0 to DataSetList.Count - 1 do
+    begin
+      CurrentTime := Now;
+      DataArray := DataSetList[Index];
+      frmProgress.Caption := 'Displaying ' + DataArray.Name;
+      Application.ProcessMessages;
+      case rgDisplayChoice.ItemIndex of
+        0:
+          begin
+            if Index > 0 then
+            begin
+              DataArray.Limits := PriorDataArray.Limits;
+              Legend.Assign(frmGoPhast.PhastModel.ColorLegend);
+            end;
+            case DataArray.Orientation of
+              dsoTop:
+                begin
+                  frmGoPhast.Grid.TopDataSet := DataArray;
+                end;
+              dsoFront:
+                begin
+                  frmGoPhast.Grid.FrontDataSet := DataArray;
+                end;
+              dsoSide:
+                begin
+                  frmGoPhast.Grid.SideDataSet := DataArray;
+                end;
+              dso3D:
+                begin
+                  frmGoPhast.Grid.TopDataSet := DataArray;
+                  frmGoPhast.Grid.FrontDataSet := DataArray;
+                  frmGoPhast.Grid.SideDataSet := DataArray;
+                end;
+              else
+                Assert(False);
+            end;
+            frmGoPhast.Grid.ThreeDDataSet := DataArray;
+          end;
+        1:
+          begin
+            if Index > 0 then
+            begin
+              DataArray.ContourLimits := PriorDataArray.ContourLimits;
+              DataArray.Contours := PriorDataArray.Contours;
+              Legend.Assign(frmGoPhast.PhastModel.ContourLegend);
+            end;
+            case DataArray.Orientation of
+              dsoTop:
+                begin
+                  frmGoPhast.Grid.TopContourDataSet := DataArray;
+                end;
+              dsoFront:
+                begin
+                  frmGoPhast.Grid.FrontContourDataSet := DataArray;
+                end;
+              dsoSide:
+                begin
+                  frmGoPhast.Grid.SideContourDataSet := DataArray;
+                end;
+              dso3D:
+                begin
+                  frmGoPhast.Grid.TopContourDataSet := DataArray;
+                  frmGoPhast.Grid.FrontContourDataSet := DataArray;
+                  frmGoPhast.Grid.SideContourDataSet := DataArray;
+                end;
+              else
+                Assert(False);
+            end;
+            frmGoPhast.Grid.ThreeDContourDataSet := DataArray;
+          end;
+        else
+          Assert(False);
+      end;
+      frmGoPhast.Grid.GridChanged;
+
+      UpdateFrmGridColor;
+      UpdateFrmContourData;
+      Application.ProcessMessages;
+      PriorDataArray := DataArray;
+      if FShouldStop then
+      begin
+        break;
+      end;
+      if Index > 0 then
+      begin
+        case rgDisplayChoice.ItemIndex of
+          0:
+            begin
+              frmGoPhast.PhastModel.ColorLegend.Assign(Legend);
+            end;
+          1:
+            begin
+              frmGoPhast.PhastModel.ContourLegend.Assign(Legend);
+            end;
+        end;
+      end;
+      while frmGoPhast.frameTopView.Drawing
+        or frmGoPhast.frameFrontView.Drawing
+        or frmGoPhast.frameSideView.Drawing
+        or frmGoPhast.frameTopView.PaintingNeeded
+        or frmGoPhast.frameFrontView.PaintingNeeded
+        or frmGoPhast.frameSideView.PaintingNeeded
+        do
+      begin
+      end;
+      if Index = 0 then
+      begin
+        case rgDisplayChoice.ItemIndex of
+          0:
+            begin
+              Legend.Assign(frmGoPhast.PhastModel.ColorLegend);
+            end;
+          1:
+            begin
+              Legend.Assign(frmGoPhast.PhastModel.ContourLegend);
+            end;
+        end;
+
+      end;
+
+      FreeAndNil(FModelImage);
+      DrawImage;
+
+      if Sender = btnPreview then
+      begin
+        while Now - CurrentTime < HalfSecond do
+        begin
+          Application.ProcessMessages;
+        end;
+      end
+      else if Sender = btnSaveMultipleImages then
+      begin
+        ImageIndex := Index + 1;
+        FileName := RootName;
+        for PadIndex := Trunc(Log10(ImageIndex)) to
+          Trunc(Log10(DataSetList.Count+1))-1 do
+        begin
+          FileName := FileName + '0';
+        end;
+        FileName := FileName + IntToStr(ImageIndex);
+        FileName := ChangeFileExt(FileName, Extension);
+        SaveImage(spdSaveImage.FilterIndex, FileName);
+      end
+      else
+      begin
+        Assert(False);
+      end;
+      if FShouldStop then
+      begin
+        break;
+      end;
+    end;
+  finally
+    frmProgress.Hide;
+    DataSetList.Free;
+    Legend.Free;
+    if frmErrorsAndWarnings.HasMessages then
+    begin
+      frmErrorsAndWarnings.Show;
+    end;
+  end;
+end;
+
+procedure TfrmExportImage.btnCloseClick(Sender: TObject);
+begin
+  FShouldStop := True;
+  inherited;
 end;
 
 procedure TfrmExportImage.btnFontClick(Sender: TObject);
@@ -196,80 +454,29 @@ begin
   GetData;
 end;
 
-procedure TfrmExportImage.btnSaveImageClick(Sender: TObject);
-const
-
-  MillimeterPerInchTimes100 = 2540;
-//  EmpricalFactor = 30;
+procedure TfrmExportImage.btnSaveMultipleImagesClick(Sender: TObject);
 var
-  MetaFile: TMetaFile;
-  MetaFileCanvas: TMetaFileCanvas;
-  CanvasWidth: Integer;
-  CanvasHeight: Integer;
-  DrawingRect: TRect;
-  Factor: integer;
-  DC: HDC;
-  RealPixelsPerInch: Integer;
-  VerticalSize: Integer;
-  VerticalSizeInches: double;
-  VerticalResolution: Integer;
+  OldIndex: Integer;
 begin
   inherited;
-  // You would think that Screen.PixelsPerInch would give you
-  // what you need here but no such luck.
-  DC := GetDC(0);
-  VerticalSize := GetDeviceCaps(DC, VERTSIZE);
-  VerticalSizeInches := VerticalSize/25.4;
-  VerticalResolution := GetDeviceCaps(DC, VERTRES);
-  RealPixelsPerInch := Trunc(VerticalResolution / VerticalSizeInches);
-  ReleaseDC(0, DC);
-  Factor := MillimeterPerInchTimes100 div RealPixelsPerInch;
+  OldIndex := spdSaveImage.FilterIndex;
+  try
+    spdSaveImage.FilterIndex := 2;
+    if spdSaveImage.Execute then
+    begin
+      btnPreviewClick(Sender);
+    end;
+  finally
+    spdSaveImage.FilterIndex := OldIndex;
+  end;
+end;
+
+procedure TfrmExportImage.btnSaveImageClick(Sender: TObject);
+begin
+  inherited;
   if spdSaveImage.Execute then
   begin
-    MetaFile := TMetaFile.Create;
-    try
-      MetaFile.MMWidth := seImageWidth.AsInteger
-        * MillimeterPerInchTimes100 div RealPixelsPerInch;
-      MetaFile.MMHeight := seImageHeight.AsInteger
-        * MillimeterPerInchTimes100 div RealPixelsPerInch;
-      CanvasWidth := MetaFile.MMWidth;
-      CanvasHeight := MetaFile.MMHeight;
-      MetaFileCanvas := TMetaFileCanvas.Create(MetaFile, 0);
-      try
-        DrawOutsideItems(CanvasHeight, CanvasWidth, DrawingRect, MetaFileCanvas);
-      finally
-        MetaFileCanvas.Free;
-      end;
-    finally
-      MetaFile.Free;
-    end;
-
-    MetaFile := TMetaFile.Create;
-    try
-      MetaFile.MMWidth := seImageWidth.AsInteger
-        + ((CanvasWidth - DrawingRect.Right)
-        + DrawingRect.Left);
-      MetaFile.MMWidth := MetaFile.MMWidth * Factor;
-
-      MetaFile.MMHeight := seImageHeight.AsInteger
-        + ((CanvasHeight - DrawingRect.Bottom)
-        + DrawingRect.Top);
-      MetaFile.MMHeight := MetaFile.MMHeight * Factor;
-
-      MetaFileCanvas := TMetaFileCanvas.Create(MetaFile, 0);
-      try
-        DrawOnCanvas(
-          MetaFile.MMWidth div Factor,
-          MetaFile.MMHeight div Factor,
-          MetaFileCanvas);
-      finally
-        MetaFileCanvas.Free;
-      end;
-      imagePreview.Picture.Assign(MetaFile);
-      MetaFile.SaveToFile(spdSaveImage.FileName);
-    finally
-      MetaFile.Free;
-    end;
+    SaveImage(spdSaveImage.FilterIndex, spdSaveImage.FileName);
   end;
 end;
 
@@ -287,6 +494,12 @@ begin
   begin
     SaveSettings;
   end;
+end;
+
+procedure TfrmExportImage.btnStopClick(Sender: TObject);
+begin
+  inherited;
+  FShouldStop := True;
 end;
 
 procedure TfrmExportImage.btnTitleFontClick(Sender: TObject);
@@ -335,6 +548,17 @@ begin
   inherited;
   DrawImage;
   FQuerySaveSettings := True;
+end;
+
+procedure TfrmExportImage.miCheckSelectedClick(Sender: TObject);
+begin
+  inherited;
+  vstDataSets.BeginUpdate;
+  try
+    SetStateOfMultipleNodes(vstDataSets.RootNode, csCheckedNormal);
+  finally
+    vstDataSets.EndUpdate;
+  end;
 end;
 
 procedure TfrmExportImage.comboSavedSettingsChange(Sender: TObject);
@@ -796,6 +1020,217 @@ begin
   end;
 end;
 
+procedure TfrmExportImage.ExpandText(Sender: TObject; var TextToDraw: string);
+var
+  PhastModel: TPhastModel;
+  Grid: TCustomGrid;
+  DataArray: TDataArray;
+  CommentLines: TStringList;
+  SearchPosition: Integer;
+  Index: Integer;
+  StressPeriodText: string;
+begin
+  PhastModel := frmGoPhast.PhastModel;
+  Grid := PhastModel.Grid;
+  DataArray := nil;
+  case TViewDirection(comboView.ItemIndex) of
+    vdTop:
+      begin
+        DataArray := Grid.TopDataSet;
+      end;
+    vdFront:
+      begin
+        DataArray := Grid.FrontDataSet;
+      end;
+    vdSide:
+      begin
+        DataArray := Grid.SideDataSet;
+      end;
+  else
+    Assert(False);
+  end;
+  if DataArray = nil then
+  begin
+    case TViewDirection(comboView.ItemIndex) of
+      vdTop:
+        begin
+          DataArray := Grid.TopContourDataSet;
+        end;
+      vdFront:
+        begin
+          DataArray := Grid.FrontContourDataSet;
+        end;
+      vdSide:
+        begin
+          DataArray := Grid.SideContourDataSet;
+        end;
+    else
+      Assert(False);
+    end;
+  end;
+  if DataArray <> nil then
+  begin
+    CommentLines := TStringList.Create;
+    try
+      CommentLines.Text := DataArray.Comment;
+      SearchPosition := Pos(StrSP, TextToDraw);
+      if SearchPosition > 0 then
+      begin
+        for Index := 0 to CommentLines.Count - 1 do
+        begin
+          StressPeriodText := '?';
+          if Pos(StrStressPeriodLabel, CommentLines[Index]) = 1 then
+          begin
+            StressPeriodText := Trim(Copy(CommentLines[Index],
+              Length(StrStressPeriodLabel), MAXINT));
+            break;
+          end;
+        end;
+        TextToDraw := StringReplace(TextToDraw, StrSP, StressPeriodText,
+          [rfReplaceAll, rfIgnoreCase]);
+      end;
+
+      SearchPosition := Pos(StrTS, TextToDraw);
+      if SearchPosition > 0 then
+      begin
+        for Index := 0 to CommentLines.Count - 1 do
+        begin
+          StressPeriodText := '?';
+          if Pos(StrTimeStepLabel, CommentLines[Index]) = 1 then
+          begin
+            StressPeriodText := Trim(Copy(CommentLines[Index],
+              Length(StrTimeStepLabel), MAXINT));
+            break;
+          end;
+        end;
+        TextToDraw := StringReplace(TextToDraw, StrTS, StressPeriodText,
+          [rfReplaceAll, rfIgnoreCase]);
+      end;
+
+      SearchPosition := Pos(StrET, TextToDraw);
+      if SearchPosition > 0 then
+      begin
+        for Index := 0 to CommentLines.Count - 1 do
+        begin
+          StressPeriodText := '?';
+          if Pos(StrElapsedTimeLabel, CommentLines[Index]) = 1 then
+          begin
+            StressPeriodText := Trim(Copy(CommentLines[Index],
+              Length(StrElapsedTimeLabel), MAXINT));
+            break;
+          end;
+        end;
+        TextToDraw := StringReplace(TextToDraw, StrET, StressPeriodText,
+          [rfReplaceAll, rfIgnoreCase]);
+      end;
+    finally
+      CommentLines.Free;
+    end;
+  end;
+end;
+
+procedure TfrmExportImage.SaveImage(FilterIndex: Integer; FileName: string);
+var
+  VerticalSizeInches: Double;
+  VerticalSize: Integer;
+  DC: HDC;
+  ABitMap: TBitmap;
+  DrawingRect: TRect;
+  MetaFileCanvas: TMetafileCanvas;
+  CanvasHeight: Integer;
+  CanvasWidth: Integer;
+  MetaFile: TMetafile;
+  Factor: double;
+  RealPixelsPerInch: double;
+  VerticalResolution: Integer;
+  RealVerticalPixelsPerInch: double;
+  HorizontalSize: Integer;
+  HorizontalSizeInches: Double;
+  HorizontalResolution: Integer;
+  RealHorizontalPixelsPerInch: double;
+  WidthToDraw: Integer;
+  HeightToDraw: Integer;
+const
+  MillimeterPerInchTimes100 = 2540;
+begin
+  case FilterIndex of
+    1:
+      begin
+        // You would think that Screen.PixelsPerInch would give you
+        // what you need here but no such luck.
+        DC := GetDC(0);
+        try
+          VerticalSize := GetDeviceCaps(DC, VERTSIZE);
+          VerticalSize := 180;
+          VerticalSizeInches := VerticalSize / 25.4;
+          VerticalResolution := GetDeviceCaps(DC, VERTRES);
+          VerticalResolution := 1080;
+          RealVerticalPixelsPerInch := (VerticalResolution / VerticalSizeInches);
+
+          HorizontalSize := GetDeviceCaps(DC, HORZSIZE);
+          HorizontalSize := 320;
+          HorizontalSizeInches := HorizontalSize / 25.4;
+          HorizontalResolution := GetDeviceCaps(DC, HORZRES);
+          HorizontalResolution := 1920;
+          RealHorizontalPixelsPerInch := (HorizontalResolution / HorizontalSizeInches);
+
+          RealPixelsPerInch := Min(RealVerticalPixelsPerInch, RealHorizontalPixelsPerInch);
+        finally
+          ReleaseDC(0, DC);
+        end;
+
+        Factor := (MillimeterPerInchTimes100 / RealPixelsPerInch);
+
+        MetaFile := TMetaFile.Create;
+        try
+          MetaFile.MMWidth := Trunc(seImageWidth.AsInteger * Factor);
+          MetaFile.MMHeight := Trunc(seImageHeight.AsInteger * Factor);
+          CanvasWidth := MetaFile.MMWidth;
+          CanvasHeight := MetaFile.MMHeight;
+          MetaFileCanvas := TMetaFileCanvas.Create(MetaFile, 0);
+          try
+            DrawOutsideItems(CanvasHeight, CanvasWidth, DrawingRect, MetaFileCanvas);
+          finally
+            MetaFileCanvas.Free;
+          end;
+        finally
+          MetaFile.Free;
+        end;
+        MetaFile := TMetaFile.Create;
+        try
+          WidthToDraw := seImageWidth.AsInteger
+            + ((CanvasWidth - DrawingRect.Right) + DrawingRect.Left);
+//          MetaFile.MMWidth := WidthToDraw;
+          MetaFile.MMWidth := Trunc(WidthToDraw * Factor);
+          HeightToDraw := seImageHeight.AsInteger
+            + ((CanvasHeight - DrawingRect.Bottom) + DrawingRect.Top);
+//          MetaFile.MMHeight := HeightToDraw;
+          MetaFile.MMHeight := Trunc(HeightToDraw * Factor);
+          MetaFileCanvas := TMetaFileCanvas.Create(MetaFile, 0);
+          try
+            DrawOnCanvas(WidthToDraw, HeightToDraw, MetaFileCanvas);
+          finally
+            MetaFileCanvas.Free;
+          end;
+//          imagePreview.Picture.Assign(MetaFile);
+          MetaFile.SaveToFile(FileName);
+        finally
+          MetaFile.Free;
+        end;
+      end;
+    2:
+      begin
+        ABitMap := TBitMap.Create;
+        try
+          ABitMap.Assign(imagePreview.Picture);
+          ABitMap.SaveToFile(FileName);
+        finally
+          ABitMap.Free;
+        end;
+      end;
+  end;
+end;
+
 procedure TfrmExportImage.DrawBackgroundImages(BitMap32: TBitmap32);
 var
   ViewDirection: TViewDirection;
@@ -1160,6 +1595,7 @@ begin
   for Index := 0 to ASetting.AdditionalText.Count - 1 do
   begin
     DrawItem := TDrawItem.Create;
+    DrawItem.OnDraw := ExpandText;
     TextItem := ASetting.AdditionalText.Items[Index] as TTextItem;
     DrawItem.Assign(TextItem);
     FTextItems.Add(DrawItem);
@@ -1171,7 +1607,6 @@ begin
   FQuerySaveSettings := False;
 
 end;
-
 
 procedure TfrmExportImage.btnRefreshClick(Sender: TObject);
 begin
@@ -1491,6 +1926,17 @@ begin
   UpdateFrmGridColor;
 end;
 
+procedure TfrmExportImage.UncheckSelected1Click(Sender: TObject);
+begin
+  inherited;
+  vstDataSets.BeginUpdate;
+  try
+    SetStateOfMultipleNodes(vstDataSets.RootNode, csUncheckedNormal);
+  finally
+    vstDataSets.EndUpdate;
+  end;
+end;
+
 procedure TfrmExportImage.UpdateModelColors;
 var
   PhastModel: TPhastModel;
@@ -1529,6 +1975,175 @@ begin
   frmGoPhast.PhastModel.Grid.GridChanged;
 end;
 
+procedure TfrmExportImage.vstDataSetsChecked(Sender: TBaseVirtualTree;
+  Node: PVirtualNode);
+var
+  Data: PClassificationNodeData;
+  DataArray: TDataArray;
+  Column: TStrings;
+  DA_Position: Integer;
+  ChildIndex: Integer;
+  ChildNode: PVirtualNode;
+  ParentNode: PVirtualNode;
+  NewState: TCheckState;
+begin
+  inherited;
+  rdgDataSets.BeginUpdate;
+  try
+    Data := Sender.GetNodeData(Node);
+    // Add or remove the selected data sets.
+    if (Data <> nil) and (Data.ClassificationObject is TDataSetClassification) then
+    begin
+      DataArray := TDataSetClassification(Data.ClassificationObject).DataArray;
+      Column := rdgDataSets.Cols[1];
+      DA_Position := Column.IndexOf(DataArray.Name);
+      if Node.CheckState = csCheckedNormal then
+      begin
+        if DA_Position < 0 then
+        begin
+          if rdgDataSets.Cells[1,rdgDataSets.RowCount-1] <> '' then
+          begin
+            rdgDataSets.RowCount := rdgDataSets.RowCount + 1;
+          end;
+          rdgDataSets.Cells[1,rdgDataSets.RowCount-1] := DataArray.Name;
+          rdgDataSets.Objects[1,rdgDataSets.RowCount-1] := DataArray;
+        end;
+      end
+      else
+      begin
+        if DA_Position > 0 then
+        begin
+          if rdgDataSets.RowCount = 2 then
+          begin
+            rdgDataSets.Cells[1,1] := '';
+            rdgDataSets.Objects[1,1] := nil;
+          end
+          else
+          begin
+            rdgDataSets.DeleteRow(DA_Position);
+          end;
+        end;
+      end;
+    end;
+
+    // Update the check state of the children
+    if (Node.ChildCount > 0)
+      and (Node.CheckState in [csCheckedNormal, csUncheckedNormal]) then
+    begin
+      Sender.BeginUpdate;
+      try
+        ChildNode := nil;
+        for ChildIndex := 0 to Node.ChildCount - 1 do
+        begin
+          if ChildIndex = 0 then
+          begin
+            ChildNode := Sender.GetFirstChild(Node);
+          end
+          else
+          begin
+            ChildNode := Sender.GetNextSibling(ChildNode);
+          end;
+          if ChildNode.CheckState <> Node.CheckState then
+          begin
+            ChildNode.CheckState := Node.CheckState;
+
+            // handle children
+            vstDataSetsChecked(Sender, ChildNode);
+          end;
+        end;
+      finally
+        Sender.EndUpdate;
+      end;
+    end;
+
+    // update the check state of the parent.
+    if (Node.Parent <> Sender.RootNode)
+      and (Node.Parent.CheckState <> Node.CheckState) then
+    begin
+      Sender.BeginUpdate;
+      try
+        ParentNode := Node.Parent;
+        ChildNode := nil;
+        NewState := ParentNode.CheckState;
+        for ChildIndex := 0 to ParentNode.ChildCount - 1 do
+        begin
+          if ChildIndex = 0 then
+          begin
+            ChildNode := Sender.GetFirstChild(ParentNode);
+            NewState := ChildNode.CheckState;
+          end
+          else
+          begin
+            ChildNode := Sender.GetNextSibling(ChildNode);
+            if NewState <> ChildNode.CheckState then
+            begin
+              NewState := csMixedNormal;
+              break;
+            end;
+          end;
+        end;
+        if ParentNode.CheckState <> NewState then
+        begin
+          ParentNode.CheckState := NewState;
+          // propagate check state to grandparent
+          vstDataSetsChecked(Sender, ParentNode);
+        end;
+      finally
+        Sender.EndUpdate;
+      end;
+    end;
+  finally
+    rdgDataSets.EndUpdate
+  end;
+end;
+
+procedure TfrmExportImage.vstDataSetsGetNodeDataSize(
+  Sender: TBaseVirtualTree; var NodeDataSize: Integer);
+begin
+  inherited;
+  NodeDataSize := SizeOf(TClassificationNodeData);
+end;
+
+procedure TfrmExportImage.vstDataSetsGetText(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+  var CellText: WideString);
+begin
+  inherited;
+  GetNodeCaption(Node, CellText, Sender);
+end;
+
+procedure TfrmExportImage.vstDataSetsInitNode(Sender: TBaseVirtualTree;
+  ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
+begin
+  inherited;
+  if Node.ChildCount > 0 then
+  begin
+    Node.CheckType:=ctTriStateCheckBox;
+  end
+  else
+  begin
+    Node.CheckType:=ctCheckBox;
+  end;
+
+end;
+
+function TfrmExportImage.CanColorDataSet(DataArray: TDataArray): boolean;
+begin
+  result := False;
+  case DataArray.EvaluatedAt of
+    eaBlocks: result := True;
+    eaNodes: result := frmGoPhast.PhastModel.ModelSelection = msPhast;
+    else Assert(False);
+  end;
+end;
+
+procedure TfrmExportImage.GetDataSets;
+begin
+  vstDataSets.Clear;
+  FillVirtualStringTreeWithDataSets(vstDataSets,
+    FDataSetDummyObjects, nil, CanColorDataSet);
+end;
+
 procedure TfrmExportImage.DrawContourLegend(ACanvas: TCanvas;
   var LegendY: Integer; out ContourRect: TRect);
 var
@@ -1536,7 +2151,6 @@ var
   PhastModel: TPhastModel;
   Grid: TCustomGrid;
   ShowLegend: Boolean;
-
 begin
   ContourRect.Left := 0;
   ContourRect.Top := 0;
@@ -1649,6 +2263,7 @@ begin
   for Index := 0 to memoTitle.Lines.Count - 1 do
   begin
     ALine := memoTitle.Lines[Index];
+    ExpandText(self, ALine);
     if ALine = '' then
     begin
       Extent := ACanvas.TextExtent(' ');
@@ -1748,6 +2363,8 @@ end;
 procedure TfrmExportImage.FormCreate(Sender: TObject);
 begin
   inherited;
+  rdgDataSets.Cells[1,0] := 'Data Sets';
+  FDataSetDummyObjects := TObjectList.Create;
   FCanDraw := False;
   ocSettings.ActivePage := opView;
 
@@ -1769,6 +2386,7 @@ end;
 procedure TfrmExportImage.FormDestroy(Sender: TObject);
 begin
   inherited;
+  FDataSetDummyObjects.Free;
   FDefaultFont.Free;
   FTextItems.Free;
   FModelImage.Free;
@@ -1807,6 +2425,22 @@ begin
   end;
   comboSavedSettings.ItemIndex := ComboIndex;
   btnManageSettings.Enabled := frmGoPhast.PhastModel.DisplaySettings.Count > 0;
+
+  GetDataSets;
+
+  if frmGoPhast.Grid.ThreeDDataSet <> nil then
+  begin
+    rgDisplayChoice.ItemIndex := 0;
+  end
+  else
+  if frmGoPhast.Grid.ThreeDContourDataSet <> nil then
+  begin
+    rgDisplayChoice.ItemIndex := 1;
+  end
+  else
+  begin
+    rgDisplayChoice.ItemIndex := 1;
+  end;
 end;
 
 procedure TfrmExportImage.imagePreviewDblClick(Sender: TObject);
@@ -1979,6 +2613,32 @@ begin
     finally
       FSelectingItem := False;
     end;
+  end;
+end;
+
+procedure TfrmExportImage.SetStateOfMultipleNodes(BaseNode: PVirtualNode;
+  NewState: TCheckState);
+begin
+  rdgDataSets.BeginUpdate;
+  try
+    UpdateStringTreeViewCheckedState(vstDataSets, BaseNode, NewState);
+  finally
+    rdgDataSets.EndUpdate;
+  end;
+end;
+
+procedure TfrmExportImage.spdSaveImageTypeChange(Sender: TObject);
+begin
+  inherited;
+  case spdSaveImage.FilterIndex of
+    1: spdSaveImage.DefaultExt := '.emf';
+    2: spdSaveImage.DefaultExt := '.bmp';
+    else Assert(False);
+  end;
+  if spdSaveImage.FileName <> '' then
+  begin
+    spdSaveImage.FileName := ChangeFileExt(spdSaveImage.FileName,
+      spdSaveImage.DefaultExt);
   end;
 end;
 

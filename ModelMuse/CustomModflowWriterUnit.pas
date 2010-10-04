@@ -196,6 +196,8 @@ type
   // @name is an abstract base class used to generate input for
   // MODFLOW for a specific package.
   TCustomPackageWriter = class(TCustomModflowWriter)
+  private
+    FWarningRoot: string;
   protected
     procedure SetTimeListsUpToDate(TimeLists: TModflowBoundListOfTimeLists);
     // @name identifies the package that is being exported.
@@ -245,6 +247,7 @@ type
       var Clusters: TOneDIntegerArray; var UniformLayers: TBooleanDynArray;
       LayerCount: Integer; Param: TModflowSteadyParameter);
     Function UcodeObsNameOK(Const AName: string): boolean;
+    procedure CheckCell(ValueCell: TValueCell; const PackageName: string);
   public
     destructor Destroy; override;
   end;
@@ -465,6 +468,7 @@ type
     //   @link(WriteCell).)
     procedure WriteStressPeriods(const VariableIdentifiers, DataSetIdentifier,
       DS5, D7PNameIname, D7PName: string); override;
+    // Check that the cell is in an active cell.
   public
     // @name is used to update the display of transient data used to color the
     // grid.
@@ -693,19 +697,6 @@ var
   BatchFile: TStringList;
   AFileName: string;
   ADirectory: string;
-  function QuoteFileName(AName: string): string;
-  begin
-    if (Length(AName) > 0)
-      and (AName[1] <> '"')
-      and (Pos(' ', AName) > 0) then
-    begin
-      result := '"' + AName + '"';
-    end
-    else
-    begin
-      result := AName;
-    end;
-  end;
 begin
   ADirectory:= GetCurrentDir;
   try
@@ -781,7 +772,7 @@ begin
 
   BatchFile := TStringList.Create;
   try
-    AFileName :=  ProgramLocations.ModPathLocation;
+    AFileName :=  QuoteFileName(ProgramLocations.ModPathLocation);
     BatchFile.Add(AFileName + ' <MpIn.txt');
     BatchFile.SaveToFile(MpBatName);
   finally
@@ -837,13 +828,7 @@ begin
 
   ZoneBudgetLocation := ProgramLocations.ZoneBudgetLocation;
   Model.AddFileToArchive(ZoneBudgetLocation);
-  if (Length(ZoneBudgetLocation) > 0)
-    and (ZoneBudgetLocation[1] <> '"')
-    and (Pos(' ', ZoneBudgetLocation) > 0) then
-  begin
-    ZoneBudgetLocation := '"'
-      + ProgramLocations.ZoneBudgetLocation + '"';
-  end;
+  ZoneBudgetLocation := QuoteFileName(ZoneBudgetLocation);
 
   ADirectory := IncludeTrailingPathDelimiter(ExtractFileDir(FileName));
 
@@ -1717,6 +1702,36 @@ begin
   end;
 end;
 
+procedure TCustomPackageWriter.CheckCell(ValueCell: TValueCell;
+  const PackageName: string);
+var
+  ActiveDataArray: TDataArray;
+  WarningRoot: string;
+  ErrorMessage: string;
+begin
+  ActiveDataArray := PhastModel.GetDataSetByName(rsActive);
+  Assert(ActiveDataArray <> nil);
+  ActiveDataArray.Initialize;
+  if not ActiveDataArray.BooleanData[ValueCell.Layer,
+    ValueCell.Row, ValueCell.Column] then
+  begin
+    WarningRoot := 'One or more boundaries in the ' + PackageName
+      + ' are in inactive cells';
+    if WarningRoot = FWarningRoot then
+    begin
+      WarningRoot := FWarningRoot;
+    end
+    else
+    begin
+      FWarningRoot := WarningRoot;
+    end;
+    ErrorMessage := 'Layer, Row, Col = [' + IntToStr(ValueCell.Layer+1)
+      + ', ' + IntToStr(ValueCell.Row+1)
+      + ', ' + IntToStr(ValueCell.Column+1) + ']';
+    frmErrorsAndWarnings.AddWarning(FWarningRoot, ErrorMessage);
+  end;
+end;
+
 procedure TCustomListWriter.CountCells(var MaximumNumberOfCells: Integer);
 var
   List: TValueCellList;
@@ -1944,6 +1959,7 @@ begin
   ErrorMessage := Format(ErrorRoot, [Trim(PARTYP)]);
   for ParamIndex := 0 to PhastModel.ModflowTransientParameters.Count - 1 do
   begin
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -1997,6 +2013,7 @@ begin
       // Data sets 4a and 4b
       for TimeIndex := 0 to ParamValues.Count - 1 do
       begin
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -2043,6 +2060,7 @@ begin
   try
     for TimeIndex := 0 to FValues.Count - 1 do
     begin
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -2097,6 +2115,8 @@ begin
           begin
             Cell := List[CellIndex] as TValueCell;
             WriteCell(Cell, DataSetIdentifier, VariableIdentifiers);
+            CheckCell(Cell, Package.PackageIdentifier);
+            Application.ProcessMessages;
             if not frmProgress.ShouldContinue then
             begin
               Exit;
@@ -2112,6 +2132,7 @@ begin
         begin
           WriteString(ParametersUsed[ParamIndex]);
           NewLine;
+          Application.ProcessMessages;
           if not frmProgress.ShouldContinue then
           begin
             Exit;
@@ -2389,6 +2410,7 @@ begin
   ErrorMessage := Format(ErrorRoot, [Trim(PARTYP)]);
   for ParamIndex := 0 to PhastModel.ModflowTransientParameters.Count - 1 do
   begin
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -2443,6 +2465,7 @@ begin
       // Data sets 4a and 4b
       for TimeIndex := 0 to ParameterValues.Count - 1 do
       begin
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;

@@ -33,16 +33,19 @@ type
     procedure UpdateTopFrontAndSideItems;
     procedure HandleSelectedObject(AnObject: TObject);
     procedure SetMinMaxLabels;
+    procedure HandleLimitChoice(DataSet: TDataArray);
+    function GetContourDataSet: TDataArray;
   protected
     function GetSelectedArray: TDataArray; override;
     { Private declarations }
   public
+    procedure ContourData(AnObject: TObject);
     procedure UpdateLabelsAndLegend;
     procedure UpdateContours;
     { Public declarations }
   end;
 
-procedure UpdateFrmContourData;
+procedure UpdateFrmContourData(Force: boolean = False);
 
 var
   frmContourData: TfrmContourData;
@@ -56,9 +59,9 @@ uses
 
 {$R *.dfm}
 
-procedure UpdateFrmContourData;
+procedure UpdateFrmContourData(Force: boolean = False);
 begin
-  if (frmContourData <> nil) and frmContourData.Visible then
+  if (frmContourData <> nil) and (Force or frmContourData.Visible) then
   begin
     frmContourData.GetData;
   end;
@@ -88,8 +91,8 @@ procedure TfrmContourData.btnOKClick(Sender: TObject);
 begin
   inherited;
   SetData;
-
   UpdateLabelsAndLegend;
+  frmProgress.Hide;
 end;
 
 procedure TfrmContourData.cbLogTransformClick(Sender: TObject);
@@ -201,91 +204,12 @@ end;
 procedure TfrmContourData.SetData;
 var
   AnObject: TObject;
-  DataSet: TDataArray;
-  Index: Integer;
-  ContourColors: TColorParameters;
 begin
   Screen.Cursor := crHourGlass;
   try
-    Application.ProcessMessages;
-    frmProgress.ShouldContinue := True;
 
     RetrieveSelectedObject(AnObject);
-
-    if AnObject <> nil then
-    begin
-      for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
-      begin
-        frmGoPhast.PhastModel.AddDataSetToCache(frmGoPhast.PhastModel.DataSets[Index]);
-      end;
-      frmGoPhast.PhastModel.CacheDataArrays;
-    end;
-
-    if (AnObject = nil) then
-    begin
-      frmGoPhast.Grid.TopContourDataSet := nil;
-      frmGoPhast.Grid.FrontContourDataSet := nil;
-      frmGoPhast.Grid.SideContourDataSet := nil;
-      frmGoPhast.Grid.ThreeDContourDataSet := nil;
-      FLegend.ValueSource := nil;
-    end
-    else if (AnObject is TDataArray) then
-    begin
-      DataSet := TDataArray(AnObject);
-
-      AssignLimits(DataSet.DataType, DataSet.ContourLimits);
-
-      if FContours <> nil then
-      begin
-        FContours.SpecifyContours := cbSpecifyContours.Checked;
-      end;
-      DataSet.Contours := FContours;
-
-      if frmGoPhast.Grid.ThreeDContourDataSet <> DataSet then
-      begin
-        comboMethod.ItemIndex := 0;
-      end;
-
-      frmGoPhast.Grid.ThreeDContourDataSet := DataSet;
-      if FTopItems.IndexOfObject(AnObject) >= 0 then
-      begin
-        frmGoPhast.Grid.TopContourDataSet := DataSet;
-      end
-      else
-      begin
-        frmGoPhast.Grid.TopContourDataSet := nil;
-      end;
-
-      if FFrontItems.IndexOfObject(AnObject) >= 0 then
-      begin
-        frmGoPhast.Grid.FrontContourDataSet := DataSet;
-      end
-      else
-      begin
-        frmGoPhast.Grid.FrontContourDataSet := nil;
-      end;
-
-      if FSideItems.IndexOfObject(AnObject) >= 0 then
-      begin
-        frmGoPhast.Grid.SideContourDataSet := DataSet;
-      end
-      else
-      begin
-        frmGoPhast.Grid.SideContourDataSet := nil;
-      end;
-      FLegend.ValueSource := DataSet;
-      FLegend.ColoringLimits := DataSet.ContourLimits;
-    end;
-
-    frmGoPhast.PhastModel.Grid.GridChanged;
-
-    ContourColors := frmGoPhast.PhastModel.ContourColors;
-    ContourColors.ColorScheme := comboColorScheme.ItemIndex;
-    ContourColors.ColorCycles := seCycles.AsInteger;
-    ContourColors.ColorExponent := seColorExponent.Value;
-
-    tabLegend.TabVisible := FLegend.ValueSource <> nil;
-    FLegend.ColorParameters := ContourColors;
+    ContourData(AnObject);
 
     if (AnObject <> nil) and frmErrorsAndWarnings.HasMessages then
     begin
@@ -353,10 +277,112 @@ begin
   end;
 end;
 
+procedure TfrmContourData.ContourData(AnObject: TObject);
+var
+  Index: Integer;
+  DataSet: TDataArray;
+  ContourColors: TColorParameters;
+begin
+  Application.ProcessMessages;
+  frmProgress.ShouldContinue := True;
+  FreeAndNil(FStoredLegend);
+  if AnObject <> nil then
+  begin
+    frmProgress.btnAbort.Visible := False;
+    frmProgress.Caption := 'Progress';
+    frmProgress.Show;
+    for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+    begin
+      frmGoPhast.PhastModel.AddDataSetToCache(frmGoPhast.PhastModel.DataSets[Index]);
+    end;
+    frmGoPhast.PhastModel.CacheDataArrays;
+    if (frmGoPhast.Grid.ThreeDDataSet <> nil)
+      and (rgUpdateLimitChoice.ItemIndex = 1) then
+    begin
+      FStoredLegend := TLegend.Create(nil);
+      FStoredLegend.Assign(frmGoPhast.PhastModel.ContourLegend);
+    end;
+  end;
+  if (AnObject = nil) then
+  begin
+    frmGoPhast.Grid.TopContourDataSet := nil;
+    frmGoPhast.Grid.FrontContourDataSet := nil;
+    frmGoPhast.Grid.SideContourDataSet := nil;
+    frmGoPhast.Grid.ThreeDContourDataSet := nil;
+    FLegend.ValueSource := nil;
+  end
+  else if (AnObject is TDataArray) then
+  begin
+    DataSet := TDataArray(AnObject);
+    AssignLimits(DataSet.DataType, DataSet.ContourLimits);
+    if FContours <> nil then
+    begin
+      FContours.SpecifyContours := cbSpecifyContours.Checked;
+    end;
+    DataSet.Contours := FContours;
+    if frmGoPhast.Grid.ThreeDContourDataSet <> DataSet then
+    begin
+      comboMethod.ItemIndex := 0;
+    end;
+    frmGoPhast.Grid.ThreeDContourDataSet := DataSet;
+    if FTopItems.IndexOfObject(AnObject) >= 0 then
+    begin
+      frmGoPhast.Grid.TopContourDataSet := DataSet;
+    end
+    else
+    begin
+      frmGoPhast.Grid.TopContourDataSet := nil;
+    end;
+    if FFrontItems.IndexOfObject(AnObject) >= 0 then
+    begin
+      frmGoPhast.Grid.FrontContourDataSet := DataSet;
+    end
+    else
+    begin
+      frmGoPhast.Grid.FrontContourDataSet := nil;
+    end;
+    if FSideItems.IndexOfObject(AnObject) >= 0 then
+    begin
+      frmGoPhast.Grid.SideContourDataSet := DataSet;
+    end
+    else
+    begin
+      frmGoPhast.Grid.SideContourDataSet := nil;
+    end;
+    FLegend.ValueSource := DataSet;
+    FLegend.ColoringLimits := DataSet.ContourLimits;
+  end;
+  frmGoPhast.PhastModel.Grid.GridChanged;
+  ContourColors := frmGoPhast.PhastModel.ContourColors;
+  ContourColors.ColorScheme := comboColorScheme.ItemIndex;
+  ContourColors.ColorCycles := seCycles.AsInteger;
+  ContourColors.ColorExponent := seColorExponent.Value;
+  tabLegend.TabVisible := FLegend.ValueSource <> nil;
+  FLegend.ColorParameters := ContourColors;
+end;
+
+function TfrmContourData.GetContourDataSet: TDataArray;
+begin
+  result := frmGoPhast.Grid.TopContourDataSet;
+  if result = nil then
+  begin
+    result := frmGoPhast.Grid.FrontContourDataSet;
+  end;
+  if result = nil then
+  begin
+    result := frmGoPhast.Grid.SideContourDataSet;
+  end;
+  if result = nil then
+  begin
+    result := frmGoPhast.Grid.ThreeDContourDataSet;
+  end;
+end;
+
 procedure TfrmContourData.HandleSelectedObject(AnObject: TObject);
 var
   DataSet: TDataArray;
   Contours: TContours;
+  ContourDataSet: TDataArray;
 begin
   if (AnObject = nil) then
   begin
@@ -389,10 +415,33 @@ begin
 
     reComment.Text := DataSet.Comment;
     cbLogTransform.Enabled := DataSet.DataType = rdtDouble;
-    ReadLimits(DataSet.DataType, DataSet.ContourLimits);
+    HandleLimitChoice(DataSet);
     cbSpecifyContours.Enabled := True;
-    Contours := DataSet.Contours;
-    cbSpecifyContours.Checked := (Contours <> nil) and Contours.SpecifyContours;
+
+    case rgUpdateLimitChoice.ItemIndex of
+      0:
+        begin
+          Contours := DataSet.Contours;
+          cbSpecifyContours.Checked := (Contours <> nil) and Contours.SpecifyContours;
+        end;
+      1:
+        begin
+          ContourDataSet := GetContourDataSet;
+          if (ContourDataSet <> nil) and (DataSet.DataType = ContourDataSet.DataType) then
+          begin
+            Contours := ContourDataSet.Contours;
+            DataSet.Contours := Contours;
+            cbSpecifyContours.Checked := (Contours <> nil) and Contours.SpecifyContours;
+          end
+          else
+          begin
+            Contours := DataSet.Contours;
+            cbSpecifyContours.Checked := (Contours <> nil) and Contours.SpecifyContours;
+          end;
+        end;
+      else
+        Assert(False);
+    end;
   end;
   UpdateLabelsAndLegend;
 end;
@@ -431,6 +480,34 @@ begin
   inherited;
   NodeDataSize := SizeOf(TClassificationNodeData);
 end;
+
+procedure TfrmContourData.HandleLimitChoice(DataSet: TDataArray);
+var
+  ContourDataSet: TDataArray;
+begin
+  case rgUpdateLimitChoice.ItemIndex of
+    0:
+      begin
+        ReadLimits(DataSet.DataType, DataSet.ContourLimits);
+      end;
+    1:
+      begin
+        ContourDataSet := GetContourDataSet;
+        if (ContourDataSet <> nil) and (DataSet.DataType = ContourDataSet.DataType) then
+        begin
+          ReadLimits(ContourDataSet.DataType, ContourDataSet.ContourLimits);
+        end
+        else
+        begin
+          ReadLimits(DataSet.DataType, DataSet.ContourLimits);
+        end;
+      end;
+    else
+      Assert(False);
+  end;
+end;
+
+
 
 initialization
 

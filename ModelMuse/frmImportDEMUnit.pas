@@ -267,6 +267,7 @@ var
     end;
   end;
 begin
+  frmProgress.Caption := 'Progress';
   frmProgress.Show;
   try
     Grid := frmGoPhast.PhastModel.Grid;

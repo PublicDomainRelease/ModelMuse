@@ -683,7 +683,17 @@ begin
         KeyValMatrix[20].SetVal(0,self.IntermedSens);
         KeyValMatrix[21].SetVal(0,self.FinalSens);
         KeyValMatrix[22].SetVal(0,self.DataExchange);
-        KeyValMatrix[23].SetVal(0,self.CreateInitFiles);
+        // CreateInitFiles is a special case
+        case UcMode of
+          umFwd: ;
+          umSensAnal: KeyValMatrix[23].SetVal(0,self.CreateInitFiles);
+          umParEst: ;
+          umTestLin: ;
+          umPred: ;
+          umAdvTestLin: ;
+          umNonlinUncert: ;
+          umInvObjFunc: ;
+        end;
       end;
     J_BuildInputBlockExclDef('UCODE_Control_Data',bdUcodeControlData,
                                      Defaults, UCDBlock, False);

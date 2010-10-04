@@ -44,7 +44,7 @@ implementation
 
 uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
   ModflowTransientListParameterUnit, ModflowUnitNumbers, frmProgressUnit, 
-  ModflowGridUnit;
+  ModflowGridUnit, Forms;
 
 { TModflowCHD_Writer }
 
@@ -163,6 +163,7 @@ begin
   if ShouldWriteFile or ShouldWriteObservationFile then
   begin
     Evaluate;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -178,6 +179,7 @@ begin
     frmProgress.AddMessage('Writing CHD Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -185,6 +187,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -192,6 +195,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -199,6 +203,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Sets 3 and 4.');
     WriteDataSets3And4;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -300,6 +305,7 @@ begin
   begin
     Cell := CellList[CellIndex] as TCHD_Cell;
     WriteCell(Cell, DataSetIdentifier, VariableIdentifiers);
+    CheckCell(Cell, 'CHD');
   end;
   // Dummy inactive cells to fill out data set 4b.
   // Each instance of a parameter is required to have the same

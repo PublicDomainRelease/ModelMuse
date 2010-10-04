@@ -22,7 +22,7 @@ type
 implementation
 
 uses ModflowUnitNumbers, ModflowTimeUnit, frmErrorsAndWarningsUnit, 
-  frmProgressUnit;
+  frmProgressUnit, Forms;
 
 { TOutputControlWriter }
 
@@ -192,6 +192,7 @@ begin
     StressPeriod := StressPeriods.Items[StressPeriodIndex];
     for TimeStepIndex := 0 to StressPeriod.NumberOfSteps - 1 do
     begin
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;

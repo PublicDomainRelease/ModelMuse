@@ -648,7 +648,7 @@ constructor TEvtCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FEvapotranspirationRateData := TModflowTimeList.Create(Model);
+  FEvapotranspirationRateData := TModflowTimeList.Create(Model, ScreenObject);
   FEvapotranspirationRateData.NonParamDescription := 'Evapo- transpiration rate';
   FEvapotranspirationRateData.ParamDescription := ' evapo- transpiration rate multiplier';
   AddTimeList(FEvapotranspirationRateData);
@@ -1334,7 +1334,7 @@ constructor TEvtLayerCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FEvapotranspirationLayerData := TModflowTimeList.Create(Model);
+  FEvapotranspirationLayerData := TModflowTimeList.Create(Model, ScreenObject);
   FEvapotranspirationLayerData.NonParamDescription := 'Evapo- transpiration layer';
   FEvapotranspirationLayerData.ParamDescription := ' evapo- transpiration layer';
   FEvapotranspirationLayerData.DataType := rdtInteger;
@@ -1672,12 +1672,12 @@ constructor TEvtSurfDepthCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FEvapotranspirationSurfaceData := TModflowTimeList.Create(Model);
+  FEvapotranspirationSurfaceData := TModflowTimeList.Create(Model, ScreenObject);
   FEvapotranspirationSurfaceData.NonParamDescription := 'Evapo- transpiration surface';
   FEvapotranspirationSurfaceData.ParamDescription := ' evapo- transpiration surface';
   AddTimeList(FEvapotranspirationSurfaceData);
 
-  FEvapotranspirationDepthData := TModflowTimeList.Create(Model);
+  FEvapotranspirationDepthData := TModflowTimeList.Create(Model, ScreenObject);
   FEvapotranspirationDepthData.NonParamDescription := 'Evapo- transpiration depth';
   FEvapotranspirationDepthData.ParamDescription := ' evapo- transpiration depth';
   AddTimeList(FEvapotranspirationDepthData);

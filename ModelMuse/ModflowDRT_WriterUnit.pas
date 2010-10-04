@@ -34,7 +34,7 @@ type
 implementation
 
 uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
-  ModflowTransientListParameterUnit, ModflowUnitNumbers, frmProgressUnit;
+  ModflowTransientListParameterUnit, ModflowUnitNumbers, frmProgressUnit, Forms;
 
 { TModflowDRT_Writer }
 
@@ -170,6 +170,7 @@ begin
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrDRT, PhastModel.UnitNumbers.UnitNumber(StrDRT), NameOfFile, foInput);
   Evaluate;
+  Application.ProcessMessages;
   if not frmProgress.ShouldContinue then
   begin
     Exit;
@@ -180,6 +181,7 @@ begin
     frmProgress.AddMessage('Writing DRN Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -187,6 +189,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -194,6 +197,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Sets 2 and 3.');
     WriteDataSets2And3;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -217,6 +221,7 @@ begin
   begin
     Cell := CellList[CellIndex] as TDrt_Cell;
     WriteCell(Cell, DataSetIdentifier, VariableIdentifiers);
+    CheckCell(Cell, 'DRT');
   end;
   // Dummy inactive cells to fill out data set 3b.
   // Each instance of a parameter is required to have the same

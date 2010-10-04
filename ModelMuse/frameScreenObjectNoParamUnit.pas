@@ -169,7 +169,7 @@ begin
   begin
     for Index := 0 to Boundary.Values.TimeListCount - 1 do
     begin
-      dgModflowBoundary.Columns[2+Index].AutoAdjustColWidths := True;
+//      dgModflowBoundary.Columns[2+Index].AutoAdjustColWidths := True;
       TimeList := Boundary.Values.TimeLists[Index];
       if Index = ConductanceColumn then
       begin
@@ -181,6 +181,8 @@ begin
         dgModflowBoundary.Cells[2+Index, 0] := TimeList.NonParamDescription;
       end;
       dgModflowBoundary.Columns[2+Index].AutoAdjustColWidths := False;
+      dgModflowBoundary.ColWidths[2+Index] :=
+        dgModflowBoundary.WidthNeededToFitText(2+Index,0);
     end;
   end;
   GridRect.Left := 2;

@@ -82,6 +82,7 @@ begin
     Caption := Caption + ' - ' + FDxfName;
     GetDataSets;
     frmProgress.PopupParent := self;
+    frmProgress.Caption := 'Progress';
     frmProgress.Show;
     try
       FDxfObject := DXF_Object.Create(name);
@@ -162,6 +163,7 @@ begin
           end;
         end;
       end;
+      frmProgress.Caption := '';
       frmProgress.Prefix := 'Object ';
       frmProgress.PopupParent := self;
       frmProgress.Show;

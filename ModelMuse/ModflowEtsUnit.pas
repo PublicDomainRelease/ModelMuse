@@ -1018,12 +1018,12 @@ constructor TEtsSurfDepthCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FEvapotranspirationSurfaceData := TModflowTimeList.Create(Model);
+  FEvapotranspirationSurfaceData := TModflowTimeList.Create(Model, ScreenObject);
   FEvapotranspirationSurfaceData.NonParamDescription := 'Evapo- transpiration surface';
   FEvapotranspirationSurfaceData.ParamDescription := ' evapo- transpiration surface';
   AddTimeList(FEvapotranspirationSurfaceData);
 
-  FEvapotranspirationDepthData := TModflowTimeList.Create(Model);
+  FEvapotranspirationDepthData := TModflowTimeList.Create(Model, ScreenObject);
   FEvapotranspirationDepthData.NonParamDescription := 'Evapo- transpiration depth';
   FEvapotranspirationDepthData.ParamDescription := ' evapo- transpiration depth';
   AddTimeList(FEvapotranspirationDepthData);
@@ -1055,7 +1055,7 @@ var
 begin
   While Index >= inherited TimeListCount do
   begin
-    TimeList := TModflowTimeList.Create(Model);
+    TimeList := TModflowTimeList.Create(Model, ScreenObject);
     Count := inherited TimeListCount;
     FractionIndex := IntToStr(Count div 2);
     if Odd(Count)  then

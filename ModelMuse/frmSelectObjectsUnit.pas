@@ -117,6 +117,7 @@ var
   Item: TListItem;
   ListView: TListView;
   IncludeHiddenObjects: boolean;
+  Objects: TStringList;
 begin
   FGettingData := True;
   try
@@ -124,18 +125,35 @@ begin
     lvTop.Items.Clear;
     lvFront.Items.Clear;
     lvSide.Items.Clear;
-    for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
-    begin
-      AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
-      if not AScreenObject.Deleted and (IncludeHiddenObjects or
-        AScreenObject.Visible) then
+    Objects:= TStringList.Create;
+    try
+      for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
       begin
-        ListView := GetCurrentListView;
+        AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
+        if not AScreenObject.Deleted and (IncludeHiddenObjects or
+          AScreenObject.Visible) then
+        begin
+          Objects.AddObject(AScreenObject.Name, AScreenObject);
+        end;
+      end;
+      Objects.Sort;
+      ListView := nil;
+      for Index := 0 to Objects.Count - 1 do
+      begin
+        AScreenObject := Objects.Objects[Index] as TScreenObject;
+        case AScreenObject.ViewDirection of
+          vdTop: ListView := lvTop;
+          vdFront: ListView := lvFront;
+          vdSide: ListView := lvSide;
+          else Assert(False);
+        end;
         Item := ListView.Items.Add;
         Item.Caption := AScreenObject.Name;
         Item.Data := AScreenObject;
         Item.Checked := AScreenObject.Selected;
       end;
+    finally
+      Objects.Free;
     end;
     tabTop.TabVisible := lvTop.Items.Count <> 0;
     tabFront.TabVisible := lvFront.Items.Count <> 0;

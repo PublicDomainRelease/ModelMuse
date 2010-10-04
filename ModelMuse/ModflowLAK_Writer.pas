@@ -35,7 +35,7 @@ type
 implementation
 
 uses ModflowUnitNumbers, ScreenObjectUnit, frmErrorsAndWarningsUnit,
-  ModflowLakUnit, DataSetUnit, frmProgressUnit;
+  ModflowLakUnit, DataSetUnit, frmProgressUnit, Forms;
 
 { TModflowLAK_Writer }
 
@@ -254,6 +254,7 @@ begin
   ModflowLayer := 0;
   for LayerIndex := 0 to PhastModel.ModflowGrid.LayerCount - 1 do
   begin
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -277,6 +278,7 @@ begin
   ModflowLayer := 0;
   for LayerIndex := 0 to PhastModel.ModflowGrid.LayerCount - 1 do
   begin
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -300,6 +302,7 @@ var
 begin
   for LakeIndex := 0 to FLakeList.Count - 1 do
   begin
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -309,6 +312,7 @@ begin
     Lake := ScreenObject.ModflowLakBoundary;
     for TimeIndex := 0 to Lake.Values.Count -1 do
     begin
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -363,6 +367,7 @@ begin
   end;
   for TimeIndex := 0 to PhastModel.ModflowFullStressPeriods.Count - 1 do
   begin
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -386,6 +391,7 @@ begin
     begin
       WriteLakeDefinitions;
     end;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -409,6 +415,7 @@ begin
   NSLMS := 0;
   for LakeIndex := 0 to FLakeList.Count - 1 do
   begin
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -429,6 +436,7 @@ begin
   begin
     for LakeIndex := 0 to FLakeList.Count - 1 do
     begin
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -480,6 +488,7 @@ begin
   end;
   FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrLAK, PhastModel.UnitNumbers.UnitNumber(StrLAK), FNameOfFile, foInput);
+  Application.ProcessMessages;
   if not frmProgress.ShouldContinue then
   begin
     Exit;
@@ -490,6 +499,7 @@ begin
     frmProgress.AddMessage('Writing LAK Package input.');
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+      Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -497,12 +507,14 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
     end;
 
     frmProgress.AddMessage('  Writing Data Set 3.');
+    Application.ProcessMessages;
     WriteDataSet3;
     if not frmProgress.ShouldContinue then
     begin

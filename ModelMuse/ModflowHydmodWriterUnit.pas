@@ -63,7 +63,7 @@ implementation
 
 uses
   frmModflowNameFileUnit, ModflowUnitNumbers, ScreenObjectUnit,
-  GoPhastTypes, frmProgressUnit, frmErrorsAndWarningsUnit, FastGEO;
+  GoPhastTypes, frmProgressUnit, frmErrorsAndWarningsUnit, FastGEO, Forms;
 
 { TModflowHydmodWriter }
 
@@ -536,6 +536,7 @@ begin
   FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrHYD, PhastModel.UnitNumbers.UnitNumber(StrHYD), FNameOfFile, foInput);
   Evaluate;
+  Application.ProcessMessages;
   if not frmProgress.ShouldContinue then
   begin
     Exit;
@@ -545,6 +546,7 @@ begin
     frmProgress.AddMessage('Writing HYDMOD Package input.');
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;

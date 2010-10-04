@@ -171,8 +171,8 @@ begin
       dgModflowBoundary.Columns[NewColPosition + NameIndex].
         UseButton := True;
 
-      dgModflowBoundary.Columns[NewColPosition + NameIndex].
-        AutoAdjustColWidths := True;
+//      dgModflowBoundary.Columns[NewColPosition + NameIndex].
+//        AutoAdjustColWidths := True;
       dgModflowBoundary.Cells[NewColPosition + NameIndex,0] :=
         Param.ParameterName +
         ParamColumnCaption(NameIndex);
@@ -180,6 +180,8 @@ begin
         AutoAdjustColWidths := False;
 
       dgModflowBoundary.Objects[NewColPosition + NameIndex,0] := Param;
+      dgModflowBoundary.ColWidths[NewColPosition + NameIndex] :=
+        dgModflowBoundary.WidthNeededToFitText(NewColPosition + NameIndex,0);
     end;
   end
   else if clbParameters.State[Index] = cbUnchecked then

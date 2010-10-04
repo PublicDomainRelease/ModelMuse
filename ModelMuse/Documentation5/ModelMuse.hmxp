@@ -98,7 +98,7 @@
       <config-value name="deffont">font-family:'MS Sans Serif'; font-size:8pt; color:#000000;</config-value>
       <config-value name="contents"></config-value>
       <config-value name="topicprefix"></config-value>
-      <config-value name="autohelpstart">3587</config-value>
+      <config-value name="autohelpstart">3591</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">1</config-value>
       <config-value name="searchpath">.\;.\Used Images\;.\ScreenShots\;.\ModflowGuide\</config-value>
@@ -605,6 +605,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Data_Set_Values_Dialog_Box" value="3519"/>
       <helpcontext-number href="Data_Sets" value="40"/>
       <helpcontext-number href="Data_Sets_Dialog_Box" value="1760"/>
+      <helpcontext-number href="Data_Sets_Dialog_Box#Comment" value="3589"/>
       <helpcontext-number href="Data_Sets_Dialog_Box#Name" value="1770"/>
       <helpcontext-number href="Data_Sets_Dialog_Box#Type" value="1780"/>
       <helpcontext-number href="Data_Sets_in_MODFLOW" value="3476"/>
@@ -759,6 +760,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Leaky_And_Well_Boundaries" value="3130"/>
       <helpcontext-number href="Length" value="1200"/>
       <helpcontext-number href="Limitations" value="3441"/>
+      <helpcontext-number href="LimitChoice" value="3587"/>
       <helpcontext-number href="Link_Streams_Dialog_Box" value="3372"/>
       <helpcontext-number href="Link_to_SFR_Packages_pane_for_" value="3340"/>
       <helpcontext-number href="Link_to_SFR_Packages_pane_for2" value="3350"/>
@@ -915,6 +917,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="RMA_Bottom_Elevation" value="3404"/>
       <helpcontext-number href="RMA_Confined_vs._Convertible" value="3448"/>
       <helpcontext-number href="RMA_Define_Model_Limits" value="3395"/>
+      <helpcontext-number href="RMA_Defining_Hydraulic_Conduct" value="3591"/>
       <helpcontext-number href="RMA_Generating_the_Grid" value="3396"/>
       <helpcontext-number href="RMA_Importing_Data" value="3393"/>
       <helpcontext-number href="RMA_Initial_Set_Up" value="3394"/>
@@ -926,7 +929,9 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="RMA_Southern_Specified_Head_Bo" value="3403"/>
       <helpcontext-number href="RMA_Stress_Periods" value="3401"/>
       <helpcontext-number href="RMA_Study_Area_Description" value="3409"/>
+      <helpcontext-number href="RMA_Study_Area_Description#TableOfProperties" value="3592"/>
       <helpcontext-number href="RMA_Top_Elevation" value="3402"/>
+      <helpcontext-number href="RMA_Using_MODPATH" value="3588"/>
       <helpcontext-number href="RMA_View_Results" value="3407"/>
       <helpcontext-number href="RMA_Wells" value="3405"/>
       <helpcontext-number href="Rocky_Mountain_Arsenal" value="3391"/>
@@ -951,6 +956,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Select_Objects_by_Name" value="2250"/>
       <helpcontext-number href="Select_Objects_for_Editing" value="3525"/>
       <helpcontext-number href="Select_Results_to_Import_Dialog_Box" value="3387"/>
+      <helpcontext-number href="Select_Results_to_Import_Dialog_Box#Comment" value="3590"/>
       <helpcontext-number href="Selected_Objects_Dialog_Box" value="2230"/>
       <helpcontext-number href="Selecting_Objects" value="1520"/>
       <helpcontext-number href="Selecting_Objects#SelectVertices" value="3438"/>

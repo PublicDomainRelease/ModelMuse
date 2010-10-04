@@ -16,7 +16,7 @@ type
 
 implementation
 
-uses ModflowUnitNumbers, frmProgressUnit;
+uses ModflowUnitNumbers, frmProgressUnit, Forms;
 
 { TModflowDiscretizationWriter }
 
@@ -47,6 +47,7 @@ begin
     // data set 2
     frmProgress.AddMessage('  Writing Data Set 2.');
     PhastModel.LayerStructure.WriteLAYCB(self);
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -55,6 +56,7 @@ begin
     // data set 3
     frmProgress.AddMessage('  Writing Data Set 3.');
     PhastModel.ModflowGrid.WriteDELR(self);
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -63,6 +65,7 @@ begin
     // data set 4
     frmProgress.AddMessage('  Writing Data Set 4.');
     PhastModel.ModflowGrid.WriteDELC(self);
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -70,6 +73,7 @@ begin
 
     frmProgress.AddMessage('  Checking column widths.');
     PhastModel.ModflowGrid.CheckColumnWidths;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -77,6 +81,7 @@ begin
 
     frmProgress.AddMessage('  Checking row height.');
     PhastModel.ModflowGrid.CheckRowHeights;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -84,6 +89,7 @@ begin
 
     frmProgress.AddMessage('  Checking row to column size ratios.');
     PhastModel.ModflowGrid.CheckRowToColumnRatios;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -92,6 +98,7 @@ begin
     // data set 5
     frmProgress.AddMessage('  Writing Data Set 5.');
     PhastModel.ModflowGrid.WriteTOP(self);
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -101,6 +108,7 @@ begin
     // data set 6
     frmProgress.AddMessage('  Writing Data Set 6.');
     PhastModel.ModflowGrid.WriteBOTM(self, PhastModel);
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -109,6 +117,7 @@ begin
 
     frmProgress.AddMessage('  Checking elevations.');
     PhastModel.ModflowGrid.CheckElevations;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -117,6 +126,7 @@ begin
     // data set 7
     frmProgress.AddMessage('  Writing Data Set 7.');
     PhastModel.ModflowFullStressPeriods.WriteStressPeriods(self);
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;

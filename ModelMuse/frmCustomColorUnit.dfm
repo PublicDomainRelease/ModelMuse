@@ -1,29 +1,25 @@
 inherited frmCustomColor: TfrmCustomColor
   Caption = 'frmCustomColor'
-  ClientHeight = 417
+  ClientHeight = 489
   ClientWidth = 606
   OnResize = FormResize
   ExplicitWidth = 614
-  ExplicitHeight = 451
+  ExplicitHeight = 523
   PixelsPerInch = 96
   TextHeight = 18
   object pcChoices: TPageControl
     Left = 0
     Top = 0
     Width = 606
-    Height = 368
-    ActivePage = tabLegend
+    Height = 440
+    ActivePage = tabSelection
     Align = alClient
     TabOrder = 0
     object tabSelection: TTabSheet
       Caption = 'Selection'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         598
-        335)
+        407)
       object lblDataSet: TLabel
         Left = 8
         Top = 4
@@ -33,35 +29,39 @@ inherited frmCustomColor: TfrmCustomColor
       end
       object lblColorScheme: TLabel
         Left = 8
-        Top = 176
+        Top = 248
         Width = 97
         Height = 18
         Anchors = [akLeft, akBottom]
         Caption = 'Color scheme'
+        ExplicitTop = 176
       end
       object lblCycles: TLabel
         Left = 492
-        Top = 203
+        Top = 275
         Width = 47
         Height = 18
         Anchors = [akRight, akBottom]
         Caption = 'Cycles'
+        ExplicitTop = 203
       end
       object pbColorScheme: TPaintBox
         Left = 8
-        Top = 240
+        Top = 312
         Width = 433
         Height = 33
         Anchors = [akLeft, akRight, akBottom]
         OnPaint = pbColorSchemePaint
+        ExplicitTop = 240
       end
       object lblColorAdjustment: TLabel
         Left = 8
-        Top = 279
+        Top = 351
         Width = 117
         Height = 18
         Anchors = [akLeft, akBottom]
         Caption = 'Color adjustment'
+        ExplicitTop = 279
       end
       object lblComment: TLabel
         Left = 8
@@ -74,8 +74,7 @@ inherited frmCustomColor: TfrmCustomColor
         Left = 8
         Top = 81
         Width = 585
-        Height = 89
-        AutoSize = False
+        Height = 80
         Anchors = [akLeft, akTop, akRight, akBottom]
         Enabled = False
         ReadOnly = True
@@ -83,7 +82,7 @@ inherited frmCustomColor: TfrmCustomColor
       end
       object comboColorScheme: TComboBox
         Left = 8
-        Top = 200
+        Top = 272
         Width = 478
         Height = 26
         Style = csDropDownList
@@ -110,7 +109,7 @@ inherited frmCustomColor: TfrmCustomColor
       end
       object seCycles: TJvSpinEdit
         Left = 492
-        Top = 240
+        Top = 312
         Width = 101
         Height = 26
         ButtonKind = bkClassic
@@ -124,7 +123,7 @@ inherited frmCustomColor: TfrmCustomColor
       end
       object jsColorExponent: TJvxSlider
         Left = 4
-        Top = 295
+        Top = 367
         Width = 150
         Height = 40
         Increment = 2
@@ -136,7 +135,7 @@ inherited frmCustomColor: TfrmCustomColor
       end
       object seColorExponent: TJvSpinEdit
         Left = 160
-        Top = 306
+        Top = 378
         Width = 65
         Height = 26
         ButtonKind = bkClassic
@@ -181,7 +180,7 @@ inherited frmCustomColor: TfrmCustomColor
       end
       object cbLogTransform: TCheckBox
         Left = 247
-        Top = 310
+        Top = 382
         Width = 137
         Height = 17
         Anchors = [akLeft, akBottom]
@@ -196,17 +195,26 @@ inherited frmCustomColor: TfrmCustomColor
         TabOrder = 1
         OnChangingEx = udDataSetsChangingEx
       end
+      object rgUpdateLimitChoice: TRadioGroup
+        Left = 8
+        Top = 168
+        Width = 305
+        Height = 73
+        Anchors = [akLeft, akBottom]
+        Caption = 'When changing data sets:'
+        ItemIndex = 0
+        Items.Strings = (
+          'Update limits and legend (default)'
+          'Retain limits and legend (animations)')
+        TabOrder = 8
+      end
     end
     object tabFilters: TTabSheet
       Caption = 'Filters'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         598
-        335)
+        407)
       object lblLowerLimit: TLabel
         Left = 8
         Top = 3
@@ -230,11 +238,12 @@ inherited frmCustomColor: TfrmCustomColor
       end
       object lblNumberOfValuesToIgnore: TLabel
         Left = 130
-        Top = 310
+        Top = 382
         Width = 185
         Height = 18
         Anchors = [akLeft, akBottom]
         Caption = 'Number of values to ignore'
+        ExplicitTop = 310
       end
       object lblEpsilon: TLabel
         Left = 203
@@ -301,7 +310,7 @@ inherited frmCustomColor: TfrmCustomColor
         Left = 8
         Top = 112
         Width = 177
-        Height = 189
+        Height = 261
         Anchors = [akLeft, akTop, akBottom]
         ColCount = 1
         FixedCols = 0
@@ -341,7 +350,7 @@ inherited frmCustomColor: TfrmCustomColor
       end
       object seNumberOfValuesToIgnore: TJvSpinEdit
         Left = 8
-        Top = 307
+        Top = 379
         Width = 121
         Height = 26
         CheckMinValue = True
@@ -368,30 +377,27 @@ inherited frmCustomColor: TfrmCustomColor
       Caption = 'Legend'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object imLegend: TImage
         Left = 218
         Top = 0
         Width = 380
-        Height = 335
+        Height = 407
         Align = alClient
         ExplicitLeft = 224
         ExplicitTop = -2
+        ExplicitHeight = 335
       end
       object Panel2: TPanel
         Left = 0
         Top = 0
         Width = 218
-        Height = 335
+        Height = 407
         Align = alLeft
         BevelOuter = bvNone
         TabOrder = 0
         DesignSize = (
           218
-          335)
+          407)
         object lblMethod: TLabel
           Left = 8
           Top = 6
@@ -401,11 +407,12 @@ inherited frmCustomColor: TfrmCustomColor
         end
         object lblColorLegendRows: TLabel
           Left = 8
-          Top = 279
+          Top = 351
           Width = 109
           Height = 18
           Anchors = [akLeft, akBottom]
           Caption = 'Number of rows'
+          ExplicitTop = 279
         end
         object comboMethod: TComboBox
           Left = 8
@@ -424,7 +431,7 @@ inherited frmCustomColor: TfrmCustomColor
         end
         object seLegendRows: TJvSpinEdit
           Left = 8
-          Top = 300
+          Top = 372
           Width = 121
           Height = 26
           CheckMaxValue = False
@@ -440,7 +447,7 @@ inherited frmCustomColor: TfrmCustomColor
           Left = 8
           Top = 59
           Width = 184
-          Height = 214
+          Height = 286
           Anchors = [akLeft, akTop, akBottom]
           Color = clBtnFace
           ColCount = 1
@@ -486,7 +493,7 @@ inherited frmCustomColor: TfrmCustomColor
   end
   object Panel1: TPanel
     Left = 0
-    Top = 368
+    Top = 440
     Width = 606
     Height = 49
     Align = alBottom

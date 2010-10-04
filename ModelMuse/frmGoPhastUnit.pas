@@ -299,6 +299,13 @@ type
     ExportImage1: TMenuItem;
     miManageParameters: TMenuItem;
     miManageHeadObservations: TMenuItem;
+    miContourstoShapefile: TMenuItem;
+    sdShapefile: TSaveDialog;
+    miShapefile: TMenuItem;
+    miPathlinestoShapefile: TMenuItem;
+    miEndpointsatStartingLocationstoShapefile: TMenuItem;
+    miEndpointsatEndingLocationstoShapefile: TMenuItem;
+    miTimeSeriestoShapefile: TMenuItem;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -389,6 +396,11 @@ type
     procedure miManageHeadObservationsClick(Sender: TObject);
     procedure sdModelMateShow(Sender: TObject);
     procedure sdModelMateClose(Sender: TObject);
+    procedure miContourstoShapefileClick(Sender: TObject);
+    procedure miPathlinestoShapefileClick(Sender: TObject);
+    procedure miEndpointsatStartingLocationstoShapefileClick(Sender: TObject);
+    procedure miEndpointsatEndingLocationstoShapefileClick(Sender: TObject);
+    procedure miTimeSeriestoShapefileClick(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -1590,7 +1602,7 @@ type
 
 
 var
-  // @name is the main form of GoPhast.
+  // @name is the main form of ModelMuse.
   frmGoPhast: TfrmGoPhast;
 
 const
@@ -1630,11 +1642,16 @@ uses
   frmDataSetValuesUnit, frmExportShapefileObjectsUnit, frmDeleteImageUnit,
   frmModpathDisplayUnit, frmPhastLocationUnit, frmEndPointDisplayUnit,
   frmTimeSeriesDisplayUnit, frmImportSurferGrdFileUnitUnit, frmImportDEMUnit,
-  frmExportImageUnit, frmManageParametersUnit, frmManageHeadObservationsUnit;
+  frmExportImageUnit, frmManageParametersUnit, frmManageHeadObservationsUnit,
+  RealListUnit, ContourExport;
 
 resourcestring
   StrModelMate = 'ModelMate';
   StrEnableModelMate = 'EnableModelMate';
+  StrPathlineshp = 'Pathline.shp';
+  StrEndpointsAtStartshp = 'EndpointsAtStart.shp';
+  StrEndpointsAtEndshp = 'EndpointsAtEnd.shp';
+  StrTimeSeriesshp = 'TimeSeries.shp';
 
 
 {$R *.dfm}
@@ -2133,6 +2150,20 @@ var
   FileName: string;
 begin
   inherited;
+  if not PhastModel.ModflowPackages.ZoneBudget.IsSelected then
+  begin
+    Beep;
+    MessageDlg('You must activate ZONEBUDGET in the MODFLOW Packages and '
+      + 'Programs dialog box before running ZONEBUDGET.',
+      mtWarning, [mbOK], 0);
+    Exit;
+  end;
+
+  if (sdZonebudgetInput.FileName = '') and (sdModflowInput.FileName <> '') then
+  begin
+    sdZonebudgetInput.FileName := ChangeFileExt(sdModflowInput.FileName,
+      sdZonebudgetInput.DefaultExt);
+  end;
   if (sdZonebudgetInput.FileName = '') and (sdSaveDialog.FileName <> '') then
   begin
     sdZonebudgetInput.FileName := ChangeFileExt(sdSaveDialog.FileName,
@@ -3909,6 +3940,54 @@ begin
     and PhastModel.ModflowPackages.HobPackage.IsSelected
 end;
 
+procedure TfrmGoPhast.miEndpointsatEndingLocationstoShapefileClick(
+  Sender: TObject);
+var
+  FileName: string;
+begin
+  inherited;
+  FileName := ChangeFileExt(PhastModel.ModelFileName, '');
+  if FileName = '' then
+  begin
+    FileName := IncludeTrailingPathDelimiter(GetCurrentDir)
+      + StrEndpointsAtEndshp;
+  end
+  else
+  begin
+    FileName := FileName + '_' + StrEndpointsAtEndshp;
+  end;
+  sdShapefile.FileName := FileName;
+  if sdShapefile.Execute then
+  begin
+    PhastModel.EndPoints.Points.
+      ExportShapefileAtEndingLocations(sdShapefile.FileName);
+  end;
+end;
+
+procedure TfrmGoPhast.miEndpointsatStartingLocationstoShapefileClick(
+  Sender: TObject);
+var
+  FileName: string;
+begin
+  inherited;
+  FileName := ChangeFileExt(PhastModel.ModelFileName, '');
+  if FileName = '' then
+  begin
+    FileName := IncludeTrailingPathDelimiter(GetCurrentDir)
+      + StrEndpointsAtStartshp;
+  end
+  else
+  begin
+    FileName := FileName + '_' + StrEndpointsAtStartshp;
+  end;
+  sdShapefile.FileName := FileName;
+  if sdShapefile.Execute then
+  begin
+    PhastModel.EndPoints.Points.
+      ExportShapefileAtStartingLocations(sdShapefile.FileName);
+  end;
+end;
+
 procedure TfrmGoPhast.EnableLinkStreams;
 begin
   miLinkSFRStreams.Enabled := (PhastModel.ModelSelection = msModflow)
@@ -4437,6 +4516,34 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.miContourstoShapefileClick(Sender: TObject);
+var
+  ContourExporter: TContourExtractor;
+begin
+  inherited;
+  if Grid.TopContourDataSet = nil then
+  begin
+    Beep;
+    MessageDlg('You must contour data on the grid to export '
+      + 'contours to a Shapefile.', mtWarning, [mbOK], 0);
+  end
+  else
+  begin
+    sdShapefile.FileName := IncludeTrailingPathDelimiter(GetCurrentDir)
+      + Grid.TopContourDataSet.Name + '.shp';
+    if sdShapefile.Execute then
+    begin
+      ContourExporter := TContourExtractor.Create(PhastModel);
+      try
+        ContourExporter.CreateShapes(PhastModel.ContourLegend.Values, Grid.TopContourDataSet,
+          sdShapefile.FileName);
+      finally
+        ContourExporter.Free;
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmGoPhast.ConvertPoint(Sender: TObject; VD: TViewDirection;
   const RealPoint: TPoint2D; var ScreenCoordinate: TPoint);
 begin
@@ -4496,6 +4603,28 @@ procedure TfrmGoPhast.miHintDelayClick(Sender: TObject);
 begin
   // Allow the user to adjust how long hints should be visible.
   ShowAForm(TfrmHintDelay);
+end;
+
+procedure TfrmGoPhast.miTimeSeriestoShapefileClick(Sender: TObject);
+var
+  FileName: string;
+begin
+  inherited;
+  FileName := ChangeFileExt(PhastModel.ModelFileName, '');
+  if FileName = '' then
+  begin
+    FileName := IncludeTrailingPathDelimiter(GetCurrentDir)
+      + StrTimeSeriesshp;
+  end
+  else
+  begin
+    FileName := FileName + '_' + StrTimeSeriesshp;
+  end;
+  sdShapefile.FileName := FileName;
+  if sdShapefile.Execute then
+  begin
+    PhastModel.TimeSeries.ExportShapefile(sdShapefile.FileName);
+  end;
 end;
 
 procedure TfrmGoPhast.SetTopScreenObjectsChanged(const Value: boolean);
@@ -5184,18 +5313,19 @@ var
   Index: integer;
   DataSet: TDataArray;
 begin
+  PhastModel.UpdateDataSetDimensions;
   if Grid = nil then
   begin
-    for Index := 0 to PhastModel.DataSetCount - 1 do
-    begin
-      DataSet := PhastModel.DataSets[Index];
-      DataSet.UpdateDimensions(-1, -1, -1);
-    end;
-    for Index := 0 to PhastModel.BoundaryDataSetCount - 1 do
-    begin
-      DataSet := PhastModel.BoundaryDataSets[Index];
-      DataSet.UpdateDimensions(-1, -1, -1);
-    end;
+//    for Index := 0 to PhastModel.DataSetCount - 1 do
+//    begin
+//      DataSet := PhastModel.DataSets[Index];
+//      DataSet.UpdateDimensions(-1, -1, -1);
+//    end;
+//    for Index := 0 to PhastModel.BoundaryDataSetCount - 1 do
+//    begin
+//      DataSet := PhastModel.BoundaryDataSets[Index];
+//      DataSet.UpdateDimensions(-1, -1, -1);
+//    end;
     for Index := 0 to DeletedDataSets.Count - 1 do
     begin
       DataSet := DeletedDataSets[Index] as TDataArray;
@@ -5204,18 +5334,18 @@ begin
   end
   else
   begin
-    for Index := 0 to PhastModel.DataSetCount - 1 do
-    begin
-      DataSet := PhastModel.DataSets[Index];
-      DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-        Grid.ColumnCount);
-    end;
-    for Index := 0 to PhastModel.BoundaryDataSetCount - 1 do
-    begin
-      DataSet := PhastModel.BoundaryDataSets[Index];
-      DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-        Grid.ColumnCount);
-    end;
+//    for Index := 0 to PhastModel.DataSetCount - 1 do
+//    begin
+//      DataSet := PhastModel.DataSets[Index];
+//      DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+//        Grid.ColumnCount);
+//    end;
+//    for Index := 0 to PhastModel.BoundaryDataSetCount - 1 do
+//    begin
+//      DataSet := PhastModel.BoundaryDataSets[Index];
+//      DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+//        Grid.ColumnCount);
+//    end;
     for Index := 0 to DeletedDataSets.Count - 1 do
     begin
       DataSet := DeletedDataSets[Index] as TDataArray;
@@ -5869,6 +5999,12 @@ var
   DataArray: TDataArray;
   Index: Integer;
 begin
+  if not FileExists(FileName) then
+  begin
+    Beep;
+    MessageDlg(FileName + ' does not exist.', mtError, [mbOK], 0);
+    Exit;
+  end;
   FreeAndNil(frmModflowPackages);
   frmErrorsAndWarnings.Clear;
   Extension := LowerCase(ExtractFileExt(FileName));
@@ -5912,8 +6048,7 @@ begin
     FFileSize := FFileStream.Size;
     if frmScreenObjectProperties <> nil then
     begin
-      frmScreenObjectProperties.tvDataSets.Selected := nil;
-      frmScreenObjectProperties.tvDataSetsChange(nil, nil);
+      frmScreenObjectProperties.Initialize;
     end;
 
     UndoStack.Clear;
@@ -6014,6 +6149,8 @@ begin
     end;
 
     UpdateDataSetDimensions;
+    PhastModel.FixOldModel;
+
 
     sdSaveDialog.FileName := FileName;
     Caption := StrModelName + ': ' + FileName;
@@ -6040,8 +6177,14 @@ begin
     else Assert(False);
   end;
   miConfigurePathlines.Enabled := PhastModel.PathLine.Lines.Count > 0;
+  miPathlinestoShapefile.Enabled := miConfigurePathlines.Enabled;
+
   miConfigureEndpoints.Enabled := PhastModel.EndPoints.Points.Count > 0;
+  miEndpointsatStartingLocationstoShapefile.Enabled := miConfigureEndpoints.Enabled;
+  miEndpointsatEndingLocationstoShapefile.Enabled := miConfigureEndpoints.Enabled;
+
   miConfigureTimeSeries.Enabled := PhastModel.TimeSeries.Series.Count > 0;
+  miTimeSeriestoShapefile.Enabled := miConfigureTimeSeries.Enabled;
   Application.Title := ExtractFileName(FileName) + ' ' + StrModelName;
   frameTopView.ZoomBox.Image32.Invalidate;
   frameFrontView.ZoomBox.Image32.Invalidate;
@@ -6752,11 +6895,21 @@ end;
 procedure TfrmGoPhast.acExportImageExecute(Sender: TObject);
 begin
   inherited;
+  if frmGridColor = nil then
+  begin
+    frmGridColor := TfrmGridColor.Create(nil);
+    UpdateFrmGridColor(True);
+  end;
+  if frmContourData = nil then
+  begin
+    frmContourData := TfrmContourData.Create(nil);
+    UpdateFrmContourData(True);
+  end;
   if frmExportImage = nil then
   begin
     Application.CreateForm(TfrmExportImage, frmExportImage);
   end;
-    frmExportImage.Show;
+  frmExportImage.Show;
 end;
 
 procedure TfrmGoPhast.acExportModelMateExecute(Sender: TObject);
@@ -6925,6 +7078,13 @@ begin
       + 'Programs dialog box before running MODPATH.',
       mtWarning, [mbOK], 0);
     Exit;
+  end;
+
+
+  if (sdModpathInput.FileName = '') and (sdModflowInput.FileName <> '') then
+  begin
+    sdModpathInput.FileName := ChangeFileExt(sdModflowInput.FileName,
+      sdModpathInput.DefaultExt);
   end;
   if (sdModpathInput.FileName = '') and (sdSaveDialog.FileName <> '') then
   begin
@@ -7449,6 +7609,27 @@ begin
   end;
   frmModflowPackages.GetData;
   frmModflowPackages.ShowModal;
+end;
+
+procedure TfrmGoPhast.miPathlinestoShapefileClick(Sender: TObject);
+var
+  FileName: string;
+begin
+  inherited;
+  FileName := ChangeFileExt(PhastModel.ModelFileName, '');
+  if FileName = '' then
+  begin
+    FileName := IncludeTrailingPathDelimiter(GetCurrentDir) + StrPathlineshp;
+  end
+  else
+  begin
+    FileName := FileName + '_' + StrPathlineshp;
+  end;
+  sdShapefile.FileName := FileName;
+  if sdShapefile.Execute then
+  begin
+    PhastModel.PathLine.Lines.ExportShapefile(sdShapefile.FileName);
+  end;
 end;
 
 procedure TfrmGoPhast.miExamplesClick(Sender: TObject);

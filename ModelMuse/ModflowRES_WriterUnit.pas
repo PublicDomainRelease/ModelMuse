@@ -39,7 +39,7 @@ type
 implementation
 
 uses RbwParser, ModflowUnitNumbers, DataSetUnit, PhastModelUnit, ModflowResUnit,
-  ModflowTimeUnit, frmProgressUnit, frmFormulaErrorsUnit;
+  ModflowTimeUnit, frmProgressUnit, frmFormulaErrorsUnit, Forms;
 
 { TModflowRES_Writer }
 
@@ -229,6 +229,7 @@ begin
   try
     for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
     begin
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -242,6 +243,7 @@ begin
     end;
     for Index := 0 to PhastModel.ModflowFullStressPeriods.Count - 1 do
     begin
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -249,6 +251,7 @@ begin
       Item := PhastModel.ModflowFullStressPeriods.Items[Index];
       for ReservoirIndex := 0 to Reservoirs.Count - 1 do
       begin
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -282,6 +285,7 @@ begin
 
         for TimeIndex := 0 to Reservoir.Values.Count - 1 do
         begin
+          Application.ProcessMessages;
           if not frmProgress.ShouldContinue then
           begin
             Exit;
@@ -396,6 +400,7 @@ begin
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrRES, PhastModel.UnitNumbers.UnitNumber(StrRES), NameOfFile, foInput);
   Evaluate;
+  Application.ProcessMessages;
   if not frmProgress.ShouldContinue then
   begin
     Exit;
@@ -407,6 +412,7 @@ begin
     frmProgress.AddMessage('Writing RES Package input.');
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -414,6 +420,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -421,6 +428,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 3.');
     WriteDataSet3;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -428,6 +436,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -435,6 +444,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 5.');
     WriteDataSet5;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -442,6 +452,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 6.');
     WriteDataSet6;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;

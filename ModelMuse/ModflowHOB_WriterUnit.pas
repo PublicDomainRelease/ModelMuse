@@ -46,7 +46,7 @@ type
 implementation
 
 uses ModflowUnitNumbers, ScreenObjectUnit, DataSetUnit,
-  frmErrorsAndWarningsUnit, frmProgressUnit;
+  frmErrorsAndWarningsUnit, frmProgressUnit, Forms;
 
 const
   ObsNameWarning = 'The following Head observation names may be valid for MODFLOW but they are not valid for UCODE.';
@@ -359,6 +359,7 @@ begin
   try
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -366,6 +367,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -375,6 +377,7 @@ begin
     WriteDataSet2;
     for Index := 0 to FObservations.Count - 1 do
     begin
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;

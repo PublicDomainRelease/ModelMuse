@@ -142,7 +142,7 @@ object frameScreenObjectNoParam: TframeScreenObjectNoParam
         Height = 22
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 0
+        ItemHeight = 13
         TabOrder = 0
         OnChange = rdeFormulaChange
         Max = 1.000000000000000000

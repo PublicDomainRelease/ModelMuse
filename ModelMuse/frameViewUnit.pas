@@ -191,10 +191,23 @@ type
     // @name is the TBitmap32 on which the @link(TfrmGoPhast.Grid) and
     // @link(TScreenObject)s are drawn.
     FBitMap32: TBitmap32;
+{$IFDEF ExtraDrawingNeeded}
+// It isn't clear that the code in which FPaintingLayer and FNeedToRedraw
+// are used is actually required.  Until it is clear, I am enclosing the code
+// in IFDEFs.
+//
+// If ExtraDrawingNeeded is not defined, sometimes screen objects
+// are not redisplayed when creating a screen object has been cancelled.
+
+// It looks like these variables only needs to be used if
+// Application.ProcessMessages is called by
+// PaintLayer or something called by PaintLayer.
     FPaintingLayer: Boolean;
     FNeedToRedraw: Boolean;
+{$ENDIF}
     FPreviousMagnification: double;
     FLastMoveTime: TDateTime;
+    FPaintingNeeded: Boolean;
     procedure UpdateStatusBarCoordinates(APoint: TPoint2D);
     procedure UpdateStatusBarForTopBlockDataSet(Column, Row, X, Y: Integer);
     procedure UpdateStatusBarForTopNodeDataSet(Column:
@@ -210,6 +223,7 @@ type
   public
     FPositionedLayer: TPositionedLayer;
     procedure SelectAll;
+    property PaintingNeeded: boolean read FPaintingNeeded;
   private
     // @name: boolean;
     // @name is used inside @link(ZoomBoxImage32MouseUp) to prevent it
@@ -505,6 +519,7 @@ type
     function FindNodeInSelectedScreenObjects(const X, Y: integer;
       const AScreenObject: TScreenObject): integer;
   public
+    procedure UpdateAllViews;
     // @name is called when a @classname is made the
     // @link(TfrmGoPhast.CurrentTool).
     // @name sets the Hint of TfrmGoPhast.@link(TfrmGoPhast.frameTopView),
@@ -561,7 +576,7 @@ uses GR32_Polygons, frmGoPhastUnit, CursorsFoiledAgain, Math, RbwParser,
   frmScreenObjectPropertiesUnit, UndoItemsScreenObjects, frmGridAngleUnit,
   InteractiveTools, frmSetSpacingUnit, frmSubdivideUnit, BigCanvasMethods,
   frmRulerOptionsUnit, PhastModelUnit, frmGridValueUnit, EdgeDisplayUnit,
-  CustomModflowWriterUnit;
+  CustomModflowWriterUnit, frmProgressUnit;
 
 const
   SelectedCellsColor = clSilver;
@@ -1085,6 +1100,7 @@ var
   BitmapIndex: integer;
   Item: TCompressedBitmapItem;
 begin
+  FPaintingNeeded := True;
     // @name is the main routine for drawing the
     // @link(TfrmGoPhast.Grid) and @link(TScreenObject)s.
     // It will also draw any imported images.
@@ -1144,9 +1160,19 @@ begin
         frmGoPhast.Grid.Draw(FBitMap32, ViewDirection);
       end;
 
+      // Do not call Application.ProcessMessages.
+      // Calling Application.ProcessMessages causes all the views to
+      // be redrawn.  If that is done, PaintLayer has to deal with the
+      // case where it is called within PaintLayer from another view.
+      // In addition, this may be the cause of some access violations
+      // within Graphics32.
+      // See the compiler definition ExtraDrawingNeeded in the TFrameView
+      // declaration.
+
+//      Application.ProcessMessages;
+
       // If the objects have been changed while drawing the grid
       // stop and start over.
-      Application.ProcessMessages;
       if ScreenObjectsHaveChanged then
       begin
         ScreenObjectsHaveChanged := True;
@@ -1250,13 +1276,13 @@ begin
       end;
     end;
   finally
-    FDrawing := False;
     ShouldUpdate := ScreenObjectsHaveChanged or NeedToRecalculateCellColors;
     ScreenObjectsHaveChanged := False;
     if ShouldUpdate then
     begin
       ZoomBox.Image32.Invalidate;
     end;
+    FDrawing := False;
   end;
 end;
 
@@ -1445,10 +1471,15 @@ begin
   begin
     Exit;
   end;
-  if FPaintingLayer or frmGoPhast.Grid.Drawing3DGrid then
+  if
+{$IFDEF ExtraDrawingNeeded}
+    FPaintingLayer or
+{$ENDIF}
+    frmGoPhast.Grid.Drawing3DGrid then
   begin
     Exit;
   end;
+{$IFDEF ExtraDrawingNeeded}
   if frmGoPhast.frameTopView.FPaintingLayer then
   begin
     FNeedToRedraw := True;
@@ -1465,39 +1496,46 @@ begin
     Exit;
   end;
   FPaintingLayer := True;
+{$ENDIF}
   try
-    Buffer.BeginUpdate;
     try
-      Paint(Sender);
-      if ZoomBox.Panning then
-      begin
-        Buffer.Draw(
-          Round(FPositionedLayer.Location.Left) - MouseStartX,
-          Round(FPositionedLayer.Location.Top) - MouseStartY,
-          FBitMap32);
-      end
-      else
-      begin
-        Buffer.Draw(0, 0, FBitMap32);
+      Buffer.BeginUpdate;
+      try
+        Paint(Sender);
+        if ZoomBox.Panning then
+        begin
+          Buffer.Draw(
+            Round(FPositionedLayer.Location.Left) - MouseStartX,
+            Round(FPositionedLayer.Location.Top) - MouseStartY,
+            FBitMap32);
+        end
+        else
+        begin
+          Buffer.Draw(0, 0, FBitMap32);
+        end;
+      finally
+        Buffer.EndUpdate;
       end;
     finally
-      Buffer.EndUpdate;
+  {$IFDEF ExtraDrawingNeeded}
+      FNeedToRedraw := False;
+      FPaintingLayer := False;
+      if frmGoPhast.frameTopView.FNeedToRedraw then
+      begin
+        frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
+      end;
+      if frmGoPhast.frameFrontView.FNeedToRedraw then
+      begin
+        frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
+      end;
+      if frmGoPhast.frameSideView.FNeedToRedraw then
+      begin
+        frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+      end;
+  {$ENDIF}
     end;
   finally
-    FNeedToRedraw := False;
-    FPaintingLayer := False;
-    if frmGoPhast.frameTopView.FNeedToRedraw then
-    begin
-      frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-    end;
-    if frmGoPhast.frameFrontView.FNeedToRedraw then
-    begin
-      frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
-    end;
-    if frmGoPhast.frameSideView.FNeedToRedraw then
-    begin
-      frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
-    end;
+    FPaintingNeeded := False;
   end;
 end;
 
@@ -3537,21 +3575,7 @@ begin
   finally
     FViewDirection := StoredViewDirection;
   end;
-  if FTopLayer <> nil then
-  begin
-    FTopLayer.Changed;
-    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-  end;
-  if FFrontLayer <> nil then
-  begin
-    FFrontLayer.Changed;
-    frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
-  end;
-  if FSideLayer <> nil then
-  begin
-    FSideLayer.Changed;
-    frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
-  end;
+  UpdateAllViews;
 end;
 
 procedure TCustomInteractiveTool.Deactivate;
@@ -3562,21 +3586,7 @@ begin
     'Choose a tool and click to edit model';
   frmGoPhast.frameSideView.ZoomBox.Hint :=
     'Choose a tool and click to edit model';
-  if FTopLayer <> nil then
-  begin
-    FTopLayer.Changed;
-    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-  end;
-  if FFrontLayer <> nil then
-  begin
-    FFrontLayer.Changed;
-    frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
-  end;
-  if FSideLayer <> nil then
-  begin
-    FSideLayer.Changed;
-    frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
-  end;
+  UpdateAllViews;
 end;
 
 procedure TCustomInteractiveTool.DoubleClick(Sender: TObject);
@@ -3675,6 +3685,25 @@ begin
   frmGoPhast.frameFrontView.ZoomBox.Image32.Cursor := Value;
   frmGoPhast.frameSideView.ZoomBox.Cursor := Value;
   frmGoPhast.frameSideView.ZoomBox.Image32.Cursor := Value;
+end;
+
+procedure TCustomInteractiveTool.UpdateAllViews;
+begin
+  if FTopLayer <> nil then
+  begin
+    FTopLayer.Changed;
+    frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
+  end;
+  if FFrontLayer <> nil then
+  begin
+    FFrontLayer.Changed;
+    frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
+  end;
+  if FSideLayer <> nil then
+  begin
+    FSideLayer.Changed;
+    frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+  end;
 end;
 
 procedure TCustomInteractiveTool.SetCursor(const Value: TCursor);

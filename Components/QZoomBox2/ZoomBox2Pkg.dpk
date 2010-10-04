@@ -29,7 +29,7 @@ package ZoomBox2Pkg;
 requires
   rtl,
   vcl,
-  GR32_BDS2006;
+  GR32_RS2006;
 
 contains
   ZoomBox2 in 'ZoomBox2.pas';

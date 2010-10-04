@@ -1039,7 +1039,8 @@ uses
   ModflowHydmodWriterUnit in 'ModflowHydmodWriterUnit.pas',
   frmManageParametersUnit in 'frmManageParametersUnit.pas' {frmManageParameters},
   frmManageHeadObservationsUnit in 'frmManageHeadObservationsUnit.pas' {frmManageHeadObservations},
-  frmRunModelMateUnit in 'frmRunModelMateUnit.pas' {frmRunModelMate};
+  frmRunModelMateUnit in 'frmRunModelMateUnit.pas' {frmRunModelMate},
+  ContourExport in 'ContourExport.pas';
 
 {$R *.res}
 
@@ -1049,7 +1050,6 @@ begin
   Application.CreateForm(TfrmProgress, frmProgress);
   Application.CreateForm(TfrmSelectedObjects, frmSelectedObjects);
   Application.CreateForm(TfrmColors, frmColors);
-  Application.CreateForm(TfrmRunModelMate, frmRunModelMate);
   Application.Run;
 end.
 

@@ -36,7 +36,8 @@ type
 implementation
 
 uses Math, Contnrs , ModflowUnitNumbers, frmProgressUnit, OrderedCollectionUnit,
-  GoPhastTypes, DataSetUnit, frmErrorsAndWarningsUnit, ModflowParameterUnit;
+  GoPhastTypes, DataSetUnit, frmErrorsAndWarningsUnit, ModflowParameterUnit,
+  Forms;
 
 const
   HufSteadyAndTransientParameters = [ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI, ptHUF_SS, ptHUF_SY];
@@ -361,6 +362,7 @@ begin
 
           WriteArray(DataArray, DataArrayLayerIndex, 'Data set 5: WETDRY ' + LayerDescription);
         end;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -662,6 +664,7 @@ begin
     frmProgress.AddMessage('Writing HUF2 Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -669,6 +672,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -676,6 +680,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -683,6 +688,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 3.');
     WriteDataSet3;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -690,6 +696,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -697,12 +704,14 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 5.');
     WriteDataSet5;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
     end;
 
     WriteDataSets6to8;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -710,6 +719,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 9.');
     WriteDataSet9;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -717,6 +727,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Sets 10 and 11.');
     WriteDataSets10and11;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -724,6 +735,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 12.');
     WriteDataSet12;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -731,6 +743,7 @@ begin
 
     frmProgress.AddMessage('  Checking elevations.');
     CheckElevations;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;

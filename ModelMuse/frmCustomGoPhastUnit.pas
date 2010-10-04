@@ -41,7 +41,10 @@ type
   private
     function CallHelpRouter: boolean;
     procedure DestroyGLSceneViewers(ParentComponent: TComponent);
+    procedure EnsureFormVisible;
   protected
+    procedure UpdateStringTreeViewCheckedState(TreeView: TVirtualStringTree;
+      BaseNode: PVirtualNode; NewState: TCheckState);
     {@name adjusts the position of Form to the left or right of the main form,
      if possible.  If there isn't room for it at the desired position it will
      try the other side.  If there isn't room there either,
@@ -257,6 +260,97 @@ begin
   end;
 end;
 
+procedure TfrmCustomGoPhast.EnsureFormVisible;
+var
+  FrameWidth: Integer;
+  WorkAreaRect: TRect;
+  FrameHeight: Integer;
+begin
+  {$IFDEF LINUX}
+  //if not QWidget_isVisible(Widget) then Exit;
+
+  {$ENDIF}
+  {$IFDEF MSWINDOWS}
+  // Because the CLX Screen.Height doesn't take the taskbar into account,
+  // use the VCL Screen object instead under windows to determine the available
+  // space on the screen.
+  WorkAreaRect := Forms.Screen.WorkAreaRect;
+  {$ELSE}
+  
+{$IFDEF LINUX}
+  // With Linux, the screen area and the available work area are the same.
+  // Use the CLX screen object to determine them.
+  WorkAreaRect.Top := 0;
+  WorkAreaRect.Left := 0;
+  WorkAreaRect.Right := Screen.Width;
+  WorkAreaRect.Bottom := Screen.Height;
+
+  {$ELSE}
+  Assert(False);
+
+  {$ENDIF}
+
+  {$ENDIF}
+  //  QWidget_frameGeometry(Handle, @AFrameGeom);
+  //  FrameHeight := AFrameGeom.Bottom - AFrameGeom.Top;
+  //  FrameWidth := AFrameGeom.Right - AFrameGeom.Left;
+  FrameHeight := Height;
+  FrameWidth := Width;
+  // Try to make sure the form is never off the screen.
+  // However, this does not resize the form to fit it on the screen.
+  // If the form is wider or taller than the screen, some of it will
+  // be off the screen.
+  if Left + FrameWidth > WorkAreaRect.Right then
+  begin
+    Left := WorkAreaRect.Right - FrameWidth;
+  end;
+  if Top + FrameHeight > WorkAreaRect.Bottom then
+  begin
+    Top := WorkAreaRect.Bottom - FrameHeight;
+  end;
+  if Left < WorkAreaRect.Left then
+  begin
+    Left := WorkAreaRect.Left;
+  end;
+  if Top < WorkAreaRect.Top then
+  begin
+    Top := WorkAreaRect.Top;
+  end;
+  CustomizeControls;
+end;
+
+procedure TfrmCustomGoPhast.UpdateStringTreeViewCheckedState(
+  TreeView: TVirtualStringTree; BaseNode: PVirtualNode; NewState: TCheckState);
+var
+  ChildNode: PVirtualNode;
+  ChildIndex: Integer;
+begin
+  ChildNode := nil;
+  for ChildIndex := 0 to BaseNode.ChildCount - 1 do
+  begin
+    if ChildIndex = 0 then
+    begin
+      ChildNode := TreeView.GetFirstChild(BaseNode);
+    end
+    else
+    begin
+      ChildNode := TreeView.GetNextSibling(ChildNode);
+    end;
+    if TreeView.Selected[ChildNode] and (ChildNode.CheckState <> NewState) then
+    begin
+      ChildNode.CheckState := NewState;
+      if Assigned(TreeView.OnChecked) then
+      begin
+        TreeView.OnChecked(TreeView, ChildNode);
+      end;
+    end;
+    if ChildNode.ChildCount > 0 then
+    begin
+      UpdateStringTreeViewCheckedState(TreeView, ChildNode, NewState);
+    end;
+  end;
+end;
+
 procedure TfrmCustomGoPhast.UpdateSubComponents(AComponent: TComponent);
 var
   ComponentIndex: Integer;
@@ -327,65 +421,8 @@ begin
 end;
 
 procedure TfrmCustomGoPhast.FormShow(Sender: TObject);
-var
-  // According to the documentation, the height of the form should
-  // take into account the boder, menu, caption, etc.  However that
-  // doesn't work correctly so call QWidget_frameGeometry to get the
-  // correct form height.
-  FrameHeight: integer;
-  FrameWidth: integer;
-  WorkAreaRect: TRect;
 begin
-{$IFDEF LINUX}
-  //if not QWidget_isVisible(Widget) then Exit;
-{$ENDIF}
-
-{$IFDEF MSWINDOWS}
-  // Because the CLX Screen.Height doesn't take the taskbar into account,
-  // use the VCL Screen object instead under windows to determine the available
-  // space on the screen.
-  WorkAreaRect := Forms.Screen.WorkAreaRect;
-{$ELSE}
-{$IFDEF LINUX}
-  // With Linux, the screen area and the available work area are the same.
-  // Use the CLX screen object to determine them.
-  WorkAreaRect.Top := 0;
-  WorkAreaRect.Left := 0;
-  WorkAreaRect.Right := Screen.Width;
-  WorkAreaRect.Bottom := Screen.Height;
-{$ELSE}
-  Assert(False);
-{$ENDIF}
-{$ENDIF}
-
-//  QWidget_frameGeometry(Handle, @AFrameGeom);
-
-//  FrameHeight := AFrameGeom.Bottom - AFrameGeom.Top;
-//  FrameWidth := AFrameGeom.Right - AFrameGeom.Left;
-  FrameHeight := Height;
-  FrameWidth := Width;
-
-  // Try to make sure the form is never off the screen.
-  // However, this does not resize the form to fit it on the screen.
-  // If the form is wider or taller than the screen, some of it will
-  // be off the screen.
-  if Left + FrameWidth > WorkAreaRect.Right then
-  begin
-    Left := WorkAreaRect.Right - FrameWidth;
-  end;
-  if Top + FrameHeight > WorkAreaRect.Bottom then
-  begin
-    Top := WorkAreaRect.Bottom - FrameHeight;
-  end;
-  if Left < WorkAreaRect.Left then
-  begin
-    Left := WorkAreaRect.Left;
-  end;
-  if Top < WorkAreaRect.Top then
-  begin
-    Top := WorkAreaRect.Top;
-  end;
-  CustomizeControls;
+  EnsureFormVisible;
 end;
 
 procedure TfrmCustomGoPhast.MouseClick;

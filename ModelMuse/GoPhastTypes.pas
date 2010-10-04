@@ -381,6 +381,11 @@ const
   clTransparent32: TColor32 = 0;
   SelectEpsilon = 5;
 
+  StrStressPeriodLabel = 'Stress Period: ';
+  StrTimeStepLabel = 'Time Step: ';
+  StrElapsedTimeLabel = 'Elapsed Time: ';
+
+
 var
   ObservationStatFlagLabels: TStringList = nil;
   PredictionStatFlagLabels: TStringList = nil;

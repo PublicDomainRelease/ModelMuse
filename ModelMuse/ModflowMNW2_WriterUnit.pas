@@ -80,7 +80,7 @@ implementation
 
 uses
   ModflowUnitNumbers, frmProgressUnit, frmErrorsAndWarningsUnit, GoPhastTypes,
-  ModflowTimeUnit, ModflowBoundaryUnit, frmFormulaErrorsUnit, Math;
+  ModflowTimeUnit, ModflowBoundaryUnit, frmFormulaErrorsUnit, Math, Forms;
 
 { TModflowMNW2_Writer }
 
@@ -476,6 +476,7 @@ begin
   WriteToNameFile(StrMNW2, PhastModel.UnitNumbers.UnitNumber(StrMNW2),
     FNameOfFile, foInput);
   Evaluate;
+  Application.ProcessMessages;
   if not frmProgress.ShouldContinue then
   begin
     Exit;
@@ -485,6 +486,7 @@ begin
     frmProgress.AddMessage('Writing MNW2 Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -492,6 +494,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -499,6 +502,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -506,6 +510,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Sets 3 and 4.');
     WriteDataSets3and4;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;

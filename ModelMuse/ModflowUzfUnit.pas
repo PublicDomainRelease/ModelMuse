@@ -1002,7 +1002,7 @@ constructor TUzfExtinctionDepthCollection.Create(Boundary: TModflowBoundary;
   Model, ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FExtinctionDepthData := TModflowTimeList.Create(Model);
+  FExtinctionDepthData := TModflowTimeList.Create(Model, ScreenObject);
   FExtinctionDepthData.NonParamDescription := 'ET extinction depth';
   FExtinctionDepthData.ParamDescription := ' ET extinction depth multiplier';
   AddTimeList(FExtinctionDepthData);
@@ -1137,7 +1137,7 @@ constructor TUzfWaterContentCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FWaterContentData := TModflowTimeList.Create(Model);
+  FWaterContentData := TModflowTimeList.Create(Model, ScreenObject);
   FWaterContentData.NonParamDescription := 'ET extinction water content';
   FWaterContentData.ParamDescription := ' ET extinction water content multiplier';
   AddTimeList(FWaterContentData);
@@ -1548,3 +1548,4 @@ begin
 end;
 
 end.
+

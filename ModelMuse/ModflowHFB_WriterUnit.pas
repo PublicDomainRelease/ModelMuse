@@ -81,7 +81,7 @@ implementation
 
 uses Math, RbwParser, ModflowUnitNumbers, ModflowHfbUnit, OrderedCollectionUnit,
   frmErrorsAndWarningsUnit, ModflowGridUnit, GoPhastTypes, GIS_Functions, 
-  frmProgressUnit, frmFormulaErrorsUnit;
+  frmProgressUnit, frmFormulaErrorsUnit, Forms;
 
 { TModflowHfb_Writer }
 
@@ -478,6 +478,7 @@ begin
     // data set 4
     for BarrierIndex := 0 to ParamList.BarrierCount - 1 do
     begin
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -507,6 +508,7 @@ begin
   // barriers that are not associated with parameters.
   for Index := 1 to FParameterScreenObjectList.Count - 1 do
   begin
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -534,6 +536,7 @@ begin
   // barriers that are not associated with parameters.
   for Index := 1 to FParameterScreenObjectList.Count - 1 do
   begin
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -555,6 +558,7 @@ begin
       // data set 3
       for BarrierIndex := 0 to ParamList.BarrierCount - 1 do
       begin
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -581,6 +585,7 @@ begin
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrHFB, PhastModel.UnitNumbers.UnitNumber(StrHFB), NameOfFile, foInput);
   Evaluate;
+  Application.ProcessMessages;
   if not frmProgress.ShouldContinue then
   begin
     Exit;
@@ -590,6 +595,7 @@ begin
     frmProgress.AddMessage('Writing HFB6 Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -597,6 +603,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -604,6 +611,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Sets 2 and 3.');
     WriteDataSets2and3;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -611,6 +619,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -618,6 +627,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 5.');
     WriteDataSet5;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;

@@ -35,7 +35,7 @@ type
 
 implementation
 
-uses ModflowUnitNumbers, frmErrorsAndWarningsUnit, frmProgressUnit;
+uses ModflowUnitNumbers, frmErrorsAndWarningsUnit, frmProgressUnit, Forms;
 
 { TModflowWEL_Writer }
 
@@ -216,6 +216,7 @@ begin
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrWEL, PhastModel.UnitNumbers.UnitNumber(StrWEL), NameOfFile, foInput);
   Evaluate;
+  Application.ProcessMessages;
   if not frmProgress.ShouldContinue then
   begin
     Exit;
@@ -226,6 +227,7 @@ begin
     frmProgress.AddMessage('Writing WEL Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -233,6 +235,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -240,6 +243,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -247,6 +251,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Sets 3 and 4.');
     WriteDataSets3And4;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -270,6 +275,7 @@ begin
   begin
     Cell := CellList[CellIndex] as TWell_Cell;
     WriteCell(Cell, DataSetIdentifier, VariableIdentifiers);
+    CheckCell(Cell, 'WEL');
   end;
   // Dummy inactive cells to fill out data set 4b.
   // Each instance of a parameter is required to have the same

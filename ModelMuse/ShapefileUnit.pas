@@ -1138,6 +1138,8 @@ var
     PointZShapeObject.FZArray[0] := Data.Z;
     PointZShapeObject.FZMin := Data.Z;
     PointZShapeObject.FZMax := Data.Z;
+    PointZShapeObject.FNumPoints := 1;
+    PointZShapeObject.FNumParts := 0;
   end;
   procedure ReadPolyLineZ;
   var
@@ -1317,7 +1319,6 @@ var
     PointMShapeObject.FMMin := Data.M;
     PointMShapeObject.FMMax := Data.M;
     SetLength(PointMShapeObject.FParts, 0);
-    PointMShapeObject.FNumPoints := 1;
     PointMShapeObject.FNumParts := 0;
     SetLength(PointMShapeObject.FZArray, 0);
   end;
@@ -1832,20 +1833,20 @@ var
         ARecord.NumPoints * SizeOf(TShapePoint));
     end;
 
-    ShapeMemoryStream.Write(Shape.FZMin, SizeOf(double));
-    ShapeMemoryStream.Write(Shape.FZMax, SizeOf(double));
+    ShapeStream.Write(Shape.FZMin, SizeOf(double));
+    ShapeStream.Write(Shape.FZMax, SizeOf(double));
     if ARecord.NumPoints > 0 then
     begin
-      ShapeMemoryStream.Write(Shape.FZArray[0],
+      ShapeStream.Write(Shape.FZArray[0],
         ARecord.NumPoints * SizeOf(double));
     end;
     if Length(Shape.FMArray) > 0 then
     begin
-      ShapeMemoryStream.Write(Shape.FMMin, SizeOf(double));
-      ShapeMemoryStream.Write(Shape.FMMax, SizeOf(double));
+      ShapeStream.Write(Shape.FMMin, SizeOf(double));
+      ShapeStream.Write(Shape.FMMax, SizeOf(double));
       if ARecord.NumPoints > 0 then
       begin
-        ShapeMemoryStream.Write(Shape.FMArray[0],
+        ShapeStream.Write(Shape.FMArray[0],
           ARecord.NumPoints * SizeOf(double));
       end;
     end;
@@ -1869,20 +1870,20 @@ var
       ShapeStream.Write(Shape.FPoints[0],
         ARecord.NumPoints * SizeOf(TShapePoint));
     end;
-    ShapeMemoryStream.Write(Shape.FZMin, SizeOf(double));
-    ShapeMemoryStream.Write(Shape.FZMax, SizeOf(double));
+    ShapeStream.Write(Shape.FZMin, SizeOf(double));
+    ShapeStream.Write(Shape.FZMax, SizeOf(double));
     if ARecord.NumPoints > 0 then
     begin
-      ShapeMemoryStream.Write(Shape.FZArray[0],
+      ShapeStream.Write(Shape.FZArray[0],
         ARecord.NumPoints * SizeOf(double));
     end;
     if Length(Shape.FMArray) > 0 then
     begin
-      ShapeMemoryStream.Write(Shape.FMMin, SizeOf(double));
-      ShapeMemoryStream.Write(Shape.FMMax, SizeOf(double));
+      ShapeStream.Write(Shape.FMMin, SizeOf(double));
+      ShapeStream.Write(Shape.FMMax, SizeOf(double));
       if ARecord.NumPoints > 0 then
       begin
-        ShapeMemoryStream.Write(Shape.FMArray[0],
+        ShapeStream.Write(Shape.FMArray[0],
           ARecord.NumPoints * SizeOf(double));
       end;
     end;
@@ -1900,20 +1901,20 @@ var
       ShapeStream.Write(Shape.FPoints[0],
         ARecord.NumPoints * SizeOf(TShapePoint));
     end;
-    ShapeMemoryStream.Write(Shape.FZMin, SizeOf(double));
-    ShapeMemoryStream.Write(Shape.FZMax, SizeOf(double));
+    ShapeStream.Write(Shape.FZMin, SizeOf(double));
+    ShapeStream.Write(Shape.FZMax, SizeOf(double));
     if ARecord.NumPoints > 0 then
     begin
-      ShapeMemoryStream.Write(Shape.FZArray[0],
+      ShapeStream.Write(Shape.FZArray[0],
         ARecord.NumPoints * SizeOf(double));
     end;
     if Length(Shape.FMArray) > 0 then
     begin
-      ShapeMemoryStream.Write(Shape.FMMin, SizeOf(double));
-      ShapeMemoryStream.Write(Shape.FMMax, SizeOf(double));
+      ShapeStream.Write(Shape.FMMin, SizeOf(double));
+      ShapeStream.Write(Shape.FMMax, SizeOf(double));
       if ARecord.NumPoints > 0 then
       begin
-        ShapeMemoryStream.Write(Shape.FMArray[0],
+        ShapeStream.Write(Shape.FMArray[0],
           ARecord.NumPoints * SizeOf(double));
       end;
     end;
@@ -1950,11 +1951,11 @@ var
     end;
     if Length(Shape.FMArray) > 0 then
     begin
-      ShapeMemoryStream.Write(Shape.FMMin, SizeOf(double));
-      ShapeMemoryStream.Write(Shape.FMMax, SizeOf(double));
+      ShapeStream.Write(Shape.FMMin, SizeOf(double));
+      ShapeStream.Write(Shape.FMMax, SizeOf(double));
       if ARecord.NumPoints > 0 then
       begin
-        ShapeMemoryStream.Write(Shape.FMArray[0],
+        ShapeStream.Write(Shape.FMArray[0],
           ARecord.NumPoints * SizeOf(double));
       end;
     end;
@@ -1980,11 +1981,11 @@ var
     end;
     if Length(Shape.FMArray) > 0 then
     begin
-      ShapeMemoryStream.Write(Shape.FMMin, SizeOf(double));
-      ShapeMemoryStream.Write(Shape.FMMax, SizeOf(double));
+      ShapeStream.Write(Shape.FMMin, SizeOf(double));
+      ShapeStream.Write(Shape.FMMax, SizeOf(double));
       if ARecord.NumPoints > 0 then
       begin
-        ShapeMemoryStream.Write(Shape.FMArray[0],
+        ShapeStream.Write(Shape.FMArray[0],
           ARecord.NumPoints * SizeOf(double));
       end;
     end;
@@ -2004,11 +2005,11 @@ var
     end;
     if Length(Shape.FMArray) > 0 then
     begin
-      ShapeMemoryStream.Write(Shape.FMMin, SizeOf(double));
-      ShapeMemoryStream.Write(Shape.FMMax, SizeOf(double));
+      ShapeStream.Write(Shape.FMMin, SizeOf(double));
+      ShapeStream.Write(Shape.FMMax, SizeOf(double));
       if ARecord.NumPoints > 0 then
       begin
-        ShapeMemoryStream.Write(Shape.FMArray[0],
+        ShapeStream.Write(Shape.FMArray[0],
           ARecord.NumPoints * SizeOf(double));
       end;
     end;

@@ -202,7 +202,7 @@ begin
   begin
     TimeItem := ParticleReleaseTimes.Items[TimeIndex] as TModpathTimeItem;
     if (not ReleaseTimeErrorDetected) and (FTrackingDirection = tdForward) and
-      ((TimeItem.Time < StartTime) or (TimeItem.Time > EndTime)) then
+      ((TimeItem.Time < 0) or (TimeItem.Time > EndTime-StartTime)) then
     begin
       frmErrorsAndWarnings.AddError(StrAStartingTimeFor,
         ScreenObject.Name);

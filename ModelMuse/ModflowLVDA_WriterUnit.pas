@@ -23,7 +23,7 @@ implementation
 
 uses
   PhastModelUnit, OrderedCollectionUnit, ModflowParameterUnit, frmProgressUnit, 
-  GoPhastTypes, frmErrorsAndWarningsUnit, ModflowUnitNumbers;
+  GoPhastTypes, frmErrorsAndWarningsUnit, ModflowUnitNumbers, Forms;
 
 { TModflowLVDA_Writer }
 
@@ -84,6 +84,7 @@ begin
     Param := PhastModel.ModflowSteadyParameters.Items[ParamIndex];
     if Param.ParameterType = ptHUF_LVDA then
     begin
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -205,6 +206,7 @@ begin
     frmProgress.AddMessage('Writing LVDA Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -212,6 +214,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -219,6 +222,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Sets 2 and 3.');
     WriteDataSets2and3;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;

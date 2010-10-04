@@ -95,7 +95,7 @@ inherited frmSelectObjects: TfrmSelectObjects
       Left = 228
       Top = 94
       Width = 105
-      Height = 25
+      Height = 26
       TabOrder = 7
       Text = 'Search Term'
     end
@@ -127,7 +127,7 @@ inherited frmSelectObjects: TfrmSelectObjects
         Left = 0
         Top = 0
         Width = 332
-        Height = 159
+        Height = 158
         Align = alClient
         Checkboxes = True
         Columns = <

@@ -435,9 +435,9 @@ constructor TDrtCollection.Create(Boundary: TModflowBoundary;
   Model, ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FElevationData := TModflowTimeList.Create(Model);
-  FConductanceData := TModflowTimeList.Create(Model);
-  FReturnFractionData := TModflowTimeList.Create(Model);
+  FElevationData := TModflowTimeList.Create(Model, ScreenObject);
+  FConductanceData := TModflowTimeList.Create(Model, ScreenObject);
+  FReturnFractionData := TModflowTimeList.Create(Model, ScreenObject);
 
   FElevationData.NonParamDescription := 'Elevation';
   FElevationData.ParamDescription := ' elevation';

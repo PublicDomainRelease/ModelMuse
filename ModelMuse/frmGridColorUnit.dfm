@@ -8,7 +8,7 @@ inherited frmGridColor: TfrmGridColor
   Caption = 'Color Grid'
   DesignSize = (
     606
-    417)
+    489)
   PixelsPerInch = 96
   TextHeight = 18
   object lblTime: TLabel [0]
@@ -32,42 +32,40 @@ inherited frmGridColor: TfrmGridColor
     OnChangingEx = udTimeChangingEx
   end
   inherited pcChoices: TPageControl
-    ActivePage = tabSelection
     TabOrder = 2
     inherited tabSelection: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 29
-      ExplicitWidth = 598
-      ExplicitHeight = 335
+      ExplicitHeight = 407
       inherited virttreecomboDataSets: TTntExDropDownVirtualStringTree
         Anchors = [akLeft, akTop, akRight]
         Tree.OnGetNodeDataSize = virttreecomboDataSetsDropDownTreeGetNodeDataSize
       end
     end
     inherited tabFilters: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 29
-      ExplicitWidth = 598
-      ExplicitHeight = 335
+      ExplicitHeight = 407
       inherited lblLowerLimit: TLabel
         Anchors = [akLeft, akTop, akBottom]
       end
+      inherited seNumberOfValuesToIgnore: TJvSpinEdit
+        ExplicitTop = 307
+      end
     end
     inherited tabLegend: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 29
-      ExplicitWidth = 598
-      ExplicitHeight = 335
+      ExplicitHeight = 407
       inherited imLegend: TImage
         AlignWithMargins = True
         Left = 221
         Top = 3
         Width = 374
-        Height = 329
+        Height = 401
         ExplicitLeft = 221
         ExplicitTop = 3
         ExplicitWidth = 374
         ExplicitHeight = 329
+      end
+      inherited Panel2: TPanel
+        inherited seLegendRows: TJvSpinEdit
+          ExplicitTop = 300
+        end
       end
     end
   end

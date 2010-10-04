@@ -476,7 +476,7 @@ constructor TRchCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FRechargeRateData := TModflowTimeList.Create(Model);
+  FRechargeRateData := TModflowTimeList.Create(Model, ScreenObject);
   FRechargeRateData.NonParamDescription := 'Recharge rate';
   FRechargeRateData.ParamDescription := ' recharge rate multiplier';
   AddTimeList(FRechargeRateData);
@@ -1086,7 +1086,7 @@ constructor TRchLayerCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FRechargeLayerData := TModflowTimeList.Create(Model);
+  FRechargeLayerData := TModflowTimeList.Create(Model, ScreenObject);
   FRechargeLayerData.NonParamDescription := 'Recharge layer';
   FRechargeLayerData.ParamDescription := ' recharge layer';
   FRechargeLayerData.DataType := rdtInteger;

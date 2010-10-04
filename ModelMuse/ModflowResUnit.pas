@@ -341,8 +341,8 @@ constructor TResCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FResIDData := TModflowTimeList.Create(Model);
-  FEndHeadData := TModflowTimeList.Create(Model);
+  FResIDData := TModflowTimeList.Create(Model, ScreenObject);
+  FEndHeadData := TModflowTimeList.Create(Model, ScreenObject);
 
   FResIDData.NonParamDescription := 'Starting stage';
   FResIDData.ParamDescription := ' starting stage';

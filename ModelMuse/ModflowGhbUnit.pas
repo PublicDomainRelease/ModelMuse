@@ -349,8 +349,8 @@ constructor TGhbCollection.Create(Boundary: TModflowBoundary;
   Model, ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FBoundaryHeadData := TModflowTimeList.Create(Model);
-  FConductanceData := TModflowTimeList.Create(Model);
+  FBoundaryHeadData := TModflowTimeList.Create(Model, ScreenObject);
+  FConductanceData := TModflowTimeList.Create(Model, ScreenObject);
   FBoundaryHeadData.NonParamDescription := 'Boundary head';
   FBoundaryHeadData.ParamDescription := ' boundary head';
   FConductanceData.NonParamDescription := 'Conductance';

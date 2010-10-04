@@ -677,11 +677,11 @@ constructor TSfrSegmentCollection.Create(Boundary: TModflowBoundary; Model,
   ScreenObject: TObject);
 begin
   inherited Create(Boundary, Model, ScreenObject);
-  FHydraulicConductivityData := TModflowTimeList.Create(Model);
-  FStreamBedThicknessData := TModflowTimeList.Create(Model);
-  FStreamBedElevationData := TModflowTimeList.Create(Model);
-  FStreamWidthData := TModflowTimeList.Create(Model);
-  FStreamDepthData := TModflowTimeList.Create(Model);
+  FHydraulicConductivityData := TModflowTimeList.Create(Model, ScreenObject);
+  FStreamBedThicknessData := TModflowTimeList.Create(Model, ScreenObject);
+  FStreamBedElevationData := TModflowTimeList.Create(Model, ScreenObject);
+  FStreamWidthData := TModflowTimeList.Create(Model, ScreenObject);
+  FStreamDepthData := TModflowTimeList.Create(Model, ScreenObject);
 
   FStreamBedThicknessData.NonParamDescription := 'Streambed thickness';
   FStreamBedThicknessData.ParamDescription := ' streambed thickness';

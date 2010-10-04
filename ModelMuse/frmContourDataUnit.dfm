@@ -4,7 +4,7 @@ inherited frmContourData: TfrmContourData
   Caption = 'Contour Data'
   DesignSize = (
     606
-    417)
+    489)
   PixelsPerInch = 96
   TextHeight = 18
   object cbSpecifyContours: TJvCheckBox [0]
@@ -40,25 +40,6 @@ inherited frmContourData: TfrmContourData
   inherited pcChoices: TPageControl
     TabOrder = 2
     inherited tabSelection: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 29
-      ExplicitWidth = 598
-      ExplicitHeight = 335
-      inherited lblDataSet: TLabel
-        Margins.Bottom = 0
-      end
-      inherited lblColorScheme: TLabel
-        Margins.Bottom = 0
-      end
-      inherited lblCycles: TLabel
-        Margins.Bottom = 0
-      end
-      inherited lblColorAdjustment: TLabel
-        Margins.Bottom = 0
-      end
-      inherited lblComment: TLabel
-        Margins.Bottom = 0
-      end
       inherited virttreecomboDataSets: TTntExDropDownVirtualStringTree
         Top = 29
         Width = 337
@@ -80,27 +61,12 @@ inherited frmContourData: TfrmContourData
       end
     end
     inherited tabFilters: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 29
-      ExplicitWidth = 598
-      ExplicitHeight = 335
       inherited lblLowerLimit: TLabel
-        Margins.Bottom = 0
         Anchors = [akLeft, akTop, akBottom]
-      end
-      inherited lblUpperLimit: TLabel
-        Margins.Bottom = 0
       end
       inherited lblValuesToIgnore: TLabel
         Top = 56
-        Margins.Bottom = 0
         ExplicitTop = 56
-      end
-      inherited lblNumberOfValuesToIgnore: TLabel
-        Margins.Bottom = 0
-      end
-      inherited lblEpsilon: TLabel
-        Margins.Bottom = 0
       end
       inherited cbActiveOnly: TCheckBox
         Left = 498
@@ -111,23 +77,9 @@ inherited frmContourData: TfrmContourData
       end
       inherited rdgValuesToIgnore: TRbwDataGrid4
         Top = 77
-        Height = 224
+        Height = 296
         ExplicitTop = 77
-        ExplicitHeight = 224
-      end
-    end
-    inherited tabLegend: TTabSheet
-      ExplicitLeft = 4
-      ExplicitTop = 29
-      ExplicitWidth = 598
-      ExplicitHeight = 335
-      inherited Panel2: TPanel
-        inherited lblMethod: TLabel
-          Margins.Bottom = 0
-        end
-        inherited lblColorLegendRows: TLabel
-          Margins.Bottom = 0
-        end
+        ExplicitHeight = 296
       end
     end
   end

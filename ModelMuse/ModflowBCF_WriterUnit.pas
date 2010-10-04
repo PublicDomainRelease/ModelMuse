@@ -31,7 +31,7 @@ implementation
 
 uses
   ModflowUnitNumbers, frmProgressUnit, GoPhastTypes, 
-  DataSetUnit;
+  DataSetUnit, Forms;
 
 { TModflowBCF_Writer }
 
@@ -149,30 +149,35 @@ begin
           AquiferType := 3;
         end;
         WriteDataSet4(Layer, TransientModel, AquiferType);
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
         end;
 
         WriteDataSet5or6(AquiferType, Layer);
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
         end;
 
         WriteDataSet7(Layer, GroupIndex, Group, LayerIndex);
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
         end;
 
         WriteDataSet8(AquiferType, TransientModel, Layer);
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
         end;
 
         WriteDataSet9(AquiferType, Layer);
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -207,18 +212,21 @@ begin
   try
     frmProgress.AddMessage('Writing BCF Package input.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
     end;
 
     WriteDataSet2;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
     end;
 
     WriteDataSet3;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;

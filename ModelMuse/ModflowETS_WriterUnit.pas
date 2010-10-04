@@ -75,7 +75,7 @@ implementation
 
 uses ModflowUnitNumbers, ModflowTransientListParameterUnit,
   frmErrorsAndWarningsUnit, ModflowEtsUnit, GoPhastTypes, 
-  frmProgressUnit;
+  frmProgressUnit, Forms;
 
 { TModflowETS_Writer }
 
@@ -515,6 +515,7 @@ begin
   WriteToNameFile(StrETS, PhastModel.UnitNumbers.UnitNumber(StrETS),
     NameOfFile, foInput);
   Evaluate;
+  Application.ProcessMessages;
   if not frmProgress.ShouldContinue then
   begin
     Exit;
@@ -525,6 +526,7 @@ begin
     frmProgress.AddMessage('Writing ETS Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -532,6 +534,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -539,6 +542,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Sets 2 and 3.');
     WriteDataSets2And3;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -684,6 +688,7 @@ begin
     end;
     for TimeIndex := 0 to Values.Count - 1 do
     begin
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -791,6 +796,7 @@ begin
           begin
             DepthSurfaceCellList := FDepthSurface[TimeIndex];
             WriteEvapotranspirationSurface(DepthSurfaceCellList);
+            Application.ProcessMessages;
             if not frmProgress.ShouldContinue then
             begin
               EtRateList.Cache;
@@ -824,6 +830,7 @@ begin
               NewLine;
             end;
           end;
+          Application.ProcessMessages;
           if not frmProgress.ShouldContinue then
           begin
             EtRateList.Cache;
@@ -839,6 +846,7 @@ begin
           begin
             DepthSurfaceCellList := FDepthSurface[TimeIndex];
             WriteExtinctionDepth(DepthSurfaceCellList);
+            Application.ProcessMessages;
             if not frmProgress.ShouldContinue then
             begin
               EtRateList.Cache;
@@ -853,6 +861,7 @@ begin
         end;
         // data set 9
         WriteLayerSelection(EtRateList, ParameterValues, TimeIndex, Comment);
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           EtRateList.Cache;
@@ -867,6 +876,7 @@ begin
           begin
             // data set 10
             WriteDepthFraction(DepthSurfaceCellList, SegmentIndex);
+            Application.ProcessMessages;
             if not frmProgress.ShouldContinue then
             begin
               EtRateList.Cache;
@@ -875,6 +885,7 @@ begin
 
             // data set 11
             WriteRateFraction(DepthSurfaceCellList, SegmentIndex);
+            Application.ProcessMessages;
             if not frmProgress.ShouldContinue then
             begin
               EtRateList.Cache;

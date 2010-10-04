@@ -5609,12 +5609,13 @@ end;
 procedure TColRowLayerSelectorTool.Activate;
 begin
   inherited;
-  FTopLayer.Changed;
-  FSideLayer.Changed;
-  FFrontLayer.Changed;
-  frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
-  frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
-  frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
+  UpdateAllViews;
+//  FTopLayer.Changed;
+//  FSideLayer.Changed;
+//  FFrontLayer.Changed;
+//  frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
+//  frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
+//  frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
 end;
 
 procedure TColRowLayerSelectorTool.DrawASelection(Col, Row, Lay: Integer;

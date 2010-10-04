@@ -1023,7 +1023,7 @@ begin
         rdgVerticalScreens.Cells[ColIndex, RowIndex] := '';
         rdgVerticalScreens.Objects[ColIndex, RowIndex] := nil;
       end;
-      rdgVerticalScreens.Columns[ColIndex].AutoAdjustColWidths := True;
+//      rdgVerticalScreens.Columns[ColIndex].AutoAdjustColWidths := True;
     end;
     rdgVerticalScreens.Cells[Ord(vsZTop), 0] := 'Well screen top (ZTop)';
     rdgVerticalScreens.Cells[Ord(vsZBot), 0] := 'Well screen bottom (ZBottom)';
@@ -1039,6 +1039,8 @@ begin
   end;
   for ColIndex := 0 to rdgVerticalScreens.ColCount - 1 do
   begin
+    rdgVerticalScreens.ColWidths[ColIndex] :=
+      rdgVerticalScreens.WidthNeededToFitText(ColIndex,0);
     rdgVerticalScreens.Columns[ColIndex].AutoAdjustColWidths := False;
   end;
 

@@ -82,6 +82,7 @@ type
     FNewEndPoints: TEndPointReader;
     FImportedNewFile: Boolean;
     procedure ForceRedraw;
+    procedure EnableMenuItems;
   public
     Constructor Create(var NewEndPoints: TEndPointReader; ImportedNewFile: boolean);
     Destructor Destroy; override;
@@ -182,11 +183,11 @@ var
 begin
   if frmGoPhast.PhastModel.ModflowPackages.ModPath.Binary then
   begin
-    fedModpathFile.DefaultExt := '.ts_bin';
+    fedModpathFile.DefaultExt := '.end_bin';
   end
   else
   begin
-    fedModpathFile.DefaultExt := '.ts';
+    fedModpathFile.DefaultExt := '.end';
   end;
   EndPoints := frmGoPhast.PhastModel.EndPoints;
   fedModpathFile.FileName := EndPoints.FileName;
@@ -531,8 +532,7 @@ end;
 procedure TUndoImportEndpoints.DoCommand;
 begin
   frmGoPhast.PhastModel.EndPoints := FNewEndPoints;
-  frmGoPhast.miConfigureEndpoints.Enabled :=
-    frmGoPhast.PhastModel.EndPoints.Points.Count > 0;
+  EnableMenuItems;
   ForceRedraw;
 end;
 
@@ -552,9 +552,18 @@ end;
 procedure TUndoImportEndpoints.Undo;
 begin
   frmGoPhast.PhastModel.EndPoints := FExistingEndPoints;
+  EnableMenuItems;
+  ForceRedraw;
+end;
+
+procedure TUndoImportEndpoints.EnableMenuItems;
+begin
   frmGoPhast.miConfigureEndpoints.Enabled :=
     frmGoPhast.PhastModel.EndPoints.Points.Count > 0;
-  ForceRedraw;
+  frmGoPhast.miEndpointsatStartingLocationstoShapefile.Enabled :=
+    frmGoPhast.miConfigureEndpoints.Enabled;
+  frmGoPhast.miEndpointsatEndingLocationstoShapefile.Enabled :=
+    frmGoPhast.miConfigureEndpoints.Enabled;
 end;
 
 end.

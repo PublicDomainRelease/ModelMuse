@@ -1173,6 +1173,10 @@ begin
     AScreenObject := FScreenObjects[Index];
     if not AScreenObject.Deleted then
     begin
+      if not AScreenObject.UpToDate then
+      begin
+        AScreenObject.UpToDate := True;
+      end;
       AScreenObject.Deleted := True;
       AScreenObject.Invalidate;
       UpdateScreenObject(AScreenObject);
@@ -1200,6 +1204,10 @@ begin
     AScreenObject := FScreenObjects[Index];
     if AScreenObject.Deleted then
     begin
+      if not AScreenObject.UpToDate then
+      begin
+        AScreenObject.UpToDate := True;
+      end;
       AScreenObject.Deleted := False;
       AScreenObject.Invalidate;
       UpdateScreenObject(AScreenObject);
@@ -1264,7 +1272,6 @@ begin
       begin
         FCanMoveScreenObject[ScreenObjectIndex] := True;
       end;
-      AScreenObject.Invalidate;
       MoveAll := not ((AScreenObject.SelectedVertexCount > 0)
         and (AScreenObject.SelectedVertexCount < AScreenObject.Count));
       if Length(Points) < AScreenObject.Count then
@@ -1346,6 +1353,7 @@ begin
         end;
         UpdateScreenObject(AScreenObject);
       end;
+      AScreenObject.Invalidate;
       AScreenObject.UpToDate := True;
     end;
   end;
@@ -2019,6 +2027,10 @@ begin
       Assert(False);
     end;
   end;
+  if ScreenObject.ModflowHfbBoundary <> nil then
+  begin
+    ScreenObject.ModflowHfbBoundary.InvalidateDisplay
+  end;
   ScreenObject.UpToDate := True;
 end;
 
@@ -2356,6 +2368,12 @@ begin
               AScreenObject.InsertPoint(CurrentEnd+1, LastPoint);
             end;
           end;
+          if not AScreenObject.UpToDate then
+          begin
+            AScreenObject.UpToDate := True;
+          end;
+          AScreenObject.Invalidate;
+          AScreenObject.UpToDate := True;
         end;
       end;
     end;
@@ -2404,6 +2422,8 @@ begin
         AScreenObject.SectionStarts := FSectionStarts[Index];
         OldPointPositionValues := FVertexValues[Index];
         AScreenObject.PointPositionValues := OldPointPositionValues;
+        AScreenObject.Invalidate;
+        AScreenObject.UpToDate := True;
       end;
       for DataSetIndex := 0 to AScreenObject.DataSetCount - 1 do
       begin

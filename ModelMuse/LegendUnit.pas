@@ -388,7 +388,6 @@ begin
                           + Delta*Index
                       end;
                     end;
-
                   end;
                 end;
               rdtInteger:
@@ -701,7 +700,7 @@ var
   ARect: TRect;
   Extent: TSize;
 begin
-  LegendRect.Top := StartY; 
+  LegendRect.Top := StartY;
   LegendRect.Left := StartX;
   LegendRect.BottomRight := LegendRect.TopLeft;
 
@@ -759,8 +758,6 @@ begin
           if ColoringLimits.LogTransform then
           begin
             LegendText := FloatToStrF(Values.RealValues[Index], ffGeneral, 7, 0);
-//            LegendText := FloatToStrF(Power(10,Values.RealValues[Index]), ffGeneral, 7, 0);
-            
           end
           else
           begin

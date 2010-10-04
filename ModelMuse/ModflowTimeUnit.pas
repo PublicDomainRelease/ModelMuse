@@ -118,6 +118,7 @@ type
     procedure FillStringsWithStartTimes(Strings: TStrings);
     procedure FillStringsWithEndTimes(Strings: TStrings);
     function MaxStepsInAnyStressPeriod: integer;
+    function FindStressPeriod(ATime: double): integer;
   end;
 
 function GetNumberOfTimeSteps(const PerLength, MaxFirstTimeStepLength,
@@ -482,6 +483,24 @@ begin
   begin
     StressPeriod := Items[TimeIndex];
     Strings.Add(FloatToStr(StressPeriod.StartTime));
+  end;
+end;
+
+function TModflowStressPeriods.FindStressPeriod(ATime: double): integer;
+var
+  Index: Integer;
+  StressPeriod: TModflowStressPeriod;
+begin
+  result := -1;
+  for Index := 0 to Count - 1 do
+  begin
+    StressPeriod := Items[Index];
+    if (StressPeriod.StartTime <= ATime)
+      and (StressPeriod.EndTime >= ATime) then
+    begin
+      result := Index;
+      Exit;
+    end;
   end;
 end;
 

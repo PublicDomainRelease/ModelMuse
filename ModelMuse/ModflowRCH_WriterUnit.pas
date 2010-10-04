@@ -37,7 +37,7 @@ implementation
 
 uses RbwParser, ModflowUnitNumbers, ModflowTransientListParameterUnit,
   frmErrorsAndWarningsUnit, DataSetUnit, ModflowRchUnit, GoPhastTypes, 
-  frmProgressUnit;
+  frmProgressUnit, Forms;
 
 const
   ErrorRoot = 'One or more %s parameters have been eliminated '
@@ -129,6 +129,7 @@ begin
   ParameterValues := TList.Create;
   try
     Evaluate;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -285,6 +286,7 @@ begin
   WriteToNameFile(StrRCH, PhastModel.UnitNumbers.UnitNumber(StrRCH),
     NameOfFile, foInput);
   Evaluate;
+  Application.ProcessMessages;
   if not frmProgress.ShouldContinue then
   begin
     Exit;
@@ -295,6 +297,7 @@ begin
     frmProgress.AddMessage('Writing RCH Package input.');
     frmProgress.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -302,6 +305,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -309,6 +313,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -316,6 +321,7 @@ begin
 
     frmProgress.AddMessage('  Writing Data Sets 3 and 4.');
     WriteDataSets3And4;
+    Application.ProcessMessages;
     if not frmProgress.ShouldContinue then
     begin
       Exit;
@@ -370,6 +376,7 @@ begin
     end;
     for TimeIndex := 0 to Values.Count - 1 do
     begin
+      Application.ProcessMessages;
       if not frmProgress.ShouldContinue then
       begin
         Exit;
@@ -413,6 +420,7 @@ begin
         WriteInteger(INIRCH);
         WriteString(DS5 + ' Stress period ' + IntToStr(TimeIndex+1));
         NewLine;
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           Exit;
@@ -434,6 +442,7 @@ begin
               NewLine;
             end;
           end;
+          Application.ProcessMessages;
           if not frmProgress.ShouldContinue then
           begin
             RechRateList.Cache;
@@ -443,6 +452,7 @@ begin
 
         // Data set 8
         WriteLayerSelection(RechRateList, ParameterValues, TimeIndex, Comment);
+        Application.ProcessMessages;
         if not frmProgress.ShouldContinue then
         begin
           RechRateList.Cache;

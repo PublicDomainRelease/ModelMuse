@@ -210,24 +210,29 @@ begin
     FNewGlobals.Delete(FNewGlobals.Count-1);
   end;
 
-  if seGlobalVariableCount.AsInteger >= 1 then
-  begin
-    rdgGlobalVariables.RowCount := seGlobalVariableCount.AsInteger +1;
-  end
-  else
-  begin
-    rdgGlobalVariables.RowCount := 2;
-    for ColIndex := 0 to rdgGlobalVariables.ColCount - 1 do
+  rdgGlobalVariables.BeginUpdate;
+  try
+    if seGlobalVariableCount.AsInteger >= 1 then
     begin
-      rdgGlobalVariables.Cells[ColIndex,1] := '';
-    end;
-  end;
-  for RowIndex := 1 to seGlobalVariableCount.AsInteger do
-  begin
-    if rdgGlobalVariables.Cells[Ord(gvName), RowIndex] = '' then
+      rdgGlobalVariables.RowCount := seGlobalVariableCount.AsInteger +1;
+    end
+    else
     begin
-      InitializeNewRow(RowIndex);
+      rdgGlobalVariables.RowCount := 2;
+      for ColIndex := 0 to rdgGlobalVariables.ColCount - 1 do
+      begin
+        rdgGlobalVariables.Cells[ColIndex,1] := '';
+      end;
     end;
+    for RowIndex := 1 to seGlobalVariableCount.AsInteger do
+    begin
+      if rdgGlobalVariables.Cells[Ord(gvName), RowIndex] = '' then
+      begin
+        InitializeNewRow(RowIndex);
+      end;
+    end;
+  finally
+    rdgGlobalVariables.EndUpdate;
   end;
   btnDelete.Enabled := seGlobalVariableCount.AsInteger >= 1;
 end;
@@ -497,37 +502,42 @@ var
   RowIndex: integer;
 begin
   FNewGlobals.Assign(frmGoPhast.PhastModel.GlobalVariables);
-  seGlobalVariableCount.AsInteger := frmGoPhast.PhastModel.GlobalVariables.Count;
-  seGlobalVariableCountChange(nil);
-  for Index := 0 to FNewGlobals.Count - 1 do
-  begin
-    RowIndex := Index+1;
-    GlobalVariable := FNewGlobals[Index];
-    rdgGlobalVariables.Cells[Ord(gvName), RowIndex] := GlobalVariable.Name;
-    rdgGlobalVariables.Cells[Ord(gvType), RowIndex] :=
-      rdgGlobalVariables.Columns[Ord(gvType)].PickList[Ord(GlobalVariable.Format)];
-    UpdateSpecialFormat(RowIndex);
-    case GlobalVariable.Format of
-      rdtDouble:
-        begin
-          rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := FloatToStr(GlobalVariable.RealValue);
-        end;
-      rdtInteger:
-        begin
-          rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := IntToStr(GlobalVariable.IntegerValue);
-        end;
-      rdtBoolean:
-        begin
-          rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := '';
-          rdgGlobalVariables.Checked[Ord(gvValue), RowIndex] := GlobalVariable.BooleanValue;
-        end;
-      rdtString:
-        begin
-          rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := GlobalVariable.StringValue;
-        end;
-      else Assert(False);
+  rdgGlobalVariables.BeginUpdate;
+  try
+    seGlobalVariableCount.AsInteger := frmGoPhast.PhastModel.GlobalVariables.Count;
+    seGlobalVariableCountChange(nil);
+    for Index := 0 to FNewGlobals.Count - 1 do
+    begin
+      RowIndex := Index+1;
+      GlobalVariable := FNewGlobals[Index];
+      rdgGlobalVariables.Cells[Ord(gvName), RowIndex] := GlobalVariable.Name;
+      rdgGlobalVariables.Cells[Ord(gvType), RowIndex] :=
+        rdgGlobalVariables.Columns[Ord(gvType)].PickList[Ord(GlobalVariable.Format)];
+      UpdateSpecialFormat(RowIndex);
+      case GlobalVariable.Format of
+        rdtDouble:
+          begin
+            rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := FloatToStr(GlobalVariable.RealValue);
+          end;
+        rdtInteger:
+          begin
+            rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := IntToStr(GlobalVariable.IntegerValue);
+          end;
+        rdtBoolean:
+          begin
+            rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := '';
+            rdgGlobalVariables.Checked[Ord(gvValue), RowIndex] := GlobalVariable.BooleanValue;
+          end;
+        rdtString:
+          begin
+            rdgGlobalVariables.Cells[Ord(gvValue), RowIndex] := GlobalVariable.StringValue;
+          end;
+        else Assert(False);
+      end;
+      rdgGlobalVariables.Cells[Ord(gvComment), RowIndex] := GlobalVariable.Comment;
     end;
-    rdgGlobalVariables.Cells[Ord(gvComment), RowIndex] := GlobalVariable.Comment;
+  finally
+    rdgGlobalVariables.EndUpdate;
   end;
 end;
 
