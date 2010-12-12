@@ -36,7 +36,7 @@ type
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     destructor Destroy; override;
     procedure UpdateDisplay(TimeLists: TModflowBoundListOfTimeLists;
       ParameterIndicies: TByteSet; Purpose: TObservationPurpose);
@@ -50,10 +50,11 @@ uses ModflowUnitNumbers, ScreenObjectUnit, DataSetUnit,
 
 const
   ObsNameWarning = 'The following Head observation names may be valid for MODFLOW but they are not valid for UCODE.';
+  MissingObsNameError = 'The head observation in the following objects do not have observations names assigned';
 
 { TModflowHobWriter }
 
-constructor TModflowHobWriter.Create(Model: TPhastModel);
+constructor TModflowHobWriter.Create(Model: TCustomModel);
 begin
   inherited;
   FObservations := TList.Create;
@@ -91,6 +92,7 @@ begin
   MOBS := 0;
   MAXM := 2;
   frmErrorsAndWarnings.RemoveWarningGroup(ObsNameWarning);
+  frmErrorsAndWarnings.RemoveErrorGroup(MissingObsNameError);
   frmErrorsAndWarnings.RemoveWarningGroup(HeadOffGrid);
   frmErrorsAndWarnings.RemoveErrorGroup(NoHeads);
   frmErrorsAndWarnings.RemoveErrorGroup(InvalidStartObsTime);
@@ -345,8 +347,8 @@ begin
     Exit;
   end;
   frmErrorsAndWarnings.RemoveErrorGroup(StrHeadObservationsError);
-  frmProgress.AddMessage('Writing HOB Package input.');
-  frmProgress.AddMessage('Evaluating data.');
+  frmProgressMM.AddMessage('Writing HOB Package input.');
+  frmProgressMM.AddMessage('Evaluating data.');
   Evaluate(Purpose);
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrHOB, PhastModel.UnitNumbers.UnitNumber(StrHOB), NameOfFile, foInput);
@@ -357,28 +359,28 @@ begin
   end;
   OpenFile(NameOfFile);
   try
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 3 to 6.');
+    frmProgressMM.AddMessage('  Writing Data Sets 3 to 6.');
     WriteDataSet2;
     for Index := 0 to FObservations.Count - 1 do
     begin
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -511,7 +513,7 @@ begin
     begin
       DeltaCol := 0;
     end;
-    ActiveDataArray := PhastModel.GetDataSetByName(rsActive);
+    ActiveDataArray := PhastModel.DataArrayManager.GetDataSetByName(rsActive);
     Assert(ActiveDataArray <> nil);
     ActiveDataArray.Initialize;
     LayerSorter := TObjectList.Create;
@@ -670,6 +672,11 @@ begin
   end;
   Cell := CellList[0];
   OBSNAM := Observations.ObservationName;
+  if OBSNAM = '' then
+  begin
+    ScreenObject := Observations.ScreenObject as TScreenObject;
+    frmErrorsAndWarnings.AddError(MissingObsNameError, ScreenObject.Name);
+  end;
   if not UcodeObsNameOK(OBSNAM) then
   begin
     ScreenObject := Observations.ScreenObject as TScreenObject;

@@ -174,6 +174,7 @@ var
   Index: Integer;
   AComponent: TComponent;
 begin
+//   Exit;
   // It seems that some TGLSceneViewer's are causing errors when
   // the form is being destroyed.  This is an attempt
   // to get around that.
@@ -775,6 +776,7 @@ var
   Position: Integer;
   HydrogeologicUnitNames: TStringList;
   LayerGroupsDataSets: TList;
+  DataArrayManager: TDataArrayManager;
 begin
   LayerGroupsDataSets := TList.Create;
   HydrogeologicUnitNames := TStringList.Create;
@@ -797,9 +799,10 @@ begin
     end;
     // DataSetClassificationList will be filled with TDataSetClassifications
     // for the all the TDataArrays
-    for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    for Index := 0 to DataArrayManager.DataSetCount - 1 do
     begin
-      DataSet := frmGoPhast.PhastModel.DataSets[Index];
+      DataSet := DataArrayManager.DataSets[Index];
       if Assigned(DataSetAllowed) and not DataSetAllowed(DataSet) then
       begin
         Continue;
@@ -965,6 +968,7 @@ var
   VirtualClassificationNode: PVirtualNode;
   BoundaryIndex: Integer;
   BounddaryClassification: TBoundaryClassification;
+  DataArrayManager: TDataArrayManager;
 begin
   LocalBoundaryClassifications.Clear;
 
@@ -977,9 +981,10 @@ begin
   try
     if frmGoPhast.PhastModel.ModelSelection = msPhast then
     begin
-      for Index := 0 to frmGoPhast.PhastModel.BoundaryDataSetCount - 1 do
+      DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+      for Index := 0 to DataArrayManager.BoundaryDataSetCount - 1 do
       begin
-        DataSet := frmGoPhast.PhastModel.BoundaryDataSets[Index];
+        DataSet := DataArrayManager.BoundaryDataSets[Index];
         ClassificationPosition :=
           Classifications.IndexOf(DataSet.Classification);
         if ClassificationPosition < 0 then
@@ -996,7 +1001,7 @@ begin
       end;
     end;
     EdgeEdits.Clear;
-    if (frmGoPhast.PhastModel.ModelSelection = msModflow)
+    if (frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR])
       and frmGoPhast.PhastModel.ModflowPackages.HfbPackage.IsSelected then
     begin
       List := TStringList.Create;

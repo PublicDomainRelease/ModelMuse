@@ -224,43 +224,8 @@ begin
 end;
 
 procedure THufUsedParameter.SendNotifications;
-//var
-//  PhastModel: TPhastModel;
 begin
-//  if (Model <> nil) and not (csLoading in (Model as TComponent).ComponentState) then
-//  begin
-    NotifyParamChange;
-//    if Parameter.ParameterType in [ptHUF_HK, ptHUF_KDEP] then
-//    begin
-//      PhastModel := Model as TPhastModel;
-//      PhastModel.HufKxNotifier.UpToDate := False;
-//      PhastModel.HufKxNotifier.UpToDate := True;
-//    end;
-//    if Parameter.ParameterType in [ptHUF_HK, ptHUF_KDEP, ptHUF_HANI] then
-//    begin
-//      PhastModel := Model as TPhastModel;
-//      PhastModel.HufKyNotifier.UpToDate := False;
-//      PhastModel.HufKyNotifier.UpToDate := True;
-//    end;
-//    if Parameter.ParameterType in [ptHUF_HK, ptHUF_KDEP, ptHUF_VK, ptHUF_VANI] then
-//    begin
-//      PhastModel := Model as TPhastModel;
-//      PhastModel.HufKzNotifier.UpToDate := False;
-//      PhastModel.HufKzNotifier.UpToDate := True;
-//    end;
-//    if Parameter.ParameterType = ptHUF_SS then
-//    begin
-//      PhastModel := Model as TPhastModel;
-//      PhastModel.HufSsNotifier.UpToDate := False;
-//      PhastModel.HufSsNotifier.UpToDate := True;
-//    end;
-//    if Parameter.ParameterType = ptHUF_SY then
-//    begin
-//      PhastModel := Model as TPhastModel;
-//      PhastModel.HufSyNotifier.UpToDate := False;
-//      PhastModel.HufSyNotifier.UpToDate := True;
-//    end;
-//  end;
+  NotifyParamChange;
 end;
 
 procedure THufUsedParameter.RenameDataArrays(NewRoot: string);
@@ -268,13 +233,15 @@ var
   NewName: string;
   DataArray: TDataArray;
   PhastModel: TPhastModel;
+  DataArrayManager: TDataArrayManager;
 begin
   PhastModel := Model as TPhastModel;
   if PhastModel <> nil then
   begin
+    DataArrayManager := PhastModel.DataArrayManager;
     if UseMultiplier then
     begin
-      DataArray := PhastModel.GetDataSetByName(FMultiplierName);
+      DataArray := DataArrayManager.GetDataSetByName(FMultiplierName);
       if DataArray <> nil then
       begin
         NewName := NewRoot + StrMultiplier;
@@ -284,7 +251,7 @@ begin
     end;
     if UseZone then
     begin
-      DataArray := PhastModel.GetDataSetByName(FZoneName);
+      DataArray := DataArrayManager.GetDataSetByName(FZoneName);
       if DataArray <> nil then
       begin
         NewName := NewRoot + StrZone;
@@ -302,10 +269,12 @@ var
   Extension: string;
   Formula: string;
   DataArray: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
   PhastModel := Model as TPhastModel;
   if PhastModel <> nil then
   begin
+    DataArrayManager := PhastModel.DataArrayManager;
     if UseDataArray then
     begin
       if DataType = rdtBoolean then
@@ -320,15 +289,22 @@ begin
         Formula := '1.';
       end;
       LayerName := HufUnit.FHufName + '_' + ParameterName + Extension;
-      DataArray := PhastModel.GetDataSetByName(LayerName);
+      DataArray := DataArrayManager.GetDataSetByName(LayerName);
       if DataArray = nil then
       begin
-        DataArray := PhastModel.CreateNewDataArray(TDataArray, LayerName,
+        DataArray := DataArrayManager.CreateNewDataArray(TDataArray, LayerName,
           Formula, StandardLock, DataType, eaBlocks, dsoTop, StrHUF);
-        DataArray.UpdateDimensions(frmGoPhast.Grid.LayerCount,
-          frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
+        if frmGoPhast.Grid = nil then
+        begin
+          DataArray.UpdateDimensions(0,0,0);
+        end
+        else
+        begin
+          DataArray.UpdateDimensions(frmGoPhast.Grid.LayerCount,
+            frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
+        end;
 
-        DataArray.OnNameChange := PhastModel.DataArrayNameChange;
+//        DataArray.OnNameChange := PhastModel.DataArrayNameChange;
 
         DataArray.OnDataSetUsed := PhastModel.HufDataArrayUsed;
         HufUnits.AddOwnedDataArray(DataArray);
@@ -337,13 +313,13 @@ begin
       begin
         DataArray.UpdateWithName(LayerName);
         DataArray.Lock := StandardLock;
-        DataArray.OnNameChange := PhastModel.DataArrayNameChange;
+//        DataArray.OnNameChange := PhastModel.DataArrayNameChange;
         DataArray.OnDataSetUsed := PhastModel.HufDataArrayUsed;
       end;
     end
     else
     begin
-      DataArray := PhastModel.GetDataSetByName(FZoneName);
+      DataArray := DataArrayManager.GetDataSetByName(FZoneName);
       if DataArray <> nil then
       begin
         DataArray.Lock := [];
@@ -647,18 +623,20 @@ destructor THydrogeologicUnit.Destroy;
 var
   PhastModel: TPhastModel;
   DataArray: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
   FHufUsedParameters.Free;
   FPrintItems.Free;
   PhastModel := Model as TPhastModel;
   if PhastModel <> nil then
   begin
-    DataArray := PhastModel.GetDataSetByName(FTopArrayName);
+    DataArrayManager := PhastModel.DataArrayManager;
+    DataArray := DataArrayManager.GetDataSetByName(FTopArrayName);
     if DataArray <> nil then
     begin
       DataArray.Lock := [];
     end;
-    DataArray := PhastModel.GetDataSetByName(FThickessArrayName);
+    DataArray := DataArrayManager.GetDataSetByName(FThickessArrayName);
     if DataArray <> nil then
     begin
       DataArray.Lock := [];
@@ -672,8 +650,10 @@ procedure THydrogeologicUnit.CreateOrRenameDataArray(var LayerName: string;
 var
   PhastModel: TPhastModel;
   DataArray: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
   PhastModel := Model as TPhastModel;
+  DataArrayManager := PhastModel.DataArrayManager;
   Assert(PhastModel <> nil);
   if LayerName = '' then
   begin
@@ -681,22 +661,29 @@ begin
   end
   else
   begin
-    DataArray := PhastModel.GetDataSetByName(LayerName);
+    DataArray := DataArrayManager.GetDataSetByName(LayerName);
   end;
   LayerName := NewHufName + Extension;
   if DataArray = nil then
   begin
-    DataArray := PhastModel.GetDataSetByName(LayerName);
+    DataArray := DataArrayManager.GetDataSetByName(LayerName);
   end;
   if DataArray = nil then
   begin
-    DataArray := PhastModel.CreateNewDataArray(TDataArray, LayerName,
+    DataArray := DataArrayManager.CreateNewDataArray(TDataArray, LayerName,
       '0.', StandardLock, rdtDouble, eaBlocks, dsoTop, StrHUF);
-    DataArray.UpdateDimensions(frmGoPhast.Grid.LayerCount,
-      frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
+    if frmGoPhast.Grid = nil then
+    begin
+      DataArray.UpdateDimensions(0,0,0);
+    end
+    else
+    begin
+      DataArray.UpdateDimensions(frmGoPhast.Grid.LayerCount,
+        frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
+    end;
 //    DataArray := TDataArray.Create(PhastModel);
 //    DataArray.UpdateWithName(LayerName);
-    DataArray.OnNameChange := PhastModel.DataArrayNameChange;
+//    DataArray.OnNameChange := PhastModel.DataArrayNameChange;
 //    DataArray.Orientation := dsoTop;
 //    DataArray.EvaluatedAt := eaBlocks;
 //    DataArray.DataType := rdtDouble;
@@ -711,7 +698,7 @@ begin
   begin
     DataArray.UpdateWithName(LayerName);
     DataArray.Lock := StandardLock;
-    DataArray.OnNameChange := PhastModel.DataArrayNameChange;
+//    DataArray.OnNameChange := PhastModel.DataArrayNameChange;
     DataArray.OnDataSetUsed := PhastModel.HufDataArrayUsed;
   end;
 end;
@@ -808,7 +795,7 @@ begin
     CreateOrRenameDataArray(FTopArrayName, StrTop, NewHufName);
     CreateOrRenameDataArray(FThickessArrayName, StrThickness, NewHufName);
     PhastModel := Model as TPhastModel;
-    DataArray := PhastModel.GetDataSetByName(FThickessArrayName);
+    DataArray := PhastModel.DataArrayManager.GetDataSetByName(FThickessArrayName);
     Assert(DataArray <> nil);
     DataArray.CheckMin := True;
     DataArray.Min := 0;

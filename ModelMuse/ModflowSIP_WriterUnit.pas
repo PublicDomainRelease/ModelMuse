@@ -73,7 +73,7 @@ begin
   WriteToNameFile('SIP', PhastModel.UnitNumbers.UnitNumber(StrSIP), NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgress.AddMessage('Writing SIP Package input.');
+    frmProgressMM.AddMessage('Writing SIP Package input.');
     WriteDataSet0;
     WriteDataSet1;
     WriteDataSet2;

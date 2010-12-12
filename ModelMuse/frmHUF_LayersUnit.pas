@@ -995,6 +995,7 @@ begin
   frmGoPhast.PhastModel.HydrogeologicUnits.NewDataSets := FNewDataSets;
   frmGoPhast.PhastModel.HydrogeologicUnits.ClearNewDataSets;
   frmGoPhast.PhastModel.HydrogeologicUnits := FNewHydrogeologicUnits;
+  UpdatedRequiredDataSets;
 end;
 
 procedure TUndoHufLayers.Undo;
@@ -1003,6 +1004,7 @@ begin
   frmGoPhast.PhastModel.HydrogeologicUnits.NewDataSets := FNewDataSets;
   frmGoPhast.PhastModel.HydrogeologicUnits.RemoveNewDataSets;
   frmGoPhast.PhastModel.HydrogeologicUnits := FOldHydrogeologicUnits;
+  UpdatedRequiredDataSets;
 end;
 
 end.

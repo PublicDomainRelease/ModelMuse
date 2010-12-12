@@ -163,6 +163,13 @@ procedure TRLIST (const NCC: longint; const LCC: TNcmaxIntArray;
   var LTRI: TNtmx_LwkIntArray; var LCT: TNcmaxIntArray;
   var IER: longint);
 
+// TRLIST2 is a faster version of TRLIST
+procedure TRLIST2 (const NCC: longint; const LCC: TNcmaxIntArray;
+  const N: longint; const LIST,LPTR: TN6IntArray; const LEND: TNmaxIntArray;
+  const NROW: longint; var NT: longint;
+  var LTRI: TNtmx_LwkIntArray; var LCT: TNcmaxIntArray;
+  var IER: longint);
+
 procedure TRLPRT (const NCC: longint; const LCT: TNcmaxIntArray;
   const N: longint; const X,Y: TNmaxSingleArray;
   const NROW,NT: longint; const LTRI: TNtmx_LwkIntArray; const LOUT: longint;
@@ -171,7 +178,7 @@ procedure TRLPRT (const NCC: longint; const LCT: TNcmaxIntArray;
 procedure TRMESH (const N: longint; var X,Y: TNmaxSingleArray;
   var LIST,LPTR: TN6IntArray; var LEND: TNmaxIntArray; var LNEW: longint;
   var NEAR: TLwkIntArray; var NEXT: array of longint;
-  var DIST: array of TFloat; var IER: longint; const NextOffset: longint);
+  var DIST: array of TFloat; var IER: longint);
 
 procedure TRPLOT (const LUN: longint; const PLTSIZ,
   WX1,WX2,WY1,WY2: TFloat; const NCC: longint; const LCC: TNcmaxIntArray;
@@ -190,7 +197,7 @@ uses
 {$IFDEF UseTripackMessages}
   TripackMessages,
 {$ENDIF}
-  Math;
+  Math, OctTreeClass;
 
 var
   SWTOL: TFloat;
@@ -6427,6 +6434,7 @@ var
     NM2, NN: longint;
   ARCS, CSTRI, PASS2: longbool;
   GoTo5, GoTo7, GoTo8: longbool;
+  KN_Temp: integer;
 //      INTEGER I, I1, I2, I3, ISV, J, JLAST, KA, KN, KT, L,
 //     .        LCC1, LP, LP2, LPL, LPLN1, N1, N1ST, N2, N3,
 //     .        NM2, NN
@@ -6783,15 +6791,20 @@ begin
       //C   reverse order.
       //C
                   GoTo7 := False;
+                  // RBW, KN is undefined after loop
+                  // so save KN in KN_Temp.
+                  KN_Temp := 1;
                   for KN := KT-1 downto 1 do
                   begin
                     IF (LTRI[KN-1,0] = I1) AND (LTRI[KN-1,1] = I2)
                       AND (LTRI[KN-1,2] = I3) then
                     begin
+                      KN_Temp := KN;
                       GoTo7 := True;
                       break;
                     end;
                   end;
+                  KN := KN_Temp;
                   if not GoTo7 then
                   begin
                     Continue;
@@ -6874,6 +6887,638 @@ begin
 //      IER = 2
 //      RETURN
 //      END
+end;
+
+procedure TRLIST2 (const NCC: longint; const LCC: TNcmaxIntArray;
+  const N: longint; const LIST,LPTR: TN6IntArray; const LEND: TNmaxIntArray;
+  const NROW: longint; var NT: longint;
+  var LTRI: TNtmx_LwkIntArray; var LCT: TNcmaxIntArray;
+  var IER: longint);
+// SUBROUTINE TRLIST (NCC,LCC,N,LIST,LPTR,LEND,NROW, NT,
+//     .                   LTRI,LCT,IER)
+//      INTEGER NCC, LCC(*), N, LIST(*), LPTR(*), LEND(N),
+//     .        NROW, NT, LTRI(NROW,*), LCT(*), IER
+//C
+//C***********************************************************
+//C
+//C                                               From TRIPACK
+//C                                            Robert J. Renka
+//C                                  Dept. of Computer Science
+//C                                       Univ. of North Texas
+//C                                           renka@cs.unt.edu
+//C                                                   03/22/97
+//C
+//C   This subroutine converts a triangulation data structure
+//C from the linked list created by Subroutine TRMESH or
+//C TRMSHR to a triangle list.
+//C
+//C On input:
+//C
+//C       NCC = Number of constraints.  NCC .GE. 0.
+//C
+//C       LCC = List of constraint curve starting indexes (or
+//C             dummy array of length 1 if NCC = 0).  Refer to
+//C             Subroutine ADDCST.
+//C
+//C       N = Number of nodes in the triangulation.  N .GE. 3.
+//C
+//C       LIST,LPTR,LEND = Linked list data structure defin-
+//C                        ing the triangulation.  Refer to
+//C                        Subroutine TRMESH.
+//C
+//C       NROW = Number of rows (entries per triangle) re-
+//C              served for the triangle list LTRI.  The value
+//C              must be 6 if only the vertex indexes and
+//C              neighboring triangle indexes are to be
+//C              stored, or 9 if arc indexes are also to be
+//C              assigned and stored.  Refer to LTRI.
+//C
+//C The above parameters are not altered by this routine.
+//C
+//C       LTRI = Integer array of length at least NROW*NT,
+//C              where NT is at most 2N-5.  (A sufficient
+//C              length is 12N if NROW=6 or 18N if NROW=9.)
+//C
+//C       LCT = Integer array of length NCC or dummy array of
+//C             length 1 if NCC = 0.
+//C
+//C On output:
+//C
+//C       NT = Number of triangles in the triangulation unless
+//C            IER .NE. 0, in which case NT = 0.  NT = 2N - NB
+//C            - 2, where NB is the number of boundary nodes.
+//C
+//C       LTRI = NROW by NT array whose J-th column contains
+//C              the vertex nodal indexes (first three rows),
+//C              neighboring triangle indexes (second three
+//C              rows), and, if NROW = 9, arc indexes (last
+//C              three rows) associated with triangle J for
+//C              J = 1,...,NT.  The vertices are ordered
+//C              counterclockwise with the first vertex taken
+//C              to be the one with smallest index.  Thus,
+//C              LTRI(2,J) and LTRI(3,J) are larger than
+//C              LTRI(1,J) and index adjacent neighbors of
+//C              node LTRI(1,J).  For I = 1,2,3, LTRI(I+3,J)
+//C              and LTRI(I+6,J) index the triangle and arc,
+//C              respectively, which are opposite (not shared
+//C              by) node LTRI(I,J), with LTRI(I+3,J) = 0 if
+//C              LTRI(I+6,J) indexes a boundary arc.  Vertex
+//C              indexes range from 1 to N, triangle indexes
+//C              from 0 to NT, and, if included, arc indexes
+//C              from 1 to NA = NT+N-1.  The triangles are or-
+//C              dered on first (smallest) vertex indexes,
+//C              except that the sets of constraint triangles
+//C              (triangles contained in the closure of a con-
+//C              straint region) follow the non-constraint
+//C              triangles.
+//C
+//C       LCT = Array of length NCC containing the triangle
+//C             index of the first triangle of constraint J in
+//C             LCT(J).  Thus, the number of non-constraint
+//C             triangles is LCT(1)-1, and constraint J con-
+//C             tains LCT(J+1)-LCT(J) triangles, where
+//C             LCT(NCC+1) = NT+1.
+//C
+//C       IER = Error indicator.
+//C             IER = 0 if no errors were encountered.
+//C             IER = 1 if NCC, N, NROW, or an LCC entry is
+//C                     outside its valid range on input.
+//C             IER = 2 if the triangulation data structure
+//C                     (LIST,LPTR,LEND) is invalid.  Note,
+//C                     however, that these arrays are not
+//C                     completely tested for validity.
+//C
+//C Modules required by TRLIST:  None
+//C
+//C Intrinsic function called by TRLIST:  ABS
+//C
+//C***********************************************************
+//C
+var
+  I, I1, I2, I3, ISV, J, JLAST, KA, KN, KT, L,
+    LCC1, LP, LP2, LPL, LPLN1, N1, N1ST, N2, N3,
+    NM2, NN: longint;
+  ARCS, CSTRI, PASS2: longbool;
+  GoTo5, GoTo7, GoTo8: longbool;
+  KN_Temp: integer;
+  OctTree: TRbwOctTree;
+  FirstIndex: Integer;
+  SecondIndex: Integer;
+  X, Y, Z: double;
+  Data: TPointerArray;
+//      INTEGER I, I1, I2, I3, ISV, J, JLAST, KA, KN, KT, L,
+//     .        LCC1, LP, LP2, LPL, LPLN1, N1, N1ST, N2, N3,
+//     .        NM2, NN
+//      LOGICAL ARCS, CSTRI, PASS2
+  procedure RemovePoint(Index: integer);
+  begin
+    if (LTRI[Index,0] <> 0)
+      and (LTRI[Index,1] <> 0)
+      and (LTRI[Index,2] <> 0) then
+    begin
+      OctTree.RemovePoint(LTRI[Index,0], LTRI[Index,1],
+        LTRI[Index,2], Pointer(Index))
+    end;
+  end;
+  procedure AddPoint(Index: integer);
+  begin
+    if (LTRI[Index,0] <> 0)
+      and (LTRI[Index,1] <> 0)
+      and (LTRI[Index,2] <> 0) then
+    begin
+      OctTree.AddPoint(LTRI[Index,0], LTRI[Index,1],
+        LTRI[Index,2], Pointer(Index))
+    end;
+  end;
+begin
+  // RBW OctTree is used to search LTRI.
+  OctTree := TRbwOctTree.Create(nil);
+  try
+    OctTree.XMin := 1;
+    OctTree.XMax := N;
+    OctTree.YMin := 1;
+    OctTree.YMax := N;
+    OctTree.ZMin := 1;
+    OctTree.ZMax := N;
+    // RBW initialize LTRI
+    for FirstIndex := 0 to Length(LTRI) - 1 do
+    begin
+      for SecondIndex := 0 to Length(LTRI[0]) - 1 do
+      begin
+        LTRI[FirstIndex, SecondIndex] := 0;
+      end;
+    end;
+//C
+//C Test for invalid input parameters and store the index
+//C   LCC1 of the first constraint node (if any).
+//C
+      NN := N;
+//      NN = N
+      IF (NCC < 0) OR ((NROW <> 6) AND
+        (NROW <> 9)) then
+      begin
+  //C Invalid input parameter.
+  //C
+        NT := 0;
+        IER := 1;
+        Exit;
+  //   12 NT = 0
+  //      IER = 1
+  //      RETURN
+      end;
+//      IF (NCC .LT. 0  .OR.  (NROW .NE. 6  .AND.
+//     .    NROW .NE. 9)) GO TO 12
+      LCC1 := NN+1;
+//      LCC1 = NN+1
+      IF (NCC = 0) THEN
+      begin
+        IF (NN < 3) then
+        begin
+    //C Invalid input parameter.
+    //C
+          NT := 0;
+          IER := 1;
+          Exit;
+    //   12 NT = 0
+    //      IER = 1
+    //      RETURN
+        end;
+      end
+      ELSE
+//      IF (NCC .EQ. 0) THEN
+//        IF (NN .LT. 3) GO TO 12
+//      ELSE
+      begin
+        for I := NCC downto 1 do
+        begin
+          IF (LCC1-LCC[I-1] < 3) then
+          begin
+      //C Invalid input parameter.
+      //C
+            NT := 0;
+            IER := 1;
+            Exit;
+      //   12 NT = 0
+      //      IER = 1
+      //      RETURN
+          end;
+          LCC1 := LCC[I-1];
+        end;
+//        DO 1 I = NCC,1,-1
+//          IF (LCC1-LCC(I) .LT. 3) GO TO 12
+//          LCC1 = LCC(I)
+//    1     CONTINUE
+        IF (LCC1 < 1) then
+        begin
+    //C Invalid input parameter.
+    //C
+          NT := 0;
+          IER := 1;
+          Exit;
+    //   12 NT = 0
+    //      IER = 1
+    //      RETURN
+        end;
+      END;
+//        IF (LCC1 .LT. 1) GO TO 12
+//      ENDIF
+//C
+//C Initialize parameters for loop on triangles KT = (N1,N2,
+//C   N3), where N1 < N2 and N1 < N3.  This requires two
+//C   passes through the nodes with all non-constraint
+//C   triangles stored on the first pass, and the constraint
+//C   triangles stored on the second.
+//C
+//C   ARCS = TRUE iff arc indexes are to be stored.
+//C   KA,KT = Numbers of currently stored arcs and triangles.
+//C   N1ST = Starting index for the loop on nodes (N1ST = 1 on
+//C            pass 1, and N1ST = LCC1 on pass 2).
+//C   NM2 = Upper bound on candidates for N1.
+//C   PASS2 = TRUE iff constraint triangles are to be stored.
+//C
+      ARCS := NROW = 9;
+      KA := 0;
+      KT := 0;
+      N1ST := 1;
+      NM2 := NN-2;
+      PASS2 := FALSE;
+//      ARCS = NROW .EQ. 9
+//      KA = 0
+//      KT = 0
+//      N1ST = 1
+//      NM2 = NN-2
+//      PASS2 = .FALSE.
+//C
+//C Loop on nodes N1:  J = constraint containing N1,
+//C                    JLAST = last node in constraint J.
+//C
+      repeat
+          J := 0;
+          JLAST := LCC1 - 1;
+  //    2 J = 0
+  //      JLAST = LCC1 - 1
+          for N1 := N1ST to NM2 do
+          begin
+            
+    //      DO 11 N1 = N1ST,NM2
+            IF (N1 > JLAST) THEN
+            begin
+    //        IF (N1 .GT. JLAST) THEN
+    //C
+    //C N1 is the first node in constraint J+1.  Update J and
+    //C   JLAST, and store the first constraint triangle index
+    //C   if in pass 2.
+    //C
+              J := J + 1;
+              IF (J < NCC) THEN
+              begin
+                JLAST := LCC[J] - 1;
+              end
+              ELSE
+              begin
+                JLAST := NN;
+              END;
+              IF PASS2 then LCT[J-1] := KT + 1;
+            END;
+    //          J = J + 1
+    //          IF (J .LT. NCC) THEN
+    //            JLAST = LCC(J+1) - 1
+    //          ELSE
+    //            JLAST = NN
+    //          ENDIF
+    //          IF (PASS2) LCT(J) = KT + 1
+    //        ENDIF
+    //C
+    //C Loop on pairs of adjacent neighbors (N2,N3).  LPLN1 points
+    //C   to the last neighbor of N1, and LP2 points to N2.
+    //C
+            LPLN1 := LEND[N1-1];
+            LP2 := LPLN1;
+    //        LPLN1 = LEND(N1)
+    //        LP2 = LPLN1
+            repeat
+              LP2 := LPTR[LP2-1];
+              N2 := LIST[LP2-1];
+              LP := LPTR[LP2-1];
+              N3 := ABS(LIST[LP-1]);
+              IF (N2 < N1) OR (N3 < N1) then
+              begin
+                if LP2 <> LPLN1 then
+                begin
+                 Continue;
+                end
+                else
+                begin
+                  Break;
+                end;
+    //   10     IF (LP2 .NE. LPLN1) GO TO 3
+              end;
+
+    //    3     LP2 = LPTR(LP2)
+    //          N2 = LIST(LP2)
+    //          LP = LPTR(LP2)
+    //          N3 = ABS(LIST(LP))
+    //          IF (N2 .LT. N1  .OR.  N3 .LT. N1) GO TO 10
+    //C
+    //C (N1,N2,N3) is a constraint triangle iff the three nodes
+    //C   are in the same constraint and N2 < N3.  Bypass con-
+    //C   straint triangles on pass 1 and non-constraint triangles
+    //C   on pass 2.
+    //C
+              CSTRI := (N1 >= LCC1) AND (N2 < N3) AND
+                     (N3 <= JLAST);
+              IF ((CSTRI  AND  NOT PASS2) OR
+                 (NOT CSTRI  AND  PASS2)) then
+              begin
+                if LP2 <> LPLN1 then
+                begin
+                 Continue;
+                end
+                else
+                begin
+                  Break;
+                end;
+    //   10     IF (LP2 .NE. LPLN1) GO TO 3
+              end;
+    //          CSTRI = N1 .GE. LCC1  .AND.  N2 .LT. N3  .AND.
+    //     .            N3 .LE. JLAST
+    //          IF ((CSTRI  .AND.  .NOT. PASS2)  .OR.
+    //     .        (.NOT. CSTRI  .AND.  PASS2)) GO TO 10
+    //C
+    //C Add a new triangle KT = (N1,N2,N3).
+    //C
+              KT := KT + 1;
+              // RBW remove existing content of OctTree
+              RemovePoint(KT-1);
+              LTRI[KT-1,0] := N1;
+              LTRI[KT-1,1] := N2;
+              LTRI[KT-1,2] := N3;
+              // RBW add new content to OctTree
+              AddPoint(KT-1);
+    //          KT = KT + 1
+    //          LTRI(1,KT) = N1
+    //          LTRI(2,KT) = N2
+    //          LTRI(3,KT) = N3
+    //C
+    //C Loop on triangle sides (I1,I2) with neighboring triangles
+    //C   KN = (I1,I2,I3).
+    //C
+              for I := 1 to 3 do
+              begin
+    //          DO 9 I = 1,3
+                IF (I = 1) THEN
+                begin
+                  I1 := N3;
+                  I2 := N2;
+                end
+                ELSE IF (I = 2) THEN
+                begin
+                  I1 := N1;
+                  I2 := N3;
+                end
+                ELSE
+                begin
+                  I1 := N2;
+                  I2 := N1;
+                END;
+    //            IF (I .EQ. 1) THEN
+    //              I1 = N3
+    //              I2 = N2
+    //            ELSEIF (I .EQ. 2) THEN
+    //              I1 = N1
+    //              I2 = N3
+    //            ELSE
+    //              I1 = N2
+    //              I2 = N1
+    //            ENDIF
+    //C
+    //C Set I3 to the neighbor of I1 which follows I2 unless
+    //C   I2->I1 is a boundary arc.
+    //C
+                LPL := LEND[I1-1];
+                LP := LPTR[LPL-1];
+    //            LPL = LEND(I1)
+    //            LP = LPTR(LPL)
+                GoTo5 := False;
+                repeat
+                  IF (LIST[LP-1] = I2) then
+                  begin
+                    GoTo5 := True;
+                    break;
+                  end;
+                  LP := LPTR[LP-1];
+    //    4       IF (LIST(LP) .EQ. I2) GO TO 5
+    //              LP = LPTR(LP)
+    //              IF (LP .NE. LPL) GO TO 4
+                until (LP = LPL);
+                GoTo8 := False;
+                if not GoTo5 then
+                begin
+      //C
+      //C   I2 is the last neighbor of I1 unless the data structure
+      //C     is invalid.  Bypass the search for a neighboring
+      //C     triangle if I2->I1 is a boundary arc.
+      //C
+                  IF (ABS(LIST[LP-1]) <> I2) then
+                  begin
+              //C Invalid triangulation data structure:  I1 is a neighbor of
+              //C   I2, but I2 is not a neighbor of I1.
+              //C
+                    NT := 0;
+                    IER := 2;
+                    Exit;
+              //   13 NT = 0
+              //      IER = 2
+              //      RETURN
+                  end;
+                  KN := 0;
+                  IF (LIST[LP-1] < 0) then
+                  begin
+                    GoTo8 := True;
+                  end;
+      //            IF (ABS(LIST(LP)) .NE. I2) GO TO 13
+      //            KN = 0
+      //            IF (LIST(LP) .LT. 0) GO TO 8
+                end;
+                if not GoTo8 then
+                begin
+      //C
+      //C   I2->I1 is not a boundary arc, and LP points to I2 as
+      //C     a neighbor of I1.
+      //C
+                  LP := LPTR[LP-1];
+                  I3 := ABS(LIST[LP-1]);
+      //    5       LP = LPTR(LP)
+      //            I3 = ABS(LIST(LP))
+      //C
+      //C Find L such that LTRI(L,KN) = I3 (not used if KN > KT),
+      //C   and permute the vertex indexes of KN so that I1 is
+      //C   smallest.
+      //C
+                  IF (I1 < I2) AND (I1 < I3) THEN
+                  begin
+                    L := 3;
+                  end
+                  ELSE IF (I2 < I3) THEN
+                  begin
+                    L := 2;
+                    ISV := I1;
+                    I1 := I2;
+                    I2 := I3;
+                    I3 := ISV;
+                  end
+                  ELSE
+                  begin
+                    L := 1;
+                    ISV := I1;
+                    I1 := I3;
+                    I3 := I2;
+                    I2 := ISV;
+                  END;
+      //            IF (I1 .LT. I2  .AND.  I1 .LT. I3) THEN
+      //              L = 3
+      //            ELSEIF (I2 .LT. I3) THEN
+      //              L = 2
+      //              ISV = I1
+      //              I1 = I2
+      //              I2 = I3
+      //              I3 = ISV
+      //            ELSE
+      //              L = 1
+      //              ISV = I1
+      //              I1 = I3
+      //              I3 = I2
+      //              I2 = ISV
+      //            ENDIF
+      //C
+      //C Test for KN > KT (triangle index not yet assigned).
+      //C
+                  IF (I1 > N1) AND NOT PASS2 then
+                  begin
+                    Continue;
+                  end;
+      //            IF (I1 .GT. N1  .AND.  .NOT. PASS2) GO TO 9
+      //C
+      //C Find KN, if it exists, by searching the triangle list in
+      //C   reverse order.
+      //C
+                  GoTo7 := False;
+                  X := I1;
+                  Y := I2;
+                  Z := I3;
+                  OctTree.FindClosestPointsData(X, Y, Z, Data);
+                  if (X = I1) and (Y = I2) and (Z = I3) then
+                  begin
+                    KN := Integer(Data[0])+1;
+                    GoTo7 := True;
+                  end;
+                  {KN_Temp := 1;
+                  for KN := KT-1 downto 1 do
+                  begin
+                    IF (LTRI[KN-1,0] = I1) AND (LTRI[KN-1,1] = I2)
+                      AND (LTRI[KN-1,2] = I3) then
+                    begin
+                      KN_Temp := KN;
+                      GoTo7 := True;
+                      break;
+                    end;
+                  end;
+                  KN := KN_Temp; }
+                  if not GoTo7 then
+                  begin
+                    Continue;
+                  end;
+      //            DO 6 KN = KT-1,1,-1
+      //              IF (LTRI(1,KN) .EQ. I1  .AND.  LTRI(2,KN) .EQ.
+      //     .            I2  .AND.  LTRI(3,KN) .EQ. I3) GO TO 7
+      //    6         CONTINUE
+      //            GO TO 9
+      //C
+      //C Store KT as a neighbor of KN.
+      //C
+                  RemovePoint(KN-1);
+                  LTRI[KN-1,L+2] := KT;
+                  AddPoint(KN-1);
+      //    7       LTRI(L+3,KN) = KT
+
+                end;
+    //C
+    //C Store KN as a neighbor of KT, and add a new arc KA.
+    //C
+                LTRI[KT-1,I+2] := KN;
+                IF (ARCS) THEN
+                begin
+                  KA := KA + 1;
+                  RemovePoint(KT-1);
+                  LTRI[KT-1,I+5] := KA;
+                  AddPoint(KT-1);
+                  IF (KN <> 0) then
+                  begin
+                    RemovePoint(KN-1);
+                    LTRI[KN-1,L+5] := KA;
+                    AddPoint(KN-1);
+                  end;
+                END;
+    //    8       LTRI(I+3,KT) = KN
+    //            IF (ARCS) THEN
+    //              KA = KA + 1
+    //              LTRI(I+6,KT) = KA
+    //              IF (KN .NE. 0) LTRI(L+6,KN) = KA
+    //            ENDIF
+    //    9       CONTINUE
+              end;
+    //C
+    //C Bottom of loop on triangles.
+    //C
+    //   10     IF (LP2 .NE. LPLN1) GO TO 3
+            until LP2 = LPLN1;
+    //   11     CONTINUE
+          end;
+  //C
+  //C Bottom of loop on nodes.
+  //C
+        IF NOT PASS2  AND  (NCC > 0) THEN
+        begin
+          PASS2 := TRUE;
+          N1ST := LCC1;
+          Continue;
+        END
+        else
+        begin
+          break;
+        end;
+  //      IF (.NOT. PASS2  .AND.  NCC .GT. 0) THEN
+  //        PASS2 = .TRUE.
+  //        N1ST = LCC1
+  //        GO TO 2
+  //      ENDIF
+      until False;
+//C
+//C No errors encountered.
+//C
+      NT := KT;
+      IER := 0;
+//      NT = KT
+//      IER = 0
+//      RETURN
+//C
+//C Invalid input parameter.
+//C
+//   12 NT = 0
+//      IER = 1
+//      RETURN
+//C
+//C Invalid triangulation data structure:  I1 is a neighbor of
+//C   I2, but I2 is not a neighbor of I1.
+//C
+//   13 NT = 0
+//      IER = 2
+//      RETURN
+//      END
+
+  finally
+    OctTree.Free;
+  end;
 end;
 
 procedure TRLPRT (const NCC: longint; const LCT: TNcmaxIntArray;
@@ -7196,7 +7841,7 @@ end;
 procedure TRMESH (const N: longint; var X,Y: TNmaxSingleArray;
   var LIST,LPTR: TN6IntArray; var LEND: TNmaxIntArray; var LNEW: longint;
   var NEAR: TLwkIntArray; var NEXT: array of longint;
-  var DIST: array of TFloat; var IER: longint; const NextOffset: longint);
+  var DIST: array of TFloat; var IER: longint);
 //C
 //C***********************************************************
 //C
@@ -7410,7 +8055,9 @@ var
 //     .        NN
 //      REAL    D, D1, D2, D3, EPS, SWTOL
 //      COMMON/SWPCOM/SWTOL
+  NextOffset: longint;
 begin
+  NextOffset := N;
 //C
 //C Local parameters:
 //C

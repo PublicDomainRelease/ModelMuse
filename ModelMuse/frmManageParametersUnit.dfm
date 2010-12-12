@@ -16,6 +16,7 @@ inherited frmManageParameters: TfrmManageParameters
     Align = alClient
     ColCount = 6
     FixedCols = 0
+    RowCount = 2
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
     TabOrder = 0
     OnMouseUp = rdgParametersMouseUp
@@ -178,7 +179,7 @@ inherited frmManageParameters: TfrmManageParameters
     end
     object seNumberOfParameters: TJvSpinEdit
       Left = 8
-      Top = 9
+      Top = 6
       Width = 49
       Height = 26
       ButtonKind = bkClassic

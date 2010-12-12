@@ -1223,7 +1223,7 @@ begin
                 AssignCellList(Expression, CellList, Boundaries[ItemCount],
                   BoundaryFunctionIndex, Variables, DataSets);
 
-                PhastModel.CacheDataArrays;
+                PhastModel.DataArrayManager.CacheDataArrays;
               end;
             finally
               Variables.Free;
@@ -1280,12 +1280,12 @@ begin
             VarName := UsedVariables[VarIndex];
             VarPosition := Compiler.IndexOfVariable(VarName);
             Variable := Compiler.Variables[VarPosition];
-            AnotherDataSet := PhastModel.GetDataSetByName(VarName);
+            AnotherDataSet := PhastModel.DataArrayManager.GetDataSetByName(VarName);
             if AnotherDataSet <> nil then
             begin
               Assert(AnotherDataSet.DataType = Variable.ResultType);
               AnotherDataSet.Initialize;
-              PhastModel.AddDataSetToCache(AnotherDataSet);
+              PhastModel.DataArrayManager.AddDataSetToCache(AnotherDataSet);
               Variables.Add(Variable);
               DataSets.Add(AnotherDataSet);
             end
@@ -1650,7 +1650,7 @@ var
   Time1: Double;
   Time2: Double;
 begin
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
@@ -1680,7 +1680,7 @@ begin
 
     for Index := 0 to Length(BoundaryValues) - 1 do
     begin
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -1733,7 +1733,7 @@ begin
           end;
         end;
       end;
-      PhastModel.CacheDataArrays;
+      PhastModel.DataArrayManager.CacheDataArrays;
       DataArray.UpToDate := True;
       DataArray.CacheData;
     end;

@@ -243,7 +243,7 @@ begin
     Model := Collection.Model as TPhastModel;
     if not (csLoading in Model.ComponentState) then
     begin
-      DataArray := Model.GetDataSetByName(FMultiplierName);
+      DataArray := Model.DataArrayManager.GetDataSetByName(FMultiplierName);
       if UseMultiplier then
       begin
         if DataArray <> nil then
@@ -277,7 +277,7 @@ begin
             AnOrientation := dso3D;
           end;
 
-          DataArray := Model.CreateNewDataArray(TDataArray, Value, NewFormula,
+          DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray, Value, NewFormula,
             [dcName, dcType, dcOrientation, dcEvaluatedAt], rdtDouble,
             eaBlocks, AnOrientation, Classification);
           Collection.AddOwnedDataArray(DataArray);
@@ -314,7 +314,7 @@ begin
     NewName := NewRoot + '_Multiplier';
     LocalModel := frmGoPhast.PhastModel;
     if (UpperCase(FMultiplierName) <> UpperCase(NewName))
-      and (LocalModel.GetDataSetByName(NewName) = nil) then
+      and (LocalModel.DataArrayManager.GetDataSetByName(NewName) = nil) then
     begin
       NewName := GenerateNewName(NewName);
     end;
@@ -332,7 +332,7 @@ begin
     NewName := NewRoot + '_Zone';
     LocalModel := frmGoPhast.PhastModel;
     if (UpperCase(FZoneName) <> UpperCase(NewName))
-     and (LocalModel.GetDataSetByName(NewName) = nil) then
+     and (LocalModel.DataArrayManager.GetDataSetByName(NewName) = nil) then
     begin
       NewName := GenerateNewName(NewName);
     end;
@@ -522,7 +522,7 @@ begin
     Model := Collection.Model as TPhastModel;
     if not (csLoading in Model.ComponentState) then
     begin
-      DataArray := Model.GetDataSetByName(FZoneName);
+      DataArray := Model.DataArrayManager.GetDataSetByName(FZoneName);
       if UseZone then
       begin
         if DataArray <> nil then
@@ -556,7 +556,7 @@ begin
             AnOrientation := dso3D;
           end;
 
-          DataArray := Model.CreateNewDataArray(TDataArray, Value, NewFormula,
+          DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray, Value, NewFormula,
             [dcName, dcType, dcOrientation, dcEvaluatedAt], rdtBoolean,
             eaBlocks, AnOrientation, Classification);
           Collection.AddOwnedDataArray(DataArray);

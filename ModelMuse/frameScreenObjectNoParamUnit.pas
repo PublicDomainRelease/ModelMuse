@@ -196,7 +196,15 @@ end;
 
 procedure TframeScreenObjectNoParam.btnInsertClick(Sender: TObject);
 begin
-  if seNumberOfTimes.AsInteger > 0 then
+  if (dgModflowBoundary.SelectedRow <= 0)
+    or (dgModflowBoundary.SelectedRow >= dgModflowBoundary.RowCount) then
+  begin
+    Beep;
+    MessageDlg('You need to select a row in the grid before clicking the '
+      + 'Insert button.', mtInformation, [mbOK], 0);
+    Exit;
+  end;
+  if (seNumberOfTimes.AsInteger > 0) then
   begin
     dgModflowBoundary.InsertRow(dgModflowBoundary.SelectedRow);
   end;

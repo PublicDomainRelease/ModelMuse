@@ -107,7 +107,7 @@ var
   LayerCount: Integer;
   PorosityArray: TDataArray;
 begin
-  PorosityArray := PhastModel.GetDataSetByName(rsPorosity);
+  PorosityArray := PhastModel.DataArrayManager.GetDataSetByName(rsPorosity);
   LayerCount := 0;
   Layer := -1;
   for Index := 1 to PhastModel.LayerStructure.Count - 1 do
@@ -138,7 +138,7 @@ procedure TModpathMainFileWriter.WriteDataSet4;
 var
   ZoneDataArray: TDataArray;
 begin
-  ZoneDataArray := PhastModel.GetDataSetByName(StrModpathZone);
+  ZoneDataArray := PhastModel.DataArrayManager.GetDataSetByName(StrModpathZone);
   WriteDataSet('Data Set 4: IBOUND', ZoneDataArray);
 end;
 

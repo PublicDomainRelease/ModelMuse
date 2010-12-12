@@ -70,7 +70,7 @@ type
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     Destructor Destroy; override;
     procedure WriteFile(const AFileName: string);
     procedure UpdateDisplay;
@@ -85,7 +85,7 @@ uses Math, RbwParser, ModflowUnitNumbers, ModflowHfbUnit, OrderedCollectionUnit,
 
 { TModflowHfb_Writer }
 
-constructor TModflowHfb_Writer.Create(Model: TPhastModel);
+constructor TModflowHfb_Writer.Create(Model: TCustomModel);
 begin
   inherited;
   FParameterScreenObjectList:= TStringList.Create;
@@ -333,7 +333,7 @@ var
     end;
   end;
 begin
-  frmProgress.AddMessage('Evaluating HFB Package data.');
+  frmProgressMM.AddMessage('Evaluating HFB Package data.');
   FillParameterScreenObjectList;
   PriorSegments := TList.Create;
   SubsequentSegments := TList.Create;
@@ -412,7 +412,7 @@ var
   ScreenObject: TScreenObject;
 begin
   Evaluate;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
@@ -479,7 +479,7 @@ begin
     for BarrierIndex := 0 to ParamList.BarrierCount - 1 do
     begin
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -509,7 +509,7 @@ begin
   for Index := 1 to FParameterScreenObjectList.Count - 1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -537,7 +537,7 @@ begin
   for Index := 1 to FParameterScreenObjectList.Count - 1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -559,7 +559,7 @@ begin
       for BarrierIndex := 0 to ParamList.BarrierCount - 1 do
       begin
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -586,54 +586,54 @@ begin
   WriteToNameFile(StrHFB, PhastModel.UnitNumbers.UnitNumber(StrHFB), NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
   OpenFile(FileName(AFileName));
   try
-    frmProgress.AddMessage('Writing HFB6 Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing HFB6 Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 2 and 3.');
+    frmProgressMM.AddMessage('  Writing Data Sets 2 and 3.');
     WriteDataSets2and3;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage('  Writing Data Set 5.');
     WriteDataSet5;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 6.');
+    frmProgressMM.AddMessage('  Writing Data Set 6.');
     WriteDataSet6;
   finally
     CloseFile;

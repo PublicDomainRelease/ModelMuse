@@ -7,7 +7,8 @@ uses
   Dialogs, frmCustomGoPhastUnit, Grids, StdCtrls, RbwDataGrid4, Math,
   ModflowParameterUnit, OrderedCollectionUnit,
   ModflowTransientListParameterUnit, HufDefinition, Buttons, Mask, JvExMask,
-  JvSpin, ExtCtrls, RequiredDataSetsUndoUnit, UndoItemsScreenObjects;
+  JvSpin, ExtCtrls, RequiredDataSetsUndoUnit, UndoItemsScreenObjects, 
+  ModflowPackageSelectionUnit;
 
 type
   TParamColumn = (pcName, pcPackage, pcType, pcValue, pcMult, pcZone);
@@ -39,7 +40,9 @@ type
     FSteadyParameters: TModflowSteadyParameters;
     FHufParameters: THufModflowParameters;
     FTransientListParameters: TModflowTransientListParameters;
+    FSfrParamInstances: TSfrParamInstances;
     FParamList: TList;
+    FDeletingParam: Boolean;
     procedure GetData;
     procedure SetData;
     procedure UpdateParameterTable;
@@ -48,6 +51,7 @@ type
     procedure UpdateParameter(ParamIndex: TParameterType;
       var AParam: TModflowParameter; ARow: Integer);
     procedure CreateOrUpdateParameter(ARow: Integer);
+    procedure DeleteAParam(ARow: Integer);
     { Private declarations }
   public
     { Public declarations }
@@ -61,7 +65,8 @@ Type
   public
     Constructor Create(var NewSteadyParameters: TModflowSteadyParameters;
       var NewTransientParameters: TModflowTransientListParameters;
-      var NewHufModflowParameters: THufModflowParameters);
+      var NewHufModflowParameters: THufModflowParameters;
+      var NewSfrParamInstances: TSfrParamInstances);
     Destructor Destroy; override;
     procedure DoCommand; override;
     procedure Undo; override;
@@ -266,8 +271,7 @@ end;
 procedure TfrmManageParameters.btnDeleteClick(Sender: TObject);
 begin
   inherited;
-  rdgParameters.Objects[Ord(pcName), rdgParameters.SelectedRow].Free;
-  rdgParameters.DeleteRow(rdgParameters.SelectedRow);
+  DeleteAParam(rdgParameters.SelectedRow);
   seNumberOfParameters.AsInteger := seNumberOfParameters.AsInteger -1;
 end;
 
@@ -326,6 +330,7 @@ begin
   FSteadyParameters := TModflowSteadyParameters.Create(nil);
   FHufParameters := THufModflowParameters.Create(nil);
   FTransientListParameters := TModflowTransientListParameters.Create(nil);
+  FSfrParamInstances := TSfrParamInstances.Create(nil);
 
   GetData;
 end;
@@ -333,6 +338,7 @@ end;
 procedure TfrmManageParameters.FormDestroy(Sender: TObject);
 begin
   inherited;
+  FSfrParamInstances.Free;
   FTransientListParameters.Free;
   FHufParameters.Free;
   FSteadyParameters.Free;
@@ -350,6 +356,8 @@ begin
   FSteadyParameters.Assign(PhastModel.ModflowSteadyParameters);
   FHufParameters.Assign(PhastModel.HufParameters);
   FTransientListParameters.Assign(PhastModel.ModflowTransientParameters);
+  FSfrParamInstances.Assign(PhastModel.ModflowPackages.
+    SfrPackage.ParameterInstances);
 
   FParamList.Capacity := FSteadyParameters.Count
     + FTransientListParameters.Count
@@ -550,6 +558,37 @@ begin
   end;
 end;
 
+procedure TfrmManageParameters.DeleteAParam(ARow: Integer);
+var
+  AParam: TModflowParameter;
+  ColIndex: Integer;
+begin
+  FDeletingParam := True;
+  try
+    AParam := rdgParameters.Objects[Ord(pcName), ARow] as TModflowParameter;
+    if AParam <> nil then
+    begin
+      FSfrParamInstances.DeleteInstancesOfParameter(AParam.ParameterName);
+    end;
+    AParam.Free;
+    rdgParameters.Objects[Ord(pcName), ARow] := nil;
+    if rdgParameters.RowCount > 2 then
+    begin
+      rdgParameters.DeleteRow(ARow);
+    end
+    else
+    begin
+      for ColIndex := 0 to rdgParameters.ColCount - 1 do
+      begin
+        rdgParameters.Cells[ColIndex, 1] := '';
+      end;
+    end;
+  finally
+    FDeletingParam := False;
+  end;
+
+end;
+
 procedure TfrmManageParameters.UpdateParameterTable;
 var
   SteadyParam: TModflowSteadyParameter;
@@ -704,8 +743,11 @@ var
   ParamIndex: TParameterType;
   AParam: TModflowParameter;
   NewPackage: string;
+  NewName: string;
 begin
   inherited;
+  if FDeletingParam then
+    Exit;
   if (ARow > 0) and (ACol >= 0) and (ACol < rdgParameters.ColCount) then
   begin
     PCol := TParamColumn(ACol);
@@ -717,7 +759,12 @@ begin
           begin
             AParam := rdgParameters.Objects[Ord(pcName), ARow]
               as TModflowParameter;
-            AParam.ParameterName := rdgParameters.Cells[Ord(pcName), ARow];
+            NewName := rdgParameters.Cells[Ord(pcName), ARow];
+            if AParam.ParameterType = ptSFR then
+            begin
+              FSfrParamInstances.UpdateParamName(AParam.ParameterName, NewName);
+            end;
+            AParam.ParameterName := NewName;
             if AParam.ParameterName <>
               rdgParameters.Cells[Ord(pcName), ARow] then
             begin
@@ -803,6 +850,7 @@ var
   FirstNewRow: Integer;
   RowIndex: Integer;
   ColIndex: Integer;
+  NewRowCount: Integer;
 begin
   inherited;
   if seNumberOfParameters.AsInteger > rdgParameters.RowCount -1 then
@@ -824,9 +872,15 @@ begin
     for RowIndex := rdgParameters.RowCount -1 downto
       seNumberOfParameters.AsInteger+1 do
     begin
-      rdgParameters.Objects[Ord(pcName), RowIndex].Free;
+      DeleteAParam(RowIndex);
+//      rdgParameters.Objects[Ord(pcName), RowIndex].Free;
     end;
-    rdgParameters.RowCount := seNumberOfParameters.AsInteger+1;
+    NewRowCount := seNumberOfParameters.AsInteger+1;
+    if NewRowCount = 1 then
+    begin
+      NewRowCount := 2
+    end;
+    rdgParameters.RowCount := NewRowCount;
   end;
 end;
 
@@ -835,7 +889,7 @@ var
   Undo: TUndoChangeParameters;
 begin
   Undo := TUndoChangeParameters.Create(FSteadyParameters,
-    FTransientListParameters, FHufParameters);
+    FTransientListParameters, FHufParameters, FSfrParamInstances);
   frmGoPhast.UndoStack.Submit(Undo);
 end;
 
@@ -844,7 +898,8 @@ end;
 constructor TUndoChangeParameters.Create(
   var NewSteadyParameters: TModflowSteadyParameters;
   var NewTransientParameters: TModflowTransientListParameters;
-  var NewHufModflowParameters: THufModflowParameters);
+  var NewHufModflowParameters: THufModflowParameters;
+  var NewSfrParamInstances: TSfrParamInstances);
 var
   ScreenObjectIndex: Integer;
   Item: TScreenObjectEditItem;

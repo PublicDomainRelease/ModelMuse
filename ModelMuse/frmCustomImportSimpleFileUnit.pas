@@ -91,7 +91,8 @@ type
 implementation
 
 uses frmGoPhastUnit, GoPhastTypes, DataSetUnit, 
-  RbwParser, UndoItems, frmProgressUnit, frmDataSetsUnits, ModelMuseUtilities, FastGEO;
+  RbwParser, UndoItems, frmProgressUnit, frmDataSetsUnits, ModelMuseUtilities, FastGEO,
+  PhastModelUnit;
 
 {$R *.dfm}
 
@@ -118,7 +119,7 @@ begin
     NewDataSetName := ChangeFileExt(NewDataSetName, '');
     NewDataSetName := GenerateNewName(NewDataSetName + Suffix);
 
-    DataSet := frmGoPhast.PhastModel.CreateNewDataArray(TDataArray,
+    DataSet := frmGoPhast.PhastModel.DataArrayManager.CreateNewDataArray(TDataArray,
       NewDataSetName, '0.', [], rdtDouble,
       TEvaluatedAt(rgEvaluatedAt.ItemIndex), dsoTop, Classification);
 
@@ -176,15 +177,17 @@ var
   EvalAt: TEvaluatedAt;
   DataSet: TDataArray;
   Index: integer;
+  DataArrayManager: TDataArrayManager;
 begin
   EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
   with comboDataSets.Items do
   begin
     Clear;
     AddObject(rsNewDataSet, nil);
-    for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    for Index := 0 to DataArrayManager.DataSetCount - 1 do
     begin
-      DataSet := frmGoPhast.PhastModel.DataSets[Index];
+      DataSet := DataArrayManager.DataSets[Index];
       if (DataSet.EvaluatedAt = EvalAt)
         and (DataSet.Orientation = dsoTop)
         and (DataSet.DataType = rdtDouble) then

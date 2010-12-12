@@ -171,39 +171,39 @@ begin
   WriteToNameFile(StrDRT, PhastModel.UnitNumbers.UnitNumber(StrDRT), NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
   ClearTimeLists;
   OpenFile(FileName(AFileName));
   try
-    frmProgress.AddMessage('Writing DRN Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing DRN Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 2 and 3.');
+    frmProgressMM.AddMessage('  Writing Data Sets 2 and 3.');
     WriteDataSets2And3;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 4 to 6.');
+    frmProgressMM.AddMessage('  Writing Data Sets 4 to 6.');
     WriteDataSets4To6;
   finally
     CloseFile;

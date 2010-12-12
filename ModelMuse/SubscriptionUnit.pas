@@ -99,7 +99,7 @@ type
       ChangeKind: TChangeKind); virtual;
     // @name removes all subscribers to the current object.
     // See @link(StopsTalkingTo). @name is called in @link(Destroy).
-    procedure StopTalkingToAnyone; 
+    procedure StopTalkingToAnyone;
     {@name causes Observer to be notified when there is a change
      in this object.
      @name calls
@@ -311,9 +311,9 @@ begin
   begin
     Exit;
   end;
-  for Index := 0 to FSubscribers.Count - 1 do
+  for Index := FSubscribers.Count - 1 downto 0 do
   begin
-    Observer := FSubscribers[0];
+    Observer := FSubscribers[Index];
     if Observer <> nil then
     begin
       StopsTalkingTo(Observer);

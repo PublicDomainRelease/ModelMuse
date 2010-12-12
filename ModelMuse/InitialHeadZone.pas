@@ -71,7 +71,7 @@ constructor TInitialHeadDataSets.Create;
 begin
   FEvalAt := eaNodes;
   FZoneClass := TInitialHeadZone;
-  FInitialHead := frmGoPhast.PhastModel.GetDataSetByName(rsInitial_Head);
+  FInitialHead := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsInitial_Head);
   FInitialHead.Initialize;
 end;
 

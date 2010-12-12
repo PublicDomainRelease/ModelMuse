@@ -278,12 +278,23 @@ begin
   FReversedCols := False;
   FReversedRows := False;
   FReversedLayers := False;
+  seCol1.MinValue := 1;
+  seCol2.MinValue := 1;
+  seRow1.MinValue := 1;
+  seRow2.MinValue := 1;
+  seLayer1.MinValue := 1;
+  seLayer2.MinValue := 1;
+
   seCol1.MaxValue := frmGoPhast.Grid.ColumnCount;
   seCol2.MaxValue := frmGoPhast.Grid.ColumnCount;
   seRow1.MaxValue := frmGoPhast.Grid.RowCount;
   seRow2.MaxValue := frmGoPhast.Grid.RowCount;
   seLayer1.MaxValue := frmGoPhast.Grid.LayerCount;
   seLayer2.MaxValue := frmGoPhast.Grid.LayerCount;
+
+  seLayer1.Enabled := frmGoPhast.PhastModel.ModelSelection = msPhast;
+  seLayer2.Enabled := frmGoPhast.PhastModel.ModelSelection = msPhast;
+
   if (SpacingGridTool.FirstSpacingColumn >= 0)
     and (SpacingGridTool.LastSpacingColumn >= 0) then
   begin

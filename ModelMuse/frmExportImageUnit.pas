@@ -126,6 +126,7 @@ type
     FCanDraw: Boolean;
     FDataSetDummyObjects: TList;
     FShouldStop: Boolean;
+    FRightOffset: Integer;
     procedure GetData;
     procedure DrawImageAfterDelay;
     procedure DrawTitle(DrawingRect: TRect; ACanvas: TCanvas;
@@ -191,7 +192,7 @@ uses
   UndoItemsScreenObjects, ClassificationUnit, frmProgressUnit,
   frmErrorsAndWarningsUnit;
 
-resourcestring
+const
   StrSP = '%SP';
   StrTS = '%TS';
   StrET = '%ET';
@@ -246,7 +247,7 @@ begin
   try
     for Index := 1 to rdgDataSets.RowCount - 1 do
     begin
-      DataArray := frmGoPhast.PhastModel.GetDataSetByName(rdgDataSets.Cells[1, Index]);
+      DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rdgDataSets.Cells[1, Index]);
       if DataArray <> nil then
       begin
         DataSetList.Add(DataArray);
@@ -265,13 +266,13 @@ begin
     end;
 
     PriorDataArray := nil;
-    frmProgress.Caption := 'Progress';
-    frmProgress.Show;
+    frmProgressMM.Caption := 'Progress';
+    frmProgressMM.Show;
     for Index := 0 to DataSetList.Count - 1 do
     begin
       CurrentTime := Now;
       DataArray := DataSetList[Index];
-      frmProgress.Caption := 'Displaying ' + DataArray.Name;
+      frmProgressMM.Caption := 'Displaying ' + DataArray.Name;
       Application.ProcessMessages;
       case rgDisplayChoice.ItemIndex of
         0:
@@ -420,7 +421,7 @@ begin
       end;
     end;
   finally
-    frmProgress.Hide;
+    frmProgressMM.Hide;
     DataSetList.Free;
     Legend.Free;
     if frmErrorsAndWarnings.HasMessages then
@@ -886,8 +887,6 @@ begin
     ACanvas.Pen.Style := psSolid;
     HRuler := TRulerPainter.Create(nil);
     try
-      HRuler.RulerPosition := rpBottom;
-      HRuler.RulerStart := sTopLeft;
       ViewDirection := TViewDirection(comboView.ItemIndex);
       Ruler := nil;
       case ViewDirection of
@@ -900,16 +899,12 @@ begin
       else
         Assert(False);
       end;
-      HRuler.RulerDesiredSpacing := Ruler.RulerDesiredSpacing;
-      HRuler.RulerDigits := Ruler.RulerDigits;
-      HRuler.RulerLinePosition := Ruler.RulerLinePosition;
-      HRuler.RulerMajorTickLength := Ruler.RulerMajorTickLength;
-      HRuler.RulerMinorTickLength := Ruler.RulerMinorTickLength;
-      HRuler.RulerPrecision := Ruler.RulerPrecision;
-      HRuler.RulerTextOffset := Ruler.RulerTextOffset;
-      HRuler.RulerTextPosition := Ruler.RulerTextPosition;
+      HRuler.Assign(Ruler.Painter);
+      HRuler.RulerPosition := rpBottom;
+      HRuler.RulerStart := sTopLeft;
+
       HRuler.RulerEnds.Lower := LeftHorizontalRulerOffset;
-      HRuler.RulerEnds.Upper := DrawingRect.Right -DrawingRect.Left
+      HRuler.RulerEnds.Upper := DrawingRect.Right - DrawingRect.Left
         - RightHorizontalRulerOffset;
       case ViewDirection of
         vdTop:
@@ -929,9 +924,9 @@ begin
         vdSide:
           begin
             HRuler.RulerValues.Lower := frmGoPhast.frameSideView.ZoomBox.Y(
-              DrawingRect.Right - DrawingRect.Left - LeftHorizontalRulerOffset);
+              DrawingRect.Right - DrawingRect.Left - LeftHorizontalRulerOffset - FRightOffset);
             HRuler.RulerValues.Upper := frmGoPhast.frameSideView.ZoomBox.Y(
-              RightHorizontalRulerOffset);
+              RightHorizontalRulerOffset - FRightOffset);
           end;
       else
         Assert(False);
@@ -962,8 +957,6 @@ begin
     ACanvas.Pen.Style := psSolid;
     VRuler := TRulerPainter.Create(nil);
     try
-      VRuler.RulerPosition := rpRight;
-      VRuler.RulerStart := sBottomRight;
       ViewDirection := TViewDirection(comboView.ItemIndex);
       Ruler := nil;
       case ViewDirection of
@@ -976,14 +969,9 @@ begin
       else
         Assert(False);
       end;
-      VRuler.RulerDesiredSpacing := Ruler.RulerDesiredSpacing;
-      VRuler.RulerDigits := Ruler.RulerDigits;
-      VRuler.RulerLinePosition := Ruler.RulerLinePosition;
-      VRuler.RulerMajorTickLength := Ruler.RulerMajorTickLength;
-      VRuler.RulerMinorTickLength := Ruler.RulerMinorTickLength;
-      VRuler.RulerPrecision := Ruler.RulerPrecision;
-      VRuler.RulerTextOffset := Ruler.RulerTextOffset;
-      VRuler.RulerTextPosition := Ruler.RulerTextPosition;
+      VRuler.Assign(Ruler.Painter);
+      VRuler.RulerPosition := rpRight;
+      VRuler.RulerStart := sBottomRight;
       VRuler.RulerEnds.Upper := DrawingRect.Bottom - DrawingRect.Top
         - LowerVerticalRulerOffset;
       VRuler.RulerEnds.Lower := UpperVerticalRulerOffset;
@@ -1161,17 +1149,17 @@ begin
         DC := GetDC(0);
         try
           VerticalSize := GetDeviceCaps(DC, VERTSIZE);
-          VerticalSize := 180;
+//          VerticalSize := 180;
           VerticalSizeInches := VerticalSize / 25.4;
           VerticalResolution := GetDeviceCaps(DC, VERTRES);
-          VerticalResolution := 1080;
+//          VerticalResolution := 1080;
           RealVerticalPixelsPerInch := (VerticalResolution / VerticalSizeInches);
 
           HorizontalSize := GetDeviceCaps(DC, HORZSIZE);
-          HorizontalSize := 320;
+//          HorizontalSize := 320;
           HorizontalSizeInches := HorizontalSize / 25.4;
           HorizontalResolution := GetDeviceCaps(DC, HORZRES);
-          HorizontalResolution := 1920;
+//          HorizontalResolution := 1920;
           RealHorizontalPixelsPerInch := (HorizontalResolution / HorizontalSizeInches);
 
           RealPixelsPerInch := Min(RealVerticalPixelsPerInch, RealHorizontalPixelsPerInch);
@@ -1189,6 +1177,7 @@ begin
           CanvasHeight := MetaFile.MMHeight;
           MetaFileCanvas := TMetaFileCanvas.Create(MetaFile, 0);
           try
+            FRightOffset := 0;
             DrawOutsideItems(CanvasHeight, CanvasWidth, DrawingRect, MetaFileCanvas);
           finally
             MetaFileCanvas.Free;
@@ -1294,6 +1283,7 @@ var
   LegendY: Integer;
   ColorRect: TRect;
   ContourRect: TRect;
+  StartRight: integer;
 begin
   ACanvas.Font := Font;
   LegendY := 60;
@@ -1310,7 +1300,9 @@ begin
   DrawingRect.Top := TitleRect.Bottom;
 
   DrawHorizontalScale(ACanvas, DrawingRect);
+  StartRight := DrawingRect.Right;
   DrawVerticalScale(ACanvas, DrawingRect);
+  FRightOffset := StartRight - DrawingRect.Right;
 end;
 
 procedure TfrmExportImage.DrawImage;
@@ -1330,6 +1322,7 @@ begin
     BitMap.Height := seImageHeight.AsInteger;
     CanvasWidth := BitMap.Width;
     CanvasHeight := BitMap.Height;
+    FRightOffset := 0;
     DrawOutsideItems(CanvasHeight, CanvasWidth, DrawingRect, BitMap.Canvas);
   finally
     BitMap.Free;
@@ -1736,7 +1729,7 @@ begin
   end
   else
   begin
-    DataArray := PhastModel.GetDataSetByName(
+    DataArray := PhastModel.DataArrayManager.GetDataSetByName(
       ContourDisplaySettings.DataSetName);
   end;
   if DataArray = nil then
@@ -1872,7 +1865,7 @@ begin
     else
     begin
       PhastModel.EdgeDisplay := nil;
-      DataArray := PhastModel.GetDataSetByName(
+      DataArray := PhastModel.DataArrayManager.GetDataSetByName(
         ColorDisplaySettings.DataSetName);
     end;
     if DataArray = nil then

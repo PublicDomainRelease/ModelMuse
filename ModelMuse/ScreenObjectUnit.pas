@@ -1262,43 +1262,43 @@ view. }
     // @name is only created if needed.
     // @seealso(TScreenObject.CreateEvtBoundary)
     FModflowEvtBoundary: TEvtBoundary;
-    // @name represents an Drain boundary.
+    // @name represents a Drain boundary.
     // @name is only created if needed.
     // @seealso(TScreenObject.CreateDrnBoundary)
     FModflowDrnBoundary: TDrnBoundary;
-    // @name represents an Drain Return boundary.
+    // @name represents a Drain Return boundary.
     // @name is only created if needed.
     // @seealso(TScreenObject.CreateDrtBoundary)
     FModflowDrtBoundary: TDrtBoundary;
-    // @name represents an General Head boundary.
+    // @name represents a General Head boundary.
     // @name is only created if needed.
     // @seealso(TScreenObject.CreateGhbBoundary)
     FModflowGhbBoundary: TGhbBoundary;
-    // @name represents an Lake boundary.
+    // @name represents a Lake boundary.
     // @name is only created if needed.
     // @seealso(TScreenObject.CreateLakBoundary)
     FModflowLakBoundary: TLakBoundary;
-    // @name represents an Recharge boundary.
+    // @name represents a Recharge boundary.
     // @name is only created if needed.
     // @seealso(TScreenObject.CreateRchBoundary)
     FModflowRchBoundary: TRchBoundary;
-    // @name represents an Reservoir boundary.
+    // @name represents a Reservoir boundary.
     // @name is only created if needed.
     // @seealso(TScreenObject.CreateResBoundary)
     FModflowResBoundary: TResBoundary;
-    // @name represents an River boundary.
+    // @name represents a River boundary.
     // @name is only created if needed.
     // @seealso(TScreenObject.CreateRivBoundary)
     FModflowRivBoundary: TRivBoundary;
-    // @name represents an Stream-Flow Routing boundary.
+    // @name represents a Stream-Flow Routing boundary.
     // @name is only created if needed.
     // @seealso(TScreenObject.CreateSfrBoundary)
     FModflowSfrBoundary: TSfrBoundary;
-    // @name represents an Well boundary.
+    // @name represents a Well boundary.
     // @name is only created if needed.
     // @seealso(TScreenObject.CreateWelBoundary)
     FModflowWellBoundary: TMfWellBoundary;
-    // @name represents an UZF boundary.
+    // @name represents a UZF boundary.
     // @name is only created if needed.
     // @seealso(TScreenObject.CreateUzfBoundary)
     FModflowUzfBoundary: TUzfBoundary;
@@ -1308,6 +1308,7 @@ view. }
     FModflowMnw2Boundary: TMnw2Boundary;
     FModflowHydmodData: THydmodData;
   public
+    procedure FreeUnusedBoundaries;
     Destructor Destroy; override;
     property ModflowChdBoundary: TChdBoundary read FModflowChdBoundary
       write FModflowChdBoundary;
@@ -1565,6 +1566,8 @@ view. }
     FIFACE: TIface;
     FModpathParticles: TParticleStorage;
     FUpdateCount: Integer;
+    // each contour in @name contains one of the
+    // closed sections of this instance of @classname.
     FGpcPolygons: TGpcPolygonClass;
     FPriorObjectIntersectLengthCol: Integer;
     FPriorObjectIntersectLengthRow: Integer;
@@ -1581,6 +1584,8 @@ view. }
     FPriorObjectSectionIntersectLengthSection: integer;
     FComment: string;
     FPointPositionValues: TPointPositionValues;
+    FChildModelName: string;
+    FChildModelDiscretization: integer;
     procedure CreateLastSubPolygon;
     procedure DestroyLastSubPolygon;
     function GetSubPolygonCount: integer;
@@ -2265,6 +2270,8 @@ view. }
     function GetModflowHydmodData: THydmodData;
     procedure SetModflowHydmodData(const Value: THydmodData);
     function StoreModflowHydmodData: Boolean;
+    procedure SetChildModelDiscretization(const Value: integer);
+    procedure SetChildModelName(const Value: string);
     property SubPolygonCount: integer read GetSubPolygonCount;
     property SubPolygons[Index: integer]: TSubPolygon read GetSubPolygon;
     procedure DeleteExtraSections;
@@ -2974,10 +2981,6 @@ having them take care of the subscriptions. }
     // Index if it is not already in @Link(BoundaryDataSets).
     procedure InsertBoundaryDataSet(const Index: Integer;
       const DataSet: TDataArray); virtual;
-    // InsertDataSet inserts DataSet in @Link(DataSets) at
-    // Index if it is not already in @Link(DataSets).
-    procedure InsertDataSet(const Index: Integer;
-      const DataSet: TDataArray); virtual;
     // @name inserts APoint in @Link(Points) at Index. It does not
     // check that the point that is inserted will leave the @classname in
     // a valid state.  For instance, the @classname might cross itself after
@@ -3120,6 +3123,8 @@ having them take care of the subscriptions. }
     procedure CreateHydmodData;
     procedure CacheValueArrays;
   published
+    property ChildModelName: string read FChildModelName write SetChildModelName;
+    property ChildModelDiscretization: integer read FChildModelDiscretization write SetChildModelDiscretization;
     // If @Link(CellSizeUsed) is true, @name is the size of the cells
     // to be created in the vicinity of the object.
     property CellSize: real read FCellSize write SetCellSize;
@@ -3868,6 +3873,10 @@ SectionStarts.}
     procedure UpdateSideSegments(const Grid: TCustomGrid;
       const EvaluatedAt: TEvaluatedAt);override;
     destructor Destroy; override;
+  end;
+
+  TModflowLGRDelegate = class(TModflowDelegate)
+    constructor Create(ScreenObject: TScreenObject); override;
   end;
 
   TResetProcedure = procedure(Compiler: TRbwParser) of object;
@@ -4868,7 +4877,7 @@ begin
       begin
         Variable := Compiler.Variables[VarPosition];
         VariableList.Add(Variable);
-        AnotherDataSet := Model.GetDataSetByName(VarName);
+        AnotherDataSet := Model.DataArrayManager.GetDataSetByName(VarName);
         if AnotherDataSet = nil then
         begin
           DataSetList.Add(nil);
@@ -4878,7 +4887,7 @@ begin
           DataSetList.Add(AnotherDataSet);
           Assert(AnotherDataSet.DataType = Variable.ResultType);
           AnotherDataSet.Initialize;
-          Model.AddDataSetToCache(AnotherDataSet);
+          Model.DataArrayManager.AddDataSetToCache(AnotherDataSet);
         end;
       end;
     end;
@@ -5370,6 +5379,8 @@ begin
   end;
 
   // copy the data of the other screen object.
+  ChildModelName := AScreenObject.ChildModelName;
+  ChildModelDiscretization := AScreenObject.ChildModelDiscretization;
   Comment := AScreenObject.Comment;
   CellSize := AScreenObject.CellSize;
   CellSizeUsed := AScreenObject.CellSizeUsed;
@@ -5596,7 +5607,7 @@ begin
   end;
 
   BoundarArray :=
-    frmGoPhast.PhastModel.GetDataSetByName(rsModflowSpecifiedHead);
+    frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsModflowSpecifiedHead);
   if (ModflowChdBoundary <> nil)
     and ModflowChdBoundary.Used then
   begin
@@ -6528,6 +6539,8 @@ end;
 
 procedure TScreenObject.Draw1Elev(Const Bitmap32: TBitmap32;
   const Direction: TViewDirection; const DrawAsSelected: Boolean = False);
+var
+  ModSelect: TModelSelection;
 begin
   if Deleted then
     Exit;
@@ -6537,18 +6550,26 @@ begin
   end
   else
   begin
-    if (Model = nil)
-      or ((Model as TPhastModel).ModelSelection = msModflow) then
+    if Model = nil then
     begin
-      Draw1ElevModflow(Direction, Bitmap32, DrawAsSelected);
-      Exit;
-    end;
-    if (Model as TPhastModel).ModelSelection = msPhast then
+      ModSelect := msModflow;
+    end
+    else
     begin
-      Draw1ElevPhast(Direction, Bitmap32, DrawAsSelected);
-      Exit;
+      ModSelect := (Model as TPhastModel).ModelSelection;
     end;
-    Assert(False);
+    case ModSelect of
+      msPhast:
+        begin
+          Draw1ElevPhast(Direction, Bitmap32, DrawAsSelected);
+        end;
+      msModflow, msModflowLGR:
+        begin
+          Draw1ElevModflow(Direction, Bitmap32, DrawAsSelected);
+        end;
+      else
+        Assert(False);
+    end;
   end;
 end;
 
@@ -6852,64 +6873,6 @@ begin
   end;
 end;
 
-procedure TScreenObject.InsertDataSet(const Index: Integer; const DataSet:
-  TDataArray);
-var
-  Subscription: TObserver;
-  Item: TInterpValuesItem;
-begin
-  if IndexOfDataSet(DataSet) < 0 then
-  begin
-    if DataSet is TCustomPhastDataSet then
-    begin
-      Item := FInterpValues.Insert(Index) as TInterpValuesItem;
-      Item.Values.Assign(DataSet);
-    end;
-
-    InvalidateModel;
-    Subscription := TObserver.Create(nil);
-    Subscription.UpdateWithName(DataSet.Name + Name);
-    FDataSetSubscriptions.Insert(Index, Subscription);
-
-    FDataSets.Insert(Index, DataSet);
-    FDataSetFormulas.Insert(Index, nil);
-    self.TalksTo(DataSet);
-    Subscription.TalksTo(DataSet);
-    self.TalksTo(Subscription);
-    case ElevationCount of
-      ecZero:
-        begin
-          // do nothing
-        end;
-      ecOne:
-        begin
-          if FElevSubscription = nil then
-          begin
-            CreateElevationSubscription;
-          end;
-          FElevSubscription.TalksTo(DataSet);
-        end;
-      ecTwo:
-        begin
-          if FTopElevSubscription = nil then
-          begin
-            CreateTopElevationSubscription;
-          end;
-          FTopElevSubscription.TalksTo(DataSet);
-
-          if FBottomElevSubscription = nil then
-          begin
-            CreateBottomElevationSubscription;
-          end;
-          FBottomElevSubscription.TalksTo(DataSet);
-        end;
-    else
-      Assert(False);
-    end;
-    DataSet.Invalidate;
-  end;
-end;
-
 procedure TScreenObject.InsertPoint(const Index: Integer;
   const APoint: TPoint2D);
 var
@@ -7038,6 +7001,7 @@ procedure TScreenObject.Invalidate;
 var
   DataSet: TDataArray;
   Index: integer;
+  DataArrayManager: TDataArrayManager;
 begin
   if csDestroying in ComponentState then
   begin
@@ -7067,7 +7031,7 @@ begin
     ZoomBox(ViewDirection).Image32.Invalidate;
   end;
 
-  if (FModel <> nil) then
+  if (FModel <> nil) and CanInvalidateModel then
   begin
     if ((FModel as TPhastModel).Grid <> nil) then
     begin
@@ -7129,6 +7093,7 @@ begin
   end;
   if FCanInvalidateModel and (FLeakyBoundary <> nil) then
   begin
+    DataArrayManager := (FModel as TPhastModel).DataArrayManager;
     if (LeakyBoundary.BoundaryValue.Count > 0)
       or (LeakyBoundary.Solution.Count > 0) then
     begin
@@ -7136,17 +7101,17 @@ begin
       case ViewDirection of
         vdTop:
           begin
-            Index := (FModel as TPhastModel).IndexOfBoundaryDataSet(
+            Index := DataArrayManager.IndexOfBoundaryDataSet(
               rsTopLeakyHydraulicConductivity);
           end;
         vdFront:
           begin
-            Index := (FModel as TPhastModel).IndexOfBoundaryDataSet(
+            Index := DataArrayManager.IndexOfBoundaryDataSet(
               rsFrontLeakyHydraulicConductivity);
           end;
         vdSide:
           begin
-            Index := (FModel as TPhastModel).IndexOfBoundaryDataSet(
+            Index := DataArrayManager.IndexOfBoundaryDataSet(
               rsSideLeakyHydraulicConductivity);
           end;
       else
@@ -7154,23 +7119,23 @@ begin
       end;
       if Index >= 0 then
       begin
-        DataSet := (FModel as TPhastModel).BoundaryDataSets[Index];
+        DataSet := DataArrayManager.BoundaryDataSets[Index];
         DataSet.Invalidate;
       end;
       case ViewDirection of
         vdTop:
           begin
-            Index := (FModel as TPhastModel).IndexOfBoundaryDataSet(
+            Index := DataArrayManager.IndexOfBoundaryDataSet(
               rsTopLeakyThickness);
           end;
         vdFront:
           begin
-            Index := (FModel as TPhastModel).IndexOfBoundaryDataSet(
+            Index := DataArrayManager.IndexOfBoundaryDataSet(
               rsFrontLeakyThickness);
           end;
         vdSide:
           begin
-            Index := (FModel as TPhastModel).IndexOfBoundaryDataSet(
+            Index := DataArrayManager.IndexOfBoundaryDataSet(
               rsSideLeakyThickness);
           end;
       else
@@ -7178,7 +7143,7 @@ begin
       end;
       if Index >= 0 then
       begin
-        DataSet := (FModel as TPhastModel).BoundaryDataSets[Index];
+        DataSet := DataArrayManager.BoundaryDataSets[Index];
         DataSet.Invalidate;
       end;
     end;
@@ -7199,30 +7164,31 @@ begin
     if (RiverBoundary.BoundaryValue.Count > 0)
       or (RiverBoundary.Solution.Count > 0) then
     begin
-      Index := (FModel as TPhastModel).IndexOfBoundaryDataSet(
+      DataArrayManager := (FModel as TPhastModel).DataArrayManager;
+      Index := DataArrayManager.IndexOfBoundaryDataSet(
         rsRiverHydraulicConductivity);
       if Index >= 0 then
       begin
-        DataSet := (FModel as TPhastModel).BoundaryDataSets[Index];
+        DataSet := DataArrayManager.BoundaryDataSets[Index];
         DataSet.Invalidate;
       end;
-      Index := (FModel as TPhastModel).IndexOfBoundaryDataSet(rsRiverWidth);
+      Index := DataArrayManager.IndexOfBoundaryDataSet(rsRiverWidth);
       if Index >= 0 then
       begin
-        DataSet := (FModel as TPhastModel).BoundaryDataSets[Index];
+        DataSet := DataArrayManager.BoundaryDataSets[Index];
         DataSet.Invalidate;
       end;
-      Index := (FModel as TPhastModel).IndexOfBoundaryDataSet(rsRiverDepth);
+      Index := DataArrayManager.IndexOfBoundaryDataSet(rsRiverDepth);
       if Index >= 0 then
       begin
-        DataSet := (FModel as TPhastModel).BoundaryDataSets[Index];
+        DataSet := DataArrayManager.BoundaryDataSets[Index];
         DataSet.Invalidate;
       end;
-      Index := (FModel as TPhastModel).IndexOfBoundaryDataSet(
+      Index := DataArrayManager.IndexOfBoundaryDataSet(
         rsRiverBedThickness);
       if Index >= 0 then
       begin
-        DataSet := (FModel as TPhastModel).BoundaryDataSets[Index];
+        DataSet := DataArrayManager.BoundaryDataSets[Index];
         DataSet.Invalidate;
       end;
     end;
@@ -7307,6 +7273,10 @@ begin
     if ModflowUzfBoundary <> nil then
     begin
       ModflowUzfBoundary.InvalidateDisplay;
+    end;
+    if not (FModel as TPhastModel).ImportingModel then
+    begin
+      FModflowBoundaries.FreeUnusedBoundaries;
     end;
 //    if ModflowHfbBoundary <> nil then
 //    begin
@@ -9882,6 +9852,7 @@ var
   LowPoints: T2DRealPointArray;
   OuterPointIndex, InnerPointIndex: integer;
   RealPoint: TPoint2D;
+  ModSelect: TModelSelection;
   function UsePoint: boolean;
   var
     HighPoint, LowPoint: TPoint2D;
@@ -9942,18 +9913,26 @@ begin
   end
   else
   begin
-    if (Model = nil)
-      or ((Model as TPhastModel).ModelSelection = msModflow) then
+    if Model = nil then
     begin
-      Draw2ElevModflow(Direction, Bitmap32);
-      Exit;
+      ModSelect := msModflow;
     end
-    else if ((Model as TPhastModel).ModelSelection = msPhast) then
+    else
     begin
-      Draw2ElevPhast(Direction, Bitmap32);
-      Exit;
+      ModSelect := (Model as TPhastModel).ModelSelection;
     end;
-    Assert(False);
+    case ModSelect of
+      msPhast:
+        begin
+          Draw2ElevPhast(Direction, Bitmap32);
+        end;
+      msModflow, msModflowLGR:
+        begin
+          Draw2ElevModflow(Direction, Bitmap32);
+        end;
+      else
+        Assert(False)
+    end;
   end;
 end;
 
@@ -9974,6 +9953,24 @@ begin
   if FCellSizeUsed <> Value then
   begin
     FCellSizeUsed := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TScreenObject.SetChildModelDiscretization(const Value: integer);
+begin
+  if FChildModelDiscretization <> Value then
+  begin
+    FChildModelDiscretization := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TScreenObject.SetChildModelName(const Value: string);
+begin
+  if FChildModelName <> Value then
+  begin
+    FChildModelName := Value;
     InvalidateModel;
   end;
 end;
@@ -11596,7 +11593,7 @@ var
               else Assert(False);
             end;
           end;
-        msModflow:
+        msModflow, msModflowLGR:
           begin
             Assert(EvaluatedAt = eaBlocks);
             BlockTop := LocalModel.ModflowGrid.
@@ -12204,7 +12201,7 @@ begin
     begin
 
       Variable := Compiler.Variables[VarPosition];
-      AnotherDataSet := (FModel as TPhastModel).GetDataSetByName(VarName);
+      AnotherDataSet := (FModel as TPhastModel).DataArrayManager.GetDataSetByName(VarName);
       if AnotherDataSet <> nil then
       begin
   //      AnotherDataSet := (FModel as TPhastModel).DataSets[DataSetIndex];
@@ -12274,13 +12271,13 @@ begin
     if VarPosition >= 0 then
     begin
       Variable := Compiler.Variables[VarPosition];
-      AnotherDataSet := Model.GetDataSetByName(VarName);
+      AnotherDataSet := Model.DataArrayManager.GetDataSetByName(VarName);
       if AnotherDataSet <> nil then
       begin
         Assert(AnotherDataSet <> DataSet);
         Assert(AnotherDataSet.DataType = Variable.ResultType);
         AnotherDataSet.Initialize;
-        Model.AddDataSetToCache(AnotherDataSet);
+        Model.DataArrayManager.AddDataSetToCache(AnotherDataSet);
       end
       else
       begin
@@ -12865,7 +12862,7 @@ begin
   begin
     Exit;
   end;
-  BoundarArray := frmGoPhast.PhastModel.GetDataSetByName(StrUzfGage3);
+  BoundarArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(StrUzfGage3);
   if (ModflowUzfBoundary <> nil) and ModflowUzfBoundary.Used and (ModflowUzfBoundary.GageOption2 <> 0) then
   begin
     DS_Index := IndexOfDataSet(BoundarArray);
@@ -12894,7 +12891,7 @@ begin
   begin
     Exit;
   end;
-  BoundarArray := frmGoPhast.PhastModel.GetDataSetByName(StrUzfGage_1_and_2);
+  BoundarArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(StrUzfGage_1_and_2);
   if (ModflowUzfBoundary <> nil)
     and ModflowUzfBoundary.Used
     and (ModflowUzfBoundary.GageOption1 <> 0) then
@@ -16568,7 +16565,7 @@ begin
     ScreenObject.ClearDataSets;
     for Index := 0 to FDataSetNames.Count - 1 do
     begin
-      ADataSet := PhastModel.GetDataSetByName(FDataSetNames[Index]);
+      ADataSet := PhastModel.DataArrayManager.GetDataSetByName(FDataSetNames[Index]);
       if ADataSet <> nil then
       begin
 //        ADataSet := PhastModel.DataSets[Position];
@@ -17660,6 +17657,10 @@ begin
           begin
             Item.DelegateClass := TModflowDelegate.ClassName;
           end;
+        msModflowLGR:
+          begin
+            Item.DelegateClass := TModflowLGRDelegate.ClassName;
+          end;
         else
           begin
             Assert(False);
@@ -17862,13 +17863,13 @@ begin
     VarName := UsedVariables[VarIndex];
     VarPosition := Compiler.IndexOfVariable(VarName);
     Variable := Compiler.Variables[VarPosition];
-    AnotherDataSet := Model.GetDataSetByName(VarName);
+    AnotherDataSet := Model.DataArrayManager.GetDataSetByName(VarName);
     if AnotherDataSet <> nil then
     begin
       Assert(AnotherDataSet <> DataSet);
       Assert(AnotherDataSet.DataType = Variable.ResultType);
       AnotherDataSet.Initialize;
-      Model.AddDataSetToCache(AnotherDataSet);
+      Model.DataArrayManager.AddDataSetToCache(AnotherDataSet);
     end;
   end;
 end;
@@ -17963,7 +17964,7 @@ begin
     VarName := UsedVariables[VarIndex];
     VarPosition := Compiler.IndexOfVariable(VarName);
     Variable := Compiler.Variables[VarPosition];
-    AnotherDataSet := Model.GetDataSetByName(VarName);
+    AnotherDataSet := Model.DataArrayManager.GetDataSetByName(VarName);
     if AnotherDataSet <> nil then
     begin
 
@@ -18456,7 +18457,7 @@ begin
             CellAssignment.Annotation, Expression, OtherData,
             CellAssignment.Section);
         end;
-        (FModel as TPhastModel).CacheDataArrays;
+        (FModel as TPhastModel).DataArrayManager.CacheDataArrays;
       finally
         UsedVariables.Free;
       end;
@@ -18510,7 +18511,7 @@ begin
         end;
       finally
         UsedVariables.Free;
-        (FModel as TPhastModel).CacheDataArrays;
+        (FModel as TPhastModel).DataArrayManager.CacheDataArrays;
       end;
     end;
   finally
@@ -18562,7 +18563,7 @@ begin
         end;
       finally
         UsedVariables.Free;
-        (FModel as TPhastModel).CacheDataArrays;
+        (FModel as TPhastModel).DataArrayManager.CacheDataArrays;
       end;
     end;
   finally
@@ -19332,7 +19333,7 @@ begin
     end;
   finally
     FScreenObject.UpdateCellCache(CellList, EvalAt,
-    Orientation, AssignmentLocation);
+      Orientation, AssignmentLocation);
   end;
 end;
 
@@ -19918,7 +19919,7 @@ begin
       if not IsRiverDataSet then
       begin
         IsRiverDataSet := ((FModel as TPhastModel).
-          RiverDataSets.IndexOf(DataSet) >= 0);
+          DataArrayManager.RiverDataSets.IndexOf(DataSet) >= 0);
       end;
       if not IsRiverDataSet then
       begin
@@ -21115,7 +21116,7 @@ begin
           CellAssignment.Section);
       end;
     finally
-      (FModel as TPhastModel).CacheDataArrays;
+      (FModel as TPhastModel).DataArrayManager.CacheDataArrays;
       UsedVariables.Free;
     end;
 //  end;
@@ -28473,7 +28474,7 @@ begin
       end;
       if not IsRiverDataSet then
       begin
-        IsRiverDataSet := (Model.RiverDataSets.IndexOf(DataSet) >= 0);
+        IsRiverDataSet := (Model.DataArrayManager.RiverDataSets.IndexOf(DataSet) >= 0);
       end;
       if not IsRiverDataSet then
       begin
@@ -30024,9 +30025,9 @@ begin
     
     Model := (FModel as TPhastModel);
     BoundaryPosition :=
-      Model.IndexOfBoundaryDataSet(DataSetName);
+      Model.DataArrayManager.IndexOfBoundaryDataSet(DataSetName);
     Assert(BoundaryPosition >= 0);
-    DataArray := Model.BoundaryDataSets[BoundaryPosition];
+    DataArray := Model.DataArrayManager.BoundaryDataSets[BoundaryPosition];
     UpdateBoundaryDataSet(DataArray, Formula);
   end;
 end;
@@ -30356,6 +30357,82 @@ begin
   FModflowGhbBoundary.Free;
   FModflowChdBoundary.Free;
   inherited;
+end;
+
+procedure TModflowBoundaries.FreeUnusedBoundaries;
+begin
+  if (FModflowChdBoundary <> nil) and not FModflowChdBoundary.Used then
+  begin
+    FreeAndNil(FModflowChdBoundary);
+  end;
+  if (FModflowEtsBoundary <> nil) and not FModflowEtsBoundary.Used then
+  begin
+    FreeAndNil(FModflowEtsBoundary);
+  end;
+  if (FModflowEvtBoundary <> nil) and not FModflowEvtBoundary.Used then
+  begin
+    FreeAndNil(FModflowEvtBoundary);
+  end;
+  if (FModflowDrnBoundary <> nil) and not FModflowDrnBoundary.Used then
+  begin
+    FreeAndNil(FModflowDrnBoundary);
+  end;
+  if (FModflowDrtBoundary <> nil) and not FModflowDrtBoundary.Used then
+  begin
+    FreeAndNil(FModflowDrtBoundary);
+  end;
+  if (FModflowGhbBoundary <> nil) and not FModflowGhbBoundary.Used then
+  begin
+    FreeAndNil(FModflowGhbBoundary);
+  end;
+  if (FModflowLakBoundary <> nil) and not FModflowLakBoundary.Used then
+  begin
+    FreeAndNil(FModflowLakBoundary);
+  end;
+  if (FModflowRchBoundary <> nil) and not FModflowRchBoundary.Used then
+  begin
+    FreeAndNil(FModflowRchBoundary);
+  end;
+  if (FModflowResBoundary <> nil) and not FModflowResBoundary.Used then
+  begin
+    FreeAndNil(FModflowResBoundary);
+  end;
+  if (FModflowRivBoundary <> nil) and not FModflowRivBoundary.Used then
+  begin
+    FreeAndNil(FModflowRivBoundary);
+  end;
+  if (FModflowSfrBoundary <> nil) and not FModflowSfrBoundary.Used then
+  begin
+    FreeAndNil(FModflowSfrBoundary);
+  end;
+  if (FModflowWellBoundary <> nil) and not FModflowWellBoundary.Used then
+  begin
+    FreeAndNil(FModflowWellBoundary);
+  end;
+  if (FModflowUzfBoundary <> nil) and not FModflowUzfBoundary.Used then
+  begin
+    FreeAndNil(FModflowUzfBoundary);
+  end;
+  if (FModflowHeadObservations <> nil) and not FModflowHeadObservations.Used then
+  begin
+    FreeAndNil(FModflowHeadObservations);
+  end;
+  if (FModflowHfbBoundary <> nil) and not FModflowHfbBoundary.Used then
+  begin
+    FreeAndNil(FModflowHfbBoundary);
+  end;
+  if (FModflowGage <> nil) and not FModflowGage.Used then
+  begin
+    FreeAndNil(FModflowGage);
+  end;
+  if (FModflowMnw2Boundary <> nil) and not FModflowMnw2Boundary.Used then
+  begin
+    FreeAndNil(FModflowMnw2Boundary);
+  end;
+  if (FModflowHydmodData <> nil) and not FModflowHydmodData.Used then
+  begin
+    FreeAndNil(FModflowHydmodData);
+  end;
 end;
 
 { TSelectedCells }
@@ -30894,8 +30971,8 @@ var
   DataArray: TDataArray;
 begin
   Model := (FModel as TPhastModel);
-  BoundaryPosition := Model.IndexOfBoundaryDataSet(DataSetName);
-  DataArray := Model.BoundaryDataSets[BoundaryPosition];
+  BoundaryPosition := Model.DataArrayManager.IndexOfBoundaryDataSet(DataSetName);
+  DataArray := Model.DataArrayManager.BoundaryDataSets[BoundaryPosition];
   BoundaryPosition := ScreenObject.IndexOfBoundaryDataSet(DataArray);
   result := ScreenObject.BoundaryDataSetFormulas[BoundaryPosition];
 end;
@@ -31138,6 +31215,14 @@ begin
   finally
     List.Free;
   end;
+end;
+
+{ TModflowLGRDelegate }
+
+constructor TModflowLGRDelegate.Create(ScreenObject: TScreenObject);
+begin
+  inherited;
+  FModelSelection := msModflowLGR;
 end;
 
 initialization

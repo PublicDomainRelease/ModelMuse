@@ -324,11 +324,11 @@ begin
     FZ[7], '6.', frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
     GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
-    FChannelRoughness, '0.00000035',
+    FChannelRoughness, '3.5E-7',
     frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
     GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
-    FBankRoughness, '0.00000035',
+    FBankRoughness, '3.5E-7',
     frmGoPhast.PhastModel.rpThreeDFormulaCompiler,
     GlobalRemoveModflowBoundarySubscription, GlobalRestoreModflowBoundarySubscription, self);
 end;

@@ -678,6 +678,11 @@ program ModelMuse;
 //  PatchLib in 'PatchLib.pas',
 //  FastObj in 'FastObj.pas',
 //  FastSys in 'FastSys.pas',
+//  madExcept,
+//  madLinkDisAsm,
+//  madListHardware,
+//  madListProcesses,
+//  madListModules,
 //  RtlVclOptimize in 'RtlVclOptimize.pas',
 //  {$IFDEF Debug}
 //  TCOpenApp in 'C:\Program Files\Automated QA\TestComplete 6\Open Apps\Delphi&BCB\TCOpenApp.pas',
@@ -746,7 +751,7 @@ uses
   frmPixelPointUnit in 'frmPixelPointUnit.pas' {frmPixelPoint},
   frmPrintFrequencyUnit in 'frmPrintFrequencyUnit.pas' {frmPrintFrequency},
   frmPrintInitialUnit in 'frmPrintInitialUnit.pas' {frmPrintInitial},
-  frmProgressUnit in 'frmProgressUnit.pas' {frmProgress},
+  frmProgressUnit in 'frmProgressUnit.pas' {frmProgressMM},
   frmRearrangeObjectsUnit in 'frmRearrangeObjectsUnit.pas' {frmRearrangeObjects},
   frmRulerOptionsUnit in 'frmRulerOptionsUnit.pas' {frmRulerOptions},
   frmScreenObjectPropertiesUnit in 'frmScreenObjectPropertiesUnit.pas' {frmScreenObjectProperties},
@@ -1040,14 +1045,18 @@ uses
   frmManageParametersUnit in 'frmManageParametersUnit.pas' {frmManageParameters},
   frmManageHeadObservationsUnit in 'frmManageHeadObservationsUnit.pas' {frmManageHeadObservations},
   frmRunModelMateUnit in 'frmRunModelMateUnit.pas' {frmRunModelMate},
-  ContourExport in 'ContourExport.pas';
+  ContourExport in 'ContourExport.pas',
+  frmExportCSVUnit in 'frmExportCSVUnit.pas' {frmExportCSV},
+  frmNewVersionUnit in 'frmNewVersionUnit.pas' {frmNewVersion},
+  NatNeigh in 'NatNeigh.pas',
+  Delaunay in 'Delaunay.pas';
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.CreateForm(TfrmGoPhast, frmGoPhast);
-  Application.CreateForm(TfrmProgress, frmProgress);
+  Application.CreateForm(TfrmProgressMM, frmProgressMM);
   Application.CreateForm(TfrmSelectedObjects, frmSelectedObjects);
   Application.CreateForm(TfrmColors, frmColors);
   Application.Run;

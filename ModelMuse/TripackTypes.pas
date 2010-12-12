@@ -55,24 +55,24 @@ type
 //  TNtmx_LwkIntArray = array[0..NTMX-1] of TNrowIntArray;
   TNtmx_LwkIntArray = array of TNrowIntArray;
 
-  TSingleArray = array of TFloat;
+  TFloatArray = array of TFloat;
 
 //  TNmaxSingleArray = array[0..NMAX-1] of single;
-  TNmaxSingleArray = TSingleArray;
+  TNmaxSingleArray = TFloatArray;
 
 //  T2_NmaxSinglearray = array[0..NMAX-1]  of array[0..1] of single;
 
 //  TNiSingleArray = array[0..NI-1] of single;
-  TNiSingleArray = TSingleArray;
+  TNiSingleArray = TFloatArray;
 
 //  TN6SingleArray = array[0..N6-1] of single;
-  TN6SingleArray = TSingleArray;
+  TN6SingleArray = TFloatArray;
 
 //  TNi_NjSingleArray = array[0..NJ-1]  of array[0..NI-1] of single;
   TNi_NjSingleArray = array of array of TFloat;
 
 //  TNtnxSingleArray = array[0..NTMX-1] of single;
-  TNtnxSingleArray = TSingleArray;
+  TNtnxSingleArray = TFloatArray;
 
 // The following commented-out procedure declarations were used for debugging
 // purposes during translation of the TRIPACK routines from Fortran to

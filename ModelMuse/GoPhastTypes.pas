@@ -180,7 +180,7 @@ type
 
   // @name is used to indicate what type of model is active.
   // The type of model should never be set to msUndefined.
-  TModelSelection = (msUndefined, msPhast, msModflow);
+  TModelSelection = (msUndefined, msPhast, msModflow, msModflowLGR);
 
   //  @name is used to indicate how the spacing of layers within a unit
   // is specified.
@@ -570,7 +570,7 @@ begin
             Assert(False);
         end;
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         case Eval of
           eaBlocks:

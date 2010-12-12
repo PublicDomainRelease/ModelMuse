@@ -344,8 +344,15 @@ begin
     Dimension[Index] := YStart- Index * RowWidth;
   end;
   frmGoPhast.ModflowGrid.RowPositions := Dimension;
-  SetUpModflowLayers(ColCount, RowCount, ModelHeight);
-  frmGoPhast.PhastModel.ClearNameChangeWarnings;
+  try
+    SetUpModflowLayers(ColCount, RowCount, ModelHeight);
+  except on E: EOutOfMemory do
+    begin
+      Beep;
+      MessageDlg(E.message, mtError, [mbOK], 0);
+    end;
+  end;
+//  frmGoPhast.PhastModel.ClearNameChangeWarnings;
 
   ModelXWidth := ColCount * ColWidth;
   ModelYWidth := RowCount * RowWidth;
@@ -378,6 +385,7 @@ var
   Layers: TList;
 
   Local_Index: Integer;
+  LayerName: string;
 begin
   ModelHeight := 1;
   // Set up the layers.
@@ -387,9 +395,14 @@ begin
     begin
       try
         Value := StrToFloat(rdgInitialLayers.Cells[1, Local_Index]);
+        LayerName := Trim(rdgInitialLayers.Cells[0, Local_Index]);
+        if LayerName = '' then
+        begin
+          Continue;
+        end;
         LayerStorage := TLayerStorage.Create;
         Layers.Add(LayerStorage);
-        LayerStorage.Name := rdgInitialLayers.Cells[0, Local_Index];
+        LayerStorage.Name := LayerName;
         LayerStorage.Elevation := Value;
       except
         on E: EConvertError do
@@ -401,7 +414,7 @@ begin
     Value := StrToFloat(rdgInitialLayers.Cells[1, 1]);
     LayerGroup := frmGoPhast.PhastModel.LayerStructure.Add as TLayerGroup;
     LayerGroup.AquiferName := StrModelTop;
-    NewDataArray := frmGoPhast.PhastModel.GetDataSetByName(LayerGroup.DataArrayName);
+    NewDataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerGroup.DataArrayName);
     Assert(NewDataArray <> nil);
 //    NewDataArray := frmGoPhast.PhastModel.DataSets[DataArrayIndex];
     NewDataArray.Formula := rdgInitialLayers.Cells[1, 1];
@@ -419,7 +432,7 @@ begin
       LayerStorage := Layers[LayerIndex];
       LayerGroup := frmGoPhast.PhastModel.LayerStructure.Add as TLayerGroup;
       LayerGroup.AquiferName := LayerStorage.Name;
-      NewDataArray := frmGoPhast.PhastModel.GetDataSetByName(LayerGroup.DataArrayName);
+      NewDataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerGroup.DataArrayName);
       Assert(NewDataArray <> nil);
 //      NewDataArray := frmGoPhast.PhastModel.DataSets[DataArrayIndex];
       NewDataArray.Formula := FloatToStr(LayerStorage.Elevation);
@@ -440,7 +453,7 @@ begin
   end;
   frmGoPhast.ModflowGrid.LayerElevations := NewLayerElevations;
   frmGoPhast.PhastModel.LayerStructure.AssignAssociatedInputDataSets;
-  frmGoPhast.PhastModel.ClearNameChangeWarnings;
+//  frmGoPhast.PhastModel.ClearNameChangeWarnings;
 end;
 
 procedure TfrmStartUp.SetUpPhastGrid;

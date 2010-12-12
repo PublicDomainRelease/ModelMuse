@@ -180,10 +180,6 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       HelpType = htKeyword
       HelpKeyword = 'Properties_TabHUF'
       Caption = 'Properties'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         375
         279)
@@ -242,7 +238,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
         Font.Name = 'Arial'
         Font.Pitch = fpVariable
         Font.Style = []
-        ItemHeight = 0
+        ItemHeight = 18
         ParentFont = False
         TabOrder = 1
         Text = '1'
@@ -289,7 +285,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
         Font.Name = 'Arial'
         Font.Pitch = fpVariable
         Font.Style = []
-        ItemHeight = 0
+        ItemHeight = 18
         ParentFont = False
         TabOrder = 3
         Text = '1'
@@ -304,10 +300,6 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       HelpKeyword = 'Parameters_Tab'
       Caption = 'Parameters'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgParameters: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -427,10 +419,6 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       HelpKeyword = 'Print_Tab'
       Caption = 'Print'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblPrintFormat: TLabel
         Left = 103
         Top = 7
@@ -585,7 +573,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
     end
     object btnOK: TBitBtn
       Left = 298
-      Top = 6
+      Top = 4
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]

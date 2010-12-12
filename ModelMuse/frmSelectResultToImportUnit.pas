@@ -13,7 +13,7 @@ type
   TModflowResultFormat = (mrBinary, mrAscii, mrFlux, mrHufAscii, mrHufBinary,
     mrHufFlux, mfSubBinary);
 
-  TDataArrayForm = (dafLayer, dafSystem, dafNone);
+  TDataArrayForm = (dafLayer, dafSystem, dafSubsidence, dafWaterTable);
 
   TfrmSelectResultToImport = class(TfrmCustomGoPhast)
     clData: TJvCheckListBox;
@@ -86,6 +86,18 @@ type
     // the first stress period if there are more than one stress period and
     // the first stress period is a steady-state stress period.
     procedure AdjustTotalTime(var TOTIM: TModflowDouble);
+    procedure AssignWaterTableArray(
+      var WaterTableArray: TModflowDoubleArray;
+      ILAY: Integer;
+      AnArray: TModflowDoubleArray;
+      ValuesToIgnore: TOneDRealArray;
+      const Description: string);
+    procedure AssignWaterTable(NewDataSets: TList; OldComments: TStringList;
+      DataSetNames: TStringList; ScreenObjectsToDelete: TScreenObjectList;
+      NewCreateScreenObjects: TList; KPER: Integer;
+      WaterTableArray: TModflowDoubleArray; KSTP: Integer;
+      const Description: string; ValuesToIgnore: TOneDRealArray;
+      TOTIM: TModflowDouble);
     { Private declarations }
 
   public
@@ -154,12 +166,18 @@ implementation
 uses Math, frmGoPhastUnit, RbwParser,
   GIS_Functions, ValueArrayStorageUnit, ModelMuseUtilities, PhastModelUnit,
   frmUpdateDataSetsUnit, UndoItemsScreenObjects, frmGridColorUnit,
-  InterpolationUnit, frmContourDataUnit, HufDefinition, ModflowTimeUnit;
+  InterpolationUnit, frmContourDataUnit, HufDefinition, ModflowTimeUnit,
+  frmGridValueUnit;
+
+resourcestring
+  StrHead = 'Head';
 
 const
   StrModelResults = 'Model Results';
   StrLayerData = StrModelResults + '|Layer Data';
   StrThreeDData = StrModelResults + '|3D Data';
+  StrSystem = StrModelResults + '|System';
+  StrWaterTable = StrModelResults + '|Water Table';
 
 {$R *.dfm}
 
@@ -202,7 +220,7 @@ begin
       begin
         NewName := NewName + '_Sys' + PaddedIntToStr(ILAY, FMaxLayer);
       end;
-    dafNone:
+    dafSubsidence, dafWaterTable:
       begin
         // do nothing
       end;
@@ -210,12 +228,12 @@ begin
       Assert(False);
   end;
   CreateNewDataSet := True;
-  if frmGoPhast.PhastModel.GetDataSetByName(NewName) <> nil then
+  if frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(NewName) <> nil then
   begin
     CreateNewDataSet := AskUserIfNewDataSet;
     if CreateNewDataSet then
     begin
-      NewName := GenerateNewName(NewName, '_');
+      NewName := GenerateNewName(NewName, nil, '_');
     end;
   end;
   if CreateNewDataSet then
@@ -223,8 +241,8 @@ begin
     LayerData := TDataArray.Create(frmGoPhast.PhastModel);
     NewDataSets.Add(LayerData);
     LayerData.UpDateWithName(NewName);
-    LayerData.OnNameChange := frmGoPhast.PhastModel.DataArrayNameChange;
-    frmGoPhast.PhastModel.AddDataSet(LayerData);
+//    LayerData.OnNameChange := frmGoPhast.PhastModel.DataArrayNameChange;
+    frmGoPhast.PhastModel.DataArrayManager.AddDataSet(LayerData);
     LayerData.DataType := rdtDouble;
     LayerData.Orientation := dsoTop;
     LayerData.Formula :=
@@ -235,14 +253,20 @@ begin
     LayerData.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
       Grid.ColumnCount);
     LayerData.EvaluatedAt := eaBlocks;
-    LayerData.Classification := StrLayerData;
+    case DataArrayForm of
+      dafLayer: LayerData.Classification := StrLayerData;
+      dafSystem: LayerData.Classification := StrSystem;
+      dafSubsidence: LayerData.Classification := StrLayerData;
+      dafWaterTable: LayerData.Classification := StrWaterTable;
+    end;
+
     LayerData.OnDataSetUsed := frmGoPhast.PhastModel.ModelResultsRequired;
     frmGoPhast.PhastModel.CreateVariables(LayerData);
     OldComment := '';
   end
   else
   begin
-    LayerData := frmGoPhast.PhastModel.GetDataSetByName(NewName);
+    LayerData := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(NewName);
     OldComment := LayerData.Comment;
     for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
     begin
@@ -259,8 +283,25 @@ begin
     + '" on ' + DateTimeToStr(Now)
     + #13#10 + StrStressPeriodLabel + IntToStr(KPER)
     + #13#10 + StrTimeStepLabel + IntToStr(KSTP)
-    + #13#10 + StrElapsedTimeLabel + FloatToStr(TOTIM)
-    + #13#10 + 'Layer: ' + IntToStr(ILAY);
+    + #13#10 + StrElapsedTimeLabel + FloatToStr(TOTIM);
+  case DataArrayForm of
+    dafLayer:
+      begin
+        LayerData.Comment := LayerData.Comment
+          + #13#10 + 'Layer: ' + IntToStr(ILAY);
+      end;
+    dafSystem:
+      begin
+        LayerData.Comment := LayerData.Comment
+          + #13#10 + 'System: ' + IntToStr(ILAY);
+      end;
+    dafSubsidence, dafWaterTable:
+      begin
+        // do nothing
+      end;
+    else
+      Assert(False);
+  end;
 end;
 
 procedure TfrmSelectResultToImport.CreateScreenObject(LayerIndex: integer;
@@ -273,7 +314,7 @@ var
   ActiveDataSet: TDataArray;
   LI: Integer;
 begin
-  ActiveDataSet := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+  ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
   ActiveDataSet.Initialize;
 
   Grid := frmGoPhast.PhastModel.ModflowGrid;
@@ -322,7 +363,7 @@ end;
 
 function TfrmSelectResultToImport.DefaultFileName: string;
 begin
-  Assert(frmGoPhast.PhastModel.ModelSelection = msModflow);
+  Assert(frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR]);
   result := frmGoPhast.PhastModel.DefaultModflowOutputFileName;
   if not FileExists(result) then
   begin
@@ -350,7 +391,7 @@ var
   IgnoreIndex: Integer;
   SkipReal: TSkipReal;
 begin
-  ActiveDataSet := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+  ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
   ActiveDataSet.Initialize;
 
   Grid := frmGoPhast.PhastModel.ModflowGrid;
@@ -456,7 +497,7 @@ var
 begin
   AssignObjectName(ScreenObject, LayerData);
 
-  ActiveDataSet := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+  ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
   ActiveDataSet.Initialize;
 
   Grid := frmGoPhast.PhastModel.ModflowGrid;
@@ -551,12 +592,12 @@ begin
   NewName := NewName + '_P' + PaddedIntToStr(KPER, FMaxPeriod) +
     '_S' + PaddedIntToStr(KSTP, FMaxStep);
   CreateNewDataSet := True;
-  if frmGoPhast.PhastModel.GetDataSetByName(NewName) <> nil then
+  if frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(NewName) <> nil then
   begin
     CreateNewDataSet := AskUserIfNewDataSet;
     if CreateNewDataSet then
     begin
-      NewName := GenerateNewName(NewName, '_');
+      NewName := GenerateNewName(NewName, nil, '_');
     end;
   end;
   Grid := frmGoPhast.PhastModel.ModflowGrid;
@@ -565,8 +606,8 @@ begin
     New3DArray := TDataArray.Create(frmGoPhast.PhastModel);
     NewDataSets.Add(New3DArray);
     New3DArray.UpDateWithName(NewName);
-    New3DArray.OnNameChange := frmGoPhast.PhastModel.DataArrayNameChange;
-    frmGoPhast.PhastModel.AddDataSet(New3DArray);
+//    New3DArray.OnNameChange := frmGoPhast.PhastModel.DataArrayNameChange;
+    frmGoPhast.PhastModel.DataArrayManager.AddDataSet(New3DArray);
     New3DArray.DataType := rdtDouble;
     New3DArray.Orientation := dso3D;
     New3DArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
@@ -579,7 +620,7 @@ begin
   end
   else
   begin
-    New3DArray := frmGoPhast.PhastModel.GetDataSetByName(NewName);
+    New3DArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(NewName);
     OldComment := New3DArray.Comment;
   end;
   AdjustTotalTime(TOTIM);
@@ -698,6 +739,7 @@ var
   KPER: Integer;
   ILAY: Integer;
   AnArray: TModflowDoubleArray;
+  WaterTableArray: TModflowDoubleArray;
   LayerArray: TModflowDoubleArray;
   EndReached: Boolean;
   LayerData: TDataArray;
@@ -733,6 +775,7 @@ var
   ValuesToIgnore: TOneDRealArray;
   MinMaxAssigned: Boolean;
   TOTIM: TModflowDouble;
+  WaterTableData: TDataArray;
 begin
   inherited;
   FGrid := frmGoPhast.PhastModel.ModflowGrid;
@@ -801,6 +844,8 @@ begin
                   end;
                   if clData.Checked[Index] then
                   begin
+                    AssignWaterTableArray(WaterTableArray,
+                      ILAY, LayerArray, ValuesToIgnore, Description);
                     CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
                       LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
                     CreateScreenObject(ILAY-1, ScreenObject);
@@ -830,8 +875,15 @@ begin
                         ValuesToIgnore);
                     end;
                     NewCreateScreenObjects.Add(
-                      TUndoCreateScreenObject.Create(ScreenObject))
+                      TUndoCreateScreenObject.Create(ScreenObject));
                   end
+                end;
+                if clData.Checked[Index] then
+                begin
+                  AssignWaterTable(NewDataSets, OldComments, DataSetNames,
+                    ScreenObjectsToDelete, NewCreateScreenObjects, KPER,
+                    WaterTableArray, KSTP, Description, ValuesToIgnore,
+                    TOTIM);
                 end;
               end
               else
@@ -850,6 +902,7 @@ begin
                   ModflowLayerToDataSetLayer(ILAY)+1;
                 if clData.Checked[Index] then
                 begin
+                  AssignWaterTableArray(WaterTableArray, ILAY, AnArray, ValuesToIgnore, Description);
                   CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
                     LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
                   CreateScreenObject(ILAY-1, ScreenObject);
@@ -877,9 +930,17 @@ begin
 
                     AssignLimits(MinValues, MaxValues, New3DArray,
                       ValuesToIgnore);
+
                   end;
                   NewCreateScreenObjects.Add(
-                    TUndoCreateScreenObject.Create(ScreenObject))
+                    TUndoCreateScreenObject.Create(ScreenObject));
+                  if ILAY = FGrid.LayerCount then
+                  begin
+                    AssignWaterTable(NewDataSets, OldComments, DataSetNames,
+                      ScreenObjectsToDelete, NewCreateScreenObjects, KPER,
+                      WaterTableArray, KSTP, Description, ValuesToIgnore,
+                      TOTIM);
+                  end;
                 end;
               end;
 
@@ -986,7 +1047,7 @@ begin
               Inc(Count);
               CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
                 LayerData, OldComment, NewDataSets, ScreenObjectsToDelete,
-                dafNone);
+                dafSubsidence);
               comboColorGrid.Items.Objects[Count] := LayerData;
               CreateScreenObject(ILAY-1, ScreenObject);
               AssignValues(ILAY-1, ScreenObject, LayerData, AnArray,
@@ -1110,43 +1171,69 @@ begin
   FDescriptions := TStringList.Create;
   FAskedUser := False;
 
-  odSelectFiles.Filter := 'All supported file types|*.bhd;*.bdn;*.fhd;*.fdn;'
-    + '*.cbc;*.huf_fhd;*.huf_bhd;*.huf_flow;*.Sub_Out;*.Swt_Out;*.SubSubOut;'
-    + '*.SubComMlOut;*.SubComIsOut;*.SubVdOut;*.SubNdCritHeadOut;'
-    + '*.SubDCritHeadOut;*.SwtSubOut;*.SwtSubOut;*.SwtComMLOut;*.SwtComIsOut;'
-    + '*.SwtVDOut;*.SwtPreConStrOut;*.SwtDeltaPreConStrOut;*.SwtGeoStatOut;'
-    + '*.SwtDeltaGeoStatOut;*.SwtEffStressOut;*.SwtDeltaEffStressOut;'
-    + '*.SwtVoidRatioOut;*.SwtThickCompSedOut;*.SwtLayerCentElevOut|'
+  // The next time this is changed, it should be reorganized to read the
+  // file extensions and descriptions from an array and then
+  // construct the filter from that.
 
-    + 'Formatted head files (*.fhd)|*.fhd|'
-    + 'Formatted drawdown files (*.fdn)|*.fdn|'
-    + 'Binary head files (*.bhd)|*.bhd|'
-    + 'Binary drawdown files (*.bdn)|*.bdn|'
-    + 'Binary flow files (*.cbc)|*.cbc|'
-    + 'Formatted HUF head files (*.huf_fhd)|*.huf_fhd|'
-    + 'Binary HUF head files (*.huf_bhd)|*.huf_bhd|'
-    + 'HUF flow files (*.huf_flow)|*.huf_flow|'
-    + 'Combined SUB output file (*.Sub_Out)|*.Sub_Out|'
-    + 'Combined SWT output file (*.Swt_Out)|*.Swt_Out|'
-    + 'SUB Subsidence (*.SubSubOut)|*.SubSubOut|'
-    + 'SUB Compaction by model layer (*.SubComMlOut)|*.SubComMlOut|'
-    + 'SUB Compaction by interbed system (*.SubComIsOut)|*.SubComIsOut|'
-    + 'SUB Vertical displacement (*.SubVdOut)|*.SubVdOut|'
-    + 'SUB Critical head for no-delay interbeds (*.SubNdCritHeadOut)|*.SubNdCritHeadOut|'
-    + 'SUB Critical head for delay interbeds (*.SubDCritHeadOut)|*.SubDCritHeadOut|'
-    + 'SWT Subsidence (*.SwtSubOut)|*.SwtSubOut|'
-    + 'SWT Compaction by model layer (*.SwtComMLOut)|*.SwtComMLOut|'
-    + 'SWT Compaction by interbed system (*.SwtComIsOut)|*.SwtComIsOut|'
-    + 'SWT Vertical displacement (*.SwtVDOut)|*.SwtVDOut|'
-    + 'SWT Preconsolidation stress (*.SwtPreConStrOut)|*.SwtPreConStrOut|'
-    + 'SWT Change in preconsolidation stress (*.SwtDeltaPreConStrOut)|*.SwtDeltaPreConStrOut|'
-    + 'SWT Geostatic stress (*.SwtGeoStatOut)|*.SwtGeoStatOut|'
-    + 'SWT Change in geostatic stress (*.SwtDeltaGeoStatOut)|*.SwtDeltaGeoStatOut|'
-    + 'SWT Effective stress (*.SwtEffStressOut)|*.SwtEffStressOut|'
-    + 'SWT Change in effective stress (*.SwtDeltaEffStressOut)|*.SwtDeltaEffStressOut|'
-    + 'SWT Void ratio (*.SwtVoidRatioOut)|*.SwtVoidRatioOut|'
-    + 'SWT Thickness of compressible sediments (*.SwtThickCompSedOut)|*.SwtThickCompSedOut|'
-    + 'SWT Layer-center elevation (*.SwtLayerCentElevOut)|*.SwtLayerCentElevOut'
+  odSelectFiles.Filter := 'All supported file types|*'
+    + StrBhd + ';*' + StrBdn
+    + ';*' + StrFhd
+    + ';*' + StrFdn
+    + ';*' + StrCbcExt
+    + ';*' + StrHuffhd
+    + ';*' + StrHufbhd
+    + ';*' + StrHufflow
+    + ';*' + StrSubOut
+    + ';*' + StrSwtOut
+    + ';*' + StrSubSubOut
+    + ';*' + StrSubComMlOut
+    + ';*' + StrSubComIsOut
+    + ';*' + StrSubVdOut
+    + ';*' + StrSubNdCritHeadOut
+    + ';*' + StrSubDCritHeadOut
+    + ';*' + StrSwtSubOut
+    + ';*' + StrSwtComMLOut
+    + ';*' + StrSwtComIsOut
+    + ';*' + StrSwtVDOut
+    + ';*' + StrSwtPreConStrOut
+    + ';*' + StrSwtDeltaPreConStrOu
+    + ';*' + StrSwtGeoStatOut
+    + ';*' + StrSwtDeltaGeoStatOut
+    + ';*' + StrSwtEffStressOut
+    + ';*' + StrSwtDeltaEffStressOu
+    + ';*' + StrSwtVoidRatioOut
+    + ';*' + StrSwtThickCompSedOut
+    + ';*' + StrSwtLayerCentElevOut + '|'
+
+    + 'Formatted head files (*' + StrFhd + ')|*' + StrFhd + '|'
+    + 'Formatted drawdown files (*' + StrFdn + ')|*' + StrFdn + '|'
+    + 'Binary head files (*' + StrBhd + ')|*' + StrBhd + '|'
+    + 'Binary drawdown files (*' + StrBdn + ')|*' + StrBdn + '|'
+    + 'Binary flow files (*' + StrCbcExt + ')|*' + StrCbcExt + '|'
+    + 'Formatted HUF head files (*' + StrHuffhd + ')|*' + StrHuffhd + '|'
+    + 'Binary HUF head files (*' + StrHufbhd + ')|*' + StrHufbhd + '|'
+    + 'HUF flow files (*' + StrHufflow + ')|*' + StrHufflow + '|'
+    + 'Combined SUB output file (*' + StrSubOut + ')|*' + StrSubOut + '|'
+    + 'Combined SWT output file (*' + StrSwtOut + ')|*' + StrSwtOut + '|'
+    + 'SUB Subsidence (*' + StrSubSubOut + ')|*' + StrSubSubOut + '|'
+    + 'SUB Compaction by model layer (*' + StrSubComMlOut + ')|*' + StrSubComMlOut + '|'
+    + 'SUB Compaction by interbed system (*' + StrSubComIsOut + ')|*' + StrSubComIsOut + '|'
+    + 'SUB Vertical displacement (*' + StrSubVdOut + ')|*' + StrSubVdOut + '|'
+    + 'SUB Critical head for no-delay interbeds (*' + StrSubNdCritHeadOut + ')|*' + StrSubNdCritHeadOut + '|'
+    + 'SUB Critical head for delay interbeds (*' + StrSubDCritHeadOut + ')|*' + StrSubDCritHeadOut + '|'
+    + 'SWT Subsidence (*' + StrSwtSubOut + ')|*' + StrSwtSubOut + '|'
+    + 'SWT Compaction by model layer (*' + StrSwtComMLOut + ')|*' + StrSwtComMLOut + '|'
+    + 'SWT Compaction by interbed system (*' + StrSwtComIsOut + ')|*' + StrSwtComIsOut + '|'
+    + 'SWT Vertical displacement (*' + StrSwtVDOut + ')|*' + StrSwtVDOut + '|'
+    + 'SWT Preconsolidation stress (*' + StrSwtPreConStrOut + ')|*' + StrSwtPreConStrOut + '|'
+    + 'SWT Change in preconsolidation stress (*' + StrSwtDeltaPreConStrOu + ')|*' + StrSwtDeltaPreConStrOu + '|'
+    + 'SWT Geostatic stress (*' + StrSwtGeoStatOut + ')|*' + StrSwtGeoStatOut + '|'
+    + 'SWT Change in geostatic stress (*' + StrSwtDeltaGeoStatOut + ')|*' + StrSwtDeltaGeoStatOut + '|'
+    + 'SWT Effective stress (*' + StrSwtEffStressOut + ')|*' + StrSwtEffStressOut + '|'
+    + 'SWT Change in effective stress (*' + StrSwtDeltaEffStressOu + ')|*' + StrSwtDeltaEffStressOu + '|'
+    + 'SWT Void ratio (*' + StrSwtVoidRatioOut + ')|*' + StrSwtVoidRatioOut + '|'
+    + 'SWT Thickness of compressible sediments (*' + StrSwtThickCompSedOut + ')|*' + StrSwtThickCompSedOut + '|'
+    + 'SWT Layer-center elevation (*' + StrSwtLayerCentElevOut + ')|*' + StrSwtLayerCentElevOut
 end;
 
 procedure TfrmSelectResultToImport.FormDestroy(Sender: TObject);
@@ -1496,6 +1583,80 @@ begin
   end;
 end;
 
+procedure TfrmSelectResultToImport.AssignWaterTable(NewDataSets: TList;
+  OldComments: TStringList; DataSetNames: TStringList;
+  ScreenObjectsToDelete: TScreenObjectList; NewCreateScreenObjects: TList;
+  KPER: Integer; WaterTableArray: TModflowDoubleArray; KSTP: Integer;
+  const Description: string; ValuesToIgnore: TOneDRealArray;
+  TOTIM: TModflowDouble);
+var
+  WaterTableData: TDataArray;
+  OldComment: string;
+  ScreenObject: TScreenObject;
+  MinMaxAssigned: Boolean;
+begin
+  if Description = StrHead then
+  begin
+    CreateOrRetrieveLayerDataSet('Water Table', KSTP, KPER, -1, TOTIM,
+      WaterTableData, OldComment, NewDataSets, ScreenObjectsToDelete,
+      dafWaterTable);
+    CreateScreenObject(-1, ScreenObject);
+    AssignValues(-1, ScreenObject, WaterTableData, WaterTableArray,
+      ValuesToIgnore, MinMaxAssigned);
+    OldComments.AddObject(OldComment, WaterTableData);
+    DataSetNames.AddObject(WaterTableData.Name, WaterTableData);
+    NewCreateScreenObjects.Add(TUndoCreateScreenObject.Create(ScreenObject));
+  end;
+end;
+
+procedure TfrmSelectResultToImport.AssignWaterTableArray(
+  var WaterTableArray: TModflowDoubleArray;
+  ILAY: Integer;
+  AnArray: TModflowDoubleArray;
+  ValuesToIgnore: TOneDRealArray; const Description: string);
+var
+  AValue: single;
+  ValueIndex: Integer;
+  ValueOK: Boolean;
+  RowIndex: Integer;
+  ColIndex: Integer;
+  WaterTableValue: single;
+begin
+  if (Description = StrHead) then
+  begin
+    if ILAY = 1 then
+    begin
+      WaterTableArray := AnArray;
+      SetLength(WaterTableArray, Length(WaterTableArray),
+        Length(WaterTableArray[0]));
+    end
+    else
+    begin
+      for RowIndex := 0 to Length(WaterTableArray) - 1 do
+      begin
+        for ColIndex := 0 to Length(WaterTableArray[0]) - 1 do
+        begin
+          ValueOK := True;
+          for ValueIndex := 0 to Length(ValuesToIgnore) - 1 do
+          begin
+            AValue := ValuesToIgnore[ValueIndex];
+            WaterTableValue := WaterTableArray[RowIndex, ColIndex];
+            if WaterTableValue = AValue then
+            begin
+              ValueOK := False;
+              break;
+            end;
+          end;
+          if not ValueOK then
+          begin
+            WaterTableArray[RowIndex, ColIndex] := AnArray[RowIndex, ColIndex];
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmSelectResultToImport.AdjustTotalTime(var TOTIM: TModflowDouble);
 var
   FirstStressPeriod: TModflowStressPeriod;
@@ -1693,113 +1854,113 @@ var
 begin
   Precision := mpSingle;
   Extension := ExtractFileExt(FFileName);
-  if (SameText(Extension, '.bdn'))
-    or (CompareText(Extension, '.bhd') = 0) then
+  if (SameText(Extension, StrBdn))
+    or (CompareText(Extension, StrBhd) = 0) then
   begin
     FResultFormat := mrBinary;
   end
-  else if (SameText(Extension, '.fdn'))
-    or (SameText(Extension, '.fhd')) then
+  else if (SameText(Extension, StrFdn))
+    or (SameText(Extension, StrFhd)) then
   begin
     FResultFormat := mrAscii;
   end
-  else if (SameText(Extension, '.cbc')) then
+  else if (SameText(Extension, StrCbcExt)) then
   begin
     FResultFormat := mrFlux;
   end
-  else if (SameText(Extension, '.huf_fhd')) then
+  else if (SameText(Extension, StrHuffhd)) then
   begin
     FResultFormat := mrHufAscii;
   end
-  else if (SameText(Extension, '.huf_bhd')) then
+  else if (SameText(Extension, StrHufbhd)) then
   begin
     FResultFormat := mrHufBinary;
   end
-  else if (SameText(Extension, '.huf_flow')) then
+  else if (SameText(Extension, StrHufflow)) then
   begin
     FResultFormat := mrHufFlux;
   end
-  else if (SameText(Extension, '.Sub_Out')) then
+  else if (SameText(Extension, StrSubOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.Swt_Out')) then
+  else if (SameText(Extension, StrSwtOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SubSubOut')) then
+  else if (SameText(Extension, StrSubSubOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SubComMlOut')) then
+  else if (SameText(Extension, StrSubComMlOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SubComIsOut')) then
+  else if (SameText(Extension, StrSubComIsOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SubVdOut')) then
+  else if (SameText(Extension, StrSubVdOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SubNdCritHeadOut')) then
+  else if (SameText(Extension, StrSubNdCritHeadOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SubDCritHeadOut')) then
+  else if (SameText(Extension, StrSubDCritHeadOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SwtSubOut')) then
+  else if (SameText(Extension, StrSwtSubOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SwtComMLOut')) then
+  else if (SameText(Extension, StrSwtComMLOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SwtComIsOut')) then
+  else if (SameText(Extension, StrSwtComIsOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SwtVDOut')) then
+  else if (SameText(Extension, StrSwtVDOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SwtPreConStrOut')) then
+  else if (SameText(Extension, StrSwtPreConStrOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SwtDeltaPreConStrOut')) then
+  else if (SameText(Extension, StrSwtDeltaPreConStrOu)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SwtGeoStatOut')) then
+  else if (SameText(Extension, StrSwtGeoStatOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SwtDeltaGeoStatOut')) then
+  else if (SameText(Extension, StrSwtDeltaGeoStatOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SwtEffStressOut')) then
+  else if (SameText(Extension, StrSwtEffStressOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SwtDeltaEffStressOut')) then
+  else if (SameText(Extension, StrSwtDeltaEffStressOu)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SwtVoidRatioOut')) then
+  else if (SameText(Extension, StrSwtVoidRatioOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SwtThickCompSedOut')) then
+  else if (SameText(Extension, StrSwtThickCompSedOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
-  else if (SameText(Extension, '.SwtLayerCentElevOut')) then
+  else if (SameText(Extension, StrSwtLayerCentElevOut)) then
   begin
     FResultFormat := mfSubBinary;
   end
@@ -1971,26 +2132,20 @@ var
   Index: Integer;
   AnUndo: TCustomUndo;
   DataSet: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
   inherited;
-  for Index := 0 to FNewDataSets.Count - 1do
-  begin
-    DataSet := FNewDataSets[Index];
-    frmGoPhast.DeletedDataSets.Extract(DataSet);
-    if frmGoPhast.PhastModel.GetDataSetByName(DataSet.Name) = nil then
-    begin
-      frmGoPhast.PhastModel.AddDataSet(DataSet);
-    end;
-  end;
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  DataArrayManager.HandleAddedDataArrays(FNewDataSets);
 
   for Index := 0 to FContainedUndos.Count - 1 do
   begin
     AnUndo := FContainedUndos[Index];
     AnUndo.DoCommand;
   end;
-  for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+  for Index := 0 to DataArrayManager.DataSetCount - 1 do
   begin
-    DataSet := frmGoPhast.PhastModel.DataSets[Index];
+    DataSet := DataArrayManager.DataSets[Index];
     if FNewDataSets.IndexOf(DataSet) < 0 then
     begin
       frmGoPhast.PhastModel.CreateVariables(DataSet);
@@ -2014,15 +2169,27 @@ begin
   frmGoPhast.Grid.ThreeDContourDataSet := FNew3DContourDataSet;
   frmGoPhast.Grid.GridChanged;
 
+//  if frmContourData = nil then
+//  begin
+//    frmContourData := TfrmContourData.Create(nil);
+//  end;
+//  if frmGridColor = nil then
+//  begin
+//    frmGridColor := TfrmGridColor.Create(nil);
+//  end;
+
+
   UpdateFrmGridColor;
   UpdateFrmContourData;
+  UpdateFrmGridValue;
 end;
 
 procedure TUndoImportModelResults.Undo;
 var
   Index: Integer;
   AnUndo: TCustomUndo;
-  DataSet: TDataArray;
+//  DataSet: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
   inherited;
   for Index := FContainedUndos.Count - 1 downto 0 do
@@ -2049,18 +2216,10 @@ begin
 
   UpdateFrmGridColor;
   UpdateFrmContourData;
-  for Index := FNewDataSets.Count - 1 downto 0 do
-  begin
-    DataSet := FNewDataSets[Index];
-    frmGoPhast.PhastModel.RemoveVariables(DataSet);
-    frmGoPhast.PhastModel.ExtractDataSet(DataSet);
-  end;
-  frmGoPhast.DeletedDataSets.Assign(FNewDataSets, laOr);
-//  for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
-//  begin
-//    DataSet := frmGoPhast.PhastModel.DataSets[Index];
-//    frmGoPhast.PhastModel.CreateVariables(DataSet);
-//  end;
+
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  DataArrayManager.HandleDeletedDataArrays(FNewDataSets);
+  UpdateFrmGridValue;
 end;
 
 procedure TUndoImportModelResults.SetComments(Comments: TStringList);

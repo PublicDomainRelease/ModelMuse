@@ -22,6 +22,7 @@ type
     btnCancel: TBitBtn;
     lblWarning: TLabel;
     sbStatusBar: TStatusBar;
+    pbProgress: TProgressBar;
     procedure btnOKClick(Sender: TObject);
     procedure edNameFileChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -29,6 +30,7 @@ type
     FReadModflowInputProperly: Boolean;
     procedure HandleModflowConsolLine(const Text: string);
     procedure UpdateStatusBar(const Text: string);
+    procedure ShowProgress(Position, Total: integer);
     { Private declarations }
   public
     { Public declarations }
@@ -129,7 +131,7 @@ begin
     FreeAndNil(frmShowHideObjects);
     FreeAndNil(frmGridColor);
     ImportModflow2005(ListFileName, XOrigin, YOrigin, GridAngle,
-      UpdateStatusBar);
+      UpdateStatusBar, ShowProgress);
 
   finally
     SetCurrentDir(CurrentDir);
@@ -182,6 +184,16 @@ begin
   begin
     FReadModflowInputProperly := True;
   end;
+end;
+
+procedure TfrmImportModflow.ShowProgress(Position, Total: integer);
+begin
+  if pbProgress.Max <> Total then
+  begin
+    pbProgress.Max := Total
+  end;
+  pbProgress.Position := Position;
+  Application.ProcessMessages;
 end;
 
 procedure TfrmImportModflow.UpdateStatusBar(const Text: string);

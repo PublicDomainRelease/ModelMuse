@@ -469,7 +469,7 @@ begin
   begin
     DataArray := FNewDataSets[Index];
     (FModel as TPhastModel).RemoveVariables(DataArray);
-    (FModel as TPhastModel).ExtractDataSet(DataArray);
+    (FModel as TPhastModel).DataArrayManager.ExtractDataSet(DataArray);
     DataArray.Free;
   end;
   ClearNewDataSets;
@@ -921,9 +921,10 @@ begin
     begin
       if ParameterType in [ptHUF_HK, ptHUF_KDEP]  then
       begin
-        PhastModel := Model as TPhastModel;
-        PhastModel.HufKxNotifier.UpToDate := False;
-        PhastModel.HufKxNotifier.UpToDate := True;
+        NotifyHufKx;
+//        PhastModel := Model as TPhastModel;
+//        PhastModel.HufKxNotifier.UpToDate := False;
+//        PhastModel.HufKxNotifier.UpToDate := True;
       end;
       if ParameterType in [ptHUF_HK, ptHUF_KDEP, ptHUF_HANI]  then
       begin

@@ -51,7 +51,7 @@ type
     function UsesHufParam(UsedParam: THufUsedParameter;
       var ArrayName: string; var DataArray: TDataArray): boolean; override;
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
   end;
 
   TModflowMultiplierWriter = class(TCustomMultZoneWriter)
@@ -73,7 +73,7 @@ type
     function UsesHufParam(UsedParam: THufUsedParameter;
       var ArrayName: string; var DataArray: TDataArray): boolean; override;
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
   end;
 
 implementation
@@ -161,7 +161,7 @@ begin
   for ParamIndex := 0 to PhastModel.ModflowSteadyParameters.Count - 1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -196,7 +196,7 @@ begin
             + PhastModel.LayerStructure.ModflowLayerBottomDescription(ArrayIndex));
         end;
       end;
-      PhastModel.CacheDataArrays;
+      PhastModel.DataArrayManager.CacheDataArrays;
       DataArray.CacheData;
     end;
   end;
@@ -221,7 +221,7 @@ begin
           // Data set 3
           Description := UsedParam.Description;
           WriteArray(DataArray, 0, Description);
-          PhastModel.CacheDataArrays;
+          PhastModel.DataArrayManager.CacheDataArrays;
           DataArray.CacheData;
         end;
       end;
@@ -232,7 +232,7 @@ begin
   for Index := 0 to TransientList.Count - 1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -270,7 +270,7 @@ begin
 
       WriteArray(DataArray, ArrayIndex, ArrayType + ' array');
     end;
-    PhastModel.CacheDataArrays;
+    PhastModel.DataArrayManager.CacheDataArrays;
     DataArray.CacheData;
   end;
 end;
@@ -289,24 +289,24 @@ begin
   WriteToNameFile(FileType, FileUnit, NameOfFile, foInput);
   OpenFile(FileName(AFileName));
   try
-    frmProgress.AddMessage('Writing ' + FileType + ' Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing ' + FileType + ' Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 2 and 3.');
+    frmProgressMM.AddMessage('  Writing Data Sets 2 and 3.');
     WriteDataSets2And3;
   finally
     CloseFile;
@@ -325,7 +325,7 @@ begin
   result := UsedZoneArrayNames.IndexOf(ArrayName) >= 0
 end;
 
-constructor TModflowZoneWriter.Create(Model: TPhastModel);
+constructor TModflowZoneWriter.Create(Model: TCustomModel);
 begin
   inherited;
   FFileUnit := PhastModel.UnitNumbers.UnitNumber(StrZONE);
@@ -351,7 +351,7 @@ end;
 function TModflowZoneWriter.GetDataArray(
   Param: TModflowSteadyParameter): TDataArray;
 begin
-  result := PhastModel.GetDataSetByName(Param.ZoneName);
+  result := PhastModel.DataArrayManager.GetDataSetByName(Param.ZoneName);
 end;
 
 function TModflowZoneWriter.NumberOfArrays: integer;
@@ -397,7 +397,7 @@ begin
         ArrayName := UsedParam.ZoneArrayName;
         UsedZoneArrayNames.Add(ArrayName);
       end;
-      DataArray := PhastModel.GetDataSetByName(UsedParam.ZoneDataSetName);
+      DataArray := PhastModel.DataArrayManager.GetDataSetByName(UsedParam.ZoneDataSetName);
     end;
   end;
 end;
@@ -459,7 +459,7 @@ begin
   result := UsedMultiplierArrayNames.IndexOf(ArrayName) >= 0
 end;
 
-constructor TModflowMultiplierWriter.Create(Model: TPhastModel);
+constructor TModflowMultiplierWriter.Create(Model: TCustomModel);
 begin
   inherited;
   FFileUnit := PhastModel.UnitNumbers.UnitNumber(StrMULT);
@@ -485,7 +485,7 @@ end;
 function TModflowMultiplierWriter.GetDataArray(
   Param: TModflowSteadyParameter): TDataArray;
 begin
-  result := PhastModel.GetDataSetByName(Param.MultiplierName);
+  result := PhastModel.DataArrayManager.GetDataSetByName(Param.MultiplierName);
 end;
 
 function TModflowMultiplierWriter.NumberOfArrays: integer;
@@ -531,7 +531,7 @@ begin
         ArrayName := UsedParam.MultiplierArrayName;
         UsedMultiplierArrayNames.Add(ArrayName);
       end;
-      DataArray := PhastModel.GetDataSetByName(UsedParam.MultiplierDataSetName);
+      DataArray := PhastModel.DataArrayManager.GetDataSetByName(UsedParam.MultiplierDataSetName);
     end;
   end;
 end;

@@ -274,7 +274,7 @@ begin
     ActiveDataArray := nil;
     if ColoringLimits.ActiveOnly then
     begin
-      ActiveDataArray := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+      ActiveDataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
       ActiveDataArray.Initialize;
     end;
 
@@ -524,7 +524,7 @@ begin
   ActiveDataArray := nil;
   if ColoringLimits.ActiveOnly then
   begin
-    ActiveDataArray := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+    ActiveDataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
     ActiveDataArray.Initialize;
   end;
   FirstFound := False;

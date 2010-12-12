@@ -63,7 +63,7 @@ type
     // name is the file that is created by @classname.
     FFileStream: TFileStream;
     // See @link(PhastModel).
-    FPhastModel: TPhastModel;
+    FPhastModel: TCustomModel;
     // @name is the time at which something was exported.
     FExportTime: Extended;
     // @name writes a header for DataArray using either
@@ -78,23 +78,10 @@ type
     // the package.
     function PackageID_Comment(APackage: TModflowPackageSelection): string;
     {@name is the model to be exported.}
-    property PhastModel: TPhastModel read FPhastModel;
+    property PhastModel: TCustomModel read FPhastModel;
     // @name closes the MODFLOW input file that is being exported.
     // @seealso(OpenFile)
     procedure CloseFile;
-    // @name converts a real number represented as a string to always use
-    // the period as the decimal separator.
-    class Function FortranDecimal(NumberString : string) : string;
-    // @name converts "Value" to an string padded at the beginning with blank
-    // characters so that the resulting string as a length of "Width".
-    class function FixedFormattedInteger(const Value, Width: integer): string;
-    // @name converts "Value" to an string padded at the beginning with blank
-    // characters so that the resulting string as a length of "Width".
-    class function FixedFormattedReal(const Value : double;
-      const Width : integer) : string;
-    // @name converts "Value" to a string.  The decimal separator will
-    // always be a period.
-    class function FreeFormattedReal(const Value : double) : string;
     // @name opens the input file to be exported.
     // @seealso(CloseFile)
     procedure OpenFile(const FileName: string);
@@ -131,6 +118,19 @@ type
       List: TList; var TransientArray: TDataArray;
       FreeArray: boolean = True);
   public
+    // @name converts a real number represented as a string to always use
+    // the period as the decimal separator.
+    class Function FortranDecimal(NumberString : string) : string;
+    // @name converts "Value" to an string padded at the beginning with blank
+    // characters so that the resulting string as a length of "Width".
+    class function FixedFormattedInteger(const Value, Width: integer): string;
+    // @name converts "Value" to an string padded at the beginning with blank
+    // characters so that the resulting string as a length of "Width".
+    class function FixedFormattedReal(const Value : double;
+      const Width : integer) : string;
+    // @name converts "Value" to a string.  The decimal separator will
+    // always be a period.
+    class function FreeFormattedReal(const Value : double) : string;
     {@name checks that the values stored in DataArray are valid.)
     @param(DataArray is the @link(TDataArray) to be checked.)
     @param(LayerIndex is the layer (first index) in DataArray to be checked.)
@@ -147,7 +147,7 @@ type
       CheckValue: double; ErrorType: TErrorType);
     // @name creates and instance of @classname.
     // @param(Model is the @link(TPhastModel) to be exported.)
-    Constructor Create(Model: TPhastModel); virtual;
+    Constructor Create(Model: TCustomModel); virtual;
     // @name writes an end of line to the output file.
     procedure NewLine;
     { @name writes one layer of DataArray to the output file.
@@ -318,13 +318,19 @@ type
 
   public
     // @name creates and instance of @classname.
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     // @name destroys the current instance of @classname.
     Destructor Destroy; override;
   end;
 
   TCustomParameterTransientWriter = class(TCustomTransientWriter)
   protected
+    // @name is used to maintain a list of parameter instance names so that
+    // duplicate instance names are not generated. @name is filled once
+    // when exporting the parameters and again when exporting the
+    // stress periods.  Thus it must be cleared at the beginning of the process
+    // of exporting the stress periods.
+    FUsedInstanceNames: TStringList;
     // See @link(ParamValues).
     FParamValues: TStringList;
     // @name is used to create a @link(TValueCellList) for a particular type
@@ -406,7 +412,7 @@ type
     procedure ClearTimeLists;
   public
     // @name creates and instance of @classname.
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     Destructor Destroy; override;
     // After @link(Evaluate) is called,
     // @name contains a series of parameter names.  Associated with each
@@ -589,8 +595,13 @@ type
     // Otherwise, List is used to define the layers.
     procedure WriteLayerSelection(List: TValueCellList;
       ParameterValues: TList; TimeIndex: Integer; const Comment: string);
+    // @name clears @link(FUsedInstanceNames) so that the same parameter
+    //instance names will be used in the stress periods as used in the
+    // paramater definitions.
+    procedure WriteStressPeriods(const VariableIdentifiers, DataSetIdentifier,
+      DS5, D7PNameIname, D7PName: string); override;
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     // @name destroys the current instance of @classname.
     Destructor Destroy; override;
   end;
@@ -631,7 +642,7 @@ function WriteModPathBatchFile(ProgramLocations: TProgramLocations;
   FileName: string; ListFile: string; OpenListFile: boolean;
   const LargeBudgetFileResponse: string): string;
 
-function WriteZoneBudgetBatchFile(Model: TPhastModel;
+function WriteZoneBudgetBatchFile(Model: TCustomModel;
   FileName: string; OpenListFile: boolean): string;
 
 const
@@ -794,7 +805,7 @@ begin
   end;
 end;
 
-function WriteZoneBudgetBatchFile(Model: TPhastModel;
+function WriteZoneBudgetBatchFile(Model: TCustomModel;
   FileName: string; OpenListFile: boolean): string;
 var
   BatchFile: TStringList;
@@ -917,7 +928,7 @@ begin
       end;
     end;
   end;
-  PhastModel.AddDataSetToCache(DataArray);
+  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
 end;
 
 procedure TCustomModflowWriter.CloseFile;
@@ -936,7 +947,7 @@ begin
   end;
 end;
 
-constructor TCustomModflowWriter.Create(Model: TPhastModel);
+constructor TCustomModflowWriter.Create(Model: TCustomModel);
 begin
   inherited Create;
   FPhastModel := Model;
@@ -1046,16 +1057,16 @@ var
 begin
   if ArrayName <> '' then
   begin
-    frmProgress.AddMessage('    Writing ' + ArrayName);
+    frmProgressMM.AddMessage('    Writing ' + ArrayName);
   end
   else if DataArray.Name <> '' then
   begin
-    frmProgress.AddMessage('    Writing ' + DataArray.Name
+    frmProgressMM.AddMessage('    Writing ' + DataArray.Name
       + ' for Layer ' + IntToStr(LayerIndex+1));
   end
   else
   begin
-    frmProgress.AddMessage('    Writing array');
+    frmProgressMM.AddMessage('    Writing array');
   end;
 
   DataArray.Initialize;
@@ -1171,7 +1182,7 @@ begin
   end;
   if CacheArray then
   begin
-    FPhastModel.AddDataSetToCache(DataArray);
+    FPhastModel.DataArrayManager.AddDataSetToCache(DataArray);
   end;
 end;
 
@@ -1238,7 +1249,7 @@ begin
       NewLine;
     end;
   end;
-  PhastModel.AddDataSetToCache(DataArray);
+  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
 end;
 
 procedure TCustomModflowWriter.WriteHeader(const DataArray: TDataArray;
@@ -1463,7 +1474,7 @@ begin
       end;
     csfBinary:
       begin
-        CellFlowsName := ChangeFileExt(FileName, '.cbc');
+        CellFlowsName := ChangeFileExt(FileName, StrCbcExt);
         WriteToNameFile(StrDATABINARY,
           PhastModel.UnitNumbers.UnitNumber(StrCBC), CellFlowsName, foOutput);
       end;
@@ -1502,7 +1513,7 @@ begin
       end;
     csfBinary:
       begin
-        UnitNumber := PhastModel.UnitNumbers.UnitNumber(StrCBC);  
+        UnitNumber := PhastModel.UnitNumbers.UnitNumber(StrCBC);
       end;
     csfListing:
       begin
@@ -1539,7 +1550,7 @@ begin
 
 end;
 
-constructor TCustomTransientWriter.Create(Model: TPhastModel);
+constructor TCustomTransientWriter.Create(Model: TCustomModel);
 begin
   inherited;
   FValues := TObjectList.Create;
@@ -1564,11 +1575,11 @@ begin
     + Package.PackageIdentifier
     + ' because the object does not '
     + 'set the values of either enclosed or intersected cells.';
-  frmProgress.AddMessage('Evaluating '
+  frmProgressMM.AddMessage('Evaluating '
     + Package.PackageIdentifier + ' data.');
   for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
   begin
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -1585,7 +1596,7 @@ begin
       begin
         frmErrorsAndWarnings.AddError(NoAssignmentErrorRoot, ScreenObject.Name);
       end;
-      frmProgress.AddMessage('  Evaluating '
+      frmProgressMM.AddMessage('  Evaluating '
         + ScreenObject.Name);
       Boundary.GetCellValues(FValues, FParamValues);
     end;
@@ -1632,11 +1643,13 @@ procedure TCustomParameterTransientWriter.GetInstanceName(
   TimeIndex: Integer; InstanceRoot: string);
 begin
   InstanceName := InstanceRoot + IntToStr(TimeIndex + 1);
-  While Length(InstanceName) > 10 do
+  While (Length(InstanceName) > 10)
+    or (FUsedInstanceNames.IndexOf(InstanceName) >= 0) do
   begin
     SetLength(InstanceRoot, Length(InstanceRoot) -1);
     InstanceName := InstanceRoot + IntToStr(TimeIndex + 1);
   end;
+  FUsedInstanceNames.Add(InstanceName);
 end;
 
 procedure TCustomParameterTransientWriter.GetNumCellsAndNumInstances(
@@ -1709,7 +1722,7 @@ var
   WarningRoot: string;
   ErrorMessage: string;
 begin
-  ActiveDataArray := PhastModel.GetDataSetByName(rsActive);
+  ActiveDataArray := PhastModel.DataArrayManager.GetDataSetByName(rsActive);
   Assert(ActiveDataArray <> nil);
   ActiveDataArray.Initialize;
   if not ActiveDataArray.BooleanData[ValueCell.Layer,
@@ -1811,7 +1824,7 @@ begin
   try
     // evaluate all the data used in the package.
     Evaluate;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -1960,7 +1973,7 @@ begin
   for ParamIndex := 0 to PhastModel.ModflowTransientParameters.Count - 1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -1983,7 +1996,7 @@ begin
       Assert(ParamValues.Count > 0);
       // Data set 3
       PARNAM := Param.ParameterName;
-      frmProgress.AddMessage('    Writing paramter: ' + PARNAM);
+      frmProgressMM.AddMessage('    Writing paramter: ' + PARNAM);
       if Length(PARNAM) > 10 then
       begin
         SetLength(PARNAM, 10);
@@ -2014,7 +2027,7 @@ begin
       for TimeIndex := 0 to ParamValues.Count - 1 do
       begin
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -2056,16 +2069,17 @@ var
   PriorCell: TValueCell;
   IdenticalValues: Boolean;
 begin
+  FUsedInstanceNames.Clear;
   ParamValues := TList.Create;
   try
     for TimeIndex := 0 to FValues.Count - 1 do
     begin
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
-      frmProgress.AddMessage('  Writing Stress Period ' + IntToStr(TimeIndex+1));
+      frmProgressMM.AddMessage('  Writing Stress Period ' + IntToStr(TimeIndex+1));
       ParametersUsed := TStringList.Create;
       try
         RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
@@ -2117,7 +2131,7 @@ begin
             WriteCell(Cell, DataSetIdentifier, VariableIdentifiers);
             CheckCell(Cell, Package.PackageIdentifier);
             Application.ProcessMessages;
-            if not frmProgress.ShouldContinue then
+            if not frmProgressMM.ShouldContinue then
             begin
               Exit;
             end;
@@ -2133,7 +2147,7 @@ begin
           WriteString(ParametersUsed[ParamIndex]);
           NewLine;
           Application.ProcessMessages;
-          if not frmProgress.ShouldContinue then
+          if not frmProgressMM.ShouldContinue then
           begin
             Exit;
           end;
@@ -2411,7 +2425,7 @@ begin
   for ParamIndex := 0 to PhastModel.ModflowTransientParameters.Count - 1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -2438,7 +2452,7 @@ begin
       begin
         SetLength(PARNAM, 10);
       end;
-      frmProgress.AddMessage('    Writing parameter: ' + PARNAM);
+      frmProgressMM.AddMessage('    Writing parameter: ' + PARNAM);
       GetNumCellsAndNumInstances(ParameterValues, NUMINST, NCLU);
       NCLU := 1;
       Parval := Param.Value;
@@ -2466,7 +2480,7 @@ begin
       for TimeIndex := 0 to ParameterValues.Count - 1 do
       begin
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -2491,7 +2505,14 @@ begin
   end;
 end;
 
-constructor TCustomTransientArrayWriter.Create(Model: TPhastModel);
+procedure TCustomTransientArrayWriter.WriteStressPeriods(
+  const VariableIdentifiers, DataSetIdentifier, DS5, D7PNameIname,
+  D7PName: string);
+begin
+  FUsedInstanceNames.Clear;
+end;
+
+constructor TCustomTransientArrayWriter.Create(Model: TCustomModel);
 begin
   inherited;
   FLayers := TObjectList.Create;
@@ -2889,16 +2910,18 @@ end;
 { TCustomParameterTransientWriter }
 
 
-constructor TCustomParameterTransientWriter.Create(Model: TPhastModel);
+constructor TCustomParameterTransientWriter.Create(Model: TCustomModel);
 begin
   inherited;
   FParamValues := TStringList.Create;
+  FUsedInstanceNames := TStringList.Create;
 end;
 
 destructor TCustomParameterTransientWriter.Destroy;
 var
   Index: Integer;
 begin
+  FUsedInstanceNames.Free;
   for Index := 0 to FParamValues.Count - 1 do
   begin
     FParamValues.Objects[Index].Free;
@@ -3340,7 +3363,7 @@ begin
           DataArray.Initialize;
           Variables.Add(VariablesUsed.Objects[VariableIndex]);
           DataSets.Add(DataArray);
-          PhastModel.AddDataSetToCache(DataArray);
+          PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
         end
         else
         begin
@@ -3353,7 +3376,7 @@ begin
     finally
       Variables.Free;
       DataSets.Free;
-      PhastModel.CacheDataArrays;
+      PhastModel.DataArrayManager.CacheDataArrays;
     end;
   end;
 end;
@@ -3675,7 +3698,7 @@ var
 begin
   SetLength(Clusters, LayerCount);
   SetLength(UniformLayers, LayerCount);
-  ZoneDataSet := PhastModel.GetDataSetByName(Param.ZoneName);
+  ZoneDataSet := PhastModel.DataArrayManager.GetDataSetByName(Param.ZoneName);
   ZoneDataSet.Initialize;
   NCLU := 0;
   if Param.ParameterType = ptLPF_VKCB then
@@ -3759,7 +3782,7 @@ begin
       end;
     end;
   end;
-  PhastModel.AddDataSetToCache(ZoneDataSet);
+  PhastModel.DataArrayManager.AddDataSetToCache(ZoneDataSet);
 end;
 
 { TCustomSolverWriter }

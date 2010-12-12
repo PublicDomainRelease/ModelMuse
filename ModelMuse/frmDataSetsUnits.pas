@@ -318,9 +318,6 @@ Type
     // @name allows the user to click the OK button (@link(btnOK))
     // only if all the formulas are valid.
     procedure EnableOK_Button(ForceCheck: boolean = False);
-    { TODO :
-See if TfrmDataSets.GenerateNewName can be combined with
-DataSetUnit.GenerateNewName. }
     // @name generates a name for a @link(TDataArray) that is valid
     // and does not conflict with the names of any existing @link(TDataArray)s.
     function GenerateNewName(Root: string; const
@@ -419,6 +416,7 @@ begin
   AddNewInterpolator(List, TNearestPoint2DInterpolator);
   AddNewInterpolator(List, TLinearSfrpackInterpolator);
   AddNewInterpolator(List, TFittedSurfaceIntepolator);
+  AddNewInterpolator(List, TNaturalNeighborInterp);
   AddNewInterpolator(List, TNearest2DInterpolator);
   AddNewInterpolator(List, TInvDistSqPoint2DInterpolator);
   AddNewInterpolator(List, TInvDistSq2DInterpolator);
@@ -433,14 +431,14 @@ begin
   FPriorModelUpToDate := frmGoPhast.PhastModel.UpToDate;
   // Make sure each of the formula compilers has access to the
   // GIS functions.
-  AddGIS_Functions(rpTopFormulaCompiler, frmGoPhast.PhastModel.ModelSelection);
-  AddGIS_Functions(rpFrontFormulaCompiler, frmGoPhast.PhastModel.ModelSelection);
-  AddGIS_Functions(rpSideFormulaCompiler, frmGoPhast.PhastModel.ModelSelection);
-  AddGIS_Functions(rpThreeDFormulaCompiler, frmGoPhast.PhastModel.ModelSelection);
-  AddGIS_Functions(rpTopFormulaCompilerNodes, frmGoPhast.PhastModel.ModelSelection);
-  AddGIS_Functions(rpFrontFormulaCompilerNodes, frmGoPhast.PhastModel.ModelSelection);
-  AddGIS_Functions(rpSideFormulaCompilerNodes, frmGoPhast.PhastModel.ModelSelection);
-  AddGIS_Functions(rpThreeDFormulaCompilerNodes, frmGoPhast.PhastModel.ModelSelection);
+  AddGIS_Functions(rpTopFormulaCompiler, frmGoPhast.PhastModel.ModelSelection, eaBlocks);
+  AddGIS_Functions(rpFrontFormulaCompiler, frmGoPhast.PhastModel.ModelSelection, eaBlocks);
+  AddGIS_Functions(rpSideFormulaCompiler, frmGoPhast.PhastModel.ModelSelection, eaBlocks);
+  AddGIS_Functions(rpThreeDFormulaCompiler, frmGoPhast.PhastModel.ModelSelection, eaBlocks);
+  AddGIS_Functions(rpTopFormulaCompilerNodes, frmGoPhast.PhastModel.ModelSelection, eaNodes);
+  AddGIS_Functions(rpFrontFormulaCompilerNodes, frmGoPhast.PhastModel.ModelSelection, eaNodes);
+  AddGIS_Functions(rpSideFormulaCompilerNodes, frmGoPhast.PhastModel.ModelSelection, eaNodes);
+  AddGIS_Functions(rpThreeDFormulaCompilerNodes, frmGoPhast.PhastModel.ModelSelection, eaNodes);
 
     // create the list of deleted data sets.
   FDeletedDataSets := TList.Create;
@@ -488,28 +486,8 @@ function TfrmDataSets.GenerateNewName(Root: string; const
 var
   Names: TStringList;
   Index: integer;
-  DataSet: TDataArray;
-  GlobalVariable: TGlobalVariable;
   OtherDataEdit: TDataArrayEdit;
 begin
-  Root := Trim(Root);
-  if Root = '' then
-  begin
-    Root := 'NewDataSet';
-  end;
-  if not (Root[1] in ['A'..'Z', 'a'..'z', '_']) then
-  begin
-    Root[1] := '_';
-  end;
-
-  for Index := 2 to Length(Root) do
-  begin
-    if not (Root[Index] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
-    begin
-      Root[Index] := '_';
-    end;
-  end;
-
   // This function generates a name for a data set that is valid
   // and does not conflict with the names of any existing data sets.
   Names := TStringList.Create;
@@ -532,41 +510,7 @@ begin
       end;
     end;
 
-    // Don't allow the name to be the same as a deleted data set.
-    for Index := 0 to frmGoPhast.DeletedDataSets.Count - 1 do
-    begin
-      DataSet := frmGoPhast.DeletedDataSets[Index] as TDataArray;
-      Names.Add(DataSet.Name);
-    end;
-    for Index := 0 to FDeletedDataSets.Count - 1 do
-    begin
-      DataSet := FDeletedDataSets[Index];
-      Names.Add(DataSet.Name);
-    end;
-    // Names now includes the names of all the data sets.
-
-    // don't allow the name to be the same as a global variable.
-    for Index := 0 to frmGoPhast.PhastModel.GlobalVariables.Count -1 do
-    begin
-      GlobalVariable := frmGoPhast.PhastModel.GlobalVariables[Index];
-      Names.Add(GlobalVariable.Name);
-    end;
-
-    // Generate a new name.
-    if Names.IndexOf(Root) < 0 then
-    begin
-      result := Root;
-    end
-    else
-    begin
-      Index := 1;
-      result := Root + IntToStr(Index);
-      while Names.IndexOf(result) >= 0 do
-      begin
-        Inc(Index);
-        result := Root + IntToStr(Index);
-      end;
-    end;
+    result := PhastModelUnit.GenerateNewName(Root, Names);
   finally
     Names.Free;
   end;
@@ -759,7 +703,7 @@ begin
     with TfrmFormula.Create(self) do
     begin
       try
-        IncludeGIS_Functions;
+        IncludeGIS_Functions(EvaluatedAt);
         if not OK_Var.ActiveOK then
         begin
           RemoveActiveOnLayer;
@@ -938,7 +882,7 @@ begin
         comboOrientation.Items[1].Brush.Color := clWhite;
         comboOrientation.Items[2].Brush.Color := clWhite;
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         comboOrientation.Items[1].Brush.Color := clBtnFace;
         comboOrientation.Items[2].Brush.Color := clBtnFace;
@@ -975,6 +919,7 @@ var
   SelectedName: string;
   HydrogeologicUnitNames: TStringList;
   HufDataArrays: TClassificationList;
+  DataArrayManager: TDataArrayManager;
 begin
   { TODO : Nearly the same code is use in TfrmFormulaUnit, TFrmGridColor,
   TfrmScreenObjectProperties, and TfrmDataSets. Find a way to combine them. }
@@ -1019,9 +964,10 @@ begin
     begin
       LayerClassificationList.Add(nil);
     end;
-    for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    for Index := 0 to DataArrayManager.DataSetCount - 1 do
     begin
-      DataArray := frmGoPhast.PhastModel.DataSets[Index];
+      DataArray := DataArrayManager.DataSets[Index];
       DataArrayEdit:= TDataArrayEdit.Create(DataArray);
       FArrayEdits.Add(DataArrayEdit);
       CreateVariable(DataArrayEdit);
@@ -1047,6 +993,12 @@ begin
     Assert(ClassificationList.IndexOf(StrDataSets) < 0);
 
     CreateClassifiedNodes(ClassificationList, 1, tvDataSets, SelectedName);
+
+    for Index := 0 to FArrayEdits.Count - 1 do
+    begin
+      DataArrayEdit := FArrayEdits[Index];
+      CreateFormula(DataArrayEdit);
+    end;
 
   finally
     DataSetList.Free;
@@ -1238,7 +1190,7 @@ begin
         SelectedEdit.Orientation :=
           TDataSetOrientation(comboOrientation.ItemIndex);
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         case comboOrientation.ItemIndex of
           0,3:
@@ -1280,6 +1232,7 @@ begin
     Exit;
   end;
   SelectedEdit.DataType := TRbwDataType(comboType.ItemIndex);
+  CreateVariable(SelectedEdit);
   UpdateInterpolationControl;
   reDefaultFormulaExit(nil);
 end;
@@ -1382,7 +1335,8 @@ begin
       //with Tester do
       begin
         try
-          AddGIS_Functions(Tester, frmGoPhast.PhastModel.ModelSelection);
+          AddGIS_Functions(Tester, frmGoPhast.PhastModel.ModelSelection,
+            DataEdit.EvaluatedAt);
           // put the formula in the TfrmFormula.
           AFormula := NewFormula;
 
@@ -1536,10 +1490,25 @@ begin
   for ArrayIndex := 0 to FArrayEdits.Count - 1 do
   begin
     DataArrayEdit := FArrayEdits[ArrayIndex];
-    if UpperCase(DataArrayEdit.Name) = DataSetName then
+    if SameText(DataArrayEdit.Name, DataSetName) then
     begin
       result := ArrayIndex;
       break;
+    end;
+  end;
+  if result = -1 then
+  begin
+    for ArrayIndex := 0 to FArrayEdits.Count - 1 do
+    begin
+      DataArrayEdit := FArrayEdits[ArrayIndex];
+      if (DataArrayEdit.DataArray <> nil) then
+      begin
+        if SameText(DataArrayEdit.DataArray.Name, DataSetName) then
+        begin
+          result := ArrayIndex;
+          break;
+        end;
+      end;
     end;
   end;
 end;
@@ -1552,7 +1521,6 @@ var
   Count: integer;
   DataSetName: string;
   DataArrayEdit, InnerEdit: TDataArrayEdit;
-
 begin
   repeat
     Changed := False;
@@ -1565,10 +1533,14 @@ begin
       begin
         DataSetName := UseList[InnerIndex];
         DataSetIndex := GetDataSetIndex(DataSetName);
-        InnerEdit := FArrayEdits[DataSetIndex];
-        // Get the list of variables that depends on it.
-        InnerUseList := InnerEdit.NewUses;
-        UseList.AddStrings(InnerUseList);
+        if DataSetIndex >= 0 then
+        begin
+          // DataSetIndex may be less than 0 if a DataArray has been deleted.
+          InnerEdit := FArrayEdits[DataSetIndex];
+          // Get the list of variables that depends on it.
+          InnerUseList := InnerEdit.NewUses;
+          UseList.AddStrings(InnerUseList);
+        end;
       end;
       if Count <> UseList.Count then
       begin
@@ -1837,7 +1809,7 @@ var
 begin
   // allow the user to click the OK button only if all the formulas
   // are valid.
-  if ForceCheck or (ComponentState = []) then
+  if ForceCheck or (ComponentState = [csFreeNotification]) then
   begin
     Enable := True;
     for Index := 0 to FArrayEdits.Count-1 do
@@ -1949,6 +1921,7 @@ var
   Temp3DCompiler: TRbwParser;
   Classification: string;
   DataArray: TDataArray;
+  OldVarPosition: Integer;
 begin
   Assert(DataArrayEdit <> nil);
   // This procedure creates a TCustomVariable that represents a data set in
@@ -1969,6 +1942,22 @@ begin
   else
   begin
     Classification := DataArray.FullClassification;
+  end;
+
+  OldVarPosition := TempFormulaCompiler.IndexOfVariable(NewName);
+  if OldVarPosition >= 0 then
+  begin
+    Variable := TempFormulaCompiler.Variables[OldVarPosition] as TCustomVariable;
+    TempFormulaCompiler.RemoveVariable(Variable);
+  end;
+  if TempFormulaCompiler <> Temp3DCompiler then
+  begin
+    OldVarPosition := Temp3DCompiler.IndexOfVariable(NewName);
+    if OldVarPosition >= 0 then
+    begin
+      Variable := Temp3DCompiler.Variables[OldVarPosition] as TCustomVariable;
+      Temp3DCompiler.RemoveVariable(Variable);
+    end;
   end;
 
   DataType := DataArrayEdit.DataType;
@@ -2037,7 +2026,7 @@ begin
 
   if FSelectedEdit.FDataArray <> nil then
   begin
-    ActiveDataSet := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+    ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
     if ActiveDataSet.IsListeningTo(FSelectedEdit.FDataArray) then
     begin
       OK_Var.ActiveOK := False;
@@ -2514,16 +2503,18 @@ end;
 procedure TfrmDataSets.UpdateMixtureAllowed(ADataSet: TDataArray);
 var
   ChemDataSets: TList;
+  DataArrayManager: TDataArrayManager;
 begin
   ChemDataSets := TList.Create;
   try
-    ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Solution));
-    ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Equilibrium_Phases));
-    ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Surface));
-    ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Exchange));
-    ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Gas_Phase));
-    ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Solid_Solutions));
-    ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Kinetics));
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    ChemDataSets.Add(DataArrayManager.GetDataSetByName(rsChemistry_Initial_Solution));
+    ChemDataSets.Add(DataArrayManager.GetDataSetByName(rsChemistry_Initial_Equilibrium_Phases));
+    ChemDataSets.Add(DataArrayManager.GetDataSetByName(rsChemistry_Initial_Surface));
+    ChemDataSets.Add(DataArrayManager.GetDataSetByName(rsChemistry_Initial_Exchange));
+    ChemDataSets.Add(DataArrayManager.GetDataSetByName(rsChemistry_Initial_Gas_Phase));
+    ChemDataSets.Add(DataArrayManager.GetDataSetByName(rsChemistry_Initial_Solid_Solutions));
+    ChemDataSets.Add(DataArrayManager.GetDataSetByName(rsChemistry_Initial_Kinetics));
     framePhastInterpolation.SetMixtureAllowed(ChemDataSets.IndexOf(ADataSet) >= 0);
   finally
     ChemDataSets.Free;
@@ -3072,7 +3063,7 @@ begin
     begin
       try
         PopupParent := self;
-        IncludeGIS_Functions;
+        IncludeGIS_Functions(EvaluatedAt);
         // register the appropriate variables with the
         // parser.
         for Index := 0 to VariableList.Count - 1 do
@@ -3286,9 +3277,8 @@ begin
   if FDataArray = nil then
   begin
     FDataArray := TDataArray.Create(frmGoPhast.PhastModel);
-//    frmGoPhast.PhastModel.AddDataSet(FDataArray);
     FDataArray.UpdateWithName(Name);
-    FDataArray.OnNameChange := frmGoPhast.PhastModel.DataArrayNameChange
+//    FDataArray.OnNameChange := frmGoPhast.PhastModel.DataArrayNameChange
   end;
 end;
 

@@ -59,7 +59,7 @@ uses frmGoPhastUnit, GoPhastTypes, DataSetUnit,
 
 procedure TfrmImportDXF.Think(const Sender: TObject; Message: string);
 begin
-  frmProgress.ProgressLabelCaption := Message;
+  frmProgressMM.ProgressLabelCaption := Message;
 end;
 
 function TfrmImportDXF.GetData: boolean;
@@ -81,16 +81,16 @@ begin
     end;
     Caption := Caption + ' - ' + FDxfName;
     GetDataSets;
-    frmProgress.PopupParent := self;
-    frmProgress.Caption := 'Progress';
-    frmProgress.Show;
+    frmProgressMM.PopupParent := self;
+    frmProgressMM.Caption := 'Progress';
+    frmProgressMM.Show;
     try
       FDxfObject := DXF_Object.Create(name);
-      FDxfObject.Progress := frmProgress.pbProgress;
+      FDxfObject.Progress := frmProgressMM.pbProgress;
       FDxfObject.OnThinking := Think;
-      FDxfObject.ReadFile(FDxfName, frmProgress.memoMessages.Lines);
+      FDxfObject.ReadFile(FDxfName, frmProgressMM.memoMessages.Lines);
     finally
-      frmProgress.Hide;
+      frmProgressMM.Hide;
     end;
 
     result := FDxfObject.layer_lists.Count > 0;
@@ -163,18 +163,17 @@ begin
           end;
         end;
       end;
-      frmProgress.Caption := '';
-      frmProgress.Prefix := 'Object ';
-      frmProgress.PopupParent := self;
-      frmProgress.Show;
-      frmProgress.pbProgress.Max := EntityCount;
-      frmProgress.pbProgress.Position := 0;
-      frmProgress.ProgressLabelCaption := '0 out of '
+      frmProgressMM.Caption := '';
+      frmProgressMM.Prefix := 'Object ';
+      frmProgressMM.PopupParent := self;
+      frmProgressMM.Show;
+      frmProgressMM.pbProgress.Max := EntityCount;
+      frmProgressMM.pbProgress.Position := 0;
+      frmProgressMM.ProgressLabelCaption := '0 out of '
         + IntToStr(EntityCount) + '.';
       DataSetName := comboDataSets.Text;
-  //    Position := frmGoPhast.PhastModel.IndexOfDataSet(DataSetName);
-    //  Assert(Position >= 0);
-      DataSet := frmGoPhast.PhastModel.GetDataSetByName(DataSetName);
+
+      DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
       Assert(DataSet <> nil);
       ScreenObjectList := TList.Create;
       //MultipleParts := false;
@@ -242,7 +241,7 @@ begin
                       end;
                     end;
                   end;
-                  frmProgress.StepIt;
+                  frmProgressMM.StepIt;
                   Application.ProcessMessages;
                 end;
               end;
@@ -265,7 +264,7 @@ begin
         end;
       finally
         ScreenObjectList.Free;
-        frmProgress.Hide;
+        frmProgressMM.Hide;
       end;
     finally
       NewDataSets.Free;

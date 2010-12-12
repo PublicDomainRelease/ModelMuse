@@ -603,7 +603,7 @@ uses Math, Contnrs , frmGoPhastUnit, GoPhastTypes, frmProgressUnit,
   ModflowSfrEquationUnit, ModflowSfrSegment, ModflowSfrUnit, ModflowTimeUnit, 
   ModflowLakUnit, ModflowDrtUnit, ModflowResUnit, ModflowHfbUnit, 
   ModflowUzfUnit, GlobalVariablesUnit, frameScreenObjectMNW2Unit,
-  ModflowMnw2Unit, frmErrorsAndWarningsUnit, ModflowSfrTable;
+  ModflowMnw2Unit, frmErrorsAndWarningsUnit, ModflowSfrTable, frmGridValueUnit;
 
 resourcestring
   StrParameterName = 'Parameter name';
@@ -774,6 +774,7 @@ var
   Variable: TGlobalVariable;
   DSIndex: Integer;
   DataArray: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
   inherited;
   dgFields.DefaultRowHeight := dgFields.Canvas.TextHeight('Fields')+4;
@@ -817,18 +818,18 @@ begin
         FDataBaseFileName := '';
       end;
       FGeometryFile := TShapefileGeometryReader.Create;
-      frmProgress.pbProgress.Max := 1000;
-      frmProgress.pbProgress.Position := 0;
-      frmProgress.Caption := 'Reading Shape Geometry File';
-      frmProgress.PopupParent := self;
-      frmProgress.ProgressLabelCaption := 'Reading shape 1';
+      frmProgressMM.pbProgress.Max := 1000;
+      frmProgressMM.pbProgress.Position := 0;
+      frmProgressMM.Caption := 'Reading Shape Geometry File';
+      frmProgressMM.PopupParent := self;
+      frmProgressMM.ProgressLabelCaption := 'Reading shape 1';
       FShapeCount := 0;
-      frmProgress.Show;
+      frmProgressMM.Show;
       try
         FGeometryFile.OnProgress := ShapefileProgress;
         FGeometryFile.ReadFromFile(FGeometryFileName, FIndexFileName);
       finally
-        frmProgress.Hide;
+        frmProgressMM.Hide;
       end;
       lblNumShapes.Caption := 'Number of shapes = '
         + IntToStrFormatted(FGeometryFile.Count);
@@ -914,9 +915,10 @@ begin
             end;
           end;
           FRealFieldGlobalsAndDataSetsNames.Assign(FRealFieldAndGlobalVariablesNames);
-          for DSIndex := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+          DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+          for DSIndex := 0 to DataArrayManager.DataSetCount - 1 do
           begin
-            DataArray := frmGoPhast.PhastModel.DataSets[DSIndex];
+            DataArray := DataArrayManager.DataSets[DSIndex];
             if DataArray.DataType in [rdtDouble, rdtInteger] then
             begin
               FRealFieldGlobalsAndDataSetsNames.Add(DataArray.Name)
@@ -1084,10 +1086,12 @@ procedure TfrmImportShapefile.CreateDataSetVariables(Parser: TRbwParser);
 var
   DataArray: TDataArray;
   Index: Integer;
+  DataArrayManager: TDataArrayManager;
 begin
-  for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  for Index := 0 to DataArrayManager.DataSetCount - 1 do
   begin
-    DataArray := frmGoPhast.PhastModel.DataSets[Index];
+    DataArray := DataArrayManager.DataSets[Index];
     if (DataArray.Orientation = dsoTop) and (Parser.IndexOfVariable(DataArray.Name) < 0) then
     begin
       case DataArray.DataType of
@@ -3602,7 +3606,7 @@ begin
         begin
           ShouldEnable := (rgEvaluatedAt.ItemIndex = 1);
         end;
-      msModflow:
+      msModflow, msModflowLGR:
         begin
           ShouldEnable := (rgEvaluatedAt.ItemIndex = 0);
         end;
@@ -3851,7 +3855,7 @@ begin
     end;
     if DataSetsOK then
     begin
-      DataArray := frmGoPhast.PhastModel.GetDataSetByName(Text);
+      DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(Text);
       if (DataArray <> nil) and
         DataArrayOrientationOK(DataArray) and
         (DataArray.DataType in [rdtDouble, rdtInteger]) then
@@ -3968,7 +3972,7 @@ begin
     end;
     if DataSetsOK then
     begin
-      DataArray := frmGoPhast.PhastModel.GetDataSetByName(Text);
+      DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(Text);
       if (DataArray <> nil) and
         DataArrayOrientationOK(DataArray) and
         (DataArray.DataType = rdtInteger) then
@@ -4191,7 +4195,7 @@ begin
             FloatToStr(Item.EndingTime));
         end;
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         Packages := Model.ModflowPackages;
         AddModflowPackageToImportChoices(Packages.ChdBoundary);
@@ -4281,14 +4285,14 @@ var
       mtInformation, [mbOK], 0);
   end;
 begin
-  frmProgress.Caption := 'Creating Grid';
-  frmProgress.pbProgress.Max := FGeometryFile.Count;
-  frmProgress.pbProgress.Position := 0;
-  frmProgress.ProgressLabelCaption := '0 out of '
-    + IntToStr(frmProgress.pbProgress.Max) + '.';
-  frmProgress.Prefix := 'Shape ';
-  frmProgress.PopupParent := self;
-  frmProgress.Show;
+  frmProgressMM.Caption := 'Creating Grid';
+  frmProgressMM.pbProgress.Max := FGeometryFile.Count;
+  frmProgressMM.pbProgress.Position := 0;
+  frmProgressMM.ProgressLabelCaption := '0 out of '
+    + IntToStr(frmProgressMM.pbProgress.Max) + '.';
+  frmProgressMM.Prefix := 'Shape ';
+  frmProgressMM.PopupParent := self;
+  frmProgressMM.Show;
 
   FoundAngles := False;
   TestRowAngle := 0;
@@ -4441,7 +4445,7 @@ begin
           RowPositions[YIndex - 1] + DistanceToOrigin;
       end;
       xbShapeDataBase.GotoNext;
-      frmProgress.StepIt;
+      frmProgressMM.StepIt;
       Application.ProcessMessages;
     end;
     ZeroPosition := XCount.IndexOf(0);
@@ -4523,7 +4527,7 @@ begin
           Exit;
         end;
         UsedDataSets.Add(DataSetName);
-        DataSet := frmGoPhast.PhastModel.GetDataSetByName(DataSetName);
+        DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
         Assert(DataSet <> nil);
 //        DataSet := frmGoPhast.PhastModel.DataSets[Position];
         FieldIndex := xbShapeDataBase.GetFieldNumberFromName(dgFields.
@@ -4642,7 +4646,7 @@ begin
         Assert(False);
       end;
 
-      DataSet := frmGoPhast.PhastModel.CreateNewDataArray(TDataArray,
+      DataSet := frmGoPhast.PhastModel.DataArrayManager.CreateNewDataArray(TDataArray,
         NewDataSetName, NewFormula, [], NewDataType,
         TEvaluatedAt(rgEvaluatedAt.ItemIndex), dsoTop,
         strDefaultClassification + '|Created from Shapefile Attribute');
@@ -4773,7 +4777,7 @@ begin
             DataSetName := dgFields.Cells[Ord(fgcDataSet), DataSetIndex];
             if dgFields.Checked[Ord(fgcImport), DataSetIndex] then
             begin
-              DataSet := frmGoPhast.PhastModel.GetDataSetByName(DataSetName);
+              DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
               Assert(DataSet <> nil);
   //            DataSet := frmGoPhast.PhastModel.DataSets[Position];
               DataSets.Add(DataSet);
@@ -4868,14 +4872,14 @@ begin
 
           if cbImportObjects.Checked then
           begin
-            frmProgress.Caption := 'Creating Objects';
-            frmProgress.pbProgress.Max := FGeometryFile.Count;
-            frmProgress.pbProgress.Position := 0;
-            frmProgress.ProgressLabelCaption := '0 out of '
-              + IntToStr(frmProgress.pbProgress.Max) + '.';
-            frmProgress.Prefix := 'Shape ';
-            frmProgress.PopupParent := self;
-            frmProgress.Show;
+            frmProgressMM.Caption := 'Creating Objects';
+            frmProgressMM.pbProgress.Max := FGeometryFile.Count;
+            frmProgressMM.pbProgress.Position := 0;
+            frmProgressMM.ProgressLabelCaption := '0 out of '
+              + IntToStr(frmProgressMM.pbProgress.Max) + '.';
+            frmProgressMM.Prefix := 'Shape ';
+            frmProgressMM.PopupParent := self;
+            frmProgressMM.Show;
 
             if FDataBaseFileName <> '' then
             begin
@@ -5158,7 +5162,7 @@ begin
                           AScreenObject.Free;
                         end;
                         xbShapeDataBase.GotoNext;
-                        frmProgress.StepIt;
+                        frmProgressMM.StepIt;
                         Application.ProcessMessages;
                         Continue;
                       end;
@@ -5294,9 +5298,9 @@ begin
                       end;
                       if (PointIndex mod 100) = 99 then
                       begin
-                        frmProgress.ProgressLabelCaption :=
+                        frmProgressMM.ProgressLabelCaption :=
                           'Object ' + IntToStr(Index+1)
-                          + ' out of ' + IntToStr(frmProgress.pbProgress.Max)
+                          + ' out of ' + IntToStr(frmProgressMM.pbProgress.Max)
                           + '.  Point ' + IntToStr(PointIndex + 1) + ' out of '
                           + IntToStr(ShapeObject.FNumPoints) + '.';
                         Application.ProcessMessages;
@@ -5335,7 +5339,7 @@ begin
                   begin
                     xbShapeDataBase.GotoNext;
                   end;
-                  frmProgress.StepIt;
+                  frmProgressMM.StepIt;
                   Application.ProcessMessages;
 
                 end;
@@ -5352,19 +5356,19 @@ begin
                     end;
                   end;
 
-                  frmProgress.Caption := 'Assigning Formulas';
-                  frmProgress.pbProgress.Position := 0;
+                  frmProgressMM.Caption := 'Assigning Formulas';
+                  frmProgressMM.pbProgress.Position := 0;
 
                   if ScreenObjectList.Count = 1 then
                   begin
                     AScreenObject := ScreenObjectList[0];
 
-                    frmProgress.pbProgress.Max := DataSets.Count;
-                    frmProgress.ProgressLabelCaption := '0 out of '
-                      + IntToStr(frmProgress.pbProgress.Max) + '.';
-                    frmProgress.Prefix := 'Formula ';
-                    frmProgress.PopupParent := self;
-                    frmProgress.Show;
+                    frmProgressMM.pbProgress.Max := DataSets.Count;
+                    frmProgressMM.ProgressLabelCaption := '0 out of '
+                      + IntToStr(frmProgressMM.pbProgress.Max) + '.';
+                    frmProgressMM.Prefix := 'Formula ';
+                    frmProgressMM.PopupParent := self;
+                    frmProgressMM.Show;
                     Application.ProcessMessages;
 
                     for DataSetIndex := 0 to DataSets.Count - 1 do
@@ -5372,8 +5376,8 @@ begin
                       DataSet := DataSets[DataSetIndex];
                       if DataSet = nil then
                       begin
-                        frmProgress.pbProgress.Max :=
-                          frmProgress.pbProgress.Max -1;
+                        frmProgressMM.pbProgress.Max :=
+                          frmProgressMM.pbProgress.Max -1;
                       end;
                     end;
 
@@ -5394,7 +5398,7 @@ begin
                         else Assert(False);
                       end;
                       AScreenObject.DataSetFormulas[Position] := Formula;
-                      frmProgress.StepIt;
+                      frmProgressMM.StepIt;
                       Application.ProcessMessages;
                     end;
                   end;
@@ -5455,7 +5459,7 @@ begin
           DataSets.Free;
           FieldNames.Free;
           RealFieldNames.Free;
-          frmProgress.Hide;
+          frmProgressMM.Hide;
         end;
       finally
         frmGoPhast.CanDraw := True;
@@ -5598,7 +5602,7 @@ begin
     DataType := FFieldTypes[ARow - 1];
     if dgFields.Cells[Ord(fgcDataSet),ARow] <> rsNewDataSet then
     begin
-      DataArray := frmGoPhast.PhastModel.GetDataSetByName(
+      DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(
         dgFields.Cells[Ord(fgcDataSet),ARow]);
       DataType := DataArray.DataType;
     end;
@@ -5625,15 +5629,17 @@ var
   DataSet: TDataArray;
   Index: integer;
   PickList: TStrings;
+  DataArrayManager: TDataArrayManager;
 begin
   EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
   PickList := dgFields.Columns[Ord(fgcDataSet)].PickList;
 
   PickList.Clear;
   PickList.AddObject(rsNewDataSet, nil);
-  for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  for Index := 0 to DataArrayManager.DataSetCount - 1 do
   begin
-    DataSet := frmGoPhast.PhastModel.DataSets[Index];
+    DataSet := DataArrayManager.DataSets[Index];
     if (DataSet.EvaluatedAt = EvalAt)
       and (DataSet.Orientation = dsoTop)
       and ((DataSet.DataType = FFieldTypes[ARow - 1])
@@ -5822,18 +5828,17 @@ var
   DataSet: TDataArray;
   Prop: TPhastDataSetStorage;
   ShouldInvalidate: array of boolean;
+  DataArrayManager: TDataArrayManager;
 begin
   frmGoPhast.CanDraw := False;
   try
     UnDeleteNewScreenObjects;
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    DataArrayManager.HandleAddedDataArrays(FNewDataSets);
+
     for Index := 0 to FNewDataSets.Count -1 do
     begin
       DataSet := FNewDataSets[Index];
-      if frmGoPhast.PhastModel.IndexOfDataSet(DataSet.Name) < 0 then
-      begin
-        frmGoPhast.PhastModel.AddDataSet(DataSet);
-      end;
-      frmGoPhast.DeletedDataSets.Extract(DataSet);
       if FTopDataSet = DataSet then
       begin
         frmGoPhast.PhastModel.Grid.TopDataSet := DataSet;
@@ -5861,6 +5866,7 @@ begin
   inherited;
   WarnSfrLengthProblems(FNewScreenObjects);
   frmGoPhast.PhastModel.FormulaManager.Pack;
+  UpdateFrmGridValue;
 end;
 
 procedure TUndoImportShapefile.Redo;
@@ -5877,6 +5883,7 @@ var
   DataSet: TDataArray;
   Prop: TPhastDataSetStorage;
   ShouldInvalidate: array of boolean;
+  DataArrayManager: TDataArrayManager;
 begin
   inherited;
   frmGoPhast.CanDraw := False;
@@ -5884,6 +5891,7 @@ begin
     DeleteNewScreenObjects;
     FTopDataSet := nil;
     FThreeDDataSet := nil;
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
     for Index := 0 to FNewDataSets.Count - 1 do
     begin
       DataSet := FNewDataSets[Index];
@@ -5897,8 +5905,9 @@ begin
         FThreeDDataSet := DataSet;
         frmGoPhast.PhastModel.Grid.ThreeDDataSet := nil;
       end;
-      frmGoPhast.PhastModel.ExtractDataSet(DataSet);
     end;
+
+    DataArrayManager.HandleDeletedDataArrays(FNewDataSets);
     SetLength(ShouldInvalidate, FOldProperties.Count);
     for Index := 0 to FOldProperties.Count - 1 do
     begin
@@ -5909,7 +5918,6 @@ begin
         Prop.DataSet.Invalidate;
       end;
     end;
-    frmGoPhast.DeletedDataSets.Assign(FNewDataSets, laOr);
 
   finally
     frmGoPhast.CanDraw := True;
@@ -5919,6 +5927,7 @@ begin
 //  UpdateDisplay;
   WarnSfrLengthProblems(FNewScreenObjects);
   frmGoPhast.PhastModel.FormulaManager.Pack;
+  UpdateFrmGridValue;
 end;
 
 procedure TfrmImportShapefile.dgFieldsSetEditText(Sender: TObject; ACol,
@@ -6006,7 +6015,7 @@ begin
   with TfrmFormula.Create(self) do
   begin
     try
-      IncludeGIS_Functions;
+      IncludeGIS_Functions(TEvaluatedAt(rgEvaluatedAt.ItemIndex));
       PopupParent := self;
       DataSetGroupName := StrAttributes;
       // put the formula in the TfrmFormula.
@@ -6039,10 +6048,10 @@ end;
 procedure TfrmImportShapefile.ShapefileProgress(Sender: TObject;
   FractionDone: double);
 begin
-  frmProgress.pbProgress.Position
-    := Round(frmProgress.pbProgress.Max * FractionDone);
+  frmProgressMM.pbProgress.Position
+    := Round(frmProgressMM.pbProgress.Max * FractionDone);
   Inc(FShapeCount);
-  frmProgress.ProgressLabelCaption := 'Reading shape ' + IntToStrFormatted(FShapeCount);
+  frmProgressMM.ProgressLabelCaption := 'Reading shape ' + IntToStrFormatted(FShapeCount);
   if (FShapeCount mod 100 = 0) or (FractionDone = 1) then
   begin
     Application.ProcessMessages;
@@ -6317,7 +6326,7 @@ begin
             end;
         end;
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         Packages := Model.ModflowPackages;
         APackage := comboBoundaryChoice.Items.Objects[
@@ -6709,7 +6718,7 @@ begin
             end;
           end;
         end;
-      msModflow:
+      msModflow, msModflowLGR:
         begin
           Model := frmGoPhast.PhastModel;
           Packages := Model.ModflowPackages;
@@ -6824,7 +6833,7 @@ begin
   with TfrmFormula.Create(self) do
   begin
     try
-      IncludeGIS_Functions;
+      IncludeGIS_Functions(TEvaluatedAt(rgEvaluatedAt.ItemIndex));
       PopupParent := self;
       DataSetGroupName := StrAttributes;
       // put the formula in the TfrmFormula.

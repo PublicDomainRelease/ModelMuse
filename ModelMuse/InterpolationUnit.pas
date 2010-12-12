@@ -3,9 +3,9 @@ unit InterpolationUnit;
 
 interface
 
-uses SysUtils, Classes, Controls, Dialogs, RbwParser, DataSetUnit,
+uses PhastModelUnit, SysUtils, Classes, Controls, Dialogs, RbwParser, DataSetUnit,
   frmGoPhastUnit, ScreenObjectUnit, FastGEO, GoPhastTypes, QuadTreeClass,
-  SfrInterpolatorUnit;
+  SfrInterpolatorUnit, NatNeigh;
 
 { TODO : 
 Consider adding bilateral interpolation method for rectangular point
@@ -20,11 +20,11 @@ type
    anisotropy.)}
   TCustomAnisotropicInterpolator = class(TCustom2DInterpolater)
   private
-    // @name: real;
     // See @link(Anisotropy).
     FAnisotropy: real;
     // See @link(Anisotropy).
     procedure SetAnisotropy(const Value: real);
+    procedure GetLimits(var MinY: Real; var MaxY: Real; var MinX: Real; var MaxX: Real; const DataSet: TDataArray);
   protected
     // @name initializes the limits of @link(TRbwQuadTree QuadTree)
     // to the grid limits.
@@ -34,7 +34,7 @@ type
     // variables used by Expression and then evaluates
     // Expression.
     procedure InitializeVariablesAndExpression(const Location: TPoint2D;
-      const NearestScreenObject: TScreenObject; var Expression: TExpression);
+      const AScreenObject: TScreenObject; var Expression: TExpression);
   public
     // @name copies the Anisotropy of Source to the item that call
     // @name.
@@ -216,14 +216,31 @@ type
     class function ValidReturnTypes: TRbwDataTypes; override;
   end;
 
+  TCustomTriangleInterpolator = class(TCustomAnisotropicInterpolator)
+  public
+    function ShouldInterpolate: boolean;override;
+  end;
+
+  TNaturalNeighborInterp = class(TCustomTriangleInterpolator)
+  private
+    FNatNeigh: TNaturalNeighborInterpolatorTripack;
+    procedure StoreData(Sender: TObject; const DataSet: TDataArray);
+  public
+    constructor Create(AOwner: TComponent); override;
+    procedure Finalize(const DataSet: TDataArray); override;
+    destructor Destroy; override;
+    class function InterpolatorName: string; override;
+    class function ValidReturnTypes: TRbwDataTypes; override;
+    function RealResult(const Location: TPoint2D): real; override;
+  end;
+
   {@abstract(@name uses inverse distance squared interpolation to return
    a real-number result.)}
-  TCustomSfrpackInterpolator = class(TCustomAnisotropicInterpolator)
+  TCustomSfrpackInterpolator = class(TCustomTriangleInterpolator)
   private
     FValidData: boolean;
     FSfrInterpolator: TSfrInterpolator;
   public
-    function ShouldInterpolate: boolean; override;
     // @name tells with what types of data this interpolator can be used.
     // (real numbers)
     class function ValidReturnTypes: TRbwDataTypes; override;
@@ -247,7 +264,7 @@ type
 
 implementation
 
-uses Math, AbstractGridUnit, RealListUnit, TripackTypes, GIS_Functions;
+uses Math, AbstractGridUnit, RealListUnit, TripackTypes, GIS_Functions, Types;
 
 type
   TSortRecord = record
@@ -376,7 +393,7 @@ begin
               Cell := frmGoPhast.PhastGrid.GetCell(ClosestLocation,
                 AScreenObject.ViewDirection, DataSet.EvaluatedAt);
             end;
-          msModflow:
+          msModflow, msModflowLGR:
             begin
               TopCell := frmGoPhast.Grid.TopContainingCell(ClosestLocation,
                 DataSet.EvaluatedAt);
@@ -389,12 +406,23 @@ begin
         for InnerIndex := 0 to VariablesUsed.Count - 1 do
         begin
           ADataSet :=
-            frmGoPhast.PhastModel.GetDataSetByName(VariablesUsed[InnerIndex]);
+            frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(VariablesUsed[InnerIndex]);
           if ADataSet <> nil then
           begin
 
 //            ADataSet := frmGoPhast.PhastModel.DataSets[DataSetIndex];
             ADataSet.Initialize;
+          end;
+        end;
+        for InnerIndex := 0 to VariablesUsed.Count - 1 do
+        begin
+          ADataSet :=
+            frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(VariablesUsed[InnerIndex]);
+          if ADataSet <> nil then
+          begin
+
+//            ADataSet := frmGoPhast.PhastModel.DataSets[DataSetIndex];
+//            ADataSet.Initialize;
             VariableIndex := Compiler.IndexOfVariable(
               VariablesUsed[InnerIndex]);
             Variable := Compiler.Variables[VariableIndex];
@@ -491,13 +519,31 @@ var
   MaxY: Real;
   MinX: Real;
   MaxX: Real;
-  APoint: TPoint2D;
-  ListOfScreenObjects: TList;
+begin
+  QuadTree.Clear;
+  GetLimits(MinY, MaxY, MinX, MaxX, DataSet);
+  QuadTree.Xmax := MaxX;
+  QuadTree.Xmin := MinX;
+  QuadTree.Ymax := MaxY;
+  QuadTree.Ymin := MinY;
+end;
+
+function TCustomAnisotropicInterpolator.SameAs(
+  AnotherInterpolator: TCustom2DInterpolater): boolean;
+begin
+  result := inherited SameAs(AnotherInterpolator)
+    and (Anisotropy = (AnotherInterpolator
+    as TCustomAnisotropicInterpolator).Anisotropy);
+end;
+
+procedure TCustomAnisotropicInterpolator.GetLimits(var MinY: Real; var MaxY: Real; var MinX: Real; var MaxX: Real; const DataSet: TDataArray);
+var
   ScreenObject: TScreenObject;
   Index: Integer;
+  ListOfScreenObjects: TList;
+  APoint: TPoint2D;
 begin
   Assert(DataSet <> nil);
-  QuadTree.Clear;
   case DataSet.Orientation of
     dsoTop:
       begin
@@ -508,8 +554,7 @@ begin
         MinX := APoint.X;
         MaxY := APoint.Y * Anisotropy;
         MinY := APoint.Y * Anisotropy;
-        APoint := frmGoPhast.Grid.TwoDElementCorner(
-          frmGoPhast.Grid.ColumnCount, 0);
+        APoint := frmGoPhast.Grid.TwoDElementCorner(frmGoPhast.Grid.ColumnCount, 0);
         if APoint.X > MaxX then
         begin
           MaxX := APoint.X;
@@ -526,8 +571,7 @@ begin
         begin
           MinY := APoint.Y * Anisotropy;
         end;
-        APoint := frmGoPhast.Grid.TwoDElementCorner(
-          frmGoPhast.Grid.ColumnCount, frmGoPhast.Grid.RowCount);
+        APoint := frmGoPhast.Grid.TwoDElementCorner(frmGoPhast.Grid.ColumnCount, frmGoPhast.Grid.RowCount);
         if APoint.X > MaxX then
         begin
           MaxX := APoint.X;
@@ -544,8 +588,7 @@ begin
         begin
           MinY := APoint.Y * Anisotropy;
         end;
-        APoint := frmGoPhast.Grid.TwoDElementCorner(
-          0, frmGoPhast.Grid.RowCount);
+        APoint := frmGoPhast.Grid.TwoDElementCorner(0, frmGoPhast.Grid.RowCount);
         if APoint.X > MaxX then
         begin
           MaxX := APoint.X;
@@ -562,29 +605,24 @@ begin
         begin
           MinY := APoint.Y * Anisotropy;
         end;
-        QuadTree.Xmax := MaxX;
-        QuadTree.Xmin := MinX;
-        QuadTree.Ymax := MaxY;
-        QuadTree.Ymin := MinY;
       end;
     dsoFront:
       begin
         Assert(frmGoPhast.Grid.ColumnCount > 0);
         Assert(frmGoPhast.Grid.LayerCount > 0);
-        QuadTree.Xmax := frmGoPhast.Grid.ColumnPosition[
-          frmGoPhast.Grid.ColumnCount];
-        QuadTree.Xmin := frmGoPhast.Grid.ColumnPosition[0];
-        QuadTree.Ymax := frmGoPhast.Grid.HighestElevation * Anisotropy;
-        QuadTree.Ymin := frmGoPhast.Grid.LowestElevation * Anisotropy;
+        MaxX := frmGoPhast.Grid.ColumnPosition[frmGoPhast.Grid.ColumnCount];
+        MinX := frmGoPhast.Grid.ColumnPosition[0];
+        MaxY := frmGoPhast.Grid.HighestElevation * Anisotropy;
+        MinY := frmGoPhast.Grid.LowestElevation * Anisotropy;
       end;
     dsoSide:
       begin
         Assert(frmGoPhast.Grid.RowCount > 0);
         Assert(frmGoPhast.Grid.LayerCount > 0);
-        QuadTree.Xmax := frmGoPhast.Grid.RowPosition[frmGoPhast.Grid.RowCount];
-        QuadTree.Xmin := frmGoPhast.Grid.RowPosition[0];
-        QuadTree.Ymax := frmGoPhast.Grid.HighestElevation * Anisotropy;
-        QuadTree.Ymin := frmGoPhast.Grid.LowestElevation * Anisotropy;
+        MaxX := frmGoPhast.Grid.RowPosition[frmGoPhast.Grid.RowCount];
+        MinX := frmGoPhast.Grid.RowPosition[0];
+        MinX := frmGoPhast.Grid.HighestElevation * Anisotropy;
+        MinY := frmGoPhast.Grid.LowestElevation * Anisotropy;
       end;
     dso3D:
       begin
@@ -595,7 +633,6 @@ begin
   ListOfScreenObjects := TList.Create;
   try
     FillScreenObjectList(ListOfScreenObjects);
-
     if ListOfScreenObjects.Count > 0 then
     begin
       for Index := 0 to 100 - 1 do
@@ -606,25 +643,24 @@ begin
           APoint := ScreenObject.Points[Random(ScreenObject.Count)];
           if ScreenObject.ViewDirection = vdTop then
           begin
-            APoint := frmGoPhast.Grid.
-              RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
+            APoint := frmGoPhast.Grid.RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
           end;
           APoint.Y := APoint.Y * Anisotropy;
-          if APoint.x < QuadTree.Xmin then
+          if APoint.x < MinX then
           begin
-            QuadTree.Xmin := APoint.x;
+            MinX := APoint.x;
           end
-          else if APoint.x > QuadTree.Xmax then
+          else if APoint.x > MaxX then
           begin
-            QuadTree.Xmax := APoint.x;
+            MaxX := APoint.x;
           end;
-          if APoint.y < QuadTree.Ymin then
+          if APoint.y < MinY then
           begin
-            QuadTree.Ymin := APoint.y;
+            MinY := APoint.y;
           end
-          else if APoint.y > QuadTree.Ymax then
+          else if APoint.y > MaxY then
           begin
-            QuadTree.Ymax := APoint.y;
+            MaxY := APoint.y;
           end;
         end;
       end;
@@ -632,14 +668,6 @@ begin
   finally
     ListOfScreenObjects.Free;
   end;
-end;
-
-function TCustomAnisotropicInterpolator.SameAs(
-  AnotherInterpolator: TCustom2DInterpolater): boolean;
-begin
-  result := inherited SameAs(AnotherInterpolator)
-    and (Anisotropy = (AnotherInterpolator
-    as TCustomAnisotropicInterpolator).Anisotropy);
 end;
 
 procedure TCustomAnisotropicInterpolator.SetAnisotropy(const Value: real);
@@ -831,7 +859,7 @@ begin
 end;
 
 procedure TCustomAnisotropicInterpolator.InitializeVariablesAndExpression(
-  const Location: TPoint2D; const NearestScreenObject: TScreenObject;
+  const Location: TPoint2D; const AScreenObject: TScreenObject;
   var Expression: TExpression);
 var
   Index: integer;
@@ -847,21 +875,21 @@ var
   TopCell: T2DTopCell;
   NearestSegment: TCellElementSegment;
 begin
-  DataSetIndex := NearestScreenObject.IndexOfDataSet(DataSet);
+  DataSetIndex := AScreenObject.IndexOfDataSet(DataSet);
   if DataSetIndex >= 0 then
   begin
     IsBoundary := False;
-    NearestScreenObject.UpdateImportedValues(DataSet);
-    ScreenObjectFunction := NearestScreenObject.DataSetFormulas[DataSetIndex];
+    AScreenObject.UpdateImportedValues(DataSet);
+    ScreenObjectFunction := AScreenObject.DataSetFormulas[DataSetIndex];
   end
   else
   begin
      { TODO : I don't think it can ever get here. }
     IsBoundary := True;
-    DataSetIndex := NearestScreenObject.IndexOfBoundaryDataSet(DataSet);
+    DataSetIndex := AScreenObject.IndexOfBoundaryDataSet(DataSet);
     Assert(DataSetIndex >= 0);
     ScreenObjectFunction :=
-      NearestScreenObject.BoundaryDataSetFormulas[DataSetIndex];
+      AScreenObject.BoundaryDataSetFormulas[DataSetIndex];
   end;
 
   Compiler := frmGoPhast.PhastModel.GetCompiler(
@@ -870,7 +898,7 @@ begin
     Compiler.Compile(ScreenObjectFunction);
   except on E: ERbwParserError do
     begin
-      ResetScreenObjectFunction(DataSetIndex, NearestScreenObject, Compiler,
+      ResetScreenObjectFunction(DataSetIndex, AScreenObject, Compiler,
         DataSet.DataType, E.Message, IsBoundary);
     end;
   end;
@@ -880,13 +908,13 @@ begin
   if frmGoPhast.ModelSelection = msPhast then
   begin
     Cell := frmGoPhast.PhastGrid.GetCell(Location,
-      NearestScreenObject.ViewDirection, DataSet.EvaluatedAt);
+      AScreenObject.ViewDirection, DataSet.EvaluatedAt);
   end
   else
   begin
     // With MODFLOW, the only 2D data sets are in the top view.
     Assert(DataSet.Orientation = dsoTop);
-    Assert(NearestScreenObject.ViewDirection = vdTop);
+    Assert(AScreenObject.ViewDirection = vdTop);
     TopCell := frmGoPhast.ModflowGrid.TopContainingCell(Location,
       DataSet.EvaluatedAt);
     Cell.Col := TopCell.Col;
@@ -934,21 +962,28 @@ begin
       end;
     else Assert(False);
   end;
-  NearestSegment := NearestScreenObject.Segments.ClosestSegment(
+  NearestSegment := AScreenObject.Segments.ClosestSegment(
     Location, Anisotropy);
   UpDateGlobalLocations(Cell.Col, Cell.Row, Cell.Lay, DataSet.EvaluatedAt);
-  UpdateCurrentScreenObject(NearestScreenObject);
+  UpdateCurrentScreenObject(AScreenObject);
   UpdateCurrentSegment(NearestSegment);
   if VariablesUsed.Count > 0 then
   begin
     for Index := 0 to VariablesUsed.Count - 1 do
     begin
-      ADataSet := frmGoPhast.PhastModel.GetDataSetByName(
+      ADataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(
         VariablesUsed[Index]);
       if ADataSet <> nil then
       begin
-//        ADataSet := frmGoPhast.PhastModel.DataSets[DataSetIndex];
         ADataSet.Initialize;
+      end;
+    end;
+    for Index := 0 to VariablesUsed.Count - 1 do
+    begin
+      ADataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(
+        VariablesUsed[Index]);
+      if ADataSet <> nil then
+      begin
         VariableIndex := Compiler.IndexOfVariable(VariablesUsed[Index]);
         Variable := Compiler.Variables[VariableIndex];
         Assert(Variable.ResultType = ADataSet.DataType);
@@ -980,10 +1015,10 @@ begin
     end;
   end;
   UpDateGlobalLocations(Cell.Col, Cell.Row, Cell.Lay, DataSet.EvaluatedAt);
-  UpdateCurrentScreenObject(NearestScreenObject);
+  UpdateCurrentScreenObject(AScreenObject);
   UpdateCurrentSegment(NearestSegment);
-  NearestScreenObject.UpdateImportedValues(DataSet);
-  EvaluateExpression(Compiler, Expression, NearestScreenObject);
+  AScreenObject.UpdateImportedValues(DataSet);
+  EvaluateExpression(Compiler, Expression, AScreenObject);
 end;
 
 function TNearest2DInterpolator.GetNearestScreenObject(
@@ -1303,37 +1338,6 @@ begin
   FSfrInterpolator.Finalize;
 end;
 
-function TCustomSfrpackInterpolator.ShouldInterpolate: boolean;
-var
-  Index: Integer;
-  AScreenObject: TScreenObject;
-  DataSetIndex: Integer;
-  PointCount: integer;
-begin
-  result := False;
-  PointCount := 0;
-  for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
-  begin
-    AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
-    if AScreenObject.Deleted or not AScreenObject.SetValuesByInterpolation
-      then
-    begin
-      continue;
-    end;
-    DataSetIndex := AScreenObject.IndexOfDataSet(DataSet);
-    if DataSetIndex < 0 then
-    begin
-      continue;
-    end;
-    PointCount := PointCount + AScreenObject.Count;
-    if PointCount >= 3 then
-    begin
-      result := True;
-      break;
-    end;
-  end;
-end;
-
 procedure TCustomSfrpackInterpolator.StoreData(Sender: TObject;
   const DataSet: TDataArray);
 var
@@ -1345,9 +1349,9 @@ var
   APoint, Point1, Point2: TPoint2D;
   PointIndex: Integer;
   Expression: TExpression;
-  XArray: TSingleArray;
-  YArray: TSingleArray;
-  ZArray: TSingleArray;
+  XArray: TFloatArray;
+  YArray: TFloatArray;
+  ZArray: TFloatArray;
   Index: Integer;
   SectionIndex: integer;
   SortArray: array of TSortRecord;
@@ -1627,6 +1631,220 @@ begin
   result := [rdtDouble];
 end;
 
+function TCustomTriangleInterpolator.ShouldInterpolate: boolean;
+var
+  Index: Integer;
+  AScreenObject: TScreenObject;
+  DataSetIndex: Integer;
+  PointCount: integer;
+begin
+  result := False;
+  PointCount := 0;
+  for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+  begin
+    AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
+    if AScreenObject.Deleted or not AScreenObject.SetValuesByInterpolation
+      then
+    begin
+      continue;
+    end;
+    DataSetIndex := AScreenObject.IndexOfDataSet(DataSet);
+    if DataSetIndex < 0 then
+    begin
+      continue;
+    end;
+    PointCount := PointCount + AScreenObject.Count;
+    if PointCount >= 3 then
+    begin
+      result := True;
+      break;
+    end;
+  end;
+end;
+
+{ TNaturalNeighborInterp }
+
+constructor TNaturalNeighborInterp.Create(AOwner: TComponent);
+begin
+  inherited;
+  OnInitialize := StoreData;
+end;
+
+destructor TNaturalNeighborInterp.Destroy;
+begin
+  FNatNeigh.Free;
+  inherited;
+end;
+
+procedure TNaturalNeighborInterp.Finalize(const DataSet: TDataArray);
+begin
+  inherited;
+  FreeAndNil(FNatNeigh);
+end;
+
+class function TNaturalNeighborInterp.InterpolatorName: string;
+begin
+  result := 'Natural Neighbor';
+end;
+
+function TNaturalNeighborInterp.RealResult(const Location: TPoint2D): real;
+begin
+  result := FNatNeigh.Interpolate(Location.x, Location.y);
+end;
+
+procedure TNaturalNeighborInterp.StoreData(Sender: TObject;
+  const DataSet: TDataArray);
+var  
+  ListOfScreenObjects: TList;
+  AScreenObject: TScreenObject;
+  ScreenObjectIndex: Integer;
+  Count: integer;
+  PointCount: Integer;
+  APoint, Point1, Point2: TPoint2D;
+  PointIndex: Integer;
+  Expression: TExpression;
+  XArray: TFloatArray;
+  YArray: TFloatArray;
+  ZArray: TFloatArray;
+  Index: Integer;
+  SectionIndex: integer;
+  SortArray: array of TSortRecord;
+  SortIndex: integer;
+  SortList: TList;
+  PSort1, PSort2: PSortRecord;
+  X_Single1: single;
+  X_Single2: single;
+  Y_Single1: single;
+  Y_Single2: single;
+  MinY: Real;
+  MaxY: Real;
+  MinX: Real;
+  MaxX: Real;
+begin
+  ListOfScreenObjects := TList.Create;
+  try
+    // Get a list of the TScreenObjects that set the value of DataSet
+    // by interpolation.
+    FillScreenObjectList(ListOfScreenObjects);
+
+    // Set the capacity of X, Y, and Z.
+    Count := 0;
+    for ScreenObjectIndex := ListOfScreenObjects.Count - 1 downto 0 do
+    begin
+      AScreenObject := ListOfScreenObjects[ScreenObjectIndex];
+      Count := Count + AScreenObject.Count;
+    end;
+    SetLength(SortArray, Count);
+
+    SortIndex := 0;
+    // Add values to X, Y, and Z at each unique location.
+    // Iterate from the end to the beginning to make sure that
+    // if any points are non-unique, the points of the later objects
+    // win out.
+    for ScreenObjectIndex := ListOfScreenObjects.Count - 1 downto 0 do
+    begin
+      AScreenObject := ListOfScreenObjects[ScreenObjectIndex];
+
+      SectionIndex := 0;
+      PointCount := AScreenObject.Count;
+      for PointIndex := 0 to PointCount - 1 do
+      begin
+        if AScreenObject.SectionEnd[SectionIndex] = PointIndex then
+        begin
+          Inc(SectionIndex);
+          if AScreenObject.SectionClosed[SectionIndex-1] then
+          begin
+            Continue;
+          end;
+        end;
+        APoint := AScreenObject.Points[PointIndex];
+        Point1.X := APoint.x;
+        Point1.y := APoint.y * Anisotropy;
+        Point2 := Point1;
+
+        SortArray[SortIndex].Location := Point2;
+        InitializeVariablesAndExpression(Point2, AScreenObject, Expression);
+        SortArray[SortIndex].Value := Expression.DoubleResult;
+        SortArray[SortIndex].Duplicate := False;
+        SortArray[SortIndex].OriginalIndex := SortIndex;
+        Inc(SortIndex);
+      end;
+    end;
+
+    SortList := TList.Create;
+    try
+      SortList.Capacity := SortIndex;
+      for SortIndex := 0 to SortList.Capacity - 1 do
+      begin
+        SortList.Add(Addr(SortArray[SortIndex]));
+      end;
+
+      SortList.Sort(SortRecordCompare);
+
+      Count := 1;
+      for SortIndex := 0 to SortList.Count - 2 do
+      begin
+        PSort1 := SortList[SortIndex];
+        PSort2 := SortList[SortIndex+1];
+        // reduce precision to single precision.
+        X_Single1 := PSort1.Location.x;
+        X_Single2 := PSort2.Location.x;
+        Y_Single1 := PSort1.Location.y;
+        Y_Single2 := PSort2.Location.y;
+        PSort2.Duplicate := (Abs(X_Single1 - X_Single2) < 1e-5)
+          and (Abs(Y_Single1 - Y_Single2) < 1e-5);
+        if not PSort2.Duplicate then
+        begin
+          Inc(Count);
+        end;
+      end;
+
+      // transfer X, Y, and Z to XArray, YArray, and ZArray.
+      SetLength(XArray, Count);
+      SetLength(YArray, Count);
+      SetLength(ZArray, Count);
+
+      SortIndex := 0;
+      for Index := 0 to SortList.Count - 1 do
+      begin
+        if not SortArray[Index].Duplicate then
+        begin
+          XArray[SortIndex] := SortArray[Index].Location.X;
+          YArray[SortIndex] := SortArray[Index].Location.Y;
+          ZArray[SortIndex] := SortArray[Index].Value;
+          Inc(SortIndex);
+        end;
+      end;
+    finally
+      SortList.Free;
+    end;
+  finally
+    ListOfScreenObjects.Free;
+  end;
+  GetLimits(MinY, MaxY, MinX, MaxX, DataSet);
+  case DataSet.Orientation of
+    dsoTop, dsoFront:
+      begin
+        FNatNeigh := TNaturalNeighborInterpolatorTripack.Create(
+          XArray, YArray, ZArray, MinX, MinY, MaxX, MaxY);
+      end;
+    dsoSide:
+      begin
+        FNatNeigh := TNaturalNeighborInterpolatorTripack.Create(
+          YArray, XArray, ZArray, MinY, MinX, MaxY, MaxX);
+      end
+    else
+    begin
+      Assert(False);
+    end;
+  end;
+end;
+
+class function TNaturalNeighborInterp.ValidReturnTypes: TRbwDataTypes;
+begin
+  result := [rdtDouble];
+end;
+
 initialization
   RegisterClass(TNearest2DInterpolator);
   RegisterClass(TInvDistSq2DInterpolator);
@@ -1634,5 +1852,6 @@ initialization
   RegisterClass(TLinearSfrpackInterpolator);
   RegisterClass(TFittedSurfaceIntepolator);
   RegisterClass(TInvDistSqPoint2DInterpolator);
+  RegisterClass(TNaturalNeighborInterp);
 
 end.

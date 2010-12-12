@@ -259,8 +259,8 @@ begin
       else Assert(False);
     end;
     PhastModel := frmGoPhast.PhastModel;
-    PhastModel.AddDataSetToCache(DataArray);
-    PhastModel.CacheDataArrays;
+    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+    PhastModel.DataArrayManager.CacheDataArrays;
   end
   else
   begin
@@ -558,8 +558,8 @@ begin
           Assert(False);
       end;
       PhastModel := frmGoPhast.PhastModel;
-      PhastModel.AddDataSetToCache(DataArray);
-      PhastModel.CacheDataArrays;
+      PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+      PhastModel.DataArrayManager.CacheDataArrays;
     end
     else
     begin
@@ -728,6 +728,7 @@ begin
   Canvas.TextOut(X, StartY, LegendText);
   StartY := StartY + DeltaY;
 
+  Assert(Fractions.Count <= Values.Count);
   for Index := 0 to Values.Count - 1 do
   begin
     AColor := ColorParameters.FracToColor(Fractions.RealValues[Index]);

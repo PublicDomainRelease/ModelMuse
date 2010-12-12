@@ -95,7 +95,7 @@ type
     class function Extension: string; override;
   public
     procedure WriteFile(const AFileName: string);
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     Destructor Destroy; override;
   end;
 
@@ -130,7 +130,7 @@ end;
 
 { TModflowSUB_Writer }
 
-constructor TModflowSUB_Writer.Create(Model: TPhastModel);
+constructor TModflowSUB_Writer.Create(Model: TCustomModel);
 begin
   inherited;
   FLN := TIntegerList.Create;
@@ -264,19 +264,19 @@ begin
       begin
         NoDelayItem := Group.SubNoDelayBedLayers[SubsidenceIndex];
 
-        PreconsolidationHeadDataArray := PhastModel.GetDataSetByName(
+        PreconsolidationHeadDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           NoDelayItem.PreconsolidationHeadDataArrayName);
         Assert(PreconsolidationHeadDataArray <> nil);
 
-        ElasticSkeletalStorageCoefficientDataArray := PhastModel.GetDataSetByName(
+        ElasticSkeletalStorageCoefficientDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           NoDelayItem.ElasticSkeletalStorageCoefficientDataArrayName);
         Assert(ElasticSkeletalStorageCoefficientDataArray <> nil);
 
-        InelasticSkeletalStorageCoefficientDataArray := PhastModel.GetDataSetByName(
+        InelasticSkeletalStorageCoefficientDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           NoDelayItem.InelasticSkeletalStorageCoefficientDataArrayName);
         Assert(InelasticSkeletalStorageCoefficientDataArray <> nil);
 
-        InitialCompactionDataArray := PhastModel.GetDataSetByName(
+        InitialCompactionDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           NoDelayItem.InitialCompactionDataArrayName);
         Assert(InitialCompactionDataArray <> nil);
         
@@ -322,41 +322,41 @@ begin
       begin
         DelayItem := Group.SubDelayBedLayers[SubsidenceIndex];
 
-        EquivNumberDataArray := PhastModel.GetDataSetByName(
+        EquivNumberDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           DelayItem.EquivNumberDataArrayName);
         Assert(EquivNumberDataArray <> nil);
 
-        VerticalHydraulicConductivityDataArray := PhastModel.GetDataSetByName(
+        VerticalHydraulicConductivityDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           DelayItem.VerticalHydraulicConductivityDataArrayName);
         Assert(VerticalHydraulicConductivityDataArray <> nil);
 
-        ElasticSpecificStorageDataArray := PhastModel.GetDataSetByName(
+        ElasticSpecificStorageDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           DelayItem.ElasticSpecificStorageDataArrayName);
         Assert(ElasticSpecificStorageDataArray <> nil);
 
-        InelasticSpecificStorageDataArray := PhastModel.GetDataSetByName(
+        InelasticSpecificStorageDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           DelayItem.InelasticSpecificStorageDataArrayName);
         Assert(InelasticSpecificStorageDataArray <> nil);
 
-        InterbedStartingHeadDataArray := PhastModel.GetDataSetByName(
+        InterbedStartingHeadDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           DelayItem.InterbedStartingHeadDataArrayName);
         if FSubPackage.ReadDelayRestartFileName = '' then
         begin
           Assert(InterbedStartingHeadDataArray <> nil);
         end;
 
-        InterbedPreconsolidationHeadDataArray := PhastModel.GetDataSetByName(
+        InterbedPreconsolidationHeadDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           DelayItem.InterbedPreconsolidationHeadDataArrayName);
         if FSubPackage.ReadDelayRestartFileName = '' then
         begin
           Assert(InterbedPreconsolidationHeadDataArray <> nil);
         end;
 
-        InterbedStartingCompactionDataArray := PhastModel.GetDataSetByName(
+        InterbedStartingCompactionDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           DelayItem.InterbedStartingCompactionDataArrayName);
         Assert(InterbedStartingCompactionDataArray <> nil);
 
-        InterbedEquivalentThicknessDataArray := PhastModel.GetDataSetByName(
+        InterbedEquivalentThicknessDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           DelayItem.InterbedEquivalentThicknessDataArrayName);
         Assert(InterbedEquivalentThicknessDataArray <> nil);
 
@@ -534,7 +534,7 @@ var
     result := PhastModel.UnitNumbers.UnitNumber(StrSubSUB_Out);
     if SubFileName = '' then
     begin
-      SubFileName := ExtractFileName(ChangeFileExt(FNameOfFile, '.Sub_Out'));
+      SubFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubOut));
       WriteToNameFile(StrDATABINARY, result,
         SubFileName, foOutput);
     end;
@@ -576,7 +576,7 @@ begin
         sbocMultipleFiles:
           begin
             Iun1 := PhastModel.UnitNumbers.UnitNumber(StrSubSUB_Out);
-            AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, '.SubSubOut'));
+            AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubSubOut));
             WriteToNameFile(StrDATABINARY, Iun1,
               AFileName, foOutput);
           end
@@ -596,7 +596,7 @@ begin
         sbocMultipleFiles:
           begin
             Iun2 := PhastModel.UnitNumbers.UnitNumber(StrSubCOM_ML_Out);
-            AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, '.SubComMlOut'));
+            AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubComMlOut));
             WriteToNameFile(StrDATABINARY, Iun2,
               AFileName, foOutput);
           end
@@ -616,7 +616,7 @@ begin
         sbocMultipleFiles:
           begin
             Iun3 := PhastModel.UnitNumbers.UnitNumber(StrSubCOM_IS_Out);
-            AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, '.SubComIsOut'));
+            AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubComIsOut));
             WriteToNameFile(StrDATABINARY, Iun3,
               AFileName, foOutput);
           end
@@ -636,7 +636,7 @@ begin
         sbocMultipleFiles:
           begin
             Iun4 := PhastModel.UnitNumbers.UnitNumber(StrSub_VD_Out);
-            AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, '.SubVdOut'));
+            AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubVdOut));
             WriteToNameFile(StrDATABINARY, Iun4,
               AFileName, foOutput);
           end
@@ -656,7 +656,7 @@ begin
         sbocMultipleFiles:
           begin
             Iun5 := PhastModel.UnitNumbers.UnitNumber(StrSub_NDPCH_Out);
-            AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, '.SubNdCritHeadOut'));
+            AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubNdCritHeadOut));
             WriteToNameFile(StrDATABINARY, Iun5,
               AFileName, foOutput);
           end
@@ -676,7 +676,7 @@ begin
         sbocMultipleFiles:
           begin
             Iun6 := PhastModel.UnitNumbers.UnitNumber(StrSub_DPCH_Out);
-            AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, '.SubDCritHeadOut'));
+            AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubDCritHeadOut));
             WriteToNameFile(StrDATABINARY, Iun6,
               AFileName, foOutput);
           end
@@ -805,9 +805,9 @@ begin
   begin
     DataArray := FRNB_List[Index];
     WriteArray(DataArray, 0, 'RNB');
-    PhastModel.AddDataSetToCache(DataArray);
+    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
   end;
-  PhastModel.CacheDataArrays;
+  PhastModel.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSUB_Writer.WriteDataSet9;
@@ -841,26 +841,26 @@ begin
     begin
       DataArray := FDstart_List[Index];
       WriteArray(DataArray, 0, 'Dstart');
-      PhastModel.AddDataSetToCache(DataArray);
+      PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
 
       DataArray := FDHC_List[Index];
       WriteArray(DataArray, 0, 'DHC');
-      PhastModel.AddDataSetToCache(DataArray);
+      PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
     end;
 
     DataArray := FDCOM_List[Index];
     WriteArray(DataArray, 0, 'DCOM');
-    PhastModel.AddDataSetToCache(DataArray);
+    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
     
     DataArray := FDZ_List[Index];
     WriteArray(DataArray, 0, 'DZ');
-    PhastModel.AddDataSetToCache(DataArray);
+    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
     
     DataArray := FNZ_List[Index];
     WriteArray(DataArray, 0, 'NZ');
     // This one isn't cached because it is temporary
   end;
-  PhastModel.CacheDataArrays;
+  PhastModel.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSUB_Writer.WriteDataSets5to8;
@@ -872,18 +872,18 @@ begin
   begin
     DataArray := FHC_List[Index];
     WriteArray(DataArray, 0, 'HC');
-    PhastModel.AddDataSetToCache(DataArray);
+    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
     DataArray := FSfe_List[Index];
     WriteArray(DataArray, 0, 'Sfe');
-    PhastModel.AddDataSetToCache(DataArray);
+    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
     DataArray := FSfv_List[Index];
     WriteArray(DataArray, 0, 'Sfv');
-    PhastModel.AddDataSetToCache(DataArray);
+    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
     DataArray := FCom_List[Index];
     WriteArray(DataArray, 0, 'Com');
-    PhastModel.AddDataSetToCache(DataArray);
+    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
   end;
-  PhastModel.CacheDataArrays;
+  PhastModel.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSUB_Writer.WriteFile(const AFileName: string);
@@ -902,84 +902,84 @@ begin
     FNameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
   OpenFile(FNameOfFile);
   try
-    frmProgress.AddMessage('Writing SUB Package input.');
+    frmProgressMM.AddMessage('Writing SUB Package input.');
 
     WriteDataSet0;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage('  Writing Data Set 3.');
     WriteDataSet3;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 5 to 8.');
+    frmProgressMM.AddMessage('  Writing Data Sets 5 to 8.');
     WriteDataSets5to8;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 9.');
+    frmProgressMM.AddMessage('  Writing Data Set 9.');
     WriteDataSet9;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 10 to 14.');
+    frmProgressMM.AddMessage('  Writing Data Sets 10 to 14.');
     WriteDataSets10to14;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 15.');
+    frmProgressMM.AddMessage('  Writing Data Set 15.');
     WriteDataSet15;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 16.');
+    frmProgressMM.AddMessage('  Writing Data Set 16.');
     WriteDataSet16;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;

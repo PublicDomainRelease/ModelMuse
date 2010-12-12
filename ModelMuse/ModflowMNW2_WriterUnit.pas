@@ -68,7 +68,7 @@ type
     class function Extension: string; override;
     procedure Evaluate; 
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     destructor Destroy; override;
     procedure WriteFile(const AFileName: string);
     procedure WriteMnwiFile(const AFileName: string;
@@ -84,7 +84,7 @@ uses
 
 { TModflowMNW2_Writer }
 
-constructor TModflowMNW2_Writer.Create(Model: TPhastModel);
+constructor TModflowMNW2_Writer.Create(Model: TCustomModel);
 begin
   inherited;
   FValues := TObjectList.Create;
@@ -110,10 +110,10 @@ var
   ScreenObject: TScreenObject;
   Boundary: TMnw2Boundary;
 begin
-  frmProgress.AddMessage('Evaluating MNWI Package data.');
+  frmProgressMM.AddMessage('Evaluating MNWI Package data.');
   for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
   begin
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -127,7 +127,7 @@ begin
     begin
       Continue;
     end;
-    frmProgress.AddMessage('    Evaluating ' + ScreenObject.Name);
+    frmProgressMM.AddMessage('    Evaluating ' + ScreenObject.Name);
     if Boundary.SaveMnwiInfo
       or Boundary.SaveExternalFlows
       or Boundary.SaveInternalFlows then
@@ -147,12 +147,12 @@ var
   Item: TCustomModflowBoundaryItem;
   StressPeriod: TModflowStressPeriod;
 begin
-  frmProgress.AddMessage('Evaluating MNW2 Package data.');
+  frmProgressMM.AddMessage('Evaluating MNW2 Package data.');
   Dummy := TStringList.Create;
   try
     for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
     begin
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -174,7 +174,7 @@ begin
         PhastModel.ModflowFullStressPeriods.Count-1];
       Item.EndTime := StressPeriod.EndTime;
 
-      frmProgress.AddMessage('    Evaluating ' + ScreenObject.Name);
+      frmProgressMM.AddMessage('    Evaluating ' + ScreenObject.Name);
       Boundary.GetCellValues(FValues, Dummy);
       if (FValues.Count >= 1) then
       begin
@@ -234,7 +234,7 @@ begin
   DataSets := TList.Create;
   try
     Evaluate;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -477,41 +477,41 @@ begin
     FNameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
   OpenFile(FNameOfFile);
   try
-    frmProgress.AddMessage('Writing MNW2 Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing MNW2 Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 3 and 4.');
+    frmProgressMM.AddMessage('  Writing Data Sets 3 and 4.');
     WriteDataSets3and4;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -544,7 +544,7 @@ begin
 
     OpenFile(NameOfMnwiFile);
     try
-      frmProgress.AddMessage('Writing MNWI Package input.');
+      frmProgressMM.AddMessage('Writing MNWI Package input.');
       WriteMnwiDataSet1(AFileName);
       WriteMnwiDataSet2;
       WriteMnwiDataSet3(StartUnitNumber, AFileName);
@@ -571,7 +571,7 @@ var
 begin
   AFileName := ExtractFileName(AFileName);
   AFileName := ChangeFileExt(AFileName, '');
-  frmProgress.AddMessage('  Writing Data Set 3.');
+  frmProgressMM.AddMessage('  Writing Data Set 3.');
   for WellIndex := 0 to FMnwiWells.Count - 1 do
   begin
     Boundary := FMnwiWells[WellIndex];
@@ -619,7 +619,7 @@ procedure TModflowMNW2_Writer.WriteMnwiDataSet2;
 var
   MNWOBS: Integer;
 begin
-  frmProgress.AddMessage('  Writing Data Set 2.');
+  frmProgressMM.AddMessage('  Writing Data Set 2.');
 
   MNWOBS := FMnwiWells.Count;
   WriteInteger(MNWOBS);
@@ -634,7 +634,7 @@ var
   BYNDflag: Integer;
   OutputFileName: string;
 begin
-  frmProgress.AddMessage('  Writing Data Set 1.');
+  frmProgressMM.AddMessage('  Writing Data Set 1.');
   AFileName := ExtractFileName(AFileName);
   AFileName := ChangeFileExt(AFileName, '');
   if FMnwPackage.CreateWellFile then

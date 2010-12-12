@@ -192,7 +192,7 @@ begin
   Evaluate(StartUnitNumber, Gages);
   if Gages.Count > 0 then
   begin
-    frmProgress.AddMessage('Writing GAGE Package input.');
+    frmProgressMM.AddMessage('Writing GAGE Package input.');
     NUMGAGES := Gages.Count;
     Gages.Insert(0, IntToStr(NUMGAGES));
     WriteToNameFile(StrGAG, PhastModel.UnitNumbers.UnitNumber(StrGAG),

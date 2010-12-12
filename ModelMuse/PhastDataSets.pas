@@ -1433,6 +1433,7 @@ begin
 
       CheckIfUniform;
       UpToDate := True;
+      UpdateDialogBoxes;
     end
     else
     begin
@@ -1452,7 +1453,7 @@ begin
     if FreeStack then
     begin
       FreeAndNil(Stack);
-      frmGoPhast.PhastModel.CacheDataArrays;
+      frmGoPhast.PhastModel.DataArrayManager.CacheDataArrays;
     end;
   end;
 end;
@@ -2014,6 +2015,7 @@ var
   Variable: TCustomValue;
   LayerToUse, RowToUse, ColToUse: integer;
   RealCellValue: double;
+  DataArrayManager: TDataArrayManager;
 begin
   inherited;
   GetRequiredDimensions(NumberOfLayers, NumberOfRows, NumberOfColumns);
@@ -2031,6 +2033,7 @@ begin
   if UsePHAST_InterpolationForAllCells then
   begin
     TempUseList := TStringList.Create;
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
     try
       if InterpolationDirection = pidMix then
       begin
@@ -2042,13 +2045,13 @@ begin
         for VarIndex := 0 to TempUseList.Count - 1 do
         begin
           VarName := TempUseList[VarIndex];
-          AnotherDataSet := frmGoPhast.PhastModel.GetDataSetByName(VarName);
+          AnotherDataSet := DataArrayManager.GetDataSetByName(VarName);
           if AnotherDataSet <> nil then
           begin
 //            AnotherDataSet := frmGoPhast.PhastModel.DataSets[DataSetIndex];
             Assert(AnotherDataSet <> self);
             AnotherDataSet.Initialize;
-            frmGoPhast.PhastModel.AddDataSetToCache(AnotherDataSet);
+            DataArrayManager.AddDataSetToCache(AnotherDataSet);
           end;
         end;
         GlobalEvaluatedAt := EvaluatedAt;
@@ -2149,7 +2152,7 @@ begin
                     VarPosition := Compiler.IndexOfVariable(VarName);
                     Variable := Compiler.Variables[VarPosition];
                     AnotherDataSet :=
-                      frmGoPhast.PhastModel.GetDataSetByName(VarName);
+                      DataArrayManager.GetDataSetByName(VarName);
                     if AnotherDataSet <> nil then
                     begin
 //                      AnotherDataSet :=
@@ -2271,7 +2274,7 @@ begin
       end;
     finally
       TempUseList.Free;
-      frmGoPhast.PhastModel.CacheDataArrays;
+      DataArrayManager.CacheDataArrays;
     end;
   end;
 end;
@@ -2927,6 +2930,8 @@ begin
   PostInitialize;
 
   UpToDate := True;
+  UpdateDialogBoxes;
+
 end;
 
 procedure TSparseArrayPhastInterpolationDataSet.ResetCellsPhastInterpolation;

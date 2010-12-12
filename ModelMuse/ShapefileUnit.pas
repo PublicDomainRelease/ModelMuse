@@ -1007,6 +1007,17 @@ var
   // NumParts is the number of parts in the current shape.
   NumParts: integer;
   DummyFileHeader: TShapefileHeader;
+  procedure CreateNullShape;
+  var
+    NullShapeObject: TShapeObject;
+  begin
+    NullShapeObject := TShapeObject.Create;
+    FShapeObjects.Add(NullShapeObject);
+    NullShapeObject.FShapeType := stNull;
+    SetLength(NullShapeObject.FPoints, 0);
+    NullShapeObject.FNumPoints := 0;
+    NullShapeObject.FNumParts := 0;
+  end;
   procedure ReadNullShape;
   var
     NullShapeObject: TShapeObject;
@@ -1545,68 +1556,74 @@ begin
         // ShapeRecordHeader.ContentLength is measured in 16 bit words = 2 bytes.
         ContentLength := ConvertInteger(ShapeRecordHeader.ContentLength) * 2;
         ContentEnd := CurrentPosition + ContentLength;
-        Assert(ContentEnd <= FileStream.Size);
-        if FileStream.Position < FileStream.Size then
+        if (ContentEnd > FileStream.Size) then
         begin
-          case ShapeType of
-            stNull:
-              begin
-                ReadNullShape;
-              end;
-            stPoint:
-              begin
-                ReadPointShape;
-              end;
-            stPolyLine:
-              begin
-                ReadPolyLine;
-              end;
-            stPolygon:
-              begin
-                ReadPolygon;
-              end;
-            stMultipoint:
-              begin
-                ReadMultiPoint;
-              end;
-            stPointZ:
-              begin
-                ReadPointZ;
-              end;
-            stPolyLineZ:
-              begin
-                ReadPolyLineZ;
-              end;
-            stPolygonZ:
-              begin
-                ReadPolygonZ;
-              end;
-            stMultipointZ:
-              begin
-                ReadMultipPointZ;
-              end;
-            stPointM:
-              begin
-                ReadPointM;
-              end;
-            stPolyLineM:
-              begin
-                ReadPolyLineM;
-              end;
-            stPolygonM:
-              begin
-                ReadPolygonM;
-              end;
-            stMultipointM:
-              begin
-                ReadMultiPointM;
-              end;
-            stMultiPatch:
-              begin
-                ReadMultiPatch;
-              end;
-          else
-            Assert(False);
+          CreateNullShape;
+        end
+        else
+        begin
+          if FileStream.Position < FileStream.Size then
+          begin
+            case ShapeType of
+              stNull:
+                begin
+                  ReadNullShape;
+                end;
+              stPoint:
+                begin
+                  ReadPointShape;
+                end;
+              stPolyLine:
+                begin
+                  ReadPolyLine;
+                end;
+              stPolygon:
+                begin
+                  ReadPolygon;
+                end;
+              stMultipoint:
+                begin
+                  ReadMultiPoint;
+                end;
+              stPointZ:
+                begin
+                  ReadPointZ;
+                end;
+              stPolyLineZ:
+                begin
+                  ReadPolyLineZ;
+                end;
+              stPolygonZ:
+                begin
+                  ReadPolygonZ;
+                end;
+              stMultipointZ:
+                begin
+                  ReadMultipPointZ;
+                end;
+              stPointM:
+                begin
+                  ReadPointM;
+                end;
+              stPolyLineM:
+                begin
+                  ReadPolyLineM;
+                end;
+              stPolygonM:
+                begin
+                  ReadPolygonM;
+                end;
+              stMultipointM:
+                begin
+                  ReadMultiPointM;
+                end;
+              stMultiPatch:
+                begin
+                  ReadMultiPatch;
+                end;
+            else
+              Assert(False);
+            end;
           end;
         end;
       end;

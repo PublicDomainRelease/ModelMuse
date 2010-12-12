@@ -183,7 +183,7 @@ begin
     try
       MakeNewDataSet(NewDataSets, '_Grd_Z', 'Imported from Surfer Grid files');
       DataSetName := comboDataSets.Text;
-      DataSet := frmGoPhast.PhastModel.GetDataSetByName(DataSetName);
+      DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
       case FFileType of
         sft6, sftAscii:
           begin

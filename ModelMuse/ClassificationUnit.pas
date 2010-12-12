@@ -208,20 +208,25 @@ begin
           for Index := 0 to SpecialGroupList.Count - 1 do
           begin
             ClassificationObject := SpecialGroupList[Index];
-            Assert(ClassificationObject <> nil);
-            Position := SortedObjects.IndexOfObject(ClassificationObject);
-            Assert(Position >= 0);
-            LayerGroupPositions.Add(Position);
+            if ClassificationObject <> nil then
+            begin
+              Position := SortedObjects.IndexOfObject(ClassificationObject);
+              Assert(Position >= 0);
+              LayerGroupPositions.Add(Position);
+            end;
           end;
           LayerGroupPositions.Sort;
           for Index := 0 to SpecialGroupList.Count - 1 do
           begin
             ClassificationObject := SpecialGroupList[Index];
-            Position := LayerGroupPositions[Index];
-            SortedObjects[Position] :=
-              ClassificationObject.FullClassification + '|'
-              + ClassificationObject.ClassificationName;
-            SortedObjects.Objects[Position] := ClassificationObject;
+            if ClassificationObject <> nil then
+            begin
+              Position := LayerGroupPositions[Index];
+              SortedObjects[Position] :=
+                ClassificationObject.FullClassification + '|'
+                + ClassificationObject.ClassificationName;
+              SortedObjects.Objects[Position] := ClassificationObject;
+            end;
           end;
         finally
           LayerGroupPositions.Free;

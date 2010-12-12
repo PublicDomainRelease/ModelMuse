@@ -4,7 +4,7 @@ interface
 
 uses Classes, GoPhastTypes, UndoItems, PhastModelUnit, frmShowHideObjectsUnit,
   ModflowParameterUnit, HufDefinition, ModflowTransientListParameterUnit,
-  UndoItemsScreenObjects;
+  UndoItemsScreenObjects, ModflowPackageSelectionUnit;
 
 type
   TCustomCreateRequiredDataSetsUndo = class(TCustomUndo)
@@ -41,13 +41,16 @@ type
     FOldTransientParameters: TModflowTransientListParameters;
     FOldHufModflowParameters: THufModflowParameters;
     FNewHufModflowParameters: THufModflowParameters;
+    FNewSfrParamInstances: TSfrParamInstances;
+    FOldSfrParamInstances: TSfrParamInstances;
 //    FExistingScreenObjects: TScreenObjectEditCollection;
   protected
     function Description: string; override;
   public
     Constructor Create(var NewSteadyParameters: TModflowSteadyParameters;
       var NewTransientParameters: TModflowTransientListParameters;
-      var NewHufModflowParameters: THufModflowParameters);
+      var NewHufModflowParameters: THufModflowParameters;
+      var NewSfrParamInstances: TSfrParamInstances);
     Destructor Destroy; override;
     procedure DoCommand; override;
     procedure Undo; override;
@@ -68,7 +71,7 @@ type
 implementation
 
 uses DataSetUnit, RbwParser, frmGoPhastUnit, frmGridColorUnit, 
-  frmContourDataUnit;
+  frmContourDataUnit, frmGridValueUnit;
 
 constructor TCustomCreateRequiredDataSetsUndo.Create;
 begin
@@ -104,20 +107,23 @@ var
   ArrayNeeded, CreateDataSet: TObjectUsedEvent;
   NewFormula, Classification: string;
   Lock: TDataLock;
+  DataArrayManager: TDataArrayManager;
 begin
   { TODO : Find a way to extract common code from
 TPhastModel.CreateModflowDataSets and
 TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
-  DataSetName := Model.FDataArrayCreationRecords[Index].Name;
-  Orientation := Model.FDataArrayCreationRecords[Index].Orientation;
-  DataType := Model.FDataArrayCreationRecords[Index].DataType;
-  ArrayNeeded := Model.FDataArrayCreationRecords[Index].DataSetNeeded;
-  CreateDataSet := Model.FDataArrayCreationRecords[Index].DataSetShouldBeCreated;
-  NewFormula := Model.FDataArrayCreationRecords[Index].Formula;
-  Classification := Model.FDataArrayCreationRecords[Index].Classification;
-  Lock := Model.FDataArrayCreationRecords[Index].Lock;
+  DataArrayManager := Model.DataArrayManager;
 
-  DataArray := Model.GetDataSetByName(DataSetName);
+  DataSetName := DataArrayManager.FDataArrayCreationRecords[Index].Name;
+  Orientation := DataArrayManager.FDataArrayCreationRecords[Index].Orientation;
+  DataType := DataArrayManager.FDataArrayCreationRecords[Index].DataType;
+  ArrayNeeded := DataArrayManager.FDataArrayCreationRecords[Index].DataSetNeeded;
+  CreateDataSet := DataArrayManager.FDataArrayCreationRecords[Index].DataSetShouldBeCreated;
+  NewFormula := DataArrayManager.FDataArrayCreationRecords[Index].Formula;
+  Classification := DataArrayManager.FDataArrayCreationRecords[Index].Classification;
+  Lock := DataArrayManager.FDataArrayCreationRecords[Index].Lock;
+
+  DataArray := DataArrayManager.GetDataSetByName(DataSetName);
 //  DataArray := nil;
   Assert(Assigned(ArrayNeeded));
   if DataArray <> nil then
@@ -129,22 +135,22 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
   else if ArrayNeeded(self)
     or (Assigned(CreateDataSet) and CreateDataSet(self)) then
   begin
-    DataArray := Model.CreateNewDataArray(TDataArray, DataSetName, NewFormula,
-      Lock, DataType, Model.FDataArrayCreationRecords[Index].EvaluatedAt,
+    DataArray := DataArrayManager.CreateNewDataArray(TDataArray, DataSetName, NewFormula,
+      Lock, DataType, DataArrayManager.FDataArrayCreationRecords[Index].EvaluatedAt,
       Orientation, Classification);
     DataArray.OnDataSetUsed := ArrayNeeded;
     DataArray.Lock := Lock;
-    DataArray.CheckMax := Model.FDataArrayCreationRecords[Index].CheckMax;
-    DataArray.CheckMin := Model.FDataArrayCreationRecords[Index].CheckMin;
-    DataArray.Max := Model.FDataArrayCreationRecords[Index].Max;
-    DataArray.Min := Model.FDataArrayCreationRecords[Index].Min;
+    DataArray.CheckMax := DataArrayManager.FDataArrayCreationRecords[Index].CheckMax;
+    DataArray.CheckMin := DataArrayManager.FDataArrayCreationRecords[Index].CheckMin;
+    DataArray.Max := DataArrayManager.FDataArrayCreationRecords[Index].Max;
+    DataArray.Min := DataArrayManager.FDataArrayCreationRecords[Index].Min;
 
     FNewPackageDataSets.Add(DataArray);
   end;
   if DataArray <> nil then
   begin
     DataArray.AssociatedDataSets :=
-      Model.FDataArrayCreationRecords[Index].AssociatedDataSets;
+      DataArrayManager.FDataArrayCreationRecords[Index].AssociatedDataSets;
   end;
   if (DataArray <> nil) and (Model.Grid <> nil) then
   begin
@@ -161,13 +167,14 @@ var
 begin
   Model:= frmGoPhast.PhastModel;
 
-  for Index := 0 to Length(Model.FDataArrayCreationRecords) - 1 do
+  for Index := 0 to Length(Model.DataArrayManager.FDataArrayCreationRecords) - 1 do
   begin
     UpdateDataArray(Model, Index);
   end;
 
   UpdateFrmGridColor;
   UpdateFrmContourData;
+  UpdateFrmGridValue;
 end;
 
 procedure TCustomCreateRequiredDataSetsUndo.UpdateOnPostInitialize;
@@ -183,6 +190,7 @@ begin
   begin
     frmShowHideObjects.UpdateScreenObjects;
   end;
+  UpdateFrmGridValue;
 end;
 
 { TUndoModelSelectionChange }
@@ -218,7 +226,8 @@ end;
 constructor TCustomUndoChangeParameters.Create(
   var NewSteadyParameters: TModflowSteadyParameters;
   var NewTransientParameters: TModflowTransientListParameters;
-  var NewHufModflowParameters: THufModflowParameters);
+  var NewHufModflowParameters: THufModflowParameters;
+  var NewSfrParamInstances: TSfrParamInstances);
 begin
   inherited Create;
   FNewSteadyParameters:= NewSteadyParameters;
@@ -233,12 +242,18 @@ begin
   FNewHufModflowParameters := NewHufModflowParameters;
   NewHufModflowParameters := nil;
 
+  FNewSfrParamInstances := NewSfrParamInstances;
+  NewSfrParamInstances := nil;
+
   FOldSteadyParameters:= TModflowSteadyParameters.Create(nil);
   FOldSteadyParameters.Assign(frmGoPhast.PhastModel.ModflowSteadyParameters);
   FOldTransientParameters:= TModflowTransientListParameters.Create(nil);
   FOldTransientParameters.Assign(frmGoPhast.PhastModel.ModflowTransientParameters);
   FOldHufModflowParameters := THufModflowParameters.Create(nil);
   FOldHufModflowParameters.Assign(frmGoPhast.PhastModel.HufParameters);
+  FOldSfrParamInstances := TSfrParamInstances.Create(nil);
+  FOldSfrParamInstances.Assign(frmGoPhast.PhastModel.ModflowPackages.
+    SfrPackage.ParameterInstances);
 
 //  FExistingScreenObjects := TScreenObjectEditCollection.Create;
 //  FExistingScreenObjects.OwnScreenObject := False;
@@ -259,6 +274,8 @@ begin
   FOldSteadyParameters.Free;
   FNewTransientParameters.Free;
   FOldTransientParameters.Free;
+  FNewSfrParamInstances.Free;
+  FOldSfrParamInstances.Free;
 //  FExistingScreenObjects.Free;
   inherited;
 end;
@@ -272,6 +289,8 @@ begin
   frmGoPhast.PhastModel.ModflowTransientParameters := FNewTransientParameters;
   frmGoPhast.PhastModel.ModflowSteadyParameters.NewDataSets := nil;
   frmGoPhast.PhastModel.HufParameters := FNewHufModflowParameters;
+  frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances :=
+    FNewSfrParamInstances;
   UpdatedRequiredDataSets;
 end;
 
@@ -284,6 +303,8 @@ begin
   frmGoPhast.PhastModel.ModflowTransientParameters := FOldTransientParameters;
   frmGoPhast.PhastModel.ModflowSteadyParameters.NewDataSets := nil;
   frmGoPhast.PhastModel.HufParameters := FOldHufModflowParameters;
+  frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances :=
+    FOldSfrParamInstances;
   UpdatedRequiredDataSets;
 end;
 

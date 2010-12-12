@@ -86,7 +86,7 @@ begin
     NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgress.AddMessage('Writing PCG Package input.');
+    frmProgressMM.AddMessage('Writing PCG Package input.');
     WriteDataSet0;
     WriteDataSet1;
     WriteDataSet2;

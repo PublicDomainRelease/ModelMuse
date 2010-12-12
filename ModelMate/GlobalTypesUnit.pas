@@ -137,13 +137,13 @@ resourcestring
   StrMODFLOW2005 = 'MODFLOW-2005';
   StrModflow2005DefaultPath = 'C:\WRDAPP\MF2005.1_8\Bin\mf2005.exe';
   StrUCODE2005 = 'UCODE2005';
-  StrUCODE2005DefaultPath = 'C:\WRDAPP\ucode_2005_1.019\bin\ucode_2005.exe';
+  StrUCODE2005DefaultPath = 'C:\WRDAPP\ucode_2005_1.021\bin\ucode_2005.exe';
   StrGWChart = 'GWChart';
   StrGWChartDefaultPath = 'C:\WRDAPP\GW_Chart\Gw_chart.exe';
   StrResidAnalysis = 'ResidAnalysis';
-  StrResidAnalysisDefaultPath = 'C:\WRDAPP\ucode_2005_1.019\bin\residual_analysis.exe';
+  StrResidAnalysisDefaultPath = 'C:\WRDAPP\ucode_2005_1.021\bin\residual_analysis.exe';
   StrResidAnalysisAdv = 'ResidAnalysisAdv';
-  StrResidAnalysisAdvDefaultPath = 'C:\WRDAPP\ucode_2005_1.019\bin\residual_analysis_adv.exe';
+  StrResidAnalysisAdvDefaultPath = 'C:\WRDAPP\ucode_2005_1.021\bin\residual_analysis_adv.exe';
 
 function GT_ParAttKeyword(PAT: TParamAttType): string;
 begin

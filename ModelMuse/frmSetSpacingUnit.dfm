@@ -81,7 +81,7 @@ inherited frmSetSpacing: TfrmSetSpacing
       Left = 118
       Top = 47
       Width = 65
-      Height = 25
+      Height = 26
       ButtonKind = bkClassic
       Value = 1.000000000000000000
       Color = clWhite
@@ -93,7 +93,7 @@ inherited frmSetSpacing: TfrmSetSpacing
       Left = 118
       Top = 80
       Width = 65
-      Height = 25
+      Height = 26
       ButtonKind = bkClassic
       Value = 1.000000000000000000
       Color = clWhite
@@ -109,7 +109,7 @@ inherited frmSetSpacing: TfrmSetSpacing
       Cursor = crIBeam
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 3
       Text = '0'
       OnChange = rdeChange
@@ -161,7 +161,7 @@ inherited frmSetSpacing: TfrmSetSpacing
       Left = 118
       Top = 47
       Width = 65
-      Height = 25
+      Height = 26
       ButtonKind = bkClassic
       Value = 1.000000000000000000
       Color = clWhite
@@ -173,7 +173,7 @@ inherited frmSetSpacing: TfrmSetSpacing
       Left = 118
       Top = 80
       Width = 65
-      Height = 25
+      Height = 26
       ButtonKind = bkClassic
       Value = 1.000000000000000000
       Color = clWhite
@@ -189,7 +189,7 @@ inherited frmSetSpacing: TfrmSetSpacing
       Cursor = crIBeam
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 3
       Text = '0'
       OnChange = rdeChange
@@ -241,7 +241,7 @@ inherited frmSetSpacing: TfrmSetSpacing
       Left = 118
       Top = 47
       Width = 65
-      Height = 25
+      Height = 26
       ButtonKind = bkClassic
       Value = 1.000000000000000000
       Color = clWhite
@@ -253,7 +253,7 @@ inherited frmSetSpacing: TfrmSetSpacing
       Left = 118
       Top = 80
       Width = 65
-      Height = 25
+      Height = 26
       ButtonKind = bkClassic
       Value = 1.000000000000000000
       Color = clWhite
@@ -269,7 +269,7 @@ inherited frmSetSpacing: TfrmSetSpacing
       Cursor = crIBeam
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 3
       Text = '0'
       OnChange = rdeChange

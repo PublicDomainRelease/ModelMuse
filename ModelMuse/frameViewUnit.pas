@@ -209,15 +209,18 @@ type
     FLastMoveTime: TDateTime;
     FPaintingNeeded: Boolean;
     procedure UpdateStatusBarCoordinates(APoint: TPoint2D);
-    procedure UpdateStatusBarForTopBlockDataSet(Column, Row, X, Y: Integer);
+    procedure UpdateStatusBarForTopBlockDataSet(Column, Row, X, Y: Integer; const Location: TPoint2D);
     procedure UpdateStatusBarForTopNodeDataSet(Column:
-      Integer; Row: Integer);
-    procedure UpdateStatusBarFrontBlockDataSet(Column, Layer: Integer);
-    procedure UpdateStatusBarFrontNodeDataSet(Column: Integer; Layer: Integer);
-    procedure UpdateStatusBarSideBlockDataSet(Row, Layer: Integer);
-    procedure UpdateStatusBarSideNodeDataSet(Row, Layer: Integer);
+      Integer; Row: Integer; const Location: TPoint2D);
+    procedure UpdateStatusBarFrontBlockDataSet(Column, Layer: Integer;
+      const Location: TPoint2D);
+    procedure UpdateStatusBarFrontNodeDataSet(Column: Integer; Layer: Integer;
+      const Location: TPoint2D);
+    procedure UpdateStatusBarSideBlockDataSet(Row, Layer: Integer;
+      const Location: TPoint2D);
+    procedure UpdateStatusBarSideNodeDataSet(Row, Layer: Integer; const Location: TPoint2D);
     procedure ShowCurrentValue(DataSet: TDataArray; const NameToDisplay: string;
-      Column, Row, Layer: Integer);
+      Column, Row, Layer: Integer; const Location: TPoint2D);
     procedure HideScreenObjects(HideSelected: Boolean);
     procedure AllowBitmapsToBeDisplayed;
   public
@@ -686,7 +689,7 @@ begin
             // display the column and row number
             frmGoPhast.sbMain.Panels[1].Text := 'Col: ' + IntToStr(Column + 1)
               + '; Row: ' + IntToStr(Row + 1);
-            UpdateStatusBarForTopBlockDataSet(Column, Row, X, Y);
+            UpdateStatusBarForTopBlockDataSet(Column, Row, X, Y, APoint);
           end
           else
           begin
@@ -708,7 +711,7 @@ begin
             // display the column and row number
             frmGoPhast.sbMain.Panels[1].Text := 'Col: ' + IntToStr(Column + 1)
               + '; Row: ' + IntToStr(Row + 1);
-            UpdateStatusBarForTopNodeDataSet(Column, Row);
+            UpdateStatusBarForTopNodeDataSet(Column, Row, APoint);
           end
           else
           begin
@@ -734,7 +737,7 @@ begin
             // display the column and layer number
             frmGoPhast.sbMain.Panels[1].Text := 'Col: ' + IntToStr(Column + 1)
               + '; Lay: ' + IntToStr(Layer + 1);
-            UpdateStatusBarFrontBlockDataSet(Column, Layer);
+            UpdateStatusBarFrontBlockDataSet(Column, Layer, APoint);
           end
           else
           begin
@@ -756,7 +759,7 @@ begin
             // display the column and layer number
             frmGoPhast.sbMain.Panels[1].Text := 'Col: ' + IntToStr(Column + 1)
               + '; Lay: ' + IntToStr(Layer + 1);
-            UpdateStatusBarFrontNodeDataSet(Column, Layer);
+            UpdateStatusBarFrontNodeDataSet(Column, Layer, APoint);
           end
           else
           begin
@@ -780,7 +783,7 @@ begin
           begin
             frmGoPhast.sbMain.Panels[1].Text := 'Row: ' + IntToStr(Row + 1)
               + '; Lay: ' + IntToStr(Layer + 1);
-            UpdateStatusBarSideBlockDataSet(Row, Layer);
+            UpdateStatusBarSideBlockDataSet(Row, Layer, APoint);
           end
           else
           begin
@@ -800,7 +803,7 @@ begin
           begin
             frmGoPhast.sbMain.Panels[1].Text := 'Row: ' + IntToStr(Row + 1)
               + '; Lay: ' + IntToStr(Layer + 1);
-            UpdateStatusBarSideNodeDataSet(Row, Layer);
+            UpdateStatusBarSideNodeDataSet(Row, Layer, APoint);
           end
           else
           begin
@@ -2724,11 +2727,16 @@ begin
 end;
 
 procedure TframeView.ShowCurrentValue(DataSet: TDataArray;
-  const NameToDisplay: string; Column, Row, Layer: Integer);
+  const NameToDisplay: string; Column, Row, Layer: Integer;
+  const Location: TPoint2D);
 var
   ValueToDisplay: string;
   Explanation: string;
 begin
+  if not DataSet.UpToDate then
+  begin
+    Exit;
+  end;
   case DataSet.Datatype of
     rdtDouble:
       begin
@@ -2801,7 +2809,7 @@ begin
   if frmGridValue <> nil then
   begin
     frmGridValue.UpdateValue(Layer, Row, Column,
-      NameToDisplay, ValueToDisplay, Explanation);
+      NameToDisplay, ValueToDisplay, Explanation, Location);
   end;
 end;
 
@@ -2838,7 +2846,7 @@ begin
   end;
 end;
 
-procedure TframeView.UpdateStatusBarSideNodeDataSet(Row, Layer: Integer);
+procedure TframeView.UpdateStatusBarSideNodeDataSet(Row, Layer: Integer; const Location: TPoint2D);
 var
   NameToDisplay: string;
   Column: Integer;
@@ -2872,14 +2880,14 @@ begin
     if DataSet.IsValue[Layer, Row, Column] and (Column >= 0)
       and (Column <= frmGoPhast.Grid.ColumnCount) then
     begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer);
+      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Location);
     end
     else
     begin
       frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '');
+        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '', Location);
       end;
     end;
   end
@@ -2888,12 +2896,13 @@ begin
     frmGoPhast.sbMain.Panels[2].Text := '';
     if frmGridValue <> nil then
     begin
-      frmGridValue.UpdateValue(Layer, Row, Column, '', '', '');
+      frmGridValue.UpdateValue(Layer, Row, Column, '', '', '', Location);
     end;
   end;
 end;
 
-procedure TframeView.UpdateStatusBarSideBlockDataSet(Row, Layer: Integer);
+procedure TframeView.UpdateStatusBarSideBlockDataSet(Row, Layer: Integer;
+  const Location: TPoint2D);
 var
   NameToDisplay: string;
   Column: Integer;
@@ -2927,14 +2936,14 @@ begin
     if DataSet.IsValue[Layer, Row, Column] and (Column >= 0)
       and (Column < frmGoPhast.Grid.ColumnCount) then
     begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer);
+      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Location);
     end
     else
     begin
       frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '');
+        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '', Location);
       end;
     end;
   end
@@ -2943,13 +2952,13 @@ begin
     frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, Row, Column, '', '', '');
+        frmGridValue.UpdateValue(Layer, Row, Column, '', '', '', Location);
       end;
   end;
 end;
 
 procedure TframeView.UpdateStatusBarFrontNodeDataSet( 
-  Column: Integer; Layer: Integer);
+  Column: Integer; Layer: Integer; const Location: TPoint2D);
 var
   NameToDisplay: string;
   Row: Integer;
@@ -2983,14 +2992,14 @@ begin
     if DataSet.IsValue[Layer, Row, Column] and (Row >= 0) and (Row <=
       frmGoPhast.Grid.RowCount) then
     begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer);
+      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Location);
     end
     else
     begin
       frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '');
+        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '', Location);
       end;
     end;
   end
@@ -2999,12 +3008,13 @@ begin
     frmGoPhast.sbMain.Panels[2].Text := '';
     if frmGridValue <> nil then
     begin
-      frmGridValue.UpdateValue(Layer, Row, Column, '', '', '');
+      frmGridValue.UpdateValue(Layer, Row, Column, '', '', '', Location);
     end;
   end;
 end;
 
-procedure TframeView.UpdateStatusBarFrontBlockDataSet(Column, Layer: Integer);
+procedure TframeView.UpdateStatusBarFrontBlockDataSet(Column, Layer: Integer;
+  const Location: TPoint2D);
 var
   NameToDisplay: string;
   Row: Integer;
@@ -3038,14 +3048,14 @@ begin
     if DataSet.IsValue[Layer, Row, Column] and (Row >= 0) and (Row <
       frmGoPhast.Grid.RowCount) then
     begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer);
+      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Location);
     end
     else
     begin
       frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '');
+        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '', Location);
       end;
     end;
   end
@@ -3054,13 +3064,13 @@ begin
     frmGoPhast.sbMain.Panels[2].Text := '';
     if frmGridValue <> nil then
     begin
-      frmGridValue.UpdateValue(Layer, Row, Column, '', '', '');
+      frmGridValue.UpdateValue(Layer, Row, Column, '', '', '', Location);
     end;
   end;
 end;
 
 procedure TframeView.UpdateStatusBarForTopNodeDataSet(
-  Column: Integer; Row: Integer);
+  Column: Integer; Row: Integer; const Location: TPoint2D);
 var
   NameToDisplay: string;
   Layer: Integer;
@@ -3094,14 +3104,14 @@ begin
     if DataSet.IsValue[Layer, Row, Column] and (Layer >= 0)
       and (Layer <= frmGoPhast.Grid.LayerCount) then
     begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer);
+      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Location);
     end
     else
     begin
       frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '');
+        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '', Location);
       end;
     end;
   end
@@ -3110,13 +3120,13 @@ begin
     frmGoPhast.sbMain.Panels[2].Text := '';
     if frmGridValue <> nil then
     begin
-      frmGridValue.UpdateValue(Layer, Row, Column, '', '', '');
+      frmGridValue.UpdateValue(Layer, Row, Column, '', '', '', Location);
     end;
   end;
 end;
 
 procedure TframeView.UpdateStatusBarForTopBlockDataSet(
-  Column, Row, X, Y: Integer);
+  Column, Row, X, Y: Integer; const Location: TPoint2D);
 var
   NameToDisplay: string;
   Layer: Integer;
@@ -3155,7 +3165,7 @@ begin
     if DataSet.IsValue[Layer, Row, Column] and (Layer >= 0)
       and (Layer < frmGoPhast.Grid.LayerCount) then
     begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer);
+      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Location);
       HasUpdated := True;
     end;
   end
@@ -3174,7 +3184,7 @@ begin
       if frmGridValue <> nil then
       begin
         frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay,
-          FloatToStr(Value), Explanation);
+          FloatToStr(Value), Explanation, Location);
       end;
       HasUpdated := True;
     end;
@@ -3185,7 +3195,7 @@ begin
     frmGoPhast.sbMain.Panels[2].Text := '';
     if frmGridValue <> nil then
     begin
-      frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '');
+      frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '', Location);
     end;
   end;
 end;

@@ -298,6 +298,7 @@ var
   Fraction: real;
   UnitBottom, UnitTop, UnitHeight: Real;
   FractionIndex: Integer;
+  DataArrayManager: TDataArrayManager;
 begin
   if not FCellElevationsNeedUpdating then Exit;
   if (ColumnCount <= 0) or (RowCount <= 0) or (LayerCount <= 0) then
@@ -312,13 +313,14 @@ begin
     UnitTopIndex := 0;
     SetLength(FLayerElevations, ColumnCount, RowCount, LayerCount+1);
 
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
     for LayerGroupIndex := 0 to
       frmGoPhast.PhastModel.LayerStructure.Count -1 do
     begin
       LayerGroup := frmGoPhast.PhastModel.LayerStructure.
         Items[LayerGroupIndex] as TLayerGroup;
       UnitBottomIndex := LayerIndex + LayerGroup.LayerCount;
-      DataArray := frmGoPhast.PhastModel.GetDataSetByName(LayerGroup.DataArrayName);
+      DataArray := DataArrayManager.GetDataSetByName(LayerGroup.DataArrayName);
       DataArray.Initialize;
       for ColIndex := 0 to ColumnCount - 1 do
       begin
@@ -328,8 +330,8 @@ begin
             DataArray.RealData[0, RowIndex, ColIndex];
         end;
       end;
-      frmGoPhast.PhastModel.AddDataSetToCache(DataArray);
-      frmGoPhast.PhastModel.CacheDataArrays;
+      DataArrayManager.AddDataSetToCache(DataArray);
+      DataArrayManager.CacheDataArrays;
       Inc(LayerIndex);
       if LayerGroup.Simulated then
       begin
@@ -731,10 +733,12 @@ var
   LayerIndex: integer;
   ErrorString: string;
   Active: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
   ErrorString := 'The top of one or more cells is below its bottom.';
   Elevations := LayerElevations;
-  Active := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  Active := DataArrayManager.GetDataSetByName(rsActive);
   Active.Initialize;
   for LayerIndex := 1 to LayerCount - 1 do
   begin
@@ -754,8 +758,8 @@ begin
       end;
     end;
   end;
-  frmGoPhast.PhastModel.AddDataSetToCache(Active);
-  frmGoPhast.PhastModel.CacheDataArrays;
+  DataArrayManager.AddDataSetToCache(Active);
+  DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowGrid.DrawOrdinarySideLayers(const BitMap: TBitmap32;

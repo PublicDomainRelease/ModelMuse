@@ -142,6 +142,10 @@ begin
   PCurrent.PriorSetup.Assign(PriorSetupCurrent);
   PCurrent.PriGpSet.Assign(PriGpsCurrent);
   PCurrent.PriSet.Assign(PriSetCurrent);
+  PCurrent.SetupParGroupUsage;
+  PCurrent.SetupObsGroupUsage;
+  PCurrent.SetupPredGroupUsage;
+  PCurrent.SetupPriGroupUsage;
 end;
 
 end.

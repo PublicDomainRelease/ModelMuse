@@ -75,7 +75,7 @@ begin
   WriteToNameFile('DE4', PhastModel.UnitNumbers.UnitNumber(StrDE4), NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgress.AddMessage('Writing DE4 Package input.');
+    frmProgressMM.AddMessage('Writing DE4 Package input.');
     WriteDataSet0;
     WriteDataSet1;
     WriteDataSet2;

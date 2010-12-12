@@ -167,7 +167,7 @@ implementation
 
 uses Clipbrd, Contnrs, GoPhastTypes, frmGoPhastUnit, DataSetUnit, RbwParser,
   frmProgressUnit, UndoItems, ScreenObjectUnit, FastGEO, GIS_Functions,
-  ValueArrayStorageUnit;
+  ValueArrayStorageUnit, PhastModelUnit;
 
 {$R *.dfm}
 
@@ -216,14 +216,16 @@ var
   DataSet: TDataArray;
   ViewDirection: TViewDirection;
   ShouldIncludeDataSet: boolean;
+  DataArrayManager: TDataArrayManager;
 begin
   jvclbDataSets.Items.Clear;
   jvclbDataSets.Color := clRed;
   EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
   ViewDirection := TViewDirection(rgViewDirection.ItemIndex);
-  for Index := 0 to frmGoPhast.PhastModel.DataSetCount -1 do
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  for Index := 0 to DataArrayManager.DataSetCount -1 do
   begin
-    DataSet := frmGoPhast.PhastModel.DataSets[Index];
+    DataSet := DataArrayManager.DataSets[Index];
     if DataSet.EvaluatedAt = EvalAt then
     begin
       ShouldIncludeDataSet := false;
@@ -505,22 +507,22 @@ begin
 
   if Now - StartTime > OneSecond then
   begin
-    if not frmProgress.Visible then
+    if not frmProgressMM.Visible then
     begin
-      frmProgress.Caption := 'Reading Data';
+      frmProgressMM.Caption := 'Reading Data';
     end;
     if Position < Max then
     begin
-      frmProgress.pbProgress.Max := Max;
-      frmProgress.pbProgress.Position := Position;
-      frmProgress.Show;
+      frmProgressMM.pbProgress.Max := Max;
+      frmProgressMM.pbProgress.Position := Position;
+      frmProgressMM.Show;
       StartTime := Now;
       Application.ProcessMessages;
     end;
   end;
   if Position = Max then
   begin
-    frmProgress.Hide;
+    frmProgressMM.Hide;
     Application.ProcessMessages;
   end;
 end;
@@ -682,11 +684,11 @@ begin
       begin
         ScreenObjectList.Capacity := seRows.AsInteger;
       end;
-      frmProgress.Caption := 'Progress';
-      frmProgress.pbProgress.Max := dgData.RowCount-1;
-      frmProgress.pbProgress.Position := 0;
-      frmProgress.PopupParent := frmGoPhast;
-      frmProgress.Show;
+      frmProgressMM.Caption := 'Progress';
+      frmProgressMM.pbProgress.Max := dgData.RowCount-1;
+      frmProgressMM.pbProgress.Position := 0;
+      frmProgressMM.PopupParent := frmGoPhast;
+      frmProgressMM.Show;
       for RowIndex := 1 to dgData.RowCount - 1 do
       begin
         try
@@ -945,10 +947,10 @@ begin
         end;
         if RowIndex mod 100 = 0 then
         begin
-          frmProgress.BringToFront;
+          frmProgressMM.BringToFront;
           Application.ProcessMessages;
         end;
-        frmProgress.StepIt;
+        frmProgressMM.StepIt;
       end;
 
       if cbImportAsSingleObject.Checked and (AScreenObject <> nil) then
@@ -1019,7 +1021,7 @@ begin
       raise;
     end;
   finally
-    frmProgress.Hide;
+    frmProgressMM.Hide;
     ScreenObjectList.Free;
     ElevValues1.Free;
     ElevValues2.Free;
@@ -1107,7 +1109,7 @@ begin
         try
           StartTime := Now;
           dgData.DistributeText(0,1, Lines.Text);
-          frmProgress.Hide;
+          frmProgressMM.Hide;
           for Index := dgData.RowCount - 1 downto 0 do
           begin
             for ColIndex := 0 to dgData.ColCount - 1 do

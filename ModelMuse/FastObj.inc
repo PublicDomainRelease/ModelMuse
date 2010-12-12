@@ -28,7 +28,7 @@
 {$ALIGN ON}
 
 //define this to use direct calls to FastMM; it saves a few calls
-{_$define UseFastMM}
+{$define UseFastMM}
 
 //define this to directly start the global optimization
 //when global optimization is OFF, use OptimizeClass to prepare

@@ -8,7 +8,7 @@ uses
   SysUtils, Types, Classes, StrUtils, Graphics, Controls, Forms, Dialogs,
   StdCtrls, frmCustomGoPhastUnit, Buttons, ExtCtrls, ComCtrls, RbwParser,
   JvExExtCtrls, JvNetscapeSplitter, JvExStdCtrls, RichEdit, JvRichEdit,
-  ehshelprouter, ClassificationUnit;
+  ehshelprouter, ClassificationUnit, GoPhastTypes;
 
 type
   TVariableEdit = class(TClassificationObject)
@@ -276,7 +276,7 @@ many will be displayed at one time. }
     procedure CreateNodesForVariables;
     { Private declarations }
   public
-    procedure IncludeGIS_Functions;
+    procedure IncludeGIS_Functions(EvalAt: TEvaluatedAt);
     procedure RemoveActiveOnLayer;
     procedure RemoveSpecifiedHeadOnLayer;
     procedure RemoveGetVCont;
@@ -791,9 +791,10 @@ begin
   frmGoPhast.PhastModel.RegisterGlobalVariables(rbFormulaParser);
 end;
 
-procedure TfrmFormula.IncludeGIS_Functions;
+procedure TfrmFormula.IncludeGIS_Functions(EvalAt: TEvaluatedAt);
 begin
-  AddGIS_Functions(rbFormulaParser, frmGoPhast.PhastModel.ModelSelection);
+  AddGIS_Functions(rbFormulaParser, frmGoPhast.PhastModel.ModelSelection,
+    EvalAt);
 end;
 
 procedure TfrmFormula.RemoveSpecialImplementor(AClass: TClass);

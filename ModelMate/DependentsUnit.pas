@@ -204,6 +204,9 @@ interface
     slPrCMPredGps: TStringList;
     slPrCMAllOptions: TStringList;
 
+    DepSetTemp: TDepSet;
+    DepGpsTemp: TDepSet;
+
 implementation
 
 //###################################################################
@@ -354,6 +357,9 @@ begin
   PredGpsCurrent := TDepSet.Create;
   PredGpsCurrent.Assign(PredGpsDefault);
 
+  DepSetTemp := TDepSet.Create;
+  DepGpsTemp := TDepSet.Create;
+
   slStatFlag := TStringList.Create;
   slStatFlag.Add('VAR');
   slStatFlag.Add('SD');
@@ -435,6 +441,10 @@ begin
   FreeAndNil(PredictionSetupDefault);
   FreeAndNil(PredictionSetupCurrent);
   FreeAndNil(PredictionSetupLastSaved);
+
+  FreeAndNil(DepSetTemp);
+  FreeAndNil(DepGpsTemp);
+
 end;
 
 //###################################################################

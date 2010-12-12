@@ -231,19 +231,25 @@ begin
 end;
 
 procedure TUndoChemistryOptions.DoCommand;
+var
+  PhastModel: TPhastModel;
 begin
-  frmGoPhast.PhastModel.SoluteTransport := FNewSoluteTransport;
-  frmGoPhast.PhastModel.Diffusivity := FNewDiffusivity;
-  frmGoPhast.PhastModel.ChemistryOptions.Assign(FNewChemistryOptions);
-  frmGoPhast.PhastModel.CreateInitialDataSets;
+  PhastModel := frmGoPhast.PhastModel;
+  PhastModel.SoluteTransport := FNewSoluteTransport;
+  PhastModel.Diffusivity := FNewDiffusivity;
+  PhastModel.ChemistryOptions.Assign(FNewChemistryOptions);
+  PhastModel.DataArrayManager.CreateInitialDataSets;
 end;
 
 procedure TUndoChemistryOptions.Undo;
+var
+  PhastModel: TPhastModel;
 begin
-  frmGoPhast.PhastModel.SoluteTransport := FOldSoluteTransport;
-  frmGoPhast.PhastModel.Diffusivity := FOldDiffusivity;
-  frmGoPhast.PhastModel.ChemistryOptions.Assign(FOldChemistryOptions);
-  frmGoPhast.PhastModel.CreateInitialDataSets;
+  PhastModel := frmGoPhast.PhastModel;
+  PhastModel.SoluteTransport := FOldSoluteTransport;
+  PhastModel.Diffusivity := FOldDiffusivity;
+  PhastModel.ChemistryOptions.Assign(FOldChemistryOptions);
+  PhastModel.DataArrayManager.CreateInitialDataSets;
 end;
 
 end.

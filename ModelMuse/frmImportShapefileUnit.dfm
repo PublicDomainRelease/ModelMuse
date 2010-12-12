@@ -84,12 +84,16 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     Top = 0
     Width = 789
     Height = 505
-    ActivePage = tabFeatures
+    ActivePage = tabOptions
     Align = alClient
     TabOrder = 1
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         781
         472)
@@ -364,6 +368,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     end
     object tabData: TTabSheet
       Caption = 'Data'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlData: TPanel
         Left = 0
         Top = 427
@@ -519,6 +527,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       Caption = 'Features'
       ImageIndex = 2
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlBoundaryCondition: TPanel
         Left = 0
         Top = 0
@@ -1412,11 +1424,17 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               object tabDrtNone: TTabSheet
                 Caption = 'tabDrtNone'
                 TabVisible = False
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
               end
               object tabDrtLocation: TTabSheet
                 Caption = 'tabDrtLocation'
                 ImageIndex = 2
                 TabVisible = False
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object lblDrtX: TLabel
                   Left = 3
                   Top = 7
@@ -1491,6 +1509,9 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 Caption = 'tabDrtCell'
                 ImageIndex = 3
                 TabVisible = False
+                ExplicitTop = 0
+                ExplicitWidth = 0
+                ExplicitHeight = 0
                 object lblDrtCol: TLabel
                   Left = 3
                   Top = 7
@@ -2085,6 +2106,10 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     object tabCoordinateConversion: TTabSheet
       Caption = 'Coordinate Conversion'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object imageUtmZones: TImage
         Left = 8
         Top = 96

@@ -30,7 +30,7 @@ type
     class function Extension: string; override;
   public
     procedure WriteFile(const AFileName: string);
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
   end;
 
 implementation
@@ -81,13 +81,15 @@ var
   SortItem, SortItem1, SortItem2: THguSort;
   TopArray: TDataArray;
   Delta: Double;
+  DataArrayManager: TDataArrayManager;
 const
   Epsilon = 1e-4;
   GapWarning = 'Gap between hydrogeologic units';
   OverlapWarning = 'Overlap between hydrogeologic units';
   WarningFormat = 'Column: %d; Row: %d; Higher unit: %s; Lower unit: %s';
 begin
-  ActiveDataArray := PhastModel.GetDataSetByName(rsActive);
+  DataArrayManager := PhastModel.DataArrayManager;
+  ActiveDataArray := DataArrayManager.GetDataSetByName(rsActive);
   ActiveDataArray.Initialize;
 
   HguList := TObjectList.Create;
@@ -113,18 +115,18 @@ begin
           for HguIndex := 0 to PhastModel.HydrogeologicUnits.Count - 1 do
           begin
             HGU := PhastModel.HydrogeologicUnits[HguIndex];
-            ThickArray := PhastModel.GetDataSetByName(HGU.ThickessDataArrayName);
+            ThickArray := DataArrayManager.GetDataSetByName(HGU.ThickessDataArrayName);
             ThickArray.Initialize;
-            PhastModel.AddDataSetToCache(ThickArray);
+            DataArrayManager.AddDataSetToCache(ThickArray);
             Thickness := ThickArray.RealData[0, RowIndex, ColIndex];
             if Thickness > 0 then
             begin
               SortItem := THguSort.Create;
               HguList.Add(SortItem);
               SortItem.HGU := HGU;
-              TopArray := PhastModel.GetDataSetByName(HGU.TopDataArrayName);
+              TopArray := DataArrayManager.GetDataSetByName(HGU.TopDataArrayName);
               TopArray.Initialize;
-              PhastModel.AddDataSetToCache(TopArray);
+              DataArrayManager.AddDataSetToCache(TopArray);
               SortItem.Top := TopArray.RealData[0, RowIndex, ColIndex];
               SortItem.Bottom := SortItem.Top - Thickness;
             end;
@@ -156,11 +158,11 @@ begin
     HguList.Free;
   end;
 
-  PhastModel.AddDataSetToCache(ActiveDataArray);
-  PhastModel.CacheDataArrays;
+  DataArrayManager.AddDataSetToCache(ActiveDataArray);
+  DataArrayManager.CacheDataArrays;
 end;
 
-constructor TModflowHUF_Writer.Create(Model: TPhastModel);
+constructor TModflowHUF_Writer.Create(Model: TCustomModel);
 begin
   inherited;
   FHufPackage := Package as THufPackageSelection;
@@ -205,13 +207,13 @@ begin
     IOHUFHEADS := PhastModel.UnitNumbers.UnitNumber(StrIOHUFHEADS);
     if PhastModel.ModflowOutputControl.HeadOC.FormatDefined then
     begin
-      NameOfFile := ChangeFileExt(FNameOfFile, '.huf_fhd');
+      NameOfFile := ChangeFileExt(FNameOfFile, StrHuffhd);
       WriteToNameFile(StrDATA, IOHUFHEADS,
         NameOfFile, foOutput);
     end
     else
     begin
-      NameOfFile := ChangeFileExt(FNameOfFile, '.huf_bhd');
+      NameOfFile := ChangeFileExt(FNameOfFile, StrHufbhd);
       WriteToNameFile(StrDATABINARY, IOHUFHEADS,
         NameOfFile, foOutput);
     end;
@@ -223,7 +225,7 @@ begin
   if FHufPackage.SaveFlows then
   begin
     IOHUFFLOWS := PhastModel.UnitNumbers.UnitNumber(StrIOHUFFLOWS);
-    NameOfFile := ChangeFileExt(FNameOfFile, '.huf_flow');
+    NameOfFile := ChangeFileExt(FNameOfFile, StrHufflow);
     WriteToNameFile(StrDATABINARY, IOHUFFLOWS,
       NameOfFile, foOutput);
   end
@@ -346,7 +348,7 @@ begin
   LTHUF := PhastModel.LayerStructure.Laytyp;
   if PhastModel.ModflowWettingOptions.WettingActive then
   begin
-    DataArray := PhastModel.GetDataSetByName(rsWetDry);
+    DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsWetDry);
     Assert(DataArray <> nil);
 
     try
@@ -363,13 +365,13 @@ begin
           WriteArray(DataArray, DataArrayLayerIndex, 'Data set 5: WETDRY ' + LayerDescription);
         end;
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
       end;
     finally
-      PhastModel.CacheDataArrays;
+      PhastModel.DataArrayManager.CacheDataArrays;
     end;
   end;
 end;
@@ -385,20 +387,20 @@ procedure TModflowHUF_Writer.WriteDataSet7(HGU: THydrogeologicUnit);
 var
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.GetDataSetByName(HGU.TopDataArrayName);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(HGU.TopDataArrayName);
   Assert(DataArray <> nil);
   WriteArray(DataArray, 0, ' Data set 7: TOP ' + HGU.HufName);
-  PhastModel.CacheDataArrays;
+  PhastModel.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowHUF_Writer.WriteDataSet8(HGU: THydrogeologicUnit);
 var
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.GetDataSetByName(HGU.ThickessDataArrayName);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(HGU.ThickessDataArrayName);
   Assert(DataArray <> nil);
   WriteArray(DataArray, 0, ' Data set 8:  THCK ' + HGU.HufName);
-  PhastModel.CacheDataArrays;
+  PhastModel.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowHUF_Writer.WriteDataSet9;
@@ -637,11 +639,11 @@ begin
   for UnitIndex := 0 to PhastModel.HydrogeologicUnits.Count - 1 do
   begin
     HGU := PhastModel.HydrogeologicUnits[UnitIndex];
-    frmProgress.AddMessage('  Writing Data Set 6 for ' + HGU.HufName);
+    frmProgressMM.AddMessage('  Writing Data Set 6 for ' + HGU.HufName);
     WriteDataSet6(HGU);
-    frmProgress.AddMessage('  Writing Data Set 7 for ' + HGU.HufName);
+    frmProgressMM.AddMessage('  Writing Data Set 7 for ' + HGU.HufName);
     WriteDataSet7(HGU);
-    frmProgress.AddMessage('  Writing Data Set 8 for ' + HGU.HufName);
+    frmProgressMM.AddMessage('  Writing Data Set 8 for ' + HGU.HufName);
     WriteDataSet8(HGU);
   end;
 end;
@@ -661,90 +663,90 @@ begin
     FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try
-    frmProgress.AddMessage('Writing HUF2 Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing HUF2 Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage('  Writing Data Set 3.');
     WriteDataSet3;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage('  Writing Data Set 5.');
     WriteDataSet5;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
     WriteDataSets6to8;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 9.');
+    frmProgressMM.AddMessage('  Writing Data Set 9.');
     WriteDataSet9;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 10 and 11.');
+    frmProgressMM.AddMessage('  Writing Data Sets 10 and 11.');
     WriteDataSets10and11;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 12.');
+    frmProgressMM.AddMessage('  Writing Data Set 12.');
     WriteDataSet12;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Checking elevations.');
+    frmProgressMM.AddMessage('  Checking elevations.');
     CheckElevations;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;

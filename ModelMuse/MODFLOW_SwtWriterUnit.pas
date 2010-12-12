@@ -37,7 +37,7 @@ type
     class function Extension: string; override;
   public
     procedure WriteFile(const AFileName: string);
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     Destructor Destroy; override;
   end;
 
@@ -51,7 +51,7 @@ uses
 
 { TModflowSWT_Writer }
 
-constructor TModflowSWT_Writer.Create(Model: TPhastModel);
+constructor TModflowSWT_Writer.Create(Model: TCustomModel);
 begin
   inherited;
   FLNWT := TIntegerList.Create;
@@ -114,43 +114,43 @@ begin
       for SubsidenceIndex := 0 to Group.WaterTableLayers.Count - 1 do
       begin
         WT_Item := Group.WaterTableLayers[SubsidenceIndex];
-        CompressibleThicknessDataArray := PhastModel.GetDataSetByName(
+        CompressibleThicknessDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableCompressibleThicknessDataArrayName);
         Assert(CompressibleThicknessDataArray <> nil);
 
-        InitialElasticSkeletalSpecificStorageDataArray := PhastModel.GetDataSetByName(
+        InitialElasticSkeletalSpecificStorageDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableInitialElasticSkeletalSpecificStorageDataArrayName);
         if FSwtPackage.CompressionSource = csSpecificStorage then
         begin
           Assert(InitialElasticSkeletalSpecificStorageDataArray <> nil);
         end;
 
-        InitialInelasticSkeletalSpecificStorageDataArray := PhastModel.GetDataSetByName(
+        InitialInelasticSkeletalSpecificStorageDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName);
         if FSwtPackage.CompressionSource = csSpecificStorage then
         begin
           Assert(InitialInelasticSkeletalSpecificStorageDataArray <> nil);
         end;
 
-        RecompressionIndexDataArray := PhastModel.GetDataSetByName(
+        RecompressionIndexDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableRecompressionIndexDataArrayName);
         if FSwtPackage.CompressionSource = csCompressionReComp then
         begin
           Assert(RecompressionIndexDataArray <> nil);
         end;
 
-        CompressionIndexDataArray := PhastModel.GetDataSetByName(
+        CompressionIndexDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableCompressionIndexDataArrayName);
         if FSwtPackage.CompressionSource = csCompressionReComp then
         begin
           Assert(CompressionIndexDataArray <> nil);
         end;
 
-        InitialVoidRatioDataArray := PhastModel.GetDataSetByName(
+        InitialVoidRatioDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableInitialVoidRatioDataArrayName);
         Assert(InitialVoidRatioDataArray <> nil);
 
-        InitialCompactionDataArray := PhastModel.GetDataSetByName(
+        InitialCompactionDataArray := PhastModel.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableInitialCompactionDataArrayName);
         Assert(InitialCompactionDataArray <> nil);
 
@@ -244,13 +244,13 @@ var
   LayerIndex: Integer;
   ArrayIndex: Integer;
 begin
-  DataArray := PhastModel.GetDataSetByName(StrInitialPreOffsets);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrInitialPreOffsets);
 
   MFLayerIndex := 0;
   for GroupIndex := 1 to PhastModel.LayerStructure.Count -1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -261,7 +261,7 @@ begin
       for LayerIndex := 0 to Group.ModflowLayerCount -1 do
       begin
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -275,8 +275,8 @@ begin
       end;
     end;
   end;
-  PhastModel.AddDataSetToCache(DataArray);
-  PhastModel.CacheDataArrays;
+  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+  PhastModel.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSWT_Writer.WriteDataSet15;
@@ -288,13 +288,13 @@ var
   LayerIndex: Integer;
   ArrayIndex: Integer;
 begin
-  DataArray := PhastModel.GetDataSetByName(StrInitialPreconsolida);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrInitialPreconsolida);
 
   MFLayerIndex := 0;
   for GroupIndex := 1 to PhastModel.LayerStructure.Count -1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -305,7 +305,7 @@ begin
       for LayerIndex := 0 to Group.ModflowLayerCount -1 do
       begin
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -319,8 +319,8 @@ begin
       end;
     end;
   end;
-  PhastModel.AddDataSetToCache(DataArray);
-  PhastModel.CacheDataArrays;
+  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+  PhastModel.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSWT_Writer.WriteDataSet16;
@@ -374,7 +374,7 @@ var
     result := PhastModel.UnitNumbers.UnitNumber(StrSwtSUB_Out);
     if SwtFileName = '' then
     begin
-      SwtFileName := ExtractFileName(ChangeFileExt(FNameOfFile, '.Swt_Out'));
+      SwtFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSwtOut));
       WriteToNameFile(StrDATABINARY, result,
         SwtFileName, foOutput);
     end;
@@ -454,19 +454,19 @@ begin
     end;
   end;
 
-  Iun1 := HandleUnitNumber(Save1, StrSwtSUB_Out, '.SwtSubOut');
-  Iun2 := HandleUnitNumber(Save2, StrSwtComML_Out, '.SwtComMLOut');
-  Iun3 := HandleUnitNumber(Save3, StrSwtCOM_IS_Out, '.SwtComIsOut');
-  Iun4 := HandleUnitNumber(Save4, StrSwt_VD_Out, '.SwtVDOut');
-  Iun5 := HandleUnitNumber(Save5, StrSwt_PreCon_Out, '.SwtPreConStrOut');
-  Iun6 := HandleUnitNumber(Save6, StrSwt_DeltaPreCon_Out, '.SwtDeltaPreConStrOut');
-  Iun7 := HandleUnitNumber(Save7, StrSwt_GeoStat_Out, '.SwtGeoStatOut');
-  Iun8 := HandleUnitNumber(Save8, StrSwt_DeltaGeoStat_Out, '.SwtDeltaGeoStatOut');
-  Iun9 := HandleUnitNumber(Save9, StrSwt_EffStress_Out, '.SwtEffStressOut');
-  Iun10 := HandleUnitNumber(Save10, StrSwt_DeltaEffStress_Out, '.SwtDeltaEffStressOut');
-  Iun11 := HandleUnitNumber(Save11, StrSwt_VoidRatio_Out, '.SwtVoidRatioOut');
-  Iun12 := HandleUnitNumber(Save12, StrSwt_ThickCompSed_Out, '.SwtThickCompSedOut');
-  Iun13 := HandleUnitNumber(Save13, StrSwt_LayerCentElev_Out, '.SwtLayerCentElevOut');
+  Iun1 := HandleUnitNumber(Save1, StrSwtSUB_Out, StrSwtSubOut);
+  Iun2 := HandleUnitNumber(Save2, StrSwtComML_Out, StrSwtComMLOut);
+  Iun3 := HandleUnitNumber(Save3, StrSwtCOM_IS_Out, StrSwtComIsOut);
+  Iun4 := HandleUnitNumber(Save4, StrSwt_VD_Out, StrSwtVDOut);
+  Iun5 := HandleUnitNumber(Save5, StrSwt_PreCon_Out, StrSwtPreConStrOut);
+  Iun6 := HandleUnitNumber(Save6, StrSwt_DeltaPreCon_Out, StrSwtDeltaPreConStrOu);
+  Iun7 := HandleUnitNumber(Save7, StrSwt_GeoStat_Out, StrSwtGeoStatOut);
+  Iun8 := HandleUnitNumber(Save8, StrSwt_DeltaGeoStat_Out, StrSwtDeltaGeoStatOut);
+  Iun9 := HandleUnitNumber(Save9, StrSwt_EffStress_Out, StrSwtEffStressOut);
+  Iun10 := HandleUnitNumber(Save10, StrSwt_DeltaEffStress_Out, StrSwtDeltaEffStressOu);
+  Iun11 := HandleUnitNumber(Save11, StrSwt_VoidRatio_Out, StrSwtVoidRatioOut);
+  Iun12 := HandleUnitNumber(Save12, StrSwt_ThickCompSed_Out, StrSwtThickCompSedOut);
+  Iun13 := HandleUnitNumber(Save13, StrSwt_LayerCentElev_Out, StrSwtLayerCentElevOut);
 
   WriteInteger(Ifm1 );
   WriteInteger(Iun1 );
@@ -662,30 +662,30 @@ procedure TModflowSWT_Writer.WriteDataSet4;
 var
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.GetDataSetByName(StrGeostaticStress);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrGeostaticStress);
   WriteArray(DataArray, 0, 'Data Set 4: GL0');
-  PhastModel.AddDataSetToCache(DataArray);
-  PhastModel.CacheDataArrays;
+  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+  PhastModel.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSWT_Writer.WriteDataSet5;
 var
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.GetDataSetByName(StrSpecificGravityUns);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrSpecificGravityUns);
   WriteArray(DataArray, 0, 'Data Set 5: SGM');
-  PhastModel.AddDataSetToCache(DataArray);
-  PhastModel.CacheDataArrays;
+  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+  PhastModel.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSWT_Writer.WriteDataSet6;
 var
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.GetDataSetByName(StrSpecificGravitySat);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrSpecificGravitySat);
   WriteArray(DataArray, 0, 'Data Set 6: SGS');
-  PhastModel.AddDataSetToCache(DataArray);
-  PhastModel.CacheDataArrays;
+  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+  PhastModel.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSWT_Writer.WriteDataSets7to13;
@@ -697,39 +697,39 @@ begin
   begin
     DataArray := FTHICK_List[Index];
     WriteArray(DataArray, 0, 'Data set 7: THICK');
-    PhastModel.AddDataSetToCache(DataArray);
+    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
 
     if FSwtPackage.CompressionSource = csSpecificStorage then
     begin
       DataArray := FSse_List[Index];
       WriteArray(DataArray, 0, 'Data set 8: Sse');
-      PhastModel.AddDataSetToCache(DataArray);
+      PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
 
       DataArray := FSsv_List[Index];
       WriteArray(DataArray, 0, 'Data set 9: Ssv');
-      PhastModel.AddDataSetToCache(DataArray);
+      PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
     end;
 
     if FSwtPackage.CompressionSource = csCompressionReComp then
     begin
       DataArray := FCr_List[Index];
       WriteArray(DataArray, 0, 'Data set 10: Cr');
-      PhastModel.AddDataSetToCache(DataArray);
+      PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
 
       DataArray := FCc_List[Index];
       WriteArray(DataArray, 0, 'Data set 11: Cc');
-      PhastModel.AddDataSetToCache(DataArray);
+      PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
     end;
 
     DataArray := FVOID_List[Index];
     WriteArray(DataArray, 0, 'Data set 12: VOID');
-    PhastModel.AddDataSetToCache(DataArray);
+    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
 
     DataArray := FSUB_List[Index];
     WriteArray(DataArray, 0, 'Data set 13: SUB');
-    PhastModel.AddDataSetToCache(DataArray);
+    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
   end;
-  PhastModel.CacheDataArrays;
+  PhastModel.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSWT_Writer.WriteFile(const AFileName: string);
@@ -749,72 +749,72 @@ begin
   RetrieveArrays;
   OpenFile(FNameOfFile);
   try
-    frmProgress.AddMessage('Writing SWT Package input.');
+    frmProgressMM.AddMessage('Writing SWT Package input.');
 
     WriteDataSet0;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage('  Writing Data Set 3.');
     WriteDataSet3;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage('  Writing Data Set 5.');
     WriteDataSet5;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 6.');
+    frmProgressMM.AddMessage('  Writing Data Set 6.');
     WriteDataSet6;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 7 to 13.');
+    frmProgressMM.AddMessage('  Writing Data Sets 7 to 13.');
     WriteDataSets7to13;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
     if FSwtPackage.PreconsolidationSource = pcOffsets then
     begin
-      frmProgress.AddMessage('  Writing Data Set 14.');
+      frmProgressMM.AddMessage('  Writing Data Set 14.');
       WriteDataSet14;
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -822,10 +822,10 @@ begin
 
     if FSwtPackage.PreconsolidationSource = pcSpecified then
     begin
-      frmProgress.AddMessage('  Writing Data Set 15.');
+      frmProgressMM.AddMessage('  Writing Data Set 15.');
       WriteDataSet15;
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -833,18 +833,18 @@ begin
 
     if FSwtPackage.PrintChoices.Count > 0 then
     begin
-      frmProgress.AddMessage('  Writing Data Set 16.');
+      frmProgressMM.AddMessage('  Writing Data Set 16.');
       WriteDataSet16;
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
 
-      frmProgress.AddMessage('  Writing Data Set 17.');
+      frmProgressMM.AddMessage('  Writing Data Set 17.');
       WriteDataSet17;
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;

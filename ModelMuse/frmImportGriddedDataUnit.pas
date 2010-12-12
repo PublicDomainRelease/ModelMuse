@@ -287,6 +287,7 @@ var
   Position: integer;
   HydrogeologicUnitNames: TStringList;
   HufDataArrays: TClassificationList;
+  DataArrayManager: TDataArrayManager;
 begin
   jvplCellGrid.ActivePageIndex := comboMethod.ItemIndex;
 
@@ -327,9 +328,10 @@ begin
         LayerGroupList.Add(nil);
       end;
 
-      for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+      DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+      for Index := 0 to DataArrayManager.DataSetCount - 1 do
       begin
-        DataSet := frmGoPhast.PhastModel.DataSets[Index];
+        DataSet := DataArrayManager.DataSets[Index];
         ClassificationObject := TDataSetClassification.Create(DataSet);
         DataSetList.Add(ClassificationObject);
         FStoredClassifications.Add(ClassificationObject);
@@ -409,7 +411,7 @@ begin
               ColumnsForward := True;
               RowsForward := False;
             end;
-          msModflow:
+          msModflow, msModflowLGR:
             begin
               ColumnsForward := True;
               RowsForward := True;
@@ -456,7 +458,7 @@ begin
               ColumnsForward := True;
               RowsForward := False;
             end;
-          msModflow:
+          msModflow, msModflowLGR:
             begin
               ColumnsForward := True;
               RowsForward := True;
@@ -503,7 +505,7 @@ begin
               ColumnsForward := True;
               RowsForward := False;
             end;
-          msModflow:
+          msModflow, msModflowLGR:
             begin
               ColumnsForward := False;
               RowsForward := True;
@@ -586,7 +588,7 @@ begin
                 ColumnsForward := True;
                 RowsForward := False;
               end;
-            msModflow:
+            msModflow, msModflowLGR:
               begin
                 ColumnsForward := True;
                 RowsForward := True;
@@ -1116,7 +1118,7 @@ begin
                 Row := Grid.ColCount - RowIndex;
                 Layer := 1;
               end;
-            msModflow:
+            msModflow, msModflowLGR:
               begin
                 Column := ColIndex;
                 Row := RowIndex;
@@ -1139,7 +1141,7 @@ begin
                 Row := 1;
                 Layer := Grid.RowCount - RowIndex;
               end;
-            msModflow:
+            msModflow, msModflowLGR:
               begin
                 Column := ColIndex;
                 Row := 1;
@@ -1162,7 +1164,7 @@ begin
                 Row := ColIndex;
                 Layer := Grid.RowCount - RowIndex;
               end;
-            msModflow:
+            msModflow, msModflowLGR:
               begin
                 Column := 1;
                 Row := Grid.ColCount - ColIndex;
@@ -1185,7 +1187,7 @@ begin
                 Row := Grid.ColCount - RowIndex;
                 Layer := GridIndex + 1;
               end;
-            msModflow:
+            msModflow, msModflowLGR:
               begin
                 Column := ColIndex;
                 Row := RowIndex;

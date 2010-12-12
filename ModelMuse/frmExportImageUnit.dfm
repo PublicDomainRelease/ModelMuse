@@ -437,7 +437,6 @@ inherited frmExportImage: TfrmExportImage
             Width = 245
             Height = 171
             Align = alClient
-            CheckImageKind = ckSystem
             Header.AutoSizeIndex = 0
             Header.DefaultHeight = 17
             Header.Font.Charset = DEFAULT_CHARSET

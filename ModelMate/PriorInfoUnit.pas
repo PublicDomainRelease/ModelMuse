@@ -152,6 +152,8 @@ interface
     PriGpsDefault: TPriSet;
     PriGpsCurrent: TPriSet;
     PriGpsLastSaved: TPriSet;
+    PriSetTemp: TPriSet;
+    PriGpsTemp: TPriSet;
 
     slPriStatFlag: TStringList;
     slCMPriDefault: TStringList;
@@ -235,6 +237,8 @@ begin
   PriGpsDefault.Items[0].Initialize('DefaultPrior','DefaultPrior');
   PriGpsCurrent := TPriSet.Create;
   PriGpsCurrent.Assign(PriGpsDefault);
+  PriSetTemp := TPriSet.Create;
+  PriGpsTemp := TPriSet.Create;
   //
   slPriStatFlag := TStringList.Create;
   slPriStatFlag.Add('VAR');
@@ -278,6 +282,8 @@ begin
   FreeAndNil(PriorSetupDefault);
   FreeAndNil(PriorSetupCurrent);
   FreeAndNil(PriorSetupLastSaved);
+  FreeAndNil(PriSetTemp);
+  FreeAndNil(PriGpsTemp);
 end;
 
 //###################################################################
@@ -475,19 +481,6 @@ begin
   Clear;
   inherited;
 end;
-
-//procedure TPriorAttributes.Empty;
-//var
-//  I: integer;
-//begin
-//  if Count > 0 then
-//    begin
-//      for I := Count - 1 downto 0 do
-//        begin
-//          Delete(I);
-//        end;
-//    end;
-//end;
 
 function TPriorAttributes.GetItem(Index: Integer): TPriorAttribute;
 begin
@@ -705,17 +698,6 @@ begin
   Clear;
   inherited;
 end;
-
-//procedure TPriSet.Empty;
-//var
-//  I: integer;
-//begin
-//  if Count > 0 then
-//    begin
-//      for I := Count - 1 downto 0 do
-//        Delete(I);
-//    end;
-//end;
 
 function TPriSet.GetItem(Index: integer): TPri;
 begin

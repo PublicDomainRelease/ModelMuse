@@ -3877,6 +3877,10 @@ var
       end;
       if Arguments.Count >= FunctionClass.InputDataCount then
       begin
+        if Arguments.Count = 0 then
+        begin
+          Dec(LastArgument);
+        end;
         break;
       end;
     end;

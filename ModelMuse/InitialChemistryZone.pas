@@ -113,15 +113,18 @@ uses Contnrs, frmGoPhastUnit, PhastModelUnit;
 { TInitialChemistryDataSets }
 
 constructor TInitialChemistryDataSets.Create;
+var
+  DataArrayManager: TDataArrayManager;
 begin
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
   FEvalAt := eaNodes;
   FZoneClass := TInitialChemistryZone;
-  FChemistry_Initial_Solution := frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Solution);
+  FChemistry_Initial_Solution := DataArrayManager.GetDataSetByName(rsChemistry_Initial_Solution);
   FChemistry_Initial_Solution.Initialize;
   if frmGoPhast.PhastModel.ChemistryOptions.UseEquilibriumPhases then
   begin
     FChemistry_Initial_Equilibrium_Phases :=
-      frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Equilibrium_Phases);
+      DataArrayManager.GetDataSetByName(rsChemistry_Initial_Equilibrium_Phases);
     FChemistry_Initial_Equilibrium_Phases.Initialize;
   end
   else
@@ -131,7 +134,7 @@ begin
 
   if frmGoPhast.PhastModel.ChemistryOptions.UseSurfaceAssemblages then
   begin
-    FChemistry_Initial_Surface := frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Surface);
+    FChemistry_Initial_Surface := DataArrayManager.GetDataSetByName(rsChemistry_Initial_Surface);
     FChemistry_Initial_Surface.Initialize;
   end
   else
@@ -141,7 +144,7 @@ begin
 
   if frmGoPhast.PhastModel.ChemistryOptions.UseExchange then
   begin
-    FChemistry_Initial_Exchange := frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Exchange);
+    FChemistry_Initial_Exchange := DataArrayManager.GetDataSetByName(rsChemistry_Initial_Exchange);
     FChemistry_Initial_Exchange.Initialize;
   end
   else
@@ -151,7 +154,7 @@ begin
 
   if frmGoPhast.PhastModel.ChemistryOptions.UseGasPhases then
   begin
-    FChemistry_Initial_Gas_Phase := frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Gas_Phase);
+    FChemistry_Initial_Gas_Phase := DataArrayManager.GetDataSetByName(rsChemistry_Initial_Gas_Phase);
     FChemistry_Initial_Gas_Phase.Initialize;
   end
   else
@@ -162,7 +165,7 @@ begin
   if frmGoPhast.PhastModel.ChemistryOptions.UseSolidSolution then
   begin
     FChemistry_Initial_Solid_Solutions :=
-      frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Solid_Solutions);
+      DataArrayManager.GetDataSetByName(rsChemistry_Initial_Solid_Solutions);
     FChemistry_Initial_Solid_Solutions.Initialize;
   end
   else
@@ -172,7 +175,7 @@ begin
 
   if frmGoPhast.PhastModel.ChemistryOptions.UseKineticReactants then
   begin
-    FChemistry_Initial_Kinetics := frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Kinetics);
+    FChemistry_Initial_Kinetics := DataArrayManager.GetDataSetByName(rsChemistry_Initial_Kinetics);
     FChemistry_Initial_Kinetics.Initialize;
   end
   else

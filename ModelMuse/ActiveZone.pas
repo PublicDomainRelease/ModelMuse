@@ -72,7 +72,7 @@ constructor TActiveDataSets.Create;
 begin
   FEvalAt := eaBlocks;
   FZoneClass := TActiveZone;
-  FActive := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+  FActive := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
   Assert(FActive <> nil);
   FActive.Initialize;
 end;

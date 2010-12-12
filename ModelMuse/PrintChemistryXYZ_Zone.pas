@@ -71,7 +71,7 @@ constructor TPrintChemistryXYZ_DataSets.Create;
 begin
   FEvalAt := eaNodes;
   FZoneClass := TPrintChemistryXYZ_Zone;
-  FPrint_ChemistryXYZ := frmGoPhast.PhastModel.GetDataSetByName(rsPrint_XYZ_Chemistry);
+  FPrint_ChemistryXYZ := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsPrint_XYZ_Chemistry);
   FPrint_ChemistryXYZ.Initialize;
 end;
 

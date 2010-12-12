@@ -79,6 +79,8 @@ type
     FDeletingLayer: Boolean;
     FChanged: Boolean;
     FHidingColumns: Boolean;
+    FTimesCountChanged: Boolean;
+    FLayerCountChanged: Boolean;
     procedure ClearGrid(Grid: TRbwDataGrid4);
     procedure EnableMultiSelect(Shift: TShiftState; Grid: TRbwDataGrid4);
     procedure AssignValuesToSelectedGridCells(const NewText: string;
@@ -175,13 +177,16 @@ begin
     ofObserved, ofInacative:
       begin
         rdgHeads.Columns[Ord(hocStatFlag)].PickList := ObservationStatFlagLabels;
+        comboMultiStatFlag.Items.Assign(ObservationStatFlagLabels);
       end;
     ofPredicted:
       begin
         rdgHeads.Columns[Ord(hocStatFlag)].PickList := PredictionStatFlagLabels;
+        comboMultiStatFlag.Items.Assign(PredictionStatFlagLabels);
         for Index := 1 to rdgHeads.RowCount - 1 do
         begin
-          if rdgHeads.ItemIndex[Ord(hocStatFlag), Index] < 0 then
+          if (rdgHeads.Cells[Ord(hocStatFlag), Index] <> '')
+            and (rdgHeads.ItemIndex[Ord(hocStatFlag), Index] < 0) then
           begin
             rdgHeads.ItemIndex[Ord(hocStatFlag), Index] := 0;
           end;
@@ -243,6 +248,7 @@ begin
             rdgLayers.Cells[Ord(hlFraction),ItemIndex +1] := FloatToStr(LayerItem.Proportion);
           end;
           comboTreatment.ItemIndex := Ord(Observations.Purpose);
+          comboTreatmentChange(nil);
         end
         else
         begin
@@ -332,6 +338,7 @@ begin
           if comboTreatment.ItemIndex <> Ord(Observations.Purpose) then
           begin
             comboTreatment.ItemIndex := -1;
+            comboTreatmentChange(nil);
           end;
         end;
         FoundFirst := True;
@@ -343,6 +350,8 @@ begin
   end;
   HideUcodeColumns;
   FChanged := False;
+  FTimesCountChanged := False;
+  FLayerCountChanged := False;
 end;
 
 procedure TframeHeadObservations.InitializeControls;
@@ -350,6 +359,9 @@ var
   Column: TRbwColumn4;
   Index: Integer;
 begin
+  pcData.ActivePageIndex := 0;
+  rdgHeads.Columns[Ord(hocStatFlag)].PickList := ObservationStatFlagLabels;
+  comboMultiStatFlag.Items.Assign(ObservationStatFlagLabels);
   Column := rdgHeads.Columns[Ord(hocStatFlag)];
   Assert(comboMultiStatFlag.Items.Count = Column.PickList.Count);
   for Index := 0 to Column.PickList.Count - 1 do
@@ -665,6 +677,7 @@ end;
 
 procedure TframeHeadObservations.seLayersChange(Sender: TObject);
 begin
+  FLayerCountChanged := True;
   FDeletingLayer := True;
   try
     if seLayers.AsInteger = 0 then
@@ -750,13 +763,16 @@ begin
           Inc(ValueCount);
         end;
       end;
-      while Observations.Values.Count < ValueCount do
+      if FTimesCountChanged then
       begin
-        Observations.Values.Add;
-      end;
-      while Observations.Values.Count > ValueCount do
-      begin
-        Observations.Values.Delete(Observations.Values.Count-1);
+        while Observations.Values.Count < ValueCount do
+        begin
+          Observations.Values.Add;
+        end;
+        while Observations.Values.Count > ValueCount do
+        begin
+          Observations.Values.Delete(Observations.Values.Count-1);
+        end;
       end;
       ValueCount := 0;
       for RowIndex := 1 to seTimes.AsInteger do
@@ -766,28 +782,31 @@ begin
           and (TryStrToFloat(rdgHeads.Cells[Ord(hocHead), RowIndex], Head)
           or (rdgHeads.Cells[Ord(hocHead), RowIndex] = '')) then
         begin
-          ObsHead := Observations.Values.HobItems[ValueCount];
-          if (rdgHeads.Cells[Ord(hocTime), RowIndex] <> '') then
+          if ValueCount < Observations.Values.Count then
           begin
-            ObsHead.Time := Time;
-          end;
-          if (rdgHeads.Cells[Ord(hocHead), RowIndex] <> '') then
-          begin
-            ObsHead.Head := Head;
-          end;
-          if TryStrToFloat(rdgHeads.Cells[Ord(hocStatistic), RowIndex], Statistic) then
-          begin
-            ObsHead.Statistic := Statistic;
-          end;
-          if (rdgHeads.Cells[Ord(hocStatFlag), RowIndex] <> '') then
-          begin
-            ObsHead.StatFlag := TStatFlag(rdgHeads.Columns[Ord(hocStatFlag)].
-              PickList.IndexOf(rdgHeads.Cells[Ord(hocStatFlag), RowIndex]));
-          end;
-          NewComment := rdgHeads.Cells[Ord(hocComment), RowIndex];
-          if (List.Count = 1) or (NewComment <> '') then
-          begin
-            ObsHead.Comment := NewComment;
+            ObsHead := Observations.Values.HobItems[ValueCount];
+            if (rdgHeads.Cells[Ord(hocTime), RowIndex] <> '') then
+            begin
+              ObsHead.Time := Time;
+            end;
+            if (rdgHeads.Cells[Ord(hocHead), RowIndex] <> '') then
+            begin
+              ObsHead.Head := Head;
+            end;
+            if TryStrToFloat(rdgHeads.Cells[Ord(hocStatistic), RowIndex], Statistic) then
+            begin
+              ObsHead.Statistic := Statistic;
+            end;
+            if (rdgHeads.Cells[Ord(hocStatFlag), RowIndex] <> '') then
+            begin
+              ObsHead.StatFlag := TStatFlag(rdgHeads.Columns[Ord(hocStatFlag)].
+                PickList.IndexOf(rdgHeads.Cells[Ord(hocStatFlag), RowIndex]));
+            end;
+            NewComment := rdgHeads.Cells[Ord(hocComment), RowIndex];
+            if (List.Count = 1) or (NewComment <> '') then
+            begin
+              ObsHead.Comment := NewComment;
+            end;
           end;
           Inc(ValueCount);
         end;
@@ -802,13 +821,16 @@ begin
           Inc(ValueCount);
         end;
       end;
-      while Observations.LayerFractions.Count < ValueCount do
+      if FLayerCountChanged then
       begin
-        Observations.LayerFractions.Add;
-      end;
-      while Observations.LayerFractions.Count > ValueCount do
-      begin
-        Observations.LayerFractions.Delete(Observations.LayerFractions.Count-1);
+        while Observations.LayerFractions.Count < ValueCount do
+        begin
+          Observations.LayerFractions.Add;
+        end;
+        while Observations.LayerFractions.Count > ValueCount do
+        begin
+          Observations.LayerFractions.Delete(Observations.LayerFractions.Count-1);
+        end;
       end;
       ValueCount := 0;
       for RowIndex := 1 to rdgLayers.RowCount - 1 do
@@ -816,9 +838,12 @@ begin
         if TryStrToInt(rdgLayers.Cells[Ord(hlLayer), RowIndex], Layer)
           and TryStrToFloat(rdgLayers.Cells[Ord(hlFraction), RowIndex], Fraction) then
         begin
-          ObsLayer := Observations.LayerFractions.MultiHeadItems[ValueCount];
-          ObsLayer.Layer := Layer;
-          ObsLayer.Proportion := Fraction;
+          if ValueCount < Observations.LayerFractions.Count then
+          begin
+            ObsLayer := Observations.LayerFractions.MultiHeadItems[ValueCount];
+            ObsLayer.Layer := Layer;
+            ObsLayer.Proportion := Fraction;
+          end;
           Inc(ValueCount);
         end;
       end;
@@ -845,6 +870,7 @@ procedure TframeHeadObservations.seTimesChange(Sender: TObject);
 var
   CharNumber: integer;
 begin
+  FTimesCountChanged := True;
   FChanged := True;
   FDeletingTime := True;
   try

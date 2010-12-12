@@ -720,7 +720,7 @@ implementation
 
 uses SysUtils, Math, frmGoPhastUnit, InteractiveTools, frmSubdivideUnit,
   frmGoToUnit, FastGEO, frmShowHideObjectsUnit, frmGridColorUnit, 
-  frmContourDataUnit;
+  frmContourDataUnit, frmGridValueUnit, PhastModelUnit;
 
 { TUndoDeleteRow }
 
@@ -1715,7 +1715,7 @@ end;
 constructor TCustomUndoChangeGridDimensions.Create;
 begin
   inherited;
-  if frmGoPhast.PhastModel.ModelSelection = msModflow then
+  if frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR] then
   begin
     FLayerCount := frmGoPhast.PhastModel.ModflowGrid.LayerCount;
   end;
@@ -1724,7 +1724,7 @@ end;
 procedure TCustomUndoChangeGridDimensions.DoCommand;
 begin
   UpdateDataSets;
-  if frmGoPhast.PhastModel.ModelSelection = msModflow then
+  if frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR] then
   begin
     if frmGoPhast.PhastModel.ModflowGrid.LayerCount < 0 then
     begin
@@ -1736,7 +1736,7 @@ end;
 procedure TCustomUndoChangeGridDimensions.Undo;
 begin
   UpdateDataSets;
-  if frmGoPhast.PhastModel.ModelSelection = msModflow then
+  if frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR] then
   begin
       frmGoPhast.PhastModel.ModflowGrid.LayerCount := FLayerCount;
   end;
@@ -1745,27 +1745,15 @@ end;
 procedure TCustomUndoChangeGridDimensions.UpdateDataSets;
 var
   Index: integer;
-  DataSet: TDataArray;
+  PhastModel: TPhastModel;
+  ChildModel: TChildModel;
 begin
-  with frmGoPhast do
+  PhastModel := frmGoPhast.PhastModel;
+  PhastModel.DataArrayManager.UpdateDataSetDimensions;
+  for Index := 0 to PhastModel.ChildModels.Count - 1 do
   begin
-    with PhastModel do
-    begin
-      { TODO : This deals with the normal data sets.
-       What about the boundary conditions? }
-      for Index := 0 to DataSetCount - 1 do
-      begin
-        DataSet := DataSets[Index] as TDataArray;
-        DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-          Grid.ColumnCount);
-      end;
-    end;
-    for Index := 0 to DeletedDataSets.Count - 1 do
-    begin
-      DataSet := DeletedDataSets[Index] as TDataArray;
-      DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-        Grid.ColumnCount);
-    end;
+    ChildModel := PhastModel.ChildModels[Index].ChildModel;
+    ChildModel.DataArrayManager.UpdateDataSetDimensions;
   end;
 end;
 { TUndoCreateGrid }
@@ -1829,17 +1817,23 @@ begin
 end;
 
 procedure TUndoFreeSurface.DoCommand;
+var
+  PhastModel: TPhastModel;
 begin
-  frmGoPhast.PhastModel.FreeSurface := NewFreeSurface;
-  frmGoPhast.PhastModel.UseWaterTable := NewFreeSurface and NewInitialWaterTable;
-  frmGoPhast.PhastModel.CreateInitialDataSets;
+  PhastModel := frmGoPhast.PhastModel;
+  PhastModel.FreeSurface := NewFreeSurface;
+  PhastModel.UseWaterTable := NewFreeSurface and NewInitialWaterTable;
+  PhastModel.DataArrayManager.CreateInitialDataSets;
 end;
 
 procedure TUndoFreeSurface.Undo;
+var
+  PhastModel: TPhastModel;
 begin
-  frmGoPhast.PhastModel.FreeSurface := FOldFreeSurface;
-  frmGoPhast.PhastModel.UseWaterTable := FOldFreeSurface and FOldInitialWaterTable;
-  frmGoPhast.PhastModel.CreateInitialDataSets;
+  PhastModel := frmGoPhast.PhastModel;
+  PhastModel.FreeSurface := FOldFreeSurface;
+  PhastModel.UseWaterTable := FOldFreeSurface and FOldInitialWaterTable;
+  PhastModel.DataArrayManager.CreateInitialDataSets;
 end;
 
 { TUndoChangeDataSets }
@@ -1913,10 +1907,11 @@ procedure TUndoChangeDataSets.SetProperties(AddedDataSets, DeletedDataSets,
   DataSetProperties: TList);
 var
   Index: integer;
-  DataSet : TDataArray;
+//  DataSet : TDataArray;
   DataStorage: TPhastDataSetStorage;
   UpdateObjectDisplay: boolean;
   ShouldInvalidateDataArray: array of boolean;
+  DataArrayManager: TDataArrayManager;
 begin
   UpdateFormulas(DataSetProperties);
 
@@ -1924,23 +1919,10 @@ begin
     or (AddedDataSets.Count > 0);
   ClearExpressionsAndVariables;
   frmGoPhast.PhastModel.CreateGlobalVariables;
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  DataArrayManager.HandleDeletedDataArrays(DeletedDataSets);
   // extract any data sets that have been deleted and store them.
-  for Index := 0 to DeletedDataSets.Count - 1 do
-  begin
-    DataSet := DeletedDataSets[Index];
-    frmGoPhast.PhastModel.ExtractDataSet(DataSet);
-  end;
-  frmGoPhast.DeletedDataSets.Assign(DeletedDataSets, laOr);
-
-  for Index := 0 to AddedDataSets.Count -1 do
-  begin
-    DataSet := AddedDataSets[Index];
-    if frmGoPhast.PhastModel.GetDataSetByName(DataSet.Name) = nil then
-    begin
-      frmGoPhast.PhastModel.AddDataSet(DataSet);
-    end;
-    frmGoPhast.DeletedDataSets.Extract(DataSet);
-  end;
+  DataArrayManager.HandleAddedDataArrays(AddedDataSets);
 
   for Index := 0 to DataSetProperties.Count - 1 do
   begin
@@ -2038,6 +2020,7 @@ begin
   end;
   UpdateFrmGridColor;
   UpdateFrmContourData;
+  UpdateFrmGridValue;
 //  frmGoPhast.PhastModel.DataArrayNameChangeWarning;
 end;
 
@@ -2046,15 +2029,17 @@ var
   Index: integer;
   DataSet: TDataArray;
   DataStorage: TPhastDataSetStorage;
+  DataArrayManager: TDataArrayManager;
 begin
   FTopDataSet := frmGoPhast.PhastModel.Grid.TopDataSet;
   FFrontDataSet := frmGoPhast.PhastModel.Grid.FrontDataSet;
   FSideDataSet := frmGoPhast.PhastModel.Grid.SideDataSet;
   F3DDataSet := frmGoPhast.PhastModel.Grid.ThreeDDataSet;
 
-  for Index := 0 to frmGoPhast.PhastModel.DataSetCount -1 do
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  for Index := 0 to DataArrayManager.DataSetCount -1 do
   begin
-    DataSet := frmGoPhast.PhastModel.DataSets[Index];
+    DataSet := DataArrayManager.DataSets[Index];
     DataStorage := TPhastDataSetStorage.Create;
     FOldDataSetProperties.Add(DataStorage);
     DataStorage.Assign(DataSet);
@@ -2083,6 +2068,7 @@ begin
   end;
   UpdateFrmGridColor;
   UpdateFrmContourData;
+  UpdateFrmGridValue;
 //  frmGoPhast.PhastModel.DataArrayNameChangeWarning;
 end;
 
@@ -2433,3 +2419,4 @@ begin
 end;
 
 end.
+

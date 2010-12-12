@@ -865,6 +865,7 @@ procedure TFormulaManager.ResetFormulas;
 var
   Index: Integer;
   FormulaObject: TFormulaObject;
+  DataArrayManager: TDataArrayManager;
 begin
   for Index := 0 to FList.Count - 1 do
   begin
@@ -886,9 +887,10 @@ begin
     end;
   end;
 
-  for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  for Index := 0 to DataArrayManager.DataSetCount - 1 do
   begin
-    frmGoPhast.PhastModel.DataSets[Index].RefreshFormula;
+    DataArrayManager.DataSets[Index].RefreshFormula;
   end;
 end;
 

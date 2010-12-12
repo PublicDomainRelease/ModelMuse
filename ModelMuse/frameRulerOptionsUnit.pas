@@ -26,9 +26,11 @@ type
     // be shown in @link(lblPreview).
     // See @link(rdePreviewNumberChange).
     rdePreviewNumber: TRbwDataEntry;
-    Label1: TLabel;
+    lblDigits: TLabel;
     sePrecision: TJvSpinEdit;
     seDigits: TJvSpinEdit;
+    lblSpacing: TLabel;
+    seSpacing: TJvSpinEdit;
     // @name causes the preview number in @link(lblPreview) to be updated.
     procedure rdePreviewNumberChange(Sender: TObject);
     // @name is the OnChange event handler for @link(sePrecision).  It calls
@@ -75,6 +77,7 @@ begin
   FRuler := Ruler;
   sePrecision.Value := FRuler.RulerPrecision;
   seDigits.Value := FRuler.RulerDigits;
+  seSpacing.Value := FRuler.RulerDesiredSpacing;
   SetPreview;
 end;
 
@@ -82,6 +85,7 @@ procedure TframeRulerOptions.SetData;
 begin
   FRuler.RulerPrecision := sePrecision.AsInteger;
   FRuler.RulerDigits := seDigits.AsInteger;
+  FRuler.RulerDesiredSpacing := seSpacing.AsInteger;
 end;
 
 procedure TframeRulerOptions.sePrecisionChange(Sender: TObject);

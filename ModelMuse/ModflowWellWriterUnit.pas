@@ -217,47 +217,47 @@ begin
   WriteToNameFile(StrWEL, PhastModel.UnitNumbers.UnitNumber(StrWEL), NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
   ClearTimeLists;
   OpenFile(FileName(AFileName));
   try
-    frmProgress.AddMessage('Writing WEL Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing WEL Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 3 and 4.');
+    frmProgressMM.AddMessage('  Writing Data Sets 3 and 4.');
     WriteDataSets3And4;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 5 to 7.');
+    frmProgressMM.AddMessage('  Writing Data Sets 5 to 7.');
     WriteDataSets5To7;
   finally
     CloseFile;

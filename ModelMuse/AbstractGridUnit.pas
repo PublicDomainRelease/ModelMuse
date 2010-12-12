@@ -883,10 +883,14 @@ side views of the model.}
       a grid element in the coordinate system of the grid.}
     function ThreeDElementCenter(const Column, Row, Layer: integer):
       T3DRealPoint; virtual;
+    function RotatedThreeDElementCenter(const Column, Row, Layer: integer):
+      T3DRealPoint;
     { @name returns the X, Y, and Z coordinates of a corner of
       a grid element in the coordinate system of the grid.}
     function ThreeDElementCorner(const Column, Row, Layer: integer):
       T3DRealPoint; virtual;
+    function RotatedThreeDElementCorner(const Column, Row, Layer: integer):
+      T3DRealPoint;
     function ThreeDCellCorner(Column, Row, Layer: integer):
       T3DRealPoint; virtual;
     // @name is used to notify @link(TScreenObject)s and @link(TDataArray)s
@@ -1248,7 +1252,7 @@ end;
 
 function GridFracToRainbow(const Fraction: real): TColor;
 begin
-  result := frmGoPhast.PhastModel.GridColors.FracToColor(Fraction);
+  result := frmGoPhast.PhastModel.GridColorParameters.FracToColor(Fraction);
 end;
 
 { TCustomGrid }
@@ -2643,6 +2647,32 @@ function TCustomGrid.NearestRowPosition(const APosition: real;
   const First: integer = -1; const Last: integer = -1): integer;
 begin
   result := NearestColumnOrRow(FRowPositions, APosition, First, Last);
+end;
+
+function TCustomGrid.RotatedThreeDElementCenter(const Column, Row,
+  Layer: integer): T3DRealPoint;
+var
+  APoint: TPoint2D;
+begin
+  result := ThreeDElementCenter(Column, Row, Layer);
+  APoint.X := Result.X;
+  APoint.Y := Result.Y;
+  RotateFromGridCoordinatesToRealWorldCoordinates(APoint);
+  Result.X := APoint.X;
+  Result.Y := APoint.Y;
+end;
+
+function TCustomGrid.RotatedThreeDElementCorner(const Column, Row,
+  Layer: integer): T3DRealPoint;
+var
+  APoint: TPoint2D;
+begin
+  result := ThreeDElementCorner(Column, Row, Layer);
+  APoint.X := Result.X;
+  APoint.Y := Result.Y;
+  RotateFromGridCoordinatesToRealWorldCoordinates(APoint);
+  Result.X := APoint.X;
+  Result.Y := APoint.Y;
 end;
 
 function TCustomGrid.RotateFromGridCoordinatesToRealWorldCoordinates(
@@ -4866,7 +4896,7 @@ begin
           dsoTop:
             begin
               { TODO : This is a clumsy hack. It should be updated. }
-              if (DataSet = frmGoPhast.PhastModel.
+              if (DataSet = frmGoPhast.PhastModel.DataArrayManager.
                 GetDataSetByName(rsInitial_Water_Table)) then
               begin
                 LayerCount := ThreeDDataSet.LayerCount;
@@ -4879,7 +4909,7 @@ begin
                 or (frmGoPhast.PhastModel.RiverAssociatedSolution.
                 IndexOfDataSet(TSparseArrayPhastInterpolationDataSet(
                 DataSet)) >= 0)))
-                or (frmGoPhast.PhastModel.RiverDataSets.IndexOf(
+                or (frmGoPhast.PhastModel.DataArrayManager.RiverDataSets.IndexOf(
                 DataSet) >= 0) then
               begin
                 LayerCount := frmGoPhast.PhastModel.PhastGrid.LayerCount + 1;
@@ -5678,7 +5708,7 @@ var
   ActiveDataSet: TDataArray;
 begin
   result := True;
-  ActiveDataSet := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+  ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
   if ActiveDataSet <> nil then
   begin
     ActiveDataSet.Initialize;
@@ -5703,7 +5733,7 @@ begin
   result := True;
   if DataSet.Limits.ActiveOnly then
   begin
-    ActiveDataSet := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+    ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
     if ActiveDataSet <> nil then
     begin
       result := False;
@@ -7002,7 +7032,7 @@ begin
     ActiveDataArray := nil;
     if ColoringLimits.ActiveOnly then
     begin
-      ActiveDataArray := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+      ActiveDataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
       ActiveDataArray.Initialize;
     end;
 
@@ -7154,14 +7184,14 @@ begin
       Contourer := TMultipleContourCreator.Create;
       try
         Contourer.DataSet := SideContourDataSet;
-        Contourer.ActiveDataSet := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+        Contourer.ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
         Contourer.BitMap := BitMap;
         Contourer.ViewDirection := vdSide;
         Contourer.Grid := ContourGrid(SideContourDataSet.EvaluatedAt,
           frmGoPhast.PhastModel.ModelSelection, vdSide, SelectedColumn);
         Contourer.ZoomBox := ZoomBox;
         Contourer.DrawContours(SelectedColumn,
-          frmGoPhast.PhastModel.ContourColors);
+          frmGoPhast.PhastModel.ContourColorParameters);
       finally
         Contourer.Free;
       end;
@@ -7378,7 +7408,7 @@ begin
       eaNodes:
         begin
           { TODO : This is a clumsy hack. It should be updated. }
-          if (ThreeDDataSet = frmGoPhast.PhastModel.
+          if (ThreeDDataSet = frmGoPhast.PhastModel.DataArrayManager.
             GetDataSetByName(rsInitial_Water_Table)) then
           begin
             LayerLength := ThreeDDataSet.LayerCount;
@@ -7391,7 +7421,7 @@ begin
             or (frmGoPhast.PhastModel.RiverAssociatedSolution.
             IndexOfDataSet(TSparseArrayPhastInterpolationDataSet(
             ThreeDDataSet)) >= 0)))
-            or (frmGoPhast.PhastModel.RiverDataSets.IndexOf(
+            or (frmGoPhast.PhastModel.DataArrayManager.RiverDataSets.IndexOf(
             ThreeDDataSet) >= 0) then
           begin
             LayerLength := frmGoPhast.PhastModel.PhastGrid.LayerCount + 1;
@@ -7407,7 +7437,7 @@ begin
             dsoTop:
               begin
                 { TODO : This is a clumsy hack. It should be updated. }
-                if (ThreeDDataSet = frmGoPhast.PhastModel.
+                if (ThreeDDataSet = frmGoPhast.PhastModel.DataArrayManager.
                   GetDataSetByName(rsInitial_Water_Table)) then
                 begin
                   LayerLength := ThreeDDataSet.LayerCount;
@@ -7420,7 +7450,7 @@ begin
                   or (frmGoPhast.PhastModel.RiverAssociatedSolution.
                   IndexOfDataSet(TSparseArrayPhastInterpolationDataSet(
                   ThreeDDataSet)) >= 0)))
-                  or (frmGoPhast.PhastModel.RiverDataSets.IndexOf(
+                  or (frmGoPhast.PhastModel.DataArrayManager.RiverDataSets.IndexOf(
                   ThreeDDataSet) >= 0)
                     then
                 begin
@@ -7592,14 +7622,14 @@ begin
       try
         Contourer.DataSet := TopContourDataSet;
         Contourer.ActiveDataSet :=
-          frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+          frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
         Contourer.BitMap := BitMap;
         Contourer.ViewDirection := vdTop;
         Contourer.Grid := ContourGrid(TopContourDataSet.EvaluatedAt,
           frmGoPhast.PhastModel.ModelSelection, vdTop, SelectedLayer);
         Contourer.ZoomBox := ZoomBox;
         Contourer.DrawContours(SelectedLayer,
-          frmGoPhast.PhastModel.ContourColors);
+          frmGoPhast.PhastModel.ContourColorParameters);
       finally
         Contourer.Free;
       end;
@@ -7881,14 +7911,14 @@ begin
       Contourer := TMultipleContourCreator.Create;
       try
         Contourer.DataSet := FrontContourDataSet;
-        Contourer.ActiveDataSet := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+        Contourer.ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
         Contourer.BitMap := BitMap;
         Contourer.ViewDirection := vdFront;
         Contourer.Grid := ContourGrid(FrontContourDataSet.EvaluatedAt,
           frmGoPhast.PhastModel.ModelSelection, vdFront, SelectedRow);
         Contourer.ZoomBox := ZoomBox;
         Contourer.DrawContours(SelectedRow,
-          frmGoPhast.PhastModel.ContourColors);
+          frmGoPhast.PhastModel.ContourColorParameters);
       finally
         Contourer.Free;
       end;

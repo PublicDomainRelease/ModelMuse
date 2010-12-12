@@ -65,6 +65,10 @@ inherited frmImportPoints: TfrmImportPoints
     TabOrder = 1
     object tabControls: TTabSheet
       Caption = 'Controls'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlRadioGroups: TPanel
         Left = 0
         Top = 167
@@ -197,6 +201,10 @@ inherited frmImportPoints: TfrmImportPoints
     object tabData: TTabSheet
       Caption = 'Data'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlDataTabControls: TPanel
         Left = 0
         Top = 401

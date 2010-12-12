@@ -15,7 +15,7 @@ type
   protected
     class function Extension: string; override;
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     procedure WriteFile(const AFileName: string);
   end;
 
@@ -26,7 +26,7 @@ uses ModflowUnitNumbers, ModflowTimeUnit, frmErrorsAndWarningsUnit,
 
 { TOutputControlWriter }
 
-constructor TOutputControlWriter.Create(Model: TPhastModel);
+constructor TOutputControlWriter.Create(Model: TCustomModel);
 begin
   inherited Create(Model);
   FOutputControl := PhastModel.ModflowOutputControl;
@@ -70,12 +70,12 @@ begin
           WriteString(FOutputControl.HeadOC.ExternalFormat.FullFormat);
           WriteString(' LABEL');
           NewLine;
-          NameOfFile := ChangeFileExt(FNameOfFile, '.fhd');
+          NameOfFile := ChangeFileExt(FNameOfFile, StrFhd);
           WriteToNameFile(StrDATA, PhastModel.UnitNumbers.UnitNumber(StrHEAD), NameOfFile, foOutput);
         end;
       oftBinary:
         begin
-          NameOfFile := ChangeFileExt(FNameOfFile, '.bhd');
+          NameOfFile := ChangeFileExt(FNameOfFile, StrBhd);
           WriteToNameFile(StrDATABINARY, PhastModel.UnitNumbers.UnitNumber(StrHEAD), NameOfFile, foOutput);
         end;
       else Assert(False);
@@ -101,12 +101,12 @@ begin
           WriteString(FOutputControl.DrawdownOC.ExternalFormat.FullFormat);
           WriteString(' LABEL');
           NewLine;
-          NameOfFile := ChangeFileExt(FNameOfFile, '.fdn');
+          NameOfFile := ChangeFileExt(FNameOfFile, StrFdn);
           WriteToNameFile(StrDATA, PhastModel.UnitNumbers.UnitNumber(StrDRAWDOWN), NameOfFile, foOutput);
         end;
       oftBinary:
         begin
-          NameOfFile := ChangeFileExt(FNameOfFile, '.bdn');
+          NameOfFile := ChangeFileExt(FNameOfFile, StrBdn);
           WriteToNameFile(StrDATABINARY, PhastModel.UnitNumbers.UnitNumber(StrDRAWDOWN), NameOfFile, foOutput);
         end;
       else Assert(False);
@@ -193,7 +193,7 @@ begin
     for TimeStepIndex := 0 to StressPeriod.NumberOfSteps - 1 do
     begin
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -237,7 +237,7 @@ begin
         or ShouldExportCellBudget or ShouldExportOverallBudget then
       begin
         // Data set 2
-        frmProgress.AddMessage('    Writing Data Set 2 for stress period '
+        frmProgressMM.AddMessage('    Writing Data Set 2 for stress period '
           + IntToStr(StressPeriodIndex+1)
           + '; time step ' + IntToStr(TimeStepIndex+1));
         IPEROC := StressPeriodIndex + 1;
@@ -254,7 +254,7 @@ begin
         NewLine;
 
         // Data set 3
-        frmProgress.AddMessage('    Writing Data Set 3 for stress period '
+        frmProgressMM.AddMessage('    Writing Data Set 3 for stress period '
           + IntToStr(StressPeriodIndex+1)
           + '; time step ' + IntToStr(TimeStepIndex+1));
         if ShouldExportHead and FOutputControl.HeadOC.PrintInListing then
@@ -302,10 +302,10 @@ begin
   WriteToNameFile(StrOC, PhastModel.UnitNumbers.UnitNumber(StrOC), FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try
-    frmProgress.AddMessage('Writing Output Control input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing Output Control input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     WriteDataSets2and3;
   finally

@@ -416,13 +416,13 @@ begin
   If UpToDate then Exit;
   Assert(Assigned(OnGetUseList));
 
-  frmProgress.ShouldContinue := True;
-  frmProgress.btnAbort.Visible := False;
-  if not frmProgress.Visible then
+  frmProgressMM.ShouldContinue := True;
+  frmProgressMM.btnAbort.Visible := False;
+  if not frmProgressMM.Visible then
   begin
-    frmProgress.Caption := 'Progress';
+    frmProgressMM.Caption := 'Progress';
   end;
-  frmProgress.Show;
+  frmProgressMM.Show;
   Model := frmGoPhast.PhastModel;
   Model.UpdateModflowFullStressPeriods;
   TimeIndex := Model.ModflowFullStressPeriods.
@@ -448,7 +448,7 @@ begin
   Assert(Assigned(OnInitialize));
   OnInitialize(self);
   SetUpToDate(True);
-  frmProgress.Hide;
+  frmProgressMM.Hide;
 end;
 
 procedure TModflowBoundaryDisplayTimeList.LabelAsSum;

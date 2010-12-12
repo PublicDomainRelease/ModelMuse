@@ -12,13 +12,13 @@ type
   private
     // @name holds the X-coordinates of the data points.
     // @name is a copy of the value passed in @link(Initialize).
-    FX: TSingleArray;
+    FX: TFloatArray;
     // @name holds the Y-coordinates of the data points.
     // @name is a copy of the value passed in @link(Initialize).
-    FY: TSingleArray;
+    FY: TFloatArray;
     // @name holds the Z-values at the data points.
     // @name is a copy of the value passed in @link(Initialize).
-    FZ: TSingleArray;
+    FZ: TFloatArray;
     // number of points.
     N: integer;
     // LIST is a work-array with Length 6N-12.
@@ -31,14 +31,14 @@ type
     // @link(Interpolate2).
     IST: longint;
     // GRAD is a work-array (with Length 2N?).
-    GRAD: TSingleArray;
+    GRAD: TFloatArray;
     // SIGMA is a work-array (with Length 6N-12?).
     //       SIGMA = Uniform tension factor (IFLGS <= 0), or
     //               array containing tension factors associated
     //               with arcs in one-to-one correspondence with
     //               LIST entries (IFLGS >= 1).  Refer to Sub-
     //               routines GETSIG, SIG0, SIG1, and SIG2.
-    SIGMA: TSingleArray;
+    SIGMA: TFloatArray;
   public
     // @name stores the data used by @link(Interpolate1) and
     // @link(Interpolate2).  Each point described by X and Y
@@ -46,7 +46,7 @@ type
     // @param(X X holds the X-coordinates of the data points.)
     // @param(Y Y holds the Y-coordinates of the data points.)
     // @param(Z Z holds the data values of the data points.)
-    procedure Initialize(X, Y, Z: TSingleArray);
+    procedure Initialize(X, Y, Z: TFloatArray);
     // Given a value of X, and Y, @name returns an interpolated value
     // at that location based on the data stored in @link(Initialize).
     // Linear interpolation is used.
@@ -76,7 +76,7 @@ begin
   SetLength(SIGMA, 0);
 end;
 
-procedure TSfrInterpolator.Initialize(X, Y, Z: TSingleArray);
+procedure TSfrInterpolator.Initialize(X, Y, Z: TFloatArray);
 var
   NODES: TIntArray;  // NODES is a work-array with Length 2N.
   LNEW: integer; // Work variable.
@@ -151,7 +151,7 @@ begin
   SetLength(GRAD, 2*N);
 
   // Construct the triangulation;
-  TRMESH (N,X,Y, LIST,LPTR,LEND,LNEW,NODES, NODES,GRAD,IER,N);
+  TRMESH (N,X,Y, LIST,LPTR,LEND,LNEW,NODES, NODES,GRAD,IER);
 
   IF (IER = -2) THEN
   begin

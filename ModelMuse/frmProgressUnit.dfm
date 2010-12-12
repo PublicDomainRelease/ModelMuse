@@ -1,4 +1,4 @@
-inherited frmProgress: TfrmProgress
+inherited frmProgressMM: TfrmProgressMM
   Left = 384
   Top = 254
   Width = 448

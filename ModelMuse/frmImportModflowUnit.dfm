@@ -2,9 +2,10 @@ inherited frmImportModflow: TfrmImportModflow
   HelpType = htKeyword
   HelpKeyword = 'Import_MODFLOW_Model_Dialog_Box'
   Caption = 'Import MODFLOW-2005 Model'
+  ClientHeight = 279
   ClientWidth = 454
   ExplicitWidth = 462
-  ExplicitHeight = 274
+  ExplicitHeight = 313
   PixelsPerInch = 96
   TextHeight = 18
   object Label1: TLabel
@@ -122,12 +123,21 @@ inherited frmImportModflow: TfrmImportModflow
   end
   object sbStatusBar: TStatusBar
     Left = 0
-    Top = 214
+    Top = 253
     Width = 454
     Height = 26
     Panels = <>
     ParentFont = True
     SimplePanel = True
     UseSystemFont = False
+    ExplicitTop = 208
+  end
+  object pbProgress: TProgressBar
+    Left = 0
+    Top = 224
+    Width = 454
+    Height = 29
+    Align = alBottom
+    TabOrder = 8
   end
 end

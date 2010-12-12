@@ -177,6 +177,14 @@ end;
 procedure TfrmModflowTime.btnInsertClick(Sender: TObject);
 begin
   inherited;
+  if (dgTime.SelectedRow <= 0)
+    or (dgTime.SelectedRow >= dgTime.RowCount) then
+  begin
+    Beep;
+    MessageDlg('You need to select a row in the grid before clicking the '
+      + 'Insert button.', mtInformation, [mbOK], 0);
+    Exit;
+  end;
   dgTime.InsertRow(dgTime.SelectedRow);
   seNumPeriods.AsInteger := seNumPeriods.AsInteger + 1;
   SetDeleteButtonEnabled;

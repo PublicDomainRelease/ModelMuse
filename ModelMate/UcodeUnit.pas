@@ -202,6 +202,7 @@ uses Classes, Dialogs, SysUtils, Windows,
         procedure ExportOmitFile(const Directory: string);
         function FindMainInputFileName: string;
         function GetModelInfo(ModelInfo: TUcModelInfo): boolean;
+        function ModeIsParallelizable: boolean;
         function OutputMainFile: TFileName;
         function PopulateRunnerDirectories(var ErrMsg: string;
                      var NFiles: integer; var NDir: integer): boolean;
@@ -1099,6 +1100,11 @@ begin
     end;
 end;
 
+function TUcProject.ModeIsParallelizable: boolean;
+begin
+  result := ((UcMode in ParallelUcodeModes) or ((UcMode = umPred) and (self.PredictionSensitivities)))
+end;
+
 procedure TUcProject.SetMainInputFileName(const Value: string);
 begin
   fMainInputFileName := RelativePath(Value);
@@ -1116,7 +1122,7 @@ var
   FoundExe: boolean;
 begin
   result := 0;
-  if (UcMode in ParallelUcodeModes) then
+  if ModeIsParallelizable then
     begin
       DirSep := '\';
       NumRunners := ParallelRunners.Count;

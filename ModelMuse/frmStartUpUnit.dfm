@@ -170,7 +170,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 5
           Text = '5'
           DataType = dtReal
@@ -184,7 +184,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 4
           Text = '100'
           DataType = dtReal
@@ -198,7 +198,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 3
           Text = '100'
           DataType = dtReal
@@ -212,7 +212,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 2
           Text = '5'
           DataType = dtInteger
@@ -227,7 +227,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 1
           Text = '10'
           DataType = dtInteger
@@ -242,7 +242,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 0
           Text = '10'
           DataType = dtInteger

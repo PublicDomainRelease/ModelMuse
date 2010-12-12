@@ -401,7 +401,7 @@ inherited frmModflowOptions: TfrmModflowOptions
     end
     object btnOK: TBitBtn
       Left = 346
-      Top = 6
+      Top = 4
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]

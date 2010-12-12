@@ -154,6 +154,8 @@ type
     // or vertical orientation. @name is determined by @link(RulerPosition).
     property RulerOrientation: TOrientation read GetOrientation;
   public
+    procedure SetDefaults;
+    procedure Assign(Source: TRulerPainter);
     property ComponentState: TComponentState read GetComponentState;
     // @name creates and instance of @classname
     constructor Create(Owner: TComponent);
@@ -291,6 +293,7 @@ type
       Font for @name to work properly.}
     procedure PaintRotated(ACanvas: TCanvas; const X, Y, Angle: double;
       const Text: string); virtual;
+    property Painter: TRulerPainter read FPainter;
     { Public declarations }
   published
     // @name is the desired spacing between major ticks in
@@ -298,7 +301,7 @@ type
     // The actual spacing will, in most cases, be slightly different from
     // @name.
     property RulerDesiredSpacing: integer read GetRulerDesiredSpacing
-      write SetRulerDesiredSpacing;
+      write SetRulerDesiredSpacing default 60;
     // @name specifies how many digits will
     // appear in the exponent portion of numbers on the ruler.
     property RulerDigits: integer read GetRulerDigits write SetRulerDigits;
@@ -664,18 +667,27 @@ end;
 
 { TRulerPainter }
 
+procedure TRulerPainter.Assign(Source: TRulerPainter);
+begin
+  RulerDesiredSpacing := Source.RulerDesiredSpacing;
+  RulerDigits := Source.RulerDigits;
+  RulerEnds := Source.RulerEnds;
+  RulerLinePosition := Source.RulerLinePosition;
+  RulerMajorTickLength := Source.RulerMajorTickLength;
+  RulerMinorTickLength := Source.RulerMinorTickLength;
+  RulerPosition := Source.RulerPosition;
+  RulerPrecision := Source.RulerPrecision;
+  RulerStart := Source.RulerStart;
+  RulerTextOffset := Source.RulerTextOffset;
+  RulerTextPosition := Source.RulerTextPosition;
+  RulerValues := Source.RulerValues;
+end;
+
 constructor TRulerPainter.Create(Owner: TComponent);
 begin
   inherited Create;
   FOwner := Owner;
-  FDesiredSpacing := 100;
-  RulerMinorTickLength := 10;
-  RulerMajorTickLength := 20;
-  FLinePosition := 40;
-  FTextOffset := 5;
-  FPrecision := 5;
-  FDigits := 1;
-  FTextPosition := tpOutside;
+  SetDefaults;
   FPositions := TRulerPositions.Create(self);
   FValues := TRulerValues.Create(self);
 end;
@@ -973,6 +985,18 @@ begin
   finally
     ACanvas.Pen.Style := AStyle
   end;  
+end;
+
+procedure TRulerPainter.SetDefaults;
+begin
+  FDesiredSpacing := 60;
+  RulerMinorTickLength := 10;
+  RulerMajorTickLength := 20;
+  FLinePosition := 30;
+  FTextOffset := 5;
+  FPrecision := 5;
+  FDigits := 1;
+  FTextPosition := tpOutside;
 end;
 
 procedure TRulerPainter.GenerateRect(out OutputRect: TRect; X1, Y1, X2, Y2: Integer);

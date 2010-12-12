@@ -64,6 +64,7 @@ begin
   if (frmContourData <> nil) and (Force or frmContourData.Visible) then
   begin
     frmContourData.GetData;
+    frmContourData.UpdateLabelsAndLegend;
   end;
 end;
 
@@ -92,7 +93,7 @@ begin
   inherited;
   SetData;
   UpdateLabelsAndLegend;
-  frmProgress.Hide;
+  frmProgressMM.Hide;
 end;
 
 procedure TfrmContourData.cbLogTransformClick(Sender: TObject);
@@ -189,7 +190,7 @@ begin
 
   virttreecomboDataSetsChange(nil);
 
-  ContourColors := frmGoPhast.PhastModel.ContourColors;
+  ContourColors := frmGoPhast.PhastModel.ContourColorParameters;
   comboColorScheme.ItemIndex := ContourColors.ColorScheme;
   seCycles.Value := ContourColors.ColorCycles;
   jsColorExponent.Value := Round(ContourColors.ColorExponent*100);
@@ -282,21 +283,23 @@ var
   Index: Integer;
   DataSet: TDataArray;
   ContourColors: TColorParameters;
+  DataArrayManager: TDataArrayManager;
 begin
   Application.ProcessMessages;
-  frmProgress.ShouldContinue := True;
+  frmProgressMM.ShouldContinue := True;
   FreeAndNil(FStoredLegend);
   if AnObject <> nil then
   begin
-    frmProgress.btnAbort.Visible := False;
-    frmProgress.Caption := 'Progress';
-    frmProgress.Show;
-    for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+    frmProgressMM.btnAbort.Visible := False;
+    frmProgressMM.Caption := 'Progress';
+    frmProgressMM.Show;
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    for Index := 0 to DataArrayManager.DataSetCount - 1 do
     begin
-      frmGoPhast.PhastModel.AddDataSetToCache(frmGoPhast.PhastModel.DataSets[Index]);
+      DataArrayManager.AddDataSetToCache(DataArrayManager.DataSets[Index]);
     end;
-    frmGoPhast.PhastModel.CacheDataArrays;
-    if (frmGoPhast.Grid.ThreeDDataSet <> nil)
+    DataArrayManager.CacheDataArrays;
+    if (frmGoPhast.Grid.ThreeDContourDataSet <> nil)
       and (rgUpdateLimitChoice.ItemIndex = 1) then
     begin
       FStoredLegend := TLegend.Create(nil);
@@ -353,7 +356,7 @@ begin
     FLegend.ColoringLimits := DataSet.ContourLimits;
   end;
   frmGoPhast.PhastModel.Grid.GridChanged;
-  ContourColors := frmGoPhast.PhastModel.ContourColors;
+  ContourColors := frmGoPhast.PhastModel.ContourColorParameters;
   ContourColors.ColorScheme := comboColorScheme.ItemIndex;
   ContourColors.ColorCycles := seCycles.AsInteger;
   ContourColors.ColorExponent := seColorExponent.Value;

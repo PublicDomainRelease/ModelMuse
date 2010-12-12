@@ -20,7 +20,6 @@ object frameView: TframeView
     ShowHint = True
     OnDblClick = rulerDblClick
     OnMouseMove = rulerMouseMove
-    RulerDesiredSpacing = 100
     RulerDigits = 0
     RulerEnds.Lower = 10
     RulerEnds.Upper = 230
@@ -86,7 +85,6 @@ object frameView: TframeView
       ShowHint = True
       OnDblClick = rulerDblClick
       OnMouseMove = rulerMouseMove
-      RulerDesiredSpacing = 100
       RulerDigits = 0
       RulerEnds.Lower = 60
       RulerEnds.Upper = 480

@@ -114,7 +114,7 @@ begin
   WriteToNameFile('GMG', PhastModel.UnitNumbers.UnitNumber(StrGMG), NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgress.AddMessage('Writing GMG Package input.');
+    frmProgressMM.AddMessage('Writing GMG Package input.');
     WriteDataSet0;
     WriteDataSet1;
     WriteDataSet2;

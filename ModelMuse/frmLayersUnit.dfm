@@ -20,7 +20,7 @@ inherited frmLayers: TfrmLayers
     Top = 0
     Width = 441
     Height = 383
-    ActivePage = tabSWT
+    ActivePage = tabBasics
     Align = alClient
     TabOrder = 0
     OnChange = pcLayerGroupsChange
@@ -28,10 +28,6 @@ inherited frmLayers: TfrmLayers
       HelpType = htKeyword
       HelpKeyword = 'Basics_Tab'
       Caption = 'Basics'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         433
         350)
@@ -74,11 +70,12 @@ inherited frmLayers: TfrmLayers
       object comboAquiferType: TJvImageComboBox
         Left = 3
         Top = 77
-        Width = 406
+        Width = 427
         Height = 28
         Style = csOwnerDrawVariable
+        Anchors = [akLeft, akTop, akRight]
         ButtonStyle = fsLighter
-        DroppedWidth = 406
+        DroppedWidth = 427
         ImageHeight = 0
         ImageWidth = 0
         Images = ilCombo
@@ -198,7 +195,7 @@ inherited frmLayers: TfrmLayers
         Top = 318
         Width = 145
         Height = 22
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 5
         Text = '1'
         OnChange = rdeAnisotropyChange
@@ -587,10 +584,6 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'No_Delay_Beds_Tab'
       Caption = 'No-Delay Beds'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       inline frameSubNoDelayBeds: TframeSubBeds
         Left = 0
         Top = 0
@@ -633,10 +626,6 @@ inherited frmLayers: TfrmLayers
       HelpKeyword = 'Delay_Beds_Tab'
       Caption = 'Delay Beds'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       inline frameSubDelayBeds: TframeSubBeds
         Left = 0
         Top = 0

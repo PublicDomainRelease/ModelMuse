@@ -416,7 +416,7 @@ var
   FieldFormat: string;
   Contours: TContours;
 begin
-  ActiveDataSet := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+  ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
   DataSet := DataArray;
   ViewDirection := vdTop;
   Grid := FModelGrid.ContourGrid(DataArray.EvaluatedAt,

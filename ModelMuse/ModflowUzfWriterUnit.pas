@@ -35,7 +35,7 @@ type
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     // @name destroys the current instance of @classname.
     Destructor Destroy; override;
     procedure WriteFile(const AFileName: string; var GageStart: integer);
@@ -47,9 +47,20 @@ implementation
 uses ModflowUnitNumbers, DataSetUnit, ModflowUzfUnit, frmErrorsAndWarningsUnit, 
   frmProgressUnit, ModflowCellUnit, Forms;
 
+resourcestring
+  StrUnspecifiedUZFData = 'Unspecified UZF data';
+  StrTheInfiltrationRat = 'The infiltration rate in the UZF package was not ' +
+  'defined in the following stress periods.';
+  StrTheETDemandRateI = 'The ET demand rate in the UZF package was not defin' +
+  'ed in the following stress periods.';
+  StrTheETExtinctionDe = 'The ET extinction depth in the UZF package was not' +
+  ' defined in the following stress periods.';
+  StrTheETExtinctionWa = 'The ET extinction water content in the UZF package' +
+  ' was not defined in the following stress periods.';
+
 { TModflowUzfWriter }
 
-constructor TModflowUzfWriter.Create(Model: TPhastModel);
+constructor TModflowUzfWriter.Create(Model: TCustomModel);
 begin
   inherited;
   FEtDemand := TObjectList.Create;
@@ -76,7 +87,7 @@ begin
     + Package.PackageIdentifier
     + ' because the object does not '
     + 'set the values of either enclosed or intersected cells.';
-  frmProgress.AddMessage('Evaluating UZF Package data.');
+  frmProgressMM.AddMessage('Evaluating UZF Package data.');
   CountGages;
 
   for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
@@ -89,7 +100,7 @@ begin
     Boundary := ScreenObject.ModflowUzfBoundary;
     if Boundary <> nil then
     begin
-      frmProgress.AddMessage('    Evaluating ' + ScreenObject.Name + '.');
+      frmProgressMM.AddMessage('    Evaluating ' + ScreenObject.Name + '.');
       if not ScreenObject.SetValuesOfEnclosedCells
         and not ScreenObject.SetValuesOfIntersectedCells then
       begin
@@ -136,7 +147,7 @@ begin
     Exit;
   end;
   Evaluate;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
@@ -145,6 +156,13 @@ begin
     SetTimeListsUpToDate(TimeLists);
     Exit;
   end;
+
+  frmErrorsAndWarnings.RemoveErrorGroup(StrUnspecifiedUZFData);
+  frmErrorsAndWarnings.RemoveErrorGroup(StrTheInfiltrationRat);
+  frmErrorsAndWarnings.RemoveErrorGroup(StrTheETDemandRateI);
+  frmErrorsAndWarnings.RemoveErrorGroup(StrTheETExtinctionDe);
+  frmErrorsAndWarnings.RemoveErrorGroup(StrTheETExtinctionWa);
+
   Infiltration := TimeLists[0];
   if PhastModel.ModflowPackages.UzfPackage.SimulateET then
   begin
@@ -172,27 +190,49 @@ begin
     begin
       EtDemandArray := EtDemand[TimeIndex]
         as TModflowBoundaryDisplayDataArray;
-      CellList := FEtDemand[TimeIndex];
-      CellList.CheckRestore;
-      AssignTransient2DArray(EtDemandArray, 0, CellList, 0,
-        rdtDouble, umAssign);
-      CellList.Cache;
+      if TimeIndex < FEtDemand.Count then
+      begin
+        CellList := FEtDemand[TimeIndex];
+        CellList.CheckRestore;
+        AssignTransient2DArray(EtDemandArray, 0, CellList, 0,
+          rdtDouble, umAssign);
+        CellList.Cache;
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddError(StrTheETDemandRateI, IntToStr(TimeIndex+1));
+      end;
 
       ExtinctionDepthArray := ExtinctionDepth[TimeIndex]
         as TModflowBoundaryDisplayDataArray;
-      CellList := FEExtinctionDepths[TimeIndex];
-      CellList.CheckRestore;
-      AssignTransient2DArray(ExtinctionDepthArray, 0, CellList, 0,
-        rdtDouble, umAssign);
-      CellList.Cache;
+      if TimeIndex < FEExtinctionDepths.Count then
+      begin
+        CellList := FEExtinctionDepths[TimeIndex];
+        CellList.CheckRestore;
+        AssignTransient2DArray(ExtinctionDepthArray, 0, CellList, 0,
+          rdtDouble, umAssign);
+        CellList.Cache;
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddError(StrTheETExtinctionDe, IntToStr(TimeIndex+1));
+      end;
+
 
       WaterContentArray := WaterContent[TimeIndex]
         as TModflowBoundaryDisplayDataArray;
-      CellList := FExtinctionWaterContent[TimeIndex];
-      CellList.CheckRestore;
-      AssignTransient2DArray(WaterContentArray, 0, CellList, 0,
-        rdtDouble, umAssign);
-      CellList.Cache;
+      if TimeIndex <  FExtinctionWaterContent.Count then
+      begin
+        CellList := FExtinctionWaterContent[TimeIndex];
+        CellList.CheckRestore;
+        AssignTransient2DArray(WaterContentArray, 0, CellList, 0,
+          rdtDouble, umAssign);
+        CellList.Cache;
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddError(StrTheETExtinctionWa, IntToStr(TimeIndex+1));
+      end;
     end;
   end;
   SetTimeListsUpToDate(TimeLists);
@@ -354,7 +394,7 @@ procedure TModflowUzfWriter.WriteDataSet2;
 var
   IUZFBND: TDataArray;
 begin
-  IUZFBND := PhastModel.GetDataSetByName(StrUzfLayer);
+  IUZFBND := PhastModel.DataArrayManager.GetDataSetByName(StrUzfLayer);
   WriteArray(IUZFBND, 0, 'Data Set 2: IUZFBND');
 end;
 
@@ -364,7 +404,7 @@ var
 begin
   if IRUNFLG > 0 then
   begin
-    IRUNBND := PhastModel.GetDataSetByName(StrUzfDischargeRouting);
+    IRUNBND := PhastModel.DataArrayManager.GetDataSetByName(StrUzfDischargeRouting);
     WriteArray(IRUNBND, 0, 'Data Set 3: IRUNBND');
   end;
 end;
@@ -375,7 +415,7 @@ var
 begin
   if IUZFOPT = 1 then
   begin
-    VKS := PhastModel.GetDataSetByName(StrUzfVerticalK);
+    VKS := PhastModel.DataArrayManager.GetDataSetByName(StrUzfVerticalK);
     WriteArray(VKS, 0, 'Data Set 4: VKS');
   end;
 end;
@@ -384,7 +424,7 @@ procedure TModflowUzfWriter.WriteDataSet5;
 var
   EPS: TDataArray;
 begin
-  EPS := PhastModel.GetDataSetByName(StrUzfBrooksCoreyEpsilon);
+  EPS := PhastModel.DataArrayManager.GetDataSetByName(StrUzfBrooksCoreyEpsilon);
   WriteArray(EPS, 0, 'Data Set 5: EPS');
 end;
 
@@ -392,7 +432,7 @@ procedure TModflowUzfWriter.WriteDataSet6;
 var
   THTS: TDataArray;
 begin
-  THTS := PhastModel.GetDataSetByName(StrUzfSaturatedWaterContent);
+  THTS := PhastModel.DataArrayManager.GetDataSetByName(StrUzfSaturatedWaterContent);
   WriteArray(THTS, 0, 'Data Set 6: THTS');
 end;
 
@@ -402,7 +442,7 @@ var
 begin
   if PhastModel.ModflowStressPeriods.CompletelyTransient then
   begin
-    THTI := PhastModel.GetDataSetByName(StrUzfInitialUnsaturatedWaterContent);
+    THTI := PhastModel.DataArrayManager.GetDataSetByName(StrUzfInitialUnsaturatedWaterContent);
     WriteArray(THTI, 0, 'Data Set 7: THTI');
   end;
 end;
@@ -424,7 +464,7 @@ begin
     end;
   end;
 
-  GageArray := PhastModel.GetDataSetByName(StrUzfGage_1_and_2);
+  GageArray := PhastModel.DataArrayManager.GetDataSetByName(StrUzfGage_1_and_2);
   GageArray.Initialize;
   for RowIndex := 0 to PhastModel.ModflowGrid.RowCount -1 do
   begin
@@ -443,7 +483,7 @@ begin
     end;
   end;
 
-  GageArray := PhastModel.GetDataSetByName(StrUzfGage3);
+  GageArray := PhastModel.DataArrayManager.GetDataSetByName(StrUzfGage3);
   GageArray.Initialize;
   for RowIndex := 0 to PhastModel.ModflowGrid.RowCount -1 do
   begin
@@ -476,93 +516,99 @@ begin
   begin
     Exit;
   end;
-  frmProgress.AddMessage('Writing UZF Package input.');
+  frmProgressMM.AddMessage('Writing UZF Package input.');
 //  frmProgress.AddMessage('  Evaluating data.');
   Evaluate;
   Application.ProcessMessages;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
+
+  frmErrorsAndWarnings.RemoveErrorGroup(StrUnspecifiedUZFData);
+  frmErrorsAndWarnings.RemoveErrorGroup(StrTheInfiltrationRat);
+  frmErrorsAndWarnings.RemoveErrorGroup(StrTheETDemandRateI);
+  frmErrorsAndWarnings.RemoveErrorGroup(StrTheETExtinctionDe);
+  frmErrorsAndWarnings.RemoveErrorGroup(StrTheETExtinctionWa);
 
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrUZF, PhastModel.UnitNumbers.UnitNumber(StrUZF), NameOfFile, foInput);
   WriteGagesToNameFile(AFileName, GageStart);
   OpenFile(NameOfFile);
   try
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage('  Writing Data Set 3.');
     WriteDataSet3;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage('  Writing Data Set 5.');
     WriteDataSet5;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 6.');
+    frmProgressMM.AddMessage('  Writing Data Set 6.');
     WriteDataSet6;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 7.');
+    frmProgressMM.AddMessage('  Writing Data Set 7.');
     WriteDataSet7;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 8.');
+    frmProgressMM.AddMessage('  Writing Data Set 8.');
     WriteDataSet8(GageStart);
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 9 to 16.');
+    frmProgressMM.AddMessage('  Writing Data Sets 9 to 16.');
     WriteStressPeriods;
   finally
     CloseFile;
@@ -593,18 +639,18 @@ var
 begin
   if Values.Count = 0 then
   begin
-    frmErrorsAndWarnings.AddError('Unspecified UZF data',
+    frmErrorsAndWarnings.AddError(StrUnspecifiedUZFData,
       'No transient data (infiltration and/or evapotranspiration) '
       + 'has been defined.');
   end;
   for TimeIndex := 0 to Values.Count - 1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
-    frmProgress.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
+    frmProgressMM.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
 
     // data set 9
     WriteInteger(0);
@@ -613,16 +659,23 @@ begin
     WriteString(': NUZF1');
     NewLine;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
     // Data Set 10
-    CellList := Values[TimeIndex];
-    WriteInfiltrationRates(CellList);
+    if TimeIndex < Values.Count then
+    begin
+      CellList := Values[TimeIndex];
+      WriteInfiltrationRates(CellList);
+    end
+    else
+    begin
+      frmErrorsAndWarnings.AddError(StrTheInfiltrationRat, IntToStr(TimeIndex+1));
+    end;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -636,16 +689,23 @@ begin
       WriteString(': NUZF2');
       NewLine;
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
 
       // Data Set 12
-      CellList := FEtDemand[TimeIndex];
-      WritePotentialEtRates(CellList);
+      if TimeIndex < FEtDemand.Count then
+      begin
+        CellList := FEtDemand[TimeIndex];
+        WritePotentialEtRates(CellList);
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddError(StrTheETDemandRateI, IntToStr(TimeIndex+1));
+      end;
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -657,16 +717,23 @@ begin
       WriteString(': NUZF3');
       NewLine;
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
 
       // Data Set 14
-      CellList := FEExtinctionDepths[TimeIndex];
-      WriteExtinctionDepth(CellList);
+      if TimeIndex < FEExtinctionDepths.Count then
+      begin
+        CellList := FEExtinctionDepths[TimeIndex];
+        WriteExtinctionDepth(CellList);
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddError(StrTheETExtinctionDe, IntToStr(TimeIndex+1));
+      end;
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -678,16 +745,23 @@ begin
       WriteString(': NUZF4');
       NewLine;
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
 
       // Data Set 16
-      CellList := FExtinctionWaterContent[TimeIndex];
-      WriteExtinctionWaterContent(CellList);
+      if TimeIndex < FExtinctionWaterContent.Count then
+      begin
+        CellList := FExtinctionWaterContent[TimeIndex];
+        WriteExtinctionWaterContent(CellList);
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddError(StrTheETExtinctionWa, IntToStr(TimeIndex+1));
+      end;
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -703,7 +777,7 @@ var
 begin
   NUZGAG := 0;
 
-  GageArray := PhastModel.GetDataSetByName(StrUzfGage_1_and_2);
+  GageArray := PhastModel.DataArrayManager.GetDataSetByName(StrUzfGage_1_and_2);
   GageArray.Initialize;
   for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
   begin
@@ -716,7 +790,7 @@ begin
     end;
   end;
 
-  GageArray := PhastModel.GetDataSetByName(StrUzfGage3);
+  GageArray := PhastModel.DataArrayManager.GetDataSetByName(StrUzfGage3);
   GageArray.Initialize;
   for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
   begin

@@ -85,7 +85,7 @@ begin
     if Param.ParameterType = ptHUF_LVDA then
     begin
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -121,7 +121,7 @@ begin
       end;
 
       // Data set 8
-      frmProgress.AddMessage('  Writing Data Set 8 for parameter: ' + PARNAM);
+      frmProgressMM.AddMessage('  Writing Data Set 8 for parameter: ' + PARNAM);
       WriteString(PARNAM);
       WriteString(PARTYP);
       WriteFloat(PARVAL);
@@ -132,7 +132,7 @@ begin
       PhastModel.WritePValAndTemplate(PARNAM,PARVAL);
 
       // Data set 9
-      frmProgress.AddMessage('  Writing Data Set 9 for parameter: ' + PARNAM);
+      frmProgressMM.AddMessage('  Writing Data Set 9 for parameter: ' + PARNAM);
       for ClusterIndex := 0 to NCLU - 1 do
       begin
         if Param.UseZone then
@@ -178,7 +178,7 @@ begin
         end;
         NewLine;
       end;
-      PhastModel.CacheDataArrays;
+      PhastModel.DataArrayManager.CacheDataArrays;
     end;
   end;
 end;
@@ -203,27 +203,27 @@ begin
     FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try
-    frmProgress.AddMessage('Writing LVDA Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing LVDA Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 2 and 3.');
+    frmProgressMM.AddMessage('  Writing Data Sets 2 and 3.');
     WriteDataSets2and3;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;

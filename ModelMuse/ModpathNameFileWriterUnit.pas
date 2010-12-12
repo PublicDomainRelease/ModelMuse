@@ -7,7 +7,7 @@ uses SysUtils, Classes, PhastModelUnit;
 Type
   TModpathNameFileWriter = class(TObject)
   public
-    procedure WriteFile(const FileName: string; Model: TPhastModel);
+    procedure WriteFile(const FileName: string; Model: TCustomModel);
   end;
 
 
@@ -20,7 +20,7 @@ uses ModpathMainFileWriterUnit, ModflowDiscretizationWriterUnit,
 { TModpathNameFileWriter }
 
 procedure TModpathNameFileWriter.WriteFile(const FileName: string;
-  Model: TPhastModel);
+  Model: TCustomModel);
 const
   CbfFileExistsError = 'The following MODFLOW input or output files are '
     + 'required by MODPATH to run but they are not in the directory in which '
@@ -118,7 +118,7 @@ begin
       TModpathStartingLocationsWriter.Extension));
     NameFile.Add('LOCATIONS 19 ' + AFileName);
 
-    AFileName := ExtractFileName(ChangeFileExt(FileName, '.cbc'));
+    AFileName := ExtractFileName(ChangeFileExt(FileName, StrCbcExt));
     NameFile.Add('BUDGET 20 ' + AFileName);
     CheckFileExists(AFileName);
 
@@ -127,13 +127,13 @@ begin
       case Model.ModflowOutputControl.HeadOC.OutputFileType of
         oftText:
           begin
-            AFileName := ExtractFileName(ChangeFileExt(FileName, '.fhd'));
+            AFileName := ExtractFileName(ChangeFileExt(FileName, StrFhd));
             NameFile.Add('HEAD 21 ' + AFileName);
             CheckFileExists(AFileName);
           end;
         oftBinary:
           begin
-            AFileName := ExtractFileName(ChangeFileExt(FileName, '.bhd'));
+            AFileName := ExtractFileName(ChangeFileExt(FileName, StrBhd));
             NameFile.Add('HEAD(BINARY) 22 ' + AFileName);
             CheckFileExists(AFileName);
           end;
@@ -146,13 +146,13 @@ begin
       case Model.ModflowOutputControl.DrawdownOC.OutputFileType of
         oftText:
           begin
-            AFileName := ExtractFileName(ChangeFileExt(FileName, '.fdn'));
+            AFileName := ExtractFileName(ChangeFileExt(FileName, StrFdn));
             NameFile.Add('DRAWDOWN 23 ' + AFileName);
             CheckFileExists(AFileName);
           end;
         oftBinary:
           begin
-            AFileName := ExtractFileName(ChangeFileExt(FileName, '.bdn'));
+            AFileName := ExtractFileName(ChangeFileExt(FileName, StrBdn));
             NameFile.Add('DRAWDOWN(BINARY) 24 ' + AFileName);
             CheckFileExists(AFileName);
           end;

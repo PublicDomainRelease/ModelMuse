@@ -52,6 +52,7 @@ type
     miEnableModelMateInterface: TMenuItem;
     reReference: TRichEdit;
     JvHTLabel2: TJvHTLabel;
+    btnGoToWeb: TBitBtn;
     // @name initialized the data in @link(dgCredit) as well as
     // @link(lblFileVersion) and @link(lblVersion).
     procedure FormCreate(Sender: TObject); override;
@@ -63,6 +64,7 @@ type
     // is currently open.
     procedure ImageLogoDblClick(Sender: TObject);
     procedure miEnableModelMateInterfaceClick(Sender: TObject);
+    procedure btnGoToWebClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -75,7 +77,7 @@ var
 
 implementation
 
-uses frmGoPhastUnit;
+uses frmGoPhastUnit, frmNewVersionUnit, RbwInternetUtilities;
 
 {$R *.dfm}
 
@@ -84,6 +86,14 @@ begin
   inherited;
   frmAbout := nil;
   Release
+end;
+
+procedure TfrmAbout.btnGoToWebClick(Sender: TObject);
+var
+  Browser: string;
+begin
+  inherited;
+  LaunchURL(Browser, 'http://water.usgs.gov/nrp/gwsoftware/ModelMuse/ModelMuse.html');
 end;
 
 procedure TfrmAbout.FormCreate(Sender: TObject);

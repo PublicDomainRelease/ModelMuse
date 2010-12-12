@@ -250,7 +250,7 @@ begin
     Model := Collection.Model as TPhastModel;
     if not (csDestroying in Model.ComponentState) then
     begin
-      DataArray := Model.GetDataSetByName(FDataArrayName);
+      DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
       if DataArray <> nil then
       begin
         DataArray.Lock := [];
@@ -322,7 +322,7 @@ var
   DataArray: TDataArray;
 begin
   Model := Collection.Model as TPhastModel;
-  DataArray := Model.GetDataSetByName(FDataArrayName);
+  DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
   Assert( DataArray <> nil);
 //  DataArray := Model.DataSets[DataArrayIndex];
   Model.TopGridObserver.TalksTo(DataArray);
@@ -448,7 +448,7 @@ begin
       Model := Collection.Model as TPhastModel;
       if not (csLoading in Model.ComponentState) then
       begin
-        DataArray := Model.GetDataSetByName(FDataArrayName);
+        DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
         if DataArray <> nil then
         begin
           // rename data array.
@@ -508,7 +508,7 @@ begin
           end;
 
           // create new data array.
-          DataArray := Model.CreateNewDataArray(TDataArray, NewName, NewFormula,
+          DataArray := Model.DataArrayManager.CreateNewDataArray(TDataArray, NewName, NewFormula,
             [dcName, dcType, dcOrientation, dcEvaluatedAt], rdtDouble,
             eaBlocks, dsoTop, StrLayerDefinition);
           DataArray.OnDataSetUsed := Model.ModelLayerDataArrayUsed;
@@ -993,7 +993,7 @@ begin
   for Index := 0 to Count - 1 do
   begin
     Name := LayerGroups[Index].DataArrayName;
-    DataSet := PhastModel.GetDataSetByName(Name);
+    DataSet := PhastModel.DataArrayManager.GetDataSetByName(Name);
     if Index = 0 then
     begin
       DataSet.AssociatedDataSets := 'MODFLOW DIS: Top';

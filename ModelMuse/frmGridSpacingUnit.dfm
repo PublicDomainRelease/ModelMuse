@@ -25,6 +25,10 @@ inherited frmGridSpacing: TfrmGridSpacing
     TabOrder = 0
     object tabColumns: TTabSheet
       Caption = 'Columns (X'#39')'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlColumns: TPanel
         Left = 0
         Top = 173
@@ -57,7 +61,7 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 18
+          ItemHeight = 0
           TabOrder = 1
           Text = '100'
           DataType = dtReal
@@ -153,6 +157,10 @@ inherited frmGridSpacing: TfrmGridSpacing
     object tabRows: TTabSheet
       Caption = 'Rows (Y'#39')'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlRows: TPanel
         Left = 0
         Top = 173
@@ -185,7 +193,7 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 18
+          ItemHeight = 0
           TabOrder = 1
           Text = '100'
           DataType = dtReal
@@ -281,6 +289,10 @@ inherited frmGridSpacing: TfrmGridSpacing
     object tabLayers: TTabSheet
       Caption = 'Layers (Z)'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlLayers: TPanel
         Left = 0
         Top = 173
@@ -313,7 +325,7 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 18
+          ItemHeight = 0
           TabOrder = 1
           Text = '10'
           DataType = dtReal

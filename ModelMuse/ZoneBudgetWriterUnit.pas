@@ -20,7 +20,7 @@ type
   protected
     class function Extension: string; override;
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     destructor Destroy; override;
     Procedure WriteU2DINTHeader(const Comment: string); override;
     procedure WriteFile(const AFileName: string);
@@ -37,7 +37,7 @@ type
     procedure WriteResponse5;
   public
     class function Extension: string; override;
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     procedure WriteFile(const AFileName: string);
   end;
 
@@ -61,7 +61,7 @@ resourcestring
 
 { TZoneBudgetWriter }
 
-constructor TZoneBudgetZoneFileWriter.Create(Model: TPhastModel);
+constructor TZoneBudgetZoneFileWriter.Create(Model: TCustomModel);
 begin
   inherited;
   FZoneBudget := Model.ModflowPackages.ZoneBudget;
@@ -100,7 +100,7 @@ var
   LayerIndex: Integer;
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.GetDataSetByName(StrZones);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrZones);
   for LayerIndex := 0 to PhastModel.LayerStructure.LayerCount - 1 do
   begin
     if PhastModel.LayerStructure.IsLayerSimulated(LayerIndex) then
@@ -195,29 +195,29 @@ begin
 
   OpenFile(NameOfFile);
   try
-    frmProgress.AddMessage('Writing ZONEBUDGET Zone File input.');
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('Writing ZONEBUDGET Zone File input.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('Writing Zone File input.');
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('Writing Zone File input.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('Writing Zone File input.');
-    frmProgress.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage('Writing Zone File input.');
+    frmProgressMM.AddMessage('  Writing Data Set 3.');
     WriteDataSet3;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -265,7 +265,7 @@ var
   LayerIndex: Integer;
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.GetDataSetByName(StrZones);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrZones);
   DataArray.Initialize;
   FUsedZones.Sorted := True;
   for LayerIndex := 0 to PhastModel.LayerStructure.LayerCount - 1 do
@@ -281,8 +281,8 @@ begin
       end;
     end;
   end;
-  PhastModel.AddDataSetToCache(DataArray);
-  PhastModel.CacheDataArrays;
+  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+  PhastModel.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TZoneBudgetZoneFileWriter.WriteU2DINTHeader(const Comment: string);
@@ -295,7 +295,7 @@ end;
 
 { TZoneBudgetResponseFileWriter }
 
-constructor TZoneBudgetResponseFileWriter.Create(Model: TPhastModel);
+constructor TZoneBudgetResponseFileWriter.Create(Model: TCustomModel);
 begin
   inherited;
   FZoneBudget := Model.ModflowPackages.ZoneBudget;
@@ -315,7 +315,7 @@ begin
   FNameOfFile := FileName(AFileName);
   PhastModel.AddFileToArchive(FNameOfFile);
 
-  frmProgress.AddMessage('Writing ZONEBUDGET Response file.');
+  frmProgressMM.AddMessage('Writing ZONEBUDGET Response file.');
   OpenFile(FNameOfFile);
   try
     WriteResponse1;
@@ -367,7 +367,7 @@ var
 begin
   // write the name of the budget file 
   frmErrorsAndWarnings.RemoveErrorGroup(StrTheBudgetFileRequ);
-  AFileName := ChangeFileExt(FNameOfFile, '.cbc');
+  AFileName := ChangeFileExt(FNameOfFile, StrCbcExt);
   if not FileExists(AFileName) then
   begin
     frmErrorsAndWarnings.AddError(StrTheBudgetFileRequ, AFileName);

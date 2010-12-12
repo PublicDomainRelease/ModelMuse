@@ -11,7 +11,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
     Top = 0
     Width = 561
     Height = 506
-    ActivePage = tabBasic
+    ActivePage = tabTime
     Align = alClient
     TabOrder = 0
     object tabBasic: TTabSheet
@@ -1743,7 +1743,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
         Exaggeration = 1.000000000000000000
         HorizontalDirection = hdRight
         Image32.Left = 0
-        Image32.Top = 0
+        Image32.Top = 68
         Image32.Width = 553
         Image32.Height = 109
         Image32.Anchors = [akLeft, akBottom]
@@ -1754,6 +1754,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
         Image32.Scale = 1.000000000000000000
         Image32.ScaleMode = smNormal
         Image32.TabOrder = 0
+        Image32.ExplicitTop = 0
         ImmediateResize = True
         Magnification = 1.000000000000000000
         VerticalDirection = vdUp
@@ -1955,6 +1956,10 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
       HelpKeyword = 'Flow_Table_Tab'
       Caption = 'Flow Table'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Splitter2: TSplitter
         Left = 208
         Top = 0
@@ -2085,7 +2090,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Exaggeration = 1.000000000000000000
           HorizontalDirection = hdRight
           Image32.Left = 0
-          Image32.Top = 0
+          Image32.Top = 108
           Image32.Width = 269
           Image32.Height = 149
           Image32.Anchors = [akLeft, akBottom]
@@ -2096,6 +2101,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Image32.Scale = 1.000000000000000000
           Image32.ScaleMode = smNormal
           Image32.TabOrder = 0
+          Image32.ExplicitTop = 0
           ImmediateResize = True
           Magnification = 1.000000000000000000
           VerticalDirection = vdUp
@@ -2115,7 +2121,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Exaggeration = 1.000000000000000000
           HorizontalDirection = hdRight
           Image32.Left = 0
-          Image32.Top = 0
+          Image32.Top = 108
           Image32.Width = 270
           Image32.Height = 149
           Image32.Anchors = [akLeft, akBottom]
@@ -2126,6 +2132,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Image32.Scale = 1.000000000000000000
           Image32.ScaleMode = smNormal
           Image32.TabOrder = 0
+          Image32.ExplicitTop = 0
           ImmediateResize = True
           Magnification = 1.000000000000000000
           VerticalDirection = vdUp
@@ -2453,6 +2460,10 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
     object tabGage: TTabSheet
       Caption = 'Gage'
       ImageIndex = 8
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         553
         478)

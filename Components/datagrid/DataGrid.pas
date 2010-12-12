@@ -23,6 +23,9 @@ uses
   {$IFDEF VER180}, Variants {$ENDIF}
   {$IFDEF VER200}, Variants {$ENDIF}
 // RBW end change
+// ERB begin change
+  {$IFDEF VER220}, Variants {$ENDIF}
+// ERB end change
   ;
 
 type

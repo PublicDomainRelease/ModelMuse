@@ -326,7 +326,7 @@ var
   var
     DataArray: TDataArray;
   begin
-    DataArray := PhastModel.GetDataSetByName(ArrayName);
+    DataArray := PhastModel.DataArrayManager.GetDataSetByName(ArrayName);
     Assert( DataArray <> nil);
     PhastModel.TopGridObserver.TalksTo(DataArray);
     DataArray.OnDataSetUsed := PhastModel.SubsidenceDataArrayUsed;
@@ -473,7 +473,7 @@ var
   var
     DataArray: TDataArray;
   begin
-    DataArray := PhastModel.GetDataSetByName(ArrayName);
+    DataArray := PhastModel.DataArrayManager.GetDataSetByName(ArrayName);
     Assert( DataArray <> nil);
     PhastModel.TopGridObserver.TalksTo(DataArray);
     DataArray.OnDataSetUsed := PhastModel.SubsidenceDataArrayUsed;
@@ -797,11 +797,11 @@ begin
         end
         else
         begin
-          DataArray := LocalModel.GetDataSetByName(StoredName);
+          DataArray := LocalModel.DataArrayManager.GetDataSetByName(StoredName);
         end;
         if DataArray = nil then
         begin
-          DataArray := LocalModel.GetDataSetByName(NewName);
+          DataArray := LocalModel.DataArrayManager.GetDataSetByName(NewName);
           if DataArray <> nil then
           begin
             DataArray.OnDataSetUsed := LocalModel.SubsidenceDataArrayUsed;
@@ -838,7 +838,7 @@ begin
           NewFormula := '0.';
 
           // create new data array.
-          DataArray := LocalModel.CreateNewDataArray(TDataArray, NewName,
+          DataArray := LocalModel.DataArrayManager.CreateNewDataArray(TDataArray, NewName,
             NewFormula, [dcName, dcType, dcOrientation, dcEvaluatedAt],
             rdtDouble, eaBlocks, dsoTop, StrSubSidence + '|' + Name);
           DataArray.OnDataSetUsed := LocalModel.SubsidenceDataArrayUsed;
@@ -900,7 +900,7 @@ begin
       Assert(NewNames.Count = FAssociatedModelDataSetNames.Count);
       for Index := 0 to NewNames.Count - 1 do
       begin
-        DataArray := Model.GetDataSetByName(NewNames[Index]);
+        DataArray := Model.DataArrayManager.GetDataSetByName(NewNames[Index]);
         if DataArray <> nil then
         begin
           DataArray.AssociatedDataSets := FAssociatedModelDataSetNames[Index];
@@ -993,7 +993,7 @@ var
   var
     DataArray: TDataArray;
   begin
-    DataArray := PhastModel.GetDataSetByName(ArrayName);
+    DataArray := PhastModel.DataArrayManager.GetDataSetByName(ArrayName);
     if( DataArray <> nil) then
     begin
       PhastModel.TopGridObserver.TalksTo(DataArray);

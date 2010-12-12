@@ -44,19 +44,21 @@ procedure TModflowBCF_Writer.WriteDataSet5or6(AquiferType: Integer;
   Layer: Integer);
 var
   DataArray: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
+  DataArrayManager := PhastModel.DataArrayManager;
   case AquiferType of
     0, 2:
       begin
         // Data set 5
-        DataArray := PhastModel.GetDataSetByName(StrTransmissivity);
+        DataArray := DataArrayManager.GetDataSetByName(StrTransmissivity);
         Assert(DataArray <> nil);
         WriteArray(DataArray, Layer, 'Tran');
       end;
     1, 3:
       begin
         // Data set 6
-        DataArray := PhastModel.GetDataSetByName(rsKx);
+        DataArray := DataArrayManager.GetDataSetByName(rsKx);
         Assert(DataArray <> nil);
         WriteArray(DataArray, Layer, 'HY');
       end;
@@ -141,7 +143,7 @@ begin
     begin
       for LayerIndex := 0 to Group.ModflowLayerCount - 1 do
       begin
-        frmProgress.AddMessage('  Writing data for layer '
+        frmProgressMM.AddMessage('  Writing data for layer '
           + IntToStr(Layer+1) + '.');
         AquiferType := Group.AquiferType;
         if (AquiferType = 1) and (Layer > 0) then
@@ -150,35 +152,35 @@ begin
         end;
         WriteDataSet4(Layer, TransientModel, AquiferType);
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
 
         WriteDataSet5or6(AquiferType, Layer);
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
 
         WriteDataSet7(Layer, GroupIndex, Group, LayerIndex);
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
 
         WriteDataSet8(AquiferType, TransientModel, Layer);
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
 
         WriteDataSet9(AquiferType, Layer);
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -210,24 +212,24 @@ begin
     NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgress.AddMessage('Writing BCF Package input.');
+    frmProgressMM.AddMessage('Writing BCF Package input.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
     WriteDataSet3;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -247,7 +249,7 @@ begin
   if PhastModel.ModflowWettingOptions.WettingActive
     and (AquiferType in [1, 3]) then
   begin
-    DataArray := PhastModel.GetDataSetByName(rsWetDry);
+    DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsWetDry);
     Assert(DataArray <> nil);
     WriteArray(DataArray, Layer, 'WETDRY');
   end;
@@ -260,7 +262,7 @@ var
 begin
   if TransientModel and (AquiferType in [2, 3]) then
   begin
-    DataArray := PhastModel.GetDataSetByName(rsSpecificYield);
+    DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsSpecificYield);
     Assert(DataArray <> nil);
     WriteArray(DataArray, Layer, 'Sf2');
   end;
@@ -274,7 +276,7 @@ begin
   if (GroupIndex <> PhastModel.LayerStructure.Count - 1)
     or (LayerIndex <> Group.ModflowLayerCount - 1) then
   begin
-    DataArray := PhastModel.GetDataSetByName(StrVerticalConductance);
+    DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrVerticalConductance);
     Assert(DataArray <> nil);
     WriteArray(DataArray, Layer, 'Vcont');
   end;
@@ -284,20 +286,22 @@ procedure TModflowBCF_Writer.WriteDataSet4(Layer: Integer;
   TransientModel: Boolean; AquiferType: integer);
 var
   DataArray: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
   if TransientModel then
   begin
+    DataArrayManager := PhastModel.DataArrayManager;
     DataArray := nil;
     case AquiferType of
       0, 2, 3:
         begin
           // confined storage coeficient
-          DataArray := PhastModel.GetDataSetByName(StrConfinedStorageCoe);
+          DataArray := DataArrayManager.GetDataSetByName(StrConfinedStorageCoe);
         end;
       1:
         begin
           // specific yield
-          DataArray := PhastModel.GetDataSetByName(rsSpecificYield);
+          DataArray := DataArrayManager.GetDataSetByName(rsSpecificYield);
         end;
     else
       Assert(False);

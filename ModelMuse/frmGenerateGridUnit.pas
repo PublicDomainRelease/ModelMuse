@@ -104,7 +104,7 @@ begin
       begin
         cbSmoothGrid.Checked := False;
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         Count := 0;
         for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do

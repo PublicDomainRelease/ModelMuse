@@ -2,6 +2,8 @@ inherited frmContourData: TfrmContourData
   HelpType = htKeyword
   HelpKeyword = 'Contour_Data_Dialog_Box'
   Caption = 'Contour Data'
+  ExplicitWidth = 320
+  ExplicitHeight = 240
   DesignSize = (
     606
     489)

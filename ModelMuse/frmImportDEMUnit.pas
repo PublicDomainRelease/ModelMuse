@@ -72,9 +72,9 @@ end;
 procedure TfrmImportDEM.DemProgress(Sender: TObject; FractionDone: double);
 begin
   FractionDone := (FDemIndex + FractionDone)/(OpenDialogFile.Files.Count+1);
-  frmProgress.pbProgress.Position
-    := Round(frmProgress.pbProgress.Max * FractionDone);
-  frmProgress.ProgressLabelCaption := 'Reading ' + OpenDialogFile.Files[FDemIndex];
+  frmProgressMM.pbProgress.Position
+    := Round(frmProgressMM.pbProgress.Max * FractionDone);
+  frmProgressMM.ProgressLabelCaption := 'Reading ' + OpenDialogFile.Files[FDemIndex];
   Application.ProcessMessages;
 end;
 
@@ -127,9 +127,9 @@ end;
 procedure TfrmImportDEM.ImportProgress(Sender: TObject; FractionDone: double);
 begin
   FractionDone := (OpenDialogFile.Files.Count + FractionDone)/(OpenDialogFile.Files.Count+1);
-  frmProgress.pbProgress.Position
-    := Round(frmProgress.pbProgress.Max * FractionDone);
-  frmProgress.ProgressLabelCaption := 'Importing data';
+  frmProgressMM.pbProgress.Position
+    := Round(frmProgressMM.pbProgress.Max * FractionDone);
+  frmProgressMM.ProgressLabelCaption := 'Importing data';
   Application.ProcessMessages;
 end;
 
@@ -203,7 +203,7 @@ begin
             end;
         end;
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         NodeElemString := 'cell';
         CenterString := 'cell center'
@@ -267,8 +267,8 @@ var
     end;
   end;
 begin
-  frmProgress.Caption := 'Progress';
-  frmProgress.Show;
+  frmProgressMM.Caption := 'Progress';
+  frmProgressMM.Show;
   try
     Grid := frmGoPhast.PhastModel.Grid;
     EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
@@ -467,7 +467,7 @@ begin
           strDefaultClassification + '|Sampled from DEM files using '
           + LowerCase(rgFilterMethod.Items[rgFilterMethod.ItemIndex]));
         DataSetName := comboDataSets.Text;
-        DataSet := frmGoPhast.PhastModel.GetDataSetByName(DataSetName);
+        DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
         Assert(DataSet <> nil);
         ScreenObjectList := TList.Create;
         try
@@ -549,7 +549,7 @@ begin
       frmGoPhast.PhastModel.EndScreenObjectUpdate;
     end;
   finally
-    frmProgress.Hide;
+    frmProgressMM.Hide;
   end;
 end;
 

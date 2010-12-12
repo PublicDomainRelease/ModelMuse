@@ -218,8 +218,8 @@ type
   private
     FOldPackages: TModflowPackages;
     FNewPackages: TModflowPackages;
-    FOldSfrParameterInstances: TSfrParamInstances;
-    FNewSfrParameterInstances: TSfrParamInstances;
+//    FOldSfrParameterInstances: TSfrParamInstances;
+//    FNewSfrParameterInstances: TSfrParamInstances;
     FOldHydroGeologicUnits: THydrogeologicUnits;
     FOldInterBlockTransmissivity: array of integer;
     FOldAquiferType: array of integer;
@@ -2089,7 +2089,7 @@ var
   LayerGroup: TLayerGroup;
 begin
   inherited Create(NewSteadyParameters, NewTransientParameters,
-    NewHufModflowParameters);
+    NewHufModflowParameters, SfrParameterInstances);
 
   SetLength(FOldInterBlockTransmissivity, frmGoPhast.PhastModel.LayerStructure.Count);
   SetLength(FOldAquiferType, frmGoPhast.PhastModel.LayerStructure.Count);
@@ -2107,13 +2107,13 @@ begin
   FNewPackages := TModflowPackages.Create(nil);
   FOldPackages.Assign(frmGoPhast.PhastModel.ModflowPackages);
 
-  FNewSfrParameterInstances := SfrParameterInstances;
-  // TUndoDefineLayers takes ownership of SfrParameterInstances.
-  SfrParameterInstances := nil;
+//  FNewSfrParameterInstances := SfrParameterInstances;
+//  // TUndoDefineLayers takes ownership of SfrParameterInstances.
+//  SfrParameterInstances := nil;
 
-  FOldSfrParameterInstances := TSfrParamInstances.Create(nil);
-  FOldSfrParameterInstances.Assign(
-    frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances);
+//  FOldSfrParameterInstances := TSfrParamInstances.Create(nil);
+//  FOldSfrParameterInstances.Assign(
+//    frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances);
 end;
 
 function TUndoChangePackageSelection.Description: string;
@@ -2126,8 +2126,8 @@ begin
   FOldHydroGeologicUnits.Free;
   FOldPackages.Free;
   FNewPackages.Free;
-  FOldSfrParameterInstances.Free;
-  FNewSfrParameterInstances.Free;
+//  FOldSfrParameterInstances.Free;
+//  FNewSfrParameterInstances.Free;
   inherited;
 end;
 
@@ -2140,7 +2140,7 @@ begin
   finally
     frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := True;
   end;
-  frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances := FNewSfrParameterInstances;
+//  frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances := FNewSfrParameterInstances;
   inherited;
   frmGoPhast.EnableLinkStreams;
   frmGoPhast.EnableManageFlowObservations;
@@ -2165,7 +2165,7 @@ begin
   finally
     frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := True;
   end;
-  frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances := FOldSfrParameterInstances;
+//  frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances := FOldSfrParameterInstances;
   inherited;
   frmGoPhast.PhastModel.HydrogeologicUnits.Assign(FOldHydroGeologicUnits);
   frmGoPhast.EnableLinkStreams;

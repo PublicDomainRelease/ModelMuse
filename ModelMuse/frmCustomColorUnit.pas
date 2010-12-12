@@ -495,10 +495,12 @@ procedure TfrmCustomColor.StoreDataSetsInLists;
 var
   DataSet: TDataArray;
   Index: Integer;
+  DataArrayManager: TDataArrayManager;
 begin
-  for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  for Index := 0 to DataArrayManager.DataSetCount - 1 do
   begin
-    DataSet := frmGoPhast.PhastModel.DataSets[Index];
+    DataSet := DataArrayManager.DataSets[Index];
     case DataSet.Orientation of
       dsoTop:
         begin
@@ -589,7 +591,7 @@ begin
 
   FUpdatingLegend := True;
   try
-    tabLegend.TabVisible := FLegend.ValueSource <> nil;
+    tabLegend.TabVisible := LegendDataSource <> nil;
     if tabLegend.TabVisible then
     begin
       if FStoredLegend <> nil then

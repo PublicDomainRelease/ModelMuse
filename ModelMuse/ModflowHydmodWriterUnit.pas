@@ -52,7 +52,7 @@ type
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     Destructor Destroy; override;
     procedure WriteFile(const AFileName: string;
       SfrWriter: TModflowSFR_Writer);
@@ -67,7 +67,7 @@ uses
 
 { TModflowHydmodWriter }
 
-constructor TModflowHydmodWriter.Create(Model: TPhastModel);
+constructor TModflowHydmodWriter.Create(Model: TCustomModel);
 begin
   inherited;
   FLocations:= TObjectList.Create;
@@ -537,22 +537,22 @@ begin
   WriteToNameFile(StrHYD, PhastModel.UnitNumbers.UnitNumber(StrHYD), FNameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
   OpenFile(FNameOfFile);
   try
-    frmProgress.AddMessage('Writing HYDMOD Package input.');
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('Writing HYDMOD Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
   finally
     CloseFile;

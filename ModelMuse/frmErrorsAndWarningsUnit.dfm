@@ -14,8 +14,6 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
     Height = 41
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 199
-    ExplicitWidth = 434
     DesignSize = (
       432
       41)

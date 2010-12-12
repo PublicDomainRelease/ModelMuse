@@ -325,7 +325,7 @@ begin
           begin
             Data.Caption := StrSetGridElementSize;
           end;
-        msModflow:
+        msModflow, msModflowLGR:
           begin
             Data.Caption := StrSetGridCellSize;
           end;
@@ -517,6 +517,7 @@ var
   Index, DataSetIndex: integer;
   ScreenObjectCount: cardinal;
   DSFormula: string;
+  DataArrayManager: TDataArrayManager;
 begin
   inherited;
   if csDestroying in ComponentState then
@@ -553,12 +554,13 @@ begin
 
     If (ParentNode <> nil) and (ParentNode.Parent = FvstDataSetRootNode) then
     begin
-      for Index := 0 to frmGoPhast.PhastModel.DataSetCount -1 do
+      DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+      for Index := 0 to DataArrayManager.DataSetCount -1 do
       begin
-        if frmGoPhast.PhastModel.DataSets[Index].Name = Data.Caption then
+        if DataArrayManager.DataSets[Index].Name = Data.Caption then
         begin
           DataSetIndex := AScreenObject.
-            IndexOfDataSet(frmGoPhast.PhastModel.DataSets[Index]);
+            IndexOfDataSet(DataArrayManager.DataSets[Index]);
           DSFormula := AScreenObject.DataSetFormulas[DataSetIndex];
           if Length(DSFormula) > 100 then
           begin
@@ -1428,6 +1430,8 @@ begin
   FvstModflowHobNode := nil;
   FvstModflowHfbNode := nil;
   FvstModflowGagNode := nil;
+
+  FvstModpathRoot := nil;
 end;
 
 procedure TfrmCustomSelectObjects.SetCanEdit(const Value: boolean);

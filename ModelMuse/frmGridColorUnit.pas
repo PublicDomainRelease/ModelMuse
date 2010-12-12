@@ -115,6 +115,7 @@ begin
   if (frmGridColor <> nil) and (Force or frmGridColor.Visible) then
   begin
     frmGridColor.GetData;
+    frmGridColor.UpdateLabelsAndLegend;
   end;
 end;
 
@@ -169,7 +170,7 @@ begin
 
   comboTime3D.Text := FloatToStr(frmGoPhast.PhastModel.ThreeDDisplayTime);
 
-  GridColors := frmGoPhast.PhastModel.GridColors;
+  GridColors := frmGoPhast.PhastModel.GridColorParameters;
   comboColorScheme.ItemIndex := GridColors.ColorScheme;
   seCycles.Value := GridColors.ColorCycles;
   jsColorExponent.Value := Round(GridColors.ColorExponent*100);
@@ -187,7 +188,7 @@ begin
   inherited;
   SetData;
   UpdateLabelsAndLegend;
-  frmProgress.Hide;
+  frmProgressMM.Hide;
 end;
 
 procedure TfrmGridColor.SetData;
@@ -275,21 +276,24 @@ var
   DataSet: TDataArray;
   Index: Integer;
   Is3DSelected: Boolean;
+  DataArrayManager: TDataArrayManager;
 begin
   Application.ProcessMessages;
-  frmProgress.ShouldContinue := True;
+  frmProgressMM.ShouldContinue := True;
   Is3DSelected := (frmGoPhast.Grid.ThreeDDataSet <> nil);
   FreeAndNil(FStoredLegend);
   if AnObject <> nil then
   begin
-    frmProgress.btnAbort.Visible := False;
-    frmProgress.Caption := 'Progress';
-    frmProgress.Show;
-    for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+    frmProgressMM.btnAbort.Visible := False;
+    frmProgressMM.Caption := 'Progress';
+    frmProgressMM.Show;
+
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    for Index := 0 to DataArrayManager.DataSetCount - 1 do
     begin
-      frmGoPhast.PhastModel.AddDataSetToCache(frmGoPhast.PhastModel.DataSets[Index]);
+      DataArrayManager.AddDataSetToCache(DataArrayManager.DataSets[Index]);
     end;
-    frmGoPhast.PhastModel.CacheDataArrays;
+    DataArrayManager.CacheDataArrays;
     if (frmGoPhast.Grid.ThreeDDataSet <> nil)
       and (rgUpdateLimitChoice.ItemIndex = 1) then
     begin
@@ -459,7 +463,7 @@ begin
     frmGoPhast.tb3DColors.Down := True;
   end;
   frmGoPhast.PhastModel.Grid.GridChanged;
-  GridColors := frmGoPhast.PhastModel.GridColors;
+  GridColors := frmGoPhast.PhastModel.GridColorParameters;
   GridColors.ColorScheme := comboColorScheme.ItemIndex;
   GridColors.ColorCycles := seCycles.AsInteger;
   GridColors.ColorExponent := seColorExponent.Value;
@@ -671,10 +675,12 @@ procedure TfrmGridColor.StoreBoundaryDataSetsInLists;
 var
   Index: Integer;
   DataSet: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
-  for Index := 0 to frmGoPhast.PhastModel.BoundaryDataSetCount - 1 do
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  for Index := 0 to DataArrayManager.BoundaryDataSetCount - 1 do
   begin
-    DataSet := frmGoPhast.PhastModel.BoundaryDataSets[Index];
+    DataSet := DataArrayManager.BoundaryDataSets[Index];
     case DataSet.Orientation of
       dsoTop:
         begin

@@ -509,8 +509,8 @@ type
     procedure AdjustRowHeights(const ARow: integer);virtual; abstract;
     procedure ButtonClick(Sender: TObject);
     procedure FillCaptionList(CellCaption: string; const CaptionList: TStringList; Width: integer);
-    procedure MoveCheckStateWithColumn(FromColIndex: Integer; ToColIndex: Integer);
-    procedure MoveCheckStateWithRow(FromRowIndex: Integer; ToRowIndex: Integer);
+    procedure MoveCheckStateWithColumn(FromColIndex, ToColIndex: Integer);
+    procedure MoveCheckStateWithRow(FromRowIndex, ToRowIndex: Integer);
     procedure SetChecked(const ACol, ARow: integer; const Value: boolean);
     procedure SetCheckState(const ACol, ARow: integer; const Value: TCheckBoxState);
     procedure SetColCount(const Value: Longint);
@@ -3585,7 +3585,9 @@ procedure TCustomRBWDataGrid.SetCheckState(const ACol, ARow: integer; const Valu
 var
   Changed: boolean;
 begin
-  if GetCellFormat(ACol, ARow) = rcf4Boolean then
+  if (GetCellFormat(ACol, ARow) = rcf4Boolean)
+    and (ACol < ColCount)
+    and (ARow < RowCount) then
   begin
     Changed := FChecked[ACol,ARow] <> Value;
     if Changed then
@@ -3607,7 +3609,9 @@ end;
 
 function TCustomRBWDataGrid.GetCheckState(const ACol, ARow: integer): TCheckBoxState;
 begin
-  if GetCellFormat(ACol, ARow) = rcf4Boolean then
+  if (GetCellFormat(ACol, ARow) = rcf4Boolean)
+    and (ACol < ColCount)
+    and (ARow < RowCount) then
   begin
     result := FChecked[ACol,ARow];
   end
@@ -4140,12 +4144,15 @@ begin
   end;
 end;
 
-procedure TCustomRBWDataGrid.MoveCheckStateWithColumn(FromColIndex: Integer; ToColIndex: Integer);
+procedure TCustomRBWDataGrid.MoveCheckStateWithColumn(FromColIndex,
+  ToColIndex: Integer);
 var
   ColIndex: Integer;
   Temp: TCheckBoxState;
   RowIndex: Integer;
 begin
+  Assert(FromColIndex < ColCount);
+  Assert(ToColIndex < ColCount);
   if FromColIndex < ToColIndex then
   begin
     for RowIndex := 0 to RowCount - 1 do
@@ -4172,12 +4179,14 @@ begin
   end;
 end;
 
-procedure TCustomRBWDataGrid.MoveCheckStateWithRow(FromRowIndex: Integer; ToRowIndex: Integer);
+procedure TCustomRBWDataGrid.MoveCheckStateWithRow(FromRowIndex, ToRowIndex: Integer);
 var
   ColIndex: Integer;
   Temp: TCheckBoxState;
   RowIndex: Integer;
 begin
+  Assert(FromRowIndex < RowCount);
+  Assert(ToRowIndex < RowCount);
   if FromRowIndex < ToRowIndex then
   begin
     for ColIndex := 0 to ColCount - 1 do

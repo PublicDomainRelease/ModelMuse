@@ -69,9 +69,12 @@ begin
 end;
 
 function TTopLeakyDataSets.HydraulicConductivityDataSet: TDataArray;
+var
+  DataArrayManager: TDataArrayManager;
 begin
-  result := frmGoPhast.PhastModel.BoundaryDataSets[frmGoPhast.PhastModel.
-    IndexOfBoundaryDataSet(rsTopLeakyHydraulicConductivity)];
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  result := DataArrayManager.BoundaryDataSets[
+    DataArrayManager.IndexOfBoundaryDataSet(rsTopLeakyHydraulicConductivity)];
 end;
 
 function TTopLeakyDataSets.SolutionTimes: TPhastTimeList;
@@ -80,9 +83,12 @@ begin
 end;
 
 function TTopLeakyDataSets.ThicknessDataSet: TDataArray;
+var
+  DataArrayManager: TDataArrayManager;
 begin
-  result := frmGoPhast.PhastModel.BoundaryDataSets[frmGoPhast.PhastModel.
-    IndexOfBoundaryDataSet(rsTopLeakyThickness)];
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  result := DataArrayManager.BoundaryDataSets[
+    DataArrayManager.IndexOfBoundaryDataSet(rsTopLeakyThickness)];
 end;
 
 { TTopLeakyZoneGroup }

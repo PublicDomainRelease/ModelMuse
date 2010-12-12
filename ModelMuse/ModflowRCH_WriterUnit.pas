@@ -130,7 +130,7 @@ begin
   try
     Evaluate;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -287,47 +287,47 @@ begin
     NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
   ClearTimeLists;
   OpenFile(FileName(AFileName));
   try
-    frmProgress.AddMessage('Writing RCH Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing RCH Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 3 and 4.');
+    frmProgressMM.AddMessage('  Writing Data Sets 3 and 4.');
     WriteDataSets3And4;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 5 to 8.');
+    frmProgressMM.AddMessage('  Writing Data Sets 5 to 8.');
     WriteDataSets5To8;
   finally
     CloseFile;
@@ -364,6 +364,7 @@ var
   INRECH, INIRCH: Integer;
   Comment: string;
 begin
+  inherited;
   ParameterValues := TValueCellList.Create(CellType);
   try
     ParameterValues.OwnsObjects := False;
@@ -377,11 +378,11 @@ begin
     for TimeIndex := 0 to Values.Count - 1 do
     begin
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
-      frmProgress.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
+      frmProgressMM.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
       ParametersUsed := TStringList.Create;
       try
         RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
@@ -421,7 +422,7 @@ begin
         WriteString(DS5 + ' Stress period ' + IntToStr(TimeIndex+1));
         NewLine;
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -443,7 +444,7 @@ begin
             end;
           end;
           Application.ProcessMessages;
-          if not frmProgress.ShouldContinue then
+          if not frmProgressMM.ShouldContinue then
           begin
             RechRateList.Cache;
             Exit;
@@ -453,7 +454,7 @@ begin
         // Data set 8
         WriteLayerSelection(RechRateList, ParameterValues, TimeIndex, Comment);
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           RechRateList.Cache;
           Exit;

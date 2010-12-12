@@ -169,7 +169,8 @@ implementation
 
 uses
   JvBoxProcs, frmGoPhastUnit, ScreenObjectUnit, Math, GIS_Functions, 
-  GoPhastTypes, DataSetUnit, frmFormulaUnit, frmErrorsAndWarningsUnit;
+  GoPhastTypes, DataSetUnit, frmFormulaUnit, frmErrorsAndWarningsUnit,
+  PhastModelUnit;
 
 {$R *.dfm}
 
@@ -1066,7 +1067,7 @@ begin
   with TfrmFormula.Create(nil) do
   begin
     try
-      IncludeGIS_Functions;
+      IncludeGIS_Functions(eaBlocks);
       RemoveGetVCont;
       RemoveHufFunctions;
       PopupParent := self;
@@ -1377,10 +1378,12 @@ procedure TfrmManageFluxObservations.CreateVariables;
 var
   Index: Integer;
   DataArray: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
-  for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  for Index := 0 to DataArrayManager.DataSetCount - 1 do
   begin
-    DataArray := frmGoPhast.PhastModel.DataSets[Index];
+    DataArray := DataArrayManager.DataSets[Index];
     if DataArray.EvaluatedAt = eaBlocks then
     begin
       case DataArray.DataType of
@@ -1424,7 +1427,7 @@ begin
   LayoutMultiFluxEdits;
 
   AddGIS_Functions(rparserThreeDFormulaElements,
-    frmGoPhast.PhastModel.ModelSelection);
+    frmGoPhast.PhastModel.ModelSelection, eaBlocks);
   GetGlobalVariables;
   CreateVariables;
 

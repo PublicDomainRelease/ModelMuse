@@ -25,6 +25,9 @@ interface
     ParamGpsCurrent: TParamSet;
     ParamGpsLastSaved: TParamSet;
 
+    ParamSetTemp: TParamSet;
+    ParamGpsTemp: TParamSet;
+
     ParallelControlGlobal: TParallelControl;
     ParallelRunnersGlobal: TParallelRunners;
     RunnerFilesGlobal: TRunnerFiles;
@@ -39,7 +42,7 @@ interface
   function GetObsHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
   function GetPredHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
   function GetParHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
-  function GetParHintOld(const aGrid: TDataGrid; const aCol: Integer): string;
+  function GetParHintOld(const aGrid: TEcDataGrid; const aCol: Integer): string;
   function GetPriHint(const aGrid: TRbwDataGrid4; const aCol: Integer): string;
   procedure InitializeGlobalData;
 
@@ -62,6 +65,9 @@ begin
   FreeAndNil(ParamGpsDefault);
   FreeAndNil(ParamGpsLastSaved);
   FreeAndNil(ParamGpsCurrent);
+  FreeAndNil(ParamSetTemp);
+  FreeAndNil(ParamGpsTemp);
+
   SetLength(AttributeTypes, 0);
   EShowCompleted.Free;
   ParallelControlGlobal.Free;
@@ -139,7 +145,7 @@ end;
 
 //###################################################################
 
-function GetParHintOld(const aGrid: TDataGrid; const aCol: Integer): string;
+function GetParHintOld(const aGrid: TEcDataGrid; const aCol: Integer): string;
 var
   Str, TestStr, Caption: string;
   I: Integer;
@@ -191,6 +197,8 @@ begin
   ParallelControlGlobal := TParallelControl.Create;
   ParallelRunnersGlobal := TParallelRunners.Create;
   RunnerFilesGlobal := TRunnerFiles.Create;
+  ParamSetTemp := TParamSet.Create;
+  ParamGpsTemp := TParamSet.Create;
 end;
 
 //###################################################################

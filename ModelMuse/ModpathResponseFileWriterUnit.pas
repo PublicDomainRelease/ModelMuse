@@ -10,14 +10,14 @@ type
     FOptions: TModpathSelection;
     FNewBudgetFile: Boolean;
     function GetCBF_Option(const AFileName: string): TCompositeBudgetFileOption;
-    function CompositeBudgetFileSize: integer;
+    function CompositeBudgetFileSize: Int64;
     function RespondToLargeBudgetFile(
       CBF_Option: TCompositeBudgetFileOption): string;
   protected
     class function Extension: string; override;
   public
     FLargeBudgetFileResponse: string;
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     procedure WriteFile(const AFileName: string; NewBudgetFile: boolean);
   end;
 
@@ -28,7 +28,7 @@ uses
 
 { TModpathResponseFileWriter }
 
-constructor TModpathResponseFileWriter.Create(Model: TPhastModel);
+constructor TModpathResponseFileWriter.Create(Model: TCustomModel);
 begin
  inherited Create(Model);
  FOptions := Model.ModflowPackages.ModPath;
@@ -53,7 +53,7 @@ begin
     Exit;
   end;
   CompositeBudgetFileName := ChangeFileExt(AFileName, '.cbf');
-  BudgetFileName := ChangeFileExt(AFileName, '.cbc');
+  BudgetFileName := ChangeFileExt(AFileName, StrCbcExt);
   if FileExists(CompositeBudgetFileName) and FileExists(BudgetFileName) then
   begin
     if FileAge(CompositeBudgetFileName, CompositeDate)
@@ -79,18 +79,18 @@ begin
   end;
 end;
 
-function TModpathResponseFileWriter.CompositeBudgetFileSize: integer;
+function TModpathResponseFileWriter.CompositeBudgetFileSize: Int64;
 var
-  NSTEPS: integer;
+  NSTEPS: Int64;
   Grid: TModflowGrid;
-  NROW: Integer;
-  NLAY: Integer;
-  NHLAY: Integer;
-  GroupIndex: Integer;
+  NROW: Int64;
+  NLAY: Int64;
+  NHLAY: Int64;
+  GroupIndex: integer;
   Group: TLayerGroup;
-  NRPTS: Integer;
-  NREC: Integer;
-  NCOL: Integer;
+  NRPTS: Int64;
+  NREC: Int64;
+  NCOL: Int64;
 
 begin
   // based on the subroutine  CBFSIZ in the MODPATH source code.
@@ -549,7 +549,7 @@ const
   MAXSIZ = 150000000;
 var
   BigFile: Boolean;
-  CBFileSize: Integer;
+  CBFileSize: Int64;
 begin
   result := '';
   if CBF_Option = cbfGenerateNew then

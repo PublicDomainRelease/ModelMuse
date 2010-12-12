@@ -8,7 +8,8 @@ interface
        {$WARN UNIT_PLATFORM ON}
        SysUtils, Windows,
        UcodeUnit, GlobalBasicData, GlobalTypesUnit, JupiterUnit,
-       DependentsUnit, Utilities, PriorInfoUnit, sskutils;
+       DependentsUnit, Utilities, PriorInfoUnit, sskutils,
+       JvBaseDlg, JvProgressDialog;
 
   type
 
@@ -218,13 +219,17 @@ interface
         procedure DefinePredGroups;
         procedure DefinePredSetup;
         procedure ExportOmitFile(FileName: string);
-        function ExportUcodeFile(ModelUse: TModelUse): boolean;
+        function ExportUcodeFile(ModelUse: TModelUse; ProgressDialog: TJvProgressDialog): boolean;
         function GetTemplateFile(const MIOFile: TFileName; const ModelUse: TModelUse): string;
         function LocateModflowNameFile(ModelUse: TModelUse): boolean;
         function MakeUcodeBatchFile(ModelUseLocal: TModelUse;
                    var BatchFileLocation: string; var ErrMess: string): boolean;
         procedure NormalizePaths();
         function NumAdjustable(): integer;
+        procedure SetupObsGroupUsage;
+        procedure SetupParGroupUsage;
+        procedure SetupPredGroupUsage;
+        procedure SetupPriGroupUsage;
         procedure WriteToStream(SStream: TStringStream);
       published
         property ModelMateVersion: string read fModelMateVersion write fModelMateVersion;
@@ -881,121 +886,17 @@ begin
     end;
 end; // procedure TProject.BuildObservationGpsBlock.
 
-//function TProject.BuildParallelControlBlock(PCBlock: TStringList): boolean;
-//var
-//  Defaults: TBlockData;
-//  bdParallelControl: TBlockData;        // Parallel_Control
-//  OK: boolean;
-//  Messg: string;
-//begin
-//  OK := False;
-//  // No need for keyword "OperatingSystem" because in ModelMate, Windows is assumed.
-//  Defaults := TBlockData.CreateAndAllocate(1,5);
-//  bdParallelControl := TBlockData.CreateAndAllocate(1,5); // Max 5 keywords
-//  try
-//    with Defaults do
-//      begin
-//        // Assign defaults for the Parallel_Control input block
-//        KeyValMatrix[0].Vtype := vtBool;
-//        KeyValMatrix[0].SetNameVal(0,'Parallel',False);
-//        KeyValMatrix[1].Vtype := vtDbl;
-//        KeyValMatrix[1].SetNameVal(0,'Wait',0.001);
-//        KeyValMatrix[2].Vtype := vtInt;
-//        KeyValMatrix[2].SetNameVal(0,'VerboseRunner',3);
-//        KeyValMatrix[3].Vtype := vtBool;
-//        KeyValMatrix[3].SetNameVal(0,'AutostopRunners',True);
-//        KeyValMatrix[4].Vtype := vtDbl;
-//        KeyValMatrix[4].SetNameVal(0,'TimeoutFactor',3.0);
-//      end;
-//    bdParallelControl.Assign(Defaults);
-//    with bdParallelControl do
-//      begin
-//        KeyValMatrix[0].SetVal(0,ParallelControl.Parallel);
-//        KeyValMatrix[1].SetVal(0,ParallelControl.Wait);
-//        KeyValMatrix[2].SetVal(0,ParallelControl.VerboseRunner);
-//        KeyValMatrix[3].SetVal(0,ParallelControl.AutoStopRunners);
-//        KeyValMatrix[4].SetVal(0,ParallelControl.TimeOutFactor);
-//      end;
-//    J_BuildInputBlockExclDef('Parallel_Control',bdParallelControl,
-//                                     Defaults, PCBlock, False);
-//    OK := True;
-//  finally
-//    Defaults.Free;
-//    bdParallelControl.Free;
-//    result := OK;
-//    if not OK then
-//      begin
-//        Messg := 'Error encountered building Parallel_Control block';
-//        ShowMessage(Messg);
-//      end;
-//  end;
-//end; // function TProject.BuildParallelControlBlock
-
-//function TProject.BuildParallelRunnersBlock(BlkFmt: TBlockFormat;
-//  PRBlock: TStringList): boolean;
-//var
-//  bdParallelRunners: TBlockData; // Parallel_Runners.
-//  I, J, NR, NumToUse: integer;
-//  Messg: string;
-//  OK: boolean;
-//begin
-//  OK := False;
-//  PRBlock.Clear;
-//  NumToUse := self.ParallelControl.NumRunnersToUse;
-//  NR := 0;
-//  if ParallelControl.Parallel then
-//    begin
-//      for I := 0 to ParallelRunners.Count - 1 do
-//        begin
-//          if ParallelRunners.Items[I].Use then
-//            NR := NR + 1;
-//        end;
-//    end;
-//  if (NR > 0) and (NumToUse > 0) then
-//    try
-//      // Need 3 columns (keywords) and NR rows in bdParallelRunners.
-//      // Keyword "Rename" is unneeded because OS is always Windows, and default "ren" is correct.
-//      if NumToUse < NR then NR := NumToUse;
-//      bdParallelRunners := TBlockData.CreateAndAllocate(NR,3);
-//      bdParallelRunners.KeyValMatrix[0].Vtype := vtStr; // RunnerName
-//      bdParallelRunners.KeyValMatrix[1].Vtype := vtStr; // RunnerDir
-//      bdParallelRunners.KeyValMatrix[2].Vtype := vtDbl; // RunTime
-//      //
-//      J := 0;
-//      for I := 0 to ParallelRunners.Count - 1 do
-//        if (ParallelRunners.Items[I].Use) and (J < NumToUse) then
-//          begin
-//            bdParallelRunners.KeyValMatrix[0].SetNameVal(J,'RunnerName',ParallelRunners.Items[I].Name);
-//            bdParallelRunners.KeyValMatrix[1].SetNameVal(J,'RunnerDir',ParallelRunners.Items[I].Directory);
-//            bdParallelRunners.KeyValMatrix[2].SetNameVal(J,'RunTime',ParallelRunners.Items[I].ExpectedRunTime);
-//            J := J + 1;
-//          end;
-//      J_BuildInputBlock('Parallel_Runners', BlkFmt, bdParallelRunners, PRBlock);
-//      OK := True;
-//    finally
-//      FreeAndNil(bdParallelRunners);
-//      if not OK then
-//        Messg := 'Error encountered building Parallel_Runners block';
-//    end
-//  else
-//    begin
-//      OK := False;
-//      Messg := 'No parallel runners have been defined';
-//    end;
-//  result := OK;
-//  if not OK then
-//    ShowMessage(Messg);
-//end; // function TProject.BuildParallelRunnersBlock
-
 function TProject.BuildParameterDataBlock(BlkFmt: TBlockFormat; PDBlock: TStringList): boolean;
 var
   FoundError: Boolean;
-  I, IC, PapDeriv, JRow, J, NC, NPar, NR: Integer;
+  I, IC, PapDeriv, PapParVal, JRow, J, NC, NPar, NR: Integer;
   Cap, Keyword, Messg, PName, S: string;
   PatTemp: TParamAttType;
   bdParameterData: TBlockData;     // Parameter_Data.
+  ParVal: double;
 begin
   PapDeriv := ParAttPos(patDerived);
+  PapParVal := ParAttPos(patStartValue);
   PDBlock.Clear;
   // Determine numbers of rows (# parameters) and columns (# attributes)
   // needed for the Parameter_Data input block.
@@ -1057,6 +958,14 @@ begin
                               Messg := 'Error: ' + Cap + ' for parameter "' + PName + '" is blank';
                               ShowMessage(Messg);
                               FoundError := True;
+                            end;
+                          if PatTemp = patScalePval then
+                            begin
+                              if AnsiSameText(S,'Starting parameter value / 100') then
+                                begin
+                                  ParVal := StrToFloat(ParamSet.Items[J].AllAtts.Items[PapParVal].Text);
+                                  S := FloatToStr(ParVal / 100.0);
+                                end;
                             end;
                           bdParameterData.KeyValMatrix[IC].SetVal(JRow,S);
                         end;
@@ -1726,9 +1635,9 @@ begin
   fMOFilesPred := TModelIOPairs.Create;
   fUcProject := TUcProject.Create(self);
   UcProject.OutputPrefix := ProjName;
-  fUseObsGps := False;
-  fUsePredGps := False;
-  fUseParGps := False;
+  fUseObsGps := True;
+  fUsePredGps := True;
+  fUseParGps := True;
   fUsePriorInfo := True;
   fLinkTemplateToParamsTable := True;
 end; // constructor TProject.Create
@@ -1862,7 +1771,7 @@ begin
     end;
 end;
 
-function TProject.ExportUcodeFile(ModelUse: TModeluse): boolean;
+function TProject.ExportUcodeFile(ModelUse: TModeluse; ProgressDialog: TJvProgressDialog): boolean;
 // Export a UCODE input file.
 var
   SL, slExport: TStringList;
@@ -1876,11 +1785,12 @@ begin
   try
   slExport.Clear;
   SL.Clear;
-
+  ProgressDialog.Position := 15;
 { TODO 2 -cinterface : Change Build* procedures for remaining
   input blocks to boolean functions...accumulate warnings }
   // Options (optional, but always write).
   UcProject.BuildOptionsBlock(SL);
+  ProgressDialog.Position := 17;
   slExport.AddStrings(SL);
   SL.Clear;
   slExport.Add(' ');
@@ -1889,6 +1799,7 @@ begin
 
   // UCODE_Control_Data (optional).
   UcProject.BuildUcodeControlDataBlock(SL);
+  ProgressDialog.Position := 20;
   slExport.AddStrings(SL);
   SL.Clear;
   slExport.Add(' ');
@@ -1901,12 +1812,13 @@ begin
       SL.Clear;
       slExport.Add(' ');
     end;
-
+  ProgressDialog.Position := 22;
   // Reg_GN_NonLinInt (optional).
 
   // Model_Command_Lines (required).
   if not BuildModelCommandLinesBlock(SL) then Errors := Error + 1;
   slExport.AddStrings(SL);
+  ProgressDialog.Position := 25;
   SL.Clear;
   slExport.Add(' ');
 
@@ -1935,12 +1847,14 @@ begin
     end;
   BuildParameterGpsBlock(bfTable, SL);
   slExport.AddStrings(SL);
+  ProgressDialog.Position := 30;
   SL.Clear;
   slExport.Add(' ');
 
   // Parameter_Data (required).
   if not BuildParameterDataBlock(bfTable, SL) then Errors := Errors + 1;
   slExport.AddStrings(SL);
+  ProgressDialog.Position := 32;
   SL.Clear;
   slExport.Add(' ');
 
@@ -1954,6 +1868,7 @@ begin
       SL.Clear;
       slExport.Add(' ');
     end;
+  ProgressDialog.Position := 35;
 
   // Include prediction input blocks only if Ucode mode is Prediction.
   if UcProject.UcMode = umPred then
@@ -1969,6 +1884,7 @@ begin
       // Prediction_Data (optional).
       if not BuildPredictionDataBlock(bfTable, SL) then Errors := Errors + 1;
       slExport.AddStrings(SL);
+      ProgressDialog.Position := 40;
       SL.Clear;
       slExport.Add(' ');
       // Derived_Predictions (optional).
@@ -1980,6 +1896,7 @@ begin
         begin
           BuildObservationGpsBlock(bfTable, SL);
           slExport.AddStrings(SL);
+          ProgressDialog.Position := 40;
           SL.Clear;
           slExport.Add(' ');
         end;
@@ -1987,11 +1904,13 @@ begin
       // Observation_Data (required).
       if not BuildObservationDataBlock(bfTable, SL) then Errors := Errors + 1;
       slExport.AddStrings(SL);
+      ProgressDialog.Position := 50;
       SL.Clear;
       slExport.Add(' ');
 
       // Derived_Observations (optional).
     end;
+  ProgressDialog.Position := 55;
 
   // Linear prior information.
   if (UsePriorInfo) and (PriSet.Count > 0) then
@@ -2010,20 +1929,23 @@ begin
       SL.Clear;
       slExport.Add(' ');
     end;
+  ProgressDialog.Position := 57;
 
   // Model_Input_Files (required).
   if not BuildModelIOBlock(fuInput, SL, ModelUse) then Errors := Errors + 1;
   slExport.AddStrings(SL);
   SL.Clear;
   slExport.Add(' ');
+  ProgressDialog.Position := 60;
 
   // Model_Output_Files (required).
   if not BuildModelIOBlock(fuOutput, SL, ModelUse) then Errors := Errors + 1;
   slExport.AddStrings(SL);
   SL.Clear;
   slExport.Add(' ');
+  ProgressDialog.Position := 62;
 
-  if (UcProject.ParallelControl.Parallel) and (UcProject.UcMode in ParallelUcodeModes) then
+  if (UcProject.ParallelControl.Parallel) and (UcProject.ModeIsParallelizable) then
     begin
       // Parallel_Control (optional).
       if not UcProject.BuildParallelControlBlock(SL) then Errors := Errors + 1;
@@ -2036,15 +1958,18 @@ begin
       SL.Clear;
       slExport.Add(' ');
     end;
+  ProgressDialog.Position := 65;
 
   AbsMIF := UcProject.AbsMainInputFileName(ModelUse);
   if AbsMIF <> '' then
     begin
      slExport.SaveToFile(AbsMIF);
+     ProgressDialog.Position := 70;
     end
   else
     begin
       Line := 'UCODE file not exported because UCODE input file not defined';
+      ProgressDialog.Hide;
       ShowMessage(Line);
     end;
   finally
@@ -2055,6 +1980,7 @@ begin
     else
       result := False;
   end;
+  ProgressDialog.Position := 75;
 end;
 
 function TProject.GetTemplateFile(const MIOFile: TFileName;
@@ -2249,6 +2175,74 @@ procedure TProject.SetUcProject(const Value: TUcProject);
 begin
   fUcProject.Assign(Value);
   ActiveApp := aaUcode;
+end;
+
+procedure TProject.SetupObsGroupUsage;
+var
+  I: Integer;
+begin
+  UseObsGps := False;
+  ObservationSetup.SetControlMethod(datGroupName, cmByDefault);
+  for I := 0 to ObservationSetup.NumAtt - 1 do
+  begin
+    if ObservationSetup.ObsAttributes[I].ControlMethod = cmByGroup then
+    begin
+      UseObsGps := True;
+      ObservationSetup.SetControlMethod(datGroupName, cmByItem);
+      Break;
+    end;
+  end;
+end;
+
+procedure TProject.SetupParGroupUsage;
+var
+  I: Integer;
+begin
+  UseParGps := False;
+  ParameterSetup.SetControlMethod(patGroupName, cmByDefault);
+  for I := 0 to ParameterSetup.NumAtt - 1 do
+  begin
+    if ParameterSetup.ParAttributes[I].ControlMethod = cmByGroup then
+    begin
+      UseParGps := True;
+      ParameterSetup.SetControlMethod(patGroupName, cmByItem);
+      Break;
+    end;
+  end;
+end;
+
+procedure TProject.SetupPredGroupUsage;
+var
+  I: Integer;
+begin
+  UsePredGps := False;
+  PredictionSetup.SetControlMethod(datGroupName, cmByDefault);
+  for I := 0 to PredictionSetup.NumAtt - 1 do
+  begin
+    if PredictionSetup.PredAttributes[I].ControlMethod = cmByGroup then
+    begin
+      UsePredGps := True;
+      PredictionSetup.SetControlMethod(datGroupName, cmByItem);
+      Break;
+    end;
+  end;
+end;
+
+procedure TProject.SetupPriGroupUsage;
+var
+  I: Integer;
+begin
+  UsePriGps := False;
+  PriorSetup.SetControlMethod(piatGroupName, cmByDefault);
+  for I := 0 to PriorSetup.NumAtt - 1 do
+  begin
+    if PriorSetup.PriAttributes[I].ControlMethod = cmByGroup then
+    begin
+      UsePriGps := True;
+      PriorSetup.SetControlMethod(piatGroupName, cmByItem);
+      Break;
+    end;
+  end;
 end;
 
 procedure TProject.WriteToStream(SStream: TStringStream);

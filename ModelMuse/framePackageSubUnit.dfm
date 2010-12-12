@@ -18,7 +18,7 @@ inherited framePackageSub: TframePackageSub
     Top = 119
     Width = 444
     Height = 283
-    ActivePage = tabControls
+    ActivePage = tabPrintSave
     Align = alBottom
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 1

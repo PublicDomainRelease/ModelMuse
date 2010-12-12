@@ -113,7 +113,7 @@ var
 begin
   inherited;
   UpdateTreeComboText(SelectedVirtNode, treecomboDataSets);
-  DataArray := frmGoPhast.PhastModel.GetDataSetByName(treecomboDataSets.Text);
+  DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(treecomboDataSets.Text);
   if DataArray = nil then
   begin
     Exit;

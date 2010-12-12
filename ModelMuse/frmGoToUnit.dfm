@@ -218,6 +218,10 @@ inherited frmGoTo: TfrmGoTo
       HelpKeyword = 'The_Object_Tab'
       Caption = 'Object'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lvScreenObjects: TListView
         Left = 0
         Top = 0

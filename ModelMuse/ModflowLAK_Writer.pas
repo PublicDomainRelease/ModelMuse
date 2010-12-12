@@ -26,7 +26,7 @@ type
     function Package: TModflowPackageSelection; override;
     class function Extension: string; override;
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     destructor Destroy; override;
     procedure WriteFile(const AFileName: string;
       var StartUnitNumber: integer; Lines: TStrings);
@@ -39,7 +39,7 @@ uses ModflowUnitNumbers, ScreenObjectUnit, frmErrorsAndWarningsUnit,
 
 { TModflowLAK_Writer }
 
-constructor TModflowLAK_Writer.Create(Model: TPhastModel);
+constructor TModflowLAK_Writer.Create(Model: TCustomModel);
 begin
   inherited;
   FLakeList := TList.Create;
@@ -72,7 +72,7 @@ var
   TempList: TList;
   SubLakeIndex: Integer;
 begin
-  frmProgress.AddMessage('Evaluating LAK Package data.');
+  frmProgressMM.AddMessage('Evaluating LAK Package data.');
   TempList := TList.Create;
   try
     for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
@@ -250,12 +250,12 @@ var
   LayerIndex: integer;
   ModflowLayer: integer;
 begin
-  LakeID := PhastModel.GetDataSetByName(rsLakeID);
+  LakeID := PhastModel.DataArrayManager.GetDataSetByName(rsLakeID);
   ModflowLayer := 0;
   for LayerIndex := 0 to PhastModel.ModflowGrid.LayerCount - 1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -274,12 +274,12 @@ var
   LayerIndex: integer;
   ModflowLayer: integer;
 begin
-  LakeLeakance := PhastModel.GetDataSetByName(rsLakeLeakance);
+  LakeLeakance := PhastModel.DataArrayManager.GetDataSetByName(rsLakeLeakance);
   ModflowLayer := 0;
   for LayerIndex := 0 to PhastModel.ModflowGrid.LayerCount - 1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -303,7 +303,7 @@ begin
   for LakeIndex := 0 to FLakeList.Count - 1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -313,7 +313,7 @@ begin
     for TimeIndex := 0 to Lake.Values.Count -1 do
     begin
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -368,7 +368,7 @@ begin
   for TimeIndex := 0 to PhastModel.ModflowFullStressPeriods.Count - 1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -392,7 +392,7 @@ begin
       WriteLakeDefinitions;
     end;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -416,7 +416,7 @@ begin
   for LakeIndex := 0 to FLakeList.Count - 1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -437,7 +437,7 @@ begin
     for LakeIndex := 0 to FLakeList.Count - 1 do
     begin
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -489,39 +489,39 @@ begin
   FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrLAK, PhastModel.UnitNumbers.UnitNumber(StrLAK), FNameOfFile, foInput);
   Application.ProcessMessages;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
   Evaluate;
   OpenFile(FileName(AFileName));
   try
-    frmProgress.AddMessage('Writing LAK Package input.');
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('Writing LAK Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
       Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage('  Writing Data Set 3.');
     Application.ProcessMessages;
     WriteDataSet3;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 4 to 9.');
+    frmProgressMM.AddMessage('  Writing Data Sets 4 to 9.');
     WriteDataSets4To9;
   finally
     CloseFile;

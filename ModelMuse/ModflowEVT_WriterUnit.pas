@@ -33,7 +33,7 @@ Type
       DS5, D7PNameIname, D7PName: string); override;
     procedure Evaluate; override;
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     // @name destroys the current instance of @classname.
     Destructor Destroy; override;
     procedure WriteFile(const AFileName: string);
@@ -53,7 +53,7 @@ begin
   result := TEvt_Cell
 end;
 
-constructor TModflowEVT_Writer.Create(Model: TPhastModel);
+constructor TModflowEVT_Writer.Create(Model: TCustomModel);
 begin
   inherited;
   FDepthSurface := TObjectList.Create;
@@ -159,7 +159,7 @@ begin
   ParameterValues := TList.Create;
   try
     Evaluate;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -358,47 +358,47 @@ begin
     NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
   ClearTimeLists;
   OpenFile(FileName(AFileName));
   try
-    frmProgress.AddMessage('Writing EVT Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing EVT Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 3 and 4.');
+    frmProgressMM.AddMessage('  Writing Data Sets 3 and 4.');
     WriteDataSets3And4;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 5 to 10.');
+    frmProgressMM.AddMessage('  Writing Data Sets 5 to 10.');
     WriteDataSets5To10;
   finally
     CloseFile;
@@ -470,6 +470,7 @@ var
   DepthSurfaceCellList, PriorListDepthSurfaceCellList: TValueCellList;
   Comment: string;
 begin
+  inherited;
   ParameterValues := TValueCellList.Create(CellType);
   try
     ParameterValues.OwnsObjects := False;
@@ -483,11 +484,11 @@ begin
     for TimeIndex := 0 to Values.Count - 1 do
     begin
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
-      frmProgress.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
+      frmProgressMM.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
       ParametersUsed := TStringList.Create;
       try
         RetrieveParametersForStressPeriod(D7PNameIname, D7PName, TimeIndex,
@@ -577,7 +578,7 @@ begin
         WriteString(DS5 + ' Stress period ' + IntToStr(TimeIndex+1));
         NewLine;
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           EtRateList.Cache;
           Exit;
@@ -591,7 +592,7 @@ begin
             DepthSurfaceCellList := FDepthSurface[TimeIndex];
             WriteEvapotranspirationSurface(DepthSurfaceCellList);
             Application.ProcessMessages;
-            if not frmProgress.ShouldContinue then
+            if not frmProgressMM.ShouldContinue then
             begin
               EtRateList.Cache;
               Exit;
@@ -626,7 +627,7 @@ begin
           end;
         end;
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           EtRateList.Cache;
           Exit;
@@ -640,7 +641,7 @@ begin
             DepthSurfaceCellList := FDepthSurface[TimeIndex];
             WriteExtinctionDepth(DepthSurfaceCellList);
             Application.ProcessMessages;
-            if not frmProgress.ShouldContinue then
+            if not frmProgressMM.ShouldContinue then
             begin
               EtRateList.Cache;
               Exit;
@@ -659,7 +660,7 @@ begin
         // data set 10
         WriteLayerSelection(EtRateList, ParameterValues, TimeIndex, Comment);
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           EtRateList.Cache;
           Exit;

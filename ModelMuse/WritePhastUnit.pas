@@ -976,50 +976,52 @@ var
   InitialChemistryZone: TInitialChemistryZone;
   ZoneIndex: integer;
   DataSet: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
   InitialChemistryZones := TInitialChemistryZoneGroup.Create;
   try
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
     Stream.WriteString('CHEMISTRY_IC' + EndOfLine);
     for ZoneIndex := 0 to InitialChemistryZones.ZoneCount - 1 do
     begin
       InitialChemistryZone := InitialChemistryZones.Zones[ZoneIndex];
       InitialChemistryZone.WriteZone(Stream);
-      DataSet := frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Solution);
+      DataSet := DataArrayManager.GetDataSetByName(rsChemistry_Initial_Solution);
       WriteIProperty(Stream, 'solution', InitialChemistryZone,
         InitialChemistryZone.FChemistry_Initial_Solution, DataSet);
       if frmGoPhast.PhastModel.ChemistryOptions.UseEquilibriumPhases then
       begin
-        DataSet := frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Equilibrium_Phases);
+        DataSet := DataArrayManager.GetDataSetByName(rsChemistry_Initial_Equilibrium_Phases);
         WriteIProperty(Stream, 'equilibrium_phases', InitialChemistryZone,
           InitialChemistryZone.FChemistry_Initial_Equilibrium_Phases, DataSet);
       end;
       if frmGoPhast.PhastModel.ChemistryOptions.UseSurfaceAssemblages then
       begin
-        DataSet := frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Surface);
+        DataSet := DataArrayManager.GetDataSetByName(rsChemistry_Initial_Surface);
         WriteIProperty(Stream, 'surface', InitialChemistryZone,
           InitialChemistryZone.FChemistry_Initial_Surface, DataSet);
       end;
       if frmGoPhast.PhastModel.ChemistryOptions.UseExchange then
       begin
-        DataSet := frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Exchange);
+        DataSet := DataArrayManager.GetDataSetByName(rsChemistry_Initial_Exchange);
         WriteIProperty(Stream, 'exchange', InitialChemistryZone,
           InitialChemistryZone.FChemistry_Initial_Exchange, DataSet);
       end;
       if frmGoPhast.PhastModel.ChemistryOptions.UseGasPhases then
       begin
-        DataSet := frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Gas_Phase);
+        DataSet := DataArrayManager.GetDataSetByName(rsChemistry_Initial_Gas_Phase);
         WriteIProperty(Stream, 'gas_phase', InitialChemistryZone,
           InitialChemistryZone.FChemistry_Initial_Gas_Phase, DataSet);
       end;
       if frmGoPhast.PhastModel.ChemistryOptions.UseSolidSolution then
       begin
-        DataSet := frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Solid_Solutions);
+        DataSet := DataArrayManager.GetDataSetByName(rsChemistry_Initial_Solid_Solutions);
         WriteIProperty(Stream, 'solid_solutions', InitialChemistryZone,
           InitialChemistryZone.FChemistry_Initial_Solid_Solutions, DataSet);
       end;
       if frmGoPhast.PhastModel.ChemistryOptions.UseKineticReactants then
       begin
-        DataSet := frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Kinetics);
+        DataSet := DataArrayManager.GetDataSetByName(rsChemistry_Initial_Kinetics);
         WriteIProperty(Stream, 'kinetics', InitialChemistryZone,
           InitialChemistryZone.FChemistry_Initial_Kinetics, DataSet);
       end;
@@ -1044,7 +1046,7 @@ begin
   Stream.WriteString('HEAD_IC' + EndOfLine);
   if frmGoPhast.PhastModel.InitialWaterTableUsed(nil) then
   begin
-    DataSet := frmGoPhast.PhastModel.GetDataSetByName(rsInitial_Water_Table);
+    DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsInitial_Water_Table);
 //    DataSet := frmGoPhast.PhastModel.DataSets[DataSetIndex];
     DataSet.Initialize;
     with frmGoPhast.PhastModel.PhastGrid do
@@ -1087,7 +1089,7 @@ begin
       end;
       if InitialHeadZones.ZoneCount > ElementCount div 10 then
       begin
-        DataSet := frmGoPhast.PhastModel.GetDataSetByName(rsInitial_Head);
+        DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsInitial_Head);
 //        DataSet := frmGoPhast.PhastModel.DataSets[DataSetIndex];
         with frmGoPhast.PhastModel.PhastGrid do
         begin
@@ -1158,16 +1160,18 @@ var
   PrintChemistryXYZ_Zone: TPrintChemistryXYZ_Zone;
   ZoneIndex: integer;
   DataSet: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
   if frmGoPhast.PhastModel.SoluteTransport then
   begin
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
     Stream.WriteString('PRINT_LOCATIONS' + EndOfLine);
     Stream.WriteString(BlankSpaces + '-chemistry' + EndOfLine);
     for ZoneIndex := 0 to PrintChemistryZones.ZoneCount - 1 do
     begin
       PrintChemistryZone := PrintChemistryZones.Zones[ZoneIndex];
       PrintChemistryZone.WriteZone(Stream);
-      DataSet := frmGoPhast.PhastModel.GetDataSetByName(rsPrint_Chemistry);
+      DataSet := DataArrayManager.GetDataSetByName(rsPrint_Chemistry);
       if PrintChemistryZone.FPrint_Chemistry.IValue > 1 then
       begin
         WriteIProperty(Stream, 'sample X', PrintChemistryZone,
@@ -1188,7 +1192,7 @@ begin
     begin
       PrintChemistryXYZ_Zone := PrintChemistryXYZ_Zones.Zones[ZoneIndex];
       PrintChemistryXYZ_Zone.WriteZone(Stream);
-      DataSet := frmGoPhast.PhastModel.GetDataSetByName(rsPrint_XYZ_Chemistry);
+      DataSet := DataArrayManager.GetDataSetByName(rsPrint_XYZ_Chemistry);
       if PrintChemistryXYZ_Zone.FPrint_ChemistryXYZ.IValue > 1 then
       begin
         WriteIProperty(Stream, 'sample X', PrintChemistryXYZ_Zone,
@@ -1460,6 +1464,7 @@ begin
       end;
       if frmGoPhast.PhastModel.SoluteTransport then
       begin
+        WritePropertyName(Stream, 'associated_solution');
         for SideFluxSolutionIndex := 0 to SideFluxZones.SolutionTimeCount - 1 do
         begin
           Time := SideFluxZones.SolutionTimes[SideFluxSolutionIndex];
@@ -1938,7 +1943,7 @@ begin
   OldDecSep := DecimalSeparator;
   try
     try
-      frmGoPhast.PhastModel.ClearModelInputFiles;
+      frmGoPhast.PhastModel.ModelInputFiles.Clear;
       frmGoPhast.PhastModel.AddModelInputFile(FileName);
       DecimalSeparator := '.';
       Input := TStringStream.Create('');

@@ -383,7 +383,7 @@ begin
       begin
         // do nothing
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         rdeSpacingRows.Text := '-100';
       end;

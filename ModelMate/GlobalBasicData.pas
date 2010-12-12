@@ -10,8 +10,7 @@ interface
     NumPriAttributes: integer = 10;
     MaxLenParName: integer = 12;
     MaxLenDepName: integer = 20;
-
-
+    MaxLenGpName: integer = 12;
 
   var
 

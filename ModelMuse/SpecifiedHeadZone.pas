@@ -155,6 +155,8 @@ uses Contnrs, frmGoPhastUnit, PhastModelUnit;
 { TSpecifiedHeadDataSets }
 
 constructor TSpecifiedHeadDataSets.Create;
+var
+  DataArrayManager: TDataArrayManager;
 begin
   FEvalAt := eaNodes;
   FZoneClass := TSpecifiedHeadZone;
@@ -169,8 +171,9 @@ begin
 
   if frmGoPhast.PhastModel.SoluteTransport then
   begin
-    FSolutionType := frmGoPhast.PhastModel.BoundaryDataSets[frmGoPhast.PhastModel.
-      IndexOfBoundaryDataSet(rsSolutionType)];
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    FSolutionType := DataArrayManager.BoundaryDataSets[
+      DataArrayManager.IndexOfBoundaryDataSet(rsSolutionType)];
     FSolutionType.Initialize;
     FAssociatedSolutions := frmGoPhast.PhastModel.SpecifiedHeadAssociatedSolution;
     FAssociatedSolutions.Initialize;

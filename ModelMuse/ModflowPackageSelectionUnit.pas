@@ -37,6 +37,8 @@ Type
     function PackageUsed(Sender: TObject): boolean;
     procedure AddTimeList(TimeList: TCustomTimeList);
     procedure RemoveTimeList(TimeList: TCustomTimeList);
+    // @name is used when determining what data sets or global variables are
+    // used when evaluating the formula for a MODFLOW boundary condition.
     procedure UpdateDisplayUseList(NewUseList: TStringList;
       ParamType: TParameterType; DataIndex: integer; const DisplayName: string);
     procedure UpdateUseList(DataIndex: integer; NewUseList: TStringList;
@@ -594,6 +596,8 @@ Type
     constructor Create(Model: TObject);
     property Items[Index: integer]: TSfrParamInstance read GetItems write SetItems;
     function ParameterInstanceExists(const ParamName, InstaName: string): boolean;
+    procedure DeleteInstancesOfParameter(const ParamName: string);
+    procedure UpdateParamName(const OldParamName, NewParamName: string);
   end;
 
   TPrintFlows = (pfNoPrint, pfListing, pfText);
@@ -1752,7 +1756,7 @@ uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
   ModflowSfrWriterUnit, ModflowSfrUnit, ModflowSfrReachUnit, ModflowSfrFlows, 
   ModflowSfrChannelUnit, ModflowSfrEquationUnit, ModflowSfrSegment, 
   ModflowSfrUnsatSegment, ModflowMNW2_WriterUnit, ModflowMnw2Unit,
-  LayerStructureUnit, ModflowSubsidenceDefUnit;
+  LayerStructureUnit, ModflowSubsidenceDefUnit, frmGridValueUnit;
 
 
 { TModflowPackageSelection }
@@ -1832,6 +1836,7 @@ begin
     begin
       UpdateFrmGridColor;
       UpdateFrmContourData;
+      UpdateFrmGridValue;
     end;
   end;
 end;
@@ -1841,7 +1846,6 @@ procedure TModflowPackageSelection.UpdateDisplayUseList(NewUseList: TStringList;
 begin
   (FModel as TPhastModel).UpdateDisplayUseList(NewUseList,
     ParamType, DataIndex, DisplayName);
-
 end;
 
 procedure TModflowPackageSelection.UpdateUseList(DataIndex: integer;
@@ -4463,6 +4467,20 @@ begin
   inherited Create(TSfrParamInstance, Model);
 end;
 
+procedure TSfrParamInstances.DeleteInstancesOfParameter(
+  const ParamName: string);
+var
+  Index: Integer;
+begin
+  for Index := Count - 1 downto 0 do
+  begin
+    if Items[Index].ParameterName = ParamName then
+    begin
+      Delete(Index);
+    end;
+  end;
+end;
+
 function TSfrParamInstances.GetItems(Index: integer): TSfrParamInstance;
 begin
   result := inherited Items[Index] as TSfrParamInstance
@@ -4490,6 +4508,20 @@ procedure TSfrParamInstances.SetItems(Index: integer;
   const Value: TSfrParamInstance);
 begin
   inherited Items[Index] := Value;
+end;
+
+procedure TSfrParamInstances.UpdateParamName(const OldParamName,
+  NewParamName: string);
+var
+  Index: Integer;
+begin
+  for Index := 0 to Count - 1 do
+  begin
+    if Items[Index].ParameterName = OldParamName then
+    begin
+      Items[Index].ParameterName := NewParamName;
+    end;
+  end;
 end;
 
 procedure TCustomLayerPackageSelection.Assign(Source: TPersistent);

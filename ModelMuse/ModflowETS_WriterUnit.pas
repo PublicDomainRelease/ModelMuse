@@ -39,7 +39,7 @@ Type
       DS5, D7PNameIname, D7PName: string); override;
     procedure Evaluate; override;
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     // @name destroys the current instance of @classname.
     Destructor Destroy; override;
     procedure WriteFile(const AFileName: string);
@@ -92,7 +92,7 @@ begin
   result := TEtsSurfDepth_Cell;
 end;
 
-constructor TModflowETS_Writer.Create(Model: TPhastModel);
+constructor TModflowETS_Writer.Create(Model: TCustomModel);
 begin
   inherited;
   FDepthSurface := TObjectList.Create;
@@ -200,7 +200,7 @@ begin
   ParameterValues := TList.Create;
   try
     Evaluate;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -516,39 +516,39 @@ begin
     NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
   ClearTimeLists;
   OpenFile(FileName(AFileName));
   try
-    frmProgress.AddMessage('Writing ETS Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing ETS Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 2 and 3.');
+    frmProgressMM.AddMessage('  Writing Data Sets 2 and 3.');
     WriteDataSets2And3;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 4 to 11.');
+    frmProgressMM.AddMessage('  Writing Data Sets 4 to 11.');
     WriteDataSets4To11;
   finally
     CloseFile;
@@ -661,6 +661,7 @@ var
   SegmentIndex: integer;
   ErrorString: string;
 begin
+  inherited;
   for SegmentIndex := 2 to NETSEG - 1 do
   begin
     ErrorString := 'In the ETS package, depth fraction of each succeeding '
@@ -689,11 +690,11 @@ begin
     for TimeIndex := 0 to Values.Count - 1 do
     begin
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
-      frmProgress.AddMessage('    Writing Stress Period '
+      frmProgressMM.AddMessage('    Writing Stress Period '
         + IntToStr(TimeIndex+1));
       ParametersUsed := TStringList.Create;
       try
@@ -797,7 +798,7 @@ begin
             DepthSurfaceCellList := FDepthSurface[TimeIndex];
             WriteEvapotranspirationSurface(DepthSurfaceCellList);
             Application.ProcessMessages;
-            if not frmProgress.ShouldContinue then
+            if not frmProgressMM.ShouldContinue then
             begin
               EtRateList.Cache;
               Exit;
@@ -831,7 +832,7 @@ begin
             end;
           end;
           Application.ProcessMessages;
-          if not frmProgress.ShouldContinue then
+          if not frmProgressMM.ShouldContinue then
           begin
             EtRateList.Cache;
             Exit;
@@ -847,7 +848,7 @@ begin
             DepthSurfaceCellList := FDepthSurface[TimeIndex];
             WriteExtinctionDepth(DepthSurfaceCellList);
             Application.ProcessMessages;
-            if not frmProgress.ShouldContinue then
+            if not frmProgressMM.ShouldContinue then
             begin
               EtRateList.Cache;
               Exit;
@@ -862,7 +863,7 @@ begin
         // data set 9
         WriteLayerSelection(EtRateList, ParameterValues, TimeIndex, Comment);
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           EtRateList.Cache;
           Exit;
@@ -877,7 +878,7 @@ begin
             // data set 10
             WriteDepthFraction(DepthSurfaceCellList, SegmentIndex);
             Application.ProcessMessages;
-            if not frmProgress.ShouldContinue then
+            if not frmProgressMM.ShouldContinue then
             begin
               EtRateList.Cache;
               Exit;
@@ -886,7 +887,7 @@ begin
             // data set 11
             WriteRateFraction(DepthSurfaceCellList, SegmentIndex);
             Application.ProcessMessages;
-            if not frmProgress.ShouldContinue then
+            if not frmProgressMM.ShouldContinue then
             begin
               EtRateList.Cache;
               Exit;

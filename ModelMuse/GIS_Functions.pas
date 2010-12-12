@@ -75,13 +75,18 @@ type
     function GetVariablesUsed: TStringList; override;
   end;
 
+  THufSYTP = class(TCustomHufExpression)
+  protected
+    function GetVariablesUsed: TStringList; override;
+  end;
+
   // @name adds a series of (mostly) GIS function to Parser.
 // The functions are defined in the initialization section.
 // In addition, one descendant of TSelectExpression is defined in the
 // implementation section and added to RbwParser.SpecialImplentorList.
 // @param(Parser is the TRbwParser to which the GIS functions will be added.)
 procedure AddGIS_Functions(const Parser: TRbwParser;
-  ModelSelection: TModelSelection);
+  ModelSelection: TModelSelection; EvalAt: TEvaluatedAt);
 
 // @name updates a series of global values related to location.
 procedure UpdateGlobalLocations(const Col, Row, Layer: integer;
@@ -123,6 +128,7 @@ const
   StrHufSs = 'GetHufSs';
   StrHufAverageSy = 'GetHuf_Average_Sy';
   StrHufSy = 'GetHufSy';
+  StrHufSytp = 'GetHufSytp';
   StrLayerHeight = 'LayerHeight';
   StrInterpolatedVertexValues = 'InterpolatedVertexValue';
   StrVertexInterpolate = 'VertexInterpolate';
@@ -136,7 +142,7 @@ implementation
 
 uses frmGoPhastUnit, DataSetUnit, FastGEO, LayerStructureUnit, PhastModelUnit,
   ValueArrayStorageUnit, HufDefinition, OrderedCollectionUnit,
-  ModflowPackageSelectionUnit, Math, ModflowGridUnit;
+  ModflowPackageSelectionUnit, Math, ModflowGridUnit, ModflowParameterUnit;
 
 var  
   SpecialImplementors: TList;
@@ -232,6 +238,9 @@ var
   ActiveOnLayer: TFunctionClass;
   ActiveOnLayerSpecialImplementor: TSpecialImplementor;
 
+//  HighestActiveLayer: TFunctionClass;
+//  HighestActiveLayerSpecialImplementor: TSpecialImplementor;
+
   SpecifiedHeadOnLayer: TFunctionClass;
   SpecifiedHeadOnLayerSpecialImplementor: TSpecialImplementor;
 
@@ -255,6 +264,9 @@ var
 
   HufSY: TFunctionClass;
   HufSYSpecialImplementor: TSpecialImplementor;
+
+  HufSYTP: TFunctionClass;
+  HufSYTPSpecialImplementor: TSpecialImplementor;
 
 procedure PushGlobalStack;
 var
@@ -295,7 +307,7 @@ begin
 end;
 
 procedure AddGIS_Functions(const Parser: TRbwParser;
-  ModelSelection: TModelSelection);
+  ModelSelection: TModelSelection; EvalAt: TEvaluatedAt);
   procedure AddItem (Item: TFunctionRecord; ShouldAdd: boolean);
   var
     Index: integer;
@@ -315,10 +327,25 @@ var
   Item: TSpecialImplementor;
 begin
   Parser.SpecialImplementorList.Clear;
+  Parser.SpecialImplementorList.Capacity := SpecialImplementors.Count;
   for Index := 0 to SpecialImplementors.Count - 1 do
   begin
     Item := SpecialImplementors[Index];
-    Parser.SpecialImplementorList.Add(Item);
+    case EvalAt of
+      eaBlocks: 
+        begin
+          Parser.SpecialImplementorList.Add(Item);
+        end;
+      eaNodes:
+        begin
+          if (Item <> ActiveOnLayerSpecialImplementor)
+            {and (Item <> HighestActiveLayerSpecialImplementor)} then
+          begin
+            Parser.SpecialImplementorList.Add(Item);
+          end;
+        end;
+      else Assert(False);
+    end;
   end;
   // Make sure the GIS functions are available in Parser.
   AddItem(XFunction, True);
@@ -835,6 +862,17 @@ var
   Distance2: Double;
   Point1, Point2: TPoint2D;
   SegmentDistance: double;
+  CurrentSegmentStartPoint: TPoint2D;
+  CurrentSegmentEndPoint: TPoint2D;
+  LocalEpsilon: double;
+  function NearlyTheSame(const A, B: real): boolean;
+  begin
+    result := A = B;
+    if not result then
+    begin
+      result := Abs(A - B) < LocalEpsilon;
+    end;
+  end;
 begin
   if (GlobalCurrentSegment = nil) or (GlobalCurrentScreenObject = nil)
     or (GlobalCurrentScreenObject.PointPositionValues = nil) then
@@ -886,6 +924,7 @@ begin
     end
     else
     begin
+      LocalEpsilon := GlobalCurrentSegment.Length/100000;
       if AfterPosition = -1 then
       begin
         result := BeforeValue;
@@ -894,9 +933,13 @@ begin
       begin
         Point1 := GlobalCurrentScreenObject.Points[
           GlobalCurrentSegment.VertexIndex];
+        CurrentSegmentStartPoint.X := GlobalCurrentSegment.X1;
+        CurrentSegmentStartPoint.Y := GlobalCurrentSegment.Y1;
+        CurrentSegmentStartPoint := frmGoPhast.Grid.
+          RotateFromGridCoordinatesToRealWorldCoordinates(CurrentSegmentStartPoint);
         if (BeforePosition = GlobalCurrentSegment.VertexIndex)
-          and (GlobalCurrentSegment.X1 = Point1.X)
-          and (GlobalCurrentSegment.Y1 = Point1.Y) then
+          and NearlyTheSame(CurrentSegmentStartPoint.X, Point1.X)
+          and NearlyTheSame(CurrentSegmentStartPoint.Y, Point1.Y) then
         begin
           result := BeforeValue;
           Exit;
@@ -904,9 +947,13 @@ begin
 
         Point2 := GlobalCurrentScreenObject.Points[
           GlobalCurrentSegment.VertexIndex+1];
+        CurrentSegmentEndPoint.X := GlobalCurrentSegment.X2;
+        CurrentSegmentEndPoint.Y := GlobalCurrentSegment.Y2;
+        CurrentSegmentEndPoint := frmGoPhast.Grid.
+          RotateFromGridCoordinatesToRealWorldCoordinates(CurrentSegmentEndPoint);
         if (AfterPosition = GlobalCurrentSegment.VertexIndex+1)
-          and (GlobalCurrentSegment.X2 = Point2.X)
-          and (GlobalCurrentSegment.Y2 = Point2.Y) then
+          and NearlyTheSame(CurrentSegmentEndPoint.X, Point2.X)
+          and NearlyTheSame(CurrentSegmentEndPoint.Y, Point2.Y) then
         begin
            result := AfterValue;
            Exit;
@@ -920,8 +967,8 @@ begin
         end
         else
         begin
-          Point2.X := (GlobalCurrentSegment.X1 + GlobalCurrentSegment.X2) / 2;
-          Point2.Y := (GlobalCurrentSegment.Y1 + GlobalCurrentSegment.Y2) / 2;
+          Point2.X := (CurrentSegmentStartPoint.X + CurrentSegmentEndPoint.X) / 2;
+          Point2.Y := (CurrentSegmentStartPoint.Y + CurrentSegmentEndPoint.Y) / 2;
           SegmentDistance := (Sqrt(Sqr(Point1.X - Point2.X) + Sqr(Point1.Y - Point2.Y))
             + NodeDistances(GlobalCurrentSegment.VertexIndex));
           result := (SegmentDistance - Distance1)/(Distance2 - Distance1)
@@ -1118,7 +1165,7 @@ begin
           else Assert(False);
         end;
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         Assert(GlobalEvaluatedAt = eaBlocks);
         result := frmGoPhast.PhastModel.ModflowGrid.
@@ -1189,7 +1236,7 @@ begin
           else Assert(False);
         end;
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         Assert(GlobalEvaluatedAt = eaBlocks);
         result := frmGoPhast.PhastModel.ModflowGrid.
@@ -1417,7 +1464,7 @@ begin
           end;
         end;
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         if (Lay < 0) or (Lay > frmGoPhast.ModflowGrid.LayerCount - 1)
           or (Row < 0) or (Row > frmGoPhast.ModflowGrid.RowCount - 1)
@@ -1456,61 +1503,63 @@ var
   CellPoints: T2DRealPointArray;
   CellOutline: TPolygon2D;
 begin
-  if frmGoPhast.ModelSelection = msPhast then
-  begin
-    if Values[2] = nil then
-    begin
-      result := _ColumnWidth([Values[0]]) * _LayerHeight([Values[1]]);
-    end
-    else
-    begin
-      result := _ColumnWidth([Values[0]]) * _LayerHeight([Values[2]]);
-    end;
-  end
-  else if frmGoPhast.ModelSelection = msModflow then
-  begin
-    if Values[2] = nil then
-    begin
-      Row := GlobalRow - 1;
-
-      if Values[0] <> nil then
+  case frmGoPhast.ModelSelection of
+    msPhast:
       begin
-        Col := PInteger(Values[0])^ - 1;
-      end
-      else
-      begin
-        Col := GlobalColumn - 1;
+        if Values[2] = nil then
+        begin
+          result := _ColumnWidth([Values[0]]) * _LayerHeight([Values[1]]);
+        end
+        else
+        begin
+          result := _ColumnWidth([Values[0]]) * _LayerHeight([Values[2]]);
+        end;
       end;
+    msModflow, msModflowLGR:
+      begin
+        if Values[2] = nil then
+        begin
+          Row := GlobalRow - 1;
 
-      if Values[1] <> nil then
-      begin
-        Layer := PInteger(Values[1])^ - 1;
-      end
-      else
-      begin
-        Layer := GlobalLayer - 1;
+          if Values[0] <> nil then
+          begin
+            Col := PInteger(Values[0])^ - 1;
+          end
+          else
+          begin
+            Col := GlobalColumn - 1;
+          end;
+
+          if Values[1] <> nil then
+          begin
+            Layer := PInteger(Values[1])^ - 1;
+          end
+          else
+          begin
+            Layer := GlobalLayer - 1;
+          end;
+        end
+        else
+        begin
+          Col := PInteger(Values[0])^ - 1;
+          Row := PInteger(Values[1])^ - 1;
+          Layer := PInteger(Values[2])^ - 1;
+        end;
+        CellPoints := frmGoPhast.ModflowGrid.FrontCellPoints(Row);
+        SetLength(CellOutline, 6);
+        CellOutline[5] := CellPoints[Col*2,Layer];
+        CellOutline[4] := CellPoints[Col*2+1,Layer];
+        CellOutline[3] := CellPoints[Col*2+2,Layer];
+        CellOutline[2] := CellPoints[Col*2+2,Layer+1];
+        CellOutline[1] := CellPoints[Col*2+1,Layer+1];
+        CellOutline[0] := CellPoints[Col*2,Layer+1];
+        result := Area(CellOutline);
       end;
-    end
     else
-    begin
-      Col := PInteger(Values[0])^ - 1;
-      Row := PInteger(Values[1])^ - 1;
-      Layer := PInteger(Values[2])^ - 1;
-    end;
-    CellPoints := frmGoPhast.ModflowGrid.FrontCellPoints(Row);
-    SetLength(CellOutline, 6);
-    CellOutline[5] := CellPoints[Col*2,Layer];
-    CellOutline[4] := CellPoints[Col*2+1,Layer];
-    CellOutline[3] := CellPoints[Col*2+2,Layer];
-    CellOutline[2] := CellPoints[Col*2+2,Layer+1];
-    CellOutline[1] := CellPoints[Col*2+1,Layer+1];
-    CellOutline[0] := CellPoints[Col*2,Layer+1];
-    result := Area(CellOutline);
-  end
-  else
-  begin
-    result := 0;
-    Assert(False);
+      begin
+        result := 0;
+        Assert(False);
+      end;
   end;
 end;
 
@@ -1520,61 +1569,63 @@ var
   CellPoints: T2DRealPointArray;
   CellOutline: TPolygon2D;
 begin
-  if frmGoPhast.ModelSelection = msPhast then
-  begin
-    if Values[2] = nil then
-    begin
-      result := _RowWidth([Values[0]]) * _LayerHeight([Values[1]]);
-    end
-    else
-    begin
-      result := _RowWidth([Values[0]]) * _LayerHeight([Values[2]]);
-    end;
-  end
-  else if frmGoPhast.ModelSelection = msModflow then
-  begin
-    if Values[2] = nil then
-    begin
-      Col := GlobalColumn - 1;
+  case frmGoPhast.ModelSelection of
+    msPhast:
+      begin
+        if Values[2] = nil then
+        begin
+          result := _RowWidth([Values[0]]) * _LayerHeight([Values[1]]);
+        end
+        else
+        begin
+          result := _RowWidth([Values[0]]) * _LayerHeight([Values[2]]);
+        end;
+      end;
+    msModflow, msModflowLGR:
+      begin
+        if Values[2] = nil then
+        begin
+          Col := GlobalColumn - 1;
 
-      if Values[0] <> nil then
-      begin
-        Row := PInteger(Values[0])^ - 1;
-      end
-      else
-      begin
-        Row := GlobalRow - 1;
+          if Values[0] <> nil then
+          begin
+            Row := PInteger(Values[0])^ - 1;
+          end
+          else
+          begin
+            Row := GlobalRow - 1;
+          end;
+
+          if Values[1] <> nil then
+          begin
+            Layer := PInteger(Values[1])^ - 1;
+          end
+          else
+          begin
+            Layer := GlobalLayer - 1;
+          end;
+        end
+        else
+        begin
+          Col := PInteger(Values[0])^ - 1;
+          Row := PInteger(Values[1])^ - 1;
+          Layer := PInteger(Values[2])^ - 1;
+        end;
+        CellPoints := frmGoPhast.ModflowGrid.SideCellPoints(Col);
+        SetLength(CellOutline, 6);
+        CellOutline[0] := CellPoints[Row*2,Layer];
+        CellOutline[1] := CellPoints[Row*2+1,Layer];
+        CellOutline[2] := CellPoints[Row*2+2,Layer];
+        CellOutline[3] := CellPoints[Row*2+2,Layer+1];
+        CellOutline[4] := CellPoints[Row*2+1,Layer+1];
+        CellOutline[5] := CellPoints[Row*2,Layer+1];
+        result := Area(CellOutline);
       end;
-      
-      if Values[1] <> nil then
-      begin
-        Layer := PInteger(Values[1])^ - 1;
-      end
-      else
-      begin
-        Layer := GlobalLayer - 1;
-      end;
-    end
     else
-    begin
-      Col := PInteger(Values[0])^ - 1;
-      Row := PInteger(Values[1])^ - 1;
-      Layer := PInteger(Values[2])^ - 1;
-    end;
-    CellPoints := frmGoPhast.ModflowGrid.SideCellPoints(Col);
-    SetLength(CellOutline, 6);
-    CellOutline[0] := CellPoints[Row*2,Layer];
-    CellOutline[1] := CellPoints[Row*2+1,Layer];
-    CellOutline[2] := CellPoints[Row*2+2,Layer];
-    CellOutline[3] := CellPoints[Row*2+2,Layer+1];
-    CellOutline[4] := CellPoints[Row*2+1,Layer+1];
-    CellOutline[5] := CellPoints[Row*2,Layer+1];
-    result := Area(CellOutline);
-  end
-  else
-  begin
-    result := 0;
-    Assert(False);
+      begin
+        result := 0;
+        Assert(False);
+      end;
   end;
 end;
 
@@ -1650,7 +1701,7 @@ begin
           Result := frmGoPhast.PhastGrid.LayerElevation[Lay];
         end;
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         if (Lay < 0) or (Lay > frmGoPhast.ModflowGrid.LayerCount)
          or (Row < 0) or (Row > frmGoPhast.ModflowGrid.RowCount-1)
@@ -1899,7 +1950,7 @@ var
   ArrayLength: integer;
   Column, Row, Layer: integer;
 begin
-  DataArray := frmGoPhast.PhastModel.GetDataSetByName(DataSetName);
+  DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
   Assert(DataArray <> nil);
   PushGlobalStack;
   try
@@ -1928,7 +1979,7 @@ var
   DataArray: TDataArray;
   ArrayLength: Integer;
 begin
-  DataArray := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+  DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
   Assert(DataArray <> nil);
   PushGlobalStack;
   try
@@ -2118,7 +2169,7 @@ var
   PhastModel: TPhastModel;
 begin
   PhastModel := frmGoPhast.PhastModel;
-  DataArray := PhastModel.GetDataSetByName(DataSetName);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
   Assert(DataArray <> nil);
   PushGlobalStack;
   try
@@ -2140,7 +2191,7 @@ var
 begin
   if Param.UseZone then
   begin
-    ZoneArray := PhastModel.GetDataSetByName(Param.ZoneDataSetName);
+    ZoneArray := PhastModel.DataArrayManager.GetDataSetByName(Param.ZoneDataSetName);
     Assert(ZoneArray <> nil);
     PushGlobalStack;
     try
@@ -2205,7 +2256,7 @@ begin
   Inc(Layer);
   if not PhastModel.LayerStructure.IsLayerSimulated(Layer) then
   begin
-    KzNonSimDataArray := PhastModel.GetDataSetByName(rsModflow_CBKz);
+    KzNonSimDataArray := PhastModel.DataArrayManager.GetDataSetByName(rsModflow_CBKz);
     Assert(KzNonSimDataArray <> nil);
     PushGlobalStack;
     try
@@ -2217,7 +2268,7 @@ begin
   end;
   BottomLayer := Layer;
 
-  KzDataArray := PhastModel.GetDataSetByName(rsKz);
+  KzDataArray := PhastModel.DataArrayManager.GetDataSetByName(rsKz);
   Assert(KzDataArray <> nil);
   PushGlobalStack;
   try
@@ -2293,7 +2344,8 @@ begin
 
 end;
 
-function HguTransmissivity(HufUnit: THydrogeologicUnit; Column, Row: integer): double;
+function HguTransmissivity(HufUnit: THydrogeologicUnit; Column, Row: integer;
+  IntervalTop, IntervalBottom: double): double;
 var
   KDEP_Used: Boolean;
   HufK: double;
@@ -2357,6 +2409,16 @@ begin
     HufTop := GetDataSetValue(Column, Row, 0, HufUnit.TopDataArrayName);
 
     HufBottom := HufTop - HufThickness;
+
+    if IntervalTop < HufTop then
+    begin
+      HufTop := IntervalTop;
+    end;
+
+    if IntervalBottom > HufBottom then
+    begin
+      HufBottom := IntervalBottom;
+    end;
 
     DepthToTop := GroundSurface - HufTop;
     DepthToBottom := GroundSurface - HufBottom;
@@ -2430,7 +2492,76 @@ begin
   result := CellValue //* HufThickness;
 end;
 
-function GetHufSy(Values: array of pointer): double;
+function _GetHufSytp(Values: array of pointer): double;
+var
+  Column: Integer;
+  Row: Integer;
+  Index: Integer;
+  SteadyParameters: TModflowSteadyParameters;
+  AParam: TModflowSteadyParameter;
+  DataArrayManager: TDataArrayManager;
+  ZoneDataArray: TDataArray;
+  AValue: Double;
+  MultiplierDataArray: TDataArray;
+begin
+  if (Length(Values) >= 1) and (Values[0] <> nil) then
+  begin
+    Row := PInteger(Values[0])^ - 1;
+  end
+  else
+  begin
+    Row := GlobalRow - 1;
+  end;
+  if (Length(Values) >= 2) and (Values[1] <> nil) then
+  begin
+    Column := PInteger(Values[1])^ - 1;
+  end
+  else
+  begin
+    Column := GlobalColumn - 1;
+  end;
+//  GetCellIndicies(Dummy, Column, Row,  Values);
+  SteadyParameters := frmGoPhast.PhastModel.ModflowSteadyParameters;
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  result := 0;
+  for Index := 0 to SteadyParameters.Count - 1 do
+  begin
+    AParam := SteadyParameters[Index];
+    if AParam.ParameterType = ptHUF_SYTP then
+    begin
+      if AParam.UseZone then
+      begin
+        ZoneDataArray := DataArrayManager.GetDataSetByName(AParam.ZoneName);
+        PushGlobalStack;
+        try
+          ZoneDataArray.Initialize;
+        finally
+          PopGlobalStack;
+        end;
+        if not ZoneDataArray.BooleanData[0, Row, Column] then
+        begin
+          Continue;
+        end;
+      end;
+      AValue := AParam.Value;
+      if AParam.UseMultiplier then
+      begin
+        MultiplierDataArray := DataArrayManager.GetDataSetByName(AParam.MultiplierName);
+        PushGlobalStack;
+        try
+          MultiplierDataArray.Initialize;
+        finally
+          PopGlobalStack;
+        end;
+        AValue := AValue * MultiplierDataArray.RealData[0, Row, Column];
+      end;
+      result := result + AValue;
+    end;
+  end;
+end;
+
+
+function _GetHufSy(Values: array of pointer): double;
 var
   Head: double;
   Column: Integer;
@@ -2592,7 +2723,7 @@ begin
               HorizontalAnisotropy := 1.;
             end;
             result := result + HorizontalAnisotropy*
-              HguTransmissivity(HufUnit, Column, Row)
+              HguTransmissivity(HufUnit, Column, Row, LayerTop, LayerBottom)
               *HufLayerThickness/HufThickness;
           end;
         end;
@@ -2670,7 +2801,6 @@ var
   VK_Used: Boolean;
   UpperHead: double;
   HufIntervalThickness: Double;
-//  LowerHead: double;
 begin
   // affected by everything in _HufKx plus the
   // by zone arrays and multiplier arrays of ptHUF_VK and ptHUF_VANI
@@ -2777,8 +2907,10 @@ begin
                   begin
                     Vani := 1;
                   end;
-                  VK := HguTransmissivity(HufUnit, Column, Row)
+                  VK := HguTransmissivity(HufUnit, Column, Row, IntervalTop, IntervalBottom)
                     /HufThickness/Vani;
+
+
 //                  result := result +
 //                    HguTransmissivity(HufUnit, Column, Row)/Vani;
                 end;
@@ -3438,6 +3570,36 @@ begin
   end;
 end;
 
+{ THufSYTP }
+
+function THufSYTP.GetVariablesUsed: TStringList;
+var
+  PhastModel: TPhastModel;
+  SteadyParameters: TModflowSteadyParameters;
+  Index: Integer;
+  AParam: TModflowSteadyParameter;
+begin
+  result := inherited GetVariablesUsed;
+
+  PhastModel := frmGoPhast.PhastModel;
+  SteadyParameters := PhastModel.ModflowSteadyParameters;
+  for Index := 0 to SteadyParameters.Count - 1 do
+  begin
+    AParam := SteadyParameters[Index];
+    if AParam.ParameterType = ptHUF_SYTP then
+    begin
+      if AParam.UseZone then
+      begin
+        result.Add(AParam.ZoneName)
+      end;
+      if AParam.UseMultiplier then
+      begin
+        result.Add(AParam.MultiplierName)
+      end;
+    end;
+  end;
+end;
+
 initialization
   SpecialImplementors := TList.Create;
 
@@ -3964,6 +4126,19 @@ initialization
   ActiveOnLayerSpecialImplementor.Implementor := TActiveOnLayer;
   SpecialImplementors.Add(ActiveOnLayerSpecialImplementor);
 
+//  HighestActiveLayer := TFunctionClass.Create;
+//  HighestActiveLayer.InputDataCount := 0;
+//  HighestActiveLayer.OptionalArguments := 0;
+//  HighestActiveLayer.IFunctionAddr := _HighestActiveLayer;
+//  HighestActiveLayer.Name := 'HighestActiveLayer';
+//  HighestActiveLayer.Prototype := 'Grid|HighestActiveLayer';
+//  HighestActiveLayer.AllowConversionToConstant := False;
+//
+//  HighestActiveLayerSpecialImplementor := TSpecialImplementor.Create;
+//  HighestActiveLayerSpecialImplementor.FunctionClass := HighestActiveLayer;
+//  HighestActiveLayerSpecialImplementor.Implementor := TActiveOnLayer;
+//  SpecialImplementors.Add(HighestActiveLayerSpecialImplementor);
+
   SpecifiedHeadOnLayer := TFunctionClass.Create;
   SpecifiedHeadOnLayer.InputDataCount := 1;
   SpecifiedHeadOnLayer.OptionalArguments := 0;
@@ -4085,7 +4260,7 @@ initialization
   HufSY := TFunctionClass.Create;
   HufSY.InputDataCount := 4;
   HufSY.OptionalArguments := 3;
-  HufSY.RFunctionAddr := GetHufSy;
+  HufSY.RFunctionAddr := _GetHufSy;
   HufSY.Name := StrHufSy;
   HufSY.Prototype := 'MODFLOW|' + StrHufSy + '(Head, {Layer, Row, Column})';
   HufSY.OptionalType := rdtInteger;
@@ -4100,12 +4275,31 @@ initialization
   HufSYSpecialImplementor.Implementor := THufSY;
   SpecialImplementors.Add(HufSYSpecialImplementor);
 
+  HufSYTP := TFunctionClass.Create;
+  HufSYTP.InputDataCount := 2;
+  HufSYTP.OptionalArguments := 2;
+  HufSYTP.RFunctionAddr := _GetHufSytp;
+  HufSYTP.Name := StrHufSytp;
+  HufSYTP.Prototype := 'MODFLOW|' + StrHufSytp + '({Row, Column})';
+  HufSYTP.OptionalType := rdtInteger;
+  HufSYTP.AllowConversionToConstant := False;
+  HufSYTP.InputDataTypes[0] := rdtInteger;
+  HufSYTP.InputDataTypes[1] := rdtInteger;
+
+  HufSYTPSpecialImplementor := TSpecialImplementor.Create;
+  HufSYTPSpecialImplementor.FunctionClass := HufSYTP;
+  HufSYTPSpecialImplementor.Implementor := THufSYTP;
+  SpecialImplementors.Add(HufSYTPSpecialImplementor);
+
 finalization
   NodeInterpolate.Free;
   NodeInterpolateSpecialImplementor.Free;
 
   ActiveOnLayer.Free;
   ActiveOnLayerSpecialImplementor.Free;
+
+//  HighestActiveLayer.Free;
+//  HighestActiveLayerSpecialImplementor.Free;
 
   SpecifiedHeadOnLayer.Free;
   SpecifiedHeadOnLayerSpecialImplementor.Free;
@@ -4130,6 +4324,9 @@ finalization
 
   HufSY.Free;
   HufSYSpecialImplementor.Free;
+
+  HufSYTP.Free;
+  HufSYTPSpecialImplementor.Free;
 
   SpecialImplementors.Free;
 

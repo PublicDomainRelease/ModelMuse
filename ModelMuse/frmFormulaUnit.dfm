@@ -496,7 +496,6 @@ inherited frmFormula: TfrmFormula
       HelpType = htKeyword
       HelpKeyword = 'Formula_Text_Box'
       Align = alClient
-      AutoSize = False
       HideSelection = False
       ScrollBars = ssVertical
       TabOrder = 2
@@ -618,12 +617,14 @@ inherited frmFormula: TfrmFormula
         AlignWithMargins = True
         Left = 4
         Top = 4
-        Width = 193
-        Height = 16
+        Width = 227
+        Height = 36
         Align = alClient
         Alignment = taCenter
         Caption = 'Double-click to insert into formula'
         WordWrap = True
+        ExplicitWidth = 193
+        ExplicitHeight = 16
       end
     end
     object tvItems: TTreeView

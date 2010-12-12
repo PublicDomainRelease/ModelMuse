@@ -118,19 +118,22 @@ uses Contnrs, frmGoPhastUnit, PhastModelUnit;
 { TMediaDataSets }
 
 constructor TMediaDataSets.Create;
+var
+  DataArrayManager: TDataArrayManager;
 begin
   FEvalAt := eaBlocks;
   FZoneClass := TMediaZone;
-  FKx := frmGoPhast.PhastModel.GetDataSetByName(rsKx);
-  FKy := frmGoPhast.PhastModel.GetDataSetByName(rsKy);
-  FKz := frmGoPhast.PhastModel.GetDataSetByName(rsKz);
-  FPorosity := frmGoPhast.PhastModel.GetDataSetByName(rsPorosity);
-  FSpecificStorage := frmGoPhast.PhastModel.GetDataSetByName(rsSpecific_Storage);
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  FKx := DataArrayManager.GetDataSetByName(rsKx);
+  FKy := DataArrayManager.GetDataSetByName(rsKy);
+  FKz := DataArrayManager.GetDataSetByName(rsKz);
+  FPorosity := DataArrayManager.GetDataSetByName(rsPorosity);
+  FSpecificStorage := DataArrayManager.GetDataSetByName(rsSpecific_Storage);
   if frmGoPhast.PhastModel.SoluteTransport then
   begin
-    FLongDisp := frmGoPhast.PhastModel.GetDataSetByName(rsLong_Dispersivity);
-    FHorzTransDisp := frmGoPhast.PhastModel.GetDataSetByName(rsHorizontal_Transv_Dispersivity);
-    FVertTransDisp := frmGoPhast.PhastModel.GetDataSetByName(rsVertical_Transv_Dispersivity);
+    FLongDisp := DataArrayManager.GetDataSetByName(rsLong_Dispersivity);
+    FHorzTransDisp := DataArrayManager.GetDataSetByName(rsHorizontal_Transv_Dispersivity);
+    FVertTransDisp := DataArrayManager.GetDataSetByName(rsVertical_Transv_Dispersivity);
   end;
 
   FKx.Initialize;

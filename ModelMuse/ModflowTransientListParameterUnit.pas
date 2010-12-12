@@ -37,7 +37,7 @@ type
 implementation
 
 uses PhastModelUnit, ScreenObjectUnit, ModflowBoundaryUnit,
-  ModflowSfrParamIcalcUnit;
+  ModflowSfrParamIcalcUnit, ModflowPackageSelectionUnit;
 
 { TModflowTransientListParameter }
 
@@ -73,7 +73,16 @@ begin
 end;
 
 destructor TModflowTransientListParameter.Destroy;
+var
+  LocalModel: TPhastModel;
+  ParameterInstances: TSfrParamInstances;
 begin
+  if (ParameterType = ptSfr) and (Model <> nil) then
+  begin
+    LocalModel := Model as TPhastModel;
+    ParameterInstances := LocalModel.ModflowPackages.SfrPackage.ParameterInstances;
+    ParameterInstances.DeleteInstancesOfParameter(ParameterName);
+  end;
   (Collection as TModflowTransientListParameters).UpdateDisplay(self);
   inherited;
 end;

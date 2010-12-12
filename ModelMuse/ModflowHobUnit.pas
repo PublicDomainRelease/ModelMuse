@@ -33,6 +33,7 @@ type
     procedure SetStatFlag(const Value: TStatFlag);
     procedure SetStatistic(const Value: double);
     procedure SetComment(const Value: string);
+    function GetStatFlag: TStatFlag;
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
     procedure InvalidateModel; override;
@@ -45,7 +46,7 @@ type
     // @name indicates the time of this observation.
     property Time: double read FTime write SetTime;
     property Statistic: double read FStatistic write SetStatistic;
-    property StatFlag: TStatFlag read FStatFlag write SetStatFlag;
+    property StatFlag: TStatFlag read GetStatFlag write SetStatFlag;
     property Comment: string read FComment write SetComment;
   end;
 
@@ -451,6 +452,19 @@ begin
   inherited;
 end;
 
+function THobItem.GetStatFlag: TStatFlag;
+var
+  LocalCollection: THobCollection;
+begin
+  result := FStatFlag;
+  LocalCollection := Collection as THobCollection;
+  if (LocalCollection.FBoundary.Purpose = ofPredicted)
+    and (result > stStandardDev) then
+  begin
+    result := stVariance;
+  end;
+end;
+
 procedure THobItem.InvalidateModel;
 begin
   (Collection as THobCollection).InvalidateModel;
@@ -740,7 +754,7 @@ begin
       DataArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
         Grid.ColumnCount);
 
-      ActiveDataSet := PhastModel.GetDataSetByName(rsActive);
+      ActiveDataSet := PhastModel.DataArrayManager.GetDataSetByName(rsActive);
       ActiveDataSet.Initialize;
 
       LocalScreenObject.AssignNumericValueToDataSet(Grid, DataArray, Value);

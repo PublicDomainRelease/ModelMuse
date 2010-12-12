@@ -30,6 +30,7 @@ interface
   function IsBlank(const Str: string): boolean;
   function IsNonBlank(const Str: string): boolean;
   function IsUNC(const Directory: string): boolean;
+  function IsNumber(const Str: string): boolean;
   function J_Valid_Name(Name: string; MaxLen: integer): boolean;
   function LastPos(const Str: string; const SubStr: string): integer;
   function LongInt2Bool(const IBool: LongInt): boolean;
@@ -38,6 +39,7 @@ interface
   function ParseByBlanks(const S: string; const Count: Integer): string;
   procedure ParseVersion(const FullVersion: string; var ShortVersion, Build: string);
   function PathToAbsPath(const SourceDir, RelPath: string): string;
+  function PathWithoutSpaces(const ProgName: string): string;
   function PosLastNonBlank(const Str: string): integer;
   function QuoteIfNeeded(const Str: string): string;
   function RelativePath(const Value: string): string;
@@ -87,21 +89,41 @@ end;
 
 //###################################################################
 
+function PathWithoutSpaces(const ProgName: string): string;
+var
+  TempName: string;
+begin
+  TempName := TrimLeadingAndTrailingBlanks(ProgName);
+  if AnsiPos(' ', TempName) > 0 then
+    begin
+      Result := ExtractShortPathName(TempName);
+    end
+  else
+    begin
+      Result := TempName;
+    end;
+end;
+
+//###################################################################
+
 function BuildCommand(const ProgName, ArgList: string;
                       const Quote: boolean): string;
 var
   Q1, Q2: string;
+  ProgNameLocal: string;
 begin
+  ProgNameLocal := PathWithoutSpaces(ProgName);
   Q1 := #039; //  #039 is ASCII for single quote.
   Q2 := '"';
-  if Quote then
-    begin
-      result := Q1 + ProgName + ' ' + Q2 + ArgList + Q2 + Q1;
-    end
-  else
-    begin
-      result := ProgName + ' ' + Q2 + ArgList + Q2;
-    end;
+  if True then
+    if Quote then
+      begin
+        result := Q1 + ProgNameLocal + ' ' + Q2 + ArgList + Q2 + Q1;
+      end
+    else
+      begin
+        result := ProgNameLocal + ' ' + Q2 + ArgList + Q2;
+      end;
 end;
 
 //###################################################################
@@ -175,13 +197,9 @@ begin
   DummyRect.Top := -1;
   DummyRect.Right := -1;
   DummyRect.Bottom := -1;
-  //
-//  DummyRect.Left := 0;
-//  DummyRect.Top := 0;
-//  DummyRect.Right := 0;
-//  DummyRect.Bottom := 0;
   RbwGrid.Selection := DummyRect;
 end;
+
 //###################################################################
 
 function ComputerName: String;
@@ -215,6 +233,7 @@ begin
         end;
     end;
 end;
+
 //###################################################################
 
 function DirectoryIsLocal(const Dir: string): boolean;
@@ -481,6 +500,20 @@ begin
     result := True
   else
     result := False;
+end;
+
+//###################################################################
+
+function IsNumber(const Str: string): boolean;
+var
+  X: double;
+begin
+  try
+    X := StrToFloat(Str);
+    result := True;
+  except
+    result := False;
+  end;
 end;
 
 //###################################################################

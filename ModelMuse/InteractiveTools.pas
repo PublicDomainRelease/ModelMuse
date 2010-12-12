@@ -1943,7 +1943,7 @@ begin
       begin
         result := 'Click on grid line and drag to move it.';
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         case ViewDirection of
           vdTop: result := 'Click on grid line and drag to move it.';
@@ -2286,25 +2286,24 @@ end;
   
 function TDeleteGridBoundaryTool.GetHint: string;
 begin
-  if frmGoPhast.PhastModel.ModelSelection = msPhast then
-  begin
-    result := 'Click on grid boundary to delete it';
-  end
-  else if frmGoPhast.PhastModel.ModelSelection = msModflow then
-  begin
-    case ViewDirection of
-      vdTop: result := 'Click on grid boundary to delete it';
-      vdFront: result := 'Click on column boundary to delete it';
-      vdSide: result := 'Click on row boundary to delete it';
+  case frmGoPhast.PhastModel.ModelSelection of
+    msPhast:
+      begin
+        result := 'Click on grid boundary to delete it';
+      end;
+    msModflow, msModflowLGR:
+      begin
+        case ViewDirection of
+          vdTop: result := 'Click on grid boundary to delete it';
+          vdFront: result := 'Click on column boundary to delete it';
+          vdSide: result := 'Click on row boundary to delete it';
+        else
+          Assert(False);
+        end;
+      end;
     else
       Assert(False);
-    end;
-  end
-  else
-  begin
-    Assert(False);
   end;
-
 end;
   
 function TDeleteGridBoundaryTool.GetSelectedCursor: TCursor;
@@ -2898,91 +2897,98 @@ begin
     L2 := FirstLayer + 1;
   end;
 
-  if frmGoPhast.PhastModel.ModelSelection = msPhast then
-  begin
-    SetLength(Polygon, 4);
-    if GetEvalAt = eaBlocks then
-    begin
-      APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(C1, 0, L1);
-      Polygon[0].X := View(Direction).ZoomBox.XCoord(APoint.X);
-      Polygon[0].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
-
-      APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(C2, 0, L1);
-      Polygon[1].X := View(Direction).ZoomBox.XCoord(APoint.X);
-      Polygon[1].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
-
-      APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(C2, 0, L2);
-      Polygon[2].X := View(Direction).ZoomBox.XCoord(APoint.X);
-      Polygon[2].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
-
-      APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(C1, 0, L2);
-      Polygon[3].X := View(Direction).ZoomBox.XCoord(APoint.X);
-      Polygon[3].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
-    end
-    else
-    begin
-      APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(C1, 0, L1);
-      Polygon[0].X := View(Direction).ZoomBox.XCoord(APoint.X);
-      Polygon[0].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
-
-      APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(C2, 0, L1);
-      Polygon[1].X := View(Direction).ZoomBox.XCoord(APoint.X);
-      Polygon[1].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
-
-      APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(C2, 0, L2);
-      Polygon[2].X := View(Direction).ZoomBox.XCoord(APoint.X);
-      Polygon[2].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
-
-      APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(C1, 0, L2);
-      Polygon[3].X := View(Direction).ZoomBox.XCoord(APoint.X);
-      Polygon[3].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
-    end;
-    SelectColor32 := Color32(Color);
-    SelectColor32 := SetAlpha(SelectColor32, 128);
-    DrawBigPolygon32(BitMap, SelectColor32,
-      SelectColor32, 0, Polygon, P, MultiplePolygons, True);
-  end
-  else
-  begin
-    Assert(frmGoPhast.PhastModel.ModelSelection = msModflow);
-
-    FrontPoints := frmGoPhast.PhastModel.ModflowGrid.FrontCellPoints(
-      frmGoPhast.PhastModel.ModflowGrid.SelectedRow);
-    if FrontPoints = nil then
-    begin
-      Exit;
-    end;
-    SetLength(Polygon, 6);
-
-    for CIndex := C1 to C2 - 1 do
-    begin
-      for LIndex := L1 to L2 - 1 do
+  case frmGoPhast.PhastModel.ModelSelection of
+    msPhast:
       begin
-        APoint2D := FrontPoints[CIndex*2, LIndex];
-        Polygon[0] := View(Direction).ConvertPoint(APoint2D);
+        SetLength(Polygon, 4);
+        if GetEvalAt = eaBlocks then
+        begin
+          APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(C1, 0, L1);
+          Polygon[0].X := View(Direction).ZoomBox.XCoord(APoint.X);
+          Polygon[0].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
 
-        APoint2D := FrontPoints[CIndex*2+1, LIndex];
-        Polygon[1] := View(Direction).ConvertPoint(APoint2D);
+          APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(C2, 0, L1);
+          Polygon[1].X := View(Direction).ZoomBox.XCoord(APoint.X);
+          Polygon[1].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
 
-        APoint2D := FrontPoints[CIndex*2+2, LIndex];
-        Polygon[2] := View(Direction).ConvertPoint(APoint2D);
+          APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(C2, 0, L2);
+          Polygon[2].X := View(Direction).ZoomBox.XCoord(APoint.X);
+          Polygon[2].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
 
-        APoint2D := FrontPoints[CIndex*2+2, LIndex+1];
-        Polygon[3] := View(Direction).ConvertPoint(APoint2D);
+          APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(C1, 0, L2);
+          Polygon[3].X := View(Direction).ZoomBox.XCoord(APoint.X);
+          Polygon[3].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
+        end
+        else
+        begin
+          APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(C1, 0, L1);
+          Polygon[0].X := View(Direction).ZoomBox.XCoord(APoint.X);
+          Polygon[0].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
 
-        APoint2D := FrontPoints[CIndex*2+1, LIndex+1];
-        Polygon[4] := View(Direction).ConvertPoint(APoint2D);
+          APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(C2, 0, L1);
+          Polygon[1].X := View(Direction).ZoomBox.XCoord(APoint.X);
+          Polygon[1].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
 
-        APoint2D := FrontPoints[CIndex*2, LIndex+1];
-        Polygon[5] := View(Direction).ConvertPoint(APoint2D);
+          APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(C2, 0, L2);
+          Polygon[2].X := View(Direction).ZoomBox.XCoord(APoint.X);
+          Polygon[2].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
 
+          APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(C1, 0, L2);
+          Polygon[3].X := View(Direction).ZoomBox.XCoord(APoint.X);
+          Polygon[3].Y := View(Direction).ZoomBox.YCoord(APoint.Z);
+        end;
         SelectColor32 := Color32(Color);
         SelectColor32 := SetAlpha(SelectColor32, 128);
         DrawBigPolygon32(BitMap, SelectColor32,
           SelectColor32, 0, Polygon, P, MultiplePolygons, True);
       end;
-    end;
+    msModflow, msModflowLGR:
+      begin
+        FrontPoints := frmGoPhast.PhastModel.ModflowGrid.FrontCellPoints(
+          frmGoPhast.PhastModel.ModflowGrid.SelectedRow);
+        if FrontPoints = nil then
+        begin
+          Exit;
+        end;
+        SetLength(Polygon, 6);
+
+        for CIndex := C1 to C2 - 1 do
+        begin
+          for LIndex := L1 to L2 - 1 do
+          begin
+            APoint2D := FrontPoints[CIndex*2, LIndex];
+            Polygon[0] := View(Direction).ConvertPoint(APoint2D);
+
+            APoint2D := FrontPoints[CIndex*2+1, LIndex];
+            Polygon[1] := View(Direction).ConvertPoint(APoint2D);
+
+            APoint2D := FrontPoints[CIndex*2+2, LIndex];
+            Polygon[2] := View(Direction).ConvertPoint(APoint2D);
+
+            APoint2D := FrontPoints[CIndex*2+2, LIndex+1];
+            Polygon[3] := View(Direction).ConvertPoint(APoint2D);
+
+            APoint2D := FrontPoints[CIndex*2+1, LIndex+1];
+            Polygon[4] := View(Direction).ConvertPoint(APoint2D);
+
+            APoint2D := FrontPoints[CIndex*2, LIndex+1];
+            Polygon[5] := View(Direction).ConvertPoint(APoint2D);
+
+            SelectColor32 := Color32(Color);
+            SelectColor32 := SetAlpha(SelectColor32, 128);
+            DrawBigPolygon32(BitMap, SelectColor32,
+              SelectColor32, 0, Polygon, P, MultiplePolygons, True);
+          end;
+        end;
+      end
+    else
+      Assert(False);
   end;
+
+  if frmGoPhast.PhastModel.ModelSelection = msPhast then
+
+  else
+  ;
 end;
 
 procedure TCustomCellSelectionTool.DrawSelectedSideCells(FirstRow, LastRow,
@@ -3025,93 +3031,97 @@ begin
     L2 := FirstLayer + 1;
   end;
 
-  if frmGoPhast.PhastModel.ModelSelection = msPhast then
-  begin
-    SetLength(Polygon, 4);
-    if GetEvalAt = eaBlocks then
-    begin
-      APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(0, R1, L1);
-      Polygon[0].X := View(Direction).ZoomBox.XCoord(APoint.Z);
-      Polygon[0].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
-
-      APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(0, R2, L1);
-      Polygon[1].X := View(Direction).ZoomBox.XCoord(APoint.Z);
-      Polygon[1].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
-
-      APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(0, R2, L2);
-      Polygon[2].X := View(Direction).ZoomBox.XCoord(APoint.Z);
-      Polygon[2].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
-
-      APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(0, R1, L2);
-      Polygon[3].X := View(Direction).ZoomBox.XCoord(APoint.Z);
-      Polygon[3].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
-    end
-    else
-    begin
-      APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(0, R1, L1);
-      Polygon[0].X := View(Direction).ZoomBox.XCoord(APoint.Z);
-      Polygon[0].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
-
-      APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(0, R2, L1);
-      Polygon[1].X := View(Direction).ZoomBox.XCoord(APoint.Z);
-      Polygon[1].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
-
-      APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(0, R2, L2);
-      Polygon[2].X := View(Direction).ZoomBox.XCoord(APoint.Z);
-      Polygon[2].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
-
-      APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(0, R1, L2);
-      Polygon[3].X := View(Direction).ZoomBox.XCoord(APoint.Z);
-      Polygon[3].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
-    end;
-
-    SelectColor32 := Color32(Color);
-    SelectColor32 := SetAlpha(SelectColor32, 128);
-
-    DrawBigPolygon32(BitMap, SelectColor32,
-      SelectColor32, 0, Polygon, P, MultiplePolygons, True);
-  end
-  else
-  begin
-    Assert(frmGoPhast.PhastModel.ModelSelection = msModflow);
-
-    SidePoints := frmGoPhast.PhastModel.ModflowGrid.SideCellPoints(
-      frmGoPhast.PhastModel.ModflowGrid.SelectedColumn);
-    if SidePoints = nil then
-    begin
-      Exit;
-    end;
-    SetLength(Polygon, 6);
-
-    for RIndex := R1 to R2 - 1 do
-    begin
-      for LIndex := L1 to L2 - 1 do
+  case frmGoPhast.PhastModel.ModelSelection of
+    msPhast:
       begin
-        { TODO : Use conversion routines like ConvertPoint wherever possible. }
-        APoint2D := SidePoints[RIndex*2, LIndex];
-        Polygon[0] := View(Direction).ConvertPoint(APoint2D);
+        SetLength(Polygon, 4);
+        if GetEvalAt = eaBlocks then
+        begin
+          APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(0, R1, L1);
+          Polygon[0].X := View(Direction).ZoomBox.XCoord(APoint.Z);
+          Polygon[0].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
 
-        APoint2D := SidePoints[RIndex*2+1, LIndex];
-        Polygon[1] := View(Direction).ConvertPoint(APoint2D);
+          APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(0, R2, L1);
+          Polygon[1].X := View(Direction).ZoomBox.XCoord(APoint.Z);
+          Polygon[1].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
 
-        APoint2D := SidePoints[RIndex*2+2, LIndex];
-        Polygon[2] := View(Direction).ConvertPoint(APoint2D);
+          APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(0, R2, L2);
+          Polygon[2].X := View(Direction).ZoomBox.XCoord(APoint.Z);
+          Polygon[2].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
 
-        APoint2D := SidePoints[RIndex*2+2, LIndex+1];
-        Polygon[3] := View(Direction).ConvertPoint(APoint2D);
+          APoint := frmGoPhast.PhastGrid.ThreeDElementCorner(0, R1, L2);
+          Polygon[3].X := View(Direction).ZoomBox.XCoord(APoint.Z);
+          Polygon[3].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
+        end
+        else
+        begin
+          APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(0, R1, L1);
+          Polygon[0].X := View(Direction).ZoomBox.XCoord(APoint.Z);
+          Polygon[0].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
 
-        APoint2D := SidePoints[RIndex*2+1, LIndex+1];
-        Polygon[4] := View(Direction).ConvertPoint(APoint2D);
+          APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(0, R2, L1);
+          Polygon[1].X := View(Direction).ZoomBox.XCoord(APoint.Z);
+          Polygon[1].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
 
-        APoint2D := SidePoints[RIndex*2, LIndex+1];
-        Polygon[5] := View(Direction).ConvertPoint(APoint2D);
+          APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(0, R2, L2);
+          Polygon[2].X := View(Direction).ZoomBox.XCoord(APoint.Z);
+          Polygon[2].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
+
+          APoint := frmGoPhast.PhastGrid.ThreeDCellCorner(0, R1, L2);
+          Polygon[3].X := View(Direction).ZoomBox.XCoord(APoint.Z);
+          Polygon[3].Y := View(Direction).ZoomBox.YCoord(APoint.Y);
+        end;
 
         SelectColor32 := Color32(Color);
         SelectColor32 := SetAlpha(SelectColor32, 128);
+
         DrawBigPolygon32(BitMap, SelectColor32,
           SelectColor32, 0, Polygon, P, MultiplePolygons, True);
       end;
-    end;
+    msModflow, msModflowLGR:
+      begin
+        Assert(frmGoPhast.PhastModel.ModelSelection = msModflow);
+
+        SidePoints := frmGoPhast.PhastModel.ModflowGrid.SideCellPoints(
+          frmGoPhast.PhastModel.ModflowGrid.SelectedColumn);
+        if SidePoints = nil then
+        begin
+          Exit;
+        end;
+        SetLength(Polygon, 6);
+
+        for RIndex := R1 to R2 - 1 do
+        begin
+          for LIndex := L1 to L2 - 1 do
+          begin
+            { TODO : Use conversion routines like ConvertPoint wherever possible. }
+            APoint2D := SidePoints[RIndex*2, LIndex];
+            Polygon[0] := View(Direction).ConvertPoint(APoint2D);
+
+            APoint2D := SidePoints[RIndex*2+1, LIndex];
+            Polygon[1] := View(Direction).ConvertPoint(APoint2D);
+
+            APoint2D := SidePoints[RIndex*2+2, LIndex];
+            Polygon[2] := View(Direction).ConvertPoint(APoint2D);
+
+            APoint2D := SidePoints[RIndex*2+2, LIndex+1];
+            Polygon[3] := View(Direction).ConvertPoint(APoint2D);
+
+            APoint2D := SidePoints[RIndex*2+1, LIndex+1];
+            Polygon[4] := View(Direction).ConvertPoint(APoint2D);
+
+            APoint2D := SidePoints[RIndex*2, LIndex+1];
+            Polygon[5] := View(Direction).ConvertPoint(APoint2D);
+
+            SelectColor32 := Color32(Color);
+            SelectColor32 := SetAlpha(SelectColor32, 128);
+            DrawBigPolygon32(BitMap, SelectColor32,
+              SelectColor32, 0, Polygon, P, MultiplePolygons, True);
+          end;
+        end;
+      end
+    else
+      Assert(False);
   end;
 end;
 
@@ -3396,7 +3406,7 @@ begin
     CurrentScreenObject.ViewDirection);
   CurrentScreenObject.ElevationFormula :=
     frmGoPhast.PhastModel.DefaultElevationFormula(
-    CurrentScreenObject.ViewDirection);
+    CurrentScreenObject.ViewDirection, CurrentScreenObject.EvaluatedAt);
 end;
 
 procedure TCustomStoreVerticesTool.StorePointsOfOtherObjects(

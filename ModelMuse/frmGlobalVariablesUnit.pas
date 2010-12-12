@@ -68,7 +68,7 @@ type
 
 implementation
 
-uses RbwParser, frmGoPhastUnit, DataSetUnit;
+uses RbwParser, frmGoPhastUnit, DataSetUnit, PhastModelUnit;
 
 {$R *.dfm}
 
@@ -89,6 +89,7 @@ procedure TfrmGlobalVariables.rdgGlobalVariablesEndUpdate(Sender: TObject);
 var
   RowIndex: Integer;
   ShouldEnableOkButton: Boolean;
+  DataArrayManager: TDataArrayManager;
 begin
   inherited;
   if VariableNames = nil then
@@ -104,12 +105,13 @@ begin
   VariableNames[0] := '';
   VariableNames.CaseSensitive := False;
   ShouldEnableOkButton := True;
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
   for RowIndex := 1 to VariableNames.Count - 1 do
   begin
     OkVariables[RowIndex] := (VariableNames[RowIndex] = '')
       or (VariableNames.IndexOf(VariableNames[RowIndex]) = RowIndex);
-    if (frmGoPhast.PhastModel.IndexOfDataSet(VariableNames[RowIndex]) >= 0)
-      or (frmGoPhast.PhastModel.IndexOfBoundaryDataSet(VariableNames[RowIndex]) >= 0) then
+    if (DataArrayManager.IndexOfDataSet(VariableNames[RowIndex]) >= 0)
+      or (DataArrayManager.IndexOfBoundaryDataSet(VariableNames[RowIndex]) >= 0) then
     begin
       OkVariables[RowIndex] := False;
     end;
@@ -372,14 +374,12 @@ function TfrmGlobalVariables.GenerateNewName(Root: string = 'NewGlobalVariable';
 var
   Names: TStringList;
   Index: integer;
-  DataSet: TDataArray;
 begin
   Root := Trim(Root);
   if Root = '' then
   begin
     Root := 'NewGlobalVariable';
   end;
-  Root := GenerateNewRoot(Root);
 
   // This function generates a name for a data set that is valid
   // and does not conflict with the names of any existing data sets.
@@ -409,34 +409,7 @@ begin
       end;
     end;
 
-    for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
-    begin
-      DataSet := frmGoPhast.PhastModel.DataSets[Index] as TDataArray;
-      Names.Add(DataSet.Name);
-    end;
-    // Don't allow the name to be the same as a deleted data set.
-    for Index := 0 to frmGoPhast.DeletedDataSets.Count - 1 do
-    begin
-      DataSet := frmGoPhast.DeletedDataSets[Index] as TDataArray;
-      Names.Add(DataSet.Name);
-    end;
-    // Names now includes the names of all the data sets.
-
-    // Generate a new name.
-    if Names.IndexOf(Root) < 0 then
-    begin
-      result := Root;
-    end
-    else
-    begin
-      Index := 1;
-      result := Root + IntToStr(Index);
-      while Names.IndexOf(result) >= 0 do
-      begin
-        Inc(Index);
-        result := Root + IntToStr(Index);
-      end;
-    end;
+    result := PhastModelUnit.GenerateNewName(Root, Names);
   finally
     Names.Free;
   end;
@@ -474,25 +447,13 @@ begin
 end;
 
 function TfrmGlobalVariables.GenerateNewRoot(const Root: string): string;
-var
-  Index: Integer;
 begin
-  result := Root;
+  result := Trim(Root);
   if result = '' then
   begin
     Exit;
   end;
-  if not (result[1] in ['A'..'Z', 'a'..'z', '_']) then
-  begin
-    result[1] := '_';
-  end;
-  for Index := 2 to Length(result) do
-  begin
-    if not (result[Index] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
-    begin
-      result[Index] := '_';
-    end;
-  end;
+  result := PhastModelUnit.GenerateNewRoot(result);
 end;
 
 procedure TfrmGlobalVariables.GetData;

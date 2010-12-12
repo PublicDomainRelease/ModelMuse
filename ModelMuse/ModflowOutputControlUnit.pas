@@ -119,8 +119,10 @@ type
     property DrawdownOC: THeadDrawdownOutputControl read FDrawdownOC
       write SetDrawdownOC;
     property Comments: TStrings read FComments write SetComments;
-    property BudgetFrequency: integer read FBudgetFrequency write SetBudgetFrequency;
-    property BudgetFrequencyChoice: TFrequencyChoice read FBudgetFrequencyChoice write SetBudgetFrequencyChoice;
+    property BudgetFrequency: integer read FBudgetFrequency
+      write SetBudgetFrequency;
+    property BudgetFrequencyChoice: TFrequencyChoice read FBudgetFrequencyChoice
+      write SetBudgetFrequencyChoice;
 
   end;
 

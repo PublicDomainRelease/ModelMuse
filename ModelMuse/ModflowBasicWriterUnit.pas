@@ -19,7 +19,7 @@ type
   protected
     class function Extension: string; override;
   public
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     procedure WriteFile(const AFileName: string);
   end;
 
@@ -43,9 +43,9 @@ var
   Active: boolean;
 begin
   ErrorString := 'Initial Head is below the bottom of the layer.';
-  DataArray := PhastModel.GetDataSetByName(rsModflow_Initial_Head);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsModflow_Initial_Head);
   DataArray.Initialize;
-  ActiveArray := PhastModel.GetDataSetByName(rsActive);
+  ActiveArray := PhastModel.DataArrayManager.GetDataSetByName(rsActive);
   ActiveArray.Initialize;
 
   for LayerIndex := 0 to PhastModel.ModflowGrid.LayerCount - 1 do
@@ -73,12 +73,12 @@ begin
       end;
     end;
   end;
-  PhastModel.AddDataSetToCache(DataArray);
-  PhastModel.AddDataSetToCache(ActiveArray);
+  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+  PhastModel.DataArrayManager.AddDataSetToCache(ActiveArray);
 
 end;
 
-constructor TModflowBasicWriter.Create(Model: TPhastModel);
+constructor TModflowBasicWriter.Create(Model: TCustomModel);
 begin
   inherited;
   XSECTION := PhastModel.ModflowGrid.RowCount = 1;
@@ -137,11 +137,11 @@ var
   DataArray: TDataArray;
   DataSetName: string;
 begin
-  DataArray := PhastModel.GetDataSetByName(rsActive);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsActive);
   DataSetName := 'IBOUND';
   WriteDataSet(DataSetName, DataArray);
-  PhastModel.AddDataSetToCache(DataArray);
-  PhastModel.CacheDataArrays;
+  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+  PhastModel.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowBasicWriter.WriteDataSet3;
@@ -161,11 +161,11 @@ var
 begin
   if PhastModel.ModflowOptions.InitialHeadFileName = '' then
   begin
-    DataArray := PhastModel.GetDataSetByName(rsModflow_Initial_Head);
+    DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsModflow_Initial_Head);
     DataSetName := 'STRT';
     WriteDataSet(DataSetName, DataArray);
-    PhastModel.AddDataSetToCache(DataArray);
-    PhastModel.CacheDataArrays;
+    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+    PhastModel.DataArrayManager.CacheDataArrays;
   end
   else
   begin
@@ -180,7 +180,7 @@ begin
       IncludeTrailingPathDelimiter(ExtractFileDir(FNameOfFile)),
       PhastModel.ModflowOptions.InitialHeadFileName);
     UnitNumber := PhastModel.UnitNumbers.UnitNumber(BAS_InitialHeads);
-    if SameText(ExtractFileExt(PhastModel.ModflowOptions.InitialHeadFileName), '.bhd') then
+    if SameText(ExtractFileExt(PhastModel.ModflowOptions.InitialHeadFileName), StrBhd) then
     begin
       WriteToNameFile(StrDATABINARY, UnitNumber, RelativeFileName,
         foInput, True);
@@ -189,7 +189,7 @@ begin
     begin
       frmErrorsAndWarnings.AddError(StrWrongExtension, 'The file '
         + PhastModel.ModflowOptions.InitialHeadFileName
-        + ' must have an extension equal to ".bhd".');
+        + ' must have an extension equal to "' + StrBhd + '".');
       Exit;
     end;
 
@@ -235,48 +235,48 @@ begin
     FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try
-    frmProgress.AddMessage('Writing Basic Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing Basic Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage('  Writing Data Set 3.');
     WriteDataSet3;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Checking starting heads.');
+    frmProgressMM.AddMessage('  Checking starting heads.');
     CheckStartingHeads;
   finally
     CloseFile;

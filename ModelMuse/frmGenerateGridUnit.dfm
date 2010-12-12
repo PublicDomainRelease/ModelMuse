@@ -12,12 +12,12 @@ inherited frmGenerateGrid: TfrmGenerateGrid
   ExplicitWidth = 344
   ExplicitHeight = 280
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object lblGridAngle: TLabel
     Left = 128
     Top = 44
-    Width = 132
-    Height = 17
+    Width = 144
+    Height = 18
     Caption = 'Grid angle (degrees)'
   end
   object cbSpecifyGridAngle: TCheckBox
@@ -82,8 +82,8 @@ inherited frmGenerateGrid: TfrmGenerateGrid
     object lblCriterion: TLabel
       Left = 8
       Top = 92
-      Width = 151
-      Height = 17
+      Width = 166
+      Height = 18
       Caption = 'Grid smoothing criterion'
       Enabled = False
     end

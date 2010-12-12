@@ -568,7 +568,7 @@ begin
       begin
         result := 'Click on grid and drag to subdivide elements';
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         result := 'Click on grid and drag to subdivide cells';
       end;

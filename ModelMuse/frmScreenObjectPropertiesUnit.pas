@@ -1344,6 +1344,7 @@ type
     FCanFillTreeView: Boolean;
     FSettingVerticies: Boolean;
     FVertexRowCount: Integer;
+    FFilledDataSetTreeView: Boolean;
     Function GenerateNewDataSetFormula(DataArray: TDataArray): string;
     // @name assigns new formulas for @link(TDataArray)s for each
     // @link(TScreenObject) in @link(FNewProperties).
@@ -2057,8 +2058,8 @@ begin
     with TfrmFormula.Create(self) do
     begin
       try
-        IncludeGIS_Functions;
-        ActiveDataArray := frmGoPhast.PhastModel.GetDataSetByName(rsActive);
+        IncludeGIS_Functions(EvaluatedAt);
+        ActiveDataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
         ActiveOK := not ActiveDataArray.IsListeningTo(FCurrentEdit.FDataArray);
         SpecifiedHeadOK := True;
         PopupParent := self;
@@ -2670,10 +2671,12 @@ begin
   end;
   SetDisabledElevationFormulas(AScreenObject);
 
-  if (AScreenObject.ImportedSectionElevations.Count > 0)
+  // The first condition is because TStringGrid can't handle too many rows.
+  if (FScreenObject.Count < 1048560)
+    and ((AScreenObject.ImportedSectionElevations.Count > 0)
     or (AScreenObject.ImportedHigherSectionElevations.Count > 0)
     or (AScreenObject.ImportedLowerSectionElevations.Count > 0)
-    or (AScreenObject.ImportedValues.Count > 0)  then
+    or (AScreenObject.ImportedValues.Count > 0)) then
   begin
     tabImportedData.TabVisible := True;
     NumberOfColumns := 1;
@@ -3896,6 +3899,10 @@ var
   Index: Integer;
   TempString: string;
 begin
+  if FSettingVerticies then
+  begin
+    Exit;
+  end;
   dgVerticies.BeginUpdate;
   try
     for Index := 1 to dgVerticies.RowCount - 1 do
@@ -4905,10 +4912,20 @@ begin
 end;
 
 procedure TfrmScreenObjectProperties.SetDisabledElevationFormulas(FirstScreenObject: TScreenObject);
+var
+  EvalAt: TEvaluatedAt;
 begin
+  if rgEvaluatedAt.ItemIndex >= 0 then
+  begin
+    EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
+  end
+  else
+  begin
+    EvalAt := eaBlocks;
+  end;
   if not edZ.Enabled then
   begin
-    edZ.Text := frmGoPhast.PhastModel.DefaultElevationFormula(FirstScreenObject.ViewDirection);
+    edZ.Text := frmGoPhast.PhastModel.DefaultElevationFormula(FirstScreenObject.ViewDirection, EvalAt);
   end;
   if not edHighZ.Enabled then
   begin
@@ -4940,7 +4957,7 @@ begin
   with TfrmFormula.Create(self) do
   begin
     try
-      IncludeGIS_Functions;
+      IncludeGIS_Functions(eaBlocks);
       RemoveGetVCont;
       RemoveHufFunctions;
       PopupParent := self;
@@ -5304,13 +5321,13 @@ begin
           end;
           ChemDataSets := TList.Create;
           try
-            ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Solution));
-            ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Equilibrium_Phases));
-            ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Surface));
-            ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Exchange));
-            ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Gas_Phase));
-            ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Solid_Solutions));
-            ChemDataSets.Add(frmGoPhast.PhastModel.GetDataSetByName(rsChemistry_Initial_Kinetics));
+            ChemDataSets.Add(frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsChemistry_Initial_Solution));
+            ChemDataSets.Add(frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsChemistry_Initial_Equilibrium_Phases));
+            ChemDataSets.Add(frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsChemistry_Initial_Surface));
+            ChemDataSets.Add(frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsChemistry_Initial_Exchange));
+            ChemDataSets.Add(frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsChemistry_Initial_Gas_Phase));
+            ChemDataSets.Add(frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsChemistry_Initial_Solid_Solutions));
+            ChemDataSets.Add(frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsChemistry_Initial_Kinetics));
             framePhastInterpolationData.SetMixtureAllowed(ChemDataSets.IndexOf(Edit.DataArray) >= 0);
           finally
             ChemDataSets.Free;
@@ -5371,6 +5388,16 @@ begin
   CompilerList.Add(rparserThreeDFormulaNodes);
   CompilerList.Add(rparserTopFormulaElements);
   CompilerList.Add(rparserTopFormulaNodes);
+
+  rparserFrontFormulaElements.Tag := Ord(eaBlocks);
+  rparserSideFormulaElements.Tag := Ord(eaBlocks);
+  rparserThreeDFormulaElements.Tag := Ord(eaBlocks);
+  rparserTopFormulaElements.Tag := Ord(eaBlocks);
+
+  rparserFrontFormulaNodes.Tag := Ord(eaNodes);
+  rparserSideFormulaNodes.Tag := Ord(eaNodes);
+  rparserThreeDFormulaNodes.Tag := Ord(eaNodes);
+  rparserTopFormulaNodes.Tag := Ord(eaNodes);
 end;
 
 procedure TfrmScreenObjectProperties.CheckIfDataSetCanBeEdited(
@@ -5527,7 +5554,7 @@ begin
   // depends on edZ.Text
   // depends on edHighZ.Text
   // depends on edLowZ.Text
-  if not FCanFillTreeView or (FDataEdits.Count = 0) then
+  if not FCanFillTreeView or (FDataEdits.Count = 0) or FFilledDataSetTreeView then
   begin
     Exit;
   end;
@@ -5765,12 +5792,14 @@ var
   Index: Integer;
   Edit: TScreenObjectDataEdit;
   DataSet: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
   FDataEdits.Clear;
-  for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  for Index := 0 to DataArrayManager.DataSetCount - 1 do
   begin
     Edit := TScreenObjectDataEdit.Create(ListOfScreenObjects,
-      frmGoPhast.PhastModel.DataSets[Index]);
+      DataArrayManager.DataSets[Index]);
     FDataEdits.Add(Edit);
     CreateVariable(Edit);
   end;
@@ -5803,7 +5832,8 @@ begin
     for Index := 0 to CompilerList.Count - 1 do
     begin
       Compiler := CompilerList[Index];
-      AddGIS_Functions(Compiler, frmGoPhast.PhastModel.ModelSelection);
+      AddGIS_Functions(Compiler, frmGoPhast.PhastModel.ModelSelection,
+        TEvaluatedAt(Compiler.Tag));
     end;
   finally
     CompilerList.Free;
@@ -6149,7 +6179,7 @@ var
   Edit: TScreenObjectDataEdit;
 begin
   // update data for Data sets.
-  for DataSetIndex := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+  for DataSetIndex := 0 to frmGoPhast.PhastModel.DataArrayManager.DataSetCount - 1 do
   begin
     Edit := FDataEdits[DataSetIndex];
     DataSet := Edit.DataArray;
@@ -6531,6 +6561,12 @@ var
   Index: Integer;
   TempString: string;
 begin
+  if FScreenObject.Count >= 1048560 then
+  begin
+    // TStringGrid can't handle too many rows.
+    tabNodes.TabVisible := False;
+    Exit;
+  end;
   // read vertices of the screen object.
   dgVerticies.RowCount := FScreenObject.Count + 1;
 
@@ -9137,9 +9173,9 @@ begin
     (rgEvaluatedAt.ItemIndex = 1) and
     ((FScreenObjectList = nil) or (FScreenObjectList.Count = 1));
   tabDataSets.TabVisible := CanSetData and
-    (frmGoPhast.PhastModel.DataSetCount > 0);
+    (frmGoPhast.PhastModel.DataArrayManager.DataSetCount > 0);
   tabModflowBoundaryConditions.TabVisible := CanSetData and
-    (frmGoPhast.ModelSelection = msModflow);
+    (frmGoPhast.ModelSelection in [msModflow, msModflowLGR]);
 end;
 
 procedure TfrmScreenObjectProperties.AssignNewDataSetFormula(
@@ -9178,11 +9214,13 @@ var
   DataSet: TDataArray;
   Index: Integer;
   Edit: TScreenObjectDataEdit;
+  DataArrayManager: TDataArrayManager;
 begin
   TempUsesList := DSEdit.UsedBy;
-  for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  for Index := 0 to DataArrayManager.DataSetCount - 1 do
   begin
-    DataSet := frmGoPhast.PhastModel.DataSets[Index];
+    DataSet := DataArrayManager.DataSets[Index];
     if (Index <> DataSetIndex)
       and (EvaluatedAt = DataSet.EvaluatedAt) then
     begin
@@ -10708,6 +10746,10 @@ end;
 procedure TfrmScreenObjectProperties.dgVerticiesEndUpdate(Sender: TObject);
 begin
   inherited;
+  if FSettingVerticies then
+  begin
+    Exit;
+  end;
   UpdateVertices;
   if FVertexRowCount <> dgVerticies.RowCount then
   begin
@@ -10900,7 +10942,8 @@ begin
 
       Tester := TRbwParser.Create(self);
       try
-        AddGIS_Functions(Tester, frmGoPhast.PhastModel.ModelSelection);
+        AddGIS_Functions(Tester, frmGoPhast.PhastModel.ModelSelection,
+          FCurrentEdit.DataArray.EvaluatedAt);
         // put the formula in the TfrmFormula.
 
         CompilerList := TList.Create;
@@ -11067,7 +11110,8 @@ begin
 
         Tester := TRbwParser.Create(self);
         try
-          AddGIS_Functions(Tester, frmGoPhast.PhastModel.ModelSelection);
+          AddGIS_Functions(Tester, frmGoPhast.PhastModel.ModelSelection,
+            TEvaluatedAt(rgEvaluatedAt.ItemIndex));
           for Index := 0 to VariableList.Count - 1 do
           begin
             Variable := VariableList[Index];
@@ -11173,6 +11217,7 @@ var
   Edit: TScreenObjectDataEdit;
   UsedIndex: Integer;
   UsedArray: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
 { TODO : See if some of this can be combined with ValidateEdFormula. }
 
@@ -11409,9 +11454,10 @@ begin
         end;
       end;
 
-      for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+      DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+      for Index := 0 to DataArrayManager.DataSetCount - 1 do
       begin
-        DataArray := frmGoPhast.PhastModel.DataSets[Index];
+        DataArray := DataArrayManager.DataSets[Index];
         if UsedDataSets.IndexOf(DataArray.Name) < 0 then
         begin
           for UsedIndex := 0 to UsedDataSets.Count - 1 do
@@ -11444,7 +11490,7 @@ begin
     with TfrmFormula.Create(nil) do
     begin
       try
-        IncludeGIS_Functions;
+        IncludeGIS_Functions(TEvaluatedAt(rgEvaluatedAt.ItemIndex));
         RemoveGetVCont;
         RemoveHufFunctions;
         PopupParent := self;
@@ -11562,6 +11608,7 @@ begin
   begin
     FillDataSetsTreeView(FScreenObjectList);
   end;
+
   ValidateEdFormula(edHighZ);
   if IsLoaded and (FHighZFormula <> nil) then
   begin
@@ -11604,6 +11651,7 @@ begin
   begin
     FillDataSetsTreeView(FScreenObjectList);
   end;
+
   ValidateEdFormula(edLowZ);
   if IsLoaded and (FLowZFormula <> nil) then
   begin
@@ -11838,6 +11886,7 @@ var
   DataArray: TDataArray;
   AnotherDataArray: TDataArray;
   DataEdit: TScreenObjectDataEdit;
+  DataArrayManager: TDataArrayManager;
 begin
   inherited;
   if FFillingDataSetTreeView then Exit;
@@ -11921,17 +11970,28 @@ begin
             and (Edit.Used <> cbUnchecked) then
           begin
             Edit.Used := cbUnchecked;
+            break;
           end;
         end;
       end;
     1:
       begin
-        edZExit(edZ);
+        FFilledDataSetTreeView := True;
+        try
+          edZExit(edZ);
+        finally
+          FFilledDataSetTreeView := False;
+        end;
       end;
     2:
       begin
-        edHighZExit(edHighZ);
-        edLowZExit(edLowZ);
+        FFilledDataSetTreeView := True;
+        try
+          edHighZExit(edHighZ);
+          edLowZExit(edLowZ);
+        finally
+          FFilledDataSetTreeView := False;
+        end;
       end;
     else
     begin
@@ -11985,17 +12045,18 @@ begin
       end;
       for Index := 0 to UsedDataSets.Count - 1 do
       begin
-        DataArray := frmGoPhast.PhastModel.GetDataSetByName(UsedDataSets[Index]);
+        DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(UsedDataSets[Index]);
         UsedDataSets.Objects[Index] := DataArray;
       end;
       Index := 0;
       UsedDataSets.Sorted := False;
+      DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
       while Index < UsedDataSets.Count do
       begin
         DataArray := UsedDataSets.Objects[Index] as TDataArray;
-        for DSIndex := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+        for DSIndex := 0 to DataArrayManager.DataSetCount - 1 do
         begin
-          AnotherDataArray := frmGoPhast.PhastModel.DataSets[DSIndex];
+          AnotherDataArray := DataArrayManager.DataSets[DSIndex];
           if UsedDataSets.IndexOfObject(AnotherDataArray) < 0 then
           begin
             if DataArray.IsListeningTo(AnotherDataArray) then
@@ -12133,7 +12194,7 @@ begin
         cbSetGridCellSize.Caption := 'Use to set grid element size';
         lblGridCellSize.Caption := 'Grid element size';
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         cbSetGridCellSize.Caption := 'Use to set grid cell size';
         lblGridCellSize.Caption := 'Grid cell size';
@@ -12772,7 +12833,7 @@ begin
     with TfrmFormula.Create(nil) do
     begin
       try
-        IncludeGIS_Functions;
+        IncludeGIS_Functions(eaBlocks);
         RemoveGetVCont;
         RemoveHufFunctions;
         PopupParent := self;
@@ -14149,6 +14210,7 @@ var
   NewValue: string;
   Variable: TCustomValue;
   Edit: TScreenObjectDataEdit;
+  DataArrayManager: TDataArrayManager;
 begin
   inherited;
   DataGrid := Sender as TRbwDataGrid4;
@@ -14171,9 +14233,10 @@ begin
     // All the MODFLOW boundary conditions are evaluated at blocks.
     EvaluatedAt := eaBlocks;
 
-    for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    for Index := 0 to DataArrayManager.DataSetCount - 1 do
     begin
-      DataSet := frmGoPhast.PhastModel.DataSets[Index];
+      DataSet := DataArrayManager.DataSets[Index];
       if (EvaluatedAt = DataSet.EvaluatedAt) then
       begin
         if ((Orientation = dso3D)
@@ -14198,7 +14261,7 @@ begin
     with TfrmFormula.Create(self) do
     begin
       try
-        IncludeGIS_Functions;
+        IncludeGIS_Functions(eaBlocks);
         RemoveGetVCont;
         RemoveHufFunctions;
         PopupParent := self;
@@ -15527,6 +15590,7 @@ var
   NewValue: string;
   Variable: TCustomValue;
   Edit: TScreenObjectDataEdit;
+  DataArrayManager: TDataArrayManager;
 begin
   inherited;
   DataGrid := Sender as TRbwDataGrid4;
@@ -15552,9 +15616,10 @@ begin
     // All the PHAST boundary conditions are evaluated at nodes.
     EvaluatedAt := eaNodes;
 
-    for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    for Index := 0 to DataArrayManager.DataSetCount - 1 do
     begin
-      DataSet := frmGoPhast.PhastModel.DataSets[Index];
+      DataSet := DataArrayManager.DataSets[Index];
       if (EvaluatedAt = DataSet.EvaluatedAt) then
       begin
         if ((Orientation = dso3D)
@@ -15579,7 +15644,7 @@ begin
     with TfrmFormula.Create(self) do
     begin
       try
-        IncludeGIS_Functions;
+        IncludeGIS_Functions(eaNodes);
         RemoveGetVCont;
         RemoveHufFunctions;
         PopupParent := self;
@@ -15792,6 +15857,7 @@ var
   Tester: TRbwParser;
   OtherEdit: TScreenObjectDataEdit;
   Edit: TScreenObjectDataEdit;
+  DataArrayManager: TDataArrayManager;
 begin
   if framePhastInterpolationData.AssigningValues then
   begin
@@ -15814,9 +15880,10 @@ begin
       Used.Assign(FCurrentEdit.UsedBy);
 
       Used.Sorted := True;
-      for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+      DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+      for Index := 0 to DataArrayManager.DataSetCount - 1 do
       begin
-        DataSet := frmGoPhast.PhastModel.DataSets[Index];
+        DataSet := DataArrayManager.DataSets[Index];
         if (DataSet <> FCurrentEdit.DataArray)
           and (EvaluatedAt = DataSet.EvaluatedAt) then
         begin
@@ -15851,7 +15918,8 @@ begin
       Tester := TRbwParser.Create(self);
       begin
         try
-          AddGIS_Functions(Tester, frmGoPhast.PhastModel.ModelSelection);
+          AddGIS_Functions(Tester, frmGoPhast.PhastModel.ModelSelection,
+            FCurrentEdit.DataArray.EvaluatedAt);
           // put the formula in the TfrmFormula.
           //Formula := NewValue;
 
@@ -16039,6 +16107,7 @@ var
   DSName: string;
   Edit, OtherEdit: TScreenObjectDataEdit;
   DataArray: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
   inherited;
 
@@ -16059,9 +16128,10 @@ begin
     Used.Assign(Edit.UsedBy);
 
     Used.Sorted := True;
-    for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    for Index := 0 to DataArrayManager.DataSetCount - 1 do
     begin
-      DataSet := frmGoPhast.PhastModel.DataSets[Index];
+      DataSet := DataArrayManager.DataSets[Index];
       if (Index <> FDataEdits.IndexOf(Edit))
         and (EvaluatedAt = DataSet.EvaluatedAt) then
       begin
@@ -16095,7 +16165,7 @@ begin
     with TfrmFormula.Create(self) do
     begin
       try
-        IncludeGIS_Functions;
+        IncludeGIS_Functions(Edit.DataArray.EvaluatedAt);
         RemoveGetVCont;
         RemoveHufFunctions;
         PopupParent := self;

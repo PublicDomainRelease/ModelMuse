@@ -1222,12 +1222,644 @@ type
 
 { TODO : 
 Make comments a pervasive feature of the model.  The project as whole
-should show the project name, author, date, and coordinate system.  
-There should also be a general comment field for the project.  Each 
-DataArray and  ScreenObject should have a contour and there should 
-also be comments for each DataArray or boundary condition specified 
-by a ScreenObject.  Any special dialog box that has a preserved state 
+should show the project name, author, date, and coordinate system.
+There should also be a general comment field for the project.  Each
+DataArray and  ScreenObject should have a contour and there should
+also be comments for each DataArray or boundary condition specified
+by a ScreenObject.  Any special dialog box that has a preserved state
 that affects the model output should also have a comment. }
+  TCustomModel = class;
+
+  TDataArrayManager = class(TObject)
+  private
+    FCustomModel: TCustomModel;
+    // @name is used to store the @link(TDataArray)s in the model that
+    // are defined throughout the grid.  An example is the data set for
+    // the hydraulic conductivity in the X direction.
+    FDataSets: TObjectList;
+    FDataSetsToCache: TList;
+    // @name is used to store @link(TDataArray)s that are related to
+    // boundary conditions but which do not vary with time.
+    FBoundaryDataSets: TObjectList;
+    FDataSetLookUpList: THashTable;
+    FRiverDataSets: TList;
+    FStoreCachedData: boolean;
+    // @name is used to store @link(TDataArray)s that have been deleted
+    // so that they can be restored later.
+    FDeletedDataSets: TList;
+    // See @link(DataSetCount).
+    function GetDataSetCount: integer;
+    // See @link(DataSets).
+    function GetDataSets(const Index: integer): TDataArray;
+    // See @link(BoundaryDataSetCount).
+    function GetBoundaryDataSetCount: integer;
+    // See @link(BoundaryDataSets).
+    function GetBoundaryDataSets(const Index: integer): TDataArray;
+    // @name returns the position of the @link(TDataArray) whose name is
+    // DataSetName in List.
+    // @name is used in @link(IndexOfBoundaryDataSet)
+    // and @link(IndexOfDataSet).
+    function IndexOfDataSetInList(DataSetName: string;
+      const List: TObjectList): integer;
+    function GetDataSetsCapacity: integer;
+    procedure SetDataSetsCapacity(const Value: integer);
+    procedure Invalidate;
+    procedure DefinePackageDataArrays;
+    procedure InvalidateDataSetLookupList;
+    function DataArrayHeld(DataArray: TDataArray): boolean;
+    function GetChildDataArrayManager(Index: integer): TDataArrayManager;
+    function GetChildDataArrayManagerCount: integer;
+  public
+    FDataArrayCreationRecords: array of TDataSetCreationData;
+    procedure Assign(Source: TDataArrayManager);
+    // @name indicates the number of @link(TDataArray)s in @link(DataSets).
+    procedure AddDataSetToLookUpList(const DataSet: TDataArray);
+    Constructor Create(Model: TCustomModel);
+    Destructor Destroy; override;
+    procedure ClearDataSetsToCache;
+    procedure ClearAllDataSets;
+    // @name holds all the @link(TDataArray)s that are related to the river
+    // boundary but which are not transient.
+    property RiverDataSets: TList read FRiverDataSets;
+    property StoreCachedData: boolean read FStoreCachedData
+      write FStoreCachedData;
+    property DataSetCount: integer read GetDataSetCount;
+    // @name is used to access the @link(TDataArray)s that are defined
+    // throughout the grid.
+    property DataSets[const Index: integer]: TDataArray read GetDataSets;
+    // @name is used to determine the number of @link(TDataArray)s in
+    // @link(BoundaryDataSets).  Only data sets that don't vary with
+    // time yet are related to boundary conditions are in
+    // @link(BoundaryDataSets).
+    property BoundaryDataSetCount: integer read GetBoundaryDataSetCount;
+    // @name is used to access @link(TDataArray)s in
+    // @link(FBoundaryDataSets).  Only data sets that don't vary with
+    // time yet are related to boundary conditions are in
+    // @link(FBoundaryDataSets).
+    property BoundaryDataSets[const Index: integer]: TDataArray
+      read GetBoundaryDataSets;
+    property DataSetsCapacity: integer read GetDataSetsCapacity
+      write SetDataSetsCapacity;
+    // @name adds DataSet to @link(FDataSets) and calls @link(AddDataSetToLookUpList);
+    function AddDataSet(const DataSet: TDataArray): Integer; virtual;
+    procedure AddDataSetToCache(DataArray: TDataArray);
+    procedure DontCache(DataArray: TDataArray);
+    procedure CacheDataArrays;
+    // @name creates a new @link(TDataArray) and adds it to @link(DataSets).
+    function CreateNewDataArray(const ClassType: TDataArrayType;
+      const Name, Formula: string; Lock: TDataLock; DataType: TRbwDataType;
+      EvaluatedAt: TEvaluatedAt; Orientation: TDataSetOrientation;
+      const Classification: string): TDataArray;
+    // @name retrieves a @link(TDataArray) from
+    // @link(DataSets) based on its name.
+    function GetDataSetByName(const DataSetName: string): TDataArray;
+    procedure CreateInitialDataSets;
+    procedure RemoveDataSetFromLookUpList(const DataSet: TDataArray);
+    // @name creates non-transient @link(TDataArray)s for boundary conditions.
+    // @name is used to store DataSet in @link(FBoundaryDataSets).
+    function AddBoundaryDataSet(const DataSet: TDataArray): Integer;
+    // @name creates non-transient @link(TDataArray)s for boundary conditions.
+    procedure CreateInitialBoundaryDataSets;
+    // @name removes DataSet from @link(DataSets) without freeing it.
+    procedure ExtractDataSet(const DataSet: TDataArray);
+    // @name returns the position of the @link(TDataArray) in
+    // @link(DataSets) whose Name is DataSetName. If none has that
+    // name, @name returns -1.
+    function IndexOfDataSet(DataSetName: string): integer;
+    // @name returns the position of the @link(TDataArray) in
+    // @link(BoundaryDataSets) whose Name is DataSetName. If none has that
+    // name, @name returns -1.
+    function IndexOfBoundaryDataSet(DataSetName: string): integer;
+    procedure UpdateDataSetDimensions;
+    procedure InvalidateAllDataSets;
+    procedure ClearDeletedDataSets;
+    procedure UnlinkDeletedDataSets;
+    procedure HandleAddedDataArrays(AddedDataSetList: TList);
+    procedure HandleDeletedDataArrays(DeletedDataSetList: TList);
+    property ChildDataArrayManagerCount: integer
+      read GetChildDataArrayManagerCount;
+    property ChildDataArrayManagers[Index: integer]: TDataArrayManager
+      read GetChildDataArrayManager;
+  end;
+
+  TChildModelCollection = class;
+
+  TCustomModel = class abstract (TComponent)
+  private
+    FClearing: Boolean;
+    FDataArrayManager: TDataArrayManager;
+    FAlternateFlowPackage: boolean;
+    FAlternateSolver: boolean;
+    FBatchFileAdditionsAfterModel: TStrings;
+    FBatchFileAdditionsBeforeModel: TStrings;
+    FModflowGrid: TModflowGrid;
+    FModflowNameFileLines: TStrings;
+    FModflowPackages: TModflowPackages;
+    FDrainObservations: TFluxObservationGroups;
+    FGhbObservations: TFluxObservationGroups;
+    FHeadFluxObservations: TFluxObservationGroups;
+    FRiverObservations: TFluxObservationGroups;
+    FHydrogeologicUnits: THydrogeologicUnits;
+    FFilesToArchive: TStrings;
+    FModelInputFiles: TStrings;
+    FFileName: string;
+    FModflowWettingOptions: TWettingOptions;
+
+    FrpFrontFormulaCompiler: TRbwParser;
+    FrpFrontFormulaCompilerNodes: TRbwParser;
+    FrpSideFormulaCompiler: TRbwParser;
+    FrpSideFormulaCompilerNodes: TRbwParser;
+    FrpThreeDFormulaCompiler: TRbwParser;
+    FrpThreeDFormulaCompilerNodes: TRbwParser;
+    FrpTopFormulaCompiler: TRbwParser;
+    FrpTopFormulaCompilerNodes: TRbwParser;
+    FParsers: TList;
+    FGlobalVariables: TGlobalVariables;
+    FThreeDGridObserver: TObserver;
+    FTopGridObserver: TObserver;
+    FEdgeDisplay: TCustomModflowGridEdgeDisplay;
+    FHufKxNotifier: TObserver;
+    FHufKyNotifier: TObserver;
+    FHufKzNotifier: TObserver;
+    FHufSsNotifier: TObserver;
+    FHufSyNotifier: TObserver;
+    // See @link(UpToDate).
+    FUpToDate: boolean;
+
+    function AlwaysUsed(Sender: TObject): boolean;
+    function AquiferPropertiesUsed(Sender: TObject): boolean;
+    function KyUsed(Sender: TObject): boolean;
+    function KzUsed(Sender: TObject): boolean;
+    function PorosityUsed(Sender: TObject): boolean;
+    function SpecificStorageUsed(Sender: TObject): boolean;
+    // @name returns true if the model uses solute transport.
+    // @name is used an event handler for
+    // TDataArray.@link(TDataArray.OnDataSetUsed)
+    function ChemistryUsed(Sender: TObject): boolean;
+    // @name returns true if the model uses initial heads.
+    // @name is used an event handler for
+    // TDataArray.@link(TDataArray.OnDataSetUsed)
+    function InitialHeadUsed(Sender: TObject): boolean;
+    // @name returns true if the model uses equilibrium phases.
+    // @name is used an event handler for
+    // TDataArray.@link(TDataArray.OnDataSetUsed)
+    function EquilibriumPhasesUsed(Sender: TObject): boolean;
+    // @name returns true if the model uses surface reactions.
+    // @name is used an event handler for
+    // TDataArray.@link(TDataArray.OnDataSetUsed)
+    function SurfacesUsed(Sender: TObject): boolean;
+    // @name returns true if the model uses exchange reactions.
+    // @name is used an event handler for
+    // TDataArray.@link(TDataArray.OnDataSetUsed)
+    function ExchangeUsed(Sender: TObject): boolean;
+    // @name returns true if the model uses gas phases.
+    // @name is used an event handler for
+    // TDataArray.@link(TDataArray.OnDataSetUsed)
+    function GasPhaseUsed(Sender: TObject): boolean;
+    // @name returns true if the model uses solid solutions.
+    // @name is used an event handler for
+    // TDataArray.@link(TDataArray.OnDataSetUsed)
+    function SolidSolutionUsed(Sender: TObject): boolean;
+    // @name returns true if the model uses kinetics.
+    // @name is used an event handler for
+    // TDataArray.@link(TDataArray.OnDataSetUsed)
+    function KineticsUsed(Sender: TObject): boolean;
+    function ModflowUsed(Sender: TObject): boolean;
+    function RouteUzfDischarge(Sender: TObject): boolean;
+    function ModflowInitialHeadUsed(Sender: TObject): boolean;
+    function ConfiningBedKzUsed(Sender: TObject): boolean;
+    function VerticalAnisotropyUsed(Sender: TObject): boolean;
+    function HorizontalAnisotropyUsed(Sender: TObject): boolean;
+    function SpecificYieldUsed(Sender: TObject): boolean;
+    function WetDryUsed(Sender: TObject): boolean;
+    function ModpathUsed(Sender: TObject): boolean;
+    function HufReferenceSurfaceNeeded(Sender: TObject): boolean;
+    function BcfUsed(Sender: TObject): boolean;
+    function ConfinedStorageCoefUsed(Sender: TObject): boolean;
+    function OptionalDataSet(Sender: TObject): boolean;
+    function HufSelected(Sender: TObject): boolean;
+    function HufStorageUsed(Sender: TObject): boolean;
+    function ZoneBudgetSelected(Sender: TObject): boolean;
+    function SwtSelected(Sender: TObject): boolean;
+    function SwtOffsetsUsed(Sender: TObject): boolean;
+    function SwtSpecifiedUsed(Sender: TObject): boolean;
+    function IndenticalTransientArray(DataArray: TDataArray; DataArrays: TList;
+      var CachedIndex: integer): TDataArray;
+    // See @link(TimeLists).
+    function GetTimeLists(Index: integer): TCustomTimeList;
+    // See @link(TimeListCount).
+    function GetTimeListCount: integer;
+    procedure ClearAllTimeLists;
+    procedure InitializeHobDisplay(Sender: TObject);
+    function ModflowHobPackageUsed(Sender: TObject): boolean;
+    procedure GetMfHobHeadsUseList(Sender: TObject; NewUseList: TStringList);
+    procedure CreateModflowDisplayTimeLists;
+    procedure SetUnitNumbers(const Value: TUnitNumbers);
+    procedure UpdateHfb(Sender: TObject);
+    // See @link(DataSetList).
+    function GetDataSetCollection: TDataSetCollection;
+    procedure FinalizePvalAndTemplate(FileName: string);
+    procedure FinalizeDischargeRouting(Sender: TObject);
+    procedure GetParameterUsedAndParameterFormulaForLPF(
+      out ParameterUsed: Boolean; out ParameterFormula: string;
+      ParameterType: TParameterType);
+    procedure UpdateLpfDataArrayParameterUsed(const DataArrayName: string;
+      ParameterType: TParameterType);
+
+  private
+    FGrid: TCustomGrid;
+    procedure SetAlternateFlowPackage(const Value: boolean);
+    procedure SetAlternateSolver(const Value: boolean);
+    procedure SetBatchFileAdditionsAfterModel(const Value: TStrings);
+    procedure SetBatchFileAdditionsBeforeModel(const Value: TStrings);
+    procedure SetModflowGrid(const Value: TModflowGrid);
+    procedure SetModflowNameFileLines(const Value: TStrings);
+    procedure SetModflowPackages(const Value: TModflowPackages);
+    // See @link(UpToDate).
+    procedure SetUpToDate(const Value: boolean); virtual;
+    procedure SetHeadFluxObservations(const Value: TFluxObservationGroups);
+    procedure SetRiverObservations(const Value: TFluxObservationGroups);
+    procedure SetDrainObservations(const Value: TFluxObservationGroups);
+    procedure SetGhbObservations(const Value: TFluxObservationGroups);
+    procedure SetHydrogeologicUnits(const Value: THydrogeologicUnits);
+    procedure SetFilesToArchive(const Value: TStrings);
+    procedure SetModelInputFiles(const Value: TStrings);
+    procedure SetFileName(const Value: string);
+    procedure SetModflowWettingOptions(const Value: TWettingOptions);
+
+
+    procedure ClearParsers;
+    function GetParsers(Index: integer): TRbwParser;
+    procedure SetGlobalVariables(const Value: TGlobalVariables);
+    procedure SetEdgeDisplay(const Value: TCustomModflowGridEdgeDisplay);
+    procedure AllObserversStopTalking;
+    procedure FreeHufNotifiers;
+    procedure FreeGridNotifiers;
+    function GetModflowFullStressPeriods: TModflowStressPeriods; virtual; abstract;
+
+  var
+    FTransientMultiplierArrays: TList;
+    FCachedMultiplierArrayIndex: Integer;
+    FTransientZoneArrays: TList;
+    FCachedZoneArrayIndex: integer;
+    FUpdatingFullStressPeriods: Boolean;
+    // See @link(DataSetList).
+    FDataSetCollection: TDataSetCollection;
+    // See @link(FrontTimeList).
+    FFrontTimeList: TCustomTimeList;
+    // See @link(SideTimeList).
+    FSideTimeList: TCustomTimeList;
+    // See @link(TopTimeList).
+    FTopTimeList: TCustomTimeList;
+    // See @link(TopDisplayTime).
+    FTopDisplayTime: double;
+    // See @link(FrontDisplayTime).
+    FFrontDisplayTime: double;
+    // See @link(SideDisplayTime).
+    FSideDisplayTime: double;
+    // See @link(ThreeDDisplayTime).
+    FThreeDDisplayTime: double;
+    // See @link(ThreeDTimeList).
+    FThreeDTimeList: TCustomTimeList;
+    FPValFile: TStringList;
+    FTemplate: TStringList;
+  strict private
+    FHfbWriter: TObject;
+    FMfHobHeads: THobDisplayTimeList;
+    FUnitNumbers: TUnitNumbers;
+    FHfbDisplayer: THfbDisplayer;
+
+    // @name holds the @link(TCustomTimeList)s in the model.
+    // See @link(TimeLists).
+    FTimeLists: TList;
+
+  protected
+    function GetScreenObjects(const Index: integer): TScreenObject;virtual;abstract;
+    function GetScreenObjectCount: integer;virtual;abstract;
+    function GetModflowSteadyParameters: TModflowSteadyParameters;virtual;abstract;
+    procedure SetModflowSteadyParameters(const Value: TModflowSteadyParameters);virtual;abstract;
+    function GetModelSelection: TModelSelection;virtual;abstract;
+    procedure SetModelSelection(const Value: TModelSelection);virtual;abstract;
+    // @name causes the grid to not be colored by any @link(TDataArray).
+    function GetLayerStructure: TLayerStructure;virtual;abstract;
+    procedure SetLayerStructure(const Value: TLayerStructure);virtual;abstract;
+    procedure SetModflowOptions(const Value: TModflowOptions);virtual;abstract;
+    function GetModflowOptions: TModflowOptions;virtual;abstract;
+    function GetModflowStressPeriods: TModflowStressPeriods;virtual;abstract;
+    procedure SetModflowStressPeriods(const Value: TModflowStressPeriods);virtual;abstract;
+    procedure SetSoluteTransport(const Value: boolean);virtual;abstract;
+    function GetSoluteTransport: boolean;virtual;abstract;
+    procedure SetUseWaterTable(const Value: boolean);virtual;abstract;
+    function GetUseWaterTable: boolean;virtual;abstract;
+    function GetFreeSurface: boolean;virtual;abstract;
+    procedure SetFreeSurface(const Value: boolean);virtual;abstract;
+    procedure SetChemistryOptions(const Value: TChemistryOptions); virtual; abstract;
+    function GetChemistryOptions: TChemistryOptions; virtual; abstract;
+    procedure SetHufParameters(const Value: THufModflowParameters);virtual;abstract;
+    function GetHufParameters: THufModflowParameters;virtual;abstract;
+    function GetObservationPurpose: TObservationPurpose; virtual; abstract;
+    procedure SetObservationPurpose(const Value: TObservationPurpose); virtual; abstract;
+    function GetModflowTransientParameters: TModflowTransientListParameters; virtual;abstract;
+    procedure SetModflowTransientParameters(
+      const Value: TModflowTransientListParameters);virtual;abstract;
+    function GetModflowOutputControl: TModflowOutputControl;virtual;abstract;
+    procedure SetModflowOutputControl(const Value: TModflowOutputControl);virtual;abstract;
+    function GetProgramLocations: TProgramLocations;virtual;abstract;
+    procedure SetProgramLocations(const Value: TProgramLocations);virtual;abstract;
+    procedure ClearViewedItems; virtual;
+    procedure InternalClear; virtual;
+  public
+    procedure Assign(Source: TPersistent); override;
+    property Clearing: Boolean read FClearing;
+    property DataArrayManager: TDataArrayManager read FDataArrayManager;
+
+    procedure OnActiveDataSetChanged(Sender: TObject);
+    procedure Clear;
+    constructor Create(AnOwner: TComponent); override;
+    destructor Destroy; override;
+    // Call @name to indicate that the model has changed in some important
+    // respect.  The user will be prompted to save the model when closing.
+    procedure Invalidate; virtual;
+    // @name indicates whether or not the model needs to be saved to file.
+    // See @link(Invalidate).
+    property UpToDate: boolean read FUpToDate write SetUpToDate;
+    procedure AddModelInputFile(const FileName: string);
+    procedure AddFileToArchive(const FileName: string);
+
+    property Grid: TCustomGrid read FGrid;
+
+    // @name is the TRbwParser for formulas for data sets on the front
+    // view of the model evaluated at elements.
+    property rpFrontFormulaCompiler: TRbwParser read FrpFrontFormulaCompiler;
+    // @name is the TRbwParser for formulas for data sets on the front
+    // view of the model evaluated at nodes.
+    property rpFrontFormulaCompilerNodes: TRbwParser
+      read FrpFrontFormulaCompilerNodes;
+    // @name is the TRbwParser for formulas for data sets on the side
+    // view of the model evaluated at elements.
+    property rpSideFormulaCompiler: TRbwParser read FrpSideFormulaCompiler;
+    // @name is the TRbwParser for formulas for data sets on the side
+    // view of the model evaluated at nodes.
+    property rpSideFormulaCompilerNodes: TRbwParser
+      read FrpSideFormulaCompilerNodes;
+    // @name is the TRbwParser for formulas for 3D data sets
+    // view of the model evaluated at elements.
+    property rpThreeDFormulaCompiler: TRbwParser read FrpThreeDFormulaCompiler;
+    // @name is the TRbwParser for formulas for 3D data sets
+    // view of the model evaluated at nodes.
+    property rpThreeDFormulaCompilerNodes: TRbwParser
+      read FrpThreeDFormulaCompilerNodes;
+    // @name is the TRbwParser for formulas for data sets on the top
+    // view of the model evaluated at elements.
+    property rpTopFormulaCompiler: TRbwParser read FrpTopFormulaCompiler;
+    // @name is the TRbwParser for formulas for data sets on the top
+    // view of the model evaluated at nodes.
+    property rpTopFormulaCompilerNodes: TRbwParser
+      read FrpTopFormulaCompilerNodes;
+    // @name returns the TRbwParser that should be used for a particular
+    // @link(TDataSetOrientation) and @link(TEvaluatedAt).
+    function GetCompiler(const Orientation: TDataSetOrientation;
+      const EvaluatedAt: TEvaluatedAt): TRbwParser;
+    function ParserCount: integer;
+    property Parsers[Index: integer]: TRbwParser read GetParsers;
+    procedure ClearExpressionsAndVariables;
+    procedure FillCompilerList(CompilerList: TList);
+    procedure RefreshGlobalVariables(CompilerList: TList);
+    procedure CreateGlobalVariables;
+    // @name creates a TCustomVariable to represent DataSet in each TRbwParser
+    // that should have one.
+    // @seealso(RemoveVariables)
+    procedure CreateVariables(const DataSet: TDataArray);
+    // @name removes the variables that represent DataSet in any
+    // expression.
+    // @seealso(CreateVariables).
+    procedure RemoveVariables(const DataSet: TDataArray);
+
+    property ThreeDGridObserver: TObserver read FThreeDGridObserver;
+    property TopGridObserver: TObserver read FTopGridObserver;
+    property HufKxNotifier: TObserver read FHufKxNotifier;
+    property HufKyNotifier: TObserver read FHufKyNotifier;
+    property HufKzNotifier: TObserver read FHufKzNotifier;
+    property HufSsNotifier: TObserver read FHufSsNotifier;
+    property HufSyNotifier: TObserver read FHufSyNotifier;
+
+    // If @name is the currently active @link(TCustomModflowGridEdgeDisplay).
+    property EdgeDisplay: TCustomModflowGridEdgeDisplay read FEdgeDisplay
+      write SetEdgeDisplay;
+
+    // @name provides access to the @link(TScreenObject)s in the model.
+    // However, the @link(TScreenObject)s are saved are read from files
+    // via @link(ObjectList).
+    property ScreenObjects[const Index: integer]: TScreenObject
+      read GetScreenObjects;
+
+    // @name returns the number of @link(TScreenObject)s
+    // in @link(ScreenObjects).
+    property ScreenObjectCount: integer read GetScreenObjectCount;
+
+    // @name returns true if the model uses the water table
+    // to set the initial condition.
+    // @name is used an event handler for
+    // TDataArray.@link(TDataArray.OnDataSetUsed).
+    // @name is also used in WriteHeadIC which
+    // is found in the implementation section of @link(WritePhastUnit).
+    function InitialWaterTableUsed(Sender: TObject): boolean;
+    function ReservoirLayerUsed(Sender: TObject): boolean;
+    function ReservoirPackageUsed(Sender: TObject): boolean;
+    function LakePackageUsed(Sender: TObject): boolean;
+    function UzfPackageUsed(Sender: TObject): boolean;
+    function UzfUnsatVertKUsed(Sender: TObject): boolean;
+    function UzfInitialInfiltrationUsed(Sender: TObject): boolean;
+
+    property TransientMultiplierArrays: TList read FTransientMultiplierArrays;
+    property TransientZoneArrays: TList read FTransientZoneArrays;
+
+    function IndenticalTransientMultiplierArray(DataArray: TDataArray): TDataArray;
+    function IndenticalTransientZoneArray(DataArray: TDataArray): TDataArray;
+
+    property ModflowFullStressPeriods: TModflowStressPeriods
+      read GetModflowFullStressPeriods;
+
+    procedure UpdateModflowFullStressPeriods;
+    procedure AddTimeList(TimeList: TCustomTimeList);
+    procedure RemoveTimeList(TimeList: TCustomTimeList);
+    // @name provides access to all the @link(TCustomTimeList)s in the model.
+    property TimeLists[Index: integer]: TCustomTimeList read GetTimeLists;
+    // @name is the number of @link(TCustomTimeList)s in @link(TimeLists).
+    property TimeListCount: integer read GetTimeListCount;
+
+    property MfHobHeads: THobDisplayTimeList read FMfHobHeads;
+
+    function ProgramName: string;
+
+    property UnitNumbers: TUnitNumbers read FUnitNumbers
+      write SetUnitNumbers stored False;
+
+    function PackageGeneratedExternally(const PackageName: string): boolean;
+    procedure WritePValAndTemplate(const ParameterName: string;
+      const Value: double);
+
+    property HfbDisplayer: THfbDisplayer read FHfbDisplayer;
+
+    function GetObserverByName(const ObserverName: string): TObserver;
+    function CheckWetting: boolean;
+
+    property ProgramLocations: TProgramLocations read GetProgramLocations
+      write SetProgramLocations;
+
+    function FixFileName(AFileName: string): string;
+    // @name exports the input files for MODFLOW and optionally runs MODFLOW.
+    procedure ExportModflowModel(FileName: string; RunModel: boolean);
+    procedure ExportModpathModel(FileName: string;
+      RunModel, NewBudgetFile: boolean);
+    procedure ExportZoneBudgetModel(FileName: string; RunModel: boolean);
+
+
+    // @name is the @link(TCustomTimeList) for
+    // the transient data set used to color
+    // the front view of the grid.
+    // If the data set used to color the grid is not transient, or the grid
+    // is not colored, @name has no meaning.
+    // See @link(FrontDisplayTime) and
+    // TCustomGrid.@link(TCustomGrid.FrontDataSet).
+    property FrontTimeList: TCustomTimeList read FFrontTimeList
+      write FFrontTimeList;
+
+    // @name is the TPhastTimeList for the transient data set used to color
+    // the side view of the grid.
+    // If the data set used to color the grid is not transient, or the grid
+    // is not colored, @name has no meaning.
+    // See @link(SideDisplayTime) and
+    // TCustomGrid.@link(TCustomGrid.SideDataSet).
+    property SideTimeList: TCustomTimeList read FSideTimeList
+      write FSideTimeList;
+    // @name is the @link(TCustomTimeList)
+    // for the transient data set used to color
+    // the top view of the grid.
+    // If the data set used to color the grid is not transient, or the grid
+    // is not colored, @name has no meaning.
+    // See @link(TopDisplayTime) and
+    // TCustomGrid.@link(TCustomGrid.TopDataSet).
+    property TopTimeList: TCustomTimeList read FTopTimeList write FTopTimeList;
+    // @name is the time for the transient data set used to color the
+    // top view of the grid.
+    // If the data set used to color the grid is not transient, or the grid
+    // is not colored, @name has no meaning.
+    // See @link(TopTimeList) and
+    // TCustomGrid.@link(TCustomGrid.TopDataSet).
+    property TopDisplayTime: double read FTopDisplayTime;
+    // @name is the time for the transient data set used to color the
+    // front view of the grid.
+    // If the data set used to color the grid is not transient, or the grid
+    // is not colored, @name has no meaning.
+    // See @link(FrontTimeList) and
+    // TCustomGrid.@link(TCustomGrid.FrontDataSet).
+    property FrontDisplayTime: double read FFrontDisplayTime;
+    // @name is the time for the transient data set used to color the
+    // side view of the grid.
+    // If the data set used to color the grid is not transient, or the grid
+    // is not colored, @name has no meaning.
+    // See @link(SideTimeList) and
+    // TCustomGrid.@link(TCustomGrid.SideDataSet).
+    property SideDisplayTime: double read FSideDisplayTime;
+    // @name is the time for the transient data set used to color the
+    // 3D view of the grid.
+    // If the data set used to color the grid is not transient, or the grid
+    // is not colored, @name has no meaning.
+    // See @link(ThreeDTimeList) and
+    // TCustomGrid.@link(TCustomGrid.ThreeDDataSet).
+    property ThreeDDisplayTime: double read FThreeDDisplayTime;
+    // @name is the @link(TCustomTimeList) for
+    // the transient data set used to color
+    // the 3D view of the grid.
+    // If the data set used to color the grid is not transient, or the grid
+    // is not colored, @name has no meaning.
+    // See @link(ThreeDDisplayTime) and
+    // TCustomGrid.@link(TCustomGrid.ThreeDDataSet).
+    property ThreeDTimeList: TCustomTimeList read FThreeDTimeList
+      write FThreeDTimeList;
+    property ModflowSteadyParameters: TModflowSteadyParameters
+      read GetModflowSteadyParameters write SetModflowSteadyParameters;
+
+    property ModelSelection: TModelSelection read GetModelSelection
+      write SetModelSelection;
+
+    property LayerStructure: TLayerStructure read GetLayerStructure
+      write SetLayerStructure;
+
+    property ModflowOptions: TModflowOptions read GetModflowOptions
+      write SetModflowOptions;
+
+    property ModflowStressPeriods: TModflowStressPeriods
+      read GetModflowStressPeriods write SetModflowStressPeriods;
+
+    // @name stores SoluteTransport option in PHAST.
+    property SoluteTransport: boolean read GetSoluteTransport
+      write SetSoluteTransport;
+
+    // @name stores whether PHAST is using the water table
+    // to set the initial condition.
+    property UseWaterTable: boolean read GetUseWaterTable write SetUseWaterTable;
+
+    // @name stores FreeSurface option in PHAST.
+    property FreeSurface: boolean read GetFreeSurface write SetFreeSurface;
+
+    // @name stores options related to chemistry in PHAST.
+    property ChemistryOptions: TChemistryOptions read GetChemistryOptions
+      write SetChemistryOptions;
+
+    property HufParameters: THufModflowParameters read GetHufParameters
+      write SetHufParameters;
+
+    property ObservationPurpose: TObservationPurpose read GetObservationPurpose
+      write SetObservationPurpose;
+
+    property ModflowTransientParameters: TModflowTransientListParameters
+      read GetModflowTransientParameters write SetModflowTransientParameters;
+
+    property ModflowOutputControl: TModflowOutputControl
+      read GetModflowOutputControl write SetModflowOutputControl;
+
+    // @name stores the @link(TDataArray)s in GoPhast.
+    property DataSetList: TDataSetCollection read GetDataSetCollection
+      write FDataSetCollection;
+
+  published
+    property AlternateFlowPackage: boolean read FAlternateFlowPackage
+      write SetAlternateFlowPackage;
+    property AlternateSolver: boolean read FAlternateSolver
+      write SetAlternateSolver;
+    property BatchFileAdditionsAfterModel: TStrings
+      read FBatchFileAdditionsAfterModel write SetBatchFileAdditionsAfterModel;
+    property BatchFileAdditionsBeforeModel: TStrings
+      read FBatchFileAdditionsBeforeModel
+      write SetBatchFileAdditionsBeforeModel;
+    property ModflowGrid: TModflowGrid read FModflowGrid write SetModflowGrid;
+    property ModflowNameFileLines: TStrings read FModflowNameFileLines
+      write SetModflowNameFileLines;
+    property ModflowPackages: TModflowPackages read FModflowPackages
+      write SetModflowPackages;
+    property HeadFluxObservations: TFluxObservationGroups
+      read FHeadFluxObservations write SetHeadFluxObservations;
+    property DrainObservations: TFluxObservationGroups
+      read FDrainObservations write SetDrainObservations;
+    property GhbObservations: TFluxObservationGroups
+      read FGhbObservations write SetGhbObservations;
+    property RiverObservations: TFluxObservationGroups
+      read FRiverObservations write SetRiverObservations;
+    property HydrogeologicUnits: THydrogeologicUnits read FHydrogeologicUnits
+      write SetHydrogeologicUnits;
+    property FilesToArchive: TStrings read FFilesToArchive
+      write SetFilesToArchive;
+    property ModelInputFiles: TStrings read FModelInputFiles
+      write SetModelInputFiles;
+    property ModelFileName: string read FFileName write SetFileName;
+    property ModflowWettingOptions: TWettingOptions read FModflowWettingOptions
+      write SetModflowWettingOptions;
+    property GlobalVariables: TGlobalVariables read FGlobalVariables
+      write SetGlobalVariables;
+
+  end;
 
   {
   @abstract(@name is used to read model configuration data to and
@@ -1252,29 +1884,14 @@ that affects the model output should also have a comment. }
   using @Link(TPhastModel.DataSetCount) and
   @Link(TPhastModel.ScreenObjectCount).
   }
-  TPhastModel = class(TComponent)
+  TPhastModel = class(TCustomModel)
   private
-    FDataSetsToCache: TList;
+    FObservationPurpose: TObservationPurpose;
     FCachedScreenObjectIndex: integer;
-    FTopGridObserver: TObserver;
-    FThreeDGridObserver: TObserver;
     // See @link(Bitmaps).
     FBitmaps: TCompressedBitmapCollection;
-    // @name is used to store @link(TDataArray)s that are related to
-    // boundary conditions but which do not vary with time.
-    FBoundaryDataSets: TObjectList;
     // See @link(ChemistryOptions).
     FChemistryOptions: TChemistryOptions;
-    // See @link(DataSetList).
-    FDataSetCollection: TDataSetCollection;
-    // @name stores a formula for each @link(TDataArray) in @link(FDataSets).
-    // The formulas in @name are in the same order as the @link(TDataArray)s
-    // in @link(FDataSets).
-    FDataSetFunctions: TStringList;
-    // @name is used to store the @link(TDataArray)s in the model that
-    // are defined throughout the grid.  An example is the data set for
-    // the hydraulic conductivity in the X direction.
-    FDataSets: TObjectList;
     // See @link(Diffusivity).
     FDiffusivity: double;
     // Values of zero are never stored for real-number properties
@@ -1294,8 +1911,6 @@ that affects the model output should also have a comment. }
     FFreeSurface: boolean;
     // See @link(FrontBoundaryType).
     FFrontBoundaryType: TDataArray;
-    // See @link(FrontDisplayTime).
-    FFrontDisplayTime: double;
     // See @link(FrontFluxBoundaryChemistry).
     FFrontFluxBoundaryChemistry: TPhastTimeList;
     // See @link(FrontFluxBoundaryFlux).
@@ -1304,8 +1919,6 @@ that affects the model output should also have a comment. }
     FFrontLeakyAssociatedSolution: TPhastTimeList;
     // See @link(FrontLeakyHead).
     FFrontLeakyHead: TPhastTimeList;
-    // See @link(FrontTimeList).
-    FFrontTimeList: TCustomTimeList;
     // See @link(GridOptions).
     FGridOptions: TGridOptions;
     // See @link(LeakyAssociatedSolutionGroup).
@@ -1324,8 +1937,6 @@ that affects the model output should also have a comment. }
     FRiverAssociatedSolution: TPhastTimeList;
     // See @link(RiverAssociatedSolutionGroup).
     FRiverAssociatedSolutionGroup: TTimeListGroup;
-    // See @link(RiverDataSets).
-    FRiverDataSets: TList;
     // See @link(RiverHead).
     FRiverHead: TPhastTimeList;
     // See @link(RiverHeadGroup).
@@ -1342,8 +1953,6 @@ that affects the model output should also have a comment. }
     FScreenObjectList: TList;
     // See @link(SideBoundaryType).
     FSideBoundaryType: TDataArray;
-    // See @link(SideDisplayTime).
-    FSideDisplayTime: double;
     // See @link(SideFluxBoundaryChemistry).
     FSideFluxBoundaryChemistry: TPhastTimeList;
     // See @link(SideFluxBoundaryFlux).
@@ -1352,8 +1961,6 @@ that affects the model output should also have a comment. }
     FSideLeakyAssociatedSolution: TPhastTimeList;
     // See @link(SideLeakyHead).
     FSideLeakyHead: TPhastTimeList;
-    // See @link(SideTimeList).
-    FSideTimeList: TCustomTimeList;
     // See @link(SoluteTransport).
     FSoluteTransport: boolean;
     // See @link(SolutionOptions).
@@ -1372,13 +1979,6 @@ that affects the model output should also have a comment. }
     FSpecifiedSolution: TPhastTimeList;
     // See @link(SteadyFlowOptions).
     FSteadyFlowOptions: TSteadyFlowOptions;
-    // See @link(ThreeDDisplayTime).
-    FThreeDDisplayTime: double;
-    // See @link(ThreeDTimeList).
-    FThreeDTimeList: TCustomTimeList;
-    // @name holds the @link(TCustomTimeList)s in the model.
-    // See @link(TimeLists).
-    FTimeLists: TList;
     // See @link(Times).
     FTimes: TTimeCollection;
     // See @link(Title).
@@ -1387,8 +1987,6 @@ that affects the model output should also have a comment. }
     FTop2DBoundaryType: TDataArray;
     // See @link(TopBoundaryType).
     FTopBoundaryType: TDataArray;
-    // See @link(TopDisplayTime).
-    FTopDisplayTime: double;
     // See @link(TopFluxBoundaryChemistry).
     FTopFluxBoundaryChemistry: TPhastTimeList;
     // See @link(TopFluxBoundaryFlux).
@@ -1397,8 +1995,6 @@ that affects the model output should also have a comment. }
     FTopLeakyAssociatedSolution: TPhastTimeList;
     // See @link(TopLeakyHead).
     FTopLeakyHead: TPhastTimeList;
-    // See @link(TopTimeList).
-    FTopTimeList: TCustomTimeList;
     // See @link(Units).
     FUnits: TUnits;
     // See @link(UseWaterTable).
@@ -1411,10 +2007,6 @@ that affects the model output should also have a comment. }
     FWellSolution: TPhastTimeList;
     // See @link(WellSolutionGroup).
     FWellSolutionGroup: TTimeListGroup;
-    // See @link(UpToDate).
-    FUpToDate: boolean;
-    FModflowGrid: TModflowGrid;
-    FGrid: TCustomGrid;
     FModelSelection: TModelSelection;
     FLayerStructure: TLayerStructure;
     FOnModelSelectionChange: TNotifyEvent;
@@ -1423,17 +2015,7 @@ that affects the model output should also have a comment. }
     FModflowStressPeriods: TModflowStressPeriods;
     FModflowOutputControl: TModflowOutputControl;
     FModflowSteadyParameters: TModflowSteadyParameters;
-    FModflowWettingOptions: TWettingOptions;
     FModflowTransientParameters: TModflowTransientListParameters;
-    FrpFrontFormulaCompilerNodes: TRbwParser;
-    FrpFrontFormulaCompiler: TRbwParser;
-    FrpSideFormulaCompilerNodes: TRbwParser;
-    FrpTopFormulaCompilerNodes: TRbwParser;
-    FrpSideFormulaCompiler: TRbwParser;
-    FrpThreeDFormulaCompilerNodes: TRbwParser;
-    FrpTopFormulaCompiler: TRbwParser;
-    FrpThreeDFormulaCompiler: TRbwParser;
-    FParsers: TList;
     FOnGetZoomBox: TGetZoomBoxEvent;
     FOnScreenObjectsChanged: TNotifyEvent;
     FOnGetCurrentScreenObject: TGetCurrentScreenObjectEvent;
@@ -1442,91 +2024,28 @@ that affects the model output should also have a comment. }
     FOnCheckScreenObject: TCheckScreenObjectEvent;
     FOn3DViewChanged: TNotifyEvent;
     FOnRefreshScreenObjects: TNotifyEvent;
-    FModflowPackages: TModflowPackages;
     FProgramLocations: TProgramLocations;
     FModflowFullStressPeriods: TModflowStressPeriods;
-    FTransientMultiplierArrays: TList;
-    FTransientZoneArrays: TList;
-    FGlobalVariables: TGlobalVariables;
-    FClearing: Boolean;
     FOnScreenObjectUnSelected: TNotifyEvent;
+    // See @link(SelectedScreenObjectCount).
     FSelectedScreenObjectCount: Integer;
     FScreenObjectUpdateCount: Integer;
-    FFilesToArchive: TStrings;
-    FModelInputFiles: TStrings;
-    FFileName: string;
     FArchiveName: string;
-    FMfHobHeads: THobDisplayTimeList;
-    FHfbDisplayer: THfbDisplayer;
-    FEdgeDisplay: TCustomModflowGridEdgeDisplay;
-    FHfbWriter: TObject;
-    FUnitNumbers: TUnitNumbers;
-    FModflowNameFileLines: TStrings;
-    FUpdatingFullStressPeriods: Boolean;
     FSortedObjectList: TLookUpList;
-    FHeadFluxObservations: TFluxObservationGroups;
-    FRiverObservations: TFluxObservationGroups;
-    FDrainObservations: TFluxObservationGroups;
-    FGhbObservations: TFluxObservationGroups;
     FGridColors: TColorParameters;
     FContourColors: TColorParameters;
     FModelMateProjectFileName: string;
     FModelMateProject: TProject;
-    FObservationPurpose: TObservationPurpose;
-    FChangedDataArrayNames: TStringList;
-    FDataSetLookUpList: THashTable;
     FFormulaManager: TFormulaManager;
-    FHydrogeologicUnits: THydrogeologicUnits;
     FHufParameters: THufModflowParameters;
-    FBatchFileAdditionsBeforeModel: TStrings;
-    FBatchFileAdditionsAfterModel: TStrings;
-    FAlternateFlowPackage: boolean;
-    FAlternateSolver: boolean;
     FPathLine: TPathLineReader;
     FEndPoints: TEndPointReader;
     FTimeSeries: TTimeSeriesReader;
-    FCachedZoneArrayIndex: integer;
-    FCachedMultiplierArrayIndex: Integer;
-    FHufKxNotifier: TObserver;
-    FHufKyNotifier: TObserver;
-    FHufKzNotifier: TObserver;
-    FHufSyNotifier: TObserver;
-    FHufSsNotifier: TObserver;
     FColorLegend: TLegend;
     FContourLegend: TLegend;
     FDisplaySettings: TDisplaySettingsCollection;
-    FStoreCachedData: boolean;
-    // See @link(UpToDate).
-    procedure SetUpToDate(const Value: boolean);
-    function AlwaysUsed(Sender: TObject): boolean;
-    // @name returns true if the model uses solute transport.
-    // @name is used an event handler for
-    // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function ChemistryUsed(Sender: TObject): boolean;
-    // @name causes the grid to not be colored by any @link(TDataArray).
-    procedure ClearViewedItems;
-    // @name returns true if the model uses equilibrium phases.
-    // @name is used an event handler for
-    // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function EquilibriumPhasesUsed(Sender: TObject): boolean;
-    // @name returns true if the model uses exchange reactions.
-    // @name is used an event handler for
-    // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function ExchangeUsed(Sender: TObject): boolean;
-    // @name returns true if the model uses gas phases.
-    // @name is used an event handler for
-    // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function GasPhaseUsed(Sender: TObject): boolean;
-    // See @link(BoundaryDataSetCount).
-    function GetBoundaryDataSetCount: integer;
-    // See @link(BoundaryDataSets).
-    function GetBoundaryDataSets(const Index: integer): TDataArray;
-    // See @link(DataSetList).
-    function GetDataSetCollection: TDataSetCollection;
-    // See @link(DataSetCount).
-    function GetDataSetCount: integer;
-    // See @link(DataSets).
-    function GetDataSets(const Index: integer): TDataArray;
+    FChildModels: TChildModelCollection;
+    FImportingModel: boolean;
     // See @link(Exaggeration).
     function GetExaggeration: double;
     // See @link(FrontHeight).
@@ -1549,20 +2068,12 @@ that affects the model output should also have a comment. }
     function GetOwnsScreenObjects: boolean;
     // See @link(ObjectList).
     function GetScreenObjectCollection: TScreenObjectCollection;
-    // See @link(ScreenObjectCount).
-    function GetScreenObjectCount: integer;
-    // See @link(ScreenObjects).
-    function GetScreenObjects(const Index: integer): TScreenObject;
     // See @link(SideWidth).
     function GetSideWidth: integer;
     // See @link(SideX).
     function GetSideX: double;
     // See @link(SideY).
     function GetSideY: double;
-    // See @link(TimeListCount).
-    function GetTimeListCount: integer;
-    // See @link(TimeLists).
-    function GetTimeLists(Index: integer): TCustomTimeList;
     // See @link(Top).
     function GetTop: integer;
     // See @link(TopViewHeight).
@@ -1579,24 +2090,11 @@ that affects the model output should also have a comment. }
     function GetWidth: integer;
     // See @link(WindowState).
     function GetWindowState: TWindowState;
-    // @name returns the position of the @link(TDataArray) whose name is
-    // DataSetName in List.
-    // @name is used in @link(IndexOfBoundaryDataSet)
-    // and @link(IndexOfDataSet).
-    function IndexOfDataSetInList(DataSetName: string;
-      const List: TObjectList): integer;
-    // @name returns true if the model uses initial heads.
-    // @name is used an event handler for
-    // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function InitialHeadUsed(Sender: TObject): boolean;
     // @name initializes all the @link(TPhastTimeList)s in @link(TimeLists).
     procedure InitializePhastBoundaries;
-    // @name returns true if the model uses kinetics.
-    // @name is used an event handler for
-    // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function KineticsUsed(Sender: TObject): boolean;
     // @name adds all the TTimeItem.@link(TTimeItem.EndingTime)s
     // in @link(Times) to @link(ModelTimes).
+    // @name is only used in PHAST models;
     procedure RecordTimeControl;
     // See @link(Bitmaps).
     procedure SetBitmaps(const Value: TCompressedBitmapCollection);
@@ -1606,8 +2104,6 @@ that affects the model output should also have a comment. }
     procedure SetExaggeration(Value: double);
     // See @link(FlowOnly).
     procedure SetFlowOnly(const Value: boolean);
-    // See @link(FreeSurface).
-    procedure SetFreeSurface(const Value: boolean);
     // See @link(FrontHeight).
     procedure SetFrontHeight(Value : integer);
     // See @link(FrontX).
@@ -1639,8 +2135,6 @@ that affects the model output should also have a comment. }
     procedure SetSideX(const Value: double);
     // See @link(SideY).
     procedure SetSideY(const Value: double);
-    // See @link(SoluteTransport).
-    procedure SetSoluteTransport(const Value: boolean);
     // See @link(Times).
     procedure SetTimes(const Value: TTimeCollection);
     // See @link(Title).
@@ -1655,84 +2149,26 @@ that affects the model output should also have a comment. }
     procedure SetTopX(const Value: double);
     // See @link(TopY).
     procedure SetTopY(const Value: double);
-    // See @link(UseWaterTable).
-    procedure SetUseWaterTable(const Value: boolean);
     // See @link(Version).
     procedure SetVersion(const Value: string);
     // See @link(Width).
     procedure SetWidth(const Value: integer);
     // See @link(WindowState).
     procedure SetWindowState(const Value: TWindowState);
-    // @name returns true if the model uses solid solutions.
-    // @name is used an event handler for
-    // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function SolidSolutionUsed(Sender: TObject): boolean;
-    // @name returns true if the model uses surface reactions.
-    // @name is used an event handler for
-    // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function SurfacesUsed(Sender: TObject): boolean;
     // See @link(Units);
     procedure SetUnits(const Value: TUnits);
-    procedure SetModflowGrid(const Value: TModflowGrid);
-    // Among other things, if @link(OnModelSelectionChange)
-    // is assigned, @name calls @link(TfrmGoPhast.ModelSelectionChange
-    // TfrmGoPhast.ModelSelectionChange).  @name also changes
-    // the functions that are available. and sets @Link(TObserver)s
-    // for the @link(Grid).
-    procedure SetModelSelection(const Value: TModelSelection);
-    procedure SetModflowOptions(const Value: TModflowOptions);
-    procedure SetModflowStressPeriods(const Value: TModflowStressPeriods);
-    procedure SetModflowOutputControl(const Value: TModflowOutputControl);
-    procedure SetModflowSteadyParameters(const Value: TModflowSteadyParameters);
-    procedure SetModflowWettingOptions(const Value: TWettingOptions);
-    procedure SetModflowTransientParameters(
-      const Value: TModflowTransientListParameters);
-    procedure SetModflowPackages(const Value: TModflowPackages);
-    procedure SetProgramLocations(const Value: TProgramLocations);
     procedure UpdateDrainReturnObjects;
-    procedure SetGlobalVariables(const Value: TGlobalVariables);
-    procedure UpdateLpfDataArrayParameterUsed(const DataArrayName: string;
-      ParameterType: TParameterType);
-    procedure GetParameterUsedAndParameterFormulaForLPF(
-      out ParameterUsed: Boolean; out ParameterFormula: string;
-      ParameterType: TParameterType);
     procedure CreatePhastTimeLists;
     procedure CreatePhastTimeListGroups;
-    procedure CreateModflowDisplayTimeLists;
-    function GetParsers(Index: integer): TRbwParser;
-    function ModflowHobPackageUsed(Sender: TObject): boolean;
     procedure UpdateUseList(DataIndex: integer; NewUseList: TStringList;
       Item: TCustomModflowBoundaryItem);
-    function RouteUzfDischarge(Sender: TObject): boolean;
-    procedure DefinePackageDataArrays;
+    //    procedure DefinePackageDataArrays;
     procedure UpdateDischargeRouting(Sender: TObject);
-    procedure FinalizeDischargeRouting(Sender: TObject);
-    function ConfiningBedKzUsed(Sender: TObject): boolean;
-    function VerticalAnisotropyUsed(Sender: TObject): boolean;
-    function SpecificYieldUsed(Sender: TObject): boolean;
-    function WetDryUsed(Sender: TObject): boolean;
-    procedure SetFilesToArchive(const Value: TStrings);
-    procedure SetModelInputFiles(const Value: TStrings);
-    procedure SetFileName(const Value: string);
     function DefaultArchiveName: string;
     function GetArchiveName: string;
     procedure SetArchiveName(const Value: string);
-    procedure InitializeHobDisplay(Sender: TObject);
-    procedure GetMfHobHeadsUseList(Sender: TObject; NewUseList: TStringList);
-    procedure SetEdgeDisplay(const Value: TCustomModflowGridEdgeDisplay);
-    procedure UpdateHfb(Sender: TObject);
-    procedure SetUnitNumbers(const Value: TUnitNumbers);
-    function PorosityUsed(Sender: TObject): boolean;
-    function ModflowUsed(Sender: TObject): boolean;
     procedure GetUnitID(var UnitID: Integer);
-    function SpecificStorageUsed(Sender: TObject): boolean;
-    procedure SetModflowNameFileLines(const Value: TStrings);
-    function ModpathUsed(Sender: TObject): boolean;
     procedure UpdateModPathZone(Sender: TObject);
-    procedure SetHeadFluxObservations(const Value: TFluxObservationGroups);
-    procedure SetDrainObservations(const Value: TFluxObservationGroups);
-    procedure SetGhbObservations(const Value: TFluxObservationGroups);
-    procedure SetRiverObservations(const Value: TFluxObservationGroups);
     procedure NotifyGridColorsChanged(Sender: TObject);
     procedure SetModelMateProjectFileName(const Value: string);
     procedure SetModelMateProject(const Value: TProject);
@@ -1751,19 +2187,7 @@ that affects the model output should also have a comment. }
       ObservationList: TStringList; Project: TProject);
     procedure EnsureModelMateObsGroup(Project: TProject; GroupName: string;
       PlotSymbol: integer);
-    procedure FinalizePvalAndTemplate(FileName: string);
-    procedure SetObservationPurpose(const Value: TObservationPurpose);
     function PhastUsed(Sender: TObject): boolean;
-    function KzUsed(Sender: TObject): boolean;
-    procedure SetHydrogeologicUnits(const Value: THydrogeologicUnits);
-    procedure SetHufParameters(const Value: THufModflowParameters);
-    procedure SetBatchFileAdditionsAfterModel(const Value: TStrings);
-    procedure SetBatchFileAdditionsBeforeModel(const Value: TStrings);
-    function HufReferenceSurfaceNeeded(Sender: TObject): boolean;
-    function AquiferPropertiesUsed(Sender: TObject): boolean;
-    function HorizontalAnisotropyUsed(Sender: TObject): boolean;
-    procedure SetAlternateFlowPackage(const Value: boolean);
-    procedure SetAlternateSolver(const Value: boolean);
     procedure SetPathLine(const Value: TPathLineReader);
     function GetPathLine: TPathLineReader;
     function StorePathLine: Boolean;
@@ -1773,168 +2197,169 @@ that affects the model output should also have a comment. }
     procedure SetTimeSeries(const Value: TTimeSeriesReader);
     function StoreTimeSeries: Boolean;
     function GetTimeSeries: TTimeSeriesReader;
-    function IndenticalTransientArray(DataArray: TDataArray; DataArrays: TList;
-      var CachedIndex: integer): TDataArray;
-    function KyUsed(Sender: TObject): boolean;
-    function BcfUsed(Sender: TObject): boolean;
-    function ConfinedStorageCoefUsed(Sender: TObject): boolean;
-    function HufSelected(Sender: TObject): boolean;
-    function OptionalDataSet(Sender: TObject): boolean;
-    function HufStorageUsed(Sender: TObject): boolean;
     procedure CreateInitialDataSetsForPhastTimeLists;
-    function ZoneBudgetSelected(Sender: TObject): boolean;
     procedure SetDisplaySettings(const Value: TDisplaySettingsCollection);
-    function SwtSelected(Sender: TObject): boolean;
-    function SwtOffsetsUsed(Sender: TObject): boolean;
-    function SwtSpecifiedUsed(Sender: TObject): boolean;
-    function ModflowInitialHeadUsed(Sender: TObject): boolean;
+    procedure SetChildModels(const Value: TChildModelCollection);
+    function StoreChildModels: Boolean;
   protected
-    // @name is used to store DataSet in @link(FBoundaryDataSets).
-    function AddBoundaryDataSet(const DataSet: TDataArray): Integer;
+    function GetLayerStructure: TLayerStructure;override;
+    procedure SetLayerStructure(const Value: TLayerStructure);override;
+    function GetModflowOptions: TModflowOptions;override;
+    function GetModflowStressPeriods: TModflowStressPeriods;override;
+    function GetSoluteTransport: boolean;override;
+    function GetFreeSurface: boolean;override;
+    function GetUseWaterTable: boolean;override;
+    function GetChemistryOptions: TChemistryOptions;override;
+    procedure SetChemistryOptions(const Value: TChemistryOptions);override;
+    function GetHufParameters: THufModflowParameters;override;
+    function GetModflowFullStressPeriods: TModflowStressPeriods; override;
+    function GetModflowOutputControl: TModflowOutputControl;override;
+    function GetProgramLocations: TProgramLocations;override;
+    function GetObservationPurpose: TObservationPurpose; override;
+    procedure SetObservationPurpose(const Value: TObservationPurpose); override;
+    procedure SetHufParameters(const Value: THufModflowParameters);override;
+    procedure SetModflowOptions(const Value: TModflowOptions);override;
+    procedure SetModflowStressPeriods(const Value: TModflowStressPeriods);override;
+    procedure SetModflowOutputControl(const Value: TModflowOutputControl);override;
+    procedure SetModflowTransientParameters(
+      const Value: TModflowTransientListParameters);override;
+    procedure SetProgramLocations(const Value: TProgramLocations);override;
+    // See @link(UseWaterTable).
+    procedure SetUseWaterTable(const Value: boolean);override;
+    // See @link(SoluteTransport).
+    procedure SetSoluteTransport(const Value: boolean);override;
+    // See @link(FreeSurface).
+    procedure SetFreeSurface(const Value: boolean);override;
+    function GetModflowTransientParameters: TModflowTransientListParameters; override;
+    function GetModelSelection: TModelSelection;override;
+    function GetModflowSteadyParameters: TModflowSteadyParameters;override;
+    procedure SetModflowSteadyParameters(const Value: TModflowSteadyParameters);override;
+    // Among other things, if @link(OnModelSelectionChange)
+    // is assigned, @name calls @link(TfrmGoPhast.ModelSelectionChange
+    // TfrmGoPhast.ModelSelectionChange).  @name also changes
+    // the functions that are available. and sets @Link(TObserver)s
+    // for the @link(Grid).
+    procedure SetModelSelection(const Value: TModelSelection);override;
+    // See @link(ScreenObjectCount).
+    function GetScreenObjectCount: integer;override;
+    // See @link(ScreenObjects).
+    function GetScreenObjects(const Index: integer): TScreenObject;override;
+    // @name causes the grid to not be colored by any @link(TDataArray).
+    procedure ClearViewedItems; override;
+    procedure SetUpToDate(const Value: boolean); override;
     // @name is used to fix up the model after @name is loaded from a file.
     procedure Loaded; override;
-  public
-    FDataArrayCreationRecords: array of TDataSetCreationData;
-    // @name updatds and invalidates data sets that may have been calculated
-    // incorrectly in previous versions of ModelMuse.
-    procedure FixOldModel;
-    procedure UpdateDataSetDimensions;
-    procedure UpdateFormulas(OldNames, NewNames: TStringList);
-    function CheckWetting: boolean;
-    function FixFileName(AFileName: string): string;
-    property HufKxNotifier: TObserver read FHufKxNotifier;
-    property HufKyNotifier: TObserver read FHufKyNotifier;
-    property HufKzNotifier: TObserver read FHufKzNotifier;
-    property HufSsNotifier: TObserver read FHufSsNotifier;
-    property HufSyNotifier: TObserver read FHufSyNotifier;
-    procedure OnActiveDataSetChanged(Sender: TObject);
-    function HufDataArrayUsed(Sender: TObject): boolean;
-    procedure FillCompilerList(CompilerList: TList);
-    procedure AddDataSetToLookUpList(const DataSet: TDataArray);
-    procedure RemoveDataSetFromLookUpList(const DataSet: TDataArray);
-    procedure InvalidateDataSetLookupList;
-    procedure AddTimeList(TimeList: TCustomTimeList);
-    procedure RemoveTimeList(TimeList: TCustomTimeList);
-    procedure UpdateDisplayUseList(NewUseList: TStringList;
-      ParamType: TParameterType; DataIndex: integer; const DisplayName: string);
-    procedure WritePValAndTemplate(const ParameterName: string;
-      const Value: double);
-    procedure InvalidateModflowBoundaries;
-    function ModelResultsRequired(Sender: TObject): boolean;
-    function ModelLayerDataArrayUsed(Sender: TObject): boolean;
-    function SubsidenceDataArrayUsed(Sender: TObject): boolean;
-    procedure AddDataSetToCache(DataArray: TDataArray);
-    procedure DontCache(DataArray: TDataArray);
-    procedure CacheDataArrays;
-    procedure CreateInitialDataSets;
-    // @name fills LayerGroupsDataSets with the @link(TDataArray)s used by
-    // @link(LayerStructure).
-    procedure GetLayerGroupDataSets(LayerGroupsDataSets: TList);
-    procedure LocateNearestLakeOrStream(TestScreenObject: TScreenObject;
-      var NearestLake, NearestStream: TScreenObject; Tolerance: double = 0);
-    procedure DischargeRoutingUpdate;
-    function ParserCount: integer;
-    property Parsers[Index: integer]: TRbwParser read GetParsers;
-    procedure BeginScreenObjectUpdate;
-    procedure EndScreenObjectUpdate;
-    property SelectedScreenObjectCount: Integer read FSelectedScreenObjectCount;
-    procedure ScreenObjectUnSelected;
-    function LakePackageUsed(Sender: TObject): boolean;
-    function ReservoirPackageUsed(Sender: TObject): boolean;
-    function ReservoirLayerUsed(Sender: TObject): boolean;
-    function UzfPackageUsed(Sender: TObject): boolean;
-    function UzfUnsatVertKUsed(Sender: TObject): boolean;
-    function UzfInitialInfiltrationUsed(Sender: TObject): boolean;
-    procedure UpdateDataArrayParameterUsed;
-    procedure UpdateOnPostInitialize;
-    property Clearing: Boolean read FClearing;
-    procedure RefreshGlobalVariables(CompilerList: TList);
-    // @name returns the TRbwParser that should be used for a particular
-    // @link(TDataSetOrientation) and @link(TEvaluatedAt).
-    function GetCompiler(const Orientation: TDataSetOrientation;
-      const EvaluatedAt: TEvaluatedAt): TRbwParser;
-    procedure ClearExpressionsAndVariables;
-    // @name is the TRbwParser for formulas for data sets on the front
-    // view of the model evaluated at elements.
-    property rpFrontFormulaCompiler: TRbwParser read FrpFrontFormulaCompiler;
-    // @name is the TRbwParser for formulas for data sets on the front
-    // view of the model evaluated at nodes.
-    property rpFrontFormulaCompilerNodes: TRbwParser
-      read FrpFrontFormulaCompilerNodes;
-    // @name is the TRbwParser for formulas for data sets on the side
-    // view of the model evaluated at elements.
-    property rpSideFormulaCompiler: TRbwParser read FrpSideFormulaCompiler;
-    // @name is the TRbwParser for formulas for data sets on the side
-    // view of the model evaluated at nodes.
-    property rpSideFormulaCompilerNodes: TRbwParser
-      read FrpSideFormulaCompilerNodes;
-    // @name is the TRbwParser for formulas for 3D data sets
-    // view of the model evaluated at elements.
-    property rpThreeDFormulaCompiler: TRbwParser read FrpThreeDFormulaCompiler;
-    // @name is the TRbwParser for formulas for 3D data sets
-    // view of the model evaluated at nodes.
-    property rpThreeDFormulaCompilerNodes: TRbwParser
-      read FrpThreeDFormulaCompilerNodes;
-    // @name is the TRbwParser for formulas for data sets on the top
-    // view of the model evaluated at elements.
-    property rpTopFormulaCompiler: TRbwParser read FrpTopFormulaCompiler;
-    // @name is the TRbwParser for formulas for data sets on the top
-    // view of the model evaluated at nodes.
-    property rpTopFormulaCompilerNodes: TRbwParser
-      read FrpTopFormulaCompilerNodes;
-    // @name creates non-transient @link(TDataArray)s for boundary conditions.
-    procedure CreateInitialBoundaryDataSets;
-    property TopGridObserver: TObserver read FTopGridObserver;
-    property ThreeDGridObserver: TObserver read FThreeDGridObserver;
-    property Grid: TCustomGrid read FGrid;
-    // @name adds DataSet to @link(FDataSets) and inserts an empty formula
-    // in the corresponding position in @link(FDataSetFunctions).
-    function AddDataSet(const DataSet: TDataArray): Integer; virtual;
-    // @name adds AScreenObject to @link(FScreenObjectList).
-    function AddScreenObject(const AScreenObject: TScreenObject): integer;
-      virtual;
-    // @name is used to determine the number of @link(TDataArray)s in
-    // @link(BoundaryDataSets).  Only data sets that don't vary with
-    // time yet are related to boundary conditions are in
-    // @link(BoundaryDataSets).
-    property BoundaryDataSetCount: integer read GetBoundaryDataSetCount;
-    // @name is used to access @link(TDataArray)s in
-    // @link(FBoundaryDataSets).  Only data sets that don't vary with
-    // time yet are related to boundary conditions are in
-    // @link(FBoundaryDataSets).
-    property BoundaryDataSets[const Index: integer]: TDataArray
-      read GetBoundaryDataSets;
     // @name restores the model to its initial state. It gets rid of
     // all @link(TDataArray)s and @link(TScreenObject)s. It initializes
     // @link(Diffusivity) and @link(SolutionOptions).
-    procedure Clear;
+    procedure InternalClear; override;
+  public
+    property ImportingModel: boolean read FImportingModel write FImportingModel;
+    procedure Assign(Source: TPersistent); override;
+    // @name updates and invalidates data sets that may have been calculated
+    // incorrectly in previous versions of ModelMuse.
+    procedure FixOldModel;
+    // When a @link(TDataArray) or global variable is renamed, @name is
+    // called to update all the formulas with the new names.
+    procedure UpdateFormulas(OldNames, NewNames: TStringList);
+    // MODFLOW can not use a file name containing a space character.
+    // @name replaces the space character in a file name with an underscore.
+    // @name is the event handler for @link(TDataArray.OnDataSetUsed
+    // TDataArray.OnDataSetUsed) for @link(TDataArray)s related to the HUF
+    // package.
+    function HufDataArrayUsed(Sender: TObject): boolean;
+    // @name is used when determining what data sets or global variables are
+    // used when evaluating the formula for a MODFLOW boundary condition.
+    // The names of all the @link(TDataArray)s and global variables are added
+    // to NewUseList.
+    procedure UpdateDisplayUseList(NewUseList: TStringList;
+      ParamType: TParameterType; DataIndex: integer; const DisplayName: string);
+    // @name invalidates all the @link(TModflowBoundaryDisplayTimeList)s.
+    procedure InvalidateModflowBoundaries;
+    // @name is the event handler for @link(TDataArray.OnDataSetUsed
+    // TDataArray.OnDataSetUsed) for @link(TDataArray)s that have model results.
+    function ModelResultsRequired(Sender: TObject): boolean;
+    // @name is the event handler for @link(TDataArray.OnDataSetUsed
+    // TDataArray.OnDataSetUsed) in MODFLOW models for @link(TDataArray)s
+    // that define the top of the model and the bottom of @link(TLayerGroup)s.
+    function ModelLayerDataArrayUsed(Sender: TObject): boolean;
+    // @name is the event handler for @link(TDataArray.OnDataSetUsed
+    // TDataArray.OnDataSetUsed) in MODFLOW models for @link(TDataArray)s
+    // related to the SUB and SWT packages.
+    function SubsidenceDataArrayUsed(Sender: TObject): boolean;
+    // @name fills LayerGroupsDataSets with the @link(TDataArray)s used by
+    // @link(LayerStructure).
+    procedure GetLayerGroupDataSets(LayerGroupsDataSets: TList);
+    // @name finds the @link(TScreenObject) that is closest to the last
+    // point in TestScreenObject.
+    procedure LocateNearestLakeOrStream(TestScreenObject: TScreenObject;
+      var NearestLake, NearestStream: TScreenObject; Tolerance: double = 0);
+    // @name sets the event handlers for the discharge routing array in
+    // the UZF package.
+    procedure DischargeRoutingUpdate;
+    // @name increments @link(FScreenObjectUpdateCount).  While
+    // @link(FScreenObjectUpdateCount) is greater than zero the
+    // @link(OnScreenObjectsChanged) event is not called.
+    procedure BeginScreenObjectUpdate;
+    // @name decrements @link(FScreenObjectUpdateCount) and calls
+    // @link(ScreenObjectsChanged).  While
+    // @link(FScreenObjectUpdateCount) is greater than zero the
+    // @link(OnScreenObjectsChanged) event is not called.
+    procedure EndScreenObjectUpdate;
+    // @name is the number of @link(TScreenObject)s that are selected.
+    property SelectedScreenObjectCount: Integer read FSelectedScreenObjectCount;
+    // @name is called by @link(TScreenObject)s when they become unselected.
+    // @name decrements @link(FSelectedScreenObjectCount) and calls
+    // @link(OnScreenObjectUnSelected).
+    procedure ScreenObjectUnSelected;
+    // See @link(TfrmGoPhast.ScreenObjectSelectionChange).
+    property OnScreenObjectSelected: TNotifyEvent read FOnScreenObjectSelected
+      write FOnScreenObjectSelected;
+    // @name is called by @link(ScreenObjectUnSelected).
+    // Then event handler for this is
+    // @link(TfrmGoPhast.ScreenObjectSelectionChange)
+    property OnScreenObjectUnSelected: TNotifyEvent
+      read FOnScreenObjectUnSelected write FOnScreenObjectUnSelected;
+    // @name increments @link(FSelectedScreenObjectCount) and then,
+    // if assigned, @name calls @link(ScreenObjectSelected).
+    procedure ScreenObjectSelected;
+    // See @link(TfrmGoPhast.CheckScreenObject).
+    property OnCheckScreenObject: TCheckScreenObjectEvent
+      read FOnCheckScreenObject write FOnCheckScreenObject;
+    // If assigned, @name calls @link(OnCheckScreenObject).
+    function IsCurrentScreenObject(ScreenObject: TScreenObject): boolean;
+    // @name updates @link(TDataArray.ParameterUsed TDataArray.ParameterUsed)
+    // and @link(TDataArray.ParameterFormula TDataArray.ParameterFormula)
+    // for the @link(TDataArray)s related to the LPF parameters.
+    procedure UpdateDataArrayParameterUsed;
+    // @name updates @link(TDataArray.OnPostInitialize
+    // TDataArray.OnPostInitialize) for several @link(TDataArray)s.
+    procedure UpdateOnPostInitialize;
+    // @name adds AScreenObject to @link(FScreenObjectList).
+    function AddScreenObject(const AScreenObject: TScreenObject): integer;
+      virtual;
     // @name removes all @link(TScreenObject)s in @link(FScreenObjectList).
     // This will destroy them unless @link(OwnsScreenObjects) is
     // set to False first.
     procedure ClearScreenObjects;
-    property GridColors: TColorParameters read FGridColors;
-    property ContourColors: TColorParameters read FContourColors;
+    // @name are the parameters used in setting the colors of the grid cells.
+    property GridColorParameters: TColorParameters read FGridColors;
+    // @name are the parameters used in setting the colors of contours.
+    property ContourColorParameters: TColorParameters read FContourColors;
     // @name creates an instance of @classname.
     constructor Create(AnOwner: TComponent); override;
-    // @name creates a TCustomVariable to represent DataSet in each TRbwParser
-    // that should have one.
-    // @seealso(RemoveVariables)
-    procedure CreateVariables(const DataSet: TDataArray);
-    procedure CreateGlobalVariables;
-
-    // @name indicates the number of @link(TDataArray)s in @link(DataSets).
-    property DataSetCount: integer read GetDataSetCount;
-    // @name is used to access the @link(TDataArray)s that are defined
-    // throughout the grid.
-    property DataSets[const Index: integer]: TDataArray read GetDataSets;
+    // @name returns the name of the most likely output file from which
+    // model results will be imported.  If heads were saved, the name of the
+    // file containing heads will be returned.
+    // If heads were not saved by drawdowns were saved, the name of the
+    // file containing drawdowns will be returned.
+    // After that, it is the file containing the cell-by-cell flows.
     function DefaultModflowOutputFileName: string;
     // @name destroys the current instance of @classname.
     // Do not call @name directly.  Call Free instead.
     destructor Destroy; override;
     // @name draws the 3D views of the @link(TScreenObject)s.
     procedure DrawScreenObjects3D;
-    // @name removes DataSet from @link(DataSets) without freeing it.
-    procedure ExtractDataSet(const DataSet: TDataArray);
     // @name removes AScreenObject from @link(ScreenObjects) without freeing it.
     procedure ExtractScreenObject(const AScreenObject: TScreenObject);
     // @name indicates what version of GoPhast last saved the file that is
@@ -1950,13 +2375,6 @@ that affects the model output should also have a comment. }
     // @name indicates what type of boundary condition (if any)
     // is present on the front face of each grid cell.
     property FrontBoundaryType: TDataArray read FFrontBoundaryType;
-    // @name is the time for the transient data set used to color the
-    // front view of the grid.
-    // If the data set used to color the grid is not transient, or the grid
-    // is not colored, @name has no meaning.
-    // See @link(FrontTimeList) and
-    // TCustomGrid.@link(TCustomGrid.FrontDataSet).
-    property FrontDisplayTime: double read FFrontDisplayTime;
     // @name is the @link(TPhastTimeList) that specifies the chemistry
     // for specified flux boundaries on the front view of model cells.
     property FrontFluxBoundaryChemistry: TPhastTimeList
@@ -1971,31 +2389,10 @@ that affects the model output should also have a comment. }
     // @name is the @link(TPhastTimeList) that specifies the head
     // for leaky boundaries on the front view of model cells.
     property FrontLeakyHead: TPhastTimeList read FFrontLeakyHead;
-    // @name is the @link(TCustomTimeList) for
-    // the transient data set used to color
-    // the front view of the grid.
-    // If the data set used to color the grid is not transient, or the grid
-    // is not colored, @name has no meaning.
-    // See @link(FrontDisplayTime) and
-    // TCustomGrid.@link(TCustomGrid.FrontDataSet).
-    property FrontTimeList: TCustomTimeList read FFrontTimeList
-      write FFrontTimeList;
-    // @name retrieves a @link(TDataArray) from
-    // @link(DataSets) based on its name.
-    function GetDataSetByName(const DataSetName: string): TDataArray;
-    function GetObserverByName(const ObserverName: string): TObserver;
     // @name increases the number of @link(TScreenObject)s that can be
     // held in @link(ScreenObjects) by the amount Delta.
     // If Delta is less than or equal to zero, @name does nothing.
     procedure IncreaseScreenObjectCapacity(const Delta: integer);
-    // @name returns the position of the @link(TDataArray) in
-    // @link(BoundaryDataSets) whose Name is DataSetName. If none has that
-    // name, @name returns -1.
-    function IndexOfBoundaryDataSet(DataSetName: string): integer;
-    // @name returns the position of the @link(TDataArray) in
-    // @link(DataSets) whose Name is DataSetName. If none has that
-    // name, @name returns -1.
-    function IndexOfDataSet(DataSetName: string): integer;
     // @name returns the position of AScreenObject
     // in @link(ScreenObjects).  If AScreenObject is not in
     /// @link(ScreenObjects), @name returns -1.
@@ -2004,16 +2401,6 @@ that affects the model output should also have a comment. }
     // @name calls @link(InitializePhastBoundaries) and @link(RecordTimeControl)
     // to do this.
     procedure InitializeTimes;
-    // @name returns true if the model uses the water table
-    // to set the initial condition.
-    // @name is used an event handler for
-    // TDataArray.@link(TDataArray.OnDataSetUsed).
-    // @name is also used in WriteHeadIC which
-    // is found in the implementation section of @link(WritePhastUnit).
-    function InitialWaterTableUsed(Sender: TObject): boolean;
-    // @name inserts DataSet into @link(DataSets) at the position specified
-    // by Index.
-    procedure InsertDataSet(const Index: integer; const DataSet: TDataArray);
     // @name inserts AScreenObject into @link(ScreenObjects) at the position
     // specified by Index.
     procedure InsertScreenObject(const Index: integer;
@@ -2059,9 +2446,7 @@ that affects the model output should also have a comment. }
     // to the associated solution in river boundaries.
     property RiverAssociatedSolutionGroup: TTimeListGroup
       read FRiverAssociatedSolutionGroup;
-    // @name holds all the @link(TDataArray)s that are related to the river
-    // boundary but which are not transient.
-    property RiverDataSets: TList read FRiverDataSets;
+
     // @name is the @link(TPhastTimeList) that specifies the head
     // for river boundaries.
     property RiverHead: TPhastTimeList read FRiverHead;
@@ -2071,24 +2456,9 @@ that affects the model output should also have a comment. }
     // @name returns the class of @link(TScreenObject) that is normally
     // used with @classname.  @name returns @link(TScreenObject).
     function ScreenObjectClass: TScreenObjectClass;
-    // @name returns the number of @link(TScreenObject)s
-    // in @link(ScreenObjects).
-    property ScreenObjectCount: integer read GetScreenObjectCount;
-    // @name provides access to the @link(TScreenObject)s in the model.
-    // However, the @link(TScreenObject)s are saved are read from files
-    // via @link(ObjectList).
-    property ScreenObjects[const Index: integer]: TScreenObject
-      read GetScreenObjects;
     // @name indicates what type of boundary condition (if any)
     // is present on the side face of each grid cell.
     property SideBoundaryType: TDataArray read FSideBoundaryType;
-    // @name is the time for the transient data set used to color the
-    // side view of the grid.
-    // If the data set used to color the grid is not transient, or the grid
-    // is not colored, @name has no meaning.
-    // See @link(SideTimeList) and
-    // TCustomGrid.@link(TCustomGrid.SideDataSet).
-    property SideDisplayTime: double read FSideDisplayTime;
     // @name is the @link(TPhastTimeList) that specifies the chemistry
     // for specified flux boundaries on the side view of model cells.
     property SideFluxBoundaryChemistry: TPhastTimeList
@@ -2104,14 +2474,7 @@ that affects the model output should also have a comment. }
     // @name is the @link(TPhastTimeList) that specifies the head
     // for leaky boundaries on the side view of model cells.
     property SideLeakyHead: TPhastTimeList read FSideLeakyHead;
-    // @name is the TPhastTimeList for the transient data set used to color
-    // the side view of the grid.
-    // If the data set used to color the grid is not transient, or the grid
-    // is not colored, @name has no meaning.
-    // See @link(SideDisplayTime) and
-    // TCustomGrid.@link(TCustomGrid.SideDataSet).
-    property SideTimeList: TCustomTimeList read FSideTimeList
-      write FSideTimeList;
+
     // If @name is @true, there is at least one @link(TScreenObject)
     // in which TScreenObject.Segments.@link(
     // TCellElementSegmentList.UpToDate) is @True
@@ -2135,26 +2498,6 @@ that affects the model output should also have a comment. }
     // @name is the @link(TPhastTimeList) that specifies the specified solution
     // for specified head boundaries.
     property SpecifiedSolution: TPhastTimeList read FSpecifiedSolution;
-    // @name is the time for the transient data set used to color the
-    // 3D view of the grid.
-    // If the data set used to color the grid is not transient, or the grid
-    // is not colored, @name has no meaning.
-    // See @link(ThreeDTimeList) and
-    // TCustomGrid.@link(TCustomGrid.ThreeDDataSet).
-    property ThreeDDisplayTime: double read FThreeDDisplayTime;
-    // @name is the @link(TCustomTimeList) for
-    // the transient data set used to color
-    // the 3D view of the grid.
-    // If the data set used to color the grid is not transient, or the grid
-    // is not colored, @name has no meaning.
-    // See @link(ThreeDDisplayTime) and
-    // TCustomGrid.@link(TCustomGrid.ThreeDDataSet).
-    property ThreeDTimeList: TCustomTimeList read FThreeDTimeList
-      write FThreeDTimeList;
-    // @name is the number of @link(TCustomTimeList)s in @link(TimeLists).
-    property TimeListCount: integer read GetTimeListCount;
-    // @name provides access to all the @link(TCustomTimeList)s in the model.
-    property TimeLists[Index: integer]: TCustomTimeList read GetTimeLists;
     function GetTimeListByName(const AName: string): TCustomTimeList;
     // @name indicates what type of 2D boundary condition (if any)
     // is present on the top face of each grid cell.
@@ -2162,13 +2505,6 @@ that affects the model output should also have a comment. }
     // @name indicates what type of boundary condition (if any)
     // is present on the top face of each grid cell.
     property TopBoundaryType: TDataArray read FTopBoundaryType;
-    // @name is the time for the transient data set used to color the
-    // top view of the grid.
-    // If the data set used to color the grid is not transient, or the grid
-    // is not colored, @name has no meaning.
-    // See @link(TopTimeList) and
-    // TCustomGrid.@link(TCustomGrid.TopDataSet).
-    property TopDisplayTime: double read FTopDisplayTime;
     // @name is the @link(TPhastTimeList) that specifies the chemistry
     // for specified flux boundaries on the top view of model cells.
     property TopFluxBoundaryChemistry: TPhastTimeList
@@ -2184,14 +2520,6 @@ that affects the model output should also have a comment. }
     // @name is the @link(TPhastTimeList) that specifies the head
     // for leaky boundaries on the top view of model cells.
     property TopLeakyHead: TPhastTimeList read FTopLeakyHead;
-    // @name is the @link(TCustomTimeList)
-    // for the transient data set used to color
-    // the top view of the grid.
-    // If the data set used to color the grid is not transient, or the grid
-    // is not colored, @name has no meaning.
-    // See @link(TopDisplayTime) and
-    // TCustomGrid.@link(TCustomGrid.TopDataSet).
-    property TopTimeList: TCustomTimeList read FTopTimeList write FTopTimeList;
     // @name is called after reading a @classname to transfer the information
     // about @link(TDataArray)s from @link(DataSetList) to @link(DataSets).
     procedure UpdateDataSets;
@@ -2234,24 +2562,13 @@ that affects the model output should also have a comment. }
     // @name is the group of @link(TPhastTimeList)s that are related
     // to the solution in well boundaries.
     property WellSolutionGroup: TTimeListGroup read FWellSolutionGroup;
-    // @name indicates whether or not the model needs to be saved to file.
-    // See @link(Invalidate).
-    property UpToDate: boolean read FUpToDate write SetUpToDate;
-    // Call @name to indicate that the model has changed in some important
-    // respect.  The user will be prompted to save the model when closing.
-    procedure Invalidate;
+
+    // name is called in @link(SetModelSelection).
+    // The event handler for this event is
+    // @link(TfrmGoPhast.ModelSelectionChange).
     property OnModelSelectionChange: TNotifyEvent read FOnModelSelectionChange
       write FOnModelSelectionChange;
-    function ProgramName: string;
-    // @name creates a new @link(TDataArray) and adds it to @link(DataSets).
-    function CreateNewDataArray(const ClassType: TDataArrayType;
-      const Name, Formula: string; Lock: TDataLock; DataType: TRbwDataType;
-      EvaluatedAt: TEvaluatedAt; Orientation: TDataSetOrientation;
-      const Classification: string): TDataArray;
-    // @name removes the variables that represent DataSet in any
-    // expression.
-    // @seealso(CreateVariables).
-    procedure RemoveVariables(const DataSet: TDataArray);
+
     // See @link(TfrmGoPhast.GetZoomBox).
     property OnGetZoomBox: TGetZoomBoxEvent read FOnGetZoomBox
       write FOnGetZoomBox;
@@ -2261,12 +2578,18 @@ that affects the model output should also have a comment. }
     // TfrmGoPhast.ScreenObjectsChanged).
     property OnScreenObjectsChanged: TNotifyEvent read FOnScreenObjectsChanged
       write FOnScreenObjectsChanged;
+    // The event handler for this event is @link(TfrmGoPhast.UpdateDisplay
+    // TfrmGoPhast.UpdateDisplay).
+    // @name is called in @link(RefreshScreenObjects).
     property OnRefreshScreenObjects: TNotifyEvent read FOnRefreshScreenObjects
       write FOnRefreshScreenObjects;
     // If assigned, @name calls @link(OnScreenObjectsChanged).
     // Typically, @link(OnScreenObjectsChanged) is assigned to
     // @link(TfrmGoPhast.ScreenObjectsChanged TfrmGoPhast.ScreenObjectsChanged).
     procedure ScreenObjectsChanged(Sender: TObject);
+    // @name calls @link(OnRefreshScreenObjects) if assigned.
+    // @name is called by @link(TScreenObject.RefreshGui
+    // TScreenObject.RefreshGui).
     procedure RefreshScreenObjects(Sender: TObject);
     // see @link(TfrmGoPhast.GetCurrentScreenObject).
     property OnGetCurrentScreenObject :TGetCurrentScreenObjectEvent
@@ -2288,29 +2611,6 @@ that affects the model output should also have a comment. }
     // @name calls @link(OnConvertPoint).
     function ConvertPoint(VD: TViewDirection;
       const RealPoint: TPoint2D): TPoint;
-    // See @link(TfrmGoPhast.ScreenObjectSelectionChange).
-    property OnScreenObjectSelected: TNotifyEvent read FOnScreenObjectSelected
-      write FOnScreenObjectSelected;
-    property OnScreenObjectUnSelected: TNotifyEvent
-      read FOnScreenObjectUnSelected write FOnScreenObjectUnSelected;
-    // If assigned, @name calls @link(ScreenObjectSelected).
-    procedure ScreenObjectSelected;
-    // See @link(TfrmGoPhast.CheckScreenObject).
-    property OnCheckScreenObject: TCheckScreenObjectEvent
-      read FOnCheckScreenObject write FOnCheckScreenObject;
-    // If assigned, @name calls @link(OnCheckScreenObject).
-    function IsCurrentScreenObject(ScreenObject: TScreenObject): boolean;
-    property ModflowFullStressPeriods: TModflowStressPeriods
-      read FModflowFullStressPeriods;
-    procedure UpdateModflowFullStressPeriods;
-    property TransientMultiplierArrays: TList read FTransientMultiplierArrays;
-    function IndenticalTransientMultiplierArray(DataArray: TDataArray): TDataArray;
-    property TransientZoneArrays: TList read FTransientZoneArrays;
-    function IndenticalTransientZoneArray(DataArray: TDataArray): TDataArray;
-    procedure ExportModflowModel(FileName: string; RunModel: boolean);
-    procedure ExportModpathModel(FileName: string;
-      RunModel, NewBudgetFile: boolean);
-    procedure ExportZoneBudgetModel(FileName: string; RunModel: boolean);
     procedure UpdateActive(Sender: TObject);
     procedure UpdateWetDry(Sender: TObject);
     procedure UpdateLakeId(Sender: TObject);
@@ -2388,20 +2688,12 @@ that affects the model output should also have a comment. }
     procedure InvalidateMfSfrUpstreamUnsatKz(Sender: TObject);
     procedure InvalidateMfSfrDownstreamUnsatKz(Sender: TObject);
 
-    procedure AddFileToArchive(const FileName: string);
-    procedure AddModelInputFile(const FileName: string);
-    procedure ClearModelInputFiles;
     property ArchiveName: string read GetArchiveName write SetArchiveName;
     procedure CreateArchive(const FileName: string);
-    property MfHobHeads: THobDisplayTimeList read FMfHobHeads;
     procedure InvalidateMfHobHeads(Sender: TObject);
-    property HfbDisplayer: THfbDisplayer read FHfbDisplayer;
-    // If @name is the currently active @link(TCustomModflowGridEdgeDisplay).
-    property EdgeDisplay: TCustomModflowGridEdgeDisplay read FEdgeDisplay
-      write SetEdgeDisplay;
     function DefaultHigherElevationFormula(ViewDirection: TViewDirection): string;
     function DefaultLowerElevationFormula(ViewDirection: TViewDirection): string;
-    function DefaultElevationFormula(ViewDirection: TViewDirection): string;
+    function DefaultElevationFormula(ViewDirection: TViewDirection; EvalAt: TEvaluatedAt): string;
     function ParameterDataSetUsed(Sender: TObject): boolean;
     function GetScreenObjectByName(AName: string): TScreenObject;
     procedure CopyScreenObjectsToClipboard;
@@ -2410,47 +2702,25 @@ that affects the model output should also have a comment. }
       write SetModelMateProject;
     procedure UpdateModelMateProject;
     procedure ImportFromModelMateProject(Project: TProject);
-    procedure DataArrayNameChange(Sender: TObject);
-//    procedure DataArrayNameChangeWarning;
-    procedure ClearNameChangeWarnings;
     procedure RegisterGlobalVariables(Parser: TRbwParser);
-    property ProgramLocations: TProgramLocations read FProgramLocations
-      write SetProgramLocations;
-    property UnitNumbers: TUnitNumbers read FUnitNumbers
-      write SetUnitNumbers stored False;
+
     property FormulaManager: TFormulaManager read FFormulaManager;
     procedure ClearScreenObjectCollection;
-    function PackageGeneratedExternally(const PackageName: string): boolean;
+
     property ColorLegend: TLegend read FColorLegend;
     property ContourLegend: TLegend read FContourLegend;
-    property StoreCachedData: boolean read FStoreCachedData
-      write FStoreCachedData;
+
     function FileVersionEqualOrEarlier(TestVersion: string): boolean;
-    procedure InvalidateAllDataSets;
+
   published
-    // @name represents a series of bitmaps that can be displayed on
-    // the top, front, or side view of the model.
-    property Bitmaps: TCompressedBitmapCollection read FBitmaps write
-      SetBitmaps;
-    // @name stores options related to chemistry in PHAST.
-    property ChemistryOptions: TChemistryOptions read FChemistryOptions
-      write FChemistryOptions;
-    // @name stores the @link(TDataArray)s in GoPhast.
-    property DataSetList: TDataSetCollection read GetDataSetCollection
-      write FDataSetCollection;
-    // @name is the diffusivity in PHAST.
-    property Diffusivity: double read FDiffusivity write SetDiffusivity;
-    // @name is the vertical exaggeration of the front, side, and 3D views
-    // of the model in GoPhast.
-    property Exaggeration: double read GetExaggeration write SetExaggeration;
+    // The following properties are obsolete.
+
     // @name stores FlowOnly option in PHAST.
     property FlowOnly: boolean write SetFlowOnly stored False;
     { @name is used to store fluid properties in PHAST.}
     { @name is only for backwards compatibility.  It is not used.}
     property FluidProperties: TFluidProperties read FFluidProperties
       write FFluidProperties stored False;
-    // @name stores FreeSurface option in PHAST.
-    property FreeSurface: boolean read FFreeSurface write SetFreeSurface;
     // @name stores the height in pixels of the front view of the model.
     property FrontHeight: integer read GetFrontHeight
       write SetFrontHeight stored False;
@@ -2458,8 +2728,6 @@ that affects the model output should also have a comment. }
     property FrontX: double read GetFrontX write SetFrontX stored False;
     // @name stores the reference Y-coordinate for the front view of the model.
     property FrontY: double read GetFrontY write SetFrontY stored False;
-    // @name is used to store options related to the grid in PHAST.
-    property GridOptions: TGridOptions read FGridOptions write FGridOptions;
     // @name is the height of the main form in pixels.
     property Height: integer read GetHeight write SetHeight stored False;
     // @name is the X-coordinate of the main form in pixels.
@@ -2473,16 +2741,6 @@ that affects the model output should also have a comment. }
     // @name is the magnification of the top view of the model.
     property MagnificationTop: double read GetMagnificationTop
       write SetMagnificationTop stored False;
-    // @name is used to read or write @link(TScreenObject)s to or from files.
-    property ObjectList: TScreenObjectCollection
-      read GetScreenObjectCollection write SetScreenObjectCollection;
-    // @name defines the grid used with PHAST.
-    property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
-    // @name represents the @link(TPrintFrequencyItem)s in PHAST.
-    property PrintFrequency: TPrintFrequencyCollection read FPrintFrequency
-      write SetPrintFrequency;
-    // @name stores options related to the PRINT_INITIAL data block in PHAST.
-    property PrintInitial: TPrintInitial read FPrintInitial write FPrintInitial;
     // @name is the width in pixels of the side view of the model.
     property SideWidth: integer read GetSideWidth
       write SetSideWidth stored False;
@@ -2490,9 +2748,36 @@ that affects the model output should also have a comment. }
     property SideX: double read GetSideX write SetSideX stored False;
     // @name stores the reference Y-coordinate for the front view of the model.
     property SideY: double read GetSideY write SetSideY stored False;
-    // @name stores SoluteTransport option in PHAST.
-    property SoluteTransport: boolean read FSoluteTransport
-      write SetSoluteTransport;
+    // @name is the Y-coordinate of the main form in pixels.
+    property Top: integer read GetTop write SetTop stored False;
+    // @name is the height of the top view of the model in pixels
+    property TopViewHeight: integer read GetTopViewHeight
+      write SetTopViewHeight stored False;
+    // @name is the width of the top view of the model in pixels
+    property TopViewWidth: integer read GetTopViewWidth write SetTopViewWidth stored False;
+    // @name stores the reference X-coordinate for the top view of the model.
+    property TopX: double read GetTopX write SetTopX stored False;
+    // @name stores the reference Y-coordinate for the top view of the model.
+    property TopY: double read GetTopY write SetTopY stored False;
+    // @name is the width of the main form in GoPhast in pixels.
+    property Width: integer read GetWidth write SetWidth stored False;
+    // @name stores whether the model is maximized, minimized, or normal.
+    property WindowState: TWindowState read GetWindowState
+      write SetWindowState stored False;
+
+    // The following properties are used only in PHAST models.
+
+    // @name is the diffusivity in PHAST.
+    property Diffusivity: double read FDiffusivity write SetDiffusivity;
+    // @name is used to store options related to the grid in PHAST.
+    property GridOptions: TGridOptions read FGridOptions write FGridOptions;
+    // @name defines the grid used with PHAST.
+    property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
+    // @name represents the @link(TPrintFrequencyItem)s in PHAST.
+    property PrintFrequency: TPrintFrequencyCollection read FPrintFrequency
+      write SetPrintFrequency;
+    // @name stores options related to the PRINT_INITIAL data block in PHAST.
+    property PrintInitial: TPrintInitial read FPrintInitial write FPrintInitial;
     // @name specifies options related to the solution method in PHAST.
     property SolutionOptions: TSolutionOptions read FSolutionOptions
       write FSolutionOptions;
@@ -2504,95 +2789,144 @@ that affects the model output should also have a comment. }
     property Times: TTimeCollection read FTimes write SetTimes;
     // @name represents the title associated with the PHAST model.
     property Title: TStrings read FTitle write SetTitle stored True;
-    // @name is the Y-coordinate of the main form in pixels.
-    property Top: integer read GetTop write SetTop;
-    // @name is the height of the top view of the model in pixels
-    property TopViewHeight: integer read GetTopViewHeight
-      write SetTopViewHeight;
-    // @name is the width of the top view of the model in pixels
-    property TopViewWidth: integer read GetTopViewWidth write SetTopViewWidth;
-    // @name stores the reference X-coordinate for the top view of the model.
-    property TopX: double read GetTopX write SetTopX;
-    // @name stores the reference Y-coordinate for the top view of the model.
-    property TopY: double read GetTopY write SetTopY;
     // @name stores the default units in PHAST.
     property Units: TUnits read FUnits write SetUnits;
-    // @name stores whether PHAST is using the water table
-    // to set the initial condition.
-    property UseWaterTable: boolean read FUseWaterTable write SetUseWaterTable;
+
+    // The following properties are used only in MODFLOW models.
+
+    // @name stores MODPATH pathline data.
+    property PathLine: TPathLineReader read GetPathLine write SetPathLine
+      stored StorePathLine;
+    // @name stores MODPATH endpoint data.
+    property EndPoints: TEndPointReader read GetEndPoints Write SetEndPoints
+      stored StoreEndPoints;
+    // @name stores MODPATH times series data.
+    property TimeSeries: TTimeSeriesReader read GetTimeSeries
+      write SetTimeSeries stored StoreTimeSeries;
+
+    // The following properties are used in both PHAST and MODFLOW models.
+
+    // @name represents a series of bitmaps that can be displayed on
+    // the top, front, or side view of the model.
+    property Bitmaps: TCompressedBitmapCollection read FBitmaps write
+      SetBitmaps;
+    // @name is the vertical exaggeration of the front, side, and 3D views
+    // of the model in GoPhast.
+    property Exaggeration: double read GetExaggeration write SetExaggeration;
+    // @name is used to read or write @link(TScreenObject)s to or from files.
+    property ObjectList: TScreenObjectCollection
+      read GetScreenObjectCollection write SetScreenObjectCollection;
     // @name is the version of GoPhast that last saved the model that is being
     // edited.
     property Version: string read GetVersion write SetVersion;
-    // @name is the width of the main form in GoPhast in pixels.
-    property Width: integer read GetWidth write SetWidth stored False;
-    // @name stores whether the model is maximized, minimized, or normal.
-    property WindowState: TWindowState read GetWindowState
-      write SetWindowState stored False;
-    property ModflowGrid: TModflowGrid read FModflowGrid write SetModflowGrid;
-    property ModelSelection: TModelSelection read FModelSelection
-      write SetModelSelection;
-    property LayerStructure: TLayerStructure read FLayerStructure
-      write FLayerStructure;
+    // @name specifies the size and appearance of various portions of the
+    // ModelMuse main window.
     property GuiSettings: TGuiSettings read FGuiSettings write FGuiSettings;
-    property ModflowOptions: TModflowOptions read FModflowOptions
-      write SetModflowOptions;
-    property ModflowStressPeriods: TModflowStressPeriods
-      read FModflowStressPeriods write SetModflowStressPeriods;
-    property ModflowOutputControl: TModflowOutputControl
-      read FModflowOutputControl write SetModflowOutputControl;
-    property ModflowSteadyParameters: TModflowSteadyParameters
-      read FModflowSteadyParameters write SetModflowSteadyParameters;
-    property ModflowWettingOptions: TWettingOptions read FModflowWettingOptions
-      write SetModflowWettingOptions;
-    property ModflowTransientParameters: TModflowTransientListParameters
-      read FModflowTransientParameters write SetModflowTransientParameters;
-    property ModflowPackages: TModflowPackages read FModflowPackages
-      write SetModflowPackages;
-    property GlobalVariables: TGlobalVariables read FGlobalVariables
-      write SetGlobalVariables;
-    property FilesToArchive: TStrings read FFilesToArchive 
-      write SetFilesToArchive;
-    property ModelInputFiles: TStrings read FModelInputFiles 
-      write SetModelInputFiles;
-    property ModelFileName: string read FFileName write SetFileName;
-    property ModflowNameFileLines: TStrings read FModflowNameFileLines
-      write SetModflowNameFileLines;
-    property AlternateSolver: boolean read FAlternateSolver
-      write SetAlternateSolver;
-    property AlternateFlowPackage: boolean read FAlternateFlowPackage
-      write SetAlternateFlowPackage;
-    property HeadFluxObservations: TFluxObservationGroups
-      read FHeadFluxObservations write SetHeadFluxObservations;
-    property DrainObservations: TFluxObservationGroups
-      read FDrainObservations write SetDrainObservations;
-    property GhbObservations: TFluxObservationGroups
-      read FGhbObservations write SetGhbObservations;
-    property RiverObservations: TFluxObservationGroups
-      read FRiverObservations write SetRiverObservations;
+    // @name is the ModelMate file associated with this model.
     property ModelMateProjectFileName: string read FModelMateProjectFileName
       write SetModelMateProjectFileName;
-    property ObservationPurpose: TObservationPurpose read FObservationPurpose
-      write SetObservationPurpose;
-    property HydrogeologicUnits: THydrogeologicUnits read FHydrogeologicUnits
-      write SetHydrogeologicUnits;
-    property HufParameters: THufModflowParameters read FHufParameters
-      write SetHufParameters;
-    property BatchFileAdditionsBeforeModel: TStrings
-      read FBatchFileAdditionsBeforeModel
-      write SetBatchFileAdditionsBeforeModel;
-    property BatchFileAdditionsAfterModel: TStrings
-      read FBatchFileAdditionsAfterModel write SetBatchFileAdditionsAfterModel;
-    property PathLine: TPathLineReader read GetPathLine write SetPathLine
-      stored StorePathLine;
-    property EndPoints: TEndPointReader read GetEndPoints Write SetEndPoints
-      stored StoreEndPoints;
-    property TimeSeries: TTimeSeriesReader read GetTimeSeries
-      write SetTimeSeries stored StoreTimeSeries;
+    //  see @link(TDisplaySettingsCollection).
     property DisplaySettings: TDisplaySettingsCollection read FDisplaySettings
       write SetDisplaySettings;
+    property ChildModels: TChildModelCollection read FChildModels
+       write SetChildModels stored StoreChildModels;
+
+
+    property ModflowSteadyParameters;
+    property ModelSelection;
+    property LayerStructure;
+    property ModflowOptions;
+    property ModflowStressPeriods;
+    property SoluteTransport;
+    property UseWaterTable;
+    property FreeSurface;
+    property ChemistryOptions;
+    property HufParameters;
+    property ObservationPurpose;
+    property ModflowTransientParameters;
+    property ModflowOutputControl;
+    property DataSetList;
+  end;
+
+  TChildModel = class(TCustomModel)
+  private
+    FParentModel: TCustomModel;
+    FModelName: string;
+    procedure SetModelName(const Value: string);
+  protected
+    function GetScreenObjects(const Index: integer): TScreenObject; override;
+    function GetScreenObjectCount: integer; override;
+    function GetModflowSteadyParameters: TModflowSteadyParameters; override;
+    function GetLayerStructure: TLayerStructure; override;
+    procedure SetLayerStructure(const Value: TLayerStructure); override;
+    procedure SetModflowOptions(const Value: TModflowOptions); override;
+    function GetModflowOptions: TModflowOptions; override;
+    function GetModflowStressPeriods: TModflowStressPeriods; override;
+    procedure SetModflowStressPeriods(const Value: TModflowStressPeriods); override;
+    procedure SetSoluteTransport(const Value: boolean); override;
+    function GetSoluteTransport: boolean; override;
+    procedure SetUseWaterTable(const Value: boolean); override;
+    function GetUseWaterTable: boolean; override;
+    function GetFreeSurface: boolean; override;
+    procedure SetFreeSurface(const Value: boolean); override;
+    procedure SetChemistryOptions(const Value: TChemistryOptions); override;
+    function GetChemistryOptions: TChemistryOptions; override;
+    function GetObservationPurpose: TObservationPurpose; override;
+    procedure SetObservationPurpose(const Value: TObservationPurpose); override;
+    procedure SetHufParameters(const Value: THufModflowParameters); override;
+    function GetHufParameters: THufModflowParameters; override;
+    function GetModflowTransientParameters: TModflowTransientListParameters; override;
+    procedure SetModflowTransientParameters(
+      const Value: TModflowTransientListParameters); override;
+    function GetModflowOutputControl: TModflowOutputControl; override;
+    procedure SetModflowOutputControl(const Value: TModflowOutputControl); override;
+    function GetProgramLocations: TProgramLocations; override;
+    procedure SetProgramLocations(const Value: TProgramLocations); override;
+    function GetModflowFullStressPeriods: TModflowStressPeriods; override;
+    procedure SetModflowSteadyParameters(const Value: TModflowSteadyParameters); override;
+    function GetModelSelection: TModelSelection; override;
+    procedure SetModelSelection(const Value: TModelSelection); override;
+  public
+    procedure Assign(Source: TPersistent); override;
+    procedure Invalidate; override;
+    property ParentModel: TCustomModel read FParentModel;
+  published
+    property ModelName: string read FModelName write SetModelName;
+  end;
+
+  TChildModelItem = class(TPhastCollectionItem)
+  private
+    FChildModel: TChildModel;
+    procedure SetChildModel(const Value: TChildModel);
+  public
+    constructor Create(Collection: TCollection); override;
+    Destructor Destroy; override;
+  published
+    property ChildModel : TChildModel read FChildModel write SetChildModel;
+  end;
+
+  TChildModelCollection = class(TPhastCollection)
+  private
+    function GetItem(Index: integer): TChildModelItem;
+    procedure SetItem(Index: integer; const Value: TChildModelItem);
+  public
+    property Items[Index: integer]: TChildModelItem read GetItem write SetItem; default;
+  published
+    constructor Create(Model: TComponent);
   end;
 
   procedure EnableLighting;
+
+  // @name generates a name for a data set that is valid
+  // and does not conflict with the names of any existing data sets.
+  function GenerateNewName( Root: string = 'NewDataSet';
+    InvalidNames: TStringList = nil; Connector: string = ''): string;
+
+  {@name is used to generate a valid name from one that may be invalid.
+  Valid names must begin with a letter or underscore.  The remaining
+  characters must be letters, digits or the underscore character.}
+  function GenerateNewRoot(const Root: string): string;
+
 
 const
   StrGlobalVariables = 'Global Variables';
@@ -3346,8 +3680,109 @@ const
   //     Bug fix: When exporting .emf files, sometimes the image size was
   //       set to an incorrect value.
   //   '2.7.0.0' Change: Updated memory manager to latest version.
+  //   '2.7.0.1' Bug fix: In the Set Widths of Columns, Rows, and Layers,
+  //       dialog box, it is no longer possible to specify an invalid
+  //       column, row, or layer.
+  //     Bug fix: when exporting a PHAST model multiple times, the name of the
+  //       file wasn't set appropriately.
+  //     Bug fix: When exporting a MODFLOW model after previously having
+  //       exported a different MODFLOW model, the default name for the model
+  //       is now set correctly rather than being the same name used previously.
+  //     Bug fix: Fixed access violations when importing model results
+  //       into a model and contouring those results.
+  //     Bug fix: When computing the size of the MODPATH composite budget file,
+  //       file sizes larger than 2 GB can now be computed without causing an
+  //       error.
+  //   '2.7.0.2' Enhancement: Data set values can now be exported to a
+  //       comma-separated value file along with X, Y, Z coordinates.
+  //   '2.7.0.3' Bug fix: Renaming a data set and then attempting to use that
+  //       data set in the formula for another data set no longer causes an
+  //       error.
+  //   '2.7.0.4' Bug fix: when exporting .emf images, the dimensions of the
+  //       image were set incorrectly.
+  //   '2.7.0.5' Enhancement: When data set values can are exported to a
+  //       comma-separated value file, column, row, and layer numbers are
+  //       exported too.
+  //   '2.7.0.6' Bug fix: When a data set is first created, it was treated
+  //       as being a real number data set in the Formula Editor even if its
+  //       type had been changed.
+  //     Bug fix: Pasting data into several of the tables could sometimes cause
+  //       errors if the data that was being pasted was larger than the table
+  //       could hold.
+  //     Bug fix: The ActiveOnLayer function can now only be applied in a
+  //       context where it will be evaluated on blocks.
+  //     Enhancement: When importing heads, the water table is imported too.
+  //   '2.7.0.7' Enhancement: When exporting MODPATH input files, ModelMuse
+  //        now warns the user if not all time steps have been exported.
+  //     Enhancement: When a new version of ModelMuse is available,
+  //        the dialog box that informs the user of the new version has a
+  //        button that the user can click to go to the ModelMuse web site.
+  //     Enhancement: The "About" dialog box has a
+  //        button that the user can click to go to the ModelMuse web site.
+  //     Bug fix: Eliminated a range check error that could sometimes occur
+  //        if user moved the mouse while importing model results.
+  //     Enhancement: If the user specifies a head observation with a blank
+  //        observation name, an error message is generated during export of
+  //        the head observations file.
+  //     Enhancement: The Grid Value dialog box now allows the user to see
+  //       the value of any data set instead of just the one that is being
+  //       used to color the grid or whose values have been contoured.
+  //   '2.7.0.8' Bug fix: When importing model results, the legend on the
+  //       Color Grid or Contour Data dialog box is updated.
+  //     Bug fix: When exporting an image of the side view of the model,
+  //        the horizontal scale now shows the correct values.
+  //   '2.7.0.9' Bug fix: fixed bug that could cause an access violation when
+  //       deleting parameter in the Manage Parameters dialog box.
+  //     Bug fix: If the model runs out of memory when attempting to create
+  //       a new model, an error message is displayed to the user instead of
+  //       sending a bug report.
+  //     Bug fix: In the Start-up dialog box, if the user specifies a layer
+  //       group but does not give it a name, it is skipped instead of causing
+  //       and assertion failure.
+  //     Bug fix: Fixed access violation in Export Object as Shapefile dialog
+  //       that could occur when unchecking a check box.
+  //   '2.7.0.10' Bug fix: Interpolated Vertex Value gave incorrect results
+  //       if the grid was rotated.
+  //   '2.7.0.11' Bug fix: The main window no longer goes behind the windows
+  //       of other programs when coloring the grid.
+  //     Enhancement: The Grid Value dialog box displays the vertex number
+  //       and section of the selected object. at the cursor location.
+  //     Bug fix: ModelMuse now displays an error message when exporting or
+  //       displaying the UZF data if some data has not been defined.
+  //   '2.7.0.12' Enhancement: The function Get_HufSytp has been added.
+  //       It evaluates SYTP parameters in HUF.
+  //   '2.7.0.13' Enhancement: The location of the grid in
+  //       real world coordinates is written as a comment in the
+  //       discretization file.
+  //     Bug fix: Fixed reading shape files from which some shapes have been
+  //       deleted.
+  //     Bug fix: Fixed position of Insert and Delete buttons for the table
+  //       of times for the SFR package in the Object Properties dialog box.
+  //     Bug fix: Clicking the Insert buttons on the Object Properties dialog
+  //       box or the MODFLOW Time dialog box could result in errors if no
+  //       row in the related grid was selected.
+  //     Enhancement: Reduced memory usage while reading ModelMuse file.
+  //     Bug fix: Fixed evaluation of the GetHufSytp function.
+  //   '2.7.0.14' Bug fix: fixed evaluation of GetHufKx when KDEP parameters
+  //       are used.
+  //     Bug fix: fixed importing models that use SYTP parameters in the HUF
+  //       package.
+  //     Bug fix: fixed evaluation of GetHuf_Interlayer_Kz when KDEP parameters
+  //       are used.
+  //     Bug fix: If an object has too many vertices, the Object Properties
+  //       dialog box now does not display them because attempting to display
+  //       them caused an access violation.
+  //     Enhancement: When importing data, less memory may be used in some
+  //       cases.
+  //   '2.7.0.15' Bug fix: Fixed editing the head observation purpose.
+  //     Enhancement: Added Natural Neighbor interpolation.
+  //   '2.7.0.16' Bug fix: Fixed export of PHAST specified flux
+  //     associated solution on the X face.
+  //   '2.7.0.17' Bug fix: A problem with duplicate parameter instance names
+  //       in MODFLOW models has been fixed.
+  //   '2.8.0.0' no additional changes.
 
-  ModelVersion = '2.7.0.0';
+  ModelVersion = '2.8.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -3364,7 +3799,35 @@ const
   StrSpecificGravityUns = 'Specific_Gravity_Unsaturated';
   StrInitialPreOffsets = 'Initial_Preconsolidation_Stress_Offset';
   StrInitialPreconsolida = 'Initial_Preconsolidation_Stress';
-
+  StrFhd = '.fhd';
+  StrBhd = '.bhd';
+  StrFdn = '.fdn';
+  StrBdn = '.bdn';
+  StrCbcExt = '.cbc';
+  StrHuffhd = '.huf_fhd';
+  StrHufbhd = '.huf_bhd';
+  StrHufflow = '.huf_flow';
+  StrSubOut = '.Sub_Out';
+  StrSwtOut = '.Swt_Out';
+  StrSubSubOut = '.SubSubOut';
+  StrSubComMlOut = '.SubComMlOut';
+  StrSubComIsOut = '.SubComIsOut';
+  StrSubVdOut = '.SubVdOut';
+  StrSubNdCritHeadOut = '.SubNdCritHeadOut';
+  StrSubDCritHeadOut = '.SubDCritHeadOut';
+  StrSwtSubOut = '.SwtSubOut';
+  StrSwtComMLOut = '.SwtComMLOut';
+  StrSwtComIsOut = '.SwtComIsOut';
+  StrSwtVDOut = '.SwtVDOut';
+  StrSwtPreConStrOut = '.SwtPreConStrOut';
+  StrSwtDeltaPreConStrOu = '.SwtDeltaPreConStrOut';
+  StrSwtGeoStatOut = '.SwtGeoStatOut';
+  StrSwtDeltaGeoStatOut = '.SwtDeltaGeoStatOut';
+  StrSwtEffStressOut = '.SwtEffStressOut';
+  StrSwtDeltaEffStressOu = '.SwtDeltaEffStressOut';
+  StrSwtVoidRatioOut = '.SwtVoidRatioOut';
+  StrSwtThickCompSedOut = '.SwtThickCompSedOut';
+  StrSwtLayerCentElevOut = '.SwtLayerCentElevOut';
 
 implementation
 
@@ -3422,12 +3885,99 @@ const
     = ('VAR', 'SD', 'CV', 'WT', 'SQRWT');
 
 
-var
-  PValFile: TStringList;
-  Template: TStringList;
 
 const
   UcodeDelimiter = '@';
+
+function GenerateNewRoot(const Root: string): string;
+var
+  Index: integer;
+begin
+  result := Trim(Root);
+  Assert(result <> '');
+  if not (result[1] in ['A'..'Z', 'a'..'z', '_']) then
+  begin
+    result[1] := '_';
+  end;
+
+  for Index := 2 to Length(result) do
+  begin
+    if not (result[Index] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
+    begin
+      result[Index] := '_';
+    end;
+  end;
+end;
+
+function GenerateNewName(Root: string = 'NewDataSet';
+  InvalidNames: TStringList = nil; Connector: string = ''): string;
+var
+  Names: TStringList;
+  Index: integer;
+  DataSet: TDataArray;
+  DataArrayManager: TDataArrayManager;
+  GlobalVariable: TGlobalVariable;
+begin
+  Root := Trim(Root);
+  if Root = '' then
+  begin
+    Root := 'NewDataSet';
+  end;
+  Root := GenerateNewRoot(Root);
+
+  // This function generates a name for a data set that is valid
+  // and does not conflict with the names of any existing data sets.
+  Names := TStringList.Create;
+  try
+    if InvalidNames <> nil then
+    begin
+      Names.AddStrings(InvalidNames);
+    end;
+
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    for Index := 0 to DataArrayManager.DataSetCount - 1 do
+    begin
+      DataSet := DataArrayManager.DataSets[Index];
+      Names.Add(DataSet.Name);
+    end;
+
+    // Don't allow the name to be the same as a deleted data set.
+    for Index := 0 to DataArrayManager.FDeletedDataSets.Count - 1 do
+    begin
+      DataSet := DataArrayManager.FDeletedDataSets[Index];
+      Names.Add(DataSet.Name);
+    end;
+
+    // Names now includes the names of all the data sets.
+
+    // don't allow the name to be the same as a global variable.
+    for Index := 0 to frmGoPhast.PhastModel.GlobalVariables.Count -1 do
+    begin
+      GlobalVariable := frmGoPhast.PhastModel.GlobalVariables[Index];
+      Names.Add(GlobalVariable.Name);
+    end;
+
+    // Generate a new name.
+    if Names.IndexOf(Root) < 0 then
+    begin
+      result := Root;
+    end
+    else
+    begin
+      Index := 1;
+      result := Root + Connector + IntToStr(Index);
+      while Names.IndexOf(result) >= 0 do
+      begin
+        Inc(Index);
+        result := Root + Connector + IntToStr(Index);
+      end;
+    end;
+  finally
+    Names.Free;
+  end;
+end;
+
+  
 
 function StrToStatFlag(const StatFlagString: string): TStatFlag;
 var
@@ -3461,100 +4011,50 @@ begin
   Invalidate;
 end;
 
-procedure TPhastModel.AddTimeList(TimeList: TCustomTimeList);
-begin
-  FTimeLists.Add(TimeList);
-end;
-
-function TPhastModel.AlwaysUsed(Sender: TObject): boolean;
-begin
-  result := True;
-end;
-
-function TPhastModel.KyUsed(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msPhast)
-    or ModflowPackages.LpfPackage.IsSelected;
-end;
-
-function TPhastModel.AquiferPropertiesUsed(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msPhast)
-    or not ModflowPackages.HufPackage.IsSelected;
-end;
-
-function TPhastModel.KzUsed(Sender: TObject): boolean;
+procedure TPhastModel.Assign(Source: TPersistent);
 var
-  LayerGroupIndex: Integer;
-  LayerGroup: TLayerGroup;
-  ParamIndex: Integer;
-  Param: TModflowSteadyParameter;
-  VK_Used: Boolean;
-  VaniUsed: Boolean;
-  VkcbUsed: Boolean;
+  SourceModel: TPhastModel;
 begin
-  result := True;
-  case ModelSelection of
-    msUndefined: result := True;
-    msPhast: result := True;
-    msModflow:
-      begin
-        if ModflowPackages.HufPackage.IsSelected then
-        begin
-          result := False;
-          Exit;
-        end;
-        if ModflowPackages.LpfPackage.IsSelected then
-        begin
-          VK_Used := False;
-          VaniUsed := False;
-          VkcbUsed := False;
-          for ParamIndex := 0 to ModflowSteadyParameters.Count - 1 do
-          begin
-            Param := ModflowSteadyParameters[ParamIndex];
-            if Param.ParameterType = ptLPF_VK then
-            begin
-              VK_Used := True;
-            end
-            else if Param.ParameterType = ptLPF_VANI then
-            begin
-              VaniUsed := True;
-            end
-            else if Param.ParameterType = ptLPF_VKCB then
-            begin
-              VkcbUsed := True;
-            end
-          end;
-
-          result := False;
-          for LayerGroupIndex := 1 to LayerStructure.Count - 1 do
-          begin
-            LayerGroup := LayerStructure[LayerGroupIndex];
-            if LayerGroup.Simulated then
-            begin
-              case LayerGroup.VerticalHydraulicConductivityMethod of
-                0: result := not VK_Used; // 0 means use vertical hydraulic conductivity
-                1: result := not VaniUsed; // 1 means user vertical anisotropy
-                else Assert(False);
-              end;
-              if result then
-              begin
-                break;
-              end;
-            end
-            else
-            begin
-              if not VkcbUsed then
-              begin
-                result := True;
-                break;
-              end;
-            end;
-          end;
-        end;
-      end;
-    else Assert(False);
+  if Source is TPhastModel then
+  begin
+    SourceModel := TPhastModel(Source);
+    Diffusivity := SourceModel.Diffusivity;
+    GridOptions := SourceModel.GridOptions;
+    PhastGrid := SourceModel.PhastGrid;
+    PrintFrequency := SourceModel.PrintFrequency;
+    PrintInitial := SourceModel.PrintInitial;
+    SolutionOptions := SourceModel.SolutionOptions;
+    SteadyFlowOptions := SourceModel.SteadyFlowOptions;
+    Times := SourceModel.Times;
+    Title := SourceModel.Title;
+    Units := SourceModel.Units;
+    PathLine := SourceModel.PathLine;
+    EndPoints := SourceModel.EndPoints;
+    TimeSeries := SourceModel.TimeSeries;
+    Bitmaps := SourceModel.Bitmaps;
+    Exaggeration := SourceModel.Exaggeration;
+    ObjectList := SourceModel.ObjectList;
+    Version := SourceModel.Version;
+    GuiSettings := SourceModel.GuiSettings;
+    ModelMateProjectFileName := SourceModel.ModelMateProjectFileName;
+    DisplaySettings := SourceModel.DisplaySettings;
+    ModflowSteadyParameters := SourceModel.ModflowSteadyParameters;
+    ModelSelection := SourceModel.ModelSelection;
+    LayerStructure := SourceModel.LayerStructure;
+    ModflowOptions := SourceModel.ModflowOptions;
+    ModflowStressPeriods := SourceModel.ModflowStressPeriods;
+    SoluteTransport := SourceModel.SoluteTransport;
+    UseWaterTable := SourceModel.UseWaterTable;
+    FreeSurface := SourceModel.FreeSurface;
+    ChemistryOptions := SourceModel.ChemistryOptions;
+    HufParameters := SourceModel.HufParameters;
+    ObservationPurpose := SourceModel.ObservationPurpose;
+    ModflowTransientParameters := SourceModel.ModflowTransientParameters;
+    ModflowOutputControl := SourceModel.ModflowOutputControl;
+    DataSetList := SourceModel.DataSetList;
   end;
+  inherited;
+
 end;
 
 procedure TPhastModel.BeginScreenObjectUpdate;
@@ -3562,161 +4062,10 @@ begin
   Inc(FScreenObjectUpdateCount);
 end;
 
-procedure TPhastModel.CreateInitialBoundaryDataSets;
-var
-  PhastDataSet: TDataArray;
-begin
-  PhastDataSet := TRealSparseDataSet.Create(self);
-  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
-  PhastDataSet.UpdateWithName(rsTopLeakyHydraulicConductivity);
-  PhastDataSet.DataType := rdtDouble;
-  PhastDataSet.EvaluatedAt := eaNodes;
-  PhastDataSet.Orientation := dso3D;
-  PhastDataSet.Formula := '100.';
-  PhastDataSet.CheckMin := True;
-  PhastDataSet.Min := 0;
-  AddBoundaryDataSet(PhastDataSet);
-
-  PhastDataSet := TRealSparseDataSet.Create(self);
-  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
-  PhastDataSet.UpdateWithName(rsTopLeakyThickness);
-  PhastDataSet.DataType := rdtDouble;
-  PhastDataSet.EvaluatedAt := eaNodes;
-  PhastDataSet.Orientation := dso3D;
-  PhastDataSet.Formula := '1.';
-  PhastDataSet.CheckMin := True;
-  PhastDataSet.Min := 0;
-  AddBoundaryDataSet(PhastDataSet);
-
-  PhastDataSet := TRealSparseDataSet.Create(self);
-  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
-  PhastDataSet.UpdateWithName(rsFrontLeakyHydraulicConductivity);
-  PhastDataSet.DataType := rdtDouble;
-  PhastDataSet.EvaluatedAt := eaNodes;
-  PhastDataSet.Orientation := dso3D;
-  PhastDataSet.Formula := '100.';
-  PhastDataSet.CheckMin := True;
-  PhastDataSet.Min := 0;
-  AddBoundaryDataSet(PhastDataSet);
-
-  PhastDataSet := TRealSparseDataSet.Create(self);
-  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
-  PhastDataSet.UpdateWithName(rsFrontLeakyThickness);
-  PhastDataSet.DataType := rdtDouble;
-  PhastDataSet.EvaluatedAt := eaNodes;
-  PhastDataSet.Orientation := dso3D;
-  PhastDataSet.Formula := '1.';
-  PhastDataSet.CheckMin := True;
-  PhastDataSet.Min := 0;
-  AddBoundaryDataSet(PhastDataSet);
-
-  PhastDataSet := TRealSparseDataSet.Create(self);
-  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
-  PhastDataSet.UpdateWithName(rsSideLeakyHydraulicConductivity);
-  PhastDataSet.DataType := rdtDouble;
-  PhastDataSet.EvaluatedAt := eaNodes;
-  PhastDataSet.Orientation := dso3D;
-  PhastDataSet.Formula := '100.';
-  PhastDataSet.CheckMin := True;
-  PhastDataSet.Min := 0;
-  AddBoundaryDataSet(PhastDataSet);
-
-  PhastDataSet := TRealSparseDataSet.Create(self);
-  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
-  PhastDataSet.UpdateWithName(rsSideLeakyThickness);
-  PhastDataSet.DataType := rdtDouble;
-  PhastDataSet.EvaluatedAt := eaNodes;
-  PhastDataSet.Orientation := dso3D;
-  PhastDataSet.Formula := '1.';
-  PhastDataSet.CheckMin := True;
-  PhastDataSet.Min := 0;
-  AddBoundaryDataSet(PhastDataSet);
-
-  PhastDataSet := TRealSparseDataSet.Create(self);
-  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
-  PhastDataSet.UpdateWithName(rsRiverHydraulicConductivity);
-  PhastDataSet.DataType := rdtDouble;
-  PhastDataSet.EvaluatedAt := eaNodes;
-  PhastDataSet.Orientation := dsoTop;
-  PhastDataSet.Formula := '100.';
-  PhastDataSet.CheckMin := True;
-  PhastDataSet.Min := 0;
-  AddBoundaryDataSet(PhastDataSet);
-  RiverDataSets.Add(PhastDataSet);
-
-  PhastDataSet := TRealSparseDataSet.Create(self);
-  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
-  PhastDataSet.UpdateWithName(rsRiverWidth);
-  PhastDataSet.DataType := rdtDouble;
-  PhastDataSet.EvaluatedAt := eaNodes;
-  PhastDataSet.Orientation := dsoTop;
-  PhastDataSet.Formula := '10.';
-  PhastDataSet.CheckMin := True;
-  PhastDataSet.Min := 0;
-  AddBoundaryDataSet(PhastDataSet);
-  RiverDataSets.Add(PhastDataSet);
-
-  PhastDataSet := TRealSparseDataSet.Create(self);
-  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
-  PhastDataSet.UpdateWithName(rsRiverDepth);
-  PhastDataSet.DataType := rdtDouble;
-  PhastDataSet.EvaluatedAt := eaNodes;
-  PhastDataSet.Orientation := dsoTop;
-  PhastDataSet.Formula := '10.';
-  PhastDataSet.CheckMin := True;
-  PhastDataSet.Min := 0;
-  AddBoundaryDataSet(PhastDataSet);
-  RiverDataSets.Add(PhastDataSet);
-
-  PhastDataSet := TRealSparseDataSet.Create(self);
-  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
-  PhastDataSet.UpdateWithName(rsRiverBedThickness);
-  PhastDataSet.DataType := rdtDouble;
-  PhastDataSet.EvaluatedAt := eaNodes;
-  PhastDataSet.Orientation := dsoTop;
-  PhastDataSet.Formula := '1.';
-  PhastDataSet.CheckMin := True;
-  PhastDataSet.Min := 0;
-  AddBoundaryDataSet(PhastDataSet);
-  RiverDataSets.Add(PhastDataSet);
-
-  PhastDataSet := TIntegerSparseDataSet.Create(self);
-  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
-  PhastDataSet.UpdateWithName(rsSolutionType);
-  PhastDataSet.DataType := rdtInteger;
-  PhastDataSet.EvaluatedAt := eaNodes;
-  PhastDataSet.Orientation := dso3D;
-  PhastDataSet.Formula := '0';
-  PhastDataSet.CheckMin := True;
-  PhastDataSet.Min := 0;
-  AddBoundaryDataSet(PhastDataSet);
-
-end;
-
-//procedure TPhastModel.CreateInitialDataSets;
-//begin
-//  CreateModflowDataSets;
-//end;
-
-procedure TPhastModel.UpdateHfb(Sender: TObject);
-begin
-  frmProgress.Caption := 'Progress';
-  frmProgress.Show;
-  if FHfbWriter = nil then
-  begin
-    FHfbWriter := TModflowHfb_Writer.Create(Self);
-  end;
-  (FHfbWriter as TModflowHfb_Writer).UpdateDisplay;
-  frmProgress.Hide;
-  if frmErrorsAndWarnings.HasMessages then
-  begin
-    frmErrorsAndWarnings.Show;
-  end;
-end;
-
 constructor TPhastModel.Create(AnOwner: TComponent);
 begin
   inherited;
+  FChildModels := TChildModelCollection.Create(self);
   FDisplaySettings := TDisplaySettingsCollection.Create(self);
   FColorLegend := TLegend.Create(nil);
   FColorLegend.ValueAssignmentMethod := vamAutomatic;
@@ -3724,11 +4073,8 @@ begin
   FContourLegend.ValueAssignmentMethod := vamAutomatic;
 
 
-  FBatchFileAdditionsBeforeModel := TStringList.Create;
-  FBatchFileAdditionsAfterModel := TStringList.Create;
   FHufParameters := THufModflowParameters.Create(self);
   FFormulaManager:= TFormulaManager.Create;
-  FChangedDataArrayNames := TStringList.Create;
   FUpdatingFullStressPeriods := False;
 
   FGridColors := TColorParameters.Create;
@@ -3736,73 +4082,25 @@ begin
 
   FContourColors := TColorParameters.Create;
 
-  FHeadFluxObservations := TFluxObservationGroups.Create(self);
-  FRiverObservations := TFluxObservationGroups.Create(self);
-  FDrainObservations := TFluxObservationGroups.Create(self);
-  FGhbObservations := TFluxObservationGroups.Create(self);
-
-  FHeadFluxObservations.FluxObservationType := fotHead;
-  FRiverObservations.FluxObservationType := fotRiver;
-  FDrainObservations.FluxObservationType := fotDrain;
-  FGhbObservations.FluxObservationType := fotGHB;
-
-  FModflowNameFileLines := TStringList.Create;
-  FDataSetsToCache:= TList.Create;
-  FUnitNumbers := TUnitNumbers.Create(self);
-
-  FHfbDisplayer:= THfbDisplayer.Create(nil);
-  FHfbDisplayer.OnNeedToUpdate := UpdateHfb;
-  FFilesToArchive := TStringList.Create;
-  FModelInputFiles := TStringList.Create;
-  DefinePackageDataArrays;
+  FDataArrayManager.DefinePackageDataArrays;
 
   FSelectedScreenObjectCount := 0;
   FClearing := False;
 
-  FGlobalVariables := TGlobalVariables.Create(self);
-  FTransientMultiplierArrays := TObjectList.Create;
-  FTransientZoneArrays := TObjectList.Create;
 
   FProgramLocations := TProgramLocations.Create;
 
-  FParsers := TList.Create;
-  FrpTopFormulaCompiler := TRbwParser.Create(self);
-  FParsers.Add(FrpTopFormulaCompiler);
-  FrpFrontFormulaCompiler := TRbwParser.Create(self);
-  FParsers.Add(FrpFrontFormulaCompiler);
-  FrpSideFormulaCompiler := TRbwParser.Create(self);
-  FParsers.Add(FrpSideFormulaCompiler);
-  FrpThreeDFormulaCompiler := TRbwParser.Create(self);
-  FParsers.Add(FrpThreeDFormulaCompiler);
-  FrpTopFormulaCompilerNodes := TRbwParser.Create(self);
-  FParsers.Add(FrpTopFormulaCompilerNodes);
-  FrpFrontFormulaCompilerNodes := TRbwParser.Create(self);
-  FParsers.Add(FrpFrontFormulaCompilerNodes);
-  FrpSideFormulaCompilerNodes := TRbwParser.Create(self);
-  FParsers.Add(FrpSideFormulaCompilerNodes);
-  FrpThreeDFormulaCompilerNodes := TRbwParser.Create(self);
-  FParsers.Add(FrpThreeDFormulaCompilerNodes);
-
   FCachedScreenObjectIndex := -1;
 
-  FTopGridObserver:= TObserver.Create(nil);
-  FThreeDGridObserver:= TObserver.Create(nil);
-  FTopGridObserver.Name := 'TopGridObserver';
-  FThreeDGridObserver.Name := 'ThreeDGridObserver';
-
-  FTopGridObserver.TalksTo(FThreeDGridObserver);
 
   FModflowOptions := TModflowOptions.Create(self);
 
   FLayerStructure := TLayerStructure.Create(self);
   FBitmaps := TCompressedBitmapCollection.Create;
-  FModflowGrid := TModflowGrid.Create;
-  ThreeDGridObserver.OnUpToDateSet := FModflowGrid.NotifyGridChanged;
+  ThreeDGridObserver.OnUpToDateSet := ModflowGrid.NotifyGridChanged;
 
   FDiffusivity := 1E-9;
-  FRiverDataSets := TList.Create;
   FModelTimes := TRealList.Create;
-  FTimeLists := TList.Create;
   FFileVersion := ModelVersion;
 
   FTopBoundaryType := TIntegerSparseDataSet.Create(self);
@@ -3834,9 +4132,6 @@ begin
     FTop2DBoundaryType;
 
   FScreenObjectList := TObjectList.Create;
-  FBoundaryDataSets := TObjectList.Create;
-  FDataSets := TObjectList.Create;
-  FDataSetFunctions := TStringList.Create;
   FPhastGrid := TPhastGrid.Create;
   FDataSetCollection := TDataSetCollection.Create;
   FScreenObjectCollection := TScreenObjectCollection.Create(self);
@@ -3871,35 +4166,20 @@ begin
   FModflowOutputControl := TModflowOutputControl.Create(Self);
 
   FModflowSteadyParameters:= TModflowSteadyParameters.Create(Self);
-  FModflowWettingOptions := TWettingOptions.Create(Self);
   FModflowTransientParameters := TModflowTransientListParameters.Create(self);
-
-  FModflowPackages := TModflowPackages.Create(self);
-  FModflowPackages.LpfPackage.IsSelected := True;
 
   CreateModflowDisplayTimeLists;
 
-  CreateInitialDataSets;
-  CreateInitialBoundaryDataSets;
+  FDataArrayManager.CreateInitialDataSets;
+  FDataArrayManager.CreateInitialBoundaryDataSets;
 
   CreatePhastTimeLists;
   CreateInitialDataSetsForPhastTimeLists;
   CreatePhastTimeListGroups;
 
 //  ModelSelection := msPhast;
-  CreateInitialDataSets;
+  FDataArrayManager.CreateInitialDataSets;
 
-  FHydrogeologicUnits := THydrogeologicUnits.Create(self);
-  FHufKxNotifier := TObserver.Create(nil);
-  FHufKxNotifier.Name := 'HufKxNotifier';
-  FHufKyNotifier := TObserver.Create(nil);
-  FHufKyNotifier.Name := 'HufKyNotifier';
-  FHufKzNotifier := TObserver.Create(nil);
-  FHufKzNotifier.Name := 'HufKzNotifier';
-  FHufSsNotifier := TObserver.Create(nil);
-  FHufSsNotifier.Name := 'HufSsNotifier';
-  FHufSyNotifier := TObserver.Create(nil);
-  FHufSyNotifier.Name := 'HufSyNotifier';
 end;
 
 procedure TPhastModel.CreateArchive(const FileName: string);
@@ -4010,24 +4290,16 @@ begin
     for Index := 0 to LayerStructure.Count - 1 do
     begin
       LayerGroup := LayerStructure.LayerGroups[Index];
-      DataSet := GetDataSetByName(LayerGroup.DataArrayName);
+      DataSet := FDataArrayManager.GetDataSetByName(LayerGroup.DataArrayName);
       Assert(DataSet <> nil);
       LayerGroupsDataSets.Add(DataSet);
     end;
   end;
 end;
 
-procedure TPhastModel.CreateGlobalVariables;
-var
-  CompilerList: TList;
+function TPhastModel.GetLayerStructure: TLayerStructure;
 begin
-  CompilerList := TList.Create;
-  try
-    FillCompilerList(CompilerList);
-    RefreshGlobalVariables(CompilerList);
-  finally
-    CompilerList.Free;
-  end;
+  result := FLayerStructure;
 end;
 
 type
@@ -4056,40 +4328,41 @@ var
   Variable: TGlobalVariable;
   ScreenObject: TScreenObject;
 begin
-  frmFileProgress:= TfrmProgress.Create(nil);
+  frmFileProgress:= TfrmProgressMM.Create(nil);
   try
-    Clear;
+    DataArrayManager.UnlinkDeletedDataSets;
+    FClearing := True;
+    try
+      InternalClear;
+    finally
+      FClearing := False;
+    end;
 
+    FChildModels.Free;
     FTimeSeries.Free;
     FEndPoints.Free;
     FPathLine.Free;
     FHufParameters.Free;
-    FHydrogeologicUnits.Free;
 
     FModelMateProject.Free;
 
     FreeAndNil(FSortedObjectList);
-    FModflowNameFileLines.Free;
-    FParsers.Free;
-    FModflowPackages.Free;
 
     FModflowTransientParameters.Free;
-    FModflowWettingOptions.Free;
     FModflowSteadyParameters.Free;
     FModflowOutputControl.Free;
     FModflowFullStressPeriods.Free;
     FModflowStressPeriods.Free;
 
-    FMfHobHeads.Free;
 
     frmFileProgress.pbProgress.Position := 0;
-    frmFileProgress.pbProgress.Max := DataSetCount + GlobalVariables.Count
+    frmFileProgress.pbProgress.Max := FDataArrayManager.DataSetCount + GlobalVariables.Count
       + ScreenObjectCount;
     frmFileProgress.Show;
 
-    for Index := 0 to DataSetCount - 1 do
+    for Index := 0 to FDataArrayManager.DataSetCount - 1 do
     begin
-      DataArray := DataSets[Index];
+      DataArray := FDataArrayManager.DataSets[Index];
       DataArray.StopTalkingToAnyone;
       frmFileProgress.pbProgress.StepIt;
 //      Application.ProcessMessages;
@@ -4123,37 +4396,17 @@ begin
       frmFileProgress.pbProgress.StepIt;
 //      Application.ProcessMessages;
     end;
-    FTopGridObserver.StopTalkingToAnyone;
-    FThreeDGridObserver.StopTalkingToAnyone;
-    FHufSyNotifier.StopTalkingToAnyone;
-    FHufSsNotifier.StopTalkingToAnyone;
-    FHufKzNotifier.StopTalkingToAnyone;
-    FHufKyNotifier.StopTalkingToAnyone;
-    FHufKxNotifier.StopTalkingToAnyone;
-
-
-    FHufSyNotifier.Free;
-    FHufSsNotifier.Free;
-    FHufKzNotifier.Free;
-    FHufKyNotifier.Free;
-    FHufKxNotifier.Free;
+    AllObserversStopTalking;
+    FreeHufNotifiers;
 
 
     FLayerStructure.Free;
     FScreenObjectList.Free;
-    FDataSets.Free;
-
-  //  FTopGridObserver.StopsTalkingTo(FThreeDGridObserver);
-    FTopGridObserver.Free;
-    FTopGridObserver := nil;
-    FThreeDGridObserver.Free;
-    FThreeDGridObserver := nil;
+    FreeGridNotifiers;
 
     PhastGrid.Free;
     FDataSetCollection.Free;
-    FBoundaryDataSets.Free;
 
-    FDataSetFunctions.Free;
     FScreenObjectCollection.Free;
 
     FPrintFrequency.Free;
@@ -4166,7 +4419,6 @@ begin
     FTitle.Free;
     FUnits.Free;
     FTimes.Free;
-    FTimeLists.Free;
 
     FTopFluxBoundaryFlux.Free;
     FFrontFluxBoundaryFlux.Free;
@@ -4211,40 +4463,19 @@ begin
     FLeakyHeadGroup.Free;
     FFluxBoundaryFluxGroup.Free;
 
-    FRiverDataSets.Free;
     FBitmaps.Free;
-    FModflowGrid.Free;
 
     FGuiSettings.Free;
 
     FProgramLocations.Free;
 
-    FTransientMultiplierArrays.Free;
-    FTransientZoneArrays.Free;
 
-    FFilesToArchive.Free;
-    FModelInputFiles.Free;
-    FHfbDisplayer.Free;
-    FHfbWriter.Free;
-
-    FUnitNumbers.Free;
-    FDataSetsToCache.Free;
-
-    FHeadFluxObservations.Free;
-    FRiverObservations.Free;
-    FDrainObservations.Free;
-    FGhbObservations.Free;
 
     FContourColors.Free;
     FGridColors.Free;
-    FChangedDataArrayNames.Free;
 
-    FGlobalVariables.Free;
-    FDataSetLookUpList.Free;
 
     FFormulaManager.Free;
-    FBatchFileAdditionsAfterModel.Free;
-    FBatchFileAdditionsBeforeModel.Free;
     FColorLegend.Free;
     FContourLegend.Free;
     FDisplaySettings.Free;
@@ -4260,24 +4491,11 @@ var
   LakeIdArray: TDataArray;
   ActiveArray: TDataArray;
 begin
-  LakeIdArray := GetDataSetByName(rsLakeID);
-  ActiveArray := GetDataSetByName(rsActive);
+  LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
+  ActiveArray := FDataArrayManager.GetDataSetByName(rsActive);
   if (LakeIdArray <> nil) and (ActiveArray <> nil) then
   begin
     LakeIdArray.StopsTalkingTo(ActiveArray);
-  end;
-end;
-
-procedure TPhastModel.FinalizeDischargeRouting(Sender: TObject);
-var
-  LakeIdArray: TDataArray;
-  DischargeRoutingArray: TDataArray;
-begin
-  DischargeRoutingArray := GetDataSetByName(StrUzfDischargeRouting);
-  LakeIdArray := GetDataSetByName(rsLakeID);
-  if (LakeIdArray <> nil) and (DischargeRoutingArray <> nil) then
-  begin
-    DischargeRoutingArray.StopsTalkingTo(LakeIdArray);
   end;
 end;
 
@@ -4285,57 +4503,6 @@ procedure TPhastModel.FinalizeLakeId(Sender: TObject);
 begin
   FinalizeActive(Sender);
   FinalizeWetDry(Sender);
-end;
-
-procedure TPhastModel.GetParameterUsedAndParameterFormulaForLPF(
-  out ParameterUsed: Boolean; out ParameterFormula: string;
-  ParameterType: TParameterType);
-var
-  Index: Integer;
-  Item: TModflowSteadyParameter;
-begin
-  ParameterFormula := '';
-  ParameterUsed := (ModelSelection = msMODFLOW)
-    and ModflowPackages.LpfPackage.IsSelected;
-  if ParameterUsed then
-  begin
-    ParameterUsed := False;
-    for Index := 0 to ModflowSteadyParameters.Count - 1 do
-    begin
-      Item := ModflowSteadyParameters[Index];
-      if Item.ParameterType = ParameterType then
-      begin
-        ParameterUsed := True;
-        if ParameterFormula <> '' then
-        begin
-          ParameterFormula := ParameterFormula + ' + ';
-        end;
-        if Item.UseZone then
-        begin
-          ParameterFormula := ParameterFormula + '(If(' + Item.ZoneName + ', ';
-        end;
-        if Item.UseMultiplier then
-        begin
-          ParameterFormula := ParameterFormula +
-            '(' + Item.MultiplierName + ' * ';
-        end;
-        ParameterFormula := ParameterFormula + FortranFloatToStr(Item.Value);
-        if Item.UseMultiplier then
-        begin
-          ParameterFormula := ParameterFormula + ')';
-        end;
-        if Item.UseZone then
-        begin
-          ParameterFormula := ParameterFormula + ', 0))';
-        end;
-      end;
-    end;
-  end;
-end;
-
-function TPhastModel.GetParsers(Index: integer): TRbwParser;
-begin
-  result := FParsers[Index];
 end;
 
 function TPhastModel.GetPathLine: TPathLineReader;
@@ -4347,30 +4514,9 @@ begin
   result := FPathLine;
 end;
 
-procedure TPhastModel.UpdateLpfDataArrayParameterUsed(
-  const DataArrayName: string; ParameterType: TParameterType);
-var
-  DataArray: TDataArray;
-  ParameterUsed: Boolean;
-  ParameterFormula: string;
+function TPhastModel.GetProgramLocations: TProgramLocations;
 begin
-  GetParameterUsedAndParameterFormulaForLPF(ParameterUsed, ParameterFormula,
-    ParameterType);
-  DataArray := GetDataSetByName(DataArrayName);
-  if (DataArray <> nil) then
-  begin
-    DataArray.ParameterUsed := ParameterUsed;
-    if ParameterUsed then
-    begin
-      DataArray.ParameterFormula := ParameterFormula;
-      DataArray.Lock := DataArray.Lock + [dcFormula];
-    end
-    else
-    begin
-      DataArray.ParameterFormula := '';
-      DataArray.Lock := DataArray.Lock - [dcFormula];
-    end;
-  end;
+  result := FProgramLocations;
 end;
 
 procedure TPhastModel.FinalizeWetDry(Sender: TObject);
@@ -4378,8 +4524,8 @@ var
   LakeIdArray: TDataArray;
   WetDryArray: TDataArray;
 begin
-  LakeIdArray := GetDataSetByName(rsLakeID);
-  WetDryArray := GetDataSetByName(rsWetDryFlag);
+  LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
+  WetDryArray := FDataArrayManager.GetDataSetByName(rsWetDryFlag);
   if (LakeIdArray <> nil) and (WetDryArray <> nil) then
   begin
     LakeIdArray.StopsTalkingTo(WetDryArray);
@@ -4402,47 +4548,6 @@ end;
 function TPhastModel.GetScreenObjects(const Index: integer): TScreenObject;
 begin
   result := FScreenObjectList[Index];
-end;
-
-function TPhastModel.GetDataSetCount: integer;
-begin
-  if FDataSets = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := FDataSets.Count;
-  end;
-end;
-
-function TPhastModel.GetDataSets(const Index: integer): TDataArray;
-begin
-  result := FDataSets[Index] as TDataArray;
-end;
-
-function TPhastModel.IndexOfDataSetInList(DataSetName: string;
-  const List: TObjectList): integer;
-var
-  Index: integer;
-  DataSet: TDataArray;
-begin
-  result := -1;
-  DataSetName := UpperCase(DataSetName);
-  for Index := 0 to List.Count - 1 do
-  begin
-    DataSet := List[Index] as TDataArray;
-    if UpperCase(DataSet.Name) = DataSetName then
-    begin
-      result := Index;
-      Exit;
-    end;
-  end;
-end;
-
-function TPhastModel.IndexOfDataSet(DataSetName: string): integer;
-begin
-  result := IndexOfDataSetInList(DataSetName, FDataSets);
 end;
 
 function TPhastModel.HufDataArrayUsed(Sender: TObject): boolean;
@@ -4472,7 +4577,7 @@ var
   Group: TLayerGroup;
   DataArray: TDataArray;
 begin
-  result := (ModelSelection = msModflow);
+  result := (ModelSelection in [msModflow, msModflowLGR]);
   if result then
   begin
     DataArray := Sender as TDataArray;
@@ -4586,68 +4691,13 @@ begin
   end;
 end;
 
-
-
-function TPhastModel.AddDataSet(const DataSet: TDataArray): Integer;
-begin
-  result := FDataSets.Add(DataSet);
-  FDataSetFunctions.Insert(result, '');
-  Invalidate;
-  AddDataSetToLookUpList(DataSet);
-end;
-
-procedure TPhastModel.AddDataSetToCache(DataArray: TDataArray);
-begin
-  if FDataSetsToCache.IndexOf(DataArray) < 0 then
-  begin
-    if (DataArray.Name <> '')
-      and not (DataArray is TSparseArrayPhastInterpolationDataSet)
-      and not (DataArray is TCustomSparseDataSet)
-      then
-    begin
-      FDataSetsToCache.Add(DataArray)
-    end;
-  end;
-end;
-
-procedure TPhastModel.AddFileToArchive(const FileName: string);
-begin
-  if FFilesToArchive.IndexOf(FileName) < 0 then
-  begin
-    FFilesToArchive.Add(FileName);
-    Invalidate;
-  end;
-end;
-
-procedure TPhastModel.AddModelInputFile(const FileName: string);
-begin
-  if FModelInputFiles.IndexOf(FileName) < 0 then
-  begin
-    FModelInputFiles.Add(FileName);
-    Invalidate;
-  end;
-end;
-
-procedure TPhastModel.InsertDataSet(const Index: integer; const DataSet:
-  TDataArray);
-begin
-  FDataSets.Insert(index, DataSet);
-  FDataSetFunctions.Insert(index, '');
-  Invalidate;
-  AddDataSetToLookUpList(DataSet);
-end;
-
-procedure TPhastModel.Clear;
+procedure TPhastModel.InternalClear;
 var
   Index: Integer;
-  TimeList: TModflowBoundaryDisplayTimeList;
-  Parser: TRbwParser;
   DataSet: TDataArray;
   ScreenObject: TScreenObject;
   Variable: TGlobalVariable;
 begin
-  FClearing := True;
-  try
     Bitmaps.Clear;
     ClearViewedItems;
 
@@ -4675,19 +4725,11 @@ begin
     end;
 
     FLayerStructure.StopTalkingToAnyone;
-    FTopGridObserver.StopTalkingToAnyone;
-    FThreeDGridObserver.StopTalkingToAnyone;
-    FHufKxNotifier.StopTalkingToAnyone;
-    FHufKyNotifier.StopTalkingToAnyone;
-    FHufKzNotifier.StopTalkingToAnyone;
-    FHufSyNotifier.StopTalkingToAnyone;
-    FHufSsNotifier.StopTalkingToAnyone;
+    AllObserversStopTalking;
 
     FCachedZoneArrayIndex := -1;
     FCachedMultiplierArrayIndex := -1;
-    FChangedDataArrayNames.Clear;
-    FModflowNameFileLines.Clear;
-    FDataSetsToCache.Clear;
+    ModflowNameFileLines.Clear;
     Title.Clear;
     FrontX := 0;
     FrontY := 0;
@@ -4698,8 +4740,8 @@ begin
     MagnificationFront := 0;
     MagnificationSide := 0;
     MagnificationTop := 0;
-    GridColors.Clear;
-    ContourColors.Clear;
+    GridColorParameters.Clear;
+    ContourColorParameters.Clear;
     FDiffusivity := 1E-9;
     FFreeSurface := False;
     FDiffusivitySet := False;
@@ -4713,29 +4755,23 @@ begin
       ScreenObject := ScreenObjects[Index];
       ScreenObject.StopTalkingToAnyone;
     end;
-    for Index := 0 to DataSetCount - 1 do
+    for Index := 0 to FDataArrayManager.DataSetCount - 1 do
     begin
-      DataSet := DataSets[Index];
+      DataSet := FDataArrayManager.DataSets[Index];
       DataSet.StopTalkingToAnyone;
     end;
-    for Index := 0 to BoundaryDataSetCount - 1 do
+    for Index := 0 to FDataArrayManager.BoundaryDataSetCount - 1 do
     begin
-      DataSet := BoundaryDataSets[Index];
+      DataSet := FDataArrayManager.BoundaryDataSets[Index];
       DataSet.StopTalkingToAnyone;
     end;
 
     ModelSelection := msUndefined;
 
     FScreenObjectList.Clear;
-    FDataSets.Clear;
-    FBoundaryDataSets.Clear;
-    for Index := 0 to FParsers.Count - 1 do
-    begin
-      Parser := FParsers[Index];
-      Parser.ClearExpressions;
-      Parser.ClearVariables;
-    end;
-    FDataSetFunctions.Clear;
+    FDataArrayManager.ClearAllDataSets;
+    ClearParsers;
+//    FDataSetFunctions.Clear;
 
     FModflowOptions.Clear;
 
@@ -4752,15 +4788,8 @@ begin
     GlobalVariables.Clear;
     ModflowOutputControl.Initialize;
 
-    FHydrogeologicUnits.Clear;
+    HydrogeologicUnits.Clear;
     FHufParameters.Clear;
-
-    for Index := 0 to FTimeLists.Count - 1 do
-    begin
-      TimeList := FTimeLists[Index];
-      TimeList.Invalidate;
-      TimeList.Clear;
-    end;
 
     HeadFluxObservations.Clear;
     DrainObservations.Clear;
@@ -4769,10 +4798,13 @@ begin
     FilesToArchive.Clear;
     ModelFileName := '';
     ModelInputFiles.Clear;
-    InvalidateDataSetLookupList;
+    FDataArrayManager.InvalidateDataSetLookupList;
 
     BatchFileAdditionsBeforeModel.Clear;
     BatchFileAdditionsAfterModel.Clear;
+    AlternateFlowPackage := False;
+    AlternateSolver := False;
+
     FormulaManager.Clear;
     FDisplaySettings.Clear;
 
@@ -4781,47 +4813,7 @@ begin
     FreeAndNil(FTimeSeries);
 
     Invalidate;
-
-  finally
-    FClearing := False;
-  end;
-end;
-
-procedure TPhastModel.ClearExpressionsAndVariables;
-begin
-  rpTopFormulaCompiler.ClearExpressions;
-  rpTopFormulaCompiler.ClearVariables;
-  rpFrontFormulaCompiler.ClearExpressions;
-  rpFrontFormulaCompiler.ClearVariables;
-  rpSideFormulaCompiler.ClearExpressions;
-  rpSideFormulaCompiler.ClearVariables;
-  rpThreeDFormulaCompiler.ClearExpressions;
-  rpThreeDFormulaCompiler.ClearVariables;
-  rpTopFormulaCompilerNodes.ClearExpressions;
-  rpTopFormulaCompilerNodes.ClearVariables;
-  rpFrontFormulaCompilerNodes.ClearExpressions;
-  rpFrontFormulaCompilerNodes.ClearVariables;
-  rpSideFormulaCompilerNodes.ClearExpressions;
-  rpSideFormulaCompilerNodes.ClearVariables;
-  rpThreeDFormulaCompilerNodes.ClearExpressions;
-  rpThreeDFormulaCompilerNodes.ClearVariables;
-end;
-
-procedure TPhastModel.ClearModelInputFiles;
-begin
-  FModelInputFiles.Clear;
-end;
-
-procedure TPhastModel.ClearNameChangeWarnings;
-begin
-  FChangedDataArrayNames.Clear;
-end;
-
-procedure TPhastModel.ExtractDataSet(const DataSet: TDataArray);
-begin
-  FDataSets.Extract(DataSet);
-  Invalidate;
-  RemoveDataSetFromLookUpList(DataSet);
+  inherited;
 end;
 
 procedure TPhastModel.ExtractScreenObject(const AScreenObject: TScreenObject);
@@ -4837,13 +4829,9 @@ begin
   Invalidate;
 end;
 
-function TPhastModel.GetObserverByName(const ObserverName: string): TObserver;
+function TPhastModel.GetObservationPurpose: TObservationPurpose;
 begin
-  result := GetDataSetByName(ObserverName);
-  if result = nil then
-  begin
-    result := GlobalVariables.GetVariableByName(ObserverName);
-  end;
+  result := FObservationPurpose;
 end;
 
 function TPhastModel.GetOwnsScreenObjects: boolean;
@@ -4871,11 +4859,6 @@ procedure TPhastModel.RemoveScreenObject(const AScreenObject: TScreenObject);
 begin
   FScreenObjectList.Remove(AScreenObject);
   Invalidate;
-end;
-
-procedure TPhastModel.RemoveTimeList(TimeList: TCustomTimeList);
-begin
-  FTimeLists.Remove(TimeList);
 end;
 
 function TPhastModel.IndexOfScreenObject(const AScreenObject: TScreenObject):
@@ -4914,135 +4897,6 @@ begin
   FCachedScreenObjectIndex := result;
 end;
 
-procedure TPhastModel.RemoveVariables(const DataSet: TDataArray);
-var
-  TempCompiler: TRbwParser;
-  Local3DCompiler: TRbwParser;
-  VarIndex: integer;
-  Variable: TCustomVariable;
-begin
-  TempCompiler := GetCompiler(DataSet.Orientation,
-    DataSet.EvaluatedAt);
-
-  Local3DCompiler := nil;
-  case DataSet.EvaluatedAt of
-    eaBlocks:
-      begin
-        Local3DCompiler := rpThreeDFormulaCompiler;
-      end;
-    eaNodes:
-      begin
-        Local3DCompiler := rpThreeDFormulaCompilerNodes;
-      end;
-  else
-    Assert(False);
-  end;
-  VarIndex := TempCompiler.IndexOfVariable(DataSet.Name);
-  if VarIndex >= 0 then
-  begin
-    Variable := TempCompiler.Variables[VarIndex] as TCustomVariable;
-    TempCompiler.RemoveVariable(Variable);
-  end;
-  if TempCompiler <> Local3DCompiler then
-  begin
-    VarIndex := Local3DCompiler.IndexOfVariable(DataSet.Name);
-    if VarIndex >= 0 then
-    begin
-      Variable := Local3DCompiler.Variables[VarIndex] as TCustomVariable;
-      Local3DCompiler.RemoveVariable(Variable);
-    end;
-  end;
-end;
-
-procedure TPhastModel.CreateVariables(const DataSet: TDataArray);
-var
-  TempCompiler: TRbwParser;
-  Local3DCompiler: TRbwParser;
-  VarIndex: integer;
-  Variable: TCustomValue;
-begin
-  TempCompiler := GetCompiler(DataSet.Orientation,
-    DataSet.EvaluatedAt);
-
-  Local3DCompiler := nil;
-  case DataSet.EvaluatedAt of
-    eaBlocks:
-      begin
-        Local3DCompiler := rpThreeDFormulaCompiler;
-      end;
-    eaNodes:
-      begin
-        Local3DCompiler := rpThreeDFormulaCompilerNodes;
-      end;
-  else
-    Assert(False);
-  end;
-
-  VarIndex := TempCompiler.IndexOfVariable(DataSet.Name);
-  if VarIndex < 0 then
-  begin
-    case DataSet.Datatype of
-      rdtDouble:
-        begin
-          TempCompiler.CreateVariable(DataSet.Name,
-            DataSet.FullClassification, 0.0);
-          if TempCompiler <> Local3DCompiler then
-          begin
-            Local3DCompiler.CreateVariable(DataSet.Name,
-              DataSet.FullClassification, 0.0);
-          end;
-        end;
-      rdtInteger:
-        begin
-          TempCompiler.CreateVariable(DataSet.Name,
-            DataSet.FullClassification, 0);
-          if TempCompiler <> Local3DCompiler then
-          begin
-            Local3DCompiler.CreateVariable(DataSet.Name,
-              DataSet.FullClassification, 0);
-          end;
-        end;
-      rdtBoolean:
-        begin
-          TempCompiler.CreateVariable(DataSet.Name,
-            DataSet.FullClassification, False);
-          if TempCompiler <> Local3DCompiler then
-          begin
-            Local3DCompiler.CreateVariable(DataSet.Name,
-              DataSet.FullClassification, False);
-          end;
-        end;
-      rdtString:
-        begin
-          TempCompiler.CreateVariable(DataSet.Name,
-            DataSet.FullClassification, '');
-          if TempCompiler <> Local3DCompiler then
-          begin
-            Local3DCompiler.CreateVariable(DataSet.Name,
-              DataSet.FullClassification, '');
-          end;
-        end;
-    else
-      Assert(False);
-    end;
-  end
-  else
-  begin
-    Variable := TempCompiler.Variables[VarIndex];
-    Assert(Variable.Name = UpperCase(DataSet.Name));
-    Assert(Variable.ResultType = DataSet.DataType);
-    Variable.Classification := DataSet.FullClassification;
-    if TempCompiler <> Local3DCompiler then
-    begin
-      VarIndex := Local3DCompiler.IndexOfVariable(DataSet.Name);
-      Variable := Local3DCompiler.Variables[VarIndex];
-      Assert(Variable.Name = UpperCase(DataSet.Name));
-      Assert(Variable.ResultType = DataSet.DataType);
-      Variable.Classification := DataSet.FullClassification;
-    end;
-  end;
-end;
-
 procedure TPhastModel.SetPathLine(const Value: TPathLineReader);
 begin
   if FPathLine = nil then
@@ -5068,6 +4922,11 @@ begin
   begin
     result := GuiSettings.Height;
   end;
+end;
+
+function TPhastModel.GetHufParameters: THufModflowParameters;
+begin
+  result := FHufParameters;
 end;
 
 function TPhastModel.GetLeft: integer;
@@ -5106,12 +4965,6 @@ begin
   end;
 end;
 
-procedure TPhastModel.SetHeadFluxObservations(
-  const Value: TFluxObservationGroups);
-begin
-  FHeadFluxObservations.Assign(Value);
-end;
-
 procedure TPhastModel.SetHeight(const Value: integer);
 begin
   if GuiSettings <> nil then
@@ -5125,9 +4978,9 @@ begin
   FHufParameters.Assign(Value);
 end;
 
-procedure TPhastModel.SetHydrogeologicUnits(const Value: THydrogeologicUnits);
+procedure TPhastModel.SetLayerStructure(const Value: TLayerStructure);
 begin
-  FHydrogeologicUnits.Assign(Value);
+  FLayerStructure.Assign(Value);
 end;
 
 procedure TPhastModel.SetLeft(const Value: integer);
@@ -5190,136 +5043,14 @@ begin
   end;
 end;
 
-function TPhastModel.UzfInitialInfiltrationUsed(Sender: TObject): boolean;
-begin
-  result := UzfPackageUsed(Sender);
-  if result then
-  begin
-    if (Sender <> nil) and (Sender is TUndoChangePackageSelection) then
-    begin
-      result := True;
-    end
-    else
-    begin
-      result := ModflowStressPeriods.CompletelyTransient;
-    end;
-  end;
-end;
-
-function TPhastModel.ModflowUsed(Sender: TObject): boolean;
-begin
-  result := ModelSelection = msModflow;
-end;
-
-function TPhastModel.ModflowInitialHeadUsed(Sender: TObject): boolean;
-begin
-  result := ModflowUsed(Sender) and (ModflowOptions.InitialHeadFileName = '');
-end;
-
-function TPhastModel.HorizontalAnisotropyUsed(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msModflow)
-    and ModflowPackages.LpfPackage.IsSelected;
-end;
-
 function TPhastModel.PhastUsed(Sender: TObject): boolean;
 begin
   result := ModelSelection = msPhast;
 end;
 
-function TPhastModel.WetDryUsed(Sender: TObject): boolean;
+function TPhastModel.StoreChildModels: Boolean;
 begin
-  result := ModflowWettingOptions.WettingActive;
-end;
-
-function TPhastModel.ModpathUsed(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msModflow)
-    and ModflowPackages.ModPath.IsSelected;
-end;
-
-function TPhastModel.BcfUsed(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msModflow)
-    and ModflowPackages.BcfPackage.IsSelected
-end;
-
-function TPhastModel.OptionalDataSet(Sender: TObject): boolean;
-begin
-  result := False;
-end;
-
-function TPhastModel.ZoneBudgetSelected(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msModflow)
-    and ModflowPackages.ZoneBudget.IsSelected
-end;
-
-function TPhastModel.SwtSelected(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msModflow)
-    and ModflowPackages.SwtPackage.IsSelected
-end;
-
-function TPhastModel.SwtOffsetsUsed(Sender: TObject): boolean;
-begin
-  result := SwtSelected(Sender)
-    and (ModflowPackages.SwtPackage.PreconsolidationSource = pcOffsets);
-end;
-
-function TPhastModel.SwtSpecifiedUsed(Sender: TObject): boolean;
-begin
-  result := SwtSelected(Sender)
-    and (ModflowPackages.SwtPackage.PreconsolidationSource = pcSpecified);
-end;
-
-
-function TPhastModel.HufSelected(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msModflow)
-    and ModflowPackages.HufPackage.IsSelected
-end;
-
-function TPhastModel.HufStorageUsed(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msModflow)
-    and ModflowPackages.HufPackage.IsSelected
-    and ModflowStressPeriods.TransientModel;
-end;
-
-function TPhastModel.HufReferenceSurfaceNeeded(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msModflow)
-    and ModflowPackages.HufPackage.IsSelected
-    and (ModflowPackages.HufPackage.ReferenceChoice = hrcReferenceLayer)
-    and (HufParameters.CountParameters([ptHUF_KDEP]) > 0);
-end;
-
-function TPhastModel.SpecificYieldUsed(Sender: TObject): boolean;
-var
-  UnitIndex: Integer;
-  LayerGroup: TLayerGroup;
-begin
-  result := (ModflowPackages.LpfPackage.IsSelected and
-    (ModflowSteadyParameters.CountParameters([ptLPF_SY]) = 0))
-    or ModflowPackages.BcfPackage.IsSelected;
-  if result then
-  begin
-    result := ModflowStressPeriods.TransientModel
-  end;
-  if result then
-  begin
-    result := False;
-    for UnitIndex := 1 to LayerStructure.Count - 1 do
-    begin
-      LayerGroup := LayerStructure[UnitIndex];
-      if LayerGroup.Simulated then
-      begin
-        result := LayerGroup.AquiferType in [1,3];
-        if result then break;
-      end;
-    end;
-  end;
+  result := FChildModels.Count > 0;  
 end;
 
 function TPhastModel.StoreEndPoints: Boolean;
@@ -5337,70 +5068,39 @@ begin
   result := (FTimeSeries <> nil) and (FTimeSeries.FileName <> '');
 end;
 
-function TPhastModel.ConfiningBedKzUsed(Sender: TObject): boolean;
-var
-  UnitIndex: Integer;
-  LayerGroup: TLayerGroup;
+function TPhastModel.GetModelSelection: TModelSelection;
 begin
-  result := (ModflowPackages.LpfPackage.IsSelected and
-    (ModflowSteadyParameters.CountParameters([ptLPF_VKCB]) = 0))
-    or ModflowPackages.BcfPackage.IsSelected;
-  if result then
-  begin
-    result := False;
-    for UnitIndex := 1 to LayerStructure.Count - 1 do
-    begin
-      LayerGroup := LayerStructure[UnitIndex];
-      result := not LayerGroup.Simulated;
-      if result then break;
-    end;
-  end;
+  result := FModelSelection;
 end;
 
-function TPhastModel.VerticalAnisotropyUsed(Sender: TObject): boolean;
-var
-  UnitIndex: Integer;
-  LayerGroup: TLayerGroup;
+function TPhastModel.GetModflowFullStressPeriods: TModflowStressPeriods;
 begin
-  result := False;
-  if ModflowPackages.LpfPackage.IsSelected then
-  begin
-    for UnitIndex := 1 to LayerStructure.Count - 1 do
-    begin
-      LayerGroup := LayerStructure[UnitIndex];
-      if LayerGroup.Simulated then
-      begin
-        result := LayerGroup.VerticalHydraulicConductivityMethod <> 0;
-        if result then break;
-      end;
-    end;
-  end;
+  result := FModflowFullStressPeriods;
 end;
 
-function TPhastModel.UzfPackageUsed(Sender: TObject): boolean;
+function TPhastModel.GetModflowOptions: TModflowOptions;
 begin
-  result := ModflowPackages.UzfPackage.IsSelected;
+  result := FModflowOptions;
 end;
 
-function TPhastModel.RouteUzfDischarge(Sender: TObject): boolean;
+function TPhastModel.GetModflowOutputControl: TModflowOutputControl;
 begin
-  result := UzfPackageUsed(Sender)
-    and ModflowPackages.UzfPackage.RouteDischargeToStreams
-    and (ModflowPackages.SfrPackage.IsSelected
-    or ModflowPackages.LakPackage.IsSelected);
+  result := FModflowOutputControl;
 end;
 
-function TPhastModel.UzfUnsatVertKUsed(Sender: TObject): boolean;
+function TPhastModel.GetModflowSteadyParameters: TModflowSteadyParameters;
 begin
-  result := UzfPackageUsed(Sender) and
-    (ModflowPackages.UzfPackage.VerticalKSource = 1);
+  result := FModflowSteadyParameters;
 end;
 
-procedure TPhastModel.GetMfHobHeadsUseList(Sender: TObject;
-  NewUseList: TStringList);
+function TPhastModel.GetModflowStressPeriods: TModflowStressPeriods;
 begin
-  NewUseList.Add(rsActive);
-  // do nothing
+  result := FModflowStressPeriods;
+end;
+
+function TPhastModel.GetModflowTransientParameters: TModflowTransientListParameters;
+begin
+  result := FModflowTransientParameters;
 end;
 
 procedure TPhastModel.UpdateUseList(DataIndex: integer;
@@ -5413,17 +5113,17 @@ var
 begin
   Formula := Item.BoundaryFormula[DataIndex];
   try
-    FrpThreeDFormulaCompiler.Compile(Formula);
+    rpThreeDFormulaCompiler.Compile(Formula);
   except on E: ErbwParserError do
     begin
       ScreenObject := Item.ScreenObject as TScreenObject;
       frmFormulaErrors.AddError(ScreenObject.Name, StrModflowSfrReachLength,
         Formula, E.Message);
       Formula := '0';
-      FrpThreeDFormulaCompiler.Compile(Formula);
+      rpThreeDFormulaCompiler.Compile(Formula);
     end;
   end;
-  TempUseList := FrpThreeDFormulaCompiler.CurrentExpression.VariablesUsed;
+  TempUseList := rpThreeDFormulaCompiler.CurrentExpression.VariablesUsed;
   for VariableIndex := 0 to TempUseList.Count - 1 do
   begin
     if NewUseList.IndexOf(TempUseList[VariableIndex]) < 0 then
@@ -5497,12 +5197,6 @@ begin
   end;
 end;
 
-procedure TPhastModel.SetModelInputFiles(const Value: TStrings);
-begin
-  FModelInputFiles.Assign(Value);
-  Invalidate;
-end;
-
 procedure TPhastModel.SetModelMateProject(const Value: TProject);
 begin
   if FModelMateProject <> Value then
@@ -5550,7 +5244,7 @@ begin
           PhastGrid.TopGridObserver := nil;
           PhastGrid.ThreeDGridObserver := nil;
         end;
-      msModflow:
+      msModflow, msModflowLGR:
         begin
           ModflowGrid.TopGridObserver := nil;
           ModflowGrid.ThreeDGridObserver := nil;
@@ -5571,7 +5265,7 @@ begin
         begin
           FGrid := PhastGrid;
         end;
-      msModflow:
+      msModflow, msModflowLGR:
         begin
           FGrid := ModflowGrid;
         end;
@@ -5579,21 +5273,21 @@ begin
     end;
     if Grid <> nil then
     begin
-      Grid.TopGridObserver := FTopGridObserver;
-      Grid.ThreeDGridObserver := FThreeDGridObserver;
+      Grid.TopGridObserver := TopGridObserver;
+      Grid.ThreeDGridObserver := ThreeDGridObserver;
     end;
     if Assigned(OnModelSelectionChange) then
     begin
       OnModelSelectionChange(self);
     end;
-    AddGIS_Functions(rpTopFormulaCompiler, FModelSelection);
-    AddGIS_Functions(rpFrontFormulaCompiler, FModelSelection);
-    AddGIS_Functions(rpSideFormulaCompiler, FModelSelection);
-    AddGIS_Functions(rpThreeDFormulaCompiler, FModelSelection);
-    AddGIS_Functions(rpTopFormulaCompilerNodes, FModelSelection);
-    AddGIS_Functions(rpFrontFormulaCompilerNodes, FModelSelection);
-    AddGIS_Functions(rpSideFormulaCompilerNodes, FModelSelection);
-    AddGIS_Functions(rpThreeDFormulaCompilerNodes, FModelSelection);
+    AddGIS_Functions(rpTopFormulaCompiler, FModelSelection, eaBlocks);
+    AddGIS_Functions(rpFrontFormulaCompiler, FModelSelection, eaBlocks);
+    AddGIS_Functions(rpSideFormulaCompiler, FModelSelection, eaBlocks);
+    AddGIS_Functions(rpThreeDFormulaCompiler, FModelSelection, eaBlocks);
+    AddGIS_Functions(rpTopFormulaCompilerNodes, FModelSelection, eaNodes);
+    AddGIS_Functions(rpFrontFormulaCompilerNodes, FModelSelection, eaNodes);
+    AddGIS_Functions(rpSideFormulaCompilerNodes, FModelSelection, eaNodes);
+    AddGIS_Functions(rpThreeDFormulaCompilerNodes, FModelSelection, eaNodes);
 
     UpdateDataArrayParameterUsed;
 
@@ -5601,11 +5295,15 @@ begin
     begin
       Grid.GridChanged;
     end;
-    CreateInitialDataSets;
-
-    for Index := 0 to DataSetCount - 1 do
+    if not (csReading in ComponentState) and not (csDestroying in ComponentState) then
     begin
-      DataSet := DataSets[Index] as TDataArray;
+      FDataArrayManager.CreateInitialDataSets;
+    end;
+
+
+    for Index := 0 to FDataArrayManager.DataSetCount - 1 do
+    begin
+      DataSet := FDataArrayManager.DataSets[Index] as TDataArray;
       if Grid <> nil then
       begin
         DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
@@ -5621,18 +5319,6 @@ begin
   end;
 end;
 
-procedure TPhastModel.SetModflowGrid(const Value: TModflowGrid);
-begin
-  FModflowGrid.Assign(Value);
-  Invalidate;
-end;
-
-procedure TPhastModel.SetModflowNameFileLines(const Value: TStrings);
-begin
-  FModflowNameFileLines.Assign(Value);
-  Invalidate;
-end;
-
 procedure TPhastModel.SetModflowOptions(const Value: TModflowOptions);
 begin
   FModflowOptions.Assign(Value);
@@ -5642,11 +5328,6 @@ procedure TPhastModel.SetModflowOutputControl(
   const Value: TModflowOutputControl);
 begin
   FModflowOutputControl.Assign(Value);
-end;
-
-procedure TPhastModel.SetModflowPackages(const Value: TModflowPackages);
-begin
-  FModflowPackages.Assign(Value);
 end;
 
 procedure TPhastModel.SetModflowSteadyParameters(
@@ -5693,11 +5374,6 @@ begin
   FModflowTransientParameters.Assign(Value);
 end;
 
-procedure TPhastModel.SetModflowWettingOptions(const Value: TWettingOptions);
-begin
-  FModflowWettingOptions.Assign(Value);
-end;
-
 function TPhastModel.GetEndPoints: TEndPointReader;
 begin
   if (FEndPoints = nil) then
@@ -5718,12 +5394,6 @@ begin
   begin
     result := frmGoPhast.frameSideView.ZoomBox.Exaggeration;
   end;
-end;
-
-procedure TPhastModel.SetEdgeDisplay(
-  const Value: TCustomModflowGridEdgeDisplay);
-begin
-  FEdgeDisplay := Value;
 end;
 
 procedure TPhastModel.SetEndPoints(const Value: TEndPointReader);
@@ -5754,6 +5424,11 @@ begin
     frmGoPhast.PhastGrid.GridChanged;
     frmGoPhast.ModflowGrid.GridChanged;
   end;
+end;
+
+function TPhastModel.GetFreeSurface: boolean;
+begin
+  result := FFreeSurface;
 end;
 
 function TPhastModel.GetFrontHeight: integer;
@@ -5816,6 +5491,11 @@ begin
   end;
 end;
 
+function TPhastModel.GetSoluteTransport: boolean;
+begin
+  result := FSoluteTransport;
+end;
+
 function TPhastModel.GetTopX: double;
 begin
   if GuiSettings = nil then
@@ -5862,189 +5542,6 @@ begin
   begin
     GuiSettings.FrontY := Value;
   end;
-end;
-
-procedure TPhastModel.SetGhbObservations(const Value: TFluxObservationGroups);
-begin
-  FGhbObservations.Assign(Value);
-end;
-
-procedure TPhastModel.SetGlobalVariables(const Value: TGlobalVariables);
-var
-  OldVariables: TStringList;
-  NewVariables: TStringList;
-  CompilerList: TList;
-  Variable: TGlobalVariable;
-  OldVariable: TGlobalVariable;
-  NewVariable: TGlobalVariable;
-  Index: integer;
-  NewIndex: integer;
-  procedure RemoveVariable(Variable: TGlobalVariable);
-  var
-    Index: Integer;
-    Compiler: TRbwParser;
-    VariableIndex: integer;
-    CompilerVariable: TCustomVariable;
-  begin
-    for Index := 0 to CompilerList.Count - 1 do
-    begin
-      Compiler := CompilerList[Index];
-      VariableIndex := Compiler.IndexOfVariable(Variable.Name);
-      Assert(VariableIndex >= 0);
-      CompilerVariable := Compiler.Variables[VariableIndex] as TCustomVariable;
-      Compiler.RemoveVariable(CompilerVariable);
-    end;
-    Variable.UpToDate := False;
-  end;
-  procedure UpdateVariable(Variable: TGlobalVariable);
-  var
-    CompilerIndex: Integer;
-    Compiler: TRbwParser;
-    VariableIndex: integer;
-    CompilerVariable: TCustomVariable;
-    ValueChanged: boolean;
-    RealVariable: TRealVariable;
-    IntegerVariable: TIntegerVariable;
-    BooleanVariable: TBooleanVariable;
-    StringVariable: TStringVariable;
-  begin
-    ValueChanged := False;
-    for CompilerIndex := 0 to CompilerList.Count - 1 do
-    begin
-      Compiler := CompilerList[CompilerIndex];
-      VariableIndex := Compiler.IndexOfVariable(Variable.Name);
-      if VariableIndex < 0 then
-      begin
-        case Variable.Format of
-          rdtDouble:
-            begin
-              Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-                Variable.RealValue);
-            end;
-          rdtInteger:
-            begin
-              Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-                Variable.IntegerValue);
-            end;
-          rdtBoolean:
-            begin
-              Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-                Variable.BooleanValue);
-            end;
-          rdtString:
-            begin
-              Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-                Variable.StringValue);
-            end;
-          else Assert(False);
-        end;
-      end
-      else
-      begin
-        CompilerVariable := Compiler.Variables[VariableIndex]
-          as TCustomVariable;
-        case Variable.Format of
-          rdtDouble:
-            begin
-              RealVariable := CompilerVariable as TRealVariable;
-              if (CompilerIndex = 0)
-                and (RealVariable.Value <> Variable.RealValue) then
-              begin
-                ValueChanged := True;
-              end;
-              RealVariable.Value := Variable.RealValue;
-            end;
-          rdtInteger:
-            begin
-              IntegerVariable := CompilerVariable as TIntegerVariable;
-              if (CompilerIndex = 0)
-                and (IntegerVariable.Value <> Variable.IntegerValue) then
-              begin
-                ValueChanged := True;
-              end;
-              IntegerVariable.Value := Variable.IntegerValue;
-            end;
-          rdtBoolean:
-            begin
-              BooleanVariable := CompilerVariable as TBooleanVariable;
-              if (CompilerIndex = 0)
-                and (BooleanVariable.Value <> Variable.BooleanValue) then
-              begin
-                ValueChanged := True;
-              end;
-              BooleanVariable.Value := Variable.BooleanValue;
-            end;
-          rdtString:
-            begin
-              StringVariable := CompilerVariable as TStringVariable;
-              if (CompilerIndex = 0)
-                and (StringVariable.Value <> Variable.StringValue) then
-              begin
-                ValueChanged := True;
-              end;
-              StringVariable.Value := Variable.StringValue;
-            end;
-          else Assert(False);
-        end;
-      end;
-    end;
-    if ValueChanged then
-    begin
-      Variable.UpToDate := False;
-      Variable.UpToDate := True;
-    end;
-  end;
-begin
-  OldVariables := TStringList.Create;
-  NewVariables := TStringList.Create;
-  CompilerList := TList.Create;
-  try
-    FillCompilerList(CompilerList);
-
-    for Index := 0 to FGlobalVariables.Count - 1 do
-    begin
-      Variable := FGlobalVariables[Index];
-      OldVariables.AddObject(UpperCase(Variable.Name), Variable);
-    end;
-    for Index := 0 to Value.Count - 1 do
-    begin
-      Variable := Value[Index];
-      NewVariables.AddObject(UpperCase(Variable.Name), Variable);
-    end;
-    OldVariables.Sort;
-    NewVariables.Sort;
-    for Index := 0 to OldVariables.Count - 1 do
-    begin
-      NewIndex := NewVariables.IndexOf(OldVariables[Index]);
-      if NewIndex < 0 then
-      begin
-        Variable := OldVariables.Objects[Index] as TGlobalVariable;
-        RemoveVariable(Variable);
-      end
-      else
-      begin
-        OldVariable := OldVariables.Objects[Index] as TGlobalVariable;
-        NewVariable := NewVariables.Objects[NewIndex] as TGlobalVariable;
-        if OldVariable.Format <> NewVariable.Format then
-        begin
-          RemoveVariable(OldVariable);
-        end;
-      end;
-    end;
-
-    for Index := 0 to NewVariables.Count - 1 do
-    begin
-      Variable := NewVariables.Objects[Index] as TGlobalVariable;
-      UpdateVariable(Variable);
-    end;
-
-  finally
-    CompilerList.Free;
-    NewVariables.Free;
-    OldVariables.Free;
-  end;
-
-  FGlobalVariables.Assign(Value);
 end;
 
 procedure TPhastModel.SetSideX(const Value: double);
@@ -6142,14 +5639,14 @@ var
   SpecifiedHeadArray: TDataArray;
   LakeComment: string;
 begin
-  if (ModelSelection = msMODFLOW)
+  if (ModelSelection in [msMODFLOW, msModflowLGR])
     and ModflowPackages.ChdBoundary.IsSelected then
   begin
-    SpecifiedHeadArray := GetDataSetByName(rsModflowSpecifiedHead);
+    SpecifiedHeadArray := FDataArrayManager.GetDataSetByName(rsModflowSpecifiedHead);
     if SpecifiedHeadArray <> nil then
     begin
       SpecifiedHeadArray.Initialize;
-      ActiveArray := GetDataSetByName(rsActive);
+      ActiveArray := FDataArrayManager.GetDataSetByName(rsActive);
       Assert(ActiveArray <> nil);
 
       for ColIndex := 0 to ModflowGrid.ColumnCount - 1 do
@@ -6169,11 +5666,11 @@ begin
       end;
     end;
   end;
-  if (ModelSelection = msMODFLOW)
+  if (ModelSelection in [msMODFLOW, msModflowLGR])
     and ModflowPackages.LakPackage.IsSelected  then
   begin
-    LakeIdArray := GetDataSetByName(rsLakeID);
-    ActiveArray := GetDataSetByName(rsActive);
+    LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
+    ActiveArray := FDataArrayManager.GetDataSetByName(rsActive);
     Assert(LakeIdArray <> nil);
     Assert(ActiveArray <> nil);
     LakeIdArray.Initialize;
@@ -6197,7 +5694,7 @@ begin
         end;
       end;
     end;
-    AddDataSetToCache(LakeIdArray);
+    FDataArrayManager.AddDataSetToCache(LakeIdArray);
   end;
 end;
 
@@ -6224,45 +5721,6 @@ begin
   end;
 end;
 
-procedure TPhastModel.UpdateDataSetDimensions;
-var
-  Index: integer;
-  DataSet: TDataArray;
-begin
-  if Grid = nil then
-  begin
-    for Index := 0 to DataSetCount - 1 do
-    begin
-      DataSet := DataSets[Index];
-      DataSet.UpdateDimensions(-1, -1, -1);
-    end;
-    for Index := 0 to BoundaryDataSetCount - 1 do
-    begin
-      DataSet := BoundaryDataSets[Index];
-      DataSet.UpdateDimensions(-1, -1, -1);
-    end;
-  end
-  else
-  begin
-    for Index := 0 to DataSetCount - 1 do
-    begin
-      DataSet := DataSets[Index];
-      DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-        Grid.ColumnCount);
-    end;
-    for Index := 0 to BoundaryDataSetCount - 1 do
-    begin
-      DataSet := BoundaryDataSets[Index];
-      DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-        Grid.ColumnCount);
-    end;
-    Grid.NeedToRecalculateTopCellColors := True;
-    Grid.NeedToRecalculateFrontCellColors := True;
-    Grid.NeedToRecalculateSideCellColors := True;
-  end;
-
-end;
-
 procedure TPhastModel.UpdateDataSets;
 const
   OldLongDispersivityName = 'Long_Dispersivity';
@@ -6279,14 +5737,12 @@ var
   SearchName: string;
   Compiler: TRbwParser;
 begin
-  FDataSets.Capacity := FDataSetCollection.Count;
-  FDataSetFunctions.Capacity := FDataSetCollection.Count;
+  FDataArrayManager.DataSetsCapacity := FDataSetCollection.Count;
   for Index := 0 to FDataSetCollection.Count - 1 do
   begin
     Item := FDataSetCollection.Items[Index] as TDataSetItem;
     ADataSet := Item.FDataSet;
     Item.UpdateDataSet;
-//    AddDataSet(ADataSet);
 
     SearchName := ADataSet.Name;
     if SearchName = OldLongDispersivityName then
@@ -6302,7 +5758,7 @@ begin
       SearchName := rsVertical_Transv_Dispersivity;
     end;
 
-    ExistingDataSet := GetDataSetByName(SearchName);
+    ExistingDataSet := FDataArrayManager.GetDataSetByName(SearchName);
 
     if ExistingDataSet = nil then
     begin
@@ -6310,7 +5766,7 @@ begin
       begin
         ADataSet.Name := SearchName;
       end;
-      AddDataSet(ADataSet);
+      FDataArrayManager.AddDataSet(ADataSet);
       CreateVariables(ADataSet);
       ADataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
         Grid.ColumnCount);
@@ -6347,7 +5803,7 @@ begin
     begin
       SearchName := rsVertical_Transv_Dispersivity;
     end;
-    ExistingDataSet := GetDataSetByName(SearchName);
+    ExistingDataSet := FDataArrayManager.GetDataSetByName(SearchName);
     Assert(ExistingDataSet <> nil);
     ExistingDataSet.Assign(ADataSet);
     Compiler := GetCompiler(ExistingDataSet.Orientation, ExistingDataSet.EvaluatedAt);
@@ -6375,7 +5831,7 @@ begin
   begin
     Item := FDataSetCollection.Items[Index] as TDataSetItem;
     ADataSet := Item.FDataSet;
-    if FDataSets.IndexOf(ADataSet) < 0 then
+    if not DataArrayManager.DataArrayHeld(ADataSet) then
     begin
       ADataSet.Free;
     end;
@@ -6383,16 +5839,14 @@ begin
 
   FDataSetCollection.Clear;
 
-
-
-  CreateInitialDataSets;
+  FDataArrayManager.CreateInitialDataSets;
 
   for Index := 0 to ModflowSteadyParameters.Count - 1 do
   begin
     ParamItem := ModflowSteadyParameters.Items[Index];
     if ParamItem.UseMultiplier then
     begin
-      DataArray := GetDataSetByName(ParamItem.MultiplierName);
+      DataArray := FDataArrayManager.GetDataSetByName(ParamItem.MultiplierName);
       if DataArray <> nil then
       begin
         DataArray.OnDataSetUsed := ParameterDataSetUsed;
@@ -6400,30 +5854,13 @@ begin
     end;
     if ParamItem.UseZone then
     begin
-      DataArray := GetDataSetByName(ParamItem.ZoneName);
+      DataArray := FDataArrayManager.GetDataSetByName(ParamItem.ZoneName);
       if DataArray <> nil then
       begin
         DataArray.OnDataSetUsed := ParameterDataSetUsed;
       end;
     end;
   end;
-end;
-
-function TPhastModel.GetDataSetCollection: TDataSetCollection;
-var
-  Index: integer;
-  ADataSet: TDataArray;
-  Item: TDataSetItem;
-begin
-  FDataSetCollection.Clear;
-  for Index := 0 to DataSetCount - 1 do
-  begin
-    ADataSet := DataSets[Index];
-    Item := FDataSetCollection.Add as TDataSetItem;
-    Item.FDataSet := ADataSet;
-    ADataSet.SetSubComponent(True);
-  end;
-  result := FDataSetCollection;
 end;
 
 function TPhastModel.GetScreenObjectByName(AName: string): TScreenObject;
@@ -6503,20 +5940,6 @@ begin
   FProgramLocations.Assign(Value);
 end;
 
-procedure TPhastModel.SetObservationPurpose(const Value: TObservationPurpose);
-begin
-  if FObservationPurpose <> Value then
-  begin
-    FObservationPurpose := Value;
-    Invalidate;
-  end;
-end;
-
-procedure TPhastModel.SetRiverObservations(const Value: TFluxObservationGroups);
-begin
-  FRiverObservations.Assign(Value);
-end;
-
 procedure TPhastModel.SetTitle(const Value: TStrings);
 begin
   FTitle.Assign(Value);
@@ -6592,32 +6015,6 @@ begin
   end;
 end;
 
-procedure TPhastModel.RemoveDataSetFromLookUpList(const DataSet: TDataArray);
-var
-  Dummy: pointer;
-begin
-  if (FDataSetLookUpList <> nil) and (DataSet.Name <> '') then
-  begin
-    if FDataSetLookUpList.Search(DataSet.Name, Dummy) then
-    begin
-      FDataSetLookUpList.Delete(DataSet.Name);
-    end;
-  end;
-end;
-
-procedure TPhastModel.AddDataSetToLookUpList(const DataSet: TDataArray);
-var
-  Dummy: pointer;
-begin
-  if (FDataSetLookUpList <> nil) and (DataSet.Name <> '') then
-  begin
-    if not FDataSetLookUpList.Search(DataSet.Name, Dummy) then
-    begin
-      FDataSetLookUpList.Insert(DataSet.Name, DataSet);
-    end;
-  end;
-end;
-
 procedure TPhastModel.ScreenObjectSelected;
 begin
   Inc(FSelectedScreenObjectCount);
@@ -6665,71 +6062,9 @@ begin
   result := FArchiveName;
 end;
 
-function TPhastModel.GetBoundaryDataSetCount: integer;
+function TPhastModel.GetChemistryOptions: TChemistryOptions;
 begin
-  result := FBoundaryDataSets.Count;
-end;
-
-function TPhastModel.GetBoundaryDataSets(const Index: integer): TDataArray;
-begin
-  result := FBoundaryDataSets[Index] as TDataArray;
-end;
-
-function TPhastModel.GetCompiler(const Orientation: TDataSetOrientation;
-  const EvaluatedAt: TEvaluatedAt): TRbwParser;
-begin
-  result := nil;
-
-  case EvaluatedAt of
-    eaBlocks:
-      begin
-        case Orientation of
-          dsoTop:
-            begin
-              result := rpTopFormulaCompiler;
-            end;
-          dsoFront:
-            begin
-              result := rpFrontFormulaCompiler;
-            end;
-          dsoSide:
-            begin
-              result := rpSideFormulaCompiler;
-            end;
-          dso3D:
-            begin
-              result := rpThreeDFormulaCompiler;
-            end;
-        else
-          Assert(False);
-        end;
-      end;
-    eaNodes:
-      begin
-        case Orientation of
-          dsoTop:
-            begin
-              result := rpTopFormulaCompilerNodes;
-            end;
-          dsoFront:
-            begin
-              result := rpFrontFormulaCompilerNodes;
-            end;
-          dsoSide:
-            begin
-              result := rpSideFormulaCompilerNodes;
-            end;
-          dso3D:
-            begin
-              result := rpThreeDFormulaCompilerNodes;
-            end;
-        else
-          Assert(False);
-        end;
-      end;
-  else
-    Assert(False);
-  end;
+  Result := FChemistryOptions;
 end;
 
 function TPhastModel.GetCurrentScreenObject(VD: TViewDirection): TScreenObject;
@@ -6738,106 +6073,6 @@ begin
   begin
     OnGetCurrentScreenObject(self, VD, result);
   end;
-end;
-
-function TPhastModel.AddBoundaryDataSet(const DataSet: TDataArray): Integer;
-begin
-  result := FBoundaryDataSets.Add(DataSet);
-  Invalidate;
-end;
-
-function TPhastModel.IndenticalTransientArray(
-  DataArray: TDataArray; DataArrays: TList; var CachedIndex: integer): TDataArray;
-var
-  Index: Integer;
-  ADataArray: TDataArray;
-  CachedDataArray: TDataArray;
-begin
-  // On entry DataArrays is a list of temporary TDataArray's
-  // that have already had their Hash's computed.
-  // CachedIndex is the location in DataArrays of the last
-  // TDataArray that was identified in DataArrays via this procedure.
-  Assert(DataArray <> nil);
-  result := nil;
-  CachedDataArray := nil;
-  try
-  DataArray.ComputeHash;
-  // First check the most likely result.
-  if (CachedIndex > 0)
-    and (CachedIndex < DataArrays.Count) then
-  begin
-    CachedDataArray := DataArrays[CachedIndex];
-    if CachedDataArray.Hash = DataArray.Hash then
-    begin
-      // If the Hash's are identical it is extremely likely
-      // but not certain that the data are identical too.
-      // Compare the two arrays to make absolutely sure they are
-      // the same.
-      if DataArray.IdenticalDataArrayContents(CachedDataArray) then
-      begin
-        result := CachedDataArray;
-        CachedDataArray := nil;
-        Exit;
-      end;
-    end;
-  end;
-  // No identical array was found so check all the arrays in the list.
-  for Index := 0 to DataArrays.Count - 1 do
-  begin
-    if Index = CachedIndex then
-    begin
-      // This one has already been checked so skip it.
-      Continue;
-    end;
-    ADataArray := DataArrays[Index];
-    if ADataArray.Hash = DataArray.Hash then
-    begin
-      if DataArray.IdenticalDataArrayContents(ADataArray) then
-      begin
-        result := ADataArray;
-        CachedIndex := Index;
-        Exit;
-      end;
-      // ADataArray had the same Hash as DataArray.
-      // The data had to be restored to to compare it's contents
-      // so Cache it again.
-      ADataArray.CacheData;
-    end;
-  end;
-
-  finally
-    if (CachedDataArray <> nil) and (result <> nil) then
-    begin
-      // A different DataArray was found so cache the data
-      // from the previous one.
-      CachedDataArray.CacheData;
-    end;
-  end;
-end;
-
-
-function TPhastModel.IndenticalTransientZoneArray(
-  DataArray: TDataArray): TDataArray;
-begin
-  result := IndenticalTransientArray(DataArray,
-    TransientZoneArrays, FCachedZoneArrayIndex);
-end;
-
-function TPhastModel.IndenticalTransientMultiplierArray(
-  DataArray: TDataArray): TDataArray;
-begin
-  result := IndenticalTransientArray(DataArray,
-    TransientMultiplierArrays, FCachedMultiplierArrayIndex);
-end;
-
-function TPhastModel.IndexOfBoundaryDataSet(DataSetName: string): integer;
-begin
-  result := IndexOfDataSetInList(DataSetName, FBoundaryDataSets);
-end;
-
-function TPhastModel.GetTimeLists(Index: integer): TCustomTimeList;
-begin
-  result := FTimeLists[Index];
 end;
 
 function TPhastModel.GetTimeSeries: TTimeSeriesReader;
@@ -6864,11 +6099,6 @@ begin
       Exit;
     end;
   end;
-end;
-
-function TPhastModel.GetTimeListCount: integer;
-begin
-  result := FTimeLists.Count;
 end;
 
 procedure TPhastModel.UpdateFormulas(OldNames, NewNames: TStringList);
@@ -6957,7 +6187,7 @@ var
   ScreenObjectIndex: Integer;
   ScreenObject: TScreenObject;
 begin
-  if (ModelSelection = msMODFLOW)
+  if (ModelSelection in [msMODFLOW, msModflowLGR])
     and ModflowPackages.LakPackage.IsSelected  then
   begin
     LakeList := TIntegerList.Create;
@@ -6981,7 +6211,7 @@ begin
         end;
       end;
 
-      LakeIdArray := GetDataSetByName(rsLakeID);
+      LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
       Assert(LakeIdArray <> nil);
       for ColIndex := 0 to ModflowGrid.ColumnCount - 1 do
       begin
@@ -7023,7 +6253,7 @@ var
   ScreenObject: TScreenObject;
   SfrList: TIntegerList;
 begin
-  if (ModelSelection = msMODFLOW)
+  if (ModelSelection in [msMODFLOW, msModflowLGR])
     and (ModflowPackages.LakPackage.IsSelected
     or ModflowPackages.SfrPackage.IsSelected)  then
   begin
@@ -7057,7 +6287,7 @@ begin
         end;
       end;
 
-      DischargeRoutingArray := GetDataSetByName(StrUzfDischargeRouting);
+      DischargeRoutingArray := FDataArrayManager.GetDataSetByName(StrUzfDischargeRouting);
       Assert(DischargeRoutingArray <> nil);
       for ColIndex := 0 to ModflowGrid.ColumnCount - 1 do
       begin
@@ -7101,162 +6331,6 @@ begin
   end;
 end;
 
-procedure TPhastModel.UpdateModflowFullStressPeriods;
-var
-  TimeList: TRealList;
-  TimeIndex: integer;
-  StressPeriod, NewStressPeriod: TModflowStressPeriod;
-  ScreenObjectIndex, StressPeriodIndex: Integer;
-  ScreenObject: TScreenObject;
-  StartTime, EndTime: double;
-  FirstTime: Double;
-  DeletedTimes: Boolean;
-//  StartTimeIndex: integer;
-begin
-  if FUpdatingFullStressPeriods then
-  begin
-    Exit;
-  end;
-  frmErrorsAndWarnings.RemoveWarningGroup(StrAnyTimesAfterThe);
-  frmErrorsAndWarnings.RemoveWarningGroup(StrAnyTimesBeforeThe);
-
-  FModflowFullStressPeriods.Clear;
-  TimeList := TRealList.Create;
-  try
-    FUpdatingFullStressPeriods := True;
-    TimeList.Sort;
-    for TimeIndex := 0 to ModflowStressPeriods.Count - 1 do
-    begin
-      StressPeriod := ModflowStressPeriods[TimeIndex];
-      TimeList.AddUnique(StressPeriod.StartTime);
-      TimeList.AddUnique(StressPeriod.EndTime);
-    end;
-    for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
-    begin
-      ScreenObject := ScreenObjects[ScreenObjectIndex];
-      if ScreenObject.Deleted then
-      begin
-        Continue;
-      end;
-      ScreenObject.UpdateModflowTimes(TimeList);
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-    end;
-
-    DeletedTimes := False;
-    StressPeriod := ModflowStressPeriods[0];
-    FirstTime := 0;
-    While TimeList.Count > 0 do
-    begin
-      if TimeList[0] < StressPeriod.StartTime then
-      begin
-        if not DeletedTimes then
-        begin
-          FirstTime := TimeList[0]
-        end;
-        TimeList.Delete(0);
-        DeletedTimes := True;
-      end
-      else
-      begin
-        break;
-      end;
-    end;
-
-    if DeletedTimes then
-    begin
-      frmErrorsAndWarnings.AddWarning(
-        StrAnyTimesBeforeThe,
-        'The beginning of the first stress period is '
-        + FloatToStr(StressPeriod.StartTime)
-        + '. The first defined time is '
-        + FloatToStr(FirstTime) + '.');
-    end;
-
-    TimeIndex := 0;
-    for StressPeriodIndex := 0 to ModflowStressPeriods.Count - 1 do
-    begin
-      if TimeIndex+1 >= TimeList.Count then
-      begin
-        break;
-      end;
-      StressPeriod := ModflowStressPeriods[StressPeriodIndex];
-      StartTime := TimeList[TimeIndex];
-      EndTime := TimeList[TimeIndex+1];
-      While (EndTime <= StressPeriod.EndTime) do
-      begin
-        NewStressPeriod :=
-          FModflowFullStressPeriods.Add as TModflowStressPeriod;
-        NewStressPeriod.Assign(StressPeriod);
-        NewStressPeriod.StartTime := StartTime;
-        NewStressPeriod.EndTime := EndTime;
-        NewStressPeriod.PeriodLength :=
-          NewStressPeriod.EndTime - NewStressPeriod.StartTime;
-        Inc(TimeIndex);
-        if TimeIndex+1 >= TimeList.Count then
-        begin
-          break;
-        end;
-        StartTime := TimeList[TimeIndex];
-        EndTime := TimeList[TimeIndex+1];
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-      end;
-    end;
-
-    StressPeriod := ModflowStressPeriods[ModflowStressPeriods.Count - 1];
-    EndTime := TimeList[TimeList.Count -1];
-    if EndTime > StressPeriod.EndTime then
-    begin
-      frmErrorsAndWarnings.AddWarning(
-        StrAnyTimesAfterThe,
-        'The end of the last stress period is '
-        + FloatToStr(StressPeriod.EndTime)
-        + '. The last defined time is '
-        + FloatToStr(EndTime) + '.');
-//      StartTimeIndex := -1;
-//      for TimeIndex := TimeList.Count -1 downto 0 do
-//      begin
-//        EndTime := TimeList[TimeIndex];
-//        if EndTime = StressPeriod.EndTime then
-//        begin
-//          StartTimeIndex := TimeIndex;
-//          break;
-//        end;
-//        Assert(EndTime > StressPeriod.EndTime);
-//        if not frmProgress.ShouldContinue then
-//        begin
-//          Exit;
-//        end;
-//      end;
-//      for TimeIndex := StartTimeIndex to TimeList.Count - 2 do
-//      begin
-//        StartTime := TimeList[TimeIndex];
-//        EndTime := TimeList[TimeIndex+1];
-//        NewStressPeriod :=
-//          FModflowFullStressPeriods.Add as TModflowStressPeriod;
-//        NewStressPeriod.Assign(StressPeriod);
-//        NewStressPeriod.StartTime := StartTime;
-//        NewStressPeriod.EndTime := EndTime;
-//        NewStressPeriod.PeriodLength :=
-//          NewStressPeriod.EndTime - NewStressPeriod.StartTime;
-//        if not frmProgress.ShouldContinue then
-//        begin
-//          Exit;
-//        end;
-//      end;
-    end;
-
-  finally
-    TimeList.Free;
-    FUpdatingFullStressPeriods := False;
-  end;
-end;
-
 procedure TPhastModel.UpdateOnPostInitialize;
 var
   ActiveArray: TDataArray;
@@ -7265,11 +6339,11 @@ var
   SpecifiedHeadArray: TDataArray;
   ModPathZoneArray: TDataArray;
 begin
-  LakeIdArray := GetDataSetByName(rsLakeID);
-  ActiveArray := GetDataSetByName(rsActive);
-  WetDryArray := GetDataSetByName(rsWetDryFlag);
-  SpecifiedHeadArray := GetDataSetByName(rsModflowSpecifiedHead);
-  ModPathZoneArray := GetDataSetByName(StrModpathZone);
+  LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
+  ActiveArray := FDataArrayManager.GetDataSetByName(rsActive);
+  WetDryArray := FDataArrayManager.GetDataSetByName(rsWetDryFlag);
+  SpecifiedHeadArray := FDataArrayManager.GetDataSetByName(rsModflowSpecifiedHead);
+  ModPathZoneArray := FDataArrayManager.GetDataSetByName(StrModpathZone);
 
   Assert(ActiveArray <> nil);
   if ModflowPackages.LakPackage.IsSelected then
@@ -7459,11 +6533,11 @@ var
 begin
   PriorNegatedString := '';
   PriorMadePositiveString := '';
-  ModPathZoneArray := GetDataSetByName(StrModpathZone);
-  ActiveArray := GetDataSetByName(rsActive);
+  ModPathZoneArray := FDataArrayManager.GetDataSetByName(StrModpathZone);
+  ActiveArray := FDataArrayManager.GetDataSetByName(rsActive);
   Assert(ActiveArray <> nil);
   ActiveArray.Initialize;
-  SpecifiedHeadArray := GetDataSetByName(rsModflowSpecifiedHead);
+  SpecifiedHeadArray := FDataArrayManager.GetDataSetByName(rsModflowSpecifiedHead);
   if SpecifiedHeadArray <> nil then
   begin
     SpecifiedHeadArray.Initialize;
@@ -7545,11 +6619,11 @@ var
   LayerIndex: Integer;
   IsLake: boolean;
 begin
-  if (ModelSelection = msMODFLOW)
+  if (ModelSelection in [msMODFLOW, msModflowLGR])
     and ModflowPackages.LakPackage.IsSelected  then
   begin
-    LakeIdArray := GetDataSetByName(rsLakeID);
-    WetDryArray := GetDataSetByName(rsWetDryFlag);
+    LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
+    WetDryArray := FDataArrayManager.GetDataSetByName(rsWetDryFlag);
     Assert(LakeIdArray <> nil);
     Assert(WetDryArray <> nil);
     LakeIdArray.Initialize;
@@ -7573,7 +6647,7 @@ begin
         end;
       end;
     end;
-    AddDataSetToCache(LakeIdArray);
+    FDataArrayManager.AddDataSetToCache(LakeIdArray);
   end;
 end;
 
@@ -7587,17 +6661,6 @@ begin
   begin
     result := nil;
   end;
-end;
-
-function TPhastModel.ReservoirLayerUsed(Sender: TObject): boolean;
-begin
-  result := ModflowPackages.ResPackage.IsSelected
-    and (ModflowPackages.ResPackage.LayerOption = loSpecified);
-end;
-
-function TPhastModel.ReservoirPackageUsed(Sender: TObject): boolean;
-begin
-  result := ModflowPackages.ResPackage.IsSelected;
 end;
 
 function TPhastModel.ResetSelectedScreenObjects: boolean;
@@ -7677,34 +6740,16 @@ end;
 
 procedure TPhastModel.ClearViewedItems;
 begin
-  FrontTimeList := nil;
-  SideTimeList := nil;
-  TopTimeList := nil;
-  FTopDisplayTime := 0;
-  FFrontDisplayTime := 0;
-  FSideDisplayTime := 0;
+  inherited;
   PhastGrid.TopDataSet := nil;
   PhastGrid.FrontDataSet := nil;
   PhastGrid.SideDataSet := nil;
   PhastGrid.ThreeDDataSet := nil;
-  ModflowGrid.TopDataSet := nil;
-  ModflowGrid.FrontDataSet := nil;
-  ModflowGrid.SideDataSet := nil;
-  ModflowGrid.ThreeDDataSet := nil;
-
+  
   PhastGrid.TopContourDataSet := nil;
   PhastGrid.FrontContourDataSet := nil;
   PhastGrid.SideContourDataSet := nil;
   PhastGrid.ThreeDContourDataSet := nil;
-  ModflowGrid.TopContourDataSet := nil;
-  ModflowGrid.FrontContourDataSet := nil;
-  ModflowGrid.SideContourDataSet := nil;
-  ModflowGrid.ThreeDContourDataSet := nil;
-
-  ThreeDTimeList := nil;
-  SideTimeList := nil;
-  FrontTimeList := nil;
-  TopTimeList := nil;
 end;
 
 function TPhastModel.ConvertPoint(VD: TViewDirection;
@@ -7799,29 +6844,6 @@ begin
   end;
 end;
 
-procedure TPhastModel.InitializeHobDisplay(Sender: TObject);
-var
-  HobWriter: TModflowHobWriter;
-  List: TModflowBoundListOfTimeLists;
-begin
-  MfHobHeads.CreateDataSets;
-
-  List := TModflowBoundListOfTimeLists.Create;
-  HobWriter := TModflowHobWriter.Create(Self);
-  try
-    List.Add(MfHobHeads);
-    HobWriter.UpdateDisplay(List, [0], ObservationPurpose);
-  finally
-    HobWriter.Free;
-    List.Free;
-  end;
-  MfHobHeads.ComputeAverage;
-  if frmErrorsAndWarnings.HasMessages then
-  begin
-    frmErrorsAndWarnings.Show;
-  end;
-end;
-
 type
   TComponentCrack = class(TComponent);
 
@@ -7851,11 +6873,11 @@ begin
   begin
     SideWidth := 1;
   end;
-  for Index := 0 to DataSetCount - 1 do
-  begin
-    DataSets[Index].OnNameChange := DataArrayNameChange;
-  end;
-  ClearNameChangeWarnings;
+//  for Index := 0 to DataSetCount - 1 do
+//  begin
+//    DataSets[Index].OnNameChange := DataArrayNameChange;
+//  end;
+//  ClearNameChangeWarnings;
 end;
 
 procedure TPhastModel.InvalidateSegments;
@@ -7901,12 +6923,20 @@ begin
     for Index := 0 to ScreenObjectCount - 1 do
     begin
       ScreenObject := ScreenObjects[Index];
+      if ScreenObject.Deleted then
+      begin
+        Continue;
+      end;
       SortedScreenObjectList.AddObject(ScreenObject.Name, ScreenObject);
     end;
     SortedScreenObjectList.Sort;
     for Index := 0 to ScreenObjectCount - 1 do
     begin
       ScreenObject := ScreenObjects[Index];
+      if ScreenObject.Deleted then
+      begin
+        Continue;
+      end;
       if ScreenObject.ModflowDrtBoundary <> nil then
       begin
         DrainReturn := ScreenObject.ModflowDrtBoundary.DrainReturn;
@@ -7930,21 +6960,6 @@ begin
   end;
 end;
 
-procedure TPhastModel.SetFileName(const Value: string);
-begin
-  if FFileName <> Value then
-  begin
-    FFileName := Value;
-    Invalidate;
-  end;
-end;
-
-procedure TPhastModel.SetFilesToArchive(const Value: TStrings);
-begin
-  FFilesToArchive.Assign(Value);
-  Invalidate;
-end;
-
 procedure TPhastModel.SetFlowOnly(const Value: boolean);
 begin
   SoluteTransport := not Value;
@@ -7966,113 +6981,15 @@ begin
   FDisplaySettings.Assign(Value);
 end;
 
-procedure TPhastModel.SetDrainObservations(const Value: TFluxObservationGroups);
-begin
-  FDrainObservations.Assign(Value);
-end;
-
 function TPhastModel.ModelResultsRequired(Sender: TObject): boolean;
 begin
   result := False;
-end;
-
-function TPhastModel.InitialHeadUsed(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msPhast) and not InitialWaterTableUsed(Sender);
-end;
-
-function TPhastModel.InitialWaterTableUsed(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msPhast) and FreeSurface and UseWaterTable;
-end;
-
-procedure TPhastModel.DontCache(DataArray: TDataArray);
-begin
-  FDataSetsToCache.Remove(DataArray);
-end;
-
-procedure TPhastModel.CacheDataArrays;
-var
-  Index: Integer;
-  DataArray: TDataArray;
-begin
-  for Index := 0 to FDataSetsToCache.Count - 1 do
-  begin
-    DataArray := FDataSetsToCache[Index];
-    if (DataArray <> Grid.TopDataSet)
-      and (DataArray <> Grid.FrontDataSet)
-      and (DataArray <> Grid.SideDataSet)
-      and (DataArray <> Grid.ThreeDDataSet) then
-    begin
-      DataArray.CacheData;
-    end;
-  end;
-  FDataSetsToCache.Clear;
-end;
-
-function TPhastModel.ConfinedStorageCoefUsed(Sender: TObject): boolean;
-begin
-  result := False;
-  case ModelSelection of
-    msUndefined: result := False;
-    msPhast: result := False;
-    msModflow:
-      begin
-        if ModflowPackages.BcfPackage.IsSelected then
-        begin
-          result := ModflowStressPeriods.TransientModel;
-        end
-        else
-        begin
-          result := False;
-        end;
-      end
-    else Assert(False);
-  end;
-end;
-
-function TPhastModel.SpecificStorageUsed(Sender: TObject): boolean;
-begin
-  result := False;
-  case ModelSelection of
-    msUndefined: result := False;
-    msPhast: result := True;
-    msModflow:
-      begin
-        if ModflowPackages.LpfPackage.IsSelected
-          or ModflowPackages.BcfPackage.IsSelected then
-        begin
-          result := ModflowStressPeriods.TransientModel;
-        end
-        else
-        begin
-          result := False;
-        end;
-      end
-    else Assert(False);
-  end;
-end;
-
-function TPhastModel.PorosityUsed(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msPhast)
-    or (ModelSelection = msModflow) and ModflowPackages.ModPath.IsSelected;
-end;
-
-function TPhastModel.ChemistryUsed(Sender: TObject): boolean;
-begin
-  result := (ModelSelection = msPhast) and SoluteTransport;
 end;
 
 procedure TPhastModel.EndScreenObjectUpdate;
 begin
   Dec(FScreenObjectUpdateCount);
   ScreenObjectsChanged(nil);
-end;
-
-function TPhastModel.EquilibriumPhasesUsed(Sender: TObject): boolean;
-begin
-  result := ChemistryUsed(Sender) and ChemistryOptions.UseEquilibriumPhases;
 end;
 
 function TPhastModel.SubsidenceDataArrayUsed(Sender: TObject): boolean;
@@ -8085,7 +7002,7 @@ var
   DelayItem: TSubDelayBedLayerItem;
   WT_Item: TSwtWaterTableItem;
 begin
-  result := (ModelSelection = msModflow)
+  result := (ModelSelection in [msMODFLOW, msModflowLGR])
     and ModflowPackages.SubPackage.IsSelected;
   if result then
   begin
@@ -8131,7 +7048,7 @@ begin
       end;
     end;
   end;
-  result := (ModelSelection = msModflow)
+  result := (ModelSelection in [msMODFLOW, msModflowLGR])
     and ModflowPackages.SwtPackage.IsSelected;
   if result then
   begin
@@ -8170,36 +7087,6 @@ begin
   end;
 end;
 
-function TPhastModel.SurfacesUsed(Sender: TObject): boolean;
-begin
-  result := ChemistryUsed(Sender) and ChemistryOptions.UseSurfaceAssemblages;
-end;
-
-function TPhastModel.ExchangeUsed(Sender: TObject): boolean;
-begin
-  result := ChemistryUsed(Sender) and ChemistryOptions.UseExchange;
-end;
-
-function TPhastModel.LakePackageUsed(Sender: TObject): boolean;
-begin
-  result := ModflowPackages.LakPackage.IsSelected;
-end;
-
-function TPhastModel.FixFileName(AFileName: string): string;
-var
-  FileName: string;
-  FileDir: string;
-begin
-  result := AFileName;
-  FileName := ExtractFileName(AFileName);
-  if Pos(' ', FileName) > 0 then
-  begin
-    FileName := StringReplace(FileName, ' ', '_', [rfReplaceAll]);
-    FileDir := ExtractFileDir(AFileName);
-    result := IncludeTrailingPathDelimiter(FileDir) + FileName;
-  end;
-end;
-
 procedure TPhastModel.FixOldModel;
 var
   ModpathZone: TDataArray;
@@ -8212,98 +7099,34 @@ begin
     // The VertexInterpolate function gave incorrect results in
     // versions '2.6.0.3' and earlier if the grid was rotated.
     // NodeInterpolate is a synonym for VertexInterpolate.
-    InvalidateAllDataSets;
+    FDataArrayManager.InvalidateAllDataSets;
   end;
   if FileVersionEqualOrEarlier('2.6.0.8') then
   begin
     // Modpath zone incorrectly limited to values >= 0 in
     // version 2.6.0.8 and earlier.
-    ModpathZone := GetDataSetByName(StrModpathZone);
+    ModpathZone := FDataArrayManager.GetDataSetByName(StrModpathZone);
     if ModpathZone <> nil then
     begin
       ModpathZone.CheckMin := False;
       ModpathZone.Invalidate;
     end;
   end;
-end;
-
-procedure TPhastModel.ExportModpathModel(FileName: string;
-  RunModel, NewBudgetFile: boolean);
-var
-  StartLocations: TModpathStartingLocationsWriter;
-  MainFileWriter: TModpathMainFileWriter;
-  TimeFileWriter: TModpathTimeFileWriter;
-  Responses: TModpathResponseFileWriter;
-  NameFileWriter: TModpathNameFileWriter;
-  BatchFileLocation: string;
-  LargeBudgetFileResponse: string;
-begin
-  if frmProgress = nil then
+  if (Grid.GridAngle <> 0)
+    and FileVersionEqualOrEarlier('2.7.0.9')
+    and FormulaManager.FunctionUsed(StrInterpolatedVertexValues) then
   begin
-    frmProgress := TfrmProgress.Create(nil);
+    // The InterpolatedVertexValue function gave incorrect results in
+    // versions '2.7.0.9' and earlier if the grid was rotated.
+    FDataArrayManager.InvalidateAllDataSets;
   end;
-  try
-    try
-      frmProgress.ShouldContinue := True;
-      UpdateModflowFullStressPeriods;
-      SetCurrentDir(ExtractFileDir(FileName));
-      FileName := FixFileName(FileName);
-
-      NameFileWriter := TModpathNameFileWriter.Create;
-      try
-        NameFileWriter.WriteFile(FileName, self);
-      finally
-        NameFileWriter.Free;
-      end;
-
-      MainFileWriter := TModpathMainFileWriter.Create(Self);
-      try
-        MainFileWriter.WriteFile(FileName);
-      finally
-        MainFileWriter.Free;
-      end;
-      StartLocations := TModpathStartingLocationsWriter.Create(Self);
-      try
-        StartLocations.WriteFile(FileName);
-      finally
-        StartLocations.Free;
-      end;
-      if ModflowPackages.ModPath.ShouldCreateTimeFile then
-      begin
-        TimeFileWriter := TModpathTimeFileWriter.Create(Self);
-        try
-          TimeFileWriter.WriteFile(FileName);
-        finally
-          TimeFileWriter.Free;
-        end;
-      end;
-      Responses := TModpathResponseFileWriter.Create(Self);
-      try
-        Responses.WriteFile(FileName, NewBudgetFile);
-        LargeBudgetFileResponse := Responses.FLargeBudgetFileResponse;
-      finally
-        Responses.Free;
-      end;
-
-      BatchFileLocation := WriteModpathBatchFile(ProgramLocations, FileName,
-        ChangeFileExt(FileName,'.mplst'), RunModel, LargeBudgetFileResponse);
-
-      if RunModel then
-      begin
-        WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
-      end;
-    except on E: EFCreateError do
-      begin
-        Beep;
-        MessageDlg(E.Message, mtError, [mbOK], 0);
-      end;
-    end;
-  finally
-    if frmProgress.Owner = nil then
-    begin
-      FreeAndNil(frmProgress);
-    end;
-//    ReclaimMemory;
+  if FileVersionEqualOrEarlier('2.7.0.13')
+  and (FormulaManager.FunctionUsed(StrHufKx)
+  or FormulaManager.FunctionUsed(StrHufKy)
+  or FormulaManager.FunctionUsed(StrHufKz)
+  or FormulaManager.FunctionUsed(StrHufSytp)) then
+  begin
+    FDataArrayManager.InvalidateAllDataSets;
   end;
 end;
 
@@ -8773,7 +7596,7 @@ begin
   else if ModelFileName <> '' then
   begin
     ModelMateProject.UcProject.ModelName :=
-      ModelFileName;
+      ChangeFileExt(ExtractFileName(ModelFileName),'');
   end;
 
   ParameterList := TStringList.Create;
@@ -8907,914 +7730,6 @@ begin
   end;
 end;
 
-procedure TPhastModel.WritePValAndTemplate(const ParameterName: string;
-  const Value: double);
-begin
-  PValFile.Add(ParameterName + ' ' + FortranFloatToStr(Value));
-  Template.Add(ParameterName + ' ' + UcodeDelimiter + ParameterName
-    + '                  ' + UcodeDelimiter);
-end;
-
-procedure TPhastModel.ExportZoneBudgetModel(FileName: string; RunModel: boolean);
-var
-  NumberOfSteps: Integer;
-  ZoneFileWriter: TZoneBudgetZoneFileWriter;
-  ResponseFileWriter: TZoneBudgetResponseFileWriter;
-  BatchFileLocation: string;
-begin
-  SetCurrentDir(ExtractFileDir(FileName));
-  FileName := FixFileName(FileName);
-  if frmProgress = nil then
-  begin
-    frmProgress := TfrmProgress.Create(nil);
-  end;
-  try
-    try
-      frmProgress.Prefix := 'File ';
-      frmProgress.Caption := 'Exporting ZONEBUDGET input files';
-      frmProgress.btnAbort.Visible := True;
-      frmProgress.ShouldContinue := True;
-      frmProgress.Show;
-
-      // Export ZoneFile;
-      // Export Response File;
-      // Export Batch File;
-      NumberOfSteps := 3;
-
-      frmProgress.pbProgress.Max := NumberOfSteps;
-      frmProgress.pbProgress.Position := 0;
-
-      ZoneFileWriter := TZoneBudgetZoneFileWriter.Create(self);
-      try
-        ZoneFileWriter.WriteFile(FileName);
-      finally
-        ZoneFileWriter.Free;
-      end;
-      CacheDataArrays;
-      Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      frmProgress.StepIt;
-
-      ResponseFileWriter := TZoneBudgetResponseFileWriter.Create(self);
-      try
-        ResponseFileWriter.WriteFile(FileName);
-      finally
-        ResponseFileWriter.Free;
-      end;
-      CacheDataArrays;
-      Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      frmProgress.StepIt;
-
-      BatchFileLocation := WriteZoneBudgetBatchFile(self, FileName, RunModel);
-
-      if RunModel then
-      begin
-        WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
-      end;
-    except on E: EFCreateError do
-      begin
-        Beep;
-        MessageDlg(E.Message, mtError, [mbOK], 0);
-      end;
-    end;
-  finally
-    frmProgress.btnAbort.Visible := False;
-    frmProgress.Hide;
-    if frmProgress.Owner = nil then
-    begin
-      FreeAndNil(frmProgress);
-    end;
-//    ReclaimMemory;
-  end;
-end;
-
-procedure TPhastModel.ExportModflowModel(FileName: string; RunModel: boolean);
-var
-  NameWriter: TNameFileWriter;
-  DisWriter: TModflowDiscretizationWriter;
-  BasicWriter: TModflowBasicWriter;
-  PcgWriter: TPcgWriter;
-  LPF_Writer: TModflowLPF_Writer;
-  HUF_Writer: TModflowHUF_Writer;
-  BCF_Writer: TModflowBCF_Writer;
-  KDEP_Writer : TModflowKDEP_Writer;
-  LVDA_Writer : TModflowLVDA_Writer;
-  ChdWriter: TModflowCHD_Writer;
-  GhbWriter: TModflowGHB_Writer;
-  WellWriter: TModflowWEL_Writer;
-  RivWriter: TModflowRIV_Writer;
-  DrnWriter: TModflowDRN_Writer;
-  DrtWriter: TModflowDRT_Writer;
-  RchWriter: TModflowRCH_Writer;
-  EvtWriter: TModflowEVT_Writer;
-  EtsWriter: TModflowETS_Writer;
-  ResWriter: TModflowRES_Writer;
-  LakWriter: TModflowLAK_Writer;
-  SfrWriter: TModflowSFR_Writer;
-  Mnw2Writer: TModflowMNW2_Writer;
-  ZoneWriter: TModflowZoneWriter;
-  MultiplierWriter: TModflowMultiplierWriter;
-  BatchFileLocation: string;
-  UzfWriter: TModflowUzfWriter;
-  GmgWriter: TGmgWriter;
-  SipWriter: TSipWriter;
-  De4Writer: TDe4Writer;
-  OCWriter: TOutputControlWriter;
-  GageUnitNumber: integer;
-  Gages: TStringList;
-  GagWriter: TModflowGAG_Writer;
-  HobWriter: TModflowHobWriter;
-  HfbWriter: TModflowHfb_Writer;
-  ListFileName: string;
-  Index: Integer;
-  StepCount: Integer;
-  StressPeriod: TModflowStressPeriod;
-  NumberOfSteps: Integer;
-  SubWriter: TModflowSUB_Writer;
-  SwtWriter: TModflowSWT_Writer;
-  HydModWriter: TModflowHydmodWriter;
-  PIndex: Integer;
-  SteadyParam: TModflowSteadyParameter;
-  MultipliersUsed: Boolean;
-  ZoneUsed: Boolean;
-  HufUnitIndex: integer;
-  HGU: THydrogeologicUnit;
-  HufParam: THufUsedParameter;
-begin
-  CheckWetting;
-
-  PValFile.Clear;
-  Template.Clear;
-
-  GageUnitNumber:= UnitNumbers.UnitNumber(StrUNIT);
-  SetCurrentDir(ExtractFileDir(FileName));
-  FileName := FixFileName(FileName);
-  TransientMultiplierArrays.Clear;
-  TransientZoneArrays.Clear;
-
-  if frmProgress = nil then
-  begin
-    frmProgress := TfrmProgress.Create(nil);
-  end;
-  try
-    frmFormulaErrors.DelayShowing := True;
-    try
-      frmProgress.Prefix := 'File ';
-      frmProgress.Caption := 'Exporting MODFLOW input files';
-      frmProgress.btnAbort.Visible := True;
-      frmProgress.ShouldContinue := True;
-      frmProgress.Show;
-
-      // The following tasks are always required.
-      // 1. Full Stress periods,
-      // 2. Discretization,
-      // 3. Basic,
-      // 4. Output Control,
-      // 5. Zone Arrays,
-      // 6. Multiplier Arrays
-      NumberOfSteps := 3;
-
-      NumberOfSteps := NumberOfSteps + ModflowPackages.SelectedPackageCount;
-      if ModflowPackages.SfrPackage.IsSelected
-        or ModflowPackages.LakPackage.IsSelected then
-      begin
-        // gages
-        Inc(NumberOfSteps)
-      end;
-
-      MultipliersUsed := False;
-      ZoneUsed := False;
-      if ModflowTransientParameters.Count > 0 then
-      begin
-        MultipliersUsed := True;
-        ZoneUsed := True;
-      end;
-
-      if not MultipliersUsed then
-      begin
-        if ModflowPackages.LpfPackage.IsSelected then
-        begin
-          for PIndex := 0 to ModflowSteadyParameters.Count - 1 do
-          begin
-            SteadyParam := ModflowSteadyParameters[PIndex];
-            if SteadyParam.UseMultiplier then
-            begin
-              MultipliersUsed := True;
-            end;
-            if SteadyParam.UseZone then
-            begin
-              ZoneUsed := True;
-            end;
-          end;
-        end
-        else if ModflowPackages.HufPackage.IsSelected then
-        begin
-          for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
-          begin
-            HGU := HydrogeologicUnits[HufUnitIndex];
-            for PIndex := 0 to HGU.HufUsedParameters.Count - 1 do
-            begin
-              HufParam := HGU.HufUsedParameters[PIndex];
-              if HufParam.UseMultiplier then
-              begin
-                MultipliersUsed := True;
-              end;
-              if HufParam.UseZone then
-              begin
-                ZoneUsed := True;
-              end;
-            end;
-          end;
-        end;
-
-      end;
-      if MultipliersUsed then
-      begin
-        Inc(NumberOfSteps)
-      end;
-      if ZoneUsed then
-      begin
-        Inc(NumberOfSteps)
-      end;
-
-      frmProgress.pbProgress.Max := NumberOfSteps;
-      frmProgress.pbProgress.Position := 0;
-
-      UpdateModflowFullStressPeriods;
-
-      Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-      frmProgress.StepIt;
-
-      StepCount := 0;
-      for Index := 0 to FModflowFullStressPeriods.Count - 1 do
-      begin
-        StressPeriod := FModflowFullStressPeriods.Items[Index];
-        StepCount := StepCount + StressPeriod.NumberOfSteps;
-      end;
-      if StepCount > 1000 then
-      begin
-        if MessageDlg('Your model has ' + IntToStr(StepCount)
-          + ' time steps. Do you want to continue?', mtWarning,
-          [mbYes, mbNo], 0) <> mrYes then
-        begin
-          Exit;
-        end;
-      end;
-
-      UsedMultiplierArrayNames.Clear;
-      UsedZoneArrayNames.Clear;
-      UsedMultiplierArrayNames.Sorted := True;
-      UsedZoneArrayNames.Sorted := True;
-      Gages := TStringList.Create;
-      NameWriter := TNameFileWriter.Create(self);
-      try
-        NameWriter.InitilizeNameFile(FileName, ListFileName);
-        DisWriter := TModflowDiscretizationWriter.Create(self);
-        try
-          DisWriter.WriteFile(FileName);
-        finally
-          DisWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        frmProgress.StepIt;
-
-        BasicWriter := TModflowBasicWriter.Create(self);
-        try
-          BasicWriter.WriteFile(FileName);
-        finally
-          BasicWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        frmProgress.StepIt;
-
-        OCWriter := TOutputControlWriter.Create(self);
-        try
-          OCWriter.WriteFile(FileName);
-        finally
-          OCWriter.Free;
-        end;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        frmProgress.StepIt;
-
-        PcgWriter := TPcgWriter.Create(self);
-        try
-          PcgWriter.WriteFile(FileName);
-        finally
-          PcgWriter.Free;
-        end;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.PcgPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        GmgWriter := TGmgWriter.Create(self);
-        try
-          GmgWriter.WriteFile(FileName);
-        finally
-          GmgWriter.Free;
-        end;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.GmgPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        SipWriter := TSipWriter.Create(self);
-        try
-          SipWriter.WriteFile(FileName);
-        finally
-          SipWriter.Free;
-        end;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.SipPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        De4Writer := TDe4Writer.Create(self);
-        try
-          De4Writer.WriteFile(FileName);
-        finally
-          De4Writer.Free;
-        end;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.De4Package.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        LPF_Writer := TModflowLPF_Writer.Create(self);
-        try
-          LPF_Writer.WriteFile(FileName);
-        finally
-          LPF_Writer.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.LpfPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        BCF_Writer := TModflowBCF_Writer.Create(self);
-        try
-          BCF_Writer.WriteFile(FileName);
-        finally
-          BCF_Writer.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.BcfPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        HUF_Writer := TModflowHUF_Writer.Create(self);
-        try
-          HUF_Writer.WriteFile(FileName);
-        finally
-          HUF_Writer.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.HufPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        KDEP_Writer := TModflowKDEP_Writer.Create(self);
-        try
-          KDEP_Writer.WriteFile(FileName);
-        finally
-          KDEP_Writer.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.HufPackage.IsSelected
-          and (HufParameters.CountParameters([ptHUF_KDEP]) > 0) then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        LVDA_Writer := TModflowLVDA_Writer.Create(self);
-        try
-          LVDA_Writer.WriteFile(FileName);
-        finally
-          LVDA_Writer.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.HufPackage.IsSelected
-          and (ModflowSteadyParameters.CountParameters([ptHUF_LVDA]) > 0) then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        ChdWriter := TModflowCHD_Writer.Create(self);
-        try
-          ChdWriter.WriteFile(FileName);
-          ChdWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
-        finally
-          ChdWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.ChdBoundary.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        GhbWriter := TModflowGHB_Writer.Create(self);
-        try
-          GhbWriter.WriteFile(FileName);
-          GhbWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
-        finally
-          GhbWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.GhbBoundary.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        WellWriter := TModflowWEL_Writer.Create(self);
-        try
-          WellWriter.WriteFile(FileName);
-        finally
-          WellWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.WelPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        RivWriter := TModflowRIV_Writer.Create(self);
-        try
-          RivWriter.WriteFile(FileName);
-          RivWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
-        finally
-          RivWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.RivPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        DrnWriter := TModflowDRN_Writer.Create(self);
-        try
-          DrnWriter.WriteFile(FileName);
-          DrnWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
-        finally
-          DrnWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.DrnPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        DrtWriter := TModflowDRT_Writer.Create(self);
-        try
-          DrtWriter.WriteFile(FileName);
-        finally
-          DrtWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.DrtPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        RchWriter := TModflowRCH_Writer.Create(self);
-        try
-          RchWriter.WriteFile(FileName);
-        finally
-          RchWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.RchPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        EvtWriter := TModflowEVT_Writer.Create(self);
-        try
-          EvtWriter.WriteFile(FileName);
-        finally
-          EvtWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.EvtPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        EtsWriter := TModflowETS_Writer.Create(self);
-        try
-          EtsWriter.WriteFile(FileName);
-        finally
-          EtsWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.EtsPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        ResWriter := TModflowRES_Writer.Create(self);
-        try
-          ResWriter.WriteFile(FileName);
-        finally
-          ResWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.ResPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        Mnw2Writer := TModflowMNW2_Writer.Create(self);
-        try
-          Mnw2Writer.WriteFile(FileName);
-          Mnw2Writer.WriteMnwiFile(FileName, GageUnitNumber);
-        finally
-          Mnw2Writer.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.Mnw2Package.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        LakWriter := TModflowLAK_Writer.Create(self);
-        try
-          LakWriter.WriteFile(FileName, GageUnitNumber, Gages);
-        finally
-          LakWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.LakPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        // SfrWriter requires that LakWriter be completed first
-        // so that TScreenObject.ModflowLakBoundary.TrueLakeID
-        // is set properly.
-        SfrWriter := TModflowSFR_Writer.Create(self);
-        try
-          SfrWriter.WriteFile(FileName, GageUnitNumber, Gages);
-          CacheDataArrays;
-          Application.ProcessMessages;
-          if not frmProgress.ShouldContinue then
-          begin
-            Exit;
-          end;
-          if ModflowPackages.SfrPackage.IsSelected then
-          begin
-            frmProgress.StepIt;
-          end;
-
-          HydModWriter := TModflowHydmodWriter.Create(self);
-          try
-            HydModWriter.WriteFile(FileName, SfrWriter);
-          finally
-            HydModWriter.Free;
-          end;
-          CacheDataArrays;
-          Application.ProcessMessages;
-          if not frmProgress.ShouldContinue then
-          begin
-            Exit;
-          end;
-          if ModflowPackages.HydmodPackage.IsSelected then
-          begin
-            frmProgress.StepIt;
-          end;
-
-
-          // GagWriter requires that LakWriter and SfrWriter be completed first
-          // so that the data in Gages is set.
-          GagWriter := TModflowGAG_Writer.Create(self);
-          try
-            GagWriter.WriteFile(FileName, Gages, SfrWriter, GageUnitNumber);
-          finally
-            GagWriter.Free;
-          end;
-          CacheDataArrays;
-          Application.ProcessMessages;
-          if not frmProgress.ShouldContinue then
-          begin
-            Exit;
-          end;
-          if ModflowPackages.SfrPackage.IsSelected
-            or ModflowPackages.LakPackage.IsSelected then
-          begin
-            frmProgress.StepIt;
-          end;
-
-        finally
-          SfrWriter.Free;
-        end;
-
-
-        HfbWriter := TModflowHfb_Writer.Create(Self);
-        try
-          HfbWriter.WriteFile(FileName);
-        finally
-          HfbWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.HfbPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        UzfWriter := TModflowUzfWriter.Create(Self);
-        try
-          UzfWriter.WriteFile(FileName, GageUnitNumber);
-        finally
-          UzfWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.UzfPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        SubWriter := TModflowSUB_Writer.Create(Self);
-        try
-          SubWriter.WriteFile(FileName);
-        finally
-          SubWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.SubPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        SwtWriter := TModflowSWT_Writer.Create(Self);
-        try
-          SwtWriter.WriteFile(FileName);
-        finally
-          SwtWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.SwtPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-        // It is important that the TModflowZoneWriter not be used
-        // until after all the zones have been identified through the
-        // export of TModflowLPF_Writer and any other packages that use
-        // zone arrays.
-        ZoneWriter := TModflowZoneWriter.Create(self);
-        try
-          ZoneWriter.WriteFile(FileName);
-        finally
-          ZoneWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ZoneUsed then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        // It is important that the TModflowMultiplierWriter not be used
-        // until after all the multiplier arrays have been identified through the
-        // export of TModflowLPF_Writer and any other packages that use
-        // multiplier arrays.
-        MultiplierWriter := TModflowMultiplierWriter.Create(self);
-        try
-          MultiplierWriter.WriteFile(FileName);
-        finally
-          MultiplierWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if MultipliersUsed then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        HobWriter := TModflowHobWriter.Create(Self);
-        try
-          HobWriter.WriteFile(FileName, ObservationPurpose);
-        finally
-          HobWriter.Free;
-        end;
-        CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.HobPackage.IsSelected then
-        begin
-          frmProgress.StepIt;
-        end;
-
-        FinalizePvalAndTemplate(FileName);
-
-        NameWriter.SaveNameFile(FileName);
-      finally
-        NameWriter.Free;
-        Gages.Free;
-      end;
-
-      Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-
-      BatchFileLocation := WriteModflowBatchFile(
-        ProgramLocations,
-        ChangeFileExt(FileName, '.nam'), ListFileName,
-        ModflowOptions.OpenInTextEditor, BatchFileAdditionsBeforeModel,
-        BatchFileAdditionsAfterModel);
-
-      Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
-      begin
-        Exit;
-      end;
-
-      if RunModel then
-      begin
-        WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
-      end;
-    finally
-      frmProgress.btnAbort.Visible := False;
-      frmProgress.Hide;
-      if frmProgress.Owner = nil then
-      begin
-        FreeAndNil(frmProgress);
-      end;
-      frmFormulaErrors.DelayShowing := False;
-//      ReclaimMemory;
-    end;
-  except on E: EFCreateError do
-    begin
-      Beep;
-      MessageDlg(E.Message, mtError, [mbOK], 0);
-    end;
-  end;
-end;
-
 function TPhastModel.FileVersionEqualOrEarlier(TestVersion: string): boolean;
 var
   ProgramNum: Integer;
@@ -9847,74 +7762,6 @@ begin
     ProgramVersionList.Free;
     SavedVersionList.Free;
   end;
-end;
-
-procedure TPhastModel.FillCompilerList(CompilerList: TList);
-begin
-  CompilerList.Add(rpFrontFormulaCompiler);
-  CompilerList.Add(rpFrontFormulaCompilerNodes);
-  CompilerList.Add(rpSideFormulaCompiler);
-  CompilerList.Add(rpSideFormulaCompilerNodes);
-  CompilerList.Add(rpThreeDFormulaCompiler);
-  CompilerList.Add(rpThreeDFormulaCompilerNodes);
-  CompilerList.Add(rpTopFormulaCompiler);
-  CompilerList.Add(rpTopFormulaCompilerNodes);
-end;
-
-procedure TPhastModel.RefreshGlobalVariables(CompilerList: TList);
-var
-  Compiler: TRbwParser;
-  Variable: TGlobalVariable;
-  CompilerIndex: Integer;
-  VariableIndex: Integer;
-begin
-  for CompilerIndex := 0 to CompilerList.Count - 1 do
-  begin
-    Compiler := CompilerList[CompilerIndex];
-    for VariableIndex := 0 to GlobalVariables.Count - 1 do
-    begin
-      Variable := GlobalVariables[VariableIndex];
-      case Variable.Format of
-        rdtDouble:
-          begin
-            Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-              Variable.RealValue);
-          end;
-        rdtInteger:
-          begin
-            Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-              Variable.IntegerValue);
-          end;
-        rdtBoolean:
-          begin
-            Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-              Variable.BooleanValue);
-          end;
-        rdtString:
-          begin
-            Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
-              Variable.StringValue);
-          end;
-      else
-        Assert(False);
-      end;
-    end;
-  end;
-end;
-
-function TPhastModel.GasPhaseUsed(Sender: TObject): boolean;
-begin
-  result := ChemistryUsed(Sender) and ChemistryOptions.UseGasPhases;
-end;
-
-function TPhastModel.SolidSolutionUsed(Sender: TObject): boolean;
-begin
-  result := ChemistryUsed(Sender) and ChemistryOptions.UseSolidSolution;
-end;
-
-function TPhastModel.KineticsUsed(Sender: TObject): boolean;
-begin
-  result := ChemistryUsed(Sender) and ChemistryOptions.UseKineticReactants;
 end;
 
 procedure TPhastModel.SetUseWaterTable(const Value: boolean);
@@ -9964,35 +7811,6 @@ begin
   begin
     ProgramLocations.ModflowLocation := ExpandFileName(
       GlobalProgramLocations.Modflow2005Location);
-  end;
-end;
-
-procedure TPhastModel.FinalizePvalAndTemplate(FileName: string);
-var
-  TemplateFileName: string;
-  PValFileName: string;
-  Comment: string;
-begin
-  if PvalFile.Count > 0 then
-  begin
-    PvalFile.Insert(0, IntToStr(PvalFile.Count));
-    Template.Insert(0, IntToStr(Template.Count));
-
-    Comment := '# PVAL file created on ' + DateToStr(Now) + ' by '
-      + ProgramName + ' version ' + ModelVersion + '.';
-    PvalFile.Insert(0, Comment);
-    Template.Insert(0, Comment);
-
-    Template.Insert(0, 'jtf ' + UcodeDelimiter);
-
-    PValFileName := ChangeFileExt(FileName, StrPvalExt);
-    TemplateFileName := ChangeFileExt(FileName, StrJtf);
-
-    PvalFile.SaveToFile(PValFileName);
-    Template.SaveToFile(TemplateFileName);
-
-    TCustomModflowWriter.WriteToNameFile('PVAL',
-      UnitNumbers.UnitNumber(StrPval), PValFileName, foInput);
   end;
 end;
 
@@ -10120,7 +7938,7 @@ begin
         ModelMuseHeadObs := Observations.Values.HobItems[0];
         OBSNAM := Observations.ObservationName;
         UpdateModelMateHeadObservation(ObservationList, OBSNAM,
-          ModelMuseHeadObs, Project, Operation, Method);
+          ModelMuseHeadObs, Project, Operation, momAllHeads);
       end
       else
       begin
@@ -10229,32 +8047,6 @@ begin
   FScreenObjectList.Capacity := FScreenObjectList.Capacity + Delta;
 end;
 
-function TPhastModel.GetDataSetByName(const DataSetName: string): TDataArray;
-var
-  Index: Integer;
-  APointer: pointer;
-  DataArray: TDataArray;
-begin
-  if DataSetCount = 0 then
-  begin
-    result := nil;
-    Exit;
-  end;
-  if FDataSetLookUpList = nil then
-  begin
-    FDataSetLookUpList := THashTable.Create(false);
-    FDataSetLookUpList.IgnoreCase := True;
-    FDataSetLookUpList.TableSize := Max(211, DataSetCount*2-1);
-    for Index := 0 to DataSetCount - 1 do
-    begin
-      DataArray := DataSets[Index];
-      FDataSetLookUpList.Insert(DataArray.Name, DataArray)
-    end;
-  end;
-  FDataSetLookUpList.Search(DataSetName, APointer);
-  result := APointer;
-end;
-
 function TPhastModel.GetWindowState: TWindowState;
 begin
   if GuiSettings = nil then
@@ -10355,33 +8147,6 @@ begin
     AScreenObject := ScreenObjects[Index];
     AScreenObject.Draw3D;
   end;
-end;
-
-procedure TPhastModel.Invalidate;
-begin
-  UpToDate := False;
-end;
-
-procedure TPhastModel.InvalidateAllDataSets;
-var
-  Index: Integer;
-  DS: TDataArray;
-begin
-  for Index := 0 to DataSetCount - 1 do
-  begin
-    DS := DataSets[Index];
-    DS.Invalidate;
-  end;
-  for Index := 0 to BoundaryDataSetCount - 1 do
-  begin
-    DS := BoundaryDataSets[Index];
-    DS.Invalidate;
-  end;
-end;
-
-procedure TPhastModel.InvalidateDataSetLookupList;
-begin
-  FreeAndNil(FDataSetLookUpList);
 end;
 
 procedure TPhastModel.InvalidateEtsDepthFractions(Sender: TObject);
@@ -10582,8 +8347,8 @@ var
   LakeIdArray: TDataArray;
   DischargeRoutingArray: TDataArray;
 begin
-  LakeIdArray := GetDataSetByName(rsLakeID);
-  DischargeRoutingArray := GetDataSetByName(StrUzfDischargeRouting);
+  LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
+  DischargeRoutingArray := FDataArrayManager.GetDataSetByName(StrUzfDischargeRouting);
 
   if ModflowPackages.SfrPackage.IsSelected
     or ModflowPackages.LakPackage.IsSelected then
@@ -10614,11 +8379,6 @@ begin
   end;
 end;
 
-procedure TPhastModel.DataArrayNameChange(Sender: TObject);
-begin
-  FChangedDataArrayNames.Add((Sender as TDataArray).Name);
-end;
-
 function TPhastModel.DefaultArchiveName: string;
 var
   ArchiveRoot: string;
@@ -10636,21 +8396,25 @@ begin
 end;
 
 function TPhastModel.DefaultElevationFormula(
-  ViewDirection: TViewDirection): string;
+  ViewDirection: TViewDirection; EvalAt: TEvaluatedAt): string;
 var
   UnitID: Integer;
   LayerGroup: TLayerGroup;
   Row: Integer;
   Column: Integer;
+  Orientation: TDataSetOrientation;
+  Compiler: TRbwParser;
 begin
   if Grid = nil then
   begin
     result := '0';
     Exit;
   end;
+  Orientation :=  dsoTop;
   case ViewDirection of
     vdTop:
       begin
+        Orientation :=  dsoTop;
         if Grid.LayerCount > 0 then
         begin
           case ModelSelection of
@@ -10659,7 +8423,7 @@ begin
               begin
                 result := FloatToStr((Grid.HighestElevation + Grid.LowestElevation)/2);
               end;
-            msModflow:
+            msModflow, msModflowLGR:
               begin
                 GetUnitID(UnitID);
                 if UnitID > 0 then
@@ -10690,6 +8454,7 @@ begin
       end;
     vdFront:
       begin
+        Orientation :=  dsoFront;
         if Grid.RowCount > 0 then
         begin
           Row := Grid.SelectedRow;
@@ -10707,6 +8472,7 @@ begin
       end;
     vdSide:
       begin
+        Orientation :=  dsoSide;
         if Grid.ColumnCount > 0 then
         begin
           Column := Grid.SelectedColumn;
@@ -10725,6 +8491,8 @@ begin
       end;
     else Assert(False);
   end;
+  Compiler := GetCompiler(Orientation, EvalAt);
+  Compiler.Compile(result);
 end;
 
 procedure TPhastModel.GetUnitID(var UnitID: Integer);
@@ -10753,6 +8521,11 @@ begin
   end;
 end;
 
+function TPhastModel.GetUseWaterTable: boolean;
+begin
+  result := FUseWaterTable;
+end;
+
 function TPhastModel.DefaultHigherElevationFormula(
   ViewDirection: TViewDirection): string;
 var
@@ -10777,7 +8550,7 @@ begin
               begin
                 result := FloatToStr(Grid.HighestElevation);
               end;
-            msModflow:
+            msModflow, msModflowLGR:
               begin
                 GetUnitID(UnitID);
                 if UnitID > 0 then
@@ -10884,7 +8657,7 @@ begin
               begin
                 result := FloatToStr(Grid.LowestElevation);
               end;
-            msModflow:
+            msModflow, msModflowLGR:
               begin
                 GetUnitID(UnitID);
                 if UnitID > 0 then
@@ -10976,11 +8749,11 @@ begin
     case ModflowOutputControl.HeadOC.OutputFileType of
       oftText:
         begin
-          Extension := '.fhd';
+          Extension := StrFhd;
         end;
       oftBinary:
         begin
-          Extension := '.bhd';
+          Extension := StrBhd;
         end;
       else Assert(False);
     end;
@@ -10990,18 +8763,18 @@ begin
     case ModflowOutputControl.DrawdownOC.OutputFileType of
       oftText:
         begin
-          Extension := '.fdn';
+          Extension := StrFdn;
         end;
       oftBinary:
         begin
-          Extension := '.bdn';
+          Extension := StrBdn;
         end;
       else Assert(False);
     end;
   end
   else if ModflowOutputControl.SaveCellFlows = csfBinary then
   begin
-    Extension := '.cbc';
+    Extension := StrCbcExt;
   end
   else
   begin
@@ -11010,909 +8783,6 @@ begin
   end;
   result := ChangeFileExt(ModelFileName, Extension);
   result := FixFileName(result);
-end;
-
-procedure TPhastModel.DefinePackageDataArrays;
-  procedure NoCheck(var ARecord: TDataSetCreationData);
-  begin
-    ARecord.CheckMax := False;
-    ARecord.CheckMin := False;
-    ARecord.Max := 1;
-    ARecord.Min := 0;
-  end;
-var
-  Index: integer;
-begin
-  SetLength(FDataArrayCreationRecords, 61);
-  Index := 0;
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtBoolean;
-  FDataArrayCreationRecords[Index].Name := rsActive;
-  FDataArrayCreationRecords[Index].Formula := 'True';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := AlwaysUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-active'#13#10'MODFLOW BAS: IBOUND';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsKx;
-  FDataArrayCreationRecords[Index].Formula := '0.0001';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := AquiferPropertiesUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-Kx'#13#10'MODFLOW LPF: HK'#13#10'MODFLOW BCF: TRAN,HY';
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Min := 0;
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsKy;
-  FDataArrayCreationRecords[Index].Formula := rsKx;
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := KyUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-Ky'#13#10'MODFLOW LPF: HANI'#13#10'MODFLOW HUF and BCF: (not used)';
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Min := 0;
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsKz;
-  FDataArrayCreationRecords[Index].Formula := rsKx + ' / 10';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := KzUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-Kz'#13#10'MODFLOW LPF: VKA'#13#10'MODFLOW BCF: Vcont';
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Min := 0;
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsPorosity;
-  FDataArrayCreationRecords[Index].Formula := '0.25';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := PorosityUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-porosity'#13#10'MODPATH: POR';
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Min := 0;
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsSpecific_Storage;
-  FDataArrayCreationRecords[Index].Formula := '1e-5';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := SpecificStorageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-specific_storage'#13#10'MODFLOW LPF: Ss'#13#10'MODFLOW BCF: Sf1';
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Min := 0;
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsLong_Dispersivity;
-  FDataArrayCreationRecords[Index].Formula := '10.';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-longitudinal_dispersivity';
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Min := 0;
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsHorizontal_Transv_Dispersivity;
-  FDataArrayCreationRecords[Index].Formula := '1.';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-horizontal_dispersivity';
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Min := 0;
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsVertical_Transv_Dispersivity;
-  FDataArrayCreationRecords[Index].Formula := '1.';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-vertical_dispersivity';
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Min := 0;
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsInitial_Head;
-  FDataArrayCreationRecords[Index].Formula := '0.';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := InitialHeadUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: HEAD_IC-head';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsInitial_Water_Table;
-  FDataArrayCreationRecords[Index].Formula := '0.';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := InitialWaterTableUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: HEAD_IC-water_table';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Solution;
-  FDataArrayCreationRecords[Index].Formula := '0';
-  FDataArrayCreationRecords[Index].Classification := StrChemistry;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: CHEMISTRY_IC-solution';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Equilibrium_Phases;
-  FDataArrayCreationRecords[Index].Formula := '-1';
-  FDataArrayCreationRecords[Index].Classification := StrChemistry;
-  FDataArrayCreationRecords[Index].DataSetNeeded := EquilibriumPhasesUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: CHEMISTRY_IC-equilibrium_phases';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Surface;
-  FDataArrayCreationRecords[Index].Formula := '-1';
-  FDataArrayCreationRecords[Index].Classification := StrChemistry;
-  FDataArrayCreationRecords[Index].DataSetNeeded := SurfacesUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: CHEMISTRY_IC-surface';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Exchange;
-  FDataArrayCreationRecords[Index].Formula := '-1';
-  FDataArrayCreationRecords[Index].Classification := StrChemistry;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ExchangeUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: CHEMISTRY_IC-exchange';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Gas_Phase;
-  FDataArrayCreationRecords[Index].Formula := '-1';
-  FDataArrayCreationRecords[Index].Classification := StrChemistry;
-  FDataArrayCreationRecords[Index].DataSetNeeded := GasPhaseUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: CHEMISTRY_IC-gas_phase';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Solid_Solutions;
-  FDataArrayCreationRecords[Index].Formula := '-1';
-  FDataArrayCreationRecords[Index].Classification := StrChemistry;
-  FDataArrayCreationRecords[Index].DataSetNeeded := SolidSolutionUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: CHEMISTRY_IC-solid_solutions';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Kinetics;
-  FDataArrayCreationRecords[Index].Formula := '-1';
-  FDataArrayCreationRecords[Index].Classification := StrChemistry;
-  FDataArrayCreationRecords[Index].DataSetNeeded := KineticsUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: CHEMISTRY_IC-kinetics';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := rsPrint_Chemistry;
-  FDataArrayCreationRecords[Index].Formula := '1';
-  FDataArrayCreationRecords[Index].Classification := StrOutput;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: PRINT_LOCATIONS-chemistry';
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Min := 0;
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := rsPrint_XYZ_Chemistry;
-  FDataArrayCreationRecords[Index].Formula := '1';
-  FDataArrayCreationRecords[Index].Classification := StrOutput;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ChemistryUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: PRINT_LOCATIONS-xyz_chemistry';
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Min := 0;
-  Inc(Index);
-
-  // Reservoir layers
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := rsResLayer;
-  FDataArrayCreationRecords[Index].Formula := '1';
-  FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ReservoirLayerUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'RES: ISRESL';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsResBottom;
-  FDataArrayCreationRecords[Index].Formula := '0.';
-  FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ReservoirPackageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'RES: BRES';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsResKv;
-  FDataArrayCreationRecords[Index].Formula := '100.';
-  FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ReservoirPackageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'RES: HCres';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsResBedThickness;
-  FDataArrayCreationRecords[Index].Formula := '1.';
-  FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ReservoirPackageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'RES: Rbthck';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  // Lake Layers
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := rsLakeID;
-  FDataArrayCreationRecords[Index].Formula := '0';
-  FDataArrayCreationRecords[Index].Classification := rsLakeClassificaton;
-  FDataArrayCreationRecords[Index].DataSetNeeded := LakePackageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LAK: LKARR';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsLakeLeakance;
-  FDataArrayCreationRecords[Index].Formula := '100.';
-  FDataArrayCreationRecords[Index].Classification := rsLakeClassificaton;
-  FDataArrayCreationRecords[Index].DataSetNeeded := LakePackageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LAK: BDLKNC';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  // UZF layers
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrUzfLandSurface;
-  FDataArrayCreationRecords[Index].Formula := '0.';
-  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
-  FDataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'UZF: IUZFBND (via the formula for ' + StrUzfLayer + ')';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtBoolean;
-  FDataArrayCreationRecords[Index].Name := rsModflowSpecifiedHead;
-  FDataArrayCreationRecords[Index].Formula := 'False';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ModflowUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BAS: IBOUND';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := StrUzfLayer;
-  FDataArrayCreationRecords[Index].Formula :=
-    'If((ActiveOnLayer(ElevationToLayer('
-      + StrUzfLandSurface + ')) AND NOT SpecifiedHeadOnLayer(ElevationToLayer('
-      + StrUzfLandSurface + '))), ElevationToModelLayer('
-      + StrUzfLandSurface + '), 0)';
-  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
-  FDataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IUZFBND';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := StrUzfDischargeRouting;
-  FDataArrayCreationRecords[Index].Formula := '0';
-  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
-  FDataArrayCreationRecords[Index].DataSetNeeded := RouteUzfDischarge;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IRUNBND';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrUzfVerticalK;
-  FDataArrayCreationRecords[Index].Formula := '1.';
-  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
-  FDataArrayCreationRecords[Index].DataSetNeeded := UzfUnsatVertKUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: VKS';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrUzfBrooksCoreyEpsilon;
-  FDataArrayCreationRecords[Index].Formula := '3.5';
-  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
-  FDataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: EPS';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrUzfSaturatedWaterContent;
-  FDataArrayCreationRecords[Index].Formula := '0.3';
-  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
-  FDataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: THTS';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrUzfInitialUnsaturatedWaterContent;
-  FDataArrayCreationRecords[Index].Formula := '0.3';
-  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
-  FDataArrayCreationRecords[Index].DataSetNeeded := UzfInitialInfiltrationUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: THTI';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := StrUzfGage_1_and_2;
-  FDataArrayCreationRecords[Index].Formula := '0';
-  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
-  FDataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IUZOPT';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := StrUzfGage3;
-  FDataArrayCreationRecords[Index].Formula := '0';
-  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
-  FDataArrayCreationRecords[Index].DataSetNeeded := UzfPackageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IUZOPT';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsModflow_Initial_Head;
-  FDataArrayCreationRecords[Index].Formula := '0';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ModflowInitialHeadUsed;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := ModflowUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BAS: STRT';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsModflow_CBKz;
-  FDataArrayCreationRecords[Index].Formula := rsKz;
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ConfiningBedKzUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: VKCB; BCF: VCONT';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsVerticalAnisotropy;
-  FDataArrayCreationRecords[Index].Formula :=
-    'If((' + rsKz + ' = 0.), 0, (' + rsKx + ' / ' + rsKz + '))';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := VerticalAnisotropyUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: VKA';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsHorizontalAnisotropy;
-  FDataArrayCreationRecords[Index].Formula :=
-    'If((' + rsKx + ' = 0.), 1., (' + rsKy + ' / ' + rsKx + '))';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := HorizontalAnisotropyUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: HANI';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsSpecificYield;
-  FDataArrayCreationRecords[Index].Formula := '0.2';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := SpecificYieldUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: Sy; BCF: Sf1';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsWetDryThreshold;
-  FDataArrayCreationRecords[Index].Formula := StrLayerHeight + ' * 0.1';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := WetDryUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := rsWetDryFlag;
-  FDataArrayCreationRecords[Index].Formula := 'IfI(' + rsActive + ', -1, 0)';
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := WetDryUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].CheckMax := True;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Max := 1;
-  FDataArrayCreationRecords[Index].Min := -1;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY'
-    + #13#10#13#10'A value < 0 indicates that only the cell below the '
-      + 'dry cell can cause the dry cell to become active again.'
-    + #13#10#13#10'A value > 0 indicates that the cell below the dry cell '
-      + 'or the cells next to the dry cell can cause the dry cell to become '
-      + 'active again.'
-    + #13#10#13#10'A value = 0 indicates that the dry cell can not become '
-      +'active again.';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := rsWetDry;
-  FDataArrayCreationRecords[Index].Formula := rsWetDryThreshold
-    + ' * ' + rsWetDryFlag;
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := WetDryUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY';
-  NoCheck(FDataArrayCreationRecords[Index]);
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := StrModpathZone;
-  FDataArrayCreationRecords[Index].Formula := '1';
-  FDataArrayCreationRecords[Index].Classification := 'MODPATH';
-  FDataArrayCreationRecords[Index].DataSetNeeded := ModpathUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := False;
-//  FDataArrayCreationRecords[Index].Max := 1;
-//  FDataArrayCreationRecords[Index].Min := 0;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'MODPATH: IBOUND';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrHufReferenceSurface;
-  FDataArrayCreationRecords[Index].Formula := '0.';
-  FDataArrayCreationRecords[Index].Classification := StrHUF;
-  FDataArrayCreationRecords[Index].DataSetNeeded := HufReferenceSurfaceNeeded;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := False;
-  FDataArrayCreationRecords[Index].Max := 1;
-  FDataArrayCreationRecords[Index].Min := 0;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'MODFLOW, KDEP package: RS';
-  Inc(Index);
-
-  // BCF data sets.
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrTransmissivity;
-  FDataArrayCreationRecords[Index].Formula := rsKx + ' * ' + StrLayerHeight;
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := BcfUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Max := 1;
-  FDataArrayCreationRecords[Index].Min := 0;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: Tran';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrVerticalConductance;
-  FDataArrayCreationRecords[Index].Formula := StrBcfVCONT;
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := BcfUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Max := 1;
-  FDataArrayCreationRecords[Index].Min := 0;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: VCONT';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrConfinedStorageCoe;
-  FDataArrayCreationRecords[Index].Formula := rsSpecific_Storage + ' * ' + StrLayerHeight;
-  FDataArrayCreationRecords[Index].Classification := StrHydrology;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ConfinedStorageCoefUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].CheckMax := False;
-  FDataArrayCreationRecords[Index].CheckMin := True;
-  FDataArrayCreationRecords[Index].Max := 1;
-  FDataArrayCreationRecords[Index].Min := 0;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: Sf1';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := 'HUF_Kx';
-  FDataArrayCreationRecords[Index].Formula := StrHufKx + '(' + rsModflow_Initial_Head + ')';
-  FDataArrayCreationRecords[Index].Classification := StrHUF;
-  FDataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'displays HUF Kx values';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := 'HUF_Ky';
-  FDataArrayCreationRecords[Index].Formula := StrHufKy + '(' + rsModflow_Initial_Head + ')';
-  FDataArrayCreationRecords[Index].Classification := StrHUF;
-  FDataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets := 'displays HUF Ky values';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := 'HUF_Interlayer_Kz';
-  FDataArrayCreationRecords[Index].Formula := StrHufKz + '(' + rsModflow_Initial_Head + ')';
-  FDataArrayCreationRecords[Index].Classification := StrHUF;
-  FDataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := HufSelected;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'displays HUF Kz values between one layer and the layer beneath';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := 'HUF_SS';
-  FDataArrayCreationRecords[Index].Formula := StrHufSs + '(' + rsModflow_Initial_Head + ')';
-  FDataArrayCreationRecords[Index].Classification := StrHUF;
-  FDataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'displays HUF SS values';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := 'HUF_Average_SY';
-  FDataArrayCreationRecords[Index].Formula := StrHufAverageSy + '(' + rsModflow_Initial_Head + ')';
-  FDataArrayCreationRecords[Index].Classification := StrHUF;
-  FDataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'displays average HUF Sy values for a cell';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := 'HUF_SY';
-  FDataArrayCreationRecords[Index].Formula := StrHufSy + '(' + rsModflow_Initial_Head + ')';
-  FDataArrayCreationRecords[Index].Classification := StrHUF;
-  FDataArrayCreationRecords[Index].DataSetNeeded := OptionalDataSet;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := HufStorageUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'displays HUF Sy values for a cell';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtInteger;
-  FDataArrayCreationRecords[Index].Name := StrZones;
-  FDataArrayCreationRecords[Index].Formula := '0';
-  FDataArrayCreationRecords[Index].Classification := StrZonebudget;
-  FDataArrayCreationRecords[Index].DataSetNeeded := ZoneBudgetSelected;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := ZoneBudgetSelected;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'ZONEBUDGET Zone array (IZONE)';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrGeostaticStress;
-  FDataArrayCreationRecords[Index].Formula := '0';
-  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
-  FDataArrayCreationRecords[Index].DataSetNeeded := SwtSelected;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := SwtSelected;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'SWT: GL0 (data set 4)';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrSpecificGravityUns;
-  FDataArrayCreationRecords[Index].Formula := '1.7';
-  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
-  FDataArrayCreationRecords[Index].DataSetNeeded := SwtSelected;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := SwtSelected;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'SWT: SGM (data set 5)';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dsoTop;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrSpecificGravitySat;
-  FDataArrayCreationRecords[Index].Formula := '2.';
-  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
-  FDataArrayCreationRecords[Index].DataSetNeeded := SwtSelected;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := SwtSelected;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'SWT: SGS (data set 6)';
-  Inc(Index);
-
-
-
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrInitialPreOffsets;
-  FDataArrayCreationRecords[Index].Formula := '0.';
-  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
-  FDataArrayCreationRecords[Index].DataSetNeeded := SwtOffsetsUsed;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := SwtOffsetsUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'SWT: PCSOFF (data set 14)';
-  Inc(Index);
-
-  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
-  FDataArrayCreationRecords[Index].Orientation := dso3D;
-  FDataArrayCreationRecords[Index].DataType := rdtDouble;
-  FDataArrayCreationRecords[Index].Name := StrInitialPreconsolida;
-  FDataArrayCreationRecords[Index].Formula := '0.';
-  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
-  FDataArrayCreationRecords[Index].DataSetNeeded := SwtSpecifiedUsed;
-  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := SwtSpecifiedUsed;
-  FDataArrayCreationRecords[Index].Lock := StandardLock;
-  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
-  FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'SWT: PCS (data set 15)';
-  Inc(Index);
-
-
-
-  Assert(Length(FDataArrayCreationRecords) = Index);
 end;
 
 procedure TPhastModel.InvalidateMfSfrDownstreamUnsaturatedWaterContent(
@@ -12229,7 +9099,7 @@ begin
     as TIntegerSparseDataSet);
   FSpecifiedHeadHead.DataType := rdtDouble;
   FSpecifiedHeadHead.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FSpecifiedHeadHead);
+  AddTimeList(FSpecifiedHeadHead);
 
   FSpecifiedHeadAssociatedSolution := TPhastTimeList.Create(self);
   FSpecifiedHeadAssociatedSolution.Name := StrSpecifiedHeadSolution;
@@ -12244,7 +9114,7 @@ begin
     as TIntegerSparseDataSet);
   FSpecifiedHeadAssociatedSolution.DataType := rdtInteger;
   FSpecifiedHeadAssociatedSolution.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FSpecifiedHeadAssociatedSolution);
+  AddTimeList(FSpecifiedHeadAssociatedSolution);
 
   FTopFluxBoundaryFlux := TPhastTimeList.Create(self);
   FTopFluxBoundaryFlux.Name := StrTopFluxBoundaryFlux;
@@ -12255,7 +9125,7 @@ begin
     as TIntegerSparseDataSet);
   FTopFluxBoundaryFlux.DataType := rdtDouble;
   FTopFluxBoundaryFlux.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FTopFluxBoundaryFlux);
+  AddTimeList(FTopFluxBoundaryFlux);
 
   FFrontFluxBoundaryFlux := TPhastTimeList.Create(self);
   FFrontFluxBoundaryFlux.Name := StrFrontFluxBoundaryFlux;
@@ -12266,7 +9136,7 @@ begin
     as TIntegerSparseDataSet);
   FFrontFluxBoundaryFlux.DataType := rdtDouble;
   FFrontFluxBoundaryFlux.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FFrontFluxBoundaryFlux);
+  AddTimeList(FFrontFluxBoundaryFlux);
 
   FSideFluxBoundaryFlux := TPhastTimeList.Create(self);
   FSideFluxBoundaryFlux.Name := StrSideFluxBoundaryFlux;
@@ -12277,7 +9147,7 @@ begin
     as TIntegerSparseDataSet);
   FSideFluxBoundaryFlux.DataType := rdtDouble;
   FSideFluxBoundaryFlux.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FSideFluxBoundaryFlux);
+  AddTimeList(FSideFluxBoundaryFlux);
 
   FTopFluxBoundaryChemistry := TPhastTimeList.Create(self);
   FTopFluxBoundaryChemistry.Name := StrTopFluxBoundaryAssocSoln;
@@ -12288,7 +9158,7 @@ begin
     as TIntegerSparseDataSet);
   FTopFluxBoundaryChemistry.DataType := rdtInteger;
   FTopFluxBoundaryChemistry.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FTopFluxBoundaryChemistry);
+  AddTimeList(FTopFluxBoundaryChemistry);
 
   FFrontFluxBoundaryChemistry := TPhastTimeList.Create(self);
   FFrontFluxBoundaryChemistry.Name := StrFrontFluxBoundaryAssocSoln;
@@ -12299,7 +9169,7 @@ begin
     as TIntegerSparseDataSet);
   FFrontFluxBoundaryChemistry.DataType := rdtInteger;
   FFrontFluxBoundaryChemistry.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FFrontFluxBoundaryChemistry);
+  AddTimeList(FFrontFluxBoundaryChemistry);
 
   FSideFluxBoundaryChemistry := TPhastTimeList.Create(self);
   FSideFluxBoundaryChemistry.Name := StrSideFluxBoundaryAssocSoln;
@@ -12310,7 +9180,7 @@ begin
     as TIntegerSparseDataSet);
   FSideFluxBoundaryChemistry.DataType := rdtInteger;
   FSideFluxBoundaryChemistry.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FSideFluxBoundaryChemistry);
+  AddTimeList(FSideFluxBoundaryChemistry);
 
   FTopLeakyHead := TPhastTimeList.Create(self);
   FTopLeakyHead.Name := StrTopLeakyBoundaryHead;
@@ -12321,7 +9191,7 @@ begin
     as TIntegerSparseDataSet);
   FTopLeakyHead.DataType := rdtDouble;
   FTopLeakyHead.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FTopLeakyHead);
+  AddTimeList(FTopLeakyHead);
 
   FTopLeakyAssociatedSolution := TPhastTimeList.Create(self);
   FTopLeakyAssociatedSolution.Name := StrTopLeakyBoundaryAssocSoln;
@@ -12332,7 +9202,7 @@ begin
     as TIntegerSparseDataSet);
   FTopLeakyAssociatedSolution.DataType := rdtInteger;
   FTopLeakyAssociatedSolution.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FTopLeakyAssociatedSolution);
+  AddTimeList(FTopLeakyAssociatedSolution);
 
   FFrontLeakyHead := TPhastTimeList.Create(self);
   FFrontLeakyHead.Name := StrFrontLeakyBoundaryHead;
@@ -12343,7 +9213,7 @@ begin
     as TIntegerSparseDataSet);
   FFrontLeakyHead.DataType := rdtDouble;
   FFrontLeakyHead.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FFrontLeakyHead);
+  AddTimeList(FFrontLeakyHead);
 
   FFrontLeakyAssociatedSolution := TPhastTimeList.Create(self);
   FFrontLeakyAssociatedSolution.Name := StrFrontLeakyBoundaryAssocSoln;
@@ -12354,7 +9224,7 @@ begin
     as TIntegerSparseDataSet);
   FFrontLeakyAssociatedSolution.DataType := rdtInteger;
   FFrontLeakyAssociatedSolution.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FFrontLeakyAssociatedSolution);
+  AddTimeList(FFrontLeakyAssociatedSolution);
 
   FSideLeakyHead := TPhastTimeList.Create(self);
   FSideLeakyHead.Name := StrSideLeakyBoundaryHead;
@@ -12365,7 +9235,7 @@ begin
     as TIntegerSparseDataSet);
   FSideLeakyHead.DataType := rdtDouble;
   FSideLeakyHead.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FSideLeakyHead);
+  AddTimeList(FSideLeakyHead);
 
   FSideLeakyAssociatedSolution := TPhastTimeList.Create(self);
   FSideLeakyAssociatedSolution.Name := StrSideLeakyBoundaryAssocSoln;
@@ -12376,7 +9246,7 @@ begin
     as TIntegerSparseDataSet);
   FSideLeakyAssociatedSolution.DataType := rdtInteger;
   FSideLeakyAssociatedSolution.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FSideLeakyAssociatedSolution);
+  AddTimeList(FSideLeakyAssociatedSolution);
 
   FRiverHead := TPhastTimeList.Create(self);
   FRiverHead.Name := StrRiverHead;
@@ -12387,7 +9257,7 @@ begin
     as TIntegerSparseDataSet);
   FRiverHead.DataType := rdtDouble;
   FRiverHead.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FRiverHead);
+  AddTimeList(FRiverHead);
 
   FRiverAssociatedSolution := TPhastTimeList.Create(self);
   FRiverAssociatedSolution.Name := StrRiverAssocSoln;
@@ -12398,7 +9268,7 @@ begin
     as TIntegerSparseDataSet);
   FRiverAssociatedSolution.DataType := rdtInteger;
   FRiverAssociatedSolution.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FRiverAssociatedSolution);
+  AddTimeList(FRiverAssociatedSolution);
 
   FWellInjectionOrPumpingRate := TPhastTimeList.Create(self);
   FWellInjectionOrPumpingRate.Name := StrWellInjectionRate;
@@ -12409,7 +9279,7 @@ begin
     as TIntegerSparseDataSet);
   FWellInjectionOrPumpingRate.DataType := rdtDouble;
   FWellInjectionOrPumpingRate.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FWellInjectionOrPumpingRate);
+  AddTimeList(FWellInjectionOrPumpingRate);
 
   FWellSolution := TPhastTimeList.Create(self);
   FWellSolution.Name := StrWellSolution;
@@ -12420,22 +9290,7 @@ begin
     as TIntegerSparseDataSet);
   FWellSolution.DataType := rdtInteger;
   FWellSolution.OnTimeListUsed := PhastUsed;
-  FTimeLists.Add(FWellSolution);
-end;
-
-function TPhastModel.ModflowHobPackageUsed(Sender: TObject): boolean;
-begin
-  result := ModflowPackages.HobPackage.IsSelected;
-end;
-
-procedure TPhastModel.CreateModflowDisplayTimeLists;
-begin
-  FMfHobHeads := THobDisplayTimeList.Create(self);
-  FMfHobHeads.OnInitialize := InitializeHobDisplay;
-  FMfHobHeads.OnGetUseList := GetMfHobHeadsUseList;
-  FMfHobHeads.OnTimeListUsed := ModflowHobPackageUsed;
-  FMfHobHeads.Name := StrMODFLOWHeadObservations;
-  FTimeLists.Add(FMfHobHeads);
+  AddTimeList(FWellSolution);
 end;
 
 procedure TPhastModel.InvalidateScreenObjects;
@@ -12461,46 +9316,9 @@ begin
   end;
 end;
 
-procedure TPhastModel.SetAlternateFlowPackage(const Value: boolean);
-begin
-  if FAlternateFlowPackage <> Value then
-  begin
-    FAlternateFlowPackage := Value;
-    Invalidate;
-  end;
-end;
-
-procedure TPhastModel.SetAlternateSolver(const Value: boolean);
-begin
-  if FAlternateSolver <> Value then
-  begin
-    FAlternateSolver := Value;
-    Invalidate;
-  end;
-end;
-
 procedure TPhastModel.SetArchiveName(const Value: string);
 begin
   FArchiveName := Value;
-end;
-
-procedure TPhastModel.SetBatchFileAdditionsAfterModel(const Value: TStrings);
-begin
-  if not FBatchFileAdditionsAfterModel.Equals(Value) then
-  begin
-    Invalidate;
-  end;
-  FBatchFileAdditionsAfterModel.Assign(Value);
-end;
-
-procedure TPhastModel.SetBatchFileAdditionsBeforeModel(
-  const Value: TStrings);
-begin
-  if not FBatchFileAdditionsBeforeModel.Equals(Value) then
-  begin
-    Invalidate;
-  end;
-  FBatchFileAdditionsBeforeModel.Assign(Value);
 end;
 
 procedure TPhastModel.SetBitmaps(const Value: TCompressedBitmapCollection);
@@ -12508,9 +9326,14 @@ begin
   FBitmaps.Assign(Value);
 end;
 
-procedure TPhastModel.SetUnitNumbers(const Value: TUnitNumbers);
+procedure TPhastModel.SetChemistryOptions(const Value: TChemistryOptions);
 begin
-  FUnitNumbers.Assign(Value);
+  FChemistryOptions.Assign(Value);
+end;
+
+procedure TPhastModel.SetChildModels(const Value: TChildModelCollection);
+begin
+  FChildModels.Assign(Value);
 end;
 
 procedure TPhastModel.SetUnits(const Value: TUnits);
@@ -12520,11 +9343,12 @@ end;
 
 procedure TPhastModel.SetUpToDate(const Value: boolean);
 begin
-  FUpToDate := Value;
-  if not FUpToDate then
+  inherited;
+  if not UpToDate then
   begin
     FreeAndNil(FSortedObjectList);
   end;
+
 end;
 
 procedure TPhastModel.Notify3DViewChanged;
@@ -12574,130 +9398,6 @@ begin
   end;
 end;
 
-procedure TPhastModel.OnActiveDataSetChanged(Sender: TObject);
-var
-  ActiveDataArray: TDataArray;
-  DataArray: TDataArray;
-begin
-  ActiveDataArray := Sender as TDataArray;
-  Assert(ActiveDataArray <> nil);
-  Assert(ActiveDataArray.Name = rsActive);
-  if Grid <> nil then
-  begin
-    DataArray := Grid.ThreeDDataSet;
-    if (DataArray <> nil) and DataArray.Limits.ActiveOnly then
-    begin
-      if not ActiveDataArray.UpToDate then
-      begin
-        Grid.NeedToRecalculate3DCellColors := True;
-        ThreeDGridObserver.UpToDate := False;
-        ThreeDGridObserver.UpToDate := True;
-      end;
-    end
-    else if (EdgeDisplay <> nil)
-      and EdgeDisplay.Limits[EdgeDisplay.DataToPlot].ActiveOnly then
-    begin
-      if not ActiveDataArray.UpToDate then
-      begin
-        Grid.NeedToRecalculate3DCellColors := True;
-        ThreeDGridObserver.UpToDate := False;
-        ThreeDGridObserver.UpToDate := True;
-      end;
-    end;
-  end;
-end;
-
-function TPhastModel.PackageGeneratedExternally(const PackageName: string): boolean;
-var
-  Index: Integer;
-  ALine: string;
-  FirstChar: Integer;
-  CharIndex: Integer;
-  AChar: Char;
-  LastChar: Integer;
-  APackageName: string;
-begin
-  result := false;
-  for Index := 0 to ModflowNameFileLines.Count - 1 do
-  begin
-    ALine := ModflowNameFileLines[Index];
-    // skip comment lines
-    if (Length(ALine) = 0) or (ALine[1] = '#') then
-    begin
-      Continue;
-    end;
-    ALine := Trim(ALine);
-    FirstChar := Length(ALine)+1;
-    for CharIndex := 1 to Length(ALine) do
-    begin
-      AChar := ALine[CharIndex];
-      if not (AChar in [',', ' ']) then
-      begin
-        FirstChar := CharIndex;
-        break;
-      end;
-    end;
-    LastChar := Length(ALine);
-    for CharIndex := FirstChar + 1 to Length(ALine) do
-    begin
-      AChar := ALine[CharIndex];
-      if (AChar in [',', ' ']) then
-      begin
-        LastChar := CharIndex-1;
-        break;
-      end;
-    end;
-    APackageName := Copy(ALine, FirstChar, LastChar-FirstChar+1);
-    if SameText(APackageName, PackageName) then
-    begin
-      result := True;
-      Exit;
-    end;
-  end;
-end;
-
-function TPhastModel.CheckWetting: boolean;
-var
-  Group: TLayerGroup;
-  LayerGroupIndex: Integer;
-var
-  WetErrorMessage: string;
-begin
-  result := False;
-  frmErrorsAndWarnings.RemoveErrorGroup(WetError);
-  if ModflowWettingOptions.WettingActive then
-  begin
-    result := True;
-    for LayerGroupIndex := 1 to LayerStructure.Count - 1 do
-    begin
-      Group := LayerStructure[LayerGroupIndex];
-      if Group.AquiferType in WettableLayers then
-      begin
-        result := False;
-        break;
-      end;
-    end;
-  end;
-  if result then
-  begin
-    if frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected
-      or frmGoPhast.PhastModel.ModflowPackages.HufPackage.IsSelected then
-    begin
-      WetErrorMessage := 'At least one layer must be convertible.';
-    end
-    else if frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected then
-    begin
-      WetErrorMessage :=
-        'At least one layer must be unconfined or fully convertible.';
-    end
-    else
-    begin
-      Assert(False);
-    end;
-    frmErrorsAndWarnings.AddError(WetError, WetErrorMessage);
-  end;
-end;
-
 procedure EnableLighting;
 var
   light_specular: array[0..3] of Extended;
@@ -12732,11 +9432,6 @@ end;
 function TPhastModel.ParameterDataSetUsed(Sender: TObject): boolean;
 begin
   result := ModflowSteadyParameters.IsDataSetUsed(Sender);
-end;
-
-function TPhastModel.ParserCount: integer;
-begin
-  result := FParsers.Count;
 end;
 
 procedure TPhastModel.PasteObjectsFromClipboard(List: TList);
@@ -12845,104 +9540,7 @@ begin
   end;
 end;
 
-function TPhastModel.ProgramName: string;
-begin
-  result := StrModelName;
-end;
-
-procedure TPhastModel.CreateInitialDataSets;
-var
-  DataArray: TDataArray;
-  Index: Integer;
-//  DataArrayIndex: Integer;
-  DataSetName: string;
-  Orientation: TDataSetOrientation;
-  DataType: TRbwDataType;
-  ArrayNeeded: TObjectUsedEvent;
-  ArrayArrayShouldBeCreated: TObjectUsedEvent;
-  NewFormula, Classification: string;
-  Lock: TDataLock;
-begin
-  { TODO : Find a way to extract common code from
-TPhastModel.CreateModflowDataSets and
-TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
-
-  // See DefinePackageDataArrays for the definition of the
-  // contents of DataArrayCreationRecords.
-  for Index := 0 to Length(FDataArrayCreationRecords) - 1 do
-  begin
-    DataSetName := FDataArrayCreationRecords[Index].Name;
-    Orientation := FDataArrayCreationRecords[Index].Orientation;
-    DataType := FDataArrayCreationRecords[Index].DataType;
-    ArrayNeeded := FDataArrayCreationRecords[Index].DataSetNeeded;
-    ArrayArrayShouldBeCreated := FDataArrayCreationRecords[Index].DataSetShouldBeCreated;
-    NewFormula := FDataArrayCreationRecords[Index].Formula;
-    Classification := FDataArrayCreationRecords[Index].Classification;
-    Lock := FDataArrayCreationRecords[Index].Lock;
-
-    DataArray := GetDataSetByName(DataSetName);
-    Assert(Assigned(ArrayNeeded));
-    if DataArray <> nil then
-    begin
-      DataArray.Name := DataSetName;
-      DataArray.Lock := Lock;
-      DataArray.OnDataSetUsed := ArrayNeeded;
-      CreateVariables(DataArray);
-    end
-    else if ArrayNeeded(self)
-      or (Assigned(ArrayArrayShouldBeCreated)
-      and ArrayArrayShouldBeCreated(self)) then
-    begin
-      DataArray := CreateNewDataArray(
-        FDataArrayCreationRecords[Index].DataSetType, DataSetName, NewFormula,
-        Lock, DataType, FDataArrayCreationRecords[Index].EvaluatedAt,
-        Orientation, Classification);
-      DataArray.OnDataSetUsed := ArrayNeeded;
-      DataArray.Lock := Lock;
-      DataArray.CheckMax := FDataArrayCreationRecords[Index].CheckMax;
-      DataArray.CheckMin := FDataArrayCreationRecords[Index].CheckMin;
-      DataArray.Max := FDataArrayCreationRecords[Index].Max;
-      DataArray.Min := FDataArrayCreationRecords[Index].Min;
-    end;
-    if DataArray <> nil then
-    begin
-      if Grid <> nil then
-      begin
-        DataArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
-          Grid.ColumnCount);
-      end;
-      DataArray.AssociatedDataSets := FDataArrayCreationRecords[
-        Index].AssociatedDataSets;
-    end;
-  end;
-
-  DataArray := GetDataSetByName(rsActive);
-  if not Assigned(DataArray.OnUpToDateSet) then
-  begin
-    DataArray.OnUpToDateSet := OnActiveDataSetChanged;
-  end;
-end;
-
-function TPhastModel.CreateNewDataArray(const ClassType: TDataArrayType;
-  const Name, Formula: string; Lock: TDataLock; DataType: TRbwDataType;
-  EvaluatedAt: TEvaluatedAt; Orientation: TDataSetOrientation;
-  const Classification: string): TDataArray;
-begin
-  result := ClassType.Create(self);
-  result.Lock := Lock;
-  result.UpdateWithName(Name);
-  result.DataType := DataType;
-  result.EvaluatedAt := EvaluatedAt;
-  result.Orientation := Orientation;
-  result.OnNameChange := DataArrayNameChange;
-  result.Formula := Formula;
-  result.Classification := Classification;
-  AddDataSet(result);
-  CreateVariables(result);
-end;
-
 { TDataSetItem }
-
 procedure TDataSetItem.Assign(Source: TPersistent);
 var
   SourceItem: TDataSetItem;
@@ -14232,15 +10830,4754 @@ begin
   FLastIndex := -1;
 end;
 
+procedure TCustomModel.SetUpToDate(const Value: boolean);
+begin
+  FUpToDate := Value;
+//  if not FUpToDate then
+//  begin
+//    FreeAndNil(FSortedObjectList);
+//  end;
+end;
+
+constructor TCustomModel.Create(AnOwner: TComponent);
+begin
+  inherited;
+  FPValFile := TStringList.Create;
+  FTemplate := TStringList.Create;
+  FTimeLists := TList.Create;
+  FTransientZoneArrays := TObjectList.Create;
+  FTransientMultiplierArrays := TObjectList.Create;
+  FDataArrayManager:= TDataArrayManager.Create(self);
+  FParsers := TList.Create;
+  FrpTopFormulaCompiler := TRbwParser.Create(self);
+  FParsers.Add(FrpTopFormulaCompiler);
+  FrpFrontFormulaCompiler := TRbwParser.Create(self);
+  FParsers.Add(FrpFrontFormulaCompiler);
+  FrpSideFormulaCompiler := TRbwParser.Create(self);
+  FParsers.Add(FrpSideFormulaCompiler);
+  FrpThreeDFormulaCompiler := TRbwParser.Create(self);
+  FParsers.Add(FrpThreeDFormulaCompiler);
+  FrpTopFormulaCompilerNodes := TRbwParser.Create(self);
+  FParsers.Add(FrpTopFormulaCompilerNodes);
+  FrpFrontFormulaCompilerNodes := TRbwParser.Create(self);
+  FParsers.Add(FrpFrontFormulaCompilerNodes);
+  FrpSideFormulaCompilerNodes := TRbwParser.Create(self);
+  FParsers.Add(FrpSideFormulaCompilerNodes);
+  FrpThreeDFormulaCompilerNodes := TRbwParser.Create(self);
+  FParsers.Add(FrpThreeDFormulaCompilerNodes);
+
+//  FDataSetsToCache:= TList.Create;
+//  FDataSets := TObjectList.Create;
+//  FBoundaryDataSets := TObjectList.Create;
+//  FDataSetFunctions := TStringList.Create;
+  FModflowNameFileLines := TStringList.Create;
+  FBatchFileAdditionsBeforeModel := TStringList.Create;
+  FBatchFileAdditionsAfterModel := TStringList.Create;
+  FModflowPackages := TModflowPackages.Create(self);
+  FModflowPackages.LpfPackage.IsSelected := True;
+  FModflowGrid := TModflowGrid.Create;
+
+  FHeadFluxObservations := TFluxObservationGroups.Create(self);
+  FRiverObservations := TFluxObservationGroups.Create(self);
+  FDrainObservations := TFluxObservationGroups.Create(self);
+  FGhbObservations := TFluxObservationGroups.Create(self);
+
+  FHeadFluxObservations.FluxObservationType := fotHead;
+  FRiverObservations.FluxObservationType := fotRiver;
+  FDrainObservations.FluxObservationType := fotDrain;
+  FGhbObservations.FluxObservationType := fotGHB;
+
+  FHydrogeologicUnits := THydrogeologicUnits.Create(self);
+  FFilesToArchive := TStringList.Create;
+  FModelInputFiles := TStringList.Create;
+  FModflowWettingOptions := TWettingOptions.Create(Self);
+  FGlobalVariables := TGlobalVariables.Create(self);
+//  FChangedDataArrayNames := TStringList.Create;
+
+  FTopGridObserver:= TObserver.Create(nil);
+  FThreeDGridObserver:= TObserver.Create(nil);
+  FTopGridObserver.Name := 'TopGridObserver';
+  FThreeDGridObserver.Name := 'ThreeDGridObserver';
+
+  FTopGridObserver.TalksTo(FThreeDGridObserver);
+
+  FHufKxNotifier := TObserver.Create(nil);
+  FHufKxNotifier.Name := 'HufKxNotifier';
+  FHufKyNotifier := TObserver.Create(nil);
+  FHufKyNotifier.Name := 'HufKyNotifier';
+  FHufKzNotifier := TObserver.Create(nil);
+  FHufKzNotifier.Name := 'HufKzNotifier';
+  FHufSsNotifier := TObserver.Create(nil);
+  FHufSsNotifier.Name := 'HufSsNotifier';
+  FHufSyNotifier := TObserver.Create(nil);
+  FHufSyNotifier.Name := 'HufSyNotifier';
+
+  FUnitNumbers := TUnitNumbers.Create(self);
+
+  FHfbDisplayer:= THfbDisplayer.Create(nil);
+  FHfbDisplayer.OnNeedToUpdate := UpdateHfb;
+end;
+
+destructor TCustomModel.Destroy;
+begin
+//  FChangedDataArrayNames.Free;
+//  FBoundaryDataSets.Free;
+//  FDataSets.Free;
+//  FDataSetsToCache.Free;
+  FModflowWettingOptions.Free;
+  FFilesToArchive.Free;
+  FModelInputFiles.Free;
+  FModflowGrid.Free;
+  FModflowPackages.Free;
+  FBatchFileAdditionsAfterModel.Free;
+  FBatchFileAdditionsBeforeModel.Free;
+  FModflowNameFileLines.Free;
+  FHeadFluxObservations.Free;
+  FRiverObservations.Free;
+  FDrainObservations.Free;
+  FGhbObservations.Free;
+  FHydrogeologicUnits.Free;
+  FParsers.Free;
+  FGlobalVariables.Free;
+  FDataArrayManager.Free;
+  FTransientMultiplierArrays.Free;
+  FTransientZoneArrays.Free;
+  FTimeLists.Free;
+  FMfHobHeads.Free;
+  FHfbDisplayer.Free;
+  FHfbWriter.Free;
+  FUnitNumbers.Free;
+  FPValFile.Free;
+  FTemplate.Free;
+  inherited;
+end;
+
+function TCustomModel.EquilibriumPhasesUsed(Sender: TObject): boolean;
+begin
+  result := ChemistryUsed(Sender) and ChemistryOptions.UseEquilibriumPhases;
+end;
+
+procedure TCustomModel.Invalidate;
+begin
+  UpToDate := False;
+end;
+
+procedure TCustomModel.SetModflowGrid(const Value: TModflowGrid);
+begin
+  FModflowGrid.Assign(Value);
+  Invalidate;
+end;
+
+procedure TCustomModel.SetModflowPackages(const Value: TModflowPackages);
+begin
+  FModflowPackages.Assign(Value);
+end;
+
+procedure TCustomModel.SetAlternateSolver(const Value: boolean);
+begin
+  if FAlternateSolver <> Value then
+  begin
+    FAlternateSolver := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TCustomModel.SetAlternateFlowPackage(const Value: boolean);
+begin
+  if FAlternateFlowPackage <> Value then
+  begin
+    FAlternateFlowPackage := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TCustomModel.SetBatchFileAdditionsBeforeModel(const Value: TStrings);
+begin
+  if not FBatchFileAdditionsBeforeModel.Equals(Value) then
+  begin
+    Invalidate;
+  end;
+  FBatchFileAdditionsBeforeModel.Assign(Value);
+end;
+
+procedure TCustomModel.SetBatchFileAdditionsAfterModel(const Value: TStrings);
+begin
+  if not FBatchFileAdditionsAfterModel.Equals(Value) then
+  begin
+    Invalidate;
+  end;
+  FBatchFileAdditionsAfterModel.Assign(Value);
+end;
+
+procedure TCustomModel.SetModflowNameFileLines(const Value: TStrings);
+begin
+  FModflowNameFileLines.Assign(Value);
+  Invalidate;
+end;
+
+procedure TCustomModel.SetHeadFluxObservations(const Value: TFluxObservationGroups);
+begin
+  FHeadFluxObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetRiverObservations(const Value: TFluxObservationGroups);
+begin
+  FRiverObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetDrainObservations(const Value: TFluxObservationGroups);
+begin
+  FDrainObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetGhbObservations(const Value: TFluxObservationGroups);
+begin
+  FGhbObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetHydrogeologicUnits(const Value: THydrogeologicUnits);
+begin
+  FHydrogeologicUnits.Assign(Value);
+end;
+
+procedure TCustomModel.SetFilesToArchive(const Value: TStrings);
+begin
+  FFilesToArchive.Assign(Value);
+  Invalidate;
+end;
+
+procedure TCustomModel.SetModelInputFiles(const Value: TStrings);
+begin
+  FModelInputFiles.Assign(Value);
+  Invalidate;
+end;
+
+procedure TCustomModel.SetFileName(const Value: string);
+begin
+  if FFileName <> Value then
+  begin
+    FFileName := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TCustomModel.SetModflowWettingOptions(const Value: TWettingOptions);
+begin
+  FModflowWettingOptions.Assign(Value);
+end;
+
+procedure TCustomModel.AddModelInputFile(const FileName: string);
+begin
+  if ModelInputFiles.IndexOf(FileName) < 0 then
+  begin
+    ModelInputFiles.Add(FileName);
+    Invalidate;
+  end;
+end;
+
+procedure TCustomModel.AddFileToArchive(const FileName: string);
+begin
+  if FilesToArchive.IndexOf(FileName) < 0 then
+  begin
+    FilesToArchive.Add(FileName);
+    Invalidate;
+  end;
+end;
+
+procedure TCustomModel.InternalClear;
+begin
+  FDataArrayManager.ClearDataSetsToCache;
+  ClearAllTimeLists;
+end;
+
+function TCustomModel.GetCompiler(const Orientation: TDataSetOrientation;
+      const EvaluatedAt: TEvaluatedAt): TRbwParser;
+begin
+  result := nil;
+
+  case EvaluatedAt of
+    eaBlocks:
+      begin
+        case Orientation of
+          dsoTop:
+            begin
+              result := rpTopFormulaCompiler;
+            end;
+          dsoFront:
+            begin
+              result := rpFrontFormulaCompiler;
+            end;
+          dsoSide:
+            begin
+              result := rpSideFormulaCompiler;
+            end;
+          dso3D:
+            begin
+              result := rpThreeDFormulaCompiler;
+            end;
+        else
+          Assert(False);
+        end;
+      end;
+    eaNodes:
+      begin
+        case Orientation of
+          dsoTop:
+            begin
+              result := rpTopFormulaCompilerNodes;
+            end;
+          dsoFront:
+            begin
+              result := rpFrontFormulaCompilerNodes;
+            end;
+          dsoSide:
+            begin
+              result := rpSideFormulaCompilerNodes;
+            end;
+          dso3D:
+            begin
+              result := rpThreeDFormulaCompilerNodes;
+            end;
+        else
+          Assert(False);
+        end;
+      end;
+  else
+    Assert(False);
+  end;
+end;
+
+function TCustomModel.ParserCount: integer;
+begin
+  result := FParsers.Count;
+end;
+
+procedure TCustomModel.ClearParsers;
+var
+  Parser: TRbwParser;
+  Index: Integer;
+begin
+  for Index := 0 to ParserCount - 1 do
+  begin
+    Parser := Parsers[Index];
+    Parser.ClearExpressions;
+    Parser.ClearVariables;
+  end;
+end;
+
+procedure TCustomModel.ClearViewedItems;
+begin
+  FrontTimeList := nil;
+  SideTimeList := nil;
+  TopTimeList := nil;
+  ThreeDTimeList := nil;
+  FTopDisplayTime := 0;
+  FFrontDisplayTime := 0;
+  FSideDisplayTime := 0;
+  FThreeDDisplayTime := 0;
+
+  ModflowGrid.TopDataSet := nil;
+  ModflowGrid.FrontDataSet := nil;
+  ModflowGrid.SideDataSet := nil;
+  ModflowGrid.ThreeDDataSet := nil;
+
+  ModflowGrid.TopContourDataSet := nil;
+  ModflowGrid.FrontContourDataSet := nil;
+  ModflowGrid.SideContourDataSet := nil;
+  ModflowGrid.ThreeDContourDataSet := nil;
+end;
+
+function TCustomModel.GetParsers(Index: integer): TRbwParser;
+begin
+  result := FParsers[Index];
+end;
+
+procedure TCustomModel.Clear;
+begin
+  FClearing := True;
+  try
+    InternalClear;
+  finally
+    FClearing := False;
+  end;
+end;
+
+procedure TCustomModel.ClearExpressionsAndVariables;
+begin
+  rpTopFormulaCompiler.ClearExpressions;
+  rpTopFormulaCompiler.ClearVariables;
+  rpFrontFormulaCompiler.ClearExpressions;
+  rpFrontFormulaCompiler.ClearVariables;
+  rpSideFormulaCompiler.ClearExpressions;
+  rpSideFormulaCompiler.ClearVariables;
+  rpThreeDFormulaCompiler.ClearExpressions;
+  rpThreeDFormulaCompiler.ClearVariables;
+  rpTopFormulaCompilerNodes.ClearExpressions;
+  rpTopFormulaCompilerNodes.ClearVariables;
+  rpFrontFormulaCompilerNodes.ClearExpressions;
+  rpFrontFormulaCompilerNodes.ClearVariables;
+  rpSideFormulaCompilerNodes.ClearExpressions;
+  rpSideFormulaCompilerNodes.ClearVariables;
+  rpThreeDFormulaCompilerNodes.ClearExpressions;
+  rpThreeDFormulaCompilerNodes.ClearVariables;
+end;
+
+procedure TCustomModel.FillCompilerList(CompilerList: TList);
+begin
+  CompilerList.Add(rpFrontFormulaCompiler);
+  CompilerList.Add(rpFrontFormulaCompilerNodes);
+  CompilerList.Add(rpSideFormulaCompiler);
+  CompilerList.Add(rpSideFormulaCompilerNodes);
+  CompilerList.Add(rpThreeDFormulaCompiler);
+  CompilerList.Add(rpThreeDFormulaCompilerNodes);
+  CompilerList.Add(rpTopFormulaCompiler);
+  CompilerList.Add(rpTopFormulaCompilerNodes);
+end;
+
+procedure TCustomModel.FinalizePvalAndTemplate(FileName: string);
+var
+  TemplateFileName: string;
+  PValFileName: string;
+  Comment: string;
+begin
+  if FPValFile.Count > 0 then
+  begin
+    FPValFile.Insert(0, IntToStr(FPValFile.Count));
+    FTemplate.Insert(0, IntToStr(FTemplate.Count));
+
+    Comment := '# PVAL file created on ' + DateToStr(Now) + ' by '
+      + ProgramName + ' version ' + ModelVersion + '.';
+    FPValFile.Insert(0, Comment);
+    FTemplate.Insert(0, Comment);
+
+    FTemplate.Insert(0, 'jtf ' + UcodeDelimiter);
+
+    PValFileName := ChangeFileExt(FileName, StrPvalExt);
+    TemplateFileName := ChangeFileExt(FileName, StrJtf);
+
+    FPValFile.SaveToFile(PValFileName);
+    FTemplate.SaveToFile(TemplateFileName);
+
+    TCustomModflowWriter.WriteToNameFile('PVAL',
+      UnitNumbers.UnitNumber(StrPval), PValFileName, foInput);
+  end;
+end;
+
+procedure TCustomModel.SetGlobalVariables(const Value: TGlobalVariables);
+var
+  OldVariables: TStringList;
+  NewVariables: TStringList;
+  CompilerList: TList;
+  Variable: TGlobalVariable;
+  OldVariable: TGlobalVariable;
+  NewVariable: TGlobalVariable;
+  Index: integer;
+  NewIndex: integer;
+  procedure RemoveVariable(Variable: TGlobalVariable);
+  var
+    Index: Integer;
+    Compiler: TRbwParser;
+    VariableIndex: integer;
+    CompilerVariable: TCustomVariable;
+  begin
+    for Index := 0 to CompilerList.Count - 1 do
+    begin
+      Compiler := CompilerList[Index];
+      VariableIndex := Compiler.IndexOfVariable(Variable.Name);
+      Assert(VariableIndex >= 0);
+      CompilerVariable := Compiler.Variables[VariableIndex] as TCustomVariable;
+      Compiler.RemoveVariable(CompilerVariable);
+    end;
+    Variable.UpToDate := False;
+  end;
+  procedure UpdateVariable(Variable: TGlobalVariable);
+  var
+    CompilerIndex: Integer;
+    Compiler: TRbwParser;
+    VariableIndex: integer;
+    CompilerVariable: TCustomVariable;
+    ValueChanged: boolean;
+    RealVariable: TRealVariable;
+    IntegerVariable: TIntegerVariable;
+    BooleanVariable: TBooleanVariable;
+    StringVariable: TStringVariable;
+  begin
+    ValueChanged := False;
+    for CompilerIndex := 0 to CompilerList.Count - 1 do
+    begin
+      Compiler := CompilerList[CompilerIndex];
+      VariableIndex := Compiler.IndexOfVariable(Variable.Name);
+      if VariableIndex < 0 then
+      begin
+        case Variable.Format of
+          rdtDouble:
+            begin
+              Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
+                Variable.RealValue);
+            end;
+          rdtInteger:
+            begin
+              Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
+                Variable.IntegerValue);
+            end;
+          rdtBoolean:
+            begin
+              Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
+                Variable.BooleanValue);
+            end;
+          rdtString:
+            begin
+              Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
+                Variable.StringValue);
+            end;
+          else Assert(False);
+        end;
+      end
+      else
+      begin
+        CompilerVariable := Compiler.Variables[VariableIndex]
+          as TCustomVariable;
+        case Variable.Format of
+          rdtDouble:
+            begin
+              RealVariable := CompilerVariable as TRealVariable;
+              if (CompilerIndex = 0)
+                and (RealVariable.Value <> Variable.RealValue) then
+              begin
+                ValueChanged := True;
+              end;
+              RealVariable.Value := Variable.RealValue;
+            end;
+          rdtInteger:
+            begin
+              IntegerVariable := CompilerVariable as TIntegerVariable;
+              if (CompilerIndex = 0)
+                and (IntegerVariable.Value <> Variable.IntegerValue) then
+              begin
+                ValueChanged := True;
+              end;
+              IntegerVariable.Value := Variable.IntegerValue;
+            end;
+          rdtBoolean:
+            begin
+              BooleanVariable := CompilerVariable as TBooleanVariable;
+              if (CompilerIndex = 0)
+                and (BooleanVariable.Value <> Variable.BooleanValue) then
+              begin
+                ValueChanged := True;
+              end;
+              BooleanVariable.Value := Variable.BooleanValue;
+            end;
+          rdtString:
+            begin
+              StringVariable := CompilerVariable as TStringVariable;
+              if (CompilerIndex = 0)
+                and (StringVariable.Value <> Variable.StringValue) then
+              begin
+                ValueChanged := True;
+              end;
+              StringVariable.Value := Variable.StringValue;
+            end;
+          else Assert(False);
+        end;
+      end;
+    end;
+    if ValueChanged then
+    begin
+      Variable.UpToDate := False;
+      Variable.UpToDate := True;
+    end;
+  end;
+begin
+  OldVariables := TStringList.Create;
+  NewVariables := TStringList.Create;
+  CompilerList := TList.Create;
+  try
+    FillCompilerList(CompilerList);
+
+    for Index := 0 to FGlobalVariables.Count - 1 do
+    begin
+      Variable := FGlobalVariables[Index];
+      OldVariables.AddObject(UpperCase(Variable.Name), Variable);
+    end;
+    for Index := 0 to Value.Count - 1 do
+    begin
+      Variable := Value[Index];
+      NewVariables.AddObject(UpperCase(Variable.Name), Variable);
+    end;
+    OldVariables.Sort;
+    NewVariables.Sort;
+    for Index := 0 to OldVariables.Count - 1 do
+    begin
+      NewIndex := NewVariables.IndexOf(OldVariables[Index]);
+      if NewIndex < 0 then
+      begin
+        Variable := OldVariables.Objects[Index] as TGlobalVariable;
+        RemoveVariable(Variable);
+      end
+      else
+      begin
+        OldVariable := OldVariables.Objects[Index] as TGlobalVariable;
+        NewVariable := NewVariables.Objects[NewIndex] as TGlobalVariable;
+        if OldVariable.Format <> NewVariable.Format then
+        begin
+          RemoveVariable(OldVariable);
+        end;
+      end;
+    end;
+
+    for Index := 0 to NewVariables.Count - 1 do
+    begin
+      Variable := NewVariables.Objects[Index] as TGlobalVariable;
+      UpdateVariable(Variable);
+    end;
+
+  finally
+    CompilerList.Free;
+    NewVariables.Free;
+    OldVariables.Free;
+  end;
+
+  FGlobalVariables.Assign(Value);
+end;
+
+procedure TCustomModel.RefreshGlobalVariables(CompilerList: TList);
+var
+  Compiler: TRbwParser;
+  Variable: TGlobalVariable;
+  CompilerIndex: Integer;
+  VariableIndex: Integer;
+begin
+  for CompilerIndex := 0 to CompilerList.Count - 1 do
+  begin
+    Compiler := CompilerList[CompilerIndex];
+    for VariableIndex := 0 to GlobalVariables.Count - 1 do
+    begin
+      Variable := GlobalVariables[VariableIndex];
+      case Variable.Format of
+        rdtDouble:
+          begin
+            Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
+              Variable.RealValue);
+          end;
+        rdtInteger:
+          begin
+            Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
+              Variable.IntegerValue);
+          end;
+        rdtBoolean:
+          begin
+            Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
+              Variable.BooleanValue);
+          end;
+        rdtString:
+          begin
+            Compiler.CreateVariable(Variable.Name, StrGlobalVariables,
+              Variable.StringValue);
+          end;
+      else
+        Assert(False);
+      end;
+    end;
+  end;
+end;
+
+procedure TCustomModel.CreateGlobalVariables;
+var
+  CompilerList: TList;
+begin
+  CompilerList := TList.Create;
+  try
+    FillCompilerList(CompilerList);
+    RefreshGlobalVariables(CompilerList);
+  finally
+    CompilerList.Free;
+  end;
+end;
+
+procedure TCustomModel.CreateVariables(const DataSet: TDataArray);
+var
+  TempCompiler: TRbwParser;
+  Local3DCompiler: TRbwParser;
+  VarIndex: integer;
+  Variable: TCustomValue;
+begin
+  TempCompiler := GetCompiler(DataSet.Orientation,
+    DataSet.EvaluatedAt);
+
+  Local3DCompiler := nil;
+  case DataSet.EvaluatedAt of
+    eaBlocks:
+      begin
+        Local3DCompiler := rpThreeDFormulaCompiler;
+      end;
+    eaNodes:
+      begin
+        Local3DCompiler := rpThreeDFormulaCompilerNodes;
+      end;
+  else
+    Assert(False);
+  end;
+
+  VarIndex := TempCompiler.IndexOfVariable(DataSet.Name);
+  if VarIndex < 0 then
+  begin
+    case DataSet.Datatype of
+      rdtDouble:
+        begin
+          TempCompiler.CreateVariable(DataSet.Name,
+            DataSet.FullClassification, 0.0);
+          if TempCompiler <> Local3DCompiler then
+          begin
+            Local3DCompiler.CreateVariable(DataSet.Name,
+              DataSet.FullClassification, 0.0);
+          end;
+        end;
+      rdtInteger:
+        begin
+          TempCompiler.CreateVariable(DataSet.Name,
+            DataSet.FullClassification, 0);
+          if TempCompiler <> Local3DCompiler then
+          begin
+            Local3DCompiler.CreateVariable(DataSet.Name,
+              DataSet.FullClassification, 0);
+          end;
+        end;
+      rdtBoolean:
+        begin
+          TempCompiler.CreateVariable(DataSet.Name,
+            DataSet.FullClassification, False);
+          if TempCompiler <> Local3DCompiler then
+          begin
+            Local3DCompiler.CreateVariable(DataSet.Name,
+              DataSet.FullClassification, False);
+          end;
+        end;
+      rdtString:
+        begin
+          TempCompiler.CreateVariable(DataSet.Name,
+            DataSet.FullClassification, '');
+          if TempCompiler <> Local3DCompiler then
+          begin
+            Local3DCompiler.CreateVariable(DataSet.Name,
+              DataSet.FullClassification, '');
+          end;
+        end;
+    else
+      Assert(False);
+    end;
+  end
+  else
+  begin
+    Variable := TempCompiler.Variables[VarIndex];
+    Assert(Variable.Name = UpperCase(DataSet.Name));
+    Assert(Variable.ResultType = DataSet.DataType);
+    Variable.Classification := DataSet.FullClassification;
+    if TempCompiler <> Local3DCompiler then
+    begin
+      VarIndex := Local3DCompiler.IndexOfVariable(DataSet.Name);
+      Variable := Local3DCompiler.Variables[VarIndex];
+      Assert(Variable.Name = UpperCase(DataSet.Name));
+      Assert(Variable.ResultType = DataSet.DataType);
+      Variable.Classification := DataSet.FullClassification;
+    end;
+  end;
+end;
+
+procedure TCustomModel.RemoveVariables(const DataSet: TDataArray);
+var
+  TempCompiler: TRbwParser;
+  Local3DCompiler: TRbwParser;
+  VarIndex: integer;
+  Variable: TCustomVariable;
+begin
+  TempCompiler := GetCompiler(DataSet.Orientation,
+    DataSet.EvaluatedAt);
+
+  Local3DCompiler := nil;
+  case DataSet.EvaluatedAt of
+    eaBlocks:
+      begin
+        Local3DCompiler := rpThreeDFormulaCompiler;
+      end;
+    eaNodes:
+      begin
+        Local3DCompiler := rpThreeDFormulaCompilerNodes;
+      end;
+  else
+    Assert(False);
+  end;
+  VarIndex := TempCompiler.IndexOfVariable(DataSet.Name);
+  if VarIndex >= 0 then
+  begin
+    Variable := TempCompiler.Variables[VarIndex] as TCustomVariable;
+    TempCompiler.RemoveVariable(Variable);
+  end;
+  if TempCompiler <> Local3DCompiler then
+  begin
+    VarIndex := Local3DCompiler.IndexOfVariable(DataSet.Name);
+    if VarIndex >= 0 then
+    begin
+      Variable := Local3DCompiler.Variables[VarIndex] as TCustomVariable;
+      Local3DCompiler.RemoveVariable(Variable);
+    end;
+  end;
+end;
+
+procedure TCustomModel.SetEdgeDisplay(const Value: TCustomModflowGridEdgeDisplay);
+begin
+  FEdgeDisplay := Value;
+end;
+
+procedure TCustomModel.OnActiveDataSetChanged(Sender: TObject);
+var
+  ActiveDataArray: TDataArray;
+  DataArray: TDataArray;
+begin
+  ActiveDataArray := Sender as TDataArray;
+  Assert(ActiveDataArray <> nil);
+  Assert(ActiveDataArray.Name = rsActive);
+  if Grid <> nil then
+  begin
+    DataArray := Grid.ThreeDDataSet;
+    if (DataArray <> nil) and DataArray.Limits.ActiveOnly then
+    begin
+      if not ActiveDataArray.UpToDate then
+      begin
+        Grid.NeedToRecalculate3DCellColors := True;
+        ThreeDGridObserver.UpToDate := False;
+        ThreeDGridObserver.UpToDate := True;
+      end;
+    end
+    else if (EdgeDisplay <> nil)
+      and EdgeDisplay.Limits[EdgeDisplay.DataToPlot].ActiveOnly then
+    begin
+      if not ActiveDataArray.UpToDate then
+      begin
+        Grid.NeedToRecalculate3DCellColors := True;
+        ThreeDGridObserver.UpToDate := False;
+        ThreeDGridObserver.UpToDate := True;
+      end;
+    end;
+  end;
+end;
+
+function TCustomModel.OptionalDataSet(Sender: TObject): boolean;
+begin
+  result := False;
+end;
+
+procedure TCustomModel.AllObserversStopTalking;
+begin
+  FTopGridObserver.StopTalkingToAnyone;
+  FThreeDGridObserver.StopTalkingToAnyone;
+  FHufSyNotifier.StopTalkingToAnyone;
+  FHufSsNotifier.StopTalkingToAnyone;
+  FHufKzNotifier.StopTalkingToAnyone;
+  FHufKyNotifier.StopTalkingToAnyone;
+  FHufKxNotifier.StopTalkingToAnyone;
+end;
+
+procedure TCustomModel.FreeHufNotifiers;
+begin
+  FHufSyNotifier.Free;
+  FHufSsNotifier.Free;
+  FHufKzNotifier.Free;
+  FHufKyNotifier.Free;
+  FHufKxNotifier.Free;
+end;
+
+procedure TCustomModel.FreeGridNotifiers;
+begin
+  FTopGridObserver.Free;
+  FTopGridObserver := nil;
+  FThreeDGridObserver.Free;
+  FThreeDGridObserver := nil;
+end;
+
+{ TDataArrayManager }
+
+function TDataArrayManager.AddBoundaryDataSet(
+  const DataSet: TDataArray): Integer;
+begin
+  result := FBoundaryDataSets.Add(DataSet);
+  Invalidate;
+end;
+
+function TDataArrayManager.AddDataSet(const DataSet: TDataArray): Integer;
+begin
+  result := FDataSets.Add(DataSet);
+  Invalidate;
+  AddDataSetToLookUpList(DataSet);
+end;
+
+procedure TDataArrayManager.AddDataSetToCache(DataArray: TDataArray);
+begin
+  if FDataSetsToCache.IndexOf(DataArray) < 0 then
+  begin
+    if (DataArray.Name <> '')
+      and not (DataArray is TSparseArrayPhastInterpolationDataSet)
+      and not (DataArray is TCustomSparseDataSet)
+      then
+    begin
+      FDataSetsToCache.Add(DataArray)
+    end;
+  end;
+end;
+
+procedure TDataArrayManager.AddDataSetToLookUpList(const DataSet: TDataArray);
+var
+  Dummy: pointer;
+begin
+  if (FDataSetLookUpList <> nil) and (DataSet.Name <> '') then
+  begin
+    if not FDataSetLookUpList.Search(DataSet.Name, Dummy) then
+    begin
+      FDataSetLookUpList.Insert(DataSet.Name, DataSet);
+    end;
+  end;
+end;
+
+procedure TDataArrayManager.Assign(Source: TDataArrayManager);
+var
+  Index: Integer;
+  DataArray: TDataArray;
+  SourceDataArray: TDataArray;
+  DA_Index: Integer;
+begin
+  Assert(Source <> self);
+  for Index := DataSetCount - 1 downto 0 do
+  begin
+    DataArray := DataSets[Index];
+    if Source.IndexOfDataSet(DataArray.Name) < 0 then
+    begin
+      FDataSets.Delete(Index);
+    end;
+  end;
+  for Index := BoundaryDataSetCount - 1 downto 0 do
+  begin
+    DataArray := BoundaryDataSets[Index];
+    if Source.IndexOfBoundaryDataSet(DataArray.Name) < 0 then
+    begin
+      FBoundaryDataSets.Delete(Index);
+    end;
+  end;
+  for Index := 0 to Source.DataSetCount - 1 do
+  begin
+    SourceDataArray := Source.DataSets[Index];
+    DataArray := GetDataSetByName(SourceDataArray.Name);
+    if DataArray = nil then
+    begin
+      DataArray := TDataArrayType(SourceDataArray.ClassType).Create(FCustomModel);
+      AddDataSet(DataArray);
+    end;
+    DataArray.AssignProperties(SourceDataArray);
+  end;
+  for Index := 0 to Source.BoundaryDataSetCount - 1 do
+  begin
+    SourceDataArray := Source.BoundaryDataSets[Index];
+    DA_Index := IndexOfBoundaryDataSet(SourceDataArray.Name);
+    if DA_Index < 0 then
+    begin
+      DataArray := TDataArrayType(SourceDataArray.ClassType).Create(FCustomModel);
+      AddBoundaryDataSet(DataArray);
+    end
+    else
+    begin
+      DataArray := BoundaryDataSets[DA_Index];
+    end;
+    DataArray.AssignProperties(SourceDataArray);
+  end;
+end;
+
+procedure TDataArrayManager.CacheDataArrays;
+var
+  Index: Integer;
+  DataArray: TDataArray;
+begin
+  for Index := 0 to FDataSetsToCache.Count - 1 do
+  begin
+    DataArray := FDataSetsToCache[Index];
+    if (DataArray <> FCustomModel.Grid.TopDataSet)
+      and (DataArray <> FCustomModel.Grid.FrontDataSet)
+      and (DataArray <> FCustomModel.Grid.SideDataSet)
+      and (DataArray <> FCustomModel.Grid.ThreeDDataSet)
+      and (DataArray <> FCustomModel.Grid.TopContourDataSet)
+      and (DataArray <> FCustomModel.Grid.FrontContourDataSet)
+      and (DataArray <> FCustomModel.Grid.SideContourDataSet)
+      and (DataArray <> FCustomModel.Grid.ThreeDContourDataSet) then
+    begin
+      DataArray.CacheData;
+    end;
+  end;
+  FDataSetsToCache.Clear;
+end;
+
+procedure TDataArrayManager.ClearAllDataSets;
+begin
+  FDataSetsToCache.Clear;
+  FDataSets.Clear;
+  FBoundaryDataSets.Clear;
+end;
+
+procedure TDataArrayManager.ClearDataSetsToCache;
+begin
+  FDataSetsToCache.Clear;
+end;
+
+procedure TDataArrayManager.ClearDeletedDataSets;
+var
+  Index: Integer;
+begin
+  ClearingDeletedDataSets := True;
+  try
+    FDeletedDataSets.Clear;
+  finally
+    ClearingDeletedDataSets := False;
+  end;
+  for Index := 0 to ChildDataArrayManagerCount - 1 do
+  begin
+    ChildDataArrayManagers[Index].ClearDeletedDataSets;
+  end;
+end;
+
+constructor TDataArrayManager.Create(Model: TCustomModel);
+begin
+  FCustomModel := Model;
+  FRiverDataSets := TList.Create;
+  FDataSetsToCache:= TList.Create;
+  FDataSets := TObjectList.Create;
+  FBoundaryDataSets := TObjectList.Create;
+  FDeletedDataSets := TObjectList.Create;
+end;
+
+procedure TDataArrayManager.CreateInitialBoundaryDataSets;
+var
+  PhastDataSet: TDataArray;
+begin
+  PhastDataSet := TRealSparseDataSet.Create(FCustomModel);
+  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
+  PhastDataSet.UpdateWithName(rsTopLeakyHydraulicConductivity);
+  PhastDataSet.DataType := rdtDouble;
+  PhastDataSet.EvaluatedAt := eaNodes;
+  PhastDataSet.Orientation := dso3D;
+  PhastDataSet.Formula := '100.';
+  PhastDataSet.CheckMin := True;
+  PhastDataSet.Min := 0;
+  AddBoundaryDataSet(PhastDataSet);
+
+  PhastDataSet := TRealSparseDataSet.Create(FCustomModel);
+  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
+  PhastDataSet.UpdateWithName(rsTopLeakyThickness);
+  PhastDataSet.DataType := rdtDouble;
+  PhastDataSet.EvaluatedAt := eaNodes;
+  PhastDataSet.Orientation := dso3D;
+  PhastDataSet.Formula := '1.';
+  PhastDataSet.CheckMin := True;
+  PhastDataSet.Min := 0;
+  AddBoundaryDataSet(PhastDataSet);
+
+  PhastDataSet := TRealSparseDataSet.Create(FCustomModel);
+  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
+  PhastDataSet.UpdateWithName(rsFrontLeakyHydraulicConductivity);
+  PhastDataSet.DataType := rdtDouble;
+  PhastDataSet.EvaluatedAt := eaNodes;
+  PhastDataSet.Orientation := dso3D;
+  PhastDataSet.Formula := '100.';
+  PhastDataSet.CheckMin := True;
+  PhastDataSet.Min := 0;
+  AddBoundaryDataSet(PhastDataSet);
+
+  PhastDataSet := TRealSparseDataSet.Create(FCustomModel);
+  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
+  PhastDataSet.UpdateWithName(rsFrontLeakyThickness);
+  PhastDataSet.DataType := rdtDouble;
+  PhastDataSet.EvaluatedAt := eaNodes;
+  PhastDataSet.Orientation := dso3D;
+  PhastDataSet.Formula := '1.';
+  PhastDataSet.CheckMin := True;
+  PhastDataSet.Min := 0;
+  AddBoundaryDataSet(PhastDataSet);
+
+  PhastDataSet := TRealSparseDataSet.Create(FCustomModel);
+  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
+  PhastDataSet.UpdateWithName(rsSideLeakyHydraulicConductivity);
+  PhastDataSet.DataType := rdtDouble;
+  PhastDataSet.EvaluatedAt := eaNodes;
+  PhastDataSet.Orientation := dso3D;
+  PhastDataSet.Formula := '100.';
+  PhastDataSet.CheckMin := True;
+  PhastDataSet.Min := 0;
+  AddBoundaryDataSet(PhastDataSet);
+
+  PhastDataSet := TRealSparseDataSet.Create(FCustomModel);
+  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
+  PhastDataSet.UpdateWithName(rsSideLeakyThickness);
+  PhastDataSet.DataType := rdtDouble;
+  PhastDataSet.EvaluatedAt := eaNodes;
+  PhastDataSet.Orientation := dso3D;
+  PhastDataSet.Formula := '1.';
+  PhastDataSet.CheckMin := True;
+  PhastDataSet.Min := 0;
+  AddBoundaryDataSet(PhastDataSet);
+
+  PhastDataSet := TRealSparseDataSet.Create(FCustomModel);
+  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
+  PhastDataSet.UpdateWithName(rsRiverHydraulicConductivity);
+  PhastDataSet.DataType := rdtDouble;
+  PhastDataSet.EvaluatedAt := eaNodes;
+  PhastDataSet.Orientation := dsoTop;
+  PhastDataSet.Formula := '100.';
+  PhastDataSet.CheckMin := True;
+  PhastDataSet.Min := 0;
+  AddBoundaryDataSet(PhastDataSet);
+  RiverDataSets.Add(PhastDataSet);
+
+  PhastDataSet := TRealSparseDataSet.Create(FCustomModel);
+  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
+  PhastDataSet.UpdateWithName(rsRiverWidth);
+  PhastDataSet.DataType := rdtDouble;
+  PhastDataSet.EvaluatedAt := eaNodes;
+  PhastDataSet.Orientation := dsoTop;
+  PhastDataSet.Formula := '10.';
+  PhastDataSet.CheckMin := True;
+  PhastDataSet.Min := 0;
+  AddBoundaryDataSet(PhastDataSet);
+  RiverDataSets.Add(PhastDataSet);
+
+  PhastDataSet := TRealSparseDataSet.Create(FCustomModel);
+  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
+  PhastDataSet.UpdateWithName(rsRiverDepth);
+  PhastDataSet.DataType := rdtDouble;
+  PhastDataSet.EvaluatedAt := eaNodes;
+  PhastDataSet.Orientation := dsoTop;
+  PhastDataSet.Formula := '10.';
+  PhastDataSet.CheckMin := True;
+  PhastDataSet.Min := 0;
+  AddBoundaryDataSet(PhastDataSet);
+  RiverDataSets.Add(PhastDataSet);
+
+  PhastDataSet := TRealSparseDataSet.Create(FCustomModel);
+  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
+  PhastDataSet.UpdateWithName(rsRiverBedThickness);
+  PhastDataSet.DataType := rdtDouble;
+  PhastDataSet.EvaluatedAt := eaNodes;
+  PhastDataSet.Orientation := dsoTop;
+  PhastDataSet.Formula := '1.';
+  PhastDataSet.CheckMin := True;
+  PhastDataSet.Min := 0;
+  AddBoundaryDataSet(PhastDataSet);
+  RiverDataSets.Add(PhastDataSet);
+
+  PhastDataSet := TIntegerSparseDataSet.Create(FCustomModel);
+  PhastDataSet.Lock := [dcName, dcType, dcOrientation, dcEvaluatedAt];
+  PhastDataSet.UpdateWithName(rsSolutionType);
+  PhastDataSet.DataType := rdtInteger;
+  PhastDataSet.EvaluatedAt := eaNodes;
+  PhastDataSet.Orientation := dso3D;
+  PhastDataSet.Formula := '0';
+  PhastDataSet.CheckMin := True;
+  PhastDataSet.Min := 0;
+  AddBoundaryDataSet(PhastDataSet);
+
+end;
+
+procedure TDataArrayManager.CreateInitialDataSets;
+var
+  DataArray: TDataArray;
+  Index: Integer;
+  DataSetName: string;
+  Orientation: TDataSetOrientation;
+  DataType: TRbwDataType;
+  ArrayNeeded: TObjectUsedEvent;
+  ArrayArrayShouldBeCreated: TObjectUsedEvent;
+  NewFormula, Classification: string;
+  Lock: TDataLock;
+begin
+  { TODO : Find a way to extract common code from
+TPhastModel.CreateModflowDataSets and
+TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
+
+  // See DefinePackageDataArrays for the definition of the
+  // contents of DataArrayCreationRecords.
+  for Index := 0 to Length(FDataArrayCreationRecords) - 1 do
+  begin
+    DataSetName := FDataArrayCreationRecords[Index].Name;
+    Orientation := FDataArrayCreationRecords[Index].Orientation;
+    DataType := FDataArrayCreationRecords[Index].DataType;
+    ArrayNeeded := FDataArrayCreationRecords[Index].DataSetNeeded;
+    ArrayArrayShouldBeCreated := FDataArrayCreationRecords[Index].DataSetShouldBeCreated;
+    NewFormula := FDataArrayCreationRecords[Index].Formula;
+    Classification := FDataArrayCreationRecords[Index].Classification;
+    Lock := FDataArrayCreationRecords[Index].Lock;
+
+    DataArray := GetDataSetByName(DataSetName);
+    Assert(Assigned(ArrayNeeded));
+    if DataArray <> nil then
+    begin
+      DataArray.Name := DataSetName;
+      DataArray.Lock := Lock;
+      DataArray.OnDataSetUsed := ArrayNeeded;
+      FCustomModel.CreateVariables(DataArray);
+    end
+    else if ArrayNeeded(self)
+      or (Assigned(ArrayArrayShouldBeCreated)
+      and ArrayArrayShouldBeCreated(self)) then
+    begin
+      DataArray := CreateNewDataArray(
+        FDataArrayCreationRecords[Index].DataSetType, DataSetName, NewFormula,
+        Lock, DataType, FDataArrayCreationRecords[Index].EvaluatedAt,
+        Orientation, Classification);
+      DataArray.OnDataSetUsed := ArrayNeeded;
+      DataArray.Lock := Lock;
+      DataArray.CheckMax := FDataArrayCreationRecords[Index].CheckMax;
+      DataArray.CheckMin := FDataArrayCreationRecords[Index].CheckMin;
+      DataArray.Max := FDataArrayCreationRecords[Index].Max;
+      DataArray.Min := FDataArrayCreationRecords[Index].Min;
+    end;
+    if DataArray <> nil then
+    begin
+      if FCustomModel.Grid <> nil then
+      begin
+        DataArray.UpdateDimensions(FCustomModel.Grid.LayerCount, FCustomModel.Grid.RowCount,
+          FCustomModel.Grid.ColumnCount);
+      end;
+      DataArray.AssociatedDataSets := FDataArrayCreationRecords[
+        Index].AssociatedDataSets;
+    end;
+  end;
+
+  DataArray := GetDataSetByName(rsActive);
+  if not Assigned(DataArray.OnUpToDateSet) then
+  begin
+    DataArray.OnUpToDateSet := FCustomModel.OnActiveDataSetChanged;
+  end;
+end;
+
+function TDataArrayManager.CreateNewDataArray(const ClassType: TDataArrayType;
+  const Name, Formula: string; Lock: TDataLock; DataType: TRbwDataType;
+  EvaluatedAt: TEvaluatedAt; Orientation: TDataSetOrientation;
+  const Classification: string): TDataArray;
+begin
+  result := ClassType.Create(FCustomModel);
+  result.Lock := Lock;
+  result.UpdateWithName(Name);
+  result.DataType := DataType;
+  result.EvaluatedAt := EvaluatedAt;
+  result.Orientation := Orientation;
+  result.Formula := Formula;
+  result.Classification := Classification;
+  AddDataSet(result);
+  FCustomModel.CreateVariables(result);
+end;
+
+function TDataArrayManager.DataArrayHeld(DataArray: TDataArray): boolean;
+begin
+  result := FDataSets.IndexOf(DataArray) >= 0
+end;
+
+procedure TDataArrayManager.DefinePackageDataArrays;
+  procedure NoCheck(var ARecord: TDataSetCreationData);
+  begin
+    ARecord.CheckMax := False;
+    ARecord.CheckMin := False;
+    ARecord.Max := 1;
+    ARecord.Min := 0;
+  end;
+var
+  Index: integer;
+begin
+  SetLength(FDataArrayCreationRecords, 62);
+  Index := 0;
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtBoolean;
+  FDataArrayCreationRecords[Index].Name := rsActive;
+  FDataArrayCreationRecords[Index].Formula := 'True';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.AlwaysUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: MEDIA-active'#13#10'MODFLOW BAS: IBOUND';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsKx;
+  FDataArrayCreationRecords[Index].Formula := '0.0001';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded :=
+    FCustomModel.AquiferPropertiesUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: MEDIA-Kx'#13#10'MODFLOW LPF: HK'#13#10'MODFLOW BCF: TRAN,HY';
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsKy;
+  FDataArrayCreationRecords[Index].Formula := rsKx;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.KyUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: MEDIA-Ky'#13#10'MODFLOW LPF: HANI'#13#10'MODFLOW HUF and BCF: (not used)';
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsKz;
+  FDataArrayCreationRecords[Index].Formula := rsKx + ' / 10';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.KzUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: MEDIA-Kz'#13#10'MODFLOW LPF: VKA'#13#10'MODFLOW BCF: Vcont';
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsPorosity;
+  FDataArrayCreationRecords[Index].Formula := '0.25';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.PorosityUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: MEDIA-porosity'#13#10'MODPATH: POR';
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsSpecific_Storage;
+  FDataArrayCreationRecords[Index].Formula := '1e-5';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded :=
+    FCustomModel.SpecificStorageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: MEDIA-specific_storage'#13#10'MODFLOW LPF: Ss'#13#10'MODFLOW BCF: Sf1';
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsLong_Dispersivity;
+  FDataArrayCreationRecords[Index].Formula := '10.';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ChemistryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: MEDIA-longitudinal_dispersivity';
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsHorizontal_Transv_Dispersivity;
+  FDataArrayCreationRecords[Index].Formula := '1.';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ChemistryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: MEDIA-horizontal_dispersivity';
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsVertical_Transv_Dispersivity;
+  FDataArrayCreationRecords[Index].Formula := '1.';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ChemistryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: MEDIA-vertical_dispersivity';
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsInitial_Head;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.InitialHeadUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: HEAD_IC-head';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TRealPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsInitial_Water_Table;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded :=
+    FCustomModel.InitialWaterTableUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: HEAD_IC-water_table';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Solution;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ChemistryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: CHEMISTRY_IC-solution';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Equilibrium_Phases;
+  FDataArrayCreationRecords[Index].Formula := '-1';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.EquilibriumPhasesUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: CHEMISTRY_IC-equilibrium_phases';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Surface;
+  FDataArrayCreationRecords[Index].Formula := '-1';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SurfacesUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: CHEMISTRY_IC-surface';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Exchange;
+  FDataArrayCreationRecords[Index].Formula := '-1';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ExchangeUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: CHEMISTRY_IC-exchange';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Gas_Phase;
+  FDataArrayCreationRecords[Index].Formula := '-1';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.GasPhaseUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: CHEMISTRY_IC-gas_phase';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Solid_Solutions;
+  FDataArrayCreationRecords[Index].Formula := '-1';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SolidSolutionUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: CHEMISTRY_IC-solid_solutions';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TIntegerPhastDataSet;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsChemistry_Initial_Kinetics;
+  FDataArrayCreationRecords[Index].Formula := '-1';
+  FDataArrayCreationRecords[Index].Classification := StrChemistry;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.KineticsUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: CHEMISTRY_IC-kinetics';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsPrint_Chemistry;
+  FDataArrayCreationRecords[Index].Formula := '1';
+  FDataArrayCreationRecords[Index].Classification := StrOutput;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ChemistryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: PRINT_LOCATIONS-chemistry';
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsPrint_XYZ_Chemistry;
+  FDataArrayCreationRecords[Index].Formula := '1';
+  FDataArrayCreationRecords[Index].Classification := StrOutput;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ChemistryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaNodes;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'PHAST: PRINT_LOCATIONS-xyz_chemistry';
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Min := 0;
+  Inc(Index);
+
+  // Reservoir layers
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsResLayer;
+  FDataArrayCreationRecords[Index].Formula := '1';
+  FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ReservoirLayerUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'RES: ISRESL';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsResBottom;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ReservoirPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'RES: BRES';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsResKv;
+  FDataArrayCreationRecords[Index].Formula := '100.';
+  FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ReservoirPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'RES: HCres';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsResBedThickness;
+  FDataArrayCreationRecords[Index].Formula := '1.';
+  FDataArrayCreationRecords[Index].Classification := rsResClassificaton;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ReservoirPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'RES: Rbthck';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  // Lake Layers
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsLakeID;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := rsLakeClassificaton;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.LakePackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LAK: LKARR';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsLakeLeakance;
+  FDataArrayCreationRecords[Index].Formula := '100.';
+  FDataArrayCreationRecords[Index].Classification := rsLakeClassificaton;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.LakePackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LAK: BDLKNC';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  // UZF layers
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrUzfLandSurface;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'UZF: IUZFBND (via the formula for ' + StrUzfLayer + ')';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtBoolean;
+  FDataArrayCreationRecords[Index].Name := rsModflowSpecifiedHead;
+  FDataArrayCreationRecords[Index].Formula := 'False';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ModflowUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BAS: IBOUND';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := StrUzfLayer;
+  FDataArrayCreationRecords[Index].Formula :=
+    'If((ActiveOnLayer(ElevationToLayer('
+      + StrUzfLandSurface + ')) AND NOT SpecifiedHeadOnLayer(ElevationToLayer('
+      + StrUzfLandSurface + '))), ElevationToModelLayer('
+      + StrUzfLandSurface + '), 0)';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IUZFBND';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := StrUzfDischargeRouting;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.RouteUzfDischarge;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IRUNBND';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrUzfVerticalK;
+  FDataArrayCreationRecords[Index].Formula := '1.';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfUnsatVertKUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: VKS';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrUzfBrooksCoreyEpsilon;
+  FDataArrayCreationRecords[Index].Formula := '3.5';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: EPS';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrUzfSaturatedWaterContent;
+  FDataArrayCreationRecords[Index].Formula := '0.3';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: THTS';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrUzfInitialUnsaturatedWaterContent;
+  FDataArrayCreationRecords[Index].Formula := '0.3';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfInitialInfiltrationUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: THTI';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := StrUzfGage_1_and_2;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IUZOPT';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := StrUzfGage3;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := strUzfClassification;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.UzfPackageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock + [dcFormula];
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'UZF: IUZOPT';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsModflow_Initial_Head;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ModflowInitialHeadUsed;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.ModflowUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BAS: STRT';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsModflow_CBKz;
+  FDataArrayCreationRecords[Index].Formula := rsKz;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ConfiningBedKzUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: VKCB; BCF: VCONT';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsVerticalAnisotropy;
+  FDataArrayCreationRecords[Index].Formula :=
+    'If((' + rsKz + ' = 0.), 0, (' + rsKx + ' / ' + rsKz + '))';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded :=
+    FCustomModel.VerticalAnisotropyUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: VKA';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsHorizontalAnisotropy;
+  FDataArrayCreationRecords[Index].Formula :=
+    'If((' + rsKx + ' = 0.), 1., (' + rsKy + ' / ' + rsKx + '))';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.HorizontalAnisotropyUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: HANI';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsSpecificYield;
+  FDataArrayCreationRecords[Index].Formula := '0.2';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SpecificYieldUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'LPF: Sy; BCF: Sf1';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsWetDryThreshold;
+  FDataArrayCreationRecords[Index].Formula := StrLayerHeight + ' * 0.1';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.WetDryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := rsWetDryFlag;
+  FDataArrayCreationRecords[Index].Formula := 'IfI(' + rsActive + ', -1, 0)';
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.WetDryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].CheckMax := True;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Max := 1;
+  FDataArrayCreationRecords[Index].Min := -1;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY'
+    + #13#10#13#10'A value < 0 indicates that only the cell below the '
+      + 'dry cell can cause the dry cell to become active again.'
+    + #13#10#13#10'A value > 0 indicates that the cell below the dry cell '
+      + 'or the cells next to the dry cell can cause the dry cell to become '
+      + 'active again.'
+    + #13#10#13#10'A value = 0 indicates that the dry cell can not become '
+      +'active again.';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := rsWetDry;
+  FDataArrayCreationRecords[Index].Formula := rsWetDryThreshold
+    + ' * ' + rsWetDryFlag;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.WetDryUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY';
+  NoCheck(FDataArrayCreationRecords[Index]);
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := StrModpathZone;
+  FDataArrayCreationRecords[Index].Formula := '1';
+  FDataArrayCreationRecords[Index].Classification := 'MODPATH';
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ModpathUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := False;
+//  FDataArrayCreationRecords[Index].Max := 1;
+//  FDataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'MODPATH: IBOUND';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrHufReferenceSurface;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.HufReferenceSurfaceNeeded;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := False;
+  FDataArrayCreationRecords[Index].Max := 1;
+  FDataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'MODFLOW, KDEP package: RS';
+  Inc(Index);
+
+  // BCF data sets.
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrTransmissivity;
+  FDataArrayCreationRecords[Index].Formula := rsKx + ' * ' + StrLayerHeight;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.BcfUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Max := 1;
+  FDataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: Tran';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrVerticalConductance;
+  FDataArrayCreationRecords[Index].Formula := StrBcfVCONT;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.BcfUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Max := 1;
+  FDataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: VCONT';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrConfinedStorageCoe;
+  FDataArrayCreationRecords[Index].Formula := rsSpecific_Storage + ' * ' + StrLayerHeight;
+  FDataArrayCreationRecords[Index].Classification := StrHydrology;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ConfinedStorageCoefUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].CheckMax := False;
+  FDataArrayCreationRecords[Index].CheckMin := True;
+  FDataArrayCreationRecords[Index].Max := 1;
+  FDataArrayCreationRecords[Index].Min := 0;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF: Sf1';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := 'HUF_Kx';
+  FDataArrayCreationRecords[Index].Formula := StrHufKx + '(' + rsModflow_Initial_Head + ')';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.HufSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'displays HUF Kx values';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := 'HUF_Ky';
+  FDataArrayCreationRecords[Index].Formula := StrHufKy + '(' + rsModflow_Initial_Head + ')';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.HufSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets := 'displays HUF Ky values';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := 'HUF_Interlayer_Kz';
+  FDataArrayCreationRecords[Index].Formula := StrHufKz + '(' + rsModflow_Initial_Head + ')';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.HufSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'displays HUF Kz values between one layer and the layer beneath';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := 'HUF_SS';
+  FDataArrayCreationRecords[Index].Formula := StrHufSs + '(' + rsModflow_Initial_Head + ')';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.HufStorageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'displays HUF SS values';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := 'HUF_Average_SY';
+  FDataArrayCreationRecords[Index].Formula := StrHufAverageSy + '(' + rsModflow_Initial_Head + ')';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.HufStorageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'displays average HUF Sy values for a cell';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := 'HUF_SY';
+  FDataArrayCreationRecords[Index].Formula := StrHufSy + '(' + rsModflow_Initial_Head + ')';
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.HufStorageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'displays HUF Sy values for a cell';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := 'HUF_SYTP';
+  FDataArrayCreationRecords[Index].Formula := StrHufSytp;
+  FDataArrayCreationRecords[Index].Classification := StrHUF;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.OptionalDataSet;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.HufStorageUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'displays HUF SYTP values for the top active cell';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtInteger;
+  FDataArrayCreationRecords[Index].Name := StrZones;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrZonebudget;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.ZoneBudgetSelected;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.ZoneBudgetSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'ZONEBUDGET Zone array (IZONE)';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrGeostaticStress;
+  FDataArrayCreationRecords[Index].Formula := '0';
+  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwtSelected;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.SwtSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWT: GL0 (data set 4)';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrSpecificGravityUns;
+  FDataArrayCreationRecords[Index].Formula := '1.7';
+  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwtSelected;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.SwtSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWT: SGM (data set 5)';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dsoTop;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrSpecificGravitySat;
+  FDataArrayCreationRecords[Index].Formula := '2.';
+  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwtSelected;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.SwtSelected;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWT: SGS (data set 6)';
+  Inc(Index);
+
+
+
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrInitialPreOffsets;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwtOffsetsUsed;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.SwtOffsetsUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWT: PCSOFF (data set 14)';
+  Inc(Index);
+
+  FDataArrayCreationRecords[Index].DataSetType := TDataArray;
+  FDataArrayCreationRecords[Index].Orientation := dso3D;
+  FDataArrayCreationRecords[Index].DataType := rdtDouble;
+  FDataArrayCreationRecords[Index].Name := StrInitialPreconsolida;
+  FDataArrayCreationRecords[Index].Formula := '0.';
+  FDataArrayCreationRecords[Index].Classification := StrSubsidence;
+  FDataArrayCreationRecords[Index].DataSetNeeded := FCustomModel.SwtSpecifiedUsed;
+  FDataArrayCreationRecords[Index].DataSetShouldBeCreated := FCustomModel.SwtSpecifiedUsed;
+  FDataArrayCreationRecords[Index].Lock := StandardLock;
+  FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
+  FDataArrayCreationRecords[Index].AssociatedDataSets :=
+    'SWT: PCS (data set 15)';
+  Inc(Index);
+
+
+
+  Assert(Length(FDataArrayCreationRecords) = Index);
+end;
+
+destructor TDataArrayManager.Destroy;
+var
+  Index: Integer;
+  DataSet: TDataArray;
+begin
+  for Index := 0 to FDeletedDataSets.Count - 1 do
+  begin
+    DataSet := FDeletedDataSets[Index];
+    DataSet.StopTalkingToAnyone;
+    DataSet.SetModelToNil;
+  end;
+  FDeletedDataSets.Free;
+  FDataSetLookUpList.Free;
+  FBoundaryDataSets.Free;
+  FDataSets.Free;
+  FDataSetsToCache.Free;
+  FRiverDataSets.Free;
+  inherited;
+end;
+
+procedure TDataArrayManager.DontCache(DataArray: TDataArray);
+begin
+  FDataSetsToCache.Remove(DataArray);
+end;
+
+procedure TDataArrayManager.ExtractDataSet(const DataSet: TDataArray);
+begin
+  FDataSets.Extract(DataSet);
+  Invalidate;
+  RemoveDataSetFromLookUpList(DataSet);
+end;
+
+function TDataArrayManager.GetBoundaryDataSetCount: integer;
+begin
+  result := FBoundaryDataSets.Count;
+end;
+
+function TDataArrayManager.GetBoundaryDataSets(
+  const Index: integer): TDataArray;
+begin
+  result := FBoundaryDataSets[Index] as TDataArray;
+end;
+
+function TDataArrayManager.GetChildDataArrayManager(
+  Index: integer): TDataArrayManager;
+var
+  PhastModel: TPhastModel;
+begin
+  PhastModel := FCustomModel as TPhastModel;
+  result := PhastModel.ChildModels[Index].ChildModel.DataArrayManager;
+end;
+
+function TDataArrayManager.GetChildDataArrayManagerCount: integer;
+var
+  PhastModel: TPhastModel;
+begin
+  if FCustomModel is TPhastModel then
+  begin
+    PhastModel := TPhastModel(FCustomModel);
+    result := PhastModel.ChildModels.Count;
+  end
+  else
+  begin
+    result := 0;
+  end;
+end;
+
+function TDataArrayManager.GetDataSetByName(
+  const DataSetName: string): TDataArray;
+var
+  Index: Integer;
+  APointer: pointer;
+  DataArray: TDataArray;
+begin
+  if DataSetCount = 0 then
+  begin
+    result := nil;
+    Exit;
+  end;
+  if FDataSetLookUpList = nil then
+  begin
+    FDataSetLookUpList := THashTable.Create(false);
+    FDataSetLookUpList.IgnoreCase := True;
+    FDataSetLookUpList.TableSize := Max(211, DataSetCount*2-1);
+    for Index := 0 to DataSetCount - 1 do
+    begin
+      DataArray := DataSets[Index];
+      FDataSetLookUpList.Insert(DataArray.Name, DataArray)
+    end;
+  end;
+  FDataSetLookUpList.Search(DataSetName, APointer);
+  result := APointer;
+end;
+
+function TDataArrayManager.GetDataSetCount: integer;
+begin
+  if FDataSets = nil then
+  begin
+    result := 0;
+  end
+  else
+  begin
+    result := FDataSets.Count;
+  end;
+end;
+
+function TDataArrayManager.GetDataSets(const Index: integer): TDataArray;
+begin
+  result := FDataSets[Index] as TDataArray;
+end;
+
+function TDataArrayManager.GetDataSetsCapacity: integer;
+begin
+  if FDataSets = nil then
+  begin
+    result := 0;
+  end
+  else
+  begin
+    result := FDataSets.Capacity;
+  end;
+end;
+
+procedure TDataArrayManager.HandleAddedDataArrays(AddedDataSetList: TList);
+var
+  Index: Integer;
+  DataArray: TDataArray;
+  ChildIndex: Integer;
+  ChildManager: TDataArrayManager;
+  NewAddedList: TList;
+  DataArrayIndex: Integer;
+  ChildDataArray: TDataArray;
+  DeletedIndex: Integer;
+  TestDataArray: TDataArray;
+begin
+  for Index := 0 to AddedDataSetList.Count - 1 do
+  begin
+    DataArray := AddedDataSetList[Index];
+    if GetDataSetByName(DataArray.Name) = nil then
+    begin
+      AddDataSet(DataArray);
+      FCustomModel.CreateVariables(DataArray);
+    end;
+    FDeletedDataSets.Extract(DataArray);
+  end;
+  for ChildIndex := 0 to ChildDataArrayManagerCount - 1 do
+  begin
+    ChildManager := ChildDataArrayManagers[ChildIndex];
+    NewAddedList := TList.Create;
+    try
+      NewAddedList.Capacity := AddedDataSetList.Count;
+      for DataArrayIndex := 0 to AddedDataSetList.Count - 1 do
+      begin
+        DataArray := AddedDataSetList[DataArrayIndex];
+        ChildDataArray := ChildManager.GetDataSetByName(DataArray.Name);
+        if ChildDataArray = nil then
+        begin
+          for DeletedIndex := 0 to ChildManager.FDeletedDataSets.Count - 1 do
+          begin
+            TestDataArray := ChildManager.FDeletedDataSets[DeletedIndex];
+            if DataArray.Name = TestDataArray.Name then
+            begin
+              ChildDataArray := TestDataArray;
+              break;
+            end;
+          end;
+        end;
+        if ChildDataArray = nil then
+        begin
+          ChildDataArray := CreateNewDataArray(TDataArrayType(DataArray.ClassType),
+            DataArray.Name, DataArray.Formula, DataArray.Lock,
+            DataArray.DataType, DataArray.EvaluatedAt, DataArray.Orientation,
+            DataArray.Classification);
+          ChildDataArray.AssignProperties(DataArray);
+        end;
+        DataArray.TalksTo(ChildDataArray);
+        NewAddedList.Add(ChildDataArray);
+      end;
+      ChildManager.HandleAddedDataArrays(NewAddedList);
+    finally
+      NewAddedList.Free;
+    end;
+  end;
+end;
+
+procedure TDataArrayManager.HandleDeletedDataArrays(DeletedDataSetList: TList);
+var
+  Index: Integer;
+  DataArray: TDataArray;
+  ChildIndex: Integer;
+  ChildManager: TDataArrayManager;
+  NewDeletedList: TList;
+  DataArrayIndex: integer;
+  ChildDataArray: TDataArray;
+begin
+  for Index := DeletedDataSetList.Count - 1 downto 0 do
+  begin
+    DataArray := DeletedDataSetList[Index];
+    FCustomModel.RemoveVariables(DataArray);
+    ExtractDataSet(DataArray);
+  end;
+  FDeletedDataSets.Assign(DeletedDataSetList, laOr);
+  for ChildIndex := 0 to ChildDataArrayManagerCount - 1 do
+  begin
+    ChildManager := ChildDataArrayManagers[ChildIndex];
+    NewDeletedList := TList.Create;
+    try
+      NewDeletedList.Capacity := DeletedDataSetList.Count;
+      for DataArrayIndex := 0 to DeletedDataSetList.Count - 1 do
+      begin
+        DataArray := DeletedDataSetList[DataArrayIndex];
+        ChildDataArray := ChildManager.GetDataSetByName(DataArray.Name);
+        NewDeletedList.Add(ChildDataArray);
+      end;
+      ChildManager.HandleDeletedDataArrays(NewDeletedList);
+    finally
+      NewDeletedList.Free;
+    end;
+  end;
+end;
+
+function TDataArrayManager.IndexOfBoundaryDataSet(DataSetName: string): integer;
+begin
+  result := IndexOfDataSetInList(DataSetName, FBoundaryDataSets);
+end;
+
+function TDataArrayManager.IndexOfDataSet(DataSetName: string): integer;
+begin
+  result := IndexOfDataSetInList(DataSetName, FDataSets);
+end;
+
+function TDataArrayManager.IndexOfDataSetInList(DataSetName: string;
+  const List: TObjectList): integer;
+var
+  Index: integer;
+  DataSet: TDataArray;
+begin
+  result := -1;
+  DataSetName := UpperCase(DataSetName);
+  for Index := 0 to List.Count - 1 do
+  begin
+    DataSet := List[Index] as TDataArray;
+    if UpperCase(DataSet.Name) = DataSetName then
+    begin
+      result := Index;
+      Exit;
+    end;
+  end;
+end;
+
+procedure TDataArrayManager.Invalidate;
+begin
+  FCustomModel.Invalidate;
+end;
+
+procedure TDataArrayManager.InvalidateAllDataSets;
+var
+  Index: Integer;
+  DS: TDataArray;
+begin
+  for Index := 0 to DataSetCount - 1 do
+  begin
+    DS := DataSets[Index];
+    DS.Invalidate;
+  end;
+  for Index := 0 to BoundaryDataSetCount - 1 do
+  begin
+    DS := BoundaryDataSets[Index];
+    DS.Invalidate;
+  end;
+  for Index := 0 to ChildDataArrayManagerCount - 1 do
+  begin
+    ChildDataArrayManagers[Index].InvalidateAllDataSets;
+  end;
+end;
+
+procedure TDataArrayManager.InvalidateDataSetLookupList;
+begin
+  FreeAndNil(FDataSetLookUpList);
+end;
+
+procedure TDataArrayManager.RemoveDataSetFromLookUpList(
+  const DataSet: TDataArray);
+var
+  Dummy: pointer;
+begin
+  if (FDataSetLookUpList <> nil) and (DataSet.Name <> '') then
+  begin
+    if FDataSetLookUpList.Search(DataSet.Name, Dummy) then
+    begin
+      FDataSetLookUpList.Delete(DataSet.Name);
+    end;
+  end;
+end;
+
+procedure TDataArrayManager.SetDataSetsCapacity(const Value: integer);
+begin
+  if FDataSets <> nil then
+  begin
+    FDataSets.Capacity := Value;
+  end;
+end;
+
+procedure TDataArrayManager.UnlinkDeletedDataSets;
+var
+  Index: Integer;
+  DataSet: TDataArray;
+begin
+  for Index := 0 to FDeletedDataSets.Count - 1 do
+  begin
+    DataSet := FDeletedDataSets[Index];
+    DataSet.StopTalkingToAnyone;
+    DataSet.SetModelToNil;
+  end;
+  for Index := 0 to ChildDataArrayManagerCount - 1 do
+  begin
+    ChildDataArrayManagers[Index].UnlinkDeletedDataSets;
+  end;
+end;
+
+procedure TDataArrayManager.UpdateDataSetDimensions;
+var
+  Index: integer;
+  DataSet: TDataArray;
+  Grid: TCustomGrid;
+begin
+  Grid := FCustomModel.Grid;
+  if Grid = nil then
+  begin
+    for Index := 0 to DataSetCount - 1 do
+    begin
+      DataSet := DataSets[Index];
+      DataSet.UpdateDimensions(-1, -1, -1);
+    end;
+    for Index := 0 to BoundaryDataSetCount - 1 do
+    begin
+      DataSet := BoundaryDataSets[Index];
+      DataSet.UpdateDimensions(-1, -1, -1);
+    end;
+    for Index := 0 to FDeletedDataSets.Count - 1 do
+    begin
+      DataSet := FDeletedDataSets[Index];
+      DataSet.UpdateDimensions(-1, -1, -1);
+    end;
+  end
+  else
+  begin
+    for Index := 0 to DataSetCount - 1 do
+    begin
+      DataSet := DataSets[Index];
+      DataSet.UpdateDimensions(Grid.LayerCount,
+        Grid.RowCount, Grid.ColumnCount);
+    end;
+    for Index := 0 to BoundaryDataSetCount - 1 do
+    begin
+      DataSet := BoundaryDataSets[Index];
+      DataSet.UpdateDimensions(Grid.LayerCount,
+        Grid.RowCount, Grid.ColumnCount);
+    end;
+    for Index := 0 to FDeletedDataSets.Count - 1 do
+    begin
+      DataSet := FDeletedDataSets[Index];
+      DataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+        Grid.ColumnCount);
+    end;
+    Grid.NeedToRecalculateTopCellColors := True;
+    Grid.NeedToRecalculateFrontCellColors := True;
+    Grid.NeedToRecalculateSideCellColors := True;
+  end;
+  for Index := 0 to ChildDataArrayManagerCount - 1 do
+  begin
+    ChildDataArrayManagers[Index].UpdateDataSetDimensions;
+  end;
+end;
+
+function TCustomModel.AlwaysUsed(Sender: TObject): boolean;
+begin
+  result := True;
+end;
+
+function TCustomModel.AquiferPropertiesUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection = msPhast)
+    or not ModflowPackages.HufPackage.IsSelected;
+end;
+
+procedure TCustomModel.Assign(Source: TPersistent);
+var
+  SourceModel: TCustomModel;
+begin
+  if Source is TCustomModel then
+  begin
+    SourceModel := TCustomModel(Source);
+    AlternateFlowPackage := SourceModel.AlternateFlowPackage;
+    AlternateSolver := SourceModel.AlternateSolver;
+    BatchFileAdditionsAfterModel := SourceModel.BatchFileAdditionsAfterModel;
+    BatchFileAdditionsBeforeModel := SourceModel.BatchFileAdditionsBeforeModel;
+    ModflowGrid := SourceModel.ModflowGrid;
+    ModflowNameFileLines := SourceModel.ModflowNameFileLines;
+    ModflowPackages := SourceModel.ModflowPackages;
+    HeadFluxObservations := SourceModel.HeadFluxObservations;
+    DrainObservations := SourceModel.DrainObservations;
+    GhbObservations := SourceModel.GhbObservations;
+    RiverObservations := SourceModel.RiverObservations;
+    HydrogeologicUnits := SourceModel.HydrogeologicUnits;
+    FilesToArchive := SourceModel.FilesToArchive;
+    ModelInputFiles := SourceModel.ModelInputFiles;
+    ModelFileName := SourceModel.ModelFileName;
+    ModflowWettingOptions := SourceModel.ModflowWettingOptions;
+    GlobalVariables := SourceModel.GlobalVariables;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+function TCustomModel.KineticsUsed(Sender: TObject): boolean;
+begin
+  result := ChemistryUsed(Sender) and ChemistryOptions.UseKineticReactants;
+end;
+
+function TCustomModel.KyUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection = msPhast)
+    or ModflowPackages.LpfPackage.IsSelected;
+end;
+
+function TCustomModel.KzUsed(Sender: TObject): boolean;
+var
+  LayerGroupIndex: Integer;
+  LayerGroup: TLayerGroup;
+  ParamIndex: Integer;
+  Param: TModflowSteadyParameter;
+  VK_Used: Boolean;
+  VaniUsed: Boolean;
+  VkcbUsed: Boolean;
+begin
+  result := True;
+  case ModelSelection of
+    msUndefined: result := True;
+    msPhast: result := True;
+    msModflow, msModflowLGR:
+      begin
+        if ModflowPackages.HufPackage.IsSelected then
+        begin
+          result := False;
+          Exit;
+        end;
+        if ModflowPackages.LpfPackage.IsSelected then
+        begin
+          VK_Used := False;
+          VaniUsed := False;
+          VkcbUsed := False;
+          for ParamIndex := 0 to ModflowSteadyParameters.Count - 1 do
+          begin
+            Param := ModflowSteadyParameters[ParamIndex];
+            if Param.ParameterType = ptLPF_VK then
+            begin
+              VK_Used := True;
+            end
+            else if Param.ParameterType = ptLPF_VANI then
+            begin
+              VaniUsed := True;
+            end
+            else if Param.ParameterType = ptLPF_VKCB then
+            begin
+              VkcbUsed := True;
+            end
+          end;
+
+          result := False;
+          for LayerGroupIndex := 1 to LayerStructure.Count - 1 do
+          begin
+            LayerGroup := LayerStructure[LayerGroupIndex];
+            if LayerGroup.Simulated then
+            begin
+              case LayerGroup.VerticalHydraulicConductivityMethod of
+                0: result := not VK_Used; // 0 means use vertical hydraulic conductivity
+                1: result := not VaniUsed; // 1 means user vertical anisotropy
+                else Assert(False);
+              end;
+              if result then
+              begin
+                break;
+              end;
+            end
+            else
+            begin
+              if not VkcbUsed then
+              begin
+                result := True;
+                break;
+              end;
+            end;
+          end;
+        end;
+      end;
+    else Assert(False);
+  end;
+end;
+
+function TCustomModel.PorosityUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection = msPhast)
+    or (ModelSelection in [msModflow, msModflowLGR])
+    and ModflowPackages.ModPath.IsSelected;
+end;
+
+function TCustomModel.SpecificStorageUsed(Sender: TObject): boolean;
+begin
+  result := False;
+  case ModelSelection of
+    msUndefined: result := False;
+    msPhast: result := True;
+    msModflow, msModflowLGR:
+      begin
+        if ModflowPackages.LpfPackage.IsSelected
+          or ModflowPackages.BcfPackage.IsSelected then
+        begin
+          result := ModflowStressPeriods.TransientModel;
+        end
+        else
+        begin
+          result := False;
+        end;
+      end
+    else Assert(False);
+  end;
+end;
+
+function TCustomModel.ChemistryUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection = msPhast) and SoluteTransport;
+end;
+
+function TCustomModel.InitialWaterTableUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection = msPhast) and FreeSurface and UseWaterTable;
+end;
+
+function TCustomModel.InitialHeadUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection = msPhast) and not InitialWaterTableUsed(Sender);
+end;
+
+function TCustomModel.SurfacesUsed(Sender: TObject): boolean;
+begin
+  result := ChemistryUsed(Sender) and ChemistryOptions.UseSurfaceAssemblages;
+end;
+
+function TCustomModel.ExchangeUsed(Sender: TObject): boolean;
+begin
+  result := ChemistryUsed(Sender) and ChemistryOptions.UseExchange;
+end;
+
+function TCustomModel.GasPhaseUsed(Sender: TObject): boolean;
+begin
+  result := ChemistryUsed(Sender) and ChemistryOptions.UseGasPhases;
+end;
+
+function TCustomModel.SolidSolutionUsed(Sender: TObject): boolean;
+begin
+  result := ChemistryUsed(Sender) and ChemistryOptions.UseSolidSolution;
+end;
+
+function TCustomModel.ReservoirLayerUsed(Sender: TObject): boolean;
+begin
+  result := ModflowPackages.ResPackage.IsSelected
+    and (ModflowPackages.ResPackage.LayerOption = loSpecified);
+end;
+
+function TCustomModel.ReservoirPackageUsed(Sender: TObject): boolean;
+begin
+  result := ModflowPackages.ResPackage.IsSelected;
+end;
+
+function TCustomModel.LakePackageUsed(Sender: TObject): boolean;
+begin
+  result := ModflowPackages.LakPackage.IsSelected;
+end;
+
+function TCustomModel.UzfPackageUsed(Sender: TObject): boolean;
+begin
+  result := ModflowPackages.UzfPackage.IsSelected;
+end;
+
+function TCustomModel.UzfUnsatVertKUsed(Sender: TObject): boolean;
+begin
+  result := UzfPackageUsed(Sender) and
+    (ModflowPackages.UzfPackage.VerticalKSource = 1);
+end;
+
+function TCustomModel.ModflowUsed(Sender: TObject): boolean;
+begin
+  result := ModelSelection in [msModflow, msModflowLGR];
+end;
+
+function TCustomModel.RouteUzfDischarge(Sender: TObject): boolean;
+begin
+  result := UzfPackageUsed(Sender)
+    and ModflowPackages.UzfPackage.RouteDischargeToStreams
+    and (ModflowPackages.SfrPackage.IsSelected
+    or ModflowPackages.LakPackage.IsSelected);
+end;
+
+function TCustomModel.UzfInitialInfiltrationUsed(Sender: TObject): boolean;
+begin
+  result := UzfPackageUsed(Sender);
+  if result then
+  begin
+    if (Sender <> nil) and (Sender is TUndoChangePackageSelection) then
+    begin
+      result := True;
+    end
+    else
+    begin
+      result := ModflowStressPeriods.CompletelyTransient;
+    end;
+  end;
+end;
+
+function TCustomModel.ModflowInitialHeadUsed(Sender: TObject): boolean;
+begin
+  result := ModflowUsed(Sender) and (ModflowOptions.InitialHeadFileName = '');
+end;
+
+function TCustomModel.ConfiningBedKzUsed(Sender: TObject): boolean;
+var
+  UnitIndex: Integer;
+  LayerGroup: TLayerGroup;
+begin
+  result := (ModflowPackages.LpfPackage.IsSelected and
+    (ModflowSteadyParameters.CountParameters([ptLPF_VKCB]) = 0))
+    or ModflowPackages.BcfPackage.IsSelected;
+  if result then
+  begin
+    result := False;
+    for UnitIndex := 1 to LayerStructure.Count - 1 do
+    begin
+      LayerGroup := LayerStructure[UnitIndex];
+      result := not LayerGroup.Simulated;
+      if result then break;
+    end;
+  end;
+end;
+
+function TCustomModel.VerticalAnisotropyUsed(Sender: TObject): boolean;
+var
+  UnitIndex: Integer;
+  LayerGroup: TLayerGroup;
+begin
+  result := False;
+  if ModflowPackages.LpfPackage.IsSelected then
+  begin
+    for UnitIndex := 1 to LayerStructure.Count - 1 do
+    begin
+      LayerGroup := LayerStructure[UnitIndex];
+      if LayerGroup.Simulated then
+      begin
+        result := LayerGroup.VerticalHydraulicConductivityMethod <> 0;
+        if result then break;
+      end;
+    end;
+  end;
+end;
+
+function TCustomModel.HorizontalAnisotropyUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR])
+    and ModflowPackages.LpfPackage.IsSelected;
+end;
+
+function TCustomModel.SpecificYieldUsed(Sender: TObject): boolean;
+var
+  UnitIndex: Integer;
+  LayerGroup: TLayerGroup;
+begin
+  result := (ModflowPackages.LpfPackage.IsSelected and
+    (ModflowSteadyParameters.CountParameters([ptLPF_SY]) = 0))
+    or ModflowPackages.BcfPackage.IsSelected;
+  if result then
+  begin
+    result := ModflowStressPeriods.TransientModel
+  end;
+  if result then
+  begin
+    result := False;
+    for UnitIndex := 1 to LayerStructure.Count - 1 do
+    begin
+      LayerGroup := LayerStructure[UnitIndex];
+      if LayerGroup.Simulated then
+      begin
+        result := LayerGroup.AquiferType in [1,3];
+        if result then break;
+      end;
+    end;
+  end;
+end;
+
+function TCustomModel.WetDryUsed(Sender: TObject): boolean;
+begin
+  result := ModflowWettingOptions.WettingActive;
+end;
+
+function TCustomModel.ModpathUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR])
+    and ModflowPackages.ModPath.IsSelected;
+end;
+
+function TCustomModel.HufReferenceSurfaceNeeded(Sender: TObject): boolean;
+begin
+  { TODO : In LGR, this function may need to updated. }
+  result := (ModelSelection in [msModflow, msModflowLGR])
+    and ModflowPackages.HufPackage.IsSelected
+    and (ModflowPackages.HufPackage.ReferenceChoice = hrcReferenceLayer)
+    and (HufParameters.CountParameters([ptHUF_KDEP]) > 0);
+end;
+
+function TCustomModel.BcfUsed(Sender: TObject): boolean;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR])
+    and ModflowPackages.BcfPackage.IsSelected
+end;
+
+function TCustomModel.ConfinedStorageCoefUsed(Sender: TObject): boolean;
+begin
+  result := False;
+  case ModelSelection of
+    msUndefined: result := False;
+    msPhast: result := False;
+    msModflow, msModflowLGR:
+      begin
+        if ModflowPackages.BcfPackage.IsSelected then
+        begin
+          result := ModflowStressPeriods.TransientModel;
+        end
+        else
+        begin
+          result := False;
+        end;
+      end
+    else Assert(False);
+  end;
+end;
+
+function TCustomModel.HufSelected(Sender: TObject): boolean;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR])
+    and ModflowPackages.HufPackage.IsSelected
+end;
+
+function TCustomModel.HufStorageUsed(Sender: TObject): boolean;
+begin
+  result := HufSelected(Sender)
+    and ModflowStressPeriods.TransientModel;
+end;
+
+function TCustomModel.ZoneBudgetSelected(Sender: TObject): boolean;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR])
+    and ModflowPackages.ZoneBudget.IsSelected
+end;
+
+function TCustomModel.SwtSelected(Sender: TObject): boolean;
+begin
+  result := (ModelSelection in [msModflow, msModflowLGR])
+    and ModflowPackages.SwtPackage.IsSelected
+end;
+
+function TCustomModel.SwtOffsetsUsed(Sender: TObject): boolean;
+begin
+  result := SwtSelected(Sender)
+    and (ModflowPackages.SwtPackage.PreconsolidationSource = pcOffsets);
+end;
+
+function TCustomModel.SwtSpecifiedUsed(Sender: TObject): boolean;
+begin
+  result := SwtSelected(Sender)
+    and (ModflowPackages.SwtPackage.PreconsolidationSource = pcSpecified);
+end;
+
+function TCustomModel.IndenticalTransientArray(DataArray: TDataArray; DataArrays: TList;
+      var CachedIndex: integer): TDataArray;
+var
+  Index: Integer;
+  ADataArray: TDataArray;
+  CachedDataArray: TDataArray;
+begin
+  // On entry DataArrays is a list of temporary TDataArray's
+  // that have already had their Hash's computed.
+  // CachedIndex is the location in DataArrays of the last
+  // TDataArray that was identified in DataArrays via this procedure.
+  Assert(DataArray <> nil);
+  result := nil;
+  CachedDataArray := nil;
+  try
+  DataArray.ComputeHash;
+  // First check the most likely result.
+  if (CachedIndex > 0)
+    and (CachedIndex < DataArrays.Count) then
+  begin
+    CachedDataArray := DataArrays[CachedIndex];
+    if CachedDataArray.Hash = DataArray.Hash then
+    begin
+      // If the Hash's are identical it is extremely likely
+      // but not certain that the data are identical too.
+      // Compare the two arrays to make absolutely sure they are
+      // the same.
+      if DataArray.IdenticalDataArrayContents(CachedDataArray) then
+      begin
+        result := CachedDataArray;
+        CachedDataArray := nil;
+        Exit;
+      end;
+    end;
+  end;
+  // No identical array was found so check all the arrays in the list.
+  for Index := 0 to DataArrays.Count - 1 do
+  begin
+    if Index = CachedIndex then
+    begin
+      // This one has already been checked so skip it.
+      Continue;
+    end;
+    ADataArray := DataArrays[Index];
+    if ADataArray.Hash = DataArray.Hash then
+    begin
+      if DataArray.IdenticalDataArrayContents(ADataArray) then
+      begin
+        result := ADataArray;
+        CachedIndex := Index;
+        Exit;
+      end;
+      // ADataArray had the same Hash as DataArray.
+      // The data had to be restored to to compare it's contents
+      // so Cache it again.
+      ADataArray.CacheData;
+    end;
+  end;
+
+  finally
+    if (CachedDataArray <> nil) and (result <> nil) then
+    begin
+      // A different DataArray was found so cache the data
+      // from the previous one.
+      CachedDataArray.CacheData;
+    end;
+  end;
+end;
+
+function TCustomModel.IndenticalTransientMultiplierArray(DataArray: TDataArray): TDataArray;
+begin
+  result := IndenticalTransientArray(DataArray,
+    TransientMultiplierArrays, FCachedMultiplierArrayIndex);
+end;
+
+function TCustomModel.IndenticalTransientZoneArray(DataArray: TDataArray): TDataArray;
+begin
+  result := IndenticalTransientArray(DataArray,
+    TransientZoneArrays, FCachedZoneArrayIndex);
+end;
+
+procedure TCustomModel.UpdateModflowFullStressPeriods;
+var
+  TimeList: TRealList;
+  TimeIndex: integer;
+  StressPeriod, NewStressPeriod: TModflowStressPeriod;
+  ScreenObjectIndex, StressPeriodIndex: Integer;
+  ScreenObject: TScreenObject;
+  StartTime, EndTime: double;
+  FirstTime: Double;
+  DeletedTimes: Boolean;
+//  StartTimeIndex: integer;
+begin
+  if FUpdatingFullStressPeriods then
+  begin
+    Exit;
+  end;
+  frmErrorsAndWarnings.RemoveWarningGroup(StrAnyTimesAfterThe);
+  frmErrorsAndWarnings.RemoveWarningGroup(StrAnyTimesBeforeThe);
+
+  ModflowFullStressPeriods.Clear;
+  TimeList := TRealList.Create;
+  try
+    FUpdatingFullStressPeriods := True;
+    TimeList.Sort;
+    for TimeIndex := 0 to ModflowStressPeriods.Count - 1 do
+    begin
+      StressPeriod := ModflowStressPeriods[TimeIndex];
+      TimeList.AddUnique(StressPeriod.StartTime);
+      TimeList.AddUnique(StressPeriod.EndTime);
+    end;
+    for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
+    begin
+      ScreenObject := ScreenObjects[ScreenObjectIndex];
+      if ScreenObject.Deleted then
+      begin
+        Continue;
+      end;
+      ScreenObject.UpdateModflowTimes(TimeList);
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+    end;
+
+    DeletedTimes := False;
+    StressPeriod := ModflowStressPeriods[0];
+    FirstTime := 0;
+    While TimeList.Count > 0 do
+    begin
+      if TimeList[0] < StressPeriod.StartTime then
+      begin
+        if not DeletedTimes then
+        begin
+          FirstTime := TimeList[0]
+        end;
+        TimeList.Delete(0);
+        DeletedTimes := True;
+      end
+      else
+      begin
+        break;
+      end;
+    end;
+
+    if DeletedTimes then
+    begin
+      frmErrorsAndWarnings.AddWarning(
+        StrAnyTimesBeforeThe,
+        'The beginning of the first stress period is '
+        + FloatToStr(StressPeriod.StartTime)
+        + '. The first defined time is '
+        + FloatToStr(FirstTime) + '.');
+    end;
+
+    TimeIndex := 0;
+    for StressPeriodIndex := 0 to ModflowStressPeriods.Count - 1 do
+    begin
+      if TimeIndex+1 >= TimeList.Count then
+      begin
+        break;
+      end;
+      StressPeriod := ModflowStressPeriods[StressPeriodIndex];
+      StartTime := TimeList[TimeIndex];
+      EndTime := TimeList[TimeIndex+1];
+      While (EndTime <= StressPeriod.EndTime) do
+      begin
+        NewStressPeriod :=
+          ModflowFullStressPeriods.Add as TModflowStressPeriod;
+        NewStressPeriod.Assign(StressPeriod);
+        NewStressPeriod.StartTime := StartTime;
+        NewStressPeriod.EndTime := EndTime;
+        NewStressPeriod.PeriodLength :=
+          NewStressPeriod.EndTime - NewStressPeriod.StartTime;
+        Inc(TimeIndex);
+        if TimeIndex+1 >= TimeList.Count then
+        begin
+          break;
+        end;
+        StartTime := TimeList[TimeIndex];
+        EndTime := TimeList[TimeIndex+1];
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+      end;
+    end;
+
+    StressPeriod := ModflowStressPeriods[ModflowStressPeriods.Count - 1];
+    EndTime := TimeList[TimeList.Count -1];
+    if EndTime > StressPeriod.EndTime then
+    begin
+      frmErrorsAndWarnings.AddWarning(
+        StrAnyTimesAfterThe,
+        'The end of the last stress period is '
+        + FloatToStr(StressPeriod.EndTime)
+        + '. The last defined time is '
+        + FloatToStr(EndTime) + '.');
+//      StartTimeIndex := -1;
+//      for TimeIndex := TimeList.Count -1 downto 0 do
+//      begin
+//        EndTime := TimeList[TimeIndex];
+//        if EndTime = StressPeriod.EndTime then
+//        begin
+//          StartTimeIndex := TimeIndex;
+//          break;
+//        end;
+//        Assert(EndTime > StressPeriod.EndTime);
+//        if not frmProgress.ShouldContinue then
+//        begin
+//          Exit;
+//        end;
+//      end;
+//      for TimeIndex := StartTimeIndex to TimeList.Count - 2 do
+//      begin
+//        StartTime := TimeList[TimeIndex];
+//        EndTime := TimeList[TimeIndex+1];
+//        NewStressPeriod :=
+//          ModflowFullStressPeriods.Add as TModflowStressPeriod;
+//        NewStressPeriod.Assign(StressPeriod);
+//        NewStressPeriod.StartTime := StartTime;
+//        NewStressPeriod.EndTime := EndTime;
+//        NewStressPeriod.PeriodLength :=
+//          NewStressPeriod.EndTime - NewStressPeriod.StartTime;
+//        if not frmProgress.ShouldContinue then
+//        begin
+//          Exit;
+//        end;
+//      end;
+    end;
+
+  finally
+    TimeList.Free;
+    FUpdatingFullStressPeriods := False;
+  end;
+end;
+
+procedure TCustomModel.AddTimeList(TimeList: TCustomTimeList);
+begin
+  FTimeLists.Add(TimeList);
+end;
+
+procedure TCustomModel.RemoveTimeList(TimeList: TCustomTimeList);
+begin
+  FTimeLists.Remove(TimeList);
+end;
+
+function TCustomModel.GetTimeLists(Index: integer): TCustomTimeList;
+begin
+  result := FTimeLists[Index];
+end;
+
+function TCustomModel.GetTimeListCount: integer;
+begin
+  result := FTimeLists.Count;
+end;
+
+procedure TCustomModel.ClearAllTimeLists;
+var
+  Index: Integer;
+  TimeList: TModflowBoundaryDisplayTimeList;
+begin
+  for Index := 0 to FTimeLists.Count - 1 do
+  begin
+    TimeList := FTimeLists[Index];
+    TimeList.Invalidate;
+    TimeList.Clear;
+  end;
+end;
+
+procedure TPhastModel.SetObservationPurpose(const Value: TObservationPurpose);
+begin
+  if FObservationPurpose <> Value then
+  begin
+    FObservationPurpose := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TCustomModel.InitializeHobDisplay(Sender: TObject);
+var
+  HobWriter: TModflowHobWriter;
+  List: TModflowBoundListOfTimeLists;
+begin
+  MfHobHeads.CreateDataSets;
+
+  List := TModflowBoundListOfTimeLists.Create;
+  HobWriter := TModflowHobWriter.Create(Self);
+  try
+    List.Add(MfHobHeads);
+    HobWriter.UpdateDisplay(List, [0], ObservationPurpose);
+  finally
+    HobWriter.Free;
+    List.Free;
+  end;
+  MfHobHeads.ComputeAverage;
+  if frmErrorsAndWarnings.HasMessages then
+  begin
+    frmErrorsAndWarnings.Show;
+  end;
+end;
+
+function TCustomModel.ModflowHobPackageUsed(Sender: TObject): boolean;
+begin
+  result := ModflowPackages.HobPackage.IsSelected;
+end;
+
+procedure TCustomModel.GetMfHobHeadsUseList(Sender: TObject; NewUseList: TStringList);
+begin
+  NewUseList.Add(rsActive);
+  // do nothing
+end;
+
+function TCustomModel.GetObserverByName(const ObserverName: string): TObserver;
+begin
+  result := FDataArrayManager.GetDataSetByName(ObserverName);
+  if result = nil then
+  begin
+    result := GlobalVariables.GetVariableByName(ObserverName);
+  end;
+end;
+
+procedure TCustomModel.CreateModflowDisplayTimeLists;
+begin
+  FMfHobHeads := THobDisplayTimeList.Create(self);
+  FMfHobHeads.OnInitialize := InitializeHobDisplay;
+  FMfHobHeads.OnGetUseList := GetMfHobHeadsUseList;
+  FMfHobHeads.OnTimeListUsed := ModflowHobPackageUsed;
+  FMfHobHeads.Name := StrMODFLOWHeadObservations;
+  AddTimeList(FMfHobHeads);
+end;
+
+function TCustomModel.ProgramName: string;
+begin
+  result := StrModelName;
+end;
+
+procedure TCustomModel.SetUnitNumbers(const Value: TUnitNumbers);
+begin
+  FUnitNumbers.Assign(Value);
+end;
+
+function TCustomModel.PackageGeneratedExternally(const PackageName: string): boolean;
+var
+  Index: Integer;
+  ALine: string;
+  FirstChar: Integer;
+  CharIndex: Integer;
+  AChar: Char;
+  LastChar: Integer;
+  APackageName: string;
+begin
+  result := false;
+  for Index := 0 to ModflowNameFileLines.Count - 1 do
+  begin
+    ALine := ModflowNameFileLines[Index];
+    // skip comment lines
+    if (Length(ALine) = 0) or (ALine[1] = '#') then
+    begin
+      Continue;
+    end;
+    ALine := Trim(ALine);
+    FirstChar := Length(ALine)+1;
+    for CharIndex := 1 to Length(ALine) do
+    begin
+      AChar := ALine[CharIndex];
+      if not (AChar in [',', ' ']) then
+      begin
+        FirstChar := CharIndex;
+        break;
+      end;
+    end;
+    LastChar := Length(ALine);
+    for CharIndex := FirstChar + 1 to Length(ALine) do
+    begin
+      AChar := ALine[CharIndex];
+      if (AChar in [',', ' ']) then
+      begin
+        LastChar := CharIndex-1;
+        break;
+      end;
+    end;
+    APackageName := Copy(ALine, FirstChar, LastChar-FirstChar+1);
+    if SameText(APackageName, PackageName) then
+    begin
+      result := True;
+      Exit;
+    end;
+  end;
+end;
+
+procedure TCustomModel.WritePValAndTemplate(const ParameterName: string;
+      const Value: double);
+begin
+  FPValFile.Add(ParameterName + ' ' + FortranFloatToStr(Value));
+  FTemplate.Add(ParameterName + ' ' + UcodeDelimiter + ParameterName
+    + '                  ' + UcodeDelimiter);
+end;
+
+procedure TCustomModel.UpdateHfb(Sender: TObject);
+begin
+  frmProgressMM.Caption := 'Progress';
+  frmProgressMM.Show;
+  if FHfbWriter = nil then
+  begin
+    FHfbWriter := TModflowHfb_Writer.Create(Self);
+  end;
+  (FHfbWriter as TModflowHfb_Writer).UpdateDisplay;
+  frmProgressMM.Hide;
+  if frmErrorsAndWarnings.HasMessages then
+  begin
+    frmErrorsAndWarnings.Show;
+  end;
+end;
+
+function TCustomModel.GetDataSetCollection: TDataSetCollection;
+var
+  Index: integer;
+  ADataSet: TDataArray;
+  Item: TDataSetItem;
+begin
+  FDataSetCollection.Clear;
+  for Index := 0 to FDataArrayManager.DataSetCount - 1 do
+  begin
+    ADataSet := FDataArrayManager.DataSets[Index];
+    Item := FDataSetCollection.Add as TDataSetItem;
+    Item.FDataSet := ADataSet;
+    ADataSet.SetSubComponent(True);
+  end;
+  result := FDataSetCollection;
+end;
+
+function TCustomModel.CheckWetting: boolean;
+var
+  Group: TLayerGroup;
+  LayerGroupIndex: Integer;
+var
+  WetErrorMessage: string;
+begin
+  result := False;
+  frmErrorsAndWarnings.RemoveErrorGroup(WetError);
+  if ModflowWettingOptions.WettingActive then
+  begin
+    result := True;
+    for LayerGroupIndex := 1 to LayerStructure.Count - 1 do
+    begin
+      Group := LayerStructure[LayerGroupIndex];
+      if Group.AquiferType in WettableLayers then
+      begin
+        result := False;
+        break;
+      end;
+    end;
+  end;
+  if result then
+  begin
+    if frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected
+      or frmGoPhast.PhastModel.ModflowPackages.HufPackage.IsSelected then
+    begin
+      WetErrorMessage := 'At least one layer must be convertible.';
+    end
+    else if frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected then
+    begin
+      WetErrorMessage :=
+        'At least one layer must be unconfined or fully convertible.';
+    end
+    else
+    begin
+      Assert(False);
+    end;
+    frmErrorsAndWarnings.AddError(WetError, WetErrorMessage);
+  end;
+end;
+
+function TCustomModel.FixFileName(AFileName: string): string;
+var
+  FileName: string;
+  FileDir: string;
+begin
+  result := AFileName;
+  FileName := ExtractFileName(AFileName);
+  if Pos(' ', FileName) > 0 then
+  begin
+    FileName := StringReplace(FileName, ' ', '_', [rfReplaceAll]);
+    FileDir := ExtractFileDir(AFileName);
+    result := IncludeTrailingPathDelimiter(FileDir) + FileName;
+  end;
+end;
+
+procedure TCustomModel.ExportModflowModel(FileName: string; RunModel: boolean);
+var
+  NameWriter: TNameFileWriter;
+  DisWriter: TModflowDiscretizationWriter;
+  BasicWriter: TModflowBasicWriter;
+  PcgWriter: TPcgWriter;
+  LPF_Writer: TModflowLPF_Writer;
+  HUF_Writer: TModflowHUF_Writer;
+  BCF_Writer: TModflowBCF_Writer;
+  KDEP_Writer : TModflowKDEP_Writer;
+  LVDA_Writer : TModflowLVDA_Writer;
+  ChdWriter: TModflowCHD_Writer;
+  GhbWriter: TModflowGHB_Writer;
+  WellWriter: TModflowWEL_Writer;
+  RivWriter: TModflowRIV_Writer;
+  DrnWriter: TModflowDRN_Writer;
+  DrtWriter: TModflowDRT_Writer;
+  RchWriter: TModflowRCH_Writer;
+  EvtWriter: TModflowEVT_Writer;
+  EtsWriter: TModflowETS_Writer;
+  ResWriter: TModflowRES_Writer;
+  LakWriter: TModflowLAK_Writer;
+  SfrWriter: TModflowSFR_Writer;
+  Mnw2Writer: TModflowMNW2_Writer;
+  ZoneWriter: TModflowZoneWriter;
+  MultiplierWriter: TModflowMultiplierWriter;
+  BatchFileLocation: string;
+  UzfWriter: TModflowUzfWriter;
+  GmgWriter: TGmgWriter;
+  SipWriter: TSipWriter;
+  De4Writer: TDe4Writer;
+  OCWriter: TOutputControlWriter;
+  GageUnitNumber: integer;
+  Gages: TStringList;
+  GagWriter: TModflowGAG_Writer;
+  HobWriter: TModflowHobWriter;
+  HfbWriter: TModflowHfb_Writer;
+  ListFileName: string;
+  Index: Integer;
+  StepCount: Integer;
+  StressPeriod: TModflowStressPeriod;
+  NumberOfSteps: Integer;
+  SubWriter: TModflowSUB_Writer;
+  SwtWriter: TModflowSWT_Writer;
+  HydModWriter: TModflowHydmodWriter;
+  PIndex: Integer;
+  SteadyParam: TModflowSteadyParameter;
+  MultipliersUsed: Boolean;
+  ZoneUsed: Boolean;
+  HufUnitIndex: integer;
+  HGU: THydrogeologicUnit;
+  HufParam: THufUsedParameter;
+begin
+  CheckWetting;
+
+  FPValFile.Clear;
+  FTemplate.Clear;
+
+  GageUnitNumber:= UnitNumbers.UnitNumber(StrUNIT);
+  SetCurrentDir(ExtractFileDir(FileName));
+  FileName := FixFileName(FileName);
+  TransientMultiplierArrays.Clear;
+  TransientZoneArrays.Clear;
+
+  if frmProgressMM = nil then
+  begin
+    frmProgressMM := TfrmProgressMM.Create(nil);
+  end;
+  try
+    frmFormulaErrors.DelayShowing := True;
+    try
+      frmProgressMM.Prefix := 'File ';
+      frmProgressMM.Caption := 'Exporting MODFLOW input files';
+      frmProgressMM.btnAbort.Visible := True;
+      frmProgressMM.ShouldContinue := True;
+      frmProgressMM.Show;
+
+      // The following tasks are always required.
+      // 1. Full Stress periods,
+      // 2. Discretization,
+      // 3. Basic,
+      // 4. Output Control,
+      // 5. Zone Arrays,
+      // 6. Multiplier Arrays
+      NumberOfSteps := 3;
+
+      NumberOfSteps := NumberOfSteps + ModflowPackages.SelectedPackageCount;
+      if ModflowPackages.SfrPackage.IsSelected
+        or ModflowPackages.LakPackage.IsSelected then
+      begin
+        // gages
+        Inc(NumberOfSteps)
+      end;
+
+      MultipliersUsed := False;
+      ZoneUsed := False;
+      if ModflowTransientParameters.Count > 0 then
+      begin
+        MultipliersUsed := True;
+        ZoneUsed := True;
+      end;
+
+      if not MultipliersUsed then
+      begin
+        if ModflowPackages.LpfPackage.IsSelected then
+        begin
+          for PIndex := 0 to ModflowSteadyParameters.Count - 1 do
+          begin
+            SteadyParam := ModflowSteadyParameters[PIndex];
+            if SteadyParam.UseMultiplier then
+            begin
+              MultipliersUsed := True;
+            end;
+            if SteadyParam.UseZone then
+            begin
+              ZoneUsed := True;
+            end;
+          end;
+        end
+        else if ModflowPackages.HufPackage.IsSelected then
+        begin
+          for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
+          begin
+            HGU := HydrogeologicUnits[HufUnitIndex];
+            for PIndex := 0 to HGU.HufUsedParameters.Count - 1 do
+            begin
+              HufParam := HGU.HufUsedParameters[PIndex];
+              if HufParam.UseMultiplier then
+              begin
+                MultipliersUsed := True;
+              end;
+              if HufParam.UseZone then
+              begin
+                ZoneUsed := True;
+              end;
+            end;
+          end;
+        end;
+
+      end;
+      if MultipliersUsed then
+      begin
+        Inc(NumberOfSteps)
+      end;
+      if ZoneUsed then
+      begin
+        Inc(NumberOfSteps)
+      end;
+
+      frmProgressMM.pbProgress.Max := NumberOfSteps;
+      frmProgressMM.pbProgress.Position := 0;
+
+      UpdateModflowFullStressPeriods;
+
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      frmProgressMM.StepIt;
+
+      StepCount := 0;
+      for Index := 0 to ModflowFullStressPeriods.Count - 1 do
+      begin
+        StressPeriod := ModflowFullStressPeriods.Items[Index];
+        StepCount := StepCount + StressPeriod.NumberOfSteps;
+      end;
+      if StepCount > 1000 then
+      begin
+        if MessageDlg('Your model has ' + IntToStr(StepCount)
+          + ' time steps. Do you want to continue?', mtWarning,
+          [mbYes, mbNo], 0) <> mrYes then
+        begin
+          Exit;
+        end;
+      end;
+
+      UsedMultiplierArrayNames.Clear;
+      UsedZoneArrayNames.Clear;
+      UsedMultiplierArrayNames.Sorted := True;
+      UsedZoneArrayNames.Sorted := True;
+      Gages := TStringList.Create;
+      NameWriter := TNameFileWriter.Create(self);
+      try
+        NameWriter.InitilizeNameFile(FileName, ListFileName);
+        DisWriter := TModflowDiscretizationWriter.Create(self);
+        try
+          DisWriter.WriteFile(FileName);
+        finally
+          DisWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        frmProgressMM.StepIt;
+
+        BasicWriter := TModflowBasicWriter.Create(self);
+        try
+          BasicWriter.WriteFile(FileName);
+        finally
+          BasicWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        frmProgressMM.StepIt;
+
+        OCWriter := TOutputControlWriter.Create(self);
+        try
+          OCWriter.WriteFile(FileName);
+        finally
+          OCWriter.Free;
+        end;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        frmProgressMM.StepIt;
+
+        PcgWriter := TPcgWriter.Create(self);
+        try
+          PcgWriter.WriteFile(FileName);
+        finally
+          PcgWriter.Free;
+        end;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.PcgPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        GmgWriter := TGmgWriter.Create(self);
+        try
+          GmgWriter.WriteFile(FileName);
+        finally
+          GmgWriter.Free;
+        end;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.GmgPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        SipWriter := TSipWriter.Create(self);
+        try
+          SipWriter.WriteFile(FileName);
+        finally
+          SipWriter.Free;
+        end;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.SipPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        De4Writer := TDe4Writer.Create(self);
+        try
+          De4Writer.WriteFile(FileName);
+        finally
+          De4Writer.Free;
+        end;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.De4Package.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        LPF_Writer := TModflowLPF_Writer.Create(self);
+        try
+          LPF_Writer.WriteFile(FileName);
+        finally
+          LPF_Writer.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.LpfPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        BCF_Writer := TModflowBCF_Writer.Create(self);
+        try
+          BCF_Writer.WriteFile(FileName);
+        finally
+          BCF_Writer.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.BcfPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        HUF_Writer := TModflowHUF_Writer.Create(self);
+        try
+          HUF_Writer.WriteFile(FileName);
+        finally
+          HUF_Writer.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.HufPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        KDEP_Writer := TModflowKDEP_Writer.Create(self);
+        try
+          KDEP_Writer.WriteFile(FileName);
+        finally
+          KDEP_Writer.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.HufPackage.IsSelected
+          and (HufParameters.CountParameters([ptHUF_KDEP]) > 0) then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        LVDA_Writer := TModflowLVDA_Writer.Create(self);
+        try
+          LVDA_Writer.WriteFile(FileName);
+        finally
+          LVDA_Writer.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.HufPackage.IsSelected
+          and (ModflowSteadyParameters.CountParameters([ptHUF_LVDA]) > 0) then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        ChdWriter := TModflowCHD_Writer.Create(self);
+        try
+          ChdWriter.WriteFile(FileName);
+          ChdWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
+        finally
+          ChdWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.ChdBoundary.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        GhbWriter := TModflowGHB_Writer.Create(self);
+        try
+          GhbWriter.WriteFile(FileName);
+          GhbWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
+        finally
+          GhbWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.GhbBoundary.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        WellWriter := TModflowWEL_Writer.Create(self);
+        try
+          WellWriter.WriteFile(FileName);
+        finally
+          WellWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.WelPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        RivWriter := TModflowRIV_Writer.Create(self);
+        try
+          RivWriter.WriteFile(FileName);
+          RivWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
+        finally
+          RivWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.RivPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        DrnWriter := TModflowDRN_Writer.Create(self);
+        try
+          DrnWriter.WriteFile(FileName);
+          DrnWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
+        finally
+          DrnWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.DrnPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        DrtWriter := TModflowDRT_Writer.Create(self);
+        try
+          DrtWriter.WriteFile(FileName);
+        finally
+          DrtWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.DrtPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        RchWriter := TModflowRCH_Writer.Create(self);
+        try
+          RchWriter.WriteFile(FileName);
+        finally
+          RchWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.RchPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        EvtWriter := TModflowEVT_Writer.Create(self);
+        try
+          EvtWriter.WriteFile(FileName);
+        finally
+          EvtWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.EvtPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        EtsWriter := TModflowETS_Writer.Create(self);
+        try
+          EtsWriter.WriteFile(FileName);
+        finally
+          EtsWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.EtsPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        ResWriter := TModflowRES_Writer.Create(self);
+        try
+          ResWriter.WriteFile(FileName);
+        finally
+          ResWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.ResPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        Mnw2Writer := TModflowMNW2_Writer.Create(self);
+        try
+          Mnw2Writer.WriteFile(FileName);
+          Mnw2Writer.WriteMnwiFile(FileName, GageUnitNumber);
+        finally
+          Mnw2Writer.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.Mnw2Package.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        LakWriter := TModflowLAK_Writer.Create(self);
+        try
+          LakWriter.WriteFile(FileName, GageUnitNumber, Gages);
+        finally
+          LakWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.LakPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        // SfrWriter requires that LakWriter be completed first
+        // so that TScreenObject.ModflowLakBoundary.TrueLakeID
+        // is set properly.
+        SfrWriter := TModflowSFR_Writer.Create(self);
+        try
+          SfrWriter.WriteFile(FileName, GageUnitNumber, Gages);
+          FDataArrayManager.CacheDataArrays;
+          Application.ProcessMessages;
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+          if ModflowPackages.SfrPackage.IsSelected then
+          begin
+            frmProgressMM.StepIt;
+          end;
+
+          HydModWriter := TModflowHydmodWriter.Create(self);
+          try
+            HydModWriter.WriteFile(FileName, SfrWriter);
+          finally
+            HydModWriter.Free;
+          end;
+          FDataArrayManager.CacheDataArrays;
+          Application.ProcessMessages;
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+          if ModflowPackages.HydmodPackage.IsSelected then
+          begin
+            frmProgressMM.StepIt;
+          end;
+
+
+          // GagWriter requires that LakWriter and SfrWriter be completed first
+          // so that the data in Gages is set.
+          GagWriter := TModflowGAG_Writer.Create(self);
+          try
+            GagWriter.WriteFile(FileName, Gages, SfrWriter, GageUnitNumber);
+          finally
+            GagWriter.Free;
+          end;
+          FDataArrayManager.CacheDataArrays;
+          Application.ProcessMessages;
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+          if ModflowPackages.SfrPackage.IsSelected
+            or ModflowPackages.LakPackage.IsSelected then
+          begin
+            frmProgressMM.StepIt;
+          end;
+
+        finally
+          SfrWriter.Free;
+        end;
+
+
+        HfbWriter := TModflowHfb_Writer.Create(Self);
+        try
+          HfbWriter.WriteFile(FileName);
+        finally
+          HfbWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.HfbPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        UzfWriter := TModflowUzfWriter.Create(Self);
+        try
+          UzfWriter.WriteFile(FileName, GageUnitNumber);
+        finally
+          UzfWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.UzfPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        SubWriter := TModflowSUB_Writer.Create(Self);
+        try
+          SubWriter.WriteFile(FileName);
+        finally
+          SubWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.SubPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        SwtWriter := TModflowSWT_Writer.Create(Self);
+        try
+          SwtWriter.WriteFile(FileName);
+        finally
+          SwtWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.SwtPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+        // It is important that the TModflowZoneWriter not be used
+        // until after all the zones have been identified through the
+        // export of TModflowLPF_Writer and any other packages that use
+        // zone arrays.
+        ZoneWriter := TModflowZoneWriter.Create(self);
+        try
+          ZoneWriter.WriteFile(FileName);
+        finally
+          ZoneWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ZoneUsed then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        // It is important that the TModflowMultiplierWriter not be used
+        // until after all the multiplier arrays have been identified through the
+        // export of TModflowLPF_Writer and any other packages that use
+        // multiplier arrays.
+        MultiplierWriter := TModflowMultiplierWriter.Create(self);
+        try
+          MultiplierWriter.WriteFile(FileName);
+        finally
+          MultiplierWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if MultipliersUsed then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        HobWriter := TModflowHobWriter.Create(Self);
+        try
+          HobWriter.WriteFile(FileName, ObservationPurpose);
+        finally
+          HobWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.HobPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        FinalizePvalAndTemplate(FileName);
+
+        NameWriter.SaveNameFile(FileName);
+      finally
+        NameWriter.Free;
+        Gages.Free;
+      end;
+
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      BatchFileLocation := WriteModflowBatchFile(
+        ProgramLocations,
+        ChangeFileExt(FileName, '.nam'), ListFileName,
+        ModflowOptions.OpenInTextEditor, BatchFileAdditionsBeforeModel,
+        BatchFileAdditionsAfterModel);
+
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      if RunModel then
+      begin
+        WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
+      end;
+    finally
+      frmProgressMM.btnAbort.Visible := False;
+      frmProgressMM.Hide;
+      if frmProgressMM.Owner = nil then
+      begin
+        FreeAndNil(frmProgressMM);
+      end;
+      frmFormulaErrors.DelayShowing := False;
+//      ReclaimMemory;
+    end;
+  except on E: EFCreateError do
+    begin
+      Beep;
+      MessageDlg(E.Message, mtError, [mbOK], 0);
+    end;
+  end;
+end;
+
+procedure TCustomModel.ExportModpathModel(FileName: string;
+      RunModel, NewBudgetFile: boolean);
+var
+  StartLocations: TModpathStartingLocationsWriter;
+  MainFileWriter: TModpathMainFileWriter;
+  TimeFileWriter: TModpathTimeFileWriter;
+  Responses: TModpathResponseFileWriter;
+  NameFileWriter: TModpathNameFileWriter;
+  BatchFileLocation: string;
+  LargeBudgetFileResponse: string;
+begin
+  if (ModflowOutputControl.SaveCellFlows = csfNone)
+    or (ModflowOutputControl.BudgetFrequency <> 1)
+    or (ModflowOutputControl.BudgetFrequencyChoice <> fcTimeSteps)
+    or (not ModflowOutputControl.HeadOC.SaveInExternalFile)
+    or (ModflowOutputControl.HeadOC.Frequency <> 1)
+    or (ModflowOutputControl.HeadOC.FrequencyChoice <> fcTimeSteps)
+    then
+  begin
+    Beep;
+    if (MessageDlg('MODPATH requires that the heads and flows be saved for '
+      + 'every time step of the model. That isn''t the case for this model. '
+      + 'Do you want to export the MODPATH input anyway?',
+      mtWarning, [mbYes, mbNo], 0, mbNo) <> mrYes) then
+    begin
+      frmGoPhast.miOutputControlClick(nil);
+      Exit;
+    end;
+  end;
+  if frmProgressMM = nil then
+  begin
+    frmProgressMM := TfrmProgressMM.Create(nil);
+  end;
+  try
+    try
+      frmProgressMM.ShouldContinue := True;
+      UpdateModflowFullStressPeriods;
+      SetCurrentDir(ExtractFileDir(FileName));
+      FileName := FixFileName(FileName);
+
+      NameFileWriter := TModpathNameFileWriter.Create;
+      try
+        NameFileWriter.WriteFile(FileName, self);
+      finally
+        NameFileWriter.Free;
+      end;
+
+      MainFileWriter := TModpathMainFileWriter.Create(Self);
+      try
+        MainFileWriter.WriteFile(FileName);
+      finally
+        MainFileWriter.Free;
+      end;
+      StartLocations := TModpathStartingLocationsWriter.Create(Self);
+      try
+        StartLocations.WriteFile(FileName);
+      finally
+        StartLocations.Free;
+      end;
+      if ModflowPackages.ModPath.ShouldCreateTimeFile then
+      begin
+        TimeFileWriter := TModpathTimeFileWriter.Create(Self);
+        try
+          TimeFileWriter.WriteFile(FileName);
+        finally
+          TimeFileWriter.Free;
+        end;
+      end;
+      Responses := TModpathResponseFileWriter.Create(Self);
+      try
+        Responses.WriteFile(FileName, NewBudgetFile);
+        LargeBudgetFileResponse := Responses.FLargeBudgetFileResponse;
+      finally
+        Responses.Free;
+      end;
+
+      BatchFileLocation := WriteModpathBatchFile(ProgramLocations, FileName,
+        ChangeFileExt(FileName,'.mplst'), RunModel, LargeBudgetFileResponse);
+
+      if RunModel then
+      begin
+        WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
+      end;
+    except on E: EFCreateError do
+      begin
+        Beep;
+        MessageDlg(E.Message, mtError, [mbOK], 0);
+      end;
+    end;
+  finally
+    if frmProgressMM.Owner = nil then
+    begin
+      FreeAndNil(frmProgressMM);
+    end;
+//    ReclaimMemory;
+  end;
+end;
+
+procedure TCustomModel.ExportZoneBudgetModel(FileName: string; RunModel: boolean);
+var
+  NumberOfSteps: Integer;
+  ZoneFileWriter: TZoneBudgetZoneFileWriter;
+  ResponseFileWriter: TZoneBudgetResponseFileWriter;
+  BatchFileLocation: string;
+begin
+  SetCurrentDir(ExtractFileDir(FileName));
+  FileName := FixFileName(FileName);
+  if frmProgressMM = nil then
+  begin
+    frmProgressMM := TfrmProgressMM.Create(nil);
+  end;
+  try
+    try
+      frmProgressMM.Prefix := 'File ';
+      frmProgressMM.Caption := 'Exporting ZONEBUDGET input files';
+      frmProgressMM.btnAbort.Visible := True;
+      frmProgressMM.ShouldContinue := True;
+      frmProgressMM.Show;
+
+      // Export ZoneFile;
+      // Export Response File;
+      // Export Batch File;
+      NumberOfSteps := 3;
+
+      frmProgressMM.pbProgress.Max := NumberOfSteps;
+      frmProgressMM.pbProgress.Position := 0;
+
+      ZoneFileWriter := TZoneBudgetZoneFileWriter.Create(self);
+      try
+        ZoneFileWriter.WriteFile(FileName);
+      finally
+        ZoneFileWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      frmProgressMM.StepIt;
+
+      ResponseFileWriter := TZoneBudgetResponseFileWriter.Create(self);
+      try
+        ResponseFileWriter.WriteFile(FileName);
+      finally
+        ResponseFileWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      frmProgressMM.StepIt;
+
+      BatchFileLocation := WriteZoneBudgetBatchFile(self, FileName, RunModel);
+
+      if RunModel then
+      begin
+        WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
+      end;
+    except on E: EFCreateError do
+      begin
+        Beep;
+        MessageDlg(E.Message, mtError, [mbOK], 0);
+      end;
+    end;
+  finally
+    frmProgressMM.btnAbort.Visible := False;
+    frmProgressMM.Hide;
+    if frmProgressMM.Owner = nil then
+    begin
+      FreeAndNil(frmProgressMM);
+    end;
+//    ReclaimMemory;
+  end;
+end;
+
+procedure TCustomModel.FinalizeDischargeRouting(Sender: TObject);
+var
+  LakeIdArray: TDataArray;
+  DischargeRoutingArray: TDataArray;
+begin
+  DischargeRoutingArray := FDataArrayManager.GetDataSetByName(StrUzfDischargeRouting);
+  LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
+  if (LakeIdArray <> nil) and (DischargeRoutingArray <> nil) then
+  begin
+    DischargeRoutingArray.StopsTalkingTo(LakeIdArray);
+  end;
+end;
+
+procedure TCustomModel.GetParameterUsedAndParameterFormulaForLPF(
+      out ParameterUsed: Boolean; out ParameterFormula: string;
+      ParameterType: TParameterType);
+var
+  Index: Integer;
+  Item: TModflowSteadyParameter;
+begin
+  ParameterFormula := '';
+  ParameterUsed := (ModelSelection in [msModflow, msModflowLGR])
+    and ModflowPackages.LpfPackage.IsSelected;
+  if ParameterUsed then
+  begin
+    ParameterUsed := False;
+    for Index := 0 to ModflowSteadyParameters.Count - 1 do
+    begin
+      Item := ModflowSteadyParameters[Index];
+      if Item.ParameterType = ParameterType then
+      begin
+        ParameterUsed := True;
+        if ParameterFormula <> '' then
+        begin
+          ParameterFormula := ParameterFormula + ' + ';
+        end;
+        if Item.UseZone then
+        begin
+          ParameterFormula := ParameterFormula + '(If(' + Item.ZoneName + ', ';
+        end;
+        if Item.UseMultiplier then
+        begin
+          ParameterFormula := ParameterFormula +
+            '(' + Item.MultiplierName + ' * ';
+        end;
+        ParameterFormula := ParameterFormula + FortranFloatToStr(Item.Value);
+        if Item.UseMultiplier then
+        begin
+          ParameterFormula := ParameterFormula + ')';
+        end;
+        if Item.UseZone then
+        begin
+          ParameterFormula := ParameterFormula + ', 0))';
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TCustomModel.UpdateLpfDataArrayParameterUsed(const DataArrayName: string;
+      ParameterType: TParameterType);
+var
+  DataArray: TDataArray;
+  ParameterUsed: Boolean;
+  ParameterFormula: string;
+begin
+  GetParameterUsedAndParameterFormulaForLPF(ParameterUsed, ParameterFormula,
+    ParameterType);
+  DataArray := FDataArrayManager.GetDataSetByName(DataArrayName);
+  if (DataArray <> nil) then
+  begin
+    DataArray.ParameterUsed := ParameterUsed;
+    if ParameterUsed then
+    begin
+      DataArray.ParameterFormula := ParameterFormula;
+      DataArray.Lock := DataArray.Lock + [dcFormula];
+    end
+    else
+    begin
+      DataArray.ParameterFormula := '';
+      DataArray.Lock := DataArray.Lock - [dcFormula];
+    end;
+  end;
+end;
+
+{ TChildModelCollection }
+
+constructor TChildModelCollection.Create(Model: TComponent);
+begin
+  inherited Create(TChildModelItem, Model);
+end;
+
+function TChildModelCollection.GetItem(Index: integer): TChildModelItem;
+begin
+  result := inherited Items[Index] as TChildModelItem;
+end;
+
+procedure TChildModelCollection.SetItem(Index: integer;
+  const Value: TChildModelItem);
+begin
+  inherited Items[Index] := Value;
+end;
+
+{ TChildModelItem }
+
+constructor TChildModelItem.Create(Collection: TCollection);
+begin
+  inherited;
+  FChildModel := TChildModel.Create(nil);
+  FChildModel.FParentModel := Model as TCustomModel;
+  FChildModel.Assign(FChildModel.FParentModel);
+end;
+
+destructor TChildModelItem.Destroy;
+begin
+  FChildModel.Free;
+  inherited;
+end;
+
+procedure TChildModelItem.SetChildModel(const Value: TChildModel);
+begin
+  FChildModel.Assign(Value);
+end;
+
+{ TChildModel }
+
+procedure TChildModel.Assign(Source: TPersistent);
+begin
+  if Source is TChildModel then
+  begin
+    ModelName := TChildModel(Source).ModelName;
+  end;
+  inherited;
+end;
+
+function TChildModel.GetChemistryOptions: TChemistryOptions;
+begin
+  result := ParentModel.GetChemistryOptions;
+end;
+
+function TChildModel.GetFreeSurface: boolean;
+begin
+  result := ParentModel.GetFreeSurface;
+end;
+
+function TChildModel.GetHufParameters: THufModflowParameters;
+begin
+  result := ParentModel.GetHufParameters;
+end;
+
+function TChildModel.GetLayerStructure: TLayerStructure;
+begin
+  result := ParentModel.GetLayerStructure;
+end;
+
+function TChildModel.GetModelSelection: TModelSelection;
+begin
+  result := ParentModel.GetModelSelection;
+end;
+
+function TChildModel.GetModflowFullStressPeriods: TModflowStressPeriods;
+begin
+  result := ParentModel.GetModflowFullStressPeriods;
+end;
+
+function TChildModel.GetModflowOptions: TModflowOptions;
+begin
+  result := ParentModel.GetModflowOptions;
+end;
+
+function TChildModel.GetModflowOutputControl: TModflowOutputControl;
+begin
+  result := ParentModel.GetModflowOutputControl;
+end;
+
+function TChildModel.GetModflowSteadyParameters: TModflowSteadyParameters;
+begin
+  result := ParentModel.GetModflowSteadyParameters;
+end;
+
+function TChildModel.GetModflowStressPeriods: TModflowStressPeriods;
+begin
+  result := ParentModel.GetModflowStressPeriods;
+end;
+
+function TChildModel.GetModflowTransientParameters: TModflowTransientListParameters;
+begin
+  result := ParentModel.GetModflowTransientParameters;
+end;
+
+function TChildModel.GetObservationPurpose: TObservationPurpose;
+begin
+  result := ParentModel.GetObservationPurpose;
+end;
+
+function TChildModel.GetProgramLocations: TProgramLocations;
+begin
+  result := ParentModel.GetProgramLocations;
+end;
+
+function TChildModel.GetScreenObjectCount: integer;
+begin
+  result := ParentModel.GetScreenObjectCount;
+end;
+
+function TChildModel.GetScreenObjects(const Index: integer): TScreenObject;
+begin
+  result := ParentModel.GetScreenObjects(Index);
+end;
+
+function TChildModel.GetSoluteTransport: boolean;
+begin
+  result := ParentModel.GetSoluteTransport
+end;
+
+function TChildModel.GetUseWaterTable: boolean;
+begin
+  result := ParentModel.GetUseWaterTable
+end;
+
+procedure TChildModel.Invalidate;
+begin
+  inherited;
+  ParentModel.Invalidate;
+end;
+
+procedure TChildModel.SetChemistryOptions(const Value: TChemistryOptions);
+begin
+  ParentModel.SetChemistryOptions(Value);
+end;
+
+procedure TChildModel.SetFreeSurface(const Value: boolean);
+begin
+  ParentModel.SetFreeSurface(Value);
+end;
+
+procedure TChildModel.SetHufParameters(const Value: THufModflowParameters);
+begin
+  ParentModel.SetHufParameters(Value);
+end;
+
+procedure TChildModel.SetLayerStructure(const Value: TLayerStructure);
+begin
+  ParentModel.SetLayerStructure(Value);
+end;
+
+procedure TChildModel.SetModelName(const Value: string);
+begin
+  if FModelName <> Value then
+  begin
+    FModelName := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TChildModel.SetModelSelection(const Value: TModelSelection);
+begin
+  ParentModel.SetModelSelection(Value);
+end;
+
+procedure TChildModel.SetModflowOptions(const Value: TModflowOptions);
+begin
+  ParentModel.SetModflowOptions(Value);
+end;
+
+procedure TChildModel.SetModflowOutputControl(
+  const Value: TModflowOutputControl);
+begin
+  ParentModel.SetModflowOutputControl(Value);
+end;
+
+procedure TChildModel.SetModflowSteadyParameters(
+  const Value: TModflowSteadyParameters);
+begin
+  ParentModel.SetModflowSteadyParameters(Value);
+end;
+
+procedure TChildModel.SetModflowStressPeriods(
+  const Value: TModflowStressPeriods);
+begin
+  ParentModel.SetModflowStressPeriods(Value);
+end;
+
+procedure TChildModel.SetModflowTransientParameters(
+  const Value: TModflowTransientListParameters);
+begin
+  ParentModel.SetModflowTransientParameters(Value);
+end;
+
+procedure TChildModel.SetObservationPurpose(const Value: TObservationPurpose);
+begin
+  ParentModel.SetObservationPurpose(Value);
+end;
+
+procedure TChildModel.SetProgramLocations(const Value: TProgramLocations);
+begin
+  ParentModel.SetProgramLocations(Value);
+end;
+
+procedure TChildModel.SetSoluteTransport(const Value: boolean);
+begin
+  ParentModel.SetSoluteTransport(Value);
+end;
+
+procedure TChildModel.SetUseWaterTable(const Value: boolean);
+begin
+  ParentModel.SetUseWaterTable(Value);
+end;
+
 initialization
   RegisterClass(TPhastModel);
-  PValFile := TStringList.Create;
-  Template := TStringList.Create;
-
-finalization
-  Template.Free;
-  PValFile.Free;
+  RegisterClass(TChildModel);
 
 end.
-
-

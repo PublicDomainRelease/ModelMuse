@@ -198,7 +198,7 @@ begin
     SetLength(ZValues, SurferGrid.Header.nx * SurferGrid.Header.ny);
     for Index := 0 to SurferGrid.Header.nx*SurferGrid.Header.ny - 1 do
     begin
-    Read(GrdFile, ZValues[Index]);
+      Read(GrdFile, ZValues[Index]);
     end;
 
     XLength := SurferGrid.Header.Xhi - SurferGrid.Header.Xlo;

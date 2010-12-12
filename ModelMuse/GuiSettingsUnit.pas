@@ -67,7 +67,19 @@ type
     procedure SetTopHorizontalPrecision(const Value: integer);
     procedure SetTopVerticalDigits(const Value: integer);
     procedure SetTopVerticalPrecision(const Value: integer);
-
+    function GetFrontHorizontalDesiredSpacing: integer;
+    function GetFrontVerticalDesiredSpacing: integer;
+    function GetSideHorizontalDesiredSpacing: integer;
+    function GetSideVerticalDesiredSpacing: integer;
+    function GetTopHorizontalDesiredSpacing: integer;
+    function GetTopVerticalDesiredSpacing: integer;
+    procedure SetFrontHorizontalDesiredSpacing(const Value: integer);
+    procedure SetFrontVerticalDesiredSpacing(const Value: integer);
+    procedure SetSideHorizontalDesiredSpacing(const Value: integer);
+    procedure SetSideVerticalDesiredSpacing(const Value: integer);
+    procedure SetTopHorizontalDesiredSpacing(const Value: integer);
+    procedure SetTopVerticalDesiredSpacing(const Value: integer);
+  public
   published
     // @name stores the height in pixels of the front view of the model.
     property FrontHeight: integer read GetFrontHeight write SetFrontHeight;
@@ -126,18 +138,31 @@ type
 
     // @name stores whether the model is maximized, minimized, or normal.
     property WindowState: TWindowState read GetWindowState write SetWindowState;
+
     property TopHorizontalDigits: integer read GetTopHorizontalDigits write SetTopHorizontalDigits;
     property TopHorizontalPrecision: integer read GetTopHorizontalPrecision write SetTopHorizontalPrecision;
+    property TopHorizontalDesiredSpacing: integer read GetTopHorizontalDesiredSpacing write SetTopHorizontalDesiredSpacing;
+
     property TopVerticalDigits: integer read GetTopVerticalDigits write SetTopVerticalDigits;
     property TopVerticalPrecision: integer read GetTopVerticalPrecision write SetTopVerticalPrecision;
+    property TopVerticalDesiredSpacing: integer read GetTopVerticalDesiredSpacing write SetTopVerticalDesiredSpacing;
+
     property FrontHorizontalDigits: integer read GetFrontHorizontalDigits write SetFrontHorizontalDigits;
     property FrontHorizontalPrecision: integer read GetFrontHorizontalPrecision write SetFrontHorizontalPrecision;
+    property FrontHorizontalDesiredSpacing: integer read GetFrontHorizontalDesiredSpacing write SetFrontHorizontalDesiredSpacing;
+
     property FrontVerticalDigits: integer read GetFrontVerticalDigits write SetFrontVerticalDigits;
     property FrontVerticalPrecision: integer read GetFrontVerticalPrecision write SetFrontVerticalPrecision;
+    property FrontVerticalDesiredSpacing: integer read GetFrontVerticalDesiredSpacing write SetFrontVerticalDesiredSpacing;
+
     property SideHorizontalDigits: integer read GetSideHorizontalDigits write SetSideHorizontalDigits;
     property SideHorizontalPrecision: integer read GetSideHorizontalPrecision write SetSideHorizontalPrecision;
+    property SideHorizontalDesiredSpacing: integer read GetSideHorizontalDesiredSpacing write SetSideHorizontalDesiredSpacing;
+
     property SideVerticalDigits: integer read GetSideVerticalDigits write SetSideVerticalDigits;
     property SideVerticalPrecision: integer read GetSideVerticalPrecision write SetSideVerticalPrecision;
+    property SideVerticalDesiredSpacing: integer read GetSideVerticalDesiredSpacing write SetSideVerticalDesiredSpacing;
+
   end;
 
 implementation
@@ -164,6 +189,11 @@ begin
   end;
 end;
 
+procedure TGuiSettings.SetFrontHorizontalDesiredSpacing(const Value: integer);
+begin
+  frmGoPhast.frameFrontView.rulHorizontal.RulerDesiredSpacing := Value;
+end;
+
 procedure TGuiSettings.SetFrontHorizontalDigits(const Value: integer);
 begin
   frmGoPhast.frameFrontView.rulHorizontal.RulerDigits := Value;
@@ -172,6 +202,11 @@ end;
 procedure TGuiSettings.SetFrontHorizontalPrecision(const Value: integer);
 begin
   frmGoPhast.frameFrontView.rulHorizontal.RulerPrecision := Value;
+end;
+
+procedure TGuiSettings.SetFrontVerticalDesiredSpacing(const Value: integer);
+begin
+  frmGoPhast.frameFrontView.rulVertical.RulerDesiredSpacing := Value;
 end;
 
 procedure TGuiSettings.SetFrontVerticalDigits(const Value: integer);
@@ -201,6 +236,11 @@ begin
   frmGoPhast.Height := Value;
 end;
 
+function TGuiSettings.GetFrontHorizontalDesiredSpacing: integer;
+begin
+  result := frmGoPhast.frameFrontView.rulHorizontal.RulerDesiredSpacing;
+end;
+
 function TGuiSettings.GetFrontHorizontalDigits: integer;
 begin
   result := frmGoPhast.frameFrontView.rulHorizontal.RulerDigits;
@@ -209,6 +249,11 @@ end;
 function TGuiSettings.GetFrontHorizontalPrecision: integer;
 begin
   result := frmGoPhast.frameFrontView.rulHorizontal.RulerPrecision;
+end;
+
+function TGuiSettings.GetFrontVerticalDesiredSpacing: integer;
+begin
+  result := frmGoPhast.frameFrontView.rulVertical.RulerDesiredSpacing;
 end;
 
 function TGuiSettings.GetFrontVerticalDigits: integer;
@@ -293,6 +338,11 @@ begin
   frmGoPhast.frameTopView.ZoomBox.Magnification := Value;
 end;
 
+function TGuiSettings.GetSideHorizontalDesiredSpacing: integer;
+begin
+  result := frmGoPhast.frameSideView.rulHorizontal.RulerDesiredSpacing
+end;
+
 function TGuiSettings.GetSideHorizontalDigits: integer;
 begin
   result := frmGoPhast.frameSideView.rulHorizontal.RulerDigits;
@@ -301,6 +351,11 @@ end;
 function TGuiSettings.GetSideHorizontalPrecision: integer;
 begin
   result := frmGoPhast.frameSideView.rulHorizontal.RulerPrecision;
+end;
+
+function TGuiSettings.GetSideVerticalDesiredSpacing: integer;
+begin
+  result := frmGoPhast.frameSideView.rulVertical.RulerDesiredSpacing;
 end;
 
 function TGuiSettings.GetSideVerticalDigits: integer;
@@ -318,6 +373,11 @@ begin
   result := frmGoPhast.frameSideView.Width;
 end;
 
+procedure TGuiSettings.SetSideHorizontalDesiredSpacing(const Value: integer);
+begin
+  frmGoPhast.frameSideView.rulHorizontal.RulerDesiredSpacing := Value;
+end;
+
 procedure TGuiSettings.SetSideHorizontalDigits(const Value: integer);
 begin
   frmGoPhast.frameSideView.rulHorizontal.RulerDigits := Value;
@@ -326,6 +386,11 @@ end;
 procedure TGuiSettings.SetSideHorizontalPrecision(const Value: integer);
 begin
   frmGoPhast.frameSideView.rulHorizontal.RulerPrecision := Value;
+end;
+
+procedure TGuiSettings.SetSideVerticalDesiredSpacing(const Value: integer);
+begin
+  frmGoPhast.frameSideView.rulVertical.RulerDesiredSpacing := Value;
 end;
 
 procedure TGuiSettings.SetSideVerticalDigits(const Value: integer);
@@ -379,6 +444,11 @@ begin
   result := frmGoPhast.Top;
 end;
 
+function TGuiSettings.GetTopHorizontalDesiredSpacing: integer;
+begin
+  result := frmGoPhast.frameTopView.rulHorizontal.RulerDesiredSpacing
+end;
+
 function TGuiSettings.GetTopHorizontalDigits: integer;
 begin
   result := frmGoPhast.frameTopView.rulHorizontal.RulerDigits;
@@ -394,6 +464,11 @@ begin
   frmGoPhast.Top := Value;
 end;
 
+function TGuiSettings.GetTopVerticalDesiredSpacing: integer;
+begin
+  result := frmGoPhast.frameTopView.rulVertical.RulerDesiredSpacing;
+end;
+
 function TGuiSettings.GetTopVerticalDigits: integer;
 begin
   result := frmGoPhast.frameTopView.rulVertical.RulerDigits;
@@ -402,6 +477,11 @@ end;
 function TGuiSettings.GetTopVerticalPrecision: integer;
 begin
   result := frmGoPhast.frameTopView.rulVertical.RulerPrecision;
+end;
+
+procedure TGuiSettings.SetTopHorizontalDesiredSpacing(const Value: integer);
+begin
+  frmGoPhast.frameTopView.rulHorizontal.RulerDesiredSpacing := Value;
 end;
 
 procedure TGuiSettings.SetTopHorizontalDigits(const Value: integer);
@@ -417,6 +497,11 @@ end;
 function TGuiSettings.GetTopViewHeight: integer;
 begin
   result := frmGoPhast.frameTopView.Height;
+end;
+
+procedure TGuiSettings.SetTopVerticalDesiredSpacing(const Value: integer);
+begin
+  frmGoPhast.frameTopView.rulVertical.RulerDesiredSpacing := Value;
 end;
 
 procedure TGuiSettings.SetTopVerticalDigits(const Value: integer);

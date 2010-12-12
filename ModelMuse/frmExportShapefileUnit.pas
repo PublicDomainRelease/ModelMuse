@@ -105,6 +105,7 @@ var
   Position: integer;
   HydrogeologicUnitNames: TStringList;
   HufDataArrays: TClassificationList;
+  DataArrayManager: TDataArrayManager;
 begin
   { TODO : Nearly the same code is use in TfrmFormulaUnit, TFrmGridColor,
   TfrmScreenObjectProperties, and TfrmDataSets. Find a way to combine them. }
@@ -140,9 +141,10 @@ begin
         LayerGroupList.Add(nil);
       end;
 
-      for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+      DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+      for Index := 0 to DataArrayManager.DataSetCount - 1 do
       begin
-        DataSet := frmGoPhast.PhastModel.DataSets[Index];
+        DataSet := DataArrayManager.DataSets[Index];
         ClassificationObject := TDataSetClassification.Create(DataSet);
         DataSetList.Add(ClassificationObject);
         Position := LayerGroupsDataSets.IndexOf(DataSet);
@@ -260,7 +262,7 @@ begin
             RealList.AddUnique(TimeItem.EndingTime);
           end;
         end;
-      msModflow:
+      msModflow, msModflowLGR:
         begin
           for Index := 0 to
             frmGoPhast.PhastModel.ModflowStressPeriods.Count - 1 do
@@ -427,7 +429,7 @@ begin
               end;
             end;
           end;
-          frmGoPhast.PhastModel.CacheDataArrays;
+          frmGoPhast.PhastModel.DataArrayManager.CacheDataArrays;
           DataArray := DataSets[DataSetIndex];
           DataArray.CacheData;
         end;
@@ -526,7 +528,7 @@ begin
               end;
             end;
           end;
-          frmGoPhast.PhastModel.CacheDataArrays;
+          frmGoPhast.PhastModel.DataArrayManager.CacheDataArrays;
           DataArray := DataSets[DataSetIndex];
           DataArray.CacheData;
         end;
@@ -832,7 +834,7 @@ begin
     DataArray := DataSets[Index];
     DataArray.Initialize;
     DataArray.CacheData;
-    frmGoPhast.PhastModel.CacheDataArrays;
+    frmGoPhast.PhastModel.DataArrayManager.CacheDataArrays;
     RootName := UpperCase(DataArray.Name);
     case DataArray.Orientation of
       dsoTop:
@@ -1062,7 +1064,7 @@ begin
         lblElements.Caption := '&Element Shapefile name';
         lblNodes.Caption := '&Node Shapefile name';
       end;
-    msModflow:
+    msModflow, msModflowLGR:
       begin
         lblElements.Caption := '&Cell Shapefile name';
         lblNodes.Caption := '&Cell-Corner Shapefile name';
@@ -1190,6 +1192,7 @@ var
   SelectedTimeList: TCustomTimeList;
   SelectedDataArray: TDataArray;
   EdgeEdit: TEdgeDisplayEdit;
+  DataArrayManager: TDataArrayManager;
 begin
   SelectedDataArray := frmGoPhast.Grid.ThreeDDataSet;
   SelectedTimeList := frmGoPhast.PhastModel.ThreeDTimeList;
@@ -1198,9 +1201,10 @@ begin
     StrBoundaryConditions);
   DataSetClassifications := TStringList.Create;
   try
-    for Index := 0 to frmGoPhast.PhastModel.BoundaryDataSetCount - 1 do
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    for Index := 0 to DataArrayManager.BoundaryDataSetCount - 1 do
     begin
-      DataSet := frmGoPhast.PhastModel.BoundaryDataSets[Index];
+      DataSet := DataArrayManager.BoundaryDataSets[Index];
       ClassificationPosition :=
         DataSetClassifications.IndexOf(DataSet.Classification);
       if ClassificationPosition < 0 then

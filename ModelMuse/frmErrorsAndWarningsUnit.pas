@@ -165,9 +165,9 @@ begin
     Data := vstWarningsAndErrors.GetNodeData(ChildNode);
     Data.List := ErrorMessages;
     vstWarningsAndErrors.HasChildren[ChildNode] := True;
-    if frmProgress <> nil then
+    if frmProgressMM <> nil then
     begin
-      frmProgress.AddMessage(TypeOfErrorOrWarning);
+      frmProgressMM.AddMessage(TypeOfErrorOrWarning);
     end;
   end;
 

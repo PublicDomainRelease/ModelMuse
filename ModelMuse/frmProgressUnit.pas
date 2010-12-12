@@ -14,7 +14,7 @@ uses
 type
   { @abstract(@name is used to display a progress bar to the user with extra
     information displayed in @link(memoMessages) about what is happening.)}
-  TfrmProgress = class(TfrmCustomGoPhast)
+  TfrmProgressMM = class(TfrmCustomGoPhast)
     // @name: TLabel;
     // @name displays the amount of progress.
     // See @link(StepIt) and @link(Prefix).
@@ -63,8 +63,8 @@ type
 
 var
   // @name is the instance of @link(TfrmProgress).
-  frmProgress: TfrmProgress = nil;
-  frmFileProgress: TfrmProgress;
+  frmProgressMM: TfrmProgressMM = nil;
+  frmFileProgress: TfrmProgressMM;
 
 implementation
 
@@ -75,14 +75,14 @@ const
 
 { TfrmProgress }
 
-procedure TfrmProgress.StepIt;
+procedure TfrmProgressMM.StepIt;
 begin
   pbProgress.StepIt;
   ProgressLabelCaption := Prefix + IntToStr(pbProgress.Position) + ' out of '
     + IntToStr(pbProgress.Max) + '.';
 end;
 
-procedure TfrmProgress.AddMessage(const AMessage: string;
+procedure TfrmProgressMM.AddMessage(const AMessage: string;
   AllowUpdate: boolean = True);
 begin
   memoMessages.Lines.Add(AMessage);
@@ -99,14 +99,14 @@ begin
   end;
 end;
 
-procedure TfrmProgress.btnAbortClick(Sender: TObject);
+procedure TfrmProgressMM.btnAbortClick(Sender: TObject);
 begin
   inherited;
   FShouldContinue := False;
   memoMessages.Lines.Add('Attempting to abort; please wait.');
 end;
 
-procedure TfrmProgress.FormShow(Sender: TObject);
+procedure TfrmProgressMM.FormShow(Sender: TObject);
 begin
   inherited;
   LastTime := Now;
@@ -116,12 +116,12 @@ begin
   lblProgress.Caption := '';
 end;
 
-function TfrmProgress.GetProgressLabelCaption: string;
+function TfrmProgressMM.GetProgressLabelCaption: string;
 begin
   result := lblProgress.Caption;
 end;
 
-function TfrmProgress.GetShouldContinue: Boolean;
+function TfrmProgressMM.GetShouldContinue: Boolean;
 begin
   // Don't call Application.ProcessMessages.
   // Doing so can cause access violations due to
@@ -133,12 +133,12 @@ begin
   Result := FShouldContinue;
 end;
 
-procedure TfrmProgress.SetPrefix(const Value: string);
+procedure TfrmProgressMM.SetPrefix(const Value: string);
 begin
   FPrefix := Value;
 end;
 
-procedure TfrmProgress.SetProgressLabelCaption(const Value: string);
+procedure TfrmProgressMM.SetProgressLabelCaption(const Value: string);
 begin
   if Now - LastTime > HalfSecond then
   begin

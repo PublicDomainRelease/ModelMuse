@@ -8,7 +8,7 @@ unit CheckInternetUnit;
 
 interface
 
-uses SysUtils, Classes, Dialogs, Forms, IniFiles, JvExStdCtrls, JvHtControls;
+uses Windows, SysUtils, Classes, Dialogs, Forms, IniFiles, JvExStdCtrls, JvHtControls;
 
 type
   TVersionCompare = (vcUnknown, vcSame, vcExternalOlder, vcExternalNewer);
@@ -50,7 +50,8 @@ const
 implementation
 
 uses
-  Math, RbwInternetUtilities, frmGoPhastUnit, IniFileUtilities, GoPhastTypes;
+  Math, RbwInternetUtilities, frmGoPhastUnit, IniFileUtilities, GoPhastTypes, 
+  StdCtrls, frmNewVersionUnit;
 
 
 const
@@ -256,7 +257,16 @@ end;
 procedure TCheckInternetThread.ShowNewVersionMessage;
 begin
   Beep;
-  ShowMessage('A newer version of ModelMuse is ' + 'now available on the ModelMuse web site.');
+
+  with TfrmNewVersion.Create(nil) do
+  begin
+    try
+      ShowModal;
+    finally
+      Free;
+    end;
+  end;
+//  ShowMessage('A newer version of ModelMuse is ' + 'now available on the ModelMuse web site.');
 end;
 
 procedure TCheckInternetThread.ReadIniFile;

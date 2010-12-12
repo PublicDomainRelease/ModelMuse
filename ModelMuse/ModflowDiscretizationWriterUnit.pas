@@ -16,7 +16,7 @@ type
 
 implementation
 
-uses ModflowUnitNumbers, frmProgressUnit, Forms;
+uses ModflowUnitNumbers, frmProgressUnit, Forms, FastGEO;
 
 { TModflowDiscretizationWriter }
 
@@ -38,96 +38,96 @@ begin
     NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgress.AddMessage('Writing Discretization Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing Discretization Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
 
     // data set 2
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     PhastModel.LayerStructure.WriteLAYCB(self);
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
     // data set 3
-    frmProgress.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage('  Writing Data Set 3.');
     PhastModel.ModflowGrid.WriteDELR(self);
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
     // data set 4
-    frmProgress.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage('  Writing Data Set 4.');
     PhastModel.ModflowGrid.WriteDELC(self);
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Checking column widths.');
+    frmProgressMM.AddMessage('  Checking column widths.');
     PhastModel.ModflowGrid.CheckColumnWidths;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Checking row height.');
+    frmProgressMM.AddMessage('  Checking row height.');
     PhastModel.ModflowGrid.CheckRowHeights;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Checking row to column size ratios.');
+    frmProgressMM.AddMessage('  Checking row to column size ratios.');
     PhastModel.ModflowGrid.CheckRowToColumnRatios;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
     // data set 5
-    frmProgress.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage('  Writing Data Set 5.');
     PhastModel.ModflowGrid.WriteTOP(self);
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
-    PhastModel.CacheDataArrays;
+    PhastModel.DataArrayManager.CacheDataArrays;
 
     // data set 6
-    frmProgress.AddMessage('  Writing Data Set 6.');
+    frmProgressMM.AddMessage('  Writing Data Set 6.');
     PhastModel.ModflowGrid.WriteBOTM(self, PhastModel);
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
-    PhastModel.CacheDataArrays;
+    PhastModel.DataArrayManager.CacheDataArrays;
 
-    frmProgress.AddMessage('  Checking elevations.');
+    frmProgressMM.AddMessage('  Checking elevations.');
     PhastModel.ModflowGrid.CheckElevations;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
     // data set 7
-    frmProgress.AddMessage('  Writing Data Set 7.');
+    frmProgressMM.AddMessage('  Writing Data Set 7.');
     PhastModel.ModflowFullStressPeriods.WriteStressPeriods(self);
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -138,11 +138,28 @@ begin
 end;
 
 procedure TModflowDiscretizationWriter.WriteDataSet0;
+var
+  GridAngle: Real;
+  procedure WriteCorner(const CornerDesc: string; APoint: TPoint2D);
+  begin
+    WriteCommentLine(CornerDesc + ' (' + FloatToStr(APoint.x)
+      + ', ' + FloatToStr(APoint.y) + ')');
+  end;
 begin
   WriteCommentLine('Discretization File created on ' + DateToStr(Now) + ' by '
     + PhastModel.ProgramName
     + ' version ' + ModelVersion + '.');
   WriteCommentLines(PhastModel.ModflowOptions.Description);
+
+  WriteCorner('Upper left corner:', PhastModel.Grid.TwoDElementCorner(0,0));
+  WriteCorner('Lower left corner:', PhastModel.Grid.TwoDElementCorner(
+    0,PhastModel.Grid.RowCount));
+  WriteCorner('Upper right corner:', PhastModel.Grid.TwoDElementCorner(
+    PhastModel.Grid.ColumnCount,0));
+  WriteCorner('Lower right corner:', PhastModel.Grid.TwoDElementCorner(
+    PhastModel.Grid.ColumnCount,PhastModel.Grid.RowCount));
+  GridAngle := PhastModel.Grid.GridAngle * 180 / Pi;
+  WriteCommentLine('Grid angle (in degrees counterclockwise): ' + FloatToStr(GridAngle));
 end;
 
 procedure TModflowDiscretizationWriter.WriteDataSet1;

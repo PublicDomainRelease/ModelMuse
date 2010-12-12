@@ -67,8 +67,11 @@ implementation
 
 procedure MALLOC(var p : pointer; b : integer; s : string);
 begin
-  GetMem(p, b); if (p = nil) and (b <> 0) then
+  GetMem(p, b);
+  if (p = nil) and (b <> 0) then
+  begin
     raise EGpcException.Create(Format('gpc malloc failure: %s', [s]));
+  end;
 end;
 { TGpcPolygonClass }
 

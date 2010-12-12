@@ -25,7 +25,7 @@ type
     class function Extension: string; override;
   public
     procedure WriteFile(const AFileName: string);
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
   end;
 
 const
@@ -213,7 +213,7 @@ begin
   for GroupIndex := 1 to PhastModel.LayerStructure.Count -1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -224,7 +224,7 @@ begin
       for LayerIndex := 0 to Group.ModflowLayerCount -1 do
       begin
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -243,9 +243,9 @@ begin
         end
         else
         begin
-          frmProgress.AddMessage('  Writing Data Set 10 for layer '
+          frmProgressMM.AddMessage('  Writing Data Set 10 for layer '
             + IntToStr(MFLayerIndex));
-          DataArray := PhastModel.GetDataSetByName(rsKx);
+          DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsKx);
           Assert(DataArray <> nil);
           WriteArray(DataArray, ArrayIndex, 'HK ' + Group.AquiferName
             + ' Layer ' + IntToStr(MFLayerIndex));
@@ -254,7 +254,7 @@ begin
             cvmGreaterEqual, 0, etError);
         end;
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -269,9 +269,9 @@ begin
         end
         else
         begin
-          frmProgress.AddMessage('  Writing Data Set 11 for layer '
+          frmProgressMM.AddMessage('  Writing Data Set 11 for layer '
             + IntToStr(MFLayerIndex));
-          DataArray := PhastModel.GetDataSetByName(rsHorizontalAnisotropy);
+          DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsHorizontalAnisotropy);
           Assert(DataArray <> nil);
           WriteArray(DataArray, ArrayIndex, 'HANI ' + Group.AquiferName
             + ' Layer ' + IntToStr(MFLayerIndex));
@@ -280,7 +280,7 @@ begin
             cvmGreaterEqual, 0, etError);
         end;
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -297,9 +297,9 @@ begin
           end
           else
           begin
-            frmProgress.AddMessage('  Writing Data Set 12 for layer '
+            frmProgressMM.AddMessage('  Writing Data Set 12 for layer '
               + IntToStr(MFLayerIndex));
-            DataArray := PhastModel.GetDataSetByName(rsKz);
+            DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsKz);
             Assert(DataArray <> nil);
             WriteArray(DataArray, ArrayIndex, 'VKA ' + Group.AquiferName
               + ' Layer ' + IntToStr(MFLayerIndex));
@@ -322,9 +322,9 @@ begin
           end
           else
           begin
-            frmProgress.AddMessage('  Writing Data Set 12 for layer '
+            frmProgressMM.AddMessage('  Writing Data Set 12 for layer '
               + IntToStr(MFLayerIndex));
-            DataArray := PhastModel.GetDataSetByName(rsVerticalAnisotropy);
+            DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsVerticalAnisotropy);
             Assert(DataArray <> nil);
             WriteArray(DataArray, ArrayIndex, 'VKA ' + Group.AquiferName
               + ' Layer ' + IntToStr(MFLayerIndex));
@@ -337,7 +337,7 @@ begin
           end;
         end;
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -355,9 +355,9 @@ begin
           end
           else
           begin
-            frmProgress.AddMessage('  Writing Data Set 13 for layer '
+            frmProgressMM.AddMessage('  Writing Data Set 13 for layer '
               + IntToStr(MFLayerIndex));
-            DataArray := PhastModel.GetDataSetByName(rsSpecific_Storage);
+            DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsSpecific_Storage);
             Assert(DataArray <> nil);
             WriteArray(DataArray, ArrayIndex, 'SS ' + Group.AquiferName
               + ' Layer ' + IntToStr(MFLayerIndex));
@@ -367,7 +367,7 @@ begin
           end;
         end;
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -384,9 +384,9 @@ begin
           end
           else
           begin
-            frmProgress.AddMessage('  Writing Data Set 14 for layer '
+            frmProgressMM.AddMessage('  Writing Data Set 14 for layer '
               + IntToStr(MFLayerIndex));
-            DataArray := PhastModel.GetDataSetByName(rsSpecificYield);
+            DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsSpecificYield);
             Assert(DataArray <> nil);
             WriteArray(DataArray, ArrayIndex, 'SY ' + Group.AquiferName
               + ' Layer ' + IntToStr(MFLayerIndex));
@@ -396,7 +396,7 @@ begin
           end;
         end;
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -417,9 +417,9 @@ begin
             end
             else
             begin
-              frmProgress.AddMessage('  Writing Data Set 15 for layer '
+              frmProgressMM.AddMessage('  Writing Data Set 15 for layer '
                 + IntToStr(MFLayerIndex));
-              DataArray := PhastModel.GetDataSetByName(rsModflow_CBKz);
+              DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsModflow_CBKz);
               Assert(DataArray <> nil);
               WriteArray(DataArray, ArrayIndex+1, 'VKCB ' + NextGroup.AquiferName
                 + ' Layer ' + IntToStr(MFLayerIndex));
@@ -430,7 +430,7 @@ begin
           end;
         end;
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -440,15 +440,15 @@ begin
           and (Group.AquiferType <> 0) then
         begin
           { TODO : Consider supporting LAYWET }
-          frmProgress.AddMessage('  Writing Data Set 16 for layer '
+          frmProgressMM.AddMessage('  Writing Data Set 16 for layer '
             + IntToStr(MFLayerIndex));
-          DataArray := PhastModel.GetDataSetByName(rsWetDry);
+          DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsWetDry);
           Assert(DataArray <> nil);
           WriteArray(DataArray, ArrayIndex, 'WETDRY ' + Group.AquiferName
             + ' Layer ' + IntToStr(MFLayerIndex));
         end;
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -474,74 +474,74 @@ begin
     NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
-    frmProgress.AddMessage('Writing LPF Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing LPF Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage('  Writing Data Set 3.');
     WriteDataSet3;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage('  Writing Data Set 5.');
     WriteDataSet5;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 6.');
+    frmProgressMM.AddMessage('  Writing Data Set 6.');
     WriteDataSet6;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 7.');
+    frmProgressMM.AddMessage('  Writing Data Set 7.');
     WriteDataSet7;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
     WriteDataSest8and9;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -552,7 +552,7 @@ begin
   end;
 end;
 
-constructor TModflowLPF_Writer.Create(Model: TPhastModel);
+constructor TModflowLPF_Writer.Create(Model: TCustomModel);
 var
   Index: TParameterType;
 begin
@@ -610,7 +610,7 @@ begin
       if Param.ParameterType in ValidParamTypes then
       begin
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -672,7 +672,7 @@ begin
         end;
 
         // Data set 8
-        frmProgress.AddMessage('  Writing Data Set 8 for parameter: ' + PARNAM);
+        frmProgressMM.AddMessage('  Writing Data Set 8 for parameter: ' + PARNAM);
         WriteString(PARNAM);
         WriteString(PARTYP);
         WriteFloat(PARVAL);
@@ -683,7 +683,7 @@ begin
         PhastModel.WritePValAndTemplate(PARNAM,PARVAL);
 
         // Data set 9
-        frmProgress.AddMessage('  Writing Data Set 9 for parameter: ' + PARNAM);
+        frmProgressMM.AddMessage('  Writing Data Set 9 for parameter: ' + PARNAM);
         for ClusterIndex := 0 to NCLU - 1 do
         begin
           if Param.UseZone then
@@ -729,7 +729,7 @@ begin
           end;
           NewLine;
         end;
-        PhastModel.CacheDataArrays;
+        PhastModel.DataArrayManager.CacheDataArrays;
       end;
     end;
   end;

@@ -111,6 +111,11 @@ type
     property Visible: boolean read FVisible write SetVisible;
   end;
 
+  {A @name stores all the information
+   needed to restore the appearance of ModelMuse to a previous
+   state including the name of the data set used to color or
+   contour the grid and the magnification.
+  }
   TDisplaySettingsItem = class(TPhastCollectionItem)
   private
     FShowColoredGridLines: boolean;
@@ -198,6 +203,12 @@ type
       write SetVisibleObjects;
   end;
 
+  { @name is a collection of @link(TDisplaySettingsItem)s.
+    Each @link(TDisplaySettingsItem) stores all the information
+    needed to restore the appearance of ModelMuse to a previous
+    state including the name of the data set used to color or
+    contour the grid and the magnification.
+  }
   TDisplaySettingsCollection = class(TPhastCollection)
   public
     constructor Create(Model: TComponent);

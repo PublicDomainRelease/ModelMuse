@@ -480,6 +480,7 @@ type
     // When values are beginning to be assigned to a @classname,
     // @name is set to to the current time.
     FEvalTime: Extended;
+    procedure UpdateDialogBoxes;
     // See @link(EvaluatedAt).
     procedure SetEvaluatedAt(const Value: TEvaluatedAt); virtual;
     procedure DefineProperties(Filer: TFiler); override;
@@ -766,6 +767,7 @@ type
     procedure ComputeHash;
     property Hash: longint read GetHash;
     function IdenticalDataArrayContents(ADataArray: TDataArray): boolean;
+    procedure AssignProperties(Source: TDataArray); virtual;
   published
     // @name indicates the hierarchical position of this instance of
     // @classname when it is required by MODFLOW.
@@ -838,6 +840,39 @@ type
 
     // @name has no effect.  It is maintained only for backwards compatibility.
     property Visible: boolean read FVisible write SetVisible stored False;
+  end;
+
+  TDataArrayList = class(TObject)
+  private
+    FList: TList;
+    function GetDataArray(Index: integer): TDataArray;
+    function GetCount: integer;
+    procedure SetOwnsDataArrays(const Value: boolean);
+    function GetOwnsDataArrays: boolean;
+    property OwnsDataArrays: boolean read GetOwnsDataArrays write SetOwnsDataArrays;
+  public
+    constructor Create;
+    Destructor Destroy; override;
+    function Add(DataArray: TDataArray): integer;
+    property Count: integer read GetCount;
+    property DataArrays[Index: integer]: TDataArray read GetDataArray; default;
+    function Extract(DataArray: TDataArray): TDataArray;
+  end;
+
+  TTempDataArrayStorage = class(TObject)
+  private
+    FModelList: TList;
+    FDataArrayList: TList;
+    FOwnsDataArrays: boolean;
+    function GetDataArray(Model: TObject; Index: integer): TDataArray;
+    function GetDataArrayList(Model: TObject): TDataArrayList;
+    procedure SetOwnsDataArrays(const Value: boolean);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    property DataArrayList[Model: TObject]: TDataArrayList read GetDataArrayList;
+    property DataArray[Model: TObject; Index: integer]: TDataArray read GetDataArray;
+    property OwnsDataArrays: boolean read FOwnsDataArrays write SetOwnsDataArrays;
   end;
 
   {@name is used in creating descendants of @link(TDataArray) of the
@@ -1274,19 +1309,6 @@ type
     function MinValue(Time: double): string;
   End;
 
-{ TODO : See if GenerateNewName can be combined with some similar function elsewhere. }
-{ @name generates a name for a @link(TDataArray) that is valid
-  and does not conflict with the names of any existing @link(TDataArray)s.}
-
-// @name generates a name for a data set that is valid
-// and does not conflict with the names of any existing data sets.
-function GenerateNewName(Root: string = 'NewDataSet'; Connector: string = ''): string;
-
-{@name is used to generate a valid name from one that may be invalid.
-Valid names must begin with a letter or underscore.  The remaining
-characters must be letters, digits or the underscore character.}
-function GenerateNewRoot(const Root: string): string;
-
 procedure GlobalDataArrayRemoveSubscription(Sender: TObject; Subject: TObject;
   const AName: string);
 
@@ -1316,82 +1338,10 @@ implementation
 uses Contnrs, frmGoPhastUnit, frmConvertChoiceUnit, GIS_Functions,
   ScreenObjectUnit, frmFormulaErrorsUnit, InterpolationUnit, SparseArrayUnit,
   PhastModelUnit, AbstractGridUnit, frmGridColorUnit, frmContourDataUnit,
-  frmErrorsAndWarningsUnit, frmProgressUnit;
+  frmErrorsAndWarningsUnit, frmProgressUnit, GlobalVariablesUnit;
 
 resourcestring
   StrUnassigned = 'Unassigned';
-
-function GenerateNewRoot(const Root: string): string;
-var
-  Index: integer;
-begin
-  result := Trim(Root);
-  Assert(result <> '');
-  if not (result[1] in ['A'..'Z', 'a'..'z', '_']) then
-  begin
-    result[1] := '_';
-  end;
-
-  for Index := 2 to Length(result) do
-  begin
-    if not (result[Index] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
-    begin
-      result[Index] := '_';
-    end;
-  end;
-end;
-
-function GenerateNewName(Root: string = 'NewDataSet'; Connector: string = ''): string;
-var
-  Names: TStringList;
-  Index: integer;
-  DataSet: TDataArray;
-begin
-  Root := Trim(Root);
-  if Root = '' then
-  begin
-    Root := 'NewDataSet';
-  end;
-  Root := GenerateNewRoot(Root);
-
-  // This function generates a name for a data set that is valid
-  // and does not conflict with the names of any existing data sets.
-  Names := TStringList.Create;
-  try
-    for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
-    begin
-      DataSet := frmGoPhast.PhastModel.DataSets[Index];
-      Names.Add(DataSet.Name);
-    end;
-
-    // Don't allow the name to be the same as a deleted data set.
-    for Index := 0 to frmGoPhast.DeletedDataSets.Count - 1 do
-    begin
-      DataSet := frmGoPhast.DeletedDataSets[Index] as TDataArray;
-      Names.Add(DataSet.Name);
-    end;
-
-    // Names now includes the names of all the data sets.
-
-    // Generate a new name.
-    if Names.IndexOf(Root) < 0 then
-    begin
-      result := Root;
-    end
-    else
-    begin
-      Index := 1;
-      result := Root + Connector + IntToStr(Index);
-      while Names.IndexOf(result) >= 0 do
-      begin
-        Inc(Index);
-        result := Root + Connector + IntToStr(Index);
-      end;
-    end;
-  finally
-    Names.Free;
-  end;
-end;
 
 { TDataArray }
 
@@ -1597,19 +1547,21 @@ procedure TDataArray.FullUseList(const AStringList: TStringList);
 var
   Index: integer;
   DataSet: TDataArray;
+  DataArrayManager: TDataArrayManager;
 begin
   Assert(AStringList <> nil);
   AStringList.Clear;
-  for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  for Index := 0 to DataArrayManager.DataSetCount - 1 do
   begin
-    DataSet := frmGoPhast.PhastModel.DataSets[Index];
+    DataSet := DataArrayManager.DataSets[Index];
     DataSet.Observed := False;
   end;
 
   ObserverList.NotifyOnChange(self, ckCheckDependance);
-  for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+  for Index := 0 to DataArrayManager.DataSetCount - 1 do
   begin
-    DataSet := frmGoPhast.PhastModel.DataSets[Index];
+    DataSet := DataArrayManager.DataSets[Index];
     if DataSet.Observed then
     begin
       AStringList.Add(DataSet.Name)
@@ -1685,6 +1637,34 @@ begin
           end;
         end;
       end;
+    end;
+  end;
+end;
+
+procedure TDataArray.UpdateDialogBoxes;
+var
+  Grid: TCustomGrid;
+begin
+  Grid := (FPhastModel as TPhastModel).Grid;
+  if Grid <> nil then
+  begin
+    if Grid.ThreeDContourDataSet = self then
+    begin
+      if frmContourData = nil then
+      begin
+        frmContourData := TfrmContourData.Create(nil);
+      end;
+      frmContourData.LegendDataSource := self;
+      UpdateFrmContourData(True);
+    end;
+    if Grid.ThreeDDataSet = self then
+    begin
+      if frmGridColor = nil then
+      begin
+        frmGridColor := TfrmGridColor.Create(nil);
+      end;
+      frmGridColor.LegendDataSource := self;
+      UpdateFrmGridColor(True);
     end;
   end;
 end;
@@ -1779,6 +1759,7 @@ var
   InterpAnnString: string;
   AValue: double;
   HideProgressForm: Boolean;
+  DataArrayManager: TDataArrayManager;
   procedure GetLimits;
   begin
     case EvaluatedAt of
@@ -1835,18 +1816,19 @@ begin
     Exit;
   end;
 
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
   HideProgressForm := False;
-  if (Name <> '') and (frmProgress <> nil) then
+  if (Name <> '') and (frmProgressMM <> nil) then
   begin
     FUpdatingProgress := True;
     try
-      HideProgressForm := not frmProgress.Visible;
+      HideProgressForm := not frmProgressMM.Visible;
       if HideProgressForm then
       begin
-        frmProgress.Caption := '';
-        frmProgress.Show;
+        frmProgressMM.Caption := '';
+        frmProgressMM.Show;
       end;
-      frmProgress.AddMessage('      Evaluating data set: "' + Name + '."', False);
+      frmProgressMM.AddMessage('      Evaluating data set: "' + Name + '."', False);
     finally
       FUpdatingProgress := False;
     end;
@@ -2321,12 +2303,12 @@ begin
         for VarIndex := 0 to TempUseList.Count - 1 do
         begin
           VarName := TempUseList[VarIndex];
-          AnotherDataSet := frmGoPhast.PhastModel.GetDataSetByName(VarName);
+          AnotherDataSet := DataArrayManager.GetDataSetByName(VarName);
           if AnotherDataSet <> nil then
           begin
             Assert(AnotherDataSet <> self);
             AnotherDataSet.Initialize;
-            frmGoPhast.PhastModel.AddDataSetToCache(AnotherDataSet);
+            DataArrayManager.AddDataSetToCache(AnotherDataSet);
           end;
         end;
         GlobalEvaluatedAt := EvaluatedAt;
@@ -2402,7 +2384,7 @@ begin
           VariablePositions[VarIndex] := VarPosition;
           if VarPosition >= 0 then
           begin
-            DataSetIndex := frmGoPhast.PhastModel.IndexOfDataSet(VarName);
+            DataSetIndex := DataArrayManager.IndexOfDataSet(VarName);
             DataSetIndexes[VarIndex] := DataSetIndex;
           end
           else
@@ -2431,8 +2413,8 @@ begin
                   DataSetIndex := DataSetIndexes[VarIndex];
                   if DataSetIndex >= 0 then
                   begin
-                    AnotherDataSet := frmGoPhast.PhastModel.
-                      DataSets[DataSetIndex];
+                    AnotherDataSet :=
+                      DataArrayManager.DataSets[DataSetIndex];
                     Assert(AnotherDataSet <> self);
                     Assert(AnotherDataSet.DataType = Variable.ResultType);
                     if AnotherDataSet.Orientation = dsoTop then
@@ -2572,12 +2554,12 @@ begin
     if FreeStack then
     begin
       FreeAndNil(Stack);
-      frmGoPhast.PhastModel.DontCache(self);
-      frmGoPhast.PhastModel.CacheDataArrays;
+      DataArrayManager.DontCache(self);
+      DataArrayManager.CacheDataArrays;
     end;
     if HideProgressForm then
     begin
-      frmProgress.Hide;
+      frmProgressMM.Hide;
     end;
   end;
   PostInitialize;
@@ -2585,6 +2567,7 @@ begin
   FCleared := False;
   UpToDate := True;
   CheckIfUniform;
+  UpdateDialogBoxes;
 end;
 
 procedure TDataArray.Invalidate;
@@ -3406,16 +3389,16 @@ begin
   end;
   if NameChanged then
   begin
-    if LocalModel.GetDataSetByName(Name) <> nil then
+    if LocalModel.DataArrayManager.GetDataSetByName(Name) <> nil then
     begin
-      LocalModel.RemoveDataSetFromLookUpList(self);
+      LocalModel.DataArrayManager.RemoveDataSetFromLookUpList(self);
       MustAdd := True;
     end;
   end;
   inherited;
   if MustAdd then
   begin
-    LocalModel.AddDataSetToLookUpList(self);
+    LocalModel.DataArrayManager.AddDataSetToLookUpList(self);
   end;
   if NameChanged then
   begin
@@ -4759,13 +4742,14 @@ begin
     if FreeStack then
     begin
       FreeAndNil(Stack);
-      frmGoPhast.PhastModel.CacheDataArrays;
+      frmGoPhast.PhastModel.DataArrayManager.CacheDataArrays;
     end;
   end;
 
   PostInitialize;
 
   UpToDate := True;
+  UpdateDialogBoxes;
 end;
 
 procedure TCustomSparseDataSet.Invalidate;
@@ -5923,6 +5907,21 @@ begin
   end;
 end;
 
+procedure TDataArray.AssignProperties(Source: TDataArray);
+begin
+  Name := Source.Name;
+  CheckMax := Source.CheckMax;
+  CheckMin := Source.CheckMin;
+  Lock := Source.Lock;
+  Max := Source.Max;
+  Min := Source.Min;
+  DataType := Source.DataType;
+  EvaluatedAt := Source.EvaluatedAt;
+  Orientation := Source.Orientation;
+  TwoDInterpolator := Source.TwoDInterpolator;
+  Units := Source.Units;
+end;
+
 procedure TDataArray.CacheData;
 var
   MemStream: TMemoryStream;
@@ -6187,7 +6186,7 @@ procedure TDataArray.DefineProperties(Filer: TFiler);
     if result then
     begin
       Model := FPhastModel as TPhastModel;
-      result := Model.StoreCachedData;
+      result := Model.DataArrayManager.StoreCachedData;
     end;
   end;
 begin
@@ -6387,6 +6386,99 @@ begin
   if Assigned(OnChange) then
   begin
     OnChange(self);
+  end;
+end;
+
+{ TDataArrayList }
+
+function TDataArrayList.Add(DataArray: TDataArray): integer;
+begin
+  result := FList.Add(DataArray);
+end;
+
+constructor TDataArrayList.Create;
+begin
+  inherited;
+  FList := TObjectList.Create;
+end;
+
+destructor TDataArrayList.Destroy;
+begin
+  FList.Free;
+  inherited;
+end;
+
+function TDataArrayList.Extract(DataArray: TDataArray): TDataArray;
+begin
+  result := FList.Extract(DataArray);
+end;
+
+function TDataArrayList.GetCount: integer;
+begin
+  result := FList.Count;
+end;
+
+function TDataArrayList.GetDataArray(Index: integer): TDataArray;
+begin
+  result := FList[Index];
+end;
+
+function TDataArrayList.GetOwnsDataArrays: boolean;
+begin
+  result := TObjectList(FList).OwnsObjects;
+end;
+
+procedure TDataArrayList.SetOwnsDataArrays(const Value: boolean);
+begin
+  TObjectList(FList).OwnsObjects := Value;
+end;
+
+{ TTempDataArrayStorage }
+
+constructor TTempDataArrayStorage.Create;
+begin
+  FModelList := TList.Create;
+  FDataArrayList := TObjectList.Create;
+end;
+
+destructor TTempDataArrayStorage.Destroy;
+begin
+  FDataArrayList.Free;
+  FModelList.Free;
+  inherited;
+end;
+
+function TTempDataArrayStorage.GetDataArray(Model: TObject;
+  Index: integer): TDataArray;
+begin
+  result := DataArrayList[Model][Index];
+end;
+
+function TTempDataArrayStorage.GetDataArrayList(Model: TObject): TDataArrayList;
+var
+  Index: Integer;
+begin
+  Assert(Model <> nil);
+  Index := FModelList.IndexOf(Model);
+  if Index < 0 then
+  begin
+    Index := FModelList.Add(Model);
+    FDataArrayList.Add(TDataArrayList.Create);
+  end;
+  result := FDataArrayList[Index];
+  result.OwnsDataArrays := OwnsDataArrays;
+end;
+
+procedure TTempDataArrayStorage.SetOwnsDataArrays(const Value: boolean);
+var
+  Index: Integer;
+  List: TDataArrayList;
+begin
+  FOwnsDataArrays := Value;
+  for Index := 0 to FDataArrayList.Count - 1 do
+  begin
+    List := FDataArrayList[Index];
+    List.OwnsDataArrays := FOwnsDataArrays;
   end;
 end;
 

@@ -53,7 +53,7 @@ var
   Index: Integer;
   AScreenObject: TScreenObject;
 begin
-  frmProgress.AddMessage('Evaluating RES Package data.');
+  frmProgressMM.AddMessage('Evaluating RES Package data.');
   NRES := 0;
   for Index := 0 to PhastModel.ScreenObjectCount - 1 do
   begin
@@ -163,7 +163,7 @@ var
 begin
   if NRESOP = 2 then
   begin
-    DataArray := PhastModel.GetDataSetByName(rsResLayer);
+    DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsResLayer);
     Assert(DataArray <> nil);
 //    DataArray := PhastModel.DataSets[ArrayIndex];
     WriteArray(DataArray, 0, ' # Data Set 3: IRESL');
@@ -175,7 +175,7 @@ var
   DataArray: TDataArray;
 //  ArrayIndex: integer;
 begin
-  DataArray := PhastModel.GetDataSetByName(rsResBottom);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsResBottom);
   Assert(DataArray <> nil);
 //  DataArray := PhastModel.DataSets[ArrayIndex];
   WriteArray(DataArray, 0, ' # Data Set 4: BRES');
@@ -186,7 +186,7 @@ var
   DataArray: TDataArray;
 //  ArrayIndex: integer;
 begin
-  DataArray := PhastModel.GetDataSetByName(rsResKv);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsResKv);
   Assert(DataArray <> nil);
 //  DataArray := PhastModel.DataSets[ArrayIndex];
   WriteArray(DataArray, 0, ' # Data Set 5: HCres');
@@ -197,7 +197,7 @@ var
   DataArray: TDataArray;
 //  ArrayIndex: integer;
 begin
-  DataArray := PhastModel.GetDataSetByName(rsResBedThickness);
+  DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsResBedThickness);
   Assert(DataArray <> nil);
 //  DataArray := PhastModel.DataSets[ArrayIndex];
   WriteArray(DataArray, 0, ' # Data Set 6: Rbthck');
@@ -230,7 +230,7 @@ begin
     for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
     begin
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -244,7 +244,7 @@ begin
     for Index := 0 to PhastModel.ModflowFullStressPeriods.Count - 1 do
     begin
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -252,7 +252,7 @@ begin
       for ReservoirIndex := 0 to Reservoirs.Count - 1 do
       begin
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -286,11 +286,11 @@ begin
         for TimeIndex := 0 to Reservoir.Values.Count - 1 do
         begin
           Application.ProcessMessages;
-          if not frmProgress.ShouldContinue then
+          if not frmProgressMM.ShouldContinue then
           begin
             Exit;
           end;
-          frmProgress.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
+          frmProgressMM.AddMessage('    Writing Stress Period ' + IntToStr(TimeIndex+1));
           ResItem := Reservoir.Values[TimeIndex] as TResItem;
 
           TempFormula := ResItem.StartHead;
@@ -401,7 +401,7 @@ begin
   WriteToNameFile(StrRES, PhastModel.UnitNumbers.UnitNumber(StrRES), NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
@@ -409,56 +409,56 @@ begin
   OpenFile(FileName(AFileName));
   try
 //    WriteDataSet0;
-    frmProgress.AddMessage('Writing RES Package input.');
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('Writing RES Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 3.');
+    frmProgressMM.AddMessage('  Writing Data Set 3.');
     WriteDataSet3;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 4.');
+    frmProgressMM.AddMessage('  Writing Data Set 4.');
     WriteDataSet4;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 5.');
+    frmProgressMM.AddMessage('  Writing Data Set 5.');
     WriteDataSet5;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 6.');
+    frmProgressMM.AddMessage('  Writing Data Set 6.');
     WriteDataSet6;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 7.');
+    frmProgressMM.AddMessage('  Writing Data Set 7.');
     WriteDataSet7;
   finally
     CloseFile;
@@ -469,7 +469,7 @@ end;
 procedure TModflowRES_Writer.WriteStressPeriods(const VariableIdentifiers,
   DataSetIdentifier, DS5, D7PNameIname, D7PName: string);
 begin
-
+  inherited;
 end;
 
 end.

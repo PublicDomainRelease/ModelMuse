@@ -76,23 +76,25 @@ constructor TRiverWriter.Create;
 var
   Index: integer;
   AScreenObject: TScreenObject;
+  DataArrayManager: TDataArrayManager;
 begin
   inherited;
-  FWidth := frmGoPhast.PhastModel.BoundaryDataSets[frmGoPhast.PhastModel.
-    IndexOfBoundaryDataSet(rsRiverWidth)];
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  FWidth := DataArrayManager.BoundaryDataSets[
+    DataArrayManager.IndexOfBoundaryDataSet(rsRiverWidth)];
   Width.Initialize;
 
-  FDepth := frmGoPhast.PhastModel.BoundaryDataSets[frmGoPhast.PhastModel.
-    IndexOfBoundaryDataSet(rsRiverDepth)];
+  FDepth := DataArrayManager.BoundaryDataSets[
+    DataArrayManager.IndexOfBoundaryDataSet(rsRiverDepth)];
   Depth.Initialize;
 
-  FBedHydraulicConductivity := frmGoPhast.PhastModel.
-    BoundaryDataSets[frmGoPhast.PhastModel.
-    IndexOfBoundaryDataSet(rsRiverHydraulicConductivity)];
+  FBedHydraulicConductivity :=
+    DataArrayManager.BoundaryDataSets[
+    DataArrayManager.IndexOfBoundaryDataSet(rsRiverHydraulicConductivity)];
   BedHydraulicConductivity.Initialize;
 
-  FBedThickness := frmGoPhast.PhastModel.BoundaryDataSets[frmGoPhast.PhastModel.
-    IndexOfBoundaryDataSet(rsRiverBedThickness)];
+  FBedThickness := DataArrayManager.BoundaryDataSets[
+    DataArrayManager.IndexOfBoundaryDataSet(rsRiverBedThickness)];
   BedThickness.Initialize;
 
   FHead := frmGoPhast.PhastModel.RiverHead;

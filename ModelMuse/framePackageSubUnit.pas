@@ -396,8 +396,11 @@ begin
   Assert(seNumExportPeriods.AsInteger > 0);
   if seNumExportPeriods.AsInteger = 1 then
   begin
-    seNumExportPeriods.AsInteger := 0;
-    seNumExportPeriodsChange(Sender);
+    if (rdgOutput.Row >= FirstStateRow) then
+    begin
+      seNumExportPeriods.AsInteger := 0;
+      seNumExportPeriodsChange(Sender);
+    end;
   end
   else
   begin

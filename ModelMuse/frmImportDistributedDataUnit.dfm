@@ -11,7 +11,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
   ExplicitWidth = 471
   ExplicitHeight = 462
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object pnlTop: TPanel
     Left = 0
     Top = 0
@@ -23,50 +23,50 @@ inherited frmImportDistributedData: TfrmImportDistributedData
     object lblLowerX: TLabel
       Left = 8
       Top = 12
-      Width = 54
-      Height = 17
+      Width = 61
+      Height = 18
       Caption = 'Lower X'#39
     end
     object lblHigherX: TLabel
       Left = 256
       Top = 12
-      Width = 58
-      Height = 17
+      Width = 64
+      Height = 18
       Caption = 'Higher X'#39
     end
     object lblLowerY: TLabel
       Left = 8
       Top = 52
-      Width = 54
-      Height = 17
+      Width = 59
+      Height = 18
       Caption = 'Lower Y'#39
     end
     object lblHigherY: TLabel
       Left = 256
       Top = 52
-      Width = 58
-      Height = 17
+      Width = 62
+      Height = 18
       Caption = 'Higher Y'#39
     end
     object lblLowerZ: TLabel
       Left = 8
       Top = 92
-      Width = 51
-      Height = 17
+      Width = 56
+      Height = 18
       Caption = 'Lower Z'
     end
     object lblHigherZ: TLabel
       Left = 256
       Top = 92
-      Width = 55
-      Height = 17
+      Width = 59
+      Height = 18
       Caption = 'Higher Z'
     end
     object lblImportTo: TLabel
       Left = 8
       Top = 132
-      Width = 59
-      Height = 17
+      Width = 64
+      Height = 18
       Caption = 'Import to '
     end
     object rdeLowerX: TRbwDataEntry
@@ -75,7 +75,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 17
+      ItemHeight = 0
       TabOrder = 1
       Text = '0'
       DataType = dtReal
@@ -88,7 +88,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 17
+      ItemHeight = 0
       TabOrder = 0
       Text = '0'
       DataType = dtReal
@@ -101,7 +101,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 17
+      ItemHeight = 0
       TabOrder = 3
       Text = '0'
       DataType = dtReal
@@ -114,7 +114,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 17
+      ItemHeight = 0
       TabOrder = 2
       Text = '0'
       DataType = dtReal
@@ -127,7 +127,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 17
+      ItemHeight = 0
       TabOrder = 4
       Text = '0'
       DataType = dtReal
@@ -140,7 +140,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 17
+      ItemHeight = 0
       TabOrder = 5
       Text = '0'
       DataType = dtReal
@@ -151,9 +151,9 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Left = 104
       Top = 128
       Width = 101
-      Height = 25
+      Height = 26
       Style = csDropDownList
-      ItemHeight = 17
+      ItemHeight = 18
       ItemIndex = 0
       TabOrder = 6
       Text = 'Top'

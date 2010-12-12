@@ -45,7 +45,7 @@ type
       SfrBoundary: TSfrBoundary; ParamScreenObjectItem: TSfrParamIcalcItem;
       StartTime: double; StressPeriodIndex: integer);
     procedure WriteSegmentValues(StressPeriodIndex: Integer;
-      Parameter: Boolean; UpstreamValues: TSfrSegmentStorage; upstream: Boolean;
+      Parameter: Boolean; UpOrDownStreamValues: TSfrSegmentStorage; upstream: Boolean;
       var CommentLine: string; var ValuesWriten: boolean;
       ParamScreenObjectItem: TSfrParamIcalcItem);
     procedure WriteUnsatSegmentValues(upstream: Boolean;
@@ -63,6 +63,7 @@ type
     procedure WriteGages(var StartUnitNumber: integer; Lines: TStrings);
     function GetSegment(Index: integer): TSegment;
     function GetSegmentCount: integer;
+    procedure TestBedElevations;
   protected
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
@@ -71,7 +72,7 @@ type
   public
     property Segments[Index: integer]: TSegment read GetSegment;
     property SegmentCount: integer read GetSegmentCount;
-    Constructor Create(Model: TPhastModel); override;
+    Constructor Create(Model: TCustomModel); override;
     destructor Destroy; override;
     procedure WriteFile(const AFileName: string;
       var StartUnitNumber: integer; Lines: TStrings);
@@ -85,6 +86,10 @@ uses ModflowUnitNumbers, OrderedCollectionUnit, frmErrorsAndWarningsUnit,
   ModflowSfrFlows, ModflowSfrChannelUnit, ModflowSfrEquationUnit,
   ModflowTimeUnit, frmProgressUnit, IntListUnit, GoPhastTypes, Forms, 
   ModflowBoundaryUnit;
+
+resourcestring
+  StrOneOrMoreSFRStre = 'One or more SFR stream segments have slopes that ar' +
+  'e zero or negative.';
 
 const
   StrSegmentNumber = 'Segment Number in ';
@@ -113,7 +118,7 @@ begin
   result := Segment1.OriginalSegmentNumber - Segment2.OriginalSegmentNumber;
 end;
 
-constructor TModflowSFR_Writer.Create(Model: TPhastModel);
+constructor TModflowSFR_Writer.Create(Model: TCustomModel);
 begin
   inherited;
   FValues := TObjectList.Create;
@@ -147,18 +152,19 @@ begin
   frmErrorsAndWarnings.RemoveErrorGroup(BankRoughnessError);
   frmErrorsAndWarnings.RemoveWarningGroup(NoSegmentsWarning);
   frmErrorsAndWarnings.RemoveErrorGroup(UnsatError);
+  frmErrorsAndWarnings.RemoveErrorGroup(StrOneOrMoreSFRStre);
 
   StartTime := PhastModel.ModflowStressPeriods[0].StartTime;
   EndTime := PhastModel.ModflowStressPeriods[
     PhastModel.ModflowStressPeriods.Count-1].EndTime;
 
-  frmProgress.AddMessage('Evaluating SFR Package data.');
+  frmProgressMM.AddMessage('Evaluating SFR Package data.');
   ISFROPT := (Package as TSfrPackageSelection).Isfropt;
   Dummy := TStringList.Create;
   try
     for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
     begin
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -172,7 +178,7 @@ begin
       begin
         Continue;
       end;
-      frmProgress.AddMessage('    Evaluating ' + ScreenObject.Name);
+      frmProgressMM.AddMessage('    Evaluating ' + ScreenObject.Name);
       Assert(Boundary.Values.Count = 1);
       Item := Boundary.Values[0];
       Item.StartTime := StartTime;
@@ -208,6 +214,7 @@ begin
     Segment := FSegments[Index];
     Segment.FNewSegmentNumber := Index + 1;
   end;
+  TestBedElevations;
 end;
 
 class function TModflowSFR_Writer.Extension: string;
@@ -493,7 +500,7 @@ begin
   end;
 
   Evaluate;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
@@ -719,7 +726,7 @@ begin
           FlowList.Times[TimeIndex]);
         if Item <> nil then
         begin
-          FlowRecord := Segment.FScreenObject.ModflowSfrBoundary.SegmentFlows.
+          FlowRecord := Boundary.SegmentFlows.
             GetFlowValuesFromTime(FlowList.Times[TimeIndex]);
           DataArray := FlowList[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
@@ -734,7 +741,7 @@ begin
           RunOffList.Times[TimeIndex]);
         if Item <> nil then
         begin
-          FlowRecord := Segment.FScreenObject.ModflowSfrBoundary.SegmentFlows.
+          FlowRecord := Boundary.SegmentFlows.
             GetFlowValuesFromTime(RunOffList.Times[TimeIndex]);
           DataArray := RunOffList[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
@@ -749,7 +756,7 @@ begin
           PrecipitationList.Times[TimeIndex]);
         if Item <> nil then
         begin
-          FlowRecord := Segment.FScreenObject.ModflowSfrBoundary.SegmentFlows.
+          FlowRecord := Boundary.SegmentFlows.
             GetFlowValuesFromTime(PrecipitationList.Times[TimeIndex]);
           DataArray := PrecipitationList[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
@@ -764,7 +771,7 @@ begin
           EvapotranspirationList.Times[TimeIndex]);
         if Item <> nil then
         begin
-          FlowRecord := Segment.FScreenObject.ModflowSfrBoundary.SegmentFlows.
+          FlowRecord := Boundary.SegmentFlows.
             GetFlowValuesFromTime(EvapotranspirationList.Times[TimeIndex]);
           DataArray := EvapotranspirationList[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
@@ -779,7 +786,7 @@ begin
           ChannelRoughnessList.Times[TimeIndex]);
         if (Item <> nil) and (Item.ICalc in [1,2]) then
         begin
-          ChannelRecord := Segment.FScreenObject.ModflowSfrBoundary.ChannelValues.
+          ChannelRecord := Boundary.ChannelValues.
             GetChannelTimeValuesFromTime(ChannelRoughnessList.Times[TimeIndex]);
           DataArray := ChannelRoughnessList[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
@@ -794,7 +801,7 @@ begin
           BankRoughnessList.Times[TimeIndex]);
         if  (Item <> nil) and (Item.ICalc = 2) then
         begin
-          ChannelRecord := Segment.FScreenObject.ModflowSfrBoundary.ChannelValues.
+          ChannelRecord := Boundary.ChannelValues.
             GetChannelTimeValuesFromTime(BankRoughnessList.Times[TimeIndex]);
           DataArray := BankRoughnessList[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
@@ -809,7 +816,7 @@ begin
           DepthCoefficientList.Times[TimeIndex]);
         if  (Item <> nil) and (Item.ICalc = 3) then
         begin
-          EquationRecord := Segment.FScreenObject.ModflowSfrBoundary.EquationValues.
+          EquationRecord := Boundary.EquationValues.
             GetEquationTimeValuesFromTime(DepthCoefficientList.Times[TimeIndex]);
           DataArray := DepthCoefficientList[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
@@ -824,7 +831,7 @@ begin
           DepthExponentList.Times[TimeIndex]);
         if  (Item <> nil) and (Item.ICalc = 3) then
         begin
-          EquationRecord := Segment.FScreenObject.ModflowSfrBoundary.EquationValues.
+          EquationRecord := Boundary.EquationValues.
             GetEquationTimeValuesFromTime(DepthExponentList.Times[TimeIndex]);
           DataArray := DepthExponentList[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
@@ -839,7 +846,7 @@ begin
           WidthCoefficientList.Times[TimeIndex]);
         if  (Item <> nil) and (Item.ICalc = 3) then
         begin
-          EquationRecord := Segment.FScreenObject.ModflowSfrBoundary.EquationValues.
+          EquationRecord := Boundary.EquationValues.
             GetEquationTimeValuesFromTime(WidthCoefficientList.Times[TimeIndex]);
           DataArray := WidthCoefficientList[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
@@ -854,7 +861,7 @@ begin
           WidthExponentList.Times[TimeIndex]);
         if  (Item <> nil) and (Item.ICalc = 3) then
         begin
-          EquationRecord := Segment.FScreenObject.ModflowSfrBoundary.EquationValues.
+          EquationRecord := Boundary.EquationValues.
             GetEquationTimeValuesFromTime(WidthExponentList.Times[TimeIndex]);
           DataArray := WidthExponentList[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
@@ -878,7 +885,7 @@ begin
               begin
                 Param := PhastModel.ModflowTransientParameters.GetParamByName(Item.Param);
               end;
-              UpstreamValues := Segment.FScreenObject.ModflowSfrBoundary.UpstreamSegmentValues.
+              UpstreamValues := Boundary.UpstreamSegmentValues.
                 GetBoundaryByStartTime(UpstreamHydraulicConductivityList.Times[TimeIndex])
                 as TSfrSegmentStorage;
               UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
@@ -915,7 +922,7 @@ begin
               begin
                 Param := PhastModel.ModflowTransientParameters.GetParamByName(Item.Param);
               end;
-              DownstreamValues := Segment.FScreenObject.ModflowSfrBoundary.DownstreamSegmentValues.
+              DownstreamValues := Boundary.DownstreamSegmentValues.
                 GetBoundaryByStartTime(DownstreamHydraulicConductivityList.Times[TimeIndex])
                 as TSfrSegmentStorage;
               DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
@@ -949,7 +956,7 @@ begin
             UpstreamWidthList.Times[TimeIndex]);
           if (Item <> nil) and WidthValueUsed then
           begin
-            UpstreamValues := Segment.FScreenObject.ModflowSfrBoundary.UpstreamSegmentValues.
+            UpstreamValues := Boundary.UpstreamSegmentValues.
               GetBoundaryByStartTime(UpstreamWidthList.Times[TimeIndex])
               as TSfrSegmentStorage;
             UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
@@ -969,7 +976,7 @@ begin
             DownstreamWidthList.Times[TimeIndex]);
           if (Item <> nil) and WidthValueUsed then
           begin
-            DownstreamValues := Segment.FScreenObject.ModflowSfrBoundary.DownstreamSegmentValues.
+            DownstreamValues := Boundary.DownstreamSegmentValues.
               GetBoundaryByStartTime(DownstreamWidthList.Times[TimeIndex])
               as TSfrSegmentStorage;
             DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
@@ -991,7 +998,7 @@ begin
               UpstreamThicknessList.Times[TimeIndex]);
             if (Item <> nil) and ThicknessElevUsed then
             begin
-              UpstreamValues := Segment.FScreenObject.ModflowSfrBoundary.UpstreamSegmentValues.
+              UpstreamValues := Boundary.UpstreamSegmentValues.
                 GetBoundaryByStartTime(UpstreamThicknessList.Times[TimeIndex])
                 as TSfrSegmentStorage;
               UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
@@ -1011,7 +1018,7 @@ begin
               DownstreamThicknessList.Times[TimeIndex]);
             if (Item <> nil) and ThicknessElevUsed then
             begin
-              DownstreamValues := Segment.FScreenObject.ModflowSfrBoundary.DownstreamSegmentValues.
+              DownstreamValues := Boundary.DownstreamSegmentValues.
                 GetBoundaryByStartTime(DownstreamThicknessList.Times[TimeIndex])
                 as TSfrSegmentStorage;
               DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
@@ -1034,7 +1041,7 @@ begin
               UpstreamElevationList.Times[TimeIndex]);
             if (Item <> nil) and ThicknessElevUsed then
             begin
-              UpstreamValues := Segment.FScreenObject.ModflowSfrBoundary.UpstreamSegmentValues.
+              UpstreamValues := Boundary.UpstreamSegmentValues.
                 GetBoundaryByStartTime(UpstreamElevationList.Times[TimeIndex])
                 as TSfrSegmentStorage;
               UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
@@ -1054,7 +1061,7 @@ begin
               DownstreamElevationList.Times[TimeIndex]);
             if (Item <> nil) and ThicknessElevUsed then
             begin
-              DownstreamValues := Segment.FScreenObject.ModflowSfrBoundary.DownstreamSegmentValues.
+              DownstreamValues := Boundary.DownstreamSegmentValues.
                 GetBoundaryByStartTime(DownstreamElevationList.Times[TimeIndex])
                 as TSfrSegmentStorage;
               DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
@@ -1075,7 +1082,7 @@ begin
             UpstreamDepthList.Times[TimeIndex]);
           if (Item <> nil) and (Item.ICalc <= 0) then
           begin
-            UpstreamValues := Segment.FScreenObject.ModflowSfrBoundary.UpstreamSegmentValues.
+            UpstreamValues := Boundary.UpstreamSegmentValues.
               GetBoundaryByStartTime(UpstreamDepthList.Times[TimeIndex])
               as TSfrSegmentStorage;
             UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
@@ -1095,7 +1102,7 @@ begin
             DownstreamDepthList.Times[TimeIndex]);
           if (Item <> nil) and (Item.ICalc <= 0) then
           begin
-            DownstreamValues := Segment.FScreenObject.ModflowSfrBoundary.DownstreamSegmentValues.
+            DownstreamValues := Boundary.DownstreamSegmentValues.
               GetBoundaryByStartTime(DownstreamDepthList.Times[TimeIndex])
               as TSfrSegmentStorage;
             DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
@@ -1117,8 +1124,7 @@ begin
               UpstreamUnSatWatContList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              if Segment.FScreenObject.
-                ModflowSfrBoundary.UpstreamUnsatSegmentValues.
+              if Boundary.UpstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
                 frmErrorsAndWarnings.AddError(UnsatError,
@@ -1126,8 +1132,7 @@ begin
               end
               else
               begin
-                UpstreamUnsatValues := Segment.FScreenObject.
-                  ModflowSfrBoundary.UpstreamUnsatSegmentValues.
+                UpstreamUnsatValues := Boundary.UpstreamUnsatSegmentValues.
                   Boundaries[0] as TSfrUnsatSegmentStorage;
                 UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := UpstreamUnSatWatContList[TimeIndex]
@@ -1147,8 +1152,7 @@ begin
               DownstreamUnSatWatContList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              if Segment.FScreenObject.
-                ModflowSfrBoundary.DownstreamUnsatSegmentValues.
+              if Boundary.DownstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
                 frmErrorsAndWarnings.AddError(UnsatError,
@@ -1156,8 +1160,7 @@ begin
               end
               else
               begin
-                DownstreamUnsatValues := Segment.FScreenObject.
-                  ModflowSfrBoundary.DownstreamUnsatSegmentValues.
+                DownstreamUnsatValues := Boundary.DownstreamUnsatSegmentValues.
                   Boundaries[0] as TSfrUnsatSegmentStorage;
                 DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := DownstreamUnSatWatContList[TimeIndex]
@@ -1180,8 +1183,7 @@ begin
               UpstreamUnSatInitWatContList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              if Segment.FScreenObject.
-                ModflowSfrBoundary.UpstreamUnsatSegmentValues.
+              if Boundary.UpstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
                 frmErrorsAndWarnings.AddError(UnsatError,
@@ -1189,8 +1191,7 @@ begin
               end
               else
               begin
-                UpstreamUnsatValues := Segment.FScreenObject.
-                  ModflowSfrBoundary.UpstreamUnsatSegmentValues.
+                UpstreamUnsatValues := Boundary.UpstreamUnsatSegmentValues.
                   Boundaries[0] as TSfrUnsatSegmentStorage;
                 UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := UpstreamUnSatInitWatContList[TimeIndex]
@@ -1210,8 +1211,7 @@ begin
               DownstreamUnSatInitWatContList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              if Segment.FScreenObject.
-                ModflowSfrBoundary.DownstreamUnsatSegmentValues.
+              if Boundary.DownstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
                 frmErrorsAndWarnings.AddError(UnsatError,
@@ -1219,8 +1219,7 @@ begin
               end
               else
               begin
-                DownstreamUnsatValues := Segment.FScreenObject.
-                  ModflowSfrBoundary.DownstreamUnsatSegmentValues.
+                DownstreamUnsatValues := Boundary.DownstreamUnsatSegmentValues.
                   Boundaries[0] as TSfrUnsatSegmentStorage;
                 DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := DownstreamUnSatInitWatContList[TimeIndex]
@@ -1243,8 +1242,7 @@ begin
               UpstreamBrooksCoreyList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              if Segment.FScreenObject.
-                ModflowSfrBoundary.UpstreamUnsatSegmentValues.
+              if Boundary.UpstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
                 frmErrorsAndWarnings.AddError(UnsatError,
@@ -1252,8 +1250,7 @@ begin
               end
               else
               begin
-                UpstreamUnsatValues := Segment.FScreenObject.
-                  ModflowSfrBoundary.UpstreamUnsatSegmentValues.
+                UpstreamUnsatValues := Boundary.UpstreamUnsatSegmentValues.
                   Boundaries[0] as TSfrUnsatSegmentStorage;
                 UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := UpstreamBrooksCoreyList[TimeIndex]
@@ -1273,8 +1270,7 @@ begin
               DownstreamBrooksCoreyList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              if Segment.FScreenObject.
-                ModflowSfrBoundary.DownstreamUnsatSegmentValues.
+              if Boundary.DownstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
                 frmErrorsAndWarnings.AddError(UnsatError,
@@ -1282,8 +1278,7 @@ begin
               end
               else
               begin
-                DownstreamUnsatValues := Segment.FScreenObject.
-                  ModflowSfrBoundary.DownstreamUnsatSegmentValues.
+                DownstreamUnsatValues := Boundary.DownstreamUnsatSegmentValues.
                   Boundaries[0] as TSfrUnsatSegmentStorage;
                 DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := DownstreamBrooksCoreyList[TimeIndex]
@@ -1306,8 +1301,7 @@ begin
               UpstreamUnSatKzList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              if Segment.FScreenObject.
-                ModflowSfrBoundary.UpstreamUnsatSegmentValues.
+              if Boundary.UpstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
                 frmErrorsAndWarnings.AddError(UnsatError,
@@ -1315,8 +1309,7 @@ begin
               end
               else
               begin
-                UpstreamUnsatValues := Segment.FScreenObject.
-                  ModflowSfrBoundary.UpstreamUnsatSegmentValues.
+                UpstreamUnsatValues := Boundary.UpstreamUnsatSegmentValues.
                   Boundaries[0] as TSfrUnsatSegmentStorage;
                 UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := UpstreamUnSatKzList[TimeIndex]
@@ -1336,8 +1329,7 @@ begin
               DownstreamUnSatKzList.Times[TimeIndex]);
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
-              if Segment.FScreenObject.
-                ModflowSfrBoundary.DownstreamUnsatSegmentValues.
+              if Boundary.DownstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
                 frmErrorsAndWarnings.AddError(UnsatError,
@@ -1345,8 +1337,7 @@ begin
               end
               else
               begin
-                DownstreamUnsatValues := Segment.FScreenObject.
-                  ModflowSfrBoundary.DownstreamUnsatSegmentValues.
+                DownstreamUnsatValues := Boundary.DownstreamUnsatSegmentValues.
                   Boundaries[0] as TSfrUnsatSegmentStorage;
                 DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := DownstreamUnSatKzList[TimeIndex]
@@ -1373,6 +1364,63 @@ begin
       DataArray.UpToDate := True;
     end;
     DisplayTimeList.SetUpToDate(True);
+  end;
+end;
+
+procedure TModflowSFR_Writer.TestBedElevations;
+var
+  DownstreamElev: Double;
+  UpstreamElev: Double;
+  WriteValue: Boolean;
+  DownstreamValues: TSfrSegmentStorage;
+  UpstreamValues: TSfrSegmentStorage;
+  ParamIcalcItem: TSfrParamIcalcItem;
+  StressPeriod: TModflowStressPeriod;
+  TimeIndex: Integer;
+  PriorDownstreamValues: TSfrSegmentStorage;
+  PriorUpstreamValues: TSfrSegmentStorage;
+  Index: Integer;
+  Segment: TSegment;
+  Boundary: TSfrBoundary;
+begin
+  for Index := 0 to FSegments.Count - 1 do
+  begin
+    Segment := FSegments[Index];
+    Boundary := Segment.FScreenObject.ModflowSfrBoundary;
+    PriorUpstreamValues := nil;
+    PriorDownstreamValues := nil;
+    for TimeIndex := 0 to PhastModel.ModflowFullStressPeriods.Count - 1 do
+    begin
+      StressPeriod := PhastModel.ModflowFullStressPeriods[TimeIndex];
+      ParamIcalcItem := Boundary.ParamIcalc.GetItemByStartTime(StressPeriod.StartTime);
+      UpstreamValues := Boundary.UpstreamSegmentValues.GetBoundaryByStartTime(StressPeriod.StartTime) as TSfrSegmentStorage;
+      DownstreamValues := Boundary.DownstreamSegmentValues.GetBoundaryByStartTime(StressPeriod.StartTime) as TSfrSegmentStorage;
+      Assert(UpstreamValues <> nil);
+      Assert(DownstreamValues <> nil);
+      if (UpstreamValues <> PriorUpstreamValues) or (DownstreamValues <> PriorDownstreamValues) then
+      begin
+        WriteValue := ISFROPT in [0, 4, 5];
+        if (ISFROPT in [4, 5]) and (ParamIcalcItem.ICalc in [1, 2]) then
+        begin
+          WriteValue := TimeIndex = 0;
+        end;
+        if WriteValue then
+        begin
+          UpstreamElev := UpstreamValues.SrfSegmentArray[0].StreambedElevation;
+          DownstreamElev := DownstreamValues.SrfSegmentArray[0].StreambedElevation;
+          if UpstreamElev <= DownstreamElev then
+          begin
+            frmErrorsAndWarnings.AddError(StrOneOrMoreSFRStre,
+              'Object: ' + Segment.FScreenObject.Name
+              + '; Time: ' + FloatToStr(StressPeriod.StartTime)
+              + '; Upstream elevation: ' + FloatToStr(UpstreamElev)
+              + '; Downstream elevation: ' + FloatToStr(DownstreamElev));
+          end;
+        end;
+      end;
+      PriorUpstreamValues := UpstreamValues;
+      PriorDownstreamValues := DownstreamValues;
+    end;
   end;
 end;
 
@@ -1649,7 +1697,7 @@ begin
   for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
   begin
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
@@ -1662,7 +1710,7 @@ begin
         for Index := 0 to SfrPackage.ParameterInstances.Count - 1 do
         begin
           Application.ProcessMessages;
-          if not frmProgress.ShouldContinue then
+          if not frmProgressMM.ShouldContinue then
           begin
             Exit;
           end;
@@ -1675,7 +1723,7 @@ begin
         for Index := 0 to FSegments.Count - 1 do
         begin
           Application.ProcessMessages;
-          if not frmProgress.ShouldContinue then
+          if not frmProgressMM.ShouldContinue then
           begin
             Exit;
           end;
@@ -1685,7 +1733,7 @@ begin
           for ScreenObjectParamIndex := 0 to ScreenObject.ModflowSfrBoundary.ParamIcalc.Count - 1 do
           begin
             Application.ProcessMessages;
-            if not frmProgress.ShouldContinue then
+            if not frmProgressMM.ShouldContinue then
             begin
               Exit;
             end;
@@ -1699,7 +1747,7 @@ begin
         end;
 
         // Data set 3
-        frmProgress.AddMessage('    Writing parameter '
+        frmProgressMM.AddMessage('    Writing parameter '
           + ParamItem.ParameterName);
         WriteString(ParamItem.ParameterName + ' SFR');
         WriteFloat(ParamItem.Value);
@@ -1723,7 +1771,7 @@ begin
         for InstanceIndex := 0 to Instances.Count - 1 do
         begin
           Application.ProcessMessages;
-          if not frmProgress.ShouldContinue then
+          if not frmProgressMM.ShouldContinue then
           begin
             Exit;
           end;
@@ -1738,7 +1786,7 @@ begin
           for Index := 0 to Segments.Count - 1 do
           begin
             Application.ProcessMessages;
-            if not frmProgress.ShouldContinue then
+            if not frmProgressMM.ShouldContinue then
             begin
               Exit;
             end;
@@ -1749,7 +1797,7 @@ begin
             for ScreenObjectParamIndex := 0 to SfrBoundary.ParamIcalc.Count - 1 do
             begin
               Application.ProcessMessages;
-              if not frmProgress.ShouldContinue then
+              if not frmProgressMM.ShouldContinue then
               begin
                 Exit;
               end;
@@ -1763,7 +1811,7 @@ begin
                 WriteDataSet4b6a(InstanceItem.StartTime, Segment,
                   ParamScreenObjectItem, SfrBoundary, True);
                 Application.ProcessMessages;
-                if not frmProgress.ShouldContinue then
+                if not frmProgressMM.ShouldContinue then
                 begin
                   Exit;
                 end;
@@ -1772,7 +1820,7 @@ begin
                 WriteDataSet4c6b(True, SfrBoundary,
                   ParamScreenObjectItem, InstanceItem.StartTime, 0);
                 Application.ProcessMessages;
-                if not frmProgress.ShouldContinue then
+                if not frmProgressMM.ShouldContinue then
                 begin
                   Exit;
                 end;
@@ -1781,7 +1829,7 @@ begin
                 WriteDataSet4d6c(True, SfrBoundary,
                   ParamScreenObjectItem, InstanceItem.StartTime, 0);
                 Application.ProcessMessages;
-                if not frmProgress.ShouldContinue then
+                if not frmProgressMM.ShouldContinue then
                 begin
                   Exit;
                 end;
@@ -1789,7 +1837,7 @@ begin
                 // data set 4e
                 WriteDataSet4e6d(True, SfrBoundary, ParamScreenObjectItem, 1);
                 Application.ProcessMessages;
-                if not frmProgress.ShouldContinue then
+                if not frmProgressMM.ShouldContinue then
                 begin
                   Exit;
                 end;
@@ -1798,7 +1846,7 @@ begin
                 WriteDataSet4f6e(True, SfrBoundary, ParamScreenObjectItem,
                   InstanceItem.StartTime);
                 Application.ProcessMessages;
-                if not frmProgress.ShouldContinue then
+                if not frmProgressMM.ShouldContinue then
                 begin
                   Exit;
                 end;
@@ -1848,7 +1896,7 @@ begin
       SfrPackage.ParameterInstances.Count - 1 do
     begin
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -1870,10 +1918,10 @@ begin
 
     for TimeIndex := 0 to PhastModel.ModflowFullStressPeriods.Count - 1 do
     begin
-        frmProgress.AddMessage('    Writing stress period '
-          + IntToStr(TimeIndex + 1));
+      frmProgressMM.AddMessage('    Writing stress period '
+        + IntToStr(TimeIndex + 1));
       Application.ProcessMessages;
-      if not frmProgress.ShouldContinue then
+      if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
@@ -1970,7 +2018,7 @@ begin
       for ParamIndex := 0 to ParametersUsed.Count - 1 do
       begin
         Application.ProcessMessages;
-        if not frmProgress.ShouldContinue then
+        if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
@@ -1983,7 +2031,7 @@ begin
           for InstanceIndex := 0 to InstanceList.Count - 1 do
           begin
             Application.ProcessMessages;
-            if not frmProgress.ShouldContinue then
+            if not frmProgressMM.ShouldContinue then
             begin
               Exit;
             end;
@@ -2031,46 +2079,46 @@ begin
   WriteToNameFile(StrSFR, PhastModel.UnitNumbers.UnitNumber(StrSFR), FNameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
-  if not frmProgress.ShouldContinue then
+  if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
   OpenFile(FileName(AFileName));
   try
-    frmProgress.AddMessage('Writing SFR Package input.');
-    frmProgress.AddMessage('  Writing Data Set 0.');
+    frmProgressMM.AddMessage('Writing SFR Package input.');
+    frmProgressMM.AddMessage('  Writing Data Set 0.');
     WriteDataSet0;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 1.');
+    frmProgressMM.AddMessage('  Writing Data Set 1.');
     WriteDataSet1;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Set 2.');
+    frmProgressMM.AddMessage('  Writing Data Set 2.');
     WriteDataSet2;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 3 and 4.');
+    frmProgressMM.AddMessage('  Writing Data Sets 3 and 4.');
     WriteDataSets3and4;
     Application.ProcessMessages;
-    if not frmProgress.ShouldContinue then
+    if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
 
-    frmProgress.AddMessage('  Writing Data Sets 5 to 7.');
+    frmProgressMM.AddMessage('  Writing Data Sets 5 to 7.');
     WriteDataSets5to7;
   finally
     CloseFile;
@@ -2305,7 +2353,7 @@ begin
 end;
 
 procedure TModflowSFR_Writer.WriteSegmentValues(StressPeriodIndex: Integer;
-  Parameter: Boolean; UpstreamValues: TSfrSegmentStorage; upstream: Boolean;
+  Parameter: Boolean; UpOrDownStreamValues: TSfrSegmentStorage; upstream: Boolean;
   var CommentLine: string; var ValuesWriten: boolean;
   ParamScreenObjectItem: TSfrParamIcalcItem);
 var
@@ -2313,8 +2361,8 @@ var
   WriteValue: Boolean;
 begin
   ValuesWriten := False;
-  Assert(Length(UpstreamValues.SrfSegmentArray) >= 1);
-  SegmentValues := UpstreamValues.SrfSegmentArray[0];
+  Assert(Length(UpOrDownStreamValues.SrfSegmentArray) >= 1);
+  SegmentValues := UpOrDownStreamValues.SrfSegmentArray[0];
   // Hc1fact, Hc2fact, HCOND1, HCOND2
   if ISFROPT in [0, 4, 5] then
   begin

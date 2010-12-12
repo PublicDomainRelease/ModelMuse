@@ -110,7 +110,7 @@ type
 implementation
 
 uses frmGoPhastUnit, DataSetUnit, ScreenObjectUnit, UndoItemsScreenObjects,
-  GoPhastTypes, UndoItems, GIS_Functions, RbwParser, FastGEO;
+  GoPhastTypes, UndoItems, GIS_Functions, RbwParser, FastGEO, PhastModelUnit;
 
 {$R *.dfm}
 
@@ -167,12 +167,14 @@ var
   DataSet: TDataArray;
   Row: integer;
   UseDataSet: boolean;
+  DataArrayManager: TDataArrayManager;
 begin
   Row := 0;
-  dgDataSets.RowCount := frmGoPhast.PhastModel.DataSetCount + 1;
-  for Index := 0 to frmGoPhast.PhastModel.DataSetCount - 1 do
+  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  dgDataSets.RowCount := DataArrayManager.DataSetCount + 1;
+  for Index := 0 to DataArrayManager.DataSetCount - 1 do
   begin
-    DataSet := frmGoPhast.PhastModel.DataSets[Index];
+    DataSet := DataArrayManager.DataSets[Index];
     if DataSet.DataType in [rdtDouble, rdtInteger] then
     begin
       UseDataSet := False;
