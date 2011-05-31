@@ -1,32 +1,100 @@
 unit frmMonitorUnit;
 
+{#BACKUP VIEWER1.ICO}
+{#BACKUP FacesRed.bmp}
+{#BACKUP FacesYellow.bmp}
+{#BACKUP FacesGreen.bmp}
+
 interface
 
 {
   1.0.2.0 Fixed bug that caused ModelMonitor to work improperly when the
     decimal separator was not a period in the local language settings.
+  1.1.0.0 Added support for LGR.
 }
 
 uses
-  Types, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, JvExExtCtrls, JvImage, ImgList, JvImageList,
-  TeEngine, Series, TeeProcs, Chart, ComCtrls, Buttons, JvNavigationPane,
-  JvSplitter, JvSyncSplitter, JvExtComponent, JvSplit, Mask, JvExMask,
-  JvToolEdit, JvExStdCtrls, JvRichEdit, JclFileUtils, AppEvnts, RealListUnit,
-  JvHtControls;
+  Types, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
+  Forms, Dialogs, StdCtrls, ExtCtrls, JvExExtCtrls, JvImage, ImgList,
+  JvImageList, TeEngine, Series, TeeProcs, Chart, ComCtrls, Buttons,
+  JvNavigationPane, JvSplitter, JvSyncSplitter, JvExtComponent,  JvToolEdit,
+  JvRichEdit, AppEvnts, RealListUnit, JvHtControls, rmOutlook, JvPageList,
+  JvExControls, JvExStdCtrls, JvExMask, Mask, JvExComCtrls, JvComCtrls;
 
 type
+  TStatusChange = (scOK, scWarning, scError, scNone);
+
   TStringFileStream = class(TFileStream)
   private
-    FBuffer: array[0..1000] of char;
-    TempLine: string;
+    FBuffer: array[0..1000] of AnsiChar;
+    TempLine: AnsiString;
     FEOF: boolean;
     function GetEOF: boolean;
   public
-    function ReadLn: string;
+    function ReadLn: AnsiString;
     property EOF: boolean read GetEOF;
   end;
-  
+
+  TOnStatusChanged = procedure(Sender: TObject; NewStatus: TStatusChange) of object;
+
+  TListFileHandler = class(TObject)
+  private
+    FFileStream: TStringFileStream;
+    FErrorMessages: TJvRichEdit;
+    FBudgetChart: TChart;
+    FserCumulative: TLineSeries;
+    FserTimeStep: TLineSeries;
+    FPageControl: TJvPageList;
+    FListingTabSheet: TjvStandardPage;
+    FResultsTabSheet: TjvStandardPage;
+    FLabel: TLabel;
+    FOnStatusChanged: TOnStatusChanged;
+    FPercentRate: TRealList;
+    FPercentCumulative: TRealList;
+    FStartPlotTime: TDateTime;
+    FLineCount: Integer;
+    FErrorPositions: TIntegerDynArray;
+    FWarningPositions: TIntegerDynArray;
+    FListingFile: string;
+    FStartTime: TDateTime;
+    FShouldAbort: Boolean;
+    FTree: TTreeView;
+    FParentNode: TTreeNode;
+    FListingNode: TTreeNode;
+    FResultsNode: TTreeNode;
+    procedure CreateNewTabSheet(out ATabSheet: TjvStandardPage;
+      NewCaption: string; out NewNode: TTreeNode);
+    procedure CreateLineSeries(AColor: TColor; ATitle: string;
+      var ASeries: TLineSeries);
+    procedure FindStart(PositionInLine: integer; out SelStart: integer);
+    procedure GetColor(StatusChangeIndicator: TStatusChange; Value: Double;
+      var AColor: TColor);
+    procedure StorePercentDiscrepancy(ALine: string);
+    function PlotPercentDiscrepancy : boolean;
+    procedure IndentifyProblem(ALine: string; var IsProblem: Boolean;
+      StatusChangeIndicator: TStatusChange; var Positions: TIntegerDynArray;
+      KeyTerms: TStringList);
+    procedure HandleListFileLine(ALine: string);
+    procedure HandleProblem(IsError: Boolean; AColor: TColor;
+      Positions: TIntegerDynArray; EV: TStringList);
+    function GetPageStatus(APage: TjvStandardPage): TStatusChange;
+    procedure SetPageStatus(APage: TjvStandardPage;
+      const Value: TStatusChange);
+    property PageStatus[APage: TjvStandardPage]: TStatusChange
+      read GetPageStatus write SetPageStatus;
+    function GetConnectedNode(APage: TJvStandardPage): TTreeNode;
+  public
+    property OnStatusChanged: TOnStatusChanged read FOnStatusChanged
+      write FOnStatusChanged;
+    constructor Create(AFileName: string; APageControl: TJvPageList;
+      ATree: TTreeView; ModelCaption: string; CreateSubTree: boolean);
+    Destructor Destroy; override;
+    procedure HandleListingFile;
+    procedure ReadListingFileLines;
+    procedure Abort;
+    function Done: boolean;
+  end;
+
   TfrmMonitor = class(TForm)
     jilBigFaces: TJvImageList;
     timerReadOutput: TTimer;
@@ -37,32 +105,26 @@ type
     pnlMain: TPanel;
     pnlBottom: TPanel;
     btnRun: TBitBtn;
-    pcMain: TPageControl;
-    tabConfiguration: TTabSheet;
-    lblModelName: TLabel;
-    lblNameFile: TLabel;
-    jvfeModelName: TJvFilenameEdit;
-    jvfeNameFile: TJvFilenameEdit;
-    tabListing: TTabSheet;
-    tabResults: TTabSheet;
-    chartPercentDiscrepancy: TChart;
-    serCumulative: TLineSeries;
-    serTimeStep: TLineSeries;
-    tabMonitor: TTabSheet;
-    lblMonitor: TLabel;
-    reMonitor: TJvRichEdit;
-    lblListingFile: TLabel;
-    reListing: TJvRichEdit;
     timerStartFromCommandParameters: TTimer;
     lblModelDone: TLabel;
-    tabAbout: TTabSheet;
+    jvplMain: TJvPageList;
+    tabConfiguration: TJvStandardPage;
+    lblModelName: TLabel;
+    jvfeModelName: TJvFilenameEdit;
+    lblNameFile: TLabel;
+    jvfeNameFile: TJvFilenameEdit;
+    tabMonitor: TJvStandardPage;
+    lblMonitor: TLabel;
+    reMonitor: TJvRichEdit;
+    tabAbout: TJvStandardPage;
     ImageLogo: TImage;
-    lblDeveloperName: TLabel;
-    lblGoPhast: TLabel;
-    JvHTLabel1: TJvHTLabel;
     reReference: TRichEdit;
     JvHTLabel2: TJvHTLabel;
+    lblGoPhast: TLabel;
+    lblDeveloperName: TLabel;
+    JvHTLabel1: TJvHTLabel;
     lblVersion: TLabel;
+    treeNavigation: TJvTreeView;
     procedure btnRunClick(Sender: TObject);
     procedure timerReadOutputTimer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -72,11 +134,13 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormShow(Sender: TObject);
     procedure timerStartFromCommandParametersTimer(Sender: TObject);
+    procedure SetPageStatus(APage: TJvStandardPage; Status: TStatusChange);
+    procedure treeNavigationClick(Sender: TObject);
   private
-    FListingFile: string;
+    FListFilesNames: TStringList;
+    FListFileHandlers: TList;
     FErrorPositions: TIntegerDynArray;
     FWarningPositions: TIntegerDynArray;
-    FListTextReader: TStringFileStream;
     FMonitorTextReader: TStringFileStream;
     FLineCount: Integer;
     FShouldAbort: Boolean;
@@ -93,23 +157,18 @@ type
     FActivated: Boolean;
     FStartPlotTime: TDateTime;
     FDone: Boolean;
-    procedure GetListFile(var ListFile: string);
+    procedure GetListFile(AFileName: string; ListFiles: TStringList);
     procedure FindStart(RichEdit: TJvRichEdit; PositionInLine: integer;
       out SelStart: integer);
     procedure CreateFileReaders;
-    procedure HandleListFileLine(ALine: string);
-    procedure IndentifyProblem(ALine: string; var IsProblem: Boolean;
-      NewIndex: Integer; var Positions: TIntegerDynArray;
-      KeyTerms: TStringList);
-    procedure HandleProblem(IsError: Boolean; AColor: TColor; Positions: TIntegerDynArray; EV: TStringList);
-    procedure GetColor(NewIndex: Integer; Value: Double; var AColor: TColor);
-    procedure StorePercentDiscrepancy(ALine: string);
     function WinExecAndWait32(FileName: string; Visibility: Integer): Longword;
     procedure HandleMonitorFileLine(ALine: string);
     procedure ReadCommandLine;
-    function PlotPercentDiscrepancy : boolean;
+    function ListFileReadersFinished: boolean;
+
     { Private declarations }
   public
+    procedure StatusChanged(Sender: TObject; NewStatus: TStatusChange);
     { Public declarations }
   end;
 
@@ -118,7 +177,7 @@ var
 
 implementation
 
-uses {ShellApi,} ErrorMessages, forceforeground, JvVersionInfo;
+uses {ShellApi,} ErrorMessages, forceforeground, JvVersionInfo, contnrs;
 
 resourcestring
   StrPERCENTDISCREPANCY = 'PERCENT DISCREPANCY =';
@@ -168,10 +227,6 @@ begin
         TerminateProcess(ProcessInfo.hProcess,0);
         break;
       end;
-      if FListingFile = '' then
-      begin
-        break;
-      end;
       Application.ProcessMessages;
       Sleep(50);
     until WaitForSingleObject(ProcessInfo.hProcess, 100) <> WAIT_TIMEOUT;
@@ -189,36 +244,21 @@ procedure TfrmMonitor.AppEventsIdle(Sender: TObject;
   var Done: Boolean);
 var
   ALine: string;
+  FileReaderIndex: Integer;
+  ListHandler: TListFileHandler;
 begin
   CreateFileReaders;
   FReading1 := True;
   try
-    if FListTextReader = nil then
+    for FileReaderIndex := 0 to FListFileHandlers.Count - 1 do
     begin
-      Exit;
+      ListHandler := FListFileHandlers[FileReaderIndex];
+      ListHandler.HandleListingFile;
     end;
 
-    while (FListingFile <> '')
-      and ((FListTextReader.Position < FListTextReader.Size-1)
-      or not FListTextReader.EOF) do
-    begin
-      if (FListingFile = '') then
-      begin
-        Exit;
-      end;
-      ALine := FListTextReader.ReadLn;
-      if (ALine <> '') or not FListTextReader.EOF then
-      begin
-        HandleListFileLine(ALine);
-      end;
-      Application.ProcessMessages;
-      FStartTime := Now;
-    end;
-    PlotPercentDiscrepancy;
     while (FOutFile <> '') and FileExists(FOutFile)
       and (FMonitorTextReader <> nil)
-      and ((FMonitorTextReader.Position < FMonitorTextReader.Size-1)
-      or not FMonitorTextReader.EOF)  do
+      and not FMonitorTextReader.EOF  do
     begin
       if (FOutFile = '') then
       begin
@@ -234,17 +274,31 @@ begin
     end;
     if FModelFinished then
     begin
-        FListingFile := '';
         FOutFile := '';
         timerReadOutput.Enabled := False;
-        FreeAndNil(FListTextReader);
         FreeAndNil(FMonitorTextReader);
         Exit;
     end;
-    jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
     Application.ProcessMessages;
   finally
     FReading1 := False;
+  end;
+end;
+
+function TfrmMonitor.ListFileReadersFinished: boolean;
+var
+  Index: Integer;
+  FileHandler: TListFileHandler;
+begin
+  result := True;
+  for Index := 0 to FListFileHandlers.Count - 1 do
+  begin
+    FileHandler := FListFileHandlers[Index];
+    result := FileHandler.Done;
+    if not result then
+    begin
+      Exit;
+    end;
   end;
 end;
 
@@ -253,12 +307,13 @@ var
   CommandLine: string;
   FileDir: string;
   FileName: string;
-  ListFile: string;
   NormalTermination: Boolean;
   Index: Integer;
   {$IFDEF MakeBatchFile}
   BatFile: TStringList;
   ProcessExitCode: Cardinal;
+  ListHandler: TListFileHandler;
+  Dummy: Boolean;
   {$ENDIF}
 begin
   if timerReadOutput.Enabled then
@@ -267,7 +322,11 @@ begin
     FShouldAbort := True;
     timerReadOutput.Enabled := False;
     btnRun.Glyph := jilBigFaces.Items[3].Bitmap;
-    FListingFile := '';
+    for Index := 0 to FListFileHandlers.Count - 1 do
+    begin
+      ListHandler := FListFileHandlers[Index];
+      ListHandler.Abort;
+    end;
   end
   else
   begin
@@ -277,10 +336,6 @@ begin
       Beep;
       Exit;
     end;
-
-    chartPercentDiscrepancy.LeftAxis.Automatic := False;
-    chartPercentDiscrepancy.LeftAxis.Minimum := -1;
-    chartPercentDiscrepancy.LeftAxis.Maximum := 1;
 
     FActivated := False;
     FModelFinished := False;
@@ -320,40 +375,45 @@ begin
       CommandLine := '"' + CommandLine + '"';
     end;
     {$ENDIF}
-
-    GetListFile(ListFile);
-    if ListFile = '' then
+    FListFilesNames.Clear;
+    FListFileHandlers.Clear;
+    GetListFile(jvfeNameFile.FileName, FListFilesNames);
+    if FListFilesNames.Count = 0 then
     begin
       Beep;
       MessageDlg('No list file in name file.', mtError, [mbOK], 0);
       Exit;
     end;
-    FListingFile := ExpandFileName(ListFile);
+
+    for Index := 0 to FListFilesNames.Count - 1 do
+    begin
+      if FileExists(FListFilesNames[Index]) then
+      begin
+        DeleteFile(FListFilesNames[Index]);
+      end;
+    end;
 
     btnRun.Caption := StrStopMonitoringMode;
-    serCumulative.Clear;
-    serTimeStep.Clear;
     jimageStatus.Tag := 0;
     jimageStatus.Picture.Assign(jilBigFaces.Items[0].Bitmap);
 
-    tabListing.ImageIndex := 0;
-    tabResults.ImageIndex := 0;
-    tabMonitor.ImageIndex := 0;
+    SetPageStatus(tabMonitor, scOK);
     FLineCount := 0;
     FShouldAbort := False;
 
     reMonitor.Lines.Clear;
-    reListing.Lines.Clear;
 
     lblMonitor.Caption := 'Screen output';
     lblMonitor.Font.Color := clBlack;
     lblMonitor.Font.Style := [];
 
-    pcMain.ActivePage := tabResults;
+    treeNavigation.AutoExpand := True;
     timerReadOutput.Enabled := True;
     ProcessExitCode := WinExecAndWait32(CommandLine, SW_SHOW);
     if ProcessExitCode <> 0 then
     begin
+      AppEventsIdle(Sender, Dummy);
+      StatusChanged(Sender, scError);
       if ProcessExitCode = WAIT_FAILED then
       begin
         raise Exception.Create('Error waiting for program to start.');
@@ -366,31 +426,17 @@ begin
 
     lblModelDone.Visible := True;
 
+    AppEventsIdle(Sender, Dummy);
+
     while not FShouldAbort and (FMonitorTextReader <> nil) and
       ((FMonitorTextReader.Position < FMonitorTextReader.Size-1)
-      or not FMonitorTextReader.EOF) do
+      or not FMonitorTextReader.EOF) and not ListFileReadersFinished do
     begin
       Application.ProcessMessages;
       Sleep(20);
     end;
 
     FDone := True;
-
-    if FListingFile <> '' then
-    begin
-      while (FListTextReader = nil) or
-        ((FListTextReader.Position < FListTextReader.Size-1)
-        or not FListTextReader.EOF) do
-      begin
-        timerReadOutputTimer(nil);
-      end;
-      while (FMonitorTextReader = nil) or
-        ((FMonitorTextReader.Position < FMonitorTextReader.Size-1)
-        or not FMonitorTextReader.EOF) do
-      begin
-        timerReadOutputTimer(nil);
-      end;
-    end;
 
     NormalTermination := False;
     for Index := 0 to reMonitor.Lines.Count - 1 do
@@ -404,22 +450,14 @@ begin
     
     if not FShouldAbort and not NormalTermination then
     begin
-      lblMonitor.Caption := 'Screen output' + #13#10
+      lblMonitor.Caption := 'Screen output' + sLineBreak
         + 'Program failed to terminate normally';
       lblMonitor.Font.Color := clRed;
       lblMonitor.Font.Style := [fsBold];
-      tabMonitor.ImageIndex := 2;
-      jimageStatus.Tag := 2;
-      jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
+      SetPageStatus(tabMonitor, scError);
+      StatusChanged(nil, scError);
     end;
 
-    while not FShouldAbort and (FListTextReader <> nil) and
-      ((FListTextReader.Position < FListTextReader.Size-1)
-      or not FListTextReader.EOF) do
-    begin
-      Application.ProcessMessages;
-      Sleep(20);
-    end;
     lblModelDone.Visible := False;
 
     btnRun.Caption := StrStartModel;
@@ -433,12 +471,10 @@ procedure TfrmMonitor.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   timerReadOutput.Enabled := False;
   AppEvents.OnIdle := nil;
-  FListingFile := '';
   while FReading1 or FReading2 do
   begin
     // wait
   end;
-  FreeAndNil(FListTextReader);
   FreeAndNil(FMonitorTextReader);
 end;
 
@@ -449,6 +485,14 @@ procedure TfrmMonitor.FormCreate(Sender: TObject);
 var
   VerInfo: TJvVersionInfo;
 begin
+  // The ItemHeight property seems to get lost all the time.
+  treeNavigation.ItemHeight := 28;
+
+  DecimalSeparator := '.';
+  ThousandSeparator := ',';
+
+  FListFilesNames := TStringList.Create;
+  FListFileHandlers := TObjectList.Create;
   VerInfo := TJvVersionInfo.Create(Application.ExeName);
   try
     lblVersion.Caption := 'Version: ' + VerInfo.FileVersion;
@@ -456,12 +500,16 @@ begin
     VerInfo.Free;
   end;
 
+  treeNavigation.Items[0].Data := tabConfiguration;
+  treeNavigation.Items[1].Data := tabMonitor;
+  treeNavigation.Items[2].Data := tabAbout;
+
   SetLength(FErrorPositions, ErrorValues.Count);
   SetLength(FWarningPositions, WarningValues.Count);
 
   jvfeModelNameChange(jvfeModelName);
   jvfeModelNameChange(jvfeNameFile);
-  pcMain.ActivePageIndex := 0;
+  jvplMain.ActivePageIndex := 0;
   FPercentRate := TRealList.Create;
   FPercentCumulative := TRealList.Create;
   FStartPlotTime  := 0;
@@ -473,9 +521,9 @@ procedure TfrmMonitor.FormDestroy(Sender: TObject);
 begin
   FPercentCumulative.Free;
   FPercentRate.Free;
-  FListingFile := '';
-  FreeAndNil(FListTextReader);
   FreeAndNil(FMonitorTextReader);
+  FListFilesNames.Free;
+  FListFileHandlers.Free;
 end;
 
 procedure TfrmMonitor.FormShow(Sender: TObject);
@@ -511,26 +559,69 @@ begin
   SelStart := SelStart + PositionInLine;
 end;
 
-procedure TfrmMonitor.GetListFile(var ListFile: string);
+procedure TfrmMonitor.GetListFile(AFileName: string; ListFiles: TStringList);
 var
   ALine: string;
   LineList: TStringList;
   NameFile: TStringList;
   Index: Integer;
+  NameFileLine: string;
+  GridCountLine: string;
+  GridCount: Integer;
+  GridIndex: Integer;
+  GridLineIndex: Integer;
+  ListFile: string; 
 begin
   ListFile := '';
   NameFile := TStringList.Create;
   try
-    NameFile.LoadFromFile(jvfeNameFile.FileName);
+    NameFile.LoadFromFile(AFileName);
     for Index := 0 to NameFile.Count - 1 do
     begin
       ALine := UpperCase(Trim(NameFile[Index]));
+      if (Length(ALine) = 0) or (ALine[1] = '#') then
+      begin
+        Continue
+      end;
+      if (Pos('LGR', ALine) > 0) and (Index < NameFile.Count - 2) then
+      begin
+        LineList := TStringList.Create;
+        try
+          LineList.Delimiter := ' ';
+          LineList.DelimitedText := Trim(ALine);
+          if LineList[0] = 'LGR' then
+          begin
+            GridCountLine := NameFile[Index+1];
+            Assert(Length(GridCountLine) > 0);
+            LineList.DelimitedText := Trim(GridCountLine);
+            GridCount := StrToInt(LineList[0]);
+
+            NameFileLine := NameFile[Index+2];
+            Assert(Length(NameFileLine) > 0);
+            LineList.DelimitedText := Trim(NameFileLine);
+            GetListFile(LineList[0], ListFiles);
+
+            for GridIndex := 1 to GridCount - 1 do
+            begin
+              GridLineIndex := (GridIndex-1)*10 + 3 + Index + 2;
+              Assert(GridLineIndex < NameFile.Count);
+              NameFileLine := NameFile[GridLineIndex];
+              Assert(Length(NameFileLine) > 0);
+              LineList.DelimitedText := Trim(NameFileLine);
+              GetListFile(LineList[0], ListFiles);
+            end;
+            Exit;
+          end;
+        finally
+          LineList.Free;
+        end;
+      end;
       if Pos('LIST', ALine) > 0 then
       begin
         LineList := TStringList.Create;
         try
           LineList.Delimiter := ' ';
-          LineList.DelimitedText := ALine;
+          LineList.DelimitedText := Trim(ALine);
           if LineList.Count < 3 then
           begin
             Continue;
@@ -540,6 +631,7 @@ begin
             Continue;
           end;
           ListFile := LineList[2];
+          ListFiles.Add(ListFile);
           break;
         finally
           LineList.Free;
@@ -552,16 +644,13 @@ begin
 end;
 
 procedure TfrmMonitor.CreateFileReaders;
+var
+  FileHandlerIndex: Integer;
+  AListingFile: string;
+  FileHandler: TListFileHandler;
+  ModelCaption: string;
+  ANode: TTreeNode;
 begin
-  if FListingFile = '' then
-  begin
-    FreeAndNil(FListTextReader);
-  end;
-  if (FListTextReader = nil) and FileExists(FListingFile) then
-  begin
-    FListTextReader := TStringFileStream.Create(FListingFile,
-      fmOpenRead or fmShareDenyNone);
-  end;
   if FOutFile = '' then
   begin
     FreeAndNil(FMonitorTextReader);
@@ -571,82 +660,131 @@ begin
     FMonitorTextReader := TStringFileStream.Create(FOutFile,
       fmOpenRead or fmShareDenyNone);
   end;
+
+  if FListFileHandlers.Count = FListFilesNames.Count then
+  begin
+    treeNavigation.AutoExpand := False;
+    Exit;
+  end;
+
+  ANode := treeNavigation.Items[treeNavigation.Items.Count-1];
+  treeNavigation.Items.Delete(ANode);
+
+  for FileHandlerIndex := FListFileHandlers.Count
+    to FListFilesNames.Count - 1 do
+  begin
+    AListingFile := FListFilesNames[FileHandlerIndex];
+    if FileExists(AListingFile) then
+    begin
+      if FListFilesNames.Count = 1 then
+      begin
+        ModelCaption := '';
+      end
+      else
+      begin
+        if FileHandlerIndex = 0 then
+        begin
+          ModelCaption := 'Parent ';
+        end
+        else
+        begin
+          ModelCaption := 'Child ' + IntToStr(FileHandlerIndex) + ' ';
+        end;
+      end;
+      FileHandler := TListFileHandler.Create(AListingFile, jvplMain,
+        treeNavigation, ModelCaption, FListFilesNames.Count > 1);
+      FileHandler.OnStatusChanged := StatusChanged;
+      FListFileHandlers.Add(FileHandler);
+    end
+    else
+    begin
+      break;
+    end;
+  end;
+  ANode := treeNavigation.Items.Add(nil, 'About');
+  ANode.Data := tabAbout;
+  treeNavigation.SetFocus;
 end;
 
 procedure TfrmMonitor.HandleMonitorFileLine(ALine: string);
 var
   Position: integer;
   SelStart: Integer;
-  OldDecimalSeparator: Char;
-  OldThousandSeparator: Char;
+  ErrorIndex: Integer;
+  AnErrorMessage: string;
 begin
   if (FOutFile = '') then
   begin
     Exit;
   end;
-  OldDecimalSeparator := DecimalSeparator;
-  OldThousandSeparator := ThousandSeparator;
-  try
-    DecimalSeparator := '.';
-    ThousandSeparator := ',';
-    reMonitor.Lines.Add(ALine);
-    Position := Pos(StrNormalTermination, ALine);
+  reMonitor.Lines.Add(ALine);
+  Position := Pos(StrNormalTermination, ALine);
+  if Position > 0 then
+  begin
+    FindStart(reMonitor, Position, SelStart);
+    reMonitor.SetSelection(SelStart,
+      SelStart + Length(StrNormalTermination), True);
+    reMonitor.SelAttributes.BackColor := clGreen;
+    reMonitor.SelAttributes.Color := clWhite;
+    reMonitor.SetSelection(SelStart, SelStart, True);
+  end
+  else
+  begin
+    Position := Pos(StrFIRSTENTRYINNAME, ALine);
     if Position > 0 then
     begin
       FindStart(reMonitor, Position, SelStart);
       reMonitor.SetSelection(SelStart,
-        SelStart + Length(StrNormalTermination), True);
-      reMonitor.SelAttributes.BackColor := clGreen;
+        SelStart + Length(StrFIRSTENTRYINNAME), True);
+      reMonitor.SelAttributes.BackColor := clRed;
       reMonitor.SelAttributes.Color := clWhite;
       reMonitor.SetSelection(SelStart, SelStart, True);
-    end
-    else
+      StatusChanged(nil, scError);
+      SetPageStatus(tabMonitor, scError);
+    end;
+
+    Position := Pos(StrFailureToConverge, ALine);
+    if Position > 0 then
     begin
-      Position := Pos(StrFIRSTENTRYINNAME, ALine);
-      if Position > 0 then
-      begin
-        FindStart(reMonitor, Position, SelStart);
-        reMonitor.SetSelection(SelStart,
-          SelStart + Length(StrFIRSTENTRYINNAME), True);
-        reMonitor.SelAttributes.BackColor := clRed;
-        reMonitor.SelAttributes.Color := clWhite;
-        reMonitor.SetSelection(SelStart, SelStart, True);
-        jimageStatus.Tag := 2;
-        tabMonitor.ImageIndex := 2;
-        jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
-      end;
+      FindStart(reMonitor, Position, SelStart);
+      reMonitor.SetSelection(SelStart,
+        SelStart + Length(StrFailureToConverge), True);
+      reMonitor.SelAttributes.BackColor := clRed;
+      reMonitor.SelAttributes.Color := clWhite;
+      reMonitor.SetSelection(SelStart, SelStart, True);
+      StatusChanged(nil, scError);
+      SetPageStatus(tabMonitor, scError);
+    end;
 
-      Position := Pos(StrFailureToConverge, ALine);
-      if Position > 0 then
-      begin
-        FindStart(reMonitor, Position, SelStart);
-        reMonitor.SetSelection(SelStart,
-          SelStart + Length(StrFailureToConverge), True);
-        reMonitor.SelAttributes.BackColor := clRed;
-        reMonitor.SelAttributes.Color := clWhite;
-        reMonitor.SetSelection(SelStart, SelStart, True);
-        jimageStatus.Tag := 0;
-        tabMonitor.ImageIndex := 2;
-        jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
-      end;
+    Position := Pos(StrFAILEDTOMEETSOLVE, ALine);
+    if Position > 0 then
+    begin
+      FindStart(reMonitor, Position, SelStart);
+      reMonitor.SetSelection(SelStart,
+        SelStart + Length(StrFAILEDTOMEETSOLVE), True);
+      reMonitor.SelAttributes.BackColor := clRed;
+      reMonitor.SelAttributes.Color := clWhite;
+      reMonitor.SetSelection(SelStart, SelStart, True);
+      StatusChanged(nil, scError);
+      SetPageStatus(tabMonitor, scError);
+    end;
 
-      Position := Pos(StrFAILEDTOMEETSOLVE, ALine);
+    for ErrorIndex := 0 to ErrorValues.Count - 1 do
+    begin
+      AnErrorMessage := ErrorValues[ErrorIndex];
+      Position := Pos(AnErrorMessage, ALine);
       if Position > 0 then
       begin
         FindStart(reMonitor, Position, SelStart);
         reMonitor.SetSelection(SelStart,
-          SelStart + Length(StrFAILEDTOMEETSOLVE), True);
+          SelStart + Length(AnErrorMessage), True);
         reMonitor.SelAttributes.BackColor := clRed;
         reMonitor.SelAttributes.Color := clWhite;
         reMonitor.SetSelection(SelStart, SelStart, True);
-        jimageStatus.Tag := 0;
-        tabMonitor.ImageIndex := 2;
-        jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
+        StatusChanged(nil, scError);
+        SetPageStatus(tabMonitor, scError);
       end;
     end;
-  finally
-    DecimalSeparator := OldDecimalSeparator;
-    ThousandSeparator := OldThousandSeparator;
   end;
 end;
 
@@ -718,188 +856,28 @@ begin
   end;
 end;
 
-procedure TfrmMonitor.HandleListFileLine(ALine: string);
+procedure TfrmMonitor.SetPageStatus(APage: TJvStandardPage;
+  Status: TStatusChange);
 var
-  IsError: boolean;
-  IsWarning: Boolean;
-  OldDecimalSeparator: Char;
-  OldThousandSeparator: Char;
+  ANode: TTreeNode;
 begin
-  OldDecimalSeparator := DecimalSeparator;
-  OldThousandSeparator := ThousandSeparator;
-  try
-    DecimalSeparator := '.';
-    ThousandSeparator := ',';
-
-    Inc(FLineCount);
-    if (FListingFile = '') then
-    begin
-      Exit;
-    end;
-    StorePercentDiscrepancy(ALine);
-
-    ALine := IntToStr(FLineCount) + ': ' + ALine;
-    IndentifyProblem(ALine, IsError, 2, FErrorPositions, ErrorValues);
-    IndentifyProblem(ALine, IsWarning, 1, FWarningPositions, WarningValues);
-    if IsError or IsWarning then
-    begin
-      reListing.Lines.Add(ALine);
-      HandleProblem(IsWarning, clYellow, FWarningPositions, WarningValues);
-      HandleProblem(IsError, clRed, FErrorPositions, ErrorValues);
-    end;
-  finally
-    DecimalSeparator := OldDecimalSeparator;
-    ThousandSeparator := OldThousandSeparator;
+  ANode := treeNavigation.Items[APage.PageIndex];
+  if Status = scNone then
+  begin
+    ANode.StateIndex := -1;
+  end
+  else
+  begin
+    ANode.StateIndex := Ord(Status)+1;
   end;
 end;
 
-procedure TfrmMonitor.IndentifyProblem(ALine: string; var IsProblem: Boolean;
-  NewIndex: Integer; var Positions: TIntegerDynArray; KeyTerms: TStringList);
-var
-  Position: Integer;
-  Index: Integer;
+procedure TfrmMonitor.StatusChanged(Sender: TObject; NewStatus: TStatusChange);
 begin
-  IsProblem := False;
-  for Index := 0 to KeyTerms.Count - 1 do
+  if Ord(NewStatus) > jimageStatus.Tag then
   begin
-    Position := Pos(KeyTerms[Index], ALine);
-    Positions[Index] := Position;
-    if Position > 0 then
-    begin
-      IsProblem := True;
-      if NewIndex > jimageStatus.Tag then
-      begin
-        jimageStatus.Tag := NewIndex;
-        jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
-      end;
-      if NewIndex > tabListing.ImageIndex then
-      begin
-        tabListing.ImageIndex := NewIndex;
-      end;
-    end;
-  end;
-end;
-
-procedure TfrmMonitor.HandleProblem(IsError: Boolean; AColor: TColor; Positions: TIntegerDynArray; EV: TStringList);
-var
-  SelStart: Integer;
-  Index: Integer;
-begin
-  if IsError then
-  begin
-    for Index := 0 to EV.Count - 1 do
-    begin
-      if Positions[Index] > 0 then
-      begin
-        FindStart(reListing, Positions[Index], SelStart);
-        reListing.SetSelection(SelStart, SelStart + Length(EV[Index]), True);
-        reListing.SelAttributes.BackColor := AColor;
-        if AColor = clRed then
-        begin
-          reListing.SelAttributes.Color := clWhite;
-        end;
-        reListing.SetSelection(SelStart, SelStart, True);
-      end;
-    end;
-  end;
-end;
-
-procedure TfrmMonitor.GetColor(NewIndex: Integer; Value: Double; var AColor: TColor);
-begin
-  if Abs(Value) >= 1 then
-  begin
-    AColor := clRed;
-    if jimageStatus.Tag < NewIndex then
-    begin
-      jimageStatus.Tag := NewIndex;
-      jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
-    end;
-    if tabResults.ImageIndex < NewIndex then
-    begin
-      tabResults.ImageIndex := NewIndex;
-    end;
-    chartPercentDiscrepancy.LeftAxis.Automatic := True;
-  end;
-end;
-
-function TfrmMonitor.PlotPercentDiscrepancy: boolean;
-const
-  TimeOutTime = 1/24/3600;
-var
-  Index: Integer;
-  Rate: Double;
-  AColor: TColor;
-begin
-  result := False;
-  if not FDone and (Now - FStartPlotTime < TimeOutTime) then
-  begin
-    Exit;
-  end;
-  result := True;
-  FStartPlotTime := Now;
-  if (FPercentRate.Count > 0) or (FPercentCumulative.Count > 0) then
-  begin
-    // Hide the series while it is being updated so
-    // that the program doesn't spend too much time
-    // trying to redraw the screen.
-    serCumulative.Active := False;
-    try
-      for Index := 0 to FPercentCumulative.Count - 1 do
-      begin
-        Rate := FPercentCumulative[Index];
-        AColor := clBlue;
-        GetColor(2, Rate, AColor);
-        serCumulative.AddXY(serCumulative.Count + 1, Rate, '', AColor);
-      end;
-    finally
-      FPercentCumulative.Clear;
-      serCumulative.Active := True;
-    end;
-
-    serTimeStep.Active := False;
-    try
-      for Index := 0 to FPercentRate.Count - 1 do
-      begin
-        Rate := FPercentRate[Index];
-        AColor := clYellow;
-        GetColor(2, Rate, AColor);
-        serTimeStep.AddXY(serTimeStep.Count + 1, Rate, '', AColor);
-      end;
-    finally
-      FPercentRate.Clear;
-      serTimeStep.Active := True;
-    end;
-  end;
-end;
-
-procedure TfrmMonitor.StorePercentDiscrepancy(ALine: string);
-var
-  Position: Integer;
-  TestLine: string;
-  Num1: string;
-  Num2: string;
-  Cum: Double;
-  Rate: Double;
-begin
-  Position := Pos(StrPERCENTDISCREPANCY, ALine);
-  if Position > 0 then
-  begin
-    if not FActivated then
-    begin
-      FActivated := True;
-      ForceForegroundWindow(Handle);
-    end;
-
-    TestLine := Trim(Copy(ALine, Position + Length(StrPERCENTDISCREPANCY), MAXINT));
-    Position := Pos(StrPERCENTDISCREPANCY, TestLine);
-    Assert(Position > 0);
-    Num1 := Trim(Copy(TestLine, 1, Position - 1));
-    Num2 := Trim(Copy(TestLine, Position + Length(StrPERCENTDISCREPANCY), MAXINT));
-    Cum := StrToFloat(Num1);
-    Rate := StrToFloat(Num2);
-
-    FPercentRate.Add(Rate);
-    FPercentCumulative.Add(Cum);
+    jimageStatus.Tag := Ord(NewStatus);
+    jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
   end;
 end;
 
@@ -909,6 +887,8 @@ const
 var
   ALine: string;
   ATime: TDateTime;
+  FileReaderIndex: Integer;
+  ListHandler : TListFileHandler;
 begin
   if FReading2 then
   begin
@@ -917,43 +897,20 @@ begin
   FReading2 := True;
   try
     CreateFileReaders;
-    if (FListTextReader = nil) or (FMonitorTextReader = nil) then
+    for FileReaderIndex := 0 to FListFileHandlers.Count - 1 do
     begin
-      Beep;
+      ListHandler := FListFileHandlers[FileReaderIndex];
+      ListHandler.ReadListingFileLines;
+    end;
+
+    if (FMonitorTextReader = nil) then
+    begin
       Exit;
-    end;
-    while (FListTextReader.Position < FListTextReader.Size-1)
-      or not FListTextReader.EOF do
-    begin
-      if (FListingFile = '') then
-      begin
-        Exit;
-      end;
-      ALine := FListTextReader.ReadLn;
-      if (ALine <> '') or not FListTextReader.EOF then
-      begin
-        HandleListFileLine(ALine);
-      end;
-      if PlotPercentDiscrepancy then
-      begin
-        // only update the plot once per second so the program doesn't spend
-        // too much time trying to redraw the screen.
-        Application.ProcessMessages;
-        if not FDone and (FListTextReader.Size > 0)
-          and (FMonitorTextReader.Size > 0)
-          and (FListTextReader.Position/FListTextReader.Size
-          > FMonitorTextReader.Position/FMonitorTextReader.Size) then
-        begin
-          break;
-        end;
-      end;
-      Application.ProcessMessages;
-    end;
-    if FMonitorTextReader <> nil then
+    end
+    else
     begin
       ATime := Now;
-      while (FMonitorTextReader.Position < FMonitorTextReader.Size-1)
-        or not FMonitorTextReader.EOF do
+      while not FMonitorTextReader.EOF do
       begin
         if (FOutFile = '') then
         begin
@@ -971,7 +928,6 @@ begin
         end;
       end;
     end;
-    jimageStatus.Picture.Assign(jilBigFaces.Items[jimageStatus.Tag].Bitmap);
     Application.ProcessMessages;
   finally
     FReading2 := False;
@@ -984,6 +940,17 @@ begin
   ReadCommandLine;
 end;
 
+procedure TfrmMonitor.treeNavigationClick(Sender: TObject);
+var
+  APage: TJvStandardPage;
+begin
+  APage := treeNavigation.Selected.Data;
+  if APage <> nil then
+  begin
+    jvplMain.ActivePage := APage;
+  end;
+end;
+
 { TStringFileStream }
 
 function TStringFileStream.GetEOF: boolean;
@@ -994,11 +961,11 @@ begin
   end
   else
   begin
-    result := FEOF;
+    result := FEOF and (Position >= Size-1);
   end;
 end;
 
-function TStringFileStream.ReadLn: string;
+function TStringFileStream.ReadLn: AnsiString;
 var
   EndPos: integer;
 begin
@@ -1006,9 +973,10 @@ begin
   begin
     FEOF := False;
   end;
-  EndPos := Pos(#13#10, TempLine);
+  EndPos := Pos(sLineBreak, TempLine);
   if EndPos > 0 then
   begin
+    FEOF := False;
     result := Copy(TempLine, 1,EndPos-1);
     TempLine := Copy(TempLine,EndPos+2, MAXINT);
   end
@@ -1017,7 +985,7 @@ begin
     if Position < Size -1 then
     begin
       FillChar(FBuffer, SizeOf(FBuffer), 0) ;
-      Read(FBuffer, SizeOf(FBuffer)-SizeOf(Char));
+      Read(FBuffer, SizeOf(FBuffer)-SizeOf(AnsiChar));
       TempLine := TempLine + FBuffer;
       result := ReadLn;
     end
@@ -1036,6 +1004,440 @@ begin
   begin
     result := '';
   end;
+end;
+
+{ TListFileHandler }
+
+procedure TListFileHandler.Abort;
+begin
+  FShouldAbort := True;
+end;
+
+function TListFileHandler.GetConnectedNode(APage: TJvStandardPage): TTreeNode; 
+var
+  ANode: TTreeNode;
+  Index: Integer;
+begin
+  result := nil;
+  for Index := 0 to FTree.Items.Count - 1 do
+  begin
+    ANode := FTree.Items[Index];
+    if ANode.Data = APage then
+    begin
+      result := ANode;
+      break;
+    end;
+  end;
+end;
+
+constructor TListFileHandler.Create(AFileName: string;
+  APageControl: TJvPageList; ATree: TTreeView; ModelCaption: string;
+  CreateSubTree: boolean);
+begin
+  SetLength(FErrorPositions, ErrorValues.Count);
+  SetLength(FWarningPositions, WarningValues.Count);
+
+  FListingFile := AFileName;
+  FPageControl := APageControl;
+  FTree := ATree;
+  Assert(FileExists(FListingFile));
+
+  FPercentRate := TRealList.Create;
+  FPercentCumulative := TRealList.Create;
+
+  FFileStream := TStringFileStream.Create(FListingFile,
+    fmOpenRead or fmShareDenyNone);
+
+  if CreateSubTree then
+  begin
+    FParentNode := FTree.Items.Add(nil, ModelCaption);
+    FParentNode.StateIndex := 1;
+  end
+  else
+  begin
+    FParentNode := nil;
+  end;
+
+  CreateNewTabSheet(FListingTabSheet, 'Listing', FListingNode);
+
+  FLabel := TLabel.Create(APageControl.Owner);
+  FLabel.Parent := FListingTabSheet;
+  FLabel.Align := alTop;
+  FLabel.Alignment := Classes.taCenter;
+  FLabel.Caption := 'Errors and warnings in Listing file';
+  FLabel.Height := 19;
+
+  FErrorMessages := TJvRichEdit.Create(FPageControl.Owner);
+  FErrorMessages.Parent := FListingTabSheet;
+  FErrorMessages.Align := alClient;
+  FErrorMessages.WordWrap := False;
+
+  CreateNewTabSheet(FResultsTabSheet, 'Results', FResultsNode);
+
+  FBudgetChart := TChart.Create(FPageControl.Owner);
+  FBudgetChart.Parent := FResultsTabSheet;
+  FBudgetChart.Align := alClient;
+  FBudgetChart.View3D := False;
+  FBudgetChart.LeftAxis.Automatic := False;
+  FBudgetChart.LeftAxis.Minimum := -1;
+  FBudgetChart.LeftAxis.Maximum := 1;
+  FBudgetChart.LeftAxis.Title.Caption := 'Percent Discrepancy';
+  FBudgetChart.Color := clWhite;
+
+  CreateLineSeries($00FF8000, 'Cumulative', FserCumulative);
+  CreateLineSeries($0080FFFF, 'Time Step', FserTimeStep);
+
+  FTree.Selected := FResultsNode;
+  FPageControl.ActivePage := FResultsTabSheet;
+  
+end;
+
+destructor TListFileHandler.Destroy;
+begin
+  FFileStream.Free;
+  FPercentRate.Free;
+  FPercentCumulative.Free;
+
+
+  FTree.Items.Delete(FListingNode);
+  FTree.Items.Delete(FResultsNode);
+  if FParentNode <> nil then
+  begin
+    FTree.Items.Delete(FParentNode);
+  end;
+
+  FserCumulative.Free;
+  FserTimeStep.Free;
+  FBudgetChart.Free;
+  FLabel.Free;
+  FErrorMessages.Free;
+  FResultsTabSheet.Free;
+  FListingTabSheet.Free;
+
+  inherited;
+end;
+
+function TListFileHandler.Done: boolean;
+begin
+  result := FFileStream.EOF;
+end;
+
+procedure TListFileHandler.FindStart(PositionInLine: integer;
+  out SelStart: integer);
+var
+  LineIndex: Integer;
+begin
+  SelStart := -1;
+  for LineIndex := 0 to FErrorMessages.Lines.Count - 2 do
+  begin
+    SelStart := SelStart + Length(FErrorMessages.Lines[LineIndex]) + 1;
+  end;
+  SelStart := SelStart + PositionInLine;
+end;
+
+procedure TListFileHandler.GetColor(StatusChangeIndicator: TStatusChange;
+  Value: Double; var AColor: TColor);
+begin
+  if Abs(Value) >= 1 then
+  begin
+    AColor := clRed;
+    if Assigned(OnStatusChanged) then
+    begin
+      OnStatusChanged(self, StatusChangeIndicator);
+    end;
+
+    if (PageStatus[FResultsTabSheet] = scNone)
+       or (PageStatus[FResultsTabSheet] < StatusChangeIndicator) then
+    begin
+      PageStatus[FResultsTabSheet] := StatusChangeIndicator;
+    end;
+    FBudgetChart.LeftAxis.Automatic := True;
+  end;
+end;
+
+function TListFileHandler.GetPageStatus(
+  APage: TjvStandardPage): TStatusChange;
+var
+  ConnectedNode: TTreeNode;
+begin
+  ConnectedNode := GetConnectedNode(APage);
+  if ConnectedNode.StateIndex < 0 then
+  begin
+    result := scNone
+  end
+  else
+  begin
+    result := TStatusChange(ConnectedNode.StateIndex-1);
+  end;
+end;
+
+procedure TListFileHandler.HandleListFileLine(ALine: string);
+var
+  IsError: boolean;
+  IsWarning: Boolean;
+begin
+  Inc(FLineCount);
+  StorePercentDiscrepancy(ALine);
+
+  ALine := IntToStr(FLineCount) + ': ' + ALine;
+  IndentifyProblem(ALine, IsError, scError, FErrorPositions, ErrorValues);
+  IndentifyProblem(ALine, IsWarning, scWarning, FWarningPositions, WarningValues);
+  if IsError or IsWarning then
+  begin
+    FErrorMessages.Lines.Add(ALine);
+    HandleProblem(IsWarning, clYellow, FWarningPositions, WarningValues);
+    HandleProblem(IsError, clRed, FErrorPositions, ErrorValues);
+  end;
+end;
+
+procedure TListFileHandler.HandleListingFile;
+var
+  ALine: string;
+begin
+  while (FListingFile <> '')
+    and not FFileStream.EOF do
+  begin
+    if FShouldAbort or (FListingFile = '') then
+    begin
+      Exit;
+    end;
+    ALine := FFileStream.ReadLn;
+    if (ALine <> '') then
+    begin
+      HandleListFileLine(ALine);
+    end;
+    Application.ProcessMessages;
+    FStartTime := Now;
+  end;
+  PlotPercentDiscrepancy;
+end;
+
+procedure TListFileHandler.HandleProblem(IsError: Boolean; AColor: TColor;
+  Positions: TIntegerDynArray; EV: TStringList);
+var
+  SelStart: Integer;
+  Index: Integer;
+begin
+  if IsError then
+  begin
+    for Index := 0 to EV.Count - 1 do
+    begin
+      if Positions[Index] > 0 then
+      begin
+        FindStart(Positions[Index], SelStart);
+        FErrorMessages.SetSelection(SelStart, SelStart + Length(EV[Index]), True);
+        FErrorMessages.SelAttributes.BackColor := AColor;
+        if AColor = clRed then
+        begin
+          FErrorMessages.SelAttributes.Color := clWhite;
+        end;
+        FErrorMessages.SetSelection(SelStart, SelStart, True);
+      end;
+    end;
+  end;
+end;
+
+procedure TListFileHandler.IndentifyProblem(ALine: string;
+  var IsProblem: Boolean; StatusChangeIndicator: TStatusChange;
+  var Positions: TIntegerDynArray; KeyTerms: TStringList);
+var
+  Position: Integer;
+  Index: Integer;
+begin
+  IsProblem := False;
+  for Index := 0 to KeyTerms.Count - 1 do
+  begin
+    Position := Pos(KeyTerms[Index], ALine);
+    Positions[Index] := Position;
+    if Position > 0 then
+    begin
+      IsProblem := True;
+      if Assigned(OnStatusChanged) then
+      begin
+        OnStatusChanged(self, StatusChangeIndicator);
+      end;
+      if (PageStatus[FListingTabSheet] = scNone)
+        or (PageStatus[FListingTabSheet] < StatusChangeIndicator) then
+      begin
+        PageStatus[FListingTabSheet] := StatusChangeIndicator;
+      end;
+    end;
+  end;
+end;
+
+function TListFileHandler.PlotPercentDiscrepancy: boolean;
+const
+  TimeOutTime = 1/24/3600;
+var
+  Index: Integer;
+  Rate: Double;
+  AColor: TColor;
+begin
+  result := False;
+  if {not FDone and} (Now - FStartPlotTime < TimeOutTime) then
+  begin
+    Exit;
+  end;
+  result := True;
+  FStartPlotTime := Now;
+  if (FPercentRate.Count > 0) or (FPercentCumulative.Count > 0) then
+  begin
+    // Hide the series while it is being updated so
+    // that the program doesn't spend too much time
+    // trying to redraw the screen.
+    FserCumulative.Active := False;
+    try
+      for Index := 0 to FPercentCumulative.Count - 1 do
+      begin
+        Rate := FPercentCumulative[Index];
+        AColor := clBlue;
+        GetColor(scError, Rate, AColor);
+        FserCumulative.AddXY(FserCumulative.Count + 1, Rate, '', AColor);
+      end;
+    finally
+      FPercentCumulative.Clear;
+      FserCumulative.Active := True;
+    end;
+
+    FserTimeStep.Active := False;
+    try
+      for Index := 0 to FPercentRate.Count - 1 do
+      begin
+        Rate := FPercentRate[Index];
+        AColor := clYellow;
+        GetColor(scError, Rate, AColor);
+        FserTimeStep.AddXY(FserTimeStep.Count + 1, Rate, '', AColor);
+      end;
+    finally
+      FPercentRate.Clear;
+      FserTimeStep.Active := True;
+    end;
+  end;
+end;
+
+procedure TListFileHandler.ReadListingFileLines;
+const
+  OneSecond = 1/24/3600;
+var
+  ALine: string;
+  StartTime : TDateTime;
+begin
+  StartTime := Now;
+  repeat
+  begin
+    if FShouldAbort then
+    begin
+      Exit;
+    end;
+    if (FFileStream.Position < FFileStream.Size - 1)
+      or not FFileStream.EOF then
+    begin
+      if (FListingFile = '') then
+      begin
+        break;
+      end;
+      ALine := FFileStream.ReadLn;
+      if (ALine <> '') or not FFileStream.EOF then
+      begin
+        HandleListFileLine(ALine);
+      end;
+      if PlotPercentDiscrepancy then
+      begin
+        // only update the plot once per second so the program doesn't spend
+        // too much time trying to redraw the screen.
+        Application.ProcessMessages;
+        break;
+      end;
+      Application.ProcessMessages;
+    end
+    else
+    begin
+      break;
+    end;
+  end
+  until Now - StartTime > OneSecond;
+end;
+
+procedure TListFileHandler.SetPageStatus(APage: TjvStandardPage;
+  const Value: TStatusChange);
+var
+  ConnectedNode: TTreeNode;
+begin
+  ConnectedNode := GetConnectedNode(APage);
+  if Value = scNone then
+  begin
+    ConnectedNode.StateIndex := -1;
+  end
+  else
+  begin
+    ConnectedNode.StateIndex := Ord(Value)+1;
+  end;
+  if (ConnectedNode.Parent <> nil) then
+  begin
+    if ConnectedNode.StateIndex = -1 then
+    begin
+      ConnectedNode.Parent.StateIndex := -1;
+    end
+    else
+    begin
+      if ConnectedNode.Parent.StateIndex < ConnectedNode.StateIndex then
+      begin
+        ConnectedNode.Parent.StateIndex := ConnectedNode.StateIndex;
+      end;
+    end;
+  end;
+end;
+
+procedure TListFileHandler.StorePercentDiscrepancy(ALine: string);
+var
+  Position: Integer;
+  TestLine: string;
+  Num1: string;
+  Num2: string;
+  Cum: Double;
+  Rate: Double;
+begin
+  Position := Pos(StrPERCENTDISCREPANCY, ALine);
+  if Position > 0 then
+  begin
+    TestLine := Trim(Copy(ALine, Position + Length(StrPERCENTDISCREPANCY), MAXINT));
+    Position := Pos(StrPERCENTDISCREPANCY, TestLine);
+    Assert(Position > 0);
+    Num1 := Trim(Copy(TestLine, 1, Position - 1));
+    Num2 := Trim(Copy(TestLine, Position + Length(StrPERCENTDISCREPANCY), MAXINT));
+    Cum := StrToFloat(Num1);
+    Rate := StrToFloat(Num2);
+
+    FPercentRate.Add(Rate);
+    FPercentCumulative.Add(Cum);
+  end;
+end;
+
+procedure TListFileHandler.CreateLineSeries(AColor: TColor; ATitle: string;
+  var ASeries: TLineSeries);
+begin
+  ASeries := TLineSeries.Create(FPageControl.Owner);
+  ASeries.ParentChart := FBudgetChart;
+  ASeries.SeriesColor := AColor;
+  ASeries.Title := ATitle;
+  ASeries.Pointer.Style := psRectangle;
+  ASeries.Pointer.Visible := True;
+end;
+
+procedure TListFileHandler.CreateNewTabSheet(out ATabSheet: TjvStandardPage;
+  NewCaption: string; out NewNode: TTreeNode);
+var
+  NewPageIndex: Integer;
+begin
+  NewPageIndex := FPageControl.PageCount - 1;
+  ATabSheet := TjvStandardPage.Create(FPageControl.Owner);
+  ATabSheet.PageList := FPageControl;
+  ATabSheet.PageIndex := NewPageIndex;
+  ATabSheet.Caption := NewCaption;
+
+  NewNode := FTree.Items.AddChild(FParentNode, NewCaption);
+  NewNode.Data := ATabSheet;
+  NewNode.StateIndex := 1;
 end;
 
 end.

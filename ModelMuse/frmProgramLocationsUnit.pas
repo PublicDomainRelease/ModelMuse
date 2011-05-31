@@ -43,6 +43,10 @@ type
     lblZoneBudget: TLabel;
     lblModelMate: TLabel;
     fedModelMate: TJvFilenameEdit;
+    Label1: TLabel;
+    JvHTLabel1: TJvHTLabel;
+    fedModflowLgr: TJvFilenameEdit;
+    JvHTLabel2: TJvHTLabel;
     procedure fedModflowChange(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
@@ -57,7 +61,7 @@ type
 
 implementation
 
-uses frmGoPhastUnit;
+uses frmGoPhastUnit, GoPhastTypes;
 
 {$R *.dfm}
 
@@ -94,6 +98,7 @@ begin
   fedModelMonitor.FileName := Locations.ModelMonitorLocation;
   fedZonebudget.FileName := Locations.ZoneBudgetLocation;
   fedModelMate.FileName := Locations.ModelMateLocation;
+  fedModflowLgr.FileName := Locations.ModflowLgrLocation;
 end;
 
 procedure TfrmProgramLocations.SetData;
@@ -109,6 +114,7 @@ begin
     Locations.ModelMonitorLocation := fedModelMonitor.FileName;
     Locations.ZoneBudgetLocation := fedZonebudget.FileName;
     Locations.ModelMateLocation := fedModelMate.FileName;
+    Locations.ModflowLgrLocation := fedModflowLgr.FileName;
     Undo := TUndoChangeProgramLocations.Create(Locations);
     frmGoPhast.UndoStack.Submit(Undo);
   finally
@@ -118,7 +124,11 @@ end;
 
 procedure TfrmProgramLocations.HighlightControls;
 var
-  FilesExist: Boolean;
+  ModflowOK: Boolean;
+  ModflowLgrOK: Boolean;
+  ModpathOK: Boolean;
+  ZoneBudgetOK: Boolean;
+  FileEditorOK: Boolean;
   function CheckControl(Edit: TJvFilenameEdit): boolean;
   begin
     if Edit = fedTextEditor then
@@ -142,11 +152,17 @@ var
 begin
   CheckControl(fedModelMonitor);
   CheckControl(fedModelMate);
-  FilesExist := CheckControl(fedModflow)
-    and (CheckControl(fedModpath)
-    or not frmGoPhast.PhastModel.ModflowPackages.ModPath.IsSelected)
-    and CheckControl(fedTextEditor);
-  btnOK.Enabled := FilesExist;
+  ModflowOK := CheckControl(fedModflow)
+    or (frmGoPhast.PhastModel.ModelSelection  <> msModflow);
+  ModflowLgrOK := CheckControl(fedModflowLgr)
+    or (frmGoPhast.PhastModel.ModelSelection  <> msModflowLGR);
+  ModpathOK := CheckControl(fedModpath)
+    or not frmGoPhast.PhastModel.ModPathIsSelected;
+  ZoneBudgetOK := CheckControl(fedZonebudget)
+    or not frmGoPhast.PhastModel.ZoneBudgetIsSelected;
+  FileEditorOK := CheckControl(fedTextEditor);
+  btnOK.Enabled := ModflowOK and ModflowLgrOK and ModpathOK
+    and ZoneBudgetOK and FileEditorOK;
 end;
 
 { TUndoChangeProgramLocations }

@@ -29,9 +29,9 @@ type
     function HufUnit: THydrogeologicUnit;
     function HufUnits: THydrogeologicUnits;
     procedure CreateOrUpdataDataArray(var LayerName: string;
-      DataType: TRbwDataType; UseDataArray: boolean);
+      DataType: TRbwDataType; UseDataArray: boolean; AModel: TBaseModel);
     procedure RenameLayer(const NewHufName: string);
-    procedure RenameDataArrays(NewRoot: string);
+    procedure RenameDataArrays(NewRoot: string; AModel: TBaseModel);
     function GetParameter: TModflowParameter;
     function ArrayRoot: string;
     function UniqueName(Candidate: string; Names: TStringList): string;
@@ -66,7 +66,7 @@ type
     procedure RemoveUsedParameter(const ParameterName: string);
   public
     property Items[Index: integer]: THufUsedParameter read GetItem; default;
-    constructor Create(Model: TComponent; HufUnit: THydrogeologicUnit);
+    constructor Create(Model: TBaseModel; HufUnit: THydrogeologicUnit);
     function GetUsedParameterByName(const ParameterName: string): THufUsedParameter;
     function IsUsed(const ParameterName: string): boolean;
     procedure Notify(Item: TCollectionItem; Action: TCollectionNotification); override;
@@ -99,7 +99,7 @@ type
     function GetItem(Index: TPrintParam): TPrintItem;
   public
     property Print[Index: TPrintParam]: boolean read GetPrint write SetPrint;
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
     property Items[Index: TPrintParam]: TPrintItem read GetItem; default;
   end;
 
@@ -127,10 +127,10 @@ type
     procedure RenameLayer(const NewHufName: string);
     procedure FillDataArrayNames(DataArrayNames: TStrings);
     procedure CreateOrRenameDataArray(var LayerName: string; Extension: string;
-      const NewHufName: string);
+      const NewHufName: string; AModel: TBaseModel);
     function HufUnits: THydrogeologicUnits;
     procedure RemoveUsedParameter(const ParameterName: string);
-    function UsesParameterType(ParamType: TParameterType): Boolean; 
+    function UsesParameterType(ParamType: TParameterType): Boolean;
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
   public
@@ -166,7 +166,7 @@ type
     function GetItems(Index: integer): THydrogeologicUnit;
     procedure SetItems(Index: integer; const Value: THydrogeologicUnit);
   public
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
     property Items[Index: integer]: THydrogeologicUnit read GetItems write SetItems; default;
     procedure RenameParameters(const OldName, NewName: string);
     function GetUnitByName(UnitName: string): THydrogeologicUnit;
@@ -187,7 +187,7 @@ type
   private
     function GetItem(Index: integer): THufParameter;
   public
-    Constructor Create(Model: TComponent);
+    Constructor Create(Model: TBaseModel);
     function GetParameterByName(const ParameterName: string): THufParameter;
     property Items[Index: integer]: THufParameter read GetItem; default;
     function CountParameters(ParamTypes: TParameterTypes): integer;
@@ -228,17 +228,20 @@ begin
   NotifyParamChange;
 end;
 
-procedure THufUsedParameter.RenameDataArrays(NewRoot: string);
+procedure THufUsedParameter.RenameDataArrays(NewRoot: string; AModel: TBaseModel);
 var
   NewName: string;
   DataArray: TDataArray;
-  PhastModel: TPhastModel;
+  LocalModel: TCustomModel;
   DataArrayManager: TDataArrayManager;
+  PhastModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
-  PhastModel := Model as TPhastModel;
-  if PhastModel <> nil then
+  LocalModel := AModel as TCustomModel;
+  if LocalModel <> nil then
   begin
-    DataArrayManager := PhastModel.DataArrayManager;
+    DataArrayManager := LocalModel.DataArrayManager;
     if UseMultiplier then
     begin
       DataArray := DataArrayManager.GetDataSetByName(FMultiplierName);
@@ -260,21 +263,33 @@ begin
       end;
     end;
   end;
+  if AModel is TPhastModel then
+  begin
+    PhastModel := TPhastModel(AModel);
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      RenameDataArrays(NewRoot, ChildModel);
+    end;
+  end;
 end;
 
 procedure THufUsedParameter.CreateOrUpdataDataArray(var LayerName: string;
-  DataType: TRbwDataType; UseDataArray: boolean);
+  DataType: TRbwDataType; UseDataArray: boolean; AModel: TBaseModel);
 var
-  PhastModel: TPhastModel;
+  LocalModel: TCustomModel;
   Extension: string;
   Formula: string;
   DataArray: TDataArray;
   DataArrayManager: TDataArrayManager;
+  PhastModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
-  PhastModel := Model as TPhastModel;
-  if PhastModel <> nil then
+  LocalModel := AModel as TCustomModel;
+  if LocalModel <> nil then
   begin
-    DataArrayManager := PhastModel.DataArrayManager;
+    DataArrayManager := LocalModel.DataArrayManager;
     if UseDataArray then
     begin
       if DataType = rdtBoolean then
@@ -304,17 +319,17 @@ begin
             frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
         end;
 
-//        DataArray.OnNameChange := PhastModel.DataArrayNameChange;
+//        DataArray.OnNameChange := LocalModel.DataArrayNameChange;
 
-        DataArray.OnDataSetUsed := PhastModel.HufDataArrayUsed;
+        DataArray.OnDataSetUsed := LocalModel.HufDataArrayUsed;
         HufUnits.AddOwnedDataArray(DataArray);
       end
       else
       begin
         DataArray.UpdateWithName(LayerName);
         DataArray.Lock := StandardLock;
-//        DataArray.OnNameChange := PhastModel.DataArrayNameChange;
-        DataArray.OnDataSetUsed := PhastModel.HufDataArrayUsed;
+//        DataArray.OnNameChange := LocalModel.DataArrayNameChange;
+        DataArray.OnDataSetUsed := LocalModel.HufDataArrayUsed;
       end;
     end
     else
@@ -324,6 +339,15 @@ begin
       begin
         DataArray.Lock := [];
       end;
+    end;
+  end;
+  if AModel is TPhastModel then
+  begin
+    PhastModel := TPhastModel(AModel);
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      CreateOrUpdataDataArray(LayerName, DataType, UseDataArray, ChildModel);
     end;
   end;
 end;
@@ -337,10 +361,14 @@ end;
 procedure THufUsedParameter.NotifyParamChange;
 var
   AParam: TModflowParameter;
-  PhastModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  PhastModel := Model as TPhastModel;
-  if (PhastModel <> nil) and not (csLoading in PhastModel.ComponentState) then
+  LocalModel := Model as TCustomModel;
+  if LocalModel is TChildModel then
+  begin
+    LocalModel := TChildModel(LocalModel).ParentModel as TCustomModel;
+  end;
+  if (LocalModel <> nil) and not (csLoading in LocalModel.ComponentState) then
   begin
     AParam := Parameter;
     AParam.NotifyParamChange(AParam.ParameterType);
@@ -415,7 +443,7 @@ var
   NewRoot: string;
 begin
   NewRoot := NewHufName + '_' + ParameterName;
-  RenameDataArrays(NewRoot);
+  RenameDataArrays(NewRoot, Model);
 end;
 
 procedure THufUsedParameter.SetParameterName(const Value: string);
@@ -426,7 +454,7 @@ begin
   if FParameterName <> Value then
   begin
     NewRoot := HufUnit.HufName + '_' + Value;
-    RenameDataArrays(NewRoot);
+    RenameDataArrays(NewRoot, Model);
     FParameterName := Value;
     InvalidateModel;
     NotifyParamChange;
@@ -438,7 +466,7 @@ begin
   if FUseMultiplier <> Value then
   begin
     FUseMultiplier := Value;
-    CreateOrUpdataDataArray(FMultiplierName, rdtDouble, FUseMultiplier);
+    CreateOrUpdataDataArray(FMultiplierName, rdtDouble, FUseMultiplier, Model);
     SendNotifications;
     InvalidateModel;
     NotifyParamChange;
@@ -450,7 +478,7 @@ begin
   if FUseZone <> Value then
   begin
     FUseZone := Value;
-    CreateOrUpdataDataArray(FZoneName, rdtBoolean, FUseZone);
+    CreateOrUpdataDataArray(FZoneName, rdtBoolean, FUseZone, Model);
     SendNotifications;
     InvalidateModel;
     NotifyParamChange;
@@ -493,7 +521,7 @@ end;
 
 { THufUsedParameters }
 
-constructor THufUsedParameters.Create(Model: TComponent; HufUnit: THydrogeologicUnit);
+constructor THufUsedParameters.Create(Model: TBaseModel; HufUnit: THydrogeologicUnit);
 begin
   inherited Create(THufUsedParameter, Model);
   FHufUnit := HufUnit;
@@ -621,16 +649,17 @@ end;
 
 destructor THydrogeologicUnit.Destroy;
 var
+  LocalModel: TCustomModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  AModel: TCustomModel;
   PhastModel: TPhastModel;
-  DataArray: TDataArray;
-  DataArrayManager: TDataArrayManager;
-begin
-  FHufUsedParameters.Free;
-  FPrintItems.Free;
-  PhastModel := Model as TPhastModel;
-  if PhastModel <> nil then
+  procedure UnlockDataArrays(AModel: TCustomModel);
+  var
+    DataArray: TDataArray;
+    DataArrayManager: TDataArrayManager;
   begin
-    DataArrayManager := PhastModel.DataArrayManager;
+    DataArrayManager := AModel.DataArrayManager;
     DataArray := DataArrayManager.GetDataSetByName(FTopArrayName);
     if DataArray <> nil then
     begin
@@ -642,19 +671,52 @@ begin
       DataArray.Lock := [];
     end;
   end;
+begin
+  FHufUsedParameters.Free;
+  FPrintItems.Free;
+  LocalModel := Model as TCustomModel;
+  if LocalModel <> nil then
+  begin
+    AModel := LocalModel;
+    UnlockDataArrays(AModel);
+//    DataArrayManager := AModel.DataArrayManager;
+//    DataArray := DataArrayManager.GetDataSetByName(FTopArrayName);
+//    if DataArray <> nil then
+//    begin
+//      DataArray.Lock := [];
+//    end;
+//    DataArray := DataArrayManager.GetDataSetByName(FThickessArrayName);
+//    if DataArray <> nil then
+//    begin
+//      DataArray.Lock := [];
+//    end;
+    if LocalModel is TPhastModel then
+    begin
+      PhastModel := TPhastModel(LocalModel);
+      for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+        UnlockDataArrays(ChildModel);
+      end;
+    end;
+  end;
   inherited;
 end;
 
 procedure THydrogeologicUnit.CreateOrRenameDataArray(var LayerName: string;
-  Extension: string; const NewHufName: string);
+  Extension: string; const NewHufName: string; AModel: TBaseModel);
 var
-  PhastModel: TPhastModel;
+  LocalModel: TCustomModel;
   DataArray: TDataArray;
   DataArrayManager: TDataArrayManager;
+  PhastModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+
 begin
-  PhastModel := Model as TPhastModel;
-  DataArrayManager := PhastModel.DataArrayManager;
-  Assert(PhastModel <> nil);
+  LocalModel := AModel as TCustomModel;
+  DataArrayManager := LocalModel.DataArrayManager;
+  Assert(LocalModel <> nil);
   if LayerName = '' then
   begin
     DataArray := nil;
@@ -681,25 +743,34 @@ begin
       DataArray.UpdateDimensions(frmGoPhast.Grid.LayerCount,
         frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
     end;
-//    DataArray := TDataArray.Create(PhastModel);
+//    DataArray := TDataArray.Create(LocalModel);
 //    DataArray.UpdateWithName(LayerName);
-//    DataArray.OnNameChange := PhastModel.DataArrayNameChange;
+//    DataArray.OnNameChange := LocalModel.DataArrayNameChange;
 //    DataArray.Orientation := dsoTop;
 //    DataArray.EvaluatedAt := eaBlocks;
 //    DataArray.DataType := rdtDouble;
 //    DataArray.Formula := '0.';
 //    DataArray.Lock := StandardLock;
 //    DataArray.Classification := StrHUF;
-    DataArray.OnDataSetUsed := PhastModel.HufDataArrayUsed;
-//    PhastModel.AddDataSet(DataArray);
+    DataArray.OnDataSetUsed := LocalModel.HufDataArrayUsed;
+//    LocalModel.AddDataSet(DataArray);
     HufUnits.AddOwnedDataArray(DataArray);
   end
   else
   begin
     DataArray.UpdateWithName(LayerName);
     DataArray.Lock := StandardLock;
-//    DataArray.OnNameChange := PhastModel.DataArrayNameChange;
-    DataArray.OnDataSetUsed := PhastModel.HufDataArrayUsed;
+//    DataArray.OnNameChange := LocalModel.DataArrayNameChange;
+    DataArray.OnDataSetUsed := LocalModel.HufDataArrayUsed;
+  end;
+  if AModel is TPhastModel then
+  begin
+    PhastModel := TPhastModel(AModel);
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      CreateOrRenameDataArray(LayerName, Extension, NewHufName, ChildModel);
+    end;
   end;
 end;
 
@@ -765,17 +836,17 @@ end;
 
 procedure THydrogeologicUnit.SetHorizontalAnisotropy(const Value: double);
 var
-  PhastModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
   if FHorizontalAnisotropy <> Value then
   begin
     FHorizontalAnisotropy := Value;
     InvalidateModel;
-    PhastModel := Model as TPhastModel;
-    if PhastModel <> nil then
+    LocalModel := Model as TCustomModel;
+    if LocalModel <> nil then
     begin
-      PhastModel.HufKyNotifier.UpToDate := False;
-      PhastModel.HufKyNotifier.UpToDate := True;
+      LocalModel.HufKyNotifier.UpToDate := False;
+      LocalModel.HufKyNotifier.UpToDate := True;
     end;
   end;
 end;
@@ -787,15 +858,15 @@ end;
 
 procedure THydrogeologicUnit.RenameLayer(const NewHufName: string);
 var
-  PhastModel: TPhastModel;
+  LocalModel: TCustomModel;
   DataArray: TDataArray;
 begin
   if Model <> nil then
   begin
-    CreateOrRenameDataArray(FTopArrayName, StrTop, NewHufName);
-    CreateOrRenameDataArray(FThickessArrayName, StrThickness, NewHufName);
-    PhastModel := Model as TPhastModel;
-    DataArray := PhastModel.DataArrayManager.GetDataSetByName(FThickessArrayName);
+    CreateOrRenameDataArray(FTopArrayName, StrTop, NewHufName, Model);
+    CreateOrRenameDataArray(FThickessArrayName, StrThickness, NewHufName, Model);
+    LocalModel := Model as TCustomModel;
+    DataArray := LocalModel.DataArrayManager.GetDataSetByName(FThickessArrayName);
     Assert(DataArray <> nil);
     DataArray.CheckMin := True;
     DataArray.Min := 0;
@@ -841,34 +912,34 @@ end;
 
 procedure THydrogeologicUnit.SetVerticalAnisotropy(const Value: double);
 var
-  PhastModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
   if FVerticalAnisotropy <> Value then
   begin
     FVerticalAnisotropy := Value;
     InvalidateModel;
-    PhastModel := Model as TPhastModel;
-    if PhastModel <> nil then
+    LocalModel := Model as TCustomModel;
+    if LocalModel <> nil then
     begin
-      PhastModel.HufKzNotifier.UpToDate := False;
-      PhastModel.HufKzNotifier.UpToDate := True;
+      LocalModel.HufKzNotifier.UpToDate := False;
+      LocalModel.HufKzNotifier.UpToDate := True;
     end;
   end;
 end;
 
 procedure THydrogeologicUnit.SetVK_Method(const Value: TVK_Method);
 var
-  PhastModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
   if FVK_Method <> Value then
   begin
     FVK_Method := Value;
     InvalidateModel;
-    PhastModel := Model as TPhastModel;
-    if PhastModel <> nil then
+    LocalModel := Model as TCustomModel;
+    if LocalModel <> nil then
     begin
-      PhastModel.HufKzNotifier.UpToDate := False;
-      PhastModel.HufKzNotifier.UpToDate := True;
+      LocalModel.HufKzNotifier.UpToDate := False;
+      LocalModel.HufKzNotifier.UpToDate := True;
     end;
   end;
 end;
@@ -920,7 +991,7 @@ end;
 
 { THydrogeologicUnits }
 
-constructor THydrogeologicUnits.Create(Model: TComponent);
+constructor THydrogeologicUnits.Create(Model: TBaseModel);
 begin
   inherited Create(THydrogeologicUnit, Model);
 end;
@@ -1016,12 +1087,12 @@ end;
 
 function TPrintItem.ShouldPrint: boolean;
 var
-  Model: TPhastModel;
+  Model: TCustomModel;
 begin
   result := Print;
   if result and (PrintParam in [pprSS, pprSY]) then
   begin
-    Model := (Collection as TPhastCollection).Model as TPhastModel;
+    Model := (Collection as TPhastCollection).Model as TCustomModel;
     result := Model.ModflowFullStressPeriods.TransientModel;
   end;
   
@@ -1029,7 +1100,7 @@ end;
 
 { TPrintCollection }
 
-constructor TPrintCollection.Create(Model: TComponent);
+constructor TPrintCollection.Create(Model: TBaseModel);
 var
   Index: TPrintParam;
   NewItem: TPrintItem;
@@ -1154,7 +1225,7 @@ begin
   end;
 end;
 
-constructor THufModflowParameters.Create(Model: TComponent);
+constructor THufModflowParameters.Create(Model: TBaseModel);
 begin
   inherited Create(THufParameter, Model);
 end;
@@ -1213,14 +1284,17 @@ begin
 end;
 
 procedure THufParameter.SetParameterName(const Value: string);
+var
+  NewName: string;
 begin
-  if FParameterName <> Value then
+  NewName := CorrectParamName(Value);
+  if FParameterName <> NewName then
   begin
     if FParameterName <> '' then
     begin
-      UpdateUsedParameters(Value);
+      UpdateUsedParameters(NewName);
     end;
-    FParameterName := Value;
+    FParameterName := NewName;
     InvalidateModel;
   end;
 end;

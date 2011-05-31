@@ -9,6 +9,10 @@ uses Windows, Types, SysUtils, Classes, Contnrs, CustomModflowWriterUnit,
 
 
 type
+//  EInvalidTime = class(Exception)
+//    Constructor Create(AnObject: TObject); overload;
+//  end;
+
   TSegment = class(TObject)
   private
     FReaches: TValueCellList;
@@ -85,11 +89,32 @@ uses ModflowUnitNumbers, OrderedCollectionUnit, frmErrorsAndWarningsUnit,
   ModflowSfrReachUnit, ModflowTransientListParameterUnit, ModflowSfrTable,
   ModflowSfrFlows, ModflowSfrChannelUnit, ModflowSfrEquationUnit,
   ModflowTimeUnit, frmProgressUnit, IntListUnit, GoPhastTypes, Forms, 
-  ModflowBoundaryUnit;
+  ModflowBoundaryUnit, Dialogs;
 
 resourcestring
-  StrOneOrMoreSFRStre = 'One or more SFR stream segments have slopes that ar' +
-  'e zero or negative.';
+  StrInvalidStartingTim = 'Invalid starting time or missing data for the '
+    + 'first time step in the following objects';
+  StrSFRLinkagesBetween = 'SFR linkages between grids is unsupported';
+
+const
+  StrOneOrMoreSFRStre = 'One or more SFR stream segments have slopes that '
+    + 'are zero or negative.';
+  StrDownstreamOutOfOrder = 'In the SFR package, the following objects '
+    + 'define streams that flow into streams with lower segment numbers.  '
+    + 'Because the stream segments are in strict numerical order, ModelMuse '
+    + 'will not renumber them. However, you may wish to check the order of the '
+    + 'stream segments.';
+  StrDiversionOutOfOrder = 'In the SFR package, the following objects define'
+    + ' streams that divert flow from streams with higher segment numbers.  ' 
+    + 'Because the stream segments are in strict numerical order, ModelMuse '
+    + 'will not renumber them. However, you may wish to check the order of the '
+    + 'stream segments.';
+  StrLakeDownstreamError = 'In the SFR package, the following objects '
+    + 'define streams that flow into lakes even though the lake package is ' +
+      'not in use.';
+  StrLakeDiversionError = 'In the SFR package, the following objects '
+    + 'define streams that divert flow from lakes even though the lake ' +
+      'package is not in use.';
 
 const
   StrSegmentNumber = 'Segment Number in ';
@@ -145,31 +170,50 @@ var
   StartTime: Double;
   EndTime: Double;
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(StrIncompleteSFRData);
-  frmErrorsAndWarnings.RemoveErrorGroup(DupErrorCategory);
-  frmErrorsAndWarnings.RemoveErrorGroup(CircularCategory);
-  frmErrorsAndWarnings.RemoveErrorGroup(ChannelRoughnessError);
-  frmErrorsAndWarnings.RemoveErrorGroup(BankRoughnessError);
-  frmErrorsAndWarnings.RemoveWarningGroup(NoSegmentsWarning);
-  frmErrorsAndWarnings.RemoveErrorGroup(UnsatError);
-  frmErrorsAndWarnings.RemoveErrorGroup(StrOneOrMoreSFRStre);
 
-  StartTime := PhastModel.ModflowStressPeriods[0].StartTime;
-  EndTime := PhastModel.ModflowStressPeriods[
-    PhastModel.ModflowStressPeriods.Count-1].EndTime;
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidStartingTim);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrIncompleteSFRData);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, DupErrorCategory);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, CircularCategory);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, ChannelRoughnessError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, BankRoughnessError);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, NoSegmentsWarning);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, UnsatError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrOneOrMoreSFRStre);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrDownstreamOutOfOrder);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrDiversionOutOfOrder);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrLakeDownstreamError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrLakeDiversionError);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrSFRLinkagesBetween);
+
+  if Model is TChildModel then
+  begin
+    frmErrorsAndWarnings.AddWarning(Model, StrSFRLinkagesBetween,
+      'ModelMuse does not currently support linking streams between parent '
+      + 'and child grids. You will need to modify the SFR files manually if '
+      + 'want the streams to be linked.');
+  end;
+
+  StartTime := Model.ModflowStressPeriods[0].StartTime;
+  EndTime := Model.ModflowStressPeriods[
+    Model.ModflowStressPeriods.Count-1].EndTime;
 
   frmProgressMM.AddMessage('Evaluating SFR Package data.');
   ISFROPT := (Package as TSfrPackageSelection).Isfropt;
   Dummy := TStringList.Create;
   try
-    for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
     begin
       if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
-      ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
       if ScreenObject.Deleted then
+      begin
+        Continue;
+      end;
+      if not ScreenObject.UsedModels.UsesModel(Model) then
       begin
         Continue;
       end;
@@ -184,7 +228,7 @@ begin
       Item.StartTime := StartTime;
       Item.EndTime := EndTime;
 
-      Boundary.GetCellValues(FValues, Dummy);
+      Boundary.GetCellValues(FValues, Dummy, Model);
       if (FValues.Count >= 1) then
       begin
         Assert(FValues.Count = 1);
@@ -197,7 +241,8 @@ begin
         end
         else
         begin
-          frmErrorsAndWarnings.AddWarning(NoSegmentsWarning, ScreenObject.Name);
+          frmErrorsAndWarnings.AddWarning(Model,
+            NoSegmentsWarning, ScreenObject.Name);
           Segment.Free;
         end;
       end
@@ -224,7 +269,7 @@ end;
 
 function TModflowSFR_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.SfrPackage;
+  result := Model.ModflowPackages.SfrPackage;
 end;
 
 procedure TModflowSFR_Writer.SortSegments;
@@ -241,9 +286,16 @@ var
   AnotherSegment: TSegment;
   SegmentNumberArray: TIntegerDynArray;
   OutIndex: integer;
+  DownStreamOutOfOrder: TList;
+  DiversionOutOfOrder: TList;
+  WarningIndex: Integer;
+  AScreenObject: TScreenObject;
+  LakeDownstreamError: TList;
+  LakeDiversionError: TList;
   function FindSegment(Number: integer): TSegment;
   var
     Index: Integer;
+    Segment: TSegment;
   begin
     result := nil;
     for Index := 0 to FSegments.Count - 1 do
@@ -269,10 +321,57 @@ begin
     begin
       Error := Format(DupNumbersError, [Segment1.FScreenObject.Name,
         Segment2.FScreenObject.Name, Segment1.OriginalSegmentNumber]);
-      frmErrorsAndWarnings.AddError(DupErrorCategory, Error);
+      frmErrorsAndWarnings.AddError(Model, DupErrorCategory, Error);
     end;
   end;
 
+  if not Model.ModflowPackages.LakPackage.IsSelected then
+  begin
+    LakeDownstreamError := TList.Create;
+    LakeDiversionError := TList.Create;
+    try
+      for Index := 0 to FSegments.Count - 1 do
+      begin
+        Segment := FSegments[Index];
+        SegmentNumberArray := Segment.OriginalDownStreamSegmentNumbers;
+        for OutIndex := 0 to Length(SegmentNumberArray) - 1 do
+        begin
+          if (SegmentNumberArray[OutIndex] < 0) then
+          begin
+            LakeDownstreamError.Add(Segment.FScreenObject);
+            break;
+          end;
+        end;
+
+        SegmentNumberArray := Segment.OriginalDiversionSegmentNumbers;
+        for OutIndex := 0 to Length(SegmentNumberArray) - 1 do
+        begin
+          if (SegmentNumberArray[OutIndex] < 0) then
+          begin
+            LakeDiversionError.Add(Segment.FScreenObject);
+            break;
+          end;
+        end;
+      end;
+      for WarningIndex := 0 to LakeDownstreamError.Count - 1 do
+      begin
+        AScreenObject := LakeDownstreamError[WarningIndex];
+        frmErrorsAndWarnings.AddError(Model,
+          StrLakeDownstreamError, AScreenObject.Name);
+      end;
+      for WarningIndex := 0 to LakeDiversionError.Count - 1 do
+      begin
+        AScreenObject := LakeDiversionError[WarningIndex];
+        frmErrorsAndWarnings.AddError(Model,
+          StrLakeDiversionError, AScreenObject.Name);
+      end;
+    finally
+      LakeDiversionError.Free;
+      LakeDownstreamError.Free;
+    end;
+  end;
+
+//  UnsortedList := nil;
   // don't renumber the segments if they are already in
   // numerical order.
   if (Error = '') and (FSegments.Count > 0) then
@@ -283,7 +382,74 @@ begin
       Segment2 := FSegments[FSegments.Count - 1];
       if Segment2.OriginalSegmentNumber = FSegments.Count then
       begin
-        Exit;
+//        OrderOK := True;
+        DownStreamOutOfOrder := TList.Create;
+        DiversionOutOfOrder := TList.Create;
+        try
+          for Index := 0 to FSegments.Count - 1 do
+          begin
+            Segment := FSegments[Index];
+            SegmentNumberArray := Segment.OriginalDownStreamSegmentNumbers;
+            for OutIndex := 0 to Length(SegmentNumberArray) - 1 do
+            begin
+              if (SegmentNumberArray[OutIndex] > 0) then
+              begin
+                if (SegmentNumberArray[OutIndex] > FSegments.Count)
+                or (SegmentNumberArray[OutIndex] < Segment.OriginalSegmentNumber) then
+                begin
+//                  OrderOK := False;
+                  if DownStreamOutOfOrder.IndexOf(Segment.FScreenObject) < 0 then
+                  begin
+                    DownStreamOutOfOrder.Add(Segment.FScreenObject)
+                  end;
+                end;
+              end;
+            end;
+            SegmentNumberArray := Segment.OriginalDiversionSegmentNumbers;
+            for OutIndex := 0 to Length(SegmentNumberArray) - 1 do
+            begin
+              if (SegmentNumberArray[OutIndex] > 0) then
+              begin
+                if (SegmentNumberArray[OutIndex] > FSegments.Count)
+                or (SegmentNumberArray[OutIndex] > Segment.OriginalSegmentNumber) then
+                begin
+//                  OrderOK := False;
+                  if DiversionOutOfOrder.IndexOf(Segment.FScreenObject) < 0 then
+                  begin
+                    DiversionOutOfOrder.Add(Segment.FScreenObject)
+                  end;
+                end;
+              end;
+            end;
+          end;
+          for WarningIndex := 0 to DownStreamOutOfOrder.Count - 1 do
+          begin
+            AScreenObject := DownStreamOutOfOrder[WarningIndex];
+            frmErrorsAndWarnings.AddWarning(Model,
+              StrDownstreamOutOfOrder, AScreenObject.Name);
+          end;
+          for WarningIndex := 0 to DiversionOutOfOrder.Count - 1 do
+          begin
+            AScreenObject := DiversionOutOfOrder[WarningIndex];
+            frmErrorsAndWarnings.AddWarning(Model,
+              StrDiversionOutOfOrder, AScreenObject.Name);
+          end;
+        finally
+          DownStreamOutOfOrder.Free;
+          DiversionOutOfOrder.Free;
+        end;
+//        if OrderOK then
+//        begin
+          Exit;
+//          UnsortedList := TObjectList.Create;
+//          TObjectList(UnsortedList).OwnsObjects := True;
+//          UnsortedList.Capacity := FSegments.Count;
+//          for Index := 0 to FSegments.Count - 1 do
+//          begin
+//            UnsortedList.Add(FSegments[Index]);
+//          end;
+//        end;
+//        Exit;
       end;
     end;
   end;
@@ -351,13 +517,23 @@ begin
       Segment := FSegments[Index];
       Error := Format(CircularError, [Segment.FScreenObject.Name,
         Segment.OriginalSegmentNumber]);
-      frmErrorsAndWarnings.AddError(CircularCategory, Error);
+      frmErrorsAndWarnings.AddError(Model, CircularCategory, Error);
     end;
   end;
-  (FSegments as TObjectList).OwnsObjects := True;
-  FSegments.Free;
+//  if UnsortedList = nil then
+//  begin
+    (FSegments as TObjectList).OwnsObjects := True;
+    FSegments.Free;
 
-  FSegments := SortedSegments;
+    FSegments := SortedSegments;
+//  end
+//  else
+//  begin
+//    (SortedSegments as TObjectList).OwnsObjects := False;
+//    SortedSegments.Free;
+//    FSegments.Free;
+//    FSegments := UnsortedList;
+//  end;
 end;
 
 procedure TModflowSFR_Writer.UpdateDisplay(
@@ -434,6 +610,7 @@ var
   DownstreamUnsatRecord: TSfrUnsatSegmentRecord;
   Param: TModflowTransientListParameter;
   KAnnotation: string;
+  ErrorObject: TScreenObject;
   function WidthValueUsed: boolean;
   begin
     result := True;
@@ -787,7 +964,7 @@ begin
         if (Item <> nil) and (Item.ICalc in [1,2]) then
         begin
           ChannelRecord := Boundary.ChannelValues.
-            GetChannelTimeValuesFromTime(ChannelRoughnessList.Times[TimeIndex]);
+            GetChannelTimeValuesFromTime(Model, ChannelRoughnessList.Times[TimeIndex]);
           DataArray := ChannelRoughnessList[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
           DataArray.AddDataValue(ChannelRecord.ChannelRoughnessAnnotation,
@@ -802,7 +979,7 @@ begin
         if  (Item <> nil) and (Item.ICalc = 2) then
         begin
           ChannelRecord := Boundary.ChannelValues.
-            GetChannelTimeValuesFromTime(BankRoughnessList.Times[TimeIndex]);
+            GetChannelTimeValuesFromTime(Model, BankRoughnessList.Times[TimeIndex]);
           DataArray := BankRoughnessList[TimeIndex]
             as TModflowBoundaryDisplayDataArray;
           DataArray.AddDataValue(ChannelRecord.BankRoughnessAnnotation,
@@ -883,11 +1060,18 @@ begin
               Param := nil;
               if Item.Param <> '' then
               begin
-                Param := PhastModel.ModflowTransientParameters.GetParamByName(Item.Param);
+                Param := Model.ModflowTransientParameters.GetParamByName(Item.Param);
               end;
               UpstreamValues := Boundary.UpstreamSegmentValues.
                 GetBoundaryByStartTime(UpstreamHydraulicConductivityList.Times[TimeIndex])
                 as TSfrSegmentStorage;
+              if UpstreamValues = nil then
+              begin
+                ErrorObject := Boundary.ScreenObject as TScreenObject;
+                frmErrorsAndWarnings.AddError(Model,
+                  'Invalid starting time in the following objects', ErrorObject.Name);
+                Continue;
+              end;
               UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
               DataArray := UpstreamHydraulicConductivityList[TimeIndex]
                 as TModflowBoundaryDisplayDataArray;
@@ -920,11 +1104,19 @@ begin
               Param := nil;
               if Item.Param <> '' then
               begin
-                Param := PhastModel.ModflowTransientParameters.GetParamByName(Item.Param);
+                Param := Model.ModflowTransientParameters.GetParamByName(Item.Param);
               end;
               DownstreamValues := Boundary.DownstreamSegmentValues.
                 GetBoundaryByStartTime(DownstreamHydraulicConductivityList.Times[TimeIndex])
                 as TSfrSegmentStorage;
+              if DownstreamValues = nil then
+              begin
+                ErrorObject := Boundary.ScreenObject as TScreenObject;
+                frmErrorsAndWarnings.AddError(Model,
+                  StrInvalidStartingTim, ErrorObject.Name);
+                Continue;
+//                  raise EInvalidTime.Create(Boundary.ScreenObject);
+              end;
               DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
               DataArray := DownstreamHydraulicConductivityList[TimeIndex]
                 as TModflowBoundaryDisplayDataArray;
@@ -959,6 +1151,14 @@ begin
             UpstreamValues := Boundary.UpstreamSegmentValues.
               GetBoundaryByStartTime(UpstreamWidthList.Times[TimeIndex])
               as TSfrSegmentStorage;
+            if UpstreamValues = nil then
+            begin
+              ErrorObject := Boundary.ScreenObject as TScreenObject;
+              frmErrorsAndWarnings.AddError(Model,
+                StrInvalidStartingTim, ErrorObject.Name);
+              Continue;
+//                raise EInvalidTime.Create(Boundary.ScreenObject);
+            end;
             UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
             DataArray := UpstreamWidthList[TimeIndex]
               as TModflowBoundaryDisplayDataArray;
@@ -979,6 +1179,14 @@ begin
             DownstreamValues := Boundary.DownstreamSegmentValues.
               GetBoundaryByStartTime(DownstreamWidthList.Times[TimeIndex])
               as TSfrSegmentStorage;
+            if DownstreamValues = nil then
+            begin
+              ErrorObject := Boundary.ScreenObject as TScreenObject;
+              frmErrorsAndWarnings.AddError(Model,
+                StrInvalidStartingTim, ErrorObject.Name);
+              Continue;
+//                raise EInvalidTime.Create(Boundary.ScreenObject);
+            end;
             DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
             DataArray := DownstreamWidthList[TimeIndex]
               as TModflowBoundaryDisplayDataArray;
@@ -1001,6 +1209,14 @@ begin
               UpstreamValues := Boundary.UpstreamSegmentValues.
                 GetBoundaryByStartTime(UpstreamThicknessList.Times[TimeIndex])
                 as TSfrSegmentStorage;
+              if UpstreamValues = nil then
+              begin
+                ErrorObject := Boundary.ScreenObject as TScreenObject;
+                frmErrorsAndWarnings.AddError(Model,
+                  StrInvalidStartingTim, ErrorObject.Name);
+                Continue;
+//                  raise EInvalidTime.Create(Boundary.ScreenObject);
+              end;
               UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
               DataArray := UpstreamThicknessList[TimeIndex]
                 as TModflowBoundaryDisplayDataArray;
@@ -1021,6 +1237,14 @@ begin
               DownstreamValues := Boundary.DownstreamSegmentValues.
                 GetBoundaryByStartTime(DownstreamThicknessList.Times[TimeIndex])
                 as TSfrSegmentStorage;
+              if DownstreamValues = nil then
+              begin
+                ErrorObject := Boundary.ScreenObject as TScreenObject;
+                frmErrorsAndWarnings.AddError(Model,
+                  StrInvalidStartingTim, ErrorObject.Name);
+                Continue;
+//                  raise EInvalidTime.Create(Boundary.ScreenObject);
+              end;
               DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
               DataArray := DownstreamThicknessList[TimeIndex]
                 as TModflowBoundaryDisplayDataArray;
@@ -1044,6 +1268,14 @@ begin
               UpstreamValues := Boundary.UpstreamSegmentValues.
                 GetBoundaryByStartTime(UpstreamElevationList.Times[TimeIndex])
                 as TSfrSegmentStorage;
+              if UpstreamValues = nil then
+              begin
+                ErrorObject := Boundary.ScreenObject as TScreenObject;
+                frmErrorsAndWarnings.AddError(Model,
+                  StrInvalidStartingTim, ErrorObject.Name);
+                Continue;
+//                  raise EInvalidTime.Create(Boundary.ScreenObject);
+              end;
               UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
               DataArray := UpstreamElevationList[TimeIndex]
                 as TModflowBoundaryDisplayDataArray;
@@ -1064,6 +1296,14 @@ begin
               DownstreamValues := Boundary.DownstreamSegmentValues.
                 GetBoundaryByStartTime(DownstreamElevationList.Times[TimeIndex])
                 as TSfrSegmentStorage;
+              if DownstreamValues = nil then
+              begin
+                ErrorObject := Boundary.ScreenObject as TScreenObject;
+                frmErrorsAndWarnings.AddError(Model,
+                  StrInvalidStartingTim, ErrorObject.Name);
+                Continue;
+//                  raise EInvalidTime.Create(Boundary.ScreenObject);
+              end;
               DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
               DataArray := DownstreamElevationList[TimeIndex]
                 as TModflowBoundaryDisplayDataArray;
@@ -1085,6 +1325,14 @@ begin
             UpstreamValues := Boundary.UpstreamSegmentValues.
               GetBoundaryByStartTime(UpstreamDepthList.Times[TimeIndex])
               as TSfrSegmentStorage;
+            if UpstreamValues = nil then
+            begin
+              ErrorObject := Boundary.ScreenObject as TScreenObject;
+              frmErrorsAndWarnings.AddError(Model,
+                StrInvalidStartingTim, ErrorObject.Name);
+              Continue;
+//                raise EInvalidTime.Create(Boundary.ScreenObject);
+            end;
             UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
             DataArray := UpstreamDepthList[TimeIndex]
               as TModflowBoundaryDisplayDataArray;
@@ -1105,6 +1353,14 @@ begin
             DownstreamValues := Boundary.DownstreamSegmentValues.
               GetBoundaryByStartTime(DownstreamDepthList.Times[TimeIndex])
               as TSfrSegmentStorage;
+            if DownstreamValues = nil then
+            begin
+              ErrorObject := Boundary.ScreenObject as TScreenObject;
+              frmErrorsAndWarnings.AddError(Model,
+                StrInvalidStartingTim, ErrorObject.Name);
+              Continue;
+//                raise EInvalidTime.Create(Boundary.ScreenObject);
+            end;
             DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
             DataArray := DownstreamDepthList[TimeIndex]
               as TModflowBoundaryDisplayDataArray;
@@ -1127,7 +1383,7 @@ begin
               if Boundary.UpstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
-                frmErrorsAndWarnings.AddError(UnsatError,
+                frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
               end
               else
@@ -1155,7 +1411,7 @@ begin
               if Boundary.DownstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
-                frmErrorsAndWarnings.AddError(UnsatError,
+                frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
               end
               else
@@ -1186,7 +1442,7 @@ begin
               if Boundary.UpstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
-                frmErrorsAndWarnings.AddError(UnsatError,
+                frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
               end
               else
@@ -1214,7 +1470,7 @@ begin
               if Boundary.DownstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
-                frmErrorsAndWarnings.AddError(UnsatError,
+                frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
               end
               else
@@ -1245,7 +1501,7 @@ begin
               if Boundary.UpstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
-                frmErrorsAndWarnings.AddError(UnsatError,
+                frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
               end
               else
@@ -1273,7 +1529,7 @@ begin
               if Boundary.DownstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
-                frmErrorsAndWarnings.AddError(UnsatError,
+                frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
               end
               else
@@ -1304,7 +1560,7 @@ begin
               if Boundary.UpstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
-                frmErrorsAndWarnings.AddError(UnsatError,
+                frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
               end
               else
@@ -1332,7 +1588,7 @@ begin
               if Boundary.DownstreamUnsatSegmentValues.
                 BoundaryCount = 0 then
               begin
-                frmErrorsAndWarnings.AddError(UnsatError,
+                frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
               end
               else
@@ -1382,6 +1638,7 @@ var
   Index: Integer;
   Segment: TSegment;
   Boundary: TSfrBoundary;
+  ErrorObject: TScreenObject;
 begin
   for Index := 0 to FSegments.Count - 1 do
   begin
@@ -1389,15 +1646,34 @@ begin
     Boundary := Segment.FScreenObject.ModflowSfrBoundary;
     PriorUpstreamValues := nil;
     PriorDownstreamValues := nil;
-    for TimeIndex := 0 to PhastModel.ModflowFullStressPeriods.Count - 1 do
+    for TimeIndex := 0 to Model.ModflowFullStressPeriods.Count - 1 do
     begin
-      StressPeriod := PhastModel.ModflowFullStressPeriods[TimeIndex];
+      StressPeriod := Model.ModflowFullStressPeriods[TimeIndex];
       ParamIcalcItem := Boundary.ParamIcalc.GetItemByStartTime(StressPeriod.StartTime);
-      UpstreamValues := Boundary.UpstreamSegmentValues.GetBoundaryByStartTime(StressPeriod.StartTime) as TSfrSegmentStorage;
-      DownstreamValues := Boundary.DownstreamSegmentValues.GetBoundaryByStartTime(StressPeriod.StartTime) as TSfrSegmentStorage;
-      Assert(UpstreamValues <> nil);
-      Assert(DownstreamValues <> nil);
-      if (UpstreamValues <> PriorUpstreamValues) or (DownstreamValues <> PriorDownstreamValues) then
+      UpstreamValues := Boundary.UpstreamSegmentValues.
+        GetBoundaryByStartTime(StressPeriod.StartTime) as TSfrSegmentStorage;
+      if UpstreamValues = nil then
+      begin
+        ErrorObject := Boundary.ScreenObject as TScreenObject;
+        frmErrorsAndWarnings.AddError(Model,
+          StrInvalidStartingTim, ErrorObject.Name);
+        Continue;
+//        raise EInvalidTime.Create(Boundary.ScreenObject);
+      end;
+      DownstreamValues := Boundary.DownstreamSegmentValues.
+        GetBoundaryByStartTime(StressPeriod.StartTime) as TSfrSegmentStorage;
+      if DownstreamValues = nil then
+      begin
+        ErrorObject := Boundary.ScreenObject as TScreenObject;
+        frmErrorsAndWarnings.AddError(Model,
+          StrInvalidStartingTim, ErrorObject.Name);
+        Continue;
+//        raise EInvalidTime.Create(Boundary.ScreenObject);
+      end;
+//      Assert(UpstreamValues <> nil);
+//      Assert(DownstreamValues <> nil);
+      if (UpstreamValues <> PriorUpstreamValues)
+        or (DownstreamValues <> PriorDownstreamValues) then
       begin
         WriteValue := ISFROPT in [0, 4, 5];
         if (ISFROPT in [4, 5]) and (ParamIcalcItem.ICalc in [1, 2]) then
@@ -1410,7 +1686,8 @@ begin
           DownstreamElev := DownstreamValues.SrfSegmentArray[0].StreambedElevation;
           if UpstreamElev <= DownstreamElev then
           begin
-            frmErrorsAndWarnings.AddError(StrOneOrMoreSFRStre,
+            frmErrorsAndWarnings.AddError(Model,
+              StrOneOrMoreSFRStre,
               'Object: ' + Segment.FScreenObject.Name
               + '; Time: ' + FloatToStr(StressPeriod.StartTime)
               + '; Upstream elevation: ' + FloatToStr(UpstreamElev)
@@ -1431,7 +1708,7 @@ var
   Segment: TSegment;
   NSS: integer;
   SfrPackage: TSfrPackageSelection;
-  Model: TPhastModel;
+  LocalModel: TCustomModel;
   NPARSEG: integer;
   sfrCONST: double;
   DLEAK: double;
@@ -1461,8 +1738,8 @@ begin
 
   NSS := FSegments.Count;
 
-  Model := PhastModel as TPhastModel;
-  NSFRPAR := Model.ModflowTransientParameters.CountParam(ptSFR);
+  LocalModel := Model as TCustomModel;
+  NSFRPAR := LocalModel.ModflowTransientParameters.CountParam(ptSFR);
 
   SfrPackage := Package as TSfrPackageSelection;
   NPARSEG := 0;
@@ -1515,10 +1792,10 @@ begin
   ISTCB2 := 0;
   case SfrPackage.PrintFlows of
     pfNoPrint: ISTCB2 := 0;
-    pfListing: ISTCB2 := PhastModel.UnitNumbers.UnitNumber(StrLIST);
+    pfListing: ISTCB2 := Model.UnitNumbers.UnitNumber(StrLIST);
     pfText:
       begin
-        ISTCB2 := PhastModel.UnitNumbers.UnitNumber(StrISTCB2);
+        ISTCB2 := Model.UnitNumbers.UnitNumber(StrISTCB2);
         FlowFileName := ChangeFileExt(FNameOfFile, '.sft_out');
         WriteToNameFile('DATA', ISTCB2, FlowFileName, foOutput);
       end;
@@ -1618,7 +1895,7 @@ begin
     begin
       Reach := Segment.FReaches[ReachIndex] as TSfr_Cell;
       CheckCell(Reach, 'SFR');
-      LocalLayer := PhastModel.LayerStructure.
+      LocalLayer := Model.
         DataSetLayerToModflowLayer(Reach.Layer);
       WriteInteger(LocalLayer);
       WriteInteger(Reach.Row+1);
@@ -1665,7 +1942,7 @@ begin
 
       if Reach.ReachLength <= 0 then
       begin
-        frmErrorsAndWarnings.AddWarning(WarningRoot,
+        frmErrorsAndWarnings.AddWarning(Model, WarningRoot,
           'Object = ' + ObjectName + '; '
           + 'Layer = ' + IntToStr(Reach.Layer+1) + '; '
           + 'Row = ' + IntToStr(Reach.Row+1) + '; '
@@ -1679,7 +1956,7 @@ procedure TModflowSFR_Writer.WriteDataSets3and4;
 var
   ParamIndex: integer;
   SfrPackage: TSfrPackageSelection;
-  Model: TPhastModel;
+  LocalModel: TCustomModel;
   ParamItem: TModflowTransientListParameter;
   Instances: TList;
   InstanceItem: TSfrParamInstance;
@@ -1693,15 +1970,15 @@ var
   Segment: TSegment;
 begin
   SfrPackage := Package as TSfrPackageSelection;
-  Model := PhastModel as TPhastModel;
-  for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
+  LocalModel := Model as TCustomModel;
+  for ParamIndex := 0 to LocalModel.ModflowTransientParameters.Count - 1 do
   begin
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
-    ParamItem := Model.ModflowTransientParameters.Items[ParamIndex];
+    ParamItem := LocalModel.ModflowTransientParameters.Items[ParamIndex];
     if ParamItem.ParameterType = ptSFR then
     begin
       Instances := TList.Create;
@@ -1764,7 +2041,7 @@ begin
         end;
         NewLine;
 
-        PhastModel.WritePValAndTemplate(ParamItem.ParameterName,
+        Model.WritePValAndTemplate(ParamItem.ParameterName,
           ParamItem.Value);
 
         // Data set 4a
@@ -1892,7 +2169,7 @@ begin
   ParametersUsed := TStringList.Create;
   Parameters := TStringList.Create;
   try
-    for PIndex := 0 to PhastModel.ModflowPackages.
+    for PIndex := 0 to Model.ModflowPackages.
       SfrPackage.ParameterInstances.Count - 1 do
     begin
       Application.ProcessMessages;
@@ -1900,7 +2177,7 @@ begin
       begin
         Exit;
       end;
-      Instance := PhastModel.ModflowPackages.
+      Instance := Model.ModflowPackages.
         SfrPackage.ParameterInstances.Items[PIndex];
       Location := Parameters.IndexOf(Instance.ParameterName);
       if Location < 0 then
@@ -1916,7 +2193,7 @@ begin
     end;
 
 
-    for TimeIndex := 0 to PhastModel.ModflowFullStressPeriods.Count - 1 do
+    for TimeIndex := 0 to Model.ModflowFullStressPeriods.Count - 1 do
     begin
       frmProgressMM.AddMessage('    Writing stress period '
         + IntToStr(TimeIndex + 1));
@@ -1928,7 +2205,7 @@ begin
       // data set 5;
       UsedSegments.Clear;
       ParametersUsed.Clear;
-      StressPeriod := PhastModel.ModflowFullStressPeriods[TimeIndex];
+      StressPeriod := Model.ModflowFullStressPeriods[TimeIndex];
       for SegementIndex := 0 to FSegments.Count - 1 do
       begin
         Segment := FSegments[SegementIndex];
@@ -1950,7 +2227,7 @@ begin
 
       ITMP := UsedSegments.Count;
 
-      if PhastModel.ModflowOutputControl.PrintInputCellLists then
+      if Model.ModflowOutputControl.PrintInputCellLists then
       begin
         IRDFLG := 0;
       end
@@ -2071,12 +2348,12 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrSFR) then
+  if Model.PackageGeneratedExternally(StrSFR) then
   begin
     Exit;
   end;
   FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrSFR, PhastModel.UnitNumbers.UnitNumber(StrSFR), FNameOfFile, foInput);
+  WriteToNameFile(StrSFR, Model.UnitNumbers.UnitNumber(StrSFR), FNameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
@@ -2267,7 +2544,7 @@ begin
     ((ISFROPT <= 1)  or (StressPeriod = 1) or Parameter) then
   begin
     CrossSection := SfrBoundary.ChannelValues.GetChannelTimeValuesFromTime(
-      ParamScreenObjectItem.StartTime);
+      Model, ParamScreenObjectItem.StartTime);
     for CrossSectionIndex := 0 to 7 do
     begin
       WriteFloat(CrossSection.X[CrossSectionIndex]);
@@ -2486,7 +2763,7 @@ begin
     end
     else
     begin
-      if PhastModel.ModflowPackages.LakPackage.IsSelected then
+      if Model.ModflowPackages.LakPackage.IsSelected then
       begin
         // If TModflowSFR_Writer becomes persistant,
         // there will have to be a better test for determining
@@ -2494,9 +2771,9 @@ begin
         if FLakes = nil then
         begin
           FLakes := TList.Create;
-          for Index := 0 to PhastModel.ScreenObjectCount - 1 do
+          for Index := 0 to Model.ScreenObjectCount - 1 do
           begin
-            AScreenObject := PhastModel.ScreenObjects[Index];
+            AScreenObject := Model.ScreenObjects[Index];
             if (AScreenObject.ModflowLakBoundary <> nil)
               and AScreenObject.ModflowLakBoundary.Used then
             begin
@@ -2579,7 +2856,7 @@ begin
   begin
     // ROUGHCH
     ChannelValues := SfrBoundary.ChannelValues.GetChannelTimeValuesFromTime(
-      StartTime);
+      Model, StartTime);
     WriteFloat(ChannelValues.ChannelRoughness);
     if ICALC = 2 then
     begin
@@ -2643,6 +2920,7 @@ var
   UpstreamValues: TSfrSegmentStorage;
   UnsatUpstreamValues: TSfrUnsatSegmentStorage;
   ValuesWriten: boolean;
+  ErrorObject: TScreenObject;
 begin
   upstream := True;
 
@@ -2660,15 +2938,16 @@ begin
   UpstreamValues := SfrBoundary.UpstreamSegmentValues.
     GetBoundaryByStartTime(StartTime)
     as TSfrSegmentStorage;
-  if UpstreamValues <> nil then
+  if UpstreamValues = nil then
   begin
-    WriteSegmentValues(StressPeriodIndex, Parameter, UpstreamValues,
-      upstream, CommentLine, ValuesWriten, ParamScreenObjectItem);
-  end
-  else
-  begin
-    Assert(False);
+    ErrorObject := SfrBoundary.ScreenObject as TScreenObject;
+    frmErrorsAndWarnings.AddError(Model,
+      StrInvalidStartingTim, ErrorObject.Name);
+    Exit;
+//    raise EInvalidTime.Create(SfrBoundary.ScreenObject);
   end;
+  WriteSegmentValues(StressPeriodIndex, Parameter, UpstreamValues,
+    upstream, CommentLine, ValuesWriten, ParamScreenObjectItem);
 
   if (ISFROPT in [4,5]) and (StressPeriodIndex = 0) then
   begin
@@ -2682,7 +2961,7 @@ begin
     end
     else
     begin
-      frmErrorsAndWarnings.AddError(UnsatError,
+      frmErrorsAndWarnings.AddError(Model, UnsatError,
         (SfrBoundary.ScreenObject as TScreenObject).Name);
     end;
   end;
@@ -2704,6 +2983,7 @@ var
   DownstreamValues: TSfrSegmentStorage;
   UnsatDownstreamValues: TSfrUnsatSegmentStorage;
   ValuesWriten: boolean;
+  ErrorObject: TScreenObject;
 begin
   upstream := False;
 
@@ -2721,15 +3001,16 @@ begin
   DownstreamValues := SfrBoundary.DownstreamSegmentValues.
     GetBoundaryByStartTime(StartTime)
     as TSfrSegmentStorage;
-  if DownstreamValues <> nil then
+  if DownstreamValues = nil then
   begin
-    WriteSegmentValues(StressPeriodIndex, Parameter, DownstreamValues,
-      upstream, CommentLine, ValuesWriten, ParamScreenObjectItem);
-  end
-  else
-  begin
-    Assert(False);
+    ErrorObject := SfrBoundary.ScreenObject as TScreenObject;
+    frmErrorsAndWarnings.AddError(Model,
+      StrInvalidStartingTim, ErrorObject.Name);
+    Exit;
+//    raise EInvalidTime.Create(SfrBoundary.ScreenObject);
   end;
+  WriteSegmentValues(StressPeriodIndex, Parameter, DownstreamValues,
+    upstream, CommentLine, ValuesWriten, ParamScreenObjectItem);
 
   if (ISFROPT in [4,5]) and (StressPeriodIndex = 0) then
   begin
@@ -2743,7 +3024,7 @@ begin
     end
     else
     begin
-      frmErrorsAndWarnings.AddError(UnsatError,
+      frmErrorsAndWarnings.AddError(Model, UnsatError,
         (SfrBoundary.ScreenObject as TScreenObject).Name);
     end;
   end;

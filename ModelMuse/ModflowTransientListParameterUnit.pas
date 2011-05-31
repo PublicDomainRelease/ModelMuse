@@ -2,21 +2,63 @@ unit ModflowTransientListParameterUnit;
 
 interface
 
-uses SysUtils, Classes, OrderedCollectionUnit, ModflowParameterUnit;
+uses SysUtils, Classes, OrderedCollectionUnit, ModflowParameterUnit,
+  GoPhastTypes;
 
 type
   TModflowTransientListParameters = class;
 
+  TChildModelValue = class(TOrderedItem)
+  private
+    FChildModel: TBaseModel;
+    FChildModelName: string;
+    FValue: double;
+    function GetChildModel: TBaseModel;
+    function GetChildModelName: string;
+    procedure SetValue(const Value: double);
+    procedure SetChildModel(const Value: TBaseModel);
+    procedure SetChildModelName(const Value: string);
+  protected
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+  public
+    property ChildModel: TBaseModel read GetChildModel write SetChildModel;
+  published
+    property Value: double read FValue write SetValue;
+    property ChildModelName: string read GetChildModelName
+      write SetChildModelName;
+  end;
+
+  TChildModelValues = class(TEnhancedOrderedCollection)
+  private
+    function GetItems(Index: integer): TChildModelValue;
+    procedure SetItems(Index: integer; const Value: TChildModelValue);
+    procedure Loaded;
+  public
+    constructor Create(Model: TBaseModel);
+    property Items[Index: integer]: TChildModelValue
+      read GetItems write SetItems; default;
+  end;
+
   TModflowTransientListParameter = class(TModflowParameter)
   private
+    FChildModelValues: TChildModelValues;
     function Collection: TModflowTransientListParameters;
+    procedure SetChildModelValues(const Value: TChildModelValues);
   protected
     procedure SetParameterName(const Value: string); override;
     procedure SetParameterType(const Value: TParameterType); override;
     procedure SetValue(Value : double); override;
+    procedure Loaded;
   public
     procedure Assign(Source: TPersistent); override;
+    constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
+    procedure ChildModelBeingDestroyed(Model: TBaseModel);
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    procedure NewChildModelCreated(Model: TBaseModel);
+  published
+    property ChildModelValues: TChildModelValues read FChildModelValues
+      write SetChildModelValues;
   end;
 
   TModflowTransientListParameters = class(TEnhancedOrderedCollection)
@@ -26,18 +68,19 @@ type
       const Value: TModflowTransientListParameter);
   public
     procedure UpdateDisplay(Value: TModflowTransientListParameter);
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TModflowTransientListParameter
       read GetItems write SetItems; default;
     function GetParamByName(
       const ParamName: string): TModflowTransientListParameter;
     function CountParam(ParameterType: TParameterType): integer;
+    procedure Loaded; 
   end;
 
 implementation
 
 uses PhastModelUnit, ScreenObjectUnit, ModflowBoundaryUnit,
-  ModflowSfrParamIcalcUnit, ModflowPackageSelectionUnit;
+  ModflowSfrParamIcalcUnit, ModflowPackageSelectionUnit, frmGoPhastUnit;
 
 { TModflowTransientListParameter }
 
@@ -67,9 +110,33 @@ begin
   end;
 end;
 
+procedure TModflowTransientListParameter.ChildModelBeingDestroyed(
+  Model: TBaseModel);
+var
+  ChildIndex: Integer;
+begin
+  if ParameterType in [ptGHB,ptRIV, ptDRN, ptDRT, ptSFR] then
+  begin
+    for ChildIndex := 0 to ChildModelValues.Count - 1 do
+    begin
+      if Model = ChildModelValues[ChildIndex].ChildModel then
+      begin
+        ChildModelValues.Delete(ChildIndex);
+        Exit;
+      end;
+    end;
+  end;
+end;
+
 function TModflowTransientListParameter.Collection: TModflowTransientListParameters;
 begin
   result := inherited Collection as TModflowTransientListParameters;
+end;
+
+constructor TModflowTransientListParameter.Create(Collection: TCollection);
+begin
+  inherited;
+  FChildModelValues := TChildModelValues.Create(Model);
 end;
 
 destructor TModflowTransientListParameter.Destroy;
@@ -84,7 +151,54 @@ begin
     ParameterInstances.DeleteInstancesOfParameter(ParameterName);
   end;
   (Collection as TModflowTransientListParameters).UpdateDisplay(self);
+  FChildModelValues.Free;
   inherited;
+end;
+
+function TModflowTransientListParameter.IsSame(
+  AnotherItem: TOrderedItem): boolean;
+begin
+  result := (AnotherItem is TModflowTransientListParameter)
+    and inherited IsSame(AnotherItem);
+  if result then
+  begin
+    result := ChildModelValues.IsSame(
+      TModflowTransientListParameter(AnotherItem).ChildModelValues)
+  end;
+end;
+
+procedure TModflowTransientListParameter.Loaded;
+begin
+  ChildModelValues.Loaded;
+end;
+
+procedure TModflowTransientListParameter.NewChildModelCreated(
+  Model: TBaseModel);
+var
+  ChildItem: TChildModelValue;
+  ChildIndex: Integer;
+begin
+  if ParameterType in [ptGHB,ptRIV, ptDRN, ptDRT, ptSFR] then
+  begin
+    for ChildIndex := 0 to ChildModelValues.Count - 1 do
+    begin
+      if ChildModelValues[ChildIndex].ChildModelName =
+        (Model as TChildModel).ModelName then
+      begin
+        ChildModelValues[ChildIndex].ChildModel := Model;
+        Exit;
+      end;
+    end;
+    ChildItem := ChildModelValues.Add as TChildModelValue;
+    ChildItem.ChildModel := Model;
+    ChildItem.FValue := Value;
+  end;
+end;
+
+procedure TModflowTransientListParameter.SetChildModelValues(
+  const Value: TChildModelValues);
+begin
+  FChildModelValues.Assign(Value);
 end;
 
 procedure TModflowTransientListParameter.SetParameterName(const Value: string);
@@ -148,9 +262,22 @@ end;
 
 procedure TModflowTransientListParameter.SetParameterType(
   const Value: TParameterType);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   inherited;
   (Collection as TModflowTransientListParameters).UpdateDisplay(self);
+  LocalModel := Model as TPhastModel;
+  if LocalModel <> nil then
+  begin
+    for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+      NewChildModelCreated(ChildModel);
+    end;
+  end;
 end;
 
 procedure TModflowTransientListParameter.SetValue(Value: double);
@@ -178,7 +305,7 @@ begin
   end;
 end;
 
-constructor TModflowTransientListParameters.Create(Model: TObject);
+constructor TModflowTransientListParameters.Create(Model: TBaseModel);
 begin
   inherited Create(TModflowTransientListParameter, Model);
 end;
@@ -204,6 +331,16 @@ begin
       result := Item;
       Exit;
     end;
+  end;
+end;
+
+procedure TModflowTransientListParameters.Loaded;
+var
+  ItemIndex: Integer;
+begin
+  for ItemIndex := 0 to Count - 1 do
+  begin
+    Items[ItemIndex].Loaded;
   end;
 end;
 
@@ -306,6 +443,113 @@ begin
   begin
     UpdateDisplay(Value);
   end;
+end;
+
+{ TChildModelValue }
+
+function TChildModelValue.GetChildModel: TBaseModel;
+var
+  ChildIndex: Integer;
+  AChildModel: TChildModel;
+begin
+  if (FChildModel = nil) and (FChildModelName <> '') then
+  begin
+    if (frmGoPhast.PhastModel <> nil)
+      and (frmGoPhast.PhastModel.ChildModels <> nil) then
+    begin
+      for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+      begin
+        AChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+        if AChildModel.ModelName = FChildModelName then
+        begin
+          FChildModel := AChildModel;
+          break;
+        end;
+      end;
+    end;
+  end;
+  result := FChildModel;
+end;
+
+function TChildModelValue.GetChildModelName: string;
+begin
+  if FChildModel <> nil then
+  begin
+    result := (FChildModel as TChildModel).ModelName
+  end
+  else
+  begin
+    Result := FChildModelName;
+  end;
+
+end;
+
+function TChildModelValue.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  AnotherCMValue: TChildModelValue;
+begin
+  result := AnotherItem is TChildModelValue;
+  if result then
+  begin
+    AnotherCMValue := TChildModelValue(AnotherItem);
+    result := (Value = AnotherCMValue.Value)
+      and (ChildModelName = AnotherCMValue.ChildModelName);
+  end;
+end;
+
+procedure TChildModelValue.SetChildModel(const Value: TBaseModel);
+begin
+  if FChildModel <> Value then
+  begin
+    FChildModel := Value;
+    InvalidateModel;
+  end;
+  if FChildModel = nil then
+  begin
+    ChildModelName := '';
+  end
+  else
+  begin
+    ChildModelName := (FChildModel as TChildModel).ModelName;
+  end;
+end;
+
+procedure TChildModelValue.SetChildModelName(const Value: string);
+begin
+  SetCaseSensitiveStringProperty(FChildModelName, Value);
+end;
+
+procedure TChildModelValue.SetValue(const Value: double);
+begin
+  SetRealProperty(FValue, Value);
+end;
+
+{ TChildModelValues }
+
+constructor TChildModelValues.Create(Model: TBaseModel);
+begin
+  inherited Create(TChildModelValue, Model);
+end;
+
+function TChildModelValues.GetItems(Index: integer): TChildModelValue;
+begin
+  result := inherited Items[Index] as TChildModelValue
+end;
+
+procedure TChildModelValues.Loaded;
+var
+  ItemIndex: Integer;
+begin
+  for ItemIndex := 0 to Count - 1 do
+  begin
+    Items[ItemIndex].ChildModel;
+  end;
+end;
+
+procedure TChildModelValues.SetItems(Index: integer;
+  const Value: TChildModelValue);
+begin
+  inherited Items[Index] := Value;
 end;
 
 end.

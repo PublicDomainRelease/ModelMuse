@@ -49,7 +49,7 @@ type
     procedure SetSubPreconsolidationHead(const Value: boolean);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model, ScreenObject: TObject);
+    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     Destructor Destroy; override;
     function Used: boolean; override;
     procedure Loaded;
@@ -121,7 +121,7 @@ begin
   end;
 end;
 
-constructor THydmodData.Create(Model, ScreenObject: TObject);
+constructor THydmodData.Create(Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited;
   FSubUsedLayers := TUseLayersCollection.Create(Model);
@@ -139,10 +139,10 @@ var
   GroupIndex: Integer;
   Group: TLayerGroup;
 begin
-  if (PhastModel <> nil) and (FLayerGroup <> nil) then
+  if (ParentModel <> nil) and (FLayerGroup <> nil) then
   begin
     result := '';
-    LocalPhastModel := PhastModel as TPhastModel;
+    LocalPhastModel := ParentModel as TPhastModel;
     for GroupIndex := 1 to LocalPhastModel.LayerStructure.Count - 1 do
     begin
       Group := LocalPhastModel.LayerStructure[GroupIndex];
@@ -167,10 +167,10 @@ var
   BedIndex: Integer;
   NoDelayItem: TSubNoDelayBedLayerItem;
 begin
-  if (PhastModel <> nil) and (FLayerGroup <> nil) and (FNoDelayItem <> nil) then
+  if (ParentModel <> nil) and (FLayerGroup <> nil) and (FNoDelayItem <> nil) then
   begin
     result := '';
-    LocalPhastModel := PhastModel as TPhastModel;
+    LocalPhastModel := ParentModel as TPhastModel;
     for GroupIndex := 1 to LocalPhastModel.LayerStructure.Count - 1 do
     begin
       Group := LocalPhastModel.LayerStructure[GroupIndex];
@@ -284,9 +284,9 @@ begin
   FLayerGroup := nil;
   if Value <> '' then
   begin
-    if PhastModel <> nil then
+    if ParentModel <> nil then
     begin
-      LocalPhastModel := PhastModel as TPhastModel;
+      LocalPhastModel := ParentModel as TPhastModel;
       for GroupIndex := 1 to LocalPhastModel.LayerStructure.Count - 1 do
       begin
         Group := LocalPhastModel.LayerStructure[GroupIndex];
@@ -312,9 +312,9 @@ begin
   FNoDelayItem := nil;
   if Value <> '' then
   begin
-    if (PhastModel <> nil) and (FSubLayerGroup <> '') then
+    if (ParentModel <> nil) and (FSubLayerGroup <> '') then
     begin
-      LocalPhastModel := PhastModel as TPhastModel;
+      LocalPhastModel := ParentModel as TPhastModel;
       for GroupIndex := 1 to LocalPhastModel.LayerStructure.Count - 1 do
       begin
         Group := LocalPhastModel.LayerStructure[GroupIndex];
@@ -364,10 +364,10 @@ var
   Index: Integer;
   ArraySize: Integer;
 begin
-  if (PhastModel <> nil) and (FSubLayerGroup <> '') then
+  if (ParentModel <> nil) and (FSubLayerGroup <> '') then
   begin
     OverlyingCount := 0;
-    LocalPhastModel := PhastModel as TPhastModel;
+    LocalPhastModel := ParentModel as TPhastModel;
     for GroupIndex := 1 to LocalPhastModel.LayerStructure.Count - 1 do
     begin
       Group := LocalPhastModel.LayerStructure[GroupIndex];

@@ -15,11 +15,11 @@
     <para styleclass="Normal"><text styleclass="Normal" translate="true">There is more info in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Frequently_Asked_Questions" anchor="mpifh" styleclass="Normal" translate="true">FAQ</link><text styleclass="Normal" translate="true"> about compiling a parallel version of MODFLOW-2000.</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">References to commercial vendors of software products or services are provided solely for the convenience of users when obtaining or using USGS software. Such references do not imply any endorsement by the U.S. Government.</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The information on this web page was provided with the assistance of Edward Banta, Steffan Mehl, Henk den Adel, William R. Hutchison, and Richard Winston. &#160;The instructions may be outdated or incorrect. &#160;If you find that the instructions are in error, please send corrections to </text><link displaytype="text" defaultstyle="true" type="weblink" href="mailto:rbwinst@usgs.gov" styleclass="Normal" translate="true">rbwinst@usgs.gov</link><text styleclass="Normal" translate="true">.</text></para>
-    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Lahey-Fujitsu Fortran 95 (LF95)]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Lahey-Fujitsu Fortran 95 (LF95)]]></caption></toggle></para>
     <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td>
-          <list id="63" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="21" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Make sure that you have installed the Fujitsu C compiler that comes with LF95. &#160;The compiler is named fcc.exe. &#160;It should be in the &quot;bin&quot; directory under the directory in which LF95 is installed. &#160;If you have not installed the Fujitsu C compiler, install it from the same CD (or other media) on which you received LF95. &#160;After installing it, be sure to also install the most recent patch file for your version of LF95 from the Lahey web site.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Download MODFLOW-2000.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Extract all the source code being sure to retain the directory structure inside the compressed download file.</text></li>
@@ -31,7 +31,7 @@
           <para styleclass="Normal"></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true"> &#160; &#160; &#160;COMPILE=@fcc /c /D _UF /I C:\Compilers\Lahey\LF9557\Include /o .\objLF95\%sf%oe %fi</text></para>
           <para styleclass="Normal"></para>
-          <list id="64" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="8" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="22" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="8" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">You can run AutoMake to compile MODFLOW-2000 either by running the file AM.bat (which is distributed with LF95) from the command prompt or by doing the following.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Start the Lahey ED Developer.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Open any of the source code files for MODFLOW-2000.</text></li>
@@ -41,11 +41,11 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Compaq Digital Visual Fortran]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Compaq Digital Visual Fortran]]></caption></toggle></para>
     <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td>
-          <list id="65" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="23" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Download MODFLOW-2000.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Extract all the source code being sure to retain the directory structure inside the compressed download file.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Copy parallel.inc from the mf2k.1_17\src\mf2k directory to the mf2k.1_17\src\mf2k\serial directory.</text></li>
@@ -56,37 +56,37 @@
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Select File|New and create a new Project that is a Fortran Console Application. &#160;A good location for the project would be in C:\MF2K.1_17\SRC which Visual studio will change to C:\MF2K.1_17\SRC\mf2k. &#160;After you click the OK button, choose &quot;An empty project&quot; (the default) and click on the Finish button. &#160;Then click OK to close the &quot;New Project Information&quot; dialog box.</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="CompaqNewProject.PNG" scale="100.00%" styleclass="Image Caption"><title translate="true">Compaq New Project dialog box</title></image></para>
-          <list id="66" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="9" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="24" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="9" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Change to &quot;File View&quot; and right click on &quot;mf2k files&quot;. Select Add Files to Project.</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="CompaqAddNewFiles.PNG" scale="100.00%" styleclass="Image Caption"><title translate="true">Compaq &quot;File View&quot; mode with pop-up menu</title></image></para>
-          <list id="67" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="10" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="25" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="10" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Select all the files with the extensions .c and .h in the \src\mf2k directory.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Right click on &quot;mf2k files&quot; again and select Add Files to Project. &#160;This time, change the file type to Fortran Source files and add all the Fortran source files in the \src\mf2k directory.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Right click on &quot;mf2k files&quot; again and select Add Files to Project. &#160;Change the file type to Fortran Source files and add para-non.f &#160;in the \src\mf2k\serial directory.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">On line 398 of gmg1.f, add a “c” in column one in order to comment out the “_resprint” reference: </text></li>
           </list>
           <para styleclass="Normal" style="margin-left:24px;"><text styleclass="Normal" translate="true">c &#160; &#160; &#160;!DEC$ ATTRIBUTES ALIAS:&apos;_resprint&apos; :: RESPRINT</text></para>
-          <list id="67" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="10" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="25" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="10" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Select &quot;Project|Settings&quot; and on the C/C++ tab change the &quot;Category&quot; to &quot;Code Generation&quot; and then change the &quot;Calling Convention&quot; to &quot;__stdcall&quot;.</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="CompaqProjectSettingStdcall.PNG" scale="100.00%" styleclass="Image Caption"><title translate="true">Compaq Project Settings dialog box with __stdcall selected</title></image></para>
-          <list id="68" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="14" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="26" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="14" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Change to the Link tab and add &quot;DFOR.LIB&quot; to the end of the list of &#160;Object/libray modules.</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="CompaqProjectSettingDfor.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Compaq Project Settings dialog box with DFOR.LIB showing</title></image></para>
-          <list id="69" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="15" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="27" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="15" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Click the OK button to close the Project Settings dialog box. &#160;Then select Build|Build mf2k.exe</text></li>
           </list>
         </td>
       </tr>
     </table></para>
-    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Microsoft Visual Studio .NET 2003 and the Intel Fortran Compiler 8.1.]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Microsoft Visual Studio .NET 2003 and the Intel Fortran Compiler 8.1.]]></caption></toggle></para>
     <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Thanks to Ingo Berg for the following instructions. Thanks to Edward Banta and Eileen Poeter for additional suggestions.</text></para>
-          <list id="70" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="28" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">First, extract the source code being sure to retain the directory structure inside the compressed download file.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Copy par-non.f from the mf2k.1_17\src\mf2k\serial directory to the mf2k.1_17\src\mf2k directory.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Open Solvers.h in a text editor. At the beginning of the file, comment out the following three lines (6,7,8) by placing a &quot;//&quot; in front of them like:</text></li>
@@ -100,7 +100,7 @@
           <para styleclass="Normal"></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true"> &#160; &#160; &#160;#define resprint RESPRINT</text></para>
           <para styleclass="Normal"></para>
-          <list id="71" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="4" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="29" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="4" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Open Microsoft Visual Studio .NET and create a new project using the &quot;File | New | Project menu&quot;. Select Intel(R) Fortran Projects on the left side of the window and choose &quot;Console Application&quot; on the right side. Name the project mf2k_net and select ...\mf2k.1_17\src\mf2k as the project location. The IDE will create a new directory with that name to store the project.</text></li>
           </list>
           <para styleclass="Normal"></para>
@@ -110,34 +110,34 @@
           <para styleclass="Normal"></para>
           <para styleclass="Normal" style="text-align:center;"><image src="pic2.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Empty project</title></image></para>
           <para styleclass="Normal"></para>
-          <list id="72" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="5" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="30" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="5" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">You should now see the Microsoft .NET IDE with the project explorer treeview on the right side. In the File menu select &quot;File | Add existing element&quot;. A File dialog box will appear. This dialog box shows the content of the newly created &quot;mf2k_net&quot; directory, which does not contain any Fortran files yet. Go to the parent directory. (Press the small yellow symbol with the buckled arrow pointing upwards on top of the window). You should now see the content of the &quot;mf2k&quot; directory which consists of the Fortran files. Select all of them. In order to select all of the files, hold the shift key down and select the first and the last file. After doing this press &quot;open&quot;. Now you should see the files added to the project explorer treeview.</text></li>
           </list>
           <para styleclass="Normal"></para>
           <para styleclass="Normal" style="text-align:center;"><image src="pic3.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Fortran project with source files.</title></image></para>
           <para styleclass="Normal"></para>
           <para styleclass="Normal"></para>
-          <list id="73" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="6" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="31" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="6" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Now we have a project with the fortran source code files. The part that is missing are the C-source code files. These will be added next. Since It is not possible to mix Fortran and c code within the same project, we have to create another project containing the c files. From the main menu, select &quot;File | New | Project&quot;. From the &quot;Visual C++ Projects&quot; node on the left side, select &quot;Win32&quot;. From the right side, select &quot;Win32-Project&quot;. Assign &quot;mf2k_gmg&quot; as the project name and assign ...\mf2k.1_17\src\mf2k as the project path. Make sure you have the &quot;Add to project&quot; radiobutton active; otherwise, the IDE would close the previousely created Fortran project.</text></li>
           </list>
           <para styleclass="Normal"></para>
           <para styleclass="Normal" style="text-align:center;"><image src="pic4.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Add to Project</title></image></para>
           <para styleclass="Normal"></para>
-          <list id="74" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="7" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="32" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="7" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Press OK. The Project C++ project wizard will open. Go to the application settings and select &quot;Static library&quot;. Uncheck the &quot;Precompiled headers&quot; option.</text></li>
           </list>
           <para styleclass="Normal"></para>
           <para styleclass="Normal" style="text-align:center;"><image src="pic5.png" scale="100.00%" styleclass="Image Caption"><title translate="true">C++ Project Wizard</title></image></para>
           <para styleclass="Normal"></para>
           <para styleclass="Normal" style="margin-left:24px;"><text styleclass="Normal" translate="true">Press the &quot;Create&quot; Button. You will see a second project appear in the Project explorer treeview. This project is the static library for the GMG components which are written in C. Next we have to add the source files. In the Project explorer select the &quot;mf2k_gmg&quot; project. From the main menu, select &quot;File | Add existing element&quot;. In the file input dialog box, go to the parent directory. (Press the small yellow symbol with the buckled arrow pointing upwards on top of the window.) Select all files with the extension *.c and *.h. (Do not include the *.inc files!). Again, multiple files can be selected by holding the shift key down. Press open; the new files will appear in the Project explorer.</text></para>
-          <list id="75" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="8" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="33" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="8" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The next step is telling the IDE to link the gmg library file to the main program. For this reason first compile the &quot;mf2k_gmg&quot; project in order to create a library file. Select the project; press the right mouse button; and select the &quot;build&quot; menu entry. You should see the library compile. If successful, a file named &quot;mf2k_gmg.lib&quot; should be created in either the &quot;mf2k\mf2k_gmg\Debug&quot; or the &quot;mf2k\mf2k_gmg\Release&quot; directory. The location depends on whether &quot;debug&quot; or &quot;release&quot; is selected as the build option in your IDE. For this test, the file is assumed to be located in the &quot;Debug&quot; directory.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">In the &quot;Project Explorer&quot; treeview, select the &quot;Ressource Files&quot; node from &quot;mf2k_net&quot; project. This is the place where we are going to add the gmg lib file. Press the right mouse button and select &quot;Add | Existing Element&quot;. A file selector will open. Go to the &quot;mf2k_gmg/Debug directory&quot;. In the File types selector at the bottom of the window, change the filter to *.*. Select the file &quot;mf2k_gmg.lib&quot; and press open. The gmg lib has now been added to the main program.</text></li>
           </list>
           <para styleclass="Normal"></para>
           <para styleclass="Normal" style="text-align:center;"><image src="pic6.png" scale="100.00%" styleclass="Image Caption"><title translate="true">mf2k_gmg lib</title></image></para>
           <para styleclass="Normal"></para>
-          <list id="76" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="10" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="34" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="10" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Finally select the &quot;mf2k_net&quot; Project and build it. The output file will be created either as &quot;mf2k.1_17\src\mf2k\mf2k_net\Debug}mf2k_net&quot; or as &quot;mf2k.1_17\src\mf2k\mf2k_net\Debug}mf2k_net&quot;. If you wish, change the name of the output file in the Project settings or rename it manually to mf2k.</text></li>
             <li styleclass="Normal"></li>
           </list>
@@ -145,23 +145,23 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Microsoft Visual Studio C++ .NET 2003 and the Intel Fortran Compiler 9.0.]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Microsoft Visual Studio C++ .NET 2003 and the Intel Fortran Compiler 9.0.]]></caption></toggle></para>
     <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Thanks to Edward Banta for the following instructions. Thanks to Edward Banta and Eileen Poeter for additional suggestions.</text></para>
-          <list id="77" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="35" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">First, extract the MODFLOW-2000 source code, being sure to retain the directory structure inside the compressed download file.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Copy para-non.f from the src\mf2k\serial folder to the src\mf2k folder.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Open Microsoft Visual Studio .NET 2003 and create a new solution using File … New … Blank Solution. Name the solution “MF2K_Solution” and for Location, browse to an existing folder; it would be convenient to use the folder that is the parent of the src folder of the MODFLOW-2000 distribution, but the location can be anywhere. &#160;The new solution will be in a subfolder that will be created under the selected folder. &#160;Click OK.New Console Application - MF2K</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" translate="true">&#32;</text><image src="VS2003_image001.png" scale="100.00%" styleclass="Image Caption"><title translate="true">New Project</title></image></para>
-          <list id="77" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="35" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Create a project in the “MF2K_Solution” solution you just made. To do this, in the Solution Explorer panel right click Solution ‘MF2K_Solution’ and select Add…New Project. &#160;In the Add New Project dialog, click on “Intel Fortran Projects” in the left panel and ensure that “Console Application” is selected in the right panel. &#160;Change the name to “mf2k” and click OK.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The Fortran Console Application wizard will open. Click on Application Settings and select &quot;Empty Project&quot;. &#160;Click Finish.Empty Project. </text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2003_image003.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Empty Project</title></image></para>
-          <list id="77" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="35" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The next step is to add Fortran source code files to the mf2k project. &#160;In the Solution Explorer panel under the “mf2k” project, right click “Source Files” and select Add…Add Existing Item. &#160;Navigate to the src\mf2k folder of the MODFLOW-2000 distribution. &#160;Ensure that the “Files of type” filter is “Common Intel Fortran files”. &#160;Select all the *.f and *.f90 files (click on the first one and &lt;Shift&gt;-click on the last one). &#160;Click Open. &#160;Add more files to the “Source Files” list, but this time set the “Files of type” filter to “All Files”. &#160;Select ground.com then use &lt;Ctrl&gt;-click to add hydmod.inc, lmt6.inc, openspec.inc, param.inc, params.inc, and startdaf.com to the selection. &#160;Click Open.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Now we have a project with the Fortran source code files. The C source code will be added next. Since it is not possible to mix Fortran and C code within the same project, we have to create another project containing the C files. &#160;In the Solution Explorer panel, right click Solution ‘MF2K_Solution’ and select Add…New Project. &#160;In the Add New Project dialog, expand “Visual C++ Projects” in the left panel and select Win32. &#160;In the right panel, select “Win32 Project” and enter “mf2k_gmg” as the name. &#160;Click OK. &#160;In the Win32 Application Wizard dialog, click “Application Settings” and then under Application type, select “static library” and clear the “Precompiled header” check box. &#160;Click Finish.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">You will see a second project appear in the Solution Explorer panel. This project will be used to create a static library for the GMG components that are written in C. Next we have to add the C source files. In the Solution Explorer panel, under the “mf2k_gmg” project, right click “Source Files” and select Add…Add Existing Item. &#160;Navigate to the src\mf2k folder of the MODFLOW-2000 distribution and select all the *.c files (four of them). &#160;In a similar manner, add the four *.h files in the src\mf2k folder under “Header Files” in the Solution Explorer panel.</text></li>
@@ -171,18 +171,18 @@
             <li styleclass="Normal"></li>
           </list>
           <para styleclass="Normal"><snippet src="IgnoreMSVCRT"/></para>
-          <list id="77" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="35" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The steps above generate a mixed precision executable file, like the one posted on the MODFLOW-2000 web page. &#160;In some cases, it is advantageous to use a fully double precision version of MODFLOW-2000 to generate satisfactory results. &#160;A fully double precision executable can be generated as follows. &#160;Select the mf2k project in the Solution Explorer panel. &#160;On the main menu bar select Project…Properties. In the mf2k Property Page dialog, select Fortran and under Fortran select Data. &#160;Change the Default Real KIND from 4 to 8. &#160;Click OK. &#160;Again, build the mf2k project. &#160;The resulting mf2k.exe program is now fully double-precision. You might want to rename it as “mf2k-dp.exe”. &#160;Be aware that programs that read binary files produced by MODFLOW-2000 (e.g. Modpath, Zonebudget, ModelViewer) expect to read single-precision data, and they will be unable to read data from binary files produced by a double-precision version of MODFLOW-2000. &#160;Those programs, however, could be similarly recompiled as fully double precision, which would enable them to read double precision binary files.</text></li>
           </list>
         </td>
       </tr>
     </table></para>
-    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Microsoft Visual Studio 2005 with Intel Fortran Compiler 11.1]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Microsoft Visual Studio 2005 with Intel Fortran Compiler 11.1]]></caption></toggle></para>
     <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Thanks to Christian D Langevin and David Ahlfeld for the following instructions. Thanks to Edward Banta, Eileen Poeter and Seung Jae Lee for additional suggestions.</text></para>
-          <list id="78" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="36" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">First, extract the source code being sure to retain the directory structure inside the compressed download file.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Copy par-non.f from the mf2k.1_17\src\mf2k\serial directory to the mf2k.1_17\src\mf2k directory.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Open Microsoft Visual Studio</text></li>
@@ -190,37 +190,37 @@
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2005_NewProject.png" scale="100.00%" styleclass="Image Caption"></image></para>
           <para styleclass="Normal" style="margin-left:24px;"><text styleclass="Normal" translate="true">Click Next to the &quot;Welcome to the Fortran Console Application Wizard&quot;.</text></para>
-          <list id="78" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="36" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Click &quot;Empty Project&quot; under the &quot;Application Settings&quot; window, and then click Finish.</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2005_ApplicationSettings.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Fortran Consol Application Wizard. Empty project selected.</title></image></para>
-          <list id="78" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="36" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Now you need to add all of the Fortran files to the mf2k project that you just created. &#160;You can do this by selecting Project&gt;Add Existing Item... &#160;Select all of the Fortran source files in the mf2k subdirectory and click Add.</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2005_AddItems.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Add Fortran files.</title></image></para>
-          <list id="78" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="36" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:line-through; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Confirm that the following line is present gmg1.f after the line containing &quot;SUBROUTINE RESPRINT&quot;:</text></li>
           </list>
           <para styleclass="Normal"></para>
           <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:line-through; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true"> &#160; &#160; &#160; &#160; &#160; &#160;!DEC$ ATTRIBUTES ALIAS:&apos;_resprint&apos; :: RESPRINT</text></para>
           <para styleclass="Normal"></para>
-          <list id="78" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="36" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Next, you need to create a new project for the GMG solver because a project can contain only a single programming language. &#160;Click File&gt;New&gt;Project. &#160;Then select the settings as follows making sure to &quot;Add to Solution&quot;.</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2005_NewCProject.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Empty C++ project for GMG solver.</title></image></para>
-          <list id="78" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="36" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Now you should see that the gmg project has been added to the solution. &#160;This will be shown in the Solution Explorer Window, which may be on the right-side of the screen. &#160;To add the gmg C files to the gmg project, select Project&gt;Add Existing Item... (make sure that the gmg project is selected in the solution window). &#160;Add only the .c and .h files as follows and click Add: </text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2005_AddCFiles.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Add .c and .h files for GMG solver.</title></image></para>
-          <list id="78" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="36" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Now select Project&gt;Project Dependencies. &#160;Then select the mf2k project and check the underlying box that says gmg as follows: </text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2005_ProjectDependencies.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Make Fortran project depend on gmg project.</title></image></para>
-          <list id="78" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="36" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Now select the project properties for the gmg project and change the configuration type from .exe to a static library (.lib) as follows: </text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2005_ConfigurationType.png" scale="100.00%" styleclass="Image Caption"><title translate="true">Make GMG project a static library</title></image></para>
-          <list id="78" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="36" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:line-through; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Now, open the solvers.h file, which is a Header File under the gmg project. &#160;As Ingo Berg mentioned in his description of compiling MODFLOW-2000 with Microsoft Visual Studio .NET 2003, you need make the following changes. &#160;Comment out the following three lines by placing a // in front of them</text></li>
           </list>
           <para styleclass="Normal" style="margin-left:24px;"></para>
@@ -230,14 +230,14 @@
           <para styleclass="Normal" style="margin-left:24px;"></para>
           <para styleclass="Normal" style="margin-left:24px;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:line-through; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">(According the David Ahlfeld, MODFLOW will still compile if this instruction is omitted.)</text></para>
           <para styleclass="Normal" style="margin-left:24px;"></para>
-          <list id="79" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="13" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; text-decoration:line-through; color:#000000;">
+          <list id="37" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="13" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; text-decoration:line-through; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:line-through; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">After these commented lines add the following line:</text></li>
           </list>
           <para styleclass="Normal" style="margin-left:24px;"></para>
           <para styleclass="Normal" style="margin-left:24px;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:line-through; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">#define resprint RESPRINT</text></para>
           <para styleclass="Normal" style="margin-left:24px;"></para>
           <para styleclass="Normal" style="margin-left:24px;"><text styleclass="Normal" translate="true">(The original instructions from Christian D Langevin included the instruction above but according to David Ahlfeld they are not required and they cause a linker error.)</text></para>
-          <list id="80" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="14" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="38" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="14" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">In the Fortran code project property (shown after click on the &apos;property&apos; in the popped list when you right-click on the title of the Fortran project in the solution explorer), &apos;Configuration properties&gt;Fortran&gt;Diagnostics&gt;Check Routine Interfaces&apos; should be &quot;NO&quot;, otherwise the program generates error messages.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">In the Fortran code project property, &apos;Configuration properties&gt;Linker&gt;General&gt;Enable Incremental Linking&quot; should be &quot;YES&quot;, to avoid an error.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The same option for both of &apos;Configuration properties&gt;Fortran&gt;Libraries&gt;Runtime Library&apos; in the Fortran code project property and &apos;Configuration properties&gt;C/C++&gt;Code Generation&gt;Runtime Library&apos; in the C code project, i.e., gmg, property is recommended. E.g., if &quot;Multi-threaded Debug (/MTd)&quot; is chosen for the C code part, the same one is recommended to choose for the counterpart in the Fortran project.</text></li>
@@ -250,13 +250,13 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Visual Studio 2008 with Intel C++ compiler 11.0 and Intel Visual Fortran compiler 11.0]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Visual Studio 2008 with Intel C++ compiler 11.0 and Intel Visual Fortran compiler 11.0]]></caption></toggle></para>
     <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">These instructions are by Richard B. Winston. They are adapted from the Microsoft Visual Studio 2005 with Intel Fortran Compiler 11.1 above.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">To compile MODFLOW-2005, the following instructions can be used except that step 2 should be skipped and the directory names for the source code would be slightly different.</text></para>
-          <list id="81" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="39" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">First, extract the source code being sure to retain the directory structure inside the compressed download file. </text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Copy par-non.f from the mf2k.1_19\src\mf2k\serial directory to the mf2k.1_19\src\mf2k directory. </text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Rename the mf2k.1_19\src\mf2k directory to mf2k.1_19\src\temp directory</text></li>
@@ -264,62 +264,62 @@
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Select File&gt;New&gt;Project: Make sure to select the settings according to the following window. &#160;You can give the project a name, such as mf2k, and set the location to the location of the MODFLOW Fortran source files. &#160;Then click OK. </text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2008_1_NewProject.png" scale="100.00%" styleclass="Image Caption"></image></para>
-          <list id="81" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="39" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Copy all the files from the mf2k.1_19\src\temp to the mf2k.1_19\src\mf2k directory created by Visual Studio</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Now you need to add all of the Fortran files to the mf2k project that you just created. &#160;You can do this by selecting Project&gt;Add Existing Item... &#160;Select all of the Fortran source files in the mf2k subdirectory and click Add. </text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2008_2_AddFortranfiles.png" scale="100.00%" styleclass="Image Caption"></image></para>
-          <list id="81" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="39" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Next, you need to create a new project for the GMG solver because a project can contain only a single programming language. &#160;Click File&gt;New&gt;Project. &#160;Then select the settings as follows making sure to &quot;Add to Solution&quot;.</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2008_3_NewCPlusPlus.png" scale="100.00%" styleclass="Image Caption"></image></para>
-          <list id="81" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="39" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">In the Win32 Application Wizard, click the Finish button</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2008_4_Wizard.png" scale="100.00%" styleclass="Image Caption"></image></para>
-          <list id="81" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="39" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Remove all the header and source files from the gmg project by right-clicking on them and selecting Remove from the pop-up menu.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Now you should see that the gmg project has been added to the solution. &#160;This will be shown in the Solution Explorer Window. &#160;To add the gmg C files to the gmg project, select Project&gt;Add Existing Item... (make sure that the gmg project is selected in the solution window). &#160;Add only the .c and .h files as follows and click Add: &#160;</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2008_5_AddGmgFiles.png" scale="100.00%" styleclass="Image Caption"></image></para>
-          <list id="81" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="39" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Right click on the gmg project and select Intel C++ compiler pro&gt;Use Intel C++</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Now select Project&gt;Project Dependencies. &#160;Then select the mf2k project and check the underlying box that says gmg as follows: &#160;</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2008_6_ProjectDependencies.png" scale="100.00%" styleclass="Image Caption"></image></para>
-          <list id="81" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="39" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Now select Project&gt;Properties for the gmg project and change the configuration type from .exe to a static library (.lib) as follows: &#160;</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2008_7_StaticLib.png" scale="100.00%" styleclass="Image Caption"></image></para>
-          <list id="81" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="39" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Turn off the use of precompiled headers.</text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2008_8_PrecompiledHeaders.png" scale="100.00%" styleclass="Image Caption"></image></para>
-          <list id="81" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="39" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">In the Fortran code project property (shown after click on the &apos;property&apos; in the popped list when you right-click on the title of the Fortran project in the solution explorer), &apos;Configuration properties&gt;Fortran&gt;Diagnostics&gt;Check Routine Interfaces&apos; should be &quot;NO&quot;, otherwise the program generates error messages. </text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2008_9_CheckRoutineInterfaces.png" scale="100.00%" styleclass="Image Caption"></image></para>
-          <list id="81" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="39" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">In the Fortran code project property, &apos;Configuration properties&gt;Linker&gt;General&gt;Enable Incremental Linking&quot; should be &quot;YES&quot;, to avoid an error. </text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2008_10_IncrementalLinking.png" scale="100.00%" styleclass="Image Caption"></image></para>
-          <list id="81" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="39" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The same option for both of &apos;Configuration properties&gt;Fortran&gt;Libraries&gt;Runtime Library&apos; in the Fortran code project property and &apos;Configuration properties&gt;C/C++&gt;Code Generation&gt;Runtime Library&apos; in the C code project, i.e., gmg, property is recommended. E.g., if &quot;Multi-threaded Debug (/MTd)&quot; is chosen for the C code part, the same one is recommended to choose for the counterpart in the Fortran project. </text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2008_11_CPlusPlusRuntime.png" scale="100.00%" styleclass="Image Caption"></image></para>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2008_12_FortranRuntime.png" scale="100.00%" styleclass="Image Caption"></image></para>
-          <list id="81" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="39" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">If &quot;DLL&quot; is chosen, it will cause an error. E.g., &quot;Multi-threaded DLL (/MD)&quot; is chosen for &apos;Configuration properties&gt;C/C++&gt;Code Generation&gt;Runtime Library&apos; in the C code project property will not work. </text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Also include the path to the default Intel Fortan header file and library directories in the GMG project property dialog box. </text></li>
           </list>
           <para styleclass="Normal" style="text-align:center;"><image src="VS2008_13_HeaderPath.png" scale="100.00%" styleclass="Image Caption"></image></para>
-          <list id="81" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="39" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">You are now ready to compile MODFLOW-2000, including the GMG solver. &#160;Click Build&gt;Build Solution. &#160;Keep in mind that &quot;debug&quot; is the default configuration. &#160;You may want to change to the &quot;release&quot; configuration and make adjustments to the optimization settings to improve efficiency. &#160;If you have a problem with the &quot;release&quot; configuration, make sure that the GMG project is set to a &quot;Static Library (.lib)&quot;. </text></li>
           </list>
         </td>
       </tr>
     </table></para>
-    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[GNU gfortran on Mac OS X (UNIX)]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[GNU gfortran on Mac OS X (UNIX)]]></caption></toggle></para>
     <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td>
@@ -337,19 +337,19 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[GNU Fortran (gfortran)]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[GNU Fortran (gfortran)]]></caption></toggle></para>
     <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">The methods described for gfortran on the Mac might work on other operating systems too.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Thanks to Jaime Carrera for the following suggestions regarding compiling with gfortran.</text></para>
           <para styleclass="Normal"></para>
-          <list id="82" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="40" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Modify the makefile file:</text></li>
           </list>
           <para styleclass="Normal"><text styleclass="Normal" translate="true"> &#160; &#160; &#160;F77FLAGS = -fno-second-underscore</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true"> &#160; &#160; &#160;F77= gfortran</text></para>
-          <list id="82" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="40" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">On the command line just type (under src/mf2k/)</text></li>
           </list>
           <para styleclass="Normal"><text styleclass="Normal" translate="true"> &#160; &#160; &#160;make install</text></para>
@@ -359,7 +359,7 @@
           <para styleclass="Normal"></para>
           <para styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Thanks to Henk den Adel for the following instructions.</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">The GNU version of the Fortran 95 compiler (gfortran, i.e. not the G95 project) allows one to compile the .f files and the .c files.</text></para>
-          <list id="83" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="41" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">Comment out lines 5, 6 and 7 of solvers.h</text></li>
           </list>
           <para styleclass="Normal"></para>
@@ -368,7 +368,7 @@
           <para styleclass="Normal"><text styleclass="Normal" translate="true"> &#160; &#160; &#160;/#define resprint resprint</text></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true"> &#160; &#160; &#160;//#endif</text></para>
           <para styleclass="Normal"></para>
-          <list id="83" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="41" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true"> &#160; 2. Change lines 11..17 of mf2kgmg.h into</text></li>
           </list>
           <para styleclass="Normal"></para>
@@ -385,13 +385,13 @@
           <para styleclass="Normal"></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true"> &#160; &#160; &#160;Do not append the tailing underscore. The -fno-underscoring makes it unnecessary. However, functions are case sensitive for this compiler.</text></para>
           <para styleclass="Normal"></para>
-          <list id="83" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="41" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">To compile the .f files use:</text></li>
           </list>
           <para styleclass="Normal"></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true"> &#160; &#160; &#160;gfortran -c -fno-underscoring file.f</text></para>
           <para styleclass="Normal"></para>
-          <list id="83" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="41" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">To compile the .c files use:</text></li>
           </list>
           <para styleclass="Normal"></para>
@@ -399,17 +399,120 @@
           <para styleclass="Normal"></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true"> &#160; &#160; &#160;where &apos;location&apos; points to the drive and directory where the include files for gfortran are located.</text></para>
           <para styleclass="Normal"></para>
-          <list id="83" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="41" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">To link the object files into an executable use:</text></li>
           </list>
           <para styleclass="Normal"></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true"> &#160; &#160; &#160;gfortran *.o -o mf2k</text></para>
           <para styleclass="Normal"></para>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">Final remark: Henk den Adel says he did not check whether the program runs; however all errors due to &apos;undefined references&apos; were gone.</text></para>
-          <para styleclass="Normal"></para>
-          <para styleclass="Normal"></para>
         </td>
       </tr>
     </table></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[GNU Fortran and the GNU C compiler on the Mac OSX]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Laurent Delphin has provided a makefile for compiling MODFLOW-2005 on the Mac.</text></para>
+          <para styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="makefile" styleclass="Normal" translate="true">makefile</link></para>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Suggestions for compiling the Conduit Flow Process for MODFLOW-2005]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">The Conduit Flow Process (</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-CFP"/><link displaytype="text" defaultstyle="true" type="topiclink" href="CFP" styleclass="Normal" translate="true">CFP</link><conditional-text type="ELSE"/><text styleclass="Normal" translate="true">CFP</text><conditional-text type="END"/><text styleclass="Normal" translate="true">) was complied using double precision for real variables and arrays (Compiler setting was Default, Real, Kind=8). </text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">CFP relies on several FORTRAN routines from Numerical Recipes in Fortran (1992). Due to copyright restrictions the source code for these routines cannot be publicly released by the U.S. Geological Survey. &#160;Users interested in compiling CFP will need to obtain copies of the LUDCMP, LUBKSP, and MPROVE routines (or equivalent routines) prior to compiling the program.</text></para>
+          <para styleclass="Normal"></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Numerical Recipes in Fortran 1992</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">W. H. Press, S. A. Teukolsky, W. T. Vetterling adnd B. P. Flannery</text></para>
+          <para styleclass="Normal"></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">SUBROUTINE LUDCMP(A, N, Np, Indx, D)</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">SUBROUTINE LUBKSB(A, N, Np, Indx, B)</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">SUBROUTINE MPROVE(A, Alud, N, Np, Indx, B, X)</text></para>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[FTN95 and Watcom Compilers for Compiling MODFLOW-2005]]></caption></toggle></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+      <tr style="vertical-align:top">
+        <td>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">From Matt Gloe</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Install ftn95_personal </text><link displaytype="text" defaultstyle="true" type="weblink" href="http://www.silverfrost.com/32/ftn95/ftn95_personal_edition.aspx" target="_blank" styleclass="Normal" translate="true">http://www.silverfrost.com/32/ftn95/ftn95_personal_edition.aspx</link></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Install C from watcom &#160;</text><link displaytype="text" defaultstyle="true" type="weblink" href="&lt;%LINK_CAPTION%&gt;" target="_blank" styleclass="Normal" translate="true">http://www.openwatcom.org/index.php/Download</link></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Keep the default installation directory</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Copy the file compMF.bat &#160;(shown below) into the working directory (compMF = compile ModFlow). The locations of the compiler exe files are hardcoded to avoid path errors.</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Open a “CMD” window and change to the working directory. At the prompt type compMF and press enter. </text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">If you have errors, the best way to find them is to redirect output from the compMF batch file to a log file.</text></para>
+          <para styleclass="Code Example"><text styleclass="Code Example" translate="true">compMF &gt;&gt; comp.log</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">To check comp.log type</text></para>
+          <para styleclass="Code Example"><text styleclass="Code Example" translate="true">notepad comp.log </text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Note that the new executable will be created in the source code directory</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">Also note that in older Fortran compilers, the code should be up to (and including) col 72. Fortran 95 is more flexible, but for compatibility, please keep each line under 72 cols</text></para>
+          <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[Compmf.bat]]></caption></toggle></para>
+          <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
+            <tr style="vertical-align:top">
+              <td>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">echo start</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">del *.obj</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">del mf2005.exe</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; de47.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gmg7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2bas7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2bcf7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2chd7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2drn7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2drt7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2ets7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2evt7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2fhb7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2gag7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2ghb7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2hfb7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2huf7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2hydmod7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2ibs7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2lak7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2lpf7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2mnw17.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2mnw27.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2mnw2i7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2rch7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2res7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2riv7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2sfr7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2str7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2sub7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2swt7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2uzf1.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwf2wel7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwfsfrmodule.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; gwfuzfmodule.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; hufutl7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; lmt7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; mhc7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; obs2bas7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; obs2chd7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; obs2drn7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; obs2ghb7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; obs2riv7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; obs2str7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; parutl7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; pcg7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; sip7.f</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; utl7.f /ALT_kinds</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">c:\watcom\binnt\wcc386.exe &#160;r_vector.c</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">c:\watcom\binnt\wcc386.exe &#160;solvers.c</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">c:\watcom\binnt\wcc386.exe &#160;ccfd.c</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">c:\watcom\binnt\wcc386.exe &#160;mf2kgmg.c</text></para>
+                <para styleclass="Code Example"><text styleclass="Code Example" translate="true">&quot;C:\Program Files\Silverfrost\FTN95\FTN95.exe&quot; &#160; mf2005.f /link</text></para>
+              </td>
+            </tr>
+          </table></para>
+        </td>
+      </tr>
+    </table></para>
+    <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"></para>
   </body>
 </topic>

@@ -67,7 +67,7 @@ begin
   begin
     AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
     if (AScreenObject.ViewDirection = vdTop) and (AScreenObject.Count = 1)
-      and (AScreenObject.Segments.Count > 0)
+      and (AScreenObject.Segments[frmGoPhast.PhastModel].Count > 0)
       and AScreenObject.WellBoundary.IsBoundary then
     begin
       ScreenObjectList.Add(AScreenObject);

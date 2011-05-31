@@ -15,9 +15,9 @@ uses
   Mask, JvExMask, JvSpin, JvExControls, JvxSlider, StdCtrls, Spin, Forms,
   frameDisplayLimitUnit, ArgusDataEntry, Graphics, Controls, Dialogs, ComCtrls,
   Buttons, ExtCtrls,  JvComponent, EdgeDisplayUnit, JvExStdCtrls, JvRichEdit,
-  DataSetUnit, JvCombobox, JvExComCtrls, JvUpDown, TntStdCtrls,
-  TntExDropDownEdit, TntExDropDownVirtualStringTree, VirtualTrees,
-  ClassificationUnit, Grids, RbwDataGrid4, RbwParser, LegendUnit;
+  DataSetUnit, JvCombobox, JvExComCtrls, JvUpDown, VirtualTrees,
+  ClassificationUnit, Grids, RbwDataGrid4, RbwParser, LegendUnit, SsButtonEd,
+  RbwStringTreeCombo;
 
 type
   TEdgeDisplayEdit = class(TObject)
@@ -106,7 +106,7 @@ implementation
 
 uses frmGoPhastUnit, PhastDataSets, ModelMuseUtilities,
   GoPhastTypes, StrUtils, PhastModelUnit, frmErrorsAndWarningsUnit,
-  frmProgressUnit, RealListUnit, ColorSchemes;
+  frmProgressUnit, RealListUnit, ColorSchemes, frmFormulaErrorsUnit;
 
 {$R *.dfm}
 
@@ -145,14 +145,14 @@ var
 begin
   FGettingData := True;
   try
-    virttreecomboDataSets.Tree.Clear;
+    virttreecomboDataSets1.Tree.Clear;
 
     FFrontItems.Clear;
     FSideItems.Clear;
     FTopItems.Clear;
 
-    VirtNoneNode := virttreecomboDataSets.Tree.AddChild(nil);
-    virttreecomboDataSets.Tree.Selected[VirtNoneNode] := True;
+    VirtNoneNode := virttreecomboDataSets1.Tree.AddChild(nil);
+    virttreecomboDataSets1.Tree.Selected[VirtNoneNode] := True;
 
     if csDestroying in frmGoPhast.PhastModel.ComponentState then
     begin
@@ -197,6 +197,7 @@ var
 begin
   frmGoPhast.CanDraw := False;
   Screen.Cursor := crHourGlass;
+  frmFormulaErrors.sgErrors.BeginUpdate;
   try
     RetrieveSelectedObject(AnObject);
     ColorGrid(AnObject);
@@ -207,6 +208,7 @@ begin
     end;
 
   finally
+    frmFormulaErrors.sgErrors.EndUpdate;
     Screen.Cursor := crDefault;
     frmGoPhast.CanDraw := True;
   end;
@@ -214,9 +216,9 @@ end;
 
 procedure TfrmGridColor.GetBoundaryConditions;
 begin
-  FillTreeComboWithBoundaryConditions(frmGoPhast.Grid.ThreeDDataSet,
+  FillVirtStrTreeWithBoundaryConditions(frmGoPhast.Grid.ThreeDDataSet,
     frmGoPhast.PhastModel.ThreeDTimeList, frmGoPhast.PhastModel.EdgeDisplay,
-    FBoundaryClassifications, FEdgeEdits, virttreecomboDataSets);
+    FBoundaryClassifications, FEdgeEdits, virttreecomboDataSets1.Tree);
 end;
 
 procedure TfrmGridColor.UpdateTopFrontAndSideItems;
@@ -271,12 +273,15 @@ var
   EdgeEdit: TEdgeDisplayEdit;
   Time: Double;
   ADataArray: TDataArray;
-  TimeListIndex: Integer;
+  TimeIndex: Integer;
   TimeList: TCustomTimeList;
   DataSet: TDataArray;
   Index: Integer;
   Is3DSelected: Boolean;
   DataArrayManager: TDataArrayManager;
+  ChildModel: TChildModel;
+  ChildTimeList: TCustomTimeList;
+  ChildIndex: Integer;
 begin
   Application.ProcessMessages;
   frmProgressMM.ShouldContinue := True;
@@ -314,10 +319,28 @@ begin
     frmGoPhast.PhastModel.EdgeDisplay := nil;
     comboMethod.ItemIndex := 0;
     FLegend.ValueSource := nil;
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.Grid.TopDataSet := nil;
+      ChildModel.TopTimeList := nil;
+      ChildModel.Grid.FrontDataSet := nil;
+      ChildModel.FrontTimeList := nil;
+      ChildModel.Grid.SideDataSet := nil;
+      ChildModel.SideTimeList := nil;
+      ChildModel.Grid.ThreeDDataSet := nil;
+      ChildModel.ThreeDTimeList := nil;
+      ChildModel.EdgeDisplay := nil;
+    end;
   end
   else if (AnObject is TDataArray) then
   begin
     frmGoPhast.PhastModel.EdgeDisplay := nil;
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.EdgeDisplay := nil;
+    end;
     DataSet := TDataArray(AnObject);
     AssignLimits(DataSet.DataType, DataSet.Limits);
     if frmGoPhast.Grid.ThreeDDataSet <> DataSet then
@@ -361,6 +384,13 @@ begin
     frmGoPhast.PhastModel.EdgeDisplay := nil;
     TimeList := TCustomTimeList(AnObject);
     AssignLimits(TimeList.DataType, TimeList.Limits);
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildTimeList := ChildModel.GetTimeListByName(TimeList.Name);
+      AssignLimits(ChildTimeList.DataType, ChildTimeList.Limits);
+      ChildModel.EdgeDisplay := nil;
+    end;
 
     Time := StrToFloat(comboTime3D.Text);
     if (frmGoPhast.PhastModel.ThreeDTimeList <> TimeList)
@@ -368,14 +398,33 @@ begin
     begin
       comboMethod.ItemIndex := 0;
       TimeList.Invalidate;
+//      for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+//      begin
+//        ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+//        ChildTimeList := ChildModel.GetTimeListByName(TimeList.Name);
+//        ChildTimeList.Invalidate;
+//      end;
     end;
 
     if TimeList.UpToDate then
     begin
-      for TimeListIndex := 0 to TimeList.Count - 1 do
+      for TimeIndex := 0 to TimeList.Count - 1 do
       begin
-        ADataArray := TimeList[TimeListIndex];
+        ADataArray := TimeList[TimeIndex];
         AssignLimits(ADataArray.DataType, ADataArray.Limits);
+      end;
+    end;
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildTimeList := ChildModel.GetTimeListByName(TimeList.Name);
+      if ChildTimeList.UpToDate then
+      begin
+        for TimeIndex := 0 to ChildTimeList.Count - 1 do
+        begin
+          ADataArray := ChildTimeList[TimeIndex];
+          AssignLimits(ADataArray.DataType, ADataArray.Limits);
+        end;
       end;
     end;
     frmGoPhast.PhastModel.UpdateThreeDTimeDataSet(TimeList, Time);
@@ -385,7 +434,7 @@ begin
     end
     else
     begin
-      frmGoPhast.Grid.TopDataSet := nil;
+      frmGoPhast.PhastModel.Grid.TopDataSet := nil;
       frmGoPhast.PhastModel.TopTimeList := nil;
     end;
     if FFrontItems.IndexOfObject(AnObject) >= 0 then
@@ -394,7 +443,7 @@ begin
     end
     else
     begin
-      frmGoPhast.Grid.FrontDataSet := nil;
+      frmGoPhast.PhastModel.Grid.FrontDataSet := nil;
       frmGoPhast.PhastModel.FrontTimeList := nil;
     end;
     if FSideItems.IndexOfObject(AnObject) >= 0 then
@@ -403,7 +452,7 @@ begin
     end
     else
     begin
-      frmGoPhast.Grid.SideDataSet := nil;
+      frmGoPhast.PhastModel.Grid.SideDataSet := nil;
       frmGoPhast.PhastModel.SideTimeList := nil;
     end;
     ADataArray := nil;
@@ -427,17 +476,18 @@ begin
   end
   else if AnObject is TEdgeDisplayEdit then
   begin
-    frmGoPhast.Grid.TopDataSet := nil;
+    frmGoPhast.PhastModel.Grid.TopDataSet := nil;
     frmGoPhast.PhastModel.TopTimeList := nil;
-    frmGoPhast.Grid.FrontDataSet := nil;
+    frmGoPhast.PhastModel.Grid.FrontDataSet := nil;
     frmGoPhast.PhastModel.FrontTimeList := nil;
-    frmGoPhast.Grid.SideDataSet := nil;
+    frmGoPhast.PhastModel.Grid.SideDataSet := nil;
     frmGoPhast.PhastModel.SideTimeList := nil;
-    frmGoPhast.Grid.ThreeDDataSet := nil;
+    frmGoPhast.PhastModel.Grid.ThreeDDataSet := nil;
     frmGoPhast.PhastModel.ThreeDTimeList := nil;
     EdgeEdit := TEdgeDisplayEdit(AnObject);
     AssignLimits(rdtDouble, EdgeEdit.Edge.Limits[EdgeEdit.DataIndex]);
-    if (frmGoPhast.PhastModel.EdgeDisplay <> EdgeEdit.Edge) or (EdgeEdit.Edge.DataToPlot <> EdgeEdit.DataIndex) then
+    if (frmGoPhast.PhastModel.EdgeDisplay <> EdgeEdit.Edge)
+      or (EdgeEdit.Edge.DataToPlot <> EdgeEdit.DataIndex) then
     begin
       comboMethod.ItemIndex := 0;
     end;
@@ -446,12 +496,35 @@ begin
     FLegend.ValueSource := EdgeEdit.Edge;
     FLegend.ColoringLimits := EdgeEdit.Edge.Limits[EdgeEdit.DataIndex];
     FLegend.EdgeDataToPlot := EdgeEdit.DataIndex;
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.Grid.TopDataSet := nil;
+      ChildModel.TopTimeList := nil;
+      ChildModel.Grid.FrontDataSet := nil;
+      ChildModel.FrontTimeList := nil;
+      ChildModel.Grid.SideDataSet := nil;
+      ChildModel.SideTimeList := nil;
+      ChildModel.Grid.ThreeDDataSet := nil;
+      ChildModel.ThreeDTimeList := nil;
+      if frmGoPhast.PhastModel.EdgeDisplay = frmGoPhast.PhastModel.HfbDisplayer then
+      begin
+        ChildModel.HfbDisplayer.DataToPlot := EdgeEdit.DataIndex;
+        ChildModel.EdgeDisplay := ChildModel.HfbDisplayer;
+      end
+      else
+      begin
+        Assert(False);
+      end;
+    end;
+
   end
   else
   begin
     Assert(False);
   end;
-  frmGoPhast.acColoredGrid.Enabled := (frmGoPhast.Grid.ThreeDDataSet <> nil) or (frmGoPhast.PhastModel.EdgeDisplay <> nil);
+  frmGoPhast.acColoredGrid.Enabled := (frmGoPhast.Grid.ThreeDDataSet <> nil)
+    or (frmGoPhast.PhastModel.EdgeDisplay <> nil);
   if not frmGoPhast.acColoredGrid.Enabled then
   begin
     frmGoPhast.acColoredGrid.Checked := False;

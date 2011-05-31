@@ -37,8 +37,6 @@ type
     procedure dgParametersExit(Sender: TObject);
     procedure dgParametersStateChange(Sender: TObject; ACol, ARow: Integer;
       const Value: TCheckBoxState);
-    procedure dgParametersMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure dgParametersEndUpdate(Sender: TObject);
   private
     { Private declarations }
@@ -134,20 +132,6 @@ begin
       dgParameters.Cells[0,RowIndex] := Parameter.ParameterName;
     end;
   end;
-end;
-
-procedure TframeListParameterDefinition.dgParametersMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    dgParameters.Options := dgParameters.Options + [goEditing];
-  end
-  else
-  begin
-    dgParameters.Options := dgParameters.Options - [goEditing];
-  end;
-
 end;
 
 procedure TframeListParameterDefinition.dgParametersSelectCell(Sender: TObject;

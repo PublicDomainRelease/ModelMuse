@@ -17,7 +17,7 @@ uses
 
 { TODO : Consider making this a property sheet like the object inspector. }
 
-{ TODO : Consider using a non-moldal window here. }
+{ TODO : Consider using a non-modal window here. }
 
 Type
   TOK_Variables = record
@@ -185,11 +185,14 @@ Type
     tabPHAST: TTabSheet;
     framePhastInterpolation: TframePhastInterpolation;
     tabComment: TTabSheet;
+    Splitter1: TSplitter;
+    pnlComment: TPanel;
     Comment: TLabel;
     reComment: TJvRichEdit;
+    pnlDescription: TPanel;
     lblAssociatedDataSets: TLabel;
     memoAssociatedDataSets: TMemo;
-    Splitter1: TSplitter;
+    Splitter2: TSplitter;
     // @name adds a new @link(TDataArray) at the end of @link(tvDataSets).
     procedure btnAddClick(Sender: TObject);
     // @name closes the @classname without making any changes to the
@@ -1019,6 +1022,7 @@ var
   DataStorage: TPhastDataSetStorage;
   NewDataSetProperties : TObjectList;
   ArrayEdit: TDataArrayEdit;
+  DataSetsDeleted: Boolean;
 begin
   // This procedure updates the data sets based on the changes the
   // user has made.
@@ -1049,6 +1053,9 @@ begin
           ArrayEdit.UpdateDataSet;
           DataSet := ArrayEdit.DataArray;
           NewDataSets.Add(DataSet);
+          DataSet.Orientation := ArrayEdit.Orientation;
+          DataSet.EvaluatedAt := ArrayEdit.EvaluatedAt;
+          DataSet.Datatype := ArrayEdit.Datatype;
         end;
 
         // set the data set properties except for the formula.
@@ -1079,6 +1086,7 @@ begin
         end;
       end;
 
+      DataSetsDeleted := DeletedDataSets.Count > 0;
       Undo := TUndoChangeDataSets.Create(DeletedDataSets, NewDataSets,
         NewDataSetProperties);
     finally
@@ -1089,6 +1097,13 @@ begin
     if Undo.DataSetsChanged then
     begin
       frmGoPhast.UndoStack.Submit(Undo);
+      if DataSetsDeleted then
+      begin
+        Beep;
+        MessageDlg('If you have any unused objects, '
+          + 'now might be a good time to delete them.',
+          mtInformation, [mbOK], 0);
+      end;
     end
     else
     begin
@@ -1371,7 +1386,7 @@ begin
               Beep;
               if OldFormulaOK then
               begin
-                ErrorMessage := ErrorMessage + #13#10#13#10
+                ErrorMessage := ErrorMessage + sLineBreak + sLineBreak
                   + 'Do you wish to Do you wish to '
                   + 'restore the old formula?';
                  if MessageDlg(ErrorMessage, mtError,
@@ -2725,7 +2740,7 @@ begin
     Exit;
   end;
   ValidateFormula(SelectedEdit,
-    StringReplace(reDefaultFormula.Text, #13#10, '', [rfReplaceAll]));
+    StringReplace(reDefaultFormula.Text, sLineBreak, '', [rfReplaceAll]));
 end;
 
 procedure TfrmDataSets.SetCurrentInterpolator(

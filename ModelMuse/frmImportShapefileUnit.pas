@@ -386,6 +386,7 @@ type
     comboLiftQMax: TComboBox;
     comboWellTolerance: TComboBox;
     rpShapeCompiler: TRbwParser;
+    memoMultipleParts: TMemo;
     // @name edits the formula in @link(edImportCriterion).
     procedure btnImportCriterionClick(Sender: TObject);
     // @name sets all the checkboxes to checked
@@ -468,6 +469,7 @@ type
     FNumPointsInCurrentShape: Integer;
     FInvalidParameterNames: TStringList;
     FCombinedObjectsAllowed: Boolean;
+    FObsCount: Integer;
     // @name checks for valid data in @link(dgFields).
     function CheckDataSets: boolean;
     // @name checks that AFormula is a valid formula.
@@ -710,6 +712,7 @@ end;
 procedure TfrmImportShapefile.FormCreate(Sender: TObject);
 begin
   inherited;
+  FObsCount := 0;
   FCombinedObjectsAllowed := True;
   FFieldNumbers := TStringList.Create;
   FFieldNumbers.CaseSensitive := False;
@@ -840,7 +843,7 @@ begin
       begin
         xbShapeDataBase.FileName := FDataBaseFileName;
         try
-        xbShapeDataBase.Active := True;
+          xbShapeDataBase.Active := True;
         Except on E: EFOpenError do
           begin
             Beep;
@@ -975,13 +978,27 @@ begin
           for ShapeIndex := 0 to FGeometryFile.Count - 1 do
           begin
             Shape := FGeometryFile[ShapeIndex];
-            FAllowShapesToCombine := Shape.FNumParts <= 1;
-            if not FAllowShapesToCombine then
+            if Shape.FNumParts > 1 then
             begin
-              break;
+              FAllowShapesToCombine := False;
+              if memoMultipleParts.Lines.Count = 0 then
+              begin
+                memoMultipleParts.Lines.Add('The shapes can not be combined ' +
+                  'because the following shapes have multiple parts.');
+              end;
+              memoMultipleParts.Lines.Add(IntToStr(ShapeIndex+1));
             end;
+//            FAllowShapesToCombine := Shape.FNumParts <= 1;
+//            if not FAllowShapesToCombine then
+//            begin
+//              lblSeparateObjectsExplanation.Caption := 'The shapes can not be '
+//                + 'combined because Shape ' + IntToStr(ShapeIndex) + ' has '
+//                + 'multiple parts.';
+//              break;
+//            end;
 
           end;
+          memoMultipleParts.Visible := not FAllowShapesToCombine;
         finally
           ValidFields.Free;
           ValidIndicies.Free;
@@ -1076,7 +1093,7 @@ end;
 
 procedure TfrmImportShapefile.AddModflowPackageToImportChoices(APackage: TModflowPackageSelection);
 begin
-  if APackage.IsSelected then
+  if frmGoPhast.PhastModel.PackageIsSelected(APackage) then
   begin
     comboBoundaryChoice.Items.AddObject(APackage.PackageIdentifier, APackage);
   end;
@@ -1745,7 +1762,7 @@ begin
           // not a field
           if TryStrToFloat(comboSfrReachLength.Text, Value) then
           begin
-            RCHLEN := FloatToStr(Value);
+            RCHLEN := FortranFloatToStr(Value);
           end
           else
           begin
@@ -1755,7 +1772,7 @@ begin
         else
         begin
           Value := xbShapeDataBase.GetFieldNum(FieldNumber);
-          RCHLEN := FloatToStr(Value);
+          RCHLEN := FortranFloatToStr(Value);
         end;
         Item.ReachLength := RCHLEN;
         Item.HydraulicConductivity :=
@@ -2026,7 +2043,7 @@ begin
       Item := AScreenObject.ModflowHeadObservations.Values.Add as THobItem;
       Item.Time := ATime;
       Item.Head := AValue;
-      if frmGoPhast.ShowUcodeInterface then
+//      if frmGoPhast.ShowUcodeInterface then
       begin
         AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[2, Index + 1]);
         Item.Statistic := AValue;
@@ -2044,6 +2061,11 @@ begin
   end;
   AScreenObject.ModflowHeadObservations.ObservationName :=
     GetStringValueFromText(comboHeadObservationNames.Text);
+  if AScreenObject.ModflowHeadObservations.ObservationName = '' then
+  begin
+    Inc(FObsCount);
+    AScreenObject.ModflowHeadObservations.ObservationName := 'Obs' + IntToStr(FObsCount);
+  end;
   AScreenObject.ModflowHeadObservations.Purpose :=
     TObservationPurpose(comboHeadObsType.ItemIndex);
   AScreenObject.ModflowHeadObservations.MultiObsMethod :=
@@ -2472,14 +2494,14 @@ begin
   plBoundary.ActivePage := jvspModflowHOB;
   comboHeadObservationNames.Items := FStringFieldNames;
   rdgBoundaryConditions.Enabled := True;
-  if frmGoPhast.ShowUcodeInterface then
-  begin
+//  if frmGoPhast.ShowUcodeInterface then
+//  begin
     rdgBoundaryConditions.ColCount := 4;
-  end
-  else
-  begin
-    rdgBoundaryConditions.ColCount := 2;
-  end;
+//  end
+//  else
+//  begin
+//    rdgBoundaryConditions.ColCount := 2;
+//  end;
   AssignColFeatureProperties;
   rdgBoundaryConditions.Columns[0].ComboUsed := True;
   rdgBoundaryConditions.Columns[0].Format := rcf4String;
@@ -2487,18 +2509,18 @@ begin
   rdgBoundaryConditions.Columns[1].ComboUsed := True;
   rdgBoundaryConditions.Columns[1].Format := rcf4String;
   rdgBoundaryConditions.Columns[1].PickList := FRealFieldNames;
-  if frmGoPhast.ShowUcodeInterface then
-  begin
-    rdgBoundaryConditions.Columns[2].ComboUsed := True;
-    rdgBoundaryConditions.Columns[2].Format := rcf4String;
-    rdgBoundaryConditions.Columns[2].PickList := FRealFieldNames;
-    rdgBoundaryConditions.Columns[3].ComboUsed := True;
-    rdgBoundaryConditions.Columns[3].Format := rcf4String;
-    rdgBoundaryConditions.Columns[3].PickList := FIntegerFieldNames;
-  end;
+//  if frmGoPhast.ShowUcodeInterface then
+//  begin
+  rdgBoundaryConditions.Columns[2].ComboUsed := True;
+  rdgBoundaryConditions.Columns[2].Format := rcf4String;
+  rdgBoundaryConditions.Columns[2].PickList := FRealFieldNames;
+  rdgBoundaryConditions.Columns[3].ComboUsed := True;
+  rdgBoundaryConditions.Columns[3].Format := rcf4String;
+  rdgBoundaryConditions.Columns[3].PickList := FIntegerFieldNames;
+//  end;
   rdgBoundaryConditions.Cells[0, 0] := 'Time';
   rdgBoundaryConditions.Cells[1, 0] := 'Observed head';
-  if frmGoPhast.ShowUcodeInterface then
+//  if frmGoPhast.ShowUcodeInterface then
   begin
     rdgBoundaryConditions.Cells[2, 0] := 'Statistic';
     rdgBoundaryConditions.Cells[3, 0] := 'Stat Flag';
@@ -3837,7 +3859,7 @@ begin
     end
     else
     begin
-      result := FloatToStr(GetRealValueFromText(Text));
+      result := FortranFloatToStr(GetRealValueFromText(Text));
     end;
   end
   else
@@ -3882,7 +3904,7 @@ begin
       Exit;
     end;
 
-    result := FloatToStr(GetRealValueFromText(Text));
+    result := FortranFloatToStr(GetRealValueFromText(Text));
     FieldStorage.Formula := result;
   end;
 end;
@@ -4092,7 +4114,7 @@ begin
         RealItem := Boundary.BoundaryValue.Add as TRealPhastBoundaryCondition;
       end;
       RealItem.Time := ATime;
-      RealItem.FormulaExpression := FloatToStr(AValue);
+      RealItem.FormulaExpression := FortranFloatToStr(AValue);
       AnInt := 0;
       FieldName := rdgBoundaryConditions.Cells[2, Index + 1];
       if FieldName <> '' then
@@ -5036,7 +5058,7 @@ begin
                                 else
                                 begin
                                   AScreenObject.DataSetFormulas[Position]
-                                    := FloatToStr(RealVariable.Value);
+                                    := FortranFloatToStr(RealVariable.Value);
                                 end;
                               end;
                             end;
@@ -5182,7 +5204,7 @@ begin
                           begin
                             AScreenObject.ElevationFormula
                               := ZExpression.Decompile;
-  //                            := FloatToStr(ZExpression.DoubleResult);
+  //                            := FortranFloatToStr(ZExpression.DoubleResult);
                           end;
                         end;
                       ecTwo:
@@ -5516,7 +5538,7 @@ begin
     end;
     for InvalidParametersIndex := 0 to FInvalidParameterNames.Count - 1 do
     begin
-      frmErrorsAndWarnings.AddWarning(WarningRoot,
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, WarningRoot,
         FInvalidParameterNames[InvalidParametersIndex]);
     end;
     if FInvalidParameterNames.Count > 0 then
@@ -5832,6 +5854,7 @@ var
 begin
   frmGoPhast.CanDraw := False;
   try
+    DisallowChildGridUpdates;
     UnDeleteNewScreenObjects;
     DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
     DataArrayManager.HandleAddedDataArrays(FNewDataSets);
@@ -5861,6 +5884,7 @@ begin
     end;
   finally
     frmGoPhast.CanDraw := True;
+    AllowChildGridUpdates;
   end;
   FShouldUpdateShowHideObjects := True;
   inherited;
@@ -5886,6 +5910,7 @@ var
   DataArrayManager: TDataArrayManager;
 begin
   inherited;
+  DisallowChildGridUpdates;
   frmGoPhast.CanDraw := False;
   try
     DeleteNewScreenObjects;
@@ -5920,6 +5945,7 @@ begin
     end;
 
   finally
+    AllowChildGridUpdates;
     frmGoPhast.CanDraw := True;
   end;
   FShouldUpdateShowHideObjects := True;
@@ -6952,7 +6978,7 @@ function TValueReal.Decompile: string;
 begin
   case GlobalDecompileType of
     dcNormal: result := inherited Decompile;
-    dcValue: result := FloatToStr(DoubleResult);
+    dcValue: result := FortranFloatToStr(DoubleResult);
     else Assert(False);
   end;
 
@@ -7037,7 +7063,7 @@ begin
     end
     else
     begin
-      Result := FloatToStr(GetRealValue);
+      Result := FortranFloatToStr(GetRealValue);
     end;
     Cached := True;
     Formula := result;

@@ -311,6 +311,17 @@ type
     acShowGridValues: TAction;
     acModflowLgrActive: TAction;
     miModflowLgr: TMenuItem;
+    miChildModels: TMenuItem;
+    miASCII_RasterFile: TMenuItem;
+    tbImportModelResults: TToolButton;
+    acImportModelResults: TAction;
+    acRunModflowLgr: TAction;
+    sdModflowLgr: TSaveDialog;
+    miExportModflowLgr: TMenuItem;
+    miInvertSelectedVertices: TMenuItem;
+    miSplitSelectedObjects: TMenuItem;
+    miMakeSelectedVerticesASeparateObject: TMenuItem;
+    miSplitObjectAtSelectedVertices: TMenuItem;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -408,6 +419,13 @@ type
     procedure miTimeSeriestoShapefileClick(Sender: TObject);
     procedure miDataSetstoCSVClick(Sender: TObject);
     procedure acModflowLgrActiveExecute(Sender: TObject);
+    procedure miChildModelsClick(Sender: TObject);
+    procedure miASCII_RasterFileClick(Sender: TObject);
+    procedure acRunModflowLgrExecute(Sender: TObject);
+    procedure miInvertSelectedVerticesClick(Sender: TObject);
+    procedure miSplitSelectedObjectsClick(Sender: TObject);
+    procedure miMakeSelectedVerticesASeparateObjectClick(Sender: TObject);
+    procedure miSplitObjectAtSelectedVerticesClick(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -427,7 +445,7 @@ type
     FRunPhast: boolean;
     FPositionList: TPositionList;
     FBrowser: string;
-    FShowUcodeInterface: Boolean;
+//    FShowUcodeInterface: Boolean;
     FStartTime: TDateTime;
     FFileStream: TFileStream;
     FFileSize: Int64;
@@ -436,6 +454,8 @@ type
     FObservationFileName: string;
     FPredictionFileName: string;
     FReadingFile: Boolean;
+    FSizeWarningDisplayed: Boolean;
+    FRunModelSelection: Integer;
     procedure SetCreateArchive(const Value: Boolean);
     property CreateArchive: Boolean read FCreateArchive write SetCreateArchive;
     procedure WMMenuSelect(var Msg: TWMMenuSelect); message WM_MENUSELECT;
@@ -444,7 +464,7 @@ type
     // @link(TScreenObject)(s).
     procedure DeleteLastPointInScreenObject;
     // @name deletes the selected @link(TScreenObject)(s).
-    procedure DeleteSelectedNotesOrSelectedScreenObjects;
+    procedure DeleteSelectedNodesOrSelectedScreenObjects;
     procedure CreatePhastModel;
     procedure UpdateDisplay(Sender: TObject);
     procedure UpdatePermanantDialogBoxAppearances;
@@ -454,7 +474,7 @@ type
     procedure ReadModelMateProject(FileName: string;
       ModelMateProject: TProject);
     procedure InitializeModflowInputDialog;
-    procedure SetVisibilityOfModelMateActions;
+//    procedure SetVisibilityOfModelMateActions;
     procedure EnableDeleteImage;
     procedure CancelCurrentScreenObject;
     procedure InternalSaveFile(FileName: string);
@@ -1348,7 +1368,7 @@ type
     // are on the same row.
     procedure AdjustToolbarPositions(FirstToolBar,
       SecondToolBar: TToolBar);
-    // If @link(frmProgress), @link(frmSelectedObjects), or @link(frmColors)
+    // If @link(frmProgressMM), @link(frmSelectedObjects), or @link(frmColors)
     // are visible, @name brings them to the front.
     // @name is the Application.OnActivate event handler.
     procedure BringFormsToFront(Sender: TObject);
@@ -1432,12 +1452,13 @@ type
     procedure CheckInternet;
     procedure SaveModelMateProject;
     procedure SetChangingSelection(const Value: boolean);
-    procedure SetShowUcodeInterface(const Value: boolean);
+//    procedure SetShowUcodeInterface(const Value: boolean);
     procedure OnOpenFile(Sender: TObject);
     procedure SetCanDraw(const Value: boolean);
-    function GetObservationFileName: string;
-    function GetPredictionFileName: string;
+    function GetObservationFileName(SD: TSaveDialog): string;
+    function GetPredictionFileName(SD: TSaveDialog): string;
     function GetCanDraw: boolean;
+    procedure InitializeModflowLgrInputDialog;
     { Private declarations }
   protected
     // @name is used to specify the format of the files that
@@ -1449,8 +1470,8 @@ type
   public
     FCubeControl: TRbwModelCube;
     procedure EnableHufMenuItems;
-    property ShowUcodeInterface: boolean read FShowUcodeInterface
-      write SetShowUcodeInterface;
+//    property ShowUcodeInterface: boolean read FShowUcodeInterface
+//      write SetShowUcodeInterface;
     property ChangingSelection: boolean read FChangingSelection
       write SetChangingSelection;
     procedure EnableManageFlowObservations;
@@ -1539,7 +1560,7 @@ type
     // @name is used to read a GoPhast file from the disk.
     // @param(FileName is the name of the file that is to be read.)
     procedure OpenAFile(const FileName: string);
-    // @name is the @link(TPhastModel.PhastGrid) of @link(PhastModel).
+    // @name is the @link(TCustomModel.PhastGrid) of @link(PhastModel).
     property PhastGrid: TPhastGrid read GetPhastGrid;
     // @name sets the @link(TScreenObject.Selected) property of
     // all @link(TScreenObject)s to false.  @name returns true if any
@@ -1580,8 +1601,9 @@ type
     property CreateNewCompositeBudgetFile: boolean
       read FCreateNewCompositeBudgetFile write FCreateNewCompositeBudgetFile;
     { Public declarations }
-    property ObservationFileName: string read GetObservationFileName;
-    property PredictionFileName: string read GetPredictionFileName;
+    property ObservationFileName[SD: TSaveDialog]: string read GetObservationFileName;
+    property PredictionFileName[SD: TSaveDialog]: string read GetPredictionFileName;
+    procedure EnableVisualization;
   end;
 
 
@@ -1627,7 +1649,8 @@ uses
   frmModpathDisplayUnit, frmPhastLocationUnit, frmEndPointDisplayUnit,
   frmTimeSeriesDisplayUnit, frmImportSurferGrdFileUnitUnit, frmImportDEMUnit,
   frmExportImageUnit, frmManageParametersUnit, frmManageHeadObservationsUnit,
-  RealListUnit, ContourExport, frmExportCSVUnit;
+  RealListUnit, ContourExport, frmExportCSVUnit, frmChildModelsUnit,
+  frmImportAsciiRasterUnit, CustomModflowWriterUnit, ModflowUnitNumbers;
 
 resourcestring
   StrModelMate = 'ModelMate';
@@ -1636,6 +1659,10 @@ resourcestring
   StrEndpointsAtStartshp = 'EndpointsAtStart.shp';
   StrEndpointsAtEndshp = 'EndpointsAtEnd.shp';
   StrTimeSeriesshp = 'TimeSeries.shp';
+  StrDisplayOption = 'DisplayOption';
+  StrColor = 'Color';
+  StrContour = 'Contour';
+  StrDisplayNone = 'None';
 
 
 {$R *.dfm}
@@ -1999,6 +2026,12 @@ begin
   end;
 end;
 
+procedure TfrmGoPhast.miSplitObjectAtSelectedVerticesClick(Sender: TObject);
+begin
+  inherited;
+  UndoStack.Submit(TUndoSplitScreenObject.Create);
+end;
+
 procedure TfrmGoPhast.ReadIniFile;
 var
   Keys: TStringList;
@@ -2015,8 +2048,12 @@ begin
   IniFName := IniFileName(Handle, Application.ExeName);
   FIniFile:= TMemInifile.Create(IniFName);
   miShowVideoTips.Checked := FIniFile.ReadBool(StrCustomization, StrShowTips, True);
-  FShowUcodeInterface := FIniFile.ReadBool(StrModelMate, StrEnableModelMate, False);
-  SetVisibilityOfModelMateActions;
+//  FShowUcodeInterface := FIniFile.ReadBool(StrModelMate, StrEnableModelMate, False);
+//  SetVisibilityOfModelMateActions;
+
+  DisplayChoices[dcColor] := FIniFile.ReadInteger(StrDisplayOption, StrColor, 0);
+  DisplayChoices[dcContour] := FIniFile.ReadInteger(StrDisplayOption, StrContour, 0);
+  DisplayChoices[dcNone] := FIniFile.ReadInteger(StrDisplayOption, StrDisplayNone, 0);
 
   Keys := TStringList.Create;
   try
@@ -2117,7 +2154,21 @@ begin
     IniFile.WriteString(MRU_Section,
       'FileName' + IntToStr(Index), FileName);
   end;
-  FIniFile.WriteBool(StrModelMate, StrEnableModelMate, ShowUcodeInterface);
+//  FIniFile.WriteBool(StrModelMate, StrEnableModelMate, ShowUcodeInterface);
+
+  While (DisplayChoices[dcColor] > MaxDisplayChoiceCount)
+    or (DisplayChoices[dcContour] > MaxDisplayChoiceCount)
+    or (DisplayChoices[dcNone] > MaxDisplayChoiceCount)
+    do
+  begin
+    DisplayChoices[dcColor] := DisplayChoices[dcColor] div 2;
+    DisplayChoices[dcContour] := DisplayChoices[dcContour] div 2;
+    DisplayChoices[dcNone] := DisplayChoices[dcNone] div 2;
+  end;
+
+  FIniFile.WriteInteger(StrDisplayOption, StrColor, DisplayChoices[dcColor]);
+  FIniFile.WriteInteger(StrDisplayOption, StrContour, DisplayChoices[dcContour]);
+  FIniFile.WriteInteger(StrDisplayOption, StrDisplayNone, DisplayChoices[dcNone]);
 
   PhastModel.ProgramLocations.WriteToIniFile(IniFile);
   try
@@ -2171,7 +2222,12 @@ begin
     end;
 
     FileName := sdZonebudgetInput.FileName;
-    PhastModel.ExportZoneBudgetModel(FileName, FRunZoneBudget);
+    frmFormulaErrors.sgErrors.BeginUpdate;
+    try
+      PhastModel.ExportZoneBudgetModel(FileName, FRunZoneBudget);
+    finally
+      frmFormulaErrors.sgErrors.EndUpdate;
+    end;
 
     if frmErrorsAndWarnings.HasMessages then
     begin
@@ -2219,8 +2275,18 @@ var
   WorkAreaWidth: Integer;
   WorkAreaHeight: Integer;
   HelpFileName: string;
+  NewFileName: string;
+  NameWriter: TNameFileWriter;
+  Index: Integer;
+  ChildModel: TChildModel;
+  ChildModelNameFile: string;
 begin
   inherited;
+  // Some laptops of the Dept. of the Interior contract have a
+  // screen height of 600 pixels so ensure that the height of the main
+  // form is never more than that.
+  Assert(Height <= 600);
+
   frameTopView.miEditSelectedObjects.Action := acEditSelecteObjects;
   frameFrontView.miEditSelectedObjects.Action := acEditSelecteObjects;
   frameSideView.miEditSelectedObjects.Action := acEditSelecteObjects;
@@ -2318,8 +2384,6 @@ begin
     frameSideView.ZoomBox.OriginY := -1000.0;
     frameSideView.ZoomBox.OriginX := -80;
 
-//    FDeletedDataSets := TObjectList.Create;
-
     // Make sure that everything is the right color.
     pnlBottom.ParentColor := True;
     frameFrontView.ZoomBox.ParentColor := True;
@@ -2416,7 +2480,7 @@ begin
 
     PhastModel.UpToDate := True;
 
-    frmScreenObjectProperties := TfrmScreenObjectProperties.Create(Application);
+//    frmScreenObjectProperties := TfrmScreenObjectProperties.Create(Application);
 
     OpenedFile := False;
     if ParamCount > 0 then
@@ -2470,10 +2534,19 @@ begin
                   ExportFile(ChangeFileExt(FileName, sdPhastInput.DefaultExt),
                     False);
                 end;
-              msModflow, msModflowLGR:
+              msModflow:
                 begin
-                  PhastModel.ExportModflowModel(
-                    ChangeFileExt(FileName, '.nam'), False);
+                  NewFileName := ChangeFileExt(FileName, '.nam');
+                  NewFileName := PhastModel.FixFileName(NewFileName);
+                  NameWriter := TNameFileWriter.Create(PhastModel, NewFileName);
+                  try
+                    PhastModel.NameFileWriter := NameWriter;
+                    PhastModel.ExportModflowModel(
+                      NewFileName, False);
+                  finally
+                    NameWriter.Free;
+                    PhastModel.NameFileWriter := nil;
+                  end;
                   if PhastModel.ModflowPackages.ModPath.IsSelected then
                   begin
                     PhastModel.ExportModpathModel(
@@ -2484,8 +2557,44 @@ begin
                     PhastModel.ExportZoneBudgetModel(
                       ChangeFileExt(FileName, '.zon'), False);
                   end;
+                end;
+              msModflowLGR:
+                begin
+                  NewFileName := PhastModel.FixFileName(ChangeFileExt(FileName, '.lgr'));
+
+                  NameWriter := TNameFileWriter.Create(PhastModel, FileName);
+                  try
+                    PhastModel.NameFileWriter := NameWriter;
+                    for Index := 0 to PhastModel.ChildModels.Count - 1 do
+                    begin
+                      ChildModel := PhastModel.ChildModels[Index].ChildModel;
+                      ChildModelNameFile := ChildModel.Child_NameFile_Name(FileName);
+                      NameWriter := TNameFileWriter.Create(ChildModel, ChildModelNameFile);
+                      ChildModel.NameFileWriter := NameWriter;
+                    end;
+                    PhastModel.ExportModflowLgrModel(NewFileName, False);
+                  finally
+                    PhastModel.NameFileWriter.Free;
+                    PhastModel.NameFileWriter := nil;
+                    for Index := 0 to PhastModel.ChildModels.Count - 1 do
+                    begin
+                      ChildModel := PhastModel.ChildModels[Index].ChildModel;
+                      ChildModel.NameFileWriter.Free;
+                      ChildModel.NameFileWriter := nil;
+                    end;
+                  end;
 
 
+                  if PhastModel.ModflowPackages.ModPath.IsSelected then
+                  begin
+                    PhastModel.ExportModpathModel(
+                      ChangeFileExt(FileName, '.mpn'), False, True);
+                  end;
+                  if PhastModel.ModflowPackages.ZoneBudget.IsSelected then
+                  begin
+                    PhastModel.ExportZoneBudgetModel(
+                      ChangeFileExt(FileName, '.zon'), False);
+                  end;
                 end;
               else Assert(False);
             end;
@@ -2734,9 +2843,6 @@ begin
 end;
 
 procedure TfrmGoPhast.FormDestroy(Sender: TObject);
-//var
-//  Index: Integer;
-//  DataSet: TDataArray;
 begin
 //  OutputDebugString('SAMPLING ON');
   WriteIniFile;
@@ -2756,18 +2862,11 @@ begin
   }
 
   UndoStack.Clear;
-//  for Index := 0 to PhastModel.DataArrayManager.DeletedDataSets.Count - 1 do
-//  begin
-//    DataSet := PhastModel.DataArrayManager.DeletedDataSets[Index];
-//    DataSet.StopTalkingToAnyone;
-//    DataSet.SetModelToNil;
-//  end;
   // Get rid of the model.
 //  FreeAndNil(FPhastModel);
   // Formula manager needs FPhastModel to be defined during FPhastModel.Free;
   FPhastModel.Free;
   FPhastModel := nil;
-//  FDeletedDataSets.Free;
   FPhastModel := nil;
   inherited;
 //  OutputDebugString('SAMPLING OFF');
@@ -2899,6 +2998,18 @@ begin
 end;
 
 procedure TfrmGoPhast.ModelSelectionChange(Sender: TObject);
+  procedure UpdateRunShortCut(Action: TAction);
+  begin
+    if Action.Enabled then
+    begin
+      Action.ShortCut := ShortCut(Word('E'), [ssCtrl]);
+      tbRun.Action := Action;
+    end
+    else
+    begin
+      Action.ShortCut := 0;
+    end;
+  end;
 begin
   case PhastModel.ModelSelection of
     msUndefined: ; // ignore
@@ -2911,11 +3022,20 @@ begin
         acSubdivide.Hint := 'Subdivide grid elements|'
           + 'Click down and drag to select elements to be subdivided.';
       end;
-    msModflow, msModflowLGR:
+    msModflow:
       begin
         frameTopView.ModelCube.ZOrigin := zoTop;
         frameFrontView.ModelCube.YOrigin := yoNorth;
         acModflowActive.Checked := True;
+        acSubdivide.Caption := 'Subdivide Grid &Cells...';
+        acSubdivide.Hint := 'Subdivide grid cells|'
+          + 'Click down and drag to select cells to be subdivided.';
+      end;
+    msModflowLGR:
+      begin
+        frameTopView.ModelCube.ZOrigin := zoTop;
+        frameFrontView.ModelCube.YOrigin := yoNorth;
+        acModflowLgrActive.Checked := True;
         acSubdivide.Caption := 'Subdivide Grid &Cells...';
         acSubdivide.Hint := 'Subdivide grid cells|'
           + 'Click down and drag to select cells to be subdivided.';
@@ -2931,33 +3051,19 @@ begin
   dcSubdivide.RedrawCursor;
   dcSetSpacing.RedrawCursor;
 
-  miModelResults.Enabled := PhastModel.ModelSelection in [msModflow, msModflowLGR];
-  miExportModflow.Enabled := PhastModel.ModelSelection in [msModflow, msModflowLGR];
+  acImportModelResults.Enabled := PhastModel.ModelSelection in [msModflow, msModflowLGR];
   acExportModpath.Enabled := PhastModel.ModelSelection in [msModflow, msModflowLGR];
-  miExportPhast.Enabled := PhastModel.ModelSelection = msPhast;
+//  miExportPhast.Enabled := PhastModel.ModelSelection = msPhast;
   miImportDistributedDatabyZone.Enabled := PhastModel.ModelSelection = msPhast;
+  miChildModels.Enabled := PhastModel.ModelSelection = msModflowLGR;
 
   acExportPhastInputFile.Enabled := PhastModel.ModelSelection = msPhast;
-  acRunModflow.Enabled := PhastModel.ModelSelection in [msModflow, msModflowLGR];
-  if acExportPhastInputFile.Enabled then
-  begin
-    acExportPhastInputFile.ShortCut := ShortCut(Word('E'), [ssCtrl]);
-    tbRun.Action := acExportPhastInputFile;
-  end
-  else
-  begin
-    acExportPhastInputFile.ShortCut := 0;
-  end;
+  acRunModflow.Enabled := PhastModel.ModelSelection = msModflow;
+  acRunModflowLgr.Enabled := PhastModel.ModelSelection = msModflowLGR;
 
-  if acRunModflow.Enabled then
-  begin
-    acRunModflow.ShortCut := ShortCut(Word('E'), [ssCtrl]);
-    tbRun.Action := acRunModflow;
-  end
-  else
-  begin
-    acRunModflow.ShortCut := 0;
-  end;
+  UpdateRunShortCut(acExportPhastInputFile);
+  UpdateRunShortCut(acRunModflow);
+  UpdateRunShortCut(acRunModflowLgr);
 
   miLayers.Enabled := PhastModel.ModelSelection in [msModflow, msModflowLGR];
   EnableHufMenuItems;
@@ -3333,9 +3439,14 @@ end;
 procedure TfrmGoPhast.acModflowLgrActiveExecute(Sender: TObject);
 begin
   inherited;
-  if frmGoPhast.ModelSelection <> msModflowLGR then
+  if ModelSelection <> msModflowLGR then
   begin
     UndoStack.Submit(TUndoModelSelectionChange.Create(msModflowLGR));
+    if PhastModel.ChildModels.Count = 0 then
+    begin
+      miChildModelsClick(nil);
+    end;
+
   end;
 end;
 
@@ -3691,50 +3802,76 @@ begin
 end;
 
 procedure TfrmGoPhast.InternalSaveFile(FileName: string);
+const
+  FiveMB = 5*1024*1024;
+  OneSecond = 1/24/3600;
 var
   CompressionStream: TCompressionStream;
   FileStream: TFileStream;
   MemStream: TMemoryStream;
+  StartTime: Extended;
 begin
   MemStream := TMemoryStream.Create;
-  FileStream := TFileStream.Create(FileName, fmCreate or fmShareDenyWrite,
-    ReadWritePermissions);
   try
-    case FileFormat of
-      ffAscii:
-        begin
-          MemStream.WriteComponent(PhastModel);
-          PhastModel.ClearScreenObjectCollection;
-          MemStream.Position := 0;
-          ObjectBinaryToText(MemStream, FileStream);
-        end;
-      ffBinary:
-        begin
-          FileStream.WriteComponent(PhastModel);
-          PhastModel.ClearScreenObjectCollection;
-        end;
-      ffXML:
-        begin
-          MemStream.WriteComponent(PhastModel);
-          PhastModel.ClearScreenObjectCollection;
-          MemStream.Position := 0;
-          rwObjectBinaryToXML(MemStream, FileStream);
-        end;
-      ffZLib:
-        begin
-          CompressionStream := TCompressionStream.Create(clMax, FileStream);
-          try
-            CompressionStream.WriteComponent(PhastModel);
-          finally
-            CompressionStream.Free;
+    try
+      FileStream := TFileStream.Create(FileName, fmCreate or fmShareDenyWrite,
+        ReadWritePermissions);
+    except on EFCreateError do
+      begin
+        // try again after 1 second.
+        StartTime := Now;
+        repeat
+        until (Now - StartTime > OneSecond);
+        FileStream := TFileStream.Create(FileName, fmCreate or fmShareDenyWrite,
+          ReadWritePermissions);
+      end;
+    end;
+    try
+      case FileFormat of
+        ffAscii:
+          begin
+            MemStream.WriteComponent(PhastModel);
+            PhastModel.ClearScreenObjectCollection;
+            MemStream.Position := 0;
+            ObjectBinaryToText(MemStream, FileStream);
+            if not FSizeWarningDisplayed and (FileStream.Size > FiveMB) then
+            begin
+              FSizeWarningDisplayed := True;
+              Beep;
+              MessageDlg('If you want to save disk space, next time save '
+                +'this file as a .mmZLib file instead of a .gpt file.',
+                mtInformation, [mbOK], 0);
+            end;
           end;
-          PhastModel.ClearScreenObjectCollection;
-        end;
-    else
-      Assert(False);
+        ffBinary:
+          begin
+            FileStream.WriteComponent(PhastModel);
+            PhastModel.ClearScreenObjectCollection;
+          end;
+        ffXML:
+          begin
+            MemStream.WriteComponent(PhastModel);
+            PhastModel.ClearScreenObjectCollection;
+            MemStream.Position := 0;
+            rwObjectBinaryToXML(MemStream, FileStream);
+          end;
+        ffZLib:
+          begin
+            CompressionStream := TCompressionStream.Create(clMax, FileStream);
+            try
+              CompressionStream.WriteComponent(PhastModel);
+            finally
+              CompressionStream.Free;
+            end;
+            PhastModel.ClearScreenObjectCollection;
+          end;
+      else
+        Assert(False);
+      end;
+    finally
+      FileStream.Free;
     end;
   finally
-    FileStream.Free;
     MemStream.Free;
   end;
 end;
@@ -3800,17 +3937,26 @@ begin
     and PhastModel.ModflowPackages.HufPackage.IsSelected;
 end;
 
-procedure TfrmGoPhast.SetVisibilityOfModelMateActions;
-begin
-  acImportModelMate.Visible := FShowUcodeInterface;
-  acExportModelMate.Visible := FShowUcodeInterface;
-end;
+//procedure TfrmGoPhast.SetVisibilityOfModelMateActions;
+//begin
+//  acImportModelMate.Visible := FShowUcodeInterface;
+//  acExportModelMate.Visible := FShowUcodeInterface;
+//end;
 
 procedure TfrmGoPhast.InitializeModflowInputDialog;
 begin
   case PhastModel.ObservationPurpose of
-    ofObserved: sdModflowInput.FileName := ObservationFileName;
-    ofPredicted: sdModflowInput.FileName := PredictionFileName;
+    ofObserved: sdModflowInput.FileName := ObservationFileName[sdModflowInput];
+    ofPredicted: sdModflowInput.FileName := PredictionFileName[sdModflowInput];
+    else Assert(False);
+  end;
+end;
+
+procedure TfrmGoPhast.InitializeModflowLgrInputDialog;
+begin
+  case PhastModel.ObservationPurpose of
+    ofObserved: sdModflowLgr.FileName := ObservationFileName[sdModflowLgr];
+    ofPredicted: sdModflowLgr.FileName := PredictionFileName[sdModflowLgr];
     else Assert(False);
   end;
 end;
@@ -3926,17 +4072,29 @@ procedure TfrmGoPhast.EnableManageFlowObservations;
 begin
   miManageFluxObservations.Enabled :=
     (PhastModel.ModelSelection in [msModflow, msModflowLGR])
-    and (PhastModel.ModflowPackages.ChobPackage.IsSelected
-    or PhastModel.ModflowPackages.DrobPackage.IsSelected
-    or PhastModel.ModflowPackages.GbobPackage.IsSelected
-    or PhastModel.ModflowPackages.RvobPackage.IsSelected);
+    and (PhastModel.ChobIsSelected
+    or PhastModel.DrobIsSelected
+    or PhastModel.GbobIsSelected
+    or PhastModel.RvobIsSelected);
 end;
 
 procedure TfrmGoPhast.EnableManageHeadObservations;
 begin
   miManageHeadObservations.Enabled :=
     (PhastModel.ModelSelection in [msModflow, msModflowLGR])
-    and PhastModel.ModflowPackages.HobPackage.IsSelected
+    and PhastModel.HobIsSelected
+end;
+
+procedure TfrmGoPhast.EnableVisualization;
+var
+  LocalGrid: TCustomGrid;
+begin
+  LocalGrid := Grid;
+  acColorGrid.Enabled := (LocalGrid <> nil)
+    and (LocalGrid.ColumnCount > 0)
+    and (LocalGrid.RowCount > 0)
+    and (LocalGrid.LayerCount > 0);
+  acContourData.Enabled := acColorGrid.Enabled;
 end;
 
 procedure TfrmGoPhast.miEndpointsatEndingLocationstoShapefileClick(
@@ -4150,7 +4308,7 @@ begin
     tbAddLinesToObjects.OnMouseDown(tbAddLinesToObjects, mbLeft, [ssLeft], 0, 0);
   end;
 
-  if tbAddLinesToObjects.Down then
+  if tbAddLinesToObjects.Down and tbAddLinesToObjects.Enabled then
   begin
     // Make sure all buttons except the current one are up.
     SetButtonsUp(tbAddLinesToObjects);
@@ -4162,6 +4320,7 @@ begin
   else
   begin
     CurrentTool := nil;
+    tbAddLinesToObjects.Down := False;
   end;
   SelectDefaultButton;
 end;
@@ -4176,7 +4335,7 @@ begin
     tbAddPointsToObject.OnMouseDown(tbAddPointsToObject, mbLeft, [ssLeft], 0, 0);
   end;
 
-  if tbAddPointsToObject.Down then
+  if tbAddPointsToObject.Down and tbAddPointsToObject.Enabled then
   begin
     // Make sure all buttons except the current one are up.
     SetButtonsUp(tbAddPointsToObject);
@@ -4188,6 +4347,7 @@ begin
   else
   begin
     CurrentTool := nil;
+    tbAddPointsToObject.Down := False;
   end;
   SelectDefaultButton;
 end;
@@ -4202,7 +4362,7 @@ begin
     tbAddPartsToObject.OnMouseDown(tbAddPartsToObject, mbLeft, [ssLeft], 0, 0);
   end;
 
-  if tbAddPartsToObject.Down then
+  if tbAddPartsToObject.Down and tbAddPartsToObject.Enabled then
   begin
     // Make sure all buttons except the current one are up.
     SetButtonsUp(tbAddPartsToObject);
@@ -4214,6 +4374,7 @@ begin
   else
   begin
     CurrentTool := nil;
+    tbAddPartsToObject.Down := False;
   end;
   SelectDefaultButton;
 end;
@@ -4321,6 +4482,22 @@ begin
   inherited;
 
   LaunchURL(FBrowser, VideoUrl);
+end;
+
+procedure TfrmGoPhast.miASCII_RasterFileClick(Sender: TObject);
+begin
+  inherited;
+  with TfrmImportAsciiRaster.Create(nil) do
+  begin
+    try
+      if GetData then
+      begin
+        ShowModal;
+      end;
+    finally
+      Free;
+    end;
+  end;
 end;
 
 procedure TfrmGoPhast.miBatchFileAdditionsClick(Sender: TObject);
@@ -4908,7 +5085,7 @@ begin
   end
   else if AScreenObject = nil then
   begin
-    DeleteSelectedNotesOrSelectedScreenObjects;
+    DeleteSelectedNodesOrSelectedScreenObjects;
   end;
 end;
 
@@ -4985,18 +5162,18 @@ begin
         end
         else
         begin
-          DeleteSelectedNotesOrSelectedScreenObjects;
+          DeleteSelectedNodesOrSelectedScreenObjects;
         end;
       end;
     Key_Left:
       begin
         if BigJump then
         begin
-          Grid.SelectedColumn := Grid.SelectedColumn - ReverseFactor*10;
+          PhastModel.SelectedColumn := PhastModel.SelectedColumn - ReverseFactor*10;
         end
         else
         begin
-          Grid.SelectedColumn := Grid.SelectedColumn - ReverseFactor*1;
+          PhastModel.SelectedColumn := PhastModel.SelectedColumn - ReverseFactor*1;
         end;
         frameSideView.DisplayItem;
       end;
@@ -5004,11 +5181,11 @@ begin
       begin
         if BigJump then
         begin
-          Grid.SelectedRow := Grid.SelectedRow + ReverseFactor*10;
+          PhastModel.SelectedRow := PhastModel.SelectedRow + ReverseFactor*10;
         end
         else
         begin
-          Grid.SelectedRow := Grid.SelectedRow + ReverseFactor*1;
+          PhastModel.SelectedRow := PhastModel.SelectedRow + ReverseFactor*1;
         end;
         frameFrontView.DisplayItem;
       end;
@@ -5028,11 +5205,11 @@ begin
       begin
         if BigJump then
         begin
-          Grid.SelectedRow := Grid.SelectedRow - ReverseFactor*10;
+          PhastModel.SelectedRow := PhastModel.SelectedRow - ReverseFactor*10;
         end
         else
         begin
-          Grid.SelectedRow := Grid.SelectedRow - ReverseFactor*1;
+          PhastModel.SelectedRow := PhastModel.SelectedRow - ReverseFactor*1;
         end;
         frameFrontView.DisplayItem;
       end;
@@ -5040,11 +5217,11 @@ begin
       begin
         if BigJump then
         begin
-          Grid.SelectedLayer := Grid.SelectedLayer + ReverseFactor*10;
+          PhastModel.SelectedLayer := PhastModel.SelectedLayer + ReverseFactor*10;
         end
         else
         begin
-          Grid.SelectedLayer := Grid.SelectedLayer + ReverseFactor*1;
+          PhastModel.SelectedLayer := PhastModel.SelectedLayer + ReverseFactor*1;
         end;
         frameTopView.DisplayItem;
       end;
@@ -5052,11 +5229,11 @@ begin
       begin
         if BigJump then
         begin
-          Grid.SelectedLayer := Grid.SelectedLayer - ReverseFactor*10;
+          PhastModel.SelectedLayer := PhastModel.SelectedLayer - ReverseFactor*10;
         end
         else
         begin
-          Grid.SelectedLayer := Grid.SelectedLayer - ReverseFactor*1;
+          PhastModel.SelectedLayer := PhastModel.SelectedLayer - ReverseFactor*1;
         end;
         frameTopView.DisplayItem;
       end;
@@ -5270,16 +5447,17 @@ var
   Index: Integer;
   ScreenObject: TScreenObject;
 begin
+  miInvertSelection.Enabled := False;
   for Index := 0 to PhastModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := PhastModel.ScreenObjects[Index];
     if ScreenObject.Selected then
     begin
       miInvertSelection.Enabled := True;
-      Exit;
+      break;
     end;
   end;
-  miInvertSelection.Enabled := False;
+  ScreenObjectSelectionChange(nil);
 end;
 
 procedure TfrmGoPhast.UpdateDisplay(Sender: TObject);
@@ -5290,14 +5468,14 @@ begin
   frame3DView.glWidModelView.Invalidate;
 end;
 
-procedure TfrmGoPhast.SetShowUcodeInterface(const Value: boolean);
-begin
-  if FShowUcodeInterface <> Value then
-  begin
-    FShowUcodeInterface := Value;
-    SetVisibilityOfModelMateActions;
-  end;
-end;
+//procedure TfrmGoPhast.SetShowUcodeInterface(const Value: boolean);
+//begin
+//  if FShowUcodeInterface <> Value then
+//  begin
+//    FShowUcodeInterface := Value;
+//    SetVisibilityOfModelMateActions;
+//  end;
+//end;
 
 procedure TfrmGoPhast.SetSideScreenObjectsChanged(const Value: boolean);
 begin
@@ -5314,11 +5492,8 @@ begin
 end;
 
 procedure TfrmGoPhast.UpdateDataSetDimensions;
-//var
-//  Index: integer;
-//  DataSet: TDataArray;
 begin
-  PhastModel.DataArrayManager.UpdateDataSetDimensions;
+  PhastModel.UpdateDataSetDimensions;
 
   frameTopView.ZoomBox.Image32.Invalidate;
   frameFrontView.ZoomBox.Image32.Invalidate;
@@ -5333,7 +5508,7 @@ begin
     and (PhastModel.Grid = PhastModel.PhastGrid);
 end;
 
-procedure TfrmGoPhast.DeleteSelectedNotesOrSelectedScreenObjects;
+procedure TfrmGoPhast.DeleteSelectedNodesOrSelectedScreenObjects;
 var
   SelectedScreenObjects: TScreenObjectList;
   DeleteNodes: Boolean;
@@ -5402,7 +5577,7 @@ end;
 
 function TfrmGoPhast.GetCanDraw: boolean;
 begin
-  result := FCanDraw and not FReadingFile;
+  result := FCanDraw and not FReadingFile and (PhastModel.DataSetUpdateCount = 0);
 end;
 
 procedure TfrmGoPhast.GetCurrentScreenObject(Sender: TObject;
@@ -5456,13 +5631,13 @@ begin
   end
 end;
 
-function TfrmGoPhast.GetObservationFileName: string;
+function TfrmGoPhast.GetObservationFileName(SD: TSaveDialog): string;
 begin
   result := FObservationFileName;
   if (result = '') and (PhastModel.ModelFileName <> '') then
   begin
     result := ChangeFileExt(PhastModel.ModelFileName,
-      sdModflowInput.DefaultExt);
+      SD.DefaultExt);
   end;
   result := PhastModel.FixFileName(result);
 end;
@@ -5488,6 +5663,13 @@ begin
     end;
     Position := Position + DividerWidth;
   end;
+end;
+
+procedure TfrmGoPhast.miMakeSelectedVerticesASeparateObjectClick(
+  Sender: TObject);
+begin
+  inherited;
+  UndoStack.Submit(TUndoMakeSelectedVerticesNewScreenObject.Create);
 end;
 
 procedure TfrmGoPhast.miManageFluxObservationsClick(Sender: TObject);
@@ -5660,9 +5842,9 @@ begin
     (ModelHeight * frameFrontView.ZoomBox.Exaggeration));
 
   // Make sure the grid is visible on the screen.
-  MoveToTopCell((Grid.ColumnCount - 1) div 2,
+  MoveToTopCell(Grid, (Grid.ColumnCount - 1) div 2,
     (Grid.RowCount - 1) div 2);
-  MoveToFrontCell((Grid.ColumnCount - 1) div 2,
+  MoveToFrontCell(Grid, (Grid.ColumnCount - 1) div 2,
     (Grid.LayerCount - 1) div 2);
 
   SynchronizeViews(vdTop);
@@ -5711,6 +5893,9 @@ begin
 end;
 
 procedure TfrmGoPhast.ScreenObjectSelectionChange(Sender: TObject);
+var
+  Index: Integer;
+  AScreenObject: TScreenObject;
 begin
   if ChangingSelection then
   begin
@@ -5733,6 +5918,39 @@ begin
   frameFrontView.miMergeObjects.Enabled := miMergeObjects.Enabled;
   frameTopView.miMergeObjects.Enabled := miMergeObjects.Enabled;
   frameSideView.miMergeObjects.Enabled := miMergeObjects.Enabled;
+
+  miInvertSelectedVertices.Enabled := False;
+  miMakeSelectedVerticesASeparateObject.Enabled := False;
+  miSplitObjectAtSelectedVertices.Enabled := False;
+  miSplitSelectedObjects.Enabled := False;
+  if (PhastModel <> nil)
+    and (PhastModel.SelectedScreenObjectCount >= 1) then
+  begin
+    for Index := 0 to PhastModel.ScreenObjectCount - 1 do
+    begin
+      AScreenObject := PhastModel.ScreenObjects[Index];
+      if AScreenObject.Selected then
+      begin
+        if (AScreenObject.SelectedVertexCount > 0)
+          and (AScreenObject.SelectedVertexCount < AScreenObject.Count) then
+        begin
+          miInvertSelectedVertices.Enabled := True;
+          miMakeSelectedVerticesASeparateObject.Enabled := True;
+          miSplitObjectAtSelectedVertices.Enabled := True;
+          break;
+        end;
+      end;
+    end;
+    for Index := 0 to PhastModel.ScreenObjectCount - 1 do
+    begin
+      AScreenObject := PhastModel.ScreenObjects[Index];
+      if AScreenObject.Selected and (AScreenObject.SectionCount > 1) then
+      begin
+        miSplitSelectedObjects.Enabled := True;
+        break;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmGoPhast.ReDrawAllViews(Sender: TObject);
@@ -6018,6 +6236,15 @@ begin
     try
       FFileStream.Position := 0;
       FFileSize := FFileStream.Size;
+      if FFileSize = 0 then
+      begin
+        Beep;
+        MessageDlg('The file can not be opened because it is empty.  You may '
+          + 'wish to see if you can open the backup file (with the extension '
+          + '".bak" or there may be an archived file in the directory '
+          + 'containing the file.', mtError, [mbOK], 0);
+        Exit;
+      end;
       if frmScreenObjectProperties <> nil then
       begin
         frmScreenObjectProperties.Initialize;
@@ -6083,6 +6310,7 @@ begin
         end;
         PhastModel.CreateGlobalVariables;
         PhastModel.UpdateDataSets;
+        PhastModel.ChildModels.Loaded;
         PhastModel.UpdateScreenObjects;
         PhastModel.LayerStructure.Loaded;
         PhastModel.HeadFluxObservations.Loaded;
@@ -6094,6 +6322,8 @@ begin
         PhastModel.ModelFileName := FileName;
         PhastModel.FormulaManager.Pack;
         PhastModel.FormulaManager.FixSubscriptions;
+        PhastModel.UpdateChildGrids;
+        PhastModel.UpdateDataSetConnections;
         miObservations.Checked := PhastModel.ObservationPurpose = ofObserved;
         miPredictions.Checked := PhastModel.ObservationPurpose = ofPredicted;
 
@@ -6103,6 +6333,8 @@ begin
         begin
           DataArray.OnUpToDateSet := PhastModel.OnActiveDataSetChanged;
         end;
+
+
 
         for Index := 0 to DataArrayManager.DataSetCount - 1 do
         begin
@@ -6143,7 +6375,7 @@ begin
       msModflowLGR: acModflowLgrActive.Checked := True;
       else Assert(False);
     end;
-    miConfigurePathlines.Enabled := PhastModel.PathLine.Lines.Count > 0;
+    miConfigurePathlines.Enabled := PhastModel.PathLines.Lines.Count > 0;
     miPathlinestoShapefile.Enabled := miConfigurePathlines.Enabled;
 
     miConfigureEndpoints.Enabled := PhastModel.EndPoints.Points.Count > 0;
@@ -6219,10 +6451,10 @@ begin
 
   PhastModel.ProgramLocations.ReadFromIniFile(IniFile);
 
-  if PhastModel.ModelMateProjectFileName <> '' then
-  begin
-    ShowUcodeInterface := True;
-  end;
+//  if PhastModel.ModelMateProjectFileName <> '' then
+//  begin
+//    ShowUcodeInterface := True;
+//  end;
   EnableDeleteImage;
 
   WriteIniFile;
@@ -6268,13 +6500,13 @@ begin
   end
 end;
 
-function TfrmGoPhast.GetPredictionFileName: string;
+function TfrmGoPhast.GetPredictionFileName(SD: TSaveDialog): string;
 begin
   result := FPredictionFileName;
   if (result = '') and (PhastModel.ModelFileName <> '') then
   begin
     result := ChangeFileExt(PhastModel.ModelFileName,
-      '_pred' + sdModflowInput.DefaultExt);
+      '_pred' + SD.DefaultExt);
   end;
   result := PhastModel.FixFileName(result);
 end;
@@ -6325,6 +6557,39 @@ begin
   frameTopView.ModelChanged := True;
   frameFrontView.ModelChanged := True;
   frameSideView.ModelChanged := True;
+end;
+
+procedure TfrmGoPhast.miInvertSelectedVerticesClick(Sender: TObject);
+var
+  Undo: TUndoChangeSelection;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  PointIndex: Integer;
+begin
+  Undo := TUndoChangeSelection.Create;
+  for ScreenObjectIndex := 0 to
+    frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+  begin
+    AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
+    if not AScreenObject.Deleted and AScreenObject.Visible and
+      AScreenObject.Selected then
+    begin
+      for PointIndex := 0 to AScreenObject.Count - 1 do
+      begin
+        AScreenObject.SelectedVertices[PointIndex]
+          := not AScreenObject.SelectedVertices[PointIndex];
+      end;
+    end;
+  end;
+  Undo.SetPostSelection;
+  if Undo.SelectionChanged then
+  begin
+    frmGoPhast.UndoStack.Submit(Undo)
+  end
+  else
+  begin
+    Undo.Free;
+  end;
 end;
 
 procedure TfrmGoPhast.miInvertSelectionClick(Sender: TObject);
@@ -6493,6 +6758,12 @@ begin
   ShowAForm(TfrmSolutionMethod);
 end;
 
+procedure TfrmGoPhast.miSplitSelectedObjectsClick(Sender: TObject);
+begin
+  inherited;
+  UndoStack.Submit(TUndoExplodeScreenObject.Create);
+end;
+
 procedure TfrmGoPhast.miTitleAndUnitsClick(Sender: TObject);
 begin
   ShowAForm(TfrmUnits);
@@ -6568,14 +6839,42 @@ procedure TfrmGoPhast.sdModflowInputClose(Sender: TObject);
 begin
   inherited;
   FRunModflow := FRunModflowForm.cbRun.Checked;
+  if FRunModflowForm.comboModelSelection.ItemIndex >= 0 then
+  begin
+    FRunModelSelection := FRunModflowForm.comboModelSelection.ItemIndex;
+  end
+  else
+  begin
+    FRunModelSelection := 0;
+  end;
   FRunModflowForm.free;
 end;
 
 procedure TfrmGoPhast.sdModflowInputShow(Sender: TObject);
+var
+  ADialog: TSaveDialog;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   inherited;
-  FRunModflowForm := TfrmRunModflow.createfordialog(sdModflowInput);
+  ADialog := Sender as TSaveDialog;
+  FRunModflowForm := TfrmRunModflow.createfordialog(ADialog);
   FRunModflowForm.cbRun.Checked := FRunModflow;
+  if PhastModel.LgrUsed then
+  begin
+    FRunModflowForm.comboModelSelection.Items.Add('Combined model');
+    FRunModflowForm.comboModelSelection.Items.AddObject(PhastModel.DisplayName, PhastModel);
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      FRunModflowForm.comboModelSelection.Items.AddObject(ChildModel.DisplayName, ChildModel);
+    end;
+    FRunModflowForm.comboModelSelection.ItemIndex := FRunModelSelection;
+  end
+  else
+  begin
+    FRunModflowForm.comboModelSelection.Visible := False;
+  end;
 end;
 
 procedure TfrmGoPhast.sdModpathInputClose(Sender: TObject);
@@ -6612,6 +6911,14 @@ procedure TfrmGoPhast.sdSaveDialogClose(Sender: TObject);
 begin
   inherited;
   CreateArchive := FSaveModelForm.cbSaveArchive.Checked;
+  if FSaveModelForm.cbSaveDataSetValues.Checked then
+  begin
+    PhastModel.SaveDataSetValues := sdsvAlways;
+  end
+  else
+  begin
+    PhastModel.SaveDataSetValues := sdsvNever;
+  end;
   FSaveModelForm.free;
 end;
 
@@ -6641,6 +6948,8 @@ begin
   inherited;
   FSaveModelForm := TfrmSaveArchive.createfordialog(sdSaveDialog);
   FSaveModelForm.cbSaveArchive.Checked := CreateArchive;
+  FSaveModelForm.cbSaveDataSetValues.Checked :=
+    PhastModel.SaveDataSetValues = sdsvAlways;
 end;
 
 procedure TfrmGoPhast.sdSaveDialogTypeChange(Sender: TObject);
@@ -6800,8 +7109,19 @@ end;
 procedure TfrmGoPhast.miExportModflowClick(Sender: TObject);
 var
   FileName: string;
+  AGrid: TCustomGrid;
+  NameWriter: TNameFileWriter;
 begin
   inherited;
+  AGrid := Grid;
+  if (AGrid = nil) or (AGrid.ColumnCount <= 0)
+    or (AGrid.RowCount <= 0) or (AGrid.LayerCount <= 0) then
+  begin
+    Beep;
+    MessageDlg('You must define the grid before you can export the MODFLOW '
+      + 'input files.', mtError, [mbOK], 0);
+    Exit;
+  end;
   InitializeModflowInputDialog;
   if sdModflowInput.Execute then
   begin
@@ -6842,6 +7162,7 @@ begin
     frmErrorsAndWarnings.Clear;
 
     FileName := sdModflowInput.FileName;
+    frmFormulaErrors.sgErrors.BeginUpdate;
     CanDraw := False;
     try
       PhastModel.Grid.ThreeDDataSet := nil;
@@ -6857,9 +7178,20 @@ begin
       PhastModel.FrontTimeList := nil;
       PhastModel.SideTimeList := nil;
 
-      PhastModel.ExportModflowModel(FileName, FRunModflow);
+      FileName := PhastModel.FixFileName(FileName);
+
+      NameWriter := TNameFileWriter.Create(PhastModel, FileName);
+      try
+        PhastModel.NameFileWriter := NameWriter;
+        PhastModel.ExportModflowModel(FileName, FRunModflow);
+      finally
+        NameWriter.Free;
+        PhastModel.NameFileWriter := nil;
+      end;
+
     finally
       CanDraw := True;
+      frmFormulaErrors.sgErrors.EndUpdate;
     end;
 
     if frmErrorsAndWarnings.HasMessages then
@@ -6955,13 +7287,13 @@ begin
         ofObserved:
           begin
             NameFile := ExtractRelativePath(PhastModel.ModelFileName,
-              ObservationFileName);
+              ObservationFileName[sdModflowInput]);
             PhastModel.ModelMateProject.ModflowNameFile := NameFile
           end;
         ofPredicted:
           begin
             NameFile := ExtractRelativePath(PhastModel.ModelFileName,
-              PredictionFileName);
+              PredictionFileName[sdModflowInput]);
             PhastModel.ModelMateProject.ModflowNameFilePred := NameFile
           end;
         ofInacative:
@@ -7035,7 +7367,8 @@ begin
         if FileExists(PhastModel.ProgramLocations.ModelMateLocation) then
         begin
           WinExec(PChar('"' + PhastModel.ProgramLocations.ModelMateLocation
-            + '" "' + PhastModel.ModelMateProjectFileName + '"'), SW_SHOW);
+            + '" "' + ExpandFileName(PhastModel.ModelMateProjectFileName)
+            + '"'), SW_SHOW);
         end;
       end;
     finally
@@ -7088,8 +7421,13 @@ begin
 
 
     FileName := sdModpathInput.FileName;
-    PhastModel.ExportModpathModel(FileName, FRunModpath,
-      FCreateNewCompositeBudgetFile);
+    frmFormulaErrors.sgErrors.BeginUpdate;
+    try
+      PhastModel.ExportModpathModel(FileName, FRunModpath,
+        FCreateNewCompositeBudgetFile);
+    finally
+      frmFormulaErrors.sgErrors.EndUpdate;
+    end;
     FCreateNewCompositeBudgetFile := False;
 
     if frmErrorsAndWarnings.HasMessages then
@@ -7102,7 +7440,16 @@ end;
 procedure TfrmGoPhast.acExportPhastInputFileExecute(Sender: TObject);
 var
   FileName: string;
+  AGrid: TCustomGrid;
 begin
+  AGrid := Grid;
+  if (AGrid = nil) or (AGrid.ColumnCount <= 0)
+    or (AGrid.RowCount <= 0) or (AGrid.LayerCount <= 0) then
+  begin
+    Beep;
+    MessageDlg('You must define the grid before you can export the PHAST '
+      + 'input files.', mtError, [mbOK], 0);
+  end;
   if (sdPhastInput.FileName = '') and (sdSaveDialog.FileName <> '') then
   begin
     sdPhastInput.FileName := ChangeFileExt(sdSaveDialog.FileName,
@@ -7116,7 +7463,13 @@ begin
     FileName := ChangeFileExt(FileName, '');
     FileName := ChangeFileExt(FileName, sdPhastInput.DefaultExt);
     sdPhastInput.FileName := FileName;
-    ExportFile(FileName, FRunPhast);
+    frmErrorsAndWarnings.Clear;
+    frmFormulaErrors.sgErrors.BeginUpdate;
+    try
+      ExportFile(FileName, FRunPhast);
+    finally
+      frmFormulaErrors.sgErrors.EndUpdate;
+    end;
   end;
 end;
 
@@ -7222,6 +7575,12 @@ begin
     (frameTopView.CurrentScreenObject = ScreenObject)
     or (frameFrontView.CurrentScreenObject = ScreenObject)
     or (frameSideView.CurrentScreenObject = ScreenObject);
+end;
+
+procedure TfrmGoPhast.miChildModelsClick(Sender: TObject);
+begin
+  inherited;
+  ShowAForm(TfrmChildModels);
 end;
 
 procedure TfrmGoPhast.FormActivate(Sender: TObject);
@@ -7408,6 +7767,162 @@ procedure TfrmGoPhast.acRestoreDefaultViewExecute(Sender: TObject);
 begin
   frame3DView.SetDefaultOrientation;
   frame3DView.glWidModelView.Invalidate;
+end;
+
+procedure TfrmGoPhast.acRunModflowLgrExecute(Sender: TObject);
+var
+  FileName: string;
+  AGrid: TCustomGrid;
+  NameWriter: TNameFileWriter;
+  Index: Integer;
+  ChildModel: TChildModel;
+  ChildModelNameFile: string;
+begin
+  inherited;
+  AGrid := Grid;
+  if (AGrid = nil) or (AGrid.ColumnCount <= 0)
+    or (AGrid.RowCount <= 0) or (AGrid.LayerCount <= 0) then
+  begin
+    Beep;
+    MessageDlg('You must define the grid before you can export the MODFLOW '
+      + 'input files.', mtError, [mbOK], 0);
+    Exit;
+  end;
+  for Index := 0 to PhastModel.ChildModels.Count - 1 do
+  begin
+    AGrid := PhastModel.ChildModels[Index].ChildModel.Grid;
+    if (AGrid = nil) or (AGrid.ColumnCount <= 0)
+      or (AGrid.RowCount <= 0) or (AGrid.LayerCount <= 0) then
+    begin
+      Beep;
+      MessageDlg('You must define the grid before you can export the MODFLOW '
+        + 'input files.', mtError, [mbOK], 0);
+      Exit;
+    end;
+  end;
+  InitializeModflowLgrInputDialog;
+  if sdModflowLgr.Execute then
+  begin
+    if sdModflowLgr.FileName <>
+      PhastModel.FixFileName(sdModflowLgr.FileName) then
+    begin
+      Beep;
+      MessageDlg('Space characters are not allowed in the names of '
+        + 'MODFLOW input files.', mtError, [mbOK], 0);
+      Exit;
+    end;
+    case PhastModel.ObservationPurpose of
+      ofObserved: FObservationFileName := sdModflowLgr.FileName;
+      ofPredicted: FPredictionFileName := sdModflowLgr.FileName;
+      else Assert(False);
+    end;
+    // erase the list of model input files to be stored in the archive.
+    frmGoPhast.PhastModel.ModelInputFiles.Clear;
+
+    if not FileExists(PhastModel.ProgramLocations.ModflowLgrLocation) then
+    begin
+      ShowAForm(TfrmProgramLocations);
+      if not FileExists(PhastModel.ProgramLocations.ModflowLgrLocation) then
+      begin
+        Beep;
+        if MessageDlg('MODFLOW-LGR does not exist at the location you specified.  '
+          + 'Do you still want to export the MODFLOW input files?', mtWarning,
+          [mbYes, mbNo], 0) <> mrYes then
+        begin
+          Exit;
+        end;
+      end;
+    end;
+    if FileExists(PhastModel.ProgramLocations.ModflowLgrLocation) then
+    begin
+      PhastModel.AddModelInputFile(PhastModel.ProgramLocations.ModflowLgrLocation);
+    end;
+    frmErrorsAndWarnings.Clear;
+
+    FileName := sdModflowLgr.FileName;
+    frmFormulaErrors.sgErrors.BeginUpdate;
+    CanDraw := False;
+    try
+      PhastModel.Grid.ThreeDDataSet := nil;
+      PhastModel.Grid.TopDataSet := nil;
+      PhastModel.Grid.FrontDataSet := nil;
+      PhastModel.Grid.SideDataSet := nil;
+      PhastModel.Grid.ThreeDContourDataSet := nil;
+      PhastModel.Grid.TopContourDataSet := nil;
+      PhastModel.Grid.FrontContourDataSet := nil;
+      PhastModel.Grid.SideContourDataSet := nil;
+      PhastModel.ThreeDTimeList := nil;
+      PhastModel.TopTimeList := nil;
+      PhastModel.FrontTimeList := nil;
+      PhastModel.SideTimeList := nil;
+
+      FileName := PhastModel.FixFileName(FileName);
+
+      Assert(FRunModelSelection >= 0);
+      case FRunModelSelection of
+        0:
+          begin
+            NameWriter := TNameFileWriter.Create(PhastModel, FileName);
+            try
+              PhastModel.NameFileWriter := NameWriter;
+              for Index := 0 to PhastModel.ChildModels.Count - 1 do
+              begin
+                ChildModel := PhastModel.ChildModels[Index].ChildModel;
+                ChildModelNameFile := ChildModel.Child_NameFile_Name(FileName);
+                NameWriter := TNameFileWriter.Create(ChildModel,
+                  ChildModelNameFile);
+                ChildModel.NameFileWriter := NameWriter;
+              end;
+              PhastModel.ExportModflowLgrModel(FileName, FRunModflow);
+            finally
+              PhastModel.NameFileWriter.Free;
+              PhastModel.NameFileWriter := nil;
+              for Index := 0 to PhastModel.ChildModels.Count - 1 do
+              begin
+                ChildModel := PhastModel.ChildModels[Index].ChildModel;
+                ChildModel.NameFileWriter.Free;
+                ChildModel.NameFileWriter := nil;
+              end;
+            end;
+          end;
+        1:
+          begin
+            NameWriter := TNameFileWriter.Create(PhastModel, FileName);
+            try
+              PhastModel.NameFileWriter := NameWriter;
+              PhastModel.ExportSeparateLgrModel(FileName, FRunModflow);
+            finally
+              PhastModel.NameFileWriter.Free;
+              PhastModel.NameFileWriter := nil;
+            end;
+          end;
+        else
+          begin
+            ChildModel := PhastModel.ChildModels[FRunModelSelection-2].ChildModel;
+            ChildModelNameFile := ChildModel.Child_NameFile_Name(FileName);
+            NameWriter := TNameFileWriter.Create(ChildModel,
+              ChildModelNameFile);
+            try
+              ChildModel.NameFileWriter := NameWriter;
+              ChildModel.ExportSeparateLgrModel(FileName, FRunModflow);
+            finally
+              ChildModel.NameFileWriter.Free;
+              ChildModel.NameFileWriter := nil;
+            end;
+          end;
+      end;
+
+
+    finally
+      CanDraw := True;
+      frmFormulaErrors.sgErrors.EndUpdate;
+    end;
+
+    if frmErrorsAndWarnings.HasMessages then
+    begin
+      frmErrorsAndWarnings.Show;
+    end;
+  end;
 end;
 
 procedure TfrmGoPhast.tb3DColorsClick(Sender: TObject);
@@ -7624,7 +8139,7 @@ begin
   sdShapefile.FileName := FileName;
   if sdShapefile.Execute then
   begin
-    PhastModel.PathLine.Lines.ExportShapefile(sdShapefile.FileName);
+    PhastModel.PathLines.Lines.ExportShapefile(sdShapefile.FileName);
   end;
 end;
 
@@ -7797,6 +8312,4 @@ begin
 end;
 
 end.
-
-
 

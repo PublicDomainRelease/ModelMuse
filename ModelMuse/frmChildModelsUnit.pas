@@ -1,0 +1,742 @@
+unit frmChildModelsUnit;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, frmCustomGoPhastUnit, StdCtrls, ExtCtrls, Buttons, ComCtrls, Grids,
+  RbwDataGrid4, Mask, JvExMask, JvSpin, PhastModelUnit, UndoItems,
+  OrderedCollectionUnit, ArgusDataEntry;
+
+type
+  TDisColumn = (dsLayerGroup, dsParentLayer, dsDiscretization);
+
+  TfrmChildModels = class(TfrmCustomGoPhast)
+    Panel1: TPanel;
+    tvChildModels: TTreeView;
+    Panel3: TPanel;
+    btnAdd: TSpeedButton;
+    btnDelete: TSpeedButton;
+    pcMain: TPageControl;
+    tabBasic: TTabSheet;
+    lblBottomUnit: TLabel;
+    lblBottomLayer: TLabel;
+    edModelName: TLabeledEdit;
+    comboBottomUnit: TComboBox;
+    seBottomLayer: TJvSpinEdit;
+    tabDiscretization: TTabSheet;
+    rdgDiscretization: TRbwDataGrid4;
+    pnlBottom: TPanel;
+    btnHelp: TBitBtn;
+    btnOK: TBitBtn;
+    btnCancel: TBitBtn;
+    lblCellCount: TLabel;
+    seCellCount: TJvSpinEdit;
+    rgStartingHeads: TRadioGroup;
+    tabSolution: TTabSheet;
+    lblMaxIterations: TLabel;
+    seMaxIterations: TJvSpinEdit;
+    rgPrintIterations: TRadioGroup;
+    rdeRelaxHeads: TRbwDataEntry;
+    lblRelaxHeads: TLabel;
+    lblRelaxFlux: TLabel;
+    rdeRelaxFlux: TRbwDataEntry;
+    lblHeadClosure: TLabel;
+    rdeHeadClosure: TRbwDataEntry;
+    lblFluxClosure: TLabel;
+    rdeFluxClosure: TRbwDataEntry;
+    rgCouplingMethod: TRadioGroup;
+    Panel2: TPanel;
+    rdeDiscretization: TRbwDataEntry;
+    cbSaveBFH: TCheckBox;
+    procedure FormCreate(Sender: TObject); override;
+    procedure FormDestroy(Sender: TObject); override;
+    procedure btnAddClick(Sender: TObject);
+    procedure btnDeleteClick(Sender: TObject);
+    procedure tvChildModelsChange(Sender: TObject; Node: TTreeNode);
+    procedure btnOKClick(Sender: TObject);
+    procedure edModelNameChange(Sender: TObject);
+    procedure comboBottomUnitChange(Sender: TObject);
+    procedure seBottomLayerChange(Sender: TObject);
+    procedure comboBottomUnitExit(Sender: TObject);
+    procedure seBottomLayerExit(Sender: TObject);
+    procedure rdgDiscretizationExit(Sender: TObject);
+    procedure tvChildModelsChanging(Sender: TObject; Node: TTreeNode;
+      var AllowChange: Boolean);
+    procedure rdgDiscretizationEnter(Sender: TObject);
+    procedure rgStartingHeadsClick(Sender: TObject);
+    procedure rgPrintIterationsClick(Sender: TObject);
+    procedure rdeRelaxHeadsChange(Sender: TObject);
+    procedure rdeRelaxFluxChange(Sender: TObject);
+    procedure seMaxIterationsChange(Sender: TObject);
+    procedure seCellCountChange(Sender: TObject);
+    procedure rdeHeadClosureChange(Sender: TObject);
+    procedure rdeFluxClosureChange(Sender: TObject);
+    procedure cbOneWayCouplingClick(Sender: TObject);
+    procedure rdgDiscretizationColSize(Sender: TObject; ACol,
+      PriorWidth: Integer);
+    procedure rdgDiscretizationHorizontalScroll(Sender: TObject);
+    procedure rdeDiscretizationChange(Sender: TObject);
+    procedure rdgDiscretizationMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure rgCouplingMethodClick(Sender: TObject);
+  private
+    FChildModels: TChildModelEditCollection;
+    FAlreadyHandled: Boolean;
+    procedure GetData;
+    procedure SetData;
+    procedure FillListWithLayerGroups(List: TList);
+    procedure ReadSublayerDiscretization;
+    procedure WriteSublayerDiscretization;
+    procedure LayoutMultiRowEditControl;
+    procedure EnableControls;
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+  Type TUndoChildModelChange = class(TCustomUndo)
+  private
+    FNewChildModels: TChildModelEditCollection;
+    FOldChildModels: TChildModelCollection;
+    FScreenObjects: TList;
+    FNewSaveBfhBoundaries: Boolean;
+    FOldSaveBfhBoundaries: Boolean;
+    procedure ChangeChildModel(Source: TCollection);
+  protected
+    function Description: string; override;
+  public
+    constructor Create(SaveBfhBoundaries: boolean;
+      var NewChildModels: TChildModelEditCollection);
+    destructor Destroy; override;
+    procedure DoCommand; override;
+    procedure Undo; override;
+  end;
+
+var
+  frmChildModels: TfrmChildModels;
+
+implementation
+
+uses
+  frmGoPhastUnit, LayerStructureUnit, ScreenObjectUnit;
+
+{$R *.dfm}
+
+procedure TfrmChildModels.btnAddClick(Sender: TObject);
+var
+  Edit: TChildModelEdit;
+  Node: TTreeNode;
+begin
+  inherited;
+  Edit := FChildModels.Add as TChildModelEdit;
+  Edit.ModelName := 'Child ' + IntToStr(FChildModels.Count);
+  Edit.Discretization.BottomLayerGroup :=
+    frmGoPhast.PhastModel.LayerStructure.Last;
+  Edit.Discretization.BottomLayerInUnit := Edit.Discretization.
+    BottomLayerGroup.LayerCount-1;
+  Node := tvChildModels.Items.AddObject(nil, Edit.ModelName, Edit);
+  Node.Selected := True;
+end;
+
+procedure TfrmChildModels.btnDeleteClick(Sender: TObject);
+var
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if tvChildModels.Selected <> nil then
+  begin
+    Edit := tvChildModels.Selected.Data;
+    Edit.Free;
+    tvChildModels.Selected.Free;
+  end;
+end;
+
+procedure TfrmChildModels.btnOKClick(Sender: TObject);
+begin
+  inherited;
+  SetData;
+end;
+
+procedure TfrmChildModels.cbOneWayCouplingClick(Sender: TObject);
+var
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if (tvChildModels.Selected <> nil) then
+  begin
+    Edit := tvChildModels.Selected.Data;
+    Edit.CouplingMethod := TCouplingMethod(rgCouplingMethod.ItemIndex);
+//    Edit.OneWayCoupling := cbOneWayCoupling.Checked;
+  end;
+  EnableControls;
+end;
+
+procedure TfrmChildModels.comboBottomUnitChange(Sender: TObject);
+var
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if (tvChildModels.Selected <> nil) and (comboBottomUnit.ItemIndex >= 0) then
+  begin
+    Edit := tvChildModels.Selected.Data;
+    Edit.Discretization.BottomLayerGroup :=
+      comboBottomUnit.Items.Objects[comboBottomUnit.ItemIndex]
+      as TLayerGroup;
+    seBottomLayer.MaxValue :=
+      Edit.Discretization.BottomLayerGroup.LayerCount;
+  end;
+  EnableControls;
+end;
+
+procedure TfrmChildModels.comboBottomUnitExit(Sender: TObject);
+begin
+  inherited;
+  ReadSublayerDiscretization;
+end;
+
+procedure TfrmChildModels.edModelNameChange(Sender: TObject);
+var
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if tvChildModels.Selected <> nil then
+  begin
+    Edit := tvChildModels.Selected.Data;
+    Edit.ModelName := edModelName.Text;
+    tvChildModels.Selected.Text := edModelName.Text;
+  end;
+end;
+
+procedure TfrmChildModels.EnableControls;
+var
+  ShouldEnable: Boolean;
+begin
+  ShouldEnable := tvChildModels.Selected <> nil;
+  edModelName.Enabled := ShouldEnable;
+  comboBottomUnit.Enabled := ShouldEnable;
+  seCellCount.Enabled := ShouldEnable;
+  rgStartingHeads.Enabled := ShouldEnable;
+  rdgDiscretization.Enabled := ShouldEnable;
+  rdgDiscretization.Enabled := ShouldEnable;
+  rgPrintIterations.Enabled := ShouldEnable;
+  rdeRelaxHeads.Enabled := ShouldEnable;
+  rdeRelaxFlux.Enabled := ShouldEnable;
+  rdeHeadClosure.Enabled := ShouldEnable;
+  rdeFluxClosure.Enabled := ShouldEnable;
+  rgCouplingMethod.Enabled := ShouldEnable;
+
+  if ShouldEnable then
+  begin
+    seBottomLayer.Enabled := seBottomLayer.MaxValue > 1;
+    seMaxIterations.Enabled := (rgCouplingMethod.ItemIndex = 1);
+  end
+  else
+  begin
+    seBottomLayer.Enabled := False;
+    seMaxIterations.Enabled := False;
+  end;
+end;
+
+procedure TfrmChildModels.FormCreate(Sender: TObject);
+var
+  LayerGroupIndex: Integer;
+  Group: TLayerGroup;
+begin
+  inherited;
+  pcMain.ActivePageIndex := 0;
+  FChildModels:= TChildModelEditCollection.Create;
+
+  comboBottomUnit.Items.Capacity :=
+    frmGoPhast.PhastModel.LayerStructure.Count - 1;
+  for LayerGroupIndex := 1 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  begin
+    Group := frmGoPhast.PhastModel.LayerStructure[LayerGroupIndex];
+    if Group.Simulated then
+    begin
+      comboBottomUnit.Items.AddObject(Group.AquiferName, Group)
+    end;
+  end;
+
+  rdgDiscretization.Cells[Ord(dsLayerGroup),0] := 'Layer group';
+  rdgDiscretization.Cells[Ord(dsParentLayer),0] := 'Layer';
+  rdgDiscretization.Cells[Ord(dsDiscretization),0] := 'Child model discretization';
+
+  GetData;
+end;
+
+procedure TfrmChildModels.FormDestroy(Sender: TObject);
+begin
+  FChildModels.Free;
+  inherited;
+end;
+
+procedure TfrmChildModels.GetData;
+var
+  ChildIndex: Integer;
+  Edit: TChildModelEdit;
+  Node: TTreeNode;
+begin
+  FChildModels.Capacity := frmGoPhast.PhastModel.ChildModels.Count;
+  FChildModels.Assign(frmGoPhast.PhastModel.ChildModels);
+//  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+//  begin
+//    Edit := FChildModels.Add as TChildModelEdit;
+//    Edit.Assign(frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel);
+//  end;
+  Node := nil;
+  for ChildIndex := 0 to FChildModels.Count - 1 do
+  begin
+    Edit := FChildModels.Items[ChildIndex] as TChildModelEdit;
+    Node := tvChildModels.Items.AddObject(Node, Edit.ModelName, Edit);
+  end;
+  cbSaveBFH.Checked := frmGoPhast.PhastModel.SaveBfhBoundaryConditions;
+  EnableControls;
+end;
+
+procedure TfrmChildModels.LayoutMultiRowEditControl;
+begin
+  if [csLoading, csReading] * ComponentState <> [] then
+  begin
+    Exit
+  end;
+  LayoutControls(rdgDiscretization, rdeDiscretization, nil, Ord(dsDiscretization));
+
+end;
+
+procedure TfrmChildModels.rdeDiscretizationChange(Sender: TObject);
+begin
+  inherited;
+  ChangeSelectedCellsInColumn(rdgDiscretization, Ord(dsDiscretization),
+    rdeDiscretization.Text);
+  rdgDiscretizationExit(nil);
+end;
+
+procedure TfrmChildModels.rdeFluxClosureChange(Sender: TObject);
+var
+  Value: Extended;
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if tvChildModels.Selected <> nil then
+  begin
+    if TryStrToFloat(rdeFluxClosure.Text, Value) then
+    begin
+      Edit := tvChildModels.Selected.Data;
+      Edit.FluxClosureCriterion := Value;
+    end;
+  end;
+end;
+
+procedure TfrmChildModels.rdeHeadClosureChange(Sender: TObject);
+var
+  Value: Extended;
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if tvChildModels.Selected <> nil then
+  begin
+    if TryStrToFloat(rdeHeadClosure.Text, Value) then
+    begin
+      Edit := tvChildModels.Selected.Data;
+      Edit.HeadClosureCriterion := Value;
+    end;
+  end;
+end;
+
+procedure TfrmChildModels.rdeRelaxFluxChange(Sender: TObject);
+var
+  Value: Extended;
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if tvChildModels.Selected <> nil then
+  begin
+    if TryStrToFloat(rdeRelaxFlux.Text, Value) then
+    begin
+      Edit := tvChildModels.Selected.Data;
+      Edit.FluxRelaxationFactor := Value;
+    end;
+  end;
+end;
+
+procedure TfrmChildModels.rdeRelaxHeadsChange(Sender: TObject);
+var
+  Value: Extended;
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if tvChildModels.Selected <> nil then
+  begin
+    if TryStrToFloat(rdeRelaxHeads.Text, Value) then
+    begin
+      Edit := tvChildModels.Selected.Data;
+      Edit.HeadRelaxationFactor := Value;
+    end;
+  end;
+end;
+
+procedure TfrmChildModels.rdgDiscretizationColSize(Sender: TObject; ACol,
+  PriorWidth: Integer);
+begin
+  inherited;
+  LayoutMultiRowEditControl
+end;
+
+procedure TfrmChildModels.rdgDiscretizationEnter(Sender: TObject);
+begin
+  inherited;
+  FAlreadyHandled := False;
+end;
+
+procedure TfrmChildModels.rdgDiscretizationExit(Sender: TObject);
+begin
+  inherited;
+  if FAlreadyHandled then
+  begin
+    FAlreadyHandled := False;
+  end
+  else
+  begin
+    WriteSublayerDiscretization;
+  end;
+end;
+
+procedure TfrmChildModels.rdgDiscretizationHorizontalScroll(Sender: TObject);
+begin
+  inherited;
+  LayoutMultiRowEditControl;
+end;
+
+procedure TfrmChildModels.rdgDiscretizationMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
+  EnableMultiEditControl(rdgDiscretization, rdeDiscretization, Ord(dsDiscretization));
+end;
+
+procedure TfrmChildModels.seBottomLayerChange(Sender: TObject);
+var
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if (tvChildModels.Selected <> nil) then
+  begin
+    Edit := tvChildModels.Selected.Data;
+    Edit.Discretization.BottomLayerInUnit := seBottomLayer.AsInteger-1;
+  end;
+end;
+
+procedure TfrmChildModels.seBottomLayerExit(Sender: TObject);
+begin
+  inherited;
+  ReadSublayerDiscretization;
+end;
+
+procedure TfrmChildModels.seCellCountChange(Sender: TObject);
+var
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if (tvChildModels.Selected <> nil) then
+  begin
+    Edit := tvChildModels.Selected.Data;
+    if not Odd(seCellCount.AsInteger) then
+    begin
+      seCellCount.AsInteger := seCellCount.AsInteger + 1;
+    end;
+    Edit.ChildCellsPerParentCell := seCellCount.AsInteger;
+  end;
+end;
+
+procedure TfrmChildModels.seMaxIterationsChange(Sender: TObject);
+var
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if (tvChildModels.Selected <> nil) then
+  begin
+    Edit := tvChildModels.Selected.Data;
+    Edit.MaxIterations := seMaxIterations.AsInteger;
+  end;
+end;
+
+procedure TfrmChildModels.ReadSublayerDiscretization;
+var
+  List: TList;
+  ParentLayerCount: Integer;
+  RowIndex: Integer;
+  DisIndex: Integer;
+  EndLayer: Integer;
+  Item: TChildDiscretization;
+  LayerGroup: TLayerGroup;
+  LayerGroupIndex: Integer;
+  Edit: TChildModelEdit;
+begin
+  if (tvChildModels.Selected = nil) then
+  begin
+    Exit;
+  end;
+  List := TList.Create;
+  try
+    FillListWithLayerGroups(List);
+    Edit := tvChildModels.Selected.Data;
+    ParentLayerCount := 0;
+    for LayerGroupIndex := 0 to List.Count - 1 do
+    begin
+      LayerGroup := List[LayerGroupIndex];
+      if LayerGroupIndex = List.Count - 1 then
+      begin
+        ParentLayerCount := ParentLayerCount
+          + Edit.Discretization.BottomLayerInUnit+1;
+      end
+      else
+      begin
+        ParentLayerCount := ParentLayerCount + LayerGroup.LayerCount;
+      end;
+    end;
+    rdgDiscretization.BeginUpdate;
+    try
+      RowIndex := 0;
+      rdgDiscretization.RowCount := ParentLayerCount + 1;
+      for LayerGroupIndex := 0 to List.Count - 1 do
+      begin
+        LayerGroup := List[LayerGroupIndex];
+        if LayerGroupIndex = List.Count - 1 then
+        begin
+          EndLayer := Edit.Discretization.BottomLayerInUnit;
+        end
+        else
+        begin
+          EndLayer := LayerGroup.LayerCount - 1;
+        end;
+        for DisIndex := 0 to EndLayer do
+        begin
+          Inc(RowIndex);
+          rdgDiscretization.Cells[Ord(dsLayerGroup),RowIndex] := LayerGroup.AquiferName;
+          rdgDiscretization.Cells[Ord(dsParentLayer),RowIndex] := IntToStr(DisIndex+1);
+          Item := Edit.Discretization.
+            GetAnItemByGroupAndLayer(LayerGroup, DisIndex);
+          Assert(Item <> nil);
+          rdgDiscretization.Cells[Ord(dsDiscretization),RowIndex] :=
+            IntToStr(Item.Discretization);
+          rdgDiscretization.Objects[Ord(dsLayerGroup),RowIndex] := LayerGroup;
+        end;
+      end;
+    finally
+      rdgDiscretization.EndUpdate;
+    end;
+  finally
+    List.Free;
+  end;
+end;
+
+procedure TfrmChildModels.rgCouplingMethodClick(Sender: TObject);
+var
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if (tvChildModels.Selected <> nil) then
+  begin
+    Edit := tvChildModels.Selected.Data;
+    Edit.CouplingMethod := TCouplingMethod(
+      rgCouplingMethod.ItemIndex);
+  end;
+  EnableControls;
+end;
+
+procedure TfrmChildModels.rgPrintIterationsClick(Sender: TObject);
+var
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if (tvChildModels.Selected <> nil) then
+  begin
+    Edit := tvChildModels.Selected.Data;
+    Edit.LgrPrintChoice := TLgrPrintChoice(
+      rgPrintIterations.ItemIndex);
+  end;
+end;
+
+procedure TfrmChildModels.rgStartingHeadsClick(Sender: TObject);
+var
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  if (tvChildModels.Selected <> nil) then
+  begin
+    Edit := tvChildModels.Selected.Data;
+    Edit.StartingHeadSource := TStartingHeadSource(
+      rgStartingHeads.ItemIndex);
+  end;
+end;
+
+procedure TfrmChildModels.FillListWithLayerGroups(List: TList);
+var
+  LayerGroup: TLayerGroup;
+  LayerGroupIndex: Integer;
+  Edit: TChildModelEdit;
+begin
+  Edit := tvChildModels.Selected.Data;
+  for LayerGroupIndex := 1 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  begin
+    LayerGroup := frmGoPhast.PhastModel.LayerStructure[LayerGroupIndex];
+    if LayerGroup.Simulated then
+    begin
+      List.Add(LayerGroup);
+    end;
+    if Edit.Discretization.BottomLayerGroup = LayerGroup then
+    begin
+      break;
+    end;
+  end;
+end;
+
+procedure TfrmChildModels.SetData;
+var
+  Undo: TUndoChildModelChange;
+begin
+  Undo := TUndoChildModelChange.Create(cbSaveBFH.Checked, FChildModels);
+  frmGoPhast.UndoStack.Submit(Undo);
+end;
+
+procedure TfrmChildModels.tvChildModelsChange(Sender: TObject; Node: TTreeNode);
+var
+  Edit: TChildModelEdit;
+begin
+  inherited;
+  Assert(Node <> nil);
+  Edit := Node.Data;
+  edModelName.Text := Edit.ModelName;
+  comboBottomUnit.ItemIndex := comboBottomUnit.Items.IndexOfObject(
+    Edit.Discretization.BottomLayerGroup);
+  if Edit.Discretization.BottomLayerGroup <> nil then
+  begin
+    seBottomLayer.MaxValue :=
+      Edit.Discretization.BottomLayerGroup.LayerCount;
+    seBottomLayer.AsInteger := Edit.Discretization.BottomLayerInUnit+1;
+  end;
+  seCellCount.AsInteger := Edit.ChildCellsPerParentCell;
+  ReadSublayerDiscretization;
+  rgStartingHeads.ItemIndex := Ord(Edit.StartingHeadSource);
+//  cbOneWayCoupling.Checked := Edit.OneWayCoupling;
+  rgCouplingMethod.ItemIndex := Ord(Edit.CouplingMethod);
+  seMaxIterations.AsInteger := Edit.MaxIterations;
+  rgPrintIterations.ItemIndex := Ord(Edit.LgrPrintChoice);
+  rdeRelaxHeads.Text := FloatToStr(Edit.HeadRelaxationFactor);
+  rdeRelaxFlux.Text := FloatToStr(Edit.FluxRelaxationFactor);
+  rdeHeadClosure.Text := FloatToStr(Edit.HeadClosureCriterion);
+  rdeFluxClosure.Text := FloatToStr(Edit.FluxClosureCriterion);
+  EnableControls;
+end;
+
+procedure TfrmChildModels.tvChildModelsChanging(Sender: TObject;
+  Node: TTreeNode; var AllowChange: Boolean);
+begin
+  inherited;
+  FAlreadyHandled := False;
+  rdgDiscretizationExit(Sender);
+  FAlreadyHandled := True;
+end;
+
+procedure TfrmChildModels.WriteSublayerDiscretization;
+var
+  Edit: TChildModelEdit;
+  RowIndex: Integer;
+  LayerGroup: TLayerGroup;
+  Layer: Integer;
+  Item: TChildDiscretization;
+  AValue: Integer;
+begin
+  if (tvChildModels.Selected = nil) then
+  begin
+    Exit;
+  end;
+  Edit := tvChildModels.Selected.Data;
+  for RowIndex := 1 to rdgDiscretization.RowCount - 1 do
+  begin
+    LayerGroup := rdgDiscretization.Objects[Ord(dsLayerGroup),RowIndex] as TLayerGroup;
+    Layer := StrToInt(rdgDiscretization.Cells[Ord(dsParentLayer),RowIndex]) -1;
+    Item := Edit.Discretization.GetAnItemByGroupAndLayer(LayerGroup, Layer);
+    Assert(Item <> nil);
+    AValue := StrToInt(rdgDiscretization.Cells[Ord(dsDiscretization),RowIndex]);
+    If not Odd(AValue) then
+    begin
+      Inc(AValue);
+      rdgDiscretization.Cells[Ord(dsDiscretization),RowIndex] := IntToStr(AValue);
+    end;
+    Item.Discretization := AValue;
+  end;
+end;
+
+{ TUndoChildModelChange }
+
+procedure TUndoChildModelChange.ChangeChildModel(Source: TCollection);
+begin
+  frmGoPhast.CanDraw := False;
+  try
+    frmGoPhast.PhastModel.ChildModels.Assign(Source);
+  finally
+    frmGoPhast.CanDraw := True;
+  end;
+end;
+
+constructor TUndoChildModelChange.Create(SaveBfhBoundaries: boolean;
+  var NewChildModels: TChildModelEditCollection);
+var
+  ChildIndex: Integer;
+begin
+  FNewSaveBfhBoundaries := SaveBfhBoundaries;
+  FOldSaveBfhBoundaries := frmGoPhast.PhastModel.SaveBfhBoundaryConditions;
+  FOldChildModels := TChildModelCollection.Create(nil);
+  FOldChildModels.Assign(frmGoPhast.PhastModel.ChildModels);
+
+  FNewChildModels := NewChildModels;
+  NewChildModels := nil;
+
+  FScreenObjects := TList.Create;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    FScreenObjects.Add(frmGoPhast.PhastModel.ChildModels[ChildIndex].
+      ChildModel.HorizontalPositionScreenObject);
+  end;
+end;
+
+function TUndoChildModelChange.Description: string;
+begin
+  result := 'change child models';
+end;
+
+destructor TUndoChildModelChange.Destroy;
+begin
+  FScreenObjects.Free;
+  FOldChildModels.Free;
+  FNewChildModels.Free;
+  inherited;
+end;
+
+procedure TUndoChildModelChange.DoCommand;
+begin
+  inherited;
+  frmGoPhast.PhastModel.SaveBfhBoundaryConditions := FNewSaveBfhBoundaries;
+  ChangeChildModel(FNewChildModels);
+end;
+
+procedure TUndoChildModelChange.Undo;
+var
+  ChildIndex: Integer;
+  ScreenObject: TScreenObject;
+begin
+  inherited;
+  frmGoPhast.PhastModel.SaveBfhBoundaryConditions := FOldSaveBfhBoundaries;
+  ChangeChildModel(FOldChildModels);
+  Assert(frmGoPhast.PhastModel.ChildModels.Count = FScreenObjects.Count);
+  for ChildIndex := 0 to FScreenObjects.Count - 1 do
+  begin
+    ScreenObject := FScreenObjects[ChildIndex];
+    frmGoPhast.PhastModel.ChildModels[ChildIndex].
+      ChildModel.HorizontalPositionScreenObject := ScreenObject;
+  end;
+end;
+
+end.

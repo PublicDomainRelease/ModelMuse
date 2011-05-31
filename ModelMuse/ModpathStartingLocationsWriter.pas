@@ -41,7 +41,8 @@ type
 implementation
 
 uses
-  ModpathParticleUnit, ModflowTimeUnit, frmErrorsAndWarningsUnit;
+  ModpathParticleUnit, ModflowTimeUnit, frmErrorsAndWarningsUnit,
+  ModelMuseUtilities, frmGoPhastUnit;
 
 resourcestring
   StrAStartingTimeFor = 'A starting time for the MODPATH particles defined '
@@ -76,10 +77,10 @@ var
   NameOfFile: string;
   StressPeriods: TModflowStressPeriods;
 begin
-  StressPeriods := PhastModel.ModflowStressPeriods;
+  StressPeriods := Model.ModflowStressPeriods;
   if StressPeriods.CompletelyTransient then
   begin
-    FStartTime := PhastModel.ModflowPackages.ModPath.BeginningTime;
+    FStartTime := Model.ModflowPackages.ModPath.BeginningTime;
   end
   else
   begin
@@ -87,13 +88,13 @@ begin
   end;
   if StressPeriods.TransientModel then
   begin
-    FEndTime := PhastModel.ModflowPackages.ModPath.EndingTime;
+    FEndTime := Model.ModflowPackages.ModPath.EndingTime;
   end
   else
   begin
     FEndTime := StressPeriods[StressPeriods.Count-1].EndTime;
   end;
-  frmErrorsAndWarnings.RemoveErrorGroup(StrAStartingTimeFor);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrAStartingTimeFor);
 
   NameOfFile := FileName(AFileName);
   OpenFile(NameOfFile);
@@ -125,12 +126,12 @@ var
   ColumnIndex: Integer;
   ParticleLines: TParticleLines;
 begin
-  for LayerIndex := 0 to PhastModel.Grid.LayerCount - 1 do
+  for LayerIndex := 0 to Model.Grid.LayerCount - 1 do
   begin
-    SimulatedLayer := PhastModel.LayerStructure.IsLayerSimulated(LayerIndex);
-    for RowIndex := 0 to PhastModel.Grid.RowCount - 1 do
+    SimulatedLayer := Model.IsLayerSimulated(LayerIndex);
+    for RowIndex := 0 to Model.Grid.RowCount - 1 do
     begin
-      for ColumnIndex := 0 to PhastModel.Grid.ColumnCount - 1 do
+      for ColumnIndex := 0 to Model.Grid.ColumnCount - 1 do
       begin
         ParticleLines := FParticleGrid[LayerIndex, RowIndex, ColumnIndex];
         if ParticleLines <> nil then
@@ -150,20 +151,22 @@ var
   Cell: TCellAssignment;
   ObjectIndex: Integer;
   ParticleLines: TParticleLines;
+  LocalModel: TCustomModel;
 begin
-  SetLength(FParticleGrid, PhastModel.Grid.LayerCount,
-    PhastModel.Grid.RowCount, PhastModel.Grid.ColumnCount);
-  for Index := 0 to PhastModel.ScreenObjectCount - 1 do
+  LocalModel := Model.SelectedModel;
+  SetLength(FParticleGrid, LocalModel.Grid.LayerCount,
+    LocalModel.Grid.RowCount, LocalModel.Grid.ColumnCount);
+  for Index := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
-    ScreenObject := PhastModel.ScreenObjects[Index];
+    ScreenObject := LocalModel.ScreenObjects[Index];
     if (not ScreenObject.Deleted) and ScreenObject.ModpathParticles.Used then
     begin
       ParticleLines := TParticleLines.Create(ScreenObject,
-        PhastModel.ModflowPackages.ModPath.TrackingDirection,
+        LocalModel.ModflowPackages.ModPath.TrackingDirection,
         FStartTime, FEndTime);
       FParticleLines.Add(ParticleLines);
       FCellList.Clear;
-      ScreenObject.GetModpathCellList(FCellList);
+      ScreenObject.GetModpathCellList(FCellList, LocalModel);
       for ObjectIndex := 0 to FCellList.Count - 1 do
       begin
         Cell := FCellList[ObjectIndex];
@@ -204,21 +207,21 @@ begin
     if (not ReleaseTimeErrorDetected) and (FTrackingDirection = tdForward) and
       ((TimeItem.Time < 0) or (TimeItem.Time > EndTime-StartTime)) then
     begin
-      frmErrorsAndWarnings.AddError(StrAStartingTimeFor,
+      frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrAStartingTimeFor,
         ScreenObject.Name);
       ReleaseTimeErrorDetected := True;
     end;
-    FReleaseTimes.Add(FloatToStr(TimeItem.Time));
+    FReleaseTimes.Add(FortranFloatToStr(TimeItem.Time));
   end;
   Particles := ScreenObject.ModpathParticles.Particles;
   for Index := 0 to Particles.Count - 1 do
   begin
     ParticleItem := Particles.Items[Index] as TParticleLocation;
-    XYString := FloatToStr(ParticleItem.X) + ' '
-      + FloatToStr(ParticleItem.Y) + ' ';
-    FSimulatedLocations.Add(XYString + FloatToStr(ParticleItem.Z)
+    XYString := FortranFloatToStr(ParticleItem.X) + ' '
+      + FortranFloatToStr(ParticleItem.Y) + ' ';
+    FSimulatedLocations.Add(XYString + FortranFloatToStr(ParticleItem.Z)
       + ' 0 0 0 ');
-    FNonSimulatedLocations.Add(XYString + FloatToStr(1-ParticleItem.Z)
+    FNonSimulatedLocations.Add(XYString + FortranFloatToStr(1-ParticleItem.Z)
       + ' 0 0 0 ');
   end;
 end;

@@ -30,7 +30,7 @@ type
     procedure Initialize;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     function FullFormat: string;
   published
     property ExtFormatPrefix: TExtFormatPrefix read FExtFormatPrefix
@@ -62,7 +62,7 @@ type
     procedure Initialize;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     function PrintCode: integer;
     function FormatDefined: boolean;
@@ -104,7 +104,7 @@ type
     procedure SetBudgetFrequencyChoice(const Value: TFrequencyChoice);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TComponent);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure Initialize;
   published
@@ -154,7 +154,7 @@ begin
   end;
 end;
 
-constructor TModflowOutputControl.Create(Model: TComponent);
+constructor TModflowOutputControl.Create(Model: TBaseModel);
 begin
   inherited Create(Model);
   FHeadOC := THeadDrawdownOutputControl.Create(Model);
@@ -296,7 +296,7 @@ begin
   end;
 end;
 
-constructor TExternalFormat.Create(Model: TObject);
+constructor TExternalFormat.Create(Model: TBaseModel);
 begin
   inherited Create(Model);
   Initialize;
@@ -392,7 +392,7 @@ begin
   end;
 end;
 
-constructor THeadDrawdownOutputControl.Create(Model: TObject);
+constructor THeadDrawdownOutputControl.Create(Model: TBaseModel);
 begin
   inherited Create(Model);
   FExternalFormat := TExternalFormat.Create(Model);

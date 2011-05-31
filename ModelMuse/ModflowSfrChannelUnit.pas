@@ -3,7 +3,7 @@ unit ModflowSfrChannelUnit;
 interface
 
 uses SysUtils, Classes, RbwParser, OrderedCollectionUnit, ModflowBoundaryUnit,
-  FormulaManagerUnit, SubscriptionUnit;
+  FormulaManagerUnit, SubscriptionUnit, GoPhastTypes;
 
 type
   TSfrChannelRecord = record
@@ -52,7 +52,6 @@ type
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
-    procedure InvalidateModel; override;
     procedure DefineProperties(Filer: TFiler); override;
     function BoundaryFormulaCount: integer; override;
   public
@@ -87,10 +86,11 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
   public
-    procedure EvaluateBoundaries;
+    procedure EvaluateBoundaries(AModel: TBaseModel);
     property ChannelTimeValues[Index: integer]: TSfrChannelRecord
       read GetChannelTimeValues write SetChannelTimeValues;
-    function GetChannelTimeValuesFromTime(StartTime: double): TSfrChannelRecord;
+    function GetChannelTimeValuesFromTime(AModel: TBaseModel;
+      StartTime: double): TSfrChannelRecord;
   end;
 
 const
@@ -101,7 +101,7 @@ const
 implementation
 
 uses Contnrs, DataSetUnit, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit,
-  ModflowSfrUnit, frmFormulaErrorsUnit, frmErrorsAndWarningsUnit, GoPhastTypes, 
+  ModflowSfrUnit, frmFormulaErrorsUnit, frmErrorsAndWarningsUnit,
   frmGoPhastUnit;
 
 const
@@ -423,12 +423,6 @@ begin
   result := FZ[Index].Formula;
 end;
 
-procedure TSfrChannelItem.InvalidateModel;
-begin
-  inherited;
-
-end;
-
 function TSfrChannelItem.IsSame(AnotherItem: TOrderedItem): boolean;
 var
   SfrChannel: TSfrChannelItem;
@@ -524,7 +518,7 @@ end;
 
 { TSfrChannelCollection }
 
-procedure TSfrChannelCollection.EvaluateBoundaries;
+procedure TSfrChannelCollection.EvaluateBoundaries(AModel: TBaseModel);
 var
   CurrentRecord: TSfrChannelRecord;
   CurrentItem: TSfrChannelItem;
@@ -575,7 +569,7 @@ begin
       Expression.Evaluate;
     except on E: ERbwParserError do
       begin
-        frmFormulaErrors.AddError(ScrObj.Name,
+        frmFormulaErrors.AddFormulaError(ScrObj.Name,
           '(Channel rougnness for the SFR package)',
           Formula, E.Message);
 
@@ -589,7 +583,7 @@ begin
     CurrentRecord.ChannelRoughness := Expression.DoubleResult;
     if CurrentRecord.ChannelRoughness <= 0 then
     begin
-      frmErrorsAndWarnings.AddError(ChannelRoughnessError,
+      frmErrorsAndWarnings.AddError(AModel, ChannelRoughnessError,
         Format(IDError, [ScrObj.Name, CurrentItem.StartTime]));
 
     end;
@@ -606,7 +600,7 @@ begin
         Expression.Evaluate;
       except on E: ERbwParserError do
         begin
-          frmFormulaErrors.AddError(ScrObj.Name,
+          frmFormulaErrors.AddFormulaError(ScrObj.Name,
             '(bank roughness for the SFR package)',
             Formula, E.Message);
 
@@ -620,7 +614,7 @@ begin
       CurrentRecord.BankRoughness := Expression.DoubleResult;
       if CurrentRecord.BankRoughness <= 0 then
       begin
-        frmErrorsAndWarnings.AddError(BankRoughnessError,
+        frmErrorsAndWarnings.AddError(AModel, BankRoughnessError,
           Format(IDError, [ScrObj.Name, CurrentItem.StartTime]));
       end;
 
@@ -637,7 +631,7 @@ begin
           Expression.Evaluate;
         except on E: ERbwParserError do
           begin
-            frmFormulaErrors.AddError(ScrObj.Name,
+            frmFormulaErrors.AddFormulaError(ScrObj.Name,
               '(cross section X for the SFR package)',
               Formula, E.Message);
 
@@ -661,7 +655,7 @@ begin
           Expression.Evaluate;
         except on E: ERbwParserError do
           begin
-            frmFormulaErrors.AddError(ScrObj.Name,
+            frmFormulaErrors.AddFormulaError(ScrObj.Name,
               '(cross section Z for the SFR package)',
               Formula, E.Message);
 
@@ -687,7 +681,7 @@ begin
   result := FTimeValues[Index];
 end;
 
-function TSfrChannelCollection.GetChannelTimeValuesFromTime(
+function TSfrChannelCollection.GetChannelTimeValuesFromTime(AModel: TBaseModel;
   StartTime: double): TSfrChannelRecord;
 var
   Index: Integer;
@@ -710,7 +704,7 @@ begin
   ScreenObjectName := (ScreenObject as TScreenObject).Name;
   ErrorMessage := 'Object = ' + ScreenObjectName
     + '; Time = ' + FloatToStr(StartTime);
-  frmErrorsAndWarnings.AddError(StrIncompleteSFRData, ErrorMessage);
+  frmErrorsAndWarnings.AddError(AModel, StrIncompleteSFRData, ErrorMessage);
 
 end;
 

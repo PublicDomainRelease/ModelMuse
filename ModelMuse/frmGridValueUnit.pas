@@ -5,10 +5,14 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ScreenObjectUnit,
-  TntStdCtrls, TntExDropDownEdit, TntExDropDownVirtualStringTree, ComCtrls,
-  DataSetUnit, VirtualTrees, FastGEO;
+  ComCtrls, DataSetUnit, VirtualTrees, FastGEO, GoPhastTypes, SsButtonEd,
+  RbwStringTreeCombo, Grids, RbwDataGrid4;
 
 type
+  TPathLineColumn = (plcLabel, plcFirst, plcLast, plcClosest);
+  TPathlineRow = (plrLabel, plrX, plrY, plrZ, plrXPrime, plrYPrime, plrLocalZ,
+    plrTime, plrColumn, plrRow, plrLayer, plrTimeStep);
+
   TfrmGridValue = class(TfrmCustomGoPhast)
     btnHelp: TBitBtn;
     btnClose: TBitBtn;
@@ -30,7 +34,6 @@ type
     lblRowWidth: TLabel;
     lblColumnWidth: TLabel;
     tabAllDataSets: TTabSheet;
-    virttreecomboDataSets: TTntExDropDownVirtualStringTree;
     lblSelectValue: TLabel;
     edSelectValue: TEdit;
     lblSelectExplanation: TLabel;
@@ -38,6 +41,11 @@ type
     btnUpdate: TButton;
     lblSection: TLabel;
     lblVertex: TLabel;
+    lblModel: TLabel;
+    comboModel: TComboBox;
+    virttreecomboDataSets: TRbwStringTreeCombo;
+    tabPathline: TTabSheet;
+    rdgPathline: TRbwDataGrid4;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject); override;
     procedure edCellValueKeyUp(Sender: TObject; var Key: Word;
@@ -52,11 +60,18 @@ type
     procedure virttreecomboDataSetsDropDownTreeGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: WideString);
+    procedure comboModelChange(Sender: TObject);
     procedure virttreecomboDataSetsChange(Sender: TObject);
-    procedure virttreecomboDataSetsClosedUp(Sender: TObject);
-    procedure virttreecomboDataSetsDropDownTreeChange(Sender: TBaseVirtualTree;
+    procedure virttreecomboDataSets1TreeGetNodeDataSize(
+      Sender: TBaseVirtualTree; var NodeDataSize: Integer);
+    procedure virttreecomboDataSets1TreeGetText(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+      var CellText: WideString);
+    procedure virttreecomboDataSets1TreeInitNode(Sender: TBaseVirtualTree;
+      ParentNode, Node: PVirtualNode;
+      var InitialStates: TVirtualNodeInitStates);
+    procedure virttreecomboDataSetsTreeChange(Sender: TBaseVirtualTree;
       Node: PVirtualNode);
-    procedure virttreecomboDataSetsEnter(Sender: TObject);
   private
     FSelectedScreenObject: TScreenObject;
     FColumn: Integer;
@@ -65,17 +80,21 @@ type
     // @name is implemented as a TObjectList.
     FDataSetDummyObjects: TList;
     FSelectedVirtNode: PVirtualNode;
-    FShouldClick: Boolean;
+    FViewDirection: TViewDirection;
+    FPriorLocation: TPoint2D;
     property SelectedVirtNode: PVirtualNode read FSelectedVirtNode;
     procedure UpdatedSelectedObject;
-    procedure UpdateScreenObjectInfo(const Column, Row, Layer: Integer; const Location: TPoint2D);
+    procedure UpdateScreenObjectInfo(const Column, Row, Layer: Integer;
+      Location: TPoint2D; Model: TBaseModel);
     procedure UpdateSelectedData(Layer, Row, Column: integer);
     procedure GetSelectedDataArray(var OtherDataSet: TDataArray);
+    procedure InitializePathlineGrid;
+    procedure DisplayPathlineData(const Location: TPoint2D);
     { Private declarations }
   public
     procedure UpdateValue(const Layer, Row, Column: integer;
       const DataSetName, CellValue: string; Explanation: string;
-      const Location: TPoint2D);
+      const Location: TPoint2D; ViewDirection: TViewDirection);
     procedure UpdateDataSets;
     { Public declarations }
   end;
@@ -88,7 +107,8 @@ var
 implementation
 
 uses Clipbrd, CustomModflowWriterUnit, AbstractGridUnit, frmGoPhastUnit, 
-  GoPhastTypes, GIS_Functions, RbwParser, Contnrs, ClassificationUnit;
+  GIS_Functions, RbwParser, Contnrs, ClassificationUnit,
+  PhastModelUnit, PathlineReader, QuadtreeClass, ZoomBox2, InteractiveTools;
 
 resourcestring
   StrSelectedObject = 'Selected object';
@@ -126,6 +146,19 @@ begin
   UpdateSelectedData(FLayer, FRow, FColumn);
 end;
 
+procedure TfrmGridValue.comboModelChange(Sender: TObject);
+var
+  LocalModel: TCustomModel;
+begin
+  inherited;
+  LocalModel := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
+  if LocalModel <> nil then
+  begin
+    frmGoPhast.PhastModel.SelectedModel := LocalModel;
+    UpdateCurrentModel(LocalModel);
+  end;
+end;
+
 procedure TfrmGridValue.edCellValueKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
@@ -144,10 +177,34 @@ begin
 end;
 
 procedure TfrmGridValue.FormCreate(Sender: TObject);
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   inherited;
   AdjustFormPosition(dpLeft);
   FDataSetDummyObjects := TObjectList.Create;
+
+  case frmGoPhast.ModelSelection of
+    msPhast, msModflow:
+      begin
+        comboModel.Items.AddObject('Parent model', frmGoPhast.PhastModel)
+      end;
+    msModflowLGR:
+      begin
+        comboModel.Items.AddObject('Parent model', frmGoPhast.PhastModel);
+        for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+        begin
+          ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+          comboModel.Items.AddObject(ChildModel.ModelName, ChildModel);
+        end;
+      end;
+    else
+      Assert(False);
+  end;
+  comboModel.ItemIndex := comboModel.Items.IndexOfObject(frmGoPhast.PhastModel.SelectedModel);
+
+  InitializePathlineGrid;
 end;
 
 procedure TfrmGridValue.FormDestroy(Sender: TObject);
@@ -162,7 +219,7 @@ begin
   UpdateDataSets;
   // virttreecomboDataSets thows an exception if it is not on the
   // active page when TfrmGridValue is created.
-  Assert(pcDataDisplay.ActivePageIndex = 1);
+//  Assert(pcDataDisplay.ActivePageIndex = 1);
   pcDataDisplay.ActivePageIndex := 0;
 end;
 
@@ -259,7 +316,7 @@ end;
 
 procedure TfrmGridValue.UpdateValue(const Layer, Row, Column: integer;
   const DataSetName, CellValue: string; Explanation: string;
-  const Location: TPoint2D);
+  const Location: TPoint2D; ViewDirection: TViewDirection);
 var
   Grid: TCustomGrid;
   DataArray: TDataArray;
@@ -267,7 +324,10 @@ var
   ColumnWidth: Double;
   RowWidth: Double;
   LayerHeight: Double;
+  Model: TBaseModel;
 begin
+  Model := frmGoPhast.PhastModel.SelectedModel;
+  FViewDirection := ViewDirection;
   FColumn := Column;
   FRow := Row;
   FLayer := Layer;
@@ -318,9 +378,9 @@ begin
     lblColumnWidth.Caption := 'Column width:';
   end;
   
-  UpdateScreenObjectInfo(Column, Row, Layer, Location);
+  UpdateScreenObjectInfo(Column, Row, Layer, Location, Model);
   UpdateSelectedData(Layer, Row, Column);
-
+  DisplayPathlineData(Location);
 end;
 
 procedure TfrmGridValue.virttreecomboDataSetsChange(Sender: TObject);
@@ -330,21 +390,29 @@ begin
   UpdateSelectedData(FLayer, FRow, FColumn);
 end;
 
-procedure TfrmGridValue.virttreecomboDataSetsClosedUp(Sender: TObject);
+procedure TfrmGridValue.virttreecomboDataSets1TreeGetNodeDataSize(
+  Sender: TBaseVirtualTree; var NodeDataSize: Integer);
 begin
   inherited;
-  if FShouldClick then
-  begin
-    FShouldClick := False;
-    MouseClick;
-  end;
+  NodeDataSize := SizeOf(TClassificationNodeData);
 end;
 
-procedure TfrmGridValue.virttreecomboDataSetsDropDownTreeChange(
-  Sender: TBaseVirtualTree; Node: PVirtualNode);
+procedure TfrmGridValue.virttreecomboDataSets1TreeGetText(
+  Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
+  TextType: TVSTTextType; var CellText: WideString);
 begin
   inherited;
-  SelectOnlyLeaves(Node, virttreecomboDataSets, Sender, FSelectedVirtNode);
+  GetNodeCaption(Node, CellText, Sender);
+end;
+
+procedure TfrmGridValue.virttreecomboDataSets1TreeInitNode(
+  Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
+  var InitialStates: TVirtualNodeInitStates);
+var
+  CellText: WideString;
+begin
+  inherited;
+  GetNodeCaption(Node, CellText, Sender);
 end;
 
 procedure TfrmGridValue.virttreecomboDataSetsDropDownTreeGetNodeDataSize(
@@ -362,24 +430,30 @@ begin
   GetNodeCaption(Node, CellText, Sender);
 end;
 
-procedure TfrmGridValue.virttreecomboDataSetsEnter(Sender: TObject);
+procedure TfrmGridValue.virttreecomboDataSetsTreeChange(
+  Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   inherited;
-  FShouldClick := True;
+  SelectOnlyLeaves(Node, virttreecomboDataSets, Sender, FSelectedVirtNode);
 end;
 
 procedure TfrmGridValue.GetSelectedDataArray(var OtherDataSet: TDataArray);
 begin
-  OtherDataSet := frmGoPhast.PhastModel.DataArrayManager.
+  OtherDataSet := frmGoPhast.PhastModel.SelectedModel.DataArrayManager.
     GetDataSetByName(virttreecomboDataSets.Text);
 end;
 
+//procedure TfrmGridValue.
+
 procedure TfrmGridValue.UpdateScreenObjectInfo
-  (const Column, Row, Layer: Integer; const Location: TPoint2D);
+  (const Column, Row, Layer: Integer; Location: TPoint2D;
+  Model: TBaseModel);
 var
   Value: Double;
   DirectionText: string;
   Segment: TCellElementSegment;
+  LocalModel: TCustomModel;
+  temp: TFloat;
   procedure AssignHigherElevLabel(const ExtraText: string);
   var
     Indicies: array[0..2] of Integer;
@@ -393,10 +467,10 @@ var
     if cbShowThirdDValues.Checked then
     begin
       if FSelectedScreenObject.
-        IsHigher3DElevationAssigned(Column, Row, Layer) then
+        IsHigher3DElevationAssigned(Column, Row, Layer, LocalModel) then
       begin
         Value := FSelectedScreenObject.
-          Higher3DElevations[Layer, Row, Column];
+          Higher3DElevations[LocalModel][Layer, Row, Column];
         lblHigher3rdDimensionCoordinate.Caption :=
           ExtraText + DirectionText + ': ' + FloatToStr(Value);
       end
@@ -439,10 +513,10 @@ var
         begin
           Indicies[VarIndex] := LayRowColIndex;
           if FSelectedScreenObject.
-            IsHigher3DElevationAssigned(Indicies[2], Indicies[1], Indicies[0]) then
+            IsHigher3DElevationAssigned(Indicies[2], Indicies[1], Indicies[0], LocalModel) then
           begin
             Value := FSelectedScreenObject.
-              Higher3DElevations[Indicies[0], Indicies[1], Indicies[2]];
+              Higher3DElevations[LocalModel][Indicies[0], Indicies[1], Indicies[2]];
             lblHigher3rdDimensionCoordinate.Caption :=
               ExtraText + DirectionText + ': ' + FloatToStr(Value)
               + ' on ' + VarLabel + IntToStr(LayRowColIndex+1);
@@ -475,10 +549,10 @@ var
     if cbShowThirdDValues.Checked then
     begin
       if FSelectedScreenObject.
-        IsLower3DElevationAssigned(Column, Row, Layer) then
+        IsLower3DElevationAssigned(Column, Row, Layer, LocalModel) then
       begin
         Value := FSelectedScreenObject.
-          Lower3DElevations[Layer, Row, Column];
+          Lower3DElevations[LocalModel][Layer, Row, Column];
         lblLower3rdDimensionCoordinate.Caption :=
           ExtraText + DirectionText + ': ' + FloatToStr(Value);
       end
@@ -521,10 +595,10 @@ var
         begin
           Indicies[VarIndex] := LayRowColIndex;
           if FSelectedScreenObject.
-            IsLower3DElevationAssigned(Indicies[2], Indicies[1], Indicies[0]) then
+            IsLower3DElevationAssigned(Indicies[2], Indicies[1], Indicies[0], LocalModel) then
           begin
             Value := FSelectedScreenObject.
-              Lower3DElevations[Indicies[0], Indicies[1], Indicies[2]];
+              Lower3DElevations[LocalModel][Indicies[0], Indicies[1], Indicies[2]];
             lblLower3rdDimensionCoordinate.Caption :=
               ExtraText + DirectionText + ': ' + FloatToStr(Value)
               + ' on ' + VarLabel + IntToStr(LayRowColIndex+1);
@@ -545,6 +619,7 @@ var
     end;
   end;
 begin
+  LocalModel := frmGoPhast.PhastModel.SelectedModel;
   if (frmGoPhast.PhastModel.SelectedScreenObjectCount = 1) then
   begin
     if (FSelectedScreenObject = nil)
@@ -555,55 +630,69 @@ begin
     lblSelectedObject.Caption := StrSelectedObject
       + ': ' + FSelectedScreenObject.Name;
 
-    Segment := FSelectedScreenObject.Segments.ClosestSegment(Location, 1);
-    case FSelectedScreenObject.ViewDirection of
-      vdTop:
-        begin
-          DirectionText := 'Z-coordinate';
-          if (Segment <> nil) and (Segment.Col = Column)
-            and (Segment.Row = Row) then
+    if FViewDirection = FSelectedScreenObject.ViewDirection then
+    begin
+      if FViewDirection = vdSide then
+      begin
+        temp := Location.x;
+        Location.x := Location.y;
+        Location.y := temp;
+      end;
+      Segment := FSelectedScreenObject.Segments[Model].ClosestSegment(Location, 1);
+      case FSelectedScreenObject.ViewDirection of
+        vdTop:
           begin
-            lblVertex.Caption := StrPriorVertex + IntToStr(Segment.VertexIndex + 1);
-            lblSection.Caption := 'Section ' + IntToStr(Segment.SectionIndex + 1);
-          end
-          else
-          begin
-            lblVertex.Caption := StrPriorVertex +' = ?';
-            lblSection.Caption := 'Section = ?';
+            DirectionText := 'Z-coordinate';
+            if (Segment <> nil) and (Segment.Col = Column)
+              and (Segment.Row = Row) then
+            begin
+              lblVertex.Caption := StrPriorVertex + IntToStr(Segment.VertexIndex + 1);
+              lblSection.Caption := 'Section ' + IntToStr(Segment.SectionIndex + 1);
+            end
+            else
+            begin
+              lblVertex.Caption := StrPriorVertex +' = ?';
+              lblSection.Caption := 'Section = ?';
+            end;
           end;
-        end;
-      vdFront:
-        begin
-          DirectionText := 'Y-coordinate';
-          if (Segment <> nil) and (Segment.Col = Column)
-            and (Segment.Layer = Layer) then
+        vdFront:
           begin
-            lblVertex.Caption := StrPriorVertex + IntToStr(Segment.VertexIndex + 1);
-            lblSection.Caption := 'Section ' + IntToStr(Segment.SectionIndex + 1);
-          end
-          else
-          begin
-            lblVertex.Caption := StrPriorVertex +' = ?';
-            lblSection.Caption := 'Section = ?';
+            DirectionText := 'Y-coordinate';
+            if (Segment <> nil) and (Segment.Col = Column)
+              and (Segment.Layer = Layer) then
+            begin
+              lblVertex.Caption := StrPriorVertex + IntToStr(Segment.VertexIndex + 1);
+              lblSection.Caption := 'Section ' + IntToStr(Segment.SectionIndex + 1);
+            end
+            else
+            begin
+              lblVertex.Caption := StrPriorVertex +' = ?';
+              lblSection.Caption := 'Section = ?';
+            end;
           end;
-        end;
-      vdSide:
-        begin
-          DirectionText := 'X-coordinate';
-          if (Segment <> nil)
-            and (Segment.Row = Row) and (Segment.Layer = Layer) then
+        vdSide:
           begin
-            lblVertex.Caption := StrPriorVertex + IntToStr(Segment.VertexIndex + 1);
-            lblSection.Caption := 'Section ' + IntToStr(Segment.SectionIndex + 1);
-          end
-          else
-          begin
-            lblVertex.Caption := StrPriorVertex +' = ?';
-            lblSection.Caption := 'Section = ?';
+            DirectionText := 'X-coordinate';
+            if (Segment <> nil)
+              and (Segment.Row = Row) and (Segment.Layer = Layer) then
+            begin
+              lblVertex.Caption := StrPriorVertex + IntToStr(Segment.VertexIndex + 1);
+              lblSection.Caption := 'Section ' + IntToStr(Segment.SectionIndex + 1);
+            end
+            else
+            begin
+              lblVertex.Caption := StrPriorVertex +' = ?';
+              lblSection.Caption := 'Section = ?';
+            end;
           end;
-        end;
+      else
+        Assert(False);
+      end;
+    end
     else
-      Assert(False);
+    begin
+      lblVertex.Caption := '';
+      lblSection.Caption := '';
     end;
 
 
@@ -658,6 +747,164 @@ begin
 
   FillVirtualStringTreeWithDataSets(virttreecomboDataSets.Tree,
     FDataSetDummyObjects, nil, nil);
+end;
+
+procedure TfrmGridValue.DisplayPathlineData(const Location: TPoint2D);
+var
+  PathLinePoint: TPathLinePoint;
+  APointer: Pointer;
+  Y: TFloat;
+  X: TFloat;
+  PathQuadTree: TRbwQuadTree;
+  PathLines: TPathLineReader;
+  DisplayPoint: Boolean;
+  ZoomBox: TQRbwZoomBox2;
+  ColIndex: Integer;
+  RowIndex: Integer;
+  PathLine: TPathLine;
+  FirstPoint: TPathLinePoint;
+  LastPoint: TPathLinePoint;
+  List: TList;
+  APathLinePoint: TPathLinePoint;
+  ALayer: Integer;
+begin
+  if (FPriorLocation.x = Location.x)
+    and (FPriorLocation.y = Location.Y)then
+  begin
+    Exit;
+  end;
+  FPriorLocation := Location;
+  PathLines := frmGoPhast.PhastModel.PathLines;
+  PathQuadTree := nil;
+  if PathLines.Visible then
+  begin
+    case FViewDirection of
+      vdTop:
+        PathQuadTree := PathLines.TopQuadTree;
+      vdFront:
+        PathQuadTree := PathLines.FrontQuadTree;
+      vdSide:
+        PathQuadTree := PathLines.SideQuadTree;
+    else
+      Assert(False);
+    end;
+  end;
+  tabPathline.TabVisible := PathLines.Visible and (PathQuadTree.Count > 0);
+  if tabPathline.TabVisible then
+  begin
+    X := Location.X;
+    Y := Location.Y;
+    PathQuadTree.FirstNearestPoint(X, Y, APointer);
+    PathLinePoint := APointer;
+    Assert(PathLinePoint <> nil);
+
+    DisplayPoint := False;
+    case FViewDirection of
+      vdTop:
+        begin
+          DisplayPoint := (Abs(FColumn+1 - PathLinePoint.Column) <= 1)
+            and (Abs(FRow+1 - PathLinePoint.Row) <= 1);
+        end;
+      vdFront:
+        begin
+          ALayer := frmGoPhast.PhastModel.
+            ModflowLayerToDataSetLayer(PathLinePoint.Layer);
+          DisplayPoint := (Abs(FColumn+1 - PathLinePoint.Column) <= 1)
+            and (Abs(FLayer - ALayer) <= 1);
+        end;
+      vdSide:
+        begin
+          ALayer := frmGoPhast.PhastModel.
+            ModflowLayerToDataSetLayer(PathLinePoint.Layer);
+          DisplayPoint := (Abs(FLayer - ALayer) <= 1)
+            and (Abs(FRow+1 - PathLinePoint.Row) <= 1);
+        end;
+      else Assert(False);
+    end;
+
+    if not DisplayPoint then
+    begin
+      ZoomBox := nil;
+      case FViewDirection of
+        vdTop: ZoomBox := frmGoPhast.frameTopView.ZoomBox;
+        vdFront: ZoomBox := frmGoPhast.frameFrontView.ZoomBox;
+        vdSide: ZoomBox := frmGoPhast.framesideView.ZoomBox;
+        else Assert(False);
+      end;
+      DisplayPoint :=
+        (Abs(ZoomBox.XCoord(X) - ZoomBox.XCoord(Location.X)) <= SelectionWidth)
+        and (Abs(ZoomBox.YCoord(Y) - ZoomBox.YCoord(Location.Y)) <= SelectionWidth);
+    end;
+
+    if DisplayPoint then
+    begin
+      PathLine := PathLinePoint.ParentLine;
+      FirstPoint :=PathLine.Points[0];
+      LastPoint :=PathLine.Points[PathLine.Points.Count -1];
+      List := TList.Create;
+      try
+        List.Add(nil);
+        List.Add(FirstPoint);
+        List.Add(LastPoint);
+        List.Add(PathLinePoint);
+        rdgPathline.BeginUpdate;
+        try
+          for ColIndex := Ord(plcFirst) to Ord(plcClosest) do
+          begin
+            APathLinePoint := List[ColIndex];
+            rdgPathline.Cells[ColIndex, Ord(plrX)] := FloatToStr(APathLinePoint.X);
+            rdgPathline.Cells[ColIndex, Ord(plrY)] := FloatToStr(APathLinePoint.Y);
+            rdgPathline.Cells[ColIndex, Ord(plrZ)] := FloatToStr(APathLinePoint.Z);
+            rdgPathline.Cells[ColIndex, Ord(plrXPrime)] := FloatToStr(APathLinePoint.XPrime);
+            rdgPathline.Cells[ColIndex, Ord(plrYPrime)] := FloatToStr(APathLinePoint.YPrime);
+            rdgPathline.Cells[ColIndex, Ord(plrLocalZ)] := FloatToStr(APathLinePoint.LocalZ);
+            rdgPathline.Cells[ColIndex, Ord(plrTime)] := FloatToStr(APathLinePoint.Time);
+            rdgPathline.Cells[ColIndex, Ord(plrColumn)] := IntToStr(APathLinePoint.Column);
+            rdgPathline.Cells[ColIndex, Ord(plrRow)] := IntToStr(APathLinePoint.Row);
+            rdgPathline.Cells[ColIndex, Ord(plrLayer)] := IntToStr(APathLinePoint.Layer);
+            rdgPathline.Cells[ColIndex, Ord(plrTimeStep)] := IntToStr(APathLinePoint.TimeStep);
+          end;
+        finally
+          rdgPathline.EndUpdate;
+        end;
+      finally
+        List.Free;
+      end;
+    end
+    else
+    begin
+      rdgPathline.BeginUpdate;
+      try
+        for ColIndex := 1 to rdgPathline.ColCount - 1 do
+        begin
+          for RowIndex := 1 to rdgPathline.RowCount - 1 do
+          begin
+            rdgPathline.Cells[ColIndex, RowIndex] := '';
+          end;
+        end;
+      finally
+        rdgPathline.EndUpdate;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmGridValue.InitializePathlineGrid;
+begin
+  rdgPathline.Cells[Ord(plcFirst), 0] := 'First';
+  rdgPathline.Cells[Ord(plcLast), 0] := 'Last';
+  rdgPathline.Cells[Ord(plcClosest), 0] := 'Closest';
+  rdgPathline.Cells[0, Ord(plrX)] := 'X';
+  rdgPathline.Cells[0, Ord(plrY)] := 'Y';
+  rdgPathline.Cells[0, Ord(plrZ)] := 'Z';
+  rdgPathline.Cells[0, Ord(plrXPrime)] := 'X''';
+  rdgPathline.Cells[0, Ord(plrYPrime)] := 'Y''';
+  rdgPathline.Cells[0, Ord(plrLocalZ)] := 'Local Z';
+  rdgPathline.Cells[0, Ord(plrTime)] := 'Time';
+  rdgPathline.Cells[0, Ord(plrColumn)] := 'Column';
+  rdgPathline.Cells[0, Ord(plrRow)] := 'Row';
+  rdgPathline.Cells[0, Ord(plrLayer)] := 'Layer';
+  rdgPathline.Cells[0, Ord(plrTimeStep)] := 'Time step';
 end;
 
 procedure TfrmGridValue.UpdatedSelectedObject;

@@ -68,7 +68,7 @@ type
     property ScreenObject: TObject read FScreenObject;
   public
     // @name creates an instance of @classname
-    constructor Create(Boundary: THobBoundary; Model,
+    constructor Create(Boundary: THobBoundary; Model: TBaseModel;
       ScreenObject: TObject);
     procedure EvaluateHeadObservations;
     // @name destroys the current instance of @classname.
@@ -91,10 +91,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -141,7 +144,7 @@ type
     FScreenObject: TObject;
     function GetMultiHeadItem(Index: integer): TMultiHeadItem;
   public
-    constructor Create(Boundary: THobBoundary; Model,
+    constructor Create(Boundary: THobBoundary; Model: TBaseModel;
       ScreenObject: TObject);
     property MultiHeadItems[Index: integer]: TMultiHeadItem read GetMultiHeadItem; default;
   end;
@@ -150,9 +153,7 @@ type
   // a single @link(TScreenObject).
   THobBoundary = class(TModflowScreenObjectProperty)
   private
-//    FPhastModel: TObject;
     FValues: THobCollection;
-//    FScreenObject: TObject;
     FObservationName: string;
     FLayerFractions: TMultiHeadCollection;
     FMultiObsMethod: TMultiObsMethod;
@@ -167,7 +168,7 @@ type
   public
     procedure Assign(Source: TPersistent); override;
     // @name creates an instance of @classname.
-    Constructor Create(Model, ScreenObject: TObject);
+    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     // @name destroys the current instance of @classname.  Do not call
     // @name directly.  Call Free instead.
     Destructor Destroy; override;
@@ -207,7 +208,7 @@ type
     procedure SetUpToDate(const Value: boolean); override;
   public
     procedure Clear; override;
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     // @name destroys the current instance of @classname.
     // Do not call @name directly. Call Free instead.
     destructor Destroy; override;
@@ -217,7 +218,7 @@ type
     // locations and values are stored in @link(TRealSparseDataSet)s
     // accessed through @link(TCustomTimeList.Items Items).
     procedure Initialize(ObservationValues: THobCollection;
-      ScreenObject: TObject); reintroduce;
+      ScreenObject: TObject; UseLgrEdgeCells: boolean); reintroduce;
     // If assigned, @name is called with @link(UpToDate) is set to False.
     property OnInvalidate: TNotifyEvent read FOnInvalidate write FOnInvalidate;
     property CellLists[Index: integer]: TObsCellList read GetCellList; default;
@@ -255,13 +256,13 @@ begin
   result := Values.HeadAnnotation;
 end;
 
-function THob_Cell.GetIntegerAnnotation(Index: integer): string;
+function THob_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function THob_Cell.GetIntegerValue(Index: integer): integer;
+function THob_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -272,7 +273,7 @@ begin
   result := Values.Cell.Layer;
 end;
 
-function THob_Cell.GetRealAnnotation(Index: integer): string;
+function THob_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -281,7 +282,7 @@ begin
   end;
 end;
 
-function THob_Cell.GetRealValue(Index: integer): double;
+function THob_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -317,6 +318,21 @@ begin
   Values.Restore(Decomp, Annotations);
 end;
 
+procedure THob_Cell.SetColumn(const Value: integer);
+begin
+  Values.Cell.Column := Value;
+end;
+
+procedure THob_Cell.SetLayer(const Value: integer);
+begin
+  Values.Cell.Layer := Value;
+end;
+
+procedure THob_Cell.SetRow(const Value: integer);
+begin
+  Values.Cell.Row := Value;
+end;
+
 { THobBoundary }
 
 procedure THobBoundary.Assign(Source: TPersistent);
@@ -343,7 +359,7 @@ begin
   Values.Clear;
 end;
 
-constructor THobBoundary.Create(Model, ScreenObject: TObject);
+constructor THobBoundary.Create(Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited;
 //  Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
@@ -550,7 +566,7 @@ begin
   end;
 end;
 
-constructor THobCollection.Create(Boundary: THobBoundary; Model,
+constructor THobCollection.Create(Boundary: THobBoundary; Model: TBaseModel;
   ScreenObject: TObject);
 begin
   inherited Create(THobItem, Model);
@@ -586,7 +602,7 @@ var
   CellList: TObsCellList;
   Cell : THob_Cell;
 begin
-  FObservationHeads.Initialize(self, ScreenObject);
+  FObservationHeads.Initialize(self, ScreenObject, True);
 
   if FObservationHeads.FCellList.Count > 0 then
   begin
@@ -605,7 +621,8 @@ begin
       begin
         FObservationRowOffset := -1000;
         FObservationColumnOffset := -1000;
-        frmErrorsAndWarnings.AddError(StrHeadObservationsError, LocalScreenObject.Name)
+        frmErrorsAndWarnings.AddError(FObservationHeads.Model,
+          StrHeadObservationsError, LocalScreenObject.Name)
       end
       else
       begin
@@ -656,7 +673,7 @@ begin
   FCellList.Clear;
 end;
 
-constructor TObservationTimeList.Create(Model: TObject);
+constructor TObservationTimeList.Create(Model: TBaseModel);
 begin
   inherited;
   FCellList := TObjectList.Create;
@@ -674,7 +691,7 @@ begin
 end;
 
 procedure TObservationTimeList.Initialize(ObservationValues: THobCollection;
-  ScreenObject: TObject);
+  ScreenObject: TObject; UseLgrEdgeCells: boolean);
 const
   ErrorRoot = 'Error: Duplicate head observation times';
   EarlyTimeWarning = 'Head observation times earlier than the beginning of the first stress period will be ignored.';
@@ -684,7 +701,7 @@ var
   Index: Integer;
   Time: double;
   DataArray: TCustomSparseDataSet;
-  PhastModel: TPhastModel;
+  LocalModel: TCustomModel;
   Grid: TModflowGrid;
   Value: double;
   StoredUpToDate: boolean;
@@ -706,12 +723,12 @@ begin
 
   LocalScreenObject := ScreenObject as TScreenObject;
   Assert(LocalScreenObject <> nil);
-  PhastModel := LocalScreenObject.Model as TPhastModel;
-  EarliestAllowedTime := PhastModel.ModflowFullStressPeriods[0].StartTime;
-  LatestAllowedTime := PhastModel.ModflowFullStressPeriods[
-    PhastModel.ModflowFullStressPeriods.Count-1].EndTime;
-  Assert(PhastModel <> nil);
-  StoredUpToDate := PhastModel.UpToDate;
+  LocalModel := Model as TCustomModel;
+  EarliestAllowedTime := LocalModel.ModflowFullStressPeriods[0].StartTime;
+  LatestAllowedTime := LocalModel.ModflowFullStressPeriods[
+    LocalModel.ModflowFullStressPeriods.Count-1].EndTime;
+  Assert(LocalModel <> nil);
+  StoredUpToDate := LocalModel.UpToDate;
   Times := TRealList.Create;
   try
     DuplicateTimes := '';
@@ -719,7 +736,7 @@ begin
     LateTimes := '';
     Times.Sorted := True;
     Clear;
-    Grid := PhastModel.ModflowGrid;
+    Grid := LocalModel.ModflowGrid;
     Assert(Grid <> nil);
 
     for Index := 0 to ObservationValues.Count - 1 do
@@ -747,17 +764,18 @@ begin
 
       Times.Add(Time);
       Value := ObservationValues.HobItems[Index].Head;
-      DataArray := TRealSparseDataSet.Create(PhastModel);
+      DataArray := TRealSparseDataSet.Create(LocalModel);
       Add(Time, DataArray);
       DataArray.EvaluatedAt := eaBlocks;
       DataArray.Orientation := dso3D;
       DataArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
         Grid.ColumnCount);
 
-      ActiveDataSet := PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+      ActiveDataSet := LocalModel.DataArrayManager.GetDataSetByName(rsActive);
       ActiveDataSet.Initialize;
 
-      LocalScreenObject.AssignNumericValueToDataSet(Grid, DataArray, Value);
+      LocalScreenObject.AssignNumericValueToDataSet(Grid, DataArray, Value,
+        Model);
       for LayerIndex := 0 to DataArray.LayerCount - 1 do
       begin
         for RowIndex := 0 to DataArray.RowCount - 1 do
@@ -784,22 +802,22 @@ begin
     begin
       DuplicateTimes := 'Error; Object = ' + LocalScreenObject.Name +
         ' Duplicate Times = ' +  DuplicateTimes;
-      frmErrorsAndWarnings.AddError(ErrorRoot, DuplicateTimes);
+      frmErrorsAndWarnings.AddError(Model, ErrorRoot, DuplicateTimes);
     end;
     if EarlyTimes <> '' then
     begin
       EarlyTimes := 'Error; Object = ' + LocalScreenObject.Name +
         ' Early Times = ' +  EarlyTimes;
-      frmErrorsAndWarnings.AddWarning(EarlyTimeWarning, EarlyTimes);
+      frmErrorsAndWarnings.AddWarning(Model, EarlyTimeWarning, EarlyTimes);
     end;
     if LateTimes <> '' then
     begin
       LateTimes := 'Error; Object = ' + LocalScreenObject.Name +
         ' Late Times = ' +  LateTimes;
-      frmErrorsAndWarnings.AddWarning(LateTimeWarning, LateTimes);
+      frmErrorsAndWarnings.AddWarning(Model, LateTimeWarning, LateTimes);
     end;
   finally
-    PhastModel.UpToDate := StoredUpToDate;
+    LocalModel.UpToDate := StoredUpToDate;
     Times.Free;
   end;
 end;
@@ -864,7 +882,7 @@ end;
 
 { TMultiHeadCollection }
 
-constructor TMultiHeadCollection.Create(Boundary: THobBoundary; Model,
+constructor TMultiHeadCollection.Create(Boundary: THobBoundary; Model: TBaseModel;
   ScreenObject: TObject);
 begin
   inherited Create(TMultiHeadItem, Model);
@@ -933,3 +951,4 @@ begin
 end;
 
 end.
+

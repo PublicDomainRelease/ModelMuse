@@ -48,8 +48,6 @@ type
     procedure rdgOutputColSize(Sender: TObject; ACol, PriorWidth: Integer);
     procedure rdgOutputHorizontalScroll(Sender: TObject);
     procedure FrameResize(Sender: TObject);
-    procedure rdgOutputMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure rdgOutputMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure seNumExportPeriodsChange(Sender: TObject);
@@ -350,13 +348,6 @@ procedure TframePackageSub.rdgOutputHorizontalScroll(Sender: TObject);
 begin
   inherited;
   LayoutPrintSaveControls;
-end;
-
-procedure TframePackageSub.rdgOutputMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  ChangeGridOptions(rdgOutput, Shift);
 end;
 
 procedure TframePackageSub.rdgOutputMouseUp(Sender: TObject;

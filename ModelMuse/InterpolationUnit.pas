@@ -299,6 +299,12 @@ begin
   end;
 end;
 
+function InvertPoint(APoint: TPoint2D): TPoint2D;
+begin
+  result.x := APoint.y;
+  result.y := APoint.x;
+end;
+
 { TNearest2DInterpolator }
 
 class function TNearest2DInterpolator.InterpolatorName: string;
@@ -349,6 +355,8 @@ var
   Compiler: TRbwParser;
   InnerIndex: integer;
   ListOfScreenObjects: TList;
+  LocalLocation: TPoint2D;
+  LocalAnisotropy: Real;
 begin
   SumWeights := 0;
   Sum := 0;
@@ -361,6 +369,16 @@ begin
     // override earlier ones, so if there is a tie, the later one
     // should win.
 
+    Assert(ListOfScreenObjects.Count > 0);
+    AScreenObject := ListOfScreenObjects[0];
+    LocalLocation := Location;
+    LocalAnisotropy := Anisotropy;
+    if AScreenObject.ViewDirection = vdSide then
+    begin
+      LocalLocation := InvertPoint(Location);
+      LocalAnisotropy := 1/Anisotropy
+    end;
+
     for Index := ListOfScreenObjects.Count - 1 downto 0 do
     begin
       AScreenObject := ListOfScreenObjects[Index];
@@ -369,7 +387,8 @@ begin
       Assert(DataSetIndex >= 0);
 
       ScreenObjectDistance := AScreenObject.DistanceToScreenObject(
-        Location, ClosestLocation, Anisotropy);
+        LocalLocation, ClosestLocation, LocalAnisotropy);
+
 
       ScreenObjectFunction := AScreenObject.DataSetFormulas[DataSetIndex];
 
@@ -455,14 +474,14 @@ begin
         end;
       end;
       UpdateCurrentScreenObject(AScreenObject);
-      UpdateCurrentSegment(AScreenObject.Segments.ClosestSegment(
-        ClosestLocation, Anisotropy));
+      UpdateCurrentSegment(AScreenObject.Segments[FModel].ClosestSegment(
+        ClosestLocation, LocalAnisotropy));
       AScreenObject.UpdateImportedValues(DataSet);
       EvaluateExpression(Compiler, Expression, AScreenObject);
 
       UpdateCurrentScreenObject(AScreenObject);
-      UpdateCurrentSegment(AScreenObject.Segments.ClosestSegment(
-        ClosestLocation, Anisotropy));
+      UpdateCurrentSegment(AScreenObject.Segments[FModel].ClosestSegment(
+        ClosestLocation, LocalAnisotropy));
       Value := Expression.DoubleResult;
       if ScreenObjectDistance = 0 then
       begin
@@ -621,7 +640,7 @@ begin
         Assert(frmGoPhast.Grid.LayerCount > 0);
         MaxX := frmGoPhast.Grid.RowPosition[frmGoPhast.Grid.RowCount];
         MinX := frmGoPhast.Grid.RowPosition[0];
-        MinX := frmGoPhast.Grid.HighestElevation * Anisotropy;
+        MaxY := frmGoPhast.Grid.HighestElevation * Anisotropy;
         MinY := frmGoPhast.Grid.LowestElevation * Anisotropy;
       end;
     dso3D:
@@ -641,9 +660,17 @@ begin
         if ScreenObject.Count > 0 then
         begin
           APoint := ScreenObject.Points[Random(ScreenObject.Count)];
-          if ScreenObject.ViewDirection = vdTop then
-          begin
-            APoint := frmGoPhast.Grid.RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
+          case ScreenObject.ViewDirection of
+            vdTop:
+              begin
+                APoint := frmGoPhast.Grid.
+                  RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
+              end;
+            vdFront: ; // do nothing
+            vdSide:
+              begin
+                APoint := InvertPoint(APoint);
+              end;
           end;
           APoint.Y := APoint.Y * Anisotropy;
           if APoint.x < MinX then
@@ -852,6 +879,10 @@ begin
         end;
       end;
       APoint := AScreenObject.Points[PointIndex];
+      if AScreenObject.ViewDirection = vdSide then
+      begin
+        APoint := InvertPoint(APoint);
+      end;
       FQuadTree.AddPoint(APoint.X, APoint.Y * Anisotropy, AScreenObject);
     end;
     AScreenObject.CacheSegments;
@@ -874,7 +905,9 @@ var
   IsBoundary: boolean;
   TopCell: T2DTopCell;
   NearestSegment: TCellElementSegment;
+  Model: TCustomModel;
 begin
+  Assert(DataSet <> nil);
   DataSetIndex := AScreenObject.IndexOfDataSet(DataSet);
   if DataSetIndex >= 0 then
   begin
@@ -892,7 +925,9 @@ begin
       AScreenObject.BoundaryDataSetFormulas[DataSetIndex];
   end;
 
-  Compiler := frmGoPhast.PhastModel.GetCompiler(
+  Model := DataSet.Model as TCustomModel;
+  Assert(FModel = Model);
+  Compiler := Model.GetCompiler(
     DataSet.Orientation, DataSet.EvaluatedAt);
   try
     Compiler.Compile(ScreenObjectFunction);
@@ -905,9 +940,9 @@ begin
 
   Expression := Compiler.CurrentExpression;
   VariablesUsed := Expression.VariablesUsed;
-  if frmGoPhast.ModelSelection = msPhast then
+  if Model.ModelSelection = msPhast then
   begin
-    Cell := frmGoPhast.PhastGrid.GetCell(Location,
+    Cell := Model.PhastGrid.GetCell(Location,
       AScreenObject.ViewDirection, DataSet.EvaluatedAt);
   end
   else
@@ -915,7 +950,7 @@ begin
     // With MODFLOW, the only 2D data sets are in the top view.
     Assert(DataSet.Orientation = dsoTop);
     Assert(AScreenObject.ViewDirection = vdTop);
-    TopCell := frmGoPhast.ModflowGrid.TopContainingCell(Location,
+    TopCell := Model.ModflowGrid.TopContainingCell(Location,
       DataSet.EvaluatedAt);
     Cell.Col := TopCell.Col;
     Cell.Row := TopCell.Row;
@@ -932,46 +967,47 @@ begin
   case DataSet.EvaluatedAt of
     eaBlocks:
       begin
-        if Cell.Col >= frmGoPhast.Grid.ColumnCount then
+        if Cell.Col >= Model.Grid.ColumnCount then
         begin
-          Cell.Col := frmGoPhast.Grid.ColumnCount-1;
+          Cell.Col := Model.Grid.ColumnCount-1;
         end;
-        if Cell.Row >= frmGoPhast.Grid.RowCount then
+        if Cell.Row >= Model.Grid.RowCount then
         begin
-          Cell.Row := frmGoPhast.Grid.RowCount-1;
+          Cell.Row := Model.Grid.RowCount-1;
         end;
-        if Cell.Lay >= frmGoPhast.Grid.LayerCount then
+        if Cell.Lay >= Model.Grid.LayerCount then
         begin
-          Cell.Lay := frmGoPhast.Grid.LayerCount-1;
+          Cell.Lay := Model.Grid.LayerCount-1;
         end;
       end;
     eaNodes:
       begin
-        if Cell.Col >= frmGoPhast.Grid.ColumnCount+1 then
+        if Cell.Col >= Model.Grid.ColumnCount+1 then
         begin
-          Cell.Col := frmGoPhast.Grid.ColumnCount;
+          Cell.Col := Model.Grid.ColumnCount;
         end;
-        if Cell.Row >= frmGoPhast.Grid.RowCount+1 then
+        if Cell.Row >= Model.Grid.RowCount+1 then
         begin
-          Cell.Row := frmGoPhast.Grid.RowCount;
+          Cell.Row := Model.Grid.RowCount;
         end;
-        if Cell.Lay >= frmGoPhast.Grid.LayerCount+1 then
+        if Cell.Lay >= Model.Grid.LayerCount+1 then
         begin
-          Cell.Lay := frmGoPhast.Grid.LayerCount;
+          Cell.Lay := Model.Grid.LayerCount;
         end;
       end;
     else Assert(False);
   end;
-  NearestSegment := AScreenObject.Segments.ClosestSegment(
+  NearestSegment := AScreenObject.Segments[FModel].ClosestSegment(
     Location, Anisotropy);
-  UpDateGlobalLocations(Cell.Col, Cell.Row, Cell.Lay, DataSet.EvaluatedAt);
+  UpDateGlobalLocations(Cell.Col, Cell.Row, Cell.Lay, DataSet.EvaluatedAt,
+    DataSet.Model);
   UpdateCurrentScreenObject(AScreenObject);
   UpdateCurrentSegment(NearestSegment);
   if VariablesUsed.Count > 0 then
   begin
     for Index := 0 to VariablesUsed.Count - 1 do
     begin
-      ADataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(
+      ADataSet := Model.DataArrayManager.GetDataSetByName(
         VariablesUsed[Index]);
       if ADataSet <> nil then
       begin
@@ -980,7 +1016,7 @@ begin
     end;
     for Index := 0 to VariablesUsed.Count - 1 do
     begin
-      ADataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(
+      ADataSet := Model.DataArrayManager.GetDataSetByName(
         VariablesUsed[Index]);
       if ADataSet <> nil then
       begin
@@ -1014,7 +1050,8 @@ begin
       end;
     end;
   end;
-  UpDateGlobalLocations(Cell.Col, Cell.Row, Cell.Lay, DataSet.EvaluatedAt);
+  UpDateGlobalLocations(Cell.Col, Cell.Row, Cell.Lay, DataSet.EvaluatedAt,
+    DataSet.Model);
   UpdateCurrentScreenObject(AScreenObject);
   UpdateCurrentSegment(NearestSegment);
   AScreenObject.UpdateImportedValues(DataSet);
@@ -1029,6 +1066,8 @@ var
   ScreenObjectDistance: real;
   X, Y: double;
   Data: TPointerArray;
+  LocalAnisotropy: Real;
+  LocalLocation: TPoint2D;
 begin
   result := nil;
 
@@ -1061,6 +1100,15 @@ begin
     Exit;
   end;
 
+  LocalAnisotropy := Anisotropy;
+  LocalLocation := Location;
+  if result.ViewDirection = vdSide then
+  begin
+    LocalAnisotropy := 1/Anisotropy;
+    LocalLocation := InvertPoint(Location);
+    ClosestLocation := InvertPoint(ClosestLocation);
+  end;
+
   // Check objects in reverse order because later objects should
   // override earlier ones, so if there is a tie, the later one
   // should win.
@@ -1069,8 +1117,8 @@ begin
     AScreenObject := FListOfTScreenObjects[Index];
     // ScreenObjectDistance and ClosestLocation are changed if and only
     // if IsAnyPointCloser returns True.
-    if AScreenObject.IsAnyPointCloser(Location, ScreenObjectDistance,
-      ClosestLocation, Anisotropy) then
+    if AScreenObject.IsAnyPointCloser(LocalLocation, ScreenObjectDistance,
+      ClosestLocation, LocalAnisotropy) then
     begin
       result := AScreenObject;
       if ScreenObjectDistance = 0 then
@@ -1140,6 +1188,10 @@ begin
           end;
         end;
         APoint := AScreenObject.Points[PointIndex];
+        if AScreenObject.ViewDirection = vdSide then
+        begin
+          APoint := InvertPoint(APoint);
+        end;
 
         StoreDataValue(Count, DataSet, APoint, AScreenObject);
         Inc(Count);
@@ -1175,6 +1227,7 @@ constructor TNearestPoint2DInterpolator.Create(AOwner: TComponent);
 begin
   inherited;
   FQuadTree := TRbwQuadTree.Create(self);
+//  FQuadTree.MaxPoints := 10;
 
 end;
 
@@ -1401,6 +1454,10 @@ begin
           end;
         end;
         APoint := AScreenObject.Points[PointIndex];
+        if AScreenObject.ViewDirection = vdSide then
+        begin
+          APoint := InvertPoint(APoint);
+        end;
         Point1.X := APoint.x;
         Point1.y := APoint.y * Anisotropy;
         Point2 := Point1;
@@ -1758,6 +1815,10 @@ begin
           end;
         end;
         APoint := AScreenObject.Points[PointIndex];
+        if AScreenObject.ViewDirection = vdSide then
+        begin
+          APoint := InvertPoint(APoint);
+        end;
         Point1.X := APoint.x;
         Point1.y := APoint.y * Anisotropy;
         Point2 := Point1;
@@ -1822,22 +1883,22 @@ begin
     ListOfScreenObjects.Free;
   end;
   GetLimits(MinY, MaxY, MinX, MaxX, DataSet);
-  case DataSet.Orientation of
-    dsoTop, dsoFront:
-      begin
+//  case DataSet.Orientation of
+//    dsoTop, dsoFront:
+//      begin
         FNatNeigh := TNaturalNeighborInterpolatorTripack.Create(
           XArray, YArray, ZArray, MinX, MinY, MaxX, MaxY);
-      end;
-    dsoSide:
-      begin
-        FNatNeigh := TNaturalNeighborInterpolatorTripack.Create(
-          YArray, XArray, ZArray, MinY, MinX, MaxY, MaxX);
-      end
-    else
-    begin
-      Assert(False);
-    end;
-  end;
+//      end;
+//    dsoSide:
+//      begin
+//        FNatNeigh := TNaturalNeighborInterpolatorTripack.Create(
+//          YArray, XArray, ZArray, MinY, MinX, MaxY, MaxX);
+//      end
+//    else
+//    begin
+//      Assert(False);
+//    end;
+//  end;
 end;
 
 class function TNaturalNeighborInterp.ValidReturnTypes: TRbwDataTypes;

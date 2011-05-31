@@ -14,7 +14,6 @@ type
     FDataType: TRbwDataType;
     FCached: boolean;
     FCleared: boolean;
-//    FCachedData: TMemoryStream;
     FTempFileName: string;
     function GetBooleanValues(Index: integer): boolean;
     function GetCount: integer;
@@ -31,7 +30,6 @@ type
     procedure WriteValues(Writer: TWriter);
   protected
     procedure DefineProperties(Filer: TFiler); override;
-    procedure RestoreData;
   public
     Constructor Create;
     Destructor Destroy; override;
@@ -53,6 +51,8 @@ type
     procedure Insert(Index: integer);
     procedure Clear;
     procedure CacheData;
+    procedure RestoreData;
+    procedure Reverse;
   published
     property DataType: TRbwDataType read FDataType write SetDataType;
     property Count: integer read GetCount write SetCount;
@@ -165,6 +165,47 @@ begin
     CachedData.Free;
   end;
   FCleared := False;
+end;
+
+procedure TValueArrayStorage.Reverse;
+var
+  Index: Integer;
+  TempR: Double;
+  TempI: Integer;
+  TempB: Boolean;
+  TempS: string;
+begin
+  for Index := 0 to Count div 2 - 1 do
+  begin
+    case DataType of
+      rdtDouble:
+        begin
+          TempR := RealValues[Index];
+          RealValues[Index] := RealValues[Count - 1 - Index];
+          RealValues[Count - 1 - Index] := TempR;
+        end;
+      rdtInteger:
+        begin
+          TempI := IntValues[Index];
+          IntValues[Index] := IntValues[Count - 1 - Index];
+          IntValues[Count - 1 - Index] := TempI;
+        end;
+      rdtBoolean:
+        begin
+          TempB := BooleanValues[Index];
+          BooleanValues[Index] := BooleanValues[Count - 1 - Index];
+          BooleanValues[Count - 1 - Index] := TempB;
+        end;
+      rdtString:
+        begin
+          TempS := StringValues[Index];
+          StringValues[Index] := StringValues[Count - 1 - Index];
+          StringValues[Count - 1 - Index] := TempS;
+        end;
+      else
+        Assert(False);
+    end;
+  end;
 end;
 
 procedure TValueArrayStorage.WriteValues(Writer: TWriter);

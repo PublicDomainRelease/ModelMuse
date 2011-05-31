@@ -84,6 +84,10 @@ object frameHeadObservations: TframeHeadObservations
     TabOrder = 2
     object tabTimes: TTabSheet
       Caption = 'Observation times'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Panel5: TPanel
         Left = 0
         Top = 0
@@ -200,9 +204,9 @@ object frameHeadObservations: TframeHeadObservations
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
         TabOrder = 2
         OnExit = rdgHeadsExit
-        OnMouseDown = rdgHeadsMouseDown
         OnSelectCell = rdgHeadsSelectCell
         OnSetEditText = rdgHeadsSetEditText
+        AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = True
@@ -324,7 +328,6 @@ object frameHeadObservations: TframeHeadObservations
             WordWrapCells = True
             AutoAdjustColWidths = False
           end>
-        OnEndUpdate = rdgHeadsEndUpdate
         ColWidths = (
           64
           64
@@ -336,6 +339,10 @@ object frameHeadObservations: TframeHeadObservations
     object tabLayers: TTabSheet
       Caption = 'Layers'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Panel4: TPanel
         Left = 0
         Top = 107
@@ -412,9 +419,9 @@ object frameHeadObservations: TframeHeadObservations
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
         TabOrder = 2
         OnExit = rdgLayersExit
-        OnMouseDown = rdgLayersMouseDown
         OnSelectCell = rdgLayersSelectCell
         OnSetEditText = rdgLayersSetEditText
+        AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = True

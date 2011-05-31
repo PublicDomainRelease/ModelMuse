@@ -114,7 +114,7 @@ inherited frmSelectObjects: TfrmSelectObjects
     Top = 0
     Width = 340
     Height = 191
-    ActivePage = tabTop
+    ActivePage = tabSide
     Align = alClient
     TabOrder = 1
     object tabTop: TTabSheet
@@ -152,7 +152,7 @@ inherited frmSelectObjects: TfrmSelectObjects
         Left = 0
         Top = 0
         Width = 332
-        Height = 159
+        Height = 158
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -177,7 +177,7 @@ inherited frmSelectObjects: TfrmSelectObjects
         Left = 0
         Top = 0
         Width = 332
-        Height = 159
+        Height = 158
         Align = alClient
         Checkboxes = True
         Columns = <

@@ -40,7 +40,7 @@ type
     // @name converts the entities from @link(FDxfObject) to
     // @link(TScreenObject)s.
     procedure SetData;
-    // @name is used to update @link(frmProgress).
+    // @name is used to update @link(frmProgressMM).
     procedure Think(const Sender: TObject; Message: string);
     { Private declarations }
   public
@@ -117,9 +117,9 @@ var
   UndoCreateScreenObject: TCustomUndo;
   ScreenObjectList: TList;
   PointIndex: integer;
-  DataSetName: string;
+  DataArrayName: string;
   Position: integer;
-  DataSet: TDataArray;
+  DataArray: TDataArray;
   EntityCount: Integer;
   LayerIndex: integer;
   ALayer: DXF_Layer;
@@ -171,10 +171,10 @@ begin
       frmProgressMM.pbProgress.Position := 0;
       frmProgressMM.ProgressLabelCaption := '0 out of '
         + IntToStr(EntityCount) + '.';
-      DataSetName := comboDataSets.Text;
+      DataArrayName := comboDataSets.Text;
 
-      DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
-      Assert(DataSet <> nil);
+      DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataArrayName);
+      Assert(DataArray <> nil);
       ScreenObjectList := TList.Create;
       //MultipleParts := false;
       try
@@ -229,10 +229,10 @@ begin
                           AScreenObject.AddPoint(ConvertPoint(Points[PointIndex]), False);
                         end;
                         ScreenObjectList.Add(AScreenObject);
-                        Position := AScreenObject.AddDataSet(DataSet);
+                        Position := AScreenObject.AddDataSet(DataArray);
                         Assert(Position >= 0);
                         AScreenObject.DataSetFormulas[Position]
-                          := FloatToStr(Entity.p1.z);
+                          := FortranFloatToStr(Entity.p1.z);
                       except on E: EScreenObjectError do
                         begin
                           Inc(InvalidPointCount);

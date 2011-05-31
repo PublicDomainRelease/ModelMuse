@@ -45,7 +45,7 @@ inherited frameZoneBudget: TframeZoneBudget
     RowCount = 2
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
     TabOrder = 1
-    OnMouseDown = rdgCompositeZonesMouseDown
+    AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = True

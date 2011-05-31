@@ -109,6 +109,7 @@ object frameSfrParamInstances: TframeSfrParamInstances
     TabOrder = 1
     OnExit = rdgSfrParamInstancesExit
     OnSelectCell = rdgSfrParamInstancesSelectCell
+    AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = True
@@ -181,7 +182,6 @@ object frameSfrParamInstances: TframeSfrParamInstances
         AutoAdjustColWidths = True
       end>
     OnEndUpdate = rdgSfrParamInstancesEndUpdate
-    ExplicitHeight = 238
   end
   object pnlLabel: TPanel
     Left = 0

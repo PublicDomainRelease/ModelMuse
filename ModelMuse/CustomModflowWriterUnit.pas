@@ -17,10 +17,6 @@ type
   // @name indicates whether the file in the name file is an input file
   // and output file or undetermined.
   TFileOption = (foNone, foInput, foOutput);
-  // @name is used in @link(TCustomTransientWriter.AssignTransient2DArray).
-  // @value(umAssign Replace existing values with new values.)
-  // @value(umAdd Add new values to existing values.)
-  TUpdateMethod = (umAssign, umAdd);
 
   {@name is used in @link(TCustomModflowWriter.CheckArray)
    @value(cvmGreater If the value in the array is greater than
@@ -62,23 +58,25 @@ type
   private
     // name is the file that is created by @classname.
     FFileStream: TFileStream;
-    // See @link(PhastModel).
-    FPhastModel: TCustomModel;
+    // See @link(Model).
+    FModel: TCustomModel;
     // @name is the time at which something was exported.
-    FExportTime: Extended;
+//    FExportTime: Extended;
+
     // @name writes a header for DataArray using either
     // @link(WriteConstantU2DINT) or @link(WriteU2DRELHeader).
     procedure WriteHeader(const DataArray: TDataArray;
       const ArrayName: string);
     // @name updates FExportTime if it has been at least 1/10
     // second since the last time FExportTime has been updated.
-    procedure UpdateExportTime;
+//    procedure UpdateExportTime;
   protected
+    // @name generates a comment line for a MODFLOW input file indentifying
+    // the file type
+    function File_Comment(const FileID: string): string;
     // @name generates a comment line for a MODFLOW input file indentifying
     // the package.
     function PackageID_Comment(APackage: TModflowPackageSelection): string;
-    {@name is the model to be exported.}
-    property PhastModel: TCustomModel read FPhastModel;
     // @name closes the MODFLOW input file that is being exported.
     // @seealso(OpenFile)
     procedure CloseFile;
@@ -115,9 +113,11 @@ type
     // responsibility to free TransientArray
     procedure WriteTransient2DArray(const Comment: string;
       DataTypeIndex: Integer; DataType: TRbwDataType; DefaultValue: Double;
-      List: TList; var TransientArray: TDataArray;
+      List: TList; AssignmentMethod: TUpdateMethod; AdjustForLGR: boolean; var TransientArray: TDataArray;
       FreeArray: boolean = True);
   public
+    {@name is the model to be exported.}
+    property Model: TCustomModel read FModel;
     // @name converts a real number represented as a string to always use
     // the period as the decimal separator.
     class Function FortranDecimal(NumberString : string) : string;
@@ -146,8 +146,8 @@ type
       const ErrorOrWarningMessage: string; CheckMethod: TCheckValueMethod;
       CheckValue: double; ErrorType: TErrorType);
     // @name creates and instance of @classname.
-    // @param(Model is the @link(TPhastModel) to be exported.)
-    Constructor Create(Model: TCustomModel); virtual;
+    // @param(Model is the @link(TCustomModel) to be exported.)
+    Constructor Create(AModel: TCustomModel); virtual;
     // @name writes an end of line to the output file.
     procedure NewLine;
     { @name writes one layer of DataArray to the output file.
@@ -325,6 +325,7 @@ type
 
   TCustomParameterTransientWriter = class(TCustomTransientWriter)
   protected
+    FParameterNames: TStringList;
     // @name is used to maintain a list of parameter instance names so that
     // duplicate instance names are not generated. @name is filled once
     // when exporting the parameters and again when exporting the
@@ -354,7 +355,8 @@ type
       DS5, D7PNameIname, D7PName: string); virtual; abstract;
     // @name returns the proper name for an instance of a parameter in
     // InstanceName. InstanceRoot should have been obtained from
-    // @link(GetInstanceRoot);
+    // @link(GetInstanceRoot). @name needs to return the same value of the
+    // instance name for each unique combination of TimeIndex and InstanceRoot;
     procedure GetInstanceName(var InstanceName: string; TimeIndex: Integer;
       InstanceRoot: string);
     // @name uses PARNAM to determine InstanceRoot which is then used in
@@ -373,7 +375,7 @@ type
       D7PName: string; TimeIndex: Integer; ParametersUsed: TStringList;
       ParameterValues: TList; IncludePrintCode: boolean);
     // @name is the number of parameters used by the package.
-    function ParameterCount: integer;
+    function ParameterCount: integer; virtual;
     // @name is an abstract method that returns the package being exported.
     function ParameterType: TParameterType; virtual; abstract;
     // @name is an abstract method used to write the cells for a parameter.
@@ -388,7 +390,8 @@ type
     // @param(VariableIdentifiers VariableIdentifiers is passed to
     //   @link(TCustomListWriter.WriteCell).)
     procedure WriteParameterCells(CellList: TValueCellList; NLST: Integer;
-      const VariableIdentifiers, DataSetIdentifier: string); virtual; abstract;
+      const VariableIdentifiers, DataSetIdentifier: string;
+      AssignmentMethod: TUpdateMethod); virtual; abstract;
     // @name writes the definitions of parameters including the lists of cells.
     // @param(DS3 DS3 identifies the data set containing
     //   PARNAM PARTYP Parval NLST  and those variable names.)
@@ -407,9 +410,9 @@ type
     // @param(ParameterType ParameterType is the type of parameter associated
     //   with the package being exported.)
     procedure WriteParameterDefinitions(const DS3, DS3Instances, DS4A,
-      DataSetIdentifier, VariableIdentifiers, ErrorRoot: string);
-      virtual; abstract;
-    procedure ClearTimeLists;
+      DataSetIdentifier, VariableIdentifiers, ErrorRoot: string;
+      AssignmentMethod: TUpdateMethod); virtual; abstract;
+    procedure ClearTimeLists(AModel: TBaseModel);
   public
     // @name creates and instance of @classname.
     Constructor Create(Model: TCustomModel); override;
@@ -465,7 +468,8 @@ type
     // @param(ParameterType ParameterType is the type of parameter associated
     //   with the package being exported.)
     procedure WriteParameterDefinitions(const DS3, DS3Instances, DS4A,
-      DataSetIdentifier, VariableIdentifiers, ErrorRoot: string); override;
+      DataSetIdentifier, VariableIdentifiers, ErrorRoot: string;
+      AssignmentMethod: TUpdateMethod); override;
     // @name writes the non-parameter cells and the names of the parameter
     // instance for each stress period.
     // @param(DataSetIdentifier DataSetIdentifier is passed to
@@ -554,7 +558,8 @@ type
     {@name assigns values to DataArray based on Param and
      the contents of CellList.}
     procedure EvaluateParameterCells(CellList: TValueCellList;
-      DataArray: TModflowBoundaryDisplayDataArray; Param: TModflowTransientListParameter);
+      DataArray: TModflowBoundaryDisplayDataArray;
+      Param: TModflowTransientListParameter; AssignmentMethod: TUpdateMethod);
     {@name assigns the layer where the array boundary condition will be applied
     based on the contents of List.
     List can be a @link(TValueCellList) or contain @link(TValueCellList)s
@@ -574,7 +579,7 @@ type
     // On exit, List contains a @link(TModflowBoundaryDisplayDataArray)
     // for each active parameter for each stress period.
     procedure EvaluateParameterDefinitions(List: TList;
-      const ErrorRoot: string);
+      const ErrorRoot: string; AssignmentMethod: TUpdateMethod);
     // Name is used in assigning the names of Multiplier array
     // and Zone array data sets.
     function Prefix: string; virtual; abstract;
@@ -583,9 +588,11 @@ type
     // NLST is not used in this version of @name.
     // DataSetIdentifier is not used in this version of @name.
     procedure WriteParameterCells(CellList: TValueCellList; NLST: integer;
-      const VariableIdentifiers, DataSetIdentifier: string);override;
+      const VariableIdentifiers, DataSetIdentifier: string;
+      AssignmentMethod: TUpdateMethod); override;
     procedure WriteParameterDefinitions(const DS3, DS3Instances, DS4A,
-      DataSetIdentifier, VariableIdentifiers, ErrorRoot: string);override;
+      DataSetIdentifier, VariableIdentifiers, ErrorRoot: string;
+      AssignmentMethod: TUpdateMethod); override;
     // @name is used to write the layer on which the array boundary
     // condition is applied for each cell in Lists.
     procedure WriteLayerArray(Lists: TList; const Comment: string);
@@ -600,6 +607,7 @@ type
     // paramater definitions.
     procedure WriteStressPeriods(const VariableIdentifiers, DataSetIdentifier,
       DS5, D7PNameIname, D7PName: string); override;
+    function ParameterCount: integer; override;
   public
     Constructor Create(Model: TCustomModel); override;
     // @name destroys the current instance of @classname.
@@ -618,23 +626,29 @@ type
 
   TNameFileWriter = class(TCustomModflowWriter)
   private
+    FNameFile: TStringList;
+    FListFileName: string;
     procedure CheckExternalFiles(const FileName: string);
-  public
-    class function Extension: string; override;
     // @name clears the name file.
-    Class Procedure ClearNameFile;
-    // Name saves the name file to a file.
-    Class procedure SaveNameFile(AFileName: string);
+    Procedure ClearNameFile;
     // @name adds lines to the name file to define the listing file,
     // the cell-by-cell flow file, and the files generated outside of
     // ModelMuse.
     procedure InitilizeNameFile(Const FileName: string;
-      out ListFileName: string);
+      out OutputListFileName: string);
+  public
+    Constructor Create(AModel: TCustomModel; const FileName: string); reintroduce;
+    Destructor Destroy; override;
+    class function Extension: string; override;
+    // Name saves the name file to a file.
+    procedure SaveNameFile(AFileName: string);
+    property NameFile: TStringList read FNameFile;
+    property ListFileName: string read FListFileName;
   end;
 
 // name writes a batch-file used to run MODFLOW.
 function WriteModflowBatchFile(ProgramLocations: TProgramLocations;
-  FileName: string; ListFile: string; OpenListFile: boolean;
+  FileName: string; ListFiles: TStringList; OpenListFile: boolean;
   Before, After: TStrings): string;
 
 // name writes a batch-file used to run MODPATH.
@@ -645,6 +659,11 @@ function WriteModPathBatchFile(ProgramLocations: TProgramLocations;
 function WriteZoneBudgetBatchFile(Model: TCustomModel;
   FileName: string; OpenListFile: boolean): string;
 
+procedure ResetMaxUnitNumber;
+function GetMaxUnitNumber: integer;
+
+procedure SetCurrentNameFileWriter(NameFileWriter: TNameFileWriter);
+
 const
   // @name is the comment assigned to locations in a @link(TDataArray) where
   // no value has been assigned but a value is still needed.
@@ -652,14 +671,36 @@ const
   StrDATABINARY = 'DATA(BINARY)';
   StrDATA = 'DATA';
 
+
 implementation
 
 uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmGoPhastUnit,
   frmProgressUnit, GlobalVariablesUnit, frmFormulaErrorsUnit, GIS_Functions,
-  ZoneBudgetWriterUnit, ModelMuseUtilities;
+  ZoneBudgetWriterUnit, ModelMuseUtilities, SparseDataSets, SparseArrayUnit;
+
+resourcestring
+  StrTheFollowingParame = 'The following %s parameters are being skipped ' +
+  'because they have no cells associated with them.';
 
 var
-  NameFile: TStringList;
+//  NameFile: TStringList;
+  MaxUnitNumber: integer = 0;
+  CurrentNameFileWriter: TNameFileWriter;
+
+procedure SetCurrentNameFileWriter(NameFileWriter: TNameFileWriter);
+begin
+  CurrentNameFileWriter := NameFileWriter;
+end;
+
+procedure ResetMaxUnitNumber;
+begin
+  MaxUnitNumber := 0;
+end;
+
+function GetMaxUnitNumber: integer;
+begin
+  result := MaxUnitNumber;
+end;
 
 procedure AddOpenListFileLine(ListFile: string; OpenListFile: Boolean;
   BatchFile: TStringList; ProgramLocations: TProgramLocations);
@@ -702,12 +743,14 @@ begin
 end;
 
 function WriteModflowBatchFile(ProgramLocations: TProgramLocations;
-  FileName: string; ListFile: string; OpenListFile: boolean;
+  FileName: string; ListFiles: TStringList; OpenListFile: boolean;
   Before, After: TStrings): string;
 var
   BatchFile: TStringList;
   AFileName: string;
   ADirectory: string;
+  ModflowLocation: string;
+  ListFileIndex: Integer;
 begin
   ADirectory:= GetCurrentDir;
   try
@@ -716,6 +759,18 @@ begin
     result := IncludeTrailingPathDelimiter(result)
       + 'RunModflow.Bat';
 
+    case frmGoPhast.PhastModel.ModelSelection of
+      msModflow:
+        begin
+          ModflowLocation := ProgramLocations.ModflowLocation;
+        end;
+      msModflowLGR:
+        begin
+          ModflowLocation := ProgramLocations.ModflowLgrLocation;
+        end;
+      else Assert(False);
+    end;
+
     BatchFile := TStringList.Create;
     try
       BatchFile.AddStrings(Before);
@@ -723,16 +778,20 @@ begin
       begin
         BatchFile.Add('call '
           + QuoteFileName(ExpandFileName(ProgramLocations.ModelMonitorLocation))
-          + ' -m ' + QuoteFileName(ExpandFileName(ProgramLocations.ModflowLocation))
+          + ' -m ' + QuoteFileName(ExpandFileName(ModflowLocation))
           + ' -n ' + QuoteFileName(FileName));
       end
       else
       begin
-        AFileName :=  QuoteFileName(ExpandFileName(ProgramLocations.ModflowLocation));
+        AFileName :=  QuoteFileName(ExpandFileName(ModflowLocation));
         BatchFile.Add(AFileName + ' ' + ExtractFileName(FileName) + ' /wait');
       end;
       BatchFile.AddStrings(After);
-      AddOpenListFileLine(ListFile, OpenListFile, BatchFile, ProgramLocations);
+      for ListFileIndex := 0 to ListFiles.Count - 1 do
+      begin
+        AddOpenListFileLine(ListFiles[ListFileIndex], OpenListFile,
+          BatchFile, ProgramLocations);
+      end;
 
       BatchFile.Add('pause');
       BatchFile.SaveToFile(result);
@@ -875,7 +934,8 @@ end;
 
 class procedure TCustomModflowWriter.AddNameFileComment(const Comment: string);
 begin
-  NameFile.Add('# ' + Comment);
+  Assert(CurrentNameFileWriter <> nil);
+  CurrentNameFileWriter.NameFile.Add('# ' + Comment);
 end;
 
 procedure TCustomModflowWriter.CheckArray(const DataArray: TDataArray;
@@ -921,14 +981,14 @@ begin
           + '; Row: ' + IntToStr(RowIndex+1)
           + '; Column: ' + IntToStr(ColIndex+1);
         case ErrorType of
-          etError: frmErrorsAndWarnings.AddError(ErrorOrWarningMessage, Error);
+          etError: frmErrorsAndWarnings.AddError(Model, ErrorOrWarningMessage, Error);
           etWarning: frmErrorsAndWarnings.
-            AddError(ErrorOrWarningMessage, Error);
+            AddError(Model, ErrorOrWarningMessage, Error);
         end;
       end;
     end;
   end;
-  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+  Model.DataArrayManager.AddDataSetToCache(DataArray);
 end;
 
 procedure TCustomModflowWriter.CloseFile;
@@ -936,22 +996,22 @@ begin
   FreeAndNil(FFileStream);
 end;
 
-procedure TCustomModflowWriter.UpdateExportTime;
-const
-  TenthSecond = 1/24/3600/10;
-begin
-  if (Now - FExportTime) > TenthSecond then
-  begin
-    FExportTime := Now;
-    Application.ProcessMessages;
-  end;
-end;
+//procedure TCustomModflowWriter.UpdateExportTime;
+//const
+//  TenthSecond = 1/24/3600/10;
+//begin
+//  if (Now - FExportTime) > TenthSecond then
+//  begin
+//    FExportTime := Now;
+//    Application.ProcessMessages;
+//  end;
+//end;
 
-constructor TCustomModflowWriter.Create(Model: TCustomModel);
+constructor TCustomModflowWriter.Create(AModel: TCustomModel);
 begin
   inherited Create;
-  FPhastModel := Model;
-  FExportTime := Now;
+  FModel := AModel;
+//  FExportTime := Now;
 end;
 
 class function TCustomModflowWriter.FileName(const AFileName: string): string;
@@ -1037,7 +1097,7 @@ end;
 
 procedure TCustomModflowWriter.NewLine;
 begin
-  WriteString(#13#10);
+  WriteString(sLineBreak);
 end;
 
 procedure TCustomModflowWriter.OpenFile(const FileName: string);
@@ -1182,7 +1242,7 @@ begin
   end;
   if CacheArray then
   begin
-    FPhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+    FModel.DataArrayManager.AddDataSetToCache(DataArray);
   end;
 end;
 
@@ -1249,7 +1309,7 @@ begin
       NewLine;
     end;
   end;
-  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+  Model.DataArrayManager.AddDataSetToCache(DataArray);
 end;
 
 procedure TCustomModflowWriter.WriteHeader(const DataArray: TDataArray;
@@ -1295,7 +1355,7 @@ begin
   if Length(Value) > 0 then
   begin
     FFileStream.Write(Value[1], Length(Value)*SizeOf(AnsiChar));
-    UpdateExportTime;
+//    UpdateExportTime;
   end;
 end;
 
@@ -1305,6 +1365,10 @@ class procedure TCustomModflowWriter.WriteToNameFile(const Ftype: string;
 var
   Line: string;
 begin
+  if UnitNumber > MaxUnitNumber then
+  begin
+    MaxUnitNumber := UnitNumber;
+  end;
   frmGoPhast.PhastModel.AddModelInputFile(FileName);
   if not RelativeFileName then
   begin
@@ -1322,12 +1386,13 @@ begin
         Line := Line + ' ' + 'REPLACE';
       end;
   end;
-  NameFile.Add(Line);
+  Assert(CurrentNameFileWriter <> nil);
+  CurrentNameFileWriter.NameFile.Add(Line);
 end;
 
 function TCustomModflowWriter.IPRN_Real: integer;
 begin
-  if PhastModel.ModflowOutputControl.PrintInputArrays then
+  if Model.ModflowOutputControl.PrintInputArrays then
   begin
     result := 12;
   end
@@ -1339,7 +1404,7 @@ end;
 
 function TCustomModflowWriter.IPRN_Integer: integer;
 begin
-  if PhastModel.ModflowOutputControl.PrintInputArrays then
+  if Model.ModflowOutputControl.PrintInputArrays then
   begin
     result := 5;
   end
@@ -1385,9 +1450,23 @@ end;
 
 { TNameFileWriter }
 
-class procedure TNameFileWriter.ClearNameFile;
+procedure TNameFileWriter.ClearNameFile;
 begin
   NameFile.Clear;
+end;
+
+constructor TNameFileWriter.Create(AModel: TCustomModel; const FileName: string);
+begin
+  inherited Create(AModel);
+  FNameFile := TStringList.Create;
+  SetCurrentNameFileWriter(self);
+  InitilizeNameFile(FileName, FListFileName);
+end;
+
+destructor TNameFileWriter.Destroy;
+begin
+  FNameFile.Free;
+  inherited;
 end;
 
 class function TNameFileWriter.Extension: string;
@@ -1418,9 +1497,9 @@ begin
     Splitter := TStringList.Create;
     try
       Splitter.Delimiter := #9;
-      for Index := 0 to PhastModel.ModflowNameFileLines.Count - 1 do
+      for Index := 0 to Model.ModflowNameFileLines.Count - 1 do
       begin
-        ALine := PhastModel.ModflowNameFileLines[Index];
+        ALine := Model.ModflowNameFileLines[Index];
         if (ALine <> '') and (ALine[1] <> '#') then
         begin
           Splitter.DelimitedText := ALine;
@@ -1440,10 +1519,10 @@ begin
               end;
               if InputFile then
               begin
-                frmErrorsAndWarnings.AddWarning(MissingFile, Fname);
+                frmErrorsAndWarnings.AddWarning(Model, MissingFile, Fname);
               end;
             end;
-            PhastModel.AddModelInputFile(ExpandFileName(Fname));
+            Model.AddModelInputFile(ExpandFileName(Fname));
           end;
         end;
       end;
@@ -1456,18 +1535,18 @@ begin
 end;
 
 procedure TNameFileWriter.InitilizeNameFile(const FileName: string;
-  out ListFileName: string);
+  out OutputListFileName: string);
 var
   CellFlowsName: string;
 begin
   ClearNameFile;
   AddNameFileComment('Name File for MODFLOW created on '
-    + DateToStr(Now) + ' by ' + PhastModel.ProgramName);
-  ListFileName := ChangeFileExt(FileName, '.lst');
-  WriteToNameFile(StrLIST, PhastModel.UnitNumbers.UnitNumber(StrLIST),
-    ListFileName, foOutput);
+    + DateToStr(Now) + ' by ' + Model.ProgramName);
+  OutputListFileName := ChangeFileExt(FileName, '.lst');
+  WriteToNameFile(StrLIST, Model.UnitNumbers.UnitNumber(StrLIST),
+    OutputListFileName, foOutput);
 
-  case PhastModel.ModflowOutputControl.SaveCellFlows of
+  case Model.ModflowOutputControl.SaveCellFlows of
     csfNone:
       begin
         // do nothing
@@ -1476,7 +1555,7 @@ begin
       begin
         CellFlowsName := ChangeFileExt(FileName, StrCbcExt);
         WriteToNameFile(StrDATABINARY,
-          PhastModel.UnitNumbers.UnitNumber(StrCBC), CellFlowsName, foOutput);
+          Model.UnitNumbers.UnitNumber(StrCBC), CellFlowsName, foOutput);
       end;
     csfListing:
       begin
@@ -1487,18 +1566,18 @@ begin
         Assert(False);
       end;
   end;
-  if PhastModel.ModflowNameFileLines.Count > 0 then
+  if Model.ModflowNameFileLines.Count > 0 then
   begin
     CheckExternalFiles(FileName);
     NameFile.Add('');
-    NameFile.Add('#Files generated outside of ' + PhastModel.ProgramName);
-    NameFile.AddStrings(PhastModel.ModflowNameFileLines);
+    NameFile.Add('#Files generated outside of ' + Model.ProgramName);
+    NameFile.AddStrings(Model.ModflowNameFileLines);
     NameFile.Add('');
-    NameFile.Add('#Files generated by ' + PhastModel.ProgramName);
+    NameFile.Add('#Files generated by ' + Model.ProgramName);
   end;
 end;
 
-class procedure TNameFileWriter.SaveNameFile(AFileName: string);
+procedure TNameFileWriter.SaveNameFile(AFileName: string);
 begin
 //  AFileName := ChangeFileExt(AFileName, '.nam');
   NameFile.SaveToFile(FileName(AFileName));
@@ -1506,14 +1585,14 @@ end;
 
 procedure TCustomModflowWriter.GetFlowUnitNumber(var UnitNumber: Integer);
 begin
-  case PhastModel.ModflowOutputControl.SaveCellFlows of
+  case Model.ModflowOutputControl.SaveCellFlows of
     csfNone:
       begin
         UnitNumber := 0;
       end;
     csfBinary:
       begin
-        UnitNumber := PhastModel.UnitNumbers.UnitNumber(StrCBC);
+        UnitNumber := Model.UnitNumbers.UnitNumber(StrCBC);
       end;
     csfListing:
       begin
@@ -1528,15 +1607,15 @@ end;
 
 { TCustomTransientWriter }
 
-procedure TCustomParameterTransientWriter.ClearTimeLists;
+procedure TCustomParameterTransientWriter.ClearTimeLists(AModel: TBaseModel);
 var
   ScreenObjectIndex: Integer;
   ScreenObject: TScreenObject;
   Boundary: TModflowBoundary;
 begin
-  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
-    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
     if ScreenObject.Deleted then
     begin
       Continue;
@@ -1544,7 +1623,7 @@ begin
     Boundary := GetBoundary(ScreenObject);
     if Boundary <> nil then
     begin
-      Boundary.ClearTimeLists;
+      Boundary.ClearTimeLists(AModel);
     end;
   end;
 
@@ -1577,14 +1656,18 @@ begin
     + 'set the values of either enclosed or intersected cells.';
   frmProgressMM.AddMessage('Evaluating '
     + Package.PackageIdentifier + ' data.');
-  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
-    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
     if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    if not ScreenObject.UsedModels.UsesModel(Model) then
     begin
       Continue;
     end;
@@ -1594,11 +1677,12 @@ begin
       if not ScreenObject.SetValuesOfEnclosedCells
         and not ScreenObject.SetValuesOfIntersectedCells then
       begin
-        frmErrorsAndWarnings.AddError(NoAssignmentErrorRoot, ScreenObject.Name);
+        frmErrorsAndWarnings.AddError(Model, NoAssignmentErrorRoot,
+          ScreenObject.Name);
       end;
       frmProgressMM.AddMessage('  Evaluating '
         + ScreenObject.Name);
-      Boundary.GetCellValues(FValues, FParamValues);
+      Boundary.GetCellValues(FValues, FParamValues, Model);
     end;
   end;
   for ParamIndex := 0 to FParamValues.Count - 1 do
@@ -1628,14 +1712,28 @@ procedure TCustomParameterTransientWriter.GetInstanceRoot(const PARNAM: string;
   ParamValues: TList; var InstanceRoot: string);
 var
   InstanceName: string;
+  PCount: Integer;
+  MaxStressPeriodString: string;
+  TerminalString: string;
 begin
+  PCount := FParameterNames.IndexOf(PARNAM);
+  if PCount < 0 then
+  begin
+    PCount := FParameterNames.Add(PARNAM);
+  end;
+  Inc(PCount);
+  MaxStressPeriodString := IntToStr(FModel.ModflowFullStressPeriods.Count);
+  TerminalString := IntToStr(PCount) + '_';
+
   // Make sure the maximum length of the name of instance is <= 10.
   InstanceRoot := PARNAM;
-  InstanceName := InstanceRoot + IntToStr(ParamValues.Count);
-  if Length(InstanceName) > 10 then
+  InstanceName := InstanceRoot + TerminalString + MaxStressPeriodString;
+  While(Length(InstanceName)) > 10 do
   begin
-    SetLength(InstanceRoot, 20 - Length(InstanceName));
+    SetLength(InstanceRoot, Length(InstanceRoot)-1);
+    InstanceName := InstanceRoot + TerminalString + MaxStressPeriodString;
   end;
+  InstanceRoot := InstanceRoot + TerminalString;
 end;
 
 procedure TCustomParameterTransientWriter.GetInstanceName(
@@ -1647,6 +1745,7 @@ begin
     or (FUsedInstanceNames.IndexOf(InstanceName) >= 0) do
   begin
     SetLength(InstanceRoot, Length(InstanceRoot) -1);
+    Assert(InstanceRoot <> '');
     InstanceName := InstanceRoot + IntToStr(TimeIndex + 1);
   end;
   FUsedInstanceNames.Add(InstanceName);
@@ -1722,7 +1821,7 @@ var
   WarningRoot: string;
   ErrorMessage: string;
 begin
-  ActiveDataArray := PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+  ActiveDataArray := Model.DataArrayManager.GetDataSetByName(rsActive);
   Assert(ActiveDataArray <> nil);
   ActiveDataArray.Initialize;
   if not ActiveDataArray.BooleanData[ValueCell.Layer,
@@ -1741,7 +1840,7 @@ begin
     ErrorMessage := 'Layer, Row, Col = [' + IntToStr(ValueCell.Layer+1)
       + ', ' + IntToStr(ValueCell.Row+1)
       + ', ' + IntToStr(ValueCell.Column+1) + ']';
-    frmErrorsAndWarnings.AddWarning(FWarningRoot, ErrorMessage);
+    frmErrorsAndWarnings.AddWarning(Model, FWarningRoot, ErrorMessage);
   end;
 end;
 
@@ -1789,7 +1888,7 @@ end;
 procedure TCustomListWriter.GetOption(var Option: string);
 begin
   Option := ' AUXILIARY IFACE';
-  if not PhastModel.ModflowOutputControl.PrintInputCellLists then
+  if not Model.ModflowOutputControl.PrintInputCellLists then
   begin
     Option := Option + ' NOPRINT';
   end;
@@ -1828,7 +1927,7 @@ begin
     begin
       Exit;
     end;
-    ClearTimeLists;
+    ClearTimeLists(Model);
 
     // Set PARTYP.
     case ParameterType of
@@ -1846,9 +1945,9 @@ begin
     ErrorMessage := Format(ErrorRoot, [Trim(PARTYP)]);
 
     // loop over the parameters
-    for ParamIndex := 0 to PhastModel.ModflowTransientParameters.Count - 1 do
+    for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
     begin
-      Param := PhastModel.ModflowTransientParameters[ParamIndex];
+      Param := Model.ModflowTransientParameters[ParamIndex];
       // Consider only those parameters that match the parameter type for the
       // current package.
       if Param.ParameterType = ParameterType then
@@ -1861,7 +1960,8 @@ begin
         begin
           if frmErrorsAndWarnings <> nil then
           begin
-            frmErrorsAndWarnings.AddWarning(ErrorMessage, Param.ParameterName);
+            frmErrorsAndWarnings.AddWarning(Model,
+              ErrorMessage, Param.ParameterName);
           end;
           Continue;
         end;
@@ -1946,7 +2046,8 @@ begin
 end;
 
 procedure TCustomListWriter.WriteParameterDefinitions(const DS3, DS3Instances,
-  DS4A, DataSetIdentifier, VariableIdentifiers, ErrorRoot: string);
+  DS4A, DataSetIdentifier, VariableIdentifiers, ErrorRoot: string;
+  AssignmentMethod: TUpdateMethod);
 var
   ParamIndex: Integer;
   Param: TModflowTransientListParameter;
@@ -1970,14 +2071,14 @@ begin
     Else Assert(False);
   end;
   ErrorMessage := Format(ErrorRoot, [Trim(PARTYP)]);
-  for ParamIndex := 0 to PhastModel.ModflowTransientParameters.Count - 1 do
+  for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
   begin
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
-    Param := PhastModel.ModflowTransientParameters[ParamIndex];
+    Param := Model.ModflowTransientParameters[ParamIndex];
     if Param.ParameterType = ParameterType then
     begin
       Position := FParamValues.IndexOf(Param.ParameterName);
@@ -1988,7 +2089,8 @@ begin
       begin
         if frmErrorsAndWarnings <> nil then
         begin
-          frmErrorsAndWarnings.AddWarning(ErrorMessage, Param.ParameterName);
+          frmErrorsAndWarnings.AddWarning(Model,
+            ErrorMessage, Param.ParameterName);
         end;
         Continue;
       end;
@@ -2019,7 +2121,7 @@ begin
       end;
       NewLine;
 
-      PhastModel.WritePValAndTemplate(PARNAM,PARVAL);
+      Model.WritePValAndTemplate(PARNAM,PARVAL);
 
       // Make sure the maximum length of the name of instance is <= 10.
       GetInstanceRoot(PARNAM, ParamValues, InstanceRoot);
@@ -2046,7 +2148,7 @@ begin
           end;
           // Data set 4b.
           WriteParameterCells(CellList, NLST, VariableIdentifiers,
-            DataSetIdentifier);
+            DataSetIdentifier, umAssign);
         end;
         CellList.Cache;
       end;
@@ -2113,7 +2215,8 @@ begin
         end;
         if (ITMP = 0) and (NP = 0) then
         begin
-          frmErrorsAndWarnings.AddWarning('No boundary conditions for the '
+          frmErrorsAndWarnings.AddWarning(Model,
+            'No boundary conditions for the '
             + Package.PackageIdentifier + ' in one or more stress periods.',
             'Stress Period ' + IntToStr(TimeIndex+1));
         end;
@@ -2164,44 +2267,84 @@ end;
 { TCustomTransientArrayWriter }
 procedure TCustomTransientArrayWriter.EvaluateParameterCells(
   CellList: TValueCellList; DataArray: TModflowBoundaryDisplayDataArray;
-  Param: TModflowTransientListParameter);
+  Param: TModflowTransientListParameter; AssignmentMethod: TUpdateMethod);
 var
   CellIndex: Integer;
   Cell: TValueCell;
   Annotation: string;
   NewAnnotation: string;
+  OldAnnotation: string;
+  AnnotationList: TStringList;
+  GroupedAnnotation: string;
+  GroupIndex: Integer;
 begin
   if CellList.Count = 0 then
   begin
     Exit;
   end;
 
-  Annotation := '';
-  for CellIndex := 0 to CellList.Count - 1 do
-  begin
-    Cell := CellList[CellIndex] as TValueCell;
-    DataArray.RealData[0, Cell.Row, Cell.Column] :=
-      Cell.RealValue[0] * Param.Value;
-    NewAnnotation := Cell.RealAnnotation[0]
-      + ' (multiplied by ' + Param.ParameterName + ' = '
-      + FloatToStr(Param.Value) + ')';
-    // reduce memory usage by preventing multiple copies of the same
-    // annotation from being saved.
-    if Annotation <> NewAnnotation then
+  AnnotationList := TStringList.Create;
+  try
+    AnnotationList.Sorted := True;
+    Annotation := '';
+    for CellIndex := 0 to CellList.Count - 1 do
     begin
-      Annotation := NewAnnotation;
+      Cell := CellList[CellIndex] as TValueCell;
+      if (AssignmentMethod = umAdd) and DataArray.IsValue[0, Cell.Row, Cell.Column] then
+      begin
+        DataArray.RealData[0, Cell.Row, Cell.Column] :=
+          DataArray.RealData[0, Cell.Row, Cell.Column]
+          + Cell.RealValue[0, Model] * Param.Value;
+      end
+      else
+      begin
+        DataArray.RealData[0, Cell.Row, Cell.Column] :=
+          Cell.RealValue[0, Model] * Param.Value;
+      end;
+      NewAnnotation := Cell.RealAnnotation[0, Model]
+        + ' (multiplied by ' + Param.ParameterName + ' = '
+        + FloatToStr(Param.Value) + ')';
+      // reduce memory usage by preventing multiple copies of the same
+      // annotation from being saved.
+      if Annotation <> NewAnnotation then
+      begin
+        Annotation := NewAnnotation;
+      end;
+      if (AssignmentMethod = umAdd) and DataArray.IsValue[0, Cell.Row, Cell.Column] then
+      begin
+        OldAnnotation := DataArray.Annotation[0, Cell.Row, Cell.Column];
+        GroupedAnnotation := OldAnnotation
+          + sLineBreak + 'Plus' + sLineBreak + Annotation;
+        // reduce memory usage by preventing the number of strings from
+        // getting out of hand.
+        GroupIndex := AnnotationList.IndexOf(GroupedAnnotation);
+        if GroupIndex >= 0 then
+        begin
+          GroupedAnnotation := AnnotationList[GroupIndex];
+        end
+        else
+        begin
+          AnnotationList.Add(GroupedAnnotation)
+        end;
+        DataArray.Annotation[0, Cell.Row, Cell.Column] := GroupedAnnotation;
+      end
+      else
+      begin
+        DataArray.Annotation[0, Cell.Row, Cell.Column] := Annotation;
+      end;
+      DataArray.CellCount[0, Cell.Row, Cell.Column] := 1;
     end;
-    DataArray.Annotation[0, Cell.Row, Cell.Column] := Annotation;
-    DataArray.CellCount[0, Cell.Row, Cell.Column] := 1;
-  end;
 
-  DataArray.UpToDate := True;
+    DataArray.UpToDate := True;
+  finally
+    AnnotationList.Free;
+  end;
 
 end;
 
 procedure TCustomTransientArrayWriter.WriteParameterCells(
   CellList: TValueCellList; NLST: integer; const VariableIdentifiers,
-  DataSetIdentifier: string);
+  DataSetIdentifier: string; AssignmentMethod: TUpdateMethod);
 var
   MultiplierArray: TDataArray;
   ZoneArray: TDataArray;
@@ -2211,18 +2354,40 @@ var
   ColIndex: Integer;
   IdenticalZoneArray: TDataArray;
   IdenticalMultiplierArray: TDataArray;
+  NewMultName: string;
+  MultPrefix: string;
+  ZonePrefix: string;
+  NewZoneName: string;
 begin
   if CellList.Count = 0 then
   begin
     Exit;
   end;
-  MultiplierArray := TDataArray.Create(PhastModel);
-  ZoneArray:= TDataArray.Create(PhastModel);
+  MultiplierArray := TDataArray.Create(Model);
+  ZoneArray:= TDataArray.Create(Model);
   try
-    MultiplierArray.Name := Prefix + '_Mult_'
-      + IntToStr(PhastModel.TransientMultiplierArrays.Count + 1);
-    ZoneArray.Name := Prefix + '_Zone_'
-      + IntToStr(PhastModel.TransientZoneArrays.Count + 1);
+    MultPrefix := Prefix + '_Mult_';
+    NewMultName := MultPrefix
+      + IntToStr(Model.TransientMultiplierArrays.Count + 1);
+    while (Length(NewMultName) > 10) and (Length(MultPrefix) > 0) do
+    begin
+      MultPrefix := Copy(MultPrefix, 1, Length(MultPrefix)-1);
+      NewMultName := MultPrefix
+        + IntToStr(Model.TransientMultiplierArrays.Count + 1);
+    end;
+
+    ZonePrefix := Prefix + '_Zone_';
+    NewZoneName := ZonePrefix
+      + IntToStr(Model.TransientZoneArrays.Count + 1);
+    while (Length(NewZoneName) > 10) and (Length(ZonePrefix) > 0) do
+    begin
+      ZonePrefix := Copy(ZonePrefix, 1, Length(ZonePrefix)-1);
+      NewZoneName := ZonePrefix
+        + IntToStr(Model.TransientZoneArrays.Count + 1);
+    end;
+
+    MultiplierArray.Name := NewMultName;
+    ZoneArray.Name := NewZoneName;
 
     MultiplierArray.Orientation := dsoTop;
     ZoneArray.Orientation := dsoTop;
@@ -2233,15 +2398,15 @@ begin
     MultiplierArray.DataType := rdtDouble;
     ZoneArray.DataType := rdtBoolean;
 
-    MultiplierArray.UpdateDimensions(1, PhastModel.ModflowGrid.RowCount,
-      PhastModel.ModflowGrid.ColumnCount);
-    ZoneArray.UpdateDimensions(1, PhastModel.ModflowGrid.RowCount,
-      PhastModel.ModflowGrid.ColumnCount);
+    MultiplierArray.UpdateDimensions(1, Model.ModflowGrid.RowCount,
+      Model.ModflowGrid.ColumnCount);
+    ZoneArray.UpdateDimensions(1, Model.ModflowGrid.RowCount,
+      Model.ModflowGrid.ColumnCount);
 
     // initialize multiplier and zone arrays.
-    for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+    for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
     begin
-      for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+      for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
       begin
         MultiplierArray.RealData[0,RowIndex,ColIndex] := 0;
         ZoneArray.BooleanData[0,RowIndex,ColIndex] := False;
@@ -2251,11 +2416,29 @@ begin
     for CellIndex := 0 to CellList.Count - 1 do
     begin
       Cell := CellList[CellIndex];
-      MultiplierArray.RealData[0, Cell.Row, Cell.Column] := Cell.RealValue[0];
+      case AssignmentMethod of
+        umAssign:
+          begin
+            MultiplierArray.RealData[0, Cell.Row, Cell.Column] :=
+              Cell.RealValue[0, Model];
+          end;
+        umAdd:
+          begin
+            MultiplierArray.RealData[0, Cell.Row, Cell.Column] :=
+              MultiplierArray.RealData[0, Cell.Row, Cell.Column]
+              + Cell.RealValue[0, Model];
+          end;
+        else Assert(False);
+      end;
       ZoneArray.BooleanData[0, Cell.Row, Cell.Column] := True;
     end;
 
     MultiplierArray.UpToDate := True;
+    if ParameterType in [ptRCH, ptEVT, ptETS] then
+    begin
+      Model.AdjustDataArray(MultiplierArray);
+      Model.AdjustDataArray(ZoneArray);
+    end;
     MultiplierArray.CheckIfUniform;
     if (MultiplierArray.IsUniform = iuTrue) and
       (MultiplierArray.RealData[0,0,0] = 1) then
@@ -2264,14 +2447,15 @@ begin
     end
     else
     begin
-      IdenticalMultiplierArray := PhastModel.
+      IdenticalMultiplierArray := Model.
         IndenticalTransientMultiplierArray(MultiplierArray);
       if IdenticalMultiplierArray = nil then
       begin
+        Assert(Length(MultiplierArray.Name) <= 10);
         WriteString(MultiplierArray.Name);
         WriteString(' ');
         MultiplierArray.CacheData;
-        PhastModel.TransientMultiplierArrays.Add(MultiplierArray);
+        Model.TransientMultiplierArrays.Add(MultiplierArray);
         MultiplierArray := nil;
       end
       else
@@ -2290,13 +2474,14 @@ begin
     end
     else
     begin
-      IdenticalZoneArray := PhastModel.IndenticalTransientZoneArray(ZoneArray);
+      IdenticalZoneArray := Model.IndenticalTransientZoneArray(ZoneArray);
       if IdenticalZoneArray = nil then
       begin
+        Assert(Length(ZoneArray.Name) <= 10);
         WriteString(ZoneArray.Name);
         WriteString(' 1');
         ZoneArray.CacheData;
-        PhastModel.TransientZoneArrays.Add(ZoneArray);
+        Model.TransientZoneArrays.Add(ZoneArray);
         ZoneArray := nil;
       end
       else
@@ -2317,7 +2502,7 @@ begin
 end;
 
 procedure TCustomTransientArrayWriter.EvaluateParameterDefinitions(List: TList;
-  const ErrorRoot: string);
+  const ErrorRoot: string; AssignmentMethod: TUpdateMethod);
 var
   ParamIndex: Integer;
   Param: TModflowTransientListParameter;
@@ -2331,6 +2516,7 @@ var
   ErrorMessage: string;
   DataArray: TModflowBoundaryDisplayDataArray;
   DataArrayList: TObjectList;
+  SkippedParamWarning: string;
 begin
   case ParameterType of
     ptUndefined..ptLPF_VKCB: Assert(False);
@@ -2339,11 +2525,13 @@ begin
     Else Assert(False);
   end;
   ErrorMessage := Format(ErrorRoot, [Trim(PARTYP)]);
-  frmErrorsAndWarnings.RemoveWarningGroup(ErrorMessage);
+  SkippedParamWarning := Format(StrTheFollowingParame, [Trim(PARTYP)]);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, ErrorMessage);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, SkippedParamWarning);
 
-  for ParamIndex := 0 to PhastModel.ModflowTransientParameters.Count - 1 do
+  for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
   begin
-    Param := PhastModel.ModflowTransientParameters[ParamIndex];
+    Param := Model.ModflowTransientParameters[ParamIndex];
     if Param.ParameterType = ParameterType then
     begin
       Position := ParamValues.IndexOf(Param.ParameterName);
@@ -2354,7 +2542,8 @@ begin
       begin
         if frmErrorsAndWarnings <> nil then
         begin
-          frmErrorsAndWarnings.AddWarning(ErrorMessage, Param.ParameterName);
+          frmErrorsAndWarnings.AddWarning(Model,
+            ErrorMessage, Param.ParameterName);
         end;
         Continue;
       end;
@@ -2362,43 +2551,92 @@ begin
       Assert(ParameterValues.Count > 0);
       // Data set 3
       GetNumCellsAndNumInstances(ParameterValues, NUMINST, NCLU);
-      NCLU := 1;
-      // Make sure the maximum length of the name of instance is <= 10.
-//      GetInstanceRoot(PARNAM, ParameterValues, InstanceRoot);
-      // Data sets 4a and 4b
-      for TimeIndex := 0 to ParameterValues.Count - 1 do
+      if NCLU > 0 then
       begin
-        if List.Count > TimeIndex then
+        NCLU := 1;
+        // Make sure the maximum length of the name of instance is <= 10.
+  //      GetInstanceRoot(PARNAM, ParameterValues, InstanceRoot);
+        // Data sets 4a and 4b
+        for TimeIndex := 0 to ParameterValues.Count - 1 do
         begin
-          DataArrayList := List[TimeIndex];
-        end
-        else
-        begin
-          DataArrayList:= TObjectList.Create;
-          List.Add(DataArrayList);
+          if List.Count > TimeIndex then
+          begin
+            DataArrayList := List[TimeIndex];
+          end
+          else
+          begin
+            DataArrayList:= TObjectList.Create;
+            List.Add(DataArrayList);
+          end;
+          CellList := ParameterValues[TimeIndex];
+          if CellList.Count > 0 then
+          begin
+            // Data set 4a
+            DataArray:= TModflowBoundaryDisplayDataArray.Create(Model);
+            DataArray.Orientation := dso3D;
+            DataArray.EvaluatedAt := eaBlocks;
+            DataArray.UpdateDimensions(Model.ModflowGrid.LayerCount,
+              Model.ModflowGrid.RowCount,
+              Model.ModflowGrid.ColumnCount);
+            DataArrayList.Add(DataArray);
+            EvaluateParameterCells(CellList, DataArray, Param, AssignmentMethod);
+            DataArray.CacheData;
+          end;
         end;
-        CellList := ParameterValues[TimeIndex];
-        if CellList.Count > 0 then
-        begin
-          // Data set 4a
-          DataArray:= TModflowBoundaryDisplayDataArray.Create(PhastModel);
-          DataArray.Orientation := dso3D;
-          DataArray.EvaluatedAt := eaBlocks;
-          DataArray.UpdateDimensions(PhastModel.ModflowGrid.LayerCount,
-            PhastModel.ModflowGrid.RowCount,
-            PhastModel.ModflowGrid.ColumnCount);
-          DataArrayList.Add(DataArray);
-          EvaluateParameterCells(CellList, DataArray, Param);
-          DataArray.CacheData;
-        end;
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddWarning(Model,
+          SkippedParamWarning, Param.ParameterName);
       end;
     end;
   end;
 end;
 
+function TCustomTransientArrayWriter.ParameterCount: integer;
+var
+  ParamIndex: Integer;
+  Param: TModflowTransientListParameter;
+  Position: Integer;
+  ParameterValues: TList;
+  NUMINST: Integer;
+  NCLU: Integer;
+begin
+  result := 0;
+  for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
+  begin
+    Param := Model.ModflowTransientParameters[ParamIndex];
+    if Param.ParameterType = ParameterType then
+    begin
+      Position := ParamValues.IndexOf(Param.ParameterName);
+      // The parameter name is erased from ParamValues in
+      // CountParametersAndParameterCells if there are no cells
+      // associated with it.
+      if Position < 0 then
+      begin
+//        if frmErrorsAndWarnings <> nil then
+//        begin
+//          frmErrorsAndWarnings.AddWarning(Model,
+//            ErrorMessage, Param.ParameterName);
+//        end;
+        Continue;
+      end;
+      ParameterValues := ParamValues.Objects[Position] as TList;
+      Assert(ParameterValues.Count > 0);
+      // Data set 3
+      GetNumCellsAndNumInstances(ParameterValues, NUMINST, NCLU);
+      if NCLU > 0 then
+      begin
+        Inc(result);
+      end;
+    end;
+  end;
+
+end;
+
 procedure TCustomTransientArrayWriter.WriteParameterDefinitions(
   const DS3, DS3Instances, DS4A, DataSetIdentifier,
-  VariableIdentifiers, ErrorRoot: string);
+  VariableIdentifiers, ErrorRoot: string; AssignmentMethod: TUpdateMethod);
 var
   ParamIndex: Integer;
   Param: TModflowTransientListParameter;
@@ -2414,6 +2652,7 @@ var
   InstanceName: string;
   PARTYP: string;
   ErrorMessage: string;
+  SkippedParamWarning: string;
 begin
   case ParameterType of
     ptUndefined..ptLPF_VKCB: Assert(False);
@@ -2422,14 +2661,17 @@ begin
     Else Assert(False);
   end;
   ErrorMessage := Format(ErrorRoot, [Trim(PARTYP)]);
-  for ParamIndex := 0 to PhastModel.ModflowTransientParameters.Count - 1 do
+  SkippedParamWarning := Format(StrTheFollowingParame, [Trim(PARTYP)]);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, ErrorMessage);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, SkippedParamWarning);
+  for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
   begin
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
-    Param := PhastModel.ModflowTransientParameters[ParamIndex];
+    Param := Model.ModflowTransientParameters[ParamIndex];
     if Param.ParameterType = ParameterType then
     begin
       Position := ParamValues.IndexOf(Param.ParameterName);
@@ -2438,10 +2680,8 @@ begin
       // associated with it.
       if Position < 0 then
       begin
-        if frmErrorsAndWarnings <> nil then
-        begin
-          frmErrorsAndWarnings.AddWarning(ErrorMessage, Param.ParameterName);
-        end;
+        frmErrorsAndWarnings.AddWarning(Model,
+          ErrorMessage, Param.ParameterName);
         Continue;
       end;
       ParameterValues := ParamValues.Objects[Position] as TList;
@@ -2454,52 +2694,60 @@ begin
       end;
       frmProgressMM.AddMessage('    Writing parameter: ' + PARNAM);
       GetNumCellsAndNumInstances(ParameterValues, NUMINST, NCLU);
-      NCLU := 1;
-      Parval := Param.Value;
-      WriteString(PARNAM);
-      WriteString(PARTYP);
-      WriteFloat(Parval);
-      WriteInteger(NCLU);
-      if NUMINST > 1 then
+      if NCLU > 0 then
       begin
-        WriteString(' INSTANCES');
-        WriteInteger(NUMINST);
-      end;
-      WriteString(DS3);
-      if NUMINST > 1 then
-      begin
-        WriteString(DS3Instances);
-      end;
-      NewLine;
-
-      PhastModel.WritePValAndTemplate(PARNAM,PARVAL);
-
-      // Make sure the maximum length of the name of instance is <= 10.
-      GetInstanceRoot(PARNAM, ParameterValues, InstanceRoot);
-      // Data sets 4a and 4b
-      for TimeIndex := 0 to ParameterValues.Count - 1 do
-      begin
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
+        NCLU := 1;
+        Parval := Param.Value;
+        WriteString(PARNAM);
+        WriteString(PARTYP);
+        WriteFloat(Parval);
+        WriteInteger(NCLU);
+        if NUMINST > 1 then
         begin
-          Exit;
+          WriteString(' INSTANCES');
+          WriteInteger(NUMINST);
         end;
-        CellList := ParameterValues[TimeIndex];
-        if CellList.Count > 0 then
+        WriteString(DS3);
+        if NUMINST > 1 then
         begin
-          // Data set 4a
-          if NUMINST > 1 then
+          WriteString(DS3Instances);
+        end;
+        NewLine;
+
+        Model.WritePValAndTemplate(PARNAM,PARVAL);
+
+        // Make sure the maximum length of the name of instance is <= 10.
+        GetInstanceRoot(PARNAM, ParameterValues, InstanceRoot);
+        // Data sets 4a and 4b
+        for TimeIndex := 0 to ParameterValues.Count - 1 do
+        begin
+          Application.ProcessMessages;
+          if not frmProgressMM.ShouldContinue then
           begin
-            GetInstanceName(InstanceName, TimeIndex, InstanceRoot);
-            WriteString(InstanceName);
-            WriteString(DS4A + ' (Parameter instance for stress period '
-              + IntToStr(TimeIndex+1) + ')');
-            NewLine;
+            Exit;
           end;
-          WriteParameterCells(CellList, NCLU, VariableIdentifiers,
-            DataSetIdentifier);
+          CellList := ParameterValues[TimeIndex];
+          if CellList.Count > 0 then
+          begin
+            // Data set 4a
+            if NUMINST > 1 then
+            begin
+              GetInstanceName(InstanceName, TimeIndex, InstanceRoot);
+              WriteString(InstanceName);
+              WriteString(DS4A + ' (Parameter instance for stress period '
+                + IntToStr(TimeIndex+1) + ')');
+              NewLine;
+            end;
+            WriteParameterCells(CellList, NCLU, VariableIdentifiers,
+              DataSetIdentifier, AssignmentMethod);
+          end;
+          CellList.Cache;
         end;
-        CellList.Cache;
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddWarning(Model,
+          SkippedParamWarning, Param.ParameterName);
       end;
     end;
   end;
@@ -2529,7 +2777,8 @@ procedure TCustomTransientArrayWriter.WriteLayerArray(Lists: TList;
 var
   Dummy: TDataArray;
 begin
-  WriteTransient2DArray(Comment, 0, rdtInteger, 1, Lists, Dummy);
+  WriteTransient2DArray(Comment, 0, rdtInteger, 1, Lists, umAssign,
+    False, Dummy);
 end;
 
 procedure TCustomTransientArrayWriter.UpdateLayerDataSet(List: TList;
@@ -2556,18 +2805,18 @@ var
     begin
       Cell := CellList[CellIndex] as TValueCell;
       LayerArray.IntegerData[0, Cell.Row, Cell.Column] :=
-        Cell.IntegerValue[DataTypeIndex];
+        Cell.IntegerValue[DataTypeIndex, Model];
       LayerArray.Annotation[0, Cell.Row, Cell.Column] :=
-        Cell.IntegerAnnotation[DataTypeIndex];
+        Cell.IntegerAnnotation[DataTypeIndex, Model];
     end;
   end;
 begin
-  LayerArray := TIntegerSparseDataSet.Create(PhastModel);
+  LayerArray := TIntegerSparseDataSet.Create(Model);
   try
     LayerArray.Orientation := dsoTop;
     LayerArray.EvaluatedAt := eaBlocks;
-    LayerArray.UpdateDimensions(PhastModel.ModflowGrid.LayerCount,
-      PhastModel.ModflowGrid.RowCount, PhastModel.ModflowGrid.ColumnCount);
+    LayerArray.UpdateDimensions(Model.ModflowGrid.LayerCount,
+      Model.ModflowGrid.RowCount, Model.ModflowGrid.ColumnCount);
 
     DefaultValue := 1;
     DataTypeIndex := 0;
@@ -2603,9 +2852,9 @@ begin
       end;
     end;
 
-    for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+    for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
     begin
-      for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+      for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
       begin
         if not LayerArray.IsValue[0, RowIndex, ColIndex] then
         begin
@@ -2614,16 +2863,16 @@ begin
         end;
       end;
     end;
-    for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+    for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
     begin
-      for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+      for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
       begin
         Assert(LayerArray.IsValue[0, RowIndex, ColIndex]);
         Layer := LayerArray.IntegerData[0, RowIndex, ColIndex];
         if (Layer >= 1) and
-          (Layer <= PhastModel.LayerStructure.ModflowLayerCount) then
+          (Layer <= Model.ModflowLayerCount) then
         begin
-          LayerIndex := PhastModel.LayerStructure.
+          LayerIndex := Model.
             ModflowLayerToDataSetLayer(Layer);
           if (LayerIndex >= 0) and (LayerIndex < DisplayArray.LayerCount) then
           begin
@@ -2795,7 +3044,8 @@ end;
 
 procedure TCustomModflowWriter.WriteTransient2DArray(const Comment: string;
   DataTypeIndex: Integer; DataType: TRbwDataType; DefaultValue: Double;
-  List: TList; var TransientArray: TDataArray; FreeArray: boolean = True);
+  List: TList; AssignmentMethod: TUpdateMethod; AdjustForLGR: boolean; var TransientArray: TDataArray;
+  FreeArray: boolean = True);
 var
   ColIndex: Integer;
   RowIndex: Integer;
@@ -2817,13 +3067,37 @@ var
       case DataType of
         rdtDouble:
           begin
-            ExportArray.RealData[0, Cell.Row, Cell.Column] :=
-              Cell.RealValue[DataTypeIndex];
+            case AssignmentMethod of
+              umAssign:
+                begin
+                  ExportArray.RealData[0, Cell.Row, Cell.Column] :=
+                    Cell.RealValue[DataTypeIndex, Model];
+                end;
+              umAdd:
+                begin
+                  ExportArray.RealData[0, Cell.Row, Cell.Column] :=
+                    ExportArray.RealData[0, Cell.Row, Cell.Column]
+                    + Cell.RealValue[DataTypeIndex, Model];
+                end;
+              else Assert(False);
+            end;
           end;
         rdtInteger:
           begin
-            ExportArray.IntegerData[0, Cell.Row, Cell.Column] :=
-              Cell.IntegerValue[DataTypeIndex];
+            case AssignmentMethod of
+              umAssign:
+                begin
+                  ExportArray.IntegerData[0, Cell.Row, Cell.Column] :=
+                    Cell.IntegerValue[DataTypeIndex, Model];
+                end;
+              umAdd:
+                begin
+                  ExportArray.IntegerData[0, Cell.Row, Cell.Column] :=
+                    ExportArray.IntegerData[0, Cell.Row, Cell.Column]
+                    + Cell.IntegerValue[DataTypeIndex, Model];
+                end;
+              else Assert(False);
+            end;
           end;
       else
         Assert(False);
@@ -2831,17 +3105,17 @@ var
     end;
   end;
 begin
-  ExportArray := TDataArray.Create(PhastModel);
+  ExportArray := TDataArray.Create(Model);
   try
     IntDefaultValue := Round(DefaultValue);
     ExportArray.Orientation := dsoTop;
     ExportArray.EvaluatedAt := eaBlocks;
     ExportArray.DataType := DataType;
-    ExportArray.UpdateDimensions(1, PhastModel.ModflowGrid.RowCount,
-      PhastModel.ModflowGrid.ColumnCount);
-    for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+    ExportArray.UpdateDimensions(1, Model.ModflowGrid.RowCount,
+      Model.ModflowGrid.ColumnCount);
+    for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
     begin
-      for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+      for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
       begin
         case DataType of
           rdtDouble:
@@ -2893,6 +3167,10 @@ begin
     end;
 
     ExportArray.UpToDate := True;
+    if AdjustForLGR then
+    begin
+      Model.AdjustDataArray(ExportArray);
+    end;
     WriteArray(ExportArray, 0, Comment, False);
   finally
     if FreeArray then
@@ -2915,12 +3193,16 @@ begin
   inherited;
   FParamValues := TStringList.Create;
   FUsedInstanceNames := TStringList.Create;
+  FUsedInstanceNames.Sorted := True;
+  // FParameterNames should not be sorted.
+  FParameterNames := TStringList.Create;
 end;
 
 destructor TCustomParameterTransientWriter.Destroy;
 var
   Index: Integer;
 begin
+  FParameterNames.Free;
   FUsedInstanceNames.Free;
   for Index := 0 to FParamValues.Count - 1 do
   begin
@@ -2986,13 +3268,13 @@ begin
       Cell := CellList[CellIndex] as TValueCell;
       if (Param = nil) or not (DataArrayIndex in ParameterIndicies) then
       begin
-        Value := Cell.RealValue[DataArrayIndex];
-        Annotation := Cell.RealAnnotation[DataArrayIndex];
+        Value := Cell.RealValue[DataArrayIndex, Model];
+        Annotation := Cell.RealAnnotation[DataArrayIndex, Model];
       end
       else
       begin
-        Value := Cell.RealValue[DataArrayIndex]*Param.Value;
-        Annotation := Cell.RealAnnotation[DataArrayIndex]
+        Value := Cell.RealValue[DataArrayIndex, Model]*Param.Value;
+        Annotation := Cell.RealAnnotation[DataArrayIndex, Model]
           + ' (multiplied by parameter '
           + Param.ParameterName + ' = ' + FloatToStr(Param.Value) + ')';
       end;
@@ -3046,12 +3328,17 @@ begin
   end;
 end;
 
+function TCustomModflowWriter.File_Comment(const FileID: string): string;
+begin
+  result := FileID + ' file created on '
+    + DateToStr(Now) + ' by ' + Model.ProgramName + ' version '
+    + ModelVersion + '.';
+end;
+
 function TCustomModflowWriter.PackageID_Comment(
   APackage: TModflowPackageSelection): string;
 begin
-  result := APackage.PackageIdentifier + ' file created on '
-    + DateToStr(Now) + ' by ' + PhastModel.ProgramName + ' version '
-    + ModelVersion + '.';
+  result := File_Comment(APackage.PackageIdentifier);
 end;
 
 procedure TCustomTransientWriter.UpdateTransient2DArray(
@@ -3134,9 +3421,9 @@ var
   RowIndex: Integer;
   ColIndex: Integer;
 begin
-  for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+  for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
   begin
-    for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+    for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
     begin
       DisplayArray.RealData[0, RowIndex, ColIndex] := DefaultValue;
       DisplayArray.Annotation[0, RowIndex, ColIndex] := StrNoValueAssigned;
@@ -3168,17 +3455,17 @@ var
               rdtDouble:
                 begin
                   DisplayArray.RealData[0, Cell.Row, Cell.Column]
-                    := Cell.RealValue[DataTypeIndex];
+                    := Cell.RealValue[DataTypeIndex, Model];
                   DisplayArray.Annotation[0, Cell.Row, Cell.Column]
-                    := Cell.RealAnnotation[DataTypeIndex];
+                    := Cell.RealAnnotation[DataTypeIndex, Model];
                   DisplayArray.CellCount[0, Cell.Row, Cell.Column] := 1;
                 end;
               rdtInteger:
                 begin
                   DisplayArray.RealData[0, Cell.Row, Cell.Column]
-                    := Cell.IntegerValue[DataTypeIndex];
+                    := Cell.IntegerValue[DataTypeIndex, Model];
                   DisplayArray.Annotation[0, Cell.Row, Cell.Column]
-                    := Cell.IntegerAnnotation[DataTypeIndex];
+                    := Cell.IntegerAnnotation[DataTypeIndex, Model];
                   DisplayArray.CellCount[0, Cell.Row, Cell.Column] := 1;
                 end;
             else
@@ -3190,13 +3477,13 @@ var
             case DataType of
               rdtDouble:
                 begin
-                  DisplayArray.AddDataValue(Cell.RealAnnotation[DataTypeIndex],
-                    Cell.RealValue[DataTypeIndex], Cell.Column, Cell.Row, 0);
+                  DisplayArray.AddDataValue(Cell.RealAnnotation[DataTypeIndex, Model],
+                    Cell.RealValue[DataTypeIndex, Model], Cell.Column, Cell.Row, 0);
                 end;
               rdtInteger:
                 begin
-                  DisplayArray.AddDataValue(Cell.IntegerAnnotation[DataTypeIndex],
-                    Cell.IntegerValue[DataTypeIndex], Cell.Column, Cell.Row, 0);
+                  DisplayArray.AddDataValue(Cell.IntegerAnnotation[DataTypeIndex, Model],
+                    Cell.IntegerValue[DataTypeIndex, Model], Cell.Column, Cell.Row, 0);
                 end;
             else
               Assert(False);
@@ -3267,9 +3554,9 @@ var
 begin
   EarlyTimes := '';
   LateTimes := '';
-  StartTime := PhastModel.ModflowStressPeriods[0].StartTime;
-  EndTime := PhastModel.ModflowFullStressPeriods[
-    PhastModel.ModflowFullStressPeriods.Count-1].EndTime;
+  StartTime := Model.ModflowStressPeriods[0].StartTime;
+  EndTime := Model.ModflowFullStressPeriods[
+    Model.ModflowFullStressPeriods.Count-1].EndTime;
   MaxObsTimeLength := Length(IntToStr(ObservationGroup.ObservationTimes.Count));
   for TimeIndex := 0 to ObservationGroup.ObservationTimes.Count - 1 do
   begin
@@ -3295,7 +3582,7 @@ begin
     OBSNAM := ObservationGroup.ObservationName + '_' + TimeString;
     if not UcodeObsNameOK(OBSNAM) then
     begin
-      frmErrorsAndWarnings.AddWarning(ObsNameWarningString, OBSNAM);
+      frmErrorsAndWarnings.AddWarning(Model, ObsNameWarningString, OBSNAM);
     end;
     TOFFSET := ObsTime.Time - StartTime;
     FLWOBS := ObsTime.ObservedValue;
@@ -3316,13 +3603,15 @@ begin
   begin
     EarlyTimes := 'Error; Flow Observaton = ' + ObservationGroup.ObservationName +
       ' Early Times = ' +  EarlyTimes;
-    frmErrorsAndWarnings.AddWarning(GetFluxType + EarlyTimeWarning, EarlyTimes);
+    frmErrorsAndWarnings.AddWarning(Model,
+      GetFluxType + EarlyTimeWarning, EarlyTimes);
   end;
   if LateTimes <> '' then
   begin
     LateTimes := 'Error; Flow Observaton = ' + ObservationGroup.ObservationName +
       ' Late Times = ' +  LateTimes;
-    frmErrorsAndWarnings.AddWarning(GetFluxType + LateTimeWarning, LateTimes);
+    frmErrorsAndWarnings.AddWarning(Model,
+      GetFluxType + LateTimeWarning, LateTimes);
   end;
 end;
 
@@ -3345,8 +3634,8 @@ begin
   begin
     ObsFactor := ObservationGroup.ObservationFactors[ObjectIndex];
     FactorFormula := ObsFactor.Factor;
-    PhastModel.rpThreeDFormulaCompiler.Compile(FactorFormula);
-    Expression := PhastModel.rpThreeDFormulaCompiler.CurrentExpression;
+    Model.rpThreeDFormulaCompiler.Compile(FactorFormula);
+    Expression := Model.rpThreeDFormulaCompiler.CurrentExpression;
     Assert(Expression.ResultType in [rdtDouble, rdtInteger]);
     DataSets := TList.Create;
     Variables := TList.Create;
@@ -3356,14 +3645,14 @@ begin
       DataSets.Capacity := VariablesUsed.Count;
       for VariableIndex := 0 to VariablesUsed.Count - 1 do
       begin
-        Observer := PhastModel.GetObserverByName(VariablesUsed[VariableIndex]);
+        Observer := Model.GetObserverByName(VariablesUsed[VariableIndex]);
         if Observer is TDataArray then
         begin
           DataArray := TDataArray(Observer);
           DataArray.Initialize;
           Variables.Add(VariablesUsed.Objects[VariableIndex]);
           DataSets.Add(DataArray);
-          PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+          Model.DataArrayManager.AddDataSetToCache(DataArray);
         end
         else
         begin
@@ -3376,7 +3665,7 @@ begin
     finally
       Variables.Free;
       DataSets.Free;
-      PhastModel.DataArrayManager.CacheDataArrays;
+      Model.DataArrayManager.CacheDataArrays;
     end;
   end;
 end;
@@ -3414,12 +3703,12 @@ begin
   begin
     Exit;
   end;
-  if PhastModel.PackageGeneratedExternally(PackageAbbreviation) then
+  if Model.PackageGeneratedExternally(PackageAbbreviation) then
   begin
     Exit;
   end;
 
-  frmErrorsAndWarnings.RemoveWarningGroup(ObsNameWarningString);;
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, ObsNameWarningString);;
 
   NQ_Pkg := 0;
   for ObsIndex := 0 to Observations.Count - 1 do
@@ -3435,10 +3724,10 @@ begin
   NQT_Pkg := 0;
 
   NameOfFile := ObservationFileName(AFileName);
-  WriteToNameFile(PackageAbbreviation, PhastModel.UnitNumbers.
+  WriteToNameFile(PackageAbbreviation, Model.UnitNumbers.
     UnitNumber(PackageAbbreviation), NameOfFile, foInput);
 
-  IU_Pkg_OBSV := PhastModel.UnitNumbers.UnitNumber(OutputUnitId);
+  IU_Pkg_OBSV := Model.UnitNumbers.UnitNumber(OutputUnitId);
   OutputName := ObservationOutputFileName(AFileName);
   WriteToNameFile(StrDATA, IU_Pkg_OBSV, OutputName, foOutput);
 
@@ -3451,7 +3740,7 @@ begin
         + ' input file can not be created.';
       DetailedMessage := 'In the boundary package related to the '
         + PackageAbbreviation + ' package, no boundaries were defined.';
-      frmErrorsAndWarnings.AddError(ErrorRoot, DetailedMessage);
+      frmErrorsAndWarnings.AddError(Model, ErrorRoot, DetailedMessage);
       Exit;
     end;
     List := Values[0];
@@ -3520,7 +3809,7 @@ var
   Column: Integer;
 begin
   // write zero-conductance cell.
-  Layer := PhastModel.LayerStructure.
+  Layer := Model.
     DataSetLayerToModflowLayer(ACell.Layer);
   Row := ACell.Row + 1;
   Column := ACell.Column + 1;
@@ -3550,7 +3839,7 @@ var
   DA_Column: Integer;
 begin
   // Write cell
-  Layer := PhastModel.LayerStructure.DataSetLayerToModflowLayer(ACell.Layer);
+  Layer := Model.DataSetLayerToModflowLayer(ACell.Layer);
   Row := ACell.Row + 1;
   Column := ACell.Column + 1;
   for Local_VariableIndex := 0 to Variables.Count - 1 do
@@ -3603,11 +3892,13 @@ begin
   except on E: ERbwParserError do
     begin
       ScreenObject := ObsFactor.ScreenObject as TScreenObject;
-      frmFormulaErrors.AddError(ScreenObject.Name,
-        '(Observation factor for the '#13#10 + ObservationPackage.PackageIdentifier + ')', Expression.Decompile, E.Message);
+      frmFormulaErrors.AddFormulaError(ScreenObject.Name,
+        '(Observation factor for the ' + sLineBreak
+        + ObservationPackage.PackageIdentifier + ')',
+        Expression.Decompile, E.Message);
 
       ObsFactor.Factor := '1.';
-      Compiler := PhastModel.rpThreeDFormulaCompiler;
+      Compiler := Model.rpThreeDFormulaCompiler;
 
       TempFormula := ObsFactor.Factor;
       Compiler.Compile(TempFormula);
@@ -3687,10 +3978,10 @@ procedure TCustomPackageWriter.IdentifyZoneClusters(var NCLU: Integer;
       LayerCount: Integer; Param: TModflowSteadyParameter);
 var
   MF_LayerIndex: Integer;
-  Group: TLayerGroup;
+//  Group: TLayerGroup;
   LayerUsed: Boolean;
   LayerIndex: Integer;
-  GroupIndex: Integer;
+  ModelLayerIndex: Integer;
   ZoneDataSet: TDataArray;
   ColIndex: Integer;
   RowIndex: Integer;
@@ -3698,29 +3989,30 @@ var
 begin
   SetLength(Clusters, LayerCount);
   SetLength(UniformLayers, LayerCount);
-  ZoneDataSet := PhastModel.DataArrayManager.GetDataSetByName(Param.ZoneName);
+  ZoneDataSet := Model.DataArrayManager.GetDataSetByName(Param.ZoneName);
   ZoneDataSet.Initialize;
   NCLU := 0;
   if Param.ParameterType = ptLPF_VKCB then
   begin
     MF_LayerIndex := 0;
-    for GroupIndex := 1 to PhastModel.LayerStructure.Count - 1 do
+    for ModelLayerIndex := 0 to Model.Grid.LayerCount - 1 do
     begin
-      Group := PhastModel.LayerStructure.LayerGroups[GroupIndex];
-      if Group.Simulated then
+//      Group := Model.LayerStructure.LayerGroups[ModelLayerIndex];
+      if Model.IsLayerSimulated(ModelLayerIndex) then
       begin
-        MF_LayerIndex := MF_LayerIndex + Group.ModflowLayerCount;
+//        MF_LayerIndex := MF_LayerIndex + Group.ModflowLayerCount;
+        Inc(MF_LayerIndex);
       end
       else
       begin
         LayerUsed := False;
-        LayerIndex := PhastModel.LayerStructure.ModflowLayerToDataSetLayer(MF_LayerIndex);
-        Inc(LayerIndex);
+        LayerIndex := ModelLayerIndex;
+//        Inc(LayerIndex);
         FirstValue := ZoneDataSet.BooleanData[LayerIndex, 0, 0];
         UniformLayers[NCLU] := True;
-        for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+        for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
         begin
-          for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+          for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
           begin
             if ZoneDataSet.BooleanData[LayerIndex, RowIndex, ColIndex] then
             begin
@@ -3751,13 +4043,13 @@ begin
     for MF_LayerIndex := 1 to LayerCount do
     begin
       LayerUsed := False;
-      LayerIndex := PhastModel.LayerStructure.
+      LayerIndex := Model.
         ModflowLayerToDataSetLayer(MF_LayerIndex);
       FirstValue := ZoneDataSet.BooleanData[LayerIndex, 0, 0];
       UniformLayers[NCLU] := True;
-      for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+      for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
       begin
-        for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+        for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
         begin
           if ZoneDataSet.BooleanData[LayerIndex, RowIndex, ColIndex] then
           begin
@@ -3782,7 +4074,7 @@ begin
       end;
     end;
   end;
-  PhastModel.DataArrayManager.AddDataSetToCache(ZoneDataSet);
+  Model.DataArrayManager.AddDataSetToCache(ZoneDataSet);
 end;
 
 { TCustomSolverWriter }
@@ -3791,7 +4083,7 @@ function TCustomSolverWriter.SolverFileGeneratedExternally: boolean;
 var
   Index: Integer;
 begin
-  if PhastModel.AlternateSolver then
+  if Model.AlternateSolver then
   begin
     result := True;
   end
@@ -3799,7 +4091,7 @@ begin
   begin
     for Index := 0 to Length(Solvers) - 1 do
     begin
-      result := PhastModel.PackageGeneratedExternally(Solvers[Index]);
+      result := Model.PackageGeneratedExternally(Solvers[Index]);
       if result then
       begin
         Exit;
@@ -3814,7 +4106,7 @@ function TCustomFlowPackageWriter.FlowPackageFileGeneratedExternally: boolean;
 var
   Index: Integer;
 begin
-  if PhastModel.AlternateFlowPackage then
+  if Model.AlternateFlowPackage then
   begin
     result := True;
   end
@@ -3822,7 +4114,7 @@ begin
   begin
     for Index := 0 to Length(FlowPackages) - 1 do
     begin
-      result := PhastModel.PackageGeneratedExternally(FlowPackages[Index]);
+      result := Model.PackageGeneratedExternally(FlowPackages[Index]);
       if result then
       begin
         Exit;
@@ -3844,7 +4136,7 @@ begin
   ITS1 := 0;
   ISP2 := 0;
   ITS2 := 0;
-  StressPeriod := PhastModel.ModflowFullStressPeriods[0];
+  StressPeriod := Model.ModflowFullStressPeriods[0];
   if StartTimeOK(StressPeriod.StartTime, PrintChoice) then
   begin
     ISP1 := 1;
@@ -3853,9 +4145,9 @@ begin
   else
   begin
     for StressPeriodIndex := 0 to
-      PhastModel.ModflowFullStressPeriods.Count - 1 do
+      Model.ModflowFullStressPeriods.Count - 1 do
     begin
-      StressPeriod := PhastModel.ModflowFullStressPeriods[StressPeriodIndex];
+      StressPeriod := Model.ModflowFullStressPeriods[StressPeriodIndex];
       if StressPeriod.EndTime > PrintChoice.StartTime then
       begin
         ISP1 := StressPeriodIndex + 1;
@@ -3891,19 +4183,19 @@ begin
       end;
     end;
   end;
-  StressPeriod := PhastModel.ModflowFullStressPeriods
-    [PhastModel.ModflowFullStressPeriods.Count - 1];
+  StressPeriod := Model.ModflowFullStressPeriods
+    [Model.ModflowFullStressPeriods.Count - 1];
   if PrintChoice.EndTime >= StressPeriod.EndTime then
   begin
-    ISP2 := PhastModel.ModflowFullStressPeriods.Count;
+    ISP2 := Model.ModflowFullStressPeriods.Count;
     ITS2 := StressPeriod.NumberOfSteps;
   end
   else
   begin
     for StressPeriodIndex := ISP1 - 1 to
-      PhastModel.ModflowFullStressPeriods.Count - 1 do
+      Model.ModflowFullStressPeriods.Count - 1 do
     begin
-      StressPeriod := PhastModel.ModflowFullStressPeriods[StressPeriodIndex];
+      StressPeriod := Model.ModflowFullStressPeriods[StressPeriodIndex];
       if EndTimeOK(StressPeriod.EndTime, PrintChoice) then
       begin
         ISP2 := StressPeriodIndex + 1;
@@ -3949,12 +4241,6 @@ function TCustomSubWriter.EndTimeOK(Time: double; PrintChoice: TCustomPrintItem)
 begin
   result := Time >= PrintChoice.EndTime - Abs(PrintChoice.EndTime)*Epsilon;
 end;
-
-initialization
-  NameFile:= TStringList.Create;
-
-finalization
-  NameFile.Free;
 
 end.
 

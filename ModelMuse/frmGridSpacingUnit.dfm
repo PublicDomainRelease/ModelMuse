@@ -25,10 +25,6 @@ inherited frmGridSpacing: TfrmGridSpacing
     TabOrder = 0
     object tabColumns: TTabSheet
       Caption = 'Columns (X'#39')'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlColumns: TPanel
         Left = 0
         Top = 173
@@ -61,7 +57,7 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 1
           Text = '100'
           DataType = dtReal
@@ -96,6 +92,7 @@ inherited frmGridSpacing: TfrmGridSpacing
         OnMouseUp = dgMouseUp
         OnSelectCell = dgSelectCell
         OnSetEditText = dgSetEditText
+        AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False
@@ -157,10 +154,6 @@ inherited frmGridSpacing: TfrmGridSpacing
     object tabRows: TTabSheet
       Caption = 'Rows (Y'#39')'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlRows: TPanel
         Left = 0
         Top = 173
@@ -193,7 +186,7 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 1
           Text = '100'
           DataType = dtReal
@@ -228,6 +221,7 @@ inherited frmGridSpacing: TfrmGridSpacing
         OnMouseUp = dgMouseUp
         OnSelectCell = dgSelectCell
         OnSetEditText = dgSetEditText
+        AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False
@@ -278,6 +272,7 @@ inherited frmGridSpacing: TfrmGridSpacing
             WordWrapCells = False
             AutoAdjustColWidths = False
           end>
+        ExplicitTop = 2
         RowHeights = (
           24
           24
@@ -289,10 +284,6 @@ inherited frmGridSpacing: TfrmGridSpacing
     object tabLayers: TTabSheet
       Caption = 'Layers (Z)'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlLayers: TPanel
         Left = 0
         Top = 173
@@ -325,7 +316,7 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 1
           Text = '10'
           DataType = dtReal
@@ -360,6 +351,7 @@ inherited frmGridSpacing: TfrmGridSpacing
         OnMouseUp = dgMouseUp
         OnSelectCell = dgSelectCell
         OnSetEditText = dgSetEditText
+        AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False
@@ -482,6 +474,25 @@ inherited frmGridSpacing: TfrmGridSpacing
         ' end and change the number of items to delete them.  Use Ctrl-V ' +
         'to paste.'
       WordWrap = True
+    end
+    object lblModel: TLabel
+      Left = 387
+      Top = 100
+      Width = 43
+      Height = 18
+      Anchors = [akTop, akRight]
+      Caption = 'Model'
+    end
+    object comboModel: TComboBox
+      Left = 8
+      Top = 97
+      Width = 373
+      Height = 26
+      Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
+      ItemHeight = 18
+      TabOrder = 0
+      OnChange = comboModelChange
     end
   end
 end

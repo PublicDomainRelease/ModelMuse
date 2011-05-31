@@ -295,8 +295,12 @@ begin
   end;
   if ShouldRefresh then
   begin
-    UpdateScreenObjects;
-    RefreshListOfObjects;
+    FSettingData := True;
+    try
+      SetCheckStates;
+    finally
+      FSettingData := False;
+    end;
   end;
 end;
 

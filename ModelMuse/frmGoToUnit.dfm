@@ -25,10 +25,6 @@ inherited frmGoTo: TfrmGoTo
       HelpType = htKeyword
       HelpKeyword = 'The_Position_Tab'
       Caption = 'Position'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         288
         199)
@@ -79,7 +75,7 @@ inherited frmGoTo: TfrmGoTo
         Height = 28
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 0
         Text = '0'
         DataType = dtReal
@@ -93,7 +89,7 @@ inherited frmGoTo: TfrmGoTo
         Height = 28
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 1
         Text = '0'
         DataType = dtReal
@@ -107,7 +103,7 @@ inherited frmGoTo: TfrmGoTo
         Height = 28
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 2
         Text = '0'
         DataType = dtReal
@@ -121,7 +117,7 @@ inherited frmGoTo: TfrmGoTo
         Height = 28
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 3
         Text = '0'
         DataType = dtReal
@@ -135,7 +131,7 @@ inherited frmGoTo: TfrmGoTo
         Height = 28
         Cursor = crIBeam
         Anchors = [akLeft, akTop, akRight]
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 4
         Text = '0'
         DataType = dtReal
@@ -148,40 +144,43 @@ inherited frmGoTo: TfrmGoTo
       HelpKeyword = 'The_Element_Tab'
       Caption = 'Element'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         288
         199)
       object lblCol: TLabel
-        Left = 226
-        Top = 9
+        Left = 221
+        Top = 41
         Width = 53
         Height = 18
         Anchors = [akTop, akRight]
         Caption = 'Column'
       end
       object lblRow: TLabel
-        Left = 226
-        Top = 41
+        Left = 221
+        Top = 73
         Width = 31
         Height = 18
         Anchors = [akTop, akRight]
         Caption = 'Row'
       end
       object lblLay: TLabel
-        Left = 226
-        Top = 73
+        Left = 221
+        Top = 105
         Width = 39
         Height = 18
         Anchors = [akTop, akRight]
         Caption = 'Layer'
       end
+      object lblModel: TLabel
+        Left = 221
+        Top = 12
+        Width = 43
+        Height = 18
+        Caption = 'Model'
+      end
       object seCol: TJvSpinEdit
-        Left = 8
-        Top = 9
+        Left = 3
+        Top = 41
         Width = 212
         Height = 26
         ButtonKind = bkClassic
@@ -191,8 +190,8 @@ inherited frmGoTo: TfrmGoTo
         TabOrder = 0
       end
       object seRow: TJvSpinEdit
-        Left = 8
-        Top = 40
+        Left = 3
+        Top = 72
         Width = 212
         Height = 26
         ButtonKind = bkClassic
@@ -202,8 +201,8 @@ inherited frmGoTo: TfrmGoTo
         TabOrder = 1
       end
       object seLayer: TJvSpinEdit
-        Left = 8
-        Top = 71
+        Left = 3
+        Top = 103
         Width = 212
         Height = 26
         ButtonKind = bkClassic
@@ -212,16 +211,23 @@ inherited frmGoTo: TfrmGoTo
         Value = 1.000000000000000000
         TabOrder = 2
       end
+      object comboModel: TComboBox
+        Left = 3
+        Top = 9
+        Width = 212
+        Height = 26
+        Style = csDropDownList
+        Anchors = [akLeft, akTop, akRight]
+        ItemHeight = 18
+        TabOrder = 3
+        OnChange = comboModelChange
+      end
     end
     object tabObject: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'The_Object_Tab'
       Caption = 'Object'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lvScreenObjects: TListView
         Left = 0
         Top = 0
@@ -249,7 +255,7 @@ inherited frmGoTo: TfrmGoTo
           Top = 8
           Width = 185
           Height = 31
-          Caption = 'Select Object'
+          Caption = 'Select object'
           TabOrder = 0
         end
       end
@@ -259,10 +265,6 @@ inherited frmGoTo: TfrmGoTo
       HelpKeyword = 'The_Image_Tab'
       Caption = 'Image'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lvImages: TListView
         Left = 0
         Top = 0

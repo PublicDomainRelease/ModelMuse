@@ -27,6 +27,7 @@ object frameFluxObs: TframeFluxObs
     RowCount = 2
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
     TabOrder = 0
+    AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = True
@@ -98,7 +99,6 @@ object frameFluxObs: TframeFluxObs
         WordWrapCells = False
         AutoAdjustColWidths = False
       end>
-    ExplicitWidth = 465
     ColWidths = (
       20
       20

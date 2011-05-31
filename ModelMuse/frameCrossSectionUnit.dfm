@@ -16,6 +16,7 @@ object frameCrossSection: TframeCrossSection
     RowCount = 9
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
     TabOrder = 0
+    AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = False

@@ -43,7 +43,7 @@ type
     ForwardOne: TMenuItem;
     // @name: TMenuItem;
     // See @link(HideClick).
-    Hide: TMenuItem;
+    miHide: TMenuItem;
     // @name: TRbwModelCube;
     // @name allows the user to change the selected column, row, or layer
     // by clicking on the model cube.
@@ -96,6 +96,7 @@ type
     ShowAll1: TMenuItem;
     miMergeObjects: TMenuItem;
     miEditSelectedObjects: TMenuItem;
+    miInvertSelectedVertices: TMenuItem;
     // @name allows the user to move selected objects back one
     // in the list of objects so that they move behind one other object.
     procedure BackOneClick(Sender: TObject);
@@ -103,7 +104,7 @@ type
     // in the list of objects so that they move forward of one other object.
     procedure ForwardOneClick(Sender: TObject);
     // @name hides the selected @link(TScreenObject)s.
-    procedure HideClick(Sender: TObject);
+    procedure miHideClick(Sender: TObject);
     // @name draws a black rectangle outlining the @link(ModelCube) component.
     procedure ModelCubePaint(Sender: TObject);
     // @name enables or disables @link(ToFront), @link(ToBack),
@@ -185,6 +186,7 @@ type
     procedure ZoomBoxMagnificationChanged(Sender: TObject);
     procedure ModelCubeMouseEnter(Sender: TObject);
     procedure ModelCubeMouseLeave(Sender: TObject);
+    procedure miInvertSelectedVerticesClick(Sender: TObject);
   private
     MouseStartX: integer;
     MouseStartY: integer;
@@ -220,7 +222,8 @@ type
       const Location: TPoint2D);
     procedure UpdateStatusBarSideNodeDataSet(Row, Layer: Integer; const Location: TPoint2D);
     procedure ShowCurrentValue(DataSet: TDataArray; const NameToDisplay: string;
-      Column, Row, Layer: Integer; const Location: TPoint2D);
+      Column, Row, Layer, GlobalColumn, GlobalRow, GlobalLayer: Integer;
+      const Location: TPoint2D);
     procedure HideScreenObjects(HideSelected: Boolean);
     procedure AllowBitmapsToBeDisplayed;
   public
@@ -659,7 +662,15 @@ var
   Column, Row, Layer: integer;
   DataSet: TDataArray;
 begin
-  if (frmGoPhast.phastModel.ComponentState * [csLoading, csReading]) <> [] then
+  if (frmGoPhast.PhastModel.ComponentState * [csLoading, csReading]) <> [] then
+  begin
+    Exit;
+  end;
+  if frmGoPhast.PhastModel.SelectedModel = nil then
+  begin
+    Exit;
+  end;
+  if frmGoPhast.PhastModel.SelectedModel.Grid = nil then
   begin
     Exit;
   end;
@@ -676,14 +687,14 @@ begin
   case ViewDirection of
     vdTop:
       begin
-        DataSet := frmGoPhast.Grid.TopDataSet;
+        DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.TopDataSet;
         if (DataSet = nil) or (DataSet.EvaluatedAt = eaBlocks) then
         begin
           // Get the column and row containing the current cursor position.
           GetRowCol(APoint, Row, Column);
           if (Column >= 0) and (Row >= 0)
-            and (Column < frmGoPhast.Grid.ColumnCount)
-            and (Row < frmGoPhast.Grid.RowCount) then
+            and (Column < frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount)
+            and (Row < frmGoPhast.PhastModel.SelectedModel.Grid.RowCount) then
           begin
             // If the cursor is over the grid,
             // display the column and row number
@@ -704,8 +715,8 @@ begin
           // Get the column and row containing the current cursor position.
           GetNodeRowCol(APoint, Row, Column);
           if (Column >= 0) and (Row >= 0)
-            and (Column <= frmGoPhast.Grid.ColumnCount)
-            and (Row <= frmGoPhast.Grid.RowCount) then
+            and (Column <= frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount)
+            and (Row <= frmGoPhast.PhastModel.SelectedModel.Grid.RowCount) then
           begin
             // If the cursor is over the grid,
             // display the column and row number
@@ -724,14 +735,14 @@ begin
       end;
     vdFront:
       begin
-        DataSet := frmGoPhast.Grid.FrontDataSet;
+        DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.FrontDataSet;
         if (DataSet = nil) or (DataSet.EvaluatedAt = eaBlocks) then
         begin
           // Get the column and layer containing the current cursor position.
           GetColLayer(APoint, Column, Layer);
           if (Column >= 0) and (Layer >= 0)
-            and (Column < frmGoPhast.Grid.ColumnCount)
-            and (Layer < frmGoPhast.Grid.LayerCount) then
+            and (Column < frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount)
+            and (Layer < frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount) then
           begin
             // If the cursor is over the grid,
             // display the column and layer number
@@ -752,8 +763,8 @@ begin
           // Get the column and layer containing the current cursor position.
           GetNodeColLayer(APoint, Column, Layer);
           if (Column >= 0) and (Layer >= 0)
-            and (Column <= frmGoPhast.Grid.ColumnCount)
-            and (Layer <= frmGoPhast.Grid.LayerCount) then
+            and (Column <= frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount)
+            and (Layer <= frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount) then
           begin
             // If the cursor is over the grid,
             // display the column and layer number
@@ -772,14 +783,14 @@ begin
       end;
     vdSide:
       begin
-        DataSet := frmGoPhast.Grid.SideDataSet;
+        DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.SideDataSet;
         if (DataSet = nil) or (DataSet.EvaluatedAt = eaBlocks) then
         begin
           // Get the row and layer containing the current cursor position.
           GetRowLayer(APoint, Row, Layer);
           if (Row >= 0) and (Layer >= 0)
-            and (Row < frmGoPhast.Grid.RowCount)
-            and (Layer < frmGoPhast.Grid.LayerCount) then
+            and (Row < frmGoPhast.PhastModel.SelectedModel.Grid.RowCount)
+            and (Layer < frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount) then
           begin
             frmGoPhast.sbMain.Panels[1].Text := 'Row: ' + IntToStr(Row + 1)
               + '; Lay: ' + IntToStr(Layer + 1);
@@ -798,8 +809,8 @@ begin
           // Get the row and layer containing the current cursor position.
           GetNodeRowLayer(APoint, Row, Layer);
           if (Row >= 0) and (Layer >= 0)
-            and (Row <= frmGoPhast.Grid.RowCount)
-            and (Layer <= frmGoPhast.Grid.LayerCount) then
+            and (Row <= frmGoPhast.PhastModel.SelectedModel.Grid.RowCount)
+            and (Layer <= frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount) then
           begin
             frmGoPhast.sbMain.Panels[1].Text := 'Row: ' + IntToStr(Row + 1)
               + '; Lay: ' + IntToStr(Layer + 1);
@@ -882,9 +893,9 @@ begin
   if frmGoPhast.Grid <> nil then
   begin
     case ViewDirection of
-      vdTop: frmGoPhast.Grid.NeedToRecalculateTopCellColors := Value;
-      vdFront: frmGoPhast.Grid.NeedToRecalculateFrontCellColors := Value;
-      vdSide: frmGoPhast.Grid.NeedToRecalculateSideCellColors := Value;
+      vdTop: frmGoPhast.PhastModel.NeedToRecalculateTopCellColors := Value;
+      vdFront: frmGoPhast.PhastModel.NeedToRecalculateFrontCellColors := Value;
+      vdSide: frmGoPhast.PhastModel.NeedToRecalculateSideCellColors := Value;
     else
       begin
         Assert(False);
@@ -1158,10 +1169,18 @@ begin
       end;
 
       // draw the grid.
+//      if frmGoPhast.PhastModel <> nil then
+//      begin
+//        frmGoPhast.PhastModel.CurrentModel := frmGoPhast.PhastModel;
+//      end;
       if frmGoPhast.Grid <> nil then
       begin
         frmGoPhast.Grid.Draw(FBitMap32, ViewDirection);
       end;
+//      if frmGoPhast.PhastModel <> nil then
+//      begin
+//        frmGoPhast.PhastModel.CurrentModel := frmGoPhast.PhastModel;
+//      end;
 
       // Do not call Application.ProcessMessages.
       // Calling Application.ProcessMessages causes all the views to
@@ -1184,7 +1203,7 @@ begin
 
       // If there are no objects, finish up and quit.
       if (frmGoPhast.PhastModel.ScreenObjectCount = 0)
-        and (frmGoPhast.PhastModel.PathLine.Lines.Count = 0)
+        and (frmGoPhast.PhastModel.PathLines.Lines.Count = 0)
         and (frmGoPhast.PhastModel.Endpoints.Points.Count = 0)
         and (frmGoPhast.PhastModel.TimeSeries.Series.Count = 0) then
       begin
@@ -1196,7 +1215,7 @@ begin
       InvalidateScreenObjectCoordinates;
       DrawScreenObjects;
 
-      if (frmGoPhast.PhastModel.PathLine.Lines.Count = 0)
+      if (frmGoPhast.PhastModel.PathLines.Lines.Count = 0)
         and (frmGoPhast.PhastModel.Endpoints.Points.Count = 0)
         and (frmGoPhast.PhastModel.TimeSeries.Series.Count = 0) then
       begin
@@ -1610,15 +1629,15 @@ procedure TframeView.GetNodeRowCol(APoint: TPoint2D; out Row, Column:
 begin
     // @name returns the column and row numbers of the cell containing APoint;
     // APoint must be on a top view of the model.
-    // APoint must be in real-world coordinates not grid coordinates.
+    // APoint must be in real-world coordinates not PhastModel.SelectedModel.Grid coordinates.
 
   APoint :=
-    frmGoPhast.Grid.RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
-  Column := frmGoPhast.Grid.NearestColumnPosition(APoint.X);
-  Row := frmGoPhast.Grid.NearestRowPosition(APoint.Y);
+    frmGoPhast.PhastModel.SelectedModel.Grid.RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
+  Column := frmGoPhast.PhastModel.SelectedModel.Grid.NearestColumnPosition(APoint.X);
+  Row := frmGoPhast.PhastModel.SelectedModel.Grid.NearestRowPosition(APoint.Y);
   if (Column < 0) or (Row < 0)
-    or (Column > frmGoPhast.Grid.ColumnCount)
-    or (Row > frmGoPhast.Grid.RowCount) then
+    or (Column > frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount)
+    or (Row > frmGoPhast.PhastModel.SelectedModel.Grid.RowCount) then
   begin
     Column := -1;
     Row := -1;
@@ -1633,7 +1652,8 @@ begin
     // @name gets the column and row numbers of the element containing APoint;
     // APoint must be on a top view of the model.
     // APoint must be in real-world coordinates not grid coordinates.
-  if (frmGoPhast.Grid.ColumnCount <= 0) or (frmGoPhast.Grid.RowCount <= 0) then
+  if (frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount <= 0)
+    or (frmGoPhast.PhastModel.SelectedModel.Grid.RowCount <= 0) then
   begin
     Column := -1;
     Row := -1;
@@ -1642,20 +1662,20 @@ begin
 
   // Get the row and column numbers of the cell containing APoint;
   APoint :=
-    frmGoPhast.Grid.RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
-  Column := frmGoPhast.Grid.NearestColumnPosition(APoint.X);
-  Row := frmGoPhast.Grid.NearestRowPosition(APoint.Y);
+    frmGoPhast.PhastModel.SelectedModel.Grid.RotateFromRealWorldCoordinatesToGridCoordinates(APoint);
+  Column := frmGoPhast.PhastModel.SelectedModel.Grid.NearestColumnPosition(APoint.X);
+  Row := frmGoPhast.PhastModel.SelectedModel.Grid.NearestRowPosition(APoint.Y);
 
   case EvaluatedAt of
     eaBlocks:
       begin
         if (Column >= 0) and (Row >= 0)
-          and (Column <= frmGoPhast.Grid.ColumnCount)
-          and (Row <= frmGoPhast.Grid.RowCount) then
+          and (Column <= frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount)
+          and (Row <= frmGoPhast.PhastModel.SelectedModel.Grid.RowCount) then
         begin
-          if APoint.X > frmGoPhast.Grid.ColumnPosition[Column] then
+          if APoint.X > frmGoPhast.PhastModel.SelectedModel.Grid.ColumnPosition[Column] then
           begin
-            if frmGoPhast.Grid.ColumnDirection = cdWestToEast then
+            if frmGoPhast.PhastModel.SelectedModel.Grid.ColumnDirection = cdWestToEast then
             begin
               NeighborColumn := Column + 1;
             end
@@ -1666,7 +1686,7 @@ begin
           end
           else
           begin
-            if frmGoPhast.Grid.ColumnDirection = cdWestToEast then
+            if frmGoPhast.PhastModel.SelectedModel.Grid.ColumnDirection = cdWestToEast then
             begin
               NeighborColumn := Column - 1;
             end
@@ -1675,9 +1695,9 @@ begin
               NeighborColumn := Column + 1;
             end;
           end;
-          if APoint.Y > frmGoPhast.Grid.RowPosition[Row] then
+          if APoint.Y > frmGoPhast.PhastModel.SelectedModel.Grid.RowPosition[Row] then
           begin
-            if frmGoPhast.Grid.RowDirection = rdSouthToNorth then
+            if frmGoPhast.PhastModel.SelectedModel.Grid.RowDirection = rdSouthToNorth then
             begin
               NeighborRow := Row + 1;
             end
@@ -1688,7 +1708,7 @@ begin
           end
           else
           begin
-            if frmGoPhast.Grid.RowDirection = rdSouthToNorth then
+            if frmGoPhast.PhastModel.SelectedModel.Grid.RowDirection = rdSouthToNorth then
             begin
               NeighborRow := Row - 1;
             end
@@ -1698,8 +1718,8 @@ begin
             end;
           end;
           if (NeighborColumn >= 0) and (NeighborRow >= 0)
-            and (NeighborColumn <= frmGoPhast.Grid.ColumnCount)
-            and (NeighborRow <= frmGoPhast.Grid.RowCount) then
+            and (NeighborColumn <= frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount)
+            and (NeighborRow <= frmGoPhast.PhastModel.SelectedModel.Grid.RowCount) then
           begin
             if NeighborColumn < Column then
             begin
@@ -1724,12 +1744,12 @@ begin
       end;
     eaNodes:
       begin
-        if (APoint.X < frmGoPhast.Grid.ColumnPosition[0])
-          or (APoint.X > frmGoPhast.Grid.ColumnPosition[
-            frmGoPhast.Grid.ColumnCount])
-          or (APoint.Y < frmGoPhast.Grid.RowPosition[0])
-          or (APoint.Y > frmGoPhast.Grid.RowPosition[
-            frmGoPhast.Grid.RowCount])
+        if (APoint.X < frmGoPhast.PhastModel.SelectedModel.Grid.ColumnPosition[0])
+          or (APoint.X > frmGoPhast.PhastModel.SelectedModel.Grid.ColumnPosition[
+            frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount])
+          or (APoint.Y < frmGoPhast.PhastModel.SelectedModel.Grid.RowPosition[0])
+          or (APoint.Y > frmGoPhast.PhastModel.SelectedModel.Grid.RowPosition[
+            frmGoPhast.PhastModel.SelectedModel.Grid.RowCount])
           then
         begin
           Column := -1;
@@ -1775,6 +1795,11 @@ begin
   end;
 end;
 
+procedure TframeView.miInvertSelectedVerticesClick(Sender: TObject);
+begin
+  frmGoPhast.miInvertSelectedVerticesClick(Sender);
+end;
+
 procedure TframeView.DrawPathLines;
 var
   Orientation: TDataSetOrientation;
@@ -1786,7 +1811,7 @@ begin
     vdSide: Orientation := dsoSide;
     else Assert(False);
   end;
-  frmGoPhast.PhastModel.Pathline.Draw(Orientation, FBitmap32);
+  frmGoPhast.PhastModel.Pathlines.Draw(Orientation, FBitmap32);
 end;
 
 procedure TframeView.DrawEndPoints;
@@ -2064,24 +2089,27 @@ begin
         case frmGoPhast.FCubeControl.SelectedFace of
           faTop:
             begin
-              frmGoPhast.Grid.DisplayLayer :=
-                frmGoPhast.Grid.DisplayLayer - Sign(WheelDelta)*Increment;
+              frmGoPhast.PhastModel.CombinedDisplayLayer :=
+                frmGoPhast.PhastModel.CombinedDisplayLayer
+                - Sign(WheelDelta)*Increment;
               frmGoPhast.sbMain.Panels[1].Text := 'Selected Layer: '
-                + IntToStr(frmGoPhast.Grid.SelectedLayer + 1);
+                + IntToStr(frmGoPhast.PhastModel.SelectedLayer + 1);
             end;
           faFront:
             begin
-              frmGoPhast.Grid.DisplayRow :=
-                frmGoPhast.Grid.DisplayRow - Sign(WheelDelta)*Increment;
+              frmGoPhast.PhastModel.CombinedDisplayRow :=
+                frmGoPhast.PhastModel.CombinedDisplayRow
+                - Sign(WheelDelta)*Increment;
               frmGoPhast.sbMain.Panels[1].Text := 'Selected Row: '
-                + IntToStr(frmGoPhast.Grid.SelectedRow + 1);
+                + IntToStr(frmGoPhast.PhastModel.SelectedRow + 1);
             end;
           faSide:
             begin
-              frmGoPhast.Grid.DisplayColumn :=
-                frmGoPhast.Grid.DisplayColumn + Sign(WheelDelta)*Increment;
+              frmGoPhast.PhastModel.CombinedDisplayColumn :=
+                frmGoPhast.PhastModel.CombinedDisplayColumn
+                + Sign(WheelDelta)*Increment;
               frmGoPhast.sbMain.Panels[1].Text := 'Selected Col: '
-                + IntToStr(frmGoPhast.Grid.SelectedColumn + 1);
+                + IntToStr(frmGoPhast.PhastModel.SelectedColumn + 1);
             end;
           else Assert(False);
         end;
@@ -2133,14 +2161,14 @@ begin
   BackOne.Enabled := False;
   ToFront.Enabled := False;
   ForwardOne.Enabled := False;
-  Hide.Enabled := False;
+  miHide.Enabled := False;
   notSelectedFound := False;
   for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
   begin
     AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
     if AScreenObject.Selected then
     begin
-      Hide.Enabled := True;
+      miHide.Enabled := True;
       if notSelectedFound then
       begin
         ToBack.Enabled := True;
@@ -2153,6 +2181,7 @@ begin
       notSelectedFound := True;
     end;
   end;
+  miInvertSelectedVertices.Enabled := miHide.Enabled;
   notSelectedFound := False;
   for Index := frmGoPhast.PhastModel.ScreenObjectCount - 1 downto 0 do
   begin
@@ -2180,11 +2209,11 @@ begin
     // APoint must be on a side view of the model.
 
   // Get the column and layer numbers of the cell containing APoint;
-  Layer := frmGoPhast.PhastGrid.NearestLayerPosition(APoint.Y);
-  Col := frmGoPhast.Grid.NearestColumnPosition(APoint.X);
+  Layer := frmGoPhast.PhastModel.SelectedModel.PhastGrid.NearestLayerPosition(APoint.Y);
+  Col := frmGoPhast.PhastModel.SelectedModel.Grid.NearestColumnPosition(APoint.X);
   if (Col < 0) or (Layer < 0)
-    or (Col > frmGoPhast.Grid.ColumnCount)
-    or (Layer > frmGoPhast.Grid.LayerCount) then
+    or (Col > frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount)
+    or (Layer > frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount) then
   begin
     Layer := -1;
     Col := -1;
@@ -2199,8 +2228,8 @@ begin
     // @name gets the column and layer numbers
     // of the element containing APoint;
     // APoint must be on a side view of the model.
-  if (frmGoPhast.Grid.ColumnCount <= 0)
-    or (frmGoPhast.Grid.LayerCount <= 0) then
+  if (frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount <= 0)
+    or (frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount <= 0) then
   begin
     Layer := -1;
     Col := -1;
@@ -2209,20 +2238,20 @@ begin
 
 
   // Get the column and layer numbers of the cell containing APoint;
-  Col := frmGoPhast.Grid.NearestColumnPosition(APoint.X);
+  Col := frmGoPhast.PhastModel.SelectedModel.Grid.NearestColumnPosition(APoint.X);
   case EvaluatedAt of
     eaBlocks:
       begin
-        if (Col < 0) or (Col > frmGoPhast.Grid.ColumnCount) then
+        if (Col < 0) or (Col > frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount) then
         begin
           Layer := -1;
           Col := -1;
           Exit;
         end;
 
-        if frmGoPhast.Grid.ColumnDirection = cdWestToEast then
+        if frmGoPhast.PhastModel.SelectedModel.Grid.ColumnDirection = cdWestToEast then
         begin
-          if APoint.X > frmGoPhast.Grid.ColumnPosition[Col] then
+          if APoint.X > frmGoPhast.PhastModel.SelectedModel.Grid.ColumnPosition[Col] then
           begin
             NeighborCol := Col + 1;
           end
@@ -2233,7 +2262,7 @@ begin
         end
         else
         begin
-          if APoint.X > frmGoPhast.Grid.ColumnPosition[Col] then
+          if APoint.X > frmGoPhast.PhastModel.SelectedModel.Grid.ColumnPosition[Col] then
           begin
             NeighborCol := Col - 1;
           end
@@ -2244,7 +2273,7 @@ begin
         end;
 
         if (NeighborCol >= 0) and
-          (NeighborCol <= frmGoPhast.Grid.ColumnCount) then
+          (NeighborCol <= frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount) then
         begin
           if NeighborCol < Col then
           begin
@@ -2260,9 +2289,9 @@ begin
       end;
     eaNodes:
       begin
-        if (APoint.X < frmGoPhast.Grid.ColumnPosition[0])
-          or (APoint.X > frmGoPhast.Grid.ColumnPosition[
-            frmGoPhast.Grid.ColumnCount])
+        if (APoint.X < frmGoPhast.PhastModel.SelectedModel.Grid.ColumnPosition[0])
+          or (APoint.X > frmGoPhast.PhastModel.SelectedModel.Grid.ColumnPosition[
+            frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount])
           or (APoint.Y < frmGoPhast.PhastGrid.LayerElevation[0])
           or (APoint.Y > frmGoPhast.PhastGrid.LayerElevation[
             frmGoPhast.PhastGrid.LayerCount])
@@ -2276,23 +2305,23 @@ begin
     else Assert(False)
   end;
 
-  Layer := frmGoPhast.Grid.Nearest2DCellElevation(Col,
-    frmGoPhast.Grid.SelectedRow, APoint.Y);
+  Layer := frmGoPhast.PhastModel.SelectedModel.Grid.Nearest2DCellElevation(Col,
+    frmGoPhast.PhastModel.SelectedRow, APoint.Y);
   case EvaluatedAt of
     eaBlocks:
       begin
         if (Layer < 0)
-          or (Layer > frmGoPhast.Grid.LayerCount) then
+          or (Layer > frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount) then
         begin
           Layer := -1;
           Col := -1;
           Exit;
         end;
 
-        if frmGoPhast.Grid.LayerDirection = ldBottomToTop then
+        if frmGoPhast.PhastModel.SelectedModel.Grid.LayerDirection = ldBottomToTop then
         begin
-          if APoint.Y > frmGoPhast.Grid.CellElevation[Col,
-            frmGoPhast.Grid.SelectedRow, Layer] then
+          if APoint.Y > frmGoPhast.PhastModel.SelectedModel.Grid.CellElevation[Col,
+            frmGoPhast.PhastModel.SelectedRow, Layer] then
           begin
             NeighborLayer := Layer + 1;
           end
@@ -2303,8 +2332,8 @@ begin
         end
         else
         begin
-          if APoint.Y > frmGoPhast.Grid.CellElevation[Col,
-            frmGoPhast.Grid.SelectedRow, Layer] then
+          if APoint.Y > frmGoPhast.PhastModel.SelectedModel.Grid.CellElevation[Col,
+            frmGoPhast.PhastModel.SelectedRow, Layer] then
           begin
             NeighborLayer := Layer - 1;
           end
@@ -2314,7 +2343,7 @@ begin
           end;
         end;
         if (NeighborLayer >= 0)
-          and (NeighborLayer <= frmGoPhast.Grid.LayerCount) then
+          and (NeighborLayer <= frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount) then
         begin
           if NeighborLayer < Layer then
           begin
@@ -2329,9 +2358,9 @@ begin
       end;
     eaNodes:
       begin
-        if (APoint.X < frmGoPhast.Grid.ColumnPosition[0])
-          or (APoint.X > frmGoPhast.Grid.ColumnPosition[
-            frmGoPhast.Grid.ColumnCount])
+        if (APoint.X < frmGoPhast.PhastModel.SelectedModel.Grid.ColumnPosition[0])
+          or (APoint.X > frmGoPhast.PhastModel.SelectedModel.Grid.ColumnPosition[
+            frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount])
           or (APoint.Y < frmGoPhast.PhastGrid.LayerElevation[0])
           or (APoint.Y > frmGoPhast.PhastGrid.LayerElevation[
             frmGoPhast.PhastGrid.LayerCount])
@@ -2351,11 +2380,11 @@ procedure TframeView.GetNodeRowLayer(APoint: TPoint2D; out Row, Layer:
 begin
     // @name returns the row and layer numbers of the cell containing APoint;
     // APoint must be on a front view of the model.
-  Layer := frmGoPhast.PhastGrid.NearestLayerPosition(APoint.X);
-  Row := frmGoPhast.Grid.NearestRowPosition(APoint.Y);
+  Layer := frmGoPhast.PhastModel.SelectedModel.PhastGrid.NearestLayerPosition(APoint.X);
+  Row := frmGoPhast.PhastModel.SelectedModel.Grid.NearestRowPosition(APoint.Y);
   if (Row < 0) and (Layer < 0)
-    and (Row > frmGoPhast.Grid.RowCount)
-    and (Layer > frmGoPhast.Grid.LayerCount) then
+    and (Row > frmGoPhast.PhastModel.SelectedModel.Grid.RowCount)
+    and (Layer > frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount) then
   begin
     Layer := -1;
     Row := -1;
@@ -2369,7 +2398,7 @@ var
 begin
     // @name gets the row and layer numbers of the element containing APoint;
     // APoint must be on a side view of the model.
-  if (frmGoPhast.Grid.RowCount <= 0) or (frmGoPhast.Grid.LayerCount <= 0) then
+  if (frmGoPhast.PhastModel.SelectedModel.Grid.RowCount <= 0) or (frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount <= 0) then
   begin
     Layer := -1;
     Row := -1;
@@ -2378,21 +2407,21 @@ begin
 
 
   // Get the row and layer numbers of the cell containing APoint;
-  Row := frmGoPhast.Grid.NearestRowPosition(APoint.Y);
+  Row := frmGoPhast.PhastModel.SelectedModel.Grid.NearestRowPosition(APoint.Y);
 
   case EvaluatedAt of
     eaBlocks:
       begin
         if (Row < 0)
-          or (Row > frmGoPhast.Grid.RowCount) then
+          or (Row > frmGoPhast.PhastModel.SelectedModel.Grid.RowCount) then
         begin
           Layer := -1;
           Row := -1;
           Exit;
         end;
-        if frmGoPhast.Grid.RowDirection = rdSouthToNorth then
+        if frmGoPhast.PhastModel.SelectedModel.Grid.RowDirection = rdSouthToNorth then
         begin
-          if APoint.Y > frmGoPhast.Grid.RowPosition[Row] then
+          if APoint.Y > frmGoPhast.PhastModel.SelectedModel.Grid.RowPosition[Row] then
           begin
             NeighborRow := Row + 1;
           end
@@ -2403,7 +2432,7 @@ begin
         end
         else
         begin
-          if APoint.Y > frmGoPhast.Grid.RowPosition[Row] then
+          if APoint.Y > frmGoPhast.PhastModel.SelectedModel.Grid.RowPosition[Row] then
           begin
             NeighborRow := Row - 1;
           end
@@ -2414,7 +2443,7 @@ begin
         end;
 
         if (NeighborRow >= 0)
-          and (NeighborRow <= frmGoPhast.Grid.RowCount) then
+          and (NeighborRow <= frmGoPhast.PhastModel.SelectedModel.Grid.RowCount) then
         begin
           if NeighborRow < Row then
           begin
@@ -2446,23 +2475,23 @@ begin
     else Assert(False);
   end;
 
-  Layer := frmGoPhast.Grid.Nearest2DCellElevation(
-    frmGoPhast.Grid.SelectedColumn, Row, APoint.X);
+  Layer := frmGoPhast.PhastModel.SelectedModel.Grid.Nearest2DCellElevation(
+    frmGoPhast.PhastModel.SelectedColumn, Row, APoint.X);
 
   case EvaluatedAt of
     eaBlocks:
       begin
         if (Layer < 0)
-          or (Layer > frmGoPhast.Grid.LayerCount) then
+          or (Layer > frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount) then
         begin
           Layer := -1;
           Row := -1;
           Exit;
         end;
-        if frmGoPhast.Grid.LayerDirection = ldBottomToTop then
+        if frmGoPhast.PhastModel.SelectedModel.Grid.LayerDirection = ldBottomToTop then
         begin
-          if APoint.X > frmGoPhast.Grid.CellElevation[
-            frmGoPhast.Grid.SelectedColumn, Row, Layer] then
+          if APoint.X > frmGoPhast.PhastModel.SelectedModel.Grid.CellElevation[
+            frmGoPhast.PhastModel.SelectedColumn, Row, Layer] then
           begin
             NeighborLayer := Layer + 1;
           end
@@ -2473,8 +2502,8 @@ begin
         end
         else
         begin
-          if APoint.X > frmGoPhast.Grid.CellElevation[
-            frmGoPhast.Grid.SelectedColumn, Row, Layer] then
+          if APoint.X > frmGoPhast.PhastModel.SelectedModel.Grid.CellElevation[
+            frmGoPhast.PhastModel.SelectedColumn, Row, Layer] then
           begin
             NeighborLayer := Layer - 1;
           end
@@ -2485,7 +2514,7 @@ begin
         end;
 
         if (NeighborLayer < 0)
-          or (NeighborLayer > frmGoPhast.Grid.LayerCount) then
+          or (NeighborLayer > frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount) then
         begin
           Layer := -1;
           Row := -1;
@@ -2727,8 +2756,8 @@ begin
 end;
 
 procedure TframeView.ShowCurrentValue(DataSet: TDataArray;
-  const NameToDisplay: string; Column, Row, Layer: Integer;
-  const Location: TPoint2D);
+  const NameToDisplay: string; Column, Row, Layer, GlobalColumn, GlobalRow,
+  GlobalLayer: Integer; const Location: TPoint2D);
 var
   ValueToDisplay: string;
   Explanation: string;
@@ -2805,11 +2834,11 @@ begin
   end;
 
   frmGoPhast.sbMain.Panels[2].Text := ValueToDisplay + ': ' + NameToDisplay
-    + '; ' + Explanation;
+    + '; ' + StringReplace(Explanation, sLineBreak, ' ', [rfReplaceAll]);
   if frmGridValue <> nil then
   begin
-    frmGridValue.UpdateValue(Layer, Row, Column,
-      NameToDisplay, ValueToDisplay, Explanation, Location);
+    frmGridValue.UpdateValue(GlobalLayer, GlobalRow, GlobalColumn,
+      NameToDisplay, ValueToDisplay, Explanation, Location, ViewDirection);
   end;
 end;
 
@@ -2851,8 +2880,10 @@ var
   NameToDisplay: string;
   Column: Integer;
   DataSet: TDataArray;
+  TrueColumn: Integer;
 begin
-  Column := frmGoPhast.Grid.SelectedColumn;
+  Column := frmGoPhast.PhastModel.SelectedColumn;
+  TrueColumn := Column;
   // Display the value of the current data set (if any).
   DataSet := frmGoPhast.Grid.SideDataSet;
   if DataSet = nil then
@@ -2863,7 +2894,7 @@ begin
   begin
     if DataSet.Orientation = dso3D then
     begin
-      Column := frmGoPhast.Grid.SelectedColumn;
+      Column := frmGoPhast.PhastModel.SelectedColumn;
     end
     else
     begin
@@ -2880,14 +2911,16 @@ begin
     if DataSet.IsValue[Layer, Row, Column] and (Column >= 0)
       and (Column <= frmGoPhast.Grid.ColumnCount) then
     begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Location);
+      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer,
+        TrueColumn, Row, Layer, Location);
     end
     else
     begin
       frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '', Location);
+        frmGridValue.UpdateValue(Layer, Row, TrueColumn, NameToDisplay, '', '',
+          Location, ViewDirection);
       end;
     end;
   end
@@ -2896,7 +2929,8 @@ begin
     frmGoPhast.sbMain.Panels[2].Text := '';
     if frmGridValue <> nil then
     begin
-      frmGridValue.UpdateValue(Layer, Row, Column, '', '', '', Location);
+      frmGridValue.UpdateValue(Layer, Row, TrueColumn, '', '', '', Location,
+        ViewDirection);
     end;
   end;
 end;
@@ -2907,19 +2941,21 @@ var
   NameToDisplay: string;
   Column: Integer;
   DataSet: TDataArray;
+  TrueColumn: Integer;
 begin
   // Display the value of the current data set (if any).
-  Column := frmGoPhast.Grid.SelectedColumn;
-  DataSet := frmGoPhast.Grid.SideDataSet;
+  Column := frmGoPhast.PhastModel.SelectedModel.SelectedColumn;
+  TrueColumn := Column;
+  DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.SideDataSet;
   if DataSet = nil then
   begin
-    DataSet := frmGoPhast.Grid.SideContourDataSet;
+    DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.SideContourDataSet;
   end;
   if (DataSet <> nil) then
   begin
     if DataSet.Orientation = dso3D then
     begin
-      Column := frmGoPhast.Grid.SelectedColumn;
+      Column := frmGoPhast.PhastModel.SelectedModel.SelectedColumn;
     end
     else
     begin
@@ -2934,16 +2970,18 @@ begin
       NameToDisplay := frmGoPhast.PhastModel.SideTimeList.Name;
     end;
     if DataSet.IsValue[Layer, Row, Column] and (Column >= 0)
-      and (Column < frmGoPhast.Grid.ColumnCount) then
+      and (Column < frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount) then
     begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Location);
+      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer,
+        TrueColumn, Row, Layer, Location);
     end
     else
     begin
       frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '', Location);
+        frmGridValue.UpdateValue(Layer, Row, TrueColumn, NameToDisplay, '', '',
+          Location, ViewDirection);
       end;
     end;
   end
@@ -2952,7 +2990,8 @@ begin
     frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, Row, Column, '', '', '', Location);
+        frmGridValue.UpdateValue(Layer, Row, TrueColumn, '', '', '',
+          Location, ViewDirection);
       end;
   end;
 end;
@@ -2963,9 +3002,11 @@ var
   NameToDisplay: string;
   Row: Integer;
   DataSet: TDataArray;
+  TrueRow: Integer;
 begin
   // Display the value of the current data set (if any).
-  Row := frmGoPhast.Grid.SelectedRow;
+  Row := frmGoPhast.PhastModel.SelectedRow;
+  TrueRow := Row;
   DataSet := frmGoPhast.Grid.FrontDataSet;
   if DataSet = nil then
   begin
@@ -2975,7 +3016,7 @@ begin
   begin
     if DataSet.Orientation = dso3D then
     begin
-      Row := frmGoPhast.Grid.SelectedRow;
+      Row := frmGoPhast.PhastModel.SelectedRow;
     end
     else
     begin
@@ -2992,14 +3033,16 @@ begin
     if DataSet.IsValue[Layer, Row, Column] and (Row >= 0) and (Row <=
       frmGoPhast.Grid.RowCount) then
     begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Location);
+      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer,
+        Column, TrueRow, Layer, Location);
     end
     else
     begin
       frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '', Location);
+        frmGridValue.UpdateValue(Layer, TrueRow, Column, NameToDisplay, '', '',
+          Location, ViewDirection);
       end;
     end;
   end
@@ -3008,7 +3051,8 @@ begin
     frmGoPhast.sbMain.Panels[2].Text := '';
     if frmGridValue <> nil then
     begin
-      frmGridValue.UpdateValue(Layer, Row, Column, '', '', '', Location);
+      frmGridValue.UpdateValue(Layer, TrueRow, Column, '', '', '',
+        Location, ViewDirection);
     end;
   end;
 end;
@@ -3019,19 +3063,21 @@ var
   NameToDisplay: string;
   Row: Integer;
   DataSet: TDataArray;
+  TrueRow: Integer;
 begin
   // Display the value of the current data set (if any).
-  Row := frmGoPhast.Grid.SelectedRow;
-  DataSet := frmGoPhast.Grid.FrontDataSet;
+  Row := frmGoPhast.PhastModel.SelectedModel.SelectedRow;
+  TrueRow := Row;
+  DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.FrontDataSet;
   if DataSet = nil then
   begin
-    DataSet := frmGoPhast.Grid.FrontContourDataSet;
+    DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.FrontContourDataSet;
   end;
   if (DataSet <> nil) then
   begin
     if DataSet.Orientation = dso3D then
     begin
-      Row := frmGoPhast.Grid.SelectedRow;
+      Row := frmGoPhast.PhastModel.SelectedModel.SelectedRow;
     end
     else
     begin
@@ -3046,16 +3092,18 @@ begin
       NameToDisplay := frmGoPhast.PhastModel.FrontTimeList.Name;
     end;
     if DataSet.IsValue[Layer, Row, Column] and (Row >= 0) and (Row <
-      frmGoPhast.Grid.RowCount) then
+      frmGoPhast.PhastModel.SelectedModel.Grid.RowCount) then
     begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Location);
+      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer,
+        Column, TrueRow, Layer, Location);
     end
     else
     begin
       frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '', Location);
+        frmGridValue.UpdateValue(Layer, TrueRow, Column, NameToDisplay, '', '',
+          Location, ViewDirection);
       end;
     end;
   end
@@ -3064,7 +3112,8 @@ begin
     frmGoPhast.sbMain.Panels[2].Text := '';
     if frmGridValue <> nil then
     begin
-      frmGridValue.UpdateValue(Layer, Row, Column, '', '', '', Location);
+      frmGridValue.UpdateValue(Layer, TrueRow, Column, '', '', '',
+        Location, ViewDirection);
     end;
   end;
 end;
@@ -3075,9 +3124,11 @@ var
   NameToDisplay: string;
   Layer: Integer;
   DataSet: TDataArray;
+  TrueLayer: Integer;
 begin
   // Display the value of the current data set (if any).
-  Layer := frmGoPhast.Grid.SelectedLayer;
+  Layer := frmGoPhast.PhastModel.SelectedLayer;
+  TrueLayer := Layer;
   DataSet := frmGoPhast.Grid.TopDataSet;
   if DataSet = nil then
   begin
@@ -3087,7 +3138,7 @@ begin
   begin
     if DataSet.Orientation = dso3D then
     begin
-      Layer := frmGoPhast.Grid.SelectedLayer;
+      Layer := frmGoPhast.PhastModel.SelectedLayer;
     end
     else
     begin
@@ -3104,14 +3155,16 @@ begin
     if DataSet.IsValue[Layer, Row, Column] and (Layer >= 0)
       and (Layer <= frmGoPhast.Grid.LayerCount) then
     begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Location);
+      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer,
+        Column, Row, TrueLayer, Location);
     end
     else
     begin
       frmGoPhast.sbMain.Panels[2].Text := '';
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '', Location);
+        frmGridValue.UpdateValue(TrueLayer, Row, Column, NameToDisplay, '', '',
+          Location, ViewDirection);
       end;
     end;
   end
@@ -3120,7 +3173,7 @@ begin
     frmGoPhast.sbMain.Panels[2].Text := '';
     if frmGridValue <> nil then
     begin
-      frmGridValue.UpdateValue(Layer, Row, Column, '', '', '', Location);
+      frmGridValue.UpdateValue(TrueLayer, Row, Column, '', '', '', Location, ViewDirection);
     end;
   end;
 end;
@@ -3135,20 +3188,22 @@ var
   HasUpdated: boolean;
   Value: double;
   Explanation: string;
+  TrueLayer: Integer;
 begin
   HasUpdated := False;
   // Display the value of the current data set (if any).
-  Layer := frmGoPhast.Grid.SelectedLayer;
-  DataSet := frmGoPhast.Grid.TopDataSet;
+  Layer := frmGoPhast.PhastModel.SelectedModel.SelectedLayer;
+  TrueLayer := Layer;
+  DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.TopDataSet;
   if DataSet = nil then
   begin
-    DataSet := frmGoPhast.Grid.TopContourDataSet;
+    DataSet := frmGoPhast.PhastModel.SelectedModel.Grid.TopContourDataSet;
   end;
   if (DataSet <> nil) then
   begin
     if DataSet.Orientation = dso3D then
     begin
-      Layer := frmGoPhast.Grid.SelectedLayer;
+      Layer := frmGoPhast.PhastModel.SelectedModel.SelectedLayer;
     end
     else
     begin
@@ -3163,15 +3218,15 @@ begin
       NameToDisplay := frmGoPhast.PhastModel.TopTimeList.Name;
     end;
     if DataSet.IsValue[Layer, Row, Column] and (Layer >= 0)
-      and (Layer < frmGoPhast.Grid.LayerCount) then
+      and (Layer < frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount) then
     begin
-      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Location);
+      ShowCurrentValue(DataSet, NameToDisplay, Column, Row, Layer, Column, Row, TrueLayer, Location);
       HasUpdated := True;
     end;
   end
-  else if frmGoPhast.PhastModel.EdgeDisplay <> nil then
+  else if frmGoPhast.PhastModel.SelectedModel.EdgeDisplay <> nil then
   begin
-    EdgeDisplay := frmGoPhast.PhastModel.EdgeDisplay;
+    EdgeDisplay := frmGoPhast.PhastModel.SelectedModel.EdgeDisplay;
     if EdgeDisplay.Select(X, Y, Layer) then
     begin
       NameToDisplay := EdgeDisplay.RealDescription[EdgeDisplay.DataToPlot];
@@ -3179,12 +3234,13 @@ begin
       Explanation := EdgeDisplay.RealAnnotation[X, Y, Layer];
 
       frmGoPhast.sbMain.Panels[2].Text := FloatToStr(Value) + ': '
-        + NameToDisplay + '; ' + Explanation;
+        + NameToDisplay + '; '
+        + StringReplace(Explanation, sLineBreak, ' ', [rfReplaceAll]);
 
       if frmGridValue <> nil then
       begin
-        frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay,
-          FloatToStr(Value), Explanation, Location);
+        frmGridValue.UpdateValue(TrueLayer, Row, Column, NameToDisplay,
+          FloatToStr(Value), Explanation, Location, ViewDirection);
       end;
       HasUpdated := True;
     end;
@@ -3195,7 +3251,8 @@ begin
     frmGoPhast.sbMain.Panels[2].Text := '';
     if frmGridValue <> nil then
     begin
-      frmGridValue.UpdateValue(Layer, Row, Column, NameToDisplay, '', '', Location);
+      frmGridValue.UpdateValue(TrueLayer, Row, Column, NameToDisplay, '', '',
+        Location, ViewDirection);
     end;
   end;
 end;
@@ -3469,7 +3526,7 @@ begin
   HideScreenObjects(False);
 end;
 
-procedure TframeView.HideClick(Sender: TObject);
+procedure TframeView.miHideClick(Sender: TObject);
 begin
     // @name hides the selected @link(TScreenObject)s.
   // This procedure hides the selected TScreenObjects
@@ -3862,3 +3919,4 @@ begin
 end;
 
 end.
+

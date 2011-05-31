@@ -40,6 +40,8 @@ type
     Timer: TTimer;
     sgErrors: TRbwDataGrid4;
     btnClear: TButton;
+    btnSave: TButton;
+    sdErrors: TSaveDialog;
     // @name copies the error messages to the clipboard.
     procedure btnCopyClick(Sender: TObject);
     // @name initializes the dialog box.
@@ -51,16 +53,18 @@ type
     // @name shows the dialog box.
     procedure TimerTimer(Sender: TObject);
     procedure btnClearClick(Sender: TObject);
+    procedure btnSaveClick(Sender: TObject);
   private
     // @name is the number of errors that have been added.
     FErrorCount: integer;
     FDelayShowing: boolean;
     FErrorAdded: Boolean;
     procedure SetDelayShowing(const Value: boolean);
+    procedure GetErrorMessages(Lines: TStringList);
     { Private declarations }
   public
     // @name adds an error message to @classname.
-    procedure AddError(const ObjectName, DataSetName, Formula, ErrorMessage:
+    procedure AddFormulaError(const ObjectName, DataSetName, Formula, ErrorMessage:
       string);
     property DelayShowing: boolean read FDelayShowing write SetDelayShowing;
     { Public declarations }
@@ -98,7 +102,7 @@ begin
   FreeAndNil(FfrmFormulaErrors);
 end;
 
-procedure TfrmFormulaErrors.AddError(const ObjectName, DataSetName, Formula,
+procedure TfrmFormulaErrors.AddFormulaError(const ObjectName, DataSetName, Formula,
   ErrorMessage: string);
 begin
   FErrorAdded := True;
@@ -110,8 +114,29 @@ begin
   sgErrors.Cells[3, FErrorCount] := ErrorMessage;
   if not DelayShowing then
   begin
-    Beep;
+//    Beep;
     Timer.Enabled := True;
+  end;
+end;
+
+procedure TfrmFormulaErrors.GetErrorMessages(Lines: TStringList);
+var
+  ColIndex: Integer;
+  ALine: string;
+  RowIndex: Integer;
+begin
+  for RowIndex := 1 to FErrorCount do
+  begin
+    ALine := '';
+    for ColIndex := 0 to sgErrors.ColCount - 1 do
+    begin
+      if ColIndex <> 0 then
+      begin
+        ALine := ALine + ''#9'';
+      end;
+      ALine := ALine + sgErrors.Cells[ColIndex, RowIndex];
+    end;
+    Lines.Add(ALine);
   end;
 end;
 
@@ -148,29 +173,31 @@ end;
 procedure TfrmFormulaErrors.btnCopyClick(Sender: TObject);
 var
   Lines: TStringList;
-  RowIndex: integer;
-  ColIndex: integer;
-  ALine: string;
 begin
   inherited;
   Lines := TStringList.Create;
   try
-    for RowIndex := 1 to FErrorCount do
-    begin
-      ALine := '';
-      for ColIndex := 0 to sgErrors.ColCount - 1 do
-      begin
-        if ColIndex <> 0 then
-        begin
-          ALine := ALine + #9;
-        end;
-        ALine := ALine + sgErrors.Cells[ColIndex, RowIndex];
-      end;
-      Lines.Add(ALine)
-    end;
+    GetErrorMessages(Lines);
     Clipboard.AsText := Lines.Text;
   finally
     Lines.Free;
+  end;
+end;
+
+procedure TfrmFormulaErrors.btnSaveClick(Sender: TObject);
+var
+  Lines: TStringList;
+begin
+  inherited;
+  if sdErrors.Execute then
+  begin
+    Lines := TStringList.Create;
+    try
+      GetErrorMessages(Lines);
+      Lines.SaveToFile(sdErrors.FileName);
+    finally
+      Lines.Free;
+    end;
   end;
 end;
 
@@ -229,6 +256,7 @@ end;
 procedure TfrmFormulaErrors.TimerTimer(Sender: TObject);
 begin
   inherited;
+  Beep;
   Show;
   Timer.Enabled := False;
 end;

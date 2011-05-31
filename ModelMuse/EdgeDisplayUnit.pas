@@ -7,7 +7,7 @@ unit EdgeDisplayUnit;
 interface
 
 uses Types, SysUtils, Classes, Contnrs , Graphics, GR32, SubscriptionUnit,
-  DataSetUnit, FastGEO;
+  DataSetUnit, FastGEO, GoPhastTypes;
 
 type
   // @name is a base class used in the display of model properties that are
@@ -26,6 +26,7 @@ type
     FRow2: integer;
     // See @link(Layer).
     FLayer: integer;
+    FModel: TBaseModel;
     // See @link(RealAnnotation).
     function GetRealAnnotation(Index: integer): string; virtual; abstract;
     // See @link(RealValue).
@@ -35,6 +36,7 @@ type
     // @name is the ending point of the @classname in screen coordinates.
     function EndPoint: TPoint;
   public
+    constructor Create(AModel: TBaseModel);
     // @name is the number of the first column
     // defining the location of @classname.
     property Col1: integer Read FCol1;
@@ -107,6 +109,7 @@ type
     FMinValue: string;
     // @name is set to @true in @link(UpdateMinMax) to prevent recursion.
     FUpdatingMinMax: Boolean;
+    FModel: TBaseModel;
     // See @link(RealAnnotation).
     function GetRealAnnotation(X, Y, ALayer: integer): string;
     // See @link(RealValue).
@@ -196,7 +199,7 @@ type
 
 implementation
 
-uses Math, frmGoPhastUnit, GoPhastTypes, AbstractGridUnit,
+uses Math, frmGoPhastUnit, AbstractGridUnit,
   BigCanvasMethods, frmGridColorUnit, PhastModelUnit;
 
 { TCustomModflowGridEdgeDisplay }
@@ -216,7 +219,9 @@ var
   Index: Integer;
   Limit: TColoringLimits;
 begin
-  inherited;
+  Assert(AnOwner <> nil);
+  FModel := AnOwner as TBaseModel;
+  inherited Create(nil);
   FList := TList.Create;
   FLimits := TObjectList.Create;
   for Index := 0 to RealValueTypeCount - 1 do
@@ -274,7 +279,8 @@ begin
     ActiveDataArray := nil;
     if ColoringLimits.ActiveOnly then
     begin
-      ActiveDataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+//      ActiveDataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+      ActiveDataArray := (FModel as TCustomModel).DataArrayManager.GetDataSetByName(rsActive);
       ActiveDataArray.Initialize;
     end;
 
@@ -524,7 +530,8 @@ begin
   ActiveDataArray := nil;
   if ColoringLimits.ActiveOnly then
   begin
-    ActiveDataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+//    ActiveDataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+    ActiveDataArray := (FModel as TCustomModel).DataArrayManager.GetDataSetByName(rsActive);
     ActiveDataArray.Initialize;
   end;
   FirstFound := False;
@@ -616,15 +623,23 @@ begin
   begin
     Assert(Abs(Row1 - Row2) = 1);
     Row := Max(Row1, Row2);
-    result := frmGoPhast.ModflowGrid.TwoDElementCorner(Col1, Row);
+//    result := frmGoPhast.ModflowGrid.TwoDElementCorner(Col1, Row);
+    result := (FModel as TCustomModel).ModflowGrid.TwoDElementCorner(Col1, Row);
   end
   else
   begin
     Assert(Row1 = Row2);
     Assert(Abs(Col1 - Col2) = 1);
     Col := Max(Col1, Col2);
-    result := frmGoPhast.ModflowGrid.TwoDElementCorner(Col, Row1);
+//    result := frmGoPhast.ModflowGrid.TwoDElementCorner(Col, Row1);
+    result := (FModel as TCustomModel).ModflowGrid.TwoDElementCorner(Col, Row1);
   end;
+end;
+
+constructor TCustomModflowGridEdgeFeature.Create(AModel: TBaseModel);
+begin
+  Assert(AModel <> nil);
+  FModel := AModel;
 end;
 
 function TCustomModflowGridEdgeFeature.EndingLocation: TPoint2D;
@@ -636,14 +651,14 @@ begin
   begin
     Assert(Abs(Row1 - Row2) = 1);
     Row := Max(Row1, Row2);
-    result := frmGoPhast.ModflowGrid.TwoDElementCorner(Col1 + 1, Row);
+    result := (FModel as TCustomModel).ModflowGrid.TwoDElementCorner(Col1 + 1, Row);
   end
   else
   begin
     Assert(Row1 = Row2);
     Assert(Abs(Col1 - Col2) = 1);
     Col := Max(Col1, Col2);
-    result := frmGoPhast.ModflowGrid.TwoDElementCorner(Col, Row1 + 1);
+    result := (FModel as TCustomModel).ModflowGrid.TwoDElementCorner(Col, Row1 + 1);
   end;
 end;
 

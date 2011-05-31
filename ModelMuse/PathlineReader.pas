@@ -3,7 +3,7 @@ unit PathlineReader;
 interface
 
 uses Windows, Classes, SysUtils, GoPhastTypes, ColorSchemes, Graphics, GR32,
-  OpenGL12x, RealListUnit;
+  OpenGL12x, RealListUnit, QuadtreeClass;
 
 type
   TShowChoice = (scAll, scSpecified, scStart, scEnd);
@@ -91,6 +91,8 @@ type
     property UseLimit: boolean read FUseLimit write SetUseLimit;
   end;
 
+  TPathLine = class;
+
   TPathLinePoint = class(TCollectionItem)
   private
     FLayer: integer;
@@ -110,6 +112,7 @@ type
     function ShouldShow(Limits: TPathLineDisplayLimits;
       Orientation: TDataSetOrientation; CurrentColRowOrLayer: integer): boolean;
     function ShouldShowLine(Limits: TPathLineDisplayLimits): boolean;
+    function ParentLine: TPathLine;
   published
     // Real world X coordinate
     property X: double read FX write FX;
@@ -130,9 +133,10 @@ type
 
   TPathLinePoints = class(TCollection)
   private
+    FPathLine: TPathLine;
     function GetPoint(Index: integer): TPathLinePoint;
   public
-    Constructor Create;
+    Constructor Create(PathLine: TPathLine);
     property Points[Index: integer]: TPathLinePoint read GetPoint; default;
     function TestGetMaxTime(var Maxtime: double): boolean;
   end;
@@ -205,6 +209,9 @@ type
     FMinTime: double;
     FRecordedPathLines: Boolean;
     FDrawingPathLines: Boolean;
+    FTopQuadTree: TRbwQuadTree;
+    FFrontQuadTree: TRbwQuadTree;
+    FSideQuadTree: TRbwQuadTree;
     class var
       FPathlineGLIndex: TGLuint;
       FListInitialized: boolean;
@@ -228,6 +235,9 @@ type
     procedure Draw(Orientation: TDataSetOrientation; const BitMap: TBitmap32);
     procedure Draw3D;
     procedure Invalidate;
+    property TopQuadTree: TRbwQuadTree read FTopQuadTree;
+    property FrontQuadTree: TRbwQuadTree read FFrontQuadTree;
+    property SideQuadTree: TRbwQuadTree read FSideQuadTree;
   published
     property Lines: TPathLines read FLines write SetLines;
     property FileName: string read FFileName write FFileName;
@@ -556,7 +566,7 @@ type
     property Points[Index: integer]: TTimeSeriesPoint read GetPoint; default;
   end;
 
-  // @name respesents the position of a particle at different times.
+  // @name represents the position of a particle at different times.
   TTimeSeries = class(TCollectionItem)
   private
     FPoints: TTimeSeriesPoints;
@@ -683,7 +693,7 @@ implementation
 uses
   Contnrs, frmGoPhastUnit, FastGEO, ZoomBox2, ModflowGridUnit, BigCanvasMethods,
   ModelMuseUtilities, PhastModelUnit, XBase1, frmExportShapefileUnit, 
-  ShapefileUnit;
+  ShapefileUnit, AbstractGridUnit;
 
 resourcestring
   StrSTARTLAY = 'START_LAY';
@@ -781,7 +791,7 @@ end;
 constructor TPathLine.Create(Collection: TCollection);
 begin
   inherited;
-  FPoints := TPathLinePoints.Create;
+  FPoints := TPathLinePoints.Create(self);
 end;
 
 destructor TPathLine.Destroy;
@@ -809,6 +819,9 @@ begin
     MinTime := PathLineReader.MinTime;
     MaxTime := PathLineReader.MaxTime;
     FileDate := PathLineReader.FileDate;
+    TopQuadTree.Clear;
+    FrontQuadTree.Clear;
+    SideQuadTree.Clear;
   end;
   inherited;
 end;
@@ -817,10 +830,16 @@ constructor TPathLineReader.Create;
 begin
   inherited;
   FLines := TPathLines.Create;
+  FTopQuadTree := TRbwQuadTree.Create(nil);
+  FFrontQuadTree := TRbwQuadTree.Create(nil);
+  FSideQuadTree := TRbwQuadTree.Create(nil);
 end;
 
 destructor TPathLineReader.Destroy;
 begin
+  FSideQuadTree.Free;
+  FFrontQuadTree.Free;
+  FTopQuadTree.Free;
   FLines.Free;
   inherited;
 end;
@@ -842,6 +861,9 @@ var
   Grid: TModflowGrid;
   AColor: TColor;
   AColor32: TColor32;
+  QuadTree: TRbwQuadTree;
+  ShouldInitializeTree: Boolean;
+  Limits: TGridLimit;
 begin
   if not Visible then
   begin
@@ -859,19 +881,23 @@ begin
   end;
   ColRowOrLayer := -1;
   ZoomBox := nil;
+  QuadTree := nil;
   case Orientation of
     dsoTop:
       begin
+        QuadTree := TopQuadTree;
         ZoomBox := frmGoPhast.frameTopView.ZoomBox;
         ColRowOrLayer := Grid.SelectedLayer+1;
       end;
     dsoFront:
       begin
+        QuadTree := FrontQuadTree;
         ZoomBox := frmGoPhast.frameFrontView.ZoomBox;
         ColRowOrLayer := Grid.SelectedRow+1;
       end;
     dsoSide:
       begin
+        QuadTree := SideQuadTree;
         ZoomBox := frmGoPhast.frameSideView.ZoomBox;
         ColRowOrLayer := Grid.SelectedColumn+1;
       end;
@@ -880,6 +906,35 @@ begin
   end;
   GetMinMaxValues(MaxValue, MinValue);
 
+  ShouldInitializeTree := QuadTree.Count = 0;
+  if ShouldInitializeTree then
+  begin
+    Limits := Grid.GridLimits(OrientationToViewDirection(Orientation));
+    case Orientation of
+      dsoTop:
+        begin
+          QuadTree.XMax := Limits.MaxX;
+          QuadTree.XMin := Limits.MinX;
+          QuadTree.YMax := Limits.MaxY;
+          QuadTree.YMin := Limits.MinY;
+        end;
+      dsoFront:
+        begin
+          QuadTree.XMax := Limits.MaxX;
+          QuadTree.XMin := Limits.MinX;
+          QuadTree.YMax := Limits.MaxZ;
+          QuadTree.YMin := Limits.MinZ;
+        end;
+      dsoSide:
+        begin
+          QuadTree.XMax := Limits.MaxY;
+          QuadTree.XMin := Limits.MinY;
+          QuadTree.YMax := Limits.MaxZ;
+          QuadTree.YMin := Limits.MinZ;
+        end
+      else Assert(False);
+    end;
+  end;
   for LineIndex := 0 to Lines.Count - 1 do
   begin
     Line := Lines[LineIndex];
@@ -900,16 +955,28 @@ begin
                 begin
                   ADisplayPoint.X := ZoomBox.XCoord(APoint.X);
                   ADisplayPoint.Y := ZoomBox.YCoord(APoint.Y);
+                  if ShouldInitializeTree then
+                  begin
+                    QuadTree.AddPoint(APoint.X, APoint.Y, APoint);
+                  end;
                 end;
               dsoFront:
                 begin
                   ADisplayPoint.X := ZoomBox.XCoord(APoint.X);
                   ADisplayPoint.Y := ZoomBox.YCoord(APoint.Z);
+                  if ShouldInitializeTree then
+                  begin
+                    QuadTree.AddPoint(APoint.X, APoint.Z, APoint);
+                  end;
                 end;
               dsoSide:
                 begin
                   ADisplayPoint.X := ZoomBox.XCoord(APoint.Z);
                   ADisplayPoint.Y := ZoomBox.YCoord(APoint.Y);
+                  if ShouldInitializeTree then
+                  begin
+                    QuadTree.AddPoint(APoint.Z, APoint.X, APoint);
+                  end;
                 end;
               else Assert(False);
             end;
@@ -1485,6 +1552,11 @@ begin
 end;
 
 
+function TPathLinePoint.ParentLine: TPathLine;
+begin
+  result := (Collection as TPathLinePoints).FPathLine;
+end;
+
 function TPathLinePoint.ShouldShow(Limits: TPathLineDisplayLimits;
   Orientation: TDataSetOrientation; CurrentColRowOrLayer: integer): boolean;
 var
@@ -1560,9 +1632,10 @@ end;
 
 { TPathLinePoints }
 
-constructor TPathLinePoints.Create;
+constructor TPathLinePoints.Create(PathLine: TPathLine);
 begin
   inherited Create(TPathLinePoint);
+  FPathLine := PathLine;
 end;
 
 function TPathLinePoints.GetPoint(Index: integer): TPathLinePoint;
@@ -1657,53 +1730,6 @@ begin
               Shape.FPoints[PointIndex].X := APoint.FX;
               Shape.FPoints[PointIndex].Y := APoint.FY;
               Shape.FZArray[PointIndex] := APoint.FZ;
-
-              if PointIndex = 0 then
-              begin
-                Shape.FBoundingBox.XMin := APoint.FX;
-                Shape.FBoundingBox.YMin := APoint.FY;
-                Shape.FBoundingBox.XMax := APoint.FX;
-                Shape.FBoundingBox.YMax := APoint.FY;
-                Shape.FMMax := APoint.FTime;
-                Shape.FMMin := APoint.FTime;
-                Shape.FZMax := APoint.FZ;
-                Shape.FZMin := APoint.FZ;
-              end
-              else
-              begin
-                if Shape.FBoundingBox.XMin > APoint.FX then
-                begin
-                  Shape.FBoundingBox.XMin := APoint.FX;
-                end;
-                if Shape.FBoundingBox.YMin > APoint.FY then
-                begin
-                  Shape.FBoundingBox.YMin := APoint.FY;
-                end;
-                if Shape.FBoundingBox.XMax < APoint.FX then
-                begin
-                  Shape.FBoundingBox.XMax := APoint.FX;
-                end;
-                if Shape.FBoundingBox.YMax < APoint.FY then
-                begin
-                  Shape.FBoundingBox.YMax := APoint.FY;
-                end;
-                if Shape.FMMin > APoint.FTime then
-                begin
-                  Shape.FMMin := APoint.FTime;
-                end;
-                if Shape.FMMax < APoint.FTime then
-                begin
-                  Shape.FMMax := APoint.FTime;
-                end;
-                if Shape.FZMin > APoint.FZ then
-                begin
-                  Shape.FZMin := APoint.FZ;
-                end;
-                if Shape.FZMax < APoint.FZ then
-                begin
-                  Shape.FZMax := APoint.FZ;
-                end;
-              end;
             end;
           except
             Shape.Free;
@@ -2029,7 +2055,6 @@ begin
           Shape.FPoints[0].X := APoint.FEndX;
           Shape.FPoints[0].Y := APoint.FEndY;
           Shape.FZArray[0] := APoint.FEndZ;
-
         except
           Shape.Free;
           raise;
@@ -2131,7 +2156,6 @@ begin
           Shape.FPoints[0].X := APoint.FStartX;
           Shape.FPoints[0].Y := APoint.FStartY;
           Shape.FZArray[0] := APoint.FStartZ;
-
         except
           Shape.Free;
           raise;
@@ -2679,7 +2703,7 @@ var
 begin
   Column := J -1;
   Row := I -1;
-  Layer := frmGoPhast.PhastModel.LayerStructure.ModflowLayerToDataSetLayer(K);
+  Layer := frmGoPhast.PhastModel.ModflowLayerToDataSetLayer(K);
   if (Column < Grid.ColumnCount) and (Row < Grid.RowCount)
     and (Layer < Grid.LayerCount) then
   begin
@@ -3477,7 +3501,6 @@ var
   APoint: TTimeSeriesPoint;
   Shape: TShapeObject;
   PointCount: Integer;
-  Index: Integer;
   PlotTimeIndex: Integer;
 begin
   ShapeDataBase := TXBase.Create(nil);
@@ -3529,78 +3552,6 @@ begin
             Shape.FNumParts := PointCount;
             Shape.FNumPoints := PointCount;
             Shape.FNumPoints := PointCount;
-
-            Shape.FBoundingBox.XMin := Shape.FPoints[0].X;
-            for Index := 1 to PointCount - 1 do
-            begin
-              if Shape.FBoundingBox.XMin > Shape.FPoints[Index].X then
-              begin
-                Shape.FBoundingBox.XMin := Shape.FPoints[Index].X;
-              end;
-            end;
-
-            Shape.FBoundingBox.YMin := Shape.FPoints[0].Y;
-            for Index := 1 to PointCount - 1 do
-            begin
-              if Shape.FBoundingBox.YMin > Shape.FPoints[Index].Y then
-              begin
-                Shape.FBoundingBox.YMin := Shape.FPoints[Index].Y;
-              end;
-            end;
-
-            Shape.FBoundingBox.XMax := Shape.FPoints[0].X;
-            for Index := 1 to PointCount - 1 do
-            begin
-              if Shape.FBoundingBox.XMax < Shape.FPoints[Index].X then
-              begin
-                Shape.FBoundingBox.XMax := Shape.FPoints[Index].X;
-              end;
-            end;
-
-            Shape.FBoundingBox.YMax := Shape.FPoints[0].Y;
-            for Index := 1 to PointCount - 1 do
-            begin
-              if Shape.FBoundingBox.YMax < Shape.FPoints[Index].Y then
-              begin
-                Shape.FBoundingBox.YMax := Shape.FPoints[Index].Y;
-              end;
-            end;
-
-            Shape.FMMin := Shape.FMArray[0];
-            for Index := 1 to PointCount - 1 do
-            begin
-              if Shape.FMMin > Shape.FMArray[Index] then
-              begin
-                Shape.FMMin := Shape.FMArray[Index];
-              end;
-            end;
-
-            Shape.FMMax := Shape.FMArray[0];
-            for Index := 1 to PointCount - 1 do
-            begin
-              if Shape.FMMax < Shape.FMArray[Index] then
-              begin
-                Shape.FMMax := Shape.FMArray[Index];
-              end;
-            end;
-
-            Shape.FZMin := Shape.FZArray[0];
-            for Index := 1 to PointCount - 1 do
-            begin
-              if Shape.FZMin > Shape.FZArray[Index] then
-              begin
-                Shape.FZMin := Shape.FZArray[Index];
-              end;
-            end;
-
-            Shape.FZMax := Shape.FZArray[0];
-            for Index := 1 to PointCount - 1 do
-            begin
-              if Shape.FZMax < Shape.FZArray[Index] then
-              begin
-                Shape.FZMax := Shape.FZArray[Index];
-              end;
-            end;
 
             Assert(APoint <> nil);
             ShapeFileWriter.AddShape(Shape);

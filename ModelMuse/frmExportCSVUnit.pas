@@ -9,12 +9,16 @@ uses
 
 type
   TfrmExportCSV = class(TfrmCustomGoPhast)
+    sdSaveCSV: TSaveDialog;
+    Panel1: TPanel;
     vstDataSets: TVirtualStringTree;
     rgOrientation: TRadioGroup;
     rgEvaluatedAt: TRadioGroup;
-    sdSaveCSV: TSaveDialog;
-    btnSave: TBitBtn;
     btnHelp: TBitBtn;
+    btnSave: TBitBtn;
+    pnlModel: TPanel;
+    lblModel: TLabel;
+    comboModel: TComboBox;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure vstDataSetsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -60,10 +64,29 @@ begin
 end;
 
 procedure TfrmExportCSV.FormCreate(Sender: TObject);
+var
+  Index: Integer;
+  ChildModel: TChildModel;
 begin
   inherited;
   FDataSets := TObjectList.Create;
   rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection = msPhast;
+
+  comboModel.AddItem(StrParentModel, frmGoPhast.PhastModel);
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for Index := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[Index].ChildModel;
+      comboModel.AddItem(ChildModel.ModelName, ChildModel);
+    end;
+  end
+  else
+  begin
+    pnlModel.Visible := False;
+  end;
+  comboModel.ItemIndex := 0;
+
   GetData;
 end;
 
@@ -148,6 +171,7 @@ var
   ColumnIndex: Integer;
   Location: T3DRealPoint;
   DataArrayManager: TDataArrayManager;
+  LocalModel: TCustomModel;
   function FreeFormattedReal(
     const Value: double): string;
   begin
@@ -205,7 +229,8 @@ var
     NewLine;
   end;
 begin
-  Grid := frmGoPhast.PhastModel.Grid;
+  LocalModel := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
+  Grid := LocalModel.Grid;
   if (Grid.ColumnCount = 0)
     or (Grid.RowCount = 0)
     or (Grid.LayerCount = 0) then
@@ -231,6 +256,11 @@ begin
           begin
             ADataArray := TDataSetClassification(
               NodeData.ClassificationObject).DataArray;
+            if LocalModel <> frmGoPhast.PhastModel then
+            begin
+              ADataArray := LocalModel.DataArrayManager.GetDataSetByName(ADataArray.Name);
+              Assert(ADataArray <> nil);
+            end;
             DataArrayList.Add(ADataArray);
           end
         end;
@@ -351,7 +381,7 @@ begin
     end;
     if DataArrayList.Count > 0 then
     begin
-      DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+      DataArrayManager := LocalModel.DataArrayManager;
       for Index := 0 to DataArrayList.Count - 1 do
       begin
         ADataArray := DataArrayList[Index];
@@ -430,7 +460,7 @@ end;
 
 procedure TfrmExportCSV.NewLine;
 begin
-  WriteString(#13#10);
+  WriteString(sLineBreak);
 end;
 
 

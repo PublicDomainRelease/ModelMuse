@@ -4,6 +4,7 @@ inherited frmManageSettings: TfrmManageSettings
   Caption = 'Manage Image Settings'
   ClientWidth = 341
   ExplicitWidth = 349
+  ExplicitHeight = 268
   PixelsPerInch = 96
   TextHeight = 18
   object rdgSettings: TRbwDataGrid4
@@ -17,6 +18,7 @@ inherited frmManageSettings: TfrmManageSettings
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
     TabOrder = 0
     OnSetEditText = rdgSettingsSetEditText
+    AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = False

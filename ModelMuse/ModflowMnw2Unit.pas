@@ -182,8 +182,7 @@ type
       write SetPartialPenetration;
   end;
 
-//  TMnw2SpatialCollection = class(TCustomMF_ListBoundColl)
-  TMnw2SpatialCollection = class(TCustomMF_ArrayBoundColl)
+  TMnw2TimeListLink = class(TTimeListsModelLink)
   private
     FWellRadiusData: TModflowTimeList;
     FSkinRadiusData: TModflowTimeList;
@@ -193,6 +192,23 @@ type
     FPData: TModflowTimeList;
     FCellToWellConductanceData: TModflowTimeList;
     FPartialPenetrationData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
+
+//  TMnw2SpatialCollection = class(TCustomMF_ListBoundColl)
+  TMnw2SpatialCollection = class(TCustomMF_ArrayBoundColl)
+  private
+//    FWellRadiusData: TModflowTimeList;
+//    FSkinRadiusData: TModflowTimeList;
+//    FSkinKData: TModflowTimeList;
+//    FBData: TModflowTimeList;
+//    FCData: TModflowTimeList;
+//    FPData: TModflowTimeList;
+//    FCellToWellConductanceData: TModflowTimeList;
+//    FPartialPenetrationData: TModflowTimeList;
     procedure InvalidateWellRadiusData(Sender: TObject);
     procedure InvalidateSkinRadiusData(Sender: TObject);
     procedure InvalidateSkinKData(Sender: TObject);
@@ -201,7 +217,7 @@ type
     procedure InvalidatePData(Sender: TObject);
     procedure InvalidateCellToWellConductanceData(Sender: TObject);
     procedure InvalidatePartialPenetrationData(Sender: TObject);
-    function GetPhastModel: TComponent;
+    function GetPhastModel: TBaseModel;
     procedure InvalidateWellRadius;
     procedure InvalidateSkinRadius;
     procedure InvalidateSkinK;
@@ -211,16 +227,11 @@ type
     procedure InvalidateCellToWellConductance;
     procedure InvalidatePartialPenetration;
   protected
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer);
-      override;
-    procedure InitializeTimeLists(ListOfTimeLists: TList); override;
-//    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
-//      ACellList: TObject); override;
-//    procedure AssignCellList(Expression: TExpression; ACellList: TObject;
-//      BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
-//      Variables, DataSets: TList); override;
-//    function AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
-//      override;
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
+    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+      AModel: TBaseModel); override;
+    procedure InitializeTimeLists(ListOfTimeLists: TList;
+      AModel: TBaseModel); override;
     procedure AddSpecificBoundary; override;
 
     // See @link(TCustomNonSpatialBoundColl.ItemClass
@@ -228,14 +239,7 @@ type
     class function ItemClass: TMF_BoundItemClass; override;
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
-    property PhastModel: TComponent read GetPhastModel;
-  public
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
+    property PhastModel: TBaseModel read GetPhastModel;
   end;
 
   TLiftItem = class(TOrderedItem)
@@ -255,7 +259,7 @@ type
 
   TLiftCollection = class(TEnhancedOrderedCollection)
   public
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     procedure Sort;
     procedure Assign(Source: TPersistent); override;
   end;
@@ -284,10 +288,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -378,7 +385,7 @@ type
     function StoreTargetCell: Boolean;
     function StoreTargetLocation: Boolean;
   public
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
   published
@@ -491,21 +498,22 @@ type
     procedure SetSaveMnwiInfo(const Value: boolean);
   protected
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-      ValueTimeList: TList); override;
+      ValueTimeList: TList; AModel: TBaseModel); override;
     class function BoundaryCollectionClass: TMF_BoundCollClass;
       override;
     procedure AddBoundaryTimes(BoundCol: TCustomNonSpatialBoundColl;
-      Times: TRealList); override;
+      Times: TRealList; StartTestTime, EndTestTime: double;
+      var StartRangeExtended, EndRangeExtended: boolean); override;
   public
-    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
-      override;
+    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel); override;
     procedure InvalidateDisplay; override;
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model, ScreenObject: TObject);
+    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     destructor Destroy; override;
     function Used: boolean; override;
     function ConstantConstraints: boolean;
-    function TargetCellLocation: TCellLocation;
+    function TargetCellLocation(AModel: TBaseModel): TCellLocation;
     procedure Clear; override;
     function DataTypeUsed(DataIndex: integer): boolean;
   published
@@ -567,7 +575,18 @@ implementation
 
 uses
   frmGoPhastUnit, ScreenObjectUnit, PhastModelUnit,
-  ModflowGridUnit, frmFormulaErrorsUnit, Math, SparseDataSets, SparseArrayUnit;
+  ModflowGridUnit, frmFormulaErrorsUnit, Math, SparseDataSets, SparseArrayUnit,
+  frmErrorsAndWarningsUnit;
+
+resourcestring
+  StrOneOrMoreMNW2Wel = 'One or more MNW2 wells has a well radius that is '
+    + 'less than or equal to zero.);';
+  MnwSkinError = 'One or more MNW2 wells has a skin radius that is '
+    + 'less than or equal to zero.);';
+  MnwSkinToThinError = 'One or more MNW2 wells has a skin radius that is '
+    + 'less than the well radius';
+  MnwSkinKError = 'One or more MNW2 wells has a skin hydraulic conductivity that is '
+    + 'less than or equal to zero.);';
 
 { TMnw2Item }
 
@@ -663,7 +682,7 @@ begin
         ErrorMessage := 'Error in formula for ' + ErrorMessage
           + ' in MNW2 data';
 
-        frmFormulaErrors.AddError(ObjectName, '', Formula, ErrorMessage);
+        frmFormulaErrors.AddFormulaError(ObjectName, '', Formula, ErrorMessage);
         Formula := '0';
         BoundaryFormula[FormulaIndex] := Formula;
         Compiler.Compile(Formula);
@@ -689,7 +708,7 @@ begin
       ErrorMessage := 'Incorrect result type in formula for ' + ErrorMessage
         + ' in MNW2 data';
 
-      frmFormulaErrors.AddError(ObjectName, '', Formula, ErrorMessage);
+      frmFormulaErrors.AddFormulaError(ObjectName, '', Formula, ErrorMessage);
       Formula := '0';
       BoundaryFormula[FormulaIndex] := Formula;
       Compiler.Compile(Formula);
@@ -926,112 +945,8 @@ begin
   AddBoundary(TMnw2Storage.Create);
 end;
 
-//function TMnw2SpatialCollection.AdjustedFormula(FormulaIndex,
-//  ItemIndex: integer): string;
-//var
-//  Item: TMnw2SpatialItem;
-//begin
-//  Item := Items[ItemIndex] as TMnw2SpatialItem;
-//  result := Item.BoundaryFormula[FormulaIndex];
-//end;
-
-//procedure TMnw2SpatialCollection.AssignCellList(Expression: TExpression;
-//  ACellList: TObject; BoundaryStorage: TCustomBoundaryStorage;
-//  BoundaryFunctionIndex: integer; Variables, DataSets: TList);
-//var
-//  Mnw2Storage: TMnw2Storage;
-//  CellList: TCellAssignmentList;
-//  Index: Integer;
-//  ACell: TCellAssignment;
-//begin
-//  Assert(BoundaryFunctionIndex in [WellRadiusPosition, SkinRadiusPosition,
-//    SkinKPosition, BPosition, CPosition, PPosition,
-//    CellToWellConductancePosition, PartialPenetrationPosition]);
-//  Assert(Expression <> nil);
-//
-//  Mnw2Storage := BoundaryStorage as TMnw2Storage;
-//  CellList := ACellList as TCellAssignmentList;
-//  for Index := 0 to CellList.Count - 1 do
-//  begin
-//    ACell := CellList[Index];
-//    UpdataRequiredData(DataSets, Variables, ACell);
-//    // 2. update locations
-//    Expression.Evaluate;
-//    with Mnw2Storage.Mnw2Array[Index] do
-//    begin
-//      case BoundaryFunctionIndex of
-//        WellRadiusPosition:
-//          begin
-//            WellRadius := Expression.DoubleResult;
-//            WellRadiusAnnotation := ACell.Annotation;
-//          end;
-//        SkinRadiusPosition:
-//          begin
-//            SkinRadius := Expression.DoubleResult;
-//            SkinRadiusAnnotation := ACell.Annotation;
-//          end;
-//        SkinKPosition:
-//          begin
-//            SkinK := Expression.DoubleResult;
-//            SkinKAnnotation := ACell.Annotation;
-//          end;
-//        BPosition:
-//          begin
-//            B := Expression.DoubleResult;
-//            BAnnotation := ACell.Annotation;
-//          end;
-//        CPosition:
-//          begin
-//            C := Expression.DoubleResult;
-//            CAnnotation := ACell.Annotation;
-//          end;
-//        PPosition:
-//          begin
-//            P := Expression.DoubleResult;
-//            PAnnotation := ACell.Annotation;
-//          end;
-//        CellToWellConductancePosition:
-//          begin
-//            CellToWellConductance := Expression.DoubleResult;
-//            CellToWellConductanceAnnotation := ACell.Annotation;
-//          end;
-//        PartialPenetrationPosition:
-//          begin
-//            PartialPenetration := Expression.DoubleResult;
-//            PartialPenetrationAnnotation := ACell.Annotation;
-//          end;
-//        else
-//          Assert(False);
-//      end;
-//    end;
-//  end;
-//end;
-
-//procedure TMnw2SpatialCollection.AssignCellLocation(
-//  BoundaryStorage: TCustomBoundaryStorage; ACellList: TObject);
-//var
-//  Mnw2Storage: TMnw2Storage;
-//  CellList: TCellAssignmentList;
-//  Index: Integer;
-//  ACell: TCellAssignment;
-//begin
-//  Mnw2Storage := BoundaryStorage as TMnw2Storage;
-//  CellList := ACellList as TCellAssignmentList;
-//  for Index := 0 to CellList.Count - 1 do
-//  begin
-//    ACell := CellList[Index];
-//    with Mnw2Storage.Mnw2Array[Index] do
-//    begin
-//      Cell.Layer := ACell.Layer;
-//      Cell.Row := ACell.Row;
-//      Cell.Column := ACell.Column;
-//      Cell.Section := ACell.Section;
-//    end;
-//  end;
-//end;
-
 procedure TMnw2SpatialCollection.AssignCellValues(DataSets: TList;
-  ItemIndex: Integer);
+  ItemIndex: Integer; AModel: TBaseModel);
 var
   WellRadiusArray: TDataArray;
   SkinRadiusArray: TDataArray;
@@ -1050,13 +965,13 @@ var
   SegmentIndex: Integer;
   Segment: TCellElementSegment;
   PriorCol, PriorRow, PriorLayer: integer;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
   Boundary: TMnw2Boundary;
   LossType: TMnwLossType;
   IsValue: Boolean;
   UsedCells: T3DSparseIntegerArray;
 begin
-  LocalModel := Model as TPhastModel;
+  LocalModel := AModel as TCustomModel;
   PriorCol := -1;
   PriorRow := -1;
   PriorLayer := -1;
@@ -1114,23 +1029,19 @@ begin
     PartialPenetrationArray := nil;
   end;
 
-
-
-
-//  LastBoundaryIndex := -1;
   BoundaryIndex := -1;
   BoundaryStorage := Boundaries[ItemIndex] as TMnw2Storage;
 
   UsedCells := T3DSparseIntegerArray.Create(SPASmall);
   try
     LocalScreenObject := ScreenObject as TScreenObject;
-    for SegmentIndex := 0 to LocalScreenObject.Segments.Count - 1 do
+    for SegmentIndex := 0 to LocalScreenObject.Segments[LocalModel].Count - 1 do
     begin
-      Segment := LocalScreenObject.Segments[SegmentIndex];
+      Segment := LocalScreenObject.Segments[LocalModel][SegmentIndex];
       ColIndex := Segment.Col;
       RowIndex := Segment.Row;
       LayerIndex := Segment.Layer;
-      if not LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+      if not LocalModel.IsLayerSimulated(LayerIndex) then
       begin
         Continue;
       end;
@@ -1179,77 +1090,92 @@ begin
       PriorRow := Segment.Row;
       PriorLayer := Segment.Layer;
 
-
-  //    if WellRadiusArray.IsValue[LayerIndex, RowIndex, ColIndex] then
+      Assert(BoundaryIndex < Length(BoundaryStorage.Mnw2Array));
+      with BoundaryStorage.Mnw2Array[BoundaryIndex] do
       begin
-  //      BoundaryStorage := Boundaries[ItemIndex] as TMnw2Storage;
-        Assert(BoundaryIndex < Length(BoundaryStorage.Mnw2Array));
-        with BoundaryStorage.Mnw2Array[BoundaryIndex] do
+        Cell.Layer := LayerIndex;
+        Cell.Row := RowIndex;
+        Cell.Column := ColIndex;
+        if WellRadiusArray <> nil then
         begin
-          Cell.Layer := LayerIndex;
-          Cell.Row := RowIndex;
-          Cell.Column := ColIndex;
-  //        Cell.Section := Sections[LayerIndex, RowIndex, ColIndex];
-          if WellRadiusArray <> nil then
+          WellRadius := WellRadiusArray.
+            RealData[LayerIndex, RowIndex, ColIndex];
+          WellRadiusAnnotation := WellRadiusArray.
+            Annotation[LayerIndex, RowIndex, ColIndex];
+          if WellRadius <= 0 then
           begin
-            WellRadius := WellRadiusArray.
-              RealData[LayerIndex, RowIndex, ColIndex];
-            WellRadiusAnnotation := WellRadiusArray.
-              Annotation[LayerIndex, RowIndex, ColIndex];
+            frmErrorsAndWarnings.AddError(LocalModel, StrOneOrMoreMNW2Wel,
+              LocalScreenObject.Name);
           end;
+        end;
 
-          if SkinRadiusArray <> nil then
+        if SkinRadiusArray <> nil then
+        begin
+          SkinRadius := SkinRadiusArray.
+            RealData[LayerIndex, RowIndex, ColIndex];
+          SkinRadiusAnnotation := SkinRadiusArray.
+            Annotation[LayerIndex, RowIndex, ColIndex];
+          if SkinRadius <= 0 then
           begin
-            SkinRadius := SkinRadiusArray.
-              RealData[LayerIndex, RowIndex, ColIndex];
-            SkinRadiusAnnotation := SkinRadiusArray.
-              Annotation[LayerIndex, RowIndex, ColIndex];
+            frmErrorsAndWarnings.AddError(LocalModel, MnwSkinError,
+              LocalScreenObject.Name);
           end;
-          if SkinKArray <> nil then
+          Assert(WellRadiusArray <> nil);
+          if SkinRadius < WellRadius then
           begin
-            SkinK := SkinKArray.
-              RealData[LayerIndex, RowIndex, ColIndex];
-            SkinKAnnotation := SkinKArray.
-              Annotation[LayerIndex, RowIndex, ColIndex];
+            frmErrorsAndWarnings.AddError(LocalModel, MnwSkinToThinError,
+              LocalScreenObject.Name);
           end;
+        end;
+        if SkinKArray <> nil then
+        begin
+          SkinK := SkinKArray.
+            RealData[LayerIndex, RowIndex, ColIndex];
+          SkinKAnnotation := SkinKArray.
+            Annotation[LayerIndex, RowIndex, ColIndex];
+          if SkinK <= 0 then
+          begin
+            frmErrorsAndWarnings.AddError(LocalModel, MnwSkinKError,
+              LocalScreenObject.Name);
+          end;
+        end;
 
-          if BArray <> nil then
-          begin
-            B := BArray.
-              RealData[LayerIndex, RowIndex, ColIndex];
-            BAnnotation := BArray.
-              Annotation[LayerIndex, RowIndex, ColIndex];
-          end;
-          if CArray <> nil then
-          begin
-            C := CArray.
-              RealData[LayerIndex, RowIndex, ColIndex];
-            CAnnotation := CArray.
-              Annotation[LayerIndex, RowIndex, ColIndex];
-          end;
-          if PArray <> nil then
-          begin
-            P := PArray.
-              RealData[LayerIndex, RowIndex, ColIndex];
-            PAnnotation := PArray.
-              Annotation[LayerIndex, RowIndex, ColIndex];
-          end;
+        if BArray <> nil then
+        begin
+          B := BArray.
+            RealData[LayerIndex, RowIndex, ColIndex];
+          BAnnotation := BArray.
+            Annotation[LayerIndex, RowIndex, ColIndex];
+        end;
+        if CArray <> nil then
+        begin
+          C := CArray.
+            RealData[LayerIndex, RowIndex, ColIndex];
+          CAnnotation := CArray.
+            Annotation[LayerIndex, RowIndex, ColIndex];
+        end;
+        if PArray <> nil then
+        begin
+          P := PArray.
+            RealData[LayerIndex, RowIndex, ColIndex];
+          PAnnotation := PArray.
+            Annotation[LayerIndex, RowIndex, ColIndex];
+        end;
 
-          if CellToWellConductanceArray <> nil then
-          begin
-            CellToWellConductance := CellToWellConductanceArray.
-              RealData[LayerIndex, RowIndex, ColIndex];
-            CellToWellConductanceAnnotation := CellToWellConductanceArray.
-              Annotation[LayerIndex, RowIndex, ColIndex];
-          end;
+        if CellToWellConductanceArray <> nil then
+        begin
+          CellToWellConductance := CellToWellConductanceArray.
+            RealData[LayerIndex, RowIndex, ColIndex];
+          CellToWellConductanceAnnotation := CellToWellConductanceArray.
+            Annotation[LayerIndex, RowIndex, ColIndex];
+        end;
 
-          if PartialPenetrationArray <> nil then
-          begin
-            PartialPenetration := PartialPenetrationArray.
-              RealData[LayerIndex, RowIndex, ColIndex];
-            PartialPenetrationAnnotation := PartialPenetrationArray.
-              Annotation[LayerIndex, RowIndex, ColIndex];
-          end;
+        if PartialPenetrationArray <> nil then
+        begin
+          PartialPenetration := PartialPenetrationArray.
+            RealData[LayerIndex, RowIndex, ColIndex];
+          PartialPenetrationAnnotation := PartialPenetrationArray.
+            Annotation[LayerIndex, RowIndex, ColIndex];
         end;
       end;
     end;
@@ -1291,78 +1217,80 @@ begin
   BoundaryStorage.CacheData;
 end;
 
-constructor TMnw2SpatialCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
-begin
-  inherited;
-  FWellRadiusData := TModflowTimeList.Create(Model, ScreenObject);
-  FSkinRadiusData := TModflowTimeList.Create(Model, ScreenObject);
-  FSkinKData := TModflowTimeList.Create(Model, ScreenObject);
-  FBData := TModflowTimeList.Create(Model, ScreenObject);
-  FCData := TModflowTimeList.Create(Model, ScreenObject);
-  FPData := TModflowTimeList.Create(Model, ScreenObject);
-  FCellToWellConductanceData := TModflowTimeList.Create(Model, ScreenObject);
-  FPartialPenetrationData := TModflowTimeList.Create(Model, ScreenObject);
-end;
-
-destructor TMnw2SpatialCollection.Destroy;
-begin
-  FPartialPenetrationData.Free;
-  FCellToWellConductanceData.Free;
-  FPData.Free;
-  FCData.Free;
-  FBData.Free;
-  FSkinKData.Free;
-  FSkinRadiusData.Free;
-  FWellRadiusData.Free;
-  inherited;
-end;
-
 procedure TMnw2SpatialCollection.InvalidatePartialPenetration;
 var
   LocalPhastModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   LocalPhastModel := PhastModel as TPhastModel;
   if LocalPhastModel <> nil then
   begin
     LocalPhastModel.ModflowPackages.Mnw2Package.MfMnwPartialPenetration.Invalidate;
+    for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.ModflowPackages.Mnw2Package.MfMnwPartialPenetration.Invalidate;
+    end;
   end;
 end;
 
 procedure TMnw2SpatialCollection.InvalidateCellToWellConductance;
 var
   LocalPhastModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   LocalPhastModel := PhastModel as TPhastModel;
   if LocalPhastModel <> nil then
   begin
     LocalPhastModel.ModflowPackages.Mnw2Package.MfMnwCellToWellConductance.Invalidate;
+    for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.ModflowPackages.Mnw2Package.MfMnwCellToWellConductance.Invalidate;
+    end;
   end;
 end;
 
 procedure TMnw2SpatialCollection.InvalidateP;
 var
   LocalPhastModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   LocalPhastModel := PhastModel as TPhastModel;
   if LocalPhastModel <> nil then
   begin
     LocalPhastModel.ModflowPackages.Mnw2Package.MfMnwP.Invalidate;
+    for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.ModflowPackages.Mnw2Package.MfMnwP.Invalidate;
+    end;
   end;
 end;
 
 procedure TMnw2SpatialCollection.InvalidateC;
 var
   LocalPhastModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   LocalPhastModel := PhastModel as TPhastModel;
   if LocalPhastModel <> nil then
   begin
     LocalPhastModel.ModflowPackages.Mnw2Package.MfMnwC.Invalidate;
+    for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.ModflowPackages.Mnw2Package.MfMnwC.Invalidate;
+    end;
   end;
 end;
 
-procedure TMnw2SpatialCollection.InitializeTimeLists(ListOfTimeLists: TList);
+procedure TMnw2SpatialCollection.InitializeTimeLists(ListOfTimeLists: TList;
+  AModel: TBaseModel);
 var
   TimeIndex: Integer;
   BoundaryValues: TBoundaryValueArray;
@@ -1372,6 +1300,15 @@ var
   ScreenObject: TScreenObject;
   ItemUsed: boolean;
   LossType: TMnwLossType;
+  ALink: TMnw2TimeListLink;
+  WellRadiusData: TModflowTimeList;
+  SkinRadiusData: TModflowTimeList;
+  SkinKData: TModflowTimeList;
+  BData: TModflowTimeList;
+  CData: TModflowTimeList;
+  PData: TModflowTimeList;
+  CellToWellConductanceData: TModflowTimeList;
+  PartialPenetrationData: TModflowTimeList;
 begin
   SetLength(BoundaryValues, Count);
 
@@ -1393,7 +1330,9 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FWellRadiusData.Initialize(BoundaryValues, ScreenObject, alAll);
+  ALink := TimeListLink.GetLink(AModel) as TMnw2TimeListLink;
+  WellRadiusData := ALink.FWellRadiusData;
+  WellRadiusData.Initialize(BoundaryValues, ScreenObject, False, alAll);
 
   ItemUsed := LossType  = mltSkin;
   for Index := 0 to Count - 1 do
@@ -1409,7 +1348,8 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FSkinRadiusData.Initialize(BoundaryValues, ScreenObject, alAll);
+  SkinRadiusData := ALink.FSkinRadiusData;
+  SkinRadiusData.Initialize(BoundaryValues, ScreenObject, False, alAll);
 
   ItemUsed := LossType  = mltSkin;
   for Index := 0 to Count - 1 do
@@ -1425,7 +1365,8 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FSkinKData.Initialize(BoundaryValues, ScreenObject, alAll);
+  SkinKData := ALink.FSkinKData;
+  SkinKData.Initialize(BoundaryValues, ScreenObject, False, alAll);
 
   ItemUsed := LossType  = mltEquation;
   for Index := 0 to Count - 1 do
@@ -1441,8 +1382,9 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FBData.Initialize(BoundaryValues, ScreenObject,
-    alAll);
+  BData := ALink.FBData;
+  BData.Initialize(BoundaryValues, ScreenObject,
+    False, alAll);
 
   ItemUsed := LossType  = mltEquation;
   for Index := 0 to Count - 1 do
@@ -1458,8 +1400,9 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FCData.Initialize(BoundaryValues, ScreenObject,
-    alAll);
+  CData := ALink.FCData;
+  CData.Initialize(BoundaryValues, ScreenObject,
+    False, alAll);
 
   ItemUsed := LossType  = mltEquation;
   for Index := 0 to Count - 1 do
@@ -1475,8 +1418,9 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FPData.Initialize(BoundaryValues, ScreenObject,
-    alAll);
+  PData := ALink.FPData;
+  PData.Initialize(BoundaryValues, ScreenObject,
+    False, alAll);
 
   ItemUsed := LossType  = mtlSpecify;
   for Index := 0 to Count - 1 do
@@ -1492,8 +1436,9 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FCellToWellConductanceData.Initialize(BoundaryValues, ScreenObject,
-    alAll);
+  CellToWellConductanceData := ALink.FCellToWellConductanceData;
+  CellToWellConductanceData.Initialize(BoundaryValues, ScreenObject,
+    False, alAll);
 
 
   ItemUsed := Boundary.PartialPenetrationCorrection;
@@ -1510,143 +1455,263 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FPartialPenetrationData.Initialize(BoundaryValues, ScreenObject,
-    alAll);
+  PartialPenetrationData := ALink.FPartialPenetrationData;
+  PartialPenetrationData.Initialize(BoundaryValues, ScreenObject,
+    False, alAll);
 
 
 
-  Assert(FWellRadiusData.Count = Count);
-  Assert(FSkinRadiusData.Count = Count);
-  Assert(FSkinKData.Count = Count);
-  Assert(FBData.Count = Count);
-  Assert(FCData.Count = Count);
-  Assert(FPData.Count = Count);
-  Assert(FCellToWellConductanceData.Count = Count);
-  Assert(FPartialPenetrationData.Count = Count);
+  Assert(WellRadiusData.Count = Count);
+  Assert(SkinRadiusData.Count = Count);
+  Assert(SkinKData.Count = Count);
+  Assert(BData.Count = Count);
+  Assert(CData.Count = Count);
+  Assert(PData.Count = Count);
+  Assert(CellToWellConductanceData.Count = Count);
+  Assert(PartialPenetrationData.Count = Count);
   ClearBoundaries;
-  SetBoundaryCapacity(FWellRadiusData.Count);
-  for TimeIndex := 0 to FWellRadiusData.Count - 1 do
+  SetBoundaryCapacity(WellRadiusData.Count);
+  for TimeIndex := 0 to WellRadiusData.Count - 1 do
   begin
     AddBoundary(TMnw2Storage.Create);
   end;
-  ListOfTimeLists.Add(FWellRadiusData);
-  ListOfTimeLists.Add(FSkinRadiusData);
-  ListOfTimeLists.Add(FSkinKData);
-  ListOfTimeLists.Add(FBData);
-  ListOfTimeLists.Add(FCData);
-  ListOfTimeLists.Add(FPData);
-  ListOfTimeLists.Add(FCellToWellConductanceData);
-  ListOfTimeLists.Add(FPartialPenetrationData);
+  ListOfTimeLists.Add(WellRadiusData);
+  ListOfTimeLists.Add(SkinRadiusData);
+  ListOfTimeLists.Add(SkinKData);
+  ListOfTimeLists.Add(BData);
+  ListOfTimeLists.Add(CData);
+  ListOfTimeLists.Add(PData);
+  ListOfTimeLists.Add(CellToWellConductanceData);
+  ListOfTimeLists.Add(PartialPenetrationData);
 end;
 
 procedure TMnw2SpatialCollection.InvalidateB;
 var
   LocalPhastModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   LocalPhastModel := PhastModel as TPhastModel;
   if LocalPhastModel <> nil then
   begin
     LocalPhastModel.ModflowPackages.Mnw2Package.MfMnwB.Invalidate;
+    for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.ModflowPackages.Mnw2Package.MfMnwB.Invalidate;
+    end;
   end;
 end;
 
 procedure TMnw2SpatialCollection.InvalidateSkinK;
 var
   LocalPhastModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   LocalPhastModel := PhastModel as TPhastModel;
   if LocalPhastModel <> nil then
   begin
     LocalPhastModel.ModflowPackages.Mnw2Package.MfMnwSkinK.Invalidate;
+    for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.ModflowPackages.Mnw2Package.MfMnwSkinK.Invalidate;
+    end;
   end;
 end;
 
 procedure TMnw2SpatialCollection.InvalidateSkinRadius;
 var
   LocalPhastModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   LocalPhastModel := PhastModel as TPhastModel;
   if LocalPhastModel <> nil then
   begin
     LocalPhastModel.ModflowPackages.Mnw2Package.MfMnwSkinRadius.Invalidate;
+    for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.ModflowPackages.Mnw2Package.MfMnwSkinRadius.Invalidate;
+    end;
   end;
 end;
 
 procedure TMnw2SpatialCollection.InvalidateWellRadius;
 var
   LocalPhastModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   LocalPhastModel := PhastModel as TPhastModel;
   if LocalPhastModel <> nil then
   begin
     LocalPhastModel.ModflowPackages.Mnw2Package.MfMnwWellRadius.Invalidate;
+    for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.ModflowPackages.Mnw2Package.MfMnwWellRadius.Invalidate;
+    end;
   end;
 end;
 
 procedure TMnw2SpatialCollection.InvalidateBData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TMnw2TimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FBData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TMnw2TimeListLink;
+    Link.FBData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TMnw2TimeListLink;
+      Link.FBData.Invalidate;
+    end;
     InvalidateB;
   end;
 end;
 
 procedure TMnw2SpatialCollection.InvalidateCData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TMnw2TimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FCData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TMnw2TimeListLink;
+    Link.FCData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TMnw2TimeListLink;
+      Link.FCData.Invalidate;
+    end;
     InvalidateC;
   end;
 end;
 
 procedure TMnw2SpatialCollection.InvalidateCellToWellConductanceData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TMnw2TimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FCellToWellConductanceData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TMnw2TimeListLink;
+    Link.FCellToWellConductanceData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TMnw2TimeListLink;
+      Link.FCellToWellConductanceData.Invalidate;
+    end;
     InvalidateCellToWellConductance;
   end;
 end;
 
 procedure TMnw2SpatialCollection.InvalidatePartialPenetrationData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TMnw2TimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FPartialPenetrationData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TMnw2TimeListLink;
+    Link.FPartialPenetrationData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TMnw2TimeListLink;
+      Link.FPartialPenetrationData.Invalidate;
+    end;
     InvalidatePartialPenetration;
   end;
 end;
 
 procedure TMnw2SpatialCollection.InvalidatePData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TMnw2TimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FPData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TMnw2TimeListLink;
+    Link.FPData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TMnw2TimeListLink;
+      Link.FPData.Invalidate;
+    end;
     InvalidateP;
   end;
 end;
 
 procedure TMnw2SpatialCollection.InvalidateSkinKData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TMnw2TimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FSkinKData.Invalidate;
-    InvalidateSkinK;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TMnw2TimeListLink;
+    Link.FSkinKData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TMnw2TimeListLink;
+      Link.FSkinKData.Invalidate;
+    end;
+    InvalidateSkinK
   end;
 end;
 
 procedure TMnw2SpatialCollection.InvalidateSkinRadiusData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TMnw2TimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FSkinRadiusData.Invalidate;
-    InvalidateSkinRadius;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TMnw2TimeListLink;
+    Link.FSkinRadiusData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TMnw2TimeListLink;
+      Link.FSkinRadiusData.Invalidate;
+    end;
+    InvalidateSkinRadius
   end;
 end;
 
-function TMnw2SpatialCollection.GetPhastModel: TComponent;
+function TMnw2SpatialCollection.GetPhastModel: TBaseModel;
 var
   OwnerScreenObject: TScreenObject;
 begin
@@ -1661,11 +1726,29 @@ begin
   end;
 end;
 
+function TMnw2SpatialCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
+begin
+  result := TMnw2TimeListLink;
+end;
+
 procedure TMnw2SpatialCollection.InvalidateWellRadiusData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TMnw2TimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FWellRadiusData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TMnw2TimeListLink;
+    Link.FWellRadiusData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TMnw2TimeListLink;
+      Link.FWellRadiusData.Invalidate;
+    end;
     InvalidateWellRadius;
   end;
 end;
@@ -1685,7 +1768,8 @@ end;
 { TMnw2Boundary }
 
 procedure TMnw2Boundary.AddBoundaryTimes(BoundCol: TCustomNonSpatialBoundColl;
-  Times: TRealList);
+  Times: TRealList; StartTestTime, EndTestTime: double;
+  var StartRangeExtended, EndRangeExtended: boolean);
 var
   Index: Integer;
   TimeItem: TMnw2TimeItem;
@@ -1695,6 +1779,14 @@ begin
     TimeItem := TimeValues[Index] as TMnw2TimeItem;
     Times.AddUnique(TimeItem.StartTime);
     Times.AddUnique(TimeItem.EndTime);
+    if (TimeItem.StartTime < StartTestTime) then
+    begin
+      StartRangeExtended := True;
+    end;
+    if (TimeItem.EndTime > EndTestTime) then
+    begin
+      EndRangeExtended := True;
+    end;
   end;
 end;
 
@@ -1729,14 +1821,16 @@ begin
 end;
 
 procedure TMnw2Boundary.AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-  ValueTimeList: TList);
+  ValueTimeList: TList; AModel: TBaseModel);
 var
   Cell: TMnw2_Cell;
   BoundaryValues: TMnw2Record;
   BoundaryIndex: Integer;
   Cells: TValueCellList;
   LocalBoundaryStorage: TMnw2Storage;
+  LocalModel: TCustomModel;
 begin
+  LocalModel := AModel as TCustomModel;
   LocalBoundaryStorage := BoundaryStorage as TMnw2Storage;
   if 0 < ValueTimeList.Count then
   begin
@@ -1749,6 +1843,10 @@ begin
   end;
   // Check if the stress period is completely enclosed within the times
   // of the LocalBoundaryStorage;
+  if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.Mnw2Array) then
+  begin
+    Cells.Capacity := Cells.Count + Length(LocalBoundaryStorage.Mnw2Array)
+  end;
 //  Cells.CheckRestore;
   for BoundaryIndex := 0 to Length(LocalBoundaryStorage.Mnw2Array) - 1 do
   begin
@@ -1760,6 +1858,7 @@ begin
     Cell.StressPeriod := 0;
     Cell.Values := BoundaryValues;
     Cell.ScreenObject := ScreenObject;
+    LocalModel.AdjustCellPosition(Cell);
   end;
   Cells.Cache;
   LocalBoundaryStorage.CacheData;
@@ -1840,7 +1939,7 @@ begin
   end;
 end;
 
-constructor TMnw2Boundary.Create(Model, ScreenObject: TObject);
+constructor TMnw2Boundary.Create(Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited;
   FLossType := mltThiem;
@@ -1860,13 +1959,13 @@ begin
 end;
 
 procedure TMnw2Boundary.GetCellValues(ValueTimeList: TList;
-  ParamList: TStringList);
+  ParamList: TStringList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TMnw2Storage;
 //  ValueCount: Integer;
 begin
-  EvaluateArrayBoundaries;
+  EvaluateArrayBoundaries(AModel);
 //  EvaluateListBoundaries;
 //  ValueCount := 0;
   for ValueIndex := 0 to Values.Count - 1 do
@@ -1874,7 +1973,7 @@ begin
     if ValueIndex < Values.BoundaryCount then
     begin
       BoundaryStorage := Values.Boundaries[ValueIndex] as TMnw2Storage;
-      AssignCells(BoundaryStorage, ValueTimeList);
+      AssignCells(BoundaryStorage, ValueTimeList, AModel);
 //      Inc(ValueCount);
     end;
   end;
@@ -2058,11 +2157,11 @@ begin
   end;
 end;
 
-function TMnw2Boundary.TargetCellLocation: TCellLocation;
+function TMnw2Boundary.TargetCellLocation(AModel: TBaseModel): TCellLocation;
 var
   ScreenObject: TScreenObject;
   X, Y, Z: double;
-  Model: TPhastModel;
+  Model: TCustomModel;
   Grid: TModflowGrid;
 begin
   case PumpCellTarget.TargetType of
@@ -2083,12 +2182,12 @@ begin
         end
         else
         begin
-          result := ScreenObject.SingleCellLocation;
+          result := ScreenObject.SingleCellLocation(AModel);
         end;
       end;
     ttLocation:
       begin
-        Model := PhastModel as TPhastModel;
+        Model := AModel as TCustomModel;
         Grid := Model.ModflowGrid;
         X := PumpCellTarget.TargetLocation.X;
         Y := PumpCellTarget.TargetLocation.Y;
@@ -2645,13 +2744,13 @@ begin
   result := Values.Cell.Column;
 end;
 
-function TMnw2_Cell.GetIntegerAnnotation(Index: integer): string;
+function TMnw2_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TMnw2_Cell.GetIntegerValue(Index: integer): integer;
+function TMnw2_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -2682,7 +2781,7 @@ begin
   result := Values.PartialPenetrationAnnotation;
 end;
 
-function TMnw2_Cell.GetRealAnnotation(Index: integer): string;
+function TMnw2_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -2698,7 +2797,7 @@ begin
   end;
 end;
 
-function TMnw2_Cell.GetRealValue(Index: integer): double;
+function TMnw2_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -2767,6 +2866,21 @@ begin
   StressPeriod := ReadCompInt(Decomp);
 end;
 
+procedure TMnw2_Cell.SetColumn(const Value: integer);
+begin
+  Values.Cell.Column := Value;
+end;
+
+procedure TMnw2_Cell.SetLayer(const Value: integer);
+begin
+  Values.Cell.Layer := Value;
+end;
+
+procedure TMnw2_Cell.SetRow(const Value: integer);
+begin
+  Values.Cell.Row := Value;
+end;
+
 { TLiftItem }
 
 procedure TLiftItem.Assign(Source: TPersistent);
@@ -2822,7 +2936,7 @@ begin
   Sort;
 end;
 
-constructor TLiftCollection.Create(Model: TObject);
+constructor TLiftCollection.Create(Model: TBaseModel);
 begin
   inherited Create(TLiftItem, Model);
 end;
@@ -3061,7 +3175,7 @@ begin
   end;
 end;
 
-constructor TTarget.Create(Model: TObject);
+constructor TTarget.Create(Model: TBaseModel);
 begin
   FTargetObject:= TTargetObject.Create(Model);
   FTargetCell:= TTargetCell.Create(Model);
@@ -3424,6 +3538,34 @@ begin
   finally
     List.Free;
   end;
+end;
+
+{ TMnw2TimeListLink }
+
+procedure TMnw2TimeListLink.CreateTimeLists;
+begin
+  inherited;
+  FWellRadiusData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FSkinRadiusData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FSkinKData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FBData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FCData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FPData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FCellToWellConductanceData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FPartialPenetrationData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+end;
+
+destructor TMnw2TimeListLink.Destroy;
+begin
+  FWellRadiusData.Free;
+  FSkinRadiusData.Free;
+  FSkinKData.Free;
+  FBData.Free;
+  FCData.Free;
+  FPData.Free;
+  FCellToWellConductanceData.Free;
+  FPartialPenetrationData.Free;
+  inherited;
 end;
 
 end.

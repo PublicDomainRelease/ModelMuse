@@ -66,8 +66,6 @@ type
     procedure seNumberOfTimesChange(Sender: TObject);
     procedure btnDeleteClick(Sender: TObject);
     procedure btnInsertClick(Sender: TObject);
-    procedure dgModflowBoundaryMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure dgModflowBoundaryMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure rdeFormulaChange(Sender: TObject);
@@ -167,10 +165,10 @@ begin
   dgModflowBoundary.Cells[1, 0] := StrEndingTime;;
   if Boundary <> nil then
   begin
-    for Index := 0 to Boundary.Values.TimeListCount - 1 do
+    for Index := 0 to Boundary.Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
     begin
 //      dgModflowBoundary.Columns[2+Index].AutoAdjustColWidths := True;
-      TimeList := Boundary.Values.TimeLists[Index];
+      TimeList := Boundary.Values.TimeLists[Index, frmGoPhast.PhastModel];
       if Index = ConductanceColumn then
       begin
         dgModflowBoundary.Cells[2+Index, 0] :=
@@ -262,19 +260,6 @@ procedure TframeScreenObjectNoParam.dgModflowBoundaryHorizontalScroll(
   Sender: TObject);
 begin
   LayoutMultiRowEditControls;
-end;
-
-procedure TframeScreenObjectNoParam.dgModflowBoundaryMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    dgModflowBoundary.Options := dgModflowBoundary.Options + [goEditing];
-  end
-  else
-  begin
-    dgModflowBoundary.Options := dgModflowBoundary.Options - [goEditing];
-  end;
 end;
 
 procedure TframeScreenObjectNoParam.dgModflowBoundaryMouseUp(Sender: TObject;
@@ -439,6 +424,11 @@ var
   ColIndex: Integer;
   RowIndex: Integer;
 begin
+  if (ACol < 0) or (ARow < 0) or (ACol >= dgModflowBoundary.ColCount)
+    or (ARow >= dgModflowBoundary.RowCount) then
+  begin
+    Exit;
+  end;
   Assert(ACol >= 0);
   Assert(ARow >= 0);
   Assert(ACol < dgModflowBoundary.ColCount);

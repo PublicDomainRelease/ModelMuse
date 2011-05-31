@@ -130,7 +130,6 @@ inherited frmImportModflow: TfrmImportModflow
     ParentFont = True
     SimplePanel = True
     UseSystemFont = False
-    ExplicitTop = 208
   end
   object pbProgress: TProgressBar
     Left = 0

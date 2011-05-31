@@ -75,7 +75,7 @@ type
     procedure FreeSearchList;
   public
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     function IndexOfVariable(Name: string): integer;
     function GetVariableByName(Const Name: string): TGlobalVariable;
@@ -83,6 +83,9 @@ type
   end;
 
 implementation
+
+uses
+  ModelMuseUtilities;
 
 { TGlobalVariable }
 
@@ -204,7 +207,7 @@ begin
               end;
             rdtString:
               begin
-                FValues.StringValue := FloatToStr(FValues.RealValue);
+                FValues.StringValue := FortranFloatToStr(FValues.RealValue);
               end;
             else Assert(False);
           end;
@@ -395,7 +398,7 @@ begin
   end;
 end;
 
-constructor TGlobalVariables.Create(Model: TComponent);
+constructor TGlobalVariables.Create(Model: TBaseModel);
 begin
   inherited Create(TGlobalVariableItem, Model);
   FSearchList := nil;

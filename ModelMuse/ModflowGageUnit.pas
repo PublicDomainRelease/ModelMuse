@@ -25,8 +25,8 @@ Type
   public
     procedure Assign(Source: TPersistent); override;
     function Used: boolean;
-    Constructor Create(Model, ScreenObject: TObject);
-    procedure Evaluate(DataSets: TList);
+    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
+    procedure Evaluate(DataSets: TList; AModel: TBaseModel);
   published
     property Gage0: boolean read FGage0 write SetGage0;
     property Gage1: boolean read FGage1 write SetGage1;
@@ -40,7 +40,7 @@ Type
 implementation
 
 uses
-  RbwParser, ScreenObjectUnit, DataSetUnit;
+  RbwParser, ScreenObjectUnit, DataSetUnit, PhastModelUnit;
 
 { TStreamGage }
 
@@ -65,18 +65,21 @@ begin
   end;
 end;
 
-constructor TStreamGage.Create(Model, ScreenObject: TObject);
+constructor TStreamGage.Create(Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited Create(Model);
   FScreenObject := ScreenObject;
 end;
 
-procedure TStreamGage.Evaluate(DataSets: TList);
+procedure TStreamGage.Evaluate(DataSets: TList; AModel: TBaseModel);
 var
   CellList: TCellAssignmentList;
   DataArray: TDataArray;
   ScreenObject: TScreenObject;
   Annotation: string;
+  Index: Integer;
+  Cell: TCellAssignment;
+  LocalModel: TCustomModel;
   procedure AssignValues;
   var
     Index: Integer;
@@ -86,6 +89,10 @@ var
     for Index := 0 to CellList.Count - 1 do
     begin
       Cell := CellList[Index];
+      if Cell.LgrEdge then
+      begin
+        Continue;
+      end;
       DataArray.BooleanData[Cell.Layer, Cell.Row, Cell.Column] := True;
       DataArray.Annotation[Cell.Layer, Cell.Row, Cell.Column] := Annotation;
     end;
@@ -95,9 +102,19 @@ begin
   CellList := TCellAssignmentList.Create;
   try
     ScreenObject := (FScreenObject as TScreenObject);
-    ScreenObject.GetModpathCellList(CellList);
+    ScreenObject.GetModpathCellList(CellList, AModel);
+    LocalModel := AModel as TCustomModel;
     if CellList.Count > 0 then
     begin
+      for Index := 0 to CellList.Count - 1 do
+      begin
+        Cell := CellList[Index];
+        if Cell.LgrEdge then
+        begin
+          Continue;
+        end;
+        LocalModel.AdjustCellPosition(Cell);
+      end;
       Annotation := 'Assigned by ' + ScreenObject.Name;
       if Gage0 then
       begin

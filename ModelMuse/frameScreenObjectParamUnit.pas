@@ -94,9 +94,9 @@ var
 begin
   InitializeNoParamFrame(Boundary);
   ParameterColumnSuffix.Clear;
-  for Index := 0 to Boundary.Values.TimeListCount - 1 do
+  for Index := 0 to Boundary.Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
   begin
-    TimeList := Boundary.Values.TimeLists[Index];
+    TimeList := Boundary.Values.TimeLists[Index, frmGoPhast.PhastModel];
     ParameterColumnSuffix.Add(TimeList.ParamDescription);
   end;
   SetButtonCaptions;

@@ -44,8 +44,8 @@ type
 
 implementation
 
-uses ModflowUnitNumbers, DataSetUnit, ModflowUzfUnit, frmErrorsAndWarningsUnit, 
-  frmProgressUnit, ModflowCellUnit, Forms;
+uses ModflowUnitNumbers, DataSetUnit, ModflowUzfUnit, frmErrorsAndWarningsUnit,
+  frmProgressUnit, ModflowCellUnit, Forms, GoPhastTypes;
 
 resourcestring
   StrUnspecifiedUZFData = 'Unspecified UZF data';
@@ -90,10 +90,14 @@ begin
   frmProgressMM.AddMessage('Evaluating UZF Package data.');
   CountGages;
 
-  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
-    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
     if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    if not ScreenObject.UsedModels.UsesModel(Model) then
     begin
       Continue;
     end;
@@ -104,10 +108,11 @@ begin
       if not ScreenObject.SetValuesOfEnclosedCells
         and not ScreenObject.SetValuesOfIntersectedCells then
       begin
-        frmErrorsAndWarnings.AddError(NoAssignmentErrorRoot, ScreenObject.Name);
+        frmErrorsAndWarnings.AddError(Model,
+          NoAssignmentErrorRoot, ScreenObject.Name);
       end;
-      Boundary.GetCellValues(Values, nil);
-      if PhastModel.ModflowPackages.UzfPackage.SimulateET then
+      Boundary.GetCellValues(Values, nil, Model);
+      if Model.ModflowPackages.UzfPackage.SimulateET then
       begin
         Boundary.GetEvapotranspirationDemandCells(FEtDemand);
         Boundary.GetExtinctionDepthCells(FEExtinctionDepths);
@@ -124,7 +129,7 @@ end;
 
 function TModflowUzfWriter.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.UzfPackage;
+  result := Model.ModflowPackages.UzfPackage;
 end;
 
 procedure TModflowUzfWriter.UpdateDisplay(
@@ -157,14 +162,14 @@ begin
     Exit;
   end;
 
-  frmErrorsAndWarnings.RemoveErrorGroup(StrUnspecifiedUZFData);
-  frmErrorsAndWarnings.RemoveErrorGroup(StrTheInfiltrationRat);
-  frmErrorsAndWarnings.RemoveErrorGroup(StrTheETDemandRateI);
-  frmErrorsAndWarnings.RemoveErrorGroup(StrTheETExtinctionDe);
-  frmErrorsAndWarnings.RemoveErrorGroup(StrTheETExtinctionWa);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrUnspecifiedUZFData);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheInfiltrationRat);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETDemandRateI);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETExtinctionDe);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETExtinctionWa);
 
   Infiltration := TimeLists[0];
-  if PhastModel.ModflowPackages.UzfPackage.SimulateET then
+  if Model.ModflowPackages.UzfPackage.SimulateET then
   begin
     EtDemand := TimeLists[1];
     ExtinctionDepth := TimeLists[2];
@@ -183,10 +188,11 @@ begin
     CellList := Values[TimeIndex];
     CellList.CheckRestore;
     AssignTransient2DArray(InfiltrationArray, 0, CellList, 0,
-      rdtDouble, umAssign);
+      rdtDouble, Model.ModflowPackages.UzfPackage.AssignmentMethod);
+    Model.AdjustDataArray(InfiltrationArray);
     CellList.Cache;
 
-    if PhastModel.ModflowPackages.UzfPackage.SimulateET then
+    if Model.ModflowPackages.UzfPackage.SimulateET then
     begin
       EtDemandArray := EtDemand[TimeIndex]
         as TModflowBoundaryDisplayDataArray;
@@ -196,11 +202,13 @@ begin
         CellList.CheckRestore;
         AssignTransient2DArray(EtDemandArray, 0, CellList, 0,
           rdtDouble, umAssign);
+        Model.AdjustDataArray(EtDemandArray);
         CellList.Cache;
       end
       else
       begin
-        frmErrorsAndWarnings.AddError(StrTheETDemandRateI, IntToStr(TimeIndex+1));
+        frmErrorsAndWarnings.AddError(Model,
+          StrTheETDemandRateI, IntToStr(TimeIndex+1));
       end;
 
       ExtinctionDepthArray := ExtinctionDepth[TimeIndex]
@@ -215,7 +223,8 @@ begin
       end
       else
       begin
-        frmErrorsAndWarnings.AddError(StrTheETExtinctionDe, IntToStr(TimeIndex+1));
+        frmErrorsAndWarnings.AddError(Model,
+          StrTheETExtinctionDe, IntToStr(TimeIndex+1));
       end;
 
 
@@ -231,7 +240,8 @@ begin
       end
       else
       begin
-        frmErrorsAndWarnings.AddError(StrTheETExtinctionWa, IntToStr(TimeIndex+1));
+        frmErrorsAndWarnings.AddError(Model,
+          StrTheETExtinctionWa, IntToStr(TimeIndex+1));
       end;
     end;
   end;
@@ -266,7 +276,7 @@ begin
   DataTypeIndex := 0;
   Comment := '# Data Set 12: PET';
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-    CellList, Dummy);
+    CellList, umAssign, True, Dummy);
 end;
 
 procedure TModflowUzfWriter.WriteExtinctionDepth(CellList: TList);
@@ -282,7 +292,7 @@ begin
   DataTypeIndex := 0;
   Comment := '# Data Set 14: EXTDP';
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-    CellList, Dummy);
+    CellList, umAssign, False, Dummy);
 end;
 
 procedure TModflowUzfWriter.WriteExtinctionWaterContent(CellList: TList);
@@ -298,7 +308,7 @@ begin
   DataTypeIndex := 0;
   Comment := '# Data Set 16: EXTWC';
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-    CellList, Dummy);
+    CellList, umAssign, False, Dummy);
 end;
 
 procedure TModflowUzfWriter.WriteDataSet1;
@@ -312,7 +322,7 @@ var
   SURFDEP: double;
 begin
   NUZTOP := 0;
-  case PhastModel.ModflowPackages.UzfPackage.LayerOption of
+  case Model.ModflowPackages.UzfPackage.LayerOption of
     loTop:
       begin
         NUZTOP := 1;
@@ -328,14 +338,14 @@ begin
     else
       Assert(False);
   end;
-  IUZFOPT := PhastModel.ModflowPackages.UzfPackage.VerticalKSource;
-  if not PhastModel.ModflowPackages.LpfPackage.IsSelected then
+  IUZFOPT := Model.ModflowPackages.UzfPackage.VerticalKSource;
+  if not Model.ModflowPackages.LpfPackage.IsSelected then
   begin
     IUZFOPT := 1;
   end;
-  if PhastModel.ModflowPackages.UzfPackage.RouteDischargeToStreams
-    and (PhastModel.ModflowPackages.SfrPackage.IsSelected
-    or PhastModel.ModflowPackages.LakPackage.IsSelected) then
+  if Model.ModflowPackages.UzfPackage.RouteDischargeToStreams
+    and (Model.ModflowPackages.SfrPackage.IsSelected
+    or Model.ModflowPackages.LakPackage.IsSelected) then
   begin
     IRUNFLG := 1;
   end
@@ -343,7 +353,7 @@ begin
   begin
     IRUNFLG := 0;
   end;
-  if PhastModel.ModflowPackages.UzfPackage.SimulateET then
+  if Model.ModflowPackages.UzfPackage.SimulateET then
   begin
     IETFLG := 1;
   end
@@ -351,7 +361,7 @@ begin
   begin
     IETFLG := 0;
   end;
-  if PhastModel.ModflowOutputControl.Compact then
+  if Model.ModflowOutputControl.Compact then
   begin
     IUZFCB1 := 0;
     IUZFCB2 := 0;
@@ -363,9 +373,9 @@ begin
     IUZFCB1 := 0;
     GetFlowUnitNumber(IUZFCB1);
   end;
-  NTRAIL2 := PhastModel.ModflowPackages.UzfPackage.NumberOfTrailingWaves;
-  NSETS2 := PhastModel.ModflowPackages.UzfPackage.NumberOfWaveSets;
-  SURFDEP := PhastModel.ModflowPackages.UzfPackage.DepthOfUndulations;
+  NTRAIL2 := Model.ModflowPackages.UzfPackage.NumberOfTrailingWaves;
+  NSETS2 := Model.ModflowPackages.UzfPackage.NumberOfWaveSets;
+  SURFDEP := Model.ModflowPackages.UzfPackage.DepthOfUndulations;
 
 
   WriteInteger(NUZTOP);
@@ -394,7 +404,7 @@ procedure TModflowUzfWriter.WriteDataSet2;
 var
   IUZFBND: TDataArray;
 begin
-  IUZFBND := PhastModel.DataArrayManager.GetDataSetByName(StrUzfLayer);
+  IUZFBND := Model.DataArrayManager.GetDataSetByName(StrUzfLayer);
   WriteArray(IUZFBND, 0, 'Data Set 2: IUZFBND');
 end;
 
@@ -404,7 +414,7 @@ var
 begin
   if IRUNFLG > 0 then
   begin
-    IRUNBND := PhastModel.DataArrayManager.GetDataSetByName(StrUzfDischargeRouting);
+    IRUNBND := Model.DataArrayManager.GetDataSetByName(StrUzfDischargeRouting);
     WriteArray(IRUNBND, 0, 'Data Set 3: IRUNBND');
   end;
 end;
@@ -415,7 +425,7 @@ var
 begin
   if IUZFOPT = 1 then
   begin
-    VKS := PhastModel.DataArrayManager.GetDataSetByName(StrUzfVerticalK);
+    VKS := Model.DataArrayManager.GetDataSetByName(StrUzfVerticalK);
     WriteArray(VKS, 0, 'Data Set 4: VKS');
   end;
 end;
@@ -424,7 +434,7 @@ procedure TModflowUzfWriter.WriteDataSet5;
 var
   EPS: TDataArray;
 begin
-  EPS := PhastModel.DataArrayManager.GetDataSetByName(StrUzfBrooksCoreyEpsilon);
+  EPS := Model.DataArrayManager.GetDataSetByName(StrUzfBrooksCoreyEpsilon);
   WriteArray(EPS, 0, 'Data Set 5: EPS');
 end;
 
@@ -432,7 +442,7 @@ procedure TModflowUzfWriter.WriteDataSet6;
 var
   THTS: TDataArray;
 begin
-  THTS := PhastModel.DataArrayManager.GetDataSetByName(StrUzfSaturatedWaterContent);
+  THTS := Model.DataArrayManager.GetDataSetByName(StrUzfSaturatedWaterContent);
   WriteArray(THTS, 0, 'Data Set 6: THTS');
 end;
 
@@ -440,9 +450,9 @@ procedure TModflowUzfWriter.WriteDataSet7;
 var
   THTI: TDataArray;
 begin
-  if PhastModel.ModflowStressPeriods.CompletelyTransient then
+  if Model.ModflowStressPeriods.CompletelyTransient then
   begin
-    THTI := PhastModel.DataArrayManager.GetDataSetByName(StrUzfInitialUnsaturatedWaterContent);
+    THTI := Model.DataArrayManager.GetDataSetByName(StrUzfInitialUnsaturatedWaterContent);
     WriteArray(THTI, 0, 'Data Set 7: THTI');
   end;
 end;
@@ -455,7 +465,7 @@ var
 begin
   if NUZGAG > 0 then
   begin
-    if PhastModel.ModflowPackages.UzfPackage.PrintSummary <> 0 then
+    if Model.ModflowPackages.UzfPackage.PrintSummary <> 0 then
     begin
       WriteInteger(-GageStart);
       Inc(GageStart);
@@ -464,11 +474,11 @@ begin
     end;
   end;
 
-  GageArray := PhastModel.DataArrayManager.GetDataSetByName(StrUzfGage_1_and_2);
+  GageArray := Model.DataArrayManager.GetDataSetByName(StrUzfGage_1_and_2);
   GageArray.Initialize;
-  for RowIndex := 0 to PhastModel.ModflowGrid.RowCount -1 do
+  for RowIndex := 0 to Model.ModflowGrid.RowCount -1 do
   begin
-    for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount -1 do
+    for ColIndex := 0 to Model.ModflowGrid.ColumnCount -1 do
     begin
       if GageArray.IntegerData[0,RowIndex,ColIndex] <> 0 then
       begin
@@ -483,11 +493,11 @@ begin
     end;
   end;
 
-  GageArray := PhastModel.DataArrayManager.GetDataSetByName(StrUzfGage3);
+  GageArray := Model.DataArrayManager.GetDataSetByName(StrUzfGage3);
   GageArray.Initialize;
-  for RowIndex := 0 to PhastModel.ModflowGrid.RowCount -1 do
+  for RowIndex := 0 to Model.ModflowGrid.RowCount -1 do
   begin
-    for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount -1 do
+    for ColIndex := 0 to Model.ModflowGrid.ColumnCount -1 do
     begin
       if GageArray.IntegerData[0,RowIndex,ColIndex] <> 0 then
       begin
@@ -512,7 +522,7 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrUZF) then
+  if Model.PackageGeneratedExternally(StrUZF) then
   begin
     Exit;
   end;
@@ -525,14 +535,14 @@ begin
     Exit;
   end;
 
-  frmErrorsAndWarnings.RemoveErrorGroup(StrUnspecifiedUZFData);
-  frmErrorsAndWarnings.RemoveErrorGroup(StrTheInfiltrationRat);
-  frmErrorsAndWarnings.RemoveErrorGroup(StrTheETDemandRateI);
-  frmErrorsAndWarnings.RemoveErrorGroup(StrTheETExtinctionDe);
-  frmErrorsAndWarnings.RemoveErrorGroup(StrTheETExtinctionWa);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrUnspecifiedUZFData);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheInfiltrationRat);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETDemandRateI);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETExtinctionDe);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheETExtinctionWa);
 
   NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrUZF, PhastModel.UnitNumbers.UnitNumber(StrUZF), NameOfFile, foInput);
+  WriteToNameFile(StrUZF, Model.UnitNumbers.UnitNumber(StrUZF), NameOfFile, foInput);
   WriteGagesToNameFile(AFileName, GageStart);
   OpenFile(NameOfFile);
   try
@@ -628,7 +638,7 @@ begin
   DataTypeIndex := 0;
   Comment := '# Data Set 10: FINF';
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-    CellList, Dummy);
+    CellList, Model.ModflowPackages.UzfPackage.AssignmentMethod, True, Dummy);
 end;
 
 
@@ -639,7 +649,7 @@ var
 begin
   if Values.Count = 0 then
   begin
-    frmErrorsAndWarnings.AddError(StrUnspecifiedUZFData,
+    frmErrorsAndWarnings.AddError(Model, StrUnspecifiedUZFData,
       'No transient data (infiltration and/or evapotranspiration) '
       + 'has been defined.');
   end;
@@ -672,7 +682,8 @@ begin
     end
     else
     begin
-      frmErrorsAndWarnings.AddError(StrTheInfiltrationRat, IntToStr(TimeIndex+1));
+      frmErrorsAndWarnings.AddError(Model,
+        StrTheInfiltrationRat, IntToStr(TimeIndex+1));
     end;
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -680,7 +691,7 @@ begin
       Exit;
     end;
 
-    if (PhastModel as TPhastModel).ModflowPackages.UzfPackage.SimulateET then
+    if (Model as TCustomModel).ModflowPackages.UzfPackage.SimulateET then
     begin
       // data set 11
       WriteInteger(0);
@@ -702,7 +713,8 @@ begin
       end
       else
       begin
-        frmErrorsAndWarnings.AddError(StrTheETDemandRateI, IntToStr(TimeIndex+1));
+        frmErrorsAndWarnings.AddError(Model,
+          StrTheETDemandRateI, IntToStr(TimeIndex+1));
       end;
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
@@ -730,7 +742,8 @@ begin
       end
       else
       begin
-        frmErrorsAndWarnings.AddError(StrTheETExtinctionDe, IntToStr(TimeIndex+1));
+        frmErrorsAndWarnings.AddError(Model,
+          StrTheETExtinctionDe, IntToStr(TimeIndex+1));
       end;
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
@@ -758,7 +771,8 @@ begin
       end
       else
       begin
-        frmErrorsAndWarnings.AddError(StrTheETExtinctionWa, IntToStr(TimeIndex+1));
+        frmErrorsAndWarnings.AddError(Model,
+          StrTheETExtinctionWa, IntToStr(TimeIndex+1));
       end;
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
@@ -777,11 +791,11 @@ var
 begin
   NUZGAG := 0;
 
-  GageArray := PhastModel.DataArrayManager.GetDataSetByName(StrUzfGage_1_and_2);
+  GageArray := Model.DataArrayManager.GetDataSetByName(StrUzfGage_1_and_2);
   GageArray.Initialize;
-  for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+  for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
   begin
-    for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+    for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
     begin
       if GageArray.IntegerData[0, RowIndex, ColIndex] <> 0 then
       begin
@@ -790,11 +804,11 @@ begin
     end;
   end;
 
-  GageArray := PhastModel.DataArrayManager.GetDataSetByName(StrUzfGage3);
+  GageArray := Model.DataArrayManager.GetDataSetByName(StrUzfGage3);
   GageArray.Initialize;
-  for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+  for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
   begin
-    for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+    for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
     begin
       if GageArray.IntegerData[0, RowIndex, ColIndex] <> 0 then
       begin
@@ -803,7 +817,7 @@ begin
     end;
   end;
 
-  if PhastModel.ModflowPackages.UzfPackage.PrintSummary <> 0 then
+  if Model.ModflowPackages.UzfPackage.PrintSummary <> 0 then
   begin
     Inc(NUZGAG);
   end;

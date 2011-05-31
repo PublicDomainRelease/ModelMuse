@@ -1,11 +1,14 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
-<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+<topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
   <title translate="true">Round</title>
+  <keywords>
+    <keyword translate="true">Round</keyword>
+  </keywords>
   <body>
     <header>
       <para style="margin-bottom:10px; line-height:2.0;"><text styleclass="Heading1" translate="true">Round</text></para>
     </header>
-    <para styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Round</text><text styleclass="Normal" translate="true">(Value) converts Value to the nearest integer.  In the case of a number that is exactly halfway between two integers, it converts it to whichever one is even.  See also </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Trunc" styleclass="Normal" translate="true">Trunc</link><text styleclass="Normal" translate="true">.</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Round</text><text styleclass="Normal" translate="true">(Value) converts Value to the nearest integer. &#160;In the case of a number that is exactly halfway between two integers, it converts it to whichever one is even.  See also </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Trunc" styleclass="Normal" translate="true">Trunc</link><text styleclass="Normal" translate="true">.</text></para>
   </body>
 </topic>

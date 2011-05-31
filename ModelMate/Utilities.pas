@@ -256,7 +256,7 @@ var
   AbsDir, RelDir, ResultTemp, Separator: string;
   Done: boolean;
 begin
-  Separator := '\';
+  Separator := PathDelimiter;
   Done := False;
   //
   if length(Dir) > 1 then
@@ -286,7 +286,7 @@ var
   BName: string;
 begin
   Len := length(SourceDir);
-  if SourceDir[Len] = '\' then
+  if SourceDir[Len] = PathDelimiter then
     begin
       BName := LeftStr(SourceDir, Len-1);
     end
@@ -597,7 +597,7 @@ end;
 function MyExtractRelativePath(const BaseName, DestName: string): string;
 var
   Len: integer;
-  BName, Dot: string;
+  BName, BaseNameLocal, Dot: string;
 begin
   Dot := '.';
   if (BaseName = DestName) then
@@ -606,15 +606,9 @@ begin
     end
   else
     begin
-      Len := length(BaseName);
-      if BaseName[Len] <> '\' then
-        begin
-          BName := BaseName + '\';
-        end
-      else
-        begin
-          BName := BaseName;
-        end;
+      BaseNameLocal := Trim(Basename);
+      Len := length(BaseNameLocal);
+      BName := IncludeTrailingPathDelimiter(BaseNameLocal);
       result := ExtractRelativePath(BName, DestName);
     end;
 end;
@@ -628,7 +622,7 @@ var
   SrcDir, DSep: string;
 begin
   result := False;
-  DSep := '\';
+  DSep := PathDelimiter;
   SrcDir := ExclTrailingBackslash(SourceDir);
   L := LastPos(SrcDir, DSep) - 1;
   if L > 0 then
@@ -701,7 +695,7 @@ var
 begin
   Dot := '.';
   FName := '';
-  Separator := '\';
+  Separator := PathDelimiter;
   Done := False;
   //
   if length(RelPath) > 1 then
@@ -843,7 +837,7 @@ begin
   Done := False;
   Colon := ':';
   Dot := '.';
-  DSep := '\';
+  DSep := PathDelimiter;
   if SourceDir = DSep then
     begin
       ResultTemp := RelDir;
@@ -1053,11 +1047,11 @@ begin
     ProgramLocation := '"' + ProgramLocation + '"';
   end;
   Path := IncludeTrailingPathDelimiter(ExtractFileDir(AbsMIF));
-  if Path = '\' then Path := '';
+  if Path = PathDelimiter then Path := '';
   result := Path + BatchName + '.bat';
   AbsAppDir := ExtractFileDir(AbsMIF);
-  AbsPrefix := AbsAppDir + '\' + OutPrefix;
-  AbsPrefixPred := AbsAppDir + '\' + OutPrefixPred;
+  AbsPrefix := AbsAppDir + PathDelimiter + OutPrefix;
+  AbsPrefixPred := AbsAppDir + PathDelimiter + OutPrefixPred;
   BatchFile := TStringList.Create;
   try
     BatchFile.Add('@echo off');

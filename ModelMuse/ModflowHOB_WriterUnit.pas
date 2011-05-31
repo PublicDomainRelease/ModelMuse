@@ -84,22 +84,22 @@ var
   WrongObservationTypesDefined: boolean;
 begin
   WrongObservationTypesDefined := False;
-  FStartTime := PhastModel.ModflowFullStressPeriods[0].StartTime;
-  FEndTime := PhastModel.ModflowFullStressPeriods[
-    PhastModel.ModflowFullStressPeriods.Count-1].EndTime;
-  IUHOBSV := PhastModel.UnitNumbers.UnitNumber(StrIUHOBSV);
+  FStartTime := Model.ModflowFullStressPeriods[0].StartTime;
+  FEndTime := Model.ModflowFullStressPeriods[
+    Model.ModflowFullStressPeriods.Count-1].EndTime;
+  IUHOBSV := Model.UnitNumbers.UnitNumber(StrIUHOBSV);
   NH := 0;
   MOBS := 0;
   MAXM := 2;
-  frmErrorsAndWarnings.RemoveWarningGroup(ObsNameWarning);
-  frmErrorsAndWarnings.RemoveErrorGroup(MissingObsNameError);
-  frmErrorsAndWarnings.RemoveWarningGroup(HeadOffGrid);
-  frmErrorsAndWarnings.RemoveErrorGroup(NoHeads);
-  frmErrorsAndWarnings.RemoveErrorGroup(InvalidStartObsTime);
-  frmErrorsAndWarnings.RemoveErrorGroup(InvalidEndObsTime);
-  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, ObsNameWarning);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, MissingObsNameError);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, HeadOffGrid);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, NoHeads);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidStartObsTime);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidEndObsTime);
+  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
-    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
     if ScreenObject.Deleted then
     begin
       Continue;
@@ -115,7 +115,7 @@ begin
         if Observations.CellListCount = 0 then
         begin
           ErrorMessage := 'Object: ' + ScreenObject.Name;
-          frmErrorsAndWarnings.AddWarning(HeadOffGrid, ErrorMessage);
+          frmErrorsAndWarnings.AddWarning(Model, HeadOffGrid, ErrorMessage);
           Continue;
         end;
 
@@ -123,7 +123,7 @@ begin
         if CellList.Count = 0 then
         begin
           ErrorMessage := 'Object: ' + ScreenObject.Name;
-          frmErrorsAndWarnings.AddWarning(HeadOffGrid, ErrorMessage);
+          frmErrorsAndWarnings.AddWarning(Model, HeadOffGrid, ErrorMessage);
           Continue;
         end;
 
@@ -148,13 +148,15 @@ begin
             begin
               ErrorMessage := 'Object: ' + ScreenObject.Name
                 + '; Time: ' + FloatToStr(Item.Time);
-              frmErrorsAndWarnings.AddError(InvalidEndObsTime, ErrorMessage);
+              frmErrorsAndWarnings.AddError(Model,
+                InvalidEndObsTime, ErrorMessage);
             end;
             if Item.Time < FStartTime then
             begin
               ErrorMessage := 'Object: ' + ScreenObject.Name
                 + '; Time: ' + FloatToStr(Item.Time);
-              frmErrorsAndWarnings.AddError(InvalidStartObsTime, ErrorMessage);
+              frmErrorsAndWarnings.AddError(Model,
+                InvalidStartObsTime, ErrorMessage);
             end;
           end;
         end;
@@ -169,7 +171,7 @@ begin
   begin
     if WrongObservationTypesDefined then
     begin
-      frmErrorsAndWarnings.AddError(NoHeads,
+      frmErrorsAndWarnings.AddError(Model, NoHeads,
         'No valid head observations were defined. '
         + 'Check that "Model|Observation Type" is set to the '
         + 'correct value and that the observation type for '
@@ -177,7 +179,7 @@ begin
     end
     else
     begin
-      frmErrorsAndWarnings.AddError(NoHeads,
+      frmErrorsAndWarnings.AddError(Model, NoHeads,
         'No valid head observations were defined.');
     end;
   end;
@@ -190,7 +192,7 @@ end;
 
 function TModflowHobWriter.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.HobPackage;
+  result := Model.ModflowPackages.HobPackage;
 end;
 
 procedure TModflowHobWriter.UpdateDisplay(
@@ -212,7 +214,7 @@ var
   CellIndex: Integer;
 begin
   // Quit if the package isn't used.
-  frmErrorsAndWarnings.RemoveErrorGroup(StrHeadObservationsError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrHeadObservationsError);
   if not Package.IsSelected then
   begin
     UpdateNotUsedDisplay(TimeLists);
@@ -280,7 +282,7 @@ procedure TModflowHobWriter.WriteDataSet1;
 var
   HOBDRY: double;
 begin
-  HOBDRY := PhastModel.ModflowPackages.HobPackage.DryHead;
+  HOBDRY := Model.ModflowPackages.HobPackage.DryHead;
   WriteInteger(NH);
   WriteInteger(MOBS);
   WriteInteger(MAXM);
@@ -342,16 +344,16 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrHOB) then
+  if Model.PackageGeneratedExternally(StrHOB) then
   begin
     Exit;
   end;
-  frmErrorsAndWarnings.RemoveErrorGroup(StrHeadObservationsError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrHeadObservationsError);
   frmProgressMM.AddMessage('Writing HOB Package input.');
   frmProgressMM.AddMessage('Evaluating data.');
   Evaluate(Purpose);
   NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrHOB, PhastModel.UnitNumbers.UnitNumber(StrHOB), NameOfFile, foInput);
+  WriteToNameFile(StrHOB, Model.UnitNumbers.UnitNumber(StrHOB), NameOfFile, foInput);
   if IUHOBSV <> 0 then
   begin
     OutFileName := ChangeFileExt(NameOfFile, '.hob_out');
@@ -499,7 +501,7 @@ begin
     begin
       DeltaRow := 0;
     end;
-    if (Cell.Row = PhastModel.Grid.RowCount - 1)
+    if (Cell.Row = Model.Grid.RowCount - 1)
       and (DeltaRow > 0) then
     begin
       DeltaRow := 0;
@@ -508,12 +510,12 @@ begin
     begin
       DeltaCol := 0;
     end;
-    if (Cell.Column = PhastModel.Grid.ColumnCount - 1)
+    if (Cell.Column = Model.Grid.ColumnCount - 1)
       and (DeltaCol > 0) then
     begin
       DeltaCol := 0;
     end;
-    ActiveDataArray := PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+    ActiveDataArray := Model.DataArrayManager.GetDataSetByName(rsActive);
     Assert(ActiveDataArray <> nil);
     ActiveDataArray.Initialize;
     LayerSorter := TObjectList.Create;
@@ -613,7 +615,7 @@ begin
             + (Observations.ScreenObject as TScreenObject).Name
             + ' the weight assigned to layer '
             + IntToStr(LayerSort.Layer+1) + ' is zero.';
-          frmErrorsAndWarnings.AddWarning('Head Observation Layer Weight = 0',
+          frmErrorsAndWarnings.AddWarning(Model, 'Head Observation Layer Weight = 0',
             WarningMessage);
         end;
 
@@ -641,7 +643,7 @@ begin
             + ' a weight was assigned for layer '
             + IntToStr(Item.Layer)
             + ' but that layer is not part of the multilayer observation.';
-          frmErrorsAndWarnings.AddWarning('Head Observation Layer Weight incorrectly assigned',
+          frmErrorsAndWarnings.AddWarning(Model, 'Head Observation Layer Weight incorrectly assigned',
             WarningMessage);
         end;
       end;
@@ -675,12 +677,13 @@ begin
   if OBSNAM = '' then
   begin
     ScreenObject := Observations.ScreenObject as TScreenObject;
-    frmErrorsAndWarnings.AddError(MissingObsNameError, ScreenObject.Name);
+    frmErrorsAndWarnings.AddError(Model,
+      MissingObsNameError, ScreenObject.Name);
   end;
   if not UcodeObsNameOK(OBSNAM) then
   begin
     ScreenObject := Observations.ScreenObject as TScreenObject;
-    frmErrorsAndWarnings.AddWarning(ObsNameWarning, OBSNAM
+    frmErrorsAndWarnings.AddWarning(Model, ObsNameWarning, OBSNAM
       + ' defined by object ' + ScreenObject.Name);
   end;
   if CellList.Count > 1 then
@@ -689,7 +692,7 @@ begin
   end
   else
   begin
-    LAYER := PhastModel.LayerStructure.
+    LAYER := Model.
       DataSetLayerToModflowLayer(Cell.Layer);
   end;
   ROW := Cell.Row+1;

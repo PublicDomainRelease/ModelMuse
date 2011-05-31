@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<helpproject xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="helpproject.xsd" version="1.5" isskin="false">
+<helpproject xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="helpproject.xsd" version="1.5" isskin="false" isrepository="false">
   <config>
     <namespaces>
       <namespace name="ModflowGuide" href=".\ModflowGuide\ModflowGuide.hmxp"/>
@@ -83,35 +83,31 @@
       </tablestyleclass>
     </styleclasses>
     <config-group name="project">
-      <config-value name="title" translate="true">ModelMuse—A Graphical User Interface for MODFLOW-2005 and PHAST</config-value>
+      <config-value name="title" translate="true">ModelMuse—A Graphical User Interface for MODFLOW-2005, MODFLOW-LGR, and PHAST</config-value>
       <config-value name="author" translate="true">Richard B. Winston</config-value>
-      <config-value name="summary" translate="true"></config-value>
       <config-value name="copyright" translate="true">© &lt;%YEAR%&gt; &lt;%AUTHOR%&gt;</config-value>
-      <config-value name="comment"></config-value>
       <config-value name="versionmajor">1</config-value>
       <config-value name="versionminor">0</config-value>
       <config-value name="versionbuild">0</config-value>
-      <config-value name="guid"></config-value>
       <config-value name="lcid" translate="true">en-us</config-value>
       <config-value name="bidimode"></config-value>
       <config-value name="charset" translate="true">ANSI_CHARSET</config-value>
       <config-value name="deffont">font-family:'MS Sans Serif'; font-size:8pt; color:#000000;</config-value>
       <config-value name="contents"></config-value>
       <config-value name="topicprefix"></config-value>
-      <config-value name="autohelpstart">3591</config-value>
+      <config-value name="autohelpstart">3613</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">1</config-value>
       <config-value name="searchpath">.\;.\Used Images\;.\ScreenShots\;.\ModflowGuide\</config-value>
       <config-value name="imageshortcuts"></config-value>
       <config-group name="custombuilds">
-        <config-value name="demo">Demo Build</config-value>
-        <config-value name="model_mate_interface">MODEL_MATE_INTERFACE</config-value>
-        <config-value name="user1">Class Exercise</config-value>
-        <config-value name="user2">User defined 2</config-value>
-        <config-value name="user3">User defined 3</config-value>
+        <config-value name="DEMO">Demo Build</config-value>
+        <config-value name="USER1">Class Exercise</config-value>
+        <config-value name="USER2">User defined 2</config-value>
+        <config-value name="USER3">User defined 3</config-value>
       </config-group>
       <config-value name="imageshortcuts_includebaggage">1</config-value>
-      <config-value name="make0include">CHM,OPT_3FRAME,OPT_ATOC,OPT_BREADTRAIL,OPT_FB,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
+      <config-value name="make0include">CHM,ALLMODELS,OPT_ATOC,OPT_BREADTRAIL,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
       <config-value name="make0status">*</config-value>
     </config-group>
     <config-group name="hlp">
@@ -133,7 +129,7 @@
       <config-value name="usesecondarywindows">1</config-value>
       <config-value name="outputfile">ModelMuse.chm</config-value>
       <config-value name="deletetemp">1</config-value>
-      <config-value name="skin">C:\Program Files (x86)\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.2 Skins\Skins Horizontal Tabs\forest_green_horiz.hmskin</config-value>
+      <config-value name="skin">C:\Program Files\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.4 Skins\Skins Horizontal Tabs\forest_green_horiz.hmskin</config-value>
     </config-group>
     <config-group name="hxs">
       <config-value name="namespace"></config-value>
@@ -578,6 +574,8 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="CHD_Object_Pane" value="1950"/>
       <helpcontext-number href="CHD_Time_Variant_Specified_Head" value="2620"/>
       <helpcontext-number href="Chemistry_Options_Dialog_Box" value="2840"/>
+      <helpcontext-number href="Child_Model_Dialog_Box" value="3598"/>
+      <helpcontext-number href="Child_Model_Dialog_Box#IOUTLGR" value="3604"/>
       <helpcontext-number href="CHOB_Specified_Head_Flow_Observations" value="3464"/>
       <helpcontext-number href="CHOB_Specified_Head_Flow_ObsObjects" value="3469"/>
       <helpcontext-number href="Color_Grid_Dialog_Box" value="1870"/>
@@ -624,6 +622,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Delete_Image_Dialog_Box" value="3520"/>
       <helpcontext-number href="Description_Tab" value="2460"/>
       <helpcontext-number href="Discretization_Tab" value="2440"/>
+      <helpcontext-number href="Discretization_Tab#Vertical_discretization" value="3600"/>
       <helpcontext-number href="Distance" value="700"/>
       <helpcontext-number href="Drawing_the_Grid" value="220"/>
       <helpcontext-number href="DRN_Drain_Package_Pane" value="2670"/>
@@ -650,6 +649,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Example_4_Biscayne_Bay_Aquifer" value="3150"/>
       <helpcontext-number href="Examples" value="2920"/>
       <helpcontext-number href="Exp" value="3376"/>
+      <helpcontext-number href="Export_Data_as_CSV_Dialog_Box" value="3593"/>
       <helpcontext-number href="Export_Image_Dialog_Box" value="3575"/>
       <helpcontext-number href="Export_Image_Dialog_Box#Manage_settings" value="3577"/>
       <helpcontext-number href="Export_Objects_to_Shapefile" value="3521"/>
@@ -665,6 +665,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Flow_Packages" value="2550"/>
       <helpcontext-number href="Flow_Table_Tab" value="2150"/>
       <helpcontext-number href="Flows_Tab" value="2110"/>
+      <helpcontext-number href="Flows_Tab#FLOW" value="3597"/>
       <helpcontext-number href="For_MODFLOW_Experts" value="3433"/>
       <helpcontext-number href="Formula_Diagram" value="3375"/>
       <helpcontext-number href="Formula_Editor" value="1810"/>
@@ -689,7 +690,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Generating_Grids" value="190"/>
       <helpcontext-number href="Generating_the_Grid" value="3190"/>
       <helpcontext-number href="GetHuf_Average_Sy" value="3552"/>
-      <helpcontext-number href="GetHuf_InterLayer_Kz" value="3550"/>
+      <helpcontext-number href="GetHuf_Interlayer_Kz" value="3550"/>
       <helpcontext-number href="GetHufKx" value="3547"/>
       <helpcontext-number href="GetHufKy" value="3549"/>
       <helpcontext-number href="GetHufSs" value="3553"/>
@@ -706,6 +707,8 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Grid_Spacing_Dialog_Box" value="1710"/>
       <helpcontext-number href="Grid_Value_Dialog_Box" value="1880"/>
       <helpcontext-number href="Grid2" value="1650"/>
+      <helpcontext-number href="GridName" value="3606"/>
+      <helpcontext-number href="GridNumber" value="3607"/>
       <helpcontext-number href="Handling_Discretization_in_SUB" value="3562"/>
       <helpcontext-number href="Head_and_Drawdown_Panes" value="2520"/>
       <helpcontext-number href="Head_Dependant_Flux" value="2660"/>
@@ -725,6 +728,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="IfI" value="630"/>
       <helpcontext-number href="IfR" value="640"/>
       <helpcontext-number href="IfT" value="650"/>
+      <helpcontext-number href="Import_ASCII_Raster_File" value="3594"/>
       <helpcontext-number href="Import_Distributed_Data_by_Zone" value="1590"/>
       <helpcontext-number href="Import_DXF_File_Dialog_Box" value="1570"/>
       <helpcontext-number href="Import_Gridded_Data_Dialog_Box" value="3460"/>
@@ -759,6 +763,8 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="LayerHeight" value="500"/>
       <helpcontext-number href="Leaky_And_Well_Boundaries" value="3130"/>
       <helpcontext-number href="Length" value="1200"/>
+      <helpcontext-number href="LGR_tab" value="3601"/>
+      <helpcontext-number href="LGR_tab#DefineChild" value="3602"/>
       <helpcontext-number href="Limitations" value="3441"/>
       <helpcontext-number href="LimitChoice" value="3587"/>
       <helpcontext-number href="Link_Streams_Dialog_Box" value="3372"/>
@@ -799,6 +805,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="MNW2_Pumping_Rate_Tab#CapMult" value="3537"/>
       <helpcontext-number href="MNW2_Pumping_Rate_Tab#Qdes" value="3536"/>
       <helpcontext-number href="Model" value="2390"/>
+      <helpcontext-number href="Model#LGR_Selection" value="3599"/>
       <helpcontext-number href="Model#ObservationType" value="3506"/>
       <helpcontext-number href="Model_Features_in_MODFLOW" value="3480"/>
       <helpcontext-number href="Model_Features_in_PHAST" value="3479"/>
@@ -818,6 +825,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="MODFLOW_Packages_Dialog_Box" value="2540"/>
       <helpcontext-number href="MODFLOW_Program_Locations_Dialog_Box" value="2810"/>
       <helpcontext-number href="MODFLOW_Time_Dialog_Box" value="2490"/>
+      <helpcontext-number href="MODFLOW-LGR" value="3605"/>
       <helpcontext-number href="MODPATH" value="3461"/>
       <helpcontext-number href="MODPATH#ReferenceTime" value="3463"/>
       <helpcontext-number href="MODPATH#UnlimitedBudgetSize" value="3522"/>
@@ -840,6 +848,9 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Object2" value="1890"/>
       <helpcontext-number href="ObjectArea" value="1000"/>
       <helpcontext-number href="ObjectCurrentSectionIndex" value="1010"/>
+      <helpcontext-number href="ObjectCurrentSegmentAngle" value="3611"/>
+      <helpcontext-number href="ObjectCurrentSegmentAngleDegre" value="3612"/>
+      <helpcontext-number href="ObjectCurrentSegmentAngleLimit" value="3613"/>
       <helpcontext-number href="ObjectCurrentSegmentLength" value="1020"/>
       <helpcontext-number href="ObjectCurrentVertexX" value="1030"/>
       <helpcontext-number href="ObjectCurrentVertexY" value="1040"/>
@@ -869,6 +880,9 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Output" value="3581"/>
       <helpcontext-number href="Parameter_Names_and_Values" value="3320"/>
       <helpcontext-number href="Parameters_Tab" value="3517"/>
+      <helpcontext-number href="ParentColumn" value="3608"/>
+      <helpcontext-number href="ParentLayer" value="3609"/>
+      <helpcontext-number href="ParentRow" value="3610"/>
       <helpcontext-number href="PCG_Preconditioned_Conjugate_Gradiant" value="2770"/>
       <helpcontext-number href="PCG_Preconditioned_Conjugate_Gradiant#HCLOSE" value="3538"/>
       <helpcontext-number href="PHAST_Boundary_Conditions_Tab" value="1930"/>
@@ -896,6 +910,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Properties_Tab" value="1910"/>
       <helpcontext-number href="Properties_Tab#GridElementSize" value="3374"/>
       <helpcontext-number href="Properties_Tab#HigherZ" value="3527"/>
+      <helpcontext-number href="Properties_Tab#Number_Of_Formulas" value="3603"/>
       <helpcontext-number href="Properties_Tab#Z_Coordinate" value="3539"/>
       <helpcontext-number href="Properties_TabHUF" value="3516"/>
       <helpcontext-number href="Quick_Start_Guide" value="3386"/>
@@ -905,6 +920,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Rearrange_Objects_Dialog_Box" value="2210"/>
       <helpcontext-number href="Rectangles" value="1510"/>
       <helpcontext-number href="References_Cited" value="3270"/>
+      <helpcontext-number href="References_Cited#MehlHill2010" value="3596"/>
       <helpcontext-number href="RES_Object_Pane" value="2030"/>
       <helpcontext-number href="RES_Reservoir_Package_Pane" value="2730"/>
       <helpcontext-number href="RIV_Object_Pane" value="2040"/>
@@ -1046,6 +1062,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="UZF_Unsaturated_Zone_Flow_Package#IUZFOPT" value="2580"/>
       <helpcontext-number href="Variations" value="3240"/>
       <helpcontext-number href="Vertex_Values_Dialog_Box" value="3570"/>
+      <helpcontext-number href="Vertex_Values_Tab" value="3595"/>
       <helpcontext-number href="VertexInterpolate" value="1150"/>
       <helpcontext-number href="Vertical_Exaggeration_Dialog_Box" value="2320"/>
       <helpcontext-number href="Vertices_Tab" value="2200"/>

@@ -70,7 +70,6 @@ type
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
-    procedure InvalidateModel; override;
     function BoundaryFormulaCount: integer; override;
   public
     constructor Create(Collection: TCollection); override;
@@ -85,9 +84,7 @@ type
     property StreamDepth: string read GetStreamDepth write SetStreamDepth;
   end;
 
-  // @name represents MODFLOW Streamflow Routing boundaries
-  // for a series of time intervals.
-  TSfrSegmentCollection = class(TCustomMF_ArrayBoundColl)
+  TSfrSegmentTimeListLink = class(TTimeListsModelLink)
   private
     // @name is used to compute the hydraulic conductivity for a series of
     // Streamflow Routing Boundaries over a series of time intervals.
@@ -102,6 +99,16 @@ type
     // Streamflow Routing Boundaries over a series of time intervals.
     FStreamWidthData: TModflowTimeList;
     FStreamDepthData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
+
+  // @name represents MODFLOW Streamflow Routing boundaries
+  // for a series of time intervals.
+  TSfrSegmentCollection = class(TCustomMF_ArrayBoundColl)
+  private
     FAssignmentLocation: TAssignmentLocation;
     procedure InvalidateHydraulicConductivityData(Sender: TObject);
     procedure InvalidateStreamBedThicknessData(Sender: TObject);
@@ -109,13 +116,16 @@ type
     procedure InvalidateStreamWidthData(Sender: TObject);
     procedure InvalidateStreamDepthData(Sender: TObject);
   protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary; override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer); override;
+    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+      AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
     // TCustomMF_ArrayBoundColl.InitializeTimeLists)
-    procedure InitializeTimeLists(ListOfTimeLists: TList); override;
+    procedure InitializeTimeLists(ListOfTimeLists: TList;
+      AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
     class function ItemClass: TMF_BoundItemClass; override;
@@ -129,12 +139,6 @@ type
   public
     property AssignmentLocation: TAssignmentLocation read FAssignmentLocation
       write FAssignmentLocation;
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
   end;
 
   TSfrSegmentParamItem = class(TModflowParamItem)
@@ -160,10 +164,10 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     procedure RecordStrings(Strings: TStringList); override;
@@ -338,12 +342,6 @@ function TSfrSegmentItem.GetStreamWidth: string;
 begin
   Result := FStreamWidth.Formula;
   ResetItemObserver(StreamWidthPosition);
-end;
-
-procedure TSfrSegmentItem.InvalidateModel;
-begin
-  inherited;
-
 end;
 
 function TSfrSegmentItem.IsSame(AnotherItem: TOrderedItem): boolean;
@@ -582,7 +580,7 @@ begin
 end;
 
 procedure TSfrSegmentCollection.AssignCellValues(DataSets: TList;
-  ItemIndex: Integer);
+  ItemIndex: Integer; AModel: TBaseModel);
 var
   HydraulicConductivityArray: TDataArray;
   StreamBedThicknessArray: TDataArray;
@@ -594,7 +592,7 @@ var
   ColIndex: Integer;
   BoundaryIndex: Integer;
   StreamDepthArray: TDataArray;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
   LayerMin: Integer;
   RowMin: Integer;
   ColMin: Integer;
@@ -602,7 +600,7 @@ var
   RowMax: Integer;
   ColMax: Integer;
 begin
-  LocalModel := Model as TPhastModel;
+  LocalModel := AModel as TCustomModel;
   BoundaryIndex := 0;
   HydraulicConductivityArray := DataSets[HydraulicConductivityPosition];
   StreamBedThicknessArray := DataSets[StreamBedThicknessPosition];
@@ -617,7 +615,7 @@ begin
   begin
     for LayerIndex := LayerMin to LayerMax do
     begin
-      if LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+      if LocalModel.IsLayerSimulated(LayerIndex) then
       begin
         for RowIndex := RowMin to RowMax do
         begin
@@ -672,55 +670,13 @@ begin
   Boundary.CacheData;
 end;
 
-
-constructor TSfrSegmentCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
+function TSfrSegmentCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FHydraulicConductivityData := TModflowTimeList.Create(Model, ScreenObject);
-  FStreamBedThicknessData := TModflowTimeList.Create(Model, ScreenObject);
-  FStreamBedElevationData := TModflowTimeList.Create(Model, ScreenObject);
-  FStreamWidthData := TModflowTimeList.Create(Model, ScreenObject);
-  FStreamDepthData := TModflowTimeList.Create(Model, ScreenObject);
-
-  FStreamBedThicknessData.NonParamDescription := 'Streambed thickness';
-  FStreamBedThicknessData.ParamDescription := ' streambed thickness';
-  FStreamBedElevationData.NonParamDescription := 'Streambed elevation';
-  FStreamBedElevationData.ParamDescription := ' streambed elevation';
-  FHydraulicConductivityData.NonParamDescription := 'Hydraulic conductivity';
-  FHydraulicConductivityData.ParamDescription := ' Hydraulic conductivity multiplier';
-  FStreamWidthData.NonParamDescription := 'Stream width';
-  FStreamWidthData.ParamDescription := ' stream width';
-
-  FStreamDepthData.NonParamDescription := 'Stream depth';
-  FStreamDepthData.ParamDescription := ' stream depth';
-
-  if Model <> nil then
-  begin
-//    FStreamBedThicknessData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivStage;
-//    FStreamBedElevationData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivConductance;
-//    FHydraulicConductivityData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivBottom;
-//    FStreamWidthData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivBottom;
-  end;
-
-  AddTimeList(FHydraulicConductivityData);
-  AddTimeList(FStreamBedThicknessData);
-  AddTimeList(FStreamBedElevationData);
-  AddTimeList(FStreamWidthData);
-  AddTimeList(FStreamDepthData);
+  result := TSfrSegmentTimeListLink;
 end;
 
-destructor TSfrSegmentCollection.Destroy;
-begin
-  FStreamBedThicknessData.Free;
-  FStreamBedElevationData.Free;
-  FHydraulicConductivityData.Free;
-  FStreamWidthData.Free;
-  FStreamDepthData.Free;
-  inherited;
-end;
-
-procedure TSfrSegmentCollection.InitializeTimeLists(ListOfTimeLists: TList);
+procedure TSfrSegmentCollection.InitializeTimeLists(ListOfTimeLists: TList;
+  AModel: TBaseModel);
 var
   TimeIndex: Integer;
   BoundaryValues: TBoundaryValueArray;
@@ -731,8 +687,14 @@ var
   ISFROPT: integer;
   ICALC: integer;
   ItemUsed: boolean;
+  HydraulicConductivityData: TModflowTimeList;
+  StreamBedThicknessData: TModflowTimeList;
+  StreamBedElevationData: TModflowTimeList;
+  StreamWidthData: TModflowTimeList;
+  StreamDepthData: TModflowTimeList;
+  ALink: TSfrSegmentTimeListLink;
 begin
-  ISFROPT := (Model as TPhastModel).ModflowPackages.SfrPackage.Isfropt;
+  ISFROPT := (AModel as TCustomModel).ModflowPackages.SfrPackage.Isfropt;
   SetLength(BoundaryValues, Count);
 
   Boundary := BoundaryGroup as TSfrBoundary;
@@ -751,7 +713,9 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FHydraulicConductivityData.Initialize(BoundaryValues, ScreenObject,
+  ALink := TimeListLink.GetLink(AModel) as TSfrSegmentTimeListLink;
+  HydraulicConductivityData := ALink.FHydraulicConductivityData;
+  HydraulicConductivityData.Initialize(BoundaryValues, ScreenObject, True,
     AssignmentLocation);
 
   for Index := 0 to Count - 1 do
@@ -784,8 +748,9 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FStreamBedThicknessData.Initialize(BoundaryValues, ScreenObject,
-    AssignmentLocation);
+  StreamBedThicknessData := ALink.FStreamBedThicknessData;
+  StreamBedThicknessData.Initialize(BoundaryValues, ScreenObject,
+    True, AssignmentLocation);
 
   for Index := 0 to Count - 1 do
   begin
@@ -817,8 +782,9 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FStreamBedElevationData.Initialize(BoundaryValues, ScreenObject,
-    AssignmentLocation);
+  StreamBedElevationData := ALink.FStreamBedElevationData;
+  StreamBedElevationData.Initialize(BoundaryValues, ScreenObject,
+    True, AssignmentLocation);
 
   for Index := 0 to Count - 1 do
   begin
@@ -843,8 +809,9 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FStreamWidthData.Initialize(BoundaryValues, ScreenObject,
-    AssignmentLocation);
+  StreamWidthData := ALink.FStreamWidthData;
+  StreamWidthData.Initialize(BoundaryValues, ScreenObject,
+    True, AssignmentLocation);
 
   for Index := 0 to Count - 1 do
   begin
@@ -862,68 +829,134 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FStreamDepthData.Initialize(BoundaryValues, ScreenObject,
-    AssignmentLocation);
+  StreamDepthData := ALink.FStreamDepthData;
+  StreamDepthData.Initialize(BoundaryValues, ScreenObject,
+    True, AssignmentLocation);
 
 
-  Assert(FHydraulicConductivityData.Count = Count);
-  Assert(FStreamBedThicknessData.Count = Count);
-  Assert(FStreamBedElevationData.Count = Count);
-  Assert(FStreamWidthData.Count = Count);
-  Assert(FStreamDepthData.Count = Count);
+  Assert(HydraulicConductivityData.Count = Count);
+  Assert(StreamBedThicknessData.Count = Count);
+  Assert(StreamBedElevationData.Count = Count);
+  Assert(StreamWidthData.Count = Count);
+  Assert(StreamDepthData.Count = Count);
   ClearBoundaries;
-  SetBoundaryCapacity(FHydraulicConductivityData.Count);
-  for TimeIndex := 0 to FHydraulicConductivityData.Count - 1 do
+  SetBoundaryCapacity(HydraulicConductivityData.Count);
+  for TimeIndex := 0 to HydraulicConductivityData.Count - 1 do
   begin
     AddBoundary(TSfrSegmentStorage.Create);
   end;
-  ListOfTimeLists.Add(FHydraulicConductivityData);
-  ListOfTimeLists.Add(FStreamBedThicknessData);
-  ListOfTimeLists.Add(FStreamBedElevationData);
-  ListOfTimeLists.Add(FStreamWidthData);
-  ListOfTimeLists.Add(FStreamDepthData);
+  ListOfTimeLists.Add(HydraulicConductivityData);
+  ListOfTimeLists.Add(StreamBedThicknessData);
+  ListOfTimeLists.Add(StreamBedElevationData);
+  ListOfTimeLists.Add(StreamWidthData);
+  ListOfTimeLists.Add(StreamDepthData);
 end;
 
 procedure TSfrSegmentCollection.InvalidateHydraulicConductivityData(
   Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrSegmentTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FHydraulicConductivityData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrSegmentTimeListLink;
+    Link.FHydraulicConductivityData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrSegmentTimeListLink;
+      Link.FHydraulicConductivityData.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrSegmentCollection.InvalidateStreambedElevationData(
   Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrSegmentTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FStreamBedElevationData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrSegmentTimeListLink;
+    Link.FStreamBedElevationData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrSegmentTimeListLink;
+      Link.FStreamBedElevationData.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrSegmentCollection.InvalidateStreamBedThicknessData(
   Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrSegmentTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FStreamBedThicknessData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrSegmentTimeListLink;
+    Link.FStreamBedThicknessData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrSegmentTimeListLink;
+      Link.FStreamBedThicknessData.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrSegmentCollection.InvalidateStreamDepthData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrSegmentTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FStreamDepthData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrSegmentTimeListLink;
+    Link.FStreamDepthData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrSegmentTimeListLink;
+      Link.FStreamDepthData.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrSegmentCollection.InvalidateStreamWidthData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrSegmentTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FStreamWidthData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrSegmentTimeListLink;
+    Link.FStreamWidthData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrSegmentTimeListLink;
+      Link.FStreamWidthData.Invalidate;
+    end;
   end;
 end;
 
@@ -971,13 +1004,13 @@ begin
   result := Values.HydraulicConductivityAnnotation;
 end;
 
-function TSfrSegment_Cell.GetIntegerAnnotation(Index: integer): string;
+function TSfrSegment_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TSfrSegment_Cell.GetIntegerValue(Index: integer): integer;
+function TSfrSegment_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -988,7 +1021,7 @@ begin
   result := Values.Cell.Layer;
 end;
 
-function TSfrSegment_Cell.GetRealAnnotation(Index: integer): string;
+function TSfrSegment_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -1001,7 +1034,7 @@ begin
   end;
 end;
 
-function TSfrSegment_Cell.GetRealValue(Index: integer): double;
+function TSfrSegment_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -1193,6 +1226,47 @@ begin
     RestoreData;
   end;
   result := FSrfSegmentArray;
+end;
+
+{ TSfrSegmentTimeListLink }
+
+procedure TSfrSegmentTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  FHydraulicConductivityData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FStreamBedThicknessData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FStreamBedElevationData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FStreamWidthData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FStreamDepthData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FStreamBedThicknessData.NonParamDescription := 'Streambed thickness';
+  FStreamBedThicknessData.ParamDescription := ' streambed thickness';
+  FStreamBedElevationData.NonParamDescription := 'Streambed elevation';
+  FStreamBedElevationData.ParamDescription := ' streambed elevation';
+  FHydraulicConductivityData.NonParamDescription := 'Hydraulic conductivity';
+  FHydraulicConductivityData.ParamDescription := ' Hydraulic conductivity multiplier';
+  FStreamWidthData.NonParamDescription := 'Stream width';
+  FStreamWidthData.ParamDescription := ' stream width';
+  FStreamDepthData.NonParamDescription := 'Stream depth';
+  FStreamDepthData.ParamDescription := ' stream depth';
+  if Model <> nil then
+  begin
+  end;
+  AddTimeList(FHydraulicConductivityData);
+  AddTimeList(FStreamBedThicknessData);
+  AddTimeList(FStreamBedElevationData);
+  AddTimeList(FStreamWidthData);
+  AddTimeList(FStreamDepthData);
+
+end;
+
+destructor TSfrSegmentTimeListLink.Destroy;
+begin
+  FHydraulicConductivityData.Free;
+  FStreamBedThicknessData.Free;
+  FStreamBedElevationData.Free;
+  FStreamWidthData.Free;
+  FStreamDepthData.Free;
+  inherited;
 end;
 
 end.

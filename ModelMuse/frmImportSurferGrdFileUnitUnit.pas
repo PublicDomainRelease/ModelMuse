@@ -22,8 +22,6 @@ type
     Label1: TLabel;
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
-    procedure rdgLimitsMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
   private
     FGrd6: TSurfer6Grid;
     FFileType: TSurferFileType;
@@ -138,28 +136,14 @@ begin
   end;
 end;
 
-procedure TfrmImportSurferGrdFile.rdgLimitsMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    rdgLimits.Options := rdgLimits.Options + [goEditing];
-  end
-  else
-  begin
-    rdgLimits.Options := rdgLimits.Options - [goEditing];
-  end;
-end;
-
 procedure TfrmImportSurferGrdFile.SetData;
 const
-  CommentStr = 'Minimum X %0g'#13#10
-    + 'Maximum X %1g'#13#10
-    + 'Minimum Y %2g'#13#10
-    + 'Maximum Y %3g'#13#10
-    + 'Minimum Z %4g'#13#10
-    + 'Maximum Z %5g'#13#10;
+  CommentStr = 'Minimum X %0g' + sLineBreak
+    + 'Maximum X %1g' + sLineBreak
+    + 'Minimum Y %2g' + sLineBreak
+    + 'Maximum Y %3g' + sLineBreak
+    + 'Minimum Z %4g' + sLineBreak
+    + 'Maximum Z %5g' + sLineBreak;
 var
   DataSetName: string;
   DataSet: TDataArray;

@@ -158,6 +158,7 @@ type
     FNewLayerStructure: TLayerStructure;
     FOldLayerStructure: TLayerStructure;
     FNewDataSets: TList;
+    FChildDiscretizations: TList;
   protected
     function Description: string; override;
   public
@@ -170,7 +171,7 @@ type
 implementation
 
 uses Math, RealListUnit, CursorsFoiledAgain, frmGoPhastUnit,
-  ModflowPackagesUnit, frmErrorsAndWarningsUnit, PhastModelUnit;
+  ModflowPackagesUnit, frmErrorsAndWarningsUnit, PhastModelUnit, Contnrs;
 
 {$R *.dfm}
 
@@ -699,10 +700,10 @@ var
 begin
   rgMethod.ItemIndex := Integer(gmCustom);
   NumLayers := StrToInt(rdeVDiscretization.Text) + 1;
+  rdgSubLayerBoundaries.Cells[0,NumLayers-1]
+    := FloatToStr(ConvertY(Y));
   rdeVDiscretization.Text := IntToStr(NumLayers);
   rdeVDiscretizationChange(rdeVDiscretization);
-  rdgSubLayerBoundaries.Cells[0,rdgSubLayerBoundaries.RowCount-1]
-    := FloatToStr(ConvertY(Y));
   for LayerIndex := 0 to FSelectedUnits.Count - 1 do
   begin
     LayerGroup := FSelectedUnits[LayerIndex];
@@ -973,6 +974,10 @@ begin
     LayerGroup.AquiferName := StrModelTop;
   end;
   LayerGroup := FLayerStructure.Insert(Position+1) as TLayerGroup;
+  // LayerGroup.AquiferName can not be assigned in LayerGroup.Create
+  // because that causes an error if you delete a layer group
+  // and then undo the deletion.
+  LayerGroup.AquiferName := 'New Layer Group';
 
   if Position < tvLayerGroups.Items.Count then
   begin
@@ -1447,7 +1452,7 @@ var
         for Index := 0 to FirstUnit.LayerCollection.Count - 1 do
         begin
           rdgSubLayerBoundaries.Cells[0,
-            rdgSubLayerBoundaries.RowCount - Index]
+            rdgSubLayerBoundaries.RowCount - Index-1]
             := FloatToStr((FirstUnit.LayerCollection.Items[Index]
             as TLayerFraction).Fraction);
         end;
@@ -1770,9 +1775,9 @@ begin
           for Index := 1 to rdgSubLayerBoundaries.RowCount - 1 do
           begin
             try
-              if rdgSubLayerBoundaries.Cells[0,Index+1] <> '' then
+              if rdgSubLayerBoundaries.Cells[0,Index] <> '' then
               begin
-                RealList.Add(StrToFloat(rdgSubLayerBoundaries.Cells[0,Index+1]));
+                RealList.Add(StrToFloat(rdgSubLayerBoundaries.Cells[0,Index]));
               end;
             except on E: EConvertError do
               begin
@@ -1978,8 +1983,20 @@ end;
 { TUndoDefineLayers }
 
 constructor TUndoDefineLayers.Create(var NewLayerStructure: TLayerStructure);
+var
+  Index: Integer;
+  ChildModel: TChildModel;
+  NewDis: TChildDiscretizationCollection;
 begin
   inherited Create;
+  FChildDiscretizations := TObjectList.Create;
+  for Index := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[Index].ChildModel;
+    NewDis := TChildDiscretizationCollection.Create(nil);
+    NewDis.Assign(ChildModel.Discretization);
+    FChildDiscretizations.Add(NewDis);
+  end;
   FNewDataSets := TList.Create;
 
   FNewLayerStructure:= NewLayerStructure;
@@ -1999,25 +2016,42 @@ begin
   FNewLayerStructure.Free;
   FOldLayerStructure.Free;
   FNewDataSets.Free;
+  FChildDiscretizations.Free;
   inherited;
 end;
 
 procedure TUndoDefineLayers.DoCommand;
+var
+  LocalModel: TPhastModel;
+  Index: Integer;
+  ChildModel: TChildModel;
 begin
   frmGoPhast.CanDraw := False;
   try
     inherited;
-    frmGoPhast.PhastModel.LayerStructure.NewDataSets := FNewDataSets;
-    frmGoPhast.PhastModel.LayerStructure.ClearNewDataSets;
-    frmGoPhast.PhastModel.LayerStructure.Assign(FNewLayerStructure);
-    frmGoPhast.PhastModel.LayerStructure.NewDataSets := nil;
+    LocalModel := frmGoPhast.PhastModel;
+    LocalModel.LayerStructure.NewDataSets := FNewDataSets;
+    LocalModel.LayerStructure.ClearNewDataSets;
+    LocalModel.LayerStructure.Assign(FNewLayerStructure);
+    LocalModel.LayerStructure.NewDataSets := nil;
     UpdatedRequiredDataSets;
+    for Index := 0 to LocalModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalModel.ChildModels[Index].ChildModel;
+      ChildModel.UpdateGrid;
+    end;
+    frmGoPhast.PhastModel.ModflowGrid.NotifyGridChanged(nil);
+    frmGoPhast.PhastModel.UpdateMapping;
   finally
     frmGoPhast.CanDraw := True;
   end;
 end;
 
 procedure TUndoDefineLayers.Undo;
+var
+  Index: Integer;
+  ChildModel: TChildModel;
+  NewDis: TChildDiscretizationCollection;
 begin
   frmGoPhast.CanDraw := False;
   try
@@ -2027,6 +2061,15 @@ begin
     frmGoPhast.PhastModel.LayerStructure.RemoveNewDataSets;
     frmGoPhast.PhastModel.LayerStructure.NewDataSets := nil;
     UpdatedRequiredDataSets;
+    for Index := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[Index].ChildModel;
+      NewDis := FChildDiscretizations[Index];
+      ChildModel.Discretization.Assign(NewDis);
+      ChildModel.UpdateGrid;
+    end;
+    frmGoPhast.PhastModel.ModflowGrid.NotifyGridChanged(nil);
+    frmGoPhast.PhastModel.UpdateMapping;
   finally
     frmGoPhast.CanDraw := True;
   end;

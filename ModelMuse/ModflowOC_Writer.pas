@@ -15,7 +15,7 @@ type
   protected
     class function Extension: string; override;
   public
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(AModel: TCustomModel); override;
     procedure WriteFile(const AFileName: string);
   end;
 
@@ -26,10 +26,10 @@ uses ModflowUnitNumbers, ModflowTimeUnit, frmErrorsAndWarningsUnit,
 
 { TOutputControlWriter }
 
-constructor TOutputControlWriter.Create(Model: TCustomModel);
+constructor TOutputControlWriter.Create(AModel: TCustomModel);
 begin
-  inherited Create(Model);
-  FOutputControl := PhastModel.ModflowOutputControl;
+  inherited Create(AModel);
+  FOutputControl := Model.ModflowOutputControl;
 end;
 
 class function TOutputControlWriter.Extension: string;
@@ -42,7 +42,7 @@ var
   Index: integer;
 begin
   WriteCommentLine('Output Control file created on '
-    + DateToStr(Now) + ' by ' + PhastModel.ProgramName
+    + DateToStr(Now) + ' by ' + Model.ProgramName
     + ' version ' + ModelVersion + '.');
   for Index := 0 to FOutputControl.Comments.Count - 1 do
   begin
@@ -71,17 +71,17 @@ begin
           WriteString(' LABEL');
           NewLine;
           NameOfFile := ChangeFileExt(FNameOfFile, StrFhd);
-          WriteToNameFile(StrDATA, PhastModel.UnitNumbers.UnitNumber(StrHEAD), NameOfFile, foOutput);
+          WriteToNameFile(StrDATA, Model.UnitNumbers.UnitNumber(StrHEAD), NameOfFile, foOutput);
         end;
       oftBinary:
         begin
           NameOfFile := ChangeFileExt(FNameOfFile, StrBhd);
-          WriteToNameFile(StrDATABINARY, PhastModel.UnitNumbers.UnitNumber(StrHEAD), NameOfFile, foOutput);
+          WriteToNameFile(StrDATABINARY, Model.UnitNumbers.UnitNumber(StrHEAD), NameOfFile, foOutput);
         end;
       else Assert(False);
     end;
     WriteString('HEAD SAVE UNIT ');
-    WriteInteger(PhastModel.UnitNumbers.UnitNumber(StrHEAD));
+    WriteInteger(Model.UnitNumbers.UnitNumber(StrHEAD));
     NewLine;
   end;
 
@@ -102,17 +102,17 @@ begin
           WriteString(' LABEL');
           NewLine;
           NameOfFile := ChangeFileExt(FNameOfFile, StrFdn);
-          WriteToNameFile(StrDATA, PhastModel.UnitNumbers.UnitNumber(StrDRAWDOWN), NameOfFile, foOutput);
+          WriteToNameFile(StrDATA, Model.UnitNumbers.UnitNumber(StrDRAWDOWN), NameOfFile, foOutput);
         end;
       oftBinary:
         begin
           NameOfFile := ChangeFileExt(FNameOfFile, StrBdn);
-          WriteToNameFile(StrDATABINARY, PhastModel.UnitNumbers.UnitNumber(StrDRAWDOWN), NameOfFile, foOutput);
+          WriteToNameFile(StrDATABINARY, Model.UnitNumbers.UnitNumber(StrDRAWDOWN), NameOfFile, foOutput);
         end;
       else Assert(False);
     end;
     WriteString('DRAWDOWN SAVE UNIT ');
-    WriteInteger(PhastModel.UnitNumbers.UnitNumber(StrDRAWDOWN));
+    WriteInteger(Model.UnitNumbers.UnitNumber(StrDRAWDOWN));
     NewLine;
   end;
 
@@ -175,7 +175,7 @@ begin
     Exit;
   end;
 
-  StressPeriods := PhastModel.ModflowFullStressPeriods;
+  StressPeriods := Model.ModflowFullStressPeriods;
 
   HeadFrequency := FOutputControl.HeadOC.Frequency;
   HeadFrequencyChoice := FOutputControl.HeadOC.FrequencyChoice;
@@ -230,7 +230,7 @@ begin
       begin
         WarningMessage := 'Stress period: '+ IntToStr(StressPeriodIndex+1)
           + '; Starting Time: ' + FloatToStr(StressPeriod.StartTime);
-        frmErrorsAndWarnings.AddWarning(StressPeriodWarning, WarningMessage);
+        frmErrorsAndWarnings.AddWarning(Model, StressPeriodWarning, WarningMessage);
       end;
 
       if ShouldExportHead or ShouldExportDrawdown or SetDDREFERENCE
@@ -294,12 +294,12 @@ end;
 
 procedure TOutputControlWriter.WriteFile(const AFileName: string);
 begin
-  if PhastModel.PackageGeneratedExternally(StrOC) then
+  if Model.PackageGeneratedExternally(StrOC) then
   begin
     Exit;
   end;
   FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrOC, PhastModel.UnitNumbers.UnitNumber(StrOC), FNameOfFile, foInput);
+  WriteToNameFile(StrOC, Model.UnitNumbers.UnitNumber(StrOC), FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try
     frmProgressMM.AddMessage('Writing Output Control input.');

@@ -397,6 +397,15 @@ var
   XMult, YMult: double;
   NewWidth, NewHeight: integer;
   NewBitMap32: TBitmap32;
+  procedure ShowErrorMessage;
+  begin
+    Beep;
+      MessageDlg('The ' + Name
+        + ' image can not be shown at this magnification '
+        + 'and has been turned off. You can turn it back on later '
+        + 'after decreasing the magnification.',
+        mtInformation, [mbOK], 0);
+  end;
 begin
     // @name will draw an imported image () on a bitmap (Dest)
     // at its proper location.
@@ -418,26 +427,27 @@ begin
     if (NewWidth > 5000) or (NewHeight > 5000) then
     begin
       Visible := False;
-      MessageDlg('The ' + Name
-        + ' image can not be shown at this magnification '
-        + 'and has been turned off. You can turn it back on later '
-        + 'after decreasing the magnification.',
-        mtInformation, [mbOK], 0);
+      ShowErrorMessage;
     end
     else
     begin
-      NewBmp.Width := NewWidth;
-      NewBmp.Height := NewHeight;
-      NewBmp.Canvas.StretchDraw(Rect(0, 0, NewWidth, NewHeight),
-        BitMap);
-
-      NewBitMap32 := TBitmap32.Create;
       try
-        NewBitMap32.Assign(NewBmp);
-        { TODO : rotate bitmap? }
-        Destination.Draw(Round(X), Round(Y), NewBitMap32);
-      finally
-        NewBitMap32.Free;
+        NewBmp.Width := NewWidth;
+        NewBmp.Height := NewHeight;
+        NewBmp.Canvas.StretchDraw(Rect(0, 0, NewWidth, NewHeight),
+          BitMap);
+
+        NewBitMap32 := TBitmap32.Create;
+        try
+          NewBitMap32.Assign(NewBmp);
+          { TODO : rotate bitmap? }
+          Destination.Draw(Round(X), Round(Y), NewBitMap32);
+        finally
+          NewBitMap32.Free;
+        end;
+      Except
+        Visible := False;
+        ShowErrorMessage;
       end;
     end;
   finally

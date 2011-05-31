@@ -8,7 +8,7 @@ interface
 uses
   UndoItemsScreenObjects, SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, frmCustomGoPhastUnit, ComCtrls, Buttons, CompressedImageUnit,
-  ExtCtrls, Spin, ArgusDataEntry, Mask, JvExMask, JvSpin;
+  ExtCtrls, Spin, ArgusDataEntry, Mask, JvExMask, JvSpin, AbstractGridUnit;
 
 type
   {@abstract(@name is used to move the viewpoint to a selected position,
@@ -106,6 +106,8 @@ type
     seLayer: TJvSpinEdit;
     tabImage: TTabSheet;
     lvImages: TListView;
+    lblModel: TLabel;
+    comboModel: TComboBox;
     // @name calls @link(SetData).
     procedure btnOKClick(Sender: TObject);
     // @name enables and disables controls depending on which of
@@ -116,12 +118,14 @@ type
     // @name enables moving to a particular cell if a grid has been defined.
     procedure FormShow(Sender: TObject);
     procedure pcMainChange(Sender: TObject);
+    procedure comboModelChange(Sender: TObject);
   private
     // @name stores information about the current position.
     procedure GetData;
     // @name moves the selected view or views to the selected
     // cell, object, or position.
     procedure SetData;
+    procedure SetGridSpinEditMax(Grid: TCustomGrid);
     { Private declarations }
   public
     { Public declarations }
@@ -149,20 +153,20 @@ procedure SetSidePosition(const YCoordinate, ZCoordinate: real);
 procedure SetSideCornerPosition(const YCoordinate, ZCoordinate: real);
 
 // @name moves the top view of the model to the cell at Column, Row.
-procedure MoveToTopCell(const Column, Row: integer);
+procedure MoveToTopCell(Grid: TCustomGrid; const Column, Row: integer);
 
 // @name moves the front view of the model to the cell at Column, Layer.
-procedure MoveToFrontCell(const Column, Layer: integer);
+procedure MoveToFrontCell(Grid: TCustomGrid; const Column, Layer: integer);
 
 // @name moves the side view of the model to the cell at Row, Layer.
-procedure MoveToSideCell(const Row, Layer: integer);
+procedure MoveToSideCell(Grid: TCustomGrid; const Row, Layer: integer);
 
 procedure MoveToImage(BitMapItem: TCompressedBitmapItem);
 
 implementation
 
-uses frmGoPhastUnit, GoPhastTypes, AbstractGridUnit, ScreenObjectUnit,
-  DataSetUnit, FastGEO;
+uses frmGoPhastUnit, GoPhastTypes, ScreenObjectUnit,
+  DataSetUnit, FastGEO, PhastModelUnit;
 
 {$R *.dfm}
 
@@ -273,36 +277,36 @@ begin
   end;
 end;
 
-procedure MoveToTopCell(const Column, Row: integer);
+procedure MoveToTopCell(Grid: TCustomGrid; const Column, Row: integer);
 var
   XCoordinate, YCoordinate: double;
   TopPoint: TPoint2D;
 begin
-  TopPoint := frmGoPhast.Grid.TwoDElementCenter(Column, Row);
+  TopPoint := Grid.TwoDElementCenter(Column, Row);
   XCoordinate := TopPoint.X;
   YCoordinate := TopPoint.Y;
   SetTopPosition(XCoordinate, YCoordinate);
 end;
 
-procedure MoveToFrontCell(const Column, Layer: integer);
+procedure MoveToFrontCell(Grid: TCustomGrid; const Column, Layer: integer);
 var
   XCoordinate, ZCoordinate: double;
   FrontPoint: T3DRealPoint;
 begin
-  FrontPoint := frmGoPhast.Grid.ThreeDElementCenter(Column,
-    frmGoPhast.Grid.SelectedRow, Layer);
+  FrontPoint := Grid.ThreeDElementCenter(Column,
+    Grid.SelectedRow, Layer);
   XCoordinate := FrontPoint.X;
   ZCoordinate := FrontPoint.Z;
   SetFrontPosition(XCoordinate, ZCoordinate);
 end;
 
-procedure MoveToSideCell(const Row, Layer: integer);
+procedure MoveToSideCell(Grid: TCustomGrid; const Row, Layer: integer);
 var
   YCoordinate, ZCoordinate: double;
   SidePoint: T3DRealPoint;
 begin
-  SidePoint := frmGoPhast.Grid.ThreeDElementCenter(
-    frmGoPhast.Grid.SelectedColumn, Row, Layer);
+  SidePoint := Grid.ThreeDElementCenter(
+    Grid.SelectedColumn, Row, Layer);
   YCoordinate := SidePoint.Y;
   ZCoordinate := SidePoint.Z;
   SetSidePosition(YCoordinate, ZCoordinate);
@@ -322,6 +326,7 @@ var
   AList: TList;
   Layer: integer;
   BitMapItem: TCompressedBitmapItem;
+  Grid: TCustomGrid;
   procedure SetGridSpinEditValue(SE: TJvSpinEdit; NewValue: integer);
   begin
     if NewValue <= SE.MaxValue then
@@ -355,14 +360,12 @@ begin
       and (frmGoPhast.Grid.RowCount > 0)
       and (frmGoPhast.Grid.LayerCount > 0) then
     begin
-      seCol.MaxValue := frmGoPhast.Grid.ColumnCount;
-      seRow.MaxValue := frmGoPhast.Grid.RowCount;
-      seLayer.MaxValue := frmGoPhast.Grid.LayerCount;
+      Grid := frmGoPhast.Grid;
+      SetGridSpinEditMax(Grid);
       seCol.MinValue := 1;
       seRow.MinValue := 1;
       seLayer.MinValue := 1;
-  //    seColNew.MaxValue := frmGoPhast.Grid.ColumnCount;
-  //    seColNew.MinValue := 1;
+
       TopCell := frmGoPhast.Grid.TopContainingCell(APoint, eaBlocks, False);
       SetGridSpinEditValue(seCol,TopCell.Col+1);
       SetGridSpinEditValue(seRow,TopCell.Row+1);
@@ -444,6 +447,7 @@ var
   Undo: TUndoChangeSelection;
   UndoShowHide: TUndoShowHideScreenObject;
   BitMapItem: TCompressedBitmapItem;
+  Model: TCustomModel;
 begin
   Screen.Cursor := crHourGlass;
   try
@@ -475,17 +479,18 @@ begin
           Column := seCol.AsInteger - 1;
           Row := seRow.AsInteger - 1;
           Layer := seLayer.AsInteger - 1;
+          Model := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
           if cbTop.Checked then
           begin
-            MoveToTopCell(Column, Row);
+            MoveToTopCell(Model.Grid, Column, Row);
           end;
           if cbFront.Checked then
           begin
-            MoveToFrontCell(Column, Layer);
+            MoveToFrontCell(Model.Grid, Column, Layer);
           end;
           if cbSide.Checked then
           begin
-            MoveToSideCell(Row, Layer);
+            MoveToSideCell(Model.Grid, Row, Layer);
           end;
 
         end;
@@ -560,10 +565,21 @@ begin
   end;
 end;
 
+procedure TfrmGoTo.SetGridSpinEditMax(Grid: TCustomGrid);
+begin
+  seCol.MaxValue := Grid.ColumnCount;
+  seRow.MaxValue := Grid.RowCount;
+  seLayer.MaxValue := Grid.LayerCount;
+end;
+
+
 procedure TfrmGoTo.FormCreate(Sender: TObject);
 begin
   inherited;
   pcMain.ActivePageIndex := 0;
+
+  FillComboWithModelNames(comboModel);
+
   GetData;
 end;
 
@@ -584,6 +600,15 @@ begin
   seCol.Enabled := cbTop.Checked or cbFront.Checked;
   seRow.Enabled := cbTop.Checked or cbSide.Checked;
   seLayer.Enabled := cbFront.Checked or cbSide.Checked;
+end;
+
+procedure TfrmGoTo.comboModelChange(Sender: TObject);
+var
+  Model: TCustomModel;
+begin
+  inherited;
+  Model := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
+  SetGridSpinEditMax(Model.Grid);
 end;
 
 procedure TfrmGoTo.pcMainChange(Sender: TObject);

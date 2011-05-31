@@ -5,7 +5,7 @@ interface
 uses SysUtils, Classes, CustomModflowWriterUnit, ModflowWellUnit,
   ScreenObjectUnit, ModflowBoundaryUnit, ModflowPackageSelectionUnit,
   ModflowCellUnit, OrderedCollectionUnit, ModflowBoundaryDisplayUnit,
-  ModflowTransientListParameterUnit;
+  ModflowTransientListParameterUnit, GoPhastTypes;
 
 type
   TModflowWEL_Writer = class(TCustomListWriter)
@@ -25,7 +25,8 @@ type
     function Package: TModflowPackageSelection; override;
     function ParameterType: TParameterType; override;
     procedure WriteParameterCells(CellList: TValueCellList; NLST: Integer;
-      const VariableIdentifiers, DataSetIdentifier: string); override;
+      const VariableIdentifiers, DataSetIdentifier: string;
+      AssignmentMethod: TUpdateMethod); override;
     procedure WriteCell(Cell: TValueCell;
       const DataSetIdentifier, VariableIdentifiers: string); override;
   public
@@ -111,7 +112,7 @@ end;   }
 
 function TModflowWEL_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.WelPackage;
+  result := Model.ModflowPackages.WelPackage;
 end;
 
 function TModflowWEL_Writer.ParameterType: TParameterType;
@@ -126,7 +127,7 @@ var
   LocalLayer: integer;
 begin
   Well_Cell := Cell as TWell_Cell;
-  LocalLayer := PhastModel.LayerStructure.
+  LocalLayer := Model.
     DataSetLayerToModflowLayer(Well_Cell.Layer);
   WriteInteger(LocalLayer);
   WriteInteger(Well_Cell.Row+1);
@@ -186,7 +187,7 @@ const
   VariableIdentifiers = 'Qfact IFACE';
 begin
   WriteParameterDefinitions(DS3, DS3Instances, DS4A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot);
+    VariableIdentifiers, ErrorRoot, umAssign);
 end;
 
 procedure TModflowWEL_Writer.WriteDataSets5To7;
@@ -209,19 +210,19 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrWEL) then
+  if Model.PackageGeneratedExternally(StrWEL) then
   begin
     Exit;
   end;
   NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrWEL, PhastModel.UnitNumbers.UnitNumber(StrWEL), NameOfFile, foInput);
+  WriteToNameFile(StrWEL, Model.UnitNumbers.UnitNumber(StrWEL), NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
-  ClearTimeLists;
+  ClearTimeLists(Model);
   OpenFile(FileName(AFileName));
   try
     frmProgressMM.AddMessage('Writing WEL Package input.');
@@ -265,7 +266,7 @@ begin
 end;
 
 procedure TModflowWEL_Writer.WriteParameterCells(CellList: TValueCellList; NLST: Integer;
-  const VariableIdentifiers, DataSetIdentifier: string);
+  const VariableIdentifiers, DataSetIdentifier: string; AssignmentMethod: TUpdateMethod);
 var
   Cell: TWell_Cell;
   CellIndex: Integer;

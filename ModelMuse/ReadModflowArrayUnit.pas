@@ -17,6 +17,8 @@ type
 
   TModflowPrecision = (mpSingle, mpDouble);
 
+  EPrecisionReadError = class(Exception);
+
   TFileVariable = class(TObject)
     AFile: TextFile;
   end;
@@ -28,7 +30,8 @@ type
 procedure ReadSinglePrecisionModflowBinaryRealArray(AFile: TFileStream;
   var KSTP, KPER: Integer; var PERTIM, TOTIM: TModflowDouble;
   var DESC: TModflowDesc; var NCOL, NROW, ILAY: Integer;
-  var AnArray: TModflowDoubleArray);
+  var AnArray: TModflowDoubleArray;
+  ReadArray: Boolean = True);
 
 // AFile needs to be open before being passed to this procedure.
 // The other variables will be returned from the procedure.
@@ -37,14 +40,15 @@ procedure ReadSinglePrecisionModflowBinaryRealArray(AFile: TFileStream;
 procedure ReadDoublePrecisionModflowBinaryRealArray(AFile: TFileStream;
   var KSTP, KPER: Integer;
   var PERTIM, TOTIM: TModflowDouble; var DESC: TModflowDesc;
-  var NCOL, NROW, ILAY: Integer; var AnArray: TModflowDoubleArray);
+  var NCOL, NROW, ILAY: Integer; var AnArray: TModflowDoubleArray;
+  ReadArray: Boolean = True);
 
 // F.AFile needs to be open before being passed to this procedure.
 // The other variables will be returned from the procedure.
 procedure ReadModflowAsciiRealArray(F: TFileVariable;
   var KSTP, KPER: Integer; var PERTIM, TOTIM: TModflowDouble;
   var DESC: TModflowDesc2; var NCOL, NROW, ILAY: Integer;
-  var AnArray: TModflowDoubleArray);
+  var AnArray: TModflowDoubleArray; ReadArray: boolean = True);
 
 // AFile needs to be open before being passed to this procedure.
 // The other variables will be returned from the procedure.
@@ -54,7 +58,8 @@ procedure ReadModflowSinglePrecFluxArray(AFile: TFileStream;
   var KSTP, KPER: Integer; var PERTIM, TOTIM: TModflowDouble;
   var DESC: TModflowDesc; var NCOL, NROW, NLAY: Integer;
   var AnArray: T3DTModflowArray;
-  HufFormat: boolean
+  HufFormat: boolean;
+  ReadArray: Boolean = True
   );
 
 // AFile needs to be open before being passed to this procedure.
@@ -65,7 +70,8 @@ procedure ReadModflowDoublePrecFluxArray(AFile: TFileStream;
   var KSTP, KPER: Integer;
   var PERTIM, TOTIM: TModflowDouble; var DESC: TModflowDesc;
   var NCOL, NROW, NLAY: Integer; var AnArray: T3DTModflowArray;
-  HufFormat: boolean
+  HufFormat: boolean;
+  ReadArray: Boolean = True
   );
 
 // Use this function to check the precision of
@@ -82,6 +88,9 @@ function CheckArrayPrecision(AFile: TFileStream): TModflowPrecision;
 function CheckBudgetPrecision(AFile: TFileStream; out HufFormat: boolean): TModflowPrecision;
 
 implementation
+
+resourcestring
+  StrUnableToReadFile = 'Unable to read file.';
 
 function CheckArrayPrecision(AFile: TFileStream): TModflowPrecision;
 var
@@ -143,8 +152,20 @@ begin
   AFile.Read(DESC, SizeOf(DESC));
   Description := DESC;
   case result of
-    mpSingle: Assert(not ValidDescription);
-    mpDouble: Assert(ValidDescription);
+    mpSingle:
+      begin
+        if ValidDescription then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
+      end;
+    mpDouble:
+      begin
+        if not ValidDescription then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
+      end;
   end;
   AFile.Position := 0;
 end;
@@ -289,7 +310,10 @@ var
               end;
             end;
           end;
-        else Assert(False);
+        else
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end;
     except
       result := false;
@@ -428,7 +452,10 @@ var
               Exit;
             end;
           end;
-        else Assert(False);
+        else
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end;
     except
       result := False;
@@ -457,27 +484,42 @@ begin
       else if (FirstDescription = '   CONSTANT HEAD')
         and (SecondDescription = 'FLOW FRONT FACE ') then
       begin
-        Assert(result = mpDouble);
+        if (result <> mpDouble) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end
       else if (FirstDescription = '   CONSTANT HEAD')
         and (SecondDescription = 'FLOW LOWER FACE ') then
       begin
-        Assert(result = mpDouble);
+        if (result <> mpDouble) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end
       else if (FirstDescription = 'FLOW RIGHT FACE ')
         and (SecondDescription = 'FLOW FRONT FACE ') then
       begin
-        Assert(result = mpDouble);
+        if (result <> mpDouble) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end
       else if (FirstDescription = 'FLOW RIGHT FACE ')
         and (SecondDescription = 'FLOW LOWER FACE ') then
       begin
-        Assert(result = mpDouble);
+        if (result <> mpDouble) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end
       else if (FirstDescription = 'FLOW FRONT FACE ')
         and (SecondDescription = 'FLOW LOWER FACE ') then
       begin
-        Assert(result = mpDouble);
+        if (result <> mpDouble) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end
       else
       begin
@@ -495,41 +537,65 @@ begin
       if (FirstDescription = '         STORAGE')
         and (SecondDescription = '   CONSTANT HEAD') then
       begin
-        Assert(result = mpSingle);
+        if (result <> mpSingle) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end
       else if (FirstDescription = '   CONSTANT HEAD')
         and (SecondDescription = 'FLOW RIGHT FACE ') then
       begin
-        Assert(result = mpSingle);
+        if (result <> mpSingle) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end
       else if (FirstDescription = '   CONSTANT HEAD')
         and (SecondDescription = 'FLOW FRONT FACE ') then
       begin
-        Assert(result = mpSingle);
+        if (result <> mpSingle) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end
       else if (FirstDescription = '   CONSTANT HEAD')
         and (SecondDescription = 'FLOW LOWER FACE ') then
       begin
-        Assert(result = mpSingle);
+        if (result <> mpSingle) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end
       else if (FirstDescription = 'FLOW RIGHT FACE ')
         and (SecondDescription = 'FLOW FRONT FACE ') then
       begin
-        Assert(result = mpSingle);
+        if (result <> mpSingle) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end
       else if (FirstDescription = 'FLOW RIGHT FACE ')
         and (SecondDescription = 'FLOW LOWER FACE ') then
       begin
-        Assert(result = mpSingle);
+        if (result <> mpSingle) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end
       else if (FirstDescription = 'FLOW FRONT FACE ')
         and (SecondDescription = 'FLOW LOWER FACE ') then
       begin
-        Assert(result = mpSingle);
+        if (result <> mpSingle) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end
       else
       begin
-        Assert(result = mpDouble);
+        if (result <> mpDouble) then
+        begin
+          raise EPrecisionReadError.Create(StrUnableToReadFile);
+        end;
       end;
     end
     else
@@ -553,22 +619,34 @@ begin
             else if (FirstDescription = '   CONSTANT HEAD')
               and (SecondDescription = 'FLOW RIGHT FACE ') then
             begin
-              Assert(result = mpDouble);
+              if (result <> mpDouble) then
+              begin
+                raise EPrecisionReadError.Create(StrUnableToReadFile);
+              end;
             end
             else if (FirstDescription = 'FLOW RIGHT FACE ')
               and (SecondDescription = 'FLOW FRONT FACE ') then
             begin
-              Assert(result = mpDouble);
+              if (result <> mpDouble) then
+              begin
+                raise EPrecisionReadError.Create(StrUnableToReadFile);
+              end;
             end
             else if (FirstDescription = 'FLOW RIGHT FACE ')
               and (SecondDescription = 'FLOW LOWER FACE ') then
             begin
-              Assert(result = mpDouble);
+              if (result <> mpDouble) then
+              begin
+                raise EPrecisionReadError.Create(StrUnableToReadFile);
+              end;
             end
             else if (FirstDescription = 'FLOW FRONT FACE ')
               and (SecondDescription = 'FLOW LOWER FACE ') then
             begin
-              Assert(result = mpDouble);
+              if (result <> mpDouble) then
+              begin
+                raise EPrecisionReadError.Create(StrUnableToReadFile);
+              end;
             end
             else
             begin
@@ -586,48 +664,75 @@ begin
             if (FirstDescription = '         STORAGE')
               and (SecondDescription = '   CONSTANT HEAD') then
             begin
-              Assert(result = mpSingle);
+              if (result <> mpSingle) then
+              begin
+                raise EPrecisionReadError.Create(StrUnableToReadFile);
+              end;
             end
             else if (FirstDescription = '   CONSTANT HEAD')
               and (SecondDescription = 'FLOW RIGHT FACE ') then
             begin
-              Assert(result = mpSingle);
+              if (result <> mpSingle) then
+              begin
+                raise EPrecisionReadError.Create(StrUnableToReadFile);
+              end;
             end
             else if (FirstDescription = 'FLOW RIGHT FACE ')
               and (SecondDescription = 'FLOW FRONT FACE ') then
             begin
-              Assert(result = mpSingle);
+              if (result <> mpSingle) then
+              begin
+                raise EPrecisionReadError.Create(StrUnableToReadFile);
+              end;
             end
             else if (FirstDescription = 'FLOW RIGHT FACE ')
               and (SecondDescription = 'FLOW LOWER FACE ') then
             begin
-              Assert(result = mpSingle);
+              if (result <> mpSingle) then
+              begin
+                raise EPrecisionReadError.Create(StrUnableToReadFile);
+              end;
             end
             else if (FirstDescription = 'FLOW FRONT FACE ')
               and (SecondDescription = 'FLOW LOWER FACE ') then
             begin
-              Assert(result = mpSingle);
+              if (result <> mpSingle) then
+              begin
+                raise EPrecisionReadError.Create(StrUnableToReadFile);
+              end;
             end
             else
             begin
-              Assert(result = mpDouble);
+              if (result <> mpDouble) then
+              begin
+                raise EPrecisionReadError.Create(StrUnableToReadFile);
+              end;
             end;
           end
           else
           begin
-            Assert(result = mpDouble);
+            if (result <> mpDouble) then
+            begin
+              raise EPrecisionReadError.Create(StrUnableToReadFile);
+            end;
           end;
         end
         else
         begin
-          Assert(result = mpDouble);
+          if (result <> mpDouble) then
+          begin
+            raise EPrecisionReadError.Create(StrUnableToReadFile);
+          end;
         end;
       end;
     end;
   end
   else
   begin
-    Assert(result = mpDouble);
+    if (result <> mpDouble) then
+    begin
+      raise EPrecisionReadError.Create(StrUnableToReadFile);
+    end;
   end;
   AFile.Position := 0;
 end;
@@ -636,7 +741,8 @@ end;
 procedure ReadSinglePrecisionModflowBinaryRealArray(AFile: TFileStream;
   var KSTP, KPER: Integer;
   var PERTIM, TOTIM: TModflowDouble; var DESC: TModflowDesc;
-  var NCOL, NROW, ILAY: Integer; var AnArray: TModflowDoubleArray);
+  var NCOL, NROW, ILAY: Integer; var AnArray: TModflowDoubleArray;
+  ReadArray: Boolean = True);
 var
   ColIndex: Integer;
   RowIndex: Integer;
@@ -653,21 +759,29 @@ begin
   AFile.Read(NCOL, SizeOf(NCOL));
   AFile.Read(NROW, SizeOf(NROW));
   AFile.Read(ILAY, SizeOf(ILAY));
-  SetLength(AnArray, NROW, NCOL);
-  for RowIndex := 0 to NROW - 1 do
+  if ReadArray then
   begin
-    for ColIndex := 0 to NCOL - 1 do
+    SetLength(AnArray, NROW, NCOL);
+    for RowIndex := 0 to NROW - 1 do
     begin
-      AFile.Read(AValue, SizeOf(TModflowFloat));
-      AnArray[RowIndex, ColIndex] := AValue;
+      for ColIndex := 0 to NCOL - 1 do
+      begin
+        AFile.Read(AValue, SizeOf(TModflowFloat));
+        AnArray[RowIndex, ColIndex] := AValue;
+      end;
     end;
+  end
+  else
+  begin
+    AFile.Position := AFile.Position + SizeOf(TModflowFloat)*NROW*NCOL;
   end;
 end;
 
 procedure ReadDoublePrecisionModflowBinaryRealArray(AFile: TFileStream;
   var KSTP, KPER: Integer;
   var PERTIM, TOTIM: TModflowDouble; var DESC: TModflowDesc;
-  var NCOL, NROW, ILAY: Integer; var AnArray: TModflowDoubleArray);
+  var NCOL, NROW, ILAY: Integer; var AnArray: TModflowDoubleArray;
+  ReadArray: Boolean = True);
 var
   ColIndex: Integer;
   RowIndex: Integer;
@@ -681,12 +795,19 @@ begin
   AFile.Read(NROW, SizeOf(NROW));
   AFile.Read(ILAY, SizeOf(ILAY));
   SetLength(AnArray, NROW, NCOL);
-  for RowIndex := 0 to NROW - 1 do
+  if ReadArray then
   begin
-    for ColIndex := 0 to NCOL - 1 do
+    for RowIndex := 0 to NROW - 1 do
     begin
-      AFile.Read(AnArray[RowIndex, ColIndex], SizeOf(TModflowDouble));
+      for ColIndex := 0 to NCOL - 1 do
+      begin
+        AFile.Read(AnArray[RowIndex, ColIndex], SizeOf(TModflowDouble));
+      end;
     end;
+  end
+  else
+  begin
+    AFile.Position := AFile.Position + SizeOf(TModflowDouble)*NROW*NCOL;
   end;
 end;
 
@@ -694,7 +815,8 @@ procedure ReadModflowSinglePrecFluxArray(AFile: TFileStream;
   var KSTP, KPER: Integer;
   var PERTIM, TOTIM: TModflowDouble; var DESC: TModflowDesc;
   var NCOL, NROW, NLAY: Integer; var AnArray: T3DTModflowArray;
-  HufFormat: boolean);
+  HufFormat: boolean;
+  ReadArray: Boolean = True);
 var
   ITYPE: integer;
   DELT: TModflowFloat;
@@ -719,14 +841,17 @@ begin
   AFile.Read(NCOL, SizeOf(NCOL));
   AFile.Read(NROW, SizeOf(NROW));
   AFile.Read(NLAY, SizeOf(NLAY));
-  SetLength(AnArray, Abs(NLAY), NROW, NCOL);
-  for LayerIndex := 0 to Abs(NLAY) - 1 do
+  if ReadArray then
   begin
-    for RowIndex := 0 to NROW - 1 do
+    SetLength(AnArray, Abs(NLAY), NROW, NCOL);
+    for LayerIndex := 0 to Abs(NLAY) - 1 do
     begin
-      for ColIndex := 0 to NCOL - 1 do
+      for RowIndex := 0 to NROW - 1 do
       begin
-        AnArray[LayerIndex, RowIndex, ColIndex] := 0;
+        for ColIndex := 0 to NCOL - 1 do
+        begin
+          AnArray[LayerIndex, RowIndex, ColIndex] := 0;
+        end;
       end;
     end;
   end;
@@ -762,16 +887,24 @@ begin
   case ITYPE of
     0,1: // full 3D array
       begin
-        for LayerIndex := 0 to Abs(NLAY) - 1 do
+        if ReadArray then
         begin
-          for RowIndex := 0 to NROW - 1 do
+          for LayerIndex := 0 to Abs(NLAY) - 1 do
           begin
-            for ColIndex := 0 to NCOL - 1 do
+            for RowIndex := 0 to NROW - 1 do
             begin
-              AFile.Read(AValue, SizeOf(TModflowFloat));
-              AnArray[LayerIndex, RowIndex, ColIndex] := AValue;
+              for ColIndex := 0 to NCOL - 1 do
+              begin
+                AFile.Read(AValue, SizeOf(TModflowFloat));
+                AnArray[LayerIndex, RowIndex, ColIndex] := AValue;
+              end;
             end;
           end;
+        end
+        else
+        begin
+          AFile.Position := AFile.Position + SizeOf(TModflowFloat)
+            * Abs(NLAY) * NROW * NCOL;
         end;
       end;
     2,5:
@@ -779,75 +912,98 @@ begin
         if NLIST > 0 then
         begin
           NRC := NROW*NCOL;
-          SetLength(Values, NVAL);
-          for Index := 0 to NLIST - 1 do
+          if ReadArray then
           begin
-            AFile.Read(ICELL, SizeOf(ICELL));
-            for ValIndex := 0 to NVAL - 1 do
+            SetLength(Values, NVAL);
+            for Index := 0 to NLIST - 1 do
             begin
-              AFile.Read(Values[ValIndex], SizeOf(TModflowFloat));
+              AFile.Read(ICELL, SizeOf(ICELL));
+              for ValIndex := 0 to NVAL - 1 do
+              begin
+                AFile.Read(Values[ValIndex], SizeOf(TModflowFloat));
+              end;
+              LayerIndex :=  (ICELL-1) div NRC;
+              RowIndex := ( (ICELL - LayerIndex*NRC)-1 ) div NCOL;
+              ColIndex := ICELL - (LayerIndex)*NRC - (RowIndex)*NCOL-1;
+              if ((ColIndex >= 0) AND (RowIndex >= 0) AND (LayerIndex >= 0)
+                AND (ColIndex < ncol) AND (RowIndex < NROW)
+                AND (LayerIndex < Abs(NLAY))) then
+              begin
+                AnArray[LayerIndex, RowIndex, ColIndex] :=
+                  AnArray[LayerIndex, RowIndex, ColIndex] + Values[0];
+              end;
             end;
-            LayerIndex :=  (ICELL-1) div NRC;
-            RowIndex := ( (ICELL - LayerIndex*NRC)-1 ) div NCOL;
-            ColIndex := ICELL - (LayerIndex)*NRC - (RowIndex)*NCOL-1;
-            if ((ColIndex >= 0) AND (RowIndex >= 0) AND (LayerIndex >= 0)
-              AND (ColIndex < ncol) AND (RowIndex < NROW)
-              AND (LayerIndex < Abs(NLAY))) then
-            begin
-              AnArray[LayerIndex, RowIndex, ColIndex] :=
-                AnArray[LayerIndex, RowIndex, ColIndex] + Values[0];
-            end;
+          end
+          else
+          begin
+            AFile.Position := AFile.Position +
+              NLIST * (SizeOf(ICELL) + NVAL*SizeOf(TModflowFloat))
           end;
         end;
       end;
     3: // 1 layer array with layer indicator array
       begin
-        SetLength(FluxArray, NROW, NCOL);
-        SetLength(LayerIndicatorArray, NROW, NCOL);
-        for RowIndex := 0 to NROW - 1 do
+        if ReadArray then
         begin
-          for ColIndex := 0 to NCOL - 1 do
-          begin
-            AFile.Read(LayerIndicatorArray[RowIndex, ColIndex],
-              SizeOf(integer));
-          end;
-        end;
-        for RowIndex := 0 to NROW - 1 do
-        begin
-          for ColIndex := 0 to NCOL - 1 do
-          begin
-            AFile.Read(FluxArray[RowIndex, ColIndex],
-              SizeOf(TModflowFloat));
-          end;
-        end;
-        for RowIndex := 0 to NROW - 1 do
-        begin
-          for ColIndex := 0 to NCOL - 1 do
-          begin
-            AnArray[LayerIndicatorArray[RowIndex, ColIndex]-1,
-              RowIndex, ColIndex] := FluxArray[RowIndex, ColIndex];
-          end;
-        end;
-      end;
-    4: // 1-layer array that defines layer 1.
-      begin
-        for LayerIndex := 1 to Abs(NLAY) - 1 do
-        begin
+          SetLength(FluxArray, NROW, NCOL);
+          SetLength(LayerIndicatorArray, NROW, NCOL);
           for RowIndex := 0 to NROW - 1 do
           begin
             for ColIndex := 0 to NCOL - 1 do
             begin
-              AnArray[LayerIndex, RowIndex, ColIndex] := 0;
+              AFile.Read(LayerIndicatorArray[RowIndex, ColIndex],
+                SizeOf(integer));
             end;
           end;
-        end;
-        for RowIndex := 0 to NROW - 1 do
-        begin
-          for ColIndex := 0 to NCOL - 1 do
+          for RowIndex := 0 to NROW - 1 do
           begin
-            AFile.Read(AValue, SizeOf(TModflowFloat));
-            AnArray[0, RowIndex, ColIndex] := AValue;
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              AFile.Read(FluxArray[RowIndex, ColIndex],
+                SizeOf(TModflowFloat));
+            end;
           end;
+          for RowIndex := 0 to NROW - 1 do
+          begin
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              AnArray[LayerIndicatorArray[RowIndex, ColIndex]-1,
+                RowIndex, ColIndex] := FluxArray[RowIndex, ColIndex];
+            end;
+          end;
+        end
+        else
+        begin
+          AFile.Position := AFile.Position +
+            NROW * NCOL * (SizeOf(integer) + SizeOf(TModflowFloat))
+        end;
+      end;
+    4: // 1-layer array that defines layer 1.
+      begin
+        if ReadArray then
+        begin
+          for LayerIndex := 1 to Abs(NLAY) - 1 do
+          begin
+            for RowIndex := 0 to NROW - 1 do
+            begin
+              for ColIndex := 0 to NCOL - 1 do
+              begin
+                AnArray[LayerIndex, RowIndex, ColIndex] := 0;
+              end;
+            end;
+          end;
+          for RowIndex := 0 to NROW - 1 do
+          begin
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              AFile.Read(AValue, SizeOf(TModflowFloat));
+              AnArray[0, RowIndex, ColIndex] := AValue;
+            end;
+          end;
+        end
+        else
+        begin
+          AFile.Position := AFile.Position + NROW * NCOL * SizeOf(TModflowFloat);
         end;
       end;
     else Assert(False);
@@ -858,7 +1014,8 @@ procedure ReadModflowDoublePrecFluxArray(AFile: TFileStream;
   var KSTP, KPER: Integer;
   var PERTIM, TOTIM: TModflowDouble; var DESC: TModflowDesc;
   var NCOL, NROW, NLAY: Integer; var AnArray: T3DTModflowArray;
-  HufFormat: boolean);
+  HufFormat: boolean;
+  ReadArray: Boolean = True);
 var
   ITYPE: integer;
   DELT: TModflowDouble;
@@ -883,14 +1040,17 @@ begin
   AFile.Read(NCOL, SizeOf(NCOL));
   AFile.Read(NROW, SizeOf(NROW));
   AFile.Read(NLAY, SizeOf(NLAY));
-  SetLength(AnArray, Abs(NLAY), NROW, NCOL);
-  for LayerIndex := 0 to Abs(NLAY) - 1 do
+  if ReadArray then
   begin
-    for RowIndex := 0 to NROW - 1 do
+    SetLength(AnArray, Abs(NLAY), NROW, NCOL);
+    for LayerIndex := 0 to Abs(NLAY) - 1 do
     begin
-      for ColIndex := 0 to NCOL - 1 do
+      for RowIndex := 0 to NROW - 1 do
       begin
-        AnArray[LayerIndex, RowIndex, ColIndex] := 0;
+        for ColIndex := 0 to NCOL - 1 do
+        begin
+          AnArray[LayerIndex, RowIndex, ColIndex] := 0;
+        end;
       end;
     end;
   end;
@@ -926,16 +1086,24 @@ begin
   case ITYPE of
     0,1: // full 3D array
       begin
-        for LayerIndex := 0 to Abs(NLAY) - 1 do
+        if ReadArray then
         begin
-          for RowIndex := 0 to NROW - 1 do
+          for LayerIndex := 0 to Abs(NLAY) - 1 do
           begin
-            for ColIndex := 0 to NCOL - 1 do
+            for RowIndex := 0 to NROW - 1 do
             begin
-              AFile.Read(AValue, SizeOf(TModflowDouble));
-              AnArray[LayerIndex, RowIndex, ColIndex] := AValue;
+              for ColIndex := 0 to NCOL - 1 do
+              begin
+                AFile.Read(AValue, SizeOf(TModflowDouble));
+                AnArray[LayerIndex, RowIndex, ColIndex] := AValue;
+              end;
             end;
           end;
+        end
+        else
+        begin
+          AFile.Position := AFile.Position +
+            Abs(NLAY) * NROW * NCOL * SizeOf(TModflowDouble);
         end;
       end;
     2,5:
@@ -943,75 +1111,99 @@ begin
         if NLIST > 0 then
         begin
           NRC := NROW*NCOL;
-          SetLength(Values, NVAL);
-          for Index := 0 to NLIST - 1 do
+          if ReadArray then
           begin
-            AFile.Read(ICELL, SizeOf(ICELL));
-            for ValIndex := 0 to NVAL - 1 do
+            SetLength(Values, NVAL);
+            for Index := 0 to NLIST - 1 do
             begin
-              AFile.Read(Values[ValIndex], SizeOf(TModflowDouble));
+              AFile.Read(ICELL, SizeOf(ICELL));
+              for ValIndex := 0 to NVAL - 1 do
+              begin
+                AFile.Read(Values[ValIndex], SizeOf(TModflowDouble));
+              end;
+              LayerIndex :=  (ICELL-1) div NRC;
+              RowIndex := ( (ICELL - LayerIndex*NRC)-1 ) div NCOL;
+              ColIndex := ICELL - (LayerIndex)*NRC - (RowIndex)*NCOL-1;
+              if ((ColIndex >= 0) AND (RowIndex >= 0) AND (LayerIndex >= 0)
+                AND (ColIndex < ncol) AND (RowIndex < NROW)
+                AND (LayerIndex < Abs(NLAY))) then
+              begin
+                AnArray[LayerIndex, RowIndex, ColIndex] :=
+                  AnArray[LayerIndex, RowIndex, ColIndex] + Values[0];
+              end;
             end;
-            LayerIndex :=  (ICELL-1) div NRC;
-            RowIndex := ( (ICELL - LayerIndex*NRC)-1 ) div NCOL;
-            ColIndex := ICELL - (LayerIndex)*NRC - (RowIndex)*NCOL-1;
-            if ((ColIndex >= 0) AND (RowIndex >= 0) AND (LayerIndex >= 0)
-              AND (ColIndex < ncol) AND (RowIndex < NROW)
-              AND (LayerIndex < Abs(NLAY))) then
-            begin
-              AnArray[LayerIndex, RowIndex, ColIndex] :=
-                AnArray[LayerIndex, RowIndex, ColIndex] + Values[0];
-            end;
+          end
+          else
+          begin
+            AFile.Position := AFile.Position +
+              NLIST * (SizeOf(ICELL) + NVAL * SizeOf(TModflowDouble));
           end;
         end;
       end;
     3: // 1 layer array with layer indicator array
       begin
-        SetLength(FluxArray, NROW, NCOL);
-        SetLength(LayerIndicatorArray, NROW, NCOL);
-        for RowIndex := 0 to NROW - 1 do
+        if ReadArray then
         begin
-          for ColIndex := 0 to NCOL - 1 do
-          begin
-            AFile.Read(LayerIndicatorArray[RowIndex, ColIndex],
-              SizeOf(integer));
-          end;
-        end;
-        for RowIndex := 0 to NROW - 1 do
-        begin
-          for ColIndex := 0 to NCOL - 1 do
-          begin
-            AFile.Read(FluxArray[RowIndex, ColIndex],
-              SizeOf(TModflowDouble));
-          end;
-        end;
-        for RowIndex := 0 to NROW - 1 do
-        begin
-          for ColIndex := 0 to NCOL - 1 do
-          begin
-            AnArray[LayerIndicatorArray[RowIndex, ColIndex]-1,
-              RowIndex, ColIndex] := FluxArray[RowIndex, ColIndex];
-          end;
-        end;
-      end;
-    4: // 1-layer array that defines layer 1.
-      begin
-        for LayerIndex := 1 to Abs(NLAY) - 1 do
-        begin
+          SetLength(FluxArray, NROW, NCOL);
+          SetLength(LayerIndicatorArray, NROW, NCOL);
           for RowIndex := 0 to NROW - 1 do
           begin
             for ColIndex := 0 to NCOL - 1 do
             begin
-              AnArray[LayerIndex, RowIndex, ColIndex] := 0;
+              AFile.Read(LayerIndicatorArray[RowIndex, ColIndex],
+                SizeOf(integer));
             end;
           end;
-        end;
-        for RowIndex := 0 to NROW - 1 do
-        begin
-          for ColIndex := 0 to NCOL - 1 do
+          for RowIndex := 0 to NROW - 1 do
           begin
-            AFile.Read(AValue, SizeOf(TModflowDouble));
-            AnArray[0, RowIndex, ColIndex] := AValue;
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              AFile.Read(FluxArray[RowIndex, ColIndex],
+                SizeOf(TModflowDouble));
+            end;
           end;
+          for RowIndex := 0 to NROW - 1 do
+          begin
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              AnArray[LayerIndicatorArray[RowIndex, ColIndex]-1,
+                RowIndex, ColIndex] := FluxArray[RowIndex, ColIndex];
+            end;
+          end;
+        end
+        else
+        begin
+          AFile.Position := AFile.Position +
+            NROW * NCOL * (SizeOf(integer) + SizeOf(TModflowDouble));
+        end;
+      end;
+    4: // 1-layer array that defines layer 1.
+      begin
+        if ReadArray then
+        begin
+          for LayerIndex := 1 to Abs(NLAY) - 1 do
+          begin
+            for RowIndex := 0 to NROW - 1 do
+            begin
+              for ColIndex := 0 to NCOL - 1 do
+              begin
+                AnArray[LayerIndex, RowIndex, ColIndex] := 0;
+              end;
+            end;
+          end;
+          for RowIndex := 0 to NROW - 1 do
+          begin
+            for ColIndex := 0 to NCOL - 1 do
+            begin
+              AFile.Read(AValue, SizeOf(TModflowDouble));
+              AnArray[0, RowIndex, ColIndex] := AValue;
+            end;
+          end;
+        end
+        else
+        begin
+          AFile.Position := AFile.Position +
+            NROW * NCOL * SizeOf(TModflowDouble);
         end;
       end;
     else Assert(False);
@@ -1020,10 +1212,12 @@ end;
 
 procedure ReadModflowAsciiRealArray(F: TFileVariable; var KSTP, KPER: Integer;
   var PERTIM, TOTIM: TModflowDouble; var DESC: TModflowDesc2;
-  var NCOL, NROW, ILAY: Integer; var AnArray: TModflowDoubleArray);
+  var NCOL, NROW, ILAY: Integer; var AnArray: TModflowDoubleArray;
+  ReadArray: boolean = True);
 var
   ColIndex: Integer;
   RowIndex: Integer;
+  Dummy: TModflowDouble;
 begin
   Read(F.AFile, KSTP);
   Read(F.AFile, KPER);
@@ -1034,12 +1228,25 @@ begin
   Read(F.AFile, NROW);
   Read(F.AFile, ILAY);
   ReadLn(F.AFile);
-  SetLength(AnArray, NROW, NCOL);
-  for RowIndex := 0 to NROW - 1 do
+  if ReadArray then
   begin
-    for ColIndex := 0 to NCOL - 1 do
+    SetLength(AnArray, NROW, NCOL);
+    for RowIndex := 0 to NROW - 1 do
     begin
-      Read(F.AFile, AnArray[RowIndex, ColIndex]);
+      for ColIndex := 0 to NCOL - 1 do
+      begin
+        Read(F.AFile, AnArray[RowIndex, ColIndex]);
+      end;
+    end;
+  end
+  else
+  begin
+    for RowIndex := 0 to NROW - 1 do
+    begin
+      for ColIndex := 0 to NCOL - 1 do
+      begin
+        Read(F.AFile, Dummy);
+      end;
     end;
   end;
   ReadLn(F.AFile);

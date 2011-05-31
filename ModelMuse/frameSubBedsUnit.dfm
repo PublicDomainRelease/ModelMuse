@@ -109,6 +109,7 @@ object frameSubBeds: TframeSubBeds
     TabOrder = 0
     OnSelectCell = rdgSubBedSelectCell
     OnSetEditText = rdgSubBedSetEditText
+    AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = False

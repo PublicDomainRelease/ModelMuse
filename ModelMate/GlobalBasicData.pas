@@ -23,6 +23,7 @@ interface
     FileToBeOpened: string = '';
     ProjectDirectory: string;
     LocalComputerName: string;
+    PathDelimiter: string = PathDelim;  // PathDelim is defined in SysUtils
 
     { Booleans }
     ObservationsChanged: boolean;
@@ -66,7 +67,7 @@ procedure InitializeGlobalBasicData;
 begin
   //
   LocalComputerName := ComputerName;
-  ProjectDirectory := '\';
+  ProjectDirectory := PathDelimiter;
   slYesNo := TStringList.Create;
   slYesNo.Add('Yes');
   slYesNo.Add('No');

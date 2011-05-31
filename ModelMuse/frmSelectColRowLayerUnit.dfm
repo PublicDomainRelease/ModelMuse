@@ -10,33 +10,33 @@ inherited frmSelectColRowLayer: TfrmSelectColRowLayer
   ExplicitWidth = 335
   ExplicitHeight = 183
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object lblCol: TLabel
     Left = 8
     Top = 10
-    Width = 104
-    Height = 17
+    Width = 115
+    Height = 18
     Caption = 'Selected column'
   end
   object lblRow: TLabel
     Left = 8
     Top = 42
-    Width = 81
-    Height = 17
+    Width = 91
+    Height = 18
     Caption = 'Selected row'
   end
   object lblLayer: TLabel
     Left = 8
     Top = 74
-    Width = 90
-    Height = 17
+    Width = 99
+    Height = 18
     Caption = 'Selected layer'
   end
   object seCol: TJvSpinEdit
     Left = 152
     Top = 8
     Width = 164
-    Height = 25
+    Height = 26
     ButtonKind = bkClassic
     TabOrder = 0
   end
@@ -44,7 +44,7 @@ inherited frmSelectColRowLayer: TfrmSelectColRowLayer
     Left = 152
     Top = 40
     Width = 164
-    Height = 25
+    Height = 26
     ButtonKind = bkClassic
     TabOrder = 2
   end
@@ -52,7 +52,7 @@ inherited frmSelectColRowLayer: TfrmSelectColRowLayer
     Left = 152
     Top = 72
     Width = 164
-    Height = 25
+    Height = 26
     ButtonKind = bkClassic
     TabOrder = 5
   end

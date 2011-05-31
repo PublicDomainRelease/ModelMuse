@@ -355,7 +355,7 @@ begin
   glTranslatef(0, 0, ZOffset);
   // Rotate the model based on the grid angle after converting
   // from radians to degrees.
-  glRotatef(frmGoPhast.Grid.GridAngle / Pi * 180, 0.0, 0.0, 1.0);
+  glRotatef(frmGoPhast.PhastModel.Grid.GridAngle / Pi * 180, 0.0, 0.0, 1.0);
   // Respond to "rolling" of the model.
   glMultMatrixf(@FTheBall.Matrix);
   // Use ZScale to scale the model to a size that can be
@@ -372,14 +372,14 @@ begin
 
   frmGoPhast.PhastModel.Grid.Draw3D;
 
-  frmGoPhast.PhastModel.PathLine.Draw3D;
+  frmGoPhast.PhastModel.PathLines.Draw3D;
   frmGoPhast.PhastModel.EndPoints.Draw3D;
   frmGoPhast.PhastModel.TimeSeries.Draw3D;
 
   if frmGoPhast.tb3DObjects.Down then
   begin
     glPushMatrix;
-    glRotatef(-frmGoPhast.Grid.GridAngle / Pi * 180, 0.0, 0.0, 1.0);
+    glRotatef(-frmGoPhast.PhastModel.Grid.GridAngle / Pi * 180, 0.0, 0.0, 1.0);
     frmGoPhast.PhastModel.DrawScreenObjects3D;
     glPopMatrix;
   end;

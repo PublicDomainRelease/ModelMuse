@@ -66,7 +66,6 @@ type
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
-    procedure InvalidateModel; override;
     function BoundaryFormulaCount: integer; override;
   public
     constructor Create(Collection: TCollection); override;
@@ -80,9 +79,7 @@ type
     property VerticalSaturatedK: string read GetVerticalSaturatedK write SetVerticalSaturatedK;
   end;
 
-  // @name represents MODFLOW Streamflow Routing boundaries
-  // for a series of time intervals.
-  TSfrUnsatSegmentCollection = class(TCustomMF_ArrayBoundColl)
+  TSfrUnsatSegmentTimeListLink = class(TTimeListsModelLink)
   private
     // @name is used to compute the hydraulic conductivity for a series of
     // Streamflow Routing Boundaries over a series of time intervals.
@@ -96,19 +93,32 @@ type
     // @name is used to compute the stream slope for a series of
     // Streamflow Routing Boundaries over a series of time intervals.
     FVerticalSaturatedKData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
+
+  // @name represents MODFLOW Streamflow Routing boundaries
+  // for a series of time intervals.
+  TSfrUnsatSegmentCollection = class(TCustomMF_ArrayBoundColl)
+  private
     FAssignmentLocation: TAssignmentLocation;
     procedure InvalidateSaturatedWaterContentData(Sender: TObject);
     procedure InvalidateInitialWaterContentData(Sender: TObject);
     procedure InvalidateBrooksCoreyExponentData(Sender: TObject);
     procedure InvalidateVerticalSaturatedKData(Sender: TObject);
   protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary; override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList;ItemIndex: Integer); override;
+    procedure AssignCellValues(DataSets: TList;ItemIndex: Integer;
+      AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
     // TCustomMF_ArrayBoundColl.InitializeTimeLists)
-    procedure InitializeTimeLists(ListOfTimeLists: TList); override;
+    procedure InitializeTimeLists(ListOfTimeLists: TList;
+      AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
     class function ItemClass: TMF_BoundItemClass; override;
@@ -122,12 +132,6 @@ type
   public
     property AssignmentLocation: TAssignmentLocation read FAssignmentLocation
       write FAssignmentLocation;
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
   end;
 
 
@@ -147,10 +151,10 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     procedure RecordStrings(Strings: TStringList); override;
@@ -304,12 +308,6 @@ function TSfrUnsatSegmentItem.GetVerticalSaturatedK: string;
 begin
   Result := FVerticalSaturatedK.Formula;
   ResetItemObserver(VerticalSaturatedKPosition);
-end;
-
-procedure TSfrUnsatSegmentItem.InvalidateModel;
-begin
-  inherited;
-
 end;
 
 function TSfrUnsatSegmentItem.IsSame(AnotherItem: TOrderedItem): boolean;
@@ -491,7 +489,7 @@ begin
 end;
 
 procedure TSfrUnsatSegmentCollection.AssignCellValues(DataSets: TList;
-  ItemIndex: Integer);
+  ItemIndex: Integer; AModel: TBaseModel);
 var
   BrooksCoreyExponentArray: TDataArray;
   InitialWaterContentArray: TDataArray;
@@ -502,7 +500,7 @@ var
   RowIndex: Integer;
   ColIndex: Integer;
   BoundaryIndex: Integer;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
   LayerMin: Integer;
   RowMin: Integer;
   ColMin: Integer;
@@ -510,7 +508,7 @@ var
   RowMax: Integer;
   ColMax: Integer;
 begin
-  LocalModel := Model as TPhastModel;
+  LocalModel := AModel as TCustomModel;
   BoundaryIndex := 0;
   SaturatedWaterContentArray := DataSets[0];
   InitialWaterContentArray := DataSets[1];
@@ -524,7 +522,7 @@ begin
   begin
     for LayerIndex := LayerMin to LayerMax do
     begin
-      if LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+      if LocalModel.IsLayerSimulated(LayerIndex) then
       begin
         for RowIndex := RowMin to RowMax do
         begin
@@ -573,49 +571,13 @@ begin
   Boundary.CacheData;
 end;
 
-
-constructor TSfrUnsatSegmentCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
+function TSfrUnsatSegmentCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FBrooksCoreyExponentData := TModflowTimeList.Create(Model, ScreenObject);
-  FInitialWaterContentData := TModflowTimeList.Create(Model, ScreenObject);
-  FSaturatedWaterContentData := TModflowTimeList.Create(Model, ScreenObject);
-  FVerticalSaturatedKData := TModflowTimeList.Create(Model, ScreenObject);
-
-  FInitialWaterContentData.NonParamDescription := 'Initial water content';
-  FInitialWaterContentData.ParamDescription := ' initial water content';
-  FSaturatedWaterContentData.NonParamDescription := 'Saturated water content';
-  FSaturatedWaterContentData.ParamDescription := ' saturated water content';
-  FBrooksCoreyExponentData.NonParamDescription := 'Brooks-Corey exponent';
-  FBrooksCoreyExponentData.ParamDescription := ' Brooks-Corey exponent';
-  FVerticalSaturatedKData.NonParamDescription := 'Maximum vertical K';
-  FVerticalSaturatedKData.ParamDescription := ' maximum vertical K';
-
-  if Model <> nil then
-  begin
-//    FInitialWaterContentData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivStage;
-//    FSaturatedWaterContentData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivConductance;
-//    FBrooksCoreyExponentData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivBottom;
-//    FVerticalSaturatedKData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivBottom;
-  end;
-
-  AddTimeList(FSaturatedWaterContentData);
-  AddTimeList(FInitialWaterContentData);
-  AddTimeList(FBrooksCoreyExponentData);
-  AddTimeList(FVerticalSaturatedKData);
+  result := TSfrUnsatSegmentTimeListLink;
 end;
 
-destructor TSfrUnsatSegmentCollection.Destroy;
-begin
-  FInitialWaterContentData.Free;
-  FSaturatedWaterContentData.Free;
-  FBrooksCoreyExponentData.Free;
-  FVerticalSaturatedKData.Free;
-  inherited;
-end;
-
-procedure TSfrUnsatSegmentCollection.InitializeTimeLists(ListOfTimeLists: TList);
+procedure TSfrUnsatSegmentCollection.InitializeTimeLists(ListOfTimeLists: TList;
+  AModel: TBaseModel);
 var
   TimeIndex: Integer;
   BoundaryValues: TBoundaryValueArray;
@@ -626,6 +588,11 @@ var
   ISFROPT: integer;
   ICALC: integer;
   ItemUsed: boolean;
+  ALink: TSfrUnsatSegmentTimeListLink;
+  BrooksCoreyExponentData: TModflowTimeList;
+  InitialWaterContentData: TModflowTimeList;
+  SaturatedWaterContentData: TModflowTimeList;
+  VerticalSaturatedKData: TModflowTimeList;
 begin
   ISFROPT := (Model as TPhastModel).ModflowPackages.SfrPackage.Isfropt;
 
@@ -648,7 +615,9 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FBrooksCoreyExponentData.Initialize(BoundaryValues, ScreenObject,
+  ALink := TimeListLink.GetLink(AModel) as TSfrUnsatSegmentTimeListLink;
+  BrooksCoreyExponentData := ALink.FBrooksCoreyExponentData;
+  BrooksCoreyExponentData.Initialize(BoundaryValues, ScreenObject, False,
     AssignmentLocation);
 
   for Index := 0 to Count - 1 do
@@ -667,7 +636,8 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FInitialWaterContentData.Initialize(BoundaryValues, ScreenObject,
+  InitialWaterContentData := ALink.FInitialWaterContentData;
+  InitialWaterContentData.Initialize(BoundaryValues, ScreenObject, False,
     AssignmentLocation);
 
   for Index := 0 to Count - 1 do
@@ -686,7 +656,8 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FSaturatedWaterContentData.Initialize(BoundaryValues, ScreenObject,
+  SaturatedWaterContentData := ALink.FSaturatedWaterContentData;
+  SaturatedWaterContentData.Initialize(BoundaryValues, ScreenObject, False,
     AssignmentLocation);
 
   for Index := 0 to Count - 1 do
@@ -705,58 +676,111 @@ begin
       BoundaryValues[Index].Formula := '0';
     end;
   end;
-  FVerticalSaturatedKData.Initialize(BoundaryValues, ScreenObject,
+  VerticalSaturatedKData := ALink.FVerticalSaturatedKData;
+  VerticalSaturatedKData.Initialize(BoundaryValues, ScreenObject, False,
     AssignmentLocation);
 
-  Assert(FBrooksCoreyExponentData.Count = Count);
-  Assert(FInitialWaterContentData.Count = Count);
-  Assert(FSaturatedWaterContentData.Count = Count);
-  Assert(FVerticalSaturatedKData.Count = Count);
+  Assert(BrooksCoreyExponentData.Count = Count);
+  Assert(InitialWaterContentData.Count = Count);
+  Assert(SaturatedWaterContentData.Count = Count);
+  Assert(VerticalSaturatedKData.Count = Count);
   ClearBoundaries;
-  SetBoundaryCapacity(FBrooksCoreyExponentData.Count);
-  for TimeIndex := 0 to FBrooksCoreyExponentData.Count - 1 do
+  SetBoundaryCapacity(BrooksCoreyExponentData.Count);
+  for TimeIndex := 0 to BrooksCoreyExponentData.Count - 1 do
   begin
     AddBoundary(TSfrUnsatSegmentStorage.Create);
   end;
-  ListOfTimeLists.Add(FSaturatedWaterContentData);
-  ListOfTimeLists.Add(FInitialWaterContentData);
-  ListOfTimeLists.Add(FBrooksCoreyExponentData);
-  ListOfTimeLists.Add(FVerticalSaturatedKData);
+  ListOfTimeLists.Add(SaturatedWaterContentData);
+  ListOfTimeLists.Add(InitialWaterContentData);
+  ListOfTimeLists.Add(BrooksCoreyExponentData);
+  ListOfTimeLists.Add(VerticalSaturatedKData);
 end;
 
 procedure TSfrUnsatSegmentCollection.InvalidateBrooksCoreyExponentData(
   Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrUnsatSegmentTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FBrooksCoreyExponentData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrUnsatSegmentTimeListLink;
+    Link.FBrooksCoreyExponentData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrUnsatSegmentTimeListLink;
+      Link.FBrooksCoreyExponentData.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrUnsatSegmentCollection.InvalidateInitialWaterContentData(
   Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrUnsatSegmentTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FInitialWaterContentData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrUnsatSegmentTimeListLink;
+    Link.FInitialWaterContentData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrUnsatSegmentTimeListLink;
+      Link.FInitialWaterContentData.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrUnsatSegmentCollection.InvalidateSaturatedWaterContentData(
   Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrUnsatSegmentTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FSaturatedWaterContentData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrUnsatSegmentTimeListLink;
+    Link.FSaturatedWaterContentData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrUnsatSegmentTimeListLink;
+      Link.FSaturatedWaterContentData.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrUnsatSegmentCollection.InvalidateVerticalSaturatedKData(
   Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrUnsatSegmentTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FVerticalSaturatedKData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrUnsatSegmentTimeListLink;
+    Link.FVerticalSaturatedKData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrUnsatSegmentTimeListLink;
+      Link.FVerticalSaturatedKData.Invalidate;
+    end;
   end;
 end;
 
@@ -797,13 +821,13 @@ begin
   result := Values.BrooksCoreyExponentAnnotation;
 end;
 
-function TSfrUnsatSegment_Cell.GetIntegerAnnotation(Index: integer): string;
+function TSfrUnsatSegment_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TSfrUnsatSegment_Cell.GetIntegerValue(Index: integer): integer;
+function TSfrUnsatSegment_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -814,7 +838,7 @@ begin
   result := Values.Cell.Layer;
 end;
 
-function TSfrUnsatSegment_Cell.GetRealAnnotation(Index: integer): string;
+function TSfrUnsatSegment_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -826,7 +850,7 @@ begin
   end;
 end;
 
-function TSfrUnsatSegment_Cell.GetRealValue(Index: integer): double;
+function TSfrUnsatSegment_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -1000,6 +1024,42 @@ begin
     RestoreData;
   end;
   result := FSrfUnsatSegmentArray;
+end;
+
+{ TSfrUnsatSegmentTimeListLink }
+
+procedure TSfrUnsatSegmentTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  FBrooksCoreyExponentData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FInitialWaterContentData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FSaturatedWaterContentData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FVerticalSaturatedKData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FInitialWaterContentData.NonParamDescription := 'Initial water content';
+  FInitialWaterContentData.ParamDescription := ' initial water content';
+  FSaturatedWaterContentData.NonParamDescription := 'Saturated water content';
+  FSaturatedWaterContentData.ParamDescription := ' saturated water content';
+  FBrooksCoreyExponentData.NonParamDescription := 'Brooks-Corey exponent';
+  FBrooksCoreyExponentData.ParamDescription := ' Brooks-Corey exponent';
+  FVerticalSaturatedKData.NonParamDescription := 'Maximum vertical K';
+  FVerticalSaturatedKData.ParamDescription := ' maximum vertical K';
+  if Model <> nil then
+  begin
+  end;
+  AddTimeList(FSaturatedWaterContentData);
+  AddTimeList(FInitialWaterContentData);
+  AddTimeList(FBrooksCoreyExponentData);
+  AddTimeList(FVerticalSaturatedKData);
+
+end;
+
+destructor TSfrUnsatSegmentTimeListLink.Destroy;
+begin
+  FInitialWaterContentData.Free;
+  FSaturatedWaterContentData.Free;
+  FBrooksCoreyExponentData.Free;
+  FVerticalSaturatedKData.Free;
+  inherited;
 end;
 
 end.

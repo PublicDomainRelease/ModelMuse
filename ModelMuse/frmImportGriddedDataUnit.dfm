@@ -2,40 +2,45 @@ inherited frmImportGriddedData: TfrmImportGriddedData
   HelpType = htKeyword
   HelpKeyword = 'Import_Gridded_Data_Dialog_Box'
   Caption = 'Import Gridded Data'
-  ClientHeight = 398
+  ClientHeight = 448
   ClientWidth = 436
   Constraints.MinHeight = 432
   Constraints.MinWidth = 444
   OnResize = FormResize
   ExplicitWidth = 444
-  ExplicitHeight = 432
+  ExplicitHeight = 482
   PixelsPerInch = 96
   TextHeight = 18
   object jvplCellGrid: TJvPageList
     Left = 0
-    Top = 113
+    Top = 147
     Width = 436
-    Height = 238
-    ActivePage = jvspCellList
+    Height = 254
+    ActivePage = jvspGrid
     PropagateEnable = False
     Align = alClient
+    ExplicitTop = 113
+    ExplicitHeight = 238
     object jvspCellList: TJvStandardPage
       Left = 0
       Top = 0
       Width = 436
-      Height = 238
+      Height = 254
       Caption = 'jvspCellList'
+      ExplicitHeight = 238
       object rdgList: TRbwDataGrid4
         Left = 0
         Top = 0
         Width = 436
-        Height = 197
+        Height = 213
         Align = alClient
         ColCount = 4
         FixedCols = 1
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
         TabOrder = 0
+        ExtendedAutoDistributeText = False
+        AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = True
@@ -129,14 +134,16 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             AutoAdjustColWidths = False
           end>
         OnEndUpdate = rdgListEndUpdate
+        ExplicitHeight = 197
       end
       object pnlListControls: TPanel
         Left = 0
-        Top = 197
+        Top = 213
         Width = 436
         Height = 41
         Align = alBottom
         TabOrder = 1
+        ExplicitTop = 197
         object lblNumberOfRows: TLabel
           Left = 79
           Top = 12
@@ -152,13 +159,13 @@ inherited frmImportGriddedData: TfrmImportGriddedData
           BevelOuter = bvNone
           ColumnCollection = <
             item
-              Value = 33.333333333333340000
+              Value = 33.333333333333330000
             end
             item
-              Value = 33.333333333333340000
+              Value = 33.333333333333330000
             end
             item
-              Value = 33.333333333333340000
+              Value = 33.333333333333330000
             end>
           ControlCollection = <
             item
@@ -286,8 +293,9 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Left = 0
       Top = 0
       Width = 436
-      Height = 238
+      Height = 254
       Caption = 'jvspGrid'
+      ExplicitHeight = 238
       object lblColumns: TLabel
         Left = 190
         Top = 16
@@ -315,13 +323,14 @@ inherited frmImportGriddedData: TfrmImportGriddedData
         Left = 40
         Top = 40
         Width = 396
-        Height = 198
+        Height = 214
         Margins.Left = 40
         Margins.Top = 40
         Margins.Right = 0
         Margins.Bottom = 0
         Align = alClient
         TabOrder = 0
+        ExplicitHeight = 198
       end
     end
   end
@@ -329,12 +338,12 @@ inherited frmImportGriddedData: TfrmImportGriddedData
     Left = 0
     Top = 0
     Width = 436
-    Height = 113
+    Height = 147
     Align = alTop
     TabOrder = 1
     DesignSize = (
       436
-      113)
+      147)
     object lblMethod: TLabel
       Left = 8
       Top = 5
@@ -358,7 +367,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
     end
     object comboMethod: TComboBox
       Left = 8
-      Top = 27
+      Top = 26
       Width = 73
       Height = 26
       Style = csDropDownList
@@ -383,6 +392,8 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       RowCount = 2
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
       TabOrder = 1
+      ExtendedAutoDistributeText = False
+      AutoMultiEdit = True
       AutoDistributeText = True
       AutoIncreaseColCount = False
       AutoIncreaseRowCount = True
@@ -424,17 +435,16 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       TabOrder = 2
       OnChange = seIgnoreValueCountChange
     end
-    object combotreeDataSets: TTntExDropDownVirtualStringTree
+    object combotreeDataSets: TRbwStringTreeCombo
       Left = 8
-      Top = 78
+      Top = 81
       Width = 289
       Height = 26
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 3
       Tree.Left = 0
       Tree.Top = 0
-      Tree.Width = 200
-      Tree.Height = 100
+      Tree.Width = 312
+      Tree.Height = 206
+      Tree.Align = alClient
       Tree.Header.AutoSizeIndex = 0
       Tree.Header.DefaultHeight = 17
       Tree.Header.Font.Charset = DEFAULT_CHARSET
@@ -443,27 +453,56 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Tree.Header.Font.Name = 'Tahoma'
       Tree.Header.Font.Style = []
       Tree.Header.MainColumn = -1
-      Tree.Header.Options = [hoColumnResize, hoDrag]
       Tree.TabOrder = 0
-      Tree.Visible = False
       Tree.OnChange = combotreeDataSetsDropDownTreeChange
-      Tree.OnEnter = combotreeDataSetsDropDownTreeEnter
       Tree.OnGetText = combotreeDataSetsDropDownTreeGetText
       Tree.OnGetNodeDataSize = combotreeDataSetsDropDownTreeGetNodeDataSize
+      Tree.OnInitNode = combotreeDataSets1TreeInitNode
+      Tree.ExplicitWidth = 200
+      Tree.ExplicitHeight = 100
       Tree.Columns = <>
-      PanelAutoWidth = True
-      PanelWidth = 289
-      PanelHeight = 200
-      OnClosedUp = combotreeDataSetsClosedUp
+      Anchors = [akLeft, akTop, akRight]
+      Enabled = True
+      Glyph.Data = {
+        36020000424D3602000000000000360000002800000010000000080000000100
+        2000000000000002000000000000000000000000000000000000D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC0000000000D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00C0C0C000D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00000000000000000000000000D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00C0C0C000C0C0C000C0C0C000D8E9EC00D8E9EC00D8E9EC00D8E9EC000000
+        000000000000000000000000000000000000D8E9EC00D8E9EC00D8E9EC00C0C0
+        C000C0C0C000C0C0C000C0C0C000C0C0C000D8E9EC00D8E9EC00000000000000
+        00000000000000000000000000000000000000000000D8E9EC00C0C0C000C0C0
+        C000C0C0C000C0C0C000C0C0C000C0C0C000C0C0C000D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00}
+      NumGlyphs = 2
+      TabOrder = 3
+    end
+    object cbMultipleDataRows: TCheckBox
+      Left = 8
+      Top = 113
+      Width = 297
+      Height = 17
+      Caption = 'Multiple data rows per grid row'
+      TabOrder = 4
+      OnClick = cbMultipleDataRowsClick
     end
   end
   object Panel2: TPanel
     Left = 0
-    Top = 351
+    Top = 401
     Width = 436
     Height = 47
     Align = alBottom
     TabOrder = 2
+    ExplicitTop = 351
     DesignSize = (
       436
       47)

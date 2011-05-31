@@ -26,17 +26,13 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
     Top = 22
     Width = 609
     Height = 426
-    ActivePage = tabPumpingRate
+    ActivePage = tabBasic
     Align = alClient
     TabOrder = 1
     object tabBasic: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'MNW2_Basic_Tab'
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         601
         393)
@@ -217,6 +213,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
           ExplicitWidth = 268
           ExplicitHeight = 62
           inherited tabNone: TTabSheet
+            ExplicitTop = 2
             ExplicitWidth = 268
             ExplicitHeight = 60
           end
@@ -239,7 +236,6 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         end
         inherited comboLocationChoice: TJvImageComboBox
           Left = 173
-          ItemIndex = -1
           OnChange = framePumpLocationMethodcomboLocationChoiceChange
           ExplicitLeft = 173
         end
@@ -560,10 +556,6 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpKeyword = 'MNW2_Discharge_Adjustment_Tab'
       Caption = 'Discharge Adjustment'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         601
         393)
@@ -672,6 +664,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
         TabOrder = 4
+        AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = True
@@ -760,10 +753,6 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpKeyword = 'MNW2_Pumping_Rate_Tab'
       Caption = 'Pumping Rate'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgTimeTable: TRbwDataGrid4
         Left = 0
         Top = 65
@@ -775,10 +764,10 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
         TabOrder = 0
-        OnMouseDown = rdgTimeTableMouseDown
         OnMouseUp = rdgTimeTableMouseUp
         OnSelectCell = rdgTimeTableSelectCell
         OnSetEditText = rdgTimeTableSetEditText
+        AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = True
@@ -1079,10 +1068,6 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
       HelpKeyword = 'Well_Screens'
       Caption = 'Well Screens'
       ImageIndex = 4
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Panel3: TPanel
         Left = 0
         Top = 352
@@ -1138,9 +1123,9 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
         TabOrder = 1
-        OnMouseDown = rdgVerticalScreensMouseDown
         OnMouseUp = rdgVerticalScreensMouseUp
         OnSelectCell = rdgVerticalScreensSelectCell
+        AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False

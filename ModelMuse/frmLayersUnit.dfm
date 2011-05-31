@@ -20,7 +20,7 @@ inherited frmLayers: TfrmLayers
     Top = 0
     Width = 441
     Height = 383
-    ActivePage = tabBasics
+    ActivePage = tabDiscretization
     Align = alClient
     TabOrder = 0
     OnChange = pcLayerGroupsChange
@@ -306,6 +306,7 @@ inherited frmLayers: TfrmLayers
           OnExit = rdgSubLayerBoundariesExit
           OnSelectCell = rdgSubLayerBoundariesSelectCell
           OnSetEditText = rdgSubLayerBoundariesSetEditText
+          AutoMultiEdit = True
           AutoDistributeText = False
           AutoIncreaseColCount = False
           AutoIncreaseRowCount = False
@@ -395,13 +396,13 @@ inherited frmLayers: TfrmLayers
             Align = alBottom
             ColumnCollection = <
               item
-                Value = 33.333333333333340000
+                Value = 33.333333333333330000
               end
               item
-                Value = 33.333333333333340000
+                Value = 33.333333333333330000
               end
               item
-                Value = 33.333333333333340000
+                Value = 33.333333333333330000
               end>
             ControlCollection = <
               item
@@ -761,13 +762,13 @@ inherited frmLayers: TfrmLayers
       Align = alBottom
       ColumnCollection = <
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end>
       ControlCollection = <
         item

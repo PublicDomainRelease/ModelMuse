@@ -3028,7 +3028,6 @@ inherited frmAbout: TfrmAbout
         7F9E548CA9679BB47B9EB67FC6D4B4EBF0E5FFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFF}
-      PopupMenu = menuModelMate
       OnDblClick = ImageLogoDblClick
     end
     object lblGoPhast: TLabel
@@ -3205,9 +3204,10 @@ inherited frmAbout: TfrmAbout
     Align = alClient
     ColCount = 3
     FixedCols = 0
-    RowCount = 45
+    RowCount = 44
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
     TabOrder = 2
+    AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = False
@@ -3279,14 +3279,5 @@ inherited frmAbout: TfrmAbout
         WordWrapCells = True
         AutoAdjustColWidths = True
       end>
-  end
-  object menuModelMate: TPopupMenu
-    Left = 440
-    Top = 40
-    object miEnableModelMateInterface: TMenuItem
-      AutoCheck = True
-      Caption = 'Enable ModelMate Interface'
-      OnClick = miEnableModelMateInterfaceClick
-    end
   end
 end

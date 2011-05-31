@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomImportSimpleFileUnit, StdCtrls, Buttons, ExtCtrls,
-  frmImportShapefileUnit, ArgusDataEntry;
+  frmImportShapefileUnit, ArgusDataEntry, FastGEO, AbstractGridUnit,
+  GoPhastTypes, ScreenObjectUnit, ValueArrayStorageUnit;
 
 type
   {@abstract(@name is the command used to import
@@ -42,13 +43,12 @@ type
 implementation
 
 uses
-  AbstractGridUnit, frmGoPhastUnit, DemReaderUnit, FastGEO, GoPhastTypes,
-  ScreenObjectUnit, ModelMuseUtilities, DataSetUnit, frmProgressUnit, UndoItems,
-  ValueArrayStorageUnit, GIS_Functions, CoordinateConversionUnit;
+  frmGoPhastUnit, DemReaderUnit, 
+  ModelMuseUtilities, DataSetUnit, frmProgressUnit, UndoItems,
+  GIS_Functions, CoordinateConversionUnit;
 
 {$R *.dfm}
 
-type TImportMethod = (imLowest, imHighest, imAverage, imClosest);
 
 { TfrmCustomImportSimpleFile2 }
 
@@ -126,7 +126,8 @@ end;
 
 procedure TfrmImportDEM.ImportProgress(Sender: TObject; FractionDone: double);
 begin
-  FractionDone := (OpenDialogFile.Files.Count + FractionDone)/(OpenDialogFile.Files.Count+1);
+  FractionDone := (OpenDialogFile.Files.Count + FractionDone)/
+    (OpenDialogFile.Files.Count+1);
   frmProgressMM.pbProgress.Position
     := Round(frmProgressMM.pbProgress.Max * FractionDone);
   frmProgressMM.ProgressLabelCaption := 'Importing data';
@@ -219,10 +220,6 @@ end;
 
 procedure TfrmImportDEM.SetData;
 var
-  Values: array of array of double;
-  Counts: array of array of integer;
-  CenterPoints: array of array of TPoint2D;
-  Distances: array of array of double;
   Grid: TCustomGrid;
   DemReader: TDemReader;
   FirstFile: string;
@@ -231,17 +228,8 @@ var
   PointIndex: Integer;
   APoint: TElevationPoint;
   Point2D: TPoint2D;
-  MinX: Real;
-  MaxX: Real;
-  MinY: Real;
-  MaxY: Real;
   EvalAt: TEvaluatedAt;
-  ACol: integer;
-  ARow: Integer;
-  ColIndex: Integer;
-  RowIndex: Integer;
   ImportMethod: TImportMethod;
-  ADistance: TFloat;
   NewDataSets: TList;
   Undo: TUndoImportDemFile;
   Root: string;
@@ -253,19 +241,8 @@ var
   UndoCreateScreenObject: TCustomUndo;
   Item: TValueArrayItem;
   DS_Position: Integer;
-  ValueIndex: Integer;
   IgnoreValue: Integer;
-  procedure EnsureMinMax(var MinValue, MaxValue: Real);
-  var
-    Temp: Real;
-  begin
-    if MinValue > MaxValue then
-    begin
-      Temp := MinValue;
-      MinValue := MaxValue;
-      MaxValue := Temp;
-    end;
-  end;
+  APoint3D: TPoint3D;
 begin
   frmProgressMM.Caption := 'Progress';
   frmProgressMM.Show;
@@ -273,62 +250,7 @@ begin
     Grid := frmGoPhast.PhastModel.Grid;
     EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
     ImportMethod := TImportMethod(rgFilterMethod.ItemIndex);
-    case EvalAt of
-      eaBlocks:
-        begin
-          SetLength(Values, Grid.RowCount, Grid.ColumnCount);
-          SetLength(Counts, Grid.RowCount, Grid.ColumnCount);
-          for RowIndex := 0 to Grid.RowCount - 1 do
-          begin
-            for ColIndex := 0 to Grid.ColumnCount - 1 do
-            begin
-              Counts[RowIndex,ColIndex]  := 0;
-            end;
-          end;
-
-          SetLength(CenterPoints, Grid.RowCount, Grid.ColumnCount);
-          for RowIndex := 0 to Grid.RowCount - 1 do
-          begin
-            for ColIndex := 0 to Grid.ColumnCount - 1 do
-            begin
-              CenterPoints[RowIndex,ColIndex]  :=
-                Grid.UnrotatedTwoDElementCenter(ColIndex, RowIndex);
-            end;
-          end;
-
-          if ImportMethod = imClosest then
-          begin
-            SetLength(Distances, Grid.RowCount, Grid.ColumnCount);
-          end;
-        end;
-      eaNodes:
-        begin
-          SetLength(Values, Grid.RowCount+1, Grid.ColumnCount+1);
-          SetLength(Counts, Grid.RowCount+1, Grid.ColumnCount+1);
-          for RowIndex := 0 to Grid.RowCount do
-          begin
-            for ColIndex := 0 to Grid.ColumnCount do
-            begin
-              Counts[RowIndex,ColIndex]  := 0;
-            end;
-          end;
-          SetLength(CenterPoints, Grid.RowCount+1, Grid.ColumnCount+1);
-          for RowIndex := 0 to Grid.RowCount do
-          begin
-            for ColIndex := 0 to Grid.ColumnCount do
-            begin
-              CenterPoints[RowIndex,ColIndex]  :=
-                Grid.UnrotatedTwoDElementCorner(ColIndex, RowIndex);
-            end;
-          end;
-          if ImportMethod = imClosest then
-          begin
-            SetLength(Distances, Grid.RowCount+1, Grid.ColumnCount+1);
-          end;
-        end;
-      else
-        Assert(False);
-    end;
+    InitializeArrays(ImportMethod);
     FirstFile := OpenDialogFile.Files[0];
     try
       DemReader := TDemReader.Create;
@@ -344,13 +266,7 @@ begin
         Exit;
       end;
     end;
-
-    MinX := Grid.ColumnPosition[0];
-    MaxX := Grid.ColumnPosition[Grid.ColumnCount];
-    EnsureMinMax(MinX, MaxX);
-    MinY := Grid.RowPosition[0];
-    MaxY := Grid.RowPosition[Grid.RowCount];
-    EnsureMinMax(MinY, MaxY);
+    GetGridMinMax;
 
     IgnoreValue := StrToInt(rdeIgnore.Text);
     try
@@ -374,64 +290,10 @@ begin
             Point2D.y := APoint.Y;
             Point2D := Grid.
               RotateFromRealWorldCoordinatesToGridCoordinates(Point2D);
-            if (Point2D.x >= MinX) and (Point2D.x <= MaxX)
-              and (Point2D.y >= MinY) and (Point2D.y <= MaxY) then
-            begin
-              ACol := -1;
-              ARow := -1;
-              case EvalAt of
-                eaBlocks:
-                  begin
-                    ACol := Grid.GetContainingColumn(Point2D.x);
-                    ARow := Grid.GetContainingRow(Point2D.y);
-                  end;
-                eaNodes:
-                  begin
-                    ACol := Grid.NearestColumnPosition(Point2D.x);
-                    ARow := Grid.NearestRowPosition(Point2D.y);
-                  end
-                else Assert(False);
-              end;
-              if Counts[ARow, ACol] = 0 then
-              begin
-                Counts[ARow, ACol] := 1;
-                Values[ARow, ACol] := APoint.Elevation;
-                if ImportMethod = imClosest then
-                begin
-                  Distances[ARow, ACol] := Distance(Point2D, CenterPoints[ARow, ACol]);
-                end;
-              end;
-              case ImportMethod of
-                imLowest:
-                  begin
-                    if Values[ARow, ACol] > APoint.Elevation then
-                    begin
-                      Values[ARow, ACol] := APoint.Elevation;
-                    end;
-                  end;
-                imHighest:
-                  begin
-                    if Values[ARow, ACol] < APoint.Elevation then
-                    begin
-                      Values[ARow, ACol] := APoint.Elevation;
-                    end;
-                  end;
-                imAverage:
-                  begin
-                    Values[ARow, ACol] := Values[ARow, ACol] + APoint.Elevation;
-                    Counts[ARow, ACol] := Counts[ARow, ACol] + 1;
-                  end;
-                imClosest:
-                  begin
-                    ADistance := Distance(Point2D, CenterPoints[ARow, ACol]);
-                    if Distances[ARow, ACol] > ADistance then
-                    begin
-                      Values[ARow, ACol] := APoint.Elevation;
-                      Distances[ARow, ACol] := ADistance;
-                    end;
-                  end;
-              end;
-            end;
+            APoint3D.x := Point2D.x;
+            APoint3D.y := Point2D.y;
+            APoint3D.z := APoint.Elevation;
+            HandleAPoint(APoint3D, ImportMethod, EvalAt, Grid);
           end;
         finally
           DemReader.Free;
@@ -443,21 +305,7 @@ begin
         Exit;
       end;
     end;
-    if ImportMethod = imAverage then
-    begin
-      for RowIndex := 0 to Length(Values)-1 do
-      begin
-        ImportProgress(self, RowIndex/Length(Values));
-        for ColIndex := 0 to Length(Values[0])-1 do
-        begin
-          if Counts[RowIndex,ColIndex] > 1  then
-          begin
-            Values[RowIndex,ColIndex] :=
-              Values[RowIndex,ColIndex]/Counts[RowIndex,ColIndex]
-          end;
-        end;
-      end;
-    end;
+    ComputeAverage(ImportMethod, ImportProgress);
     frmGoPhast.PhastModel.BeginScreenObjectUpdate;
     frmGoPhast.CanDraw := False;
     try
@@ -501,34 +349,36 @@ begin
           Item.Name := DataSet.Name;
           Item.Values.DataType := DataSet.DataType;
           Item.Values.Count := AScreenObject.Capacity;
+          AssignPointsAndValues(Grid, AScreenObject, Item);
 
-          ValueIndex := 0;
-          for RowIndex := 0 to Length(Values)-1 do
-          begin
-            for ColIndex := 0 to Length(Values[0])-1 do
-            begin
-              if Counts[RowIndex,ColIndex] > 0  then
-              begin
-                Point2D := CenterPoints[RowIndex,ColIndex];
-                Point2D := Grid.
-                  RotateFromGridCoordinatesToRealWorldCoordinates(Point2D);
-                AScreenObject.AddPoint(Point2D, True);
-                Item.Values.RealValues[ValueIndex] := Values[RowIndex,ColIndex];
-                Inc(ValueIndex);
-              end;
-            end;
-          end;
-          Item.Values.Count := ValueIndex;
+
           DS_Position := AScreenObject.AddDataSet(DataSet);
           AScreenObject.DataSetFormulas[DS_Position] :=
             rsObjectImportedValuesR + '("' + DataSet.Name + '")';
-          ScreenObjectList.Add(AScreenObject);
+          if AScreenObject.Count = 0 then
+          begin
+            Beep;
+            MessageDlg('None of the points in the DEM are inside the grid.',
+              mtError, [mbOK], 0);
+            AScreenObject.Free;
+          end
+          else
+          begin
+            ScreenObjectList.Add(AScreenObject);
+          end;
 
           Undo := TUndoImportDemFile.Create;
           try
             Undo.StoreNewScreenObjects(ScreenObjectList);
             Undo.StoreNewDataSets(NewDataSets);
             frmGoPhast.UndoStack.Submit(Undo);
+            if ScreenObjectList.Count = 0 then
+            begin
+              frmGoPhast.UndoStack.Undo(1);
+              frmGoPhast.UndoStack.Remove(Undo);
+              Undo.Free;
+              frmGoPhast.tbRedo.Enabled := False;
+            end;
           except
             Undo.Free;
             raise;

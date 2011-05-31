@@ -63,14 +63,14 @@ var
     WriteToNameFile(StrDATA, UNIT_Number, OutputName, foOutput);
   end;
 begin
-  if (PhastModel.ModflowPackages = nil)
-    or (PhastModel.ModflowPackages.SfrPackage = nil)
-    or not PhastModel.ModflowPackages.SfrPackage.IsSelected then
+  if (Model.ModflowPackages = nil)
+    or (Model.ModflowPackages.SfrPackage = nil)
+    or not Model.ModflowPackages.SfrPackage.IsSelected then
   begin
     Exit;
   end;
 
-  if PhastModel.ModflowPackages.SfrPackage.GageOverallBudget then
+  if Model.ModflowPackages.SfrPackage.GageOverallBudget then
   begin
     GAGESEG := 1;
     GAGERCH := 1;
@@ -81,22 +81,22 @@ begin
   try
     for Index := 1 to 7 do
     begin
-      DataArray := TDataArray.Create(PhastModel);
+      DataArray := TDataArray.Create(Model);
       List.Add(DataArray);
       DataArray.Orientation := dso3D;
       DataArray.EvaluatedAt := eaBlocks;
-      DataArray.UpdateDimensions(PhastModel.Grid.LayerCount,
-        PhastModel.Grid.RowCount, PhastModel.Grid.ColumnCount);
+      DataArray.UpdateDimensions(Model.Grid.LayerCount,
+        Model.Grid.RowCount, Model.Grid.ColumnCount);
       DataArray.DataType := rdtBoolean;
     end;
 
-    for Index := 0 to PhastModel.ScreenObjectCount - 1 do
+    for Index := 0 to Model.ScreenObjectCount - 1 do
     begin
-      ScreenObject := PhastModel.ScreenObjects[Index];
+      ScreenObject := Model.ScreenObjects[Index];
       if (ScreenObject.ModflowStreamGage <> nil)
         and ScreenObject.ModflowStreamGage.Used then
       begin
-        ScreenObject.ModflowStreamGage.Evaluate(List);
+        ScreenObject.ModflowStreamGage.Evaluate(List, Model);
       end;
     end;
     for Index := 0 to List.Count - 1 do
@@ -183,7 +183,7 @@ procedure TModflowGAG_Writer.WriteFile(const AFileName: string;
 var
   NUMGAGES: integer;
 begin
-  if PhastModel.PackageGeneratedExternally(StrGAG) then
+  if Model.PackageGeneratedExternally(StrGAG) then
   begin
     Exit;
   end;
@@ -195,7 +195,7 @@ begin
     frmProgressMM.AddMessage('Writing GAGE Package input.');
     NUMGAGES := Gages.Count;
     Gages.Insert(0, IntToStr(NUMGAGES));
-    WriteToNameFile(StrGAG, PhastModel.UnitNumbers.UnitNumber(StrGAG),
+    WriteToNameFile(StrGAG, Model.UnitNumbers.UnitNumber(StrGAG),
       FNameOfFile, foInput);
     Gages.SaveToFile(FNameOfFile);
   end;

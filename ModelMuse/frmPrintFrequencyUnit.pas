@@ -61,8 +61,6 @@ type
     procedure rdgPrintFrequencyColSize(Sender: TObject; ACol,
       PriorWidth: Integer);
     procedure rdgPrintFrequencyHorizontalScroll(Sender: TObject);
-    procedure rdgPrintFrequencyMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure rdgPrintFrequencyMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure rdeTimeChange(Sender: TObject);
@@ -595,20 +593,6 @@ procedure TfrmPrintFrequency.rdgPrintFrequencyHorizontalScroll(Sender: TObject);
 begin
   inherited;
   LayoutMultiEditControls;
-end;
-
-procedure TfrmPrintFrequency.rdgPrintFrequencyMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    rdgPrintFrequency.Options := rdgPrintFrequency.Options + [goEditing];
-  end
-  else
-  begin
-    rdgPrintFrequency.Options := rdgPrintFrequency.Options - [goEditing];
-  end;
 end;
 
 procedure TfrmPrintFrequency.EnableAMultiEditControl(Grid: TRbwDataGrid4;

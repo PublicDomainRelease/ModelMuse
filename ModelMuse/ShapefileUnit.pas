@@ -14,7 +14,7 @@ unit ShapefileUnit;
 
 interface
 
-uses SysUtils, Classes;
+uses SysUtils, Classes, Types;
 
 type
  { @abstract(@name represents the bounding box of a shape
@@ -499,15 +499,6 @@ type
     BoundingBox: TBoundingBox;
     NumParts: longint;
     NumPoints: longint;
-    Parts: array of integer;
-    PartTypes: array of integer;
-    Points: array of TShapePoint;
-    ZMin: double;
-    ZMax: double;
-    ZArray: array of double;
-    MMin: double;
-    MMax: double;
-    MArray: array of double;
   end;
   #)
   }
@@ -523,7 +514,7 @@ type
     {  @name: An array of length @link(NumParts). Stores, for each MultiPatch,
         the index of its first point in the points array.
         Array indexes are with respect to 0.    }
-    Parts: array of integer;
+//    Parts: array of integer;
     // @name is an array of length NumParts. @name stores the type of each part.
     // Each part can be one of the following
     //
@@ -538,7 +529,7 @@ type
     // @link(ptFirstRing) = 4;
     //
     // @link(ptRing) = 5;
-    PartTypes: array of integer;
+//    PartTypes: array of integer;
     {
     @name is an array of length @link(NumPoints).
     The points for each part in the MultiPatch
@@ -547,13 +538,13 @@ type
     so on. The @link(Parts) array holds
     the array index of the starting point for each
     part. There is no delimiter in the points array between parts.    }
-    Points: array of TShapePoint;
+//    Points: array of TShapePoint;
     // The minimum and maximum Z values for the arc
     // stored in the order ZMin, ZMax.
-    ZMin: double;
+//    ZMin: double;
     // The minimum and maximum Z values for the arc
     // stored in the order ZMin, ZMax.
-    ZMax: double;
+//    ZMax: double;
     {@name is an array of length @link(NumPoints).
     The Z values for each part in the MultiPatch
     are stored end to end. The Z values
@@ -561,13 +552,13 @@ type
     and so on. The @link(Parts) array
     holds the array index of the starting Z value for
     each part. There is no delimiter in the Z value array between parts.}
-    ZArray: array of double;
+//    ZArray: array of double;
     // @name is the minimum measure for the MultiPatch.
     // @name is optional
-    MMin: double;
+//    MMin: double;
     // @name is the maximum measure for the MultiPatch.
     // @name is optional
-    MMax: double;
+//    MMax: double;
     {@name is an array of length @link(NumPoints).
     The measures for each part in the
     MultiPatch are stored end to end. The measures for Part 2 follow the
@@ -576,7 +567,7 @@ type
     starting measure for each part. There is no delimiter in the measure array
     between parts.
     @name is optional}
-    MArray: array of double;
+//    MArray: array of double;
   end;
 
   { @abstract(@name defines a Shape Index record.)
@@ -601,9 +592,25 @@ type
   {@abstract(@name represents a shape in an ESRI Shapefile.
   See TShapefileGeometryReader.@link(TShapefileGeometryReader.Items).)}
   TShapeObject = class(TObject)
-  public
+  private
     // @name represents the bounding box of the shape.
     FBoundingBox: TBoundingBox;
+    // The maximum measure for the shape.
+    // @name is optional
+    FMMax: double;
+    // The minimum measure for the shape.
+    // @name is optional
+    FMMin: double;
+    // The maximum Z value for the arc.
+    FZMax: double;
+    // The minimum Z value for the arc.
+    FZMin: double;
+    procedure GetMinMax(var MaxValue, MinValue: Double;
+      const AnArray: TDoubleDynArray);
+    procedure UpdateBoundingBox;
+    procedure UpdateZMinMax;
+    procedure UpdateMMinMax;
+  public
     {@name is an array of length @link(FNumPoints).
     The measures for each part in the
     MultiPatch are stored end to end. The measures for Part 2 follow the
@@ -612,13 +619,7 @@ type
     starting measure for each part. There is no delimiter in the measure array
     between parts.
     @name is optional}
-    FMArray: array of double;
-    // The maximum measure for the shape.
-    // @name is optional
-    FMMax: double;
-    // The minimum measure for the shape.
-    // @name is optional
-    FMMin: double;
+    FMArray: TDoubleDynArray;
     // @name is the number of parts in the Shape.
     FNumParts: integer;
     // @name is the number of points in the Shape.
@@ -675,14 +676,9 @@ type
     and so on. The parts array holds the array
     index of the starting Z value for
     each part. There is no delimiter in the Z value array between parts.}
-    FZArray: array of double;
-    // The maximum Z value for the arc.
-    FZMax: double;
-    // The minimum Z value for the arc.
-    FZMin: double;
+    FZArray: TDoubleDynArray;
     // @name creates an instance of @classname.
     constructor Create;
-    procedure UpdateBoundingBox;
   end;
 
   {@abstract(@name provides a method of reading the geometry part
@@ -1664,6 +1660,16 @@ begin
   end;
 end;
 
+procedure TShapeObject.UpdateZMinMax;
+begin
+  GetMinMax(FZMax, FZMin, FZArray);
+end;
+
+procedure TShapeObject.UpdateMMinMax;
+begin
+  GetMinMax(FMMax, FMMin, FMArray);
+end;
+
 procedure TShapeObject.UpdateBoundingBox;
 var
   Index: Integer;
@@ -1691,6 +1697,34 @@ begin
     else if FBoundingBox.YMax < FPoints[Index].Y then
     begin
       FBoundingBox.YMax := FPoints[Index].Y;
+    end;
+  end;
+end;
+
+procedure TShapeObject.GetMinMax(var MaxValue, MinValue: Double;
+  const AnArray: TDoubleDynArray);
+var
+  Index: Integer;
+begin
+  if Length(AnArray) = 0 then
+  begin
+    MinValue := 0;
+    MaxValue := 0;
+  end
+  else
+  begin
+    MinValue := AnArray[0];
+    MaxValue := MinValue;
+    for Index := 1 to Length(AnArray) - 1 do
+    begin
+      if MinValue > AnArray[Index] then
+      begin
+        MinValue := AnArray[Index];
+      end
+      else if MaxValue < AnArray[Index] then
+      begin
+        MaxValue := AnArray[Index];
+      end;
     end;
   end;
 end;
@@ -2035,11 +2069,11 @@ var
   var
     ARecord: TMultiPatchShapeRecord;
   begin
-    ShapeStream.Write(ARecord, SizeOf(TMultiPatchShapeRecord));
     ARecord.ShapeType := Shape.FShapeType;
-    ARecord.NumParts := Shape.FNumPoints;
+    ARecord.NumPoints := Shape.FNumPoints;
     ARecord.NumParts := Shape.FNumParts;
     ARecord.BoundingBox := Shape.FBoundingBox;
+    ShapeStream.Write(ARecord, SizeOf(TMultiPatchShapeRecord));
     if ARecord.NumParts > 0 then
     begin
       ShapeStream.Write(Shape.FParts[0],
@@ -2097,6 +2131,9 @@ begin
         FOnProgress(self, Index/Count);
       end;
       Shape := Items[Index];
+      Shape.UpdateBoundingBox;
+      Shape.UpdateZMinMax;
+      Shape.UpdateMMinMax;
 
       if Index = 0 then
       begin

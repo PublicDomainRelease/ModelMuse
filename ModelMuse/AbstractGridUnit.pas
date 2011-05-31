@@ -82,6 +82,24 @@ type
     Lay: integer;
   end;
 
+  T3DCellCoordinates = record
+    Col1_Row1_Lay1: T3DRealPoint;
+    Col2_Row1_Lay1: T3DRealPoint;
+    Col1_Row2_Lay1: T3DRealPoint;
+    Col2_Row2_Lay1: T3DRealPoint;
+    Col1_Row1_Lay2: T3DRealPoint;
+    Col2_Row1_Lay2: T3DRealPoint;
+    Col1_Row2_Lay2: T3DRealPoint;
+    Col2_Row2_Lay2: T3DRealPoint;
+  end;
+
+  T3DElementCoordinates = record
+    TopCenter: T3DRealPoint;
+    TopEdge: array[0..7] of T3DRealPoint;
+    BottomCenter: T3DRealPoint;
+    BottomEdge: array[0..7] of T3DRealPoint;
+  end;
+
   // @name is used to indicate the direction in which columns are numbered.
   TColumnDirection = (cdWestToEast, cdEastToWest);
   // @name is used to indicate the direction in which rows are numbered.
@@ -96,7 +114,7 @@ type
 
   TGridLineDrawingChoice = (gldcAll, gldcExterior, gldcActive, gldcActiveEdge);
 
-  TLimit = record
+  TGridLimit = record
     MinX: double;
     MaxX: double;
     MinY: double;
@@ -287,8 +305,6 @@ side views of the model.}
     // @name is used to read @link(RowPositions) from a stream.
     // It calls @link(ReadRealArray) to do this.
     procedure ReadRowPositions(Reader: TReader);
-    // See @link(FrontDataSet).
-    procedure SetFrontDataSet(const Value: TDataArray);
     // See @link(NeedToRecalculate3DCellColors).
     procedure SetNeedToRecalculate3DCellColors(const Value: boolean);
     // See @link(NeedToRecalculateFrontCellColors).
@@ -303,14 +319,8 @@ side views of the model.}
     procedure SetSelectedLayer(Value: integer);
     // See @link(SelectedRow).
     procedure SetSelectedRow(Value: integer);
-    // See @link(SideDataSet).
-    procedure SetSideDataSet(const Value: TDataArray);
-    // See @link(ThreeDDataSet).
-    procedure SetThreeDDataSet(const Value: TDataArray);
     // See @1ink(ThreeDGridObserver).
     procedure SetThreeDGridObserver(const Value: TObserver);
-    // See @link(TopDataSet).
-    procedure SetTopDataSet(const Value: TDataArray);
     // See @1ink(TopGridObserver).
     procedure SetTopGridObserver(const Value: TObserver);
     // @name writes @link(ColumnPositions) to
@@ -368,10 +378,6 @@ side views of the model.}
     function PrivateGlGrid(EvaluatedAt: TEvaluatedAt;
       ModelSelection: TModelSelection):TGrid;
     procedure SetGridLineDrawingChoice(const Value: TGridLineDrawingChoice);
-    procedure SetFrontContourDataSet(const Value: TDataArray);
-    procedure SetSideContourDataSet(const Value: TDataArray);
-    procedure SetThreeDContourDataSet(const Value: TDataArray);
-    procedure SetTopContourDataSet(const Value: TDataArray);
     procedure DrawTopContours(const ZoomBox: TQRbwZoomBox2;
       const BitMap: TBitmap32);
     procedure SetCanDraw(const Value: boolean);
@@ -404,7 +410,22 @@ side views of the model.}
       LayerCount, RowCount, ColCount: integer);
     procedure GetCounts(DataSet: TDataArray; var LayerCount, RowCount,
       ColCount: integer);
+    function GetCellCoordinates(Col, Row, Layer: integer): T3DCellCoordinates;
+    function GetElementCoordinates(Col, Row, Layer: integer): T3DElementCoordinates;
+    procedure InvalidateScreenObjects;
+    procedure SetOnSelectedColumnChange(const Value: TNotifyEvent);
+    procedure SetOnSelectedRowChange(const Value: TNotifyEvent);
+    procedure CalculateMinMax(DataSet: TDataArray;
+      var MinMaxInitialized: Boolean;
+      var LayerCount, RowCount, ColCount: Integer;
+      var LogRMin, LogRMax: Double;
+      var RMinPositive, RMin, RMax: Real; var IMin, IMax: Integer;
+      var BMin, BMax: Boolean; var SMin, SMax: string;
+      StringValues: TStringList);
+    function GetThreeDGridObserver: TObserver;
+    function GetCanDraw: boolean;
   protected
+    FModel: TBaseModel;
     // @name is used to indicate whether or not the display lists
     // @link(FGridShellGLIndex), @link(FTopGridGLIndex),
     // @link(FFrontGridGLIndex), @link(FSideGridGLIndex), and
@@ -496,7 +517,7 @@ side views of the model.}
     // @name causes @link(ThreeDGridObserver) to have @link(TObserver.UpToDate)
     // set to false and then to true. That will invalidate everything that
     // depends on @link(ThreeDGridObserver).
-    procedure LayersChanged; 
+    procedure LayersChanged;
     {@name finds the index of the element in Positions that is
      closest to APosition.  If the index is known to be within a certain range,
      NearestColumnOrRow can be made faster by specifying First and Last.
@@ -606,7 +627,22 @@ side views of the model.}
     procedure DrawSideContours(const ZoomBox: TQRbwZoomBox2;
       const BitMap: TBitmap32);
     function IsElementActive(const Layer, Row, Col: integer): boolean;
+    procedure SetFrontContourDataSet(const Value: TDataArray); virtual;
+    procedure SetSideContourDataSet(const Value: TDataArray); virtual;
+    procedure SetThreeDContourDataSet(const Value: TDataArray); virtual;
+    procedure SetTopContourDataSet(const Value: TDataArray); virtual;
+    // See @link(SideDataSet).
+    procedure SetSideDataSet(const Value: TDataArray); virtual;
+    // See @link(ThreeDDataSet).
+    procedure SetThreeDDataSet(const Value: TDataArray); virtual;
+    // See @link(TopDataSet).
+    procedure SetTopDataSet(const Value: TDataArray); virtual;
+    // See @link(FrontDataSet).
+    procedure SetFrontDataSet(const Value: TDataArray); virtual;
+    function GetChildDataArray(const Value: TDataArray;
+      ChildModel: TBaseModel): TDataArray;
   public
+    property Model: TBaseModel read FModel;
     procedure GetRealMinMax(DataSet: TDataArray; var RMin, RMax,
       RMinPositive: real);
     procedure GetIntegerMinMax(DataSet: TDataArray; var IMin, IMax: integer);
@@ -635,7 +671,7 @@ side views of the model.}
     {Copies the properties of Source into self.  Only those properties that
      normally would be saved to file are copied.}
     procedure Assign(Source: TPersistent); override;
-    property CanDraw: boolean read FCanDraw write SetCanDraw;
+    property CanDraw: boolean read GetCanDraw write SetCanDraw;
     // @name is used to determine whether or not a grid can be drawn in 3D.
     function CanDraw3D: boolean;
     property Draw3DAllowed: boolean read FDraw3DAllowed write FDraw3DAllowed;
@@ -671,7 +707,7 @@ side views of the model.}
     // @name represents an array of column widths.
     property ColWidths: TOneDRealArray read GetColWidths;
     // @name creates a grid with 0 rows, columns and layers.
-    constructor Create;
+    constructor Create(Model: TBaseModel);
     // @name deletes the column boundary at the position AColumn.
     procedure DeleteColumn(const AColumn: integer);
     // @name deletes the row boundary at the position ARow.
@@ -701,8 +737,8 @@ side views of the model.}
     {@name is the  @link(TDataArray) whose values are used
      to determine the colors
      of the cells in a front view of the grid.  See: @link(FrontCellColors),
-     TPhastModel.@link(TPhastModel.FrontDisplayTime), and
-     TPhastModel.@link(TPhastModel.FrontTimeList).}
+     TPhastModel.@link(TCustomModel.FrontDisplayTime), and
+     TPhastModel.@link(TCustomModel.FrontTimeList).}
     property FrontDataSet: TDataArray read FFrontDataSet write SetFrontDataSet;
     property FrontContourDataSet: TDataArray read FFrontContourDataSet
       write SetFrontContourDataSet;
@@ -802,7 +838,7 @@ side views of the model.}
     { @name is an event that can be used to respond to changes
       in which column is selected.}
     property OnSelectedColumnChange: TNotifyEvent read FOnSelectedColumnChange
-      write FOnSelectedColumnChange;
+      write SetOnSelectedColumnChange;
     { @name is an event that can be used to respond to changes
       in which layer is selected.}
     property OnSelectedLayerChange: TNotifyEvent read FOnSelectedLayerChange
@@ -810,7 +846,7 @@ side views of the model.}
     { @name is an event that can be used to respond to changes
       in which row is selected.}
     property OnSelectedRowChange: TNotifyEvent read FOnSelectedRowChange write
-      FOnSelectedRowChange;
+      SetOnSelectedRowChange;
     {@name sets the colors of the cells in a front view of the grid to white.
      See @link(UpdateCellColors).}
     procedure ResetFrontCellColors;
@@ -860,8 +896,8 @@ side views of the model.}
     {@name is the  @link(TDataArray) whose values are used
      to determine the colors
      of the cells in a side view of the grid.  See: @link(SideCellColors),
-     TPhastModel.@link(TPhastModel.SideDisplayTime), and
-     TPhastModel.@link(TPhastModel.SideTimeList).}
+     TPhastModel.@link(TCustomModel.SideDisplayTime), and
+     TPhastModel.@link(TCustomModel.SideTimeList).}
     property SideDataSet: TDataArray read FSideDataSet write SetSideDataSet;
     property SideContourDataSet: TDataArray read FSideContourDataSet
       write SetSideContourDataSet;
@@ -873,8 +909,8 @@ side views of the model.}
     {@name is the @link(TDataArray) whose values are used
      to determine the colors
      of the cells in a 3D view of the grid.  See: @link(TCellColors),
-     TPhastModel.@link(TPhastModel.ThreeDDisplayTime), and
-     TPhastModel.@link(TPhastModel.ThreeDTimeList).}
+     TPhastModel.@link(TCustomModel.ThreeDDisplayTime), and
+     TPhastModel.@link(TCustomModel.ThreeDTimeList).}
     property ThreeDDataSet: TDataArray read FThreeDDataSet
       write SetThreeDDataSet;
     property ThreeDContourDataSet: TDataArray read FThreeDContourDataSet
@@ -896,7 +932,7 @@ side views of the model.}
     // @name is used to notify @link(TScreenObject)s and @link(TDataArray)s
     // That they need to redraw themselves due to a change in the columns,
     //  rows. or layers.
-    property ThreeDGridObserver: TObserver read FThreeDGridObserver
+    property ThreeDGridObserver: TObserver read GetThreeDGridObserver
       write SetThreeDGridObserver;
     { @name returns the X, Y, and Z coordinates of the
       center of a layer boundary in the coordinate system of the grid.
@@ -935,8 +971,8 @@ side views of the model.}
     {@name is the  @link(TDataArray) whose values are used
      to determine the colors
      of the cells in a top view of the grid.  See: @link(TopCellColors),
-     TPhastModel.@link(TPhastModel.TopDisplayTime), and
-     TPhastModel.@link(TPhastModel.TopTimeList).}
+     TPhastModel.@link(TCustomModel.TopDisplayTime), and
+     TPhastModel.@link(TCustomModel.TopTimeList).}
     property TopDataSet: TDataArray read FTopDataSet write SetTopDataSet;
     property TopContourDataSet: TDataArray read FTopContourDataSet
       write SetTopContourDataSet;
@@ -987,10 +1023,14 @@ side views of the model.}
     {@name returns the elevation of the center of an element.}
     function LayerCenter(Column, Row, Layer: integer): real;
     // @name returns the extent of the grid in grid coordinates;
-    function GridLimits(ViewDirection: TViewDirection): TLimit;
+    function GridLimits(ViewDirection: TViewDirection): TGridLimit;
     function GridOutline(ViewDirection: TViewDirection): TPolygon2D;
     property DrawColoredGridLines: boolean read FDrawColoredGridLines
       write FDrawColoredGridLines;
+    property CellCoordinates[Col, Row, Layer: integer]: T3DCellCoordinates
+      read GetCellCoordinates;
+    property ElementCoordinates[Col, Row, Layer: integer]: T3DElementCoordinates
+      read GetElementCoordinates;
   published
     { @name is the number of columns in the grid.
       Each column has a width that is greater than or equal to 0.}
@@ -1103,7 +1143,7 @@ implementation
 
 uses GR32_Polygons, Math, RealListUnit, frmGoPhastUnit, BigCanvasMethods,
   ModelMuseUtilities, PhastDataSets, ScreenObjectUnit, PhastModelUnit, InteractiveTools,
-  EdgeDisplayUnit, ZLib, IntListUnit;
+  EdgeDisplayUnit, ZLib, IntListUnit, PathlineReader;
 
 const
   // @name is the number of OpenGL display lists used to display the grid.
@@ -1262,7 +1302,7 @@ begin
   SetLength(FColumnPositions, Length(FColumnPositions) + 1);
   FColumnPositions[Length(FColumnPositions) - 1] := Value;
   UpdateColumnPositions;
-  frmGoPhast.PhastModel.InvalidateScreenObjects;
+  InvalidateScreenObjects;
   GridChanged;
   ColumnsChanged;
 end;
@@ -1272,14 +1312,15 @@ begin
   SetLength(FRowPositions, Length(FRowPositions) + 1);
   FRowPositions[Length(FRowPositions) - 1] := Value;
   UpdateRowPositions;
-  frmGoPhast.PhastModel.InvalidateScreenObjects;
+  InvalidateScreenObjects;
   GridChanged;
   RowsChanged;
 end;
 
-constructor TCustomGrid.Create;
+constructor TCustomGrid.Create(Model: TBaseModel);
 begin
-  inherited;
+  inherited Create;
+  FModel := Model;
   FDrawColoredGridLines := True;
   FDraw3DAllowed := True;
   FGridLineDrawingChoice := gldcAll;
@@ -1315,7 +1356,7 @@ begin
   end;
   ColumnCount := ColumnCount - 1;
   frmGoPhast.PhastModel.InvalidateSegments;
-  frmGoPhast.PhastModel.InvalidateScreenObjects;
+  InvalidateScreenObjects;
   frmGoPhast.InvalidateModel;
   GridChanged;
   ColumnsChanged;
@@ -1335,7 +1376,7 @@ begin
   end;
   RowCount := RowCount - 1;
   frmGoPhast.PhastModel.InvalidateSegments;
-  frmGoPhast.PhastModel.InvalidateScreenObjects;
+  InvalidateScreenObjects;
   frmGoPhast.InvalidateModel;
   GridChanged;
   RowsChanged;
@@ -1401,6 +1442,7 @@ var
   LineWidth: single;
   Polygon: TPolygon32;
   MultiplePolygons: boolean;
+  LocalModel: TCustomModel;
   procedure CalculatePoint1;
   var
     X1: double;
@@ -1711,12 +1753,12 @@ begin
 
     end;
   end;
-  if frmGoPhast.PhastModel.EdgeDisplay <> nil then
+  LocalModel := FModel as TCustomModel;
+  if LocalModel.EdgeDisplay <> nil then
   begin
-    frmGoPhast.PhastModel.EdgeDisplay.Draw(SelectedLayer, BitMap);
+    LocalModel.EdgeDisplay.Draw(SelectedLayer, BitMap);
   end;
   DrawTopContours(ZoomBox, BitMap);
-
 end;
 
 procedure TCustomGrid.ElementCountChanged;
@@ -1758,6 +1800,131 @@ procedure TCustomGrid.EndRowChange;
 begin
   Dec(FRowUpdate);
   RowsChanged;
+end;
+
+function TCustomGrid.GetCanDraw: boolean;
+begin
+  result := FCanDraw and (frmGoPhast.PhastModel.DataSetUpdateCount = 0);
+end;
+
+function TCustomGrid.GetCellCoordinates(Col, Row, Layer: integer): T3DCellCoordinates;
+var
+  X1: Real;
+  X2: Real;
+  Y1: Real;
+  Y2: Real;
+  Z1: Real;
+  Z2: Real;
+  TempPoint: TPoint2D;
+begin
+  if Col = 0 then
+  begin
+    X1 := ColumnPosition[0];
+  end
+  else
+  begin
+    X1 := (ColumnPosition[Col] + ColumnPosition[Col-1])/2;
+  end;
+  if Col = ColumnCount then
+  begin
+    X2 := ColumnPosition[Col];
+  end
+  else
+  begin
+    X2 := (ColumnPosition[Col] + ColumnPosition[Col+1])/2;
+  end;
+
+  if Row = 0 then
+  begin
+    Y1 := RowPosition[0];
+  end
+  else
+  begin
+    Y1 := (RowPosition[Row] + RowPosition[Row-1])/2;
+  end;
+  if Row = RowCount then
+  begin
+    Y2 := RowPosition[Row];
+  end
+  else
+  begin
+    Y2 := (RowPosition[Row] + RowPosition[Row+1])/2;
+  end;
+
+  if Layer = 0 then
+  begin
+    Z1 := CellElevation[Col, Row, 0];
+  end
+  else
+  begin
+    Z1 := (CellElevation[Col, Row, Layer] + CellElevation[Col, Row, Layer-1])/2;
+  end;
+  if Layer = LayerCount then
+  begin
+    Z2 := CellElevation[Col, Row, Layer];
+  end
+  else
+  begin
+    Z2 := (CellElevation[Col, Row, Layer] + CellElevation[Col, Row, Layer+1])/2;
+  end;
+
+  TempPoint.x := X1;
+  TempPoint.y := Y1;
+  TempPoint := RotateFromGridCoordinatesToRealWorldCoordinates(TempPoint);
+  result.Col1_Row1_Lay1.x := TempPoint.x;
+  result.Col1_Row1_Lay1.y := TempPoint.y;
+  result.Col1_Row1_Lay1.z := Z1;
+
+  TempPoint.x := X2;
+  TempPoint.y := Y1;
+  TempPoint := RotateFromGridCoordinatesToRealWorldCoordinates(TempPoint);
+  result.Col2_Row1_Lay1.x := TempPoint.x;
+  result.Col2_Row1_Lay1.y := TempPoint.y;
+  result.Col2_Row1_Lay1.z := Z1;
+
+
+  TempPoint.x := X1;
+  TempPoint.y := Y2;
+  TempPoint := RotateFromGridCoordinatesToRealWorldCoordinates(TempPoint);
+  result.Col1_Row2_Lay1.x := TempPoint.x;
+  result.Col1_Row2_Lay1.y := TempPoint.y;
+  result.Col1_Row2_Lay1.z := Z1;
+
+  TempPoint.x := X2;
+  TempPoint.y := Y2;
+  TempPoint := RotateFromGridCoordinatesToRealWorldCoordinates(TempPoint);
+  result.Col2_Row2_Lay1.x := TempPoint.x;
+  result.Col2_Row2_Lay1.y := TempPoint.y;
+  result.Col2_Row2_Lay1.z := Z1;
+
+  TempPoint.x := X1;
+  TempPoint.y := Y1;
+  TempPoint := RotateFromGridCoordinatesToRealWorldCoordinates(TempPoint);
+  result.Col1_Row1_Lay2.x := TempPoint.x;
+  result.Col1_Row1_Lay2.y := TempPoint.y;
+  result.Col1_Row1_Lay2.z := Z2;
+
+  TempPoint.x := X2;
+  TempPoint.y := Y1;
+  TempPoint := RotateFromGridCoordinatesToRealWorldCoordinates(TempPoint);
+  result.Col2_Row1_Lay2.x := TempPoint.x;
+  result.Col2_Row1_Lay2.y := TempPoint.y;
+  result.Col2_Row1_Lay2.z := Z2;
+
+
+  TempPoint.x := X1;
+  TempPoint.y := Y2;
+  TempPoint := RotateFromGridCoordinatesToRealWorldCoordinates(TempPoint);
+  result.Col1_Row2_Lay2.x := TempPoint.x;
+  result.Col1_Row2_Lay2.y := TempPoint.y;
+  result.Col1_Row2_Lay2.z := Z2;
+
+  TempPoint.x := X2;
+  TempPoint.y := Y2;
+  TempPoint := RotateFromGridCoordinatesToRealWorldCoordinates(TempPoint);
+  result.Col2_Row2_Lay2.x := TempPoint.x;
+  result.Col2_Row2_Lay2.y := TempPoint.y;
+  result.Col2_Row2_Lay2.z := Z2;
 end;
 
 function TCustomGrid.GetColumnPosition(const Column: integer): real;
@@ -2474,6 +2641,11 @@ begin
   result := GetWidths(FRowPositions);
 end;
 
+function TCustomGrid.GetThreeDGridObserver: TObserver;
+begin
+  result := FThreeDGridObserver;
+end;
+
 function TCustomGrid.GetTopCellColors(const Column, Row: integer): TColor;
 var
   ColumnLimit, RowLimit: integer;
@@ -2485,6 +2657,10 @@ begin
   end
   else
   begin
+    if NeedToRecalculateTopCellColors then
+    begin
+      UpdateCellColors(vdTop);
+    end;
     case TopDataSet.EvaluatedAt of
       eaBlocks:
         begin
@@ -2743,7 +2919,7 @@ begin
     end;
     frmGoPhast.PhastModel.InvalidateSegments;
     frmGoPhast.UpdateDataSetDimensions;
-    frmGoPhast.PhastModel.InvalidateScreenObjects;
+    InvalidateScreenObjects;
     frmGoPhast.InvalidateModel;
     GridChanged;
     ColumnsChanged;
@@ -2774,7 +2950,7 @@ begin
     if frmGoPhast.PhastModel <> nil then
     begin
       frmGoPhast.PhastModel.InvalidateSegments;
-      frmGoPhast.PhastModel.InvalidateScreenObjects;
+      InvalidateScreenObjects;
     end;
     frmGoPhast.InvalidateModel;
     GridChanged;
@@ -2796,7 +2972,7 @@ begin
     NeedToRecalculate3DCellColors := True;
     FColumnPositions[Column] := Value;
     frmGoPhast.PhastModel.InvalidateSegments;
-    frmGoPhast.PhastModel.InvalidateScreenObjects;
+    InvalidateScreenObjects;
     frmGoPhast.InvalidateModel;
     GridChanged;
     ColumnsChanged;
@@ -2837,7 +3013,7 @@ begin
   end;
 
   UpdateColumnPositions;
-  frmGoPhast.PhastModel.InvalidateScreenObjects;
+  InvalidateScreenObjects;
   GridChanged;
   ColumnsChanged;
 end;
@@ -2866,7 +3042,7 @@ begin
     end;
   end;
   frmGoPhast.PhastModel.InvalidateSegments;
-  frmGoPhast.PhastModel.InvalidateScreenObjects;
+  InvalidateScreenObjects;
   frmGoPhast.InvalidateModel;
   FNeedToRecalculateTopCellColors := True;
   FNeedToRecalculateFrontCellColors := True;
@@ -2881,7 +3057,7 @@ begin
   begin
     Value := 0;
   end
-  else if Value > ColumnCount then
+  else if (Value > ColumnCount) and (ColumnCount > 0) then
   begin
     Value := ColumnCount;
   end;
@@ -2903,7 +3079,7 @@ begin
   begin
     Value := 0;
   end
-  else if Value > LayerCount then
+  else if (Value > LayerCount) and (LayerCount > 0) then
   begin
     Value := LayerCount;
   end;
@@ -2925,7 +3101,7 @@ begin
   begin
     Value := 0;
   end
-  else if Value > RowCount then
+  else if (Value > RowCount) and (RowCount > 0) then
   begin
     Value := RowCount;
   end;
@@ -2942,8 +3118,22 @@ begin
 end;
 
 procedure TCustomGrid.SetGridLineDrawingChoice(const Value: TGridLineDrawingChoice);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
 begin
   FGridLineDrawingChoice := Value;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+    begin
+//      LocalModel.ChildModels[ChildIndex].ChildModel.
+//        PhastGrid.GridLineDrawingChoice := Value;
+      LocalModel.ChildModels[ChildIndex].ChildModel.
+        ModflowGrid.GridLineDrawingChoice := Value;
+    end;
+  end;
 end;
 
 procedure TCustomGrid.SetGridAngle(Value: real);
@@ -3026,7 +3216,7 @@ begin
     frmGoPhast.dcAddRowCursor.RedrawCursor;
     frmGoPhast.dcSubdivide.RedrawCursor;
     frmGoPhast.dcSetSpacing.RedrawCursor;
-    frmGoPhast.PhastModel.InvalidateScreenObjects;
+    InvalidateScreenObjects;
     GridChanged;
     ColumnsChanged;
     RowsChanged;
@@ -3041,8 +3231,9 @@ begin
     FNeedToRecalculateFrontCellColors := True;
     FNeedToRecalculateSideCellColors := True;
     NeedToRecalculate3DCellColors := True;
-    frmGoPhast.PhastModel.InvalidateSegments;
+//    frmGoPhast.PhastModel.InvalidateSegments;
     frmGoPhast.PhastModel.InvalidateScreenObjects;
+    InvalidateScreenObjects;
     frmGoPhast.InvalidateModel;
     if SelectedLayer >= FLayerCount then
     begin
@@ -3066,7 +3257,7 @@ begin
     if frmGoPhast.PhastModel <> nil then
     begin
       frmGoPhast.PhastModel.InvalidateSegments;
-      frmGoPhast.PhastModel.InvalidateScreenObjects;
+      InvalidateScreenObjects;
     end;
     frmGoPhast.InvalidateModel;
     GridChanged;
@@ -3077,6 +3268,9 @@ end;
 procedure TCustomGrid.ResetTopCellColors;
 var
   ColIndex, RowIndex: integer;
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if (FColumnCount <= 0) or (FRowCount <= 0) then
   begin
@@ -3123,6 +3317,18 @@ begin
   end;
 
   FNeedToRecalculateTopCellColors := False;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+        ChildModel.Grid.ResetTopCellColors;
+      end;
+    end;
+  end;
 end;
 
 procedure TCustomGrid.SetRowCount(const Value: integer);
@@ -3135,7 +3341,7 @@ begin
     FNeedToRecalculateTopCellColors := True;
     FNeedToRecalculateSideCellColors := True;
     NeedToRecalculate3DCellColors := True;
-    frmGoPhast.PhastModel.InvalidateScreenObjects;
+    InvalidateScreenObjects;
     frmGoPhast.PhastModel.InvalidateSegments;
     frmGoPhast.InvalidateModel;
     SetLength(FRowPositions, Value + 1);
@@ -3181,7 +3387,7 @@ begin
     if frmGoPhast.PhastModel <> nil then
     begin
       frmGoPhast.PhastModel.InvalidateSegments;
-      frmGoPhast.PhastModel.InvalidateScreenObjects;
+      InvalidateScreenObjects;
     end;
     frmGoPhast.InvalidateModel;
     if FRowPositions <> nil then
@@ -3212,7 +3418,7 @@ begin
     NeedToRecalculate3DCellColors := True;
     FRowPositions[Row] := Value;
     frmGoPhast.PhastModel.InvalidateSegments;
-    frmGoPhast.PhastModel.InvalidateScreenObjects;
+    InvalidateScreenObjects;
     frmGoPhast.InvalidateModel;
     GridChanged;
     RowsChanged;
@@ -3250,7 +3456,7 @@ begin
     FRowPositions[Index] := Value[Index];
   end;
   UpdateRowPositions;
-  frmGoPhast.PhastModel.InvalidateScreenObjects;
+  InvalidateScreenObjects;
   GridChanged;
   RowsChanged;
 end;
@@ -3267,7 +3473,7 @@ begin
   FNeedToRecalculateTopCellColors := True;
   FNeedToRecalculateSideCellColors := True;
   NeedToRecalculate3DCellColors := True;
-  frmGoPhast.PhastModel.InvalidateScreenObjects;
+  InvalidateScreenObjects;
   frmGoPhast.PhastModel.InvalidateSegments;
   frmGoPhast.InvalidateModel;
   Delta := RowWidth[Row] - Value;
@@ -3393,6 +3599,7 @@ begin
   FNeedToRecalculateTopCellColors := True;
   FNeedToRecalculateFrontCellColors := True;
   NeedToRecalculate3DCellColors := True;
+  frmGoPhast.UpdateDataSetDimensions;
   frmGoPhast.PhastModel.InvalidateSegments;
   frmGoPhast.InvalidateModel;
   ARealList := TRealList.Create;
@@ -3458,6 +3665,7 @@ begin
   FNeedToRecalculateTopCellColors := True;
   FNeedToRecalculateSideCellColors := True;
   NeedToRecalculate3DCellColors := True;
+  frmGoPhast.UpdateDataSetDimensions;
   frmGoPhast.PhastModel.InvalidateSegments;
   frmGoPhast.InvalidateModel;
   ARealList := TRealList.Create;
@@ -3599,12 +3807,63 @@ begin
   end;
 end;
 
+procedure TCustomGrid.SetOnSelectedColumnChange(const Value: TNotifyEvent);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  FOnSelectedColumnChange := Value;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.ModflowGrid.OnSelectedColumnChange := Value;
+    end;
+  end;
+end;
+
 procedure TCustomGrid.SetOnSelectedLayerChange(const Value: TNotifyEvent);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   FOnSelectedLayerChange := Value;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.ModflowGrid.OnSelectedLayerChange := Value;
+    end;
+  end;
+end;
+
+procedure TCustomGrid.SetOnSelectedRowChange(const Value: TNotifyEvent);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  FOnSelectedRowChange := Value;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.ModflowGrid.OnSelectedRowChange := Value;
+    end;
+  end;
 end;
 
 procedure TCustomGrid.SetSelectedColumn(Value: integer);
+var
+  PathLines: TPathLineReader;
 begin
   if Value < 0 then
   begin
@@ -3612,23 +3871,26 @@ begin
   end
   else
   begin
-    case frmGoPhast.frameSideView.EvaluatedAt of
-      eaBlocks:
-        begin
-          if Value > ColumnCount - 1 then
+    if ColumnCount > 0 then
+    begin
+      case frmGoPhast.frameSideView.EvaluatedAt of
+        eaBlocks:
           begin
-            Value := ColumnCount - 1;
+            if Value > ColumnCount - 1 then
+            begin
+              Value := ColumnCount - 1;
+            end;
           end;
-        end;
-      eaNodes:
-        begin
-          if Value > ColumnCount then
+        eaNodes:
           begin
-            Value := ColumnCount;
+            if Value > ColumnCount then
+            begin
+              Value := ColumnCount;
+            end;
           end;
-        end;
-    else
-      Assert(False);
+      else
+        Assert(False);
+      end;
     end;
   end;
   if FSelectedColumn <> Value then
@@ -3645,10 +3907,18 @@ begin
     begin
       FOnSelectedColumnChange(self);
     end;
+    PathLines := frmGoPhast.PhastModel.PathLines;
+    if PathLines.DisplayPathLines
+      and PathLines.DisplayLimits.LimitToCurrentIn2D then
+    begin
+      PathLines.SideQuadTree.Clear;
+    end;
   end;
 end;
 
 procedure TCustomGrid.SetSelectedLayer(Value: integer);
+var
+  PathLines: TPathLineReader;
 begin
   if Value < 0 then
   begin
@@ -3656,23 +3926,26 @@ begin
   end
   else
   begin
-    case frmGoPhast.frameTopView.EvaluatedAt of
-      eaBlocks:
-        begin
-          if Value > LayerCount - 1 then
+    if LayerCount > 0 then
+    begin
+      case frmGoPhast.frameTopView.EvaluatedAt of
+        eaBlocks:
           begin
-            Value := LayerCount - 1;
+            if Value > LayerCount - 1 then
+            begin
+              Value := LayerCount - 1;
+            end;
           end;
-        end;
-      eaNodes:
-        begin
-          if Value > LayerCount then
+        eaNodes:
           begin
-            Value := LayerCount;
+            if Value > LayerCount then
+            begin
+              Value := LayerCount;
+            end;
           end;
-        end;
-    else
-      Assert(False);
+      else
+        Assert(False);
+      end;
     end;
   end;
   if FSelectedLayer <> Value then
@@ -3687,10 +3960,18 @@ begin
     begin
       FOnSelectedLayerChange(self);
     end;
+    PathLines := frmGoPhast.PhastModel.PathLines;
+    if PathLines.DisplayPathLines
+      and PathLines.DisplayLimits.LimitToCurrentIn2D then
+    begin
+      PathLines.TopQuadTree.Clear;
+    end;
   end;
 end;
 
 procedure TCustomGrid.SetSelectedRow(Value: integer);
+var
+  PathLines: TPathLineReader;
 begin
   if Value < 0 then
   begin
@@ -3698,23 +3979,26 @@ begin
   end
   else
   begin
-    case frmGoPhast.frameFrontView.EvaluatedAt of
-      eaBlocks:
-        begin
-          if Value > RowCount - 1 then
+    if RowCount > 0 then
+    begin
+      case frmGoPhast.frameFrontView.EvaluatedAt of
+        eaBlocks:
           begin
-            Value := RowCount - 1;
+            if Value > RowCount - 1 then
+            begin
+              Value := RowCount - 1;
+            end;
           end;
-        end;
-      eaNodes:
-        begin
-          if Value > RowCount then
+        eaNodes:
           begin
-            Value := RowCount;
+            if Value > RowCount then
+            begin
+              Value := RowCount;
+            end;
           end;
-        end;
-    else
-      Assert(False);
+      else
+        Assert(False);
+      end;
     end;
   end;
   if FSelectedRow <> Value then
@@ -3730,6 +4014,12 @@ begin
     if Assigned(FOnSelectedRowChange) then
     begin
       FOnSelectedRowChange(self);
+    end;
+    PathLines := frmGoPhast.PhastModel.PathLines;
+    if PathLines.DisplayPathLines
+      and PathLines.DisplayLimits.LimitToCurrentIn2D then
+    begin
+      PathLines.FrontQuadTree.Clear;
     end;
   end;
 end;
@@ -3755,6 +4045,10 @@ begin
   end
   else
   begin
+    if NeedToRecalculateFrontCellColors then
+    begin
+      UpdateCellColors(vdFront);
+    end;
     case FrontDataSet.EvaluatedAt of
       eaBlocks:
         begin
@@ -3785,7 +4079,7 @@ begin
   Result := FFrontCellColors[Column, Layer];
 end;
 
-function TCustomGrid.GridLimits(ViewDirection: TViewDirection): TLimit;
+function TCustomGrid.GridLimits(ViewDirection: TViewDirection): TGridLimit;
 var
   ACorner: TPoint2D;
 begin
@@ -3883,15 +4177,115 @@ begin
       end;
     vdSide:
       begin
-        result[0].x := HighestElevation;
-        result[0].y := RowPosition[0];
-        result[1].x := HighestElevation;
-        result[1].y := RowPosition[RowCount];
-        result[2].x := LowestElevation;
-        result[2].y := RowPosition[RowCount];
-        result[3].x := LowestElevation;
-        result[3].y := RowPosition[0];
+        result[0].y := HighestElevation;
+        result[0].x := RowPosition[0];
+        result[1].y := HighestElevation;
+        result[1].x := RowPosition[RowCount];
+        result[2].y := LowestElevation;
+        result[2].x := RowPosition[RowCount];
+        result[3].y := LowestElevation;
+        result[3].x := RowPosition[0];
       end;
+  end;
+end;
+
+procedure TCustomGrid.CalculateMinMax(DataSet: TDataArray;
+  var MinMaxInitialized: Boolean;
+  var LayerCount, RowCount, ColCount: Integer;
+  var LogRMin, LogRMax: Double;
+  var RMinPositive, RMin, RMax: Real; var IMin, IMax: Integer;
+  var BMin, BMax: Boolean; var SMin, SMax: string; StringValues: TStringList);
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  LocalPhastModel: TPhastModel;
+  LocalDataArray: TDataArray;
+begin
+  if FModel is TChildModel then
+  begin
+    LocalPhastModel := TChildModel(FModel).ParentModel as TPhastModel;
+  end
+  else
+  begin
+    LocalPhastModel := FModel as TPhastModel;
+  end;
+  if LocalPhastModel.LgrUsed then
+  begin
+    if LocalPhastModel.ThreeDTimeList <> nil then
+    begin
+      LocalPhastModel.ThreeDTimeList.Initialize;
+    end;
+    LocalDataArray := LocalPhastModel.Grid.ThreeDDataSet;
+    LocalDataArray.Initialize;
+    LocalPhastModel.Grid.GetCounts(LocalDataArray, LayerCount, RowCount, ColCount);
+    if (LayerCount > 0) and (RowCount > 0) and (ColCount > 0) then
+    begin
+      LocalPhastModel.Grid.SetMinMax(LocalDataArray, MinMaxInitialized,
+        RMin, RMax, RMinPositive, IMin, IMax, BMin, BMax, SMin, SMax,
+        StringValues, LayerCount, RowCount, ColCount);
+    end;
+    for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+      if ChildModel.ThreeDTimeList <> nil then
+      begin
+        ChildModel.ThreeDTimeList.Initialize;
+      end;
+      LocalDataArray := ChildModel.Grid.ThreeDDataSet;
+      if LocalDataArray <> nil then
+      begin
+        LocalDataArray.Initialize;
+        ChildModel.Grid.GetCounts(LocalDataArray, LayerCount, RowCount, ColCount);
+        if (LayerCount > 0) and (RowCount > 0) and (ColCount > 0) then
+        begin
+          ChildModel.Grid.SetMinMax(LocalDataArray, MinMaxInitialized,
+            RMin, RMax, RMinPositive, IMin, IMax, BMin, BMax, SMin, SMax,
+            StringValues, LayerCount, RowCount, ColCount);
+        end;
+      end;
+    end;
+    GetCounts(DataSet, LayerCount, RowCount, ColCount);
+  end
+  else
+  begin
+    SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive, IMin, IMax,
+      BMin, BMax, SMin, SMax, StringValues, LayerCount, RowCount, ColCount);
+  end;
+  if DataSet.Limits.LogTransform and (RMinPositive > 0) then
+  begin
+    LogRMin := Log10(RMinPositive);
+    LogRMax := Log10(RMax);
+  end
+  else
+  begin
+    LogRMin := 0;
+    LogRMax := 0;
+  end;
+end;
+
+function TCustomGrid.GetChildDataArray(const Value: TDataArray;
+  ChildModel: TBaseModel): TDataArray;
+begin
+  if Value = nil then
+  begin
+    result := nil;
+  end
+  else if Value.Name = '' then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := (ChildModel as TChildModel).
+      DataArrayManager.GetDataSetByName(Value.Name);
+  end;
+end;
+
+procedure TCustomGrid.InvalidateScreenObjects;
+begin
+  if FModel is TPhastModel then
+  begin
+    TPhastModel(FModel).InvalidateScreenObjects;
   end;
 end;
 
@@ -4179,25 +4573,29 @@ var
   LayerCount: Integer;
   RowCount: Integer;
   ColCount: Integer;
+  TempStream: TMemoryStream;
 begin
   Assert(AGlGrid <> nil);
   ColCount := Length(AGlGrid);
   RowCount := Length(AGlGrid[0]);
   LayerCount := Length(AGlGrid[0, 0]);
+  TempStream := TMemoryStream.Create;
   Compressor := TCompressionStream.Create(clDefault, GridCacheStream);
   try
-    Compressor.Write(ColCount, SizeOf(ColCount));
-    Compressor.Write(RowCount, SizeOf(RowCount));
-    Compressor.Write(LayerCount, SizeOf(LayerCount));
+    TempStream.Write(ColCount, SizeOf(ColCount));
+    TempStream.Write(RowCount, SizeOf(RowCount));
+    TempStream.Write(LayerCount, SizeOf(LayerCount));
     for ColIndex := 0 to ColCount - 1 do
     begin
       for RowIndex := 0 to RowCount - 1 do
       begin
-        Compressor.Write(AGlGrid[ColIndex, RowIndex, 0], LayerCount * SizeOf(TGridPoint));
+        TempStream.Write(AGlGrid[ColIndex, RowIndex, 0], LayerCount * SizeOf(TGridPoint));
       end;
     end;
+    TempStream.SaveToStream(Compressor);
   finally
     Compressor.Free;
+    TempStream.Free;
   end;
   AGlGrid := nil;
 end;
@@ -4321,6 +4719,9 @@ end;
 procedure TCustomGrid.ResetFrontCellColors;
 var
   ColIndex, LayerIndex: integer;
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if (FColumnCount <= 0) or (FLayerCount <= 0) then
   begin
@@ -4368,6 +4769,18 @@ begin
   end;
 
   FNeedToRecalculateFrontCellColors := False;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+        ChildModel.Grid.ResetFrontCellColors;
+      end;
+    end;
+  end;
 end;
 
 procedure TCustomGrid.SetNeedToRecalculateSideCellColors(
@@ -4382,6 +4795,9 @@ end;
 procedure TCustomGrid.ResetSideCellColors;
 var
   RowIndex, LayerIndex: integer;
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if (FRowCount <= 0) or (FLayerCount <= 0) then
   begin
@@ -4428,6 +4844,18 @@ begin
   end;
 
   FNeedToRecalculateSideCellColors := False;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+        ChildModel.Grid.ResetSideCellColors;
+      end;
+    end;
+  end;
 end;
 
 function TCustomGrid.GetSideCellColors(const Row, Layer: integer): TColor;
@@ -4441,6 +4869,10 @@ begin
   end
   else
   begin
+    if NeedToRecalculateSideCellColors then
+    begin
+      UpdateCellColors(vdSide);
+    end;
     case SideDataSet.EvaluatedAt of
       eaBlocks:
         begin
@@ -4785,6 +5217,7 @@ var
   RowIndex: integer;
   ColIndex: integer;
 begin
+  DataSet.Initialize;
   for LayerIndex := 0 to LayerCount - 1 do
   begin
     for RowIndex := 0 to RowCount - 1 do
@@ -4949,6 +5382,122 @@ begin
 end;
 
 
+function TCustomGrid.GetElementCoordinates(Col, Row,
+  Layer: integer): T3DElementCoordinates;
+var
+  Z1: Real;
+  Z2: Real;
+  TempPoint: TPoint2D;
+  function AveragePoint(Point1, Point2: T3DRealPoint): T3DRealPoint;
+  begin
+    result.x := (Point1.x + Point2.x)/2;
+    result.y := (Point1.y + Point2.y)/2;
+  end;
+begin
+  Z1 := CellElevation[Col, Row, Layer];
+  Z2 := CellElevation[Col, Row, Layer+1];
+  TempPoint := TwoDElementCenter(Col, Row);
+  result.TopCenter.x := TempPoint.x;
+  result.TopCenter.y := TempPoint.y;
+  result.TopCenter.z := Z1;
+
+  result.BottomCenter.x := TempPoint.x;
+  result.BottomCenter.y := TempPoint.y;
+  result.BottomCenter.z := Z2;
+
+  result.TopEdge[0] := RotatedThreeDElementCorner(Col, Row, Layer);
+  result.TopEdge[2] := RotatedThreeDElementCorner(Col+1, Row, Layer);
+  result.TopEdge[4] := RotatedThreeDElementCorner(Col+1, Row+1, Layer);
+  result.TopEdge[6] := RotatedThreeDElementCorner(Col, Row+1, Layer);
+
+  result.TopEdge[1] := AveragePoint(result.TopEdge[0], result.TopEdge[2]);
+  if Row = 0 then
+  begin
+    result.TopEdge[1].Z := Z1;
+  end
+  else
+  begin
+    result.TopEdge[1].Z := (Z1 + CellElevation[Col, Row-1, Layer])/2;
+  end;
+
+  result.TopEdge[3] := AveragePoint(result.TopEdge[2], result.TopEdge[4]);
+  if Col = ColumnCount -1 then
+  begin
+    result.TopEdge[3].Z := Z1;
+  end
+  else
+  begin
+    result.TopEdge[3].Z := (Z1 + CellElevation[Col+1, Row, Layer])/2;
+  end;
+
+
+  result.TopEdge[5] := AveragePoint(result.TopEdge[4], result.TopEdge[6]);
+  if Row = RowCount -1 then
+  begin
+    result.TopEdge[5].Z := Z1;
+  end
+  else
+  begin
+    result.TopEdge[5].Z := (Z1 + CellElevation[Col, Row+1, Layer])/2;
+  end;
+
+  result.TopEdge[7] := AveragePoint(result.TopEdge[6], result.TopEdge[0]);
+  if Col = 0 then
+  begin
+    result.TopEdge[7].Z := Z1;
+  end
+  else
+  begin
+    result.TopEdge[7].Z := (Z1 + CellElevation[Col-1, Row, Layer])/2;
+  end;
+
+  result.BottomEdge[0] := RotatedThreeDElementCorner(Col, Row, Layer+1);
+  result.BottomEdge[2] := RotatedThreeDElementCorner(Col+1, Row, Layer+1);
+  result.BottomEdge[4] := RotatedThreeDElementCorner(Col+1, Row+1, Layer+1);
+  result.BottomEdge[6] := RotatedThreeDElementCorner(Col, Row+1, Layer+1);
+
+  result.BottomEdge[1] := AveragePoint(result.BottomEdge[0], result.BottomEdge[2]);
+  if Row = 0 then
+  begin
+    result.BottomEdge[1].Z := Z2;
+  end
+  else
+  begin
+    result.BottomEdge[1].Z := (Z2 + CellElevation[Col, Row-1, Layer+1])/2;
+  end;
+
+  result.BottomEdge[3] := AveragePoint(result.BottomEdge[2], result.BottomEdge[4]);
+  if Col = ColumnCount -1 then
+  begin
+    result.BottomEdge[3].Z := Z2;
+  end
+  else
+  begin
+    result.BottomEdge[3].Z := (Z2 + CellElevation[Col+1, Row, Layer+1])/2;
+  end;
+
+  result.BottomEdge[5] := AveragePoint(result.BottomEdge[4], result.BottomEdge[6]);
+  if Row = RowCount -1 then
+  begin
+    result.BottomEdge[5].Z := Z2;
+  end
+  else
+  begin
+    result.BottomEdge[5].Z := (Z2 + CellElevation[Col, Row+1, Layer+1])/2;
+  end;
+
+  result.BottomEdge[7] := AveragePoint(result.BottomEdge[6], result.BottomEdge[0]);
+  if Col = 0 then
+  begin
+    result.BottomEdge[7].Z := Z2;
+  end
+  else
+  begin
+    result.BottomEdge[7].Z := (Z2 + CellElevation[Col-1, Row, Layer+1])/2;
+  end;
+
+end;
+
 procedure TCustomGrid.UpdateCellColors(
   const ViewDirection: TViewDirection);
 var
@@ -4960,13 +5509,17 @@ var
   BMin, BMax, BTemp: boolean;
   SMin, SMax, STemp: string;
   SIndex: integer;
-  UseString: boolean;
+//  UseString: boolean;
   StringValues: TStringList;
-  TempString: string;
+//  TempString: string;
   MinMaxInitialized: boolean;
   LogRMin: double;
   LogRMax: double;
   LogRTemp: double;
+//  LocalModel: TCustomModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  LocalPhastModel: TPhastModel;
 begin
   RMinPositive := 0;
   MinMaxInitialized := False;
@@ -4979,26 +5532,20 @@ begin
       vdTop:
         begin
           DataSet := TopDataSet;
+
           if DataSet = nil then
             Exit;
+          Assert(FModel = DataSet.Model);
+          DataSet.Initialize;
           GetCounts(DataSet, LayerCount, RowCount, ColCount);
           if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
           begin
             Exit;
           end;
-          SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
-            IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
-            LayerCount, RowCount, ColCount);
-          if DataSet.Limits.LogTransform and (RMinPositive > 0) then
-          begin
-            LogRMin := Log10(RMinPositive);
-            LogRMax := Log10(RMax);
-          end
-          else
-          begin
-            LogRMin := 0.;
-            LogRMax := 0.;
-          end;
+
+          CalculateMinMax(DataSet, MinMaxInitialized, LayerCount, RowCount,
+            ColCount, LogRMin, LogRMax, RMinPositive, RMin, RMax, IMin, IMax,
+            BMin, BMax, SMin, SMax, StringValues);
           if LayerCount > 1 then
           begin
             LayerIndex := SelectedLayer;
@@ -5219,24 +5766,29 @@ begin
           DataSet := FrontDataSet;
           if DataSet = nil then
             Exit;
+          DataSet.Initialize;
           GetCounts(DataSet, LayerCount, RowCount, ColCount);
           if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
           begin
             Exit;
           end;
-          SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
-            IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
-            LayerCount, RowCount, ColCount);
-          if DataSet.Limits.LogTransform and (RMinPositive > 0) then
-          begin
-            LogRMin := Log10(RMinPositive);
-            LogRMax := Log10(RMax);
-          end
-          else
-          begin
-            LogRMin := 0.;
-            LogRMax := 0.;
-          end;
+          CalculateMinMax(DataSet, MinMaxInitialized, LayerCount, RowCount,
+            ColCount, LogRMin, LogRMax, RMinPositive, RMin, RMax, IMin, IMax,
+            BMin, BMax, SMin, SMax, StringValues);
+
+//          SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
+//            IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+//            LayerCount, RowCount, ColCount);
+//          if DataSet.Limits.LogTransform and (RMinPositive > 0) then
+//          begin
+//            LogRMin := Log10(RMinPositive);
+//            LogRMax := Log10(RMax);
+//          end
+//          else
+//          begin
+//            LogRMin := 0.;
+//            LogRMax := 0.;
+//          end;
           if RowCount > 1 then
           begin
             RowIndex := SelectedRow;
@@ -5457,24 +6009,28 @@ begin
           DataSet := SideDataSet;
           if DataSet = nil then
             Exit;
+          DataSet.Initialize;
           GetCounts(DataSet, LayerCount, RowCount, ColCount);
           if (LayerCount = 0) or (RowCount = 0) or (ColCount = 0) then
           begin
             Exit;
           end;
-          SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
-            IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
-            LayerCount, RowCount, ColCount);
-          if DataSet.Limits.LogTransform and (RMinPositive > 0) then
-          begin
-            LogRMin := Log10(RMinPositive);
-            LogRMax := Log10(RMax);
-          end
-          else
-          begin
-            LogRMin := 0.;
-            LogRMax := 0.;
-          end;
+          CalculateMinMax(DataSet, MinMaxInitialized, LayerCount, RowCount,
+            ColCount, LogRMin, LogRMax, RMinPositive, RMin, RMax, IMin, IMax,
+            BMin, BMax, SMin, SMax, StringValues);
+//          SetMinMax(DataSet, MinMaxInitialized, RMin, RMax, RMinPositive,
+//            IMin, IMax, BMin, BMax, SMin, SMax, StringValues,
+//            LayerCount, RowCount, ColCount);
+//          if DataSet.Limits.LogTransform and (RMinPositive > 0) then
+//          begin
+//            LogRMin := Log10(RMinPositive);
+//            LogRMax := Log10(RMax);
+//          end
+//          else
+//          begin
+//            LogRMin := 0.;
+//            LogRMax := 0.;
+//          end;
           if ColCount > 1 then
           begin
             ColIndex := SelectedColumn;
@@ -5696,6 +6252,18 @@ begin
   finally
     StringValues.Free;
   end;
+  if FModel is TPhastModel then
+  begin
+    LocalPhastModel := TPhastModel(FModel);
+    if LocalPhastModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+        ChildModel.Grid.UpdateCellColors(ViewDirection);
+      end;
+    end;
+  end;
 end;
 
 function TCustomGrid.ValueOK(DataSet: TDataArray; const Layer, Row, Col: integer): boolean;
@@ -5706,9 +6274,11 @@ end;
 function TCustomGrid.IsElementActive(const Layer, Row, Col: integer): boolean;
 var
   ActiveDataSet: TDataArray;
+  LocalModel: TCustomModel;
 begin
   result := True;
-  ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+  LocalModel := Model as TCustomModel;
+  ActiveDataSet := LocalModel.DataArrayManager.GetDataSetByName(rsActive);
   if ActiveDataSet <> nil then
   begin
     ActiveDataSet.Initialize;
@@ -5733,7 +6303,7 @@ begin
   result := True;
   if DataSet.Limits.ActiveOnly then
   begin
-    ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+    ActiveDataSet := (FModel as TCustomModel).DataArrayManager.GetDataSetByName(rsActive);
     if ActiveDataSet <> nil then
     begin
       result := False;
@@ -6870,7 +7440,8 @@ end;
 
 function TCustomGrid.CanDraw3D: boolean;
 begin
-  result := FDraw3DAllowed and (ColumnCount >= 1) and (RowCount >= 1) and (LayerCount >= 1)
+  result := FDraw3DAllowed and (ColumnCount >= 1) and (RowCount >= 1)
+    and (LayerCount >= 1)
     and (FLayerUpdate = 0) and (FColumnUpdate = 0) and (FGridUpdate = 0)
     and (FRowUpdate = 0) and frmGoPhast.CanDraw;
 end;
@@ -6920,10 +7491,16 @@ begin
   FRecordedFrontGrid := False;
   FRecordedTopGrid := False;
 
+  if FModel is TPhastModel then
+  begin
+    TPhastModel(FModel).InvalidateMapping;
+  end;
+
   if frmGoPhast.frame3DView.glWidModelView <> nil then
   begin
     FNeedToRedraw3d := True;
   end;
+  frmGoPhast.EnableVisualization;
   ViewsChanged;
 end;
 
@@ -7176,6 +7753,7 @@ procedure TCustomGrid.DrawSideContours(const ZoomBox: TQRbwZoomBox2;
   const BitMap: TBitmap32);
 var
   Contourer: TMultipleContourCreator;
+  LocalModel: TCustomModel;
 begin
   if (ColumnCount >= 0) and (RowCount > 0) and (LayerCount > 0) then
   begin
@@ -7183,15 +7761,16 @@ begin
     begin
       Contourer := TMultipleContourCreator.Create;
       try
+        LocalModel := Model as TCustomModel;
         Contourer.DataSet := SideContourDataSet;
-        Contourer.ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+        Contourer.ActiveDataSet := LocalModel.DataArrayManager.GetDataSetByName(rsActive);
         Contourer.BitMap := BitMap;
         Contourer.ViewDirection := vdSide;
         Contourer.Grid := ContourGrid(SideContourDataSet.EvaluatedAt,
-          frmGoPhast.PhastModel.ModelSelection, vdSide, SelectedColumn);
+          LocalModel.ModelSelection, vdSide, SelectedColumn);
         Contourer.ZoomBox := ZoomBox;
         Contourer.DrawContours(SelectedColumn,
-          frmGoPhast.PhastModel.ContourColorParameters);
+          frmGoPhast.PhastModel.ContourColorParameters, vdSide);
       finally
         Contourer.Free;
       end;
@@ -7613,6 +8192,7 @@ procedure TCustomGrid.DrawTopContours(const ZoomBox: TQRbwZoomBox2;
   const BitMap: TBitmap32);
 var
   Contourer: TMultipleContourCreator;
+  LocalModel: TCustomModel;
 begin
   if (ColumnCount >= 0) and (RowCount > 0) and (LayerCount > 0) then
   begin
@@ -7621,15 +8201,16 @@ begin
       Contourer := TMultipleContourCreator.Create;
       try
         Contourer.DataSet := TopContourDataSet;
+        LocalModel := FModel as TCustomModel;
         Contourer.ActiveDataSet :=
-          frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+          LocalModel.DataArrayManager.GetDataSetByName(rsActive);
         Contourer.BitMap := BitMap;
         Contourer.ViewDirection := vdTop;
         Contourer.Grid := ContourGrid(TopContourDataSet.EvaluatedAt,
-          frmGoPhast.PhastModel.ModelSelection, vdTop, SelectedLayer);
+          LocalModel.ModelSelection, vdTop, SelectedLayer);
         Contourer.ZoomBox := ZoomBox;
         Contourer.DrawContours(SelectedLayer,
-          frmGoPhast.PhastModel.ContourColorParameters);
+          frmGoPhast.PhastModel.ContourColorParameters, vdTop);
       finally
         Contourer.Free;
       end;
@@ -7903,6 +8484,7 @@ procedure TCustomGrid.DrawFrontContours(const ZoomBox: TQRbwZoomBox2;
       const BitMap: TBitmap32);
 var
   Contourer: TMultipleContourCreator;
+  LocalModel: TCustomModel;
 begin
   if (ColumnCount >= 0) and (RowCount > 0) and (LayerCount > 0) then
   begin
@@ -7910,15 +8492,16 @@ begin
     begin
       Contourer := TMultipleContourCreator.Create;
       try
+        LocalModel := Model as TCustomModel;
         Contourer.DataSet := FrontContourDataSet;
-        Contourer.ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+        Contourer.ActiveDataSet := LocalModel.DataArrayManager.GetDataSetByName(rsActive);
         Contourer.BitMap := BitMap;
         Contourer.ViewDirection := vdFront;
         Contourer.Grid := ContourGrid(FrontContourDataSet.EvaluatedAt,
-          frmGoPhast.PhastModel.ModelSelection, vdFront, SelectedRow);
+          LocalModel.ModelSelection, vdFront, SelectedRow);
         Contourer.ZoomBox := ZoomBox;
         Contourer.DrawContours(SelectedRow,
-          frmGoPhast.PhastModel.ContourColorParameters);
+          frmGoPhast.PhastModel.ContourColorParameters, vdFront);
       finally
         Contourer.Free;
       end;

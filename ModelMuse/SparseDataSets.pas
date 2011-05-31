@@ -147,6 +147,26 @@ type
       write SetItems; default;
   end;
 
+  T2DSparseBooleanArray = class(T2DSparsePointerArray)
+    // The address of @name is stored to indicate a value that is @False.
+    FFalse: boolean;
+    // The address of @name is stored to indicate a value that is @True.
+    FTrue: boolean;
+    // See @link(Items).
+    function GetItems(const Row, Col: Integer): boolean;
+    // See @link(Items).
+    procedure SetItems(const Row, Col: Integer; const Value: boolean);
+  public
+    // @name creates an instance of @classname.
+    constructor Create(Quantum: TSPAQuantum);
+    // @name provides access to the boolean stored at location
+    // Layer, Row, Col. Before reading @name, read
+    // @link(T3DSparsePointerArray.IsValue) to
+    // be sure that a boolean is stored at Layer, Row, Col.
+    property Items[const Row, Col: Integer]: boolean
+      read GetItems write SetItems; default;
+  end;
+
   {@abstract(@name acts like a 3D array of booleans.  It provides
   constant time access to its elements through the its
   @link(T3DSparseBooleanArray.Items) property.  However, when many of the
@@ -221,6 +241,7 @@ type
     procedure Restore;
     procedure ReadData(DecompressionStream: TStream);
   public
+    procedure RemoveValue(const Layer, Row, Col: Integer);
     // @name removes all the members of @classname.
     procedure Clear; override;
     // @name creates an instance of @classname.
@@ -598,6 +619,7 @@ procedure T3DSparseRealArray.Cache;
 var
   Compressor: TCompressionStream;
   MemStream: TMemoryStream;
+  TempStream: TMemoryStream;
 begin
   if not FCached then
   begin
@@ -608,11 +630,14 @@ begin
     MemStream := TMemoryStream.Create;
     try
       Compressor := TCompressionStream.Create(clDefault, MemStream);
+      TempStream := TMemoryStream.Create;
       try
         MemStream.Position := 0;
-        StoreData(Compressor);
+        StoreData(TempStream);
+        TempStream.SaveToStream(Compressor);
       finally
         Compressor.Free;
+        TempStream.Free;
       end;
       MemStream.Position := 0;
       ZipAFile(FTempFileName, MemStream);
@@ -686,6 +711,11 @@ begin
       Items[LayerIndex, RowIndex, ColIndex] := AValue;
     end;
   end;
+end;
+
+procedure T3DSparseRealArray.RemoveValue(const Layer, Row, Col: Integer);
+begin
+  inherited Items[Layer, Row, Col] := nil;
 end;
 
 procedure T3DSparseRealArray.Restore;
@@ -873,6 +903,39 @@ begin
   begin
     FValues[Pred(longint(DataPtr))] := Value
   end;
+end;
+
+{ T2DSparseBooleanArray }
+
+constructor T2DSparseBooleanArray.Create(Quantum: TSPAQuantum);
+begin
+  inherited;
+  FTrue := True;
+end;
+
+function T2DSparseBooleanArray.GetItems(const Row, Col: Integer): boolean;
+var
+  resultPtr: Pointer;
+begin
+  resultPtr := inherited Items[Row, Col];
+  Assert(resultPtr <> nil);
+  result := PBoolean(resultPtr)^
+end;
+
+procedure T2DSparseBooleanArray.SetItems(const Row, Col: Integer;
+  const Value: boolean);
+var
+  DataPtr: Pointer;
+begin
+  if Value then
+  begin
+    DataPtr := @FTrue;
+  end
+  else
+  begin
+    DataPtr := @FFalse;
+  end;
+  inherited Items[Row, Col] := DataPtr;
 end;
 
 initialization

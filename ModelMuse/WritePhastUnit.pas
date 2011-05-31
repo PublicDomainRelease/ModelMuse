@@ -1658,9 +1658,11 @@ LayerToUse := frmGoPhast.Model.PhastGrid.LayerCount. }
       AScreenObject := RiverWriter.ScreenObjectList[Index];
       SegIndex := 0;
       SetDefaults := True;
-      for SegmentIndex := 0 to AScreenObject.Segments.Count - 1 do
+      for SegmentIndex := 0 to AScreenObject.Segments[
+        frmGoPhast.PhastModel].Count - 1 do
       begin
-        CellSegment := AScreenObject.Segments[SegmentIndex];
+        CellSegment := AScreenObject.Segments[
+          frmGoPhast.PhastModel][SegmentIndex];
         if CellSegment.Layer <> LayerToUse then
         begin
           Continue;
@@ -1803,9 +1805,11 @@ begin
   for Index := 0 to WellWriter.ScreenObjectList.Count - 1 do
   begin
     AScreenObject := WellWriter.ScreenObjectList[Index];
-    for SegmentIndex := 0 to AScreenObject.Segments.Count - 1 do
+    for SegmentIndex := 0 to AScreenObject.Segments[
+      frmGoPhast.PhastModel].Count - 1 do
     begin
-      CellSegment := AScreenObject.Segments[SegmentIndex];
+      CellSegment := AScreenObject.Segments[
+        frmGoPhast.PhastModel][SegmentIndex];
       if CellSegment.Layer <> 0 then
       begin
         Continue;

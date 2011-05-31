@@ -23,7 +23,7 @@ type
     procedure SetItem(Index: integer; const Value: TUseLayerNumberItem);
   public
     function Add: TUseLayerNumberItem;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TUseLayerNumberItem read GetItem
       write SetItem; default;
     function GetItemByLayerNumber(LayerNumber: integer): TUseLayerNumberItem;
@@ -106,7 +106,7 @@ type
     procedure SetItem(Index: integer; const Value: TSubNoDelayBedLayerItem);
   public
     function Add: TSubNoDelayBedLayerItem;
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TSubNoDelayBedLayerItem read GetItem
       write SetItem; default;
     procedure Loaded;
@@ -178,7 +178,7 @@ type
     procedure SetItem(Index: integer; const Value: TSubDelayBedLayerItem);
   public
     function Add: TSubDelayBedLayerItem;
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TSubDelayBedLayerItem read GetItem
       write SetItem; default;
     procedure Loaded;
@@ -247,7 +247,7 @@ type
     procedure SetItem(Index: integer; const Value: TSwtWaterTableItem);
   public
     function Add: TSwtWaterTableItem;
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TSwtWaterTableItem read GetItem
       write SetItem; default;
     procedure Loaded;
@@ -585,7 +585,7 @@ begin
   result := inherited Add as TSubDelayBedLayerItem;
 end;
 
-constructor TSubDelayBedLayers.Create(Model: TObject);
+constructor TSubDelayBedLayers.Create(Model: TBaseModel);
 begin
   inherited Create(TSubDelayBedLayerItem, Model);
 end;
@@ -618,7 +618,7 @@ begin
   result := inherited Add as TSubNoDelayBedLayerItem;
 end;
 
-constructor TSubNoDelayBedLayers.Create(Model: TObject);
+constructor TSubNoDelayBedLayers.Create(Model: TBaseModel);
 begin
   inherited Create(TSubNoDelayBedLayerItem, Model);
 end;
@@ -672,7 +672,7 @@ begin
   result := inherited Add as TUseLayerNumberItem;
 end;
 
-constructor TUseLayersCollection.Create(Model: TObject);
+constructor TUseLayersCollection.Create(Model: TBaseModel);
 begin
   inherited Create(TUseLayerNumberItem, Model);
 end;
@@ -1114,7 +1114,7 @@ begin
   result := inherited Add as TSwtWaterTableItem
 end;
 
-constructor TWaterTableLayers.Create(Model: TObject);
+constructor TWaterTableLayers.Create(Model: TBaseModel);
 begin
   inherited Create(TSwtWaterTableItem, Model);
 end;

@@ -13,8 +13,8 @@ uses
   Classes, Graphics, Controls, Dialogs, StdCtrls, Grids, HtmlHelpViewer,
   ImageDLLLoader, ICOLoader, JPEGLoader, PNGLoader, HIPSLoader, BMPLoader,
   PCXLoader, WMFLoader, LinarBitmap, FileUtils, ehshelprouter, JvSpin,
-  VirtualTrees, DataSetUnit, ClassificationUnit, TntExDropDownVirtualStringTree,
-  GLWin32Viewer;
+  VirtualTrees, DataSetUnit, ClassificationUnit, GLWin32Viewer,
+  RbwStringTreeCombo;
 
 type
   // @name is used in @link(TfrmCustomGoPhast.AdjustFormPosition)
@@ -42,6 +42,7 @@ type
     function CallHelpRouter: boolean;
     procedure DestroyGLSceneViewers(ParentComponent: TComponent);
     procedure EnsureFormVisible;
+    procedure FixGridEditorPosition(AComponent: TComponent);
   protected
     procedure UpdateStringTreeViewCheckedState(TreeView: TVirtualStringTree;
       BaseNode: PVirtualNode; NewState: TCheckState);
@@ -63,18 +64,26 @@ type
     // @link(GlobalFont) and @link(GlobalColor) should be set in the
     // Applications OnCreate event handler.
     procedure SetAppearance;
-    procedure FillTreeComboWithBoundaryConditions(SelectedDataArray: TDataArray;
+    procedure FillVirtStrTreeWithBoundaryConditions(
+      SelectedDataArray: TDataArray;
       SelectedTimeList: TCustomTimeList;
       SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
       LocalBoundaryClassifications: TList; EdgeEdits: TList;
-      VirtTreeCombo: TTntExDropDownVirtualStringTree);
+      ATree: TVirtualStringTree);
+//    procedure FillTreeComboWithBoundaryConditions(SelectedDataArray: TDataArray;
+//      SelectedTimeList: TCustomTimeList;
+//      SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
+//      LocalBoundaryClassifications: TList; EdgeEdits: TList;
+//      VirtTreeCombo: TTntExDropDownVirtualStringTree);
   // @name changes the color of all TSpinEdits on the form depending
   // on whether or not the TSpinEdit is enabled or not.
   //    procedure SetSpinColor;
 
   //
+//    procedure UpdateTreeComboText(SelectedNode: PVirtualNode;
+//      TreeCombo: TTntExDropDownVirtualStringTree); overload;
     procedure UpdateTreeComboText(SelectedNode: PVirtualNode;
-      TreeCombo: TTntExDropDownVirtualStringTree);
+      TreeCombo: TRbwStringTreeCombo);
   public
     procedure MouseClick;
     procedure UpdateSubComponents(AComponent: TComponent);
@@ -127,9 +136,15 @@ procedure FillDataSetLists(HufDataArrays: TClassificationList;
 procedure GetNodeCaption(Node: PVirtualNode; var CellText: WideString;
   Sender: TBaseVirtualTree);
 
+//procedure SelectOnlyLeaves(Node: PVirtualNode;
+//  TreeCombo: TTntExDropDownVirtualStringTree; Sender: TBaseVirtualTree;
+//  var SelectedNode: PVirtualNode); overload;
+
 procedure SelectOnlyLeaves(Node: PVirtualNode;
-  TreeCombo: TTntExDropDownVirtualStringTree; Sender: TBaseVirtualTree;
-  var SelectedNode: PVirtualNode);
+  TreeCombo: TRbwStringTreeCombo; Sender: TBaseVirtualTree;
+  var SelectedNode: PVirtualNode); 
+
+procedure FillComboWithModelNames(Combo: TComboBox);
 
 var
   GlobalFont: TFont = nil;
@@ -140,7 +155,7 @@ var
 implementation
 
 uses SubscriptionUnit, GoPhastTypes, ModflowPackagesUnit,
-  ModflowPackageSelectionUnit, frmGridColorUnit, frmGoPhastUnit, PhastModelUnit;
+  frmGridColorUnit, frmGoPhastUnit, PhastModelUnit, ModflowPackageSelectionUnit;
 
 {$R *.dfm}
 
@@ -174,7 +189,7 @@ var
   Index: Integer;
   AComponent: TComponent;
 begin
-//   Exit;
+   Exit;
   // It seems that some TGLSceneViewer's are causing errors when
   // the form is being destroyed.  This is an attempt
   // to get around that.
@@ -258,6 +273,197 @@ begin
     finally
       Free;
     end;
+  end;
+end;
+
+procedure TfrmCustomGoPhast.FixGridEditorPosition(AComponent: TComponent);
+var
+  Grid: TCustomRBWDataGrid;
+  AnotherComponent: TComponent;
+  ComponentIndex: integer;
+begin
+  for ComponentIndex := 0 to AComponent.ComponentCount - 1 do
+  begin
+    AnotherComponent := AComponent.Components[ComponentIndex];
+    if AnotherComponent is TCustomRBWDataGrid then
+    begin
+      Grid := TCustomRBWDataGrid(AnotherComponent);
+      if goAlwaysShowEditor in Grid.Options then
+      begin
+        Grid.Options := Grid.Options - [goAlwaysShowEditor];
+        Grid.Options := Grid.Options + [goAlwaysShowEditor];
+      end;
+    end
+    else
+    begin
+      FixGridEditorPosition(AnotherComponent);
+    end;
+  end;
+end;
+
+procedure TfrmCustomGoPhast.FillVirtStrTreeWithBoundaryConditions(
+  SelectedDataArray: TDataArray;
+  SelectedTimeList: TCustomTimeList;
+  SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
+  LocalBoundaryClassifications: TList; EdgeEdits: TList;
+  ATree: TVirtualStringTree);
+var
+  List: TStringList;
+  ClassificationPosition: Integer;
+  DataSet: TDataArray;
+  Index: Integer;
+  DataArrayManager: TDataArrayManager;
+  Classifications: TStringList;
+  NodeData: PClassificationNodeData;
+  RootNode: PVirtualNode;
+  DummyRootClassification: TDummyClassification;
+  ParentNode: PVirtualNode;
+  AnObject: TObject;
+  VirtualNode: PVirtualNode;
+  BounddaryClassification: TBoundaryClassification;
+  BoundaryIndex: Integer;
+  VirtualClassificationNode: PVirtualNode;
+  DummyClassification: TDummyClassification;
+  TimeList: TCustomTimeList;
+  EdgeEdit: TEdgeDisplayEdit;
+  UsedByModel: Boolean;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildTimeList: TCustomTimeList;
+begin
+  LocalBoundaryClassifications.Clear;
+  DummyRootClassification := TDummyClassification.Create(StrBoundaryConditions);
+  LocalBoundaryClassifications.Add(DummyRootClassification);
+  RootNode := ATree.AddChild(nil);
+  NodeData := ATree.GetNodeData(RootNode);
+  NodeData.ClassificationObject := DummyRootClassification;
+  Classifications := TStringList.Create;
+  try
+    if frmGoPhast.PhastModel.ModelSelection = msPhast then
+    begin
+      DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+      for Index := 0 to DataArrayManager.BoundaryDataSetCount - 1 do
+      begin
+        DataSet := DataArrayManager.BoundaryDataSets[Index];
+        ClassificationPosition := Classifications.IndexOf(
+          DataSet.Classification);
+        if ClassificationPosition < 0 then
+        begin
+          List := TStringList.Create;
+          Classifications.AddObject(DataSet.Classification, List);
+        end
+        else
+        begin
+          List := Classifications.Objects[ClassificationPosition]
+            as TStringList;
+        end;
+        List.AddObject(DataSet.Name, DataSet);
+      end;
+    end;
+    EdgeEdits.Clear;
+    if (frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR])
+      and frmGoPhast.PhastModel.HfbIsSelected then
+    begin
+      List := TStringList.Create;
+      Classifications.AddObject('MODFLOW Horizontal Flow Barrier', List);
+      for Index := 0 to frmGoPhast.PhastModel.
+        HfbDisplayer.RealValueTypeCount - 1 do
+      begin
+        EdgeEdit := TEdgeDisplayEdit.Create;
+        EdgeEdits.Add(EdgeEdit);
+        EdgeEdit.DataIndex := Index;
+        EdgeEdit.Edge := frmGoPhast.PhastModel.HfbDisplayer;
+        List.AddObject(EdgeEdit.Edge.RealDescription[Index], EdgeEdit);
+      end;
+    end;
+    for Index := 0 to frmGoPhast.PhastModel.TimeListCount - 1 do
+    begin
+      TimeList := frmGoPhast.PhastModel.TimeLists[Index];
+      UsedByModel := TimeList.UsedByModel;
+      if not UsedByModel and frmGoPhast.PhastModel.LgrUsed then
+      begin
+        for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+        begin
+          ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+          if ChildModel <> nil then
+          begin
+            ChildTimeList := ChildModel.GetTimeListByName(TimeList.Name);
+            if (ChildTimeList <> nil) and ChildTimeList.UsedByModel then
+            begin
+              UsedByModel := True;
+              break;
+            end;
+          end;
+        end;
+      end;
+      if UsedByModel then
+      begin
+        ClassificationPosition := Classifications.IndexOf(
+          TimeList.Classification);
+        if ClassificationPosition < 0 then
+        begin
+          List := TStringList.Create;
+          Classifications.AddObject(TimeList.Classification, List);
+        end
+        else
+        begin
+          List := Classifications.Objects[ClassificationPosition]
+            as TStringList;
+        end;
+        List.AddObject(TimeList.Name, TimeList);
+      end;
+    end;
+    Classifications.Sort;
+    for Index := 0 to Classifications.Count - 1 do
+    begin
+      DummyClassification := TDummyClassification.Create(Classifications[Index]);
+      LocalBoundaryClassifications.Add(DummyClassification);
+      VirtualClassificationNode := ATree.AddChild(RootNode);
+      NodeData := ATree.GetNodeData(VirtualClassificationNode);
+      NodeData.ClassificationObject := DummyClassification;
+      List := Classifications.Objects[Index] as TStringList;
+      List.Sort;
+      for BoundaryIndex := 0 to List.Count - 1 do
+      begin
+        BounddaryClassification := TBoundaryClassification.Create(
+          List[BoundaryIndex], List.Objects[BoundaryIndex]);
+        LocalBoundaryClassifications.Add(BounddaryClassification);
+        VirtualNode := ATree.AddChild(VirtualClassificationNode);
+        NodeData := ATree.GetNodeData(VirtualNode);
+        NodeData.ClassificationObject := BounddaryClassification;
+        AnObject := BounddaryClassification.ClassifiedObject;
+        if AnObject is TEdgeDisplayEdit then
+        begin
+          EdgeEdit := TEdgeDisplayEdit(AnObject);
+          ATree.Selected[VirtualNode] := (EdgeEdit.Edge = SelectedEdgeDisplay)
+            and (EdgeEdit.DataIndex = SelectedEdgeDisplay.DataToPlot);
+        end
+        else
+        begin
+          ATree.Selected[VirtualNode] := (AnObject = SelectedDataArray)
+            or (AnObject = SelectedTimeList);
+        end;
+        if ATree.Selected[VirtualNode] then
+        begin
+          ParentNode := VirtualNode.Parent;
+          while ParentNode <> nil do
+          begin
+            ATree.Expanded[ParentNode] := True;
+            if ParentNode = RootNode then
+            begin
+              break;
+            end;
+            ParentNode := ParentNode.Parent;
+          end;
+        end;
+      end;
+    end;
+  finally
+    for Index := 0 to Classifications.Count - 1 do
+    begin
+      Classifications.Objects[Index].Free;
+    end;
+    Classifications.Free;
   end;
 end;
 
@@ -371,9 +577,9 @@ begin
       AStringGrid := TStringGrid(Component);
       AStringGrid.Font := Font;
       // This is a work-around for a bug in CLX.
-      TStringGridCrack(AStringGrid).ShowEditor;
-      AStringGrid.Font.Size := AStringGrid.Font.Size + 1;
-      AStringGrid.Font.Size := AStringGrid.Font.Size - 1;
+//      TStringGridCrack(AStringGrid).ShowEditor;
+//      AStringGrid.Font.Size := AStringGrid.Font.Size + 1;
+//      AStringGrid.Font.Size := AStringGrid.Font.Size - 1;
       // Make sure the rows are tall enough to show the text.
       RowHeight := AStringGrid.Canvas.TextHeight('0');
       if RowHeight > AStringGrid.DefaultRowHeight then
@@ -407,6 +613,25 @@ begin
   end;
 end;
 
+procedure TfrmCustomGoPhast.UpdateTreeComboText(SelectedNode: PVirtualNode;
+  TreeCombo: TRbwStringTreeCombo);
+var
+  CellText: WideString;
+begin
+  if TreeCombo.Tree.SelectedCount = 0 then
+  begin
+    if TreeCombo.Text <> 'none' then
+    begin
+      TreeCombo.Text := 'none';
+    end;
+  end
+  else
+  begin
+    GetNodeCaption(SelectedNode, CellText, TreeCombo.Tree);
+    TreeCombo.Text := CellText;
+  end;
+end;
+
 procedure TfrmCustomGoPhast.SetAppearance;
 var
   AComponent: TComponent;
@@ -424,6 +649,7 @@ end;
 procedure TfrmCustomGoPhast.FormShow(Sender: TObject);
 begin
   EnsureFormVisible;
+  FixGridEditorPosition(Self);
 end;
 
 procedure TfrmCustomGoPhast.MouseClick;
@@ -901,28 +1127,52 @@ begin
   end;
 end;
 
-procedure TfrmCustomGoPhast.UpdateTreeComboText(SelectedNode: PVirtualNode;
-  TreeCombo: TTntExDropDownVirtualStringTree);
-var
-  CellText: WideString;
-begin
-  if TreeCombo.Tree.SelectedCount = 0 then
-  begin
-    if TreeCombo.Text <> '' then
-    begin
-      TreeCombo.Text := '';
-    end;
-  end
-  else
-  begin
-    GetNodeCaption(SelectedNode, CellText, TreeCombo.Tree);
-    TreeCombo.Text := CellText;
-  end;
-end;
+//procedure TfrmCustomGoPhast.UpdateTreeComboText(SelectedNode: PVirtualNode;
+//  TreeCombo: TTntExDropDownVirtualStringTree);
+//var
+//  CellText: WideString;
+//begin
+//  if TreeCombo.Tree.SelectedCount = 0 then
+//  begin
+//    if TreeCombo.Text <> 'none' then
+//    begin
+//      TreeCombo.Text := 'none';
+//    end;
+//  end
+//  else
+//  begin
+//    GetNodeCaption(SelectedNode, CellText, TreeCombo.Tree);
+//    TreeCombo.Text := CellText;
+//  end;
+//end;
+
+//procedure SelectOnlyLeaves(Node: PVirtualNode;
+//  TreeCombo: TTntExDropDownVirtualStringTree;
+//  Sender: TBaseVirtualTree; var SelectedNode: PVirtualNode);
+//var
+//  CellText: WideString;
+//begin
+//  if Sender.Selected[Node] and Sender.HasChildren[Node] then
+//  begin
+//    Sender.Selected[Node] := False;
+//    Sender.FocusedNode := nil;
+//    TreeCombo.Text := '';
+//  end;
+//  if Sender.Selected[Node] then
+//  begin
+//    SelectedNode := Node;
+//    GetNodeCaption(Node, CellText, Sender);
+//    TreeCombo.Text := CellText;
+//  end
+//  else
+//  begin
+//    SelectedNode := nil;
+//  end;
+//end;
 
 procedure SelectOnlyLeaves(Node: PVirtualNode;
-  TreeCombo: TTntExDropDownVirtualStringTree;
-  Sender: TBaseVirtualTree; var SelectedNode: PVirtualNode);
+  TreeCombo: TRbwStringTreeCombo; Sender: TBaseVirtualTree;
+  var SelectedNode: PVirtualNode); overload;
 var
   CellText: WideString;
 begin
@@ -944,153 +1194,36 @@ begin
   end;
 end;
 
-procedure TfrmCustomGoPhast.FillTreeComboWithBoundaryConditions(
-  SelectedDataArray: TDataArray;
-  SelectedTimeList: TCustomTimeList;
-  SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
-  LocalBoundaryClassifications: TList; EdgeEdits: TList;
-  VirtTreeCombo: TTntExDropDownVirtualStringTree);
-var
-  Index: Integer;
-  DataSet: TDataArray;
-  ClassificationPosition: Integer;
-  List: TStringList;
-  EdgeEdit: TEdgeDisplayEdit;
-  TimeList: TCustomTimeList;
-  DummyClassification: TDummyClassification;
-  DummyRootClassification: TDummyClassification;
-  RootNode: PVirtualNode;
-  NodeData: PClassificationNodeData;
-  Classifications: TStringList;
-  VirtualNode: PVirtualNode;
-  AnObject: TObject;
-  ParentNode: PVirtualNode;
-  VirtualClassificationNode: PVirtualNode;
-  BoundaryIndex: Integer;
-  BounddaryClassification: TBoundaryClassification;
-  DataArrayManager: TDataArrayManager;
-begin
-  LocalBoundaryClassifications.Clear;
+//procedure TfrmCustomGoPhast.FillTreeComboWithBoundaryConditions(
+//  SelectedDataArray: TDataArray;
+//  SelectedTimeList: TCustomTimeList;
+//  SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
+//  LocalBoundaryClassifications: TList; EdgeEdits: TList;
+//  VirtTreeCombo: TTntExDropDownVirtualStringTree);
+//begin
+//  FillVirtStrTreeWithBoundaryConditions(SelectedDataArray, SelectedTimeList,
+//    SelectedEdgeDisplay, LocalBoundaryClassifications, EdgeEdits,
+//    VirtTreeCombo.Tree);
+//end;
 
-  DummyRootClassification := TDummyClassification.Create(StrBoundaryConditions);
-  LocalBoundaryClassifications.Add(DummyRootClassification);
-  RootNode := VirtTreeCombo.Tree.AddChild(nil);
-  NodeData := VirtTreeCombo.Tree.GetNodeData(RootNode);
-  NodeData.ClassificationObject := DummyRootClassification;
-  Classifications := TStringList.Create;
-  try
-    if frmGoPhast.PhastModel.ModelSelection = msPhast then
+procedure FillComboWithModelNames(Combo: TComboBox);
+var
+  ChildModel: TChildModel;
+  Index: Integer;
+begin
+  Combo.Clear;
+  Combo.AddItem(StrParentModel, frmGoPhast.PhastModel);
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for Index := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
     begin
-      DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
-      for Index := 0 to DataArrayManager.BoundaryDataSetCount - 1 do
-      begin
-        DataSet := DataArrayManager.BoundaryDataSets[Index];
-        ClassificationPosition :=
-          Classifications.IndexOf(DataSet.Classification);
-        if ClassificationPosition < 0 then
-        begin
-          List := TStringList.Create;
-          Classifications.AddObject(DataSet.Classification, List);
-        end
-        else
-        begin
-          List := Classifications.Objects[ClassificationPosition]
-            as TStringList;
-        end;
-        List.AddObject(DataSet.Name, DataSet);
-      end;
+      ChildModel := frmGoPhast.PhastModel.ChildModels[Index].ChildModel;
+      Combo.AddItem(ChildModel.ModelName, ChildModel);
     end;
-    EdgeEdits.Clear;
-    if (frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR])
-      and frmGoPhast.PhastModel.ModflowPackages.HfbPackage.IsSelected then
-    begin
-      List := TStringList.Create;
-      Classifications.AddObject('MODFLOW Horizontal Flow Barrier', List);
-      for Index := 0 to frmGoPhast.PhastModel.
-        HfbDisplayer.RealValueTypeCount - 1 do
-      begin
-        EdgeEdit := TEdgeDisplayEdit.Create;
-        EdgeEdits.Add(EdgeEdit);
-        EdgeEdit.DataIndex := Index;
-        EdgeEdit.Edge := frmGoPhast.PhastModel.HfbDisplayer;
-        List.AddObject(EdgeEdit.Edge.RealDescription[Index], EdgeEdit);
-      end;
-    end;
-    for Index := 0 to frmGoPhast.PhastModel.TimeListCount - 1 do
-    begin
-      TimeList := frmGoPhast.PhastModel.TimeLists[Index];
-      if TimeList.UsedByModel then
-      begin
-        ClassificationPosition :=
-          Classifications.IndexOf(TimeList.Classification);
-        if ClassificationPosition < 0 then
-        begin
-          List := TStringList.Create;
-          Classifications.AddObject(TimeList.Classification, List);
-        end
-        else
-        begin
-          List := Classifications.Objects[ClassificationPosition]
-            as TStringList;
-        end;
-        List.AddObject(TimeList.Name, TimeList);
-      end;
-    end;
-    Classifications.Sort;
-    for Index := 0 to Classifications.Count - 1 do
-    begin
-      DummyClassification := TDummyClassification.
-        Create(Classifications[Index]);
-      LocalBoundaryClassifications.Add(DummyClassification);
-      VirtualClassificationNode := VirtTreeCombo.Tree.AddChild(RootNode);
-      NodeData := VirtTreeCombo.Tree.GetNodeData(VirtualClassificationNode);
-      NodeData.ClassificationObject := DummyClassification;
-      List := Classifications.Objects[Index] as TStringList;
-      List.Sort;
-      for BoundaryIndex := 0 to List.Count - 1 do
-      begin
-        BounddaryClassification := TBoundaryClassification.
-          Create(List[BoundaryIndex], List.Objects[BoundaryIndex]);
-        LocalBoundaryClassifications.Add(BounddaryClassification);
-        VirtualNode := VirtTreeCombo.Tree.AddChild(VirtualClassificationNode);
-        NodeData := VirtTreeCombo.Tree.GetNodeData(VirtualNode);
-        NodeData.ClassificationObject := BounddaryClassification;
-        AnObject := BounddaryClassification.ClassifiedObject;
-        if AnObject is TEdgeDisplayEdit then
-        begin
-          EdgeEdit := TEdgeDisplayEdit(AnObject);
-          VirtTreeCombo.Tree.Selected[VirtualNode] :=
-            (EdgeEdit.Edge = SelectedEdgeDisplay)
-            and (EdgeEdit.DataIndex = SelectedEdgeDisplay.DataToPlot);
-        end
-        else
-        begin
-          VirtTreeCombo.Tree.Selected[VirtualNode] :=
-            (AnObject = SelectedDataArray) or (AnObject = SelectedTimeList);
-        end;
-        if VirtTreeCombo.Tree.Selected[VirtualNode] then
-        begin
-          ParentNode := VirtualNode.Parent;
-          while ParentNode <> nil do
-          begin
-            VirtTreeCombo.Tree.Expanded[ParentNode] := True;
-            if ParentNode = RootNode then
-            begin
-              break;
-            end;
-            ParentNode := ParentNode.Parent;
-          end;
-        end;
-      end;
-    end;
-  finally
-    for Index := 0 to Classifications.Count - 1 do
-    begin
-      Classifications.Objects[Index].Free;
-    end;
-    Classifications.Free;
   end;
+  Combo.ItemIndex := 0;
 end;
+
 
 initialization
   HelpRouter := THelpRouter.Create(Application);

@@ -42,6 +42,7 @@ object frameFlowTable: TframeFlowTable
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
     TabOrder = 1
     OnSetEditText = dgSfrTableSetEditText
+    AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = True

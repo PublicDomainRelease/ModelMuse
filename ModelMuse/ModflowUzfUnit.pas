@@ -5,7 +5,7 @@ interface
 uses Windows, ZLib, SysUtils, Classes, Contnrs, RealListUnit,
   OrderedCollectionUnit, ModflowBoundaryUnit, DataSetUnit, ModflowCellUnit,
   ModflowRchUnit, ModflowEvtUnit, FormulaManagerUnit, SubscriptionUnit,
-  SparseDataSets;
+  SparseDataSets, GoPhastTypes;
 
 type
 
@@ -150,22 +150,32 @@ type
     property UzfWaterContent: string read GetUzfWaterContent write SetUzfWaterContent;
   end;
 
+  TUzfExtinctionDepthTimeListLink = class(TTimeListsModelLink)
+  private
+    // @name is used to compute the extinction depths for a series of
+    // cells over a series of time intervals.
+    FExtinctionDepthData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
+
   // @name represents MODFLOW Evapotranspiration boundaries
   // for a series of time intervals.
   TUzfExtinctionDepthCollection = class(TCustomMF_ArrayBoundColl)
   private
     procedure InvalidateUzfExtinctDepthData(Sender: TObject);
   protected
-    // @name is used to compute the recharge rates for a series of
-    // cells over a series of time intervals.
-    FExtinctionDepthData: TModflowTimeList;
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary; override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer); override;
+    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+      AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
     // TCustomMF_ArrayBoundColl.InitializeTimeLists)
-    procedure InitializeTimeLists(ListOfTimeLists: TList); override;
+    procedure InitializeTimeLists(ListOfTimeLists: TList; AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
     class function ItemClass: TMF_BoundItemClass; override;
@@ -176,13 +186,17 @@ type
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+  end;
+
+  TUzfWaterContentTimeListLink = class(TTimeListsModelLink)
+  private
+    // @name is used to compute the water contents for a series of
+    // cells over a series of time intervals.
+    FWaterContentData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
   public
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
+    Destructor Destroy; override;
   end;
 
   // @name represents MODFLOW Evapotranspiration boundaries
@@ -191,16 +205,15 @@ type
   private
     procedure InvalidateUzfWaterContentData(Sender: TObject);
   protected
-    // @name is used to compute the recharge rates for a series of
-    // cells over a series of time intervals.
-    FWaterContentData: TModflowTimeList;
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary; override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList;ItemIndex: Integer); override;
+    procedure AssignCellValues(DataSets: TList;ItemIndex: Integer;
+      AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
     // TCustomMF_ArrayBoundColl.InitializeTimeLists)
-    procedure InitializeTimeLists(ListOfTimeLists: TList); override;
+    procedure InitializeTimeLists(ListOfTimeLists: TList; AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
     class function ItemClass: TMF_BoundItemClass; override;
@@ -211,25 +224,27 @@ type
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
-  public
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
+  end;
+
+  TUzfInfiltrationRateTimeListLink = class(TRchTimeListLink)
+  protected
+    procedure CreateTimeLists; override;
   end;
 
   TUzfInfiltrationRateCollection = class(TRchCollection)
-  public
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
+  protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
+    function PackageAssignmentMethod(AModel: TBaseModel): TUpdateMethod; override;
+  end;
+
+  TUzfEvtTimeListLink = class(TEvtTimeListLink)
+  protected
+    procedure CreateTimeLists; override;
   end;
 
   TUzfEvapotranspirationDemandCollection = class(TEvtCollection)
-  public
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
+  protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
   end;
 
   TUzfExtinctionDepthCell = class(TValueCell)
@@ -242,10 +257,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -267,10 +285,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -306,14 +327,14 @@ type
     // each stress period.  Each such TObjectList is filled with
     // @link(TRch_Cell)s for that stress period.
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-      ValueTimeList: TList); override;
+      ValueTimeList: TList; AModel: TBaseModel); override;
     // See @link(TModflowBoundary.BoundaryCollectionClass
     // TModflowBoundary.BoundaryCollectionClass).
     class function BoundaryCollectionClass: TMF_BoundCollClass; override;
   public
     procedure Assign(Source: TPersistent);override;
 
-    Constructor Create(Model, ScreenObject: TObject);
+    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     Destructor Destroy; override;
     // @name fills ValueTimeList via a call to AssignCells for each
     // link  @link(TRchStorage) in
@@ -326,15 +347,16 @@ type
     // with each @link(TRchStorage) in @link(TCustomMF_BoundColl.Boundaries
     // Param.Param.Boundaries)
     // Those represent parameter boundary conditions.
-    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
-      override;
+    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel); override;
     function Used: boolean; override;
-    procedure EvaluateArrayBoundaries; override;
+    procedure EvaluateArrayBoundaries(AModel: TBaseModel); override;
     procedure InvalidateDisplay; override;
     procedure GetEvapotranspirationDemandCells(LayerTimeList: TList);
     procedure GetExtinctionDepthCells(LayerTimeList: TList);
     procedure GetWaterContentCells(LayerTimeList: TList);
-    procedure UpdateTimes(Times: TRealList); override;
+    procedure UpdateTimes(Times: TRealList; StartTestTime, EndTestTime: double;
+      var StartRangeExtended, EndRangeExtended: boolean); override;
   published
     property GageOption1: integer read FGageOption1 write SetGageOption1;
     property GageOption2: integer read FGageOption2 write SetGageOption2;
@@ -349,25 +371,13 @@ type
 implementation
 
 uses RbwParser, ScreenObjectUnit, PhastModelUnit, ModflowTimeUnit,
-  ModflowTransientListParameterUnit, TempFiles, GoPhastTypes, frmGoPhastUnit;
+  ModflowTransientListParameterUnit, TempFiles, frmGoPhastUnit;
 
 { TUzfRateCollection }
 
 const
   UzfExtinctDepthPosition = 0;
   UzfWaterContentPosition = 0;
-
-constructor TUzfInfiltrationRateCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
-begin
-  inherited;
-  FRechargeRateData.NonParamDescription := 'Infiltration rate';
-  if Model <> nil then
-  begin
-    FRechargeRateData.OnInvalidate :=
-      (Model as TPhastModel).InvalidateMfUzfInfiltration;
-  end;
-end;
 
 { TUzfBoundary }
 
@@ -388,7 +398,7 @@ begin
 end;
 
 procedure TUzfBoundary.AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-  ValueTimeList: TList);
+  ValueTimeList: TList; AModel: TBaseModel);
 var
   Cell: TRch_Cell;
   BoundaryValues: TRchRecord;
@@ -397,10 +407,12 @@ var
   TimeIndex: Integer;
   Cells: TValueCellList;
   LocalBoundaryStorage: TRchStorage;
+  LocalModel: TCustomModel;
 begin
+  LocalModel := AModel as TCustomModel;
   LocalBoundaryStorage := BoundaryStorage as TRchStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    LocalModel.ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -411,12 +423,16 @@ begin
       Cells := TValueCellList.Create(TRch_Cell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
+      if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.RchArray) then
+      begin
+        Cells.Capacity := Cells.Count + Length(LocalBoundaryStorage.RchArray)
+      end;
 //      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.RchArray) - 1 do
       begin
@@ -426,6 +442,7 @@ begin
         Cells.Add(Cell);
         Cell.StressPeriod := TimeIndex;
         Cell.Values := BoundaryValues;
+        LocalModel.AdjustCellPosition(Cell);
       end;
       Cells.Cache;
     end;
@@ -446,7 +463,7 @@ var
 begin
   LocalBoundaryStorage := BoundaryStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    (ParentModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -457,7 +474,7 @@ begin
       Cells := TValueCellList.Create(TEvt_Cell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := (ParentModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
@@ -492,7 +509,7 @@ var
 begin
   LocalBoundaryStorage := BoundaryStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    (ParentModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -503,7 +520,7 @@ begin
       Cells := TValueCellList.Create(TUzfExtinctionDepthCell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := (ParentModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
@@ -540,7 +557,7 @@ var
 begin
   LocalBoundaryStorage := BoundaryStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    (ParentModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -551,7 +568,7 @@ begin
       Cells := TValueCellList.Create(TUzfWaterContentCell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := (ParentModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
@@ -580,7 +597,7 @@ begin
   result := TUzfInfiltrationRateCollection;
 end;
 
-constructor TUzfBoundary.Create(Model, ScreenObject: TObject);
+constructor TUzfBoundary.Create(Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited Create(Model, ScreenObject);
   FEvapotranspirationDemand := TUzfEvapotranspirationDemandCollection.
@@ -599,30 +616,30 @@ begin
   inherited;
 end;
 
-procedure TUzfBoundary.EvaluateArrayBoundaries;
+procedure TUzfBoundary.EvaluateArrayBoundaries(AModel: TBaseModel);
 begin
   inherited;
-  if (PhastModel as TPhastModel).ModflowPackages.UzfPackage.SimulateET then
+  if (ParentModel as TPhastModel).ModflowPackages.UzfPackage.SimulateET then
   begin
-    EvapotranspirationDemand.EvaluateArrayBoundaries;
-    ExtinctionDepth.EvaluateArrayBoundaries;
-    FWaterContent.EvaluateArrayBoundaries;
+    EvapotranspirationDemand.EvaluateArrayBoundaries(AModel);
+    ExtinctionDepth.EvaluateArrayBoundaries(AModel);
+    FWaterContent.EvaluateArrayBoundaries(AModel);
   end;
 end;
 
 procedure TUzfBoundary.GetCellValues(ValueTimeList: TList;
-  ParamList: TStringList);
+  ParamList: TStringList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TRchStorage;
 begin
-  EvaluateArrayBoundaries;
+  EvaluateArrayBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
     if ValueIndex < Values.BoundaryCount then
     begin
       BoundaryStorage := Values.Boundaries[ValueIndex] as TRchStorage;
-      AssignCells(BoundaryStorage, ValueTimeList);
+      AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;
 end;
@@ -634,8 +651,11 @@ var
 begin
   for ValueIndex := 0 to EvapotranspirationDemand.Count - 1 do
   begin
-    BoundaryStorage := EvapotranspirationDemand.Boundaries[ValueIndex] as TEvtStorage;
-    AssignEvapotranspirationDemandCells(BoundaryStorage, LayerTimeList);
+    if ValueIndex < EvapotranspirationDemand.BoundaryCount then
+    begin
+      BoundaryStorage := EvapotranspirationDemand.Boundaries[ValueIndex] as TEvtStorage;
+      AssignEvapotranspirationDemandCells(BoundaryStorage, LayerTimeList);
+    end;
   end;
 end;
 
@@ -646,8 +666,11 @@ var
 begin
   for ValueIndex := 0 to ExtinctionDepth.Count - 1 do
   begin
-    BoundaryStorage := ExtinctionDepth.Boundaries[ValueIndex] as TUzfExtinctDepthStorage;
-    AssignExtinctionDepthCells(BoundaryStorage, LayerTimeList);
+    if ValueIndex < ExtinctionDepth.BoundaryCount then
+    begin
+      BoundaryStorage := ExtinctionDepth.Boundaries[ValueIndex] as TUzfExtinctDepthStorage;
+      AssignExtinctionDepthCells(BoundaryStorage, LayerTimeList);
+    end;
   end;
 end;
 
@@ -658,8 +681,11 @@ var
 begin
   for ValueIndex := 0 to WaterContent.Count - 1 do
   begin
-    BoundaryStorage := WaterContent.Boundaries[ValueIndex] as TUzfWaterContentStorage;
-    AssignWaterContentCells(BoundaryStorage, LayerTimeList);
+    if ValueIndex < WaterContent.BoundaryCount then
+    begin
+      BoundaryStorage := WaterContent.Boundaries[ValueIndex] as TUzfWaterContentStorage;
+      AssignWaterContentCells(BoundaryStorage, LayerTimeList);
+    end;
   end;
 end;
 
@@ -668,9 +694,9 @@ var
   Model: TPhastModel;
 begin
   inherited;
-  if Used and (PhastModel <> nil) then
+  if Used and (ParentModel <> nil) then
   begin
-    Model := PhastModel as TPhastModel;
+    Model := ParentModel as TPhastModel;
     Model.InvalidateMfUzfInfiltration(self);
     Model.InvalidateMfUzfEtDemand(self);
     Model.InvalidateMfUzfExtinctionDepth(self);
@@ -723,12 +749,13 @@ begin
   FWaterContent.Assign(Value);
 end;
 
-procedure TUzfBoundary.UpdateTimes(Times: TRealList);
+procedure TUzfBoundary.UpdateTimes(Times: TRealList;
+  StartTestTime, EndTestTime: double; var StartRangeExtended, EndRangeExtended: boolean);
 begin
   inherited;
-  AddBoundaryTimes(EvapotranspirationDemand, Times);
-  AddBoundaryTimes(ExtinctionDepth, Times);
-  AddBoundaryTimes(WaterContent, Times);
+  AddBoundaryTimes(EvapotranspirationDemand, Times, StartTestTime, EndTestTime, StartRangeExtended, EndRangeExtended);
+  AddBoundaryTimes(ExtinctionDepth, Times, StartTestTime, EndTestTime, StartRangeExtended, EndRangeExtended);
+  AddBoundaryTimes(WaterContent, Times, StartTestTime, EndTestTime, StartRangeExtended, EndRangeExtended);
 end;
 
 function TUzfBoundary.Used: boolean;
@@ -743,17 +770,9 @@ end;
 
 { TUzfEvapotranspirationDemandCollection }
 
-constructor TUzfEvapotranspirationDemandCollection.Create(
-  Boundary: TModflowBoundary; Model, ScreenObject: TObject);
+function TUzfEvapotranspirationDemandCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited;
-  FEvapotranspirationRateData.NonParamDescription :=
-    'Evapo- transpiration demand';
-  if Model <> nil then
-  begin
-    FEvapotranspirationRateData.OnInvalidate :=
-      (Model as TPhastModel).InvalidateMfUzfEtDemand;
-  end;
+  result := TUzfEvtTimeListLink;
 end;
 
 { TUzfExtinctDepthItem }
@@ -942,7 +961,7 @@ begin
 end;
 
 procedure TUzfExtinctionDepthCollection.AssignCellValues(DataSets: TList;
-  ItemIndex: Integer);
+  ItemIndex: Integer; AModel: TBaseModel);
 var
   ExtinctionDepthRateArray: TDataArray;
   Boundary: TUzfExtinctDepthStorage;
@@ -950,7 +969,7 @@ var
   RowIndex: Integer;
   ColIndex: Integer;
   BoundaryIndex: Integer;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
   LayerMin: Integer;
   RowMin: Integer;
   ColMin: Integer;
@@ -958,7 +977,7 @@ var
   RowMax: Integer;
   ColMax: Integer;
 begin
-  LocalModel := Model as TPhastModel;
+  LocalModel := AModel as TCustomModel;
   BoundaryIndex := 0;
   ExtinctionDepthRateArray := DataSets[UzfExtinctDepthPosition];
   Boundary := Boundaries[ItemIndex] as TUzfExtinctDepthStorage;
@@ -968,7 +987,7 @@ begin
   begin
     for LayerIndex := LayerMin to LayerMax do
     begin
-      if LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+      if LocalModel.IsLayerSimulated(LayerIndex) then
       begin
         for RowIndex := RowMin to RowMax do
         begin
@@ -998,35 +1017,21 @@ begin
   Boundary.CacheData;
 end;
 
-constructor TUzfExtinctionDepthCollection.Create(Boundary: TModflowBoundary;
-  Model, ScreenObject: TObject);
+function TUzfExtinctionDepthCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FExtinctionDepthData := TModflowTimeList.Create(Model, ScreenObject);
-  FExtinctionDepthData.NonParamDescription := 'ET extinction depth';
-  FExtinctionDepthData.ParamDescription := ' ET extinction depth multiplier';
-  AddTimeList(FExtinctionDepthData);
-  if Model <> nil then
-  begin
-    FExtinctionDepthData.OnInvalidate :=
-      (Model as TPhastModel).InvalidateMfUzfExtinctionDepth;
-  end;
-end;
-
-destructor TUzfExtinctionDepthCollection.Destroy;
-begin
-  FExtinctionDepthData.Free;
-  inherited;
+  result := TUzfExtinctionDepthTimeListLink;
 end;
 
 procedure TUzfExtinctionDepthCollection.InitializeTimeLists(
-  ListOfTimeLists: TList);
+  ListOfTimeLists: TList; AModel: TBaseModel);
 var
   TimeIndex: Integer;
   BoundaryValues: TBoundaryValueArray;
   Index: Integer;
   Item: TUzfExtinctDepthItem;
   ScreenObject: TScreenObject;
+  ALink: TUzfExtinctionDepthTimeListLink;
+  FExtinctionDepthData: TModflowTimeList;
 begin
   ScreenObject := BoundaryGroup.ScreenObject as TScreenObject;
   SetLength(BoundaryValues, Count);
@@ -1036,7 +1041,9 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := Item.UzfExtinctDepth;
   end;
-  FExtinctionDepthData.Initialize(BoundaryValues, ScreenObject);
+  ALink := TimeListLink.GetLink(AModel) as TUzfExtinctionDepthTimeListLink;
+  FExtinctionDepthData := ALink.FExtinctionDepthData;
+  FExtinctionDepthData.Initialize(BoundaryValues, ScreenObject, True);
   Assert(FExtinctionDepthData.Count = Count);
   ClearBoundaries;
   SetBoundaryCapacity(FExtinctionDepthData.Count);
@@ -1049,10 +1056,23 @@ end;
 
 procedure TUzfExtinctionDepthCollection.InvalidateUzfExtinctDepthData(
   Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TUzfExtinctionDepthTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FExtinctionDepthData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TUzfExtinctionDepthTimeListLink;
+    Link.FExtinctionDepthData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TUzfExtinctionDepthTimeListLink;
+      Link.FExtinctionDepthData.Invalidate;
+    end;
   end;
 end;
 
@@ -1077,7 +1097,7 @@ begin
 end;
 
 procedure TUzfWaterContentCollection.AssignCellValues(DataSets: TList;
-  ItemIndex: Integer);
+  ItemIndex: Integer; AModel: TBaseModel);
 var
   WaterContentArray: TDataArray;
   Boundary: TUzfWaterContentStorage;
@@ -1085,7 +1105,7 @@ var
   RowIndex: Integer;
   ColIndex: Integer;
   BoundaryIndex: Integer;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
   LayerMin: Integer;
   RowMin: Integer;
   ColMin: Integer;
@@ -1093,7 +1113,7 @@ var
   RowMax: Integer;
   ColMax: Integer;
 begin
-  LocalModel := Model as TPhastModel;
+  LocalModel := AModel as TCustomModel;
   BoundaryIndex := 0;
   WaterContentArray := DataSets[UzfWaterContentPosition];
   Boundary := Boundaries[ItemIndex] as TUzfWaterContentStorage;
@@ -1103,7 +1123,7 @@ begin
   begin
     for LayerIndex := LayerMin to LayerMax do
     begin
-      if LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+      if LocalModel.IsLayerSimulated(LayerIndex) then
       begin
         for RowIndex := RowMin to RowMax do
         begin
@@ -1133,35 +1153,21 @@ begin
   Boundary.CacheData;
 end;
 
-constructor TUzfWaterContentCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
+function TUzfWaterContentCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FWaterContentData := TModflowTimeList.Create(Model, ScreenObject);
-  FWaterContentData.NonParamDescription := 'ET extinction water content';
-  FWaterContentData.ParamDescription := ' ET extinction water content multiplier';
-  AddTimeList(FWaterContentData);
-  if Model <> nil then
-  begin
-    FWaterContentData.OnInvalidate :=
-      (Model as TPhastModel).InvalidateMfUzfWaterContent;
-  end;
-end;
-
-destructor TUzfWaterContentCollection.Destroy;
-begin
-  FWaterContentData.Free;
-  inherited;
+  result := TUzfWaterContentTimeListLink;
 end;
 
 procedure TUzfWaterContentCollection.InitializeTimeLists(
-  ListOfTimeLists: TList);
+  ListOfTimeLists: TList; AModel: TBaseModel);
 var
   TimeIndex: Integer;
   BoundaryValues: TBoundaryValueArray;
   Index: Integer;
   Item: TUzfWaterContentItem;
   ScreenObject: TScreenObject;
+  ALink: TUzfWaterContentTimeListLink;
+  WaterContentData: TModflowTimeList;
 begin
   ScreenObject := BoundaryGroup.ScreenObject as TScreenObject;
   SetLength(BoundaryValues, Count);
@@ -1171,23 +1177,38 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := Item.UzfWaterContent;
   end;
-  FWaterContentData.Initialize(BoundaryValues, ScreenObject);
-  Assert(FWaterContentData.Count = Count);
+  ALink := TimeListLink.GetLink(AModel) as TUzfWaterContentTimeListLink;
+  WaterContentData := ALink.FWaterContentData;
+  WaterContentData.Initialize(BoundaryValues, ScreenObject, True);
+  Assert(WaterContentData.Count = Count);
   ClearBoundaries;
-  SetBoundaryCapacity(FWaterContentData.Count);
-  for TimeIndex := 0 to FWaterContentData.Count - 1 do
+  SetBoundaryCapacity(WaterContentData.Count);
+  for TimeIndex := 0 to WaterContentData.Count - 1 do
   begin
     AddBoundary(TUzfWaterContentStorage.Create);
   end;
-  ListOfTimeLists.Add(FWaterContentData);
+  ListOfTimeLists.Add(WaterContentData);
 end;
 
 procedure TUzfWaterContentCollection.InvalidateUzfWaterContentData(
   Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TUzfWaterContentTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FWaterContentData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TUzfWaterContentTimeListLink;
+    Link.FWaterContentData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TUzfWaterContentTimeListLink;
+      Link.FWaterContentData.Invalidate;
+    end;
   end;
 end;
 
@@ -1228,13 +1249,13 @@ begin
   result := Values.ExtinctionDepthAnnotation;
 end;
 
-function TUzfExtinctionDepthCell.GetIntegerAnnotation(Index: integer): string;
+function TUzfExtinctionDepthCell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TUzfExtinctionDepthCell.GetIntegerValue(Index: integer): integer;
+function TUzfExtinctionDepthCell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -1245,7 +1266,7 @@ begin
   result := Values.Cell.Layer;
 end;
 
-function TUzfExtinctionDepthCell.GetRealAnnotation(Index: integer): string;
+function TUzfExtinctionDepthCell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -1254,7 +1275,7 @@ begin
   end;
 end;
 
-function TUzfExtinctionDepthCell.GetRealValue(Index: integer): double;
+function TUzfExtinctionDepthCell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -1286,6 +1307,21 @@ begin
   StressPeriod := ReadCompInt(Decomp);
 end;
 
+procedure TUzfExtinctionDepthCell.SetColumn(const Value: integer);
+begin
+  FValues.Cell.Column := Value;
+end;
+
+procedure TUzfExtinctionDepthCell.SetLayer(const Value: integer);
+begin
+  FValues.Cell.Layer := Value;
+end;
+
+procedure TUzfExtinctionDepthCell.SetRow(const Value: integer);
+begin
+  FValues.Cell.Row := Value;
+end;
+
 { TUzfWaterContentCell }
 
 procedure TUzfWaterContentCell.Cache(Comp: TCompressionStream; Strings: TStringList);
@@ -1300,13 +1336,13 @@ begin
   result := Values.Cell.Column;
 end;
 
-function TUzfWaterContentCell.GetIntegerAnnotation(Index: integer): string;
+function TUzfWaterContentCell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TUzfWaterContentCell.GetIntegerValue(Index: integer): integer;
+function TUzfWaterContentCell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -1317,7 +1353,7 @@ begin
   result := Values.Cell.Layer;
 end;
 
-function TUzfWaterContentCell.GetRealAnnotation(Index: integer): string;
+function TUzfWaterContentCell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -1326,7 +1362,7 @@ begin
   end;
 end;
 
-function TUzfWaterContentCell.GetRealValue(Index: integer): double;
+function TUzfWaterContentCell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -1366,6 +1402,21 @@ begin
   inherited;
   Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
+end;
+
+procedure TUzfWaterContentCell.SetColumn(const Value: integer);
+begin
+  FValues.Cell.Column := Value;
+end;
+
+procedure TUzfWaterContentCell.SetLayer(const Value: integer);
+begin
+  FValues.Cell.Layer := Value;
+end;
+
+procedure TUzfWaterContentCell.SetRow(const Value: integer);
+begin
+  FValues.Cell.Row := Value;
 end;
 
 { TUzfExtinctionDepthRecord }
@@ -1545,6 +1596,88 @@ begin
     RestoreData;
   end;
   result := FWaterContentArray;
+end;
+
+{ TUzfEvtTimeListLink }
+
+procedure TUzfEvtTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  EvapotranspirationRateData.NonParamDescription :=
+    'Evapo- transpiration demand';
+  if Model <> nil then
+  begin
+    EvapotranspirationRateData.OnInvalidate :=
+      (Model as TCustomModel).InvalidateMfUzfEtDemand;
+  end;
+end;
+
+{ TUzfExtinctionDepthTimeListLink }
+
+procedure TUzfExtinctionDepthTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  FExtinctionDepthData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FExtinctionDepthData.NonParamDescription := 'ET extinction depth';
+  FExtinctionDepthData.ParamDescription := ' ET extinction depth multiplier';
+  AddTimeList(FExtinctionDepthData);
+  if Model <> nil then
+  begin
+    FExtinctionDepthData.OnInvalidate := (Model as TCustomModel).InvalidateMfUzfExtinctionDepth;
+  end;
+end;
+
+destructor TUzfExtinctionDepthTimeListLink.Destroy;
+begin
+  FExtinctionDepthData.Free;
+  inherited;
+end;
+
+{ TUzfWaterContentTimeListLink }
+
+procedure TUzfWaterContentTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  FWaterContentData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FWaterContentData.NonParamDescription := 'ET extinction water content';
+  FWaterContentData.ParamDescription := ' ET extinction water content multiplier';
+  AddTimeList(FWaterContentData);
+  if Model <> nil then
+  begin
+    FWaterContentData.OnInvalidate := (Model as TCustomModel).InvalidateMfUzfWaterContent;
+  end;
+end;
+
+destructor TUzfWaterContentTimeListLink.Destroy;
+begin
+  FWaterContentData.Free;
+  inherited;
+end;
+
+{ TUzfInfiltrationRateTimeListLink }
+
+procedure TUzfInfiltrationRateTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  RechargeRateData.NonParamDescription := 'Infiltration rate';
+  if Model <> nil then
+  begin
+    RechargeRateData.OnInvalidate := (Model as TCustomModel).InvalidateMfUzfInfiltration;
+  end;
+end;
+
+function TUzfInfiltrationRateCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
+begin
+  result := TUzfInfiltrationRateTimeListLink;
+end;
+
+function TUzfInfiltrationRateCollection.PackageAssignmentMethod(
+  AModel: TBaseModel): TUpdateMethod;
+var
+  LocalModel: TCustomModel;
+begin
+  LocalModel := AModel as TCustomModel;
+  result := LocalModel.ModflowPackages.UzfPackage.AssignmentMethod;
 end;
 
 end.

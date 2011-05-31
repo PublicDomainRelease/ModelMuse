@@ -46,7 +46,6 @@ type
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
-    procedure InvalidateModel; override;
     function BoundaryFormulaCount: integer; override;
   public
     constructor Create(Collection: TCollection); override;
@@ -220,12 +219,6 @@ begin
   ResetItemObserver(RunnoffPosition);
 end;
 
-procedure TSfrSegmentFlowItem.InvalidateModel;
-begin
-  inherited;
-
-end;
-
 function TSfrSegmentFlowItem.IsSame(AnotherItem: TOrderedItem): boolean;
 var
   SfrChannel: TSfrSegmentFlowItem;
@@ -393,7 +386,7 @@ begin
       Expression.Evaluate;
     except on E: ERbwParserError do
       begin
-        frmFormulaErrors.AddError(ScrObj.Name,
+        frmFormulaErrors.AddFormulaError(ScrObj.Name,
           '(flow for the SFR package)',
           Formula, E.Message);
 
@@ -417,7 +410,7 @@ begin
       Expression.Evaluate;
     except on E: ERbwParserError do
       begin
-        frmFormulaErrors.AddError(ScrObj.Name,
+        frmFormulaErrors.AddFormulaError(ScrObj.Name,
           '(precipitation for the SFR package)',
           Formula, E.Message);
 
@@ -441,7 +434,7 @@ begin
       Expression.Evaluate;
     except on E: ERbwParserError do
       begin
-        frmFormulaErrors.AddError(ScrObj.Name,
+        frmFormulaErrors.AddFormulaError(ScrObj.Name,
           '(evaptotranspiration for the SFR package)',
           Formula, E.Message);
 
@@ -465,7 +458,7 @@ begin
       Expression.Evaluate;
     except on E: ERbwParserError do
       begin
-        frmFormulaErrors.AddError(ScrObj.Name,
+        frmFormulaErrors.AddFormulaError(ScrObj.Name,
           '(runoff for the SFR package)',
           Formula, E.Message);
 
@@ -528,7 +521,8 @@ begin
     ScreenObjectName := (ScreenObject as TScreenObject).Name;
     ErrorMessage := 'Object = ' + ScreenObjectName
       + '; Time = ' + FloatToStr(StartTime);
-    frmErrorsAndWarnings.AddError(StrIncompleteSFRData, ErrorMessage);
+    frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
+      StrIncompleteSFRData, ErrorMessage);
   end;
 end;
 

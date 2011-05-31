@@ -429,6 +429,7 @@ object frameModpathParticles: TframeModpathParticles
           RowCount = 2
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
           TabOrder = 0
+          AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False
           AutoIncreaseRowCount = True
@@ -662,6 +663,7 @@ object frameModpathParticles: TframeModpathParticles
       RowCount = 2
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
       TabOrder = 5
+      AutoMultiEdit = True
       AutoDistributeText = True
       AutoIncreaseColCount = False
       AutoIncreaseRowCount = True

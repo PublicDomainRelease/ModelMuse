@@ -24,7 +24,8 @@ type
     function Package: TModflowPackageSelection; override;
     function ParameterType: TParameterType; override;
     procedure WriteParameterCells(CellList: TValueCellList; NLST: Integer;
-      const VariableIdentifiers, DataSetIdentifier: string); override;
+      const VariableIdentifiers, DataSetIdentifier: string;
+      AssignmentMethod: TUpdateMethod); override;
     procedure WriteCell(Cell: TValueCell;
       const DataSetIdentifier, VariableIdentifiers: string); override;
     class function ObservationExtension: string; override;
@@ -71,7 +72,7 @@ end;
 
 function TModflowRIV_Writer.ObservationPackage: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.RvobPackage;
+  result := Model.ModflowPackages.RvobPackage;
 end;
 
 function TModflowRIV_Writer.ObsNameWarningString: string;
@@ -81,7 +82,7 @@ end;
 
 function TModflowRIV_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.RivPackage;
+  result := Model.ModflowPackages.RivPackage;
 end;
 
 procedure TModflowRIV_Writer.WriteCell(Cell: TValueCell;
@@ -91,7 +92,7 @@ var
   LocalLayer: integer;
 begin
   Riv_Cell := Cell as TRiv_Cell;
-  LocalLayer := PhastModel.LayerStructure.
+  LocalLayer := Model.
     DataSetLayerToModflowLayer(Riv_Cell.Layer);
   WriteInteger(LocalLayer);
   WriteInteger(Riv_Cell.Row+1);
@@ -156,7 +157,7 @@ const
   VariableIdentifiers = 'Condfact Rbot IFACE';
 begin
   WriteParameterDefinitions(DS3, DS3Instances, DS4A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot);
+    VariableIdentifiers, ErrorRoot, umAssign);
 end;
 
 procedure TModflowRIV_Writer.WriteDataSets5To7;
@@ -181,9 +182,9 @@ begin
   begin
     Exit
   end;
-  ShouldWriteFile := not PhastModel.PackageGeneratedExternally(StrRIV);
+  ShouldWriteFile := not Model.PackageGeneratedExternally(StrRIV);
   ShouldWriteObservationFile := ObservationPackage.IsSelected
-    and not PhastModel.PackageGeneratedExternally(StrRVOB);
+    and not Model.PackageGeneratedExternally(StrRVOB);
 
   if not ShouldWriteFile and not ShouldWriteObservationFile then
   begin
@@ -192,7 +193,7 @@ begin
   NameOfFile := FileName(AFileName);
   if ShouldWriteFile then
   begin
-    WriteToNameFile(StrRIV, PhastModel.UnitNumbers.UnitNumber(StrRIV),
+    WriteToNameFile(StrRIV, Model.UnitNumbers.UnitNumber(StrRIV),
       NameOfFile, foInput);
   end;
   if ShouldWriteFile or ShouldWriteObservationFile then
@@ -203,7 +204,7 @@ begin
     begin
       Exit;
     end;
-    ClearTimeLists;
+    ClearTimeLists(Model);
   end;
   if not ShouldWriteFile then
   begin
@@ -261,11 +262,12 @@ const
 begin
   WriteFluxObsFile(AFileName, StrIURVOBSV, PackageAbbreviation,
     DataSet1Comment, DataSet2Comment, DataSet3Comment,
-    PhastModel.RiverObservations, Purpose);
+    Model.RiverObservations, Purpose);
 end;
 
-procedure TModflowRIV_Writer.WriteParameterCells(CellList: TValueCellList; NLST: Integer;
-  const VariableIdentifiers, DataSetIdentifier: string);
+procedure TModflowRIV_Writer.WriteParameterCells(CellList: TValueCellList;
+  NLST: Integer; const VariableIdentifiers, DataSetIdentifier: string;
+  AssignmentMethod: TUpdateMethod);
 var
   Cell: TRiv_Cell;
   CellIndex: Integer;

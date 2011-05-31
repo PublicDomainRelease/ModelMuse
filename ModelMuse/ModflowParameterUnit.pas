@@ -2,7 +2,7 @@ unit ModflowParameterUnit;
 
 interface
 
-uses SysUtils, Classes, OrderedCollectionUnit;
+uses SysUtils, Classes, OrderedCollectionUnit, GoPhastTypes;
 
 type
   TModflowSteadyParameters = Class;
@@ -47,7 +47,7 @@ type
     // @name is used to update @link(MultiplierArrayName)
     // and @link(ZoneArrayName).
     procedure FillArrayNameList(List: TStringList; const ArrayTypeID: string;
-      Const DefaultArrayRoot: string);
+      Const DefaultArrayRoot: string; AModel: TBaseModel);
     procedure CreateNewDataSetVariables(const OldName, NewName: string);
     procedure RemoveOldDataSetVariables;
     procedure UpdateHfbParameterNames(const Value: string);
@@ -58,6 +58,7 @@ type
     // arrays.
     procedure SetParameterName(const Value: string);override;
   public
+    procedure ClearArrayNames;
     // @name copies the source @link(TModflowSteadyParameter)
     // to the current one.
     procedure Assign(Source: TPersistent); override;
@@ -71,7 +72,7 @@ type
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
   published
     // @name lists the multiplier array names exported to MODFLOW.
-    function MultiplierArrayName(ModflowLayer: integer): string;
+    function MultiplierArrayName(ModflowLayer: integer; AModel: TBaseModel): string;
     // @name is the name of the @link(TDataArray) used to define
     // MODFLOW multiplier arrays.
     property MultiplierName: string read FMultiplierName
@@ -84,7 +85,7 @@ type
     // MODFLOW zone arrays.
     property ZoneName: string read FZoneName write SetZoneName;
     // @name lists the zone array names exported to MODFLOW.
-    function ZoneArrayName(ModflowLayer: integer): string;
+    function ZoneArrayName(ModflowLayer: integer; AModel: TBaseModel): string;
   end;
 
   // @name is a collection of @link(TModflowSteadyParameter)s.
@@ -109,6 +110,7 @@ type
     function ArrayNameCount: integer;
   public
     procedure Clear;
+    procedure ClearArrayNames;
     procedure RemoveOldDataSetVariables;
     // @name is used to access the @link(TModflowSteadyParameter) owned
     // by this @classname.
@@ -118,7 +120,7 @@ type
     // @classname.
     procedure Assign(Source: TPersistent); override;
     // @name creates an instance of @classname.
-    Constructor Create(Model: TComponent);
+    Constructor Create(Model: TBaseModel);
     // @name destroys this instance of @classname.
     destructor Destroy; override;
     // @name returns the number of parameters that match ParamTypes.
@@ -137,7 +139,7 @@ var
 
 implementation
 
-uses Math, RbwParser, PhastModelUnit, DataSetUnit, GoPhastTypes,
+uses Math, RbwParser, PhastModelUnit, DataSetUnit, 
   ScreenObjectUnit, ModflowHfbUnit, frmGoPhastUnit;
 
 { TModflowSteadyParameter }
@@ -155,6 +157,12 @@ begin
     UseMultiplier := SourceParameter.UseMultiplier;
     UseZone := SourceParameter.UseZone;
   end;
+end;
+
+procedure TModflowSteadyParameter.ClearArrayNames;
+begin
+  FMultiplierArrayNames.Clear;
+  FZoneArrayNames.Clear;
 end;
 
 function TModflowSteadyParameter.Collection: TModflowSteadyParameters;
@@ -191,7 +199,7 @@ begin
 end;
 
 procedure TModflowSteadyParameter.FillArrayNameList(List: TStringList;
-  const ArrayTypeID: string; Const DefaultArrayRoot: string);
+  const ArrayTypeID: string; Const DefaultArrayRoot: string; AModel: TBaseModel);
 var
   LayerCount: integer;
   LayerIndex: Integer;
@@ -199,8 +207,7 @@ var
   ParamRoot: string;
   ArrayName: string;
 begin
-  LayerCount := (Collection.Model as TPhastModel).
-    LayerStructure.ModflowLayerCount;
+  LayerCount := (AModel as TCustomModel). ModflowLayerCount;
   // The maximum length of the name of a multiplier or zone array is
   // 10 characters. ArrayTypeID will have a length of 2 characters.
   MaxParamRootLength := 7 - Trunc(Log10(LayerCount));
@@ -218,13 +225,13 @@ begin
 end;
 
 function TModflowSteadyParameter.MultiplierArrayName(
-  ModflowLayer: integer): string;
+  ModflowLayer: integer; AModel: TBaseModel): string;
 begin
   Assert(ModflowLayer >= 1);
   Assert(UseMultiplier);
   if FMultiplierArrayNames.Count = 0 then
   begin
-    FillArrayNameList(FMultiplierArrayNames, '_M', 'MULT_');
+    FillArrayNameList(FMultiplierArrayNames, '_M', 'MULT_', AModel);
   end;
   result := FMultiplierArrayNames[ModflowLayer-1];
 end;
@@ -341,13 +348,13 @@ begin
   end;
 end;
 
-function TModflowSteadyParameter.ZoneArrayName(ModflowLayer: integer): string;
+function TModflowSteadyParameter.ZoneArrayName(ModflowLayer: integer; AModel: TBaseModel): string;
 begin
   Assert(ModflowLayer >= 1);
   Assert(UseZone);
   if FZoneArrayNames.Count = 0 then
   begin
-    FillArrayNameList(FZoneArrayNames, '_Z', 'ZONE_');
+    FillArrayNameList(FZoneArrayNames, '_Z', 'ZONE_', AModel);
   end;
   result := FZoneArrayNames[ModflowLayer-1];
 end;
@@ -623,6 +630,11 @@ begin
   FArrayNames.Clear;
 end;
 
+procedure TModflowSteadyParameters.ClearArrayNames;
+begin
+  FArrayNames.Clear;
+end;
+
 function TModflowSteadyParameters.CountParameters(
   ParamTypes: TParameterTypes): integer;
 var
@@ -640,7 +652,7 @@ begin
   end;
 end;
 
-constructor TModflowSteadyParameters.Create(Model: TComponent);
+constructor TModflowSteadyParameters.Create(Model: TBaseModel);
 begin
   inherited Create(TModflowSteadyParameter, Model);
   FArrayNames:= TStringList.Create;

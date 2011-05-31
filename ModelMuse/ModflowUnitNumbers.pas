@@ -88,6 +88,8 @@ const
   StrSwt_ThickCompSed_Out   = 'SWT_ThickCompSed_OUT';
   StrSwt_LayerCentElev_Out  = 'SWT_LayerCentElev_OUT';
   BAS_InitialHeads          = 'BAS_InitialHeads';
+  BFH_Heads                 = 'BFH_Heads';
+  BFH_Fluxes                = 'BFH_Fluxes';
 
   Solvers: array[0..3] of string = (StrPCG, StrGMG, StrSIP, StrDE4);
   FlowPackages: array[0..2] of string = (StrLPF, StrHUF2, StrBCF);
@@ -127,9 +129,16 @@ type
   end;
 
   TCustomUnitNumbers = class(TPhastCollection)
+  private
+    FAddedValue: integer;
   public
     function IndexOf(Key: string): integer;
     function UnitNumber(const Key: string): integer;
+    // @name is added to the value that would otherwise be returned by
+    // @link(UnitNumber).  It is used with MODFLOW-LGR child models
+    // to ensure that unit numbers do not conflict between parent and
+    // child models.
+    property AddedValue: integer read FAddedValue write FAddedValue;
   end;
 
   // @name stores instances of @link(TUnitNumberItem).
@@ -142,7 +151,7 @@ type
     procedure RemoveObsoleteItems;
   public
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
   end;
 
   // @name stores instances of @link(TExternalFileItem).
@@ -152,7 +161,7 @@ type
   // be included in the name file.
   TExternalFiles = class(TCustomUnitNumbers)
   public
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
   end;
 
 implementation
@@ -256,6 +265,9 @@ const
   Hydmod_Out = 129;
   BasInitialHeads = 130;
 
+  BFH_Head = 131;
+  BFH_Flux = 132;
+
 
 
 
@@ -271,7 +283,7 @@ begin
   RemoveObsoleteItems;
 end;
 
-constructor TUnitNumbers.Create(Model: TComponent);
+constructor TUnitNumbers.Create(Model: TBaseModel);
 begin
   inherited Create(TUnitNumberItem, Model);
   CreateDefaultItems;
@@ -392,6 +404,10 @@ begin
 
   AddItem(BAS_InitialHeads, BasInitialHeads);
 
+  AddItem(BFH_Heads,  BFH_Head);
+  AddItem(BFH_Fluxes, BFH_Flux);
+
+
 end;
 
 procedure TUnitNumbers.RemoveObsoleteItems;
@@ -466,7 +482,7 @@ end;
 
 { TExternalFiles }
 
-constructor TExternalFiles.Create(Model: TComponent);
+constructor TExternalFiles.Create(Model: TBaseModel);
 begin
   inherited Create(TExternalFileItem, Model);
 end;
@@ -522,7 +538,7 @@ begin
   if result >= 0 then
   begin
     Item := Items[result] as TCustomUnitNumberItem;
-    result := Item.UnitNumber;
+    result := Item.UnitNumber + AddedValue;
   end;
 end;
 

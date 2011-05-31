@@ -23,7 +23,7 @@ uses Windows,
   frameHeadObservationsUnit, frameHfbScreenObjectUnit, Mask, JvExMask, JvSpin,
   ValueArrayStorageUnit, frameIfaceUnit, frameModpathParticlesUnit,
   frameFluxObsUnit, ModflowPackageSelectionUnit, frameScreenObjectMNW2Unit,
-  frameScreenObjectHydmodUnit;
+  frameScreenObjectHydmodUnit, CheckLst;
 
   { TODO : Consider making this a property sheet like the Object Inspector that
   could stay open at all times.  Boundary conditions and vertices might be
@@ -250,6 +250,17 @@ type
     lblComments: TLabel;
     jvspHYDMOD: TJvStandardPage;
     frameHydmod: TframeScreenObjectHydmod;
+    tabLGR: TTabSheet;
+    tabVertexValues: TTabSheet;
+    rdgVertexValues: TRbwDataGrid4;
+    pnlLgrTop: TPanel;
+    pnlLgrBottom: TPanel;
+    clbChildModels: TJvxCheckListBox;
+    lblLgrChildModel: TLabel;
+    Splitter1: TSplitter;
+    lblObjectUsedWithModels: TLabel;
+    cbLgrAllModels: TCheckBox;
+    clbLgrUsedModels: TCheckListBox;
     // @name changes which check image is displayed for the selected item
     // in @link(jvtlModflowBoundaryNavigator).
     procedure jvtlModflowBoundaryNavigatorMouseDown(Sender: TObject;
@@ -336,8 +347,6 @@ type
     procedure frameHfbBoundarybtnEditHfbHydraulicConductivityFormulaClick(
       Sender: TObject);
     procedure frameHfbBoundarybtnEditHfbThicknessyFormulaClick(Sender: TObject);
-    procedure dgVerticiesMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure dgBoundaryFluxDistributeTextProgress(Sender: TObject; Position,
       Max: Integer);
     procedure dgBoundaryLeakyDistributeTextProgress(Sender: TObject; Position,
@@ -422,14 +431,15 @@ type
     procedure frameLakcbGage4Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure frameMNW2pcMnw2Change(Sender: TObject);
-    procedure rdgImportedDataMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure dgVerticiesStateChange(Sender: TObject; ACol, ARow: Integer;
       const Value: TCheckBoxState);
     procedure dgVerticiesEnter(Sender: TObject);
     procedure frameHydmodclbBasicClickCheck(Sender: TObject);
     procedure frameHydmodclbSubClickCheck(Sender: TObject);
     procedure frameHydmodclbSFRClickCheck(Sender: TObject);
+    procedure clbChildModelsClickCheck(Sender: TObject);
+    procedure cbLgrAllModelsClick(Sender: TObject);
+    procedure clbLgrUsedModelsClickCheck(Sender: TObject);
   published
     // Clicking @name closes the @classname without changing anything.
     // See @link(btnCancelClick),
@@ -1299,17 +1309,19 @@ type
     // TUndoSetScreenObjectProperties.Undo).
     FOldProperties: TScreenObjectEditCollection;
 
-    // @name is set to frmGoPhast.Model.@link(TPhastModel.UpToDate)
+    // @name is set to frmGoPhast.Model.@link(TBaseModel.UpToDate)
     // in @link(FormCreate).  If @link(btnCancel) is clicked,
-    // frmGoPhast.Model.@link(TPhastModel.UpToDate) is restored to @name.
+    // frmGoPhast.Model.@link(TBaseModel.UpToDate) is restored to @name.
     FPriorModelUpToDate: boolean;
 
     // If only a single @link(TScreenObject) is being edited, @name is that
     //  @link(TScreenObject). If more than one is being edited, @name is @nil.
+    // @seealso(FScreenObjectList);
     FScreenObject: TScreenObject;
 
     // If multiple @link(TScreenObject)s are being editted, @name holds the
     // @link(TScreenObject)s that are being edited.
+    // @seealso(FScreenObject);
     FScreenObjectList: TList;
 
     // @name is set to @true to indicate that the colors of the cells will
@@ -1345,6 +1357,8 @@ type
     FSettingVerticies: Boolean;
     FVertexRowCount: Integer;
     FFilledDataSetTreeView: Boolean;
+    FChildModels: TList;
+    FChildModelsScreenObjects: TList;
     Function GenerateNewDataSetFormula(DataArray: TDataArray): string;
     // @name assigns new formulas for @link(TDataArray)s for each
     // @link(TScreenObject) in @link(FNewProperties).
@@ -1671,6 +1685,7 @@ type
     procedure Mnw2Changed(Sender: TObject);
     procedure CreateHydmodNode(AScreenObject: TScreenObject);
     procedure GetHydmod(const ScreenObjectList: TList);
+    procedure GetChildModels(const ScreenObjectList: TList);
 
     // @name is set to @true when the @classname has stored values of the
     // @link(TScreenObject)s being editted.
@@ -1834,6 +1849,14 @@ type
     procedure SetFrameData;
     procedure UpdateVertexNumbers;
     procedure UpdateSectionNumbers;
+    procedure SetupChildModelControls(AScreenObject: TScreenObject);
+    function CanSpecifyChildModels(AScreenObject: TScreenObject): Boolean;
+    procedure GetVertexValues;
+    procedure SetVertexValues(AScreenObject: TScreenObject);
+    procedure GetUsedLgrModels(const AScreenObject: TScreenObject);
+    procedure GetAdditionalUsedModels(const AScreenObjectList: TList);
+    procedure EnableChildModelList(AScreenObject: TScreenObject);
+    procedure FillChildModelList;
     { Private declarations }
   public
     procedure Initialize;
@@ -1865,7 +1888,7 @@ uses Math, StrUtils, JvToolEdit, frmGoPhastUnit, AbstractGridUnit,
   ModflowUzfUnit, ModflowSfrUnit, ModflowHobUnit, ModflowHfbUnit, 
   LayerStructureUnit, ModpathParticleUnit, IntListUnit, 
   frmManageFluxObservationsUnit, ModflowGageUnit, ModflowMnw2Unit, JvGroupBox,
-  ModflowHydmodUnit;
+  ModflowHydmodUnit, ModelMuseUtilities;
 
 {$R *.dfm}
 
@@ -2215,7 +2238,7 @@ begin
   inherited;
   HelpKeyWord := jvplModflowBoundaries.ActivePage.HelpKeyword;
   btnHelp.HelpKeyword := HelpKeyWord;
-  frameHeadObservations.HideUcodeColumns;
+//  frameHeadObservations.HideUcodeColumns;
 end;
 
 procedure TfrmScreenObjectProperties.jvtlModflowBoundaryNavigatorChanging(
@@ -2428,7 +2451,8 @@ begin
   end;
 end;
 
-procedure TfrmScreenObjectProperties.InitializeControls(AScreenObject: TScreenObject);
+procedure TfrmScreenObjectProperties.InitializeControls(
+  AScreenObject: TScreenObject);
 var
   Index: integer;
   CompilerList: TList;
@@ -2441,6 +2465,10 @@ begin
   InitializeGridObjects;
 
   tabNodes.TabVisible := True;
+  if dgVerticies.RowCount <= 1 then
+  begin
+    dgVerticies.RowCount := 2;
+  end;
   dgVerticies.FixedRows := 1;
 
   edName.Enabled := True;
@@ -2518,7 +2546,8 @@ begin
   CreateUzfNode;
   CreateWelNode;
   CreateModpathNode;
-
+  tabLGR.TabVisible := frmGoPhast.PhastModel.LgrUsed;
+  SetupChildModelControls(AScreenObject);
   jvplModflowBoundaries.ActivePage := jvspBlank;
 end;
 
@@ -2547,6 +2576,7 @@ var
   ValueItem: TValueArrayItem;
   TreeViewFilled: boolean;
 begin
+  FillChildModelList;
   FCurrentEdit := nil;
 
   case AScreenObject.ViewDirection of
@@ -2737,19 +2767,34 @@ begin
   begin
     tabImportedData.TabVisible := False;
   end;
+  GetVertexValues;
 
   frameIface.IFACE := AScreenObject.IFACE;
 
   edObjectLength.Text := FloatToStr(AScreenObject.ScreenObjectLength);
-  edObjectArea.Text := FloatToStr(AScreenObject.ScreenObjectArea);
+  if AScreenObject.SectionCount > 1000 then
+  begin
+    edObjectArea.Text := '?';
+  end
+  else
+  begin
+    try
+      edObjectArea.Text := FloatToStr(AScreenObject.ScreenObjectArea);
+    except on EExternal do
+      // EStackOverflow is caught here.
+      edObjectArea.Text := '?';
+    end;
+  end;
   jvplObjectInfo.ActivePage := jvspSingleObject;
   FPriorElevationCount := rgElevationCount.ItemIndex;
+
+  GetUsedLgrModels(AScreenObject);
 
   // Set Loaded to True.  FLoaded is used in event handlers to decide
   // whether or not anything should be done.
   IsLoaded := True;
   UpdateSubComponents(self);
-  frameHeadObservations.HideUcodeColumns;
+//  frameHeadObservations.HideUcodeColumns;
   if TreeViewFilled then
   begin
     UpdateCurrentEdit;
@@ -2761,7 +2806,7 @@ var
   Frame: TframeScreenObjectParam;
   Parameter: TParameterType;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.ChdBoundary.IsSelected then
+  if not frmGoPhast.PhastModel.ChdIsSelected then
   begin
     Exit;
   end;
@@ -3040,7 +3085,7 @@ begin
   frameRivParam.dgModflowBoundary.ColCount := 5;
   frameDrnParam.dgModflowBoundary.ColCount := 4;
   frameDrtParam.dgModflowBoundary.ColCount := 5;
-  if frmGoPhast.PhastModel.ModflowPackages.RchPackage.TimeVaryingLayers then
+  if frmGoPhast.PhastModel.RchTimeVaryingLayers then
   begin
     frameRchParam.dgModflowBoundary.ColCount := 4;
   end
@@ -3049,7 +3094,7 @@ begin
     frameRchParam.dgModflowBoundary.ColCount := 3;
   end;
 
-  if frmGoPhast.PhastModel.ModflowPackages.EvtPackage.TimeVaryingLayers then
+  if frmGoPhast.PhastModel.EvtTimeVaryingLayers then
   begin
     frameEvtParam.dgModflowBoundary.ColCount := 6;
   end
@@ -3058,7 +3103,7 @@ begin
     frameEvtParam.dgModflowBoundary.ColCount := 5;
   end;
 
-  if frmGoPhast.PhastModel.ModflowPackages.EtsPackage.TimeVaryingLayers then
+  if frmGoPhast.PhastModel.EtsTimeVaryingLayers then
   begin
     frameEtsParam.dgModflowBoundary.ColCount := 6
       + (frmGoPhast.PhastModel.ModflowPackages.EtsPackage.SegmentCount-1) *2;
@@ -3171,7 +3216,7 @@ begin
   FUndoSetScreenObjectProperties.Free;
   FUndoSetScreenObjectProperties :=
     TUndoSetScreenObjectProperties.Create(FScreenObjectList,
-    FNewProperties, FOldProperties);
+    FNewProperties, FOldProperties, FChildModelsScreenObjects);
   // SetMultipleScreenObjectData is called when the user press the OK button
   // after editing the properties of one or more screen objects.
   // It set up an TUndoSetScreenObjectProperties based on the data that the
@@ -3250,6 +3295,30 @@ begin
   frmGoPhast.timTimer.OnTimer := frmGoPhast.ReDrawAllViews;
   frmGoPhast.timTimer.Interval := 100;
   frmGoPhast.timTimer.Enabled := True;
+end;
+
+procedure TfrmScreenObjectProperties.cbLgrAllModelsClick(Sender: TObject);
+var
+  ItemIndex: Integer;
+  Index: Integer;
+begin
+  inherited;
+  if IsLoaded then
+  begin
+    cbLgrAllModels.AllowGrayed := False;
+    for ItemIndex := 0 to FNewProperties.Count - 1 do
+    begin
+      FNewProperties[ItemIndex].ScreenObject.UsedModels.UsedWithAllModels
+        := cbLgrAllModels.Checked;
+    end;
+    if cbLgrAllModels.Checked then
+    begin
+      for Index := 0 to clbLgrUsedModels.Items.Count - 1 do
+      begin
+        clbLgrUsedModels.Checked[Index] := True;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.cbLineColorClick(Sender: TObject);
@@ -3758,6 +3827,8 @@ begin
     end;
     if AScreenObjectList.Count > 1 then
     begin
+      tabVertexValues.TabVisible := False;
+      clbChildModels.Enabled := False;
       tabImportedData.TabVisible := False;
       tabImportedData.TabVisible := False;
       CompilerList := TList.Create;
@@ -3827,6 +3898,7 @@ begin
       // is greater than 1.
       tabNodes.TabVisible := False;
       GetModflowBoundaries(AScreenObjectList);
+      GetAdditionalUsedModels(AScreenObjectList);
 
     end;
     FScreenObject := nil;
@@ -3835,6 +3907,7 @@ begin
     begin
       FillDataSetsTreeView(AScreenObjectList);
     end;
+
   finally
     TempList.Free;
   end;
@@ -3864,6 +3937,269 @@ begin
   UpdateSubComponents(self);
   UpdateCurrentEdit;
 //  OutputDebugString('SAMPLING OFF');
+end;
+
+procedure TfrmScreenObjectProperties.FillChildModelList;
+var
+  Item: TChildModelItem;
+  ChildModelIndex: Integer;
+begin
+  if FChildModels = nil then
+  begin
+    FChildModels := TList.Create;
+  end;
+  if FChildModelsScreenObjects = nil then
+  begin
+    FChildModelsScreenObjects := TList.Create;
+  end;
+  FChildModels.Clear;
+  FChildModelsScreenObjects.Clear;
+  clbChildModels.Items.BeginUpdate;
+  try
+    clbChildModels.Items.Clear;
+    clbChildModels.Items.AddObject('none', nil);
+    for ChildModelIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      Item := frmGoPhast.PhastModel.ChildModels[ChildModelIndex];
+      clbChildModels.Items.AddObject(Item.ChildModel.ModelName, Item.ChildModel);
+      FChildModels.Add(Item.ChildModel);
+      FChildModelsScreenObjects.Add(Item.ChildModel.HorizontalPositionScreenObject);
+    end;
+    clbChildModels.CheckedIndex := 0;
+  finally
+    clbChildModels.Items.EndUpdate;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.EnableChildModelList(AScreenObject: TScreenObject);
+begin
+  if CanSpecifyChildModels(AScreenObject) then
+  begin
+    clbChildModels.Enabled := True;
+//    FillChildModelList;
+  end
+  else
+  begin
+    clbChildModels.Enabled := False;
+  end;
+  if clbChildModels.Enabled then
+  begin
+    clbChildModels.Color := clWindow;
+  end
+  else
+  begin
+    clbChildModels.Color := clBtnFace;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.GetAdditionalUsedModels(const AScreenObjectList: TList);
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+begin
+  for ScreenObjectIndex := 1 to AScreenObjectList.Count - 1 do
+  begin
+    AScreenObject := AScreenObjectList[ScreenObjectIndex];
+    if cbLgrAllModels.Checked <> AScreenObject.UsedModels.UsedWithAllModels then
+    begin
+      cbLgrAllModels.AllowGrayed := True;
+      cbLgrAllModels.State := cbGrayed;
+    end;
+    if clbLgrUsedModels.Checked[0] <> AScreenObject.UsedModels.UsesModel(frmGoPhast.PhastModel) then
+    begin
+      clbLgrUsedModels.AllowGrayed := True;
+      clbLgrUsedModels.State[0] := cbGrayed;
+    end;
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      if clbLgrUsedModels.Checked[ChildIndex+1] <> AScreenObject.UsedModels.UsesModel(ChildModel) then
+      begin
+        clbLgrUsedModels.AllowGrayed := True;
+        clbLgrUsedModels.State[ChildIndex + 1] := cbGrayed;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.GetUsedLgrModels(const AScreenObject: TScreenObject);
+var
+  ChildModel: TChildModel;
+  ChildModelIndex: Integer;
+begin
+  cbLgrAllModels.AllowGrayed := False;
+  cbLgrAllModels.Checked := AScreenObject.UsedModels.UsedWithAllModels;
+  clbLgrUsedModels.Checked[0] := AScreenObject.UsedModels.UsesModel(frmGoPhast.PhastModel);
+  for ChildModelIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildModelIndex].ChildModel;
+    clbLgrUsedModels.Checked[ChildModelIndex + 1] := AScreenObject.UsedModels.UsesModel(ChildModel);
+  end;
+  clbLgrUsedModels.AllowGrayed := False;
+  
+end;
+
+procedure TfrmScreenObjectProperties.SetVertexValues(AScreenObject: TScreenObject);
+var
+  RowIndex: Integer;
+  PointValueItem: TPointValuesItem;
+  ColIndex: Integer;
+  ValuePosition: Integer;
+  ValueItem: TPointValue;
+begin
+  if tabVertexValues.TabVisible then
+  begin
+    Assert(AScreenObject.PointPositionValues.Count =
+      rdgVertexValues.RowCount - 1);
+    for RowIndex := rdgVertexValues.RowCount - 1 downto 1 do
+    begin
+      PointValueItem := AScreenObject.PointPositionValues.
+        Items[RowIndex - 1] as TPointValuesItem;
+      for ColIndex := 1 to rdgVertexValues.ColCount - 1 do
+      begin
+        ValuePosition := PointValueItem.IndexOfName(
+          rdgVertexValues.Cells[ColIndex, 0]);
+        if rdgVertexValues.Cells[ColIndex, RowIndex] = '' then
+        begin
+          if ValuePosition >= 0 then
+          begin
+            PointValueItem.Values.Delete(ValuePosition);
+          end;
+        end
+        else
+        begin
+          if ValuePosition >= 0 then
+          begin
+            ValueItem := PointValueItem.Values.
+              Items[ValuePosition] as TPointValue;
+          end
+          else
+          begin
+            ValueItem := PointValueItem.Values.Add as TPointValue;
+            ValueItem.Name := rdgVertexValues.Cells[ColIndex, 0];
+          end;
+          ValueItem.Value := StrToFloat(
+            rdgVertexValues.Cells[ColIndex, RowIndex]);
+        end;
+      end;
+      if PointValueItem.Values.Count = 0 then
+      begin
+        AScreenObject.PointPositionValues.Delete(RowIndex - 1);
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.GetVertexValues;
+var
+  AColumn: TRbwColumn4;
+  RowIndex: Integer;
+  VertexValueItem: TPointValue;
+  ValueIndex: Integer;
+  PointValueItem: TPointValuesItem;
+  PointIndex: Integer;
+  Keys: TStringList;
+  ColIndex: Integer;
+begin
+  if FScreenObject.PointPositionValues.Count > 0 then
+  begin
+    tabVertexValues.TabVisible := True;
+    rdgVertexValues.BeginUpdate;
+    try
+      Keys := TStringList.Create;
+      try
+        Keys.Sorted := True;
+        Keys.CaseSensitive := False;
+        for PointIndex := 0 to FScreenObject.PointPositionValues.Count - 1 do
+        begin
+          PointValueItem := FScreenObject.PointPositionValues.
+            Items[PointIndex] as TPointValuesItem;
+          for ValueIndex := 0 to PointValueItem.Values.Count - 1 do
+          begin
+            VertexValueItem := PointValueItem.Values.
+              Items[ValueIndex] as TPointValue;
+            if Keys.IndexOf(VertexValueItem.Name) < 0 then
+            begin
+              Keys.Add(VertexValueItem.Name);
+            end;
+          end;
+        end;
+        rdgVertexValues.RowCount := FScreenObject.PointPositionValues.Count + 1;
+        rdgVertexValues.ColCount := Keys.Count + 1;
+        for ColIndex := 0 to rdgVertexValues.ColCount - 1 do
+        begin
+          for RowIndex := 0 to rdgVertexValues.RowCount - 1 do
+          begin
+            rdgVertexValues.Cells[ColIndex, RowIndex] := '';
+          end;
+        end;
+        for ColIndex := 1 to rdgVertexValues.ColCount - 1 do
+        begin
+          rdgVertexValues.ColWidths[ColIndex] :=
+            rdgVertexValues.DefaultColWidth;
+          rdgVertexValues.Cells[0, 0] := 'Vertex numbers';
+          rdgVertexValues.Cells[ColIndex, 0] := Keys[ColIndex - 1];
+          AColumn := rdgVertexValues.Columns[ColIndex];
+          AColumn.AutoAdjustColWidths := True;
+          AColumn.Format := rcf4Real;
+        end;
+        for PointIndex := 0 to FScreenObject.PointPositionValues.Count - 1 do
+        begin
+          PointValueItem := FScreenObject.PointPositionValues.
+            Items[PointIndex] as TPointValuesItem;
+          rdgVertexValues.Cells[0, PointIndex + 1] :=
+            IntToStr(PointValueItem.Position + 1);
+          for ValueIndex := 0 to PointValueItem.Values.Count - 1 do
+          begin
+            VertexValueItem := PointValueItem.Values.
+              Items[ValueIndex] as TPointValue;
+            ColIndex := Keys.IndexOf(VertexValueItem.Name) + 1;
+            rdgVertexValues.Cells[ColIndex, PointIndex + 1] :=
+              FloatToStr(VertexValueItem.Value);
+          end;
+        end;
+      finally
+        Keys.Free;
+      end;
+    finally
+      rdgVertexValues.EndUpdate;
+    end;
+  end
+  else
+  begin
+    tabVertexValues.TabVisible := False;
+  end;
+end;
+
+function TfrmScreenObjectProperties.CanSpecifyChildModels(AScreenObject: TScreenObject): Boolean;
+begin
+  result := (AScreenObject <> nil)
+    and frmGoPhast.PhastModel.LgrUsed
+    and (AScreenObject.ViewDirection = vdTop)
+    and (rgElevationCount.ItemIndex = 0);
+end;
+
+procedure TfrmScreenObjectProperties.SetupChildModelControls(AScreenObject: TScreenObject);
+var
+  ChildModelIndex: Integer;
+  Item: TChildModelItem;
+begin
+  clbLgrUsedModels.Items.BeginUpdate;
+  try
+    clbLgrUsedModels.Clear;
+    clbLgrUsedModels.Items.AddObject(StrParentModel,frmGoPhast.PhastModel);
+    for ChildModelIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      Item := frmGoPhast.PhastModel.ChildModels[ChildModelIndex];
+      clbLgrUsedModels.Items.AddObject(
+        Item.ChildModel.ModelName, Item.ChildModel);
+    end;
+  finally
+    clbLgrUsedModels.Items.EndUpdate;
+  end;
+  EnableChildModelList(AScreenObject);
 end;
 
 procedure TfrmScreenObjectProperties.UpdateSectionNumbers;
@@ -3940,27 +4276,27 @@ begin
   frameHeadObservations.SetData(FNewProperties,
     ((FHOB_Node <> nil) and (FHOB_Node.StateIndex = 2)),
     ((FHOB_Node = nil) or (FHOB_Node.StateIndex = 1))
-    and frmGoPhast.PhastModel.ModflowPackages.HobPackage.IsSelected);
+    and frmGoPhast.PhastModel.HobIsSelected);
 
   frameScreenObjectSFR.SetData(FNewProperties,
     ((FSFR_Node <> nil) and (FSFR_Node.StateIndex = 2)),
     ((FSFR_Node = nil) or (FSFR_Node.StateIndex = 1))
-    and frmGoPhast.PhastModel.ModflowPackages.SfrPackage.IsSelected);
+    and frmGoPhast.PhastModel.SfrIsSelected);
 
   frameMNW2.SetData(FNewProperties,
     ((FMNW2_Node <> nil) and (FMNW2_Node.StateIndex = 2)),
     ((FMNW2_Node = nil) or (FMNW2_Node.StateIndex = 1))
-    and frmGoPhast.PhastModel.ModflowPackages.Mnw2Package.IsSelected);
+    and frmGoPhast.PhastModel.Mnw2IsSelected);
 
   frameHfbBoundary.SetData(FNewProperties,
     ((FHFB_Node <> nil) and (FHFB_Node.StateIndex = 2)),
     ((FHFB_Node = nil) or (FHFB_Node.StateIndex = 1))
-    and frmGoPhast.PhastModel.ModflowPackages.HfbPackage.IsSelected);
+    and frmGoPhast.PhastModel.HfbIsSelected);
 
   frameHydmod.SetData(FNewProperties,
     ((FHydmod_Node <> nil) and (FHydmod_Node.StateIndex = 2)),
     ((FHydmod_Node = nil) or (FHydmod_Node.StateIndex = 1))
-    and frmGoPhast.PhastModel.ModflowPackages.HydmodPackage.IsSelected);
+    and frmGoPhast.PhastModel.HydmodIsSelected);
 
 end;
 
@@ -4075,7 +4411,9 @@ begin
   for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
   begin
     AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
-    if (AScreenObject <> TestScreenObject) and (AScreenObject.ModflowSfrBoundary <> nil) and AScreenObject.ModflowSfrBoundary.Used then
+    if (AScreenObject <> TestScreenObject)
+      and (AScreenObject.ModflowSfrBoundary <> nil)
+      and AScreenObject.ModflowSfrBoundary.Used then
     begin
       TestLocation := AScreenObject.Points[AScreenObject.Count - 1];
       if NearestStream = nil then
@@ -4095,14 +4433,17 @@ begin
     end;
   end;
   NearestLake := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.LakPackage.IsSelected then
+  if frmGoPhast.PhastModel.LakIsSelected then
   begin
     for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
     begin
       AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
-      if (AScreenObject <> TestScreenObject) and (AScreenObject.ModflowLakBoundary <> nil) and AScreenObject.ModflowLakBoundary.Used then
+      if (AScreenObject <> TestScreenObject)
+         and (AScreenObject.ModflowLakBoundary <> nil)
+         and AScreenObject.ModflowLakBoundary.Used then
       begin
-        TestDist := AScreenObject.DistanceToScreenObject(InFlowLocation, TestLocation, 1);
+        TestDist := AScreenObject.DistanceToScreenObject(
+          InFlowLocation, TestLocation, 1);
         if (NearestStream = nil) or (TestDist < Dist) then
         begin
           Dist := TestDist;
@@ -4322,9 +4663,10 @@ procedure TfrmScreenObjectProperties.CreateFluxNode(
   FluxObservations: TFluxObservationGroups);
 begin
   NewNode := nil;
-  if FluxPackage.IsSelected {and (FluxObservations.Count > 0)} then
+  if frmGoPhast.PhastModel.PackageIsSelected(FluxPackage) then
   begin
-    NewNode := jvtlModflowBoundaryNavigator.Items.AddChild(nil, FluxPackage.PackageIdentifier) as TJvPageIndexNode;
+    NewNode := jvtlModflowBoundaryNavigator.Items.AddChild(
+      nil, FluxPackage.PackageIdentifier) as TJvPageIndexNode;
     NewNode.PageIndex := APage.PageIndex;
     AFrame.lblFluxObservations.Caption := NewNode.Text;
     NewNode.ImageIndex := 1;
@@ -4771,7 +5113,7 @@ begin
       Inc(ColIndex, Frame.ParameterColumnSuffix.Count);
     end;
   end;
-  TimeList := Boundary.Values.TimeLists[Frame.ConductanceColumn];
+  TimeList := Boundary.Values.TimeLists[Frame.ConductanceColumn, frmGoPhast.PhastModel];
   Frame.dgModflowBoundary.Cells[Frame.ConductanceColumn + 2, 0] :=
     Frame.ConductanceCaption(TimeList.NonParamDescription);
 end;
@@ -5099,6 +5441,7 @@ begin
     end;
     ScreenObject.Comment := memoComments.Text;
     AScreenObject.Comment := memoComments.Text;
+    SetVertexValues(ScreenObject);
   end;
   for Index := 0 to FNewProperties.Count - 1 do
   begin
@@ -5374,6 +5717,89 @@ begin
   except
     on ERbwParserError do
     begin
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.clbChildModelsClickCheck(Sender: TObject);
+var
+  ChildModel: TChildModel;
+  ItemIndex: Integer;
+  Item: TScreenObjectEditItem;
+begin
+  inherited;
+  ChildModel := clbChildModels.Items.Objects[
+    clbChildModels.CheckedIndex] as TChildModel;
+  if ChildModel <> nil then
+  begin
+    ChildModel.CanUpdateGrid := False;
+  end;
+
+  if FScreenObject <> nil then
+  begin
+    FScreenObject.ChildModel := ChildModel;
+  end
+  else
+  begin
+    for ItemIndex := 0 to FNewProperties.Count - 1 do
+    begin
+      Item := FNewProperties[ItemIndex];
+      Item.ScreenObject.ChildModel := ChildModel;
+    end;
+  end;
+
+end;
+
+procedure TfrmScreenObjectProperties.clbLgrUsedModelsClickCheck(
+  Sender: TObject);
+var
+  Model: TCustomModel;
+  ItemIndex: Integer;
+  UsedsModels: TUsedWithModelCollection;
+  ModelIndex: Integer;
+  AllUsed: Boolean;
+begin
+  inherited;
+  if IsLoaded then
+  begin
+    if clbLgrUsedModels.State[clbLgrUsedModels.ItemIndex] = cbGrayed then
+    begin
+      clbLgrUsedModels.State[clbLgrUsedModels.ItemIndex] := cbChecked
+    end;
+    AllUsed := True;
+    for ModelIndex := 0 to clbLgrUsedModels.Items.Count - 1 do
+    begin
+      Model := clbLgrUsedModels.Items.Objects[ModelIndex] as TCustomModel;
+      for ItemIndex := 0 to FNewProperties.Count - 1 do
+      begin
+        UsedsModels := FNewProperties[ItemIndex].ScreenObject.UsedModels;
+        if clbLgrUsedModels.State[ModelIndex] = cbChecked then
+        begin
+          UsedsModels.AddModel(Model);
+        end
+        else if clbLgrUsedModels.State[ModelIndex] = cbUnChecked then
+        begin
+          UsedsModels.RemoveModel(Model);
+          AllUsed := False;
+        end;
+      end;
+      if FScreenObject <> nil then
+      begin
+        UsedsModels := FScreenObject.UsedModels;
+        if clbLgrUsedModels.State[ModelIndex] = cbChecked then
+        begin
+          UsedsModels.AddModel(Model);
+        end
+        else if clbLgrUsedModels.State[ModelIndex] = cbUnChecked then
+        begin
+          UsedsModels.RemoveModel(Model);
+          AllUsed := False;
+        end;
+      end;
+    end;
+    if not AllUsed then
+    begin
+      cbLgrAllModels.Checked := False;
     end;
   end;
 end;
@@ -7242,7 +7668,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FUZF_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.UzfPackage.IsSelected then
+  if frmGoPhast.PhastModel.UzfIsSelected then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
       frmGoPhast.PhastModel.ModflowPackages.UzfPackage.PackageIdentifier)
@@ -7259,7 +7685,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FSFR_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.SFRPackage.IsSelected
+  if frmGoPhast.PhastModel.SfrIsSelected
     and (AScreenObject.ViewDirection = vdTop)
     and not AScreenObject.Closed then
   begin
@@ -7280,7 +7706,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FHob_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.HOBPackage.IsSelected
+  if frmGoPhast.PhastModel.HobIsSelected
     and (AScreenObject.ViewDirection = vdTop)
     and (AScreenObject.Count = 1) then
   begin
@@ -7299,7 +7725,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FHfb_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.HFBPackage.IsSelected
+  if frmGoPhast.PhastModel.HfbIsSelected
     and (AScreenObject.ViewDirection = vdTop)
     and (AScreenObject.Count > 1) then
   begin
@@ -7318,7 +7744,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FHydmod_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.HydmodPackage.IsSelected then
+  if frmGoPhast.PhastModel.HydmodIsSelected then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
       frmGoPhast.PhastModel.ModflowPackages.HydmodPackage.PackageIdentifier)
@@ -7335,7 +7761,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FLAK_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.LakPackage.IsSelected then
+  if frmGoPhast.PhastModel.LakIsSelected then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
       frmGoPhast.PhastModel.ModflowPackages.LakPackage.PackageIdentifier)
@@ -7352,7 +7778,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FMNW2_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.MNW2Package.IsSelected then
+  if frmGoPhast.PhastModel.Mnw2IsSelected then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
       frmGoPhast.PhastModel.ModflowPackages.MNW2Package.PackageIdentifier)
@@ -7369,7 +7795,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FRES_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.ResPackage.IsSelected
+  if frmGoPhast.PhastModel.ResIsSelected
     and (AScreenObject.ViewDirection = vdTop) then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
@@ -7387,7 +7813,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FETS_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.EtsPackage.IsSelected
+  if frmGoPhast.PhastModel.EtsIsSelected
     and (AScreenObject.ViewDirection = vdTop) then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
@@ -7405,7 +7831,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FEVT_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.EvtPackage.IsSelected
+  if frmGoPhast.PhastModel.EvtIsSelected
     and (AScreenObject.ViewDirection = vdTop) then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
@@ -7423,7 +7849,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FRCH_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.RchPackage.IsSelected
+  if frmGoPhast.PhastModel.RchIsSelected
     and (AScreenObject.ViewDirection = vdTop) then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
@@ -7441,7 +7867,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FDRT_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.DrtPackage.IsSelected then
+  if frmGoPhast.PhastModel.DrtIsSelected then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
       frmGoPhast.PhastModel.ModflowPackages.DrtPackage.PackageIdentifier)
@@ -7458,7 +7884,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FDRN_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.DrnPackage.IsSelected then
+  if frmGoPhast.PhastModel.DrnIsSelected then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
       frmGoPhast.PhastModel.ModflowPackages.DrnPackage.PackageIdentifier)
@@ -7475,7 +7901,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FRIV_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.RivPackage.IsSelected then
+  if frmGoPhast.PhastModel.RivIsSelected then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
       frmGoPhast.PhastModel.ModflowPackages.RivPackage.PackageIdentifier)
@@ -7511,12 +7937,13 @@ begin
     frameRvob, jvspRVOB, frmGoPhast.PhastModel.RiverObservations);
 end;
 
+
 procedure TfrmScreenObjectProperties.CreateModpathNode;
 var
   Node: TJvPageIndexNode;
 begin
   FModpath_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.MODPATH.IsSelected then
+  if frmGoPhast.PhastModel.MODPATHIsSelected then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
       frmGoPhast.PhastModel.ModflowPackages.MODPATH.PackageIdentifier)
@@ -7528,13 +7955,12 @@ begin
   end;
 end;
 
-
 procedure TfrmScreenObjectProperties.CreateWelNode;
 var
   Node: TJvPageIndexNode;
 begin
   FWEL_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.WelPackage.IsSelected then
+  if frmGoPhast.PhastModel.WelIsSelected then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
       frmGoPhast.PhastModel.ModflowPackages.WelPackage.PackageIdentifier)
@@ -7551,7 +7977,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FGage_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.SfrPackage.IsSelected then
+  if frmGoPhast.PhastModel.SfrIsSelected then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
       'GAGE: for ' + StringReplace(
@@ -7570,7 +7996,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FGHB_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.GhbBoundary.IsSelected then
+  if frmGoPhast.PhastModel.GhbIsSelected then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
       frmGoPhast.PhastModel.ModflowPackages.GhbBoundary.PackageIdentifier)
@@ -7587,7 +8013,7 @@ var
   Node: TJvPageIndexNode;
 begin
   FCHD_Node := nil;
-  if frmGoPhast.PhastModel.ModflowPackages.ChdBoundary.IsSelected then
+  if frmGoPhast.PhastModel.ChdIsSelected then
   begin
     Node := jvtlModflowBoundaryNavigator.Items.AddChild(nil,
       frmGoPhast.PhastModel.ModflowPackages.ChdBoundary.PackageIdentifier)
@@ -7624,7 +8050,7 @@ var
   AScreenObject: TScreenObject;
   Boundary: TSfrBoundary;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.SfrPackage.IsSelected then
+  if not frmGoPhast.PhastModel.SfrIsSelected then
   begin
     Exit;
   end;
@@ -7649,7 +8075,7 @@ var
   AScreenObject: TScreenObject;
   Boundary: TMnw2Boundary;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.Mnw2Package.IsSelected then
+  if not frmGoPhast.PhastModel.Mnw2IsSelected then
   begin
     Exit;
   end;
@@ -7674,7 +8100,7 @@ var
   AScreenObject: TScreenObject;
   Boundary: THfbBoundary;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.HfbPackage.IsSelected then
+  if not frmGoPhast.PhastModel.HfbIsSelected then
   begin
     Exit;
   end;
@@ -7692,6 +8118,21 @@ begin
   frameHfbBoundary.GetData(FNewProperties);
 end;
 
+procedure TfrmScreenObjectProperties.GetChildModels(const ScreenObjectList: TList);
+var
+  AScreenObject: TScreenObject;
+  ItemPosition: Integer;
+begin
+  if clbChildModels.Enabled then
+  begin
+    AScreenObject := ScreenObjectList[0];
+    EnableChildModelList(AScreenObject);
+    ItemPosition := FChildModels.IndexOf(AScreenObject.ChildModel)+1;
+    clbChildModels.Checked[ItemPosition] := True;
+  end;
+end;
+
+
 procedure TfrmScreenObjectProperties.GetHydmod(const ScreenObjectList: TList);
 var
   State: TCheckBoxState;
@@ -7699,7 +8140,7 @@ var
   AScreenObject: TScreenObject;
   HydmodData: THydmodData;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.HydmodPackage.IsSelected then
+  if not frmGoPhast.PhastModel.HydmodIsSelected then
   begin
     Exit;
   end;
@@ -7724,7 +8165,7 @@ var
   AScreenObject: TScreenObject;
   Boundary: THobBoundary;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.HobPackage.IsSelected then
+  if not frmGoPhast.PhastModel.HobIsSelected then
   begin
     Exit;
   end;
@@ -7811,7 +8252,7 @@ var
   Boundary :TModflowBoundary;
   Values: TCustomMF_BoundColl;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.UzfPackage.IsSelected then
+  if not frmGoPhast.PhastModel.UzfIsSelected then
   begin
     Exit;
   end;
@@ -7855,7 +8296,7 @@ begin
       Item := Values[TimeIndex] as TCustomModflowBoundaryItem;
       RowIndex := TimeList.IndexOfTime(Item.StartTime, Item.EndTime) + 1;
       Assert(RowIndex >= 1);
-      for BoundaryIndex := 0 to Values.TimeListCount - 1 do
+      for BoundaryIndex := 0 to Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
       begin
         DataGrid.Cells[ColumnOffset + BoundaryIndex, RowIndex] :=
           Item.BoundaryFormula[BoundaryIndex];
@@ -7938,7 +8379,7 @@ begin
         Item := Values[TimeIndex] as TCustomModflowBoundaryItem;
         RowIndex := TimeList.IndexOfTime(Item.StartTime, Item.EndTime) + 1;
         Assert(RowIndex >= 1);
-        for BoundaryIndex := 0 to Values.TimeListCount - 1 do
+        for BoundaryIndex := 0 to Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
         begin
           DataGrid.Cells[ColumnOffset + BoundaryIndex, RowIndex]
             := Item.BoundaryFormula[BoundaryIndex];
@@ -8004,7 +8445,7 @@ begin
       Item := Values[TimeIndex] as TCustomModflowBoundaryItem;
       RowIndex := TimeList.IndexOfTime(Item.StartTime, Item.EndTime) + 1;
       Assert(RowIndex >= 1);
-      for BoundaryIndex := 0 to Values.TimeListCount - 1 do
+      for BoundaryIndex := 0 to Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
       begin
         DataGrid.Cells[ColumnOffset + BoundaryIndex, RowIndex]
           := Item.BoundaryFormula[BoundaryIndex];
@@ -8085,7 +8526,7 @@ begin
       Item := Values[TimeIndex] as TCustomModflowBoundaryItem;
       RowIndex := TimeList.IndexOfTime(Item.StartTime, Item.EndTime) + 1;
       Assert(RowIndex >= 1);
-      for BoundaryIndex := 0 to Values.TimeListCount - 1 do
+      for BoundaryIndex := 0 to Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
       begin
         DataGrid.Cells[ColumnOffset + BoundaryIndex, RowIndex]
           := Item.BoundaryFormula[BoundaryIndex];
@@ -8229,7 +8670,8 @@ begin
           TimeList.Add(Time);
         end;
       end;
-      if Boundary = AScreenObject.ModflowRchBoundary then
+      if (Boundary = AScreenObject.ModflowRchBoundary)
+        and frmGoPhast.PhastModel.RchTimeVaryingLayers then
       begin
         for TimeIndex := 0 to AScreenObject.ModflowRchBoundary.RechargeLayers.Count - 1 do
         begin
@@ -8240,19 +8682,44 @@ begin
           TimeList.Add(Time);
         end;
       end;
-      if Boundary = AScreenObject.ModflowEvtBoundary then
+      if (Boundary = AScreenObject.ModflowEvtBoundary) then
       begin
-        for TimeIndex := 0 to AScreenObject.ModflowEvtBoundary.EvapotranspirationLayers.Count - 1 do
+        if frmGoPhast.PhastModel.EvtTimeVaryingLayers then
         begin
-          Item := AScreenObject.ModflowEvtBoundary.EvapotranspirationLayers[TimeIndex] as TCustomModflowBoundaryItem;
+          for TimeIndex := 0 to AScreenObject.ModflowEvtBoundary.EvapotranspirationLayers.Count - 1 do
+          begin
+            Item := AScreenObject.ModflowEvtBoundary.EvapotranspirationLayers[TimeIndex] as TCustomModflowBoundaryItem;
+            Time := TParameterTime.Create;
+            Time.StartTime := Item.StartTime;
+            Time.EndTime := Item.EndTime;
+            TimeList.Add(Time);
+          end;
+        end;
+        for TimeIndex := 0 to AScreenObject.ModflowEvtBoundary.EvtSurfDepthCollection.Count - 1 do
+        begin
+          Item := AScreenObject.ModflowEvtBoundary.EvtSurfDepthCollection[TimeIndex] as TCustomModflowBoundaryItem;
           Time := TParameterTime.Create;
           Time.StartTime := Item.StartTime;
           Time.EndTime := Item.EndTime;
           TimeList.Add(Time);
         end;
-        for TimeIndex := 0 to AScreenObject.ModflowEvtBoundary.EvtSurfDepthCollection.Count - 1 do
+      end;
+      if (Boundary = AScreenObject.ModflowEtsBoundary) then
+      begin
+        if frmGoPhast.PhastModel.EtsTimeVaryingLayers then
         begin
-          Item := AScreenObject.ModflowEvtBoundary.EvtSurfDepthCollection[TimeIndex] as TCustomModflowBoundaryItem;
+          for TimeIndex := 0 to AScreenObject.ModflowEtsBoundary.EvapotranspirationLayers.Count - 1 do
+          begin
+            Item := AScreenObject.ModflowEtsBoundary.EvapotranspirationLayers[TimeIndex] as TCustomModflowBoundaryItem;
+            Time := TParameterTime.Create;
+            Time.StartTime := Item.StartTime;
+            Time.EndTime := Item.EndTime;
+            TimeList.Add(Time);
+          end;
+        end;
+        for TimeIndex := 0 to AScreenObject.ModflowEtsBoundary.EtsSurfDepthCollection.Count - 1 do
+        begin
+          Item := AScreenObject.ModflowEtsBoundary.EtsSurfDepthCollection[TimeIndex] as TCustomModflowBoundaryItem;
           Time := TParameterTime.Create;
           Time.StartTime := Item.StartTime;
           Time.EndTime := Item.EndTime;
@@ -8363,7 +8830,7 @@ begin
               Item := BoundaryItem.Param[ChdIndex] as TCustomModflowBoundaryItem;
               RowIndex := TimeList.IndexOfTime(Item.StartTime, Item.EndTime) + 1;
               Assert(RowIndex >= 1);
-              for BoundIndex := 0 to Boundary.Values.TimeListCount - 1 do
+              for BoundIndex := 0 to Boundary.Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
               begin
                 DataGrid.Cells[ColIndex + BoundIndex, RowIndex] :=
                   Item.BoundaryFormula[BoundIndex];
@@ -8412,7 +8879,7 @@ begin
   begin
     if Times[RowIndex].TimeOK then
     begin
-      for BoundIndex := 0 to BoundaryValues.TimeListCount - 1 do
+      for BoundIndex := 0 to BoundaryValues.TimeListCount(frmGoPhast.PhastModel) - 1 do
       begin
         ColIndex := BoundIndex + ColumnOffset;
         NewValue := DataGrid.Cells[ColIndex, RowIndex];
@@ -8435,7 +8902,7 @@ begin
   end;
   for RowIndex := DataGrid.RowCount  to BoundaryValues.Count do
   begin
-    for BoundIndex := 0 to BoundaryValues.TimeListCount - 1 do
+    for BoundIndex := 0 to BoundaryValues.TimeListCount(frmGoPhast.PhastModel) - 1 do
     begin
       BoundItem := BoundaryValues.Items[RowIndex - 1];
       BoundItem.BoundaryFormula[BoundIndex] := '';
@@ -8483,7 +8950,7 @@ begin
     StartCol := Boundary.NonParameterColumns;
     for ColIndex := StartCol to DataGrid.ColCount - 1 do
     begin
-      if ((ColIndex - StartCol) mod Boundary.Values.TimeListCount) <> 0 then
+      if ((ColIndex - StartCol) mod Boundary.Values.TimeListCount(frmGoPhast.PhastModel)) <> 0 then
       begin
         Continue;
       end;
@@ -8497,7 +8964,7 @@ begin
         begin
           Values.Clear;
           ValuesOK := True;
-          for BoundIndex := 0 to Boundary.Values.TimeListCount - 1 do
+          for BoundIndex := 0 to Boundary.Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
           begin
             Value := DataGrid.Cells[BoundIndex + ColIndex, RowIndex];
             ValuesOK := Value <> '';
@@ -8532,7 +8999,7 @@ begin
             BoundItem := ParamItem.Param.Add as TCustomModflowBoundaryItem;
             BoundItem.StartTime := Times[RowIndex].StartTime;
             BoundItem.EndTime := Times[RowIndex].EndTime;
-            for BoundIndex := 0 to Boundary.Values.TimeListCount - 1 do
+            for BoundIndex := 0 to Boundary.Values.TimeListCount(frmGoPhast.PhastModel) - 1 do
             begin
               BoundItem.BoundaryFormula[BoundIndex] := Values[BoundIndex];
             end;
@@ -8580,6 +9047,7 @@ begin
   GetHydmod(AScreenObjectList);
   GetFluxObservations(AScreenObjectList);
   SetSelectedMfBoundaryNode;
+  GetChildModels(AScreenObjectList);
 end;
 
 procedure TfrmScreenObjectProperties.GetFormulaInterpretation(
@@ -8781,8 +9249,11 @@ var
   TimeList: TModflowTimeList;
   EtsColCount: integer;
   StoredUpToDate: boolean;
+  PriorCanInvalidateModel: Boolean;
 begin
   StoredUpToDate := frmGoPhast.PhastModel.UpToDate;
+  PriorCanInvalidateModel := AScreenObject.CanInvalidateModel;
+  AScreenObject.CanInvalidateModel := False;
   try
     AScreenObject.CreateChdBoundary;
     frameChdParam.InitializeFrame(AScreenObject.ModflowChdBoundary);
@@ -8843,7 +9314,7 @@ begin
       AScreenObject.ModflowDrtBoundary := nil;
     end;
 
-    if frmGoPhast.PhastModel.ModflowPackages.RchPackage.TimeVaryingLayers then
+    if frmGoPhast.PhastModel.RchTimeVaryingLayers then
     begin
       frameRchParam.dgModflowBoundary.ColCount := 4;
     end
@@ -8853,11 +9324,11 @@ begin
     end;
     AScreenObject.CreateRchBoundary;
     frameRchParam.InitializeFrame(AScreenObject.ModflowRchBoundary);
-    if frmGoPhast.PhastModel.ModflowPackages.RchPackage.TimeVaryingLayers then
+    if frmGoPhast.PhastModel.RchTimeVaryingLayers then
     begin
 //      frameRchParam.dgModflowBoundary.Columns[3].WordWrapCaptions := True;
       frameRchParam.dgModflowBoundary.Columns[3].AutoAdjustColWidths := True;
-      TimeList := AScreenObject.ModflowRchBoundary.RechargeLayers.TimeLists[0];
+      TimeList := AScreenObject.ModflowRchBoundary.RechargeLayers.TimeLists[0, frmGoPhast.PhastModel];
       frameRchParam.dgModflowBoundary.Cells[3, 0] := TimeList.NonParamDescription;
       frameRchParam.dgModflowBoundary.Columns[3].AutoAdjustColWidths := False;
       frameRchParam.dgModflowBoundary.ColWidths[3] :=
@@ -8869,7 +9340,7 @@ begin
       AScreenObject.ModflowRchBoundary := nil;
     end;
 
-    if frmGoPhast.PhastModel.ModflowPackages.EvtPackage.TimeVaryingLayers then
+    if frmGoPhast.PhastModel.EvtTimeVaryingLayers then
     begin
       frameEvtParam.dgModflowBoundary.ColCount := 6;
     end
@@ -8879,11 +9350,11 @@ begin
     end;
     AScreenObject.CreateEvtBoundary;
     frameEvtParam.InitializeFrame(AScreenObject.ModflowEvtBoundary);
-    if frmGoPhast.PhastModel.ModflowPackages.EvtPackage.TimeVaryingLayers then
+    if frmGoPhast.PhastModel.EvtTimeVaryingLayers then
     begin
 //      frameEvtParam.dgModflowBoundary.Columns[5].WordWrapCaptions := True;
       frameEvtParam.dgModflowBoundary.Columns[5].AutoAdjustColWidths := True;
-      TimeList := AScreenObject.ModflowEvtBoundary.EvapotranspirationLayers.TimeLists[0];
+      TimeList := AScreenObject.ModflowEvtBoundary.EvapotranspirationLayers.TimeLists[0, frmGoPhast.PhastModel];
       frameEvtParam.dgModflowBoundary.Cells[5, 0] := TimeList.NonParamDescription;
       frameEvtParam.dgModflowBoundary.Columns[5].AutoAdjustColWidths := False;
       frameEvtParam.dgModflowBoundary.ColWidths[5] :=
@@ -8891,11 +9362,11 @@ begin
     end;
 
     for Index := 0 to AScreenObject.ModflowEvtBoundary.
-      EvtSurfDepthCollection.TimeListCount - 1 do
+      EvtSurfDepthCollection.TimeListCount(frmGoPhast.PhastModel) - 1 do
     begin
       frameEvtParam.dgModflowBoundary.Columns[3+Index].WordWrapCaptions := True;
 //      frameEvtParam.dgModflowBoundary.Columns[3+Index].AutoAdjustColWidths := True;
-      TimeList := AScreenObject.ModflowEvtBoundary.EvtSurfDepthCollection.TimeLists[Index];
+      TimeList := AScreenObject.ModflowEvtBoundary.EvtSurfDepthCollection.TimeLists[Index, frmGoPhast.PhastModel];
       frameEvtParam.dgModflowBoundary.Cells[3+Index, 0] := TimeList.NonParamDescription;
       frameEvtParam.dgModflowBoundary.Columns[3+Index].AutoAdjustColWidths := False;
       frameEvtParam.dgModflowBoundary.ColWidths[3+Index] :=
@@ -8907,7 +9378,7 @@ begin
       AScreenObject.ModflowEvtBoundary := nil;
     end;
 
-    if frmGoPhast.PhastModel.ModflowPackages.EtsPackage.TimeVaryingLayers then
+    if frmGoPhast.PhastModel.EtsTimeVaryingLayers then
     begin
       EtsColCount := 6
         + (frmGoPhast.PhastModel.ModflowPackages.EtsPackage.SegmentCount -1) * 2;
@@ -8921,11 +9392,11 @@ begin
 
     AScreenObject.CreateEtsBoundary;
     frameEtsParam.InitializeFrame(AScreenObject.ModflowEtsBoundary);
-    if frmGoPhast.PhastModel.ModflowPackages.EtsPackage.TimeVaryingLayers then
+    if frmGoPhast.PhastModel.EtsTimeVaryingLayers then
     begin
       frameEtsParam.dgModflowBoundary.Columns[EtsColCount-1].WordWrapCaptions := True;
 //      frameEtsParam.dgModflowBoundary.Columns[EtsColCount-1].AutoAdjustColWidths := True;
-      TimeList := AScreenObject.ModflowEtsBoundary.EvapotranspirationLayers.TimeLists[0];
+      TimeList := AScreenObject.ModflowEtsBoundary.EvapotranspirationLayers.TimeLists[0, frmGoPhast.PhastModel];
       frameEtsParam.dgModflowBoundary.Cells[EtsColCount-1, 0] := TimeList.NonParamDescription;
       frameEtsParam.dgModflowBoundary.Columns[EtsColCount-1].AutoAdjustColWidths := False;
       frameEtsParam.dgModflowBoundary.ColWidths[EtsColCount-1] :=
@@ -8933,11 +9404,11 @@ begin
     end;
 
     for Index := 0 to AScreenObject.ModflowEtsBoundary.
-      EtsSurfDepthCollection.TimeListCount - 1 do
+      EtsSurfDepthCollection.TimeListCount(frmGoPhast.PhastModel) - 1 do
     begin
       frameEtsParam.dgModflowBoundary.Columns[3+Index].WordWrapCaptions := True;
       frameEtsParam.dgModflowBoundary.Columns[3+Index].AutoAdjustColWidths := True;
-      TimeList := AScreenObject.ModflowEtsBoundary.EtsSurfDepthCollection.TimeLists[Index];
+      TimeList := AScreenObject.ModflowEtsBoundary.EtsSurfDepthCollection.TimeLists[Index, frmGoPhast.PhastModel];
       frameEtsParam.dgModflowBoundary.Cells[3+Index, 0] := TimeList.NonParamDescription;
       frameEtsParam.dgModflowBoundary.Columns[3+Index].AutoAdjustColWidths := False;
     end;
@@ -8974,7 +9445,7 @@ begin
       frameScreenObjectUZF.dgModflowBoundary.Columns[3].WordWrapCaptions := True;
 //      frameScreenObjectUZF.dgModflowBoundary.Columns[3].AutoAdjustColWidths := True;
       frameScreenObjectUZF.dgModflowBoundary.Columns[3].AutoAdjustRowHeights := True;
-      TimeList := AScreenObject.ModflowUzfBoundary.EvapotranspirationDemand.TimeLists[0];
+      TimeList := AScreenObject.ModflowUzfBoundary.EvapotranspirationDemand.TimeLists[0, frmGoPhast.PhastModel];
       frameScreenObjectUZF.dgModflowBoundary.Cells[3, 0] := TimeList.NonParamDescription;
       frameScreenObjectUZF.dgModflowBoundary.Columns[3].AutoAdjustColWidths := False;
       frameScreenObjectUZF.dgModflowBoundary.Columns[3].AutoAdjustRowHeights := False;
@@ -8984,7 +9455,7 @@ begin
       frameScreenObjectUZF.dgModflowBoundary.Columns[4].WordWrapCaptions := True;
 //      frameScreenObjectUZF.dgModflowBoundary.Columns[4].AutoAdjustColWidths := True;
       frameScreenObjectUZF.dgModflowBoundary.Columns[4].AutoAdjustRowHeights := True;
-      TimeList := AScreenObject.ModflowUzfBoundary.ExtinctionDepth.TimeLists[0];
+      TimeList := AScreenObject.ModflowUzfBoundary.ExtinctionDepth.TimeLists[0, frmGoPhast.PhastModel];
       frameScreenObjectUZF.dgModflowBoundary.Cells[4, 0] := TimeList.NonParamDescription;
       frameScreenObjectUZF.dgModflowBoundary.Columns[4].AutoAdjustColWidths := False;
       frameScreenObjectUZF.dgModflowBoundary.Columns[4].AutoAdjustRowHeights := False;
@@ -8994,7 +9465,7 @@ begin
       frameScreenObjectUZF.dgModflowBoundary.Columns[5].WordWrapCaptions := True;
 //      frameScreenObjectUZF.dgModflowBoundary.Columns[5].AutoAdjustColWidths := True;
       frameScreenObjectUZF.dgModflowBoundary.Columns[5].AutoAdjustRowHeights := True;
-      TimeList := AScreenObject.ModflowUzfBoundary.WaterContent.TimeLists[0];
+      TimeList := AScreenObject.ModflowUzfBoundary.WaterContent.TimeLists[0, frmGoPhast.PhastModel];
       frameScreenObjectUZF.dgModflowBoundary.Cells[5, 0] := TimeList.NonParamDescription;
       frameScreenObjectUZF.dgModflowBoundary.Columns[5].AutoAdjustColWidths := False;
       frameScreenObjectUZF.dgModflowBoundary.Columns[5].AutoAdjustRowHeights := False;
@@ -9012,6 +9483,7 @@ begin
       AScreenObject.ModflowUzfBoundary := nil;
     end;
   finally
+    AScreenObject.CanInvalidateModel := PriorCanInvalidateModel;
     frmGoPhast.PhastModel.UpToDate := StoredUpToDate;
   end;
 end;
@@ -9254,22 +9726,18 @@ begin
   FNewProperties.Free;
   FOldProperties.Free;
   FDataEdits.Free;
+  FChildModels.Free;
+  FChildModelsScreenObjects.Free;
 end;
 
 procedure TfrmScreenObjectProperties.FormKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
-var
-  ASelection: TGridRect;
 begin
   inherited;
-  if (ActiveControl = dgVerticies) and (ssCtrl in Shift)
+  if (ActiveControl is TRbwDataGrid4) and (ssCtrl in Shift)
     and (Key in [Ord('a'), Ord('A')]) then
   begin
-    ASelection.Left := dgVerticies.FixedCols;
-    ASelection.top := dgVerticies.FixedRows;
-    ASelection.Right := dgVerticies.ColCount -1;
-    ASelection.Bottom := dgVerticies.RowCount -1;
-    dgVerticies.Selection := ASelection;
+    TRbwDataGrid4(ActiveControl).SelectAll;
   end;
 end;
 
@@ -9578,7 +10046,7 @@ var
   Frame: TframeScreenObjectCondParam;
   Parameter: TParameterType;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.GhbBoundary.IsSelected then
+  if not frmGoPhast.PhastModel.GhbIsSelected then
   begin
     Exit;
   end;
@@ -9593,7 +10061,7 @@ var
   Frame: TframeScreenObjectCondParam;
   Parameter: TParameterType;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.WelPackage.IsSelected then
+  if not frmGoPhast.PhastModel.WelIsSelected then
   begin
     Exit;
   end;
@@ -9608,7 +10076,7 @@ var
   Frame: TframeScreenObjectCondParam;
   Parameter: TParameterType;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.RivPackage.IsSelected then
+  if not frmGoPhast.PhastModel.RivIsSelected then
   begin
     Exit;
   end;
@@ -9640,7 +10108,7 @@ var
   FirstScreenObjectFound: boolean;
   State: TCheckBoxState;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.UzfPackage.IsSelected then
+  if not frmGoPhast.PhastModel.UzfIsSelected then
   begin
     Exit;
   end;
@@ -9856,7 +10324,7 @@ var
   Frame: TframeScreenObjectCondParam;
   Parameter: TParameterType;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.DrnPackage.IsSelected then
+  if not frmGoPhast.PhastModel.DrnIsSelected then
   begin
     Exit;
   end;
@@ -9904,7 +10372,7 @@ var
   ValuesFunction: TGetBoundaryCollectionEvent;
   ColumnOffset: integer;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.RchPackage.IsSelected then
+  if not frmGoPhast.PhastModel.RchIsSelected then
   begin
     Exit;
   end;
@@ -9912,8 +10380,7 @@ begin
   Parameter := ptRch;
   GetModflowBoundary(Frame, Parameter, ScreenObjectList, FRCH_Node);
 
-  if frmGoPhast.PhastModel.ModflowPackages.
-    RchPackage.TimeVaryingLayers then
+  if frmGoPhast.PhastModel.RchTimeVaryingLayers then
   begin
     TimeList := TParameterTimeList.Create;
     try
@@ -9938,7 +10405,7 @@ var
   ValuesFunction: TGetBoundaryCollectionEvent;
   ColumnOffset: integer;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.EvtPackage.IsSelected then
+  if not frmGoPhast.PhastModel.EvtIsSelected then
   begin
     Exit;
   end;
@@ -9946,8 +10413,7 @@ begin
   Parameter := ptEvt;
   GetModflowBoundary(Frame, Parameter, ScreenObjectList, FEVT_Node);
 
-  if frmGoPhast.PhastModel.ModflowPackages.
-    EvtPackage.TimeVaryingLayers then
+  if frmGoPhast.PhastModel.EvtTimeVaryingLayers then
   begin
     TimeList := TParameterTimeList.Create;
     try
@@ -9983,7 +10449,7 @@ var
   ValuesFunction: TGetBoundaryCollectionEvent;
   ColumnOffset: integer;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.EtsPackage.IsSelected then
+  if not frmGoPhast.PhastModel.EtsIsSelected then
   begin
     Exit;
   end;
@@ -9991,8 +10457,7 @@ begin
   Parameter := ptETS;
   GetModflowBoundary(Frame, Parameter, ScreenObjectList, FETS_Node);
 
-  if frmGoPhast.PhastModel.ModflowPackages.
-    EtsPackage.TimeVaryingLayers then
+  if frmGoPhast.PhastModel.EtsTimeVaryingLayers then
   begin
     TimeList := TParameterTimeList.Create;
     try
@@ -10036,7 +10501,7 @@ var
   DataGrid: TRbwDataGrid4;
   State: TCheckBoxState;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.ResPackage.IsSelected then
+  if not frmGoPhast.PhastModel.ResIsSelected then
   begin
     Exit;
   end;
@@ -10131,7 +10596,7 @@ var
   OutState2: TCheckBoxState;
   OutState4: TCheckBoxState;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.LakPackage.IsSelected then
+  if not frmGoPhast.PhastModel.LakIsSelected then
   begin
     Exit;
   end;
@@ -10326,7 +10791,7 @@ var
   DrainReturn: TDrainReturn;
   FirstObject, FirstLocation, FirstCell: Boolean;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.DrtPackage.IsSelected then
+  if not frmGoPhast.PhastModel.DrtIsSelected then
   begin
     Exit;
   end;
@@ -10532,8 +10997,7 @@ begin
   begin
     ResultType := rdtDouble;
     if (DataGrid = frameRchParam.dgModflowBoundary)
-      and frmGoPhast.PhastModel.ModflowPackages.
-        RchPackage.TimeVaryingLayers
+      and frmGoPhast.PhastModel.RchTimeVaryingLayers
       and (ACol = 3) then
     begin
       // We are setting the formula for  the layer
@@ -10541,8 +11005,7 @@ begin
       ResultType := rdtInteger;
     end
     else if (DataGrid = frameEvtParam.dgModflowBoundary)
-      and frmGoPhast.PhastModel.ModflowPackages.
-        EvtPackage.TimeVaryingLayers
+      and frmGoPhast.PhastModel.EvtTimeVaryingLayers
       and (ACol = 5) then
     begin
       // We are setting the formula for  the layer
@@ -10768,20 +11231,6 @@ procedure TfrmScreenObjectProperties.dgVerticiesEnter(Sender: TObject);
 begin
   inherited;
   FVertexRowCount := dgVerticies.RowCount;
-end;
-
-procedure TfrmScreenObjectProperties.dgVerticiesMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    dgVerticies.Options := dgVerticies.Options + [goEditing];
-  end
-  else
-  begin
-    dgVerticies.Options := dgVerticies.Options - [goEditing];
-  end;
 end;
 
 procedure TfrmScreenObjectProperties.dgVerticiesStateChange(Sender: TObject;
@@ -11764,20 +12213,6 @@ begin
   end;
 end;
 
-procedure TfrmScreenObjectProperties.rdgImportedDataMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    rdgImportedData.Options := rdgImportedData.Options + [goEditing];
-  end
-  else
-  begin
-    rdgImportedData.Options := rdgImportedData.Options - [goEditing];
-  end;
-end;
-
 procedure TfrmScreenObjectProperties.rdgImportedDataSetEditText(Sender: TObject;
   ACol, ARow: Integer; const Value: string);
 var
@@ -11818,30 +12253,6 @@ begin
       else Assert(False);
     end;
   end;
-{
-    case ValueStorage.DataType of
-      rdtDouble:
-        begin
-          rdgImportedData.Cells[ColIndex, ValueIndex + 1] :=
-            FloatToStr(ValueStorage.RealValues[ValueIndex]);
-        end;
-      rdtInteger:
-        begin
-          rdgImportedData.Cells[ColIndex, ValueIndex + 1] :=
-            IntToStr(ValueStorage.IntValues[ValueIndex]);
-        end;
-      rdtBoolean:
-        begin
-          rdgImportedData.Checked[ColIndex, ValueIndex + 1] :=
-            ValueStorage.BooleanValues[ValueIndex];
-        end;
-      rdtString:
-        begin
-          rdgImportedData.Cells[ColIndex, ValueIndex + 1] :=
-            ValueStorage.StringValues[ValueIndex];
-        end;
-
-}
 end;
 
 procedure TfrmScreenObjectProperties.reDataSetFormulaChange(Sender: TObject);
@@ -12006,6 +12417,31 @@ begin
       end;
     end;
   end;
+  if FScreenObject <> nil then
+  begin
+    clbChildModels.Enabled := CanSpecifyChildModels(FScreenObject);
+  end
+  else
+  begin
+    Assert(FScreenObjectList <> nil);
+    if FScreenObjectList.Count = 1 then
+    begin
+      AScreenObject := FScreenObjectList[0];
+      clbChildModels.Enabled := CanSpecifyChildModels(AScreenObject);
+    end
+    else
+    begin
+      clbChildModels.Enabled := False;
+    end;
+  end;
+  if clbChildModels.Enabled then
+  begin
+    clbChildModels.Color := clWindow;
+  end
+  else
+  begin
+    clbChildModels.Color := clBtnFace;
+  end;
   if IsLoaded and (rgElevationCount.ItemIndex >= 0) then
   begin
     ShowWarning := False;
@@ -12129,6 +12565,13 @@ begin
         end;
       end;
     end;
+  end;
+
+  if (rgElevationCount.ItemIndex > 0)
+    and (clbChildModels.CheckedIndex > 0) then
+  begin
+    clbChildModels.CheckedIndex := 0;
+    clbChildModelsClickCheck(clbChildModels);
   end;
 
   FPriorElevationCount := rgElevationCount.ItemIndex;
@@ -13819,8 +14262,7 @@ begin
       end;
     end;
 
-    if frmGoPhast.PhastModel.ModflowPackages.
-      RchPackage.TimeVaryingLayers then
+    if frmGoPhast.PhastModel.RchTimeVaryingLayers then
     begin
       GetMF_BoundaryTimes(Times, Frame);
       for Index := 0 to FNewProperties.Count - 1 do
@@ -13873,8 +14315,7 @@ begin
     end;
 
     GetMF_BoundaryTimes(Times, Frame);
-    if frmGoPhast.PhastModel.ModflowPackages.
-      EvtPackage.TimeVaryingLayers then
+    if frmGoPhast.PhastModel.EvtTimeVaryingLayers then
     begin
       for Index := 0 to FNewProperties.Count - 1 do
       begin
@@ -13942,8 +14383,7 @@ begin
     end;
 
     GetMF_BoundaryTimes(Times, Frame);
-    if frmGoPhast.PhastModel.ModflowPackages.
-      EtsPackage.TimeVaryingLayers then
+    if frmGoPhast.PhastModel.EtsTimeVaryingLayers then
     begin
       for Index := 0 to FNewProperties.Count - 1 do
       begin
@@ -15912,7 +16352,7 @@ begin
       NewValue := framePhastInterpolationData.edMixFormula.Text;
       if (NewValue = '') then
       begin
-        NewValue := FloatToStr(0.5);
+        NewValue := FortranFloatToStr(0.5);
       end;
 
       Tester := TRbwParser.Create(self);
@@ -16160,7 +16600,7 @@ begin
     NewValue := OldFormula;
     if (NewValue = '') then
     begin
-      NewValue := FloatToStr(0.5);
+      NewValue := FortranFloatToStr(0.5);
     end;
     with TfrmFormula.Create(self) do
     begin

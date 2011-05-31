@@ -18,7 +18,7 @@ type
   // the new @link(TDataArray).
   //
   // @name is called by @link(UpdatePackageLayers).
-    procedure UpdateDataArray(Model: TPhastModel; Index: integer);
+    procedure UpdateDataArray(Model: TCustomModel; Index: integer);
     // @name checks if all the data sets for the selected packages
     // exist and creates them if they do not.
     procedure UpdatePackageLayers;
@@ -43,7 +43,7 @@ type
     FNewHufModflowParameters: THufModflowParameters;
     FNewSfrParamInstances: TSfrParamInstances;
     FOldSfrParamInstances: TSfrParamInstances;
-//    FExistingScreenObjects: TScreenObjectEditCollection;
+    FOldModflowBoundaries: TList;
   protected
     function Description: string; override;
   public
@@ -71,7 +71,7 @@ type
 implementation
 
 uses DataSetUnit, RbwParser, frmGoPhastUnit, frmGridColorUnit, 
-  frmContourDataUnit, frmGridValueUnit;
+  frmContourDataUnit, frmGridValueUnit, contnrs, ScreenObjectUnit;
 
 constructor TCustomCreateRequiredDataSetsUndo.Create;
 begin
@@ -97,7 +97,7 @@ begin
   frmGoPhast.PhastModel.ModflowSteadyParameters.NewDataSets := FNewSteadyModflowParameterDataSets;
 end;
 
-procedure TCustomCreateRequiredDataSetsUndo.UpdateDataArray(Model: TPhastModel; Index: integer);
+procedure TCustomCreateRequiredDataSetsUndo.UpdateDataArray(Model: TCustomModel; Index: integer);
 var
   DataArray: TDataArray;
 //  DataArrayIndex: Integer;
@@ -108,6 +108,9 @@ var
   NewFormula, Classification: string;
   Lock: TDataLock;
   DataArrayManager: TDataArrayManager;
+  PhastModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   { TODO : Find a way to extract common code from
 TPhastModel.CreateModflowDataSets and
@@ -158,6 +161,15 @@ TCustomCreateRequiredDataSetsUndo.UpdateDataArray}
       Model.Grid.ColumnCount);
   end;
   Model.UpdateDataArrayParameterUsed;
+  if Model is TPhastModel then
+  begin
+    PhastModel := TPhastModel(Model);
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      UpdateDataArray(ChildModel, Index);
+    end;
+  end;
 end;
 
 procedure TCustomCreateRequiredDataSetsUndo.UpdatePackageLayers;
@@ -228,8 +240,21 @@ constructor TCustomUndoChangeParameters.Create(
   var NewTransientParameters: TModflowTransientListParameters;
   var NewHufModflowParameters: THufModflowParameters;
   var NewSfrParamInstances: TSfrParamInstances);
+var
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  OldBoundary: TModflowBoundaries;
 begin
   inherited Create;
+  FOldModflowBoundaries := TObjectList.Create;
+  for ScreenObjectIndex := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
+    OldBoundary := TModflowBoundaries.Create;
+    OldBoundary.Assign(ScreenObject.ModflowBoundaries);
+    FOldModflowBoundaries.Add(OldBoundary);
+  end;
+
   FNewSteadyParameters:= NewSteadyParameters;
   // TUndoDefineLayers takes ownership of NewSteadyParameters.
   NewSteadyParameters := nil;
@@ -276,6 +301,7 @@ begin
   FOldTransientParameters.Free;
   FNewSfrParamInstances.Free;
   FOldSfrParamInstances.Free;
+  FOldModflowBoundaries.Free;
 //  FExistingScreenObjects.Free;
   inherited;
 end;
@@ -295,6 +321,10 @@ begin
 end;
 
 procedure TCustomUndoChangeParameters.Undo;
+var
+  ScreenObjectIndex: Integer;
+  ScreenObject: TScreenObject;
+  OldBoundary: TModflowBoundaries;
 begin
   inherited;
   frmGoPhast.PhastModel.ModflowSteadyParameters  := FOldSteadyParameters;
@@ -306,6 +336,12 @@ begin
   frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances :=
     FOldSfrParamInstances;
   UpdatedRequiredDataSets;
+  for ScreenObjectIndex := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+  begin
+    ScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
+    OldBoundary := FOldModflowBoundaries[ScreenObjectIndex];
+    ScreenObject.ModflowBoundaries.Assign(OldBoundary);
+  end;
 end;
 
 end.

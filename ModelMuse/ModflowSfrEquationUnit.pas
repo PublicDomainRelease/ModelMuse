@@ -46,7 +46,6 @@ type
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
-    procedure InvalidateModel; override;
     function BoundaryFormulaCount: integer; override;
   public
     constructor Create(Collection: TCollection); override;
@@ -212,12 +211,6 @@ function TSfrEquationItem.GetWidthExponent: string;
 begin
   Result := FWidthExponent.Formula;
   ResetItemObserver(WidthExponentPosition);
-end;
-
-procedure TSfrEquationItem.InvalidateModel;
-begin
-  inherited;
-
 end;
 
 function TSfrEquationItem.IsSame(AnotherItem: TOrderedItem): boolean;
@@ -395,7 +388,7 @@ begin
         Expression.Evaluate;
       except on E: ERbwParserError do
         begin
-          frmFormulaErrors.AddError(ScrObj.Name,
+          frmFormulaErrors.AddFormulaError(ScrObj.Name,
             '(depth coefficient for the SFR package)',
             Formula, E.Message);
 
@@ -419,7 +412,7 @@ begin
         Expression.Evaluate;
       except on E: ERbwParserError do
         begin
-          frmFormulaErrors.AddError(ScrObj.Name,
+          frmFormulaErrors.AddFormulaError(ScrObj.Name,
             '(depth exponent for the SFR package)',
             Formula, E.Message);
 
@@ -443,7 +436,7 @@ begin
         Expression.Evaluate;
       except on E: ERbwParserError do
         begin
-          frmFormulaErrors.AddError(ScrObj.Name,
+          frmFormulaErrors.AddFormulaError(ScrObj.Name,
             '(width coefficient for the SFR package)',
             Formula, E.Message);
 
@@ -467,7 +460,7 @@ begin
         Expression.Evaluate;
       except on E: ERbwParserError do
         begin
-          frmFormulaErrors.AddError(ScrObj.Name,
+          frmFormulaErrors.AddFormulaError(ScrObj.Name,
             '(width exponent for the SFR package)',
             Formula, E.Message);
 
@@ -526,7 +519,8 @@ begin
   ScreenObjectName := (ScreenObject as TScreenObject).Name;
   ErrorMessage := 'Object = ' + ScreenObjectName
     + '; Time = ' + FloatToStr(StartTime);
-  frmErrorsAndWarnings.AddError(StrIncompleteSFRData, ErrorMessage);
+  frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
+    StrIncompleteSFRData, ErrorMessage);
 end;
 
 class function TSfrEquationCollection.ItemClass: TMF_BoundItemClass;

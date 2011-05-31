@@ -605,7 +605,7 @@ begin
         NC := 2;
         Msg1 := '# Model_Input_Files input block not generated because it would be empty';
         case ModelUse of
-          muCalib: Msg2 := 'Model_Input_Files input block not generated because there are no model input files entered';
+          muCalib: Msg2 := 'Model_Input_Files input block not generated because there are no model-input files entered';
           muPred: Msg2 := 'Model_Input_Files input block not generated because there are no prediction-model input files entered';
         end;
         Keyword0 := 'ModInFile';
@@ -624,7 +624,7 @@ begin
         NC := 3;
         Msg1 := '# Model_Output_Files input block not generated because it would be empty';
         case ModelUse of
-          muCalib: Msg2 := 'Model_Output_Files input block not generated because there are no model output files entered';
+          muCalib: Msg2 := 'Model_Output_Files input block not generated because there are no model-output files entered';
           muPred: Msg2 := 'Model_Output_Files input block not generated because there are no prediction-model output files entered';
         end;
         Keyword0 := 'ModOutFile';
@@ -1602,8 +1602,8 @@ begin
   ProjName := 'default_project';
   Title := 'Title for unnamed project';
   NameLikeProjectFile := True;
-  fModelDirectory := '\';      // Avoid setter
-  fModelDirectoryPred := '\';  // Avoid setter
+  fModelDirectory := PathDelimiter;      // Avoid setter
+  fModelDirectoryPred := PathDelimiter;  // Avoid setter
   FileName := '';
   ModelID := midModflow2005;
   ModflowNameFile := '';
@@ -2058,6 +2058,11 @@ begin
       OutPrefix := UcProject.OutputPrefix;
       OutPrefixPred := UcProject.OutputPrefixPred;
       BatchBase := 'RunUcode_' + ProjName;
+      if ModelUseLocal = muPred then
+        begin
+          // Add in response to Mary's request of 2/26/2011
+          BatchBase := BatchBase + '_pred'
+        end;
       AbsModelDir := AbsModelDirectory(ModelUseLocal);
       if AnsiSameText(AbsAppDir, AbsModelDir) then
         begin

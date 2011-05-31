@@ -2,23 +2,24 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
   HelpType = htKeyword
   HelpKeyword = 'Errors_and_Warnings_Dialog_Box'
   Caption = 'Errors and Warnings'
+  ClientWidth = 472
   OnResize = FormResize
-  ExplicitWidth = 442
-  ExplicitHeight = 274
+  ExplicitWidth = 480
+  ExplicitHeight = 268
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
     Top = 193
-    Width = 432
+    Width = 472
     Height = 41
     Align = alBottom
     TabOrder = 0
     DesignSize = (
-      432
+      472
       41)
     object btnClose: TBitBtn
-      Left = 334
+      Left = 374
       Top = 4
       Width = 89
       Height = 33
@@ -27,7 +28,7 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
       Kind = bkClose
     end
     object btnHelp: TBitBtn
-      Left = 239
+      Left = 279
       Top = 4
       Width = 89
       Height = 33
@@ -37,7 +38,7 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
       Kind = bkHelp
     end
     object btnSave: TButton
-      Left = 8
+      Left = 88
       Top = 4
       Width = 75
       Height = 33
@@ -46,19 +47,28 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
       OnClick = btnSaveClick
     end
     object btnClear: TButton
-      Left = 89
-      Top = 6
+      Left = 169
+      Top = 4
       Width = 75
-      Height = 31
+      Height = 33
       Caption = 'Clear'
       TabOrder = 3
       OnClick = btnClearClick
+    end
+    object btnCopy: TButton
+      Left = 7
+      Top = 4
+      Width = 75
+      Height = 33
+      Caption = 'Copy'
+      TabOrder = 4
+      OnClick = btnCopyClick
     end
   end
   object vstWarningsAndErrors: TVirtualStringTree
     Left = 0
     Top = 0
-    Width = 432
+    Width = 472
     Height = 193
     Align = alClient
     CheckImageKind = ckLightTick
@@ -74,8 +84,6 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
     OnGetText = vstWarningsAndErrorsGetText
     OnInitNode = vstWarningsAndErrorsInitNode
     OnMeasureItem = vstWarningsAndErrorsMeasureItem
-    ExplicitWidth = 434
-    ExplicitHeight = 199
     Columns = <
       item
         Position = 0

@@ -114,8 +114,6 @@ type
     procedure rdgTimeTableHorizontalScroll(Sender: TObject);
     procedure rdgTimeTableSetEditText(Sender: TObject; ACol, ARow: Integer;
       const Value: string);
-    procedure rdgTimeTableMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure rdgTimeTableMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure comboQCUTChange(Sender: TObject);
@@ -130,8 +128,6 @@ type
     procedure btnInsertVertialScreenClick(Sender: TObject);
     procedure btnDeleteVertialScreenClick(Sender: TObject);
     procedure rdgVerticalScreensEndUpdate(Sender: TObject);
-    procedure rdgVerticalScreensMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure rdeWellScreenFormulaChange(Sender: TObject);
     procedure rdgVerticalScreensColSize(Sender: TObject; ACol,
       PriorWidth: Integer);
@@ -1211,19 +1207,6 @@ begin
   LayoutMultiCellEditControlsForStressPeriods;
 end;
 
-procedure TframeScreenObjectMNW2.rdgTimeTableMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    rdgTimeTable.Options := rdgTimeTable.Options + [goEditing];
-  end
-  else
-  begin
-    rdgTimeTable.Options := rdgTimeTable.Options - [goEditing];
-  end;
-end;
-
 procedure TframeScreenObjectMNW2.rdgTimeTableMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
@@ -1336,19 +1319,6 @@ procedure TframeScreenObjectMNW2.rdgVerticalScreensHorizontalScroll(
   Sender: TObject);
 begin
   LayoutMultiCellEditControlsForWellScreens;
-end;
-
-procedure TframeScreenObjectMNW2.rdgVerticalScreensMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    rdgVerticalScreens.Options := rdgVerticalScreens.Options + [goEditing];
-  end
-  else
-  begin
-    rdgVerticalScreens.Options := rdgVerticalScreens.Options - [goEditing];
-  end;
 end;
 
 procedure TframeScreenObjectMNW2.rdgVerticalScreensMouseUp(Sender: TObject;

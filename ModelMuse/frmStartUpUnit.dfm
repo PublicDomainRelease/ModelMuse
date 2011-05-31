@@ -79,7 +79,7 @@ inherited frmStartUp: TfrmStartUp
     Top = 0
     Width = 761
     Height = 332
-    ActivePage = tabInitialGrid
+    ActivePage = tabInitialModflowGrid
     Align = alClient
     TabOrder = 1
     OnChange = pcStartupChange
@@ -87,10 +87,6 @@ inherited frmStartUp: TfrmStartUp
       HelpType = htKeyword
       HelpKeyword = 'Start_Up_Dialog_Box'
       Caption = 'tabModelChoice'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rgChoice: TRadioGroup
         Left = 0
         Top = 0
@@ -104,7 +100,7 @@ inherited frmStartUp: TfrmStartUp
         Items.Strings = (
           'Create new MODFLOW model'
           'Create new PHAST model'
-          'Open an existing model'
+          'Open an existing ModelMuse project'
           'Import MODFLOW-2005 model')
         TabOrder = 0
       end
@@ -321,10 +317,6 @@ inherited frmStartUp: TfrmStartUp
       HelpKeyword = 'Initial_Grid_Dialog_Box'
       Caption = 'tabInitialModflowGrid'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object gbInitialGridModflow: TGroupBox
         Left = 0
         Top = 0
@@ -374,7 +366,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 4
           Text = '100'
           DataType = dtReal
@@ -388,7 +380,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 3
           Text = '100'
           DataType = dtReal
@@ -402,7 +394,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 2
           Text = '3'
           OnChange = rdeModflowLayerCountChange
@@ -418,7 +410,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 1
           Text = '10'
           DataType = dtInteger
@@ -433,7 +425,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 0
           Text = '10'
           DataType = dtInteger
@@ -454,6 +446,7 @@ inherited frmStartUp: TfrmStartUp
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
           TabOrder = 5
           OnSelectCell = rdgInitialLayersSelectCell
+          AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False
           AutoIncreaseRowCount = True

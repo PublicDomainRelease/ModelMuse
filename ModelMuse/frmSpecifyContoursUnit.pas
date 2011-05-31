@@ -40,8 +40,6 @@ type
     procedure rdgContourDataColSize(Sender: TObject; ACol, PriorWidth: Integer);
     procedure rdgContourDataHorizontalScroll(Sender: TObject);
     procedure rdeLineThicknessChange(Sender: TObject);
-    procedure rdgContourDataMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure rdgContourDataMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure FormDestroy(Sender: TObject); override;
@@ -274,20 +272,6 @@ procedure TfrmSpecifyContours.rdgContourDataHorizontalScroll(Sender: TObject);
 begin
   inherited;
   ArrangeControls;
-end;
-
-procedure TfrmSpecifyContours.rdgContourDataMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    rdgContourData.Options := rdgContourData.Options + [goEditing];
-  end
-  else
-  begin
-    rdgContourData.Options := rdgContourData.Options - [goEditing];
-  end;
 end;
 
 procedure TfrmSpecifyContours.rdgContourDataMouseUp(Sender: TObject;

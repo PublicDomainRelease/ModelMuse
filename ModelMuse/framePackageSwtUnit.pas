@@ -42,8 +42,6 @@ type
     procedure rdgOutputColSize(Sender: TObject; ACol, PriorWidth: Integer);
     procedure rdgOutputEndUpdate(Sender: TObject);
     procedure rdgOutputHorizontalScroll(Sender: TObject);
-    procedure rdgOutputMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure rdgOutputMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure rdgOutputSelectCell(Sender: TObject; ACol, ARow: Integer;
@@ -217,13 +215,6 @@ procedure TframePackageSwt.rdgOutputHorizontalScroll(Sender: TObject);
 begin
   inherited;
   LayoutPrintSaveControls;
-end;
-
-procedure TframePackageSwt.rdgOutputMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  ChangeGridOptions(rdgOutput, Shift);
 end;
 
 procedure TframePackageSwt.rdgOutputMouseUp(Sender: TObject;

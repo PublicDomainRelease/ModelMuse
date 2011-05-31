@@ -549,7 +549,7 @@ var
   ns: TNorthOrSouth;
   ew: TEastOrWest;
   AQuadNode: TQtreeNode;
-  Index, PointIndex: integer;
+  Index: integer;
   DataCount: integer;
 begin
   result := False;
@@ -592,10 +592,12 @@ begin
       begin
         AQuadNode.FPts[Index].Data.Free;
         AQuadNode.FPts[Index].Data := nil;
-        for PointIndex := Index + 1 to AQuadNode.NumPts - 1 do
-        begin
-          AQuadNode.FPts[PointIndex - 1] := AQuadNode.FPts[PointIndex];
-        end;
+        Move(AQuadNode.FPts[Index+1], AQuadNode.FPts[Index],
+          (AQuadNode.NumPts - Index - 1) * SizeOf(TQPoint));
+//        for PointIndex := Index + 1 to AQuadNode.NumPts - 1 do
+//        begin
+//          AQuadNode.FPts[PointIndex - 1] := AQuadNode.FPts[PointIndex];
+//        end;
         AQuadNode.NumPts := AQuadNode.NumPts - 1;
       end;
       Exit;

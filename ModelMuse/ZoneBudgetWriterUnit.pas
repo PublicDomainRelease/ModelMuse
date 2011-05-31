@@ -85,9 +85,9 @@ var
   NROW: Integer;
   NCOL: Integer;
 begin
-  NLAY := PhastModel.LayerStructure.ModflowLayerCount;
-  NROW := PhastModel.Grid.RowCount;
-  NCOL := PhastModel.Grid.ColumnCount;
+  NLAY := Model.ModflowLayerCount;
+  NROW := Model.Grid.RowCount;
+  NCOL := Model.Grid.ColumnCount;
   WriteInteger(NLAY);
   WriteInteger(NROW);
   WriteInteger(NCOL);
@@ -100,10 +100,10 @@ var
   LayerIndex: Integer;
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrZones);
-  for LayerIndex := 0 to PhastModel.LayerStructure.LayerCount - 1 do
+  DataArray := Model.DataArrayManager.GetDataSetByName(StrZones);
+  for LayerIndex := 0 to Model.LayerStructure.LayerCount - 1 do
   begin
-    if PhastModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+    if Model.IsLayerSimulated(LayerIndex) then
     begin
       WriteArray(DataArray, LayerIndex,
         'IZONE for layer ' + IntToStr(LayerIndex+1));
@@ -126,9 +126,9 @@ begin
   InitializeUsedZones;
   CheckValidZoneNumbers;
 
-  frmErrorsAndWarnings.RemoveErrorGroup(StrSomeCompositeZones);
-  frmErrorsAndWarnings.RemoveErrorGroup(StrTheNamesOfSomeZO);
-  frmErrorsAndWarnings.RemoveWarningGroup(StrInTheFollowingZON);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrSomeCompositeZones);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheNamesOfSomeZO);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrInTheFollowingZON);
 
   AllNames:= TStringList.Create;
   DuplicateNames:= TStringList.Create;
@@ -162,7 +162,7 @@ begin
         end
         else if (ICOMP = 0) and (ZoneIndex < CompositeZone.Count - 1) then
         begin
-          frmErrorsAndWarnings.AddWarning(StrInTheFollowingZON, NAMCOMP);
+          frmErrorsAndWarnings.AddWarning(Model, StrInTheFollowingZON, NAMCOMP);
         end;
              
       end;
@@ -173,7 +173,8 @@ begin
     end;
     for DupIndex := 0 to DuplicateNames.Count - 1 do
     begin
-      frmErrorsAndWarnings.AddError(StrTheNamesOfSomeZO, DuplicateNames[DupIndex]);
+      frmErrorsAndWarnings.AddError(Model,
+        StrTheNamesOfSomeZO, DuplicateNames[DupIndex]);
     end;
   finally
     MissingZones.Free;
@@ -191,7 +192,7 @@ begin
     Exit
   end;
   NameOfFile := FileName(AFileName);
-  PhastModel.AddFileToArchive(NameOfFile);
+  Model.AddFileToArchive(NameOfFile);
 
   OpenFile(NameOfFile);
   try
@@ -238,7 +239,8 @@ begin
     begin
       ErrorString := ErrorString + IntToStr(MissingZones[MissIndex]) + ' ';
     end;
-    frmErrorsAndWarnings.AddError(StrSomeCompositeZones, NAMCOMP + '; ' + Trim(ErrorString));
+    frmErrorsAndWarnings.AddError(Model,
+      StrSomeCompositeZones, NAMCOMP + '; ' + Trim(ErrorString));
   end;
 end;
 
@@ -247,13 +249,14 @@ var
   AValue: Integer;
   Index: Integer;
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(StrZONEBUDGETZonesMus);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrZONEBUDGETZonesMus);
   for Index := 0 to FUsedZones.Count - 1 do
   begin
     AValue := FUsedZones[Index];
     if (AValue < 0) or (AValue > 999) then
     begin
-      frmErrorsAndWarnings.AddError(StrZONEBUDGETZonesMus, IntToStr(AValue));
+      frmErrorsAndWarnings.AddError(Model,
+        StrZONEBUDGETZonesMus, IntToStr(AValue));
     end;
   end;
 end;
@@ -265,12 +268,12 @@ var
   LayerIndex: Integer;
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrZones);
+  DataArray := Model.DataArrayManager.GetDataSetByName(StrZones);
   DataArray.Initialize;
   FUsedZones.Sorted := True;
-  for LayerIndex := 0 to PhastModel.LayerStructure.LayerCount - 1 do
+  for LayerIndex := 0 to Model.LayerStructure.LayerCount - 1 do
   begin
-    if PhastModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+    if Model.IsLayerSimulated(LayerIndex) then
     begin
       for RowIndex := 0 to DataArray.RowCount - 1 do
       begin
@@ -281,8 +284,8 @@ begin
       end;
     end;
   end;
-  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
-  PhastModel.DataArrayManager.CacheDataArrays;
+  Model.DataArrayManager.AddDataSetToCache(DataArray);
+  Model.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TZoneBudgetZoneFileWriter.WriteU2DINTHeader(const Comment: string);
@@ -313,7 +316,7 @@ begin
     Exit
   end;
   FNameOfFile := FileName(AFileName);
-  PhastModel.AddFileToArchive(FNameOfFile);
+  Model.AddFileToArchive(FNameOfFile);
 
   frmProgressMM.AddMessage('Writing ZONEBUDGET Response file.');
   OpenFile(FNameOfFile);
@@ -366,11 +369,11 @@ var
   AFileName: string;
 begin
   // write the name of the budget file 
-  frmErrorsAndWarnings.RemoveErrorGroup(StrTheBudgetFileRequ);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheBudgetFileRequ);
   AFileName := ChangeFileExt(FNameOfFile, StrCbcExt);
   if not FileExists(AFileName) then
   begin
-    frmErrorsAndWarnings.AddError(StrTheBudgetFileRequ, AFileName);
+    frmErrorsAndWarnings.AddError(Model, StrTheBudgetFileRequ, AFileName);
   end;
   AFileName := ExtractFileName(AFileName);
   WriteString(AFileName);

@@ -36,12 +36,13 @@ var
     FullFileName := ExpandFileName(AFileName);
     if not FileExists(FullFileName) then
     begin
-      frmErrorsAndWarnings.AddError(CbfFileExistsError + ExtractFilePath(FileName) + '".',
+      frmErrorsAndWarnings.AddError(Model,
+        CbfFileExistsError + ExtractFilePath(FileName) + '".',
         AFileName);
     end;
   end;
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(CbfFileExistsError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, CbfFileExistsError);
   Options := Model.ModflowPackages.ModPath;
   
   NameFile := TStringList.Create;

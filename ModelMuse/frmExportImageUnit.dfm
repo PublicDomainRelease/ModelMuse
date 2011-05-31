@@ -3,17 +3,17 @@ inherited frmExportImage: TfrmExportImage
   HelpKeyword = 'Export_Image_Dialog_Box'
   Caption = 'Export Image'
   ClientHeight = 519
-  ClientWidth = 786
+  ClientWidth = 721
   ShowHint = True
   OnClose = FormClose
-  ExplicitWidth = 794
+  ExplicitWidth = 729
   ExplicitHeight = 553
   PixelsPerInch = 96
   TextHeight = 18
   object JvNetscapeSplitter2: TJvNetscapeSplitter
     Left = 249
     Top = 0
-    Height = 454
+    Height = 448
     Align = alLeft
     MinSize = 3
     Maximized = False
@@ -27,7 +27,7 @@ inherited frmExportImage: TfrmExportImage
     Left = 0
     Top = 0
     Width = 249
-    Height = 454
+    Height = 448
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 0
@@ -35,7 +35,7 @@ inherited frmExportImage: TfrmExportImage
       Left = 0
       Top = 0
       Width = 249
-      Height = 454
+      Height = 448
       Align = alClient
       ActivePage = opAnimation
       object opView: TrmOutlookPage
@@ -273,7 +273,7 @@ inherited frmExportImage: TfrmExportImage
         Left = 2
         Top = 38
         Width = 245
-        Height = 414
+        Height = 408
         Color = clBtnFace
         Caption = 'Animation'
         Data = 0
@@ -284,14 +284,14 @@ inherited frmExportImage: TfrmExportImage
           Left = 0
           Top = 0
           Width = 245
-          Height = 396
+          Height = 390
           Align = alClient
           BevelOuter = bvNone
           Caption = 'Panel2'
           TabOrder = 0
           object JvNetscapeSplitter1: TJvNetscapeSplitter
             Left = 0
-            Top = 171
+            Top = 165
             Width = 245
             Height = 10
             Cursor = crVSplit
@@ -306,7 +306,7 @@ inherited frmExportImage: TfrmExportImage
           end
           object Panel1: TPanel
             Left = 0
-            Top = 312
+            Top = 306
             Width = 245
             Height = 84
             Align = alBottom
@@ -368,7 +368,7 @@ inherited frmExportImage: TfrmExportImage
           end
           object rdgDataSets: TRbwDataGrid4
             Left = 0
-            Top = 181
+            Top = 175
             Width = 245
             Height = 131
             Align = alBottom
@@ -377,6 +377,7 @@ inherited frmExportImage: TfrmExportImage
             RowCount = 2
             Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowMoving, goEditing, goAlwaysShowEditor]
             TabOrder = 1
+            AutoMultiEdit = True
             AutoDistributeText = True
             AutoIncreaseColCount = False
             AutoIncreaseRowCount = True
@@ -435,7 +436,7 @@ inherited frmExportImage: TfrmExportImage
             Left = 0
             Top = 0
             Width = 245
-            Height = 171
+            Height = 165
             Align = alClient
             Header.AutoSizeIndex = 0
             Header.DefaultHeight = 17
@@ -461,14 +462,14 @@ inherited frmExportImage: TfrmExportImage
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 454
-    Width = 786
-    Height = 65
+    Top = 448
+    Width = 721
+    Height = 71
     Align = alBottom
     TabOrder = 1
     DesignSize = (
-      786
-      65)
+      721
+      71)
     object lblSavedSettings: TLabel
       Left = 5
       Top = 8
@@ -477,20 +478,20 @@ inherited frmExportImage: TfrmExportImage
       Caption = 'Saved settings'
     end
     object btnHelp: TBitBtn
-      Left = 595
+      Left = 629
       Top = 6
       Width = 87
-      Height = 52
+      Height = 26
       Anchors = [akTop, akRight]
       TabOrder = 5
       OnClick = btnHelpClick
       Kind = bkHelp
     end
     object btnClose: TBitBtn
-      Left = 688
-      Top = 6
+      Left = 629
+      Top = 38
       Width = 87
-      Height = 52
+      Height = 26
       Anchors = [akTop, akRight]
       TabOrder = 6
       OnClick = btnCloseClick
@@ -500,7 +501,7 @@ inherited frmExportImage: TfrmExportImage
       Left = 223
       Top = 6
       Width = 87
-      Height = 52
+      Height = 58
       Caption = 'Save settings'
       TabOrder = 1
       WordWrap = True
@@ -520,10 +521,10 @@ inherited frmExportImage: TfrmExportImage
       OnDropDown = comboSavedSettingsDropDown
     end
     object btnRefresh: TBitBtn
-      Left = 409
+      Left = 408
       Top = 6
       Width = 87
-      Height = 52
+      Height = 58
       Anchors = [akTop, akRight]
       Caption = 'Refresh'
       TabOrder = 3
@@ -547,21 +548,20 @@ inherited frmExportImage: TfrmExportImage
       Left = 316
       Top = 6
       Width = 87
-      Height = 52
+      Height = 58
       Caption = 'Manage settings'
       TabOrder = 2
       WordWrap = True
       OnClick = btnManageSettingsClick
     end
-    object btnSaveImage: TTntBitBtn
-      Left = 502
-      Top = 6
-      Width = 88
-      Height = 51
+    object btnSaveImage1: TJvBitBtn
+      Left = 501
+      Top = 38
+      Width = 122
+      Height = 26
       Anchors = [akTop, akRight]
       Caption = 'Save image'
       TabOrder = 4
-      WordWrap = True
       OnClick = btnSaveImageClick
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
@@ -577,13 +577,49 @@ inherited frmExportImage: TfrmExportImage
         99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
         93337FFFF7737777733300000033333333337777773333333333}
       NumGlyphs = 2
+      HotTrackFont.Charset = ANSI_CHARSET
+      HotTrackFont.Color = clWindowText
+      HotTrackFont.Height = -16
+      HotTrackFont.Name = 'Arial'
+      HotTrackFont.Pitch = fpVariable
+      HotTrackFont.Style = []
+    end
+    object JvBitBtn1: TJvBitBtn
+      Left = 501
+      Top = 6
+      Width = 122
+      Height = 26
+      Anchors = [akTop, akRight]
+      Caption = 'Copy image'
+      TabOrder = 7
+      OnClick = JvBitBtn1Click
+      Glyph.Data = {
+        76010000424D7601000000000000760000002800000020000000100000000100
+        04000000000000010000130B0000130B00001000000000000000000000000000
+        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF003333330B7FFF
+        FFB0333333777F3333773333330B7FFFFFB0333333777F3333773333330B7FFF
+        FFB0333333777F3333773333330B7FFFFFB03FFFFF777FFFFF77000000000077
+        007077777777777777770FFFFFFFF00077B07F33333337FFFF770FFFFFFFF000
+        7BB07F3FF3FFF77FF7770F00F000F00090077F77377737777F770FFFFFFFF039
+        99337F3FFFF3F7F777FF0F0000F0F09999937F7777373777777F0FFFFFFFF999
+        99997F3FF3FFF77777770F00F000003999337F773777773777F30FFFF0FF0339
+        99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
+        93337FFFF7737777733300000033333333337777773333333333}
+      NumGlyphs = 2
+      HotTrackFont.Charset = ANSI_CHARSET
+      HotTrackFont.Color = clWindowText
+      HotTrackFont.Height = -16
+      HotTrackFont.Name = 'Arial'
+      HotTrackFont.Pitch = fpVariable
+      HotTrackFont.Style = []
     end
   end
   object scrollBoxPreview: TScrollBox
     Left = 259
     Top = 0
-    Width = 527
-    Height = 454
+    Width = 462
+    Height = 448
     Align = alClient
     TabOrder = 2
     object imagePreview: TImage

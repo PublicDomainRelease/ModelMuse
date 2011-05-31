@@ -75,10 +75,14 @@ begin
   frmProgressMM.AddMessage('Evaluating LAK Package data.');
   TempList := TList.Create;
   try
-    for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
     begin
-      ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
       if ScreenObject.Deleted then
+      begin
+        Continue;
+      end;
+      if not ScreenObject.UsedModels.UsesModel(Model) then
       begin
         Continue;
       end;
@@ -93,7 +97,7 @@ begin
         if FLakeList[ScreenObject.ModflowLakBoundary.LakeID] <> nil then
         begin
           OtherObject := FLakeList[ScreenObject.ModflowLakBoundary.LakeID];
-          frmErrorsAndWarnings.AddError(DupNameErrorMessage, OtherObject.Name
+          frmErrorsAndWarnings.AddError(Model, DupNameErrorMessage, OtherObject.Name
             + ' and ' + ScreenObject.Name);
         end;
         FLakeList[ScreenObject.ModflowLakBoundary.LakeID]
@@ -114,7 +118,7 @@ begin
           OtherObject := FLakeList[ScreenObject.ModflowLakBoundary.CenterLake];
           if OtherObject = nil then
           begin
-            frmErrorsAndWarnings.AddError(InvalidCenterLake, ScreenObject.Name)
+            frmErrorsAndWarnings.AddError(Model, InvalidCenterLake, ScreenObject.Name)
           end
           else
           begin
@@ -125,7 +129,7 @@ begin
       end
       else
       begin
-        frmErrorsAndWarnings.AddError(InvalidCenterLake, ScreenObject.Name)
+        frmErrorsAndWarnings.AddError(Model, InvalidCenterLake, ScreenObject.Name)
       end;
     end;
     FLakeList.Pack;
@@ -163,7 +167,7 @@ end;
 
 function TModflowLAK_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.LakPackage;
+  result := Model.ModflowPackages.LakPackage;
 end;
 
 procedure TModflowLAK_Writer.WriteDataSet1;
@@ -188,7 +192,7 @@ var
   LakePkg: TLakePackageSelection;
   SURFDEPTH: double;
 begin
-  LakePkg := PhastModel.ModflowPackages.LakPackage;
+  LakePkg := Model.ModflowPackages.LakPackage;
   THETA := LakePkg.Theta;
 //  if PhastModel.ModflowFullStressPeriods.CompletelyTransient then
 //  begin
@@ -218,7 +222,7 @@ var
   LakeTime: TLakItem;
 begin
   FirstPeriodIsSteadyState :=
-    PhastModel.ModflowFullStressPeriods[0].StressPeriodType = sptSteadyState;
+    Model.ModflowFullStressPeriods[0].StressPeriodType = sptSteadyState;
   for LakeIndex := 0 to FLakeList.Count - 1 do
   begin
     ScreenObject := FLakeList[LakeIndex];
@@ -250,16 +254,16 @@ var
   LayerIndex: integer;
   ModflowLayer: integer;
 begin
-  LakeID := PhastModel.DataArrayManager.GetDataSetByName(rsLakeID);
+  LakeID := Model.DataArrayManager.GetDataSetByName(rsLakeID);
   ModflowLayer := 0;
-  for LayerIndex := 0 to PhastModel.ModflowGrid.LayerCount - 1 do
+  for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
   begin
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
-    if PhastModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+    if Model.IsLayerSimulated(LayerIndex) then
     begin
       Inc(ModflowLayer);
       WriteArray(LakeID, LayerIndex, 'Data Set 5, LKARR: Layer '
@@ -274,16 +278,16 @@ var
   LayerIndex: integer;
   ModflowLayer: integer;
 begin
-  LakeLeakance := PhastModel.DataArrayManager.GetDataSetByName(rsLakeLeakance);
+  LakeLeakance := Model.DataArrayManager.GetDataSetByName(rsLakeLeakance);
   ModflowLayer := 0;
-  for LayerIndex := 0 to PhastModel.ModflowGrid.LayerCount - 1 do
+  for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
   begin
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
-    if PhastModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+    if Model.IsLayerSimulated(LayerIndex) then
     begin
       Inc(ModflowLayer);
       WriteArray(LakeLeakance, LayerIndex, 'Data Set 6, BDLKNC: Layer ' + IntToStr(ModflowLayer));
@@ -357,7 +361,7 @@ var
   ITMP, ITMP1, LWRT: integer;
 begin
   ITMP1 := 1;
-  if PhastModel.ModflowPackages.LakPackage.PrintLakes then
+  if Model.ModflowPackages.LakPackage.PrintLakes then
   begin
     LWRT := 0;
   end
@@ -365,7 +369,7 @@ begin
   begin
     LWRT := 1;
   end;
-  for TimeIndex := 0 to PhastModel.ModflowFullStressPeriods.Count - 1 do
+  for TimeIndex := 0 to Model.ModflowFullStressPeriods.Count - 1 do
   begin
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -397,7 +401,7 @@ begin
       Exit;
     end;
 
-    StressPeriod := PhastModel.ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := Model.ModflowFullStressPeriods[TimeIndex];
     WriteDataSet9(StressPeriod);
   end;
 end;
@@ -482,12 +486,12 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrLAK) then
+  if Model.PackageGeneratedExternally(StrLAK) then
   begin
     Exit;
   end;
   FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrLAK, PhastModel.UnitNumbers.UnitNumber(StrLAK), FNameOfFile, foInput);
+  WriteToNameFile(StrLAK, Model.UnitNumbers.UnitNumber(StrLAK), FNameOfFile, foInput);
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
   begin

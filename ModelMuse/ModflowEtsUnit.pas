@@ -4,7 +4,7 @@ interface
 
 uses Windows, ZLib, SysUtils, Classes, Contnrs, OrderedCollectionUnit,
   ModflowBoundaryUnit, DataSetUnit, ModflowCellUnit, ModflowEvtUnit,
-  FormulaManagerUnit, SubscriptionUnit, RbwParser, SparseDataSets;
+  FormulaManagerUnit, SubscriptionUnit, RbwParser, SparseDataSets, GoPhastTypes;
 
 type
 
@@ -76,7 +76,7 @@ type
     FEtsSurfDepthCollection: TCollection;
   public
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TObject; ScreenObject: TObject;
+    constructor Create(Model: TBaseModel; ScreenObject: TObject;
       EtsSurfDepthCollection: TCollection);
     property Purpose: TStringCollectionPurpose read FPurpose write FPurpose;
   end;
@@ -126,28 +126,39 @@ type
       write SetDepthFractions;
   end;
 
-  TEtsSurfDepthCollection = class(TCustomMF_ArrayBoundColl)
+  TEtsSurfDepthTimeListLink = class(TTimeListsModelLink)
   private
-    FTimeListCount: integer;
-    FListOfEtFractionLists: TList;
-    FListOfDepthFractionLists: TList;
-    // @name is used to compute the evapotranspiration rates for a series of
+    // @name is used to compute the evapotranspiration surface for a series of
     // cells over a series of time intervals.
     FEvapotranspirationSurfaceData: TModflowTimeList;
     FEvapotranspirationDepthData: TModflowTimeList;
+    FListOfEtFractionLists: TList;
+    FListOfDepthFractionLists: TList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
+
+  TEtsSurfDepthCollection = class(TCustomMF_ArrayBoundColl)
+  private
+    FTimeListCount: integer;
     procedure InvalidateEtFractions(Sender: TObject);
     procedure InvalidateDepthFractions(Sender: TObject);
     procedure InvalidateEtSurface(Sender: TObject);
     procedure InvalidateEtDepth(Sender: TObject);
   protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary; override;
-    function GetTimeList(Index: integer): TModflowTimeList; override;
+    function GetTimeList(Index: integer; AModel: TBaseModel): TModflowTimeList; override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer); override;
+    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+      AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
     // TCustomMF_ArrayBoundColl.InitializeTimeLists)
-    procedure InitializeTimeLists(ListOfTimeLists: TList); override;
+    procedure InitializeTimeLists(ListOfTimeLists: TList;
+      AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
     class function ItemClass: TMF_BoundItemClass; override;
@@ -163,19 +174,17 @@ type
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
   public
     procedure Assign(Source: TPersistent); override;
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
-    function TimeListCount: integer; override;
+    function TimeListCount(AModel: TBaseModel): integer; override;
+  end;
+
+  TEtsLayerTimeListLink = class(TEvtLayerTimeListLink)
+  protected
+    procedure CreateTimeLists; override;
   end;
 
   TEtsLayerCollection = class(TEvtLayerCollection)
-  public
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
+  protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
   end;
 
   TEtsSurfDepth_Cell = class(TValueCell)
@@ -194,10 +203,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -213,10 +225,14 @@ type
     property EtFractionAnnotations[const Index: integer]: string read GetEtFractionAnnotations;
   end;
 
+  TEtsTimeListLink = class(TEvtTimeListLink)
+  protected
+    procedure CreateTimeLists; override;
+  end;
+
   TEtsCollection = class(TEvtCollection)
-  public
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
+  protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
   end;
 
   // @name represents the MODFLOW Evapotranspiration boundaries associated with
@@ -241,7 +257,7 @@ type
     // each stress period.  Each such TObjectList is filled with
     // @link(TEvt_Cell)s for that stress period.
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-      ValueTimeList: TList); override;
+      ValueTimeList: TList; AModel: TBaseModel); override;
     // See @link(TModflowBoundary.BoundaryCollectionClass
     // TModflowBoundary.BoundaryCollectionClass).
     class function BoundaryCollectionClass: TMF_BoundCollClass; override;
@@ -252,7 +268,7 @@ type
   public
     procedure Assign(Source: TPersistent);override;
 
-    Constructor Create(Model, ScreenObject: TObject);
+    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     Destructor Destroy; override;
     // @name fills ValueTimeList via a call to AssignCells for each
     // link  @link(TEvtStorage) in
@@ -265,10 +281,10 @@ type
     // with each @link(TEvtStorage) in @link(TCustomMF_BoundColl.Boundaries
     // Param.Param.Boundaries)
     // Those represent parameter boundary conditions.
-    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
-      override;
+    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel); override;
     function Used: boolean; override;
-    procedure EvaluateArrayBoundaries; override;
+    procedure EvaluateArrayBoundaries(AModel: TBaseModel); override;
     function NonParameterColumns: integer; override;
     property TimeVaryingEvapotranspirationLayers: boolean
       read GetTimeVaryingEvapotranspirationLayers;
@@ -291,7 +307,7 @@ procedure StringValueRestoreSubscription(Sender: TObject; Subject: TObject;
 
 implementation
 
-uses ScreenObjectUnit, PhastModelUnit, ModflowTimeUnit, TempFiles, GoPhastTypes,
+uses ScreenObjectUnit, PhastModelUnit, ModflowTimeUnit, TempFiles, 
   ModflowTransientListParameterUnit, frmGoPhastUnit;
 
 const
@@ -328,7 +344,7 @@ var
 begin
   LocalBoundaryStorage := BoundaryStorage;// as TEvtStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    (ParentModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -339,7 +355,7 @@ begin
       Cells := TValueCellList.Create(TEvapotranspirationLayerCell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := (ParentModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
@@ -374,7 +390,7 @@ var
 begin
   LocalBoundaryStorage := BoundaryStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    (ParentModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -385,7 +401,7 @@ begin
       Cells := TValueCellList.Create(TEtsSurfDepth_Cell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := (ParentModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
@@ -408,7 +424,7 @@ begin
 end;
 
 procedure TEtsBoundary.AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-  ValueTimeList: TList);
+  ValueTimeList: TList; AModel: TBaseModel);
 var
   Cell: TEvt_Cell;
   BoundaryValues: TEvtRecord;
@@ -417,10 +433,12 @@ var
   TimeIndex: Integer;
   Cells: TValueCellList;
   LocalBoundaryStorage: TEvtStorage;
+  LocalModel: TCustomModel;
 begin
+  LocalModel := AModel as TCustomModel;
   LocalBoundaryStorage := BoundaryStorage as TEvtStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    LocalModel.ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -432,12 +450,16 @@ begin
       Cells := TValueCellList.Create(TEvt_Cell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
+      if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.EvtArray) then
+      begin
+        Cells.Capacity := Cells.Count + Length(LocalBoundaryStorage.EvtArray)
+      end;
 //      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.EvtArray) - 1 do
       begin
@@ -446,6 +468,7 @@ begin
         Cells.Add(Cell);
         Cell.StressPeriod := TimeIndex;
         Cell.Values := BoundaryValues;
+//        LocalModel.AdjustCellPosition(Cell);
       end;
       Cells.Cache;
     end;
@@ -465,7 +488,7 @@ begin
   EtsSurfDepthCollection.Clear;
 end;
 
-constructor TEtsBoundary.Create(Model, ScreenObject: TObject);
+constructor TEtsBoundary.Create(Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited Create(Model, ScreenObject);
   FEvapotranspirationLayers := TEtsLayerCollection.Create(self, Model, ScreenObject);
@@ -479,14 +502,14 @@ begin
   inherited;
 end;
 
-procedure TEtsBoundary.EvaluateArrayBoundaries;
+procedure TEtsBoundary.EvaluateArrayBoundaries(AModel: TBaseModel);
 begin
   inherited;
-  EtsSurfDepthCollection.EvaluateArrayBoundaries;
-  if (PhastModel as TPhastModel).
+  EtsSurfDepthCollection.EvaluateArrayBoundaries(AModel);
+  if (AModel as TCustomModel).
     ModflowPackages.EtsPackage.TimeVaryingLayers then
   begin
-    EvapotranspirationLayers.EvaluateArrayBoundaries;
+    EvapotranspirationLayers.EvaluateArrayBoundaries(AModel);
   end;
 end;
 
@@ -495,15 +518,18 @@ var
   ValueIndex: Integer;
   BoundaryStorage: TEvtLayerStorage;
 begin
-  if not (PhastModel as TPhastModel).ModflowPackages.
+  if not (ParentModel as TPhastModel).ModflowPackages.
     EtsPackage.TimeVaryingLayers then
   begin
     Exit;
   end;
   for ValueIndex := 0 to EvapotranspirationLayers.Count - 1 do
   begin
-    BoundaryStorage := EvapotranspirationLayers.Boundaries[ValueIndex] as TEvtLayerStorage;
-    AssignEvapotranspirationLayerCells(BoundaryStorage, LayerTimeList);
+    if ValueIndex < EvapotranspirationLayers.BoundaryCount then
+    begin
+      BoundaryStorage := EvapotranspirationLayers.Boundaries[ValueIndex] as TEvtLayerStorage;
+      AssignEvapotranspirationLayerCells(BoundaryStorage, LayerTimeList);
+    end;
   end;
 end;
 
@@ -515,13 +541,16 @@ var
 begin
   for ValueIndex := 0 to EtsSurfDepthCollection.Count - 1 do
   begin
-    BoundaryStorage := EtsSurfDepthCollection.Boundaries[ValueIndex] as TEtsSurfDepthStorage;
-    AssignSurfaceDepthCells(BoundaryStorage, LayerTimeList);
+    if ValueIndex < EtsSurfDepthCollection.BoundaryCount then
+    begin
+      BoundaryStorage := EtsSurfDepthCollection.Boundaries[ValueIndex] as TEtsSurfDepthStorage;
+      AssignSurfaceDepthCells(BoundaryStorage, LayerTimeList);
+    end;
   end;
 end;
 
 procedure TEtsBoundary.GetCellValues(ValueTimeList: TList;
-  ParamList: TStringList);
+  ParamList: TStringList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TEvtStorage;
@@ -532,8 +561,8 @@ var
   ParamName: string;
   Model: TPhastModel;
 begin
-  EvaluateArrayBoundaries;
-  Model := PhastModel as TPhastModel;
+  EvaluateArrayBoundaries(AModel);
+  Model := ParentModel as TPhastModel;
   if Model.ModflowTransientParameters.CountParam(ParameterType) = 0 then
   begin
     for ValueIndex := 0 to Values.Count - 1 do
@@ -541,7 +570,7 @@ begin
       if ValueIndex < Values.BoundaryCount then
       begin
         BoundaryStorage := Values.Boundaries[ValueIndex] as TEvtStorage;
-        AssignCells(BoundaryStorage, ValueTimeList);
+        AssignCells(BoundaryStorage, ValueTimeList, AModel);
       end;
     end;
   end
@@ -566,7 +595,7 @@ begin
         if ValueIndex < Param.Param.BoundaryCount then
         begin
           BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TEvtStorage;
-          AssignCells(BoundaryStorage, Times);
+          AssignCells(BoundaryStorage, Times, AModel);
         end;
       end;
     end;
@@ -576,32 +605,32 @@ end;
 
 function TEtsBoundary.GetTimeVaryingEvapotranspirationLayers: boolean;
 begin
-  if PhastModel = nil then
+  if ParentModel = nil then
   begin
     result := frmGoPhast.PhastModel.ModflowPackages.
       EtsPackage.TimeVaryingLayers;
   end
   else
   begin
-    result := (PhastModel as TPhastModel).ModflowPackages.
+    result := (ParentModel as TPhastModel).ModflowPackages.
       EtsPackage.TimeVaryingLayers;
   end;
 end;
 
 procedure TEtsBoundary.InvalidateDisplay;
 var
-  Model: TPhastModel;
+  LocalModel: TPhastModel;
 begin
   inherited;
-  if Used and (PhastModel <> nil) then
+  if Used and (ParentModel <> nil) then
   begin
-    Model := PhastModel as TPhastModel;
-    Model.InvalidateMfEtsEvapRate(self);
-    Model.InvalidateMfEtsEvapSurface(self);
-    Model.InvalidateMfEtsEvapDepth(self);
-    Model.InvalidateMfEtsEvapLayer(self);
-    Model.InvalidateEtsDepthFractions(self);
-    Model.InvalidateEtsRateFractions(self);
+    LocalModel := ParentModel as TPhastModel;
+    LocalModel.InvalidateMfEtsEvapRate(self);
+    LocalModel.InvalidateMfEtsEvapSurface(self);
+    LocalModel.InvalidateMfEtsEvapDepth(self);
+    LocalModel.InvalidateMfEtsEvapLayer(self);
+    LocalModel.InvalidateEtsDepthFractions(self);
+    LocalModel.InvalidateEtsRateFractions(self);
   end;
 end;
 
@@ -612,22 +641,22 @@ end;
 
 function TEtsBoundary.NonParameterColumns: integer;
 begin
-  if PhastModel = nil then
+  if ParentModel = nil then
   begin
     result := inherited NonParameterColumns + 2
       + (frmGoPhast.PhastModel.ModflowPackages.EtsPackage.SegmentCount-1) * 2;
     if TimeVaryingEvapotranspirationLayers then
     begin
-      result := result + EvapotranspirationLayers.TimeListCount;
+      result := result + EvapotranspirationLayers.TimeListCount(frmGoPhast.PhastModel);
     end;
   end
   else
   begin
     result := inherited NonParameterColumns + 2
-      + ((PhastModel as TPhastModel).ModflowPackages.EtsPackage.SegmentCount-1) * 2;
+      + ((ParentModel as TPhastModel).ModflowPackages.EtsPackage.SegmentCount-1) * 2;
     if TimeVaryingEvapotranspirationLayers then
     begin
-      result := result + EvapotranspirationLayers.TimeListCount;
+      result := result + EvapotranspirationLayers.TimeListCount(ParentModel);
     end;
   end;
 end;
@@ -651,14 +680,14 @@ end;
 
 function TEtsBoundary.Used: boolean;
 var
-  Model: TPhastModel;
+  LocalModel: TPhastModel;
   ParamIndex: Integer;
   Param: TModflowTransientListParameter;
 begin
-  if PhastModel <> nil then
+  if ParentModel <> nil then
   begin
-    Model := PhastModel as TPhastModel;
-    result := Model.ModflowPackages.EtsPackage.TimeVaryingLayers
+    LocalModel := ParentModel as TPhastModel;
+    result := LocalModel.ModflowPackages.EtsPackage.TimeVaryingLayers
       and EvapotranspirationLayers.Used;
   end
   else
@@ -669,12 +698,12 @@ begin
   result := EtsSurfDepthCollection.Used;
   if result then Exit;
   result := inherited Used;
-  if result and (PhastModel <> nil) then
+  if result and (ParentModel <> nil) then
   begin
-    Model := PhastModel as TPhastModel;
-    for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
+    LocalModel := ParentModel as TPhastModel;
+    for ParamIndex := 0 to LocalModel.ModflowTransientParameters.Count - 1 do
     begin
-      Param := Model.ModflowTransientParameters[ParamIndex];
+      Param := LocalModel.ModflowTransientParameters[ParamIndex];
       if Param.ParameterType = ptETS then
       begin
         result := Parameters.Used;
@@ -727,7 +756,7 @@ end;
 
 constructor TEtsSurfDepthItem.Create(Collection: TCollection);
 var
-  Model: TObject;
+  Model: TBaseModel;
 begin
   inherited;
   Model := (Collection as TOrderedCollection).Model;
@@ -911,13 +940,13 @@ procedure TEtsSurfDepthCollection.Assign(Source: TPersistent);
 begin
   if Source is TEtsSurfDepthCollection then
   begin
-    FTimeListCount := TEtsSurfDepthCollection(Source).TimeListCount;
+    FTimeListCount := TEtsSurfDepthCollection(Source).TimeListCount(Model);
   end;
   inherited;
 end;
 
 procedure TEtsSurfDepthCollection.AssignCellValues(DataSets: TList;
-  ItemIndex: Integer);
+  ItemIndex: Integer; AModel: TBaseModel);
 var
   EvapotranspirationSurfaceArray: TDataArray;
   EvapotranspirationDepthArray: TDataArray;
@@ -930,7 +959,7 @@ var
   SegmentIndex: integer;
   FractionalDepthArray: TDataArray;
   FractionalRateArray: TDataArray;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
   LayerMin: Integer;
   RowMin: Integer;
   ColMin: Integer;
@@ -938,8 +967,8 @@ var
   RowMax: Integer;
   ColMax: Integer;
 begin
-  LocalModel := Model as TPhastModel;
-  SegmentCount := (Model as TPhastModel).
+  LocalModel := AModel as TCustomModel;
+  SegmentCount := LocalModel.
     ModflowPackages.EtsPackage.SegmentCount;
   BoundaryIndex := 0;
   EvapotranspirationSurfaceArray := DataSets[0];
@@ -951,7 +980,7 @@ begin
   begin
     for LayerIndex := LayerMin to LayerMax do
     begin
-      if LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+      if LocalModel.IsLayerSimulated(LayerIndex) then
       begin
         for RowIndex := RowMin to RowMax do
         begin
@@ -1014,76 +1043,55 @@ begin
   Boundary.CacheData;
 end;
 
-constructor TEtsSurfDepthCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
-begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FEvapotranspirationSurfaceData := TModflowTimeList.Create(Model, ScreenObject);
-  FEvapotranspirationSurfaceData.NonParamDescription := 'Evapo- transpiration surface';
-  FEvapotranspirationSurfaceData.ParamDescription := ' evapo- transpiration surface';
-  AddTimeList(FEvapotranspirationSurfaceData);
-
-  FEvapotranspirationDepthData := TModflowTimeList.Create(Model, ScreenObject);
-  FEvapotranspirationDepthData.NonParamDescription := 'Evapo- transpiration depth';
-  FEvapotranspirationDepthData.ParamDescription := ' evapo- transpiration depth';
-  AddTimeList(FEvapotranspirationDepthData);
-
-  if Model <> nil then
-  begin
-    FEvapotranspirationSurfaceData.OnInvalidate := (Model as TPhastModel).InvalidateMfEtsEvapSurface;
-    FEvapotranspirationDepthData.OnInvalidate := (Model as TPhastModel).InvalidateMfEtsEvapDepth;
-  end;
-
-  FListOfEtFractionLists:= TObjectList.Create;
-  FListOfDepthFractionLists:= TObjectList.Create;
-end;
-
-destructor TEtsSurfDepthCollection.Destroy;
-begin
-  FEvapotranspirationDepthData.Free;
-  FEvapotranspirationSurfaceData.Free;
-  FListOfEtFractionLists.Free;
-  FListOfDepthFractionLists.Free;
-  inherited;
-end;
-
-function TEtsSurfDepthCollection.GetTimeList(Index: integer): TModflowTimeList;
+function TEtsSurfDepthCollection.GetTimeList(Index: integer; AModel: TBaseModel): TModflowTimeList;
 var
   TimeList: TModflowTimeList;
   Count: integer;
   FractionIndex: string;
+  Link: TEtsSurfDepthTimeListLink;
+  ListOfEtFractionLists: TList;
+  ListOfDepthFractionLists: TList;
 begin
-  While Index >= inherited TimeListCount do
+  Link := TimeListLink.GetLink(AModel) as TEtsSurfDepthTimeListLink;
+  ListOfEtFractionLists := Link.FListOfEtFractionLists;
+  ListOfDepthFractionLists := Link.FListOfDepthFractionLists;
+  While Index >= inherited TimeListCount(AModel) do
   begin
-    TimeList := TModflowTimeList.Create(Model, ScreenObject);
-    Count := inherited TimeListCount;
+    TimeList := TModflowTimeList.Create(AModel, ScreenObject);
+    Count := inherited TimeListCount(AModel);
     FractionIndex := IntToStr(Count div 2);
     if Odd(Count)  then
     begin
       TimeList.NonParamDescription := 'Fractional rate ' + FractionIndex;
       TimeList.ParamDescription := ' fractional rate ' + FractionIndex;
-      FListOfEtFractionLists.Add(TimeList);
+      ListOfEtFractionLists.Add(TimeList);
       if Model <> nil then
       begin
-        TimeList.OnInvalidate := (Model as TPhastModel).InvalidateEtsRateFractions;
+        TimeList.OnInvalidate := (AModel as TCustomModel).InvalidateEtsRateFractions;
       end;
     end
     else
     begin
       TimeList.NonParamDescription := 'Fractional depth ' + FractionIndex;
       TimeList.ParamDescription := ' fractional depth ' + FractionIndex;
-      FListOfDepthFractionLists.Add(TimeList);
+      ListOfDepthFractionLists.Add(TimeList);
       if Model <> nil then
       begin
-        TimeList.OnInvalidate := (Model as TPhastModel).InvalidateEtsDepthFractions;
+        TimeList.OnInvalidate := (AModel as TCustomModel).InvalidateEtsDepthFractions;
       end;
     end;
-    AddTimeList(TimeList);
+    AddTimeList(TimeList, AModel);
   end;
-  result := Inherited GetTimeList(index);
+  result := Inherited GetTimeList(index, AModel);
 end;
 
-procedure TEtsSurfDepthCollection.InitializeTimeLists(ListOfTimeLists: TList);
+function TEtsSurfDepthCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
+begin
+  result := TEtsSurfDepthTimeListLink;
+end;
+
+procedure TEtsSurfDepthCollection.InitializeTimeLists(ListOfTimeLists: TList;
+  AModel: TBaseModel);
 var
   TimeIndex: Integer;
   BoundaryValues: TBoundaryValueArray;
@@ -1094,6 +1102,11 @@ var
   SegmentIndex: Integer;
   FractionalDepthTimeList: TModflowTimeList;
   FractionalRateTimeList: TModflowTimeList;
+  ALink: TEtsSurfDepthTimeListLink;
+  EvapotranspirationSurfaceData: TModflowTimeList;
+  EvapotranspirationDepthData: TModflowTimeList;
+  ListOfEtFractionLists: TList;
+  ListOfDepthFractionLists: TList;
 begin
   Boundary := BoundaryGroup as TEtsBoundary;
   ScreenObject := Boundary.ScreenObject as TScreenObject;
@@ -1104,8 +1117,10 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := Item.EvapotranspirationSurface;
   end;
-  FEvapotranspirationSurfaceData.Initialize(BoundaryValues, ScreenObject);
-  Assert(FEvapotranspirationSurfaceData.Count = Count);
+  ALink := TimeListLink.GetLink(AModel) as TEtsSurfDepthTimeListLink;
+  EvapotranspirationSurfaceData := ALink.FEvapotranspirationSurfaceData;
+  EvapotranspirationSurfaceData.Initialize(BoundaryValues, ScreenObject, True);
+  Assert(EvapotranspirationSurfaceData.Count = Count);
 
   for Index := 0 to Count - 1 do
   begin
@@ -1113,8 +1128,9 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := Item.EvapotranspirationDepth;
   end;
-  FEvapotranspirationDepthData.Initialize(BoundaryValues, ScreenObject);
-  Assert(FEvapotranspirationDepthData.Count = Count);
+  EvapotranspirationDepthData := ALink.FEvapotranspirationDepthData;
+  EvapotranspirationDepthData.Initialize(BoundaryValues, ScreenObject, True);
+  Assert(EvapotranspirationDepthData.Count = Count);
 
   // assign fractional depths and rates.
 
@@ -1123,7 +1139,7 @@ begin
     for SegmentIndex := 1 to (Model as TPhastModel).
       ModflowPackages.EtsPackage.SegmentCount - 1 do
     begin
-      FractionalDepthTimeList := TimeLists[SegmentIndex*2];
+      FractionalDepthTimeList := TimeLists[SegmentIndex*2, AModel];
       for Index := 0 to Count - 1 do
       begin
         Item := Items[Index] as TEtsSurfDepthItem;
@@ -1135,10 +1151,10 @@ begin
           BoundaryValues[Index].Formula := '1';
         end;
       end;
-      FractionalDepthTimeList.Initialize(BoundaryValues, ScreenObject);
+      FractionalDepthTimeList.Initialize(BoundaryValues, ScreenObject, True);
       Assert(FractionalDepthTimeList.Count = Count);
 
-      FractionalRateTimeList := TimeLists[SegmentIndex*2+1];
+      FractionalRateTimeList := TimeLists[SegmentIndex*2+1, AModel];
       for Index := 0 to Count - 1 do
       begin
         Item := Items[Index] as TEtsSurfDepthItem;
@@ -1150,28 +1166,30 @@ begin
           BoundaryValues[Index].Formula := '0';
         end;
       end;
-      FractionalRateTimeList.Initialize(BoundaryValues, ScreenObject);
+      FractionalRateTimeList.Initialize(BoundaryValues, ScreenObject, True);
       Assert(FractionalRateTimeList.Count = Count);
     end;
   end;
 
 
   ClearBoundaries;
-  SetBoundaryCapacity(FEvapotranspirationSurfaceData.Count);
-  for TimeIndex := 0 to FEvapotranspirationSurfaceData.Count - 1 do
+  SetBoundaryCapacity(EvapotranspirationSurfaceData.Count);
+  for TimeIndex := 0 to EvapotranspirationSurfaceData.Count - 1 do
   begin
     AddBoundary(TEtsSurfDepthStorage.Create);
   end;
-  ListOfTimeLists.Add(FEvapotranspirationSurfaceData);
-  ListOfTimeLists.Add(FEvapotranspirationDepthData);
+  ListOfTimeLists.Add(EvapotranspirationSurfaceData);
+  ListOfTimeLists.Add(EvapotranspirationDepthData);
+  ListOfEtFractionLists := ALink.FListOfEtFractionLists;
+  ListOfDepthFractionLists := ALink.FListOfDepthFractionLists;
   if Count > 0 then
   begin
     for SegmentIndex := 1 to (Model as TPhastModel).
       ModflowPackages.EtsPackage.SegmentCount - 1 do
     begin
-      FractionalDepthTimeList := FListOfDepthFractionLists[SegmentIndex-1];
+      FractionalDepthTimeList := ListOfDepthFractionLists[SegmentIndex-1];
       ListOfTimeLists.Add(FractionalDepthTimeList);
-      FractionalRateTimeList := FListOfEtFractionLists[SegmentIndex-1];
+      FractionalRateTimeList := ListOfEtFractionLists[SegmentIndex-1];
       ListOfTimeLists.Add(FractionalRateTimeList);
     end;
   end;
@@ -1181,22 +1199,51 @@ procedure TEtsSurfDepthCollection.InvalidateDepthFractions(Sender: TObject);
 var
   Index: Integer;
   TimeList: TModflowTimeList;
+  PhastModel: TPhastModel;
+  Link: TEtsSurfDepthTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    for Index := 0 to FListOfDepthFractionLists.Count - 1 do
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TEtsSurfDepthTimeListLink;
+    for Index := 0 to Link.FListOfDepthFractionLists.Count - 1 do
     begin
-      TimeList := FListOfDepthFractionLists[Index];
+      TimeList := Link.FListOfDepthFractionLists[Index];
       TimeList.Invalidate;
+    end;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TEtsSurfDepthTimeListLink;
+      for Index := 0 to Link.FListOfDepthFractionLists.Count - 1 do
+      begin
+        TimeList := Link.FListOfDepthFractionLists[Index];
+        TimeList.Invalidate;
+      end;
     end;
   end;
 end;
 
 procedure TEtsSurfDepthCollection.InvalidateEtDepth(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TEtsSurfDepthTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FEvapotranspirationDepthData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TEtsSurfDepthTimeListLink;
+    Link.FEvapotranspirationDepthData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TEtsSurfDepthTimeListLink;
+      Link.FEvapotranspirationDepthData.Invalidate;
+    end;
   end;
 end;
 
@@ -1204,22 +1251,51 @@ procedure TEtsSurfDepthCollection.InvalidateEtFractions(Sender: TObject);
 var
   Index: Integer;
   TimeList: TModflowTimeList;
+  PhastModel: TPhastModel;
+  Link: TEtsSurfDepthTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    for Index := 0 to FListOfEtFractionLists.Count - 1 do
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TEtsSurfDepthTimeListLink;
+    for Index := 0 to Link.FListOfEtFractionLists.Count - 1 do
     begin
-      TimeList := FListOfEtFractionLists[Index];
+      TimeList := Link.FListOfEtFractionLists[Index];
       TimeList.Invalidate;
+    end;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TEtsSurfDepthTimeListLink;
+      for Index := 0 to Link.FListOfEtFractionLists.Count - 1 do
+      begin
+        TimeList := Link.FListOfEtFractionLists[Index];
+        TimeList.Invalidate;
+      end;
     end;
   end;
 end;
 
 procedure TEtsSurfDepthCollection.InvalidateEtSurface(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TEtsSurfDepthTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FEvapotranspirationSurfaceData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TEtsSurfDepthTimeListLink;
+    Link.FEvapotranspirationSurfaceData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TEtsSurfDepthTimeListLink;
+      Link.FEvapotranspirationSurfaceData.Invalidate;
+    end;
   end;
 end;
 
@@ -1254,7 +1330,7 @@ begin
 
 end;
 
-function TEtsSurfDepthCollection.TimeListCount: integer;
+function TEtsSurfDepthCollection.TimeListCount(AModel: TBaseModel): integer;
 begin
   if Model = nil then
   begin
@@ -1323,13 +1399,13 @@ begin
   result := Values.EvapotranspirationSurfaceAnnotation;
 end;
 
-function TEtsSurfDepth_Cell.GetIntegerAnnotation(Index: integer): string;
+function TEtsSurfDepth_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TEtsSurfDepth_Cell.GetIntegerValue(Index: integer): integer;
+function TEtsSurfDepth_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -1340,7 +1416,7 @@ begin
   result := Values.Cell.Layer;
 end;
 
-function TEtsSurfDepth_Cell.GetRealAnnotation(Index: integer): string;
+function TEtsSurfDepth_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   case Index of
     0: result := EvapotranspirationSurfaceAnnotation;
@@ -1360,7 +1436,7 @@ begin
   end;
 end;
 
-function TEtsSurfDepth_Cell.GetRealValue(Index: integer): double;
+function TEtsSurfDepth_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   case Index of
     0: result := EvapotranspirationSurface;
@@ -1401,6 +1477,21 @@ begin
   inherited;
   Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
+end;
+
+procedure TEtsSurfDepth_Cell.SetColumn(const Value: integer);
+begin
+  Values.Cell.Column := Value;
+end;
+
+procedure TEtsSurfDepth_Cell.SetLayer(const Value: integer);
+begin
+  Values.Cell.Layer := Value;
+end;
+
+procedure TEtsSurfDepth_Cell.SetRow(const Value: integer);
+begin
+  Values.Cell.Row := Value;
 end;
 
 { TEtsSurfDepthRecord }
@@ -1738,7 +1829,7 @@ begin
   inherited;
 end;
 
-constructor TStringCollection.Create(Model: TObject; ScreenObject: TObject;
+constructor TStringCollection.Create(Model: TBaseModel; ScreenObject: TObject;
   EtsSurfDepthCollection: TCollection);
 begin
   inherited Create(TStringValueItem, Model);
@@ -1748,28 +1839,16 @@ end;
 
 { TEtsLayerCollection }
 
-constructor TEtsLayerCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
+function TEtsLayerCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited;
-  if Model <> nil then
-  begin
-    FEvapotranspirationLayerData.OnInvalidate :=
-      (Model as TPhastModel).InvalidateMfEtsEvapLayer;
-  end;
+  result := TEtsLayerTimeListLink;
 end;
 
 { TEtsCollection }
 
-constructor TEtsCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
+function TEtsCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited;
-  if Model <> nil then
-  begin
-    FEvapotranspirationRateData.OnInvalidate :=
-      (Model as TPhastModel).InvalidateMfEtsEvapRate;
-  end;
+  result := TEtsTimeListLink;
 end;
 
 { TEtsSurfDepthStorage }
@@ -1833,6 +1912,61 @@ begin
     RestoreData;
   end;
   result := FEtsSurfDepthArray;
+end;
+
+{ TUzfEvtTimeListLink }
+
+procedure TEtsTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  if Model <> nil then
+  begin
+    EvapotranspirationRateData.OnInvalidate :=
+      (Model as TCustomModel).InvalidateMfEtsEvapRate;
+  end;
+end;
+
+{ TEtsLayerTimeListLink }
+
+procedure TEtsLayerTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  if Model <> nil then
+  begin
+    EvapotranspirationLayerData.OnInvalidate :=
+      (Model as TCustomModel).InvalidateMfEtsEvapLayer;
+  end;
+end;
+
+{ TEtsSurfDepthTimeListLink }
+
+procedure TEtsSurfDepthTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  FEvapotranspirationSurfaceData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FEvapotranspirationSurfaceData.NonParamDescription := 'Evapo- transpiration surface';
+  FEvapotranspirationSurfaceData.ParamDescription := ' evapo- transpiration surface';
+  AddTimeList(FEvapotranspirationSurfaceData);
+  FEvapotranspirationDepthData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FEvapotranspirationDepthData.NonParamDescription := 'Evapo- transpiration depth';
+  FEvapotranspirationDepthData.ParamDescription := ' evapo- transpiration depth';
+  AddTimeList(FEvapotranspirationDepthData);
+  if Model <> nil then
+  begin
+    FEvapotranspirationSurfaceData.OnInvalidate := (Model as TCustomModel).InvalidateMfEtsEvapSurface;
+    FEvapotranspirationDepthData.OnInvalidate := (Model as TCustomModel).InvalidateMfEtsEvapDepth;
+  end;
+  FListOfEtFractionLists := TObjectList.Create;
+  FListOfDepthFractionLists := TObjectList.Create;
+end;
+
+destructor TEtsSurfDepthTimeListLink.Destroy;
+begin
+  FEvapotranspirationDepthData.Free;
+  FEvapotranspirationSurfaceData.Free;
+  FListOfEtFractionLists.Free;
+  FListOfDepthFractionLists.Free;
+  inherited;
 end;
 
 end.

@@ -26,7 +26,8 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   ModflowBoundaryDisplayUnit, ModflowBoundaryUnit, ClassificationUnit,
   ModflowHfbDisplayUnit, EdgeDisplayUnit, ModflowUnitNumbers, HufDefinition,
   ModelMateClassesUnit, ModflowHobUnit, EZDSLHsh, FormulaManagerUnit,
-  PathlineReader, LegendUnit, DisplaySettingsUnit;
+  PathlineReader, LegendUnit, DisplaySettingsUnit, ModflowCellUnit,
+  ModflowGageUnit;
 
 const
   // @name is the name of the @link(TDataArray) that specifies whether an
@@ -341,6 +342,7 @@ type
     FPhastLocation: string;
     FZoneBudgetLocation: string;
     FModelMateLocation: string;
+    FModflowLgrLocation: string;
     function GetTextEditorLocation: string;
     procedure SetModflowLocation(const Value: string);
     function RemoveQuotes(const Value: string): string;
@@ -349,6 +351,7 @@ type
     procedure SetPhastLocation(const Value: string);
     procedure SetZoneBudgetLocation(const Value: string);
     procedure SetModelMateLocation(const Value: string);
+    procedure SetModflowLgrLocation(const Value: string);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create;
@@ -368,6 +371,7 @@ type
       write SetZoneBudgetLocation;
     property ModelMateLocation: string read FModelMateLocation
       write SetModelMateLocation;
+    property ModflowLgrLocation: string read FModflowLgrLocation write SetModflowLgrLocation;
   end;
 
   {
@@ -1250,7 +1254,7 @@ that affects the model output should also have a comment. }
     // See @link(DataSetCount).
     function GetDataSetCount: integer;
     // See @link(DataSets).
-    function GetDataSets(const Index: integer): TDataArray;
+    function GetDataSet(const Index: integer): TDataArray;
     // See @link(BoundaryDataSetCount).
     function GetBoundaryDataSetCount: integer;
     // See @link(BoundaryDataSets).
@@ -1269,10 +1273,13 @@ that affects the model output should also have a comment. }
     function DataArrayHeld(DataArray: TDataArray): boolean;
     function GetChildDataArrayManager(Index: integer): TDataArrayManager;
     function GetChildDataArrayManagerCount: integer;
+    function LocalCount: integer;
+    // @name adds DataSet to @link(FDataSets) and calls @link(AddDataSetToLookUpList);
+    function AddDataSet(const DataSet: TDataArray): Integer;
+    procedure UpdateDataSetDimensions;
   public
     FDataArrayCreationRecords: array of TDataSetCreationData;
     procedure Assign(Source: TDataArrayManager);
-    // @name indicates the number of @link(TDataArray)s in @link(DataSets).
     procedure AddDataSetToLookUpList(const DataSet: TDataArray);
     Constructor Create(Model: TCustomModel);
     Destructor Destroy; override;
@@ -1283,10 +1290,11 @@ that affects the model output should also have a comment. }
     property RiverDataSets: TList read FRiverDataSets;
     property StoreCachedData: boolean read FStoreCachedData
       write FStoreCachedData;
+    // @name indicates the number of @link(TDataArray)s in @name.
     property DataSetCount: integer read GetDataSetCount;
     // @name is used to access the @link(TDataArray)s that are defined
     // throughout the grid.
-    property DataSets[const Index: integer]: TDataArray read GetDataSets;
+    property DataSets[const Index: integer]: TDataArray read GetDataSet; default;
     // @name is used to determine the number of @link(TDataArray)s in
     // @link(BoundaryDataSets).  Only data sets that don't vary with
     // time yet are related to boundary conditions are in
@@ -1300,8 +1308,6 @@ that affects the model output should also have a comment. }
       read GetBoundaryDataSets;
     property DataSetsCapacity: integer read GetDataSetsCapacity
       write SetDataSetsCapacity;
-    // @name adds DataSet to @link(FDataSets) and calls @link(AddDataSetToLookUpList);
-    function AddDataSet(const DataSet: TDataArray): Integer; virtual;
     procedure AddDataSetToCache(DataArray: TDataArray);
     procedure DontCache(DataArray: TDataArray);
     procedure CacheDataArrays;
@@ -1330,7 +1336,6 @@ that affects the model output should also have a comment. }
     // @link(BoundaryDataSets) whose Name is DataSetName. If none has that
     // name, @name returns -1.
     function IndexOfBoundaryDataSet(DataSetName: string): integer;
-    procedure UpdateDataSetDimensions;
     procedure InvalidateAllDataSets;
     procedure ClearDeletedDataSets;
     procedure UnlinkDeletedDataSets;
@@ -1344,8 +1349,12 @@ that affects the model output should also have a comment. }
 
   TChildModelCollection = class;
 
-  TCustomModel = class abstract (TComponent)
+  TCustomModel = class abstract (TBaseModel)
   private
+    FOnModelSelectionChange: TNotifyEvent;
+    // See @link(PhastGrid).
+    FPhastGrid: TPhastGrid;
+    FModelSelection: TModelSelection;
     FClearing: Boolean;
     FDataArrayManager: TDataArrayManager;
     FAlternateFlowPackage: boolean;
@@ -1383,66 +1392,69 @@ that affects the model output should also have a comment. }
     FHufKzNotifier: TObserver;
     FHufSsNotifier: TObserver;
     FHufSyNotifier: TObserver;
-    // See @link(UpToDate).
-    FUpToDate: boolean;
 
+    function GetSomeSegmentsUpToDate: boolean; virtual; abstract;
+    procedure SetSomeSegmentsUpToDate(const Value: boolean); virtual; abstract;
+    // See @link(PhastGrid).
+    procedure SetPhastGrid(const Value: TPhastGrid);
+    procedure UpdateDischargeRouting(Sender: TObject);
     function AlwaysUsed(Sender: TObject): boolean;
-    function AquiferPropertiesUsed(Sender: TObject): boolean;
-    function KyUsed(Sender: TObject): boolean;
-    function KzUsed(Sender: TObject): boolean;
-    function PorosityUsed(Sender: TObject): boolean;
-    function SpecificStorageUsed(Sender: TObject): boolean;
+    function AquiferPropertiesUsed(Sender: TObject): boolean; virtual;
+    function KyUsed(Sender: TObject): boolean; virtual;
+    function KzUsed(Sender: TObject): boolean; virtual;
+    function PorosityUsed(Sender: TObject): boolean; virtual;
+    function SpecificStorageUsed(Sender: TObject): boolean; virtual;
     // @name returns true if the model uses solute transport.
     // @name is used an event handler for
     // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function ChemistryUsed(Sender: TObject): boolean;
+    function ChemistryUsed(Sender: TObject): boolean; virtual;
     // @name returns true if the model uses initial heads.
     // @name is used an event handler for
     // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function InitialHeadUsed(Sender: TObject): boolean;
+    function InitialHeadUsed(Sender: TObject): boolean; virtual;
     // @name returns true if the model uses equilibrium phases.
     // @name is used an event handler for
     // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function EquilibriumPhasesUsed(Sender: TObject): boolean;
+    function EquilibriumPhasesUsed(Sender: TObject): boolean; virtual;
     // @name returns true if the model uses surface reactions.
     // @name is used an event handler for
     // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function SurfacesUsed(Sender: TObject): boolean;
+    function SurfacesUsed(Sender: TObject): boolean; virtual;
     // @name returns true if the model uses exchange reactions.
     // @name is used an event handler for
     // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function ExchangeUsed(Sender: TObject): boolean;
+    function ExchangeUsed(Sender: TObject): boolean; virtual;
     // @name returns true if the model uses gas phases.
     // @name is used an event handler for
     // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function GasPhaseUsed(Sender: TObject): boolean;
+    function GasPhaseUsed(Sender: TObject): boolean; virtual;
     // @name returns true if the model uses solid solutions.
     // @name is used an event handler for
     // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function SolidSolutionUsed(Sender: TObject): boolean;
+    function SolidSolutionUsed(Sender: TObject): boolean; virtual;
     // @name returns true if the model uses kinetics.
     // @name is used an event handler for
     // TDataArray.@link(TDataArray.OnDataSetUsed)
-    function KineticsUsed(Sender: TObject): boolean;
-    function ModflowUsed(Sender: TObject): boolean;
-    function RouteUzfDischarge(Sender: TObject): boolean;
-    function ModflowInitialHeadUsed(Sender: TObject): boolean;
-    function ConfiningBedKzUsed(Sender: TObject): boolean;
-    function VerticalAnisotropyUsed(Sender: TObject): boolean;
-    function HorizontalAnisotropyUsed(Sender: TObject): boolean;
-    function SpecificYieldUsed(Sender: TObject): boolean;
-    function WetDryUsed(Sender: TObject): boolean;
-    function ModpathUsed(Sender: TObject): boolean;
-    function HufReferenceSurfaceNeeded(Sender: TObject): boolean;
-    function BcfUsed(Sender: TObject): boolean;
-    function ConfinedStorageCoefUsed(Sender: TObject): boolean;
-    function OptionalDataSet(Sender: TObject): boolean;
+    function KineticsUsed(Sender: TObject): boolean; virtual;
+    function ModflowUsed(Sender: TObject): boolean; virtual;
+    function RouteUzfDischarge(Sender: TObject): boolean; virtual;
+    function ModflowInitialHeadUsed(Sender: TObject): boolean; virtual;
+    function ConfiningBedKzUsed(Sender: TObject): boolean; virtual;
+    function VerticalAnisotropyUsed(Sender: TObject): boolean; virtual;
+    function HorizontalAnisotropyUsed(Sender: TObject): boolean; virtual;
+    function SpecificYieldUsed(Sender: TObject): boolean; virtual;
+    function WetDryUsed(Sender: TObject): boolean; virtual;
+    function ModpathUsed(Sender: TObject): boolean; virtual;
+    function HufReferenceSurfaceNeeded(Sender: TObject): boolean; virtual;
+    function BcfUsed(Sender: TObject): boolean; virtual;
+    function ConfinedStorageCoefUsed(Sender: TObject): boolean; virtual;
+    function OptionalDataSet(Sender: TObject): boolean; 
     function HufSelected(Sender: TObject): boolean;
     function HufStorageUsed(Sender: TObject): boolean;
-    function ZoneBudgetSelected(Sender: TObject): boolean;
-    function SwtSelected(Sender: TObject): boolean;
-    function SwtOffsetsUsed(Sender: TObject): boolean;
-    function SwtSpecifiedUsed(Sender: TObject): boolean;
+    function ZoneBudgetSelected(Sender: TObject): boolean; virtual;
+    function SwtSelected(Sender: TObject): boolean; virtual;
+    function SwtOffsetsUsed(Sender: TObject): boolean; virtual;
+    function SwtSpecifiedUsed(Sender: TObject): boolean; virtual;
     function IndenticalTransientArray(DataArray: TDataArray; DataArrays: TList;
       var CachedIndex: integer): TDataArray;
     // See @link(TimeLists).
@@ -1465,9 +1477,14 @@ that affects the model output should also have a comment. }
       ParameterType: TParameterType);
     procedure UpdateLpfDataArrayParameterUsed(const DataArrayName: string;
       ParameterType: TParameterType);
+    function PrepareModflowFullStressPeriods: Boolean;
+    function CountStepsInExport: Integer;
+    procedure GetDefaultOutputFileExtension(var Extension: string);
 
   private
     FGrid: TCustomGrid;
+    FModflowOptions: TModflowOptions;
+    FNameFileWriter: TObject;
     procedure SetAlternateFlowPackage(const Value: boolean);
     procedure SetAlternateSolver(const Value: boolean);
     procedure SetBatchFileAdditionsAfterModel(const Value: TStrings);
@@ -1475,8 +1492,6 @@ that affects the model output should also have a comment. }
     procedure SetModflowGrid(const Value: TModflowGrid);
     procedure SetModflowNameFileLines(const Value: TStrings);
     procedure SetModflowPackages(const Value: TModflowPackages);
-    // See @link(UpToDate).
-    procedure SetUpToDate(const Value: boolean); virtual;
     procedure SetHeadFluxObservations(const Value: TFluxObservationGroups);
     procedure SetRiverObservations(const Value: TFluxObservationGroups);
     procedure SetDrainObservations(const Value: TFluxObservationGroups);
@@ -1484,7 +1499,6 @@ that affects the model output should also have a comment. }
     procedure SetHydrogeologicUnits(const Value: THydrogeologicUnits);
     procedure SetFilesToArchive(const Value: TStrings);
     procedure SetModelInputFiles(const Value: TStrings);
-    procedure SetFileName(const Value: string);
     procedure SetModflowWettingOptions(const Value: TWettingOptions);
 
 
@@ -1496,7 +1510,28 @@ that affects the model output should also have a comment. }
     procedure FreeHufNotifiers;
     procedure FreeGridNotifiers;
     function GetModflowFullStressPeriods: TModflowStressPeriods; virtual; abstract;
-
+    function StoreDrainObservations: Boolean;
+    function StoreGhbObservations: Boolean;
+    function StoreHeadFluxObservations: Boolean;
+    function StoreRiverObservations: Boolean;
+    function StoreHydrogeologicUnits: Boolean; virtual;
+    function GetDisplayColumn: integer;
+    function GetDisplayLayer: integer;
+    function GetDisplayRow: integer;
+    function GetSelectedColumn: integer;
+    function GetSelectedLayer: integer;
+    function GetSelectedRow: integer;
+    procedure SetDisplayColumn(const Value: integer);
+    procedure SetDisplayLayer(const Value: integer);
+    procedure SetDisplayRow(const Value: integer);
+    procedure SetSelectedColumn(const Value: integer);
+    procedure SetSelectedLayer(const Value: integer);
+    procedure SetSelectedRow(const Value: integer);
+    function WettingActive: boolean; virtual;
+    procedure SetNameFileWriter(const Value: TObject);
+    function GetThreeDGridObserver: TObserver;
+    function GetSaveBfhBoundaryConditions: boolean; virtual; abstract;
+    procedure SetSaveBfhBoundaryConditions(const Value: boolean);  virtual; abstract;
   var
     FTransientMultiplierArrays: TList;
     FCachedMultiplierArrayIndex: Integer;
@@ -1534,17 +1569,29 @@ that affects the model output should also have a comment. }
     FTimeLists: TList;
 
   protected
+    procedure SetFileName(const Value: string); virtual;
+    procedure SetFrontTimeList(const Value: TCustomTimeList); virtual;
+    procedure SetSideTimeList(const Value: TCustomTimeList); virtual;
+    procedure SetTopTimeList(const Value: TCustomTimeList); virtual;
+    function GetFormulaManager: TFormulaManager; virtual; abstract;
+    function GetSelectedModel: TCustomModel; virtual; abstract;
+    procedure SetSelectedModel(const Value: TCustomModel); virtual; abstract;
     function GetScreenObjects(const Index: integer): TScreenObject;virtual;abstract;
     function GetScreenObjectCount: integer;virtual;abstract;
     function GetModflowSteadyParameters: TModflowSteadyParameters;virtual;abstract;
     procedure SetModflowSteadyParameters(const Value: TModflowSteadyParameters);virtual;abstract;
     function GetModelSelection: TModelSelection;virtual;abstract;
-    procedure SetModelSelection(const Value: TModelSelection);virtual;abstract;
+    // Among other things, if @link(OnModelSelectionChange)
+    // is assigned, @name calls @link(TfrmGoPhast.ModelSelectionChange
+    // TfrmGoPhast.ModelSelectionChange).  @name also changes
+    // the functions that are available. and sets @Link(TObserver)s
+    // for the @link(Grid).
+    procedure SetModelSelection(const Value: TModelSelection);
     // @name causes the grid to not be colored by any @link(TDataArray).
     function GetLayerStructure: TLayerStructure;virtual;abstract;
     procedure SetLayerStructure(const Value: TLayerStructure);virtual;abstract;
-    procedure SetModflowOptions(const Value: TModflowOptions);virtual;abstract;
-    function GetModflowOptions: TModflowOptions;virtual;abstract;
+    procedure SetModflowOptions(const Value: TModflowOptions); 
+//    function GetModflowOptions: TModflowOptions;virtual;abstract;
     function GetModflowStressPeriods: TModflowStressPeriods;virtual;abstract;
     procedure SetModflowStressPeriods(const Value: TModflowStressPeriods);virtual;abstract;
     procedure SetSoluteTransport(const Value: boolean);virtual;abstract;
@@ -1569,6 +1616,60 @@ that affects the model output should also have a comment. }
     procedure ClearViewedItems; virtual;
     procedure InternalClear; virtual;
   public
+    procedure ExportSeparateLgrModel(const FileName: string; RunModel: boolean);
+    // @name returns the name of the most likely output file from which
+    // model results will be imported.  If heads were saved, the name of the
+    // file containing heads will be returned.
+    // If heads were not saved by drawdowns were saved, the name of the
+    // file containing drawdowns will be returned.
+    // After that, it is the file containing the cell-by-cell flows.
+    function DefaultModflowOutputFileName: string; virtual;
+    procedure ModelObserversStopTalkingTo(Observer: TObserver);
+    procedure UpdateActive(Sender: TObject);
+    procedure UpdateWetDry(Sender: TObject);
+    procedure UpdateLakeId(Sender: TObject);
+    procedure FinalizeActive(Sender: TObject);
+    procedure FinalizeWetDry(Sender: TObject);
+    procedure FinalizeLakeId(Sender: TObject);
+    procedure UpdateModPathZone(Sender: TObject);
+      // @name updates @link(TDataArray.OnPostInitialize
+    // TDataArray.OnPostInitialize) for several @link(TDataArray)s.
+    procedure UpdateOnPostInitialize;
+  // MODFLOW can not use a file name containing a space character.
+    // @name replaces the space character in a file name with an underscore.
+    // @name is the event handler for @link(TDataArray.OnDataSetUsed
+    // TDataArray.OnDataSetUsed) for @link(TDataArray)s related to the HUF
+    // package.
+    function HufDataArrayUsed(Sender: TObject): boolean;
+    // @name assigns frmGoPhast.Grid.@link(TCustomGrid.FrontDataSet)
+    // to be the @link(TDataArray) in TimeList at Time.
+    procedure UpdateFrontTimeDataSet(const TimeList: TCustomTimeList;
+      const Time: double); virtual;
+    // @name assigns frmGoPhast.Grid.@link(TCustomGrid.SideDataSet)
+    // to be the @link(TDataArray) in TimeList at Time.
+    procedure UpdateSideTimeDataSet(const TimeList: TCustomTimeList;
+      const Time: double); virtual;
+    // @name assigns frmGoPhast.Grid.@link(TCustomGrid.TopDataSet)
+    // to be the @link(TDataArray) in TimeList at Time.
+    procedure UpdateTopTimeDataSet(const TimeList: TCustomTimeList;
+      const Time: double); virtual;
+    // @name assigns frmGoPhast.Grid.@link(TCustomGrid.ThreeDDataSet)
+    // to be the @link(TDataArray) in TimeList at Time.
+    procedure UpdateThreeDTimeDataSet(const TimeList: TCustomTimeList;
+      const Time: double); virtual;
+    function GetTimeListByName(const AName: string): TCustomTimeList;
+    property FormulaManager: TFormulaManager read GetFormulaManager;
+    function AddDataSet(const DataSet: TDataArray): Integer; virtual;
+    function LayerGroupUsed(LayerGroup: TLayerGroup): boolean; virtual;
+    // When a layer group represents more than one layer, @name gives the
+    // relative positions of the dividing lines between layers.
+    // The values is @name should decrease monotonically.
+    // For example, if a layer group is divided into 4 uniform layers,
+    // @name should return [0.75, 0.5, 0.25].  
+    function LayerFractions(LayerGroup: TLayerGroup): TDoubleDynArray; virtual;
+    function LayerCount: integer; virtual; 
+    procedure UpdateDisplayUseList(NewUseList: TStringList;
+      ParamType: TParameterType; DataIndex: integer; const DisplayName: string); virtual; abstract;
     procedure Assign(Source: TPersistent); override;
     property Clearing: Boolean read FClearing;
     property DataArrayManager: TDataArrayManager read FDataArrayManager;
@@ -1577,12 +1678,6 @@ that affects the model output should also have a comment. }
     procedure Clear;
     constructor Create(AnOwner: TComponent); override;
     destructor Destroy; override;
-    // Call @name to indicate that the model has changed in some important
-    // respect.  The user will be prompted to save the model when closing.
-    procedure Invalidate; virtual;
-    // @name indicates whether or not the model needs to be saved to file.
-    // See @link(Invalidate).
-    property UpToDate: boolean read FUpToDate write SetUpToDate;
     procedure AddModelInputFile(const FileName: string);
     procedure AddFileToArchive(const FileName: string);
 
@@ -1635,7 +1730,7 @@ that affects the model output should also have a comment. }
     // @seealso(CreateVariables).
     procedure RemoveVariables(const DataSet: TDataArray);
 
-    property ThreeDGridObserver: TObserver read FThreeDGridObserver;
+    property ThreeDGridObserver: TObserver read GetThreeDGridObserver;
     property TopGridObserver: TObserver read FTopGridObserver;
     property HufKxNotifier: TObserver read FHufKxNotifier;
     property HufKyNotifier: TObserver read FHufKyNotifier;
@@ -1649,7 +1744,7 @@ that affects the model output should also have a comment. }
 
     // @name provides access to the @link(TScreenObject)s in the model.
     // However, the @link(TScreenObject)s are saved are read from files
-    // via @link(ObjectList).
+    // via @link(TPhastModel.ObjectList).
     property ScreenObjects[const Index: integer]: TScreenObject
       read GetScreenObjects;
 
@@ -1663,13 +1758,13 @@ that affects the model output should also have a comment. }
     // TDataArray.@link(TDataArray.OnDataSetUsed).
     // @name is also used in WriteHeadIC which
     // is found in the implementation section of @link(WritePhastUnit).
-    function InitialWaterTableUsed(Sender: TObject): boolean;
-    function ReservoirLayerUsed(Sender: TObject): boolean;
-    function ReservoirPackageUsed(Sender: TObject): boolean;
-    function LakePackageUsed(Sender: TObject): boolean;
-    function UzfPackageUsed(Sender: TObject): boolean;
-    function UzfUnsatVertKUsed(Sender: TObject): boolean;
-    function UzfInitialInfiltrationUsed(Sender: TObject): boolean;
+    function InitialWaterTableUsed(Sender: TObject): boolean; virtual;
+    function ReservoirLayerUsed(Sender: TObject): boolean; virtual;
+    function ReservoirPackageUsed(Sender: TObject): boolean; virtual;
+    function LakePackageUsed(Sender: TObject): boolean; virtual;
+    function UzfPackageUsed(Sender: TObject): boolean; virtual;
+    function UzfUnsatVertKUsed(Sender: TObject): boolean; virtual;
+    function UzfInitialInfiltrationUsed(Sender: TObject): boolean; virtual;
 
     property TransientMultiplierArrays: TList read FTransientMultiplierArrays;
     property TransientZoneArrays: TList read FTransientZoneArrays;
@@ -1709,7 +1804,9 @@ that affects the model output should also have a comment. }
 
     function FixFileName(AFileName: string): string;
     // @name exports the input files for MODFLOW and optionally runs MODFLOW.
-    procedure ExportModflowModel(FileName: string; RunModel: boolean);
+    procedure ExportModflowModel(const FileName: string;
+      RunModel: boolean);
+    procedure InternalExportModflowModel(const FileName: string);
     procedure ExportModpathModel(FileName: string;
       RunModel, NewBudgetFile: boolean);
     procedure ExportZoneBudgetModel(FileName: string; RunModel: boolean);
@@ -1723,7 +1820,7 @@ that affects the model output should also have a comment. }
     // See @link(FrontDisplayTime) and
     // TCustomGrid.@link(TCustomGrid.FrontDataSet).
     property FrontTimeList: TCustomTimeList read FFrontTimeList
-      write FFrontTimeList;
+      write SetFrontTimeList;
 
     // @name is the TPhastTimeList for the transient data set used to color
     // the side view of the grid.
@@ -1732,7 +1829,7 @@ that affects the model output should also have a comment. }
     // See @link(SideDisplayTime) and
     // TCustomGrid.@link(TCustomGrid.SideDataSet).
     property SideTimeList: TCustomTimeList read FSideTimeList
-      write FSideTimeList;
+      write SetSideTimeList;
     // @name is the @link(TCustomTimeList)
     // for the transient data set used to color
     // the top view of the grid.
@@ -1740,7 +1837,8 @@ that affects the model output should also have a comment. }
     // is not colored, @name has no meaning.
     // See @link(TopDisplayTime) and
     // TCustomGrid.@link(TCustomGrid.TopDataSet).
-    property TopTimeList: TCustomTimeList read FTopTimeList write FTopTimeList;
+    property TopTimeList: TCustomTimeList read FTopTimeList
+      write SetTopTimeList;
     // @name is the time for the transient data set used to color the
     // top view of the grid.
     // If the data set used to color the grid is not transient, or the grid
@@ -1787,8 +1885,6 @@ that affects the model output should also have a comment. }
     property LayerStructure: TLayerStructure read GetLayerStructure
       write SetLayerStructure;
 
-    property ModflowOptions: TModflowOptions read GetModflowOptions
-      write SetModflowOptions;
 
     property ModflowStressPeriods: TModflowStressPeriods
       read GetModflowStressPeriods write SetModflowStressPeriods;
@@ -1824,7 +1920,130 @@ that affects the model output should also have a comment. }
     property DataSetList: TDataSetCollection read GetDataSetCollection
       write FDataSetCollection;
 
+    procedure InvalidateMfSfrStreamTop(Sender: TObject);
+    procedure InvalidateMfSfrStreamSlope(Sender: TObject);
+    procedure InvalidateMfSfrStreamThickness(Sender: TObject);
+    procedure InvalidateMfSfrStreamK(Sender: TObject);
+    procedure InvalidateMfSfrSaturatedWaterContent(Sender: TObject);
+    procedure InvalidateMfSfrInitialWaterContent(Sender: TObject);
+    procedure InvalidateMfSfrBrooksCorey(Sender: TObject);
+    procedure InvalidateMfSfrVerticalUnsatK(Sender: TObject);
+    procedure InvalidateMfSfrUpstreamHydraulicConductivity(Sender: TObject);
+    procedure InvalidateMfSfrDownstreamHydraulicConductivity(Sender: TObject);
+    procedure InvalidateMfSfrUpstreamWidth(Sender: TObject);
+    procedure InvalidateMfSfrDownstreamWidth(Sender: TObject);
+    procedure InvalidateMfSfrUpstreamThickness(Sender: TObject);
+    procedure InvalidateMfSfrDownstreamThickness(Sender: TObject);
+    procedure InvalidateMfSfrUpstreamElevation(Sender: TObject);
+    procedure InvalidateMfSfrDownstreamElevation(Sender: TObject);
+    procedure InvalidateMfSfrUpstreamUnsaturatedWaterContent(Sender: TObject);
+    procedure InvalidateMfSfrDownstreamUnsaturatedWaterContent(Sender: TObject);
+    procedure InvalidateMfSfrUpstreamUnsatInitialWaterContent(Sender: TObject);
+    procedure InvalidateMfSfrDownstreamUnsatInitialWaterContent(
+      Sender: TObject);
+    procedure InvalidateMfSfrUpstreamBrooksCorey(Sender: TObject);
+    procedure InvalidateMfSfrDownstreamBrooksCorey(Sender: TObject);
+    procedure InvalidateMfSfrUpstreamUnsatKz(Sender: TObject);
+    procedure InvalidateMfSfrDownstreamUnsatKz(Sender: TObject);
+    procedure InvalidateMfRchLayer(Sender: TObject);
+    function GetScreenObjectByName(AName: string): TScreenObject; virtual; abstract;
+    // @name sets the event handlers for the discharge routing array in
+    // the UZF package.
+    procedure DischargeRoutingUpdate;
+    property SelectedModel: TCustomModel read GetSelectedModel write SetSelectedModel;
+
+    // name is called in @link(SetModelSelection).
+    // The event handler for this event is
+    // @link(TfrmGoPhast.ModelSelectionChange).
+    property OnModelSelectionChange: TNotifyEvent read FOnModelSelectionChange
+      write FOnModelSelectionChange;
+    // @name updates @link(TDataArray.ParameterUsed TDataArray.ParameterUsed)
+    // and @link(TDataArray.ParameterFormula TDataArray.ParameterFormula)
+    // for the @link(TDataArray)s related to the LPF parameters.
+    procedure UpdateDataArrayParameterUsed;
+    // @name calls TScreenObject.@link(TScreenObject.Invalidate)
+    // for every @link(TScreenObject) in @link(ScreenObjects).
+    procedure InvalidateScreenObjects;
+    property SelectedColumn: integer read GetSelectedColumn write SetSelectedColumn;
+    property SelectedRow: integer read GetSelectedRow write SetSelectedRow;
+    property SelectedLayer: integer read GetSelectedLayer write SetSelectedLayer;
+    property DisplayColumn: integer read GetDisplayColumn write SetDisplayColumn;
+    property DisplayRow: integer read GetDisplayRow write SetDisplayRow;
+    property DisplayLayer: integer read GetDisplayLayer write SetDisplayLayer;
+    // If @name is @true, there is at least one @link(TScreenObject)
+    // in which TScreenObject.Segments.@link(
+    // TCellElementSegmentList.UpToDate) is @True
+    // @name is used in @link(TPhastModel.InvalidateSegments).
+    property SomeSegmentsUpToDate: boolean read GetSomeSegmentsUpToDate
+      write SetSomeSegmentsUpToDate;
+    procedure InvalidateMfChdStartingHead(Sender: TObject);
+    procedure InvalidateMfChdEndingHead(Sender: TObject);
+    procedure InvalidateMfGhbConductance(Sender: TObject);
+    procedure InvalidateMfGhbBoundaryHead(Sender: TObject);
+    procedure InvalidateMfWellPumpage(Sender: TObject);
+    procedure InvalidateMfRivConductance(Sender: TObject);
+    procedure InvalidateMfRivStage(Sender: TObject);
+    procedure InvalidateMfRivBottom(Sender: TObject);
+    procedure InvalidateMfDrnConductance(Sender: TObject);
+    procedure InvalidateMfDrnElevation(Sender: TObject);
+    procedure InvalidateMfDrtConductance(Sender: TObject);
+    procedure InvalidateMfDrtElevation(Sender: TObject);
+    procedure InvalidateMfDrtReturnFraction(Sender: TObject);
+    procedure InvalidateMfRchRate(Sender: TObject);
+    procedure InvalidateMfUzfInfiltration(Sender: TObject);
+    procedure InvalidateMfEvtEvapRate(Sender: TObject);
+    procedure InvalidateMfEvtEvapSurface(Sender: TObject);
+    procedure InvalidateMfEvtEvapDepth(Sender: TObject);
+    procedure InvalidateMfEvtEvapLayer(Sender: TObject);
+    procedure InvalidateMfEtsEvapRate(Sender: TObject);
+    procedure InvalidateMfEtsEvapSurface(Sender: TObject);
+    procedure InvalidateMfEtsEvapDepth(Sender: TObject);
+    procedure InvalidateMfEtsEvapLayer(Sender: TObject);
+    procedure InvalidateEtsDepthFractions(Sender: TObject);
+    procedure InvalidateEtsRateFractions(Sender: TObject);
+    procedure InvalidateMfUzfEtDemand(Sender: TObject);
+    procedure InvalidateMfUzfExtinctionDepth(Sender: TObject);
+    procedure InvalidateMfUzfWaterContent(Sender: TObject);
+    property NameFileWriter: TObject read FNameFileWriter write SetNameFileWriter;
+    function ModflowLayerCount: integer; virtual;
+    function ModflowConfiningBedCount: integer; virtual;
+    procedure WriteLAYCB(const DiscretizationWriter: TObject); virtual;
+    // @name returns true if a layer in the MODFLOW grid is simulated
+    // LayerID is zero-based.
+    function IsLayerSimulated(const LayerID: integer): boolean; virtual;
+    Function Laytyp: TOneDIntegerArray; virtual;
+    Function Layavg: TOneDIntegerArray; virtual;
+    function Chani: TOneDIntegerArray; virtual;
+    Function Layvka: TOneDIntegerArray; virtual;
+    function Trpy: TOneDRealArray; virtual;
+    function GetLayerGroupByLayer(const Layer: integer): TLayerGroup; virtual;
+    function ModflowLayerBottomDescription(const LayerID: integer): string; virtual;
+    // @name converts a MODFLOW model layer (starting at 1) to the
+    // appropriate index in a 3D data array;
+    Function ModflowLayerToDataSetLayer(ModflowLayer: integer): integer; virtual;
+    function DataSetLayerToModflowLayer(DataSetLayer: integer): integer; virtual;
+    // @name is used to move a boundary to a new position when
+    // the current position is invalid.  This version of @name does nothing
+    // but in @link(TChildModel.AdjustCellPosition
+    // TChildModel.AdjustCellPosition), it is used to move boundary cells away
+    // from the edge of the model.
+    procedure AdjustCellPosition(AValueCell: TValueCell); overload; virtual;
+    procedure AdjustCellPosition(ACellAssignment: TCellAssignment); overload; virtual; 
+    // @name is used in local grid refinement to adjust the values
+    // of recharge (RCH, UZF package) and max ET (in EVT, ETS, and UZF) packages.
+    // at the interface between the grids.
+    procedure AdjustDataArray(ADataArray: TDataArray); virtual; abstract;
+    procedure AdjustResKvArray(Sender: TObject);
+    // @name is the event handler for @link(TDataArray.OnDataSetUsed
+    // TDataArray.OnDataSetUsed) for @link(TDataArray)s that have model results.
+    function ModelResultsRequired(Sender: TObject): boolean;
+    procedure BeginGridChange; virtual;
+    procedure EndGridChange; virtual;
+    property SaveBfhBoundaryConditions: boolean read GetSaveBfhBoundaryConditions
+      write SetSaveBfhBoundaryConditions default True;
   published
+    // @name defines the grid used with PHAST.
+    property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
     property AlternateFlowPackage: boolean read FAlternateFlowPackage
       write SetAlternateFlowPackage;
     property AlternateSolver: boolean read FAlternateSolver
@@ -1840,26 +2059,37 @@ that affects the model output should also have a comment. }
     property ModflowPackages: TModflowPackages read FModflowPackages
       write SetModflowPackages;
     property HeadFluxObservations: TFluxObservationGroups
-      read FHeadFluxObservations write SetHeadFluxObservations;
+      read FHeadFluxObservations write SetHeadFluxObservations stored StoreHeadFluxObservations;
     property DrainObservations: TFluxObservationGroups
-      read FDrainObservations write SetDrainObservations;
+      read FDrainObservations write SetDrainObservations stored StoreDrainObservations;
     property GhbObservations: TFluxObservationGroups
-      read FGhbObservations write SetGhbObservations;
+      read FGhbObservations write SetGhbObservations stored StoreGhbObservations;
     property RiverObservations: TFluxObservationGroups
-      read FRiverObservations write SetRiverObservations;
+      read FRiverObservations write SetRiverObservations stored StoreRiverObservations;
     property HydrogeologicUnits: THydrogeologicUnits read FHydrogeologicUnits
-      write SetHydrogeologicUnits;
+      write SetHydrogeologicUnits stored StoreHydrogeologicUnits;
     property FilesToArchive: TStrings read FFilesToArchive
       write SetFilesToArchive;
     property ModelInputFiles: TStrings read FModelInputFiles
       write SetModelInputFiles;
     property ModelFileName: string read FFileName write SetFileName;
+    property ModflowOptions: TModflowOptions read FModflowOptions
+      write SetModflowOptions;
     property ModflowWettingOptions: TWettingOptions read FModflowWettingOptions
       write SetModflowWettingOptions;
     property GlobalVariables: TGlobalVariables read FGlobalVariables
       write SetGlobalVariables;
 
   end;
+
+  TMapping = record
+    ParentPostion: integer;
+    ChildPositions: array of integer;
+  end;
+
+  TMappingArray = array of TMapping;
+
+  TSaveDataSetValues = (sdsvNever, sdsvAlways);
 
   {
   @abstract(@name is used to read model configuration data to and
@@ -1879,10 +2109,11 @@ that affects the model output should also have a comment. }
   instances of @Link(TDataArray) and @Link(TScreenObject) respectively.
   However, when not reading data from a stream or writing it to a stream.
   @Link(TDataArray)s and @Link(TScreenObject)s are accessed via
-  @link(TPhastModel.DataSets) and @link(TPhastModel.ScreenObjects) respectively.
+  @link(FDataArrayManager).@link(TDataArrayManager.DataSets)
+  and @link(TCustomModel.ScreenObjects) respectively.
   The number @Link(TDataArray)s or @Link(TScreenObject)s can be determined
-  using @Link(TPhastModel.DataSetCount) and
-  @Link(TPhastModel.ScreenObjectCount).
+  using @link(FDataArrayManager).@Link(TDataArrayManager.DataSetCount) and
+  @Link(TCustomModel.ScreenObjectCount).
   }
   TPhastModel = class(TCustomModel)
   private
@@ -1927,8 +2158,6 @@ that affects the model output should also have a comment. }
     FLeakyHeadGroup: TTimeListGroup;
     // See @link(ModelTimes).
     FModelTimes: TRealList;
-    // See @link(PhastGrid).
-    FPhastGrid: TPhastGrid;
     // See @link(PrintFrequency).
     FPrintFrequency: TPrintFrequencyCollection;
     // See @link(PrintInitial).
@@ -2007,11 +2236,8 @@ that affects the model output should also have a comment. }
     FWellSolution: TPhastTimeList;
     // See @link(WellSolutionGroup).
     FWellSolutionGroup: TTimeListGroup;
-    FModelSelection: TModelSelection;
     FLayerStructure: TLayerStructure;
-    FOnModelSelectionChange: TNotifyEvent;
     FGuiSettings: TGuiSettings;
-    FModflowOptions: TModflowOptions;
     FModflowStressPeriods: TModflowStressPeriods;
     FModflowOutputControl: TModflowOutputControl;
     FModflowSteadyParameters: TModflowSteadyParameters;
@@ -2046,50 +2272,62 @@ that affects the model output should also have a comment. }
     FDisplaySettings: TDisplaySettingsCollection;
     FChildModels: TChildModelCollection;
     FImportingModel: boolean;
+    FSelectedModel: TCustomModel;
+//    FCurrentModel: TCustomModel;
+    FColumnMapping: TMappingArray;
+    FRowMapping: TMappingArray;
+    FLayerMapping: TMappingArray;
+    FCombinedDisplayColumn: integer;
+    FCombinedDisplayLayer: integer;
+    FCombinedDisplayRow: integer;
+    FSaveDataSetValues: TSaveDataSetValues;
+    FChildGridUpdateCount: Integer;
+    FDataSetUpdateCount: Integer;
+    FSaveBfhBoundaryConditions: Boolean;
     // See @link(Exaggeration).
     function GetExaggeration: double;
     // See @link(FrontHeight).
-    function GetFrontHeight: integer;
+//    function GetFrontHeight: integer;
     // See @link(FrontX).
-    function GetFrontX: double;
+//    function GetFrontX: double;
     // See @link(FrontY).
-    function GetFrontY: double;
+//    function GetFrontY: double;
     // See @link(Height).
-    function GetHeight: integer;
+//    function GetHeight: integer;
     // See @link(Left).
-    function GetLeft: integer;
+//    function GetLeft: integer;
     // See @link(MagnificationFront).
-    function GetMagnificationFront: double;
+//    function GetMagnificationFront: double;
     // See @link(MagnificationSide).
-    function GetMagnificationSide: double;
+//    function GetMagnificationSide: double;
     // See @link(MagnificationTop).
-    function GetMagnificationTop: double;
+//    function GetMagnificationTop: double;
     // See @link(OwnsScreenObjects).
     function GetOwnsScreenObjects: boolean;
     // See @link(ObjectList).
     function GetScreenObjectCollection: TScreenObjectCollection;
     // See @link(SideWidth).
-    function GetSideWidth: integer;
+//    function GetSideWidth: integer;
     // See @link(SideX).
-    function GetSideX: double;
+//    function GetSideX: double;
     // See @link(SideY).
-    function GetSideY: double;
+//    function GetSideY: double;
     // See @link(Top).
-    function GetTop: integer;
+//    function GetTop: integer;
     // See @link(TopViewHeight).
-    function GetTopViewHeight: integer;
+//    function GetTopViewHeight: integer;
     // See @link(TopViewWidth).
-    function GetTopViewWidth: integer;
+//    function GetTopViewWidth: integer;
     // See @link(TopX).
-    function GetTopX: double;
+//    function GetTopX: double;
     // See @link(TopY).
-    function GetTopY: double;
+//    function GetTopY: double;
     // See @link(Version).
     function GetVersion: string;
     // See @link(Width).
-    function GetWidth: integer;
+//    function GetWidth: integer;
     // See @link(WindowState).
-    function GetWindowState: TWindowState;
+//    function GetWindowState: TWindowState;
     // @name initializes all the @link(TPhastTimeList)s in @link(TimeLists).
     procedure InitializePhastBoundaries;
     // @name adds all the TTimeItem.@link(TTimeItem.EndingTime)s
@@ -2122,8 +2360,6 @@ that affects the model output should also have a comment. }
     procedure SetMagnificationTop(Value: double);
     // See @link(OwnsScreenObjects).
     procedure SetOwnsScreenObjects(const Value: boolean);
-    // See @link(PhastGrid).
-    procedure SetPhastGrid(const Value: TPhastGrid);
     // See @link(PrintFrequency).
     procedure SetPrintFrequency(const Value: TPrintFrequencyCollection);
     // See @link(ObjectList).
@@ -2163,12 +2399,10 @@ that affects the model output should also have a comment. }
     procedure UpdateUseList(DataIndex: integer; NewUseList: TStringList;
       Item: TCustomModflowBoundaryItem);
     //    procedure DefinePackageDataArrays;
-    procedure UpdateDischargeRouting(Sender: TObject);
     function DefaultArchiveName: string;
     function GetArchiveName: string;
     procedure SetArchiveName(const Value: string);
     procedure GetUnitID(var UnitID: Integer);
-    procedure UpdateModPathZone(Sender: TObject);
     procedure NotifyGridColorsChanged(Sender: TObject);
     procedure SetModelMateProjectFileName(const Value: string);
     procedure SetModelMateProject(const Value: TProject);
@@ -2201,10 +2435,64 @@ that affects the model output should also have a comment. }
     procedure SetDisplaySettings(const Value: TDisplaySettingsCollection);
     procedure SetChildModels(const Value: TChildModelCollection);
     function StoreChildModels: Boolean;
+    function GetChildModels: TChildModelCollection;
+    function MaxChildColumnsPerColumn(ColIndex: Integer): integer;
+    function MaxChildRowsPerRow(RowIndex: Integer): integer;
+    function MaxChildLayersPerLayer(LayerIndex: Integer): integer;
+    function CombinedCount(ViewDirection: TViewDirection): integer;
+    function DirectionCount(ViewDirection: TViewDirection): integer;
+    function MaxChildDisPerParentDis(ViewDirection: TViewDirection;
+      Position: integer): integer;
+    procedure UpdateAMapping(var FMapping: TMappingArray;
+      ViewDirection: TViewDirection);
+    procedure SetCombinedDisplayColumn(const Value: integer);
+    procedure SetCombinedDisplayLayer(const Value: integer);
+    procedure SetCombinedDisplayRow(const Value: integer);
+    procedure SetSomeSegmentsUpToDate(const Value: boolean); override;
+    function GetSomeSegmentsUpToDate: boolean; override;
+    function GetNeedToRecalculateFrontCellColors: boolean;
+    function GetNeedToRecalculateSideCellColors: boolean;
+    function GetNeedToRecalculateTopCellColors: boolean;
+    procedure SetNeedToRecalculateFrontCellColors(const Value: boolean);
+    procedure SetNeedToRecalculateSideCellColors(const Value: boolean);
+    procedure SetNeedToRecalculateTopCellColors(const Value: boolean);
+    function AquiferPropertiesUsed(Sender: TObject): boolean; override;
+    function KyUsed(Sender: TObject): boolean; override;
+    function KzUsed(Sender: TObject): boolean; override;
+    function PorosityUsed(Sender: TObject): boolean; override;
+    function SpecificStorageUsed(Sender: TObject): boolean; override;
+    function ChemistryUsed(Sender: TObject): boolean; override;
+    function InitialHeadUsed(Sender: TObject): boolean; override;
+    function EquilibriumPhasesUsed(Sender: TObject): boolean; override;
+    function SurfacesUsed(Sender: TObject): boolean; override;
+    function ExchangeUsed(Sender: TObject): boolean; override;
+    function GasPhaseUsed(Sender: TObject): boolean; override;
+    function SolidSolutionUsed(Sender: TObject): boolean; override;
+    function KineticsUsed(Sender: TObject): boolean; override;
+    function ModflowUsed(Sender: TObject): boolean; override;
+    function RouteUzfDischarge(Sender: TObject): boolean; override;
+    function ModflowInitialHeadUsed(Sender: TObject): boolean; override;
+    function ConfiningBedKzUsed(Sender: TObject): boolean; override;
+    function VerticalAnisotropyUsed(Sender: TObject): boolean; override;
+    function HorizontalAnisotropyUsed(Sender: TObject): boolean; override;
+    function SpecificYieldUsed(Sender: TObject): boolean; override;
+    function WetDryUsed(Sender: TObject): boolean; override;
+    function ModpathUsed(Sender: TObject): boolean; override;
+    function HufReferenceSurfaceNeeded(Sender: TObject): boolean; override;
+    function BcfUsed(Sender: TObject): boolean; override;
+    function ConfinedStorageCoefUsed(Sender: TObject): boolean; override;
+    function ZoneBudgetSelected(Sender: TObject): boolean; override;
+    function SwtSelected(Sender: TObject): boolean; override;
+    function SwtOffsetsUsed(Sender: TObject): boolean; override;
+    function SwtSpecifiedUsed(Sender: TObject): boolean; override;
+    function WettingActive: boolean; override;
+    procedure InternalExportModflowLgrFile(const FileName: string);
   protected
+    procedure SetFileName(const Value: string); override;
+    function GetFormulaManager: TFormulaManager; override;
     function GetLayerStructure: TLayerStructure;override;
     procedure SetLayerStructure(const Value: TLayerStructure);override;
-    function GetModflowOptions: TModflowOptions;override;
+//    function GetModflowOptions: TModflowOptions;override;
     function GetModflowStressPeriods: TModflowStressPeriods;override;
     function GetSoluteTransport: boolean;override;
     function GetFreeSurface: boolean;override;
@@ -2218,7 +2506,7 @@ that affects the model output should also have a comment. }
     function GetObservationPurpose: TObservationPurpose; override;
     procedure SetObservationPurpose(const Value: TObservationPurpose); override;
     procedure SetHufParameters(const Value: THufModflowParameters);override;
-    procedure SetModflowOptions(const Value: TModflowOptions);override;
+//    procedure SetModflowOptions(const Value: TModflowOptions);override;
     procedure SetModflowStressPeriods(const Value: TModflowStressPeriods);override;
     procedure SetModflowOutputControl(const Value: TModflowOutputControl);override;
     procedure SetModflowTransientParameters(
@@ -2234,12 +2522,7 @@ that affects the model output should also have a comment. }
     function GetModelSelection: TModelSelection;override;
     function GetModflowSteadyParameters: TModflowSteadyParameters;override;
     procedure SetModflowSteadyParameters(const Value: TModflowSteadyParameters);override;
-    // Among other things, if @link(OnModelSelectionChange)
-    // is assigned, @name calls @link(TfrmGoPhast.ModelSelectionChange
-    // TfrmGoPhast.ModelSelectionChange).  @name also changes
-    // the functions that are available. and sets @Link(TObserver)s
-    // for the @link(Grid).
-    procedure SetModelSelection(const Value: TModelSelection);override;
+//    procedure SetModelSelection(const Value: TModelSelection);override;
     // See @link(ScreenObjectCount).
     function GetScreenObjectCount: integer;override;
     // See @link(ScreenObjects).
@@ -2253,7 +2536,33 @@ that affects the model output should also have a comment. }
     // all @link(TDataArray)s and @link(TScreenObject)s. It initializes
     // @link(Diffusivity) and @link(SolutionOptions).
     procedure InternalClear; override;
+    function GetSelectedModel: TCustomModel; override;
+    procedure SetSelectedModel(const Value: TCustomModel); override;
+    procedure SetFrontTimeList(const Value: TCustomTimeList); override;
+    procedure SetSideTimeList(const Value: TCustomTimeList); override;
+    procedure SetTopTimeList(const Value: TCustomTimeList); override;
+    function GetDisplayName: string; override;
+    function GetSaveBfhBoundaryConditions: boolean; override;
+    procedure SetSaveBfhBoundaryConditions(const Value: boolean);  override;
   public
+    procedure UpdateMapping;
+    function InitialWaterTableUsed(Sender: TObject): boolean; override;
+    function ReservoirLayerUsed(Sender: TObject): boolean; override;
+    function ReservoirPackageUsed(Sender: TObject): boolean; override;
+    function LakePackageUsed(Sender: TObject): boolean; override;
+    function UzfPackageUsed(Sender: TObject): boolean; override;
+    function UzfUnsatVertKUsed(Sender: TObject): boolean; override;
+    function UzfInitialInfiltrationUsed(Sender: TObject): boolean; override;
+    procedure InvalidateMapping;
+    procedure UpdateChildGrids;
+    procedure UpdateDataSetConnections;
+    function AddDataSet(const DataSet: TDataArray): Integer; override;
+    function IsChildModelEdgeColRow(Col, Row, Layer: integer;
+      out CModel: TBaseModel): boolean;
+    function IsChildModelEdgeCell(Col, Row, Layer: integer;
+      out CModel: TBaseModel): boolean;
+    procedure AllowChildGridUpdates;
+    procedure DisallowChildGridUpdates;
     property ImportingModel: boolean read FImportingModel write FImportingModel;
     procedure Assign(Source: TPersistent); override;
     // @name updates and invalidates data sets that may have been calculated
@@ -2262,23 +2571,14 @@ that affects the model output should also have a comment. }
     // When a @link(TDataArray) or global variable is renamed, @name is
     // called to update all the formulas with the new names.
     procedure UpdateFormulas(OldNames, NewNames: TStringList);
-    // MODFLOW can not use a file name containing a space character.
-    // @name replaces the space character in a file name with an underscore.
-    // @name is the event handler for @link(TDataArray.OnDataSetUsed
-    // TDataArray.OnDataSetUsed) for @link(TDataArray)s related to the HUF
-    // package.
-    function HufDataArrayUsed(Sender: TObject): boolean;
     // @name is used when determining what data sets or global variables are
     // used when evaluating the formula for a MODFLOW boundary condition.
     // The names of all the @link(TDataArray)s and global variables are added
     // to NewUseList.
     procedure UpdateDisplayUseList(NewUseList: TStringList;
-      ParamType: TParameterType; DataIndex: integer; const DisplayName: string);
+      ParamType: TParameterType; DataIndex: integer; const DisplayName: string); override;
     // @name invalidates all the @link(TModflowBoundaryDisplayTimeList)s.
     procedure InvalidateModflowBoundaries;
-    // @name is the event handler for @link(TDataArray.OnDataSetUsed
-    // TDataArray.OnDataSetUsed) for @link(TDataArray)s that have model results.
-    function ModelResultsRequired(Sender: TObject): boolean;
     // @name is the event handler for @link(TDataArray.OnDataSetUsed
     // TDataArray.OnDataSetUsed) in MODFLOW models for @link(TDataArray)s
     // that define the top of the model and the bottom of @link(TLayerGroup)s.
@@ -2294,9 +2594,6 @@ that affects the model output should also have a comment. }
     // point in TestScreenObject.
     procedure LocateNearestLakeOrStream(TestScreenObject: TScreenObject;
       var NearestLake, NearestStream: TScreenObject; Tolerance: double = 0);
-    // @name sets the event handlers for the discharge routing array in
-    // the UZF package.
-    procedure DischargeRoutingUpdate;
     // @name increments @link(FScreenObjectUpdateCount).  While
     // @link(FScreenObjectUpdateCount) is greater than zero the
     // @link(OnScreenObjectsChanged) event is not called.
@@ -2328,13 +2625,6 @@ that affects the model output should also have a comment. }
       read FOnCheckScreenObject write FOnCheckScreenObject;
     // If assigned, @name calls @link(OnCheckScreenObject).
     function IsCurrentScreenObject(ScreenObject: TScreenObject): boolean;
-    // @name updates @link(TDataArray.ParameterUsed TDataArray.ParameterUsed)
-    // and @link(TDataArray.ParameterFormula TDataArray.ParameterFormula)
-    // for the @link(TDataArray)s related to the LPF parameters.
-    procedure UpdateDataArrayParameterUsed;
-    // @name updates @link(TDataArray.OnPostInitialize
-    // TDataArray.OnPostInitialize) for several @link(TDataArray)s.
-    procedure UpdateOnPostInitialize;
     // @name adds AScreenObject to @link(FScreenObjectList).
     function AddScreenObject(const AScreenObject: TScreenObject): integer;
       virtual;
@@ -2348,13 +2638,6 @@ that affects the model output should also have a comment. }
     property ContourColorParameters: TColorParameters read FContourColors;
     // @name creates an instance of @classname.
     constructor Create(AnOwner: TComponent); override;
-    // @name returns the name of the most likely output file from which
-    // model results will be imported.  If heads were saved, the name of the
-    // file containing heads will be returned.
-    // If heads were not saved by drawdowns were saved, the name of the
-    // file containing drawdowns will be returned.
-    // After that, it is the file containing the cell-by-cell flows.
-    function DefaultModflowOutputFileName: string;
     // @name destroys the current instance of @classname.
     // Do not call @name directly.  Call Free instead.
     destructor Destroy; override;
@@ -2405,9 +2688,6 @@ that affects the model output should also have a comment. }
     // specified by Index.
     procedure InsertScreenObject(const Index: integer;
       const AScreenObject: TScreenObject);
-    // @name calls TScreenObject.@link(TScreenObject.Invalidate)
-    // for every @link(TScreenObject) in @link(ScreenObjects).
-    procedure InvalidateScreenObjects;
     // Calling @name ensures that TScreenObject.Segments.@link(
     // TCellElementSegmentList.UpToDate) is @False for every
     // @link(TScreenObject).
@@ -2475,12 +2755,6 @@ that affects the model output should also have a comment. }
     // for leaky boundaries on the side view of model cells.
     property SideLeakyHead: TPhastTimeList read FSideLeakyHead;
 
-    // If @name is @true, there is at least one @link(TScreenObject)
-    // in which TScreenObject.Segments.@link(
-    // TCellElementSegmentList.UpToDate) is @True
-    // @name is used in @link(InvalidateSegments)
-    property SomeSegmentsUpToDate: boolean read FSomeSegmentsUpToDate
-      write FSomeSegmentsUpToDate;
     // @name is the @link(TPhastTimeList) that specifies the associated solution
     // for specified head boundaries.
     property SpecifiedHeadAssociatedSolution: TPhastTimeList
@@ -2521,31 +2795,24 @@ that affects the model output should also have a comment. }
     // for leaky boundaries on the top view of model cells.
     property TopLeakyHead: TPhastTimeList read FTopLeakyHead;
     // @name is called after reading a @classname to transfer the information
-    // about @link(TDataArray)s from @link(DataSetList) to @link(DataSets).
+    // about @link(TDataArray)s from @link(DataSetList)
+    // to @link(FDataArrayManager).@link(TDataArrayManager.DataSets).
     procedure UpdateDataSets;
-    // @name assigns frmGoPhast.Grid.@link(TCustomGrid.FrontDataSet)
-    // to be the @link(TDataArray) in TimeList at Time.
     procedure UpdateFrontTimeDataSet(const TimeList: TCustomTimeList;
-      const Time: double);
+      const Time: double); override;
     // @name is called after reading a @classname to transfer the information
     // about @link(TScreenObject)s from @link(ObjectList) to
     // @link(ScreenObjects).
     procedure UpdateScreenObjects;
-    // @name assigns frmGoPhast.Grid.@link(TCustomGrid.SideDataSet)
-    // to be the @link(TDataArray) in TimeList at Time.
     procedure UpdateSideTimeDataSet(const TimeList: TCustomTimeList;
-      const Time: double);
-    // @name assigns frmGoPhast.Grid.@link(TCustomGrid.ThreeDDataSet)
-    // to be the @link(TDataArray) in TimeList at Time.
+      const Time: double); override;
     procedure UpdateThreeDTimeDataSet(const TimeList: TCustomTimeList;
-      const Time: double);
+      const Time: double); override;
     // @name calls TPhastTimeList.@link(TPhastTimeList.Loaded)
     // for each @link(TPhastTimeList) in @link(TimeLists).
     procedure UpdateTimeLists;
-    // @name assigns frmGoPhast.Grid.@link(TCustomGrid.TopDataSet)
-    // to be the @link(TDataArray) in TimeList at Time.
     procedure UpdateTopTimeDataSet(const TimeList: TCustomTimeList;
-      const Time: double);
+      const Time: double); override;
 
     // @name is the @link(TPhastTimeList) that specifies
     // the injection or pumping rate for well boundaries.
@@ -2562,12 +2829,6 @@ that affects the model output should also have a comment. }
     // @name is the group of @link(TPhastTimeList)s that are related
     // to the solution in well boundaries.
     property WellSolutionGroup: TTimeListGroup read FWellSolutionGroup;
-
-    // name is called in @link(SetModelSelection).
-    // The event handler for this event is
-    // @link(TfrmGoPhast.ModelSelectionChange).
-    property OnModelSelectionChange: TNotifyEvent read FOnModelSelectionChange
-      write FOnModelSelectionChange;
 
     // See @link(TfrmGoPhast.GetZoomBox).
     property OnGetZoomBox: TGetZoomBoxEvent read FOnGetZoomBox
@@ -2611,52 +2872,9 @@ that affects the model output should also have a comment. }
     // @name calls @link(OnConvertPoint).
     function ConvertPoint(VD: TViewDirection;
       const RealPoint: TPoint2D): TPoint;
-    procedure UpdateActive(Sender: TObject);
-    procedure UpdateWetDry(Sender: TObject);
-    procedure UpdateLakeId(Sender: TObject);
-    procedure FinalizeActive(Sender: TObject);
-    procedure FinalizeWetDry(Sender: TObject);
-    procedure FinalizeLakeId(Sender: TObject);
-    procedure InvalidateMfWellPumpage(Sender: TObject);
-    procedure InvalidateMfGhbConductance(Sender: TObject);
-    procedure InvalidateMfGhbBoundaryHead(Sender: TObject);
-    procedure InvalidateMfDrnConductance(Sender: TObject);
-    procedure InvalidateMfDrnElevation(Sender: TObject);
-    procedure InvalidateMfDrtConductance(Sender: TObject);
-    procedure InvalidateMfDrtElevation(Sender: TObject);
-    procedure InvalidateMfDrtReturnFraction(Sender: TObject);
-    procedure InvalidateMfRivConductance(Sender: TObject);
-    procedure InvalidateMfRivStage(Sender: TObject);
-    procedure InvalidateMfRivBottom(Sender: TObject);
-    procedure InvalidateMfChdStartingHead(Sender: TObject);
-    procedure InvalidateMfChdEndingHead(Sender: TObject);
-    procedure InvalidateMfEtsEvapRate(Sender: TObject);
-    procedure InvalidateMfEtsEvapSurface(Sender: TObject);
-    procedure InvalidateMfEtsEvapDepth(Sender: TObject);
-    procedure InvalidateMfEtsEvapLayer(Sender: TObject);
-    procedure InvalidateEtsDepthFractions(Sender: TObject);
-    procedure InvalidateEtsRateFractions(Sender: TObject);
-    procedure InvalidateMfEvtEvapRate(Sender: TObject);
-    procedure InvalidateMfEvtEvapSurface(Sender: TObject);
-    procedure InvalidateMfEvtEvapDepth(Sender: TObject);
-    procedure InvalidateMfEvtEvapLayer(Sender: TObject);
-    procedure InvalidateMfRchRate(Sender: TObject);
-    procedure InvalidateMfRchLayer(Sender: TObject);
     procedure InvalidateMfSfrData(Sender: TObject);
-    procedure InvalidateMfUzfInfiltration(Sender: TObject);
-    procedure InvalidateMfUzfEtDemand(Sender: TObject);
-    procedure InvalidateMfUzfExtinctionDepth(Sender: TObject);
-    procedure InvalidateMfUzfWaterContent(Sender: TObject);
     procedure InvalidateMfSfrSegmentReachAndIcalc(Sender: TObject);
     procedure InvalidateMfSfrReachLength(Sender: TObject);
-    procedure InvalidateMfSfrStreamTop(Sender: TObject);
-    procedure InvalidateMfSfrStreamSlope(Sender: TObject);
-    procedure InvalidateMfSfrStreamThickness(Sender: TObject);
-    procedure InvalidateMfSfrStreamK(Sender: TObject);
-    procedure InvalidateMfSfrSaturatedWaterContent(Sender: TObject);
-    procedure InvalidateMfSfrInitialWaterContent(Sender: TObject);
-    procedure InvalidateMfSfrBrooksCorey(Sender: TObject);
-    procedure InvalidateMfSfrVerticalUnsatK(Sender: TObject);
     procedure InvalidateMfSfrIprior(Sender: TObject);
     procedure InvalidateMfSfrFlow(Sender: TObject);
     procedure InvalidateMfSfrRunoff(Sender: TObject);
@@ -2668,25 +2886,8 @@ that affects the model output should also have a comment. }
     procedure InvalidateMfSfrDepthExponent(Sender: TObject);
     procedure InvalidateMfSfrWidthCoefficient(Sender: TObject);
     procedure InvalidateMfSfrWidthExponent(Sender: TObject);
-    procedure InvalidateMfSfrUpstreamHydraulicConductivity(Sender: TObject);
-    procedure InvalidateMfSfrDownstreamHydraulicConductivity(Sender: TObject);
-    procedure InvalidateMfSfrUpstreamWidth(Sender: TObject);
-    procedure InvalidateMfSfrDownstreamWidth(Sender: TObject);
-    procedure InvalidateMfSfrUpstreamThickness(Sender: TObject);
-    procedure InvalidateMfSfrDownstreamThickness(Sender: TObject);
-    procedure InvalidateMfSfrUpstreamElevation(Sender: TObject);
-    procedure InvalidateMfSfrDownstreamElevation(Sender: TObject);
     procedure InvalidateMfSfrUpstreamDepth(Sender: TObject);
     procedure InvalidateMfSfrDownstreamDepth(Sender: TObject);
-    procedure InvalidateMfSfrUpstreamUnsaturatedWaterContent(Sender: TObject);
-    procedure InvalidateMfSfrDownstreamUnsaturatedWaterContent(Sender: TObject);
-    procedure InvalidateMfSfrUpstreamUnsatInitialWaterContent(Sender: TObject);
-    procedure InvalidateMfSfrDownstreamUnsatInitialWaterContent(
-      Sender: TObject);
-    procedure InvalidateMfSfrUpstreamBrooksCorey(Sender: TObject);
-    procedure InvalidateMfSfrDownstreamBrooksCorey(Sender: TObject);
-    procedure InvalidateMfSfrUpstreamUnsatKz(Sender: TObject);
-    procedure InvalidateMfSfrDownstreamUnsatKz(Sender: TObject);
 
     property ArchiveName: string read GetArchiveName write SetArchiveName;
     procedure CreateArchive(const FileName: string);
@@ -2695,7 +2896,7 @@ that affects the model output should also have a comment. }
     function DefaultLowerElevationFormula(ViewDirection: TViewDirection): string;
     function DefaultElevationFormula(ViewDirection: TViewDirection; EvalAt: TEvaluatedAt): string;
     function ParameterDataSetUsed(Sender: TObject): boolean;
-    function GetScreenObjectByName(AName: string): TScreenObject;
+    function GetScreenObjectByName(AName: string): TScreenObject; override;
     procedure CopyScreenObjectsToClipboard;
     procedure PasteObjectsFromClipboard(List: TList);
     property ModelMateProject: TProject read FModelMateProject
@@ -2704,14 +2905,68 @@ that affects the model output should also have a comment. }
     procedure ImportFromModelMateProject(Project: TProject);
     procedure RegisterGlobalVariables(Parser: TRbwParser);
 
-    property FormulaManager: TFormulaManager read FFormulaManager;
+    property FormulaManager: TFormulaManager read GetFormulaManager;
     procedure ClearScreenObjectCollection;
 
     property ColorLegend: TLegend read FColorLegend;
     property ContourLegend: TLegend read FContourLegend;
 
     function FileVersionEqualOrEarlier(TestVersion: string): boolean;
-
+    function CombinedColumnCount: integer;
+    function CombinedRowCount: integer;
+    function CombinedLayerCount: integer;
+    property NeedToRecalculateTopCellColors: boolean read GetNeedToRecalculateTopCellColors write SetNeedToRecalculateTopCellColors;
+    property NeedToRecalculateFrontCellColors: boolean read GetNeedToRecalculateFrontCellColors write SetNeedToRecalculateFrontCellColors;
+    property NeedToRecalculateSideCellColors: boolean read GetNeedToRecalculateSideCellColors write SetNeedToRecalculateSideCellColors;
+    procedure UpdateDataSetDimensions;
+    function LgrUsed: boolean;
+    function BcfIsSelected: Boolean;
+    function ChdIsSelected: Boolean;
+    function ChobIsSelected: Boolean;
+    function De4IsSelected: Boolean;
+    function DrnIsSelected: Boolean;
+    function DrobIsSelected: Boolean;
+    function DrtIsSelected: Boolean;
+    function EtsIsSelected: Boolean;
+    function EvtIsSelected: Boolean;
+    function GbobIsSelected: Boolean;
+    function GhbIsSelected: Boolean;
+    function GmgIsSelected: Boolean;
+    function HfbIsSelected: Boolean;
+    function HobIsSelected: Boolean;
+    function HufIsSelected: Boolean;
+    function HydmodIsSelected: Boolean;
+    function LakIsSelected: Boolean;
+    function LpfIsSelected: Boolean;
+    function Mnw2IsSelected: Boolean;
+    function MODPATHIsSelected: Boolean;
+    function PcgIsSelected: Boolean;
+    function RchIsSelected: Boolean;
+    function ResIsSelected: Boolean;
+    function RivIsSelected: Boolean;
+    function RvobIsSelected: Boolean;
+    function SfrIsSelected: Boolean;
+    function SipIsSelected: Boolean;
+    function SubIsSelected: Boolean;
+    function SwtIsSelected: Boolean;
+    function UzfIsSelected: Boolean;
+    function WelIsSelected: Boolean;
+    function ZoneBudgetIsSelected: Boolean;
+    function PackageIsSelected(APackage: TObject): Boolean;
+    procedure ExportModflowLgrModel(const FileName: string;
+      RunModel: boolean);
+    procedure AdjustDataArray(ADataArray: TDataArray); override;
+    function RchTimeVaryingLayers: boolean;
+    function EvtTimeVaryingLayers: boolean;
+    function EtsTimeVaryingLayers: boolean;
+    procedure BeginGridChange; override;
+    procedure EndGridChange; override;
+    procedure BeginDataSetUpdate;
+    procedure EndDataSetUpdate;
+    property DataSetUpdateCount: integer read FDataSetUpdateCount;
+    procedure UpdateCombinedDisplayColumn;
+    procedure UpdateCombinedDisplayRow;
+    procedure UpdateCombinedDisplayLayer;
   published
     // The following properties are obsolete.
 
@@ -2719,50 +2974,51 @@ that affects the model output should also have a comment. }
     property FlowOnly: boolean write SetFlowOnly stored False;
     { @name is used to store fluid properties in PHAST.}
     { @name is only for backwards compatibility.  It is not used.}
-    property FluidProperties: TFluidProperties read FFluidProperties
+    property FluidProperties: TFluidProperties  read FFluidProperties
       write FFluidProperties stored False;
     // @name stores the height in pixels of the front view of the model.
-    property FrontHeight: integer read GetFrontHeight
+    property FrontHeight: integer // read GetFrontHeight
       write SetFrontHeight stored False;
     // @name stores the reference X-coordinate for the front view of the model.
-    property FrontX: double read GetFrontX write SetFrontX stored False;
+    property FrontX: double {read GetFrontX} write SetFrontX stored False;
     // @name stores the reference Y-coordinate for the front view of the model.
-    property FrontY: double read GetFrontY write SetFrontY stored False;
+    property FrontY: double {read GetFrontY} write SetFrontY stored False;
     // @name is the height of the main form in pixels.
-    property Height: integer read GetHeight write SetHeight stored False;
+    property Height: integer {read GetHeight} write SetHeight stored False;
     // @name is the X-coordinate of the main form in pixels.
-    property Left: integer read GetLeft write SetLeft stored False;
+    property Left: integer {read GetLeft} write SetLeft stored False;
     // @name is the magnification of the front view of the model.
-    property MagnificationFront: double read GetMagnificationFront
+    property MagnificationFront: double //read GetMagnificationFront
       write SetMagnificationFront stored False;
     // @name is the magnification of the side view of the model.
-    property MagnificationSide: double read GetMagnificationSide
+    property MagnificationSide: double //read GetMagnificationSide
       write SetMagnificationSide stored False;
     // @name is the magnification of the top view of the model.
-    property MagnificationTop: double read GetMagnificationTop
+    property MagnificationTop: double //read GetMagnificationTop
       write SetMagnificationTop stored False;
     // @name is the width in pixels of the side view of the model.
-    property SideWidth: integer read GetSideWidth
+    property SideWidth: integer //read GetSideWidth
       write SetSideWidth stored False;
     // @name stores the reference X-coordinate for the side view of the model.
-    property SideX: double read GetSideX write SetSideX stored False;
+    property SideX: double {read GetSideX} write SetSideX stored False;
     // @name stores the reference Y-coordinate for the front view of the model.
-    property SideY: double read GetSideY write SetSideY stored False;
+    property SideY: double {read GetSideY} write SetSideY stored False;
     // @name is the Y-coordinate of the main form in pixels.
-    property Top: integer read GetTop write SetTop stored False;
+    property Top: integer {read GetTop} write SetTop stored False;
     // @name is the height of the top view of the model in pixels
-    property TopViewHeight: integer read GetTopViewHeight
+    property TopViewHeight: integer //read GetTopViewHeight
       write SetTopViewHeight stored False;
     // @name is the width of the top view of the model in pixels
-    property TopViewWidth: integer read GetTopViewWidth write SetTopViewWidth stored False;
+    property TopViewWidth: integer //read GetTopViewWidth
+      write SetTopViewWidth stored False;
     // @name stores the reference X-coordinate for the top view of the model.
-    property TopX: double read GetTopX write SetTopX stored False;
+    property TopX: double {read GetTopX} write SetTopX stored False;
     // @name stores the reference Y-coordinate for the top view of the model.
-    property TopY: double read GetTopY write SetTopY stored False;
+    property TopY: double {read GetTopY} write SetTopY stored False;
     // @name is the width of the main form in GoPhast in pixels.
-    property Width: integer read GetWidth write SetWidth stored False;
+    property Width: integer {read GetWidth} write SetWidth stored False;
     // @name stores whether the model is maximized, minimized, or normal.
-    property WindowState: TWindowState read GetWindowState
+    property WindowState: TWindowState // read GetWindowState
       write SetWindowState stored False;
 
     // The following properties are used only in PHAST models.
@@ -2771,8 +3027,6 @@ that affects the model output should also have a comment. }
     property Diffusivity: double read FDiffusivity write SetDiffusivity;
     // @name is used to store options related to the grid in PHAST.
     property GridOptions: TGridOptions read FGridOptions write FGridOptions;
-    // @name defines the grid used with PHAST.
-    property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
     // @name represents the @link(TPrintFrequencyItem)s in PHAST.
     property PrintFrequency: TPrintFrequencyCollection read FPrintFrequency
       write SetPrintFrequency;
@@ -2792,50 +3046,60 @@ that affects the model output should also have a comment. }
     // @name stores the default units in PHAST.
     property Units: TUnits read FUnits write SetUnits;
 
-    // The following properties are used only in MODFLOW models.
 
     // @name stores MODPATH pathline data.
-    property PathLine: TPathLineReader read GetPathLine write SetPathLine
+    // @name is used only in MODFLOW models.
+    property PathLines: TPathLineReader read GetPathLine write SetPathLine
       stored StorePathLine;
+    // @name is retained for backwards compatibility. See @link(PathLines).
+    property PathLine: TPathLineReader read GetPathLine write SetPathLine
+      stored False;
     // @name stores MODPATH endpoint data.
+    // @name is used only in MODFLOW models.
     property EndPoints: TEndPointReader read GetEndPoints Write SetEndPoints
       stored StoreEndPoints;
     // @name stores MODPATH times series data.
+    // @name is used only in MODFLOW models.
     property TimeSeries: TTimeSeriesReader read GetTimeSeries
       write SetTimeSeries stored StoreTimeSeries;
 
-    // The following properties are used in both PHAST and MODFLOW models.
 
     // @name represents a series of bitmaps that can be displayed on
     // the top, front, or side view of the model.
+    // @name is used in both PHAST and MODFLOW models.
     property Bitmaps: TCompressedBitmapCollection read FBitmaps write
       SetBitmaps;
     // @name is the vertical exaggeration of the front, side, and 3D views
     // of the model in GoPhast.
+    // @name is used in both PHAST and MODFLOW models.
     property Exaggeration: double read GetExaggeration write SetExaggeration;
     // @name is used to read or write @link(TScreenObject)s to or from files.
+    // @name is used in both PHAST and MODFLOW models.
     property ObjectList: TScreenObjectCollection
       read GetScreenObjectCollection write SetScreenObjectCollection;
     // @name is the version of GoPhast that last saved the model that is being
     // edited.
+    // @name is used in both PHAST and MODFLOW models.
     property Version: string read GetVersion write SetVersion;
     // @name specifies the size and appearance of various portions of the
     // ModelMuse main window.
+    // @name is used in both PHAST and MODFLOW models.
     property GuiSettings: TGuiSettings read FGuiSettings write FGuiSettings;
     // @name is the ModelMate file associated with this model.
     property ModelMateProjectFileName: string read FModelMateProjectFileName
       write SetModelMateProjectFileName;
     //  see @link(TDisplaySettingsCollection).
+    // @name is used in both PHAST and MODFLOW models.
     property DisplaySettings: TDisplaySettingsCollection read FDisplaySettings
       write SetDisplaySettings;
-    property ChildModels: TChildModelCollection read FChildModels
+    property ChildModels: TChildModelCollection read GetChildModels
        write SetChildModels stored StoreChildModels;
-
+    property SaveDataSetValues: TSaveDataSetValues read FSaveDataSetValues
+      write FSaveDataSetValues default sdsvAlways;
 
     property ModflowSteadyParameters;
     property ModelSelection;
     property LayerStructure;
-    property ModflowOptions;
     property ModflowStressPeriods;
     property SoluteTransport;
     property UseWaterTable;
@@ -2846,21 +3110,158 @@ that affects the model output should also have a comment. }
     property ModflowTransientParameters;
     property ModflowOutputControl;
     property DataSetList;
+    property CombinedDisplayColumn: integer read FCombinedDisplayColumn
+      write SetCombinedDisplayColumn;
+    property CombinedDisplayRow: integer read FCombinedDisplayRow
+      write SetCombinedDisplayRow;
+    property CombinedDisplayLayer: integer read FCombinedDisplayLayer
+      write SetCombinedDisplayLayer;
+    property SaveBfhBoundaryConditions;
   end;
+
+  TChildDiscretization = class(TOrderedItem)
+  private
+    FParentLayerNumber: integer;
+    FLayerGroup: TLayerGroup;
+    FLayerGroupName: string;
+    FDiscretization: integer;
+    procedure SetDiscretization(const Value: integer);
+    procedure SetLayerGroup(const Value: TLayerGroup);
+    procedure SetLayerGroupName(const Value: string);
+    procedure SetParentLayerNumber(const Value: integer);
+    function GetLayerGroupName: string;
+    function GetLayerGroup: TLayerGroup;
+    function GetDiscretization: integer;
+  protected
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    procedure Loaded;
+  public
+    constructor Create(Collection: TCollection); override;
+    procedure Assign(Source: TPersistent); override;
+    property LayerGroup: TLayerGroup read GetLayerGroup write SetLayerGroup;
+  published
+    property LayerGroupName: string read GetLayerGroupName
+      write SetLayerGroupName;
+    // @name refers to the layer within the @link(LayerGroup).
+    // @name starts at 0.
+    property ParentLayerNumber: integer read FParentLayerNumber
+      write SetParentLayerNumber;
+    property Discretization: integer read GetDiscretization
+      write SetDiscretization default 1;
+  end;
+
+  TChildDiscretizationCollection = class(TOrderedCollection)
+  private
+    FBottomUnitName: string;
+    FBottomLayerInUnit: integer;
+    FBottomLayerGroup: TLayerGroup;
+    FChanged: Boolean;
+    function GetBottomUnitName: string;
+    procedure SetBottomLayerGroup(const Value: TLayerGroup);
+    procedure SetBottomLayerInUnit(const Value: integer);
+    procedure SetBottomUnitName(const Value: string);
+    function GetItem(Index: integer): TChildDiscretization;
+    procedure SetItem(Index: integer; const Value: TChildDiscretization);
+    procedure Sort;
+    function GetBottomLayerGroup: TLayerGroup;
+  protected
+    procedure Loaded;
+    procedure Update(Item: TCollectionItem); override;
+  public
+    function IsSame(AnOrderedCollection: TOrderedCollection): boolean; override;
+    constructor Create(Model: TBaseModel);
+    procedure Assign(Source: TPersistent); override;
+    property BottomLayerGroup: TLayerGroup read GetBottomLayerGroup
+      write SetBottomLayerGroup;
+    // SubLayer starts at zero.
+    function GetAnItemByGroupAndLayer(LayerGroup: TLayerGroup;
+      SubLayer: integer): TChildDiscretization;
+    property Items[Index: integer]: TChildDiscretization read GetItem
+      write SetItem; default;
+    procedure SortAndDeleteExtraItems;
+    // @name treats the top layer as layer 1 and only counts simulated layers.
+    // This is a MODFLOW layer number.
+    function BottomModflowParentLayerNumber: integer;
+    // @name returns the index of the parent layer at the bottom of the
+    // local grid.  The first layer is treated as zero.
+    function BottomLayerIndex: integer;
+    function ModflowLayerCount: integer;
+    function ModflowConfiningBedCount: integer;
+    procedure WriteLAYCB(const DiscretizationWriter: TObject); virtual;
+  published
+    property BottomUnitName: string read GetBottomUnitName
+      write SetBottomUnitName;
+    // @name indicates the lowermost layer in @link(BottomLayerGroup)
+    // that will be part of the child model.
+    // @name starts as 0.
+    property BottomLayerInUnit: integer read FBottomLayerInUnit
+      write SetBottomLayerInUnit;
+  end;
+
+  TGridRange = record
+    First: integer;
+    Last: integer;
+  end;
+
+  TStartingHeadSource = (shsSelf, shsParent);
+  TLgrPrintChoice = (lpcScreen, lpcListing, lpcNone);
+  TCouplingMethod = (cmOneWay, cmTwoWay);
 
   TChildModel = class(TCustomModel)
   private
     FParentModel: TCustomModel;
     FModelName: string;
+    FDiscretization: TChildDiscretizationCollection;
+    FChildCellsPerParentCell: integer;
+    FHorizontalPositionScreenObject: TScreenObject;
+    FCanUpdateGrid: Boolean;
+    FShouldUpdateGrid: Boolean;
+    FFirstCol: Integer;
+    FLastCol: Integer;
+    FFirstRow: Integer;
+    FLastRow: Integer;
+    FCreating: Boolean;
+    FStartingHeadSource: TStartingHeadSource;
+    FMaxIterations: integer;
+    FLgrPrintChoice: TLgrPrintChoice;
+    FFluxRelaxationFactor: double;
+    FHeadRelaxationFactor: double;
+    FFluxClosureCriterion: double;
+    FHeadClosureCriterion: double;
+    FCouplingMethod: TCouplingMethod;
+    function GetSomeSegmentsUpToDate: boolean; override;
+    procedure SetSomeSegmentsUpToDate(const Value: boolean); override;
     procedure SetModelName(const Value: string);
+    procedure SetDiscretization(const Value: TChildDiscretizationCollection);
+    procedure SetChildCellsPerParentCell(const Value: integer);
+    procedure SetHorizontalPositionScreenObject(const Value: TScreenObject);
+    procedure GetRowColPositions(const StartPosition, EndPosition: integer;
+      const ParentPositions: TOneDRealArray; out ChildPostions: TOneDRealArray);
+    procedure SetCanUpdateGrid(const Value: Boolean);
+    function ParentPositionToChildPositions(ViewDirection: TViewDirection;
+      APosition: integer): TGridRange;
+    function MaxPosition(ViewDirection: TViewDirection): integer;
+    procedure SetStartingHeadSource(const Value: TStartingHeadSource);
+    procedure SetMaxIterations(const Value: integer);
+    procedure SetLgrPrintChoice(const Value: TLgrPrintChoice);
+    procedure SetFluxRelaxationFactor(const Value: double);
+    procedure SetHeadRelaxationFactor(const Value: double);
+    procedure SetFluxClosureCriterion(const Value: double);
+    procedure SetHeadClosureCriterion(const Value: double);
+//    procedure SetOneWayCoupling(const Value: boolean);
+    function ConvertIntegerParentArray(ParentArray: TOneDIntegerArray): TOneDIntegerArray;
+    function ConvertRealParentArray(ParentArray: TOneDRealArray): TOneDRealArray;
+    procedure SetCouplingMethod(const Value: TCouplingMethod);
+    procedure AdjustCellPosition(var Column, Row, Layer: integer); overload;
+    function GetSaveBfhBoundaryConditions: boolean; override;
+    procedure SetSaveBfhBoundaryConditions(const Value: boolean);  override;
   protected
+    function StoreHydrogeologicUnits: Boolean; override;
     function GetScreenObjects(const Index: integer): TScreenObject; override;
     function GetScreenObjectCount: integer; override;
     function GetModflowSteadyParameters: TModflowSteadyParameters; override;
     function GetLayerStructure: TLayerStructure; override;
     procedure SetLayerStructure(const Value: TLayerStructure); override;
-    procedure SetModflowOptions(const Value: TModflowOptions); override;
-    function GetModflowOptions: TModflowOptions; override;
     function GetModflowStressPeriods: TModflowStressPeriods; override;
     procedure SetModflowStressPeriods(const Value: TModflowStressPeriods); override;
     procedure SetSoluteTransport(const Value: boolean); override;
@@ -2885,34 +3286,183 @@ that affects the model output should also have a comment. }
     function GetModflowFullStressPeriods: TModflowStressPeriods; override;
     procedure SetModflowSteadyParameters(const Value: TModflowSteadyParameters); override;
     function GetModelSelection: TModelSelection; override;
-    procedure SetModelSelection(const Value: TModelSelection); override;
+    function GetSelectedModel: TCustomModel; override;
+    procedure SetSelectedModel(const Value: TCustomModel); override;
+    function GetFormulaManager: TFormulaManager; override;
+    procedure Loaded; override;
+    procedure DefineProperties(Filer: TFiler); override;
+    procedure ReadFluxRelaxationFactor(Reader: TReader);
+    procedure ReadHeadRelaxationFactor(Reader: TReader);
+    procedure WriteFluxRelaxationFactor(Writer: TWriter);
+    procedure WriteHeadRelaxationFactor(Writer: TWriter);
+    procedure ReadHeadClosureCriterion(Reader: TReader);
+    procedure ReadFluxClosureCriterion(Reader: TReader);
+    procedure WriteHeadClosureCriterion(Writer: TWriter);
+    procedure WriteFluxClosureCriterion(Writer: TWriter);
+    function GetDisplayName: string; override;
   public
+    property CanUpdateGrid: Boolean read FCanUpdateGrid write SetCanUpdateGrid;
+    function LayerGroupUsed(LayerGroup: TLayerGroup): boolean; override;
+    function LayerFractions(LayerGroup: TLayerGroup): TDoubleDynArray; override;
+    function LayerCount: integer;  override;
+    procedure UpdateDisplayUseList(NewUseList: TStringList;
+      ParamType: TParameterType; DataIndex: integer; const DisplayName: string); override;
     procedure Assign(Source: TPersistent); override;
+    constructor Create(AnOwner: TComponent); override;
+    destructor Destroy; override;
     procedure Invalidate; override;
     property ParentModel: TCustomModel read FParentModel;
+    function GetScreenObjectByName(AName: string): TScreenObject; override;
+    procedure UpdateLayerCount;
+    property HorizontalPositionScreenObject: TScreenObject
+      read FHorizontalPositionScreenObject
+      write SetHorizontalPositionScreenObject;
+    procedure UpdateGrid;
+    procedure UpdateDataSetConnections;
+    function ChildColToParentCol(ACol: integer): integer;
+    function ChildRowToParentRow(ARow: integer): integer;
+    function ChildLayerToParentLayer(ALayer: integer): integer;
+    function ParentColToChildCols(ACol: integer): TGridRange;
+    function ParentRowToChildRows(ARow: integer): TGridRange;
+    function ParentLayerToChildLayers(ALayer: integer): TGridRange;
+    function EdgeIndex: integer;
+    function Child_NameFile_Name(const Parent_NameFile_Name: string): string;
+    property FirstCol: Integer read FFirstCol;
+    property LastCol: Integer read FLastCol;
+    property FirstRow: Integer read FFirstRow;
+    property LastRow: Integer read FLastRow;
+    function ModflowLayerCount: integer; override;
+    function ModflowConfiningBedCount: integer; override;
+    procedure WriteLAYCB(const DiscretizationWriter: TObject); override;
+    function IsLayerSimulated(const LayerID: integer): boolean; override;
+    Function Laytyp: TOneDIntegerArray; override;
+    Function Layavg: TOneDIntegerArray; override;
+    function Chani: TOneDIntegerArray; override;
+    Function Layvka: TOneDIntegerArray; override;
+    function Trpy: TOneDRealArray; override;
+    function GetLayerGroupByLayer(const Layer: integer): TLayerGroup; override;
+    function ModflowLayerBottomDescription(const LayerID: integer): string; override;
+    Function ModflowLayerToDataSetLayer(ModflowLayer: integer): integer; override;
+    function DataSetLayerToModflowLayer(DataSetLayer: integer): integer; override;
+    procedure AdjustCellPosition(AValueCell: TValueCell); overload; override;
+    procedure AdjustCellPosition(ACellAssignment: TCellAssignment); overload; override;
+    procedure AdjustDataArray(ADataArray: TDataArray); override;
+    function DefaultModflowOutputFileName: string; override;
   published
     property ModelName: string read FModelName write SetModelName;
+    property Discretization: TChildDiscretizationCollection
+      read FDiscretization write SetDiscretization;
+    property ChildCellsPerParentCell: integer read FChildCellsPerParentCell
+      write SetChildCellsPerParentCell default 3;
+    property StartingHeadSource: TStartingHeadSource read FStartingHeadSource
+      write SetStartingHeadSource default shsSelf;
+//    property OneWayCoupling: boolean read FOneWayCoupling
+//      write SetOneWayCoupling stored False;
+    property CouplingMethod: TCouplingMethod read FCouplingMethod
+      write SetCouplingMethod stored True;
+    property MaxIterations: integer read FMaxIterations
+      write SetMaxIterations default 20;
+    property LgrPrintChoice: TLgrPrintChoice read FLgrPrintChoice
+      write SetLgrPrintChoice default lpcListing;
+    property HeadRelaxationFactor: double read FHeadRelaxationFactor
+      write SetHeadRelaxationFactor;
+    property FluxRelaxationFactor: double read FFluxRelaxationFactor
+      write SetFluxRelaxationFactor;
+    property HeadClosureCriterion: double read FHeadClosureCriterion
+      write SetHeadClosureCriterion;
+    property FluxClosureCriterion: double read FFluxClosureCriterion
+      write SetFluxClosureCriterion;
   end;
 
-  TChildModelItem = class(TPhastCollectionItem)
+  TChildModelEdit = class(TOrderedItem)
+  private
+    FModelName: string;
+    FDiscretization: TChildDiscretizationCollection;
+    FChildCellsPerParentCell: integer;
+    FChildModel: TBaseModel;
+    FStartingHeadSource: TStartingHeadSource;
+    FMaxIterations: integer;
+    FLgrPrintChoice: TLgrPrintChoice;
+    FFluxRelaxationFactor: double;
+    FHeadRelaxationFactor: double;
+    FFluxClosureCriterion: double;
+    FHeadClosureCriterion: double;
+    FCouplingMethod: TCouplingMethod;
+    procedure SetDiscretization(const Value: TChildDiscretizationCollection);
+    procedure SetModelName(const Value: string);
+    procedure SetChildCellsPerParentCell(const Value: integer);
+    procedure SetStartingHeadSource(const Value: TStartingHeadSource);
+    procedure SetMaxIterations(const Value: integer);
+    procedure SetLgrPrintChoice(const Value: TLgrPrintChoice);
+    procedure SetFluxRelaxationFactor(const Value: double);
+    procedure SetHeadRelaxationFactor(const Value: double);
+    procedure SetFluxClosureCriterion(const Value: double);
+    procedure SetHeadClosureCriterion(const Value: double);
+//    procedure SetOneWayCoupling(const Value: boolean);
+    procedure SetCouplingMethod(const Value: TCouplingMethod);
+  protected
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+  public
+    procedure Assign(Source: TPersistent); override;
+    procedure AssignTo(Dest: TPersistent); override;
+    Constructor Create(Collection: TCollection); override;
+    destructor Destroy; override;
+  published
+    property ModelName: string read FModelName write SetModelName;
+    property Discretization: TChildDiscretizationCollection
+      read FDiscretization write SetDiscretization;
+    property ChildCellsPerParentCell: integer read FChildCellsPerParentCell
+      write SetChildCellsPerParentCell default 3;
+    property StartingHeadSource: TStartingHeadSource read FStartingHeadSource
+      write SetStartingHeadSource default shsSelf;
+    property CouplingMethod: TCouplingMethod read FCouplingMethod
+      write SetCouplingMethod stored True;
+    property MaxIterations: integer read FMaxIterations
+      write SetMaxIterations default 20;
+    property LgrPrintChoice: TLgrPrintChoice read FLgrPrintChoice
+      write SetLgrPrintChoice default lpcListing;
+    property HeadRelaxationFactor: double read FHeadRelaxationFactor
+      write SetHeadRelaxationFactor;
+    property FluxRelaxationFactor: double read FFluxRelaxationFactor
+      write SetFluxRelaxationFactor;
+    property HeadClosureCriterion: double read FHeadClosureCriterion
+      write SetHeadClosureCriterion;
+    property FluxClosureCriterion: double read FFluxClosureCriterion
+      write SetFluxClosureCriterion;
+  end;
+
+  TChildModelEditCollection = class(TOrderedCollection)
+  public
+    constructor Create;
+  end;
+
+  TChildModelItem = class(TOrderedItem)
   private
     FChildModel: TChildModel;
     procedure SetChildModel(const Value: TChildModel);
+  protected
+    function IsSame(AnotherItem: TOrderedItem): boolean; override;
+    procedure Loaded;
   public
     constructor Create(Collection: TCollection); override;
     Destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
   published
     property ChildModel : TChildModel read FChildModel write SetChildModel;
   end;
 
-  TChildModelCollection = class(TPhastCollection)
+  TChildModelCollection = class(TOrderedCollection)
   private
     function GetItem(Index: integer): TChildModelItem;
     procedure SetItem(Index: integer; const Value: TChildModelItem);
+    procedure UpdateUnitNumbers;
   public
-    property Items[Index: integer]: TChildModelItem read GetItem write SetItem; default;
+    procedure Assign(Source: TPersistent); override;
+    procedure Loaded;
+    property Items[Index: integer]: TChildModelItem read GetItem
+      write SetItem; default;
   published
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
   end;
 
   procedure EnableLighting;
@@ -3140,7 +3690,7 @@ const
   //      model computations.
   //    Added support for BCF package.
   //    When the HUF package is selected, optional data sets will be created
-  //      that display hydaulic properties that result from applying the
+  //      that display hydraulic properties that result from applying the
   //      HUF parameters to the model.
   //    Added support of importing the MNWI package from an existing model.
   //    Fixed bug exporting HUF files in which storage parameters were exported
@@ -3310,7 +3860,7 @@ const
   //     Bug fix: Fixed import of the RES package from existing models.
   //     Enhancement: Added Epsilon when specifying data values to skip.
   //     Bug fix: Fixed display of UZF transient data sets.
-  //     Bug fix: Fixed deletion of verticies in an object when all but one
+  //     Bug fix: Fixed deletion of vertices in an object when all but one
   //       vertices are deleted.
   //     Bug fix: Fixed default file names for the MODFLOW name file
   //       and for the default output files when the file name has a space
@@ -3383,7 +3933,7 @@ const
   //       when the previous model had objects that defined an SFR stream
   //       with unsaturated properties.
   //   '2.4.0.0' No additional changes.
-  //   '2.4.0.1' Enhancement: It is now posssible to copy and paste multiple
+  //   '2.4.0.1' Enhancement: It is now possible to copy and paste multiple
   //       cells in the parameter grids in the Packages and Programs dialog box.
   //     Enhancement: The helpfile has increased functionality.
   //     Enhancement: Support for ZONEBUDGET added.
@@ -3401,7 +3951,7 @@ const
   //       object had more than one section.
   //     Enhancement: Antialiasing used to improve appearance.
   //     Bug fix: Importing a MODFLOW-2005 model failed if LAYVKA in the
-  //       LPF package was anything besidea a zero or one.
+  //       LPF package was anything besides a zero or one.
   //     Bug fix: If there VKA is less than or equal to zero
   //       but there is only one layer, ModelMuse no longer reports
   //       and error while exporting the LPF package.
@@ -3413,7 +3963,7 @@ const
   //       areas are shaded.
   //     Enhancement: Additional options for displaying grid lines have been
   //       added. It is now possible to show just the outline of the active
-  //       area or just the gridlines inside the active avea.
+  //       area or just the grid lines inside the active area.
   //   '2.4.0.5' Bug fix; Sample DEM imported data at the wrong
   //       locations if the grid angle was not zero.
   //   '2.4.0.6' Enhancement: Legends have been added to the Color Grid and
@@ -3501,7 +4051,7 @@ const
   //   '2.5.0.4' Bug fix: Fixed bugs in deleting all print/save choices in the
   //       Subsidence package.
   //     Bug fix: Fixed layout of Subsidence package controls in
-  //       MODFLOW Packags and Programs dialog box.
+  //       MODFLOW Packages and Programs dialog box.
   //     Bug fix: The Formula Editor was displaying the ActiveOnLayer function
   //       in cases where it wouldn't work.
   //     Bug fix: The ActiveOnLayer function sometimes returned
@@ -3651,7 +4201,7 @@ const
   //       used in text on the Export Image dialog box.  They will be replaced
   //       by the stress period number, time step number, and elapsed time
   //       respectively if those data are in the comment for the data set.
-  //     Change: The elapased time is now included in the data set comment
+  //     Change: The elapsed time is now included in the data set comment
   //       when importing MODFLOW results.
   //   '2.6.0.12' Bug fix: MODPATH results were not cleared when opening
   //       a new model.
@@ -3782,7 +4332,213 @@ const
   //       in MODFLOW models has been fixed.
   //   '2.8.0.0' no additional changes.
 
-  ModelVersion = '2.8.0.0';
+  //   '2.8.0.1' Bug fix: It is no longer possible to show the Manage Head
+  //       Observations dialog box before any head observations have been
+  //       defined. Doing so could cause access violations.
+  //     Bug fix: Under certain circumstances, the "Add point sections",
+  //       "Add polyline sections", or "Add polygon sections" buttons could
+  //       be pressed when there is no selected object causing an
+  //       assertion failure. The buttons now become disabled under those
+  //       conditions.
+  //     Enhancement: Grid data can now be exported to 3D Shapefiles.
+  //   '2.8.0.2' Enhancement: In the Search for Objects dialog box, the
+  //       tree remains open after changing which checkboxes are
+  //       checked.
+  //     Bug fix: Attempting to import an empty or invalid results file
+  //       now generates an error message for the user instead of a bug report.
+  //   '2.8.0.3' Enhancement: Improved warning messages when a specified
+  //       time for a boundary condition is outside of the range of times
+  //       defined for the stress periods.
+  //     Bug fix: Removed incorrect warning message generated when the SFR
+  //       package was used and the starting time was greater than zero.
+  //     Bug fix: Fixed assignment of custom layer discretization in
+  //       Layer Groups dialog box.
+  //     Bug fix: Deleting a layer group and then undoing the deletion no
+  //       longer causes an assertion failure.
+  //     Bug fix: Fixed a problem in which operating ModelMuse on a computer
+  //       for which the language settings specify the decimal point
+  //       to be something other than a period caused conversion errors.
+  //   '2.8.0.4' Change: When creating polygon objects or adding
+  //       polygon sections to existing objects, clicking on the first
+  //       point of the polygon will close the polygon instead of continuing it.
+  //     Enhancement: Improved speed of "Select Object by Name" dialog box.
+  //     Bug fix: the "Set Widths of Columns, Rows, and Layers" dialog box now
+  //       shows the selected columns, rows, and layers when it is displayed.
+  //     Bug fix: It is no longer possible to attempt to color or contour
+  //       the grid before the grid is defined.
+  //     Bug fix: When sampling a DEM, only one DEM at a time could be selected.
+  //     Enhancement: Added option to import ASCII raster file.
+  //   '2.8.0.5' Bug fix: Fixed reversal of imported ASCII raster files.
+  //     (bug is not in released version.)
+  //   '2.8.0.6' Enhancement: added additional error checking in MNW2 package.
+  //     Bug fix: Fixed the importing of world files in "Import Bitmap"
+  //       dialog box. Previously, attempting to import some world files
+  //       would fail because of extra spaces before the beginning of a number.
+  //   '2.8.0.7' Change: When exporting Shapefiles attribute names with
+  //       an ending trailing underscore have the underscore removed.
+  //     Bug fix: When exporting Shapefiles of contours or MODPATH data,
+  //       the bounding boxes of each shape are now set correctly.
+  //   '2.8.0.8' Bug fix: Exporting contour Shapefiles when the specify contour
+  //        option is checked and contour values are copied from another
+  //        data set no longer causes an error.
+  //      Bug fix: Previewing or exporting a series of images containing
+  //        contours no longer causes an error when the range of values
+  //        varies among the images.
+  //   '2.8.0.9' Bug fix: Attempting so save a model archive on a disk with
+  //        insufficient space now generates an error message instead of a
+  //        bug report.
+  //      Enhancement: There is a new way to display the Vertex Values dialog
+  //        box. If no objects are selected on the view of the model
+  //        with which the user is working, the user can double-click on a
+  //        vertex of any object to display the Vertex Values dialog box.
+  //      Enhancement: When importing model results, the default choice for
+  //        how the imported results should be displayed now depends on the
+  //        user's past choices on how the results should be displayed.
+  //      Enhancement: There is now a button on the tool bar for importing
+  //        model results.
+  //      Enhancement: Vertex values can now be edited in the Object Properties
+  //        dialog box.
+  //      Bug fix: Previously, it you contoured a data set, closed the file,
+  //        opened another one without closing ModelMuse and attempted to
+  //        contour a data set, an access violation would occur. That access
+  //        violation has been eliminated.
+  //      Bug fix: When importing existing MODFLOW models, ModelMuse will now
+  //        check that in all the inactive cells, the top of the layer is above
+  //        the bottom of the layer. The elevations will be fixed in
+  //        any inactive cells that do not meet this criterion.
+  //   '2.8.0.10' Bug fix: ModelMuse can no longer enter an infinite loop when
+  //        generating parameter instance names.
+  //   '2.8.0.11' Bug fix: Eliminated an integer overflow error that could
+  //        occur when exporting the RCH, EVT, or EVT packages.
+  //   '2.8.0.12' Bug fix: Creating a new integer, Boolean, or text data set no
+  //        longer fails.
+  //      Enhancement: The user can now choose whether or not to save data set
+  //        values when those values are up-to-date.
+  //      Change: When data sets are deleted, the user is now prompted
+  //        to delete unused objects.
+  //      Change: The column, row and layer displayed in on the Grid Value
+  //        dialog box is now the column row, and layer of the cell under the
+  //        cursor even if a 2D data set is used to color the grid or
+  //        is being contoured.
+  //      Bug fix: In the SFR package, a warning about SFR segments circling
+  //        back on themselves was sometimes generated when it should not have
+  //        been generated and the segments involved would not be included in
+  //        in the SFR package input file.
+  //    '2.8.0.13' Enhancement: The speed of exporting the input files has
+  //        increased
+  //      Bug fix: Deleting all the vertices of the last section of an object
+  //        when that section was a polygon caused an error.
+  //      Bug fix: Making a background image too big now causes it to be
+  //        hidden rather than generating an error message.
+  //      Change: When defining CHD boundaries, an object with multiple
+  //        sections will not define separate boundaries for each section.
+  //    '2.8.0.14' Enhancement: In the SFR package, a warning is generated
+  //        if the stream segment numbers are in strict numerical order but a
+  //        segment with a higher number provides flow to one with a lower
+  //        segment number.
+  //      Enhancement: The Grid Value dialog box now displays information
+  //        about the closest MODPATH pathline if it is within 1 cell or
+  //        five pixels of the cursor.
+  //    '2.8.0.15' Bug fix: Attempting to export a model without first
+  //        defining a grid now results in an error message instead of
+  //        generating a bug report.
+  //      Bug fix: invalid formulas for river conductance and other, similar
+  //        data no longer causes an access violation.
+  //    '2.8.0.16' Bug fix: Fixed bug that prevented data for SFR data for a
+  //        time period from being deleted.
+  //    '2.8.0.17' It is now possible for the recharge from several sources to
+  //        be added together.
+  //    '2.8.0.18' reduced memory usage when recharge from several sources is
+  //        added together.
+  //    '2.8.0.19' It is now possible for the infiltration in the UZF package
+  //        from several sources to be added together.
+  //    '2.8.0.20' Bug fix: In some models, the SFR package could not be
+  //        exported correctly.
+  //      Bug fix: In some models, the Lake_ID numbers were not set incorrectly.
+  //    '2.8.0.21' Bug fix: the selected layer wasn't being restored properly
+  //        when opening a model (not in released version).
+  //      Bug fix: Changing a data set orientation could cause error messages
+  //        to be incorrectly generated for other data sets.
+  //    '2.8.0.22' Bug fix: Fixed error messages for stream segments that
+  //        are out of order.  (Bug was not in released version.)
+  //    '2.8.0.23' ---
+  //    '2.8.0.24' Bug fix: Object used to define the return location in the
+  //        DRT package are now displayed in the Show or Hide Objects
+  //        dialog box under an appropriate heading.
+  //      Bug fix: If you undo and then redo the creation of parameters,
+  //        objects that use those parameters will no longer lose them.
+  //      Change: It is now possible to select multiple cells in all tables.
+  //    '2.8.0.25' Enhancement: When importing shapefiles, the numbers of any
+  //        shapes with multiple parts will be displayed.
+  //    '2.8.0.26' ModelMonitor has been updated to work with LGR.
+  //    '2.8.0.27' Enhancement: The export image dialog box now has a "Copy
+  //        image" button that copies the image to the clipboard.
+  //      Enhancement: The Data Set Values dialog box now shows 2D Front and
+  //        2D Side data sets in a single table instead of one table for each
+  //        layer.
+  //      Bug fix: The Object Properties dialog box no longer shows times
+  //        related to time-varying layers in the RCH, EVT, and ETS packages
+  //        unless time-varying layers have been selected in the corresponding
+  //        package.
+  //    '2.8.0.28' Bug fix: Multiplier and zone array names are now
+  //        no longer than 10 characters in length.
+  //      Enhancement: Improved speed of importing model results.
+  //    '2.8.0.29' Bug fix: Fixed reading heads. Bug not in released version.
+  //    '2.8.0.30' Bug fix: Fixed bug that caused access violations when
+  //        editing packages with the HFB package selected. Bug not
+  //        in released version.
+  //    '2.8.0.31' Bug fix: Fixed LGR related bug that could cause, wells,
+  //        drains, etc to be exported incorrectly (not in released version).
+  //    '2.8.0.32' Bug fix: Fixed bug in editing the objects that control
+  //        the horizontal placement of LGR Grids.
+  //    '2.8.0.33' Bug fix: Fixed bug that would cause range check errors or
+  //        access violations when animating contours.
+  //      Enhancement: When deleting vertices of an object with imported data,
+  //        the corresponding imported data will be deleted too.
+  //      Enhancement: New command "Object|Edit|Edit|Invert Selected Vertices"
+  //        to invert the selected nodes.
+  //      Enhancement: New command "Object|Edit|Split Selected Objects"
+  //        to convert each part of an object to a separate object.
+  //      Enhancement: New command "Object|Edit|Make Selected Vertices
+  //        a Separate Object" converts the selected vertices of an object to
+  //        a new object while deleting them from the existing object.
+  //      Enhancement: New command "Object|Edit|Split Object at Selected
+  //        Vertices" to convert split an object into two separate objects.
+  //        The objects will be split at the location(s) of any selected
+  //        vertices with both objects sharing the selected vertices.
+  //      Bug fix: Adding recharge, evapotranspiration, or ETS parameters
+  //        formerly could lead to access violations later on.
+  //      Enhancement: added support for running a single model with BFH data
+  //        with MODFLOW-LGR.
+  //      Bug fix: Fixed an assertion failure in specifying
+  //        zero flow observations.
+  //      Bug fix: When reversing the order of vertices in an object, the
+  //        order of any imported data is reversed too.
+  //    '2.8.0.34' Bug fix: new commands for editing objects were never
+  //        enabled. (not in released version).
+  //    '2.8.0.35' Enhancement: In the Import Gridded Data dialog box, data
+  //        for a single grid row may not be spread over several lines when
+  //        pasting data into the grid for arrays.
+  //    '2.8.0.36' Enhancement: Three new functions added:
+  //        ObjectCurrentSegmentAngle, ObjectCurrentSegmentAngleDegrees, and
+  //        ObjectCurrentSegmentAngleLimitedDegrees. See help for
+  //        descriptions.
+  //    '2.9.0.0' Enhancement: Added support for MODFLOW-LGR.
+  //      Change: When importing head observations from a Shapefile, a default
+  //        value for the observation name is used if the user has not
+  //        assigned a name.
+  //      Enhancement: Improved responsiveness in the Manage Flow Observations
+  //        dialog box.
+  //      Enhancement: Decreased time required to display the
+  //        MODFLOW Time dialog box.
+  //      Bug fix: Fixed bug that could cause access violations when displaying
+  //        the Object Properties dialog box.
+  //      Bug fix: Fixed a bug that caused the multiplier and zone array names
+  //        for the LPF package to change each time the model was exported.
+  //      Bug fix: Fixed bug that could cause range check errors when coloring
+  //        the grid with the RCH, EVT, or ETS packages. 
+
+  ModelVersion = '2.9.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -3854,7 +4610,8 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   ModflowHUF_WriterUnit, ModflowKDEP_WriterUnit, ModflowLVDA_WriterUnit,
   ModflowMNW2_WriterUnit, ModflowBCF_WriterUnit, ModflowSubsidenceDefUnit,
   ModflowSUB_Writer, ZoneBudgetWriterUnit, MODFLOW_SwtWriterUnit,
-  ModflowHydmodWriterUnit, IniFileUtilities, TempFiles;
+  ModflowHydmodWriterUnit, IniFileUtilities, TempFiles, AbExcept,
+  ModflowLakUnit, ModflowLgr_WriterUnit;
 
 resourcestring
   StrProgramLocations = 'Program Locations';
@@ -3874,11 +4631,17 @@ resourcestring
   'period will be ignored.';
   StrAnyTimesBeforeThe = 'Any times before the beginning of the first define' +
   'd stress period will be ignored.';
+  strModflowLgrDefaultPath = 'C:\WRDAPP\mflgr.1_2\bin\mflgr.exe';
+  strModflowLgr = 'MODFLOW-LGR';
+
 const
   StrAndNegatedAtCons = ' and negated at constant head cell';
   StrAndMadePositiveA = ' and made positive at constant head cell';
   StrValueOfZeroConver = 'Value of zero converted to 1 at active cell.';
   StrNonzeroValueOfZe = 'Non-zero value converted to 0 at inactive cell.';
+  StrAddedTimes = 'The following objects define times at which stresses ' +
+    'change that were not defined as the beginning or ending or stress ' +
+    'periods. The stress periods will be adjusted to uses these times.';
 
 const
   StatFlagStrings : array[Low(TStatFlag)..High(TStatFlag)] of string
@@ -4004,11 +4767,268 @@ end;
 
   { TPhastModel }
 
+function TPhastModel.AddDataSet(const DataSet: TDataArray): Integer;
+var
+  ChildIndex: Integer;
+  ChildItem: TChildModelItem;
+  ChildDataArray: TDataArray;
+begin
+  result := inherited AddDataSet(DataSet);  
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildItem := ChildModels[ChildIndex];
+    ChildDataArray := TDataArrayType(DataSet.ClassType).Create(ChildItem.ChildModel);
+    ChildDataArray.AssignProperties(DataSet);
+    ChildItem.ChildModel.DataArrayManager.AddDataSet(ChildDataArray);
+    ChildDataArray.Formula := DataSet.Formula;
+    DataSet.TalksTo(ChildDataArray);
+  end;
+end;
+
 function TPhastModel.AddScreenObject(const AScreenObject: TScreenObject):
   integer;
 begin
   result := FScreenObjectList.Add(AScreenObject);
   Invalidate;
+end;
+
+procedure TPhastModel.AdjustDataArray(ADataArray: TDataArray);
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ColIndex: Integer;
+  LayerIndex: Integer;
+  AnnotationList: TStringList;
+  NewAnnotation: string;
+  AnnotationPosition: integer;
+  RowIndex: Integer;
+begin
+  if LgrUsed then
+  begin
+    if ADataArray.DataType = rdtBoolean then
+    begin
+      Exit;
+    end;
+    Assert(ADataArray.DataType = rdtDouble);
+    Assert(ADataArray.ColumnCount >= 3);
+    Assert(ADataArray.RowCount >= 3);
+    AnnotationList := TStringList.Create;
+    try
+      AnnotationList.Sorted := True;
+      for ChildIndex := 0 to ChildModels.Count - 1 do
+      begin
+        ChildModel := ChildModels[ChildIndex].ChildModel;
+        if (ChildModel.FirstRow >= 0) and (ChildModel.LastRow >= 0)
+          and (ChildModel.FirstCol >= 0) and (ChildModel.LastCol >= 0) then
+        begin
+          for LayerIndex := 0 to ADataArray.LayerCount - 1 do
+          begin
+            if ADataArray.IsValue[LayerIndex,
+              ChildModel.FirstRow, ChildModel.FirstCol] then
+            begin
+              NewAnnotation := ' Adjusted for LGR: ' + ADataArray.Annotation[
+                LayerIndex, ChildModel.FirstRow, ChildModel.FirstCol];
+              AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+              if AnnotationPosition >= 0 then
+              begin
+                NewAnnotation := AnnotationList[AnnotationPosition];
+              end
+              else
+              begin
+                AnnotationList.Add(NewAnnotation);;
+              end;
+              ADataArray.Annotation[LayerIndex,
+                ChildModel.FirstRow, ChildModel.FirstCol] := NewAnnotation;
+              ADataArray.RealData[LayerIndex,
+                ChildModel.FirstRow, ChildModel.FirstCol]
+                := ADataArray.RealData[LayerIndex,
+                ChildModel.FirstRow, ChildModel.FirstCol] * 0.75;
+            end;
+
+            if ADataArray.IsValue[LayerIndex,
+              ChildModel.FirstRow, ChildModel.LastCol] then
+            begin
+              NewAnnotation := ' Adjusted for LGR: ' + ADataArray.Annotation[
+                LayerIndex, ChildModel.FirstRow, ChildModel.LastCol];
+              AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+              if AnnotationPosition >= 0 then
+              begin
+                NewAnnotation := AnnotationList[AnnotationPosition];
+              end
+              else
+              begin
+                AnnotationList.Add(NewAnnotation);;
+              end;
+              ADataArray.Annotation[LayerIndex,
+                ChildModel.FirstRow, ChildModel.LastCol] := NewAnnotation;
+              ADataArray.RealData[LayerIndex,
+                ChildModel.FirstRow, ChildModel.LastCol]
+                := ADataArray.RealData[LayerIndex,
+                ChildModel.FirstRow, ChildModel.LastCol] * 0.75;
+            end;
+
+            if ADataArray.IsValue[LayerIndex,
+              ChildModel.LastRow, ChildModel.FirstCol] then
+            begin
+              NewAnnotation := ' Adjusted for LGR: ' + ADataArray.Annotation[
+                LayerIndex, ChildModel.LastRow, ChildModel.FirstCol];
+              AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+              if AnnotationPosition >= 0 then
+              begin
+                NewAnnotation := AnnotationList[AnnotationPosition];
+              end
+              else
+              begin
+                AnnotationList.Add(NewAnnotation);;
+              end;
+              ADataArray.Annotation[LayerIndex,
+                ChildModel.LastRow, ChildModel.FirstCol] := NewAnnotation;
+              ADataArray.RealData[LayerIndex,
+                ChildModel.LastRow, ChildModel.FirstCol]
+                := ADataArray.RealData[LayerIndex,
+                ChildModel.LastRow, ChildModel.FirstCol] * 0.75;
+            end;
+
+            if ADataArray.IsValue[LayerIndex,
+              ChildModel.LastRow, ChildModel.LastCol] then
+            begin
+              NewAnnotation := ' Adjusted for LGR: ' + ADataArray.Annotation[
+                LayerIndex, ChildModel.LastRow, ChildModel.LastCol];
+              AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+              if AnnotationPosition >= 0 then
+              begin
+                NewAnnotation := AnnotationList[AnnotationPosition];
+              end
+              else
+              begin
+                AnnotationList.Add(NewAnnotation);;
+              end;
+              ADataArray.Annotation[LayerIndex,
+                ChildModel.LastRow, ChildModel.LastCol] := NewAnnotation;
+              ADataArray.RealData[LayerIndex,
+                ChildModel.LastRow, ChildModel.LastCol]
+                := ADataArray.RealData[LayerIndex,
+                ChildModel.LastRow, ChildModel.LastCol] * 0.75;
+            end;
+
+            for ColIndex := ChildModel.FirstCol + 1 to ChildModel.LastCol - 1 do
+            begin
+              if ADataArray.IsValue[LayerIndex, ChildModel.FirstRow, ColIndex] then
+              begin
+                NewAnnotation := ' Adjusted for LGR: ' + ADataArray.Annotation[
+                  LayerIndex, ChildModel.FirstRow, ColIndex];
+                AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+                if AnnotationPosition >= 0 then
+                begin
+                  NewAnnotation := AnnotationList[AnnotationPosition];
+                end
+                else
+                begin
+                  AnnotationList.Add(NewAnnotation);;
+                end;
+                ADataArray.Annotation[LayerIndex,
+                  ChildModel.FirstRow, ColIndex] := NewAnnotation;
+                ADataArray.RealData[LayerIndex, ChildModel.FirstRow, ColIndex]
+                  := ADataArray.RealData[LayerIndex, ChildModel.FirstRow, ColIndex] /2;
+              end;
+              if ADataArray.IsValue[LayerIndex, ChildModel.LastRow, ColIndex] then
+              begin
+                NewAnnotation := ' Adjusted for LGR: ' + ADataArray.Annotation[
+                  LayerIndex, ChildModel.LastRow, ColIndex];
+                AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+                if AnnotationPosition >= 0 then
+                begin
+                  NewAnnotation := AnnotationList[AnnotationPosition];
+                end
+                else
+                begin
+                  AnnotationList.Add(NewAnnotation);;
+                end;
+                ADataArray.Annotation[LayerIndex,
+                  ChildModel.LastRow, ColIndex] := NewAnnotation;
+                ADataArray.RealData[LayerIndex, ChildModel.LastRow, ColIndex]
+                  := ADataArray.RealData[LayerIndex, ChildModel.LastRow, ColIndex] /2;
+              end;
+            end;
+            for RowIndex := ChildModel.FirstRow +1 to ChildModel.LastRow - 1 do
+            begin
+              if ADataArray.IsValue[LayerIndex, RowIndex, ChildModel.FirstCol] then
+              begin
+                NewAnnotation := ' Adjusted for LGR: ' + ADataArray.Annotation[
+                  LayerIndex, RowIndex, ChildModel.FirstCol];
+                AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+                if AnnotationPosition >= 0 then
+                begin
+                  NewAnnotation := AnnotationList[AnnotationPosition];
+                end
+                else
+                begin
+                  AnnotationList.Add(NewAnnotation);;
+                end;
+                ADataArray.Annotation[LayerIndex, RowIndex,
+                  ChildModel.FirstCol] := NewAnnotation;
+                ADataArray.RealData[LayerIndex, RowIndex, ChildModel.FirstCol]
+                  := ADataArray.RealData[LayerIndex, RowIndex, ChildModel.FirstCol] /2;
+              end;
+              if ADataArray.IsValue[LayerIndex, RowIndex, ChildModel.LastCol] then
+              begin
+                NewAnnotation := ' Adjusted for LGR: ' + ADataArray.Annotation[
+                  LayerIndex, RowIndex, ChildModel.LastCol];
+                AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+                if AnnotationPosition >= 0 then
+                begin
+                  NewAnnotation := AnnotationList[AnnotationPosition];
+                end
+                else
+                begin
+                  AnnotationList.Add(NewAnnotation);;
+                end;
+                ADataArray.Annotation[LayerIndex, RowIndex,
+                  ChildModel.LastCol] := NewAnnotation;
+                ADataArray.RealData[LayerIndex, RowIndex, ChildModel.LastCol]
+                  := ADataArray.RealData[LayerIndex, RowIndex, ChildModel.LastCol] /2;
+              end
+            end;
+          end;
+        end;
+      end;
+    finally
+      AnnotationList.Free;
+    end;
+  end;
+
+end;
+
+
+procedure TPhastModel.AllowChildGridUpdates;
+var
+  ChildModel: TChildModel;
+  Index: Integer;
+begin
+  Dec(FChildGridUpdateCount);
+  if FChildGridUpdateCount = 0 then
+  begin
+    for Index := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[Index].ChildModel;
+      ChildModel.CanUpdateGrid := True;
+    end;
+  end;
+end;
+
+function TPhastModel.AquiferPropertiesUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited AquiferPropertiesUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.AquiferPropertiesUsed(Sender);
+    end;
+  end;
 end;
 
 procedure TPhastModel.Assign(Source: TPersistent);
@@ -4028,7 +5048,7 @@ begin
     Times := SourceModel.Times;
     Title := SourceModel.Title;
     Units := SourceModel.Units;
-    PathLine := SourceModel.PathLine;
+    PathLines := SourceModel.PathLines;
     EndPoints := SourceModel.EndPoints;
     TimeSeries := SourceModel.TimeSeries;
     Bitmaps := SourceModel.Bitmaps;
@@ -4041,7 +5061,7 @@ begin
     ModflowSteadyParameters := SourceModel.ModflowSteadyParameters;
     ModelSelection := SourceModel.ModelSelection;
     LayerStructure := SourceModel.LayerStructure;
-    ModflowOptions := SourceModel.ModflowOptions;
+    ModflowGrid := SourceModel.ModflowGrid;
     ModflowStressPeriods := SourceModel.ModflowStressPeriods;
     SoluteTransport := SourceModel.SoluteTransport;
     UseWaterTable := SourceModel.UseWaterTable;
@@ -4057,6 +5077,61 @@ begin
 
 end;
 
+function TPhastModel.BcfIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.BcfPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.BcfPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.BcfUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited BcfUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.BcfUsed(Sender);
+    end;
+  end;
+end;
+
+procedure TPhastModel.BeginDataSetUpdate;
+begin
+  Inc(FDataSetUpdateCount);
+end;
+
+procedure TPhastModel.BeginGridChange;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    if ChildModel <> nil then
+    begin
+      ChildModel.BeginGridChange;
+    end;
+  end;
+end;
+
 procedure TPhastModel.BeginScreenObjectUpdate;
 begin
   Inc(FScreenObjectUpdateCount);
@@ -4065,6 +5140,11 @@ end;
 constructor TPhastModel.Create(AnOwner: TComponent);
 begin
   inherited;
+  FSaveBfhBoundaryConditions := True;
+  FSaveDataSetValues := sdsvAlways;
+  FSelectedModel := self;
+//  FCurrentModel := self;
+  UpdateCurrentModel(self);
   FChildModels := TChildModelCollection.Create(self);
   FDisplaySettings := TDisplaySettingsCollection.Create(self);
   FColorLegend := TLegend.Create(nil);
@@ -4082,7 +5162,6 @@ begin
 
   FContourColors := TColorParameters.Create;
 
-  FDataArrayManager.DefinePackageDataArrays;
 
   FSelectedScreenObjectCount := 0;
   FClearing := False;
@@ -4093,7 +5172,6 @@ begin
   FCachedScreenObjectIndex := -1;
 
 
-  FModflowOptions := TModflowOptions.Create(self);
 
   FLayerStructure := TLayerStructure.Create(self);
   FBitmaps := TCompressedBitmapCollection.Create;
@@ -4132,7 +5210,7 @@ begin
     FTop2DBoundaryType;
 
   FScreenObjectList := TObjectList.Create;
-  FPhastGrid := TPhastGrid.Create;
+  FPhastGrid := TPhastGrid.Create(self);
   FDataSetCollection := TDataSetCollection.Create;
   FScreenObjectCollection := TScreenObjectCollection.Create(self);
   FFluidProperties := TFluidProperties.Create(self);
@@ -4231,14 +5309,14 @@ begin
         begin
           ErrorMessage := IntToStr(DeletedFiles.Count)
             + ' of the files that were to be archived can not be found.'
-            + #13#10#13#10'The remaining files will be archived.';
+            + sLineBreak + sLineBreak + 'The remaining files will be archived.';
         end
         else
         begin
           ErrorMessage := 'The following files that '
-            + 'were to be archived can not be found: '#13#10#13#10
+            + 'were to be archived can not be found: ' + sLineBreak + sLineBreak
             + DeletedFiles.Text
-            + #13#10'The remaining files will be archived.';
+            + sLineBreak + 'The remaining files will be archived.';
         end;
         MessageDlg(ErrorMessage, mtWarning, [mbOK], 0);
       end;
@@ -4266,6 +5344,13 @@ begin
             // TAbZipArchive.SaveArchive and raises an EInvalidCast.
             Beep;
             MessageDlg('Error saving archive.  The archive may be too big.',
+              mtError, [mbOK], 0);
+          end;
+          on E: EAbZipSpanOverwrite do
+          begin
+            Beep;
+            MessageDlg('Error saving archive.  '
+              + 'The disk may not have sufficient space for the archive.',
               mtError, [mbOK], 0);
           end;
         end;
@@ -4321,15 +5406,32 @@ begin
   UpdateDrainReturnObjects;
 end;
 
+procedure TPhastModel.UpdateSideTimeDataSet(const TimeList: TCustomTimeList;
+  const Time: double);
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildList: TCustomTimeList;
+begin
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    ChildList := ChildModel.GetTimeListByName(TimeList.Name);
+    ChildModel.UpdateSideTimeDataSet(ChildList, Time);
+  end;
+end;
+
 destructor TPhastModel.Destroy;
 var
   Index: Integer;
-  DataArray: TDataArray;
+//  DataArray: TDataArray;
   Variable: TGlobalVariable;
   ScreenObject: TScreenObject;
 begin
   frmFileProgress:= TfrmProgressMM.Create(nil);
   try
+
     DataArrayManager.UnlinkDeletedDataSets;
     FClearing := True;
     try
@@ -4360,13 +5462,6 @@ begin
       + ScreenObjectCount;
     frmFileProgress.Show;
 
-    for Index := 0 to FDataArrayManager.DataSetCount - 1 do
-    begin
-      DataArray := FDataArrayManager.DataSets[Index];
-      DataArray.StopTalkingToAnyone;
-      frmFileProgress.pbProgress.StepIt;
-//      Application.ProcessMessages;
-    end;
 
 
 
@@ -4375,7 +5470,6 @@ begin
     FSideBoundaryType.StopTalkingToAnyone;
     FTop2DBoundaryType.StopTalkingToAnyone;
 
-    FModflowOptions.Free;
 
     for Index := 0 to GlobalVariables.Count - 1 do
     begin
@@ -4486,7 +5580,7 @@ begin
   inherited;
 end;
 
-procedure TPhastModel.FinalizeActive(Sender: TObject);
+procedure TCustomModel.FinalizeActive(Sender: TObject);
 var
   LakeIdArray: TDataArray;
   ActiveArray: TDataArray;
@@ -4499,7 +5593,7 @@ begin
   end;
 end;
 
-procedure TPhastModel.FinalizeLakeId(Sender: TObject);
+procedure TCustomModel.FinalizeLakeId(Sender: TObject);
 begin
   FinalizeActive(Sender);
   FinalizeWetDry(Sender);
@@ -4519,7 +5613,7 @@ begin
   result := FProgramLocations;
 end;
 
-procedure TPhastModel.FinalizeWetDry(Sender: TObject);
+procedure TCustomModel.FinalizeWetDry(Sender: TObject);
 var
   LakeIdArray: TDataArray;
   WetDryArray: TDataArray;
@@ -4550,7 +5644,12 @@ begin
   result := FScreenObjectList[Index];
 end;
 
-function TPhastModel.HufDataArrayUsed(Sender: TObject): boolean;
+function TPhastModel.GetSelectedModel: TCustomModel;
+begin
+  result := FSelectedModel
+end;
+
+function TCustomModel.HufDataArrayUsed(Sender: TObject): boolean;
 var
   DataArray: TDataArray;
   DataArrayNames: TStringList;
@@ -4568,6 +5667,59 @@ begin
     result := DataArrayNames.IndexOf(DataArray.Name) >= 0;
   finally
     DataArrayNames.Free;
+  end;
+end;
+
+function TPhastModel.HufIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.HufPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.GmgPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.HufReferenceSurfaceNeeded(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited HufReferenceSurfaceNeeded(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.HufReferenceSurfaceNeeded(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.HydmodIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.HydmodPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.HydmodPackage.IsSelected;
+      end;
+    end;
   end;
 end;
 
@@ -4691,129 +5843,142 @@ begin
   end;
 end;
 
+function TPhastModel.LpfIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.LpfPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.LpfPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
 procedure TPhastModel.InternalClear;
 var
   Index: Integer;
-  DataSet: TDataArray;
+//  DataSet: TDataArray;
   ScreenObject: TScreenObject;
   Variable: TGlobalVariable;
+  ChildIndex: Integer;
+  DataArray: TDataArray;
 begin
-    Bitmaps.Clear;
-    ClearViewedItems;
+  FSaveBfhBoundaryConditions := True;
 
-    if PhastGrid <> nil then
-    begin
-      if PhastGrid.TopGridObserver <> nil then
-      begin
-        PhastGrid.TopGridObserver.StopTalkingToAnyone;
-      end;
-      if PhastGrid.ThreeDGridObserver <> nil then
-      begin
-        PhastGrid.ThreeDGridObserver.StopTalkingToAnyone;
-      end;
-    end;
-    if ModflowGrid <> nil then
-    begin
-      if ModflowGrid.TopGridObserver <> nil then
-      begin
-        ModflowGrid.TopGridObserver.StopTalkingToAnyone;
-      end;
-      if ModflowGrid.ThreeDGridObserver <> nil then
-      begin
-        ModflowGrid.ThreeDGridObserver.StopTalkingToAnyone;
-      end;
-    end;
+  FLayerStructure.StopTalkingToAnyone;
+  for Index := 0 to GlobalVariables.Count - 1 do
+  begin
+    Variable := GlobalVariables[Index];
+    Variable.StopTalkingToAnyone;
+  end;
+  for Index := 0 to ScreenObjectCount - 1 do
+  begin
+    ScreenObject := ScreenObjects[Index];
+    ScreenObject.StopTalkingToAnyone;
+  end;
+  for Index := 0 to FDataArrayManager.DataSetCount - 1 do
+  begin
+    DataArray := FDataArrayManager.DataSets[Index];
+    DataArray.StopTalkingToAnyone;
+//      frmFileProgress.pbProgress.StepIt;
+//      Application.ProcessMessages;
+  end;
+  Bitmaps.Clear;
+  ClearViewedItems;
+  FColorLegend.ValueSource := nil;
+  FContourLegend.ValueSource := nil;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModels[ChildIndex].ChildModel.Clear;
+  end;
+  ChildModels.Clear;
 
-    FLayerStructure.StopTalkingToAnyone;
-    AllObserversStopTalking;
+  FCachedZoneArrayIndex := -1;
+  FCachedMultiplierArrayIndex := -1;
+  ModflowNameFileLines.Clear;
+  Title.Clear;
+  FrontX := 0;
+  FrontY := 0;
+  TopX := 0;
+  TopY := 0;
+  SideX := 0;
+  SideY := 0;
+  MagnificationFront := 0;
+  MagnificationSide := 0;
+  MagnificationTop := 0;
+  GridColorParameters.Clear;
+  ContourColorParameters.Clear;
+  FDiffusivity := 1E-9;
+  FFreeSurface := False;
+  FDiffusivitySet := False;
 
-    FCachedZoneArrayIndex := -1;
-    FCachedMultiplierArrayIndex := -1;
-    ModflowNameFileLines.Clear;
-    Title.Clear;
-    FrontX := 0;
-    FrontY := 0;
-    TopX := 0;
-    TopY := 0;
-    SideX := 0;
-    SideY := 0;
-    MagnificationFront := 0;
-    MagnificationSide := 0;
-    MagnificationTop := 0;
-    GridColorParameters.Clear;
-    ContourColorParameters.Clear;
-    FDiffusivity := 1E-9;
-    FFreeSurface := False;
-    FDiffusivitySet := False;
-    for Index := 0 to GlobalVariables.Count - 1 do
-    begin
-      Variable := GlobalVariables[Index];
-      Variable.StopTalkingToAnyone;
-    end;
-    for Index := 0 to ScreenObjectCount - 1 do
-    begin
-      ScreenObject := ScreenObjects[Index];
-      ScreenObject.StopTalkingToAnyone;
-    end;
-    for Index := 0 to FDataArrayManager.DataSetCount - 1 do
-    begin
-      DataSet := FDataArrayManager.DataSets[Index];
-      DataSet.StopTalkingToAnyone;
-    end;
-    for Index := 0 to FDataArrayManager.BoundaryDataSetCount - 1 do
-    begin
-      DataSet := FDataArrayManager.BoundaryDataSets[Index];
-      DataSet.StopTalkingToAnyone;
-    end;
+  ModelSelection := msUndefined;
 
-    ModelSelection := msUndefined;
+  FScreenObjectList.Clear;
+  FDataArrayManager.ClearAllDataSets;
+  ClearParsers;
 
-    FScreenObjectList.Clear;
-    FDataArrayManager.ClearAllDataSets;
-    ClearParsers;
-//    FDataSetFunctions.Clear;
+  SolutionOptions.Initialize;
+  PhastGrid.GridAngle := 0;
+  ModflowGrid.GridAngle := 0;
+  FLayerStructure.Clear;
+  Times.Initialize;
 
-    FModflowOptions.Clear;
+  ModflowPackages.Reset;
+  ModflowSteadyParameters.Clear;
+  ModflowTransientParameters.Clear;
+  GlobalVariables.Clear;
+  ModflowOutputControl.Initialize;
 
-    //  FluidProperties.Initialize;
-    SolutionOptions.Initialize;
-    PhastGrid.GridAngle := 0;
-    ModflowGrid.GridAngle := 0;
-    FLayerStructure.Clear;
-    Times.Initialize;
+  HydrogeologicUnits.Clear;
+  FHufParameters.Clear;
 
-    ModflowPackages.Reset;
-    ModflowSteadyParameters.Clear;
-    ModflowTransientParameters.Clear;
-    GlobalVariables.Clear;
-    ModflowOutputControl.Initialize;
+  HeadFluxObservations.Clear;
+  DrainObservations.Clear;
+  GhbObservations.Clear;
+  RiverObservations.Clear;
+  FilesToArchive.Clear;
+  ModelFileName := '';
+  ModelInputFiles.Clear;
+  FDataArrayManager.InvalidateDataSetLookupList;
 
-    HydrogeologicUnits.Clear;
-    FHufParameters.Clear;
+  BatchFileAdditionsBeforeModel.Clear;
+  BatchFileAdditionsAfterModel.Clear;
+  AlternateFlowPackage := False;
+  AlternateSolver := False;
 
-    HeadFluxObservations.Clear;
-    DrainObservations.Clear;
-    GhbObservations.Clear;
-    RiverObservations.Clear;
-    FilesToArchive.Clear;
-    ModelFileName := '';
-    ModelInputFiles.Clear;
-    FDataArrayManager.InvalidateDataSetLookupList;
+  FormulaManager.Clear;
+  FDisplaySettings.Clear;
 
-    BatchFileAdditionsBeforeModel.Clear;
-    BatchFileAdditionsAfterModel.Clear;
-    AlternateFlowPackage := False;
-    AlternateSolver := False;
+  FreeAndNil(FPathline);
+  FreeAndNil(FEndPoints);
+  FreeAndNil(FTimeSeries);
 
-    FormulaManager.Clear;
-    FDisplaySettings.Clear;
-
-    FreeAndNil(FPathline);
-    FreeAndNil(FEndPoints);
-    FreeAndNil(FTimeSeries);
-
-    Invalidate;
+  Invalidate;
   inherited;
+end;
+
+function TPhastModel.ExchangeUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited ExchangeUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.ExchangeUsed(Sender);
+    end;
+  end;
 end;
 
 procedure TPhastModel.ExtractScreenObject(const AScreenObject: TScreenObject);
@@ -4842,6 +6007,59 @@ end;
 procedure TPhastModel.SetOwnsScreenObjects(const Value: boolean);
 begin
   (FScreenObjectList as TObjectList).OwnsObjects := Value;
+end;
+
+function TPhastModel.ChdIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.ChdBoundary.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.ChdBoundary.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.ChemistryUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited ChemistryUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.ChemistryUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.ChobIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.ChobPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.ChobPackage.IsSelected;
+      end;
+    end;
+  end;
 end;
 
 procedure TPhastModel.ClearScreenObjectCollection;
@@ -4906,64 +6124,64 @@ begin
   FPathLine.Assign(Value);
 end;
 
-procedure TPhastModel.SetPhastGrid(const Value: TPhastGrid);
+procedure TCustomModel.SetPhastGrid(const Value: TPhastGrid);
 begin
   FPhastGrid.Assign(Value);
   Invalidate;
 end;
 
-function TPhastModel.GetHeight: integer;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.Height;
-  end;
-end;
+//function TPhastModel.GetHeight: integer;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.Height;
+//  end;
+//end;
 
 function TPhastModel.GetHufParameters: THufModflowParameters;
 begin
   result := FHufParameters;
 end;
 
-function TPhastModel.GetLeft: integer;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.Left;
-  end;
-end;
+//function TPhastModel.GetLeft: integer;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.Left;
+//  end;
+//end;
 
-function TPhastModel.GetTop: integer;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.Top;
-  end;
-end;
+//function TPhastModel.GetTop: integer;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.Top;
+//  end;
+//end;
 
-function TPhastModel.GetWidth: integer;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.Width;
-  end;
-end;
+//function TPhastModel.GetWidth: integer;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.Width;
+//  end;
+//end;
 
 procedure TPhastModel.SetHeight(const Value: integer);
 begin
@@ -4999,6 +6217,28 @@ begin
   end;
 end;
 
+procedure TPhastModel.SetTopTimeList(const Value: TCustomTimeList);
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildTimeList: TCustomTimeList;
+begin
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    if Value = nil then
+    begin
+      ChildTimeList := nil;
+    end
+    else
+    begin
+      ChildTimeList := ChildModel.GetTimeListByName(Value.Name)
+    end;
+    ChildModel.TopTimeList := ChildTimeList;
+  end;
+end;
+
 procedure TPhastModel.SetWidth(const Value: integer);
 begin
   if GuiSettings <> nil then
@@ -5007,50 +6247,65 @@ begin
   end;
 end;
 
-function TPhastModel.GetMagnificationFront: double;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.MagnificationFront;
-  end;
-end;
+//function TPhastModel.GetMagnificationFront: double;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.MagnificationFront;
+//  end;
+//end;
 
-function TPhastModel.GetMagnificationSide: double;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.MagnificationSide;
-  end;
-end;
+//function TPhastModel.GetMagnificationSide: double;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.MagnificationSide;
+//  end;
+//end;
 
-function TPhastModel.GetMagnificationTop: double;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.MagnificationTop;
-  end;
-end;
+//function TPhastModel.GetMagnificationTop: double;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.MagnificationTop;
+//  end;
+//end;
 
 function TPhastModel.PhastUsed(Sender: TObject): boolean;
 begin
   result := ModelSelection = msPhast;
 end;
 
+function TPhastModel.PorosityUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited PorosityUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.PorosityUsed(Sender);
+    end;
+  end;
+end;
+
 function TPhastModel.StoreChildModels: Boolean;
 begin
-  result := FChildModels.Count > 0;  
+  result := FChildModels.Count > 0;
 end;
 
 function TPhastModel.StoreEndPoints: Boolean;
@@ -5078,10 +6333,10 @@ begin
   result := FModflowFullStressPeriods;
 end;
 
-function TPhastModel.GetModflowOptions: TModflowOptions;
-begin
-  result := FModflowOptions;
-end;
+//function TPhastModel.GetModflowOptions: TModflowOptions;
+//begin
+//  result := FModflowOptions;
+//end;
 
 function TPhastModel.GetModflowOutputControl: TModflowOutputControl;
 begin
@@ -5103,6 +6358,21 @@ begin
   result := FModflowTransientParameters;
 end;
 
+function TPhastModel.GetNeedToRecalculateFrontCellColors: boolean;
+begin
+  result := Grid.NeedToRecalculateFrontCellColors;
+end;
+
+function TPhastModel.GetNeedToRecalculateSideCellColors: boolean;
+begin
+  result := Grid.NeedToRecalculateSideCellColors;
+end;
+
+function TPhastModel.GetNeedToRecalculateTopCellColors: boolean;
+begin
+  result := Grid.NeedToRecalculateTopCellColors;
+end;
+
 procedure TPhastModel.UpdateUseList(DataIndex: integer;
   NewUseList: TStringList; Item: TCustomModflowBoundaryItem);
 var
@@ -5117,7 +6387,7 @@ begin
   except on E: ErbwParserError do
     begin
       ScreenObject := Item.ScreenObject as TScreenObject;
-      frmFormulaErrors.AddError(ScreenObject.Name, StrModflowSfrReachLength,
+      frmFormulaErrors.AddFormulaError(ScreenObject.Name, StrModflowSfrReachLength,
         Formula, E.Message);
       Formula := '0';
       rpThreeDFormulaCompiler.Compile(Formula);
@@ -5226,7 +6496,7 @@ begin
   end;
 end;
 
-procedure TPhastModel.SetModelSelection(const Value: TModelSelection);
+procedure TCustomModel.SetModelSelection(const Value: TModelSelection);
 var
   Index: Integer;
   DataSet: TDataArray;
@@ -5314,15 +6584,18 @@ begin
         DataSet.UpdateDimensions(-1, -1, -1);
       end;
     end;
-    InvalidateScreenObjects;
+    if not (csDestroying in ComponentState) then
+    begin
+      InvalidateScreenObjects;
+    end;
     Invalidate;
   end;
 end;
 
-procedure TPhastModel.SetModflowOptions(const Value: TModflowOptions);
-begin
-  FModflowOptions.Assign(Value);
-end;
+//procedure TPhastModel.SetModflowOptions(const Value: TModflowOptions);
+//begin
+//  FModflowOptions.Assign(Value);
+//end;
 
 procedure TPhastModel.SetModflowOutputControl(
   const Value: TModflowOutputControl);
@@ -5372,6 +6645,70 @@ procedure TPhastModel.SetModflowTransientParameters(
   const Value: TModflowTransientListParameters);
 begin
   FModflowTransientParameters.Assign(Value);
+end;
+
+procedure TPhastModel.SetNeedToRecalculateFrontCellColors(const Value: boolean);
+var
+  ChildIndex: Integer;
+  ChildGrid: TCustomGrid;
+  ChildModel: TChildModel;
+begin
+  Grid.NeedToRecalculateFrontCellColors := Value;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    if ChildModel <> nil then
+    begin
+      ChildGrid := ChildModel.Grid;
+      if ChildGrid <> nil then
+      begin
+        ChildGrid.NeedToRecalculateFrontCellColors := Value;
+      end;
+    end;
+  end;
+end;
+
+procedure TPhastModel.SetNeedToRecalculateSideCellColors(const Value: boolean);
+var
+  ChildIndex: Integer;
+  ChildGrid: TCustomGrid;
+  ChildModel: TChildModel;
+begin
+  Grid.NeedToRecalculateSideCellColors := Value;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    if ChildModel <> nil then
+    begin
+      ChildGrid := ChildModel.Grid;
+      if ChildGrid <> nil then
+      begin
+        ChildGrid.NeedToRecalculateSideCellColors := Value;
+      end;
+    end;
+  end;
+end;
+
+procedure TPhastModel.SetNeedToRecalculateTopCellColors(const Value: boolean);
+var
+  ChildIndex: Integer;
+  ChildGrid: TCustomGrid;
+  ChildModel: TChildModel;
+begin
+  Grid.NeedToRecalculateTopCellColors := Value;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+
+    if ChildModel <> nil then
+    begin
+      ChildGrid := ChildModel.Grid;
+      if ChildGrid <> nil then
+      begin
+        ChildGrid.NeedToRecalculateTopCellColors := Value;
+      end;
+    end;
+  end;
 end;
 
 function TPhastModel.GetEndPoints: TEndPointReader;
@@ -5426,105 +6763,137 @@ begin
   end;
 end;
 
+function TPhastModel.GetFormulaManager: TFormulaManager;
+begin
+  result := FFormulaManager;
+end;
+
 function TPhastModel.GetFreeSurface: boolean;
 begin
   result := FFreeSurface;
 end;
 
-function TPhastModel.GetFrontHeight: integer;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.FrontHeight;
-  end;
-end;
+//function TPhastModel.GetFrontHeight: integer;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.FrontHeight;
+//  end;
+//end;
 
-function TPhastModel.GetFrontX: double;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.FrontX;
-  end;
-end;
+//function TPhastModel.GetFrontX: double;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.FrontX;
+//  end;
+//end;
 
-function TPhastModel.GetFrontY: double;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.FrontY;
-  end;
-end;
+//function TPhastModel.GetFrontY: double;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.FrontY;
+//  end;
+//end;
 
-function TPhastModel.GetSideX: double;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.SideX;
-  end;
-end;
+//function TPhastModel.GetSideX: double;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.SideX;
+//  end;
+//end;
 
-function TPhastModel.GetSideY: double;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.SideY;
-  end;
-end;
+//function TPhastModel.GetSideY: double;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.SideY;
+//  end;
+//end;
 
 function TPhastModel.GetSoluteTransport: boolean;
 begin
   result := FSoluteTransport;
 end;
 
-function TPhastModel.GetTopX: double;
+function TPhastModel.GetSomeSegmentsUpToDate: boolean;
 begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.TopX;
-  end;
+  result := FSomeSegmentsUpToDate;
 end;
 
-function TPhastModel.GetTopY: double;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.TopY;
-  end;
-end;
+//function TPhastModel.GetTopX: double;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.TopX;
+//  end;
+//end;
+
+//function TPhastModel.GetTopY: double;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.TopY;
+//  end;
+//end;
 
 procedure TPhastModel.SetFrontHeight(Value: integer);
 begin
   if GuiSettings <> nil then
   begin
     GuiSettings.FrontHeight := Value;
+  end;
+end;
+
+procedure TPhastModel.SetFrontTimeList(const Value: TCustomTimeList);
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildTimeList: TCustomTimeList;
+begin
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    if Value = nil then
+    begin
+      ChildTimeList := nil;
+    end
+    else
+    begin
+      ChildTimeList := ChildModel.GetTimeListByName(Value.Name)
+    end;
+    ChildModel.FrontTimeList := ChildTimeList;
   end;
 end;
 
@@ -5576,29 +6945,29 @@ begin
   end;
 end;
 
-function TPhastModel.GetTopViewHeight: integer;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.TopViewHeight;
-  end;
-end;
+//function TPhastModel.GetTopViewHeight: integer;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.TopViewHeight;
+//  end;
+//end;
 
-function TPhastModel.GetTopViewWidth: integer;
-begin
-  if GuiSettings = nil then
-  begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.TopViewWidth;
-  end;
-end;
+//function TPhastModel.GetTopViewWidth: integer;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.TopViewWidth;
+//  end;
+//end;
 
 procedure TPhastModel.SetTopViewHeight(const Value: integer);
 begin
@@ -5626,7 +6995,7 @@ begin
   FFileVersion := Value;
 end;
 
-procedure TPhastModel.UpdateActive(Sender: TObject);
+procedure TCustomModel.UpdateActive(Sender: TObject);
 const
   SpecifiedHeadComment = 'All specified head cells are active';
 var
@@ -5698,7 +7067,173 @@ begin
   end;
 end;
 
-procedure TPhastModel.UpdateDataArrayParameterUsed;
+procedure TPhastModel.UpdateChildGrids;
+var
+  ChildIndex: Integer;
+  ScreenObjectIndex: Integer;
+  ChildModel: TChildModel;
+  ScreenObject: TScreenObject;
+begin
+  if ChildModels.Count > 0 then
+  begin
+    for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
+    begin
+      ScreenObject := ScreenObjects[ScreenObjectIndex];
+      ChildModel := ScreenObject.ChildModel as TChildModel;
+      if ChildModel <> nil then
+      begin
+        ChildModel.HorizontalPositionScreenObject := ScreenObject;
+      end;
+    end;
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModels[ChildIndex].ChildModel.UpdateGrid;
+    end;
+  end;
+end;
+
+procedure TPhastModel.UpdateCombinedDisplayColumn;
+var
+  ModelIndex: Integer;
+  ChildIndex: Integer;
+  Index: Integer;
+begin
+  if LgrUsed then
+  begin
+    if SelectedModel = self then
+    begin
+      UpdateMapping;
+      for Index := 0 to Length(FColumnMapping) - 1 do
+      begin
+        if FColumnMapping[Index].ParentPostion
+          = SelectedColumn then
+        begin
+          CombinedDisplayColumn := Index;
+          break;
+        end;
+      end;
+    end
+    else
+    begin
+      ModelIndex := -1;
+      for ChildIndex := 0 to ChildModels.Count - 1 do
+      begin
+        if ChildModels[ChildIndex].ChildModel = SelectedModel then
+        begin
+          ModelIndex := ChildIndex;
+          break;
+        end;
+      end;
+      Assert(ModelIndex >= 0);
+      UpdateMapping;
+      for Index := 0 to Length(FColumnMapping) - 1 do
+      begin
+        if FColumnMapping[Index].ChildPositions[ModelIndex]
+          = SelectedModel.SelectedColumn then
+        begin
+          CombinedDisplayColumn := Index;
+          break;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TPhastModel.UpdateCombinedDisplayLayer;
+var
+  ModelIndex: Integer;
+  ChildIndex: Integer;
+  Index: Integer;
+begin
+  if LgrUsed then
+  begin
+    if SelectedModel = self then
+    begin
+      UpdateMapping;
+      for Index := 0 to Length(FLayerMapping) - 1 do
+      begin
+        if FLayerMapping[Index].ParentPostion
+          = SelectedLayer then
+        begin
+          CombinedDisplayLayer := Index;
+          break;
+        end;
+      end;
+    end
+    else
+    begin
+      ModelIndex := -1;
+      for ChildIndex := 0 to ChildModels.Count - 1 do
+      begin
+        if ChildModels[ChildIndex].ChildModel = SelectedModel then
+        begin
+          ModelIndex := ChildIndex;
+          break;
+        end;
+      end;
+      Assert(ModelIndex >= 0);
+      UpdateMapping;
+      for Index := 0 to Length(FLayerMapping) - 1 do
+      begin
+        if FLayerMapping[Index].ChildPositions[ModelIndex]
+          = SelectedModel.SelectedLayer then
+        begin
+          CombinedDisplayLayer := Index;
+          break;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TPhastModel.UpdateCombinedDisplayRow;
+var
+  ModelIndex: Integer;
+  ChildIndex: Integer;
+  Index: Integer;
+begin
+  if LgrUsed then
+  begin
+    if SelectedModel = self then
+    begin
+      UpdateMapping;
+      for Index := 0 to Length(FRowMapping) - 1 do
+      begin
+        if FRowMapping[Index].ParentPostion
+          = SelectedRow then
+        begin
+          CombinedDisplayRow := Index;
+          break;
+        end;
+      end;
+    end
+    else
+    begin
+      ModelIndex := -1;
+      for ChildIndex := 0 to ChildModels.Count - 1 do
+      begin
+        if ChildModels[ChildIndex].ChildModel = SelectedModel then
+        begin
+          ModelIndex := ChildIndex;
+          break;
+        end;
+      end;
+      Assert(ModelIndex >= 0);
+      UpdateMapping;
+      for Index := 0 to Length(FRowMapping) - 1 do
+      begin
+        if FRowMapping[Index].ChildPositions[ModelIndex]
+          = SelectedModel.SelectedRow then
+        begin
+          CombinedDisplayRow := Index;
+          break;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TCustomModel.UpdateDataArrayParameterUsed;
 begin
   if not (csLoading in ComponentState) and not FClearing then
   begin
@@ -5736,6 +7271,9 @@ var
   ParamItem: TModflowSteadyParameter;
   SearchName: string;
   Compiler: TRbwParser;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
 begin
   FDataArrayManager.DataSetsCapacity := FDataSetCollection.Count;
   for Index := 0 to FDataSetCollection.Count - 1 do
@@ -5766,7 +7304,7 @@ begin
       begin
         ADataSet.Name := SearchName;
       end;
-      FDataArrayManager.AddDataSet(ADataSet);
+      AddDataSet(ADataSet);
       CreateVariables(ADataSet);
       ADataSet.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
         Grid.ColumnCount);
@@ -5840,6 +7378,20 @@ begin
   FDataSetCollection.Clear;
 
   FDataArrayManager.CreateInitialDataSets;
+  for Index := 0 to FDataArrayManager.DataSetCount - 1 do
+  begin
+    ADataSet := FDataArrayManager[Index];
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      ChildDataArray := ChildModel.DataArrayManager.GetDataSetByName(ADataSet.Name);
+      Assert(ChildDataArray <> nil);
+      ChildDataArray.AssignProperties(ADataSet);
+      ChildDataArray.Formula := ADataSet.Formula;
+      ChildDataArray.Limits := ADataSet.Limits;
+      ChildDataArray.ContourLimits := ADataSet.ContourLimits;
+    end;
+  end;
 
   for Index := 0 to ModflowSteadyParameters.Count - 1 do
   begin
@@ -5861,6 +7413,46 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TPhastModel.UpdateDataSetConnections;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    ChildModel.UpdateDataSetConnections;
+    TopGridObserver.TalksTo(ChildModel.TopGridObserver);
+    ThreeDGridObserver.TalksTo(ChildModel.ThreeDGridObserver);
+    HufKxNotifier.TalksTo(ChildModel.HufKxNotifier);
+    HufKyNotifier.TalksTo(ChildModel.HufKyNotifier);
+    HufKzNotifier.TalksTo(ChildModel.HufKzNotifier);
+    HufSsNotifier.TalksTo(ChildModel.HufSsNotifier);
+    HufSyNotifier.TalksTo(ChildModel.HufSyNotifier);
+  end;
+end;
+
+procedure TPhastModel.UpdateDataSetDimensions;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  DataArrayManager.UpdateDataSetDimensions;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    if ChildModel <> nil then
+    begin
+      ChildModel.DataArrayManager.UpdateDataSetDimensions;
+    end;
+  end;
+end;
+
+function TPhastModel.GetSaveBfhBoundaryConditions: boolean;
+begin
+  result := FSaveBfhBoundaryConditions
 end;
 
 function TPhastModel.GetScreenObjectByName(AName: string): TScreenObject;
@@ -6033,15 +7625,37 @@ begin
   end;
 end;
 
-function TPhastModel.GetSideWidth: integer;
+//function TPhastModel.GetSideWidth: integer;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.SideWidth;
+//  end;
+//end;
+
+procedure TPhastModel.SetSideTimeList(const Value: TCustomTimeList);
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildTimeList: TCustomTimeList;
 begin
-  if GuiSettings = nil then
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
   begin
-    result := 0;
-  end
-  else
-  begin
-    result := GuiSettings.SideWidth;
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    if Value = nil then
+    begin
+      ChildTimeList := nil;
+    end
+    else
+    begin
+      ChildTimeList := ChildModel.GetTimeListByName(Value.Name)
+    end;
+    ChildModel.SideTimeList := ChildTimeList;
   end;
 end;
 
@@ -6050,6 +7664,40 @@ begin
   if GuiSettings <> nil then
   begin
     GuiSettings.SideWidth := Value
+  end;
+end;
+
+function TPhastModel.GasPhaseUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited GasPhaseUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.GasPhaseUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.GbobIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.GbobPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.GbobPackage.IsSelected;
+      end;
+    end;
   end;
 end;
 
@@ -6067,11 +7715,27 @@ begin
   Result := FChemistryOptions;
 end;
 
+function TPhastModel.GetChildModels: TChildModelCollection;
+begin
+  result := FChildModels;
+end;
+
 function TPhastModel.GetCurrentScreenObject(VD: TViewDirection): TScreenObject;
 begin
   if Assigned(OnGetCurrentScreenObject) then
   begin
     OnGetCurrentScreenObject(self, VD, result);
+  end;
+end;
+
+function TPhastModel.GetDisplayName: string;
+begin
+  case ModelSelection of
+    msUndefined: Assert(False);
+    msPhast: result := 'PHAST';
+    msModflow: result := 'MODFLOW';
+    msModflowLGR: result := 'Parent model';
+    else Assert(False);
   end;
 end;
 
@@ -6146,12 +7810,34 @@ end;
 procedure TPhastModel.UpdateFrontTimeDataSet(const TimeList: TCustomTimeList;
   const Time: double);
 var
-  TimeIndex: integer;
-  SelectedLayer, SelectedRow, SelectedColumn: integer;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildList: TCustomTimeList;
 begin
-  SelectedLayer := Grid.SelectedLayer;
-  SelectedRow := Grid.SelectedRow;
-  SelectedColumn := Grid.SelectedColumn;
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    ChildList := ChildModel.GetTimeListByName(TimeList.Name);
+    ChildModel.UpdateFrontTimeDataSet(ChildList, Time);
+  end;
+end;
+
+procedure TCustomModel.UpdateFrontTimeDataSet(const TimeList: TCustomTimeList;
+  const Time: double);
+var
+  TimeIndex: integer;
+  LocalSelectedLayer, LocalSelectedRow, LocalSelectedColumn: integer;
+begin
+  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
+  begin
+    FFrontTimeList := nil;
+    Grid.FrontDataSet := nil;
+    Exit;
+  end;
+  LocalSelectedLayer := Grid.SelectedLayer;
+  LocalSelectedRow := Grid.SelectedRow;
+  LocalSelectedColumn := Grid.SelectedColumn;
   try
     if not TimeList.UpToDate then
     begin
@@ -6170,13 +7856,13 @@ begin
     FFrontTimeList := TimeList;
     FFrontDisplayTime := Time;
   finally
-    Grid.SelectedLayer := SelectedLayer;
-    Grid.SelectedRow := SelectedRow;
-    Grid.SelectedColumn := SelectedColumn;
+    Grid.SelectedLayer := LocalSelectedLayer;
+    Grid.SelectedRow := LocalSelectedRow;
+    Grid.SelectedColumn := LocalSelectedColumn;
   end;
 end;
 
-procedure TPhastModel.UpdateLakeId(Sender: TObject);
+procedure TCustomModel.UpdateLakeId(Sender: TObject);
 var
   LakeIdArray: TDataArray;
   ColIndex: Integer;
@@ -6241,7 +7927,7 @@ begin
   end;
 end;
 
-procedure TPhastModel.UpdateDischargeRouting(Sender: TObject);
+procedure TCustomModel.UpdateDischargeRouting(Sender: TObject);
 var
   DischargeRoutingArray: TDataArray;
   ColIndex: Integer;
@@ -6331,19 +8017,28 @@ begin
   end;
 end;
 
-procedure TPhastModel.UpdateOnPostInitialize;
+procedure TCustomModel.UpdateOnPostInitialize;
 var
   ActiveArray: TDataArray;
   WetDryArray: TDataArray;
   LakeIdArray: TDataArray;
   SpecifiedHeadArray: TDataArray;
   ModPathZoneArray: TDataArray;
+  PhastModel: TPhastModel;
+  ChildIndex: Integer;
+  ResKvArray: TDataArray;
 begin
   LakeIdArray := FDataArrayManager.GetDataSetByName(rsLakeID);
   ActiveArray := FDataArrayManager.GetDataSetByName(rsActive);
   WetDryArray := FDataArrayManager.GetDataSetByName(rsWetDryFlag);
   SpecifiedHeadArray := FDataArrayManager.GetDataSetByName(rsModflowSpecifiedHead);
   ModPathZoneArray := FDataArrayManager.GetDataSetByName(StrModpathZone);
+  ResKvArray := FDataArrayManager.GetDataSetByName(rsResKv);
+
+  if ResKvArray <> nil then
+  begin
+    ResKvArray.OnPostInitialize := AdjustResKvArray;
+  end;
 
   Assert(ActiveArray <> nil);
   if ModflowPackages.LakPackage.IsSelected then
@@ -6450,17 +8145,31 @@ begin
       SpecifiedHeadArray.TalksTo(ModPathZoneArray);
     end;
   end;
+  if self is TPhastModel then
+  begin
+    PhastModel := TPhastModel(self);
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      PhastModel.ChildModels[ChildIndex].ChildModel.UpdateOnPostInitialize
+    end;
+  end;
 end;
 
-procedure TPhastModel.UpdateSideTimeDataSet(const TimeList: TCustomTimeList;
+procedure TCustomModel.UpdateSideTimeDataSet(const TimeList: TCustomTimeList;
   const Time: double);
 var
   TimeIndex: integer;
-  SelectedLayer, SelectedRow, SelectedColumn: integer;
+  LocalSelectedLayer, LocalSelectedRow, LocalSelectedColumn: integer;
 begin
-  SelectedLayer := Grid.SelectedLayer;
-  SelectedRow := Grid.SelectedRow;
-  SelectedColumn := Grid.SelectedColumn;
+  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
+  begin
+    FSideTimeList := nil;
+    Grid.SideDataSet := nil;
+    Exit;
+  end;
+  LocalSelectedLayer := Grid.SelectedLayer;
+  LocalSelectedRow := Grid.SelectedRow;
+  LocalSelectedColumn := Grid.SelectedColumn;
   try
     if not TimeList.UpToDate then
     begin
@@ -6479,21 +8188,27 @@ begin
     FSideTimeList := TimeList;
     FSideDisplayTime := Time;
   finally
-    Grid.SelectedLayer := SelectedLayer;
-    Grid.SelectedRow := SelectedRow;
-    Grid.SelectedColumn := SelectedColumn;
+    Grid.SelectedLayer := LocalSelectedLayer;
+    Grid.SelectedRow := LocalSelectedRow;
+    Grid.SelectedColumn := LocalSelectedColumn;
   end;
 end;
 
-procedure TPhastModel.UpdateTopTimeDataSet(const TimeList: TCustomTimeList;
+procedure TCustomModel.UpdateTopTimeDataSet(const TimeList: TCustomTimeList;
   const Time: double);
 var
   TimeIndex: integer;
-  SelectedLayer, SelectedRow, SelectedColumn: integer;
+  LocalSelectedLayer, LocalSelectedRow, LocalSelectedColumn: integer;
 begin
-  SelectedLayer := Grid.SelectedLayer;
-  SelectedRow := Grid.SelectedRow;
-  SelectedColumn := Grid.SelectedColumn;
+  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
+  begin
+    FTopTimeList := nil;
+    Grid.TopDataSet := nil;
+    Exit;
+  end;
+  LocalSelectedLayer := Grid.SelectedLayer;
+  LocalSelectedRow := Grid.SelectedRow;
+  LocalSelectedColumn := Grid.SelectedColumn;
   try
     if not TimeList.UpToDate then
     begin
@@ -6512,13 +8227,13 @@ begin
     FTopTimeList := TimeList;
     FTopDisplayTime := Time;
   finally
-    Grid.SelectedLayer := SelectedLayer;
-    Grid.SelectedRow := SelectedRow;
-    Grid.SelectedColumn := SelectedColumn;
+    Grid.SelectedLayer := LocalSelectedLayer;
+    Grid.SelectedRow := LocalSelectedRow;
+    Grid.SelectedColumn := LocalSelectedColumn;
   end;
 end;
 
-procedure TPhastModel.UpdateModPathZone(Sender: TObject);
+procedure TCustomModel.UpdateModPathZone(Sender: TObject);
 var
   ModPathZoneArray: TDataArray;
   ActiveArray: TDataArray;
@@ -6610,7 +8325,7 @@ begin
   end;
 end;
 
-procedure TPhastModel.UpdateWetDry(Sender: TObject);
+procedure TCustomModel.UpdateWetDry(Sender: TObject);
 var
   LakeIdArray: TDataArray;
   WetDryArray: TDataArray;
@@ -6651,6 +8366,168 @@ begin
   end;
 end;
 
+function TPhastModel.UzfInitialInfiltrationUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited UzfInitialInfiltrationUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.UzfInitialInfiltrationUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.UzfIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.UzfPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.UzfPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.UzfPackageUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited UzfPackageUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.UzfPackageUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.UzfUnsatVertKUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited UzfUnsatVertKUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.UzfUnsatVertKUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.VerticalAnisotropyUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited VerticalAnisotropyUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.VerticalAnisotropyUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.WelIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.WelPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.WelPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.WetDryUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited WetDryUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.WetDryUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.WettingActive: boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited WettingActive;
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.WettingActive;
+    end;
+  end;
+end;
+
+function TPhastModel.ZoneBudgetIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.ZoneBudget.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.ZoneBudget.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.ZoneBudgetSelected(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited ZoneBudgetSelected(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.ZoneBudgetSelected(Sender);
+    end;
+  end;
+end;
+
 function TPhastModel.ZoomBox(VD: TViewDirection): TQrbwZoomBox2;
 begin
   if Assigned(OnGetZoomBox) then
@@ -6660,6 +8537,36 @@ begin
   else
   begin
     result := nil;
+  end;
+end;
+
+function TPhastModel.ReservoirLayerUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited ReservoirLayerUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.ReservoirLayerUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.ReservoirPackageUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited ReservoirPackageUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.ReservoirPackageUsed(Sender);
+    end;
   end;
 end;
 
@@ -6677,6 +8584,25 @@ begin
     begin
       result := True;
       AScreenObject.Selected := False;
+    end;
+  end;
+end;
+
+function TPhastModel.ResIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.ResPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.ResPackage.IsSelected;
+      end;
     end;
   end;
 end;
@@ -6738,7 +8664,62 @@ begin
   end;
 end;
 
+function TPhastModel.RivIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.RivPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.RivPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.RouteUzfDischarge(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited RouteUzfDischarge(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.RouteUzfDischarge(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.RvobIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.RvobPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.RvobPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
 procedure TPhastModel.ClearViewedItems;
+var
+  Index: Integer;
 begin
   inherited;
   PhastGrid.TopDataSet := nil;
@@ -6750,6 +8731,320 @@ begin
   PhastGrid.FrontContourDataSet := nil;
   PhastGrid.SideContourDataSet := nil;
   PhastGrid.ThreeDContourDataSet := nil;
+  for Index := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModels[Index].ChildModel.ClearViewedItems;
+  end;
+end;
+
+function TPhastModel.DirectionCount(ViewDirection: TViewDirection): integer;
+begin
+  result := 0;
+  case ViewDirection of
+    vdTop: result := ModflowGrid.LayerCount;
+    vdFront: result := ModflowGrid.RowCount;
+    vdSide: result := ModflowGrid.ColumnCount;
+    else Assert(False);
+  end;
+end;
+
+procedure TPhastModel.DisallowChildGridUpdates;
+var
+  ChildModel: TChildModel;
+  Index: Integer;
+begin
+  Inc(FChildGridUpdateCount);
+  for Index := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[Index].ChildModel;
+    ChildModel.CanUpdateGrid := False;
+  end;
+end;
+
+procedure TPhastModel.UpdateMapping;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  if (Length(FColumnMapping) = 0)
+    and (Grid <> nil) and (Grid.ColumnCount > 0)
+    and (Grid.RowCount > 0)and (Grid.LayerCount > 0) then
+  begin
+    UpdateAMapping(FColumnMapping, vdSide);
+    UpdateAMapping(FRowMapping, vdFront);
+    UpdateAMapping(FLayerMapping, vdTop);
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      ChildModel.DataArrayManager.InvalidateAllDataSets;
+    end;
+  end;
+end;
+
+function TPhastModel.CombinedCount(ViewDirection: TViewDirection): integer;
+begin
+  result := 0;
+  case ViewDirection of
+    vdTop: result := CombinedLayerCount;
+    vdFront: result := CombinedRowCount;
+    vdSide: result := CombinedColumnCount;
+    else Assert(False);
+  end;
+end;
+
+function TPhastModel.CombinedColumnCount: integer;
+var
+  ColIndex: Integer;
+begin
+  result := 0;
+  case ModelSelection of
+    msPhast: result := PhastGrid.ColumnCount;
+    msModflow: result := ModflowGrid.ColumnCount;
+    msModflowLGR:
+      begin
+        result := 0;
+        for ColIndex := 0 to ModflowGrid.ColumnCount - 1 do
+        begin
+          Inc(result, MaxChildColumnsPerColumn(ColIndex));
+        end;
+      end
+    else Assert(False);
+  end;
+end;
+
+procedure TPhastModel.UpdateAMapping(var FMapping: TMappingArray;
+  ViewDirection: TViewDirection);
+var
+  SubDisCount: Integer;
+  ARange: TGridRange;
+  ChildModel: TChildModel;
+  ChildIndex: Integer;
+  ChildCombinedIndex: Integer;
+  SubDisIndex: Integer;
+  MaxSubDiscretization: Integer;
+  ParentDisIndex: Integer;
+  CombinedIndex: Integer;
+  Index: Integer;
+  ArrayLength: Integer;
+  MaximumPosition: Integer;
+begin
+  ArrayLength := CombinedCount(ViewDirection);
+  SetLength(FMapping, ArrayLength);
+  for Index := 0 to Length(FMapping) - 1 do
+  begin
+    SetLength(FMapping[Index].ChildPositions, ChildModels.Count);
+  end;
+  CombinedIndex := 0;
+  for ParentDisIndex := 0 to DirectionCount(ViewDirection) - 1 do
+  begin
+    MaxSubDiscretization := MaxChildDisPerParentDis(
+      ViewDirection, ParentDisIndex);
+    for SubDisIndex := 0 to MaxSubDiscretization - 1 do
+    begin
+      ChildCombinedIndex := CombinedIndex + SubDisIndex;
+      FMapping[ChildCombinedIndex].ParentPostion := ParentDisIndex;
+    end;
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      MaximumPosition := ChildModel.MaxPosition(ViewDirection);
+      ARange := ChildModel.ParentPositionToChildPositions(ViewDirection,
+        ParentDisIndex);
+      SubDisCount := ARange.Last - ARange.First + 1;
+      for SubDisIndex := 0 to MaxSubDiscretization - 1 do
+      begin
+        ChildCombinedIndex := CombinedIndex + SubDisIndex;
+        if (ARange.First < 0) then
+        begin
+          FMapping[ChildCombinedIndex].ChildPositions[ChildIndex] := -1;
+        end
+        else if ARange.First >= MaximumPosition then
+        begin
+          FMapping[ChildCombinedIndex].ChildPositions[ChildIndex] :=
+            MaximumPosition;
+        end
+        else if (SubDisIndex >= SubDisCount) then
+        begin
+          FMapping[ChildCombinedIndex].ChildPositions[ChildIndex]
+            := FMapping[ChildCombinedIndex-1].ChildPositions[ChildIndex]
+        end
+        else
+        begin
+          FMapping[ChildCombinedIndex].ChildPositions[ChildIndex] :=
+            ARange.First + SubDisIndex;
+        end;
+      end;
+    end;
+    Inc(CombinedIndex, MaxSubDiscretization);
+  end;
+end;
+
+function TPhastModel.CombinedRowCount: integer;
+var
+  RowIndex: Integer;
+begin
+  result := 0;
+  case ModelSelection of
+    msPhast: result := PhastGrid.RowCount;
+    msModflow: result := ModflowGrid.RowCount;
+    msModflowLGR:
+      begin
+        result := 0;
+        for RowIndex := 0 to ModflowGrid.RowCount - 1 do
+        begin
+          Inc(result, MaxChildRowsPerRow(RowIndex));
+        end;
+      end
+    else Assert(False);
+  end;
+end;
+
+function TPhastModel.CombinedLayerCount: integer;
+var
+  LayerIndex: Integer;
+begin
+  result := 0;
+  case ModelSelection of
+    msPhast: result := PhastGrid.LayerCount;
+    msModflow: result := ModflowGrid.LayerCount;
+    msModflowLGR:
+      begin
+        result := 0;
+        for LayerIndex := 0 to ModflowGrid.LayerCount - 1 do
+        begin
+          Inc(result, MaxChildLayersPerLayer(LayerIndex));
+        end;
+      end
+    else Assert(False);
+  end;
+end;
+
+function TPhastModel.MaxChildDisPerParentDis(ViewDirection: TViewDirection;
+  Position: integer): integer;
+begin
+  result := 0;
+  case ViewDirection of
+    vdTop: result := MaxChildLayersPerLayer(Position);
+    vdFront: result := MaxChildRowsPerRow(Position);
+    vdSide: result := MaxChildColumnsPerColumn(Position);
+    else Assert(False);
+  end;                                
+end;
+
+
+function TPhastModel.MaxChildColumnsPerColumn(ColIndex: Integer): integer;
+var
+  Range: TGridRange;
+  ChildModel: TChildModel;
+  ChildIndex: Integer;
+begin
+  result := 1;
+  if not LgrUsed then
+  begin
+    Exit;
+  end;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    if ChildModel <> nil then
+    begin
+      Range := ChildModel.ParentColToChildCols(ColIndex);
+      result := Max(result, Range.Last - Range.First + 1);
+    end;
+  end;
+end;
+
+function TPhastModel.MaxChildRowsPerRow(RowIndex: Integer): integer;
+var
+  Range: TGridRange;
+  ChildModel: TChildModel;
+  ChildIndex: Integer;
+begin
+  result := 1;
+  if not LgrUsed then
+  begin
+    Exit;
+  end;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    if ChildModel <> nil then
+    begin
+      Range := ChildModel.ParentRowToChildRows(RowIndex);
+      result := Max(result, Range.Last - Range.First + 1);
+    end;
+  end;
+end;
+
+function TPhastModel.Mnw2IsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.Mnw2Package.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.Mnw2Package.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.MaxChildLayersPerLayer(LayerIndex: Integer): integer;
+var
+  Range: TGridRange;
+  ChildModel: TChildModel;
+  ChildIndex: Integer;
+begin
+  result := 1;
+  if not LgrUsed then
+  begin
+    Exit;
+  end;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    if ChildModel <> nil then
+    begin
+      Range := ChildModel.ParentLayerToChildLayers(LayerIndex);
+      result := Max(result, Range.Last - Range.First + 1);
+    end;
+  end;
+end;
+
+function TPhastModel.ConfinedStorageCoefUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited ConfinedStorageCoefUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.ConfinedStorageCoefUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.ConfiningBedKzUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited ConfiningBedKzUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.ConfiningBedKzUsed(Sender);
+    end;
+  end;
 end;
 
 function TPhastModel.ConvertPoint(VD: TViewDirection;
@@ -6811,6 +9106,56 @@ begin
   Invalidate;
 end;
 
+function TPhastModel.InitialWaterTableUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited InitialWaterTableUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.InitialWaterTableUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.RchIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.RchPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.RchPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.RchTimeVaryingLayers: boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.RchPackage.TimeVaryingLayers;
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      result := result or ChildModel.ModflowPackages.RchPackage.TimeVaryingLayers;
+    end;
+  end;
+end;
+
 procedure TPhastModel.RecordTimeControl;
 var
   Index: integer;
@@ -6820,6 +9165,21 @@ begin
   begin
     TimeItem := Times.Items[Index] as TTimeItem;
     ModelTimes.AddUnique(TimeItem.EndingTime);
+  end;
+end;
+
+function TPhastModel.InitialHeadUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited InitialHeadUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.InitialHeadUsed(Sender);
+    end;
   end;
 end;
 
@@ -6847,6 +9207,92 @@ end;
 type
   TComponentCrack = class(TComponent);
 
+function TCustomModel.Layavg: TOneDIntegerArray;
+begin
+  result := LayerStructure.Layavg;
+end;
+
+function TCustomModel.LayerCount: integer;
+begin
+  result := LayerStructure.LayerCount;
+end;
+
+function TCustomModel.LayerGroupUsed(LayerGroup: TLayerGroup): boolean;
+begin
+  result := True;
+end;
+
+
+function TCustomModel.Laytyp: TOneDIntegerArray;
+begin
+  result := LayerStructure.Laytyp;
+end;
+
+function TCustomModel.Layvka: TOneDIntegerArray;
+begin
+  result := LayerStructure.Layvka;
+end;
+
+function TCustomModel.LayerFractions(LayerGroup: TLayerGroup): TDoubleDynArray;
+var
+  FractionIndex: Integer;
+//  Fraction: Real;
+begin
+  if LayerGroup.Simulated then
+  begin
+    SetLength(result, LayerGroup.LayerCollection.Count);
+    for FractionIndex := 0 to LayerGroup.LayerCollection.Count - 1 do
+    begin
+      result[FractionIndex] := (LayerGroup.LayerCollection.Items[FractionIndex]
+        as TLayerFraction).Fraction;
+    end;
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
+function TPhastModel.LakePackageUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited LakePackageUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.LakePackageUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.LakIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.LakPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.LakPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.LgrUsed: boolean;
+begin
+  result := (ModelSelection in [msModflowLGR])
+    and (ChildModels.Count > 0);
+end;
+
 procedure TPhastModel.Loaded;
 var
   Index: integer;
@@ -6865,19 +9311,21 @@ begin
 
   UpdateTimeLists;
 
-  if FrontHeight <= 0 then
+  if GuiSettings.FrontHeight <= 0 then
   begin
-    FrontHeight := 1;
+    GuiSettings.FrontHeight := 1;
   end;
-  if SideWidth <= 0 then
+  if GuiSettings.SideWidth <= 0 then
   begin
-    SideWidth := 1;
+    GuiSettings.SideWidth := 1;
   end;
-//  for Index := 0 to DataSetCount - 1 do
-//  begin
-//    DataSets[Index].OnNameChange := DataArrayNameChange;
-//  end;
-//  ClearNameChangeWarnings;
+  ModflowTransientParameters.Loaded;
+  if (ModelSelection = msModflow) and not LgrUsed then
+  begin
+    CombinedDisplayColumn := Grid.DisplayColumn;
+    CombinedDisplayRow := Grid.DisplayRow;
+    CombinedDisplayLayer := Grid.DisplayLayer;
+  end;
 end;
 
 procedure TPhastModel.InvalidateSegments;
@@ -6896,6 +9344,90 @@ begin
   end;
 end;
 
+function TPhastModel.IsChildModelEdgeCell(Col, Row, Layer: integer;
+  out CModel: TBaseModel): boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  LastLayer: integer;
+begin
+  result := False;
+  CModel := nil;
+  if LgrUsed then
+  begin
+    result := IsChildModelEdgeColRow(Col, Row, Layer, CModel);
+    if not result then
+//    begin
+//      ChildModel := CModel as TChildModel;
+//    end;
+    begin
+      for ChildIndex := 0 to ChildModels.Count - 1 do
+      begin
+        ChildModel := ChildModels[ChildIndex].ChildModel;
+        LastLayer := ChildModel.Discretization.BottomLayerIndex;
+        if (Layer = LastLayer)
+          and (LastLayer <> ModflowGrid.LayerCount - 1)
+          and (Col >= ChildModel.FirstCol)
+          and (Col <= ChildModel.LastCol)
+          and (Row >= ChildModel.FirstRow)
+          and (Row <= ChildModel.LastRow) then
+        begin
+          result := True;
+          CModel := ChildModel;
+          break;
+        end;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.IsChildModelEdgeColRow(Col, Row, Layer: integer;
+  out CModel: TBaseModel) : boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  ChildModel := nil;
+  result := False;
+  if LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        if (Col = ChildModel.FirstCol)
+          or (Col = ChildModel.LastCol) then
+        begin
+          if (Row >= ChildModel.FirstRow)
+            and (Row <= ChildModel.LastRow) then
+          begin
+            if Layer <= ChildModel.Discretization.BottomLayerIndex then
+            begin
+              result := True;
+              break;
+            end;
+          end;
+        end
+        else if (Row = ChildModel.FirstRow)
+          or (Row = ChildModel.LastRow) then
+        begin
+          if (Col >= ChildModel.FirstCol)
+            and (Col <= ChildModel.LastCol) then
+          begin
+            if Layer <= ChildModel.Discretization.BottomLayerIndex then
+            begin
+              result := True;
+              break;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+  CModel := ChildModel;
+end;
+
 function TPhastModel.IsCurrentScreenObject(
   ScreenObject: TScreenObject): boolean;
 begin
@@ -6906,6 +9438,51 @@ begin
   else
   begin
     result := False;
+  end;
+end;
+
+function TPhastModel.KineticsUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited KineticsUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.KineticsUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.KyUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited KyUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.KyUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.KzUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited KzUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.KzUsed(Sender);
+    end;
   end;
 end;
 
@@ -6960,6 +9537,22 @@ begin
   end;
 end;
 
+procedure TPhastModel.SetFileName(const Value: string);
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    if ChildModel <> nil then
+    begin
+      ChildModel.SetFileName(Value);
+    end;
+  end;
+end;
+
 procedure TPhastModel.SetFlowOnly(const Value: boolean);
 begin
   SoluteTransport := not Value;
@@ -6981,15 +9574,119 @@ begin
   FDisplaySettings.Assign(Value);
 end;
 
-function TPhastModel.ModelResultsRequired(Sender: TObject): boolean;
+function TCustomModel.ModelResultsRequired(Sender: TObject): boolean;
 begin
   result := False;
+end;
+
+function TPhastModel.ModflowInitialHeadUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited ModflowInitialHeadUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.ModflowInitialHeadUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.ModflowUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited ModflowUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.ModflowUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.MODPATHIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.Modpath.IsSelected;
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.Modpath.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.ModpathUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited ModpathUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.ModpathUsed(Sender);
+    end;
+  end;
+end;
+
+procedure TPhastModel.EndDataSetUpdate;
+begin
+  Dec(FDataSetUpdateCount);
+end;
+
+procedure TPhastModel.EndGridChange;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    if ChildModel <> nil then
+    begin
+      ChildModel.EndGridChange;
+    end;
+  end;
 end;
 
 procedure TPhastModel.EndScreenObjectUpdate;
 begin
   Dec(FScreenObjectUpdateCount);
   ScreenObjectsChanged(nil);
+end;
+
+function TPhastModel.SubIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.SubPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.SubPackage.IsSelected;
+      end;
+    end;
+  end;
 end;
 
 function TPhastModel.SubsidenceDataArrayUsed(Sender: TObject): boolean;
@@ -7006,7 +9703,7 @@ begin
     and ModflowPackages.SubPackage.IsSelected;
   if result then
   begin
-    result := False;
+//    result := False;
     DataArray := Sender as TDataArray;
     for Index := 0 to LayerStructure.Count - 1 do
     begin
@@ -7087,9 +9784,92 @@ begin
   end;
 end;
 
+function TPhastModel.SurfacesUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited SurfacesUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.SurfacesUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.SwtIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.SwtPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.SwtPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.SwtOffsetsUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited SwtOffsetsUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.SwtOffsetsUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.SwtSelected(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited SwtSelected(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.SwtSelected(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.SwtSpecifiedUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited SwtSpecifiedUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.SwtSpecifiedUsed(Sender);
+    end;
+  end;
+end;
+
 procedure TPhastModel.FixOldModel;
 var
   ModpathZone: TDataArray;
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  LakeIDArray: TDataArray;
+  ModflowLakBoundary: TLakBoundary;
 begin
   if (Grid.GridAngle <> 0)
     and FileVersionEqualOrEarlier('2.6.0.3')
@@ -7121,13 +9901,41 @@ begin
     FDataArrayManager.InvalidateAllDataSets;
   end;
   if FileVersionEqualOrEarlier('2.7.0.13')
-  and (FormulaManager.FunctionUsed(StrHufKx)
-  or FormulaManager.FunctionUsed(StrHufKy)
-  or FormulaManager.FunctionUsed(StrHufKz)
-  or FormulaManager.FunctionUsed(StrHufSytp)) then
+    and (FormulaManager.FunctionUsed(StrHufKx)
+    or FormulaManager.FunctionUsed(StrHufKy)
+    or FormulaManager.FunctionUsed(StrHufKz)
+    or FormulaManager.FunctionUsed(StrHufSytp)) then
   begin
     FDataArrayManager.InvalidateAllDataSets;
   end;
+//  if FileVersionEqualOrEarlier('2.8.0.16')
+//    and ModflowPackages.RchPackage.IsSelected then
+//  begin
+//    ModflowPackages.RchPackage.AssignmentMethod := umAssign;
+//  end;
+//  if FileVersionEqualOrEarlier('2.8.0.18')
+//    and ModflowPackages.UzfPackage.IsSelected then
+//  begin
+//    ModflowPackages.UzfPackage.AssignmentMethod := umAssign;
+//  end;
+  if FileVersionEqualOrEarlier('2.8.0.18') then
+  begin
+    LakeIDArray := DataArrayManager.GetDataSetByName(rsLakeID);
+    if LakeIDArray <> nil then
+    begin
+      for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
+      begin
+        AScreenObject := ScreenObjects[ScreenObjectIndex];
+        ModflowLakBoundary := AScreenObject.ModflowLakBoundary;
+        if (ModflowLakBoundary = nil) or not ModflowLakBoundary.Used then
+        begin
+          AScreenObject.RemoveDataSet(LakeIDArray);
+        end;
+      end;
+      LakeIDArray.Invalidate;
+    end;
+  end;
+
 end;
 
 procedure TPhastModel.UpdateModelMateParameter(ParameterList: TStringList;
@@ -7610,7 +10418,7 @@ begin
         if ParameterList.Count <= 10 then
         begin
           AMessage := 'Your ModelMate file contains the following unused parameters. '
-            + 'Do you want to delete them?'#13#10#13#10
+            + 'Do you want to delete them?' + sLineBreak + sLineBreak
             + ParameterList.Text
         end
         else
@@ -7676,7 +10484,7 @@ begin
         begin
           AMessage := 'Your ModelMate file contains the following unused '
             + DepType + '. '
-            + 'Do you want to delete them?'#13#10#13#10
+            + 'Do you want to delete them?' + sLineBreak + sLineBreak
             + ObservationList.Text;
         end
         else
@@ -7845,6 +10653,91 @@ begin
   end;
 end;
 
+function TPhastModel.EquilibriumPhasesUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited EquilibriumPhasesUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.EquilibriumPhasesUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.EtsIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.EtsPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.EtsPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.EtsTimeVaryingLayers: boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.EtsPackage.TimeVaryingLayers;
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      result := result or ChildModel.ModflowPackages.EtsPackage.TimeVaryingLayers;
+    end;
+  end;
+end;
+
+function TPhastModel.EvtIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.EvtPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.EvtPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.EvtTimeVaryingLayers: boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.EvtPackage.TimeVaryingLayers;
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      result := result or ChildModel.ModflowPackages.EvtPackage.TimeVaryingLayers;
+    end;
+  end;
+end;
+
 procedure TPhastModel.HandleModelMateObservations(
   Operation: TModelMateOperation;
   ObservationList: TStringList; Project: TProject);
@@ -7984,7 +10877,7 @@ begin
             + 'ModelMate file are not present in the ModelMuse '
             + 'file and have been ignored. If an ' + ObsVersion + ' has been '
             + 'renamed, change the ' + ObsVersion + ' name so that it matches '
-            + 'in ModelMuse and ModelMate and then try importing again.'#13#10#13#10
+            + 'in ModelMuse and ModelMate and then try importing again.' + sLineBreak + sLineBreak
             + ObservationList.Text, mtWarning, [mbOK], 0);
         end;
       end;
@@ -8032,12 +10925,65 @@ begin
             + 'ModelMate file are not present in the ModelMuse '
             + 'file and have been ignored. If a parameter has been '
             + 'renamed, change the parameter name so that it matches '
-            + 'in ModelMuse and ModelMate and then try importing again.'#13#10#13#10
+            + 'in ModelMuse and ModelMate and then try importing again.' + sLineBreak + sLineBreak
             + ParameterList.Text, mtWarning, [mbOK], 0);
         end;
       end;
     mmoExport: ;
     else Assert(False);
+  end;
+end;
+
+function TPhastModel.HfbIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.HfbPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.HfbPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.HobIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.HobPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.HobPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.HorizontalAnisotropyUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited HorizontalAnisotropyUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.HorizontalAnisotropyUsed(Sender);
+    end;
   end;
 end;
 
@@ -8047,15 +10993,53 @@ begin
   FScreenObjectList.Capacity := FScreenObjectList.Capacity + Delta;
 end;
 
-function TPhastModel.GetWindowState: TWindowState;
+//function TPhastModel.GetWindowState: TWindowState;
+//begin
+//  if GuiSettings = nil then
+//  begin
+//    result := wsNormal;
+//  end
+//  else
+//  begin
+//    result := GuiSettings.WindowState;
+//  end;
+//end;
+
+function TPhastModel.GhbIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
-  if GuiSettings = nil then
+  result := ModflowPackages.GhbBoundary.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
   begin
-    result := wsNormal;
-  end
-  else
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.GhbBoundary.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.GmgIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.GmgPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
   begin
-    result := GuiSettings.WindowState;
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.GmgPackage.IsSelected;
+      end;
+    end;
   end;
 end;
 
@@ -8068,6 +11052,89 @@ begin
 //  frmGoPhast.WindowState := Value;
 end;
 
+function TPhastModel.SfrIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.SfrPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.SfrPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.SipIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.SipPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.SipPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.SolidSolutionUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited SolidSolutionUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.SolidSolutionUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.SpecificStorageUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited SpecificStorageUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.SpecificStorageUsed(Sender);
+    end;
+  end;
+end;
+
+function TPhastModel.SpecificYieldUsed(Sender: TObject): boolean;
+var
+  ChildIndex: Integer;
+begin
+  result := inherited SpecificYieldUsed(Sender);
+  if not result and LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      result := result or
+        ChildModels[ChildIndex].ChildModel.SpecificYieldUsed(Sender);
+    end;
+  end;
+end;
+
 procedure TPhastModel.SetSoluteTransport(const Value: boolean);
 begin
   if FSoluteTransport <> Value then
@@ -8077,10 +11144,42 @@ begin
   end;
 end;
 
+procedure TPhastModel.SetSomeSegmentsUpToDate(const Value: boolean);
+begin
+  FSomeSegmentsUpToDate := Value;
+end;
+
+procedure TPhastModel.SetSaveBfhBoundaryConditions(const Value: boolean);
+begin
+  FSaveBfhBoundaryConditions := Value;
+end;
+
 procedure TPhastModel.SetScreenObjectCollection(
   const Value: TScreenObjectCollection);
 begin
   FScreenObjectCollection.Assign(Value);
+end;
+
+procedure TPhastModel.SetSelectedModel(const Value: TCustomModel);
+begin
+  FSelectedModel := Value;
+end;
+
+
+procedure TPhastModel.UpdateThreeDTimeDataSet(const TimeList: TCustomTimeList;
+  const Time: double);
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildList: TCustomTimeList;
+begin
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    ChildList := ChildModel.GetTimeListByName(TimeList.Name);
+    ChildModel.UpdateThreeDTimeDataSet(ChildList, Time);
+  end;
 end;
 
 procedure TPhastModel.UpdateTimeLists;
@@ -8099,15 +11198,37 @@ begin
   ModflowPackages.EtsPackage.UpdateEtsSegmentCount;
 end;
 
-procedure TPhastModel.UpdateThreeDTimeDataSet(const TimeList: TCustomTimeList;
+procedure TPhastModel.UpdateTopTimeDataSet(const TimeList: TCustomTimeList;
+  const Time: double);
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildList: TCustomTimeList;
+begin
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    ChildList := ChildModel.GetTimeListByName(TimeList.Name);
+    ChildModel.UpdateTopTimeDataSet(ChildList, Time);
+  end;
+end;
+
+procedure TCustomModel.UpdateThreeDTimeDataSet(const TimeList: TCustomTimeList;
   const Time: double);
 var
   TimeIndex: integer;
-  SelectedLayer, SelectedRow, SelectedColumn: integer;
+  LocalSelectedLayer, LocalSelectedRow, LocalSelectedColumn: integer;
 begin
-  SelectedLayer := Grid.SelectedLayer;
-  SelectedRow := Grid.SelectedRow;
-  SelectedColumn := Grid.SelectedColumn;
+  if (Grid.LayerCount <= 0) or (Grid.RowCount <= 0) or (Grid.ColumnCount <= 0) then
+  begin
+    FThreeDTimeList := nil;
+    Grid.ThreeDDataSet := nil;
+    Exit;
+  end;
+  LocalSelectedLayer := Grid.SelectedLayer;
+  LocalSelectedRow := Grid.SelectedRow;
+  LocalSelectedColumn := Grid.SelectedColumn;
   try
     FThreeDDisplayTime := Time;
     if not TimeList.UpToDate then
@@ -8126,9 +11247,9 @@ begin
     end;
     FThreeDTimeList := TimeList;
   finally
-    Grid.SelectedLayer := SelectedLayer;
-    Grid.SelectedRow := SelectedRow;
-    Grid.SelectedColumn := SelectedColumn;
+    Grid.SelectedLayer := LocalSelectedLayer;
+    Grid.SelectedRow := LocalSelectedRow;
+    Grid.SelectedColumn := LocalSelectedColumn;
   end;
 end;
 
@@ -8149,97 +11270,161 @@ begin
   end;
 end;
 
-procedure TPhastModel.InvalidateEtsDepthFractions(Sender: TObject);
+function TPhastModel.DrnIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.DrnPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.DrnPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.DrobIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.DrobPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.DrobPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.DrtIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.DrtPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.DrtPackage.IsSelected;
+      end;
+    end;
+  end;
+end;
+
+procedure TCustomModel.InvalidateEtsDepthFractions(Sender: TObject);
 begin
   ModflowPackages.EtsPackage.InvalidateEtsDepthFractions(Sender);
 end;
 
-procedure TPhastModel.InvalidateEtsRateFractions(Sender: TObject);
+procedure TCustomModel.InvalidateEtsRateFractions(Sender: TObject);
 begin
   ModflowPackages.EtsPackage.InvalidateEtsRateFractions(Sender);
 end;
 
-procedure TPhastModel.InvalidateMfChdEndingHead(Sender: TObject);
+procedure TPhastModel.InvalidateMapping;
+begin
+  SetLength(FColumnMapping, 0);
+  SetLength(FRowMapping, 0);
+  SetLength(FLayerMapping, 0);
+end;
+
+procedure TCustomModel.InvalidateMfChdEndingHead(Sender: TObject);
 begin
   ModflowPackages.ChdBoundary.MfChdEndingHead.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfChdStartingHead(Sender: TObject);
+procedure TCustomModel.InvalidateMfChdStartingHead(Sender: TObject);
 begin
   ModflowPackages.ChdBoundary.MfChdStartingHead.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfDrnConductance(Sender: TObject);
+procedure TCustomModel.InvalidateMfDrnConductance(Sender: TObject);
 begin
   ModflowPackages.DrnPackage.MfDrnConductance.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfDrnElevation(Sender: TObject);
+procedure TCustomModel.InvalidateMfDrnElevation(Sender: TObject);
 begin
   ModflowPackages.DrnPackage.MfDrnElevation.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfDrtConductance(Sender: TObject);
+procedure TCustomModel.InvalidateMfDrtConductance(Sender: TObject);
 begin
   ModflowPackages.DrtPackage.MfDrtConductance.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfDrtElevation(Sender: TObject);
+procedure TCustomModel.InvalidateMfDrtElevation(Sender: TObject);
 begin
   ModflowPackages.DrtPackage.MfDrtElevation.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfDrtReturnFraction(Sender: TObject);
+procedure TCustomModel.InvalidateMfDrtReturnFraction(Sender: TObject);
 begin
   ModflowPackages.DrtPackage.MfDrtReturnFraction.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfEtsEvapDepth(Sender: TObject);
+procedure TCustomModel.InvalidateMfEtsEvapDepth(Sender: TObject);
 begin
   ModflowPackages.EtsPackage.MfEtsEvapDepth.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfEtsEvapLayer(Sender: TObject);
+procedure TCustomModel.InvalidateMfEtsEvapLayer(Sender: TObject);
 begin
   ModflowPackages.EtsPackage.MfEtsEvapLayer.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfEtsEvapRate(Sender: TObject);
+procedure TCustomModel.InvalidateMfEtsEvapRate(Sender: TObject);
 begin
   ModflowPackages.EtsPackage.MfEtsEvapRate.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfEtsEvapSurface(Sender: TObject);
+procedure TCustomModel.InvalidateMfEtsEvapSurface(Sender: TObject);
 begin
   ModflowPackages.EtsPackage.MfEtsEvapSurface.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfEvtEvapDepth(Sender: TObject);
+procedure TCustomModel.InvalidateMfEvtEvapDepth(Sender: TObject);
 begin
   ModflowPackages.EvtPackage.MfEvtEvapDepth.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfEvtEvapLayer(Sender: TObject);
+procedure TCustomModel.InvalidateMfEvtEvapLayer(Sender: TObject);
 begin
   ModflowPackages.EvtPackage.InvalidateMfEvtEvapLayer(Sender);
 end;
 
-procedure TPhastModel.InvalidateMfEvtEvapRate(Sender: TObject);
+procedure TCustomModel.InvalidateMfEvtEvapRate(Sender: TObject);
 begin
   ModflowPackages.EvtPackage.MfEvtEvapRate.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfEvtEvapSurface(Sender: TObject);
+procedure TCustomModel.InvalidateMfEvtEvapSurface(Sender: TObject);
 begin
   ModflowPackages.EvtPackage.MfEvtEvapSurface.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfGhbBoundaryHead(Sender: TObject);
+procedure TCustomModel.InvalidateMfGhbBoundaryHead(Sender: TObject);
 begin
   ModflowPackages.GhbBoundary.MfGhbBoundaryHead.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfGhbConductance(Sender: TObject);
+procedure TCustomModel.InvalidateMfGhbConductance(Sender: TObject);
 begin
   ModflowPackages.GhbBoundary.MfGhbConductance.Invalidate;
 end;
@@ -8249,27 +11434,27 @@ begin
   MfHobHeads.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfRchLayer(Sender: TObject);
+procedure TCustomModel.InvalidateMfRchLayer(Sender: TObject);
 begin
   ModflowPackages.RchPackage.InvalidateMfRchLayer(Sender);
 end;
 
-procedure TPhastModel.InvalidateMfRchRate(Sender: TObject);
+procedure TCustomModel.InvalidateMfRchRate(Sender: TObject);
 begin
   ModflowPackages.RchPackage.MfRchRate.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfRivBottom(Sender: TObject);
+procedure TCustomModel.InvalidateMfRivBottom(Sender: TObject);
 begin
   ModflowPackages.RivPackage.MfRivBottom.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfRivConductance(Sender: TObject);
+procedure TCustomModel.InvalidateMfRivConductance(Sender: TObject);
 begin
   ModflowPackages.RivPackage.MfRivConductance.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfRivStage(Sender: TObject);
+procedure TCustomModel.InvalidateMfRivStage(Sender: TObject);
 begin
   ModflowPackages.RivPackage.MfRivStage.Invalidate;
 end;
@@ -8279,7 +11464,7 @@ begin
   ModflowPackages.SfrPackage.MfSfrBankRoughness.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrBrooksCorey(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrBrooksCorey(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrBrooksCorey.Invalidate;
 end;
@@ -8305,7 +11490,7 @@ begin
   ModflowPackages.SfrPackage.MfSfrDepthExponent.Invalidate
 end;
 
-procedure TPhastModel.InvalidateMfSfrDownstreamBrooksCorey(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrDownstreamBrooksCorey(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrDownstreamBrooksCorey.Invalidate;
 end;
@@ -8315,34 +11500,34 @@ begin
   ModflowPackages.SfrPackage.MfSfrDownstreamDepth.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrDownstreamElevation(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrDownstreamElevation(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrDownstreamElevation.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrDownstreamHydraulicConductivity(
+procedure TCustomModel.InvalidateMfSfrDownstreamHydraulicConductivity(
   Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrDownstreamHydraulicConductivity.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrDownstreamThickness(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrDownstreamThickness(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrDownstreamThickness.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrDownstreamUnsatInitialWaterContent(
+procedure TCustomModel.InvalidateMfSfrDownstreamUnsatInitialWaterContent(
   Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrDownstreamUnsatInitialWaterContent.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrDownstreamUnsatKz(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrDownstreamUnsatKz(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrDownstreamUnsatKz.Invalidate;
 end;
 
-procedure TPhastModel.DischargeRoutingUpdate;
+procedure TCustomModel.DischargeRoutingUpdate;
 var
   LakeIdArray: TDataArray;
   DischargeRoutingArray: TDataArray;
@@ -8374,6 +11559,25 @@ begin
       if LakeIdArray <> nil then
       begin
         DischargeRoutingArray.StopsTalkingTo(LakeIdArray);
+      end;
+    end;
+  end;
+end;
+
+function TPhastModel.De4IsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.De4Package.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.De4Package.IsSelected;
       end;
     end;
   end;
@@ -8421,7 +11625,7 @@ begin
             msUndefined: Assert(False);
             msPhast:
               begin
-                result := FloatToStr((Grid.HighestElevation + Grid.LowestElevation)/2);
+                result := FortranFloatToStr((Grid.HighestElevation + Grid.LowestElevation)/2);
               end;
             msModflow, msModflowLGR:
               begin
@@ -8435,13 +11639,13 @@ begin
                   LayerGroup := frmGoPhast.PhastModel.LayerStructure.
                     LayerGroups[UnitID];
                   result :=
-                    '(' + result + '+'
+                    '(' + result + ' + '
                     + LayerGroup.DataArrayName + ')/2';
                 end
                 else
                 begin
                   result :=
-                    FloatToStr((Grid.HighestElevation + Grid.LowestElevation)/2);
+                    FortranFloatToStr((Grid.HighestElevation + Grid.LowestElevation)/2);
                 end;
               end;
             else Assert(False);
@@ -8463,7 +11667,7 @@ begin
             Row := Grid.RowCount-1;
           end;
             result :=
-              FloatToStr((Grid.RowPositions[Row]+ Grid.RowPositions[Row+1])/2);
+              FortranFloatToStr((Grid.RowPositions[Row]+ Grid.RowPositions[Row+1])/2);
         end
         else
         begin
@@ -8481,7 +11685,7 @@ begin
             Column := Grid.ColumnCount -1;
           end;
           result :=
-            FloatToStr((Grid.ColumnPositions[Column]
+            FortranFloatToStr((Grid.ColumnPositions[Column]
             + Grid.ColumnPositions[Column+1])/2);
         end
         else
@@ -8548,7 +11752,7 @@ begin
             msUndefined: Assert(False);
             msPhast:
               begin
-                result := FloatToStr(Grid.HighestElevation);
+                result := FortranFloatToStr(Grid.HighestElevation);
               end;
             msModflow, msModflowLGR:
               begin
@@ -8563,7 +11767,7 @@ begin
                 else
                 begin
                   result :=
-                    FloatToStr(Grid.HighestElevation);
+                    FortranFloatToStr(Grid.HighestElevation);
                 end;
               end;
             else Assert(False);
@@ -8587,12 +11791,12 @@ begin
             rdSouthToNorth:
               begin
                 result :=
-                  FloatToStr(Grid.RowPositions[Row+1]);
+                  FortranFloatToStr(Grid.RowPositions[Row+1]);
               end;
             rdNorthToSouth:
               begin
                 result :=
-                  FloatToStr(Grid.RowPositions[Row]);
+                  FortranFloatToStr(Grid.RowPositions[Row]);
               end;
             else Assert(False);
           end;
@@ -8615,12 +11819,12 @@ begin
             cdWestToEast:
               begin
                 result :=
-                  FloatToStr(Grid.ColumnPositions[Column+1]);
+                  FortranFloatToStr(Grid.ColumnPositions[Column+1]);
               end;
             cdEastToWest:
               begin
                 result :=
-                  FloatToStr(Grid.ColumnPositions[Column]);
+                  FortranFloatToStr(Grid.ColumnPositions[Column]);
               end;
           end;
         end
@@ -8655,7 +11859,7 @@ begin
             msUndefined: Assert(False);
             msPhast:
               begin
-                result := FloatToStr(Grid.LowestElevation);
+                result := FortranFloatToStr(Grid.LowestElevation);
               end;
             msModflow, msModflowLGR:
               begin
@@ -8670,7 +11874,7 @@ begin
                 else
                 begin
                   result :=
-                    FloatToStr(Grid.LowestElevation);
+                    FortranFloatToStr(Grid.LowestElevation);
                 end;
               end;
             else Assert(False);
@@ -8694,12 +11898,12 @@ begin
             rdSouthToNorth:
               begin
                 result :=
-                  FloatToStr(Grid.RowPositions[Row]);
+                  FortranFloatToStr(Grid.RowPositions[Row]);
               end;
             rdNorthToSouth:
               begin
                 result :=
-                  FloatToStr(Grid.RowPositions[Row+1]);
+                  FortranFloatToStr(Grid.RowPositions[Row+1]);
               end;
             else Assert(False);
           end;
@@ -8722,12 +11926,12 @@ begin
             cdWestToEast:
               begin
                 result :=
-                  FloatToStr(Grid.ColumnPositions[Column]);
+                  FortranFloatToStr(Grid.ColumnPositions[Column]);
               end;
             cdEastToWest:
               begin
                 result :=
-                  FloatToStr(Grid.ColumnPositions[Column+1]);
+                  FortranFloatToStr(Grid.ColumnPositions[Column+1]);
               end;
           end;
         end
@@ -8740,43 +11944,12 @@ begin
   end;
 end;
 
-function TPhastModel.DefaultModflowOutputFileName: string;
+function TCustomModel.DefaultModflowOutputFileName: string;
 var
   Extension: string;
 begin
-  if ModflowOutputControl.HeadOC.SaveInExternalFile then
-  begin
-    case ModflowOutputControl.HeadOC.OutputFileType of
-      oftText:
-        begin
-          Extension := StrFhd;
-        end;
-      oftBinary:
-        begin
-          Extension := StrBhd;
-        end;
-      else Assert(False);
-    end;
-  end
-  else if ModflowOutputControl.DrawdownOC.SaveInExternalFile then
-  begin
-    case ModflowOutputControl.DrawdownOC.OutputFileType of
-      oftText:
-        begin
-          Extension := StrFdn;
-        end;
-      oftBinary:
-        begin
-          Extension := StrBdn;
-        end;
-      else Assert(False);
-    end;
-  end
-  else if ModflowOutputControl.SaveCellFlows = csfBinary then
-  begin
-    Extension := StrCbcExt;
-  end
-  else
+  GetDefaultOutputFileExtension(Extension);
+  if Extension = '' then
   begin
     result := '';
     Exit;
@@ -8785,13 +11958,13 @@ begin
   result := FixFileName(result);
 end;
 
-procedure TPhastModel.InvalidateMfSfrDownstreamUnsaturatedWaterContent(
+procedure TCustomModel.InvalidateMfSfrDownstreamUnsaturatedWaterContent(
   Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrDownstreamUnsaturatedWaterContent.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrDownstreamWidth(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrDownstreamWidth(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrDownstreamWidth.Invalidate;
 end;
@@ -8806,7 +11979,7 @@ begin
   ModflowPackages.SfrPackage.MfSfrFlow.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrInitialWaterContent(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrInitialWaterContent(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrInitialWaterContent.Invalidate;
 end;
@@ -8831,33 +12004,33 @@ begin
   ModflowPackages.SfrPackage.MfSfrRunoff.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrStreamK(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrStreamK(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrStreamK.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrSaturatedWaterContent(
+procedure TCustomModel.InvalidateMfSfrSaturatedWaterContent(
   Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrSaturatedWaterContent.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrStreamSlope(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrStreamSlope(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrStreamSlope.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrStreamThickness(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrStreamThickness(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrStreamThickness.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrStreamTop(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrStreamTop(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrStreamTop.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrUpstreamBrooksCorey(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrUpstreamBrooksCorey(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrUpstreamBrooksCorey.Invalidate;
 end;
@@ -8867,45 +12040,45 @@ begin
   ModflowPackages.SfrPackage.MfSfrUpstreamDepth.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrUpstreamElevation(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrUpstreamElevation(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrUpstreamElevation.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrUpstreamHydraulicConductivity(
+procedure TCustomModel.InvalidateMfSfrUpstreamHydraulicConductivity(
   Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrUpstreamHydraulicConductivity.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrUpstreamThickness(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrUpstreamThickness(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrUpstreamThickness.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrUpstreamUnsatInitialWaterContent(
+procedure TCustomModel.InvalidateMfSfrUpstreamUnsatInitialWaterContent(
   Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrUpstreamUnsatInitialWaterContent.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrUpstreamUnsatKz(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrUpstreamUnsatKz(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrUpstreamUnsatKz.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrUpstreamUnsaturatedWaterContent(
+procedure TCustomModel.InvalidateMfSfrUpstreamUnsaturatedWaterContent(
   Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrUpstreamUnsaturatedWaterContent.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrUpstreamWidth(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrUpstreamWidth(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrUpstreamWidth.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfSfrVerticalUnsatK(Sender: TObject);
+procedure TCustomModel.InvalidateMfSfrVerticalUnsatK(Sender: TObject);
 begin
   ModflowPackages.SfrPackage.MfSfrVerticalUnsatK.Invalidate;
 end;
@@ -8920,24 +12093,134 @@ begin
   ModflowPackages.SfrPackage.MfSfrWidthExponent.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfUzfEtDemand(Sender: TObject);
+procedure TCustomModel.InvalidateMfUzfEtDemand(Sender: TObject);
 begin
   ModflowPackages.UzfPackage.MfUzfEtDemand.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfUzfExtinctionDepth(Sender: TObject);
+procedure TCustomModel.InvalidateMfUzfExtinctionDepth(Sender: TObject);
 begin
   ModflowPackages.UzfPackage.MfUzfExtinctionDepth.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfUzfInfiltration(Sender: TObject);
+procedure TCustomModel.InvalidateMfUzfInfiltration(Sender: TObject);
 begin
   ModflowPackages.UzfPackage.MfUzfInfiltration.Invalidate;
 end;
 
-procedure TPhastModel.InvalidateMfUzfWaterContent(Sender: TObject);
+procedure TCustomModel.InvalidateMfUzfWaterContent(Sender: TObject);
 begin
   ModflowPackages.UzfPackage.MfUzfWaterContent.Invalidate;
+end;
+
+function TCustomModel.CountStepsInExport: Integer;
+var
+  HufParam: THufUsedParameter;
+  HGU: THydrogeologicUnit;
+  HufUnitIndex: Integer;
+  SteadyParam: TModflowSteadyParameter;
+  PIndex: Integer;
+  ZoneUsed: Boolean;
+  MultipliersUsed: Boolean;
+begin
+  // The following tasks are always required.
+  // 1. Full Stress periods,
+  // 2. Discretization,
+  // 3. Basic,
+  // 4. Output Control,
+  // 5. Zone Arrays,
+  // 6. Multiplier Arrays
+  result := 3;
+  result := result + ModflowPackages.SelectedPackageCount;
+  if ModflowPackages.SfrPackage.IsSelected or ModflowPackages.LakPackage.IsSelected then
+  begin
+    // gages
+    Inc(result);
+  end;
+  MultipliersUsed := False;
+  ZoneUsed := False;
+  if ModflowTransientParameters.Count > 0 then
+  begin
+    MultipliersUsed := True;
+    ZoneUsed := True;
+  end;
+  if not MultipliersUsed then
+  begin
+    if ModflowPackages.LpfPackage.IsSelected then
+    begin
+      for PIndex := 0 to ModflowSteadyParameters.Count - 1 do
+      begin
+        SteadyParam := ModflowSteadyParameters[PIndex];
+        if SteadyParam.UseMultiplier then
+        begin
+          MultipliersUsed := True;
+        end;
+        if SteadyParam.UseZone then
+        begin
+          ZoneUsed := True;
+        end;
+      end;
+    end
+    else if ModflowPackages.HufPackage.IsSelected then
+    begin
+      for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
+      begin
+        HGU := HydrogeologicUnits[HufUnitIndex];
+        for PIndex := 0 to HGU.HufUsedParameters.Count - 1 do
+        begin
+          HufParam := HGU.HufUsedParameters[PIndex];
+          if HufParam.UseMultiplier then
+          begin
+            MultipliersUsed := True;
+          end;
+          if HufParam.UseZone then
+          begin
+            ZoneUsed := True;
+          end;
+        end;
+      end;
+    end;
+  end;
+  if MultipliersUsed then
+  begin
+    Inc(result);
+  end;
+  if ZoneUsed then
+  begin
+    Inc(result);
+  end;
+end;
+
+function TCustomModel.PrepareModflowFullStressPeriods: Boolean;
+var
+  StressPeriod: TModflowStressPeriod;
+  Index: Integer;
+  StepCount: Integer;
+begin
+  result := True;
+  UpdateModflowFullStressPeriods;
+  Application.ProcessMessages;
+  if not frmProgressMM.ShouldContinue then
+  begin
+    result := False;
+    Exit;
+  end;
+  frmProgressMM.StepIt;
+  StepCount := 0;
+  for Index := 0 to ModflowFullStressPeriods.Count - 1 do
+  begin
+    StressPeriod := ModflowFullStressPeriods.Items[Index];
+    StepCount := StepCount + StressPeriod.NumberOfSteps;
+  end;
+  if StepCount > 1000 then
+  begin
+    if MessageDlg('Your model has ' + IntToStr(StepCount)
+      + ' time steps. Do you want to continue?',
+      mtWarning, [mbYes, mbNo], 0) <> mrYes then
+    begin
+      result := False;
+    end;
+  end;
 end;
 
 procedure TPhastModel.InvalidateMfSfrSegmentReachAndIcalc(Sender: TObject);
@@ -8946,7 +12229,7 @@ begin
     InvalidateMfSfrSegmentReachAndIcalc(Sender);
 end;
 
-procedure TPhastModel.InvalidateMfWellPumpage(Sender: TObject);
+procedure TCustomModel.InvalidateMfWellPumpage(Sender: TObject);
 begin
   ModflowPackages.WelPackage.MfWellPumpage.Invalidate;
 end;
@@ -9293,15 +12576,12 @@ begin
   AddTimeList(FWellSolution);
 end;
 
-procedure TPhastModel.InvalidateScreenObjects;
+procedure TCustomModel.InvalidateScreenObjects;
 var
   Index: integer;
   AScreenObject: TScreenObject;
 begin
-  if Grid <> nil then
-  begin
-    Grid.BeginGridChange;
-  end;
+  BeginGridChange;
   try
     for Index := 0 to ScreenObjectCount - 1 do
     begin
@@ -9309,11 +12589,13 @@ begin
       AScreenObject.Invalidate;
     end;
   finally
-    if Grid <> nil then
-    begin
-      Grid.EndGridChange;
-    end;
+    EndGridChange;
   end;
+end;
+
+function TCustomModel.IsLayerSimulated(const LayerID: integer): boolean;
+begin
+  result := LayerStructure.IsLayerSimulated(LayerID);
 end;
 
 procedure TPhastModel.SetArchiveName(const Value: string);
@@ -9334,6 +12616,181 @@ end;
 procedure TPhastModel.SetChildModels(const Value: TChildModelCollection);
 begin
   FChildModels.Assign(Value);
+end;
+
+procedure TPhastModel.SetCombinedDisplayColumn(const Value: integer);
+var
+  LocalCombinedCount: Integer;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  NewPosition: Integer;
+begin
+  FCombinedDisplayColumn := Value;
+  if FCombinedDisplayColumn < 0 then
+  begin
+    FCombinedDisplayColumn := 0;
+  end;
+  if ModelSelection = msPhast then
+  begin
+    Grid.DisplayColumn := FCombinedDisplayColumn;
+    FCombinedDisplayColumn := Grid.DisplayColumn;
+    Exit;
+  end;
+  if (Grid <> nil) and (Grid.ColumnCount > 0)
+    and (Grid.RowCount > 0)and (Grid.LayerCount > 0) then
+  begin
+
+    UpdateMapping;
+    LocalCombinedCount := Length(FColumnMapping);
+    if FCombinedDisplayColumn > LocalCombinedCount then
+    begin
+      FCombinedDisplayColumn := LocalCombinedCount;
+    end;
+    if FCombinedDisplayColumn >= 0 then
+    begin
+      if FCombinedDisplayColumn < LocalCombinedCount then
+      begin
+        ModflowGrid.DisplayColumn :=
+          FColumnMapping[FCombinedDisplayColumn].ParentPostion;
+      end
+      else
+      begin
+        ModflowGrid.DisplayColumn :=
+          FColumnMapping[FCombinedDisplayColumn-1].ParentPostion+1;
+      end;
+      for ChildIndex := 0 to ChildModels.Count - 1 do
+      begin
+        ChildModel := ChildModels[ChildIndex].ChildModel;
+        if FCombinedDisplayColumn < LocalCombinedCount then
+        begin
+          NewPosition := FColumnMapping[FCombinedDisplayColumn].
+            ChildPositions[ChildIndex];
+        end
+        else
+        begin
+          NewPosition := FColumnMapping[FCombinedDisplayColumn-1].
+            ChildPositions[ChildIndex]+1;
+        end;
+        ChildModel.ModflowGrid.DisplayColumn := NewPosition;
+      end;
+    end;
+  end;
+end;
+
+procedure TPhastModel.SetCombinedDisplayLayer(const Value: integer);
+var
+  LocalCombinedCount: Integer;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  NewPosition: Integer;
+begin
+  FCombinedDisplayLayer := Value;
+  if FCombinedDisplayLayer < 0 then
+  begin
+    FCombinedDisplayLayer := 0;
+  end;
+  if ModelSelection = msPhast then
+  begin
+    Grid.DisplayLayer := FCombinedDisplayLayer;
+    FCombinedDisplayLayer := Grid.DisplayLayer;
+    Exit;
+  end;
+  if (Grid <> nil) and (Grid.ColumnCount > 0)
+    and (Grid.RowCount > 0)and (Grid.LayerCount > 0) then
+  begin
+    UpdateMapping;
+    LocalCombinedCount := Length(FLayerMapping);
+    if FCombinedDisplayLayer > LocalCombinedCount then
+    begin
+      FCombinedDisplayLayer := LocalCombinedCount;
+    end;
+    if FCombinedDisplayLayer >= 0 then
+    begin
+      if FCombinedDisplayLayer < LocalCombinedCount then
+      begin
+        ModflowGrid.DisplayLayer :=
+          FLayerMapping[FCombinedDisplayLayer].ParentPostion;
+      end
+      else
+      begin
+        ModflowGrid.DisplayLayer :=
+          FLayerMapping[FCombinedDisplayLayer-1].ParentPostion+1;
+      end;
+      for ChildIndex := 0 to ChildModels.Count - 1 do
+      begin
+        ChildModel := ChildModels[ChildIndex].ChildModel;
+        if FCombinedDisplayLayer < LocalCombinedCount then
+        begin
+          NewPosition := FLayerMapping[FCombinedDisplayLayer].
+            ChildPositions[ChildIndex];
+        end
+        else
+        begin
+          NewPosition := FLayerMapping[FCombinedDisplayLayer-1].
+            ChildPositions[ChildIndex]+1;
+        end;
+        ChildModel.ModflowGrid.DisplayLayer := NewPosition;
+      end;
+    end;
+  end;
+end;
+
+procedure TPhastModel.SetCombinedDisplayRow(const Value: integer);
+var
+  LocalCombinedCount: Integer;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  NewPosition: Integer;
+begin
+  FCombinedDisplayRow := Value;
+  if FCombinedDisplayRow < 0 then
+  begin
+    FCombinedDisplayRow := 0;
+  end;
+  if ModelSelection = msPhast then
+  begin
+    Grid.DisplayRow := FCombinedDisplayRow;
+    FCombinedDisplayRow := Grid.DisplayRow;
+    Exit;
+  end;
+  if (Grid <> nil) and (Grid.ColumnCount > 0)
+    and (Grid.RowCount > 0)and (Grid.LayerCount > 0) then
+  begin
+    UpdateMapping;
+    LocalCombinedCount := Length(FRowMapping);
+    if FCombinedDisplayRow > LocalCombinedCount then
+    begin
+      FCombinedDisplayRow := LocalCombinedCount;
+    end;
+    if FCombinedDisplayRow >= 0 then
+    begin
+      if FCombinedDisplayRow < LocalCombinedCount then
+      begin
+        ModflowGrid.DisplayRow :=
+          FRowMapping[FCombinedDisplayRow].ParentPostion;
+      end
+      else
+      begin
+        ModflowGrid.DisplayRow :=
+          FRowMapping[FCombinedDisplayRow-1].ParentPostion+1;
+      end;
+      for ChildIndex := 0 to ChildModels.Count - 1 do
+      begin
+        ChildModel := ChildModels[ChildIndex].ChildModel;
+        if FCombinedDisplayRow < LocalCombinedCount then
+        begin
+          NewPosition := FRowMapping[FCombinedDisplayRow].
+            ChildPositions[ChildIndex];
+        end
+        else
+        begin
+          NewPosition := FRowMapping[FCombinedDisplayRow-1].
+            ChildPositions[ChildIndex]+1;
+        end;
+        ChildModel.ModflowGrid.DisplayRow := NewPosition;
+      end;
+    end;
+  end;
 end;
 
 procedure TPhastModel.SetUnits(const Value: TUnits);
@@ -9429,6 +12886,147 @@ begin
   glEnable(GL_LIGHT0);
 end;
 
+function TPhastModel.PackageIsSelected(APackage: TObject): Boolean;
+begin
+  result := False;
+  if APackage = frmGoPhast.PhastModel.ModflowPackages.ChdBoundary then
+  begin
+    result := ChdIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.GhbBoundary then
+  begin
+    result := GhbIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.GhbBoundary then
+  begin
+    result := GhbIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.LpfPackage then
+  begin
+    result := LpfIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.PcgPackage then
+  begin
+    result := PcgIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.WelPackage then
+  begin
+    result := WelIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.RivPackage then
+  begin
+    result := RivIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.DrnPackage then
+  begin
+    result := DrnIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.DrtPackage then
+  begin
+    result := DrtIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.RchPackage then
+  begin
+    result := RchIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.EvtPackage then
+  begin
+    result := EvtIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.EtsPackage then
+  begin
+    result := EtsIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.ResPackage then
+  begin
+    result := ResIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.LakPackage then
+  begin
+    result := LakIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.SfrPackage then
+  begin
+    result := SfrIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.UzfPackage then
+  begin
+    result := UzfIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.GmgPackage then
+  begin
+    result := GmgIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.SipPackage then
+  begin
+    result := SipIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.De4Package then
+  begin
+    result := De4IsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.HobPackage then
+  begin
+    result := HobIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.HfbPackage then
+  begin
+    result := HfbIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.ModPath then
+  begin
+    result := ModPathIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.ChobPackage then
+  begin
+    result := ChobIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.DrobPackage then
+  begin
+    result := DrobIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.GbobPackage then
+  begin
+    result := GbobIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.RvobPackage then
+  begin
+    result := RvobIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.HufPackage then
+  begin
+    result := HufIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.Mnw2Package then
+  begin
+    result := Mnw2IsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.BcfPackage then
+  begin
+    result := BcfIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.SubPackage then
+  begin
+    result := SubIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.ZoneBudget then
+  begin
+    result := ZoneBudgetIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.SwtPackage then
+  begin
+    result := SwtIsSelected;
+  end
+  else if APackage = frmGoPhast.PhastModel.ModflowPackages.HydmodPackage then
+  begin
+    result := HydmodIsSelected;
+  end
+  else
+  begin
+    Assert(False);
+  end;
+end;
+
 function TPhastModel.ParameterDataSetUsed(Sender: TObject): boolean;
 begin
   result := ModflowSteadyParameters.IsDataSetUsed(Sender);
@@ -9520,6 +13118,25 @@ begin
       end;
     finally
       ClipStream.Free;
+    end;
+  end;
+end;
+
+function TPhastModel.PcgIsSelected: Boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := ModflowPackages.PcgPackage.IsSelected;
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        result := result or ChildModel.ModflowPackages.PcgPackage.IsSelected;
+      end;
     end;
   end;
 end;
@@ -10677,6 +14294,7 @@ begin
     PhastLocation := SourceLocations.PhastLocation;
     ZoneBudgetLocation := SourceLocations.ZoneBudgetLocation;
     ModelMateLocation := SourceLocations.ModelMateLocation;
+    ModflowLgrLocation := SourceLocations.ModflowLgrLocation;
   end
   else
   begin
@@ -10692,6 +14310,7 @@ begin
   FModPathLocation := StrMpathDefaultPath;
   PhastLocation := StrPhastDefaultPath;
   ZoneBudgetLocation := StrZoneBudgetDefaultPath;
+  ModflowLgrLocation := strModflowLgrDefaultPath;
   ADirectory := GetCurrentDir;
   try
     SetCurrentDir(ExtractFileDir(ParamStr(0)));
@@ -10719,6 +14338,8 @@ begin
     StrZoneBudgetDefaultPath);
   ModelMateLocation := IniFile.ReadString(StrProgramLocations, StrModelMate,
     StrModelMateDefaultPath);
+  ModflowLgrLocation := IniFile.ReadString(StrProgramLocations, strModflowLgr,
+    strModflowLgrDefaultPath);
 
   ADirectory := GetCurrentDir;
   try
@@ -10773,6 +14394,11 @@ begin
   FModelMonitorLocation := RemoveQuotes(Value);
 end;
 
+procedure TProgramLocations.SetModflowLgrLocation(const Value: string);
+begin
+  FModflowLgrLocation := RemoveQuotes(Value);
+end;
+
 procedure TProgramLocations.SetModflowLocation(const Value: string);
 begin
   FModflowLocation := RemoveQuotes(Value);
@@ -10802,6 +14428,7 @@ begin
   IniFile.WriteString(StrProgramLocations, StrPHAST, PhastLocation);
   IniFile.WriteString(StrProgramLocations, StrZonebudget, ZoneBudgetLocation);
   IniFile.WriteString(StrProgramLocations, StrModelMate, ModelMateLocation);
+  IniFile.WriteString(StrProgramLocations, strModflowLgr, ModflowLgrLocation);
 end;
 
 { TDataSetClassification }
@@ -10830,18 +14457,10 @@ begin
   FLastIndex := -1;
 end;
 
-procedure TCustomModel.SetUpToDate(const Value: boolean);
-begin
-  FUpToDate := Value;
-//  if not FUpToDate then
-//  begin
-//    FreeAndNil(FSortedObjectList);
-//  end;
-end;
-
 constructor TCustomModel.Create(AnOwner: TComponent);
 begin
   inherited;
+  FModflowOptions := TModflowOptions.Create(self);
   FPValFile := TStringList.Create;
   FTemplate := TStringList.Create;
   FTimeLists := TList.Create;
@@ -10875,7 +14494,7 @@ begin
   FBatchFileAdditionsAfterModel := TStringList.Create;
   FModflowPackages := TModflowPackages.Create(self);
   FModflowPackages.LpfPackage.IsSelected := True;
-  FModflowGrid := TModflowGrid.Create;
+  FModflowGrid := TModflowGrid.Create(self);
 
   FHeadFluxObservations := TFluxObservationGroups.Create(self);
   FRiverObservations := TFluxObservationGroups.Create(self);
@@ -10914,8 +14533,15 @@ begin
 
   FUnitNumbers := TUnitNumbers.Create(self);
 
-  FHfbDisplayer:= THfbDisplayer.Create(nil);
+  FHfbDisplayer:= THfbDisplayer.Create(self);
   FHfbDisplayer.OnNeedToUpdate := UpdateHfb;
+  FDataArrayManager.DefinePackageDataArrays;
+end;
+
+function TCustomModel.DataSetLayerToModflowLayer(
+  DataSetLayer: integer): integer;
+begin
+  result := LayerStructure.DataSetLayerToModflowLayer(DataSetLayer);
 end;
 
 destructor TCustomModel.Destroy;
@@ -10927,6 +14553,7 @@ begin
   FModflowWettingOptions.Free;
   FFilesToArchive.Free;
   FModelInputFiles.Free;
+  FGrid := nil;
   FModflowGrid.Free;
   FModflowPackages.Free;
   FBatchFileAdditionsAfterModel.Free;
@@ -10949,17 +14576,21 @@ begin
   FUnitNumbers.Free;
   FPValFile.Free;
   FTemplate.Free;
+  FModflowOptions.Free;
   inherited;
+end;
+
+procedure TCustomModel.EndGridChange;
+begin
+  if Grid <> nil then
+  begin
+    Grid.EndGridChange;
+  end;
 end;
 
 function TCustomModel.EquilibriumPhasesUsed(Sender: TObject): boolean;
 begin
   result := ChemistryUsed(Sender) and ChemistryOptions.UseEquilibriumPhases;
-end;
-
-procedure TCustomModel.Invalidate;
-begin
-  UpToDate := False;
 end;
 
 procedure TCustomModel.SetModflowGrid(const Value: TModflowGrid);
@@ -11015,6 +14646,14 @@ begin
   Invalidate;
 end;
 
+procedure TCustomModel.SetModflowOptions(const Value: TModflowOptions);
+begin
+  if Value <> FModflowOptions then
+  begin
+    FModflowOptions.Assign(Value);
+  end;
+end;
+
 procedure TCustomModel.SetHeadFluxObservations(const Value: TFluxObservationGroups);
 begin
   FHeadFluxObservations.Assign(Value);
@@ -11023,6 +14662,46 @@ end;
 procedure TCustomModel.SetRiverObservations(const Value: TFluxObservationGroups);
 begin
   FRiverObservations.Assign(Value);
+end;
+
+procedure TCustomModel.SetDisplayColumn(const Value: integer);
+begin
+  Grid.DisplayColumn := Value;
+end;
+
+procedure TCustomModel.SetDisplayLayer(const Value: integer);
+begin
+  Grid.DisplayLayer := Value;
+end;
+
+procedure TCustomModel.SetDisplayRow(const Value: integer);
+begin
+  Grid.DisplayRow := Value;
+end;
+
+procedure TCustomModel.SetSelectedColumn(const Value: integer);
+begin
+  Grid.SelectedColumn := Value;
+end;
+
+procedure TCustomModel.SetSelectedLayer(const Value: integer);
+begin
+  Grid.SelectedLayer:= Value;
+end;
+
+procedure TCustomModel.SetSelectedRow(const Value: integer);
+begin
+  Grid.SelectedRow := Value;
+end;
+
+procedure TCustomModel.SetSideTimeList(const Value: TCustomTimeList);
+begin
+  FSideTimeList := Value;
+end;
+
+procedure TCustomModel.SetTopTimeList(const Value: TCustomTimeList);
+begin
+  FTopTimeList := Value;
 end;
 
 procedure TCustomModel.SetDrainObservations(const Value: TFluxObservationGroups);
@@ -11046,6 +14725,11 @@ begin
   Invalidate;
 end;
 
+procedure TCustomModel.SetFrontTimeList(const Value: TCustomTimeList);
+begin
+  FFrontTimeList := Value;
+end;
+
 procedure TCustomModel.SetModelInputFiles(const Value: TStrings);
 begin
   FModelInputFiles.Assign(Value);
@@ -11066,6 +14750,15 @@ begin
   FModflowWettingOptions.Assign(Value);
 end;
 
+procedure TCustomModel.SetNameFileWriter(const Value: TObject);
+begin
+  if Assigned(Value) then
+  begin
+    Assert(Value is TNameFileWriter);
+  end;
+  FNameFileWriter := Value;
+end;
+
 procedure TCustomModel.AddModelInputFile(const FileName: string);
 begin
   if ModelInputFiles.IndexOf(FileName) < 0 then
@@ -11073,6 +14766,11 @@ begin
     ModelInputFiles.Add(FileName);
     Invalidate;
   end;
+end;
+
+function TCustomModel.AddDataSet(const DataSet: TDataArray): Integer;
+begin
+  result := DataArrayManager.AddDataSet(DataSet);
 end;
 
 procedure TCustomModel.AddFileToArchive(const FileName: string);
@@ -11085,7 +14783,44 @@ begin
 end;
 
 procedure TCustomModel.InternalClear;
+var
+  Index: Integer;
+  DataSet: TDataArray;
 begin
+  if PhastGrid <> nil then
+  begin
+    if PhastGrid.TopGridObserver <> nil then
+    begin
+      PhastGrid.TopGridObserver.StopTalkingToAnyone;
+    end;
+    if PhastGrid.ThreeDGridObserver <> nil then
+    begin
+      PhastGrid.ThreeDGridObserver.StopTalkingToAnyone;
+    end;
+  end;
+  if ModflowGrid <> nil then
+  begin
+    if ModflowGrid.TopGridObserver <> nil then
+    begin
+      ModflowGrid.TopGridObserver.StopTalkingToAnyone;
+    end;
+    if ModflowGrid.ThreeDGridObserver <> nil then
+    begin
+      ModflowGrid.ThreeDGridObserver.StopTalkingToAnyone;
+    end;
+  end;
+  for Index := 0 to FDataArrayManager.DataSetCount - 1 do
+  begin
+    DataSet := FDataArrayManager.DataSets[Index];
+    DataSet.StopTalkingToAnyone;
+  end;
+  for Index := 0 to FDataArrayManager.BoundaryDataSetCount - 1 do
+  begin
+    DataSet := FDataArrayManager.BoundaryDataSets[Index];
+    DataSet.StopTalkingToAnyone;
+  end;
+  AllObserversStopTalking;
+  FModflowOptions.Clear;
   FDataArrayManager.ClearDataSetsToCache;
   ClearAllTimeLists;
 end;
@@ -11190,6 +14925,42 @@ end;
 function TCustomModel.GetParsers(Index: integer): TRbwParser;
 begin
   result := FParsers[Index];
+end;
+
+function TCustomModel.GetSelectedColumn: integer;
+begin
+  if Grid <> nil then
+  begin
+    result := Grid.SelectedColumn;
+  end
+  else
+  begin
+    result := 0;
+  end;
+end;
+
+function TCustomModel.GetSelectedLayer: integer;
+begin
+  if Grid <> nil then
+  begin
+    result := Grid.SelectedLayer;
+  end
+  else
+  begin
+    result := 0;
+  end;
+end;
+
+function TCustomModel.GetSelectedRow: integer;
+begin
+  if Grid <> nil then
+  begin
+    result := Grid.SelectedRow;
+  end
+  else
+  begin
+    result := 0;
+  end;
 end;
 
 procedure TCustomModel.Clear;
@@ -11501,6 +15272,9 @@ var
   Local3DCompiler: TRbwParser;
   VarIndex: integer;
   Variable: TCustomValue;
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildItem: TChildModelItem;
 begin
   TempCompiler := GetCompiler(DataSet.Orientation,
     DataSet.EvaluatedAt);
@@ -11520,6 +15294,24 @@ begin
   end;
 
   VarIndex := TempCompiler.IndexOfVariable(DataSet.Name);
+  if VarIndex >= 0 then
+  begin
+    Variable := TempCompiler.Variables[VarIndex];
+    if (Variable.ResultType <> DataSet.DataType) then
+    begin
+      TempCompiler.RemoveVariable(Variable as TCustomVariable);
+      if TempCompiler <> Local3DCompiler then
+      begin
+        VarIndex := Local3DCompiler.IndexOfVariable(DataSet.Name);
+        if VarIndex >= 0 then
+        begin
+          Variable := Local3DCompiler.Variables[VarIndex];
+          Local3DCompiler.RemoveVariable(Variable as TCustomVariable);
+        end;
+      end;
+      VarIndex := -1;
+    end;
+  end;
   if VarIndex < 0 then
   begin
     case DataSet.Datatype of
@@ -11580,6 +15372,15 @@ begin
       Assert(Variable.Name = UpperCase(DataSet.Name));
       Assert(Variable.ResultType = DataSet.DataType);
       Variable.Classification := DataSet.FullClassification;
+    end;
+  end;
+  if self is TPhastModel then
+  begin
+    LocalModel := TPhastModel(self);
+    for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+    begin
+      ChildItem := LocalModel.ChildModels[ChildIndex];
+      ChildItem.ChildModel.CreateVariables(DataSet);
     end;
   end;
 end;
@@ -11712,6 +15513,11 @@ begin
 end;
 
 procedure TDataArrayManager.AddDataSetToCache(DataArray: TDataArray);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
 begin
   if FDataSetsToCache.IndexOf(DataArray) < 0 then
   begin
@@ -11720,7 +15526,20 @@ begin
       and not (DataArray is TCustomSparseDataSet)
       then
     begin
-      FDataSetsToCache.Add(DataArray)
+      FDataSetsToCache.Add(DataArray);
+      if FCustomModel is TPhastModel then
+      begin
+        LocalModel := TPhastModel(FCustomModel);
+        for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+        begin
+          ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+          ChildDataArray := ChildModel.DataArrayManager.GetDataSetByName(DataArray.Name);
+          if (ChildDataArray <> nil) then
+          begin
+            ChildModel.DataArrayManager.AddDataSetToCache(ChildDataArray);
+          end;
+        end;
+      end;
     end;
   end;
 end;
@@ -11794,23 +15613,36 @@ procedure TDataArrayManager.CacheDataArrays;
 var
   Index: Integer;
   DataArray: TDataArray;
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   for Index := 0 to FDataSetsToCache.Count - 1 do
   begin
     DataArray := FDataSetsToCache[Index];
-    if (DataArray <> FCustomModel.Grid.TopDataSet)
+    if (FCustomModel.Grid = nil)
+      or ((DataArray <> FCustomModel.Grid.TopDataSet)
       and (DataArray <> FCustomModel.Grid.FrontDataSet)
       and (DataArray <> FCustomModel.Grid.SideDataSet)
       and (DataArray <> FCustomModel.Grid.ThreeDDataSet)
       and (DataArray <> FCustomModel.Grid.TopContourDataSet)
       and (DataArray <> FCustomModel.Grid.FrontContourDataSet)
       and (DataArray <> FCustomModel.Grid.SideContourDataSet)
-      and (DataArray <> FCustomModel.Grid.ThreeDContourDataSet) then
+      and (DataArray <> FCustomModel.Grid.ThreeDContourDataSet)) then
     begin
       DataArray.CacheData;
     end;
   end;
   FDataSetsToCache.Clear;
+  if FCustomModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FCustomModel);
+    for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.DataArrayManager.CacheDataArrays;
+    end;
+  end;
 end;
 
 procedure TDataArrayManager.ClearAllDataSets;
@@ -12058,6 +15890,9 @@ function TDataArrayManager.CreateNewDataArray(const ClassType: TDataArrayType;
   const Name, Formula: string; Lock: TDataLock; DataType: TRbwDataType;
   EvaluatedAt: TEvaluatedAt; Orientation: TDataSetOrientation;
   const Classification: string): TDataArray;
+var
+  ChildManagerIndex: Integer;
+  ChildMan: TDataArrayManager;
 begin
   result := ClassType.Create(FCustomModel);
   result.Lock := Lock;
@@ -12069,6 +15904,15 @@ begin
   result.Classification := Classification;
   AddDataSet(result);
   FCustomModel.CreateVariables(result);
+  for ChildManagerIndex := 0 to ChildDataArrayManagerCount - 1 do
+  begin
+    ChildMan := ChildDataArrayManagers[ChildManagerIndex];
+    if ChildMan.GetDataSetByName(Name) = nil then
+    begin
+      ChildMan.CreateNewDataArray(ClassType, Name, Formula, Lock, DataType,
+        EvaluatedAt, Orientation, Classification);
+    end;
+  end;
 end;
 
 function TDataArrayManager.DataArrayHeld(DataArray: TDataArray): boolean;
@@ -12100,7 +15944,7 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-active'#13#10'MODFLOW BAS: IBOUND';
+    'PHAST: MEDIA-active'+ sLineBreak + 'MODFLOW BAS: IBOUND';
   NoCheck(FDataArrayCreationRecords[Index]);
   Inc(Index);
 
@@ -12115,7 +15959,7 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-Kx'#13#10'MODFLOW LPF: HK'#13#10'MODFLOW BCF: TRAN,HY';
+    'PHAST: MEDIA-Kx'+ sLineBreak + 'MODFLOW LPF: HK'+ sLineBreak + 'MODFLOW BCF: TRAN,HY';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
   FDataArrayCreationRecords[Index].Min := 0;
@@ -12131,7 +15975,7 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-Ky'#13#10'MODFLOW LPF: HANI'#13#10'MODFLOW HUF and BCF: (not used)';
+    'PHAST: MEDIA-Ky'+ sLineBreak + 'MODFLOW LPF: HANI'+ sLineBreak + 'MODFLOW HUF and BCF: (not used)';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
   FDataArrayCreationRecords[Index].Min := 0;
@@ -12147,7 +15991,7 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-Kz'#13#10'MODFLOW LPF: VKA'#13#10'MODFLOW BCF: Vcont';
+    'PHAST: MEDIA-Kz'+ sLineBreak + 'MODFLOW LPF: VKA'+ sLineBreak + 'MODFLOW BCF: Vcont';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
   FDataArrayCreationRecords[Index].Min := 0;
@@ -12163,7 +16007,7 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-porosity'#13#10'MODPATH: POR';
+    'PHAST: MEDIA-porosity'+ sLineBreak + 'MODPATH: POR';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
   FDataArrayCreationRecords[Index].Min := 0;
@@ -12180,7 +16024,7 @@ begin
   FDataArrayCreationRecords[Index].Lock := StandardLock;
   FDataArrayCreationRecords[Index].EvaluatedAt := eaBlocks;
   FDataArrayCreationRecords[Index].AssociatedDataSets :=
-    'PHAST: MEDIA-specific_storage'#13#10'MODFLOW LPF: Ss'#13#10'MODFLOW BCF: Sf1';
+    'PHAST: MEDIA-specific_storage'+ sLineBreak + 'MODFLOW LPF: Ss'+ sLineBreak + 'MODFLOW BCF: Sf1';
   FDataArrayCreationRecords[Index].CheckMax := False;
   FDataArrayCreationRecords[Index].CheckMin := True;
   FDataArrayCreationRecords[Index].Min := 0;
@@ -12705,12 +16549,12 @@ begin
   FDataArrayCreationRecords[Index].Max := 1;
   FDataArrayCreationRecords[Index].Min := -1;
   FDataArrayCreationRecords[Index].AssociatedDataSets := 'BCF, LPF, HUF: WETDRY'
-    + #13#10#13#10'A value < 0 indicates that only the cell below the '
+    + sLineBreak + sLineBreak + 'A value < 0 indicates that only the cell below the '
       + 'dry cell can cause the dry cell to become active again.'
-    + #13#10#13#10'A value > 0 indicates that the cell below the dry cell '
+    + sLineBreak + sLineBreak + 'A value > 0 indicates that the cell below the dry cell '
       + 'or the cells next to the dry cell can cause the dry cell to become '
       + 'active again.'
-    + #13#10#13#10'A value = 0 indicates that the dry cell can not become '
+    + sLineBreak + sLineBreak + 'A value = 0 indicates that the dry cell can not become '
       +'active again.';
   Inc(Index);
 
@@ -13006,6 +16850,24 @@ begin
   begin
     DataSet := FDeletedDataSets[Index];
     DataSet.StopTalkingToAnyone;
+//    DataSet.SetModelToNil;
+  end;
+  for Index := 0 to LocalCount - 1 do
+  begin
+    DataSet := DataSets[Index];
+    DataSet.StopTalkingToAnyone;
+//    DataSet.SetModelToNil;
+  end;
+  for Index := 0 to FDeletedDataSets.Count - 1 do
+  begin
+    DataSet := FDeletedDataSets[Index];
+//    DataSet.StopTalkingToAnyone;
+    DataSet.SetModelToNil;
+  end;
+  for Index := 0 to LocalCount - 1 do
+  begin
+    DataSet := DataSets[Index];
+//    DataSet.StopTalkingToAnyone;
     DataSet.SetModelToNil;
   end;
   FDeletedDataSets.Free;
@@ -13044,9 +16906,18 @@ function TDataArrayManager.GetChildDataArrayManager(
   Index: integer): TDataArrayManager;
 var
   PhastModel: TPhastModel;
+  ChildModel: TChildModel;
 begin
   PhastModel := FCustomModel as TPhastModel;
-  result := PhastModel.ChildModels[Index].ChildModel.DataArrayManager;
+  ChildModel := PhastModel.ChildModels[Index].ChildModel;
+  if ChildModel = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ChildModel.DataArrayManager;
+  end;
 end;
 
 function TDataArrayManager.GetChildDataArrayManagerCount: integer;
@@ -13056,7 +16927,14 @@ begin
   if FCustomModel is TPhastModel then
   begin
     PhastModel := TPhastModel(FCustomModel);
-    result := PhastModel.ChildModels.Count;
+    if PhastModel.LgrUsed then
+    begin
+      result := PhastModel.ChildModels.Count;
+    end
+    else
+    begin
+      result := 0;
+    end;
   end
   else
   begin
@@ -13071,7 +16949,7 @@ var
   APointer: pointer;
   DataArray: TDataArray;
 begin
-  if DataSetCount = 0 then
+  if LocalCount = 0 then
   begin
     result := nil;
     Exit;
@@ -13081,7 +16959,7 @@ begin
     FDataSetLookUpList := THashTable.Create(false);
     FDataSetLookUpList.IgnoreCase := True;
     FDataSetLookUpList.TableSize := Max(211, DataSetCount*2-1);
-    for Index := 0 to DataSetCount - 1 do
+    for Index := 0 to LocalCount - 1 do
     begin
       DataArray := DataSets[Index];
       FDataSetLookUpList.Insert(DataArray.Name, DataArray)
@@ -13091,7 +16969,7 @@ begin
   result := APointer;
 end;
 
-function TDataArrayManager.GetDataSetCount: integer;
+function TDataArrayManager.LocalCount: integer;
 begin
   if FDataSets = nil then
   begin
@@ -13103,7 +16981,26 @@ begin
   end;
 end;
 
-function TDataArrayManager.GetDataSets(const Index: integer): TDataArray;
+function TDataArrayManager.GetDataSetCount: integer;
+begin
+  if (FCustomModel <> nil) and (FCustomModel is TChildModel) then
+  begin
+    if TChildModel(FCustomModel).FParentModel = nil then
+    begin
+      result := LocalCount;
+    end
+    else
+    begin
+      result := TChildModel(FCustomModel).FParentModel.DataArrayManager.DataSetCount;
+    end;
+  end
+  else
+  begin
+    result := LocalCount;
+  end;
+end;
+
+function TDataArrayManager.GetDataSet(const Index: integer): TDataArray;
 begin
   result := FDataSets[Index] as TDataArray;
 end;
@@ -13131,6 +17028,7 @@ var
   ChildDataArray: TDataArray;
   DeletedIndex: Integer;
   TestDataArray: TDataArray;
+  ChildGrid: TCustomGrid;
 begin
   for Index := 0 to AddedDataSetList.Count - 1 do
   begin
@@ -13166,11 +17064,15 @@ begin
         end;
         if ChildDataArray = nil then
         begin
-          ChildDataArray := CreateNewDataArray(TDataArrayType(DataArray.ClassType),
+          ChildDataArray := ChildManager.CreateNewDataArray(
+            TDataArrayType(DataArray.ClassType),
             DataArray.Name, DataArray.Formula, DataArray.Lock,
             DataArray.DataType, DataArray.EvaluatedAt, DataArray.Orientation,
             DataArray.Classification);
           ChildDataArray.AssignProperties(DataArray);
+          ChildGrid := ChildManager.FCustomModel.Grid;
+          ChildDataArray.UpdateDimensions(ChildGrid.LayerCount,
+            ChildGrid.RowCount, ChildGrid.ColumnCount);
         end;
         DataArray.TalksTo(ChildDataArray);
         NewAddedList.Add(ChildDataArray);
@@ -13209,7 +17111,10 @@ begin
       begin
         DataArray := DeletedDataSetList[DataArrayIndex];
         ChildDataArray := ChildManager.GetDataSetByName(DataArray.Name);
-        NewDeletedList.Add(ChildDataArray);
+        if ChildDataArray <> nil then
+        begin
+          NewDeletedList.Add(ChildDataArray);
+        end;
       end;
       ChildManager.HandleDeletedDataArrays(NewDeletedList);
     finally
@@ -13304,6 +17209,8 @@ procedure TDataArrayManager.UnlinkDeletedDataSets;
 var
   Index: Integer;
   DataSet: TDataArray;
+  ChildModel: TChildModel;
+  ParentDataSet: TDataArray;
 begin
   for Index := 0 to FDeletedDataSets.Count - 1 do
   begin
@@ -13315,6 +17222,23 @@ begin
   begin
     ChildDataArrayManagers[Index].UnlinkDeletedDataSets;
   end;
+  if FCustomModel is TChildModel then
+  begin
+    ChildModel := TChildModel(FCustomModel);
+    if ChildModel.ParentModel <> nil then
+    begin
+      for Index := 0 to DataSetCount - 1 do
+      begin
+        DataSet := DataSets[Index];
+        ParentDataSet := ChildModel.ParentModel.
+          DataArrayManager.GetDataSetByName(DataSet.Name);
+        if (ParentDataSet <> nil) then
+        begin
+          ParentDataSet.StopsTalkingTo(DataSet);
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TDataArrayManager.UpdateDataSetDimensions;
@@ -13322,11 +17246,12 @@ var
   Index: integer;
   DataSet: TDataArray;
   Grid: TCustomGrid;
+  Manager: TDataArrayManager;
 begin
   Grid := FCustomModel.Grid;
   if Grid = nil then
   begin
-    for Index := 0 to DataSetCount - 1 do
+    for Index := 0 to LocalCount - 1 do
     begin
       DataSet := DataSets[Index];
       DataSet.UpdateDimensions(-1, -1, -1);
@@ -13344,7 +17269,7 @@ begin
   end
   else
   begin
-    for Index := 0 to DataSetCount - 1 do
+    for Index := 0 to LocalCount - 1 do
     begin
       DataSet := DataSets[Index];
       DataSet.UpdateDimensions(Grid.LayerCount,
@@ -13368,7 +17293,11 @@ begin
   end;
   for Index := 0 to ChildDataArrayManagerCount - 1 do
   begin
-    ChildDataArrayManagers[Index].UpdateDataSetDimensions;
+    Manager := ChildDataArrayManagers[Index];
+    if Manager <> nil then
+    begin
+      Manager.UpdateDataSetDimensions;
+    end;
   end;
 end;
 
@@ -13394,7 +17323,6 @@ begin
     AlternateSolver := SourceModel.AlternateSolver;
     BatchFileAdditionsAfterModel := SourceModel.BatchFileAdditionsAfterModel;
     BatchFileAdditionsBeforeModel := SourceModel.BatchFileAdditionsBeforeModel;
-    ModflowGrid := SourceModel.ModflowGrid;
     ModflowNameFileLines := SourceModel.ModflowNameFileLines;
     ModflowPackages := SourceModel.ModflowPackages;
     HeadFluxObservations := SourceModel.HeadFluxObservations;
@@ -13407,6 +17335,7 @@ begin
     ModelFileName := SourceModel.ModelFileName;
     ModflowWettingOptions := SourceModel.ModflowWettingOptions;
     GlobalVariables := SourceModel.GlobalVariables;
+    ModflowOptions := SourceModel.ModflowOptions;
   end
   else
   begin
@@ -13565,23 +17494,23 @@ end;
 
 function TCustomModel.ReservoirLayerUsed(Sender: TObject): boolean;
 begin
-  result := ModflowPackages.ResPackage.IsSelected
+  result := ModflowUsed(Sender) and ModflowPackages.ResPackage.IsSelected
     and (ModflowPackages.ResPackage.LayerOption = loSpecified);
 end;
 
 function TCustomModel.ReservoirPackageUsed(Sender: TObject): boolean;
 begin
-  result := ModflowPackages.ResPackage.IsSelected;
+  result := ModflowUsed(Sender) and ModflowPackages.ResPackage.IsSelected;
 end;
 
 function TCustomModel.LakePackageUsed(Sender: TObject): boolean;
 begin
-  result := ModflowPackages.LakPackage.IsSelected;
+  result := ModflowUsed(Sender) and ModflowPackages.LakPackage.IsSelected;
 end;
 
 function TCustomModel.UzfPackageUsed(Sender: TObject): boolean;
 begin
-  result := ModflowPackages.UzfPackage.IsSelected;
+  result := ModflowUsed(Sender) and ModflowPackages.UzfPackage.IsSelected;
 end;
 
 function TCustomModel.UzfUnsatVertKUsed(Sender: TObject): boolean;
@@ -13608,7 +17537,7 @@ begin
   result := UzfPackageUsed(Sender);
   if result then
   begin
-    if (Sender <> nil) and (Sender is TUndoChangePackageSelection) then
+    if (Sender <> nil) and (Sender is TUndoChangeLgrPackageSelection) then
     begin
       result := True;
     end
@@ -13622,6 +17551,23 @@ end;
 function TCustomModel.ModflowInitialHeadUsed(Sender: TObject): boolean;
 begin
   result := ModflowUsed(Sender) and (ModflowOptions.InitialHeadFileName = '');
+end;
+
+function TCustomModel.ModflowLayerBottomDescription(
+  const LayerID: integer): string;
+begin
+  result := LayerStructure.ModflowLayerBottomDescription(LayerID)
+end;
+
+function TCustomModel.ModflowLayerCount: integer;
+begin
+  result := LayerStructure.ModflowLayerCount
+end;
+
+function TCustomModel.ModflowLayerToDataSetLayer(
+  ModflowLayer: integer): integer;
+begin
+  result := LayerStructure.ModflowLayerToDataSetLayer(ModflowLayer);
 end;
 
 function TCustomModel.ConfiningBedKzUsed(Sender: TObject): boolean;
@@ -13697,6 +17643,31 @@ begin
   end;
 end;
 
+function TCustomModel.StoreDrainObservations: Boolean;
+begin
+  result := FDrainObservations.Count > 0;
+end;
+
+function TCustomModel.StoreGhbObservations: Boolean;
+begin
+  result := FGhbObservations.Count > 0;
+end;
+
+function TCustomModel.StoreHeadFluxObservations: Boolean;
+begin
+  result := FHeadFluxObservations.Count > 0;
+end;
+
+function TCustomModel.StoreHydrogeologicUnits: Boolean;
+begin
+  result := FHydrogeologicUnits.Count > 0;
+end;
+
+function TCustomModel.StoreRiverObservations: Boolean;
+begin
+  result := FRiverObservations.Count > 0;
+end;
+
 function TCustomModel.WetDryUsed(Sender: TObject): boolean;
 begin
   result := ModflowWettingOptions.WettingActive;
@@ -13721,6 +17692,14 @@ function TCustomModel.BcfUsed(Sender: TObject): boolean;
 begin
   result := (ModelSelection in [msModflow, msModflowLGR])
     and ModflowPackages.BcfPackage.IsSelected
+end;
+
+procedure TCustomModel.BeginGridChange;
+begin
+  if Grid <> nil then
+  begin
+    Grid.BeginGridChange
+  end;
 end;
 
 function TCustomModel.ConfinedStorageCoefUsed(Sender: TObject): boolean;
@@ -13778,6 +17757,11 @@ function TCustomModel.SwtSpecifiedUsed(Sender: TObject): boolean;
 begin
   result := SwtSelected(Sender)
     and (ModflowPackages.SwtPackage.PreconsolidationSource = pcSpecified);
+end;
+
+function TCustomModel.Trpy: TOneDRealArray;
+begin
+  result := LayerStructure.Trpy;
 end;
 
 function TCustomModel.IndenticalTransientArray(DataArray: TDataArray; DataArrays: TList;
@@ -13871,14 +17855,24 @@ var
   StartTime, EndTime: double;
   FirstTime: Double;
   DeletedTimes: Boolean;
+  TestFirstTime: Double;
+  LastTestTime: Double;
+  OutOfStartRange: Boolean;
+  OutOfEndRange: Boolean;
+  OutOfStartRangeScreenObjects: TStringList;
+  OutOfEndRangeScreenObjects: TStringList;
+  ErrorMessage: string;
+  SpressPeriodCount: Integer;
 //  StartTimeIndex: integer;
 begin
   if FUpdatingFullStressPeriods then
   begin
     Exit;
   end;
-  frmErrorsAndWarnings.RemoveWarningGroup(StrAnyTimesAfterThe);
-  frmErrorsAndWarnings.RemoveWarningGroup(StrAnyTimesBeforeThe);
+  frmErrorsAndWarnings.RemoveWarningGroup(self, StrAnyTimesAfterThe);
+  frmErrorsAndWarnings.RemoveWarningGroup(self, StrAnyTimesBeforeThe);
+  frmErrorsAndWarnings.RemoveWarningGroup(self, StrAddedTimes);
+
 
   ModflowFullStressPeriods.Clear;
   TimeList := TRealList.Create;
@@ -13891,124 +17885,123 @@ begin
       TimeList.AddUnique(StressPeriod.StartTime);
       TimeList.AddUnique(StressPeriod.EndTime);
     end;
-    for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
-    begin
-      ScreenObject := ScreenObjects[ScreenObjectIndex];
-      if ScreenObject.Deleted then
-      begin
-        Continue;
-      end;
-      ScreenObject.UpdateModflowTimes(TimeList);
-      if not frmProgressMM.ShouldContinue then
-      begin
-        Exit;
-      end;
-    end;
+    TestFirstTime := TimeList[0];
+    LastTestTime := TimeList[TimeList.Count-1];
+    OutOfStartRangeScreenObjects := TStringList.Create;
+    OutOfEndRangeScreenObjects := TStringList.Create;
+    try
 
-    DeletedTimes := False;
-    StressPeriod := ModflowStressPeriods[0];
-    FirstTime := 0;
-    While TimeList.Count > 0 do
-    begin
-      if TimeList[0] < StressPeriod.StartTime then
+      for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
       begin
-        if not DeletedTimes then
+        ScreenObject := ScreenObjects[ScreenObjectIndex];
+        if ScreenObject.Deleted then
         begin
-          FirstTime := TimeList[0]
+          Continue;
         end;
-        TimeList.Delete(0);
-        DeletedTimes := True;
-      end
-      else
-      begin
-        break;
-      end;
-    end;
-
-    if DeletedTimes then
-    begin
-      frmErrorsAndWarnings.AddWarning(
-        StrAnyTimesBeforeThe,
-        'The beginning of the first stress period is '
-        + FloatToStr(StressPeriod.StartTime)
-        + '. The first defined time is '
-        + FloatToStr(FirstTime) + '.');
-    end;
-
-    TimeIndex := 0;
-    for StressPeriodIndex := 0 to ModflowStressPeriods.Count - 1 do
-    begin
-      if TimeIndex+1 >= TimeList.Count then
-      begin
-        break;
-      end;
-      StressPeriod := ModflowStressPeriods[StressPeriodIndex];
-      StartTime := TimeList[TimeIndex];
-      EndTime := TimeList[TimeIndex+1];
-      While (EndTime <= StressPeriod.EndTime) do
-      begin
-        NewStressPeriod :=
-          ModflowFullStressPeriods.Add as TModflowStressPeriod;
-        NewStressPeriod.Assign(StressPeriod);
-        NewStressPeriod.StartTime := StartTime;
-        NewStressPeriod.EndTime := EndTime;
-        NewStressPeriod.PeriodLength :=
-          NewStressPeriod.EndTime - NewStressPeriod.StartTime;
-        Inc(TimeIndex);
-        if TimeIndex+1 >= TimeList.Count then
-        begin
-          break;
-        end;
-        StartTime := TimeList[TimeIndex];
-        EndTime := TimeList[TimeIndex+1];
+        SpressPeriodCount := TimeList.Count;
+        ScreenObject.UpdateModflowTimes(TimeList,
+          TestFirstTime, LastTestTime, OutOfStartRange, OutOfEndRange);
         if not frmProgressMM.ShouldContinue then
         begin
           Exit;
         end;
+        if OutOfStartRange then
+        begin
+          OutOfStartRangeScreenObjects.Add(ScreenObject.Name);
+        end;
+        if OutOfEndRange then
+        begin
+          OutOfEndRangeScreenObjects.Add(ScreenObject.Name);
+        end;
+        if SpressPeriodCount <> TimeList.Count then
+        begin
+          frmErrorsAndWarnings.AddWarning(self, StrAddedTimes, ScreenObject.Name);
+        end;
       end;
-    end;
 
-    StressPeriod := ModflowStressPeriods[ModflowStressPeriods.Count - 1];
-    EndTime := TimeList[TimeList.Count -1];
-    if EndTime > StressPeriod.EndTime then
-    begin
-      frmErrorsAndWarnings.AddWarning(
-        StrAnyTimesAfterThe,
-        'The end of the last stress period is '
-        + FloatToStr(StressPeriod.EndTime)
-        + '. The last defined time is '
-        + FloatToStr(EndTime) + '.');
-//      StartTimeIndex := -1;
-//      for TimeIndex := TimeList.Count -1 downto 0 do
-//      begin
-//        EndTime := TimeList[TimeIndex];
-//        if EndTime = StressPeriod.EndTime then
-//        begin
-//          StartTimeIndex := TimeIndex;
-//          break;
-//        end;
-//        Assert(EndTime > StressPeriod.EndTime);
-//        if not frmProgress.ShouldContinue then
-//        begin
-//          Exit;
-//        end;
-//      end;
-//      for TimeIndex := StartTimeIndex to TimeList.Count - 2 do
-//      begin
-//        StartTime := TimeList[TimeIndex];
-//        EndTime := TimeList[TimeIndex+1];
-//        NewStressPeriod :=
-//          ModflowFullStressPeriods.Add as TModflowStressPeriod;
-//        NewStressPeriod.Assign(StressPeriod);
-//        NewStressPeriod.StartTime := StartTime;
-//        NewStressPeriod.EndTime := EndTime;
-//        NewStressPeriod.PeriodLength :=
-//          NewStressPeriod.EndTime - NewStressPeriod.StartTime;
-//        if not frmProgress.ShouldContinue then
-//        begin
-//          Exit;
-//        end;
-//      end;
+      DeletedTimes := False;
+      StressPeriod := ModflowStressPeriods[0];
+      FirstTime := 0;
+      While TimeList.Count > 0 do
+      begin
+        if TimeList[0] < StressPeriod.StartTime then
+        begin
+          if not DeletedTimes then
+          begin
+            FirstTime := TimeList[0]
+          end;
+          TimeList.Delete(0);
+          DeletedTimes := True;
+        end
+        else
+        begin
+          break;
+        end;
+      end;
+
+      if DeletedTimes then
+      begin
+        ErrorMessage := 'The beginning of the first stress period is '
+          + FloatToStr(StressPeriod.StartTime)
+          + '. The first defined time is '
+          + FloatToStr(FirstTime) + '. The following objects '
+          + 'have defined times before the beginning of the first stress period.';
+        OutOfStartRangeScreenObjects.Insert(0, ErrorMessage);
+
+        frmErrorsAndWarnings.AddWarning(self,
+          StrAnyTimesBeforeThe, OutOfStartRangeScreenObjects.Text);
+          ;
+      end;
+
+      TimeIndex := 0;
+      for StressPeriodIndex := 0 to ModflowStressPeriods.Count - 1 do
+      begin
+        if TimeIndex+1 >= TimeList.Count then
+        begin
+          break;
+        end;
+        StressPeriod := ModflowStressPeriods[StressPeriodIndex];
+        StartTime := TimeList[TimeIndex];
+        EndTime := TimeList[TimeIndex+1];
+        While (EndTime <= StressPeriod.EndTime) do
+        begin
+          NewStressPeriod :=
+            ModflowFullStressPeriods.Add as TModflowStressPeriod;
+          NewStressPeriod.Assign(StressPeriod);
+          NewStressPeriod.StartTime := StartTime;
+          NewStressPeriod.EndTime := EndTime;
+          NewStressPeriod.PeriodLength :=
+            NewStressPeriod.EndTime - NewStressPeriod.StartTime;
+          Inc(TimeIndex);
+          if TimeIndex+1 >= TimeList.Count then
+          begin
+            break;
+          end;
+          StartTime := TimeList[TimeIndex];
+          EndTime := TimeList[TimeIndex+1];
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+        end;
+      end;
+
+      StressPeriod := ModflowStressPeriods[ModflowStressPeriods.Count - 1];
+      EndTime := TimeList[TimeList.Count -1];
+      if EndTime > StressPeriod.EndTime then
+      begin
+        ErrorMessage := 'The end of the last stress period is '
+          + FloatToStr(StressPeriod.EndTime)
+          + '. The last defined time is '
+          + FloatToStr(EndTime) + '. The following objects '
+          + 'have defined times before the beginning of the first stress period.';
+        OutOfEndRangeScreenObjects.Insert(0, ErrorMessage);
+        frmErrorsAndWarnings.AddWarning(self,
+          StrAnyTimesAfterThe,OutOfEndRangeScreenObjects.Text);
+      end;
+    finally
+      OutOfEndRangeScreenObjects.Free;
+      OutOfStartRangeScreenObjects.Free;
     end;
 
   finally
@@ -14020,6 +18013,63 @@ end;
 procedure TCustomModel.AddTimeList(TimeList: TCustomTimeList);
 begin
   FTimeLists.Add(TimeList);
+end;
+
+procedure TCustomModel.AdjustCellPosition(ACellAssignment: TCellAssignment);
+begin
+  // do nothing;
+end;
+
+procedure TCustomModel.AdjustResKvArray(Sender: TObject);
+begin
+  AdjustDataArray(Sender as TDataArray);
+end;
+
+procedure TCustomModel.AdjustCellPosition(AValueCell: TValueCell);
+begin
+  // do nothing
+end;
+
+procedure TCustomModel.GetDefaultOutputFileExtension(var Extension: string);
+begin
+  if ModflowOutputControl.HeadOC.SaveInExternalFile then
+  begin
+    case ModflowOutputControl.HeadOC.OutputFileType of
+      oftText:
+        begin
+          Extension := StrFhd;
+        end;
+      oftBinary:
+        begin
+          Extension := StrBhd;
+        end;
+    else
+      Assert(False);
+    end;
+  end
+  else if ModflowOutputControl.DrawdownOC.SaveInExternalFile then
+  begin
+    case ModflowOutputControl.DrawdownOC.OutputFileType of
+      oftText:
+        begin
+          Extension := StrFdn;
+        end;
+      oftBinary:
+        begin
+          Extension := StrBdn;
+        end;
+    else
+      Assert(False);
+    end;
+  end
+  else if ModflowOutputControl.SaveCellFlows = csfBinary then
+  begin
+    Extension := StrCbcExt;
+  end
+  else
+  begin
+    Extension := '';
+  end;
 end;
 
 procedure TCustomModel.RemoveTimeList(TimeList: TCustomTimeList);
@@ -14035,6 +18085,29 @@ end;
 function TCustomModel.GetTimeListCount: integer;
 begin
   result := FTimeLists.Count;
+end;
+
+function TCustomModel.GetThreeDGridObserver: TObserver;
+begin
+  result := FThreeDGridObserver;
+end;
+
+function TCustomModel.GetTimeListByName(const AName: string): TCustomTimeList;
+var
+  Index: Integer;
+  TimeList: TCustomTimeList;
+begin
+  Assert(AName <> '');
+  result := nil;
+  for Index := 0 to FTimeLists.Count - 1 do
+  begin
+    TimeList := FTimeLists[Index];
+    if TimeList.Name = AName then
+    begin
+      result := TimeList;
+      Exit;
+    end;
+  end;
 end;
 
 procedure TCustomModel.ClearAllTimeLists;
@@ -14080,6 +18153,23 @@ begin
   begin
     frmErrorsAndWarnings.Show;
   end;
+end;
+
+procedure TCustomModel.ModelObserversStopTalkingTo(Observer: TObserver);
+begin
+  FTopGridObserver.StopsTalkingTo(Observer);
+  FThreeDGridObserver.StopsTalkingTo(Observer);
+  FHufSyNotifier.StopsTalkingTo(Observer);
+  FHufSsNotifier.StopsTalkingTo(Observer);
+  FHufKzNotifier.StopsTalkingTo(Observer);
+  FHufKyNotifier.StopsTalkingTo(Observer);
+  FHufKxNotifier.StopsTalkingTo(Observer);
+
+end;
+
+function TCustomModel.ModflowConfiningBedCount: integer;
+begin
+  result := LayerStructure.ModflowConfiningBedCount;
 end;
 
 function TCustomModel.ModflowHobPackageUsed(Sender: TObject): boolean;
@@ -14171,6 +18261,11 @@ begin
   end;
 end;
 
+procedure TCustomModel.WriteLAYCB(const DiscretizationWriter: TObject);
+begin
+  LayerStructure.WriteLAYCB(DiscretizationWriter);
+end;
+
 procedure TCustomModel.WritePValAndTemplate(const ParameterName: string;
       const Value: double);
 begin
@@ -14180,9 +18275,13 @@ begin
 end;
 
 procedure TCustomModel.UpdateHfb(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  ChildIndex: Integer;
 begin
   frmProgressMM.Caption := 'Progress';
   frmProgressMM.Show;
+  frmProgressMM.ShouldContinue := True;
   if FHfbWriter = nil then
   begin
     FHfbWriter := TModflowHfb_Writer.Create(Self);
@@ -14192,6 +18291,14 @@ begin
   if frmErrorsAndWarnings.HasMessages then
   begin
     frmErrorsAndWarnings.Show;
+  end;
+  if self is TPhastModel then
+  begin
+    PhastModel := TPhastModel(self);
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      PhastModel.ChildModels[ChildIndex].ChildModel.UpdateHfb(Sender);
+    end;
   end;
 end;
 
@@ -14212,6 +18319,36 @@ begin
   result := FDataSetCollection;
 end;
 
+function TCustomModel.GetDisplayColumn: integer;
+begin
+  result := Grid.DisplayColumn;
+end;
+
+function TCustomModel.GetDisplayLayer: integer;
+begin
+  result := Grid.DisplayLayer;
+end;
+
+function TCustomModel.GetDisplayRow: integer;
+begin
+  result := Grid.DisplayRow;
+end;
+
+function TCustomModel.GetLayerGroupByLayer(const Layer: integer): TLayerGroup;
+begin
+  result := LayerStructure.GetLayerGroupByLayer(Layer);
+end;
+
+function TCustomModel.WettingActive: boolean;
+begin
+  result := ModflowWettingOptions.WettingActive;
+end;
+
+function TCustomModel.Chani: TOneDIntegerArray;
+begin
+  result := LayerStructure.Chani;
+end;
+
 function TCustomModel.CheckWetting: boolean;
 var
   Group: TLayerGroup;
@@ -14220,8 +18357,8 @@ var
   WetErrorMessage: string;
 begin
   result := False;
-  frmErrorsAndWarnings.RemoveErrorGroup(WetError);
-  if ModflowWettingOptions.WettingActive then
+  frmErrorsAndWarnings.RemoveErrorGroup(self, WetError);
+  if WettingActive then
   begin
     result := True;
     for LayerGroupIndex := 1 to LayerStructure.Count - 1 do
@@ -14236,12 +18373,12 @@ begin
   end;
   if result then
   begin
-    if frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected
-      or frmGoPhast.PhastModel.ModflowPackages.HufPackage.IsSelected then
+    if ModflowPackages.LpfPackage.IsSelected
+      or ModflowPackages.HufPackage.IsSelected then
     begin
       WetErrorMessage := 'At least one layer must be convertible.';
     end
-    else if frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected then
+    else if ModflowPackages.BcfPackage.IsSelected then
     begin
       WetErrorMessage :=
         'At least one layer must be unconfined or fully convertible.';
@@ -14250,7 +18387,7 @@ begin
     begin
       Assert(False);
     end;
-    frmErrorsAndWarnings.AddError(WetError, WetErrorMessage);
+    frmErrorsAndWarnings.AddError(self, WetError, WetErrorMessage);
   end;
 end;
 
@@ -14264,14 +18401,216 @@ begin
   if Pos(' ', FileName) > 0 then
   begin
     FileName := StringReplace(FileName, ' ', '_', [rfReplaceAll]);
-    FileDir := ExtractFileDir(AFileName);
-    result := IncludeTrailingPathDelimiter(FileDir) + FileName;
+  end;
+  FileDir := ExtractFileDir(AFileName);
+  if FileDir <> '' then
+  begin
+    FileName := IncludeTrailingPathDelimiter(FileDir) + FileName;
+  end;
+  result := FileName;
+end;
+
+procedure TPhastModel.ExportModflowLgrModel(const FileName: string; RunModel: boolean);
+var
+  NumberOfSteps: Integer;
+  BatchFileLocation: string;
+  ListFileName: string;
+  ChildIndex2: Integer;
+  ListFileNames: TStringList;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+
+  if frmProgressMM = nil then
+  begin
+    frmProgressMM := TfrmProgressMM.Create(nil);
+  end;
+  try
+    frmFormulaErrors.DelayShowing := True;
+    try
+      frmProgressMM.Prefix := 'File ';
+      frmProgressMM.Caption := 'Exporting MODFLOW-LGR input files';
+      frmProgressMM.btnAbort.Visible := True;
+      frmProgressMM.ShouldContinue := True;
+      frmProgressMM.Show;
+
+      NumberOfSteps := CountStepsInExport+1;
+      for ChildIndex2 := 0 to ChildModels.Count - 1 do
+      begin
+        NumberOfSteps := NumberOfSteps +
+          ChildModels[ChildIndex2].ChildModel.CountStepsInExport;
+      end;
+
+      frmProgressMM.pbProgress.Max := NumberOfSteps;
+      frmProgressMM.pbProgress.Position := 0;
+
+      if not PrepareModflowFullStressPeriods then
+      begin
+        Exit;
+      end;
+      
+      InternalExportModflowLgrFile(FileName);
+
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      ListFileNames := TStringList.Create;
+      try
+
+        ListFileName := (NameFileWriter as TNameFileWriter).ListFileName;
+        ListFileNames.Add(ListFileName);
+        for ChildIndex := 0 to ChildModels.Count - 1 do
+        begin
+          ChildModel := ChildModels[ChildIndex].ChildModel;
+          ListFileName := (ChildModel.NameFileWriter as TNameFileWriter).ListFileName;
+          ListFileNames.Add(ListFileName);
+        end;
+
+        BatchFileLocation := WriteModflowBatchFile(
+          ProgramLocations,
+          ChangeFileExt(FileName, '.lgr'), ListFileNames,
+          ModflowOptions.OpenInTextEditor, BatchFileAdditionsBeforeModel,
+          BatchFileAdditionsAfterModel);
+
+      finally
+        ListFileNames.Free;
+      end;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      if RunModel then
+      begin
+        WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
+      end;
+    finally
+      frmProgressMM.btnAbort.Visible := False;
+      frmProgressMM.Hide;
+      if frmProgressMM.Owner = nil then
+      begin
+        FreeAndNil(frmProgressMM);
+      end;
+      frmFormulaErrors.DelayShowing := False;
+    end;
+  except on E: EFCreateError do
+    begin
+      Beep;
+      MessageDlg(E.Message, mtError, [mbOK], 0);
+    end;
   end;
 end;
 
-procedure TCustomModel.ExportModflowModel(FileName: string; RunModel: boolean);
+procedure TPhastModel.InternalExportModflowLgrFile(const FileName: string);
 var
-  NameWriter: TNameFileWriter;
+  ChildNameFile: string;
+  ChildModel: TChildModel;
+  ChildIndex: Integer;
+  LgrWriter: TLgrWriter;
+begin
+  LgrWriter := TLgrWriter.Create(Self);
+  try
+    LgrWriter.WriteFile(FileName);
+  finally
+    LgrWriter.Free;
+  end;
+
+  InternalExportModflowModel(FileName);
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModel := ChildModels[ChildIndex].ChildModel;
+    ChildNameFile := ChildModel.Child_NameFile_Name(FileName);
+    ChildModel.InternalExportModflowModel(ChildNameFile);
+  end;
+end;
+
+procedure TCustomModel.ExportModflowModel(const FileName: string; RunModel: boolean);
+var
+  NumberOfSteps: Integer;
+  BatchFileLocation: string;
+  ListFileName: string;
+  ListFileNames: TStringList;
+begin
+
+  if frmProgressMM = nil then
+  begin
+    frmProgressMM := TfrmProgressMM.Create(nil);
+  end;
+  try
+    frmFormulaErrors.DelayShowing := True;
+    try
+      frmProgressMM.Prefix := 'File ';
+      frmProgressMM.Caption := 'Exporting MODFLOW input files';
+      frmProgressMM.btnAbort.Visible := True;
+      frmProgressMM.ShouldContinue := True;
+      frmProgressMM.Show;
+
+      NumberOfSteps := CountStepsInExport;
+
+      frmProgressMM.pbProgress.Max := NumberOfSteps;
+      frmProgressMM.pbProgress.Position := 0;
+
+      if not PrepareModflowFullStressPeriods then
+      begin
+        Exit;
+      end;
+
+      InternalExportModflowModel(FileName);
+
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      ListFileNames := TStringList.Create;
+      try
+        ListFileName := (NameFileWriter as TNameFileWriter).ListFileName;
+        ListFileNames.Add(ListFileName);
+
+        BatchFileLocation := WriteModflowBatchFile(
+          ProgramLocations,
+          ChangeFileExt(FileName, '.nam'), ListFileNames,
+          ModflowOptions.OpenInTextEditor, BatchFileAdditionsBeforeModel,
+          BatchFileAdditionsAfterModel);
+      finally
+        ListFileNames.Free;
+      end;
+
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      if RunModel then
+      begin
+        WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
+      end;
+    finally
+      frmProgressMM.btnAbort.Visible := False;
+      frmProgressMM.Hide;
+      if frmProgressMM.Owner = nil then
+      begin
+        FreeAndNil(frmProgressMM);
+      end;
+      frmFormulaErrors.DelayShowing := False;
+    end;
+  except on E: EFCreateError do
+    begin
+      Beep;
+      MessageDlg(E.Message, mtError, [mbOK], 0);
+    end;
+  end;
+end;
+
+procedure TCustomModel.InternalExportModflowModel(const FileName: string);
+var
+  LocalNameWriter: TNameFileWriter;
   DisWriter: TModflowDiscretizationWriter;
   BasicWriter: TModflowBasicWriter;
   PcgWriter: TPcgWriter;
@@ -14306,123 +18645,47 @@ var
   GagWriter: TModflowGAG_Writer;
   HobWriter: TModflowHobWriter;
   HfbWriter: TModflowHfb_Writer;
-  ListFileName: string;
-  Index: Integer;
-  StepCount: Integer;
-  StressPeriod: TModflowStressPeriod;
+//  ListFileName: string;
   NumberOfSteps: Integer;
   SubWriter: TModflowSUB_Writer;
   SwtWriter: TModflowSWT_Writer;
   HydModWriter: TModflowHydmodWriter;
-  PIndex: Integer;
-  SteadyParam: TModflowSteadyParameter;
-  MultipliersUsed: Boolean;
-  ZoneUsed: Boolean;
-  HufUnitIndex: integer;
-  HGU: THydrogeologicUnit;
-  HufParam: THufUsedParameter;
+  ShouldExit: Boolean;
+  MultipUsed: Boolean;
+  ZUsed: Boolean;
 begin
-  CheckWetting;
-
-  FPValFile.Clear;
-  FTemplate.Clear;
-
-  GageUnitNumber:= UnitNumbers.UnitNumber(StrUNIT);
-  SetCurrentDir(ExtractFileDir(FileName));
-  FileName := FixFileName(FileName);
-  TransientMultiplierArrays.Clear;
-  TransientZoneArrays.Clear;
-
-  if frmProgressMM = nil then
-  begin
-    frmProgressMM := TfrmProgressMM.Create(nil);
-  end;
+  Assert(Assigned(NameFileWriter));
+  LocalNameWriter := NameFileWriter as TNameFileWriter;
+  UpdateCurrentModel(self);
   try
-    frmFormulaErrors.DelayShowing := True;
+    CheckWetting;
+
+    FPValFile.Clear;
+    FTemplate.Clear;
+
+    GageUnitNumber:= UnitNumbers.UnitNumber(StrUNIT);
+    SetCurrentDir(ExtractFileDir(FileName));
+    TransientMultiplierArrays.Clear;
+    TransientZoneArrays.Clear;
+    self.ModflowSteadyParameters.ClearArrayNames;
+
+
+
+    UsedMultiplierArrayNames.Clear;
+    UsedZoneArrayNames.Clear;
+    UsedMultiplierArrayNames.Sorted := True;
+    UsedZoneArrayNames.Sorted := True;
+    Gages := TStringList.Create;
     try
-      frmProgressMM.Prefix := 'File ';
-      frmProgressMM.Caption := 'Exporting MODFLOW input files';
-      frmProgressMM.btnAbort.Visible := True;
-      frmProgressMM.ShouldContinue := True;
-      frmProgressMM.Show;
-
-      // The following tasks are always required.
-      // 1. Full Stress periods,
-      // 2. Discretization,
-      // 3. Basic,
-      // 4. Output Control,
-      // 5. Zone Arrays,
-      // 6. Multiplier Arrays
-      NumberOfSteps := 3;
-
-      NumberOfSteps := NumberOfSteps + ModflowPackages.SelectedPackageCount;
-      if ModflowPackages.SfrPackage.IsSelected
-        or ModflowPackages.LakPackage.IsSelected then
-      begin
-        // gages
-        Inc(NumberOfSteps)
+      SetCurrentNameFileWriter(LocalNameWriter);
+//      ListFileName := LocalNameWriter.ListFileName;
+      DisWriter := TModflowDiscretizationWriter.Create(self);
+      try
+        DisWriter.WriteFile(FileName);
+      finally
+        DisWriter.Free;
       end;
-
-      MultipliersUsed := False;
-      ZoneUsed := False;
-      if ModflowTransientParameters.Count > 0 then
-      begin
-        MultipliersUsed := True;
-        ZoneUsed := True;
-      end;
-
-      if not MultipliersUsed then
-      begin
-        if ModflowPackages.LpfPackage.IsSelected then
-        begin
-          for PIndex := 0 to ModflowSteadyParameters.Count - 1 do
-          begin
-            SteadyParam := ModflowSteadyParameters[PIndex];
-            if SteadyParam.UseMultiplier then
-            begin
-              MultipliersUsed := True;
-            end;
-            if SteadyParam.UseZone then
-            begin
-              ZoneUsed := True;
-            end;
-          end;
-        end
-        else if ModflowPackages.HufPackage.IsSelected then
-        begin
-          for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
-          begin
-            HGU := HydrogeologicUnits[HufUnitIndex];
-            for PIndex := 0 to HGU.HufUsedParameters.Count - 1 do
-            begin
-              HufParam := HGU.HufUsedParameters[PIndex];
-              if HufParam.UseMultiplier then
-              begin
-                MultipliersUsed := True;
-              end;
-              if HufParam.UseZone then
-              begin
-                ZoneUsed := True;
-              end;
-            end;
-          end;
-        end;
-
-      end;
-      if MultipliersUsed then
-      begin
-        Inc(NumberOfSteps)
-      end;
-      if ZoneUsed then
-      begin
-        Inc(NumberOfSteps)
-      end;
-
-      frmProgressMM.pbProgress.Max := NumberOfSteps;
-      frmProgressMM.pbProgress.Position := 0;
-
-      UpdateModflowFullStressPeriods;
-
+      FDataArrayManager.CacheDataArrays;
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
       begin
@@ -14430,662 +18693,611 @@ begin
       end;
       frmProgressMM.StepIt;
 
-      StepCount := 0;
-      for Index := 0 to ModflowFullStressPeriods.Count - 1 do
-      begin
-        StressPeriod := ModflowFullStressPeriods.Items[Index];
-        StepCount := StepCount + StressPeriod.NumberOfSteps;
-      end;
-      if StepCount > 1000 then
-      begin
-        if MessageDlg('Your model has ' + IntToStr(StepCount)
-          + ' time steps. Do you want to continue?', mtWarning,
-          [mbYes, mbNo], 0) <> mrYes then
-        begin
-          Exit;
-        end;
-      end;
-
-      UsedMultiplierArrayNames.Clear;
-      UsedZoneArrayNames.Clear;
-      UsedMultiplierArrayNames.Sorted := True;
-      UsedZoneArrayNames.Sorted := True;
-      Gages := TStringList.Create;
-      NameWriter := TNameFileWriter.Create(self);
+      BasicWriter := TModflowBasicWriter.Create(self);
       try
-        NameWriter.InitilizeNameFile(FileName, ListFileName);
-        DisWriter := TModflowDiscretizationWriter.Create(self);
-        try
-          DisWriter.WriteFile(FileName);
-        finally
-          DisWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        frmProgressMM.StepIt;
-
-        BasicWriter := TModflowBasicWriter.Create(self);
-        try
-          BasicWriter.WriteFile(FileName);
-        finally
-          BasicWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        frmProgressMM.StepIt;
-
-        OCWriter := TOutputControlWriter.Create(self);
-        try
-          OCWriter.WriteFile(FileName);
-        finally
-          OCWriter.Free;
-        end;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        frmProgressMM.StepIt;
-
-        PcgWriter := TPcgWriter.Create(self);
-        try
-          PcgWriter.WriteFile(FileName);
-        finally
-          PcgWriter.Free;
-        end;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.PcgPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        GmgWriter := TGmgWriter.Create(self);
-        try
-          GmgWriter.WriteFile(FileName);
-        finally
-          GmgWriter.Free;
-        end;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.GmgPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        SipWriter := TSipWriter.Create(self);
-        try
-          SipWriter.WriteFile(FileName);
-        finally
-          SipWriter.Free;
-        end;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.SipPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        De4Writer := TDe4Writer.Create(self);
-        try
-          De4Writer.WriteFile(FileName);
-        finally
-          De4Writer.Free;
-        end;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.De4Package.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        LPF_Writer := TModflowLPF_Writer.Create(self);
-        try
-          LPF_Writer.WriteFile(FileName);
-        finally
-          LPF_Writer.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.LpfPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        BCF_Writer := TModflowBCF_Writer.Create(self);
-        try
-          BCF_Writer.WriteFile(FileName);
-        finally
-          BCF_Writer.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.BcfPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        HUF_Writer := TModflowHUF_Writer.Create(self);
-        try
-          HUF_Writer.WriteFile(FileName);
-        finally
-          HUF_Writer.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.HufPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        KDEP_Writer := TModflowKDEP_Writer.Create(self);
-        try
-          KDEP_Writer.WriteFile(FileName);
-        finally
-          KDEP_Writer.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.HufPackage.IsSelected
-          and (HufParameters.CountParameters([ptHUF_KDEP]) > 0) then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        LVDA_Writer := TModflowLVDA_Writer.Create(self);
-        try
-          LVDA_Writer.WriteFile(FileName);
-        finally
-          LVDA_Writer.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.HufPackage.IsSelected
-          and (ModflowSteadyParameters.CountParameters([ptHUF_LVDA]) > 0) then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        ChdWriter := TModflowCHD_Writer.Create(self);
-        try
-          ChdWriter.WriteFile(FileName);
-          ChdWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
-        finally
-          ChdWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.ChdBoundary.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        GhbWriter := TModflowGHB_Writer.Create(self);
-        try
-          GhbWriter.WriteFile(FileName);
-          GhbWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
-        finally
-          GhbWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.GhbBoundary.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        WellWriter := TModflowWEL_Writer.Create(self);
-        try
-          WellWriter.WriteFile(FileName);
-        finally
-          WellWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.WelPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        RivWriter := TModflowRIV_Writer.Create(self);
-        try
-          RivWriter.WriteFile(FileName);
-          RivWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
-        finally
-          RivWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.RivPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        DrnWriter := TModflowDRN_Writer.Create(self);
-        try
-          DrnWriter.WriteFile(FileName);
-          DrnWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
-        finally
-          DrnWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.DrnPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        DrtWriter := TModflowDRT_Writer.Create(self);
-        try
-          DrtWriter.WriteFile(FileName);
-        finally
-          DrtWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.DrtPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        RchWriter := TModflowRCH_Writer.Create(self);
-        try
-          RchWriter.WriteFile(FileName);
-        finally
-          RchWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.RchPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        EvtWriter := TModflowEVT_Writer.Create(self);
-        try
-          EvtWriter.WriteFile(FileName);
-        finally
-          EvtWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.EvtPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        EtsWriter := TModflowETS_Writer.Create(self);
-        try
-          EtsWriter.WriteFile(FileName);
-        finally
-          EtsWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.EtsPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        ResWriter := TModflowRES_Writer.Create(self);
-        try
-          ResWriter.WriteFile(FileName);
-        finally
-          ResWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.ResPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        Mnw2Writer := TModflowMNW2_Writer.Create(self);
-        try
-          Mnw2Writer.WriteFile(FileName);
-          Mnw2Writer.WriteMnwiFile(FileName, GageUnitNumber);
-        finally
-          Mnw2Writer.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.Mnw2Package.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        LakWriter := TModflowLAK_Writer.Create(self);
-        try
-          LakWriter.WriteFile(FileName, GageUnitNumber, Gages);
-        finally
-          LakWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.LakPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        // SfrWriter requires that LakWriter be completed first
-        // so that TScreenObject.ModflowLakBoundary.TrueLakeID
-        // is set properly.
-        SfrWriter := TModflowSFR_Writer.Create(self);
-        try
-          SfrWriter.WriteFile(FileName, GageUnitNumber, Gages);
-          FDataArrayManager.CacheDataArrays;
-          Application.ProcessMessages;
-          if not frmProgressMM.ShouldContinue then
-          begin
-            Exit;
-          end;
-          if ModflowPackages.SfrPackage.IsSelected then
-          begin
-            frmProgressMM.StepIt;
-          end;
-
-          HydModWriter := TModflowHydmodWriter.Create(self);
-          try
-            HydModWriter.WriteFile(FileName, SfrWriter);
-          finally
-            HydModWriter.Free;
-          end;
-          FDataArrayManager.CacheDataArrays;
-          Application.ProcessMessages;
-          if not frmProgressMM.ShouldContinue then
-          begin
-            Exit;
-          end;
-          if ModflowPackages.HydmodPackage.IsSelected then
-          begin
-            frmProgressMM.StepIt;
-          end;
-
-
-          // GagWriter requires that LakWriter and SfrWriter be completed first
-          // so that the data in Gages is set.
-          GagWriter := TModflowGAG_Writer.Create(self);
-          try
-            GagWriter.WriteFile(FileName, Gages, SfrWriter, GageUnitNumber);
-          finally
-            GagWriter.Free;
-          end;
-          FDataArrayManager.CacheDataArrays;
-          Application.ProcessMessages;
-          if not frmProgressMM.ShouldContinue then
-          begin
-            Exit;
-          end;
-          if ModflowPackages.SfrPackage.IsSelected
-            or ModflowPackages.LakPackage.IsSelected then
-          begin
-            frmProgressMM.StepIt;
-          end;
-
-        finally
-          SfrWriter.Free;
-        end;
-
-
-        HfbWriter := TModflowHfb_Writer.Create(Self);
-        try
-          HfbWriter.WriteFile(FileName);
-        finally
-          HfbWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.HfbPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        UzfWriter := TModflowUzfWriter.Create(Self);
-        try
-          UzfWriter.WriteFile(FileName, GageUnitNumber);
-        finally
-          UzfWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.UzfPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        SubWriter := TModflowSUB_Writer.Create(Self);
-        try
-          SubWriter.WriteFile(FileName);
-        finally
-          SubWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.SubPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        SwtWriter := TModflowSWT_Writer.Create(Self);
-        try
-          SwtWriter.WriteFile(FileName);
-        finally
-          SwtWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.SwtPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-        // It is important that the TModflowZoneWriter not be used
-        // until after all the zones have been identified through the
-        // export of TModflowLPF_Writer and any other packages that use
-        // zone arrays.
-        ZoneWriter := TModflowZoneWriter.Create(self);
-        try
-          ZoneWriter.WriteFile(FileName);
-        finally
-          ZoneWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ZoneUsed then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        // It is important that the TModflowMultiplierWriter not be used
-        // until after all the multiplier arrays have been identified through the
-        // export of TModflowLPF_Writer and any other packages that use
-        // multiplier arrays.
-        MultiplierWriter := TModflowMultiplierWriter.Create(self);
-        try
-          MultiplierWriter.WriteFile(FileName);
-        finally
-          MultiplierWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if MultipliersUsed then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        HobWriter := TModflowHobWriter.Create(Self);
-        try
-          HobWriter.WriteFile(FileName, ObservationPurpose);
-        finally
-          HobWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.HobPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        FinalizePvalAndTemplate(FileName);
-
-        NameWriter.SaveNameFile(FileName);
+        BasicWriter.WriteFile(FileName);
       finally
-        NameWriter.Free;
-        Gages.Free;
+        BasicWriter.Free;
       end;
-
+      FDataArrayManager.CacheDataArrays;
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
+      frmProgressMM.StepIt;
 
-      BatchFileLocation := WriteModflowBatchFile(
-        ProgramLocations,
-        ChangeFileExt(FileName, '.nam'), ListFileName,
-        ModflowOptions.OpenInTextEditor, BatchFileAdditionsBeforeModel,
-        BatchFileAdditionsAfterModel);
-
+      OCWriter := TOutputControlWriter.Create(self);
+      try
+        OCWriter.WriteFile(FileName);
+      finally
+        OCWriter.Free;
+      end;
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
+      frmProgressMM.StepIt;
 
-      if RunModel then
-      begin
-        WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
+      PcgWriter := TPcgWriter.Create(self);
+      try
+        PcgWriter.WriteFile(FileName);
+      finally
+        PcgWriter.Free;
       end;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.PcgPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      GmgWriter := TGmgWriter.Create(self);
+      try
+        GmgWriter.WriteFile(FileName);
+      finally
+        GmgWriter.Free;
+      end;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.GmgPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      SipWriter := TSipWriter.Create(self);
+      try
+        SipWriter.WriteFile(FileName);
+      finally
+        SipWriter.Free;
+      end;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.SipPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      De4Writer := TDe4Writer.Create(self);
+      try
+        De4Writer.WriteFile(FileName);
+      finally
+        De4Writer.Free;
+      end;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.De4Package.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      LPF_Writer := TModflowLPF_Writer.Create(self);
+      try
+        LPF_Writer.WriteFile(FileName);
+      finally
+        LPF_Writer.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.LpfPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      BCF_Writer := TModflowBCF_Writer.Create(self);
+      try
+        BCF_Writer.WriteFile(FileName);
+      finally
+        BCF_Writer.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.BcfPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      HUF_Writer := TModflowHUF_Writer.Create(self);
+      try
+        HUF_Writer.WriteFile(FileName);
+      finally
+        HUF_Writer.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.HufPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      KDEP_Writer := TModflowKDEP_Writer.Create(self);
+      try
+        KDEP_Writer.WriteFile(FileName);
+      finally
+        KDEP_Writer.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.HufPackage.IsSelected
+        and (HufParameters.CountParameters([ptHUF_KDEP]) > 0) then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      LVDA_Writer := TModflowLVDA_Writer.Create(self);
+      try
+        LVDA_Writer.WriteFile(FileName);
+      finally
+        LVDA_Writer.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.HufPackage.IsSelected
+        and (ModflowSteadyParameters.CountParameters([ptHUF_LVDA]) > 0) then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      ChdWriter := TModflowCHD_Writer.Create(self);
+      try
+        ChdWriter.WriteFile(FileName);
+        ChdWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
+      finally
+        ChdWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.ChdBoundary.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      GhbWriter := TModflowGHB_Writer.Create(self);
+      try
+        GhbWriter.WriteFile(FileName);
+        GhbWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
+      finally
+        GhbWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.GhbBoundary.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      WellWriter := TModflowWEL_Writer.Create(self);
+      try
+        WellWriter.WriteFile(FileName);
+      finally
+        WellWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.WelPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      RivWriter := TModflowRIV_Writer.Create(self);
+      try
+        RivWriter.WriteFile(FileName);
+        RivWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
+      finally
+        RivWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.RivPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      DrnWriter := TModflowDRN_Writer.Create(self);
+      try
+        DrnWriter.WriteFile(FileName);
+        DrnWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
+      finally
+        DrnWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.DrnPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      DrtWriter := TModflowDRT_Writer.Create(self);
+      try
+        DrtWriter.WriteFile(FileName);
+      finally
+        DrtWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.DrtPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      RchWriter := TModflowRCH_Writer.Create(self);
+      try
+        RchWriter.WriteFile(FileName);
+      finally
+        RchWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.RchPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      EvtWriter := TModflowEVT_Writer.Create(self);
+      try
+        EvtWriter.WriteFile(FileName);
+      finally
+        EvtWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.EvtPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      EtsWriter := TModflowETS_Writer.Create(self);
+      try
+        EtsWriter.WriteFile(FileName);
+      finally
+        EtsWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.EtsPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      ResWriter := TModflowRES_Writer.Create(self);
+      try
+        ResWriter.WriteFile(FileName);
+      finally
+        ResWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.ResPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      Mnw2Writer := TModflowMNW2_Writer.Create(self);
+      try
+        Mnw2Writer.WriteFile(FileName);
+        Mnw2Writer.WriteMnwiFile(FileName, GageUnitNumber);
+      finally
+        Mnw2Writer.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.Mnw2Package.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      LakWriter := TModflowLAK_Writer.Create(self);
+      try
+        LakWriter.WriteFile(FileName, GageUnitNumber, Gages);
+      finally
+        LakWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.LakPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      // SfrWriter requires that LakWriter be completed first
+      // so that TScreenObject.ModflowLakBoundary.TrueLakeID
+      // is set properly.
+      SfrWriter := TModflowSFR_Writer.Create(self);
+      try
+        SfrWriter.WriteFile(FileName, GageUnitNumber, Gages);
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.SfrPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+        HydModWriter := TModflowHydmodWriter.Create(self);
+        try
+          HydModWriter.WriteFile(FileName, SfrWriter);
+        finally
+          HydModWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.HydmodPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+
+        // GagWriter requires that LakWriter and SfrWriter be completed
+        // first so that the data in Gages is set.
+        GagWriter := TModflowGAG_Writer.Create(self);
+        try
+          GagWriter.WriteFile(FileName, Gages, SfrWriter, GageUnitNumber);
+        finally
+          GagWriter.Free;
+        end;
+        FDataArrayManager.CacheDataArrays;
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ModflowPackages.SfrPackage.IsSelected
+          or ModflowPackages.LakPackage.IsSelected then
+        begin
+          frmProgressMM.StepIt;
+        end;
+
+      finally
+        SfrWriter.Free;
+      end;
+
+
+      HfbWriter := TModflowHfb_Writer.Create(Self);
+      try
+        HfbWriter.WriteFile(FileName);
+      finally
+        HfbWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.HfbPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      UzfWriter := TModflowUzfWriter.Create(Self);
+      try
+        UzfWriter.WriteFile(FileName, GageUnitNumber);
+      finally
+        UzfWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.UzfPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      SubWriter := TModflowSUB_Writer.Create(Self);
+      try
+        SubWriter.WriteFile(FileName);
+      finally
+        SubWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.SubPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      SwtWriter := TModflowSWT_Writer.Create(Self);
+      try
+        SwtWriter.WriteFile(FileName);
+      finally
+        SwtWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.SwtPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+      // It is important that the TModflowZoneWriter not be used
+      // until after all the zones have been identified through the
+      // export of TModflowLPF_Writer and any other packages that use
+      // zone arrays.
+      ZoneWriter := TModflowZoneWriter.Create(self);
+      try
+        ZUsed := ZoneWriter.WriteFile(FileName);
+      finally
+        ZoneWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ZUsed then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      // It is important that the TModflowMultiplierWriter not be used
+      // until after all the multiplier arrays have been identified through the
+      // export of TModflowLPF_Writer and any other packages that use
+      // multiplier arrays.
+      MultiplierWriter := TModflowMultiplierWriter.Create(self);
+      try
+        MultipUsed := MultiplierWriter.WriteFile(FileName);
+      finally
+        MultiplierWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if MultipUsed then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      HobWriter := TModflowHobWriter.Create(Self);
+      try
+        HobWriter.WriteFile(FileName, ObservationPurpose);
+      finally
+        HobWriter.Free;
+      end;
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.HobPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
+
+      FinalizePvalAndTemplate(FileName);
+
+      LocalNameWriter.SaveNameFile(FileName);
     finally
-      frmProgressMM.btnAbort.Visible := False;
-      frmProgressMM.Hide;
-      if frmProgressMM.Owner = nil then
-      begin
-        FreeAndNil(frmProgressMM);
-      end;
-      frmFormulaErrors.DelayShowing := False;
-//      ReclaimMemory;
+      SetCurrentNameFileWriter(nil);
+      Gages.Free;
     end;
-  except on E: EFCreateError do
-    begin
-      Beep;
-      MessageDlg(E.Message, mtError, [mbOK], 0);
-    end;
+
+//    Application.ProcessMessages;
+//    if not frmProgressMM.ShouldContinue then
+//    begin
+//      Exit;
+//    end;
+//
+//    BatchFileLocation := WriteModflowBatchFile(
+//      ProgramLocations,
+//      ChangeFileExt(FileName, '.nam'), ListFileName,
+//      ModflowOptions.OpenInTextEditor, BatchFileAdditionsBeforeModel,
+//      BatchFileAdditionsAfterModel);
+//
+//    Application.ProcessMessages;
+//    if not frmProgressMM.ShouldContinue then
+//    begin
+//      Exit;
+//    end;
+//
+//    if RunModel then
+//    begin
+//      WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
+//    end;
+  finally
+    UpdateCurrentModel(SelectedModel);
   end;
 end;
 
@@ -15186,6 +19398,121 @@ begin
 //    ReclaimMemory;
   end;
 end;
+
+procedure TCustomModel.ExportSeparateLgrModel(const FileName: string;
+  RunModel: boolean);
+var
+  IUPBHSV: Integer;
+  IUPBFSV: Integer;
+  NameFile: string;
+  HeadFile: string;
+  ANameFileWriter: TNameFileWriter;
+  FlowFile: string;
+  ListFileNames: TStringList;
+  ListFileName: string;
+  BatchFileLocation: string;
+  FileDir: string;
+begin
+  if frmProgressMM = nil then
+  begin
+    frmProgressMM := TfrmProgressMM.Create(nil);
+  end;
+  try
+    frmFormulaErrors.DelayShowing := True;
+    try
+      frmProgressMM.Prefix := 'File ';
+      frmProgressMM.Caption := 'Exporting MODFLOW-LGR input files';
+      frmProgressMM.btnAbort.Visible := True;
+      frmProgressMM.ShouldContinue := True;
+      frmProgressMM.Show;
+
+
+      frmProgressMM.pbProgress.Max := CountStepsInExport;
+      frmProgressMM.pbProgress.Position := 0;
+
+      if not PrepareModflowFullStressPeriods then
+      begin
+        Exit;
+      end;
+
+      IUPBHSV := UnitNumbers.UnitNumber(BFH_Heads);
+      IUPBFSV := UnitNumbers.UnitNumber(BFH_Fluxes);
+      NameFile := FixFileName(ExtractFileName(FileName));
+
+      if self is TChildModel then
+      begin
+        FileDir := ExtractFilePath(FileName);
+        NameFile := FileDir + TChildModel(self).Child_NameFile_Name(NameFile);
+      end;
+
+      HeadFile := ChangeFileExt(NameFile, '.bfh_head');
+      FlowFile := ChangeFileExt(NameFile, '.bfh_flux');
+      ANameFileWriter := NameFileWriter as TNameFileWriter;
+      SetCurrentNameFileWriter(ANameFileWriter);
+      if self is TChildModel then
+      begin
+        ANameFileWriter.WriteToNameFile('BFH', IUPBHSV, HeadFile, foInput);
+        ANameFileWriter.WriteToNameFile(StrDATA, IUPBFSV, FlowFile, foInput);
+      end
+      else
+      begin
+        ANameFileWriter.WriteToNameFile(StrDATA, IUPBHSV, HeadFile, foInput);
+        ANameFileWriter.WriteToNameFile('BFH', IUPBFSV, FlowFile, foInput);
+      end;
+
+      InternalExportModflowModel(NameFile);
+
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+
+
+
+      ListFileNames := TStringList.Create;
+      try
+
+        ListFileName := (NameFileWriter as TNameFileWriter).ListFileName;
+        ListFileNames.Add(ListFileName);
+
+        BatchFileLocation := WriteModflowBatchFile(
+          ProgramLocations,
+          ChangeFileExt(NameFile, '.nam'), ListFileNames,
+          ModflowOptions.OpenInTextEditor, BatchFileAdditionsBeforeModel,
+          BatchFileAdditionsAfterModel);
+
+      finally
+        ListFileNames.Free;
+      end;
+
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      if RunModel then
+      begin
+        WinExec(PChar('"' + BatchFileLocation + '"'), SW_SHOW);
+      end;
+
+    finally
+      frmProgressMM.btnAbort.Visible := False;
+      frmProgressMM.Hide;
+      if frmProgressMM.Owner = nil then
+      begin
+        FreeAndNil(frmProgressMM);
+      end;
+      frmFormulaErrors.DelayShowing := False;
+    end;
+  except on E: EFCreateError do
+    begin
+      Beep;
+      MessageDlg(E.Message, mtError, [mbOK], 0);
+    end;
+  end;end;
 
 procedure TCustomModel.ExportZoneBudgetModel(FileName: string; RunModel: boolean);
 var
@@ -15354,14 +19681,46 @@ end;
 
 { TChildModelCollection }
 
-constructor TChildModelCollection.Create(Model: TComponent);
+procedure TChildModelCollection.Assign(Source: TPersistent);
+begin
+  inherited;
+  UpdateUnitNumbers;
+end;
+
+constructor TChildModelCollection.Create(Model: TBaseModel);
 begin
   inherited Create(TChildModelItem, Model);
+end;
+
+procedure TChildModelCollection.UpdateUnitNumbers;
+const
+  // It is assumed here that  MODFLOW will never have more than 1000
+  // files included in the name file.
+  UnitNumberOffset = 1000;
+var
+  ItemIndex: Integer;
+begin
+  for ItemIndex := 0 to Count - 1 do
+  begin
+    Items[ItemIndex].ChildModel.UnitNumbers.AddedValue :=
+      (ItemIndex + 1) * UnitNumberOffset;
+  end;
 end;
 
 function TChildModelCollection.GetItem(Index: integer): TChildModelItem;
 begin
   result := inherited Items[Index] as TChildModelItem;
+end;
+
+procedure TChildModelCollection.Loaded;
+var
+  ItemIndex: Integer;
+begin
+  for ItemIndex := 0 to Count - 1 do
+  begin
+    Items[ItemIndex].Loaded;
+  end;
+  UpdateUnitNumbers;
 end;
 
 procedure TChildModelCollection.SetItem(Index: integer;
@@ -15372,18 +19731,96 @@ end;
 
 { TChildModelItem }
 
+procedure TChildModelItem.Assign(Source: TPersistent);
+begin
+  if Source is TChildModelItem then
+  begin
+    ChildModel.Assign(TChildModelItem(Source).ChildModel);
+  end
+  else if Source is TChildModelEdit then
+  begin
+    ChildModel.Assign(TChildModelEdit(Source));
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
 constructor TChildModelItem.Create(Collection: TCollection);
 begin
   inherited;
-  FChildModel := TChildModel.Create(nil);
-  FChildModel.FParentModel := Model as TCustomModel;
-  FChildModel.Assign(FChildModel.FParentModel);
+  FChildModel := TChildModel.Create(Model as TCustomModel);
+  if FChildModel.FParentModel <> nil then
+  begin
+    FChildModel.Assign(FChildModel.FParentModel);
+  end;
+  FChildModel.SetSubComponent(True);
 end;
 
 destructor TChildModelItem.Destroy;
 begin
   FChildModel.Free;
   inherited;
+end;
+
+function TChildModelItem.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  AnotherChildItem: TChildModelItem;
+  ChildEdit: TChildModelEdit;
+begin
+    // When editing this section, be sure to edit TChildModelEdit
+    // and TChildModel too
+  result := AnotherItem is TChildModelItem;
+  if result then
+  begin
+    AnotherChildItem := TChildModelItem(AnotherItem);
+    result := ChildModel = AnotherChildItem.ChildModel;
+    if not result and (ChildModel <> nil)
+      and (AnotherChildItem.ChildModel <> nil) then
+    begin
+      result :=
+        (ChildModel.ModelName = AnotherChildItem.ChildModel.ModelName)
+        and (ChildModel.ChildCellsPerParentCell = AnotherChildItem.ChildModel.ChildCellsPerParentCell)
+        and (ChildModel.StartingHeadSource = AnotherChildItem.ChildModel.StartingHeadSource)
+//        and (ChildModel.OneWayCoupling = AnotherChildItem.ChildModel.OneWayCoupling)
+        and (ChildModel.CouplingMethod = AnotherChildItem.ChildModel.CouplingMethod)
+        and (ChildModel.MaxIterations = AnotherChildItem.ChildModel.MaxIterations)
+        and (ChildModel.LgrPrintChoice = AnotherChildItem.ChildModel.LgrPrintChoice)
+        and (ChildModel.HeadRelaxationFactor = AnotherChildItem.ChildModel.HeadRelaxationFactor)
+        and (ChildModel.FluxRelaxationFactor = AnotherChildItem.ChildModel.FluxRelaxationFactor)
+        and (ChildModel.HeadClosureCriterion = AnotherChildItem.ChildModel.HeadClosureCriterion)
+        and (ChildModel.FluxClosureCriterion = AnotherChildItem.ChildModel.FluxClosureCriterion)
+        and ChildModel.Discretization.IsSame(AnotherChildItem.ChildModel.Discretization);
+    end;
+  end
+  else if AnotherItem is TChildModelEdit then
+  begin
+    ChildEdit := TChildModelEdit(AnotherItem);
+    result := ChildModel = ChildEdit.FChildModel;
+    if result then
+    begin
+      result :=
+        (ChildModel.ModelName = ChildEdit.ModelName)
+        and (ChildModel.ChildCellsPerParentCell = ChildEdit.ChildCellsPerParentCell)
+        and (ChildModel.StartingHeadSource = ChildEdit.StartingHeadSource)
+//        and (ChildModel.OneWayCoupling = ChildEdit.OneWayCoupling)
+        and (ChildModel.CouplingMethod = ChildEdit.CouplingMethod)
+        and (ChildModel.MaxIterations = ChildEdit.MaxIterations)
+        and (ChildModel.LgrPrintChoice = ChildEdit.LgrPrintChoice)
+        and (ChildModel.HeadRelaxationFactor = ChildEdit.HeadRelaxationFactor)
+        and (ChildModel.FluxRelaxationFactor = ChildEdit.FluxRelaxationFactor)
+        and (ChildModel.HeadClosureCriterion = ChildEdit.HeadClosureCriterion)
+        and (ChildModel.FluxClosureCriterion = ChildEdit.FluxClosureCriterion)
+        and ChildModel.Discretization.IsSame(ChildEdit.Discretization)
+    end;
+  end;
+
+end;
+
+procedure TChildModelItem.Loaded;
+begin
+  ChildModel.Loaded;
 end;
 
 procedure TChildModelItem.SetChildModel(const Value: TChildModel);
@@ -15393,18 +19830,975 @@ end;
 
 { TChildModel }
 
+procedure TChildModel.AdjustCellPosition(AValueCell: TValueCell);
+var
+  Column: Integer;
+  Row: Integer;
+  Layer: Integer;
+begin
+  Column := AValueCell.Column;
+  Row := AValueCell.Row;
+  Layer := AValueCell.Layer;
+  AdjustCellPosition(Column, Row, Layer);
+  AValueCell.Column := Column;
+  AValueCell.Row := Row;
+  AValueCell.Layer := Layer;
+//
+//  if AValueCell.Column = 0 then
+//  begin
+//    AValueCell.Column := 1;
+//  end;
+//  if AValueCell.Column = ModflowGrid.ColumnCount-1 then
+//  begin
+//    AValueCell.Column := ModflowGrid.ColumnCount-2;
+//  end;
+//  if AValueCell.Row = 0 then
+//  begin
+//    AValueCell.Row := 1;
+//  end;
+//  if AValueCell.Row = ModflowGrid.RowCount-1 then
+//  begin
+//    AValueCell.Row := ModflowGrid.RowCount-2;
+//  end;
+//  if AValueCell.Layer = ModflowGrid.LayerCount-1 then
+//  begin
+//    if (Discretization.BottomLayerGroup <> LayerStructure.Last)
+//      or (Discretization.BottomLayerInUnit <> Discretization.BottomLayerGroup.LayerCount-1) then
+//    begin
+//      AValueCell.Layer := ModflowGrid.LayerCount-2
+//    end;
+//  end;
+end;
+
+procedure TChildModel.AdjustCellPosition(ACellAssignment: TCellAssignment);
+var
+  Column: Integer;
+  Row: Integer;
+  Layer: Integer;
+begin
+  Column := ACellAssignment.Column;
+  Row := ACellAssignment.Row;
+  Layer := ACellAssignment.Layer;
+  AdjustCellPosition(Column, Row, Layer);
+  ACellAssignment.Column := Column;
+  ACellAssignment.Row := Row;
+  ACellAssignment.Layer := Layer;
+end;
+
+procedure TChildModel.AdjustCellPosition(var Column, Row, Layer: integer);
+begin
+  if Column = 0 then
+  begin
+    Column := 1;
+  end;
+  if Column = ModflowGrid.ColumnCount-1 then
+  begin
+    Column := ModflowGrid.ColumnCount-2;
+  end;
+  if Row = 0 then
+  begin
+    Row := 1;
+  end;
+  if Row = ModflowGrid.RowCount-1 then
+  begin
+    Row := ModflowGrid.RowCount-2;
+  end;
+  if Layer = ModflowGrid.LayerCount-1 then
+  begin
+    if (Discretization.BottomLayerGroup <> LayerStructure.Last)
+      or (Discretization.BottomLayerInUnit <> Discretization.BottomLayerGroup.LayerCount-1) then
+    begin
+      Layer := ModflowGrid.LayerCount-2
+    end;
+  end;
+end;
+
+procedure TChildModel.AdjustDataArray(ADataArray: TDataArray);
+var
+  AnnotationList: TStringList;
+  ColIndex: Integer;
+  LayerIndex: Integer;
+  NewAnnotation: string;
+  AnnotationPosition: Integer;
+  OuterCellArea: Real;
+  InnerCellArea: Real;
+  OuterGridIndex: Integer;
+  InnerGridIndex: Integer;
+  RowIndex: Integer;
+begin
+  Assert(ADataArray.DataType in [rdtDouble, rdtBoolean]);
+  Assert(ADataArray.ColumnCount >= 3);
+  Assert(ADataArray.RowCount >= 3);
+  AnnotationList := TStringList.Create;
+  try
+    AnnotationList.Sorted := True;
+    for LayerIndex := 0 to ADataArray.LayerCount - 1 do
+    begin
+      for ColIndex := 0 to ADataArray.ColumnCount - 1 do
+      begin
+        OuterGridIndex := 0;
+        InnerGridIndex := 1;
+        if ADataArray.IsValue[LayerIndex, OuterGridIndex, ColIndex] then
+        begin
+          OuterCellArea := ModflowGrid.ColumnWidth[ColIndex]
+            * ModflowGrid.RowWidth[OuterGridIndex];
+          InnerCellArea := ModflowGrid.ColumnWidth[ColIndex]
+            * ModflowGrid.RowWidth[InnerGridIndex];
+          if ADataArray.IsValue[LayerIndex, InnerGridIndex, ColIndex] then
+          begin
+            NewAnnotation := 'Combined values for LGR: '
+              + ADataArray.Annotation[LayerIndex, OuterGridIndex, ColIndex]
+              + ', ' + ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex];
+            AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+            if AnnotationPosition >= 0 then
+            begin
+              NewAnnotation := AnnotationList[AnnotationPosition];
+            end
+            else
+            begin
+              AnnotationList.Add(NewAnnotation)
+            end;
+            case ADataArray.DataType of
+              rdtDouble:
+                ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
+                  := ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
+                  + ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex]
+                  * OuterCellArea / InnerCellArea;
+              rdtBoolean:
+                ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex] :=
+                  ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
+                  or ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex];
+              else Assert(False);
+            end;
+            ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex]
+              := NewAnnotation;
+          end
+          else
+          begin
+            case ADataArray.DataType of
+              rdtDouble:
+                ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
+                  := ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex]
+                  * OuterCellArea / InnerCellArea;
+              rdtBoolean:
+                ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
+                  := ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex];
+              else Assert(False);
+            end;
+            ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex] :=
+              ADataArray.Annotation[LayerIndex, OuterGridIndex, ColIndex];
+          end;
+          case ADataArray.DataType of
+            rdtDouble:
+              ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex] := 0;
+            rdtBoolean:
+              ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex] := False;
+            else Assert(False);
+          end;
+        end;
+
+        OuterGridIndex := ADataArray.RowCount-1;
+        InnerGridIndex := ADataArray.RowCount-2;
+        if ADataArray.IsValue[LayerIndex, OuterGridIndex, ColIndex] then
+        begin
+          OuterCellArea := ModflowGrid.ColumnWidth[ColIndex]
+            * ModflowGrid.RowWidth[OuterGridIndex];
+          InnerCellArea := ModflowGrid.ColumnWidth[ColIndex]
+            * ModflowGrid.RowWidth[InnerGridIndex];
+          if ADataArray.IsValue[LayerIndex, InnerGridIndex, ColIndex] then
+          begin
+            NewAnnotation := 'Combined values for LGR: '
+              + ADataArray.Annotation[LayerIndex, OuterGridIndex, ColIndex]
+              + ', ' + ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex];
+            AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+            if AnnotationPosition >= 0 then
+            begin
+              NewAnnotation := AnnotationList[AnnotationPosition];
+            end
+            else
+            begin
+              AnnotationList.Add(NewAnnotation)
+            end;
+            case ADataArray.DataType of
+              rdtDouble:
+                ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
+                  := ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
+                  + ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex]
+                  * OuterCellArea / InnerCellArea;
+              rdtBoolean:
+                ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
+                  := ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
+                  or ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex]
+              else Assert(False);
+
+            end;
+            ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex]
+              := NewAnnotation;
+          end
+          else
+          begin
+            case ADataArray.DataType of
+              rdtDouble:
+                ADataArray.RealData[LayerIndex, InnerGridIndex, ColIndex]
+                  := ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex]
+                  * OuterCellArea / InnerCellArea;
+              rdtBoolean:
+                ADataArray.BooleanData[LayerIndex, InnerGridIndex, ColIndex]
+                  := ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex]
+              else Assert(False);
+            end;
+            ADataArray.Annotation[LayerIndex, InnerGridIndex, ColIndex] :=
+              ADataArray.Annotation[LayerIndex, OuterGridIndex, ColIndex];
+          end;
+          case ADataArray.DataType of
+            rdtDouble:
+              ADataArray.RealData[LayerIndex, OuterGridIndex, ColIndex] := 0;
+            rdtBoolean:
+              ADataArray.BooleanData[LayerIndex, OuterGridIndex, ColIndex] := False;
+            else Assert(False);
+          end;
+        end;
+      end;
+
+
+      for RowIndex := 0 to ADataArray.RowCount - 1 do
+      begin
+        OuterGridIndex := 0;
+        InnerGridIndex := 1;
+        if ADataArray.IsValue[LayerIndex, RowIndex, OuterGridIndex] then
+        begin
+          OuterCellArea := ModflowGrid.ColumnWidth[OuterGridIndex]
+            * ModflowGrid.RowWidth[RowIndex];
+          InnerCellArea := ModflowGrid.ColumnWidth[InnerGridIndex]
+            * ModflowGrid.RowWidth[RowIndex];
+          if ADataArray.IsValue[LayerIndex, RowIndex, InnerGridIndex] then
+          begin
+            NewAnnotation := 'Combined values for LGR: '
+              + ADataArray.Annotation[LayerIndex, RowIndex, OuterGridIndex]
+              + ', ' + ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex];
+            AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+            if AnnotationPosition >= 0 then
+            begin
+              NewAnnotation := AnnotationList[AnnotationPosition];
+            end
+            else
+            begin
+              AnnotationList.Add(NewAnnotation)
+            end;
+            case ADataArray.DataType of
+              rdtDouble:
+                ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
+                  := ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
+                  + ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex]
+                  * OuterCellArea / InnerCellArea;
+              rdtBoolean:
+                ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
+                  := ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
+                  or ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex]
+              else Assert(False);
+            end;
+            ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex]
+              := NewAnnotation;
+          end
+          else
+          begin
+            case ADataArray.DataType of
+              rdtDouble:
+                ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
+                  := ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex]
+                  * OuterCellArea / InnerCellArea;
+              rdtBoolean:
+                ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
+                  := ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex]
+              else Assert(False);
+            end;
+            ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex] :=
+              ADataArray.Annotation[LayerIndex, RowIndex, OuterGridIndex];
+          end;
+            case ADataArray.DataType of
+              rdtDouble:
+                ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex] := 0;
+              rdtBoolean:
+                ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex] := False;
+              else Assert(False);
+            end;
+        end;
+
+        OuterGridIndex := ADataArray.ColumnCount-1;
+        InnerGridIndex := ADataArray.ColumnCount-2;
+        if ADataArray.IsValue[LayerIndex, RowIndex, OuterGridIndex] then
+        begin
+          OuterCellArea := ModflowGrid.ColumnWidth[OuterGridIndex]
+            * ModflowGrid.RowWidth[RowIndex];
+          InnerCellArea := ModflowGrid.ColumnWidth[InnerGridIndex]
+            * ModflowGrid.RowWidth[RowIndex];
+          if ADataArray.IsValue[LayerIndex, RowIndex, InnerGridIndex] then
+          begin
+            NewAnnotation := 'Combined values for LGR: '
+              + ADataArray.Annotation[LayerIndex, RowIndex, OuterGridIndex]
+              + ', ' + ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex];
+            AnnotationPosition := AnnotationList.IndexOf(NewAnnotation);
+            if AnnotationPosition >= 0 then
+            begin
+              NewAnnotation := AnnotationList[AnnotationPosition];
+            end
+            else
+            begin
+              AnnotationList.Add(NewAnnotation)
+            end;
+            case ADataArray.DataType of
+              rdtDouble:
+                ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
+                  := ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
+                  + ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex]
+                  * OuterCellArea / InnerCellArea;
+              rdtBoolean:
+                ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
+                  := ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
+                  or ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex];
+              else Assert(False);
+            end;
+            ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex]
+              := NewAnnotation;
+          end
+          else
+          begin
+            case ADataArray.DataType of
+              rdtDouble:
+                ADataArray.RealData[LayerIndex, RowIndex, InnerGridIndex]
+                  := ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex]
+                  * OuterCellArea / InnerCellArea;
+              rdtBoolean:
+                ADataArray.BooleanData[LayerIndex, RowIndex, InnerGridIndex]
+                  := ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex]
+              else Assert(False);
+            end;
+            ADataArray.Annotation[LayerIndex, RowIndex, InnerGridIndex] :=
+              ADataArray.Annotation[LayerIndex, RowIndex, OuterGridIndex];
+          end;
+          case ADataArray.DataType of
+            rdtDouble:
+              ADataArray.RealData[LayerIndex, RowIndex, OuterGridIndex] := 0;
+            rdtBoolean:
+              ADataArray.BooleanData[LayerIndex, RowIndex, OuterGridIndex] := False;
+            else Assert(False);
+          end;
+        end;
+      end
+    end;
+  finally
+    AnnotationList.Free;
+  end;
+end;
+
 procedure TChildModel.Assign(Source: TPersistent);
+var
+  SourceModel: TChildModel;
 begin
   if Source is TChildModel then
   begin
-    ModelName := TChildModel(Source).ModelName;
+    // When editing this section, be sure to edit TChildModelEdit
+    // and TChildModelItem too
+    SourceModel := TChildModel(Source);
+    ModelName := SourceModel.ModelName;
+    ChildCellsPerParentCell := SourceModel.ChildCellsPerParentCell;
+    Discretization := SourceModel.Discretization;
+    UpdateLayerCount;
+    StartingHeadSource := SourceModel.StartingHeadSource;
+//    OneWayCoupling := SourceModel.OneWayCoupling;
+    CouplingMethod := SourceModel.CouplingMethod;
+    MaxIterations := SourceModel.MaxIterations;
+    LgrPrintChoice := SourceModel.LgrPrintChoice;
+    HeadRelaxationFactor := SourceModel.HeadRelaxationFactor;
+    FluxRelaxationFactor := SourceModel.FluxRelaxationFactor;
+    HeadClosureCriterion := SourceModel.HeadClosureCriterion;
+    FluxClosureCriterion := SourceModel.FluxClosureCriterion;
   end;
   inherited;
+end;
+
+function TChildDiscretizationCollection.GetAnItemByGroupAndLayer(
+  LayerGroup: TLayerGroup; SubLayer: integer): TChildDiscretization;
+var
+  Index: Integer;
+  Item: TChildDiscretization;
+  PriorItem: TChildDiscretization;
+begin
+  Assert(LayerGroup.Index <> 0);
+  result := nil;
+  for Index := 0 to Count - 1 do
+  begin
+    Item := Items[Index] as TChildDiscretization;
+    if (Item.LayerGroup = LayerGroup)
+      and (Item.ParentLayerNumber = SubLayer) then
+    begin
+      result := Item;
+      Exit;
+    end;
+  end;
+  if result = nil then
+  begin
+    result := Add as TChildDiscretization;
+    result.LayerGroup := LayerGroup;
+    result.ParentLayerNumber := SubLayer;
+    if SubLayer > 0 then
+    begin
+      PriorItem := GetAnItemByGroupAndLayer(LayerGroup, SubLayer-1);
+      result.Discretization := PriorItem.Discretization;
+    end;
+  end;
+end;
+
+procedure TChildDiscretizationCollection.SortAndDeleteExtraItems;
+var
+  Index: Integer;
+  Item: TChildDiscretization;
+  InnerIndex: Integer;
+begin
+  Sort;
+  for Index := Count - 1 downto 0 do
+  begin
+    Item := Items[Index];
+    if Item.LayerGroup = BottomLayerGroup then
+    begin
+      for InnerIndex := Index downto 0 do
+      begin
+        Item := Items[InnerIndex];
+        if Item.ParentLayerNumber > BottomLayerInUnit then
+        begin
+          Delete(InnerIndex);
+        end
+        else
+        begin
+          break;
+        end;
+      end;
+      break;
+    end
+    else
+    begin
+      Delete(Index);
+    end;
+  end;
+end;
+
+procedure TChildDiscretizationCollection.Update(Item: TCollectionItem);
+begin
+  inherited;
+  if Item <> nil then
+  begin
+    FChanged := True;
+  end;
+  if (UpdateCount = 0) and FChanged then
+  begin
+    if Model <> nil then
+    begin
+      (Model as TChildModel).ModflowGrid.NotifyGridChanged(self);
+    end;
+  end;
+end;
+
+procedure TChildDiscretizationCollection.WriteLAYCB(
+  const DiscretizationWriter: TObject);
+var
+  DisWriter: TModflowDiscretizationWriter;
+  LocalModel: TChildModel;
+  GroupIndex: Integer;
+  LAYCB: array of integer;
+  AGroup: TLayerGroup;
+  DisIndex: Integer;
+  LayerIndex: integer;
+  DisItem: TChildDiscretization;
+  SubIndex: Integer;
+  Index: Integer;
+begin
+  LocalModel := Model as TChildModel;
+  SetLength(LAYCB, ModflowLayerCount);
+  LayerIndex := 0;
+  for GroupIndex := 1 to LocalModel.LayerStructure.Count - 1 do
+  begin
+    AGroup := LocalModel.LayerStructure[GroupIndex];
+    if AGroup.Simulated then
+    begin
+      for DisIndex := 0 to AGroup.LayerCount - 1 do
+      begin
+        DisItem := GetAnItemByGroupAndLayer(AGroup,DisIndex);
+        for SubIndex := 0 to DisItem.Discretization - 1 do
+        begin
+          if LayerIndex < Length(LAYCB) then
+          begin
+            LAYCB[LayerIndex] := 0;
+          end;
+          Inc(LayerIndex);
+        end;
+        if (AGroup = BottomLayerGroup)
+          and (DisIndex = BottomLayerInUnit) then
+        begin
+          break;
+        end;
+      end;
+    end
+    else
+    begin
+      if LayerIndex-1 < Length(LAYCB) then
+      begin
+        LAYCB[LayerIndex-1] := 1;
+      end;
+    end;
+    if (AGroup = BottomLayerGroup) then
+    begin
+      break;
+    end;
+  end;
+  DisWriter := DiscretizationWriter as TModflowDiscretizationWriter;
+  for Index := 0 to Length(LAYCB) - 1 do
+  begin
+    DisWriter.WriteInteger(LAYCB[Index]);
+  end;
+  DisWriter.WriteString(' # LAYCB');
+  DisWriter.NewLine;
+end;
+
+function CompareChildDisItems(Item1, Item2: Pointer): Integer;
+var
+  Child1: TChildDiscretization;
+  Child2: TChildDiscretization;
+begin
+  Child1 := Item1;
+  Child2 := Item2;
+  Assert(Child1.LayerGroup <> nil);
+  Assert(Child2.LayerGroup <> nil);
+  result := Child1.LayerGroup.Index - Child2.LayerGroup.Index;
+  if result = 0 then
+  begin
+    result := Child1.ParentLayerNumber - Child2.ParentLayerNumber;
+  end;
+end;
+
+procedure TChildDiscretizationCollection.Sort;
+var
+  ItemList: TList;
+  Item: TChildDiscretization;
+  Index: Integer;
+begin
+  ItemList := TList.Create;
+  try
+    ItemList.Capacity := Count;
+    for Index := 0 to Count - 1 do
+    begin
+      ItemList.Add(Items[Index]);
+    end;
+    ItemList.Sort(CompareChildDisItems);
+    for Index := 0 to ItemList.Count - 1 do
+    begin
+      Item := ItemList[Index];
+      Item.Index := Index;
+    end;
+  finally
+    ItemList.Free;
+  end;
+end;
+
+function TChildDiscretizationCollection.GetBottomLayerGroup: TLayerGroup;
+var
+  Index: Integer;
+  Group: TLayerGroup;
+begin
+  if (FBottomLayerGroup = nil) and (FBottomUnitName <> '') then
+  begin
+    for Index := 1 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+    begin
+      Group := frmGoPhast.PhastModel.LayerStructure[Index];
+      if Group.AquiferName = FBottomUnitName then
+      begin
+        FBottomLayerGroup := Group;
+        break;
+      end;
+    end;
+  end;
+  result := FBottomLayerGroup;
+end;
+
+function TChildDiscretizationCollection.GetBottomUnitName: string;
+begin
+  if BottomLayerGroup <> nil then
+  begin
+    result := BottomLayerGroup.AquiferName;
+  end
+  else
+  begin
+    result := FBottomUnitName
+  end;
+end;
+
+function TChildDiscretizationCollection.GetItem(
+  Index: integer): TChildDiscretization;
+begin
+  result := inherited Items[Index] as TChildDiscretization;
+end;
+
+function TChildDiscretizationCollection.IsSame(
+  AnOrderedCollection: TOrderedCollection): boolean;
+var
+  AnotherDis: TChildDiscretizationCollection;
+begin
+  result := AnOrderedCollection is TChildDiscretizationCollection;
+  if result then
+  begin
+    AnotherDis := TChildDiscretizationCollection(AnOrderedCollection);
+    result := inherited IsSame(AnOrderedCollection)
+      and (BottomUnitName = AnotherDis.BottomUnitName)
+      and (BottomLayerInUnit = AnotherDis.BottomLayerInUnit)
+  end;
+end;
+
+procedure TChildDiscretizationCollection.Loaded;
+var
+  ItemIndex: Integer;
+begin
+  for ItemIndex := 0 to Count - 1 do
+  begin
+    Items[ItemIndex].Loaded;
+  end;
+  GetBottomLayerGroup;
+end;
+
+function TChildDiscretizationCollection.ModflowConfiningBedCount: integer;
+var
+  GroupIndex: Integer;
+  LocalModel: TCustomModel;
+  AGroup: TLayerGroup;
+begin
+  result := 0;
+  LocalModel := Model as TCustomModel;
+  for GroupIndex := 1 to LocalModel.LayerStructure.Count - 1 do
+  begin
+    AGroup := LocalModel.LayerStructure[GroupIndex];
+    if AGroup = BottomLayerGroup then
+    begin
+      Exit;
+    end;
+    if not AGroup.Simulated then
+    begin
+      Inc(result);
+    end;
+  end;
+end;
+
+function TChildDiscretizationCollection.ModflowLayerCount: integer;
+var
+  GroupIndex: Integer;
+  LocalModel: TCustomModel;
+  AGroup: TLayerGroup;
+  DisItem: TChildDiscretization;
+  DisIndex: Integer;
+begin
+  result := 0;
+  LocalModel := Model as TCustomModel;
+  for GroupIndex := 1 to LocalModel.LayerStructure.Count - 1 do
+  begin
+    AGroup := LocalModel.LayerStructure[GroupIndex];
+    if AGroup.Simulated then
+    begin
+      for DisIndex := 0 to AGroup.LayerCount - 1 do
+      begin
+        DisItem := GetAnItemByGroupAndLayer(AGroup, DisIndex);
+        result := result + DisItem.Discretization;
+        if (AGroup = BottomLayerGroup) and (DisIndex = BottomLayerInUnit) then
+        begin
+          if (GroupIndex <> LocalModel.LayerStructure.Count - 1)
+            or (DisIndex <> AGroup.LayerCount - 1) then
+          begin
+            result := result - DisItem.Discretization div 2;
+          end;
+          Exit;
+        end;
+      end;
+    end;
+  end;
+end;
+
+function TChildModel.Chani: TOneDIntegerArray;
+begin
+  Result := ConvertIntegerParentArray(inherited Chani);
+end;
+
+function TChildModel.ChildColToParentCol(ACol: integer): integer;
+begin
+  if (ACol < 0) or (ACol >= Grid.ColumnCount) then
+  begin
+    result := -1;
+  end
+  else
+  begin
+    result := ((ACol + (ChildCellsPerParentCell div 2))
+       div ChildCellsPerParentCell) + FFirstCol
+  end;
+end;
+
+function TChildModel.ChildLayerToParentLayer(ALayer: integer): integer;
+var
+  CumulativeLayers: Integer;
+  LayerGroupIndex: Integer;
+  LayerGroup: TLayerGroup;
+  DisIndex: Integer;
+  DisItem: TChildDiscretization;
+begin
+  if (ALayer < 0) or (ALayer >= Grid.LayerCount) then
+  begin
+    result := -1;
+  end
+  else
+  begin
+    result := -1;
+    CumulativeLayers := -1;
+
+    for LayerGroupIndex := 1 to LayerStructure.Count - 1 do
+    begin
+      LayerGroup := LayerStructure[LayerGroupIndex];
+      for DisIndex := 0 to LayerGroup.LayerCount - 1 do
+      begin
+        DisItem := Discretization.GetAnItemByGroupAndLayer(LayerGroup,DisIndex);
+        CumulativeLayers := CumulativeLayers + DisItem.Discretization;
+        Inc(result);
+        if CumulativeLayers >= ALayer then
+        begin
+          Exit;
+        end;
+        if (Discretization.BottomLayerGroup = LayerGroup)
+          and (Discretization.BottomLayerInUnit = DisIndex) then
+        begin
+          break;
+        end;
+      end;
+      if (Discretization.BottomLayerGroup = LayerGroup) then
+      begin
+        Break;
+      end;
+    end;
+    Assert(False);
+
+    // The bottom bottom parent layer may have fewer layers
+    // than indicated by Discretization[LayerIndex].Discretization.
+    // That doesn't matter because cases where it might matter
+    // are caught by ALayer >= Grid.LayerCount.
+//    for LayerIndex := 0 to Discretization.Count - 1 do
+//    begin
+//      CumulativeLayers := CumulativeLayers
+//        + Discretization[LayerIndex].Discretization;
+//      if ALayer < CumulativeLayers  then
+//      begin
+//        result := LayerIndex;
+//        Exit;
+//      end;
+//    end;
+//    Assert(False);
+  end;
+end;
+
+function TChildModel.ChildRowToParentRow(ARow: integer): integer;
+begin
+  if (ARow < 0) or (ARow >= Grid.RowCount) then
+  begin
+    result := -1;
+  end
+  else
+  begin
+    result := ((ARow + (ChildCellsPerParentCell div 2))
+       div ChildCellsPerParentCell) + FFirstRow
+  end;
+end;
+
+function TChildModel.Child_NameFile_Name(const Parent_NameFile_Name: string): string;
+var
+  Directory: string;
+begin
+  Directory := ExtractFileDir(Parent_NameFile_Name);
+  result := ExtractFileName(Parent_NameFile_Name);
+  result := ChangeFileExt(result, '');
+  result := result + '_' + ModelName;
+  result := FixFileName(result);
+  result := ChangeFileExt(result, '.nam');
+  result := IncludeTrailingPathDelimiter(Directory) + result;
+end;
+
+constructor TChildModel.Create(AnOwner: TComponent);
+var
+  DataArrayIndex: Integer;
+  ParentDataArray: TDataArray;
+  ChildDataArray: TDataArray;
+  ChildArrays: TList;
+  ParentArrays: TList;
+  ParamIndex: Integer;
+  AParam: TModflowTransientListParameter;
+begin
+  FCreating := True;
+  inherited Create(nil);
+  FStartingHeadSource := shsSelf;
+  FMaxIterations := 20;
+  FLgrPrintChoice := lpcListing;
+  FFluxRelaxationFactor := 0.5;
+  FHeadRelaxationFactor := 0.5;
+  FHeadClosureCriterion := 5E-3;
+  FFluxClosureCriterion := 5E-2;
+  FFirstCol := -1;
+  FLastCol := -1;
+  FFirstRow := -1;
+  FLastRow := -1;
+  FParentModel := AnOwner as TCustomModel;
+  FChildCellsPerParentCell := 3;
+  FDiscretization := TChildDiscretizationCollection.Create(self);
+
+  if (ParentModel  <> nil) then
+  begin
+    ChildArrays := TList.Create;
+    ParentArrays := TList.Create;
+    try
+      for DataArrayIndex := 0 to ParentModel.DataArrayManager.DataSetCount - 1 do
+      begin
+        ParentDataArray := ParentModel.DataArrayManager.DataSets[DataArrayIndex];
+        ChildDataArray := TDataArrayType(ParentDataArray.ClassType).Create(self);
+        ChildDataArray.AssignProperties(ParentDataArray);
+        DataArrayManager.AddDataSet(ChildDataArray);
+        CreateVariables(ChildDataArray);
+        ParentArrays.Add(ParentDataArray);
+        ChildArrays.Add(ChildDataArray);
+        ParentDataArray.TalksTo(ChildDataArray);
+      end;
+      ModelSelection := ParentModel.ModelSelection;
+      for DataArrayIndex := 0 to ChildArrays.Count - 1 do
+      begin
+        ChildDataArray := ChildArrays[DataArrayIndex];
+        ParentDataArray := ParentArrays[DataArrayIndex];
+        ChildDataArray.Formula := ParentDataArray.Formula;
+      end;
+
+      for ParamIndex := 0 to ParentModel.ModflowTransientParameters.Count - 1 do
+      begin
+        AParam := ParentModel.ModflowTransientParameters[ParamIndex];
+        AParam.NewChildModelCreated(self);
+      end;
+
+      ModflowGrid.OnSelectedColumnChange :=
+        ParentModel.ModflowGrid.OnSelectedColumnChange;
+      ModflowGrid.OnSelectedRowChange :=
+        ParentModel.ModflowGrid.OnSelectedRowChange;
+      ModflowGrid.OnSelectedLayerChange :=
+        ParentModel.ModflowGrid.OnSelectedLayerChange;
+    finally
+      ParentArrays.Free;
+      ChildArrays.Free;
+    end;
+  end;
+  FCanUpdateGrid := True;
+  FCreating := False;
+end;
+
+function TChildModel.DataSetLayerToModflowLayer(DataSetLayer: integer): integer;
+var
+  Index: Integer;
+begin
+  result := 0;
+  for Index := 0 to DataSetLayer do
+  begin
+    if IsLayerSimulated(Index) then
+    begin
+      Inc(result);
+    end;
+  end;
+end;
+
+function TChildModel.DefaultModflowOutputFileName: string;
+var
+  Extension: string;
+begin
+  GetDefaultOutputFileExtension(Extension);
+  if Extension = '' then
+  begin
+    result := '';
+    Exit;
+  end;
+  result := ChangeFileExt(Child_NameFile_Name(ModelFileName), Extension);
+  result := FixFileName(result);
+end;
+
+procedure TChildModel.DefineProperties(Filer: TFiler);
+begin
+  inherited;
+  Filer.DefineProperty('HeadRelaxationFactor', ReadHeadRelaxationFactor, WriteHeadRelaxationFactor, FHeadRelaxationFactor = 0);
+  Filer.DefineProperty('FluxRelaxationFactor', ReadFluxRelaxationFactor, WriteFluxRelaxationFactor, FFluxRelaxationFactor = 0);
+  Filer.DefineProperty('HeadClosureCriterion', ReadHeadClosureCriterion, WriteHeadClosureCriterion, FHeadClosureCriterion = 0);
+  Filer.DefineProperty('FluxClosureCriterion', ReadFluxClosureCriterion, WriteFluxClosureCriterion, FFluxClosureCriterion = 0);
+end;
+
+destructor TChildModel.Destroy;
+var
+  ParamIndex: Integer;
+  AParam: TModflowTransientListParameter;
+begin
+
+  AllObserversStopTalking;
+  DataArrayManager.UnlinkDeletedDataSets;
+  if FParentModel <> nil then
+  begin
+    for ParamIndex := 0 to ParentModel.ModflowTransientParameters.Count - 1 do
+    begin
+      AParam := ParentModel.ModflowTransientParameters[ParamIndex];
+      AParam.ChildModelBeingDestroyed(self);
+    end;
+    FParentModel.TopGridObserver.StopsTalkingTo(TopGridObserver);
+    FParentModel.ThreeDGridObserver.StopsTalkingTo(ThreeDGridObserver);
+    FParentModel.HufKxNotifier.StopsTalkingTo(HufKxNotifier);
+    FParentModel.HufKyNotifier.StopsTalkingTo(HufKyNotifier);
+    FParentModel.HufKzNotifier.StopsTalkingTo(HufKzNotifier);
+    FParentModel.HufSsNotifier.StopsTalkingTo(HufSsNotifier);
+    FParentModel.HufSyNotifier.StopsTalkingTo(HufSyNotifier);
+  end;
+  FClearing := True;
+  try
+    InternalClear;
+  finally
+    FClearing := False;
+  end;
+  HorizontalPositionScreenObject := nil;
+  FreeHufNotifiers;
+  FreeGridNotifiers;
+  FModelName := '';
+  FDiscretization.Free;
+  inherited;
+end;
+
+function TChildModel.EdgeIndex: integer;
+var
+  PhastModel: TPhastModel;
+  ChildIndex: Integer;
+begin
+  PhastModel := ParentModel as TPhastModel;
+  result := -1;
+  for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+  begin
+    if PhastModel.ChildModels[ChildIndex].ChildModel = self then
+    begin
+      result := -ChildIndex -2;
+      Exit;
+    end;
+  end;
+  Assert(False);
 end;
 
 function TChildModel.GetChemistryOptions: TChemistryOptions;
 begin
   result := ParentModel.GetChemistryOptions;
+end;
+
+function TChildModel.GetDisplayName: string;
+begin
+  result := ModelName;
+end;
+
+function TChildModel.GetFormulaManager: TFormulaManager;
+begin
+  result := ParentModel.GetFormulaManager;
 end;
 
 function TChildModel.GetFreeSurface: boolean;
@@ -15417,9 +20811,21 @@ begin
   result := ParentModel.GetHufParameters;
 end;
 
+function TChildModel.GetLayerGroupByLayer(const Layer: integer): TLayerGroup;
+begin
+  result := inherited GetLayerGroupByLayer(ChildLayerToParentLayer(Layer));
+end;
+
 function TChildModel.GetLayerStructure: TLayerStructure;
 begin
-  result := ParentModel.GetLayerStructure;
+  if ParentModel = nil then
+  begin
+    result := nil;
+  end
+  else
+  begin
+    result := ParentModel.GetLayerStructure;
+  end;
 end;
 
 function TChildModel.GetModelSelection: TModelSelection;
@@ -15430,11 +20836,6 @@ end;
 function TChildModel.GetModflowFullStressPeriods: TModflowStressPeriods;
 begin
   result := ParentModel.GetModflowFullStressPeriods;
-end;
-
-function TChildModel.GetModflowOptions: TModflowOptions;
-begin
-  result := ParentModel.GetModflowOptions;
 end;
 
 function TChildModel.GetModflowOutputControl: TModflowOutputControl;
@@ -15467,6 +20868,77 @@ begin
   result := ParentModel.GetProgramLocations;
 end;
 
+procedure TChildModel.GetRowColPositions(const StartPosition,
+  EndPosition: integer; const ParentPositions: TOneDRealArray;
+  out ChildPostions: TOneDRealArray);
+var
+  NewLength: Integer;
+  ParentIndex: Integer;
+  PositionIndex: Integer;
+  ChildIndex: Integer;
+  Start: Double;
+  Delta: Double;
+begin
+  if (Length(ParentPositions) = 0) then
+  begin
+    SetLength(ChildPostions, 0);
+    Exit;
+  end;
+  Assert(0 <= StartPosition);
+  Assert(StartPosition < EndPosition);
+  Assert(EndPosition+1 < Length(ParentPositions));
+  NewLength := (EndPosition - StartPosition)*ChildCellsPerParentCell + 2;
+  SetLength(ChildPostions, NewLength);
+  PositionIndex := 0;
+
+  Start := ParentPositions[StartPosition];
+  Delta := ParentPositions[StartPosition+1] - Start;
+
+  ChildPostions[PositionIndex] := (Start + ParentPositions[StartPosition+1])/2;
+  Inc(PositionIndex);
+
+  for ChildIndex := (ChildCellsPerParentCell div 2) + 1 to ChildCellsPerParentCell - 1 do
+  begin
+    ChildPostions[PositionIndex] := Start + ChildIndex*Delta/ChildCellsPerParentCell;
+    Inc(PositionIndex);
+  end;
+
+  for ParentIndex := StartPosition+1 to EndPosition-1 do
+  begin
+    Start := ParentPositions[ParentIndex];
+    Delta := ParentPositions[ParentIndex+1] - Start;
+    for ChildIndex := 0 to ChildCellsPerParentCell - 1 do
+    begin
+      ChildPostions[PositionIndex] := Start + ChildIndex*Delta/ChildCellsPerParentCell;
+      Inc(PositionIndex);
+    end;
+  end;
+
+  Start := ParentPositions[EndPosition];
+  Delta := ParentPositions[EndPosition+1] - Start;
+
+  for ChildIndex := 0 to (ChildCellsPerParentCell div 2) do
+  begin
+    ChildPostions[PositionIndex] := Start + ChildIndex*Delta/ChildCellsPerParentCell;
+    Inc(PositionIndex);
+  end;
+
+  ChildPostions[PositionIndex] := (Start + ParentPositions[EndPosition+1])/2;
+  Inc(PositionIndex);
+
+  Assert(PositionIndex = NewLength);
+end;
+
+function TChildModel.GetSaveBfhBoundaryConditions: boolean;
+begin
+  result := ParentModel.SaveBfhBoundaryConditions;
+end;
+
+function TChildModel.GetScreenObjectByName(AName: string): TScreenObject;
+begin
+  result := ParentModel.GetScreenObjectByName(AName);
+end;
+
 function TChildModel.GetScreenObjectCount: integer;
 begin
   result := ParentModel.GetScreenObjectCount;
@@ -15477,9 +20949,19 @@ begin
   result := ParentModel.GetScreenObjects(Index);
 end;
 
+function TChildModel.GetSelectedModel: TCustomModel;
+begin
+  result := ParentModel.SelectedModel;
+end;
+
 function TChildModel.GetSoluteTransport: boolean;
 begin
   result := ParentModel.GetSoluteTransport
+end;
+
+function TChildModel.GetSomeSegmentsUpToDate: boolean;
+begin
+  result := FParentModel.SomeSegmentsUpToDate;
 end;
 
 function TChildModel.GetUseWaterTable: boolean;
@@ -15490,7 +20972,81 @@ end;
 procedure TChildModel.Invalidate;
 begin
   inherited;
-  ParentModel.Invalidate;
+  if ParentModel <> nil then
+  begin
+    ParentModel.Invalidate;
+  end;
+end;
+
+function TChildModel.IsLayerSimulated(const LayerID: integer): boolean;
+begin
+  result := inherited IsLayerSimulated(ChildLayerToParentLayer(LayerID));
+end;
+
+procedure TChildDiscretizationCollection.SetBottomLayerGroup(const Value: TLayerGroup);
+begin
+  BeginUpdate;
+  try
+    if FBottomLayerGroup <> Value then
+    begin
+      FBottomLayerGroup := Value;
+      FChanged := True;
+      InvalidateModel;
+    end;
+    if BottomLayerGroup <> nil then
+    begin
+      FBottomUnitName := BottomLayerGroup.AquiferName;
+    end;
+  finally
+    EndUpdate;
+  end;
+end;
+
+procedure TChildDiscretizationCollection.SetBottomLayerInUnit(const Value: integer);
+begin
+  if FBottomLayerInUnit <> Value then
+  begin
+    BeginUpdate;
+    try
+      FBottomLayerInUnit := Value;
+      FChanged := True;
+      InvalidateModel;
+    finally
+      EndUpdate;
+    end;
+  end;
+end;
+
+procedure TChildDiscretizationCollection.SetBottomUnitName(const Value: string);
+begin
+  if FBottomUnitName <> Value then
+  begin
+    BeginUpdate;
+    try
+      FBottomUnitName := Value;
+      FChanged := True;
+      InvalidateModel;
+      // upate FBottomLayerGroup;
+      GetBottomLayerGroup;
+    finally
+      EndUpdate
+    end;
+  end;
+end;
+
+procedure TChildDiscretizationCollection.SetItem(Index: integer;
+  const Value: TChildDiscretization);
+begin
+  inherited Items[Index] := Value;
+end;
+
+procedure TChildModel.SetCanUpdateGrid(const Value: Boolean);
+begin
+  FCanUpdateGrid := Value;
+  if FCanUpdateGrid and FShouldUpdateGrid then
+  begin
+    UpdateGrid;
+  end;
 end;
 
 procedure TChildModel.SetChemistryOptions(const Value: TChemistryOptions);
@@ -15498,9 +21054,91 @@ begin
   ParentModel.SetChemistryOptions(Value);
 end;
 
+procedure TChildModel.SetChildCellsPerParentCell(const Value: integer);
+begin
+  Assert(Odd(Value));
+  if FChildCellsPerParentCell <> Value then
+  begin
+    FChildCellsPerParentCell := Value;
+    UpdateGrid;
+    Invalidate;
+  end;
+end;
+
+procedure TChildModel.SetCouplingMethod(const Value: TCouplingMethod);
+begin
+  if FCouplingMethod <> Value then
+  begin
+    FCouplingMethod := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TChildModel.SetDiscretization(
+  const Value: TChildDiscretizationCollection);
+begin
+  FDiscretization.Assign(Value);
+end;
+
+procedure TChildModel.SetFluxClosureCriterion(const Value: double);
+begin
+  if FFluxClosureCriterion <> Value then
+  begin
+    FFluxClosureCriterion := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TChildModel.SetFluxRelaxationFactor(const Value: double);
+begin
+  if FFluxRelaxationFactor <> Value then
+  begin
+    FFluxRelaxationFactor := Value;
+    Invalidate;
+  end;
+end;
+
 procedure TChildModel.SetFreeSurface(const Value: boolean);
 begin
   ParentModel.SetFreeSurface(Value);
+end;
+
+procedure TChildModel.SetHeadClosureCriterion(const Value: double);
+begin
+  if FHeadClosureCriterion <> Value then
+  begin
+    FHeadClosureCriterion := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TChildModel.SetHeadRelaxationFactor(const Value: double);
+begin
+  if FHeadRelaxationFactor <> Value then
+  begin
+    FHeadRelaxationFactor := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TChildModel.SetHorizontalPositionScreenObject(
+  const Value: TScreenObject);
+begin
+  if FHorizontalPositionScreenObject <> Value then
+  begin
+    if FHorizontalPositionScreenObject <> nil then
+    begin
+      FHorizontalPositionScreenObject.ChildModel := nil;
+    end;
+    FHorizontalPositionScreenObject := Value;
+    if (FHorizontalPositionScreenObject <> nil)
+      and (FHorizontalPositionScreenObject.ChildModel <> self) then
+    begin
+      FHorizontalPositionScreenObject.ChildModel := self;
+    end;
+    UpdateGrid;
+    Invalidate;
+  end;
 end;
 
 procedure TChildModel.SetHufParameters(const Value: THufModflowParameters);
@@ -15513,6 +21151,24 @@ begin
   ParentModel.SetLayerStructure(Value);
 end;
 
+procedure TChildModel.SetLgrPrintChoice(const Value: TLgrPrintChoice);
+begin
+  if FLgrPrintChoice <> Value then
+  begin
+    FLgrPrintChoice := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TChildModel.SetMaxIterations(const Value: integer);
+begin
+  if FMaxIterations <> Value then
+  begin
+    FMaxIterations := Value;
+    Invalidate;
+  end;
+end;
+
 procedure TChildModel.SetModelName(const Value: string);
 begin
   if FModelName <> Value then
@@ -15520,16 +21176,6 @@ begin
     FModelName := Value;
     Invalidate;
   end;
-end;
-
-procedure TChildModel.SetModelSelection(const Value: TModelSelection);
-begin
-  ParentModel.SetModelSelection(Value);
-end;
-
-procedure TChildModel.SetModflowOptions(const Value: TModflowOptions);
-begin
-  ParentModel.SetModflowOptions(Value);
 end;
 
 procedure TChildModel.SetModflowOutputControl(
@@ -15561,9 +21207,29 @@ begin
   ParentModel.SetObservationPurpose(Value);
 end;
 
+//procedure TChildModel.SetOneWayCoupling(const Value: boolean);
+//begin
+//  CouplingMethod := TCouplingMethod(Ord(Value));
+////  if FOneWayCoupling <> Value then
+////  begin
+////    FOneWayCoupling := Value;
+////    Invalidate;
+////  end;
+//end;
+
 procedure TChildModel.SetProgramLocations(const Value: TProgramLocations);
 begin
   ParentModel.SetProgramLocations(Value);
+end;
+
+procedure TChildModel.SetSaveBfhBoundaryConditions(const Value: boolean);
+begin
+  ParentModel.SaveBfhBoundaryConditions := Value;
+end;
+
+procedure TChildModel.SetSelectedModel(const Value: TCustomModel);
+begin
+  ParentModel.SelectedModel := Value;
 end;
 
 procedure TChildModel.SetSoluteTransport(const Value: boolean);
@@ -15571,9 +21237,1151 @@ begin
   ParentModel.SetSoluteTransport(Value);
 end;
 
+procedure TChildModel.SetSomeSegmentsUpToDate(const Value: boolean);
+begin
+  FParentModel.SomeSegmentsUpToDate := Value;
+end;
+
+procedure TChildModel.SetStartingHeadSource(const Value: TStartingHeadSource);
+begin
+  if FStartingHeadSource <> Value then
+  begin
+    FStartingHeadSource := Value;
+    Invalidate;
+  end;
+end;
+
 procedure TChildModel.SetUseWaterTable(const Value: boolean);
 begin
   ParentModel.SetUseWaterTable(Value);
+end;
+
+function TChildModel.StoreHydrogeologicUnits: Boolean;
+begin
+  result := False;
+end;
+
+function TChildModel.Trpy: TOneDRealArray;
+begin
+  Result := ConvertRealParentArray(inherited Trpy);
+end;
+
+function TChildModel.ConvertRealParentArray(ParentArray: TOneDRealArray): TOneDRealArray;
+var
+  GroupIndex: Integer;
+  ChildIndex: Integer;
+  ParentIndex: Integer;
+  ChildDisIndex: Integer;
+  DisItem: TChildDiscretization;
+  DiscIndex: Integer;
+  AGroup: TLayerGroup;
+begin
+  SetLength(result, ModflowLayerCount);
+  ParentIndex := 0;
+  ChildIndex := 0;
+  for GroupIndex := 1 to LayerStructure.Count - 1 do
+  begin
+    AGroup := LayerStructure[GroupIndex];
+    if AGroup.Simulated then
+    begin
+      for DiscIndex := 0 to AGroup.LayerCount - 1 do
+      begin
+        DisItem := Discretization.GetAnItemByGroupAndLayer(AGroup, DiscIndex);
+        for ChildDisIndex := 0 to DisItem.Discretization - 1 do
+        begin
+          if ChildIndex < length(result) then
+          begin
+            result[ChildIndex] := ParentArray[ParentIndex];
+            Inc(ChildIndex);
+          end;
+        end;
+        Inc(ParentIndex);
+        if (AGroup = Discretization.BottomLayerGroup) and (DiscIndex = Discretization.BottomLayerInUnit) then
+        begin
+          break;
+        end;
+      end;
+    end;
+    if (AGroup = Discretization.BottomLayerGroup) then
+    begin
+      break;
+    end;
+  end;
+end;
+
+function TChildModel.ConvertIntegerParentArray( ParentArray: TOneDIntegerArray): TOneDIntegerArray;
+var
+  ChildDisIndex: Integer;
+  DisItem: TChildDiscretization;
+  DiscIndex: Integer;
+  AGroup: TLayerGroup;
+  GroupIndex: Integer;
+  ChildIndex: Integer;
+  ParentIndex: Integer;
+begin
+  SetLength(result, ModflowLayerCount);
+  ParentIndex := 0;
+  ChildIndex := 0;
+  for GroupIndex := 1 to LayerStructure.Count - 1 do
+  begin
+    AGroup := LayerStructure[GroupIndex];
+    if AGroup.Simulated then
+    begin
+      for DiscIndex := 0 to AGroup.LayerCount - 1 do
+      begin
+        DisItem := Discretization.GetAnItemByGroupAndLayer(AGroup, DiscIndex);
+        for ChildDisIndex := 0 to DisItem.Discretization - 1 do
+        begin
+          if ChildIndex < length(result) then
+          begin
+            result[ChildIndex] := ParentArray[ParentIndex];
+            Inc(ChildIndex);
+          end;
+        end;
+        Inc(ParentIndex);
+        if (AGroup = Discretization.BottomLayerGroup)
+          and (DiscIndex = Discretization.BottomLayerInUnit) then
+        begin
+          break;
+        end;
+      end;
+    end;
+    if (AGroup = Discretization.BottomLayerGroup) then
+    begin
+      break;
+    end;
+  end;
+end;
+
+procedure TChildModel.UpdateDataSetConnections;
+var
+  Index: Integer;
+  ParentDataArray: TDataArray;
+  ChildDataArray: TDataArray;
+begin
+  for Index := 0 to ParentModel.DataArrayManager.DataSetCount - 1 do
+  begin
+    ParentDataArray := ParentModel.DataArrayManager[Index];
+    ChildDataArray := DataArrayManager.GetDataSetByName(ParentDataArray.Name);
+    ParentDataArray.TalksTo(ChildDataArray);
+  end;
+end;
+
+procedure TChildModel.UpdateDisplayUseList(NewUseList: TStringList;
+  ParamType: TParameterType; DataIndex: integer; const DisplayName: string);
+begin
+  FParentModel.UpdateDisplayUseList(NewUseList, ParamType, DataIndex, DisplayName);
+end;
+
+procedure TChildModel.UpdateLayerCount;
+var
+  LocalParent: TPhastModel;
+begin
+  if ParentModel <> nil then
+  begin
+    ModflowGrid.LayerCount := LayerCount;
+    LocalParent := ParentModel as TPhastModel;
+    LocalParent.InvalidateMapping;
+    LocalParent.InvalidateSegments;
+  end;
+end;
+
+procedure TChildModel.WriteFluxClosureCriterion(Writer: TWriter);
+begin
+  Writer.WriteFloat(FFluxClosureCriterion);
+end;
+
+procedure TChildModel.WriteFluxRelaxationFactor(Writer: TWriter);
+begin
+  Writer.WriteFloat(FFluxRelaxationFactor);
+end;
+
+procedure TChildModel.WriteHeadClosureCriterion(Writer: TWriter);
+begin
+  Writer.WriteFloat(FHeadClosureCriterion);
+end;
+
+procedure TChildModel.WriteHeadRelaxationFactor(Writer: TWriter);
+begin
+  Writer.WriteFloat(FHeadRelaxationFactor);
+end;
+
+procedure TChildModel.WriteLAYCB(const DiscretizationWriter: TObject);
+begin
+  Discretization.WriteLAYCB(DiscretizationWriter);
+end;
+
+procedure TChildModel.UpdateGrid;
+var
+  SegIndex: Integer;
+  SegmentList: TCellElementSegmentList;
+  Segment: TCellElementSegment;
+  NewColumnPositions: TOneDRealArray;
+  NewRowPositions: TOneDRealArray;
+  LocalFirstCol: Integer;
+  LocalLastCol: Integer;
+  LocalFirstRow: Integer;
+  LocalLastRow: Integer;
+begin
+  if FParentModel = nil then
+  begin
+    Exit;
+  end;
+  if FParentModel.Clearing then
+  begin
+    Exit;
+  end;
+  if not FCanUpdateGrid then
+  begin
+    FShouldUpdateGrid := True;
+    Exit;
+  end;
+  LocalFirstCol := FirstCol;
+  LocalLastCol := LastCol;
+  LocalFirstRow := FirstRow;
+  LocalLastRow := LastRow;
+  try
+  ModflowGrid.GridAngle := (FParentModel as TCustomModel).ModflowGrid.GridAngle;
+  FShouldUpdateGrid := False;
+  FFirstCol := -1;
+  FLastCol := -1;
+  FFirstRow := -1;
+  FLastRow := -1;
+  if (HorizontalPositionScreenObject = nil)
+    or (ParentModel.ModflowGrid.RowCount < 3)
+    or (ParentModel.ModflowGrid.ColumnCount < 3)then
+  begin
+    ModflowGrid.RowCount := -1;
+    ModflowGrid.ColumnCount := -1;
+  end
+  else
+  begin
+    SegmentList := HorizontalPositionScreenObject.Segments[ParentModel];
+    if (SegmentList.Count >= 1) then
+    begin
+      Segment := SegmentList[0];
+      FFirstCol :=  Segment.Col;
+      FLastCol := FFirstCol;
+      FFirstRow :=  Segment.Row;
+      FLastRow := FFirstRow;
+      for SegIndex := 1 to SegmentList.Count - 1 do
+      begin
+        Segment := SegmentList[SegIndex];
+        if FFirstCol > Segment.Col then
+        begin
+          FFirstCol := Segment.Col;
+        end
+        else if FLastCol < Segment.Col then
+        begin
+          FLastCol := Segment.Col;
+        end;
+        if FFirstRow > Segment.Row then
+        begin
+          FFirstRow := Segment.Row;
+        end
+        else if FLastRow < Segment.Row then
+        begin
+          FLastRow := Segment.Row;
+        end;
+      end;
+      if FFirstCol = 0 then
+      begin
+        FFirstCol := 1;
+      end;
+      if FFirstRow = 0 then
+      begin
+        FFirstRow := 1;
+      end;
+      if FLastRow = ParentModel.ModflowGrid.RowCount-1 then
+      begin
+        FLastRow := ParentModel.ModflowGrid.RowCount-2;
+      end;
+      if FLastCol = ParentModel.ModflowGrid.ColumnCount-1 then
+      begin
+        FLastCol := ParentModel.ModflowGrid.ColumnCount-2;
+      end;
+
+      GetRowColPositions(FFirstCol, FLastCol,
+        ParentModel.ModflowGrid.ColumnPositions, NewColumnPositions);
+      ModflowGrid.ColumnPositions := NewColumnPositions;
+      GetRowColPositions(FFirstRow, FLastRow,
+        ParentModel.ModflowGrid.RowPositions, NewRowPositions);
+      ModflowGrid.RowPositions := NewRowPositions;
+    end
+    else
+    begin
+      ModflowGrid.RowCount := -1;
+      ModflowGrid.ColumnCount := -1;
+    end;
+  end;
+  UpdateLayerCount;
+  finally
+    if (LocalFirstCol <> FirstCol) or (LocalLastCol <> LastCol)
+      or (LocalFirstRow <> FirstRow) or (LocalLastRow <> LastRow) then
+    begin
+      InvalidateScreenObjects;
+    end;
+  end;
+end;
+
+function TChildModel.Layavg: TOneDIntegerArray;
+begin
+  Result := ConvertIntegerParentArray(inherited Layavg);
+end;
+
+function TChildModel.LayerCount: integer;
+var
+  DisIndex: Integer;
+  EndLayer: Integer;
+  Group: TLayerGroup;
+  GroupIndex: Integer;
+  PriorItem: TChildDiscretization;
+  Item: TChildDiscretization;
+  NewItems: boolean;
+begin
+  result := 0;
+  NewItems := False;
+  for GroupIndex := 1 to LayerStructure.Count - 1 do
+  begin
+    Group := LayerStructure[GroupIndex];
+    if Group.Simulated then
+    begin
+      if Group = Discretization.BottomLayerGroup then
+      begin
+        EndLayer := Discretization.BottomLayerInUnit;
+      end
+      else
+      begin
+        EndLayer := Group.LayerCount - 1;
+      end;
+      for DisIndex := 0 to EndLayer do
+      begin
+        Item := Discretization.GetAnItemByGroupAndLayer(Group, DisIndex);
+        if Item = nil then
+        begin
+          Item := Discretization.Add as TChildDiscretization;
+          Item.LayerGroup := Group;
+          Item.ParentLayerNumber := DisIndex;
+          if DisIndex > 0 then
+          begin
+            PriorItem := Discretization.GetAnItemByGroupAndLayer(Group, DisIndex - 1);
+            Item.Discretization := PriorItem.Discretization;
+          end;
+          NewItems := True;
+        end;
+        if (Group = Discretization.BottomLayerGroup)
+          and (DisIndex = EndLayer)
+          and ((GroupIndex <> LayerStructure.Count - 1)
+          or (EndLayer <> Group.LayerCount - 1)) then
+        begin
+          Inc(result, (Item.Discretization div 2)+1);
+        end
+        else
+        begin
+          Inc(result, Item.Discretization);
+        end;
+      end;
+      if Group = Discretization.BottomLayerGroup then
+      begin
+        break;
+      end
+    end
+    else
+    begin
+      Inc(result);
+    end;
+  end;
+  if NewItems then
+  begin
+    Discretization.SortAndDeleteExtraItems;
+  end;
+end;
+
+function TChildModel.LayerFractions(LayerGroup: TLayerGroup): TDoubleDynArray;
+var
+  ParentLayerIndex: Integer;
+  ArrayLength: Integer;
+  Item: TChildDiscretization;
+  LayerIndex: Integer;
+  FracItem, HigherFracItem: TLayerFraction;
+  Fraction: Real;
+  ChildLayerIndex: Integer;
+  HigherFraction: Real;
+  Delta: Real;
+begin
+  Assert(Discretization.BottomLayerGroup.Index >= LayerGroup.Index);
+  if (LayerGroup.Index = 0) then
+  begin
+    // The uppermost layer group represents the top of the model and never
+    // has additional layers above it.
+    //
+    result := nil;
+    Exit;
+  end
+  else
+  begin
+    ArrayLength := 0;
+    if LayerGroup.Simulated then
+    begin
+      for ParentLayerIndex := 0 to LayerGroup.LayerCount - 1 do
+      begin
+        Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup, ParentLayerIndex);
+        Inc(ArrayLength, Item.Discretization);
+      end;
+    end
+    else
+    begin
+      ArrayLength := 1;
+    end;
+    Dec(ArrayLength);
+    SetLength(result, ArrayLength);
+    LayerIndex := 0;
+    HigherFracItem := nil;
+    for ParentLayerIndex := 0 to LayerGroup.LayerCollection.Count do
+    begin
+      if ParentLayerIndex < LayerGroup.LayerCollection.Count then
+      begin
+        FracItem := LayerGroup.LayerCollection.Items[ParentLayerIndex] as TLayerFraction;
+        Fraction := FracItem.Fraction;
+      end
+      else
+      begin
+        FracItem := nil;
+        Fraction := 0;
+      end;
+      if HigherFracItem <> nil then
+      begin
+        HigherFraction := HigherFracItem.Fraction;
+      end
+      else
+      begin
+        HigherFraction := 1.;
+      end;
+
+      Delta := HigherFraction - Fraction;
+      Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup, ParentLayerIndex);
+      for ChildLayerIndex := Item.Discretization - 1 downto 1 do
+      begin
+        result[LayerIndex] := Fraction
+          + ChildLayerIndex/Item.Discretization * Delta;
+        Inc(LayerIndex);
+      end;
+      if FracItem <> nil then
+      begin
+        result[LayerIndex] := Fraction;
+        Inc(LayerIndex);
+      end;
+      HigherFracItem := FracItem;
+    end;
+  end;
+  if not ((Discretization.BottomLayerGroup.Index > LayerGroup.Index)
+    or ((LayerStructure[LayerStructure.Count-1] = Discretization.BottomLayerGroup)
+    and (Discretization.BottomLayerInUnit = Discretization.BottomLayerGroup.LayerCount-1)))
+//    and (Discretization.BottomLayerInUnit < Discretization.BottomLayerGroup.LayerCount-1)))
+    then
+  begin
+    // The bottom of the child grid occurs in a layer in the parent grid
+    // that is not the bottom most layer.  The child grid ends in the middle
+    // of the layer of the parent grid.
+    if ArrayLength > 0 then
+    begin
+      ArrayLength := 0;
+      for ParentLayerIndex := 0 to LayerGroup.LayerCount - 1 do
+      begin
+        Item := Discretization.GetAnItemByGroupAndLayer(LayerGroup, ParentLayerIndex);
+        if Discretization.BottomLayerInUnit = ParentLayerIndex then
+        begin
+          Inc(ArrayLength, Item.Discretization div 2);
+          break;
+        end
+        else
+        begin
+          Inc(ArrayLength, Item.Discretization);
+        end;
+      end;
+//      Item := Discretization.GetAnItemByGroupAndLayer(
+//        Discretization.BottomLayerGroup, Discretization.BottomLayerInUnit);
+//      ArrayLength := ArrayLength - Item.Discretization div 2;
+      SetLength(result, ArrayLength);
+    end;
+  end
+
+end;
+
+function TChildModel.LayerGroupUsed(LayerGroup: TLayerGroup): boolean;
+begin
+  result := LayerGroup.Index <= Discretization.FBottomLayerGroup.Index;
+end;
+
+function TChildModel.Laytyp: TOneDIntegerArray;
+var
+  LayerIndex: Integer;
+begin
+  Result := ConvertIntegerParentArray(inherited Laytyp);
+  if ModflowPackages.BcfPackage.IsSelected then
+  begin
+    // unconfined is only valid for the top layer.
+    // convert unconfined to convertible.
+    for LayerIndex := 1 to Length(result) - 1 do
+    begin
+      if (result[LayerIndex] mod 10) = 1 then
+      begin
+        result[LayerIndex] := result[LayerIndex] + 2;
+      end;
+    end;
+  end;
+end;
+
+function TChildModel.Layvka: TOneDIntegerArray;
+begin
+  Result := ConvertIntegerParentArray(inherited Layvka);
+end;
+
+procedure TChildModel.Loaded;
+begin
+  inherited;
+  Discretization.Loaded;
+  ModelSelection := ParentModel.ModelSelection;
+  UpdateGrid;
+end;
+
+function TChildModel.MaxPosition(
+  ViewDirection: TViewDirection): integer;
+begin
+  result := 0;
+  case ViewDirection of
+    vdTop: result := ModflowGrid.LayerCount;
+    vdFront: result := ModflowGrid.RowCount;
+    vdSide: result := ModflowGrid.ColumnCount;
+    else Assert(False);
+  end;
+end;
+
+function TChildModel.ModflowConfiningBedCount: integer;
+begin
+  result := Discretization.ModflowConfiningBedCount;
+end;
+
+function TChildModel.ModflowLayerBottomDescription(
+  const LayerID: integer): string;
+begin
+  result := inherited ModflowLayerBottomDescription(
+    ChildLayerToParentLayer(LayerID))
+    + ' Child layer ' + IntToStr(LayerId+1);
+end;
+
+function TChildModel.ModflowLayerCount: integer;
+begin
+  result := Discretization.ModflowLayerCount;
+end;
+
+function TChildModel.ModflowLayerToDataSetLayer(ModflowLayer: integer): integer;
+var
+  GroupIndex: Integer;
+  LayerGroup: TLayerGroup;
+  ParentLayerIndex: Integer;
+  DisItem: TChildDiscretization;
+  MFLayer: Integer;
+  ChildDisIndex: Integer;
+begin
+  result := 0;
+  MFLayer := 0;
+  for GroupIndex := 1 to LayerStructure.Count - 1 do
+  begin
+    LayerGroup := LayerStructure[GroupIndex];
+    if LayerGroup.Simulated then
+    begin
+      for ParentLayerIndex := 0 to LayerGroup.LayerCount - 1 do
+      begin
+        DisItem := Discretization.
+          GetAnItemByGroupAndLayer(LayerGroup, ParentLayerIndex);
+        for ChildDisIndex := 0 to DisItem.Discretization - 1 do
+        begin
+          Inc(MFLayer);
+          if MFLayer = ModflowLayer then
+          begin
+            Exit;
+          end;
+          Inc(result);
+        end;
+      end;
+    end
+    else
+    begin
+      Inc(result);
+    end;
+  end;
+end;
+
+function TChildModel.ParentPositionToChildPositions(
+  ViewDirection: TViewDirection; APosition: integer): TGridRange;
+begin
+  case ViewDirection of
+    vdTop: result := ParentLayerToChildLayers(APosition);
+    vdFront: result := ParentRowToChildRows(APosition);
+    vdSide: result := ParentColToChildCols(APosition);
+  end;
+end;
+
+function TChildModel.ParentColToChildCols(ACol: integer): TGridRange;
+begin
+  if (FFirstCol < 0) or (FLastCol < 0)
+    or (ACol < FFirstCol) then
+  begin
+    result.First := -1;
+    result.Last := -1;
+  end
+  else if (ACol > FLastCol) then
+  begin
+    result.First := ModflowGrid.ColumnCount;
+    result.Last := result.First;
+  end
+  else if ACol = FFirstCol then
+  begin
+    result.First := 0;
+    result.Last := (ChildCellsPerParentCell div 2);
+  end
+  else if ACol = FLastCol then
+  begin
+    result.Last := Grid.ColumnCount-1;
+    result.First := result.Last - (ChildCellsPerParentCell div 2);
+  end
+  else
+  begin
+    result.Last := (ACol-FFirstCol+1)*ChildCellsPerParentCell
+      - (ChildCellsPerParentCell div 2) - 1;
+    result.First  := result.Last - ChildCellsPerParentCell + 1;
+  end;
+
+end;
+
+function TChildModel.ParentLayerToChildLayers(ALayer: integer): TGridRange;
+var
+  LayerGroupIndex: Integer;
+  LayerGroup: TLayerGroup;
+  ParentLayerIndex: Integer;
+  DisItem: TChildDiscretization;
+  CumulativeParentLayers: Integer;
+  LastLayer: Integer;
+begin
+  result.First := -1;
+  result.Last := -1;
+  if (ALayer >= ModflowGrid.LayerCount) and (ModflowGrid.LayerCount > 0) then
+  begin
+    result.First := ModflowGrid.LayerCount;
+    result.Last := result.First;
+    Exit;
+  end;
+  if ALayer < 0 then
+  begin
+    Exit;
+  end;
+  CumulativeParentLayers := 0;
+  LastLayer := -1;
+  for LayerGroupIndex := 1 to FParentModel.LayerStructure.Count - 1 do
+  begin
+    LayerGroup := FParentModel.LayerStructure[LayerGroupIndex];
+    for ParentLayerIndex := 0 to LayerGroup.LayerCount - 1 do
+    begin
+      if LayerGroup.Simulated then
+      begin
+        DisItem := Discretization.
+          GetAnItemByGroupAndLayer(LayerGroup,ParentLayerIndex);
+        LastLayer := LastLayer + DisItem.Discretization;
+      end
+      else
+      begin
+        DisItem := nil;
+        LastLayer := LastLayer + 1;
+      end;
+      if CumulativeParentLayers = ALayer then
+      begin
+        result.Last := Min(LastLayer, ModflowGrid.LayerCount-1);
+        if LayerGroup.Simulated then
+        begin
+          result.First := LastLayer - DisItem.Discretization + 1;
+        end
+        else
+        begin
+          result.First := LastLayer;
+        end;
+        Exit;
+      end;
+      Inc(CumulativeParentLayers);
+    end;
+  end;
+end;
+
+function TChildModel.ParentRowToChildRows(ARow: integer): TGridRange;
+begin
+  if (FFirstRow < 0) or (FLastRow < 0)
+    or (ARow < FFirstRow) then
+  begin
+    result.First := -1;
+    result.Last := -1;
+  end
+  else if (ARow > FLastRow) then
+  begin
+    result.First := ModflowGrid.RowCount;
+    result.Last := result.First;
+  end
+  else if ARow = FFirstRow then
+  begin
+    result.First := 0;
+    result.Last := (ChildCellsPerParentCell div 2);
+  end
+  else if ARow = FLastRow then
+  begin
+    result.Last := Grid.RowCount-1;
+    result.First := result.Last - (ChildCellsPerParentCell div 2);
+  end
+  else
+  begin
+    result.Last := (ARow-FFirstRow+1)*ChildCellsPerParentCell
+      - (ChildCellsPerParentCell div 2) - 1;
+    result.First  := result.Last - ChildCellsPerParentCell + 1;
+  end;
+end;
+
+procedure TChildModel.ReadFluxClosureCriterion(Reader: TReader);
+begin
+  FFluxClosureCriterion := Reader.ReadFloat;
+end;
+
+procedure TChildModel.ReadFluxRelaxationFactor(Reader: TReader);
+begin
+  FFluxRelaxationFactor := Reader.ReadFloat;
+end;
+
+procedure TChildModel.ReadHeadClosureCriterion(Reader: TReader);
+begin
+  FFluxRelaxationFactor := Reader.ReadFloat;
+end;
+
+procedure TChildModel.ReadHeadRelaxationFactor(Reader: TReader);
+begin
+  FHeadRelaxationFactor := Reader.ReadFloat;
+end;
+
+{ TChildDiscretization }
+
+procedure TChildDiscretization.Assign(Source: TPersistent);
+var
+  SourceChildDiscretization: TChildDiscretization;
+begin
+  if Source is TChildDiscretization then
+  begin
+    SourceChildDiscretization := TChildDiscretization(Source);
+    LayerGroup := SourceChildDiscretization.LayerGroup;
+    LayerGroupName := SourceChildDiscretization.LayerGroupName;
+    ParentLayerNumber := SourceChildDiscretization.ParentLayerNumber;
+    Discretization := SourceChildDiscretization.Discretization;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TChildDiscretization.Create(Collection: TCollection);
+begin
+  inherited;
+  FDiscretization := 1;
+end;
+
+function TChildDiscretization.GetDiscretization: integer;
+begin
+  if LayerGroup.Simulated then
+  begin
+    result := FDiscretization
+  end
+  else
+  begin
+    result := 1
+  end;
+end;
+
+function TChildDiscretization.GetLayerGroup: TLayerGroup;
+var
+  Group: TLayerGroup;
+  Index: integer;
+begin
+  if (FLayerGroup = nil) and (FLayerGroupName <> '') then
+  begin
+    for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+    begin
+      Group := frmGoPhast.PhastModel.LayerStructure[Index];
+      if Group.AquiferName = FLayerGroupName then
+      begin
+        FLayerGroup := Group;
+        break;
+      end;
+    end;
+  end;
+  result := FLayerGroup;
+end;
+
+function TChildDiscretization.GetLayerGroupName: string;
+begin
+  if FLayerGroup <> nil then
+  begin
+    result := FLayerGroup.AquiferName;
+  end
+  else
+  begin
+    result := FLayerGroupName;
+  end;
+end;
+
+function TChildDiscretization.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  AnotherChildDis: TChildDiscretization;
+begin
+  result := AnotherItem is TChildDiscretization;
+  if result then
+  begin
+    AnotherChildDis := TChildDiscretization(AnotherItem);
+    result := (LayerGroupName = AnotherChildDis.LayerGroupName)
+      and (ParentLayerNumber = AnotherChildDis.ParentLayerNumber)
+      and (Discretization = AnotherChildDis.Discretization);
+  end;
+end;
+
+procedure TChildDiscretization.Loaded;
+begin
+  GetLayerGroup;
+end;
+
+procedure TChildDiscretization.SetDiscretization(const Value: integer);
+begin
+  SetIntegerProperty(FDiscretization, Value);
+end;
+
+procedure TChildDiscretization.SetLayerGroup(const Value: TLayerGroup);
+begin
+  if FLayerGroup <> Value then
+  begin
+    FLayerGroup := Value;
+    InvalidateModel;
+  end;
+  if FLayerGroup <> nil then
+  begin
+    FLayerGroupName := FLayerGroup.AquiferName;
+  end;
+end;
+
+procedure TChildDiscretization.SetLayerGroupName(const Value: string);
+begin
+  SetCaseInsensitiveStringProperty(FLayerGroupName, Value);
+  // update FLayerGroup.
+  GetLayerGroup;
+end;
+
+procedure TChildDiscretization.SetParentLayerNumber(const Value: integer);
+begin
+  SetIntegerProperty(FParentLayerNumber, Value);
+end;
+
+{ TChildDiscretizationCollection }
+
+procedure TChildDiscretizationCollection.Assign(Source: TPersistent);
+var
+  SourceCollection: TChildDiscretizationCollection;
+begin
+  inherited;
+  if Source is TChildDiscretizationCollection then
+  begin
+    BeginUpdate;
+    try
+      SourceCollection := TChildDiscretizationCollection(Source);
+      BottomUnitName := SourceCollection.BottomUnitName;
+      BottomLayerInUnit := SourceCollection.BottomLayerInUnit;
+      BottomLayerGroup := SourceCollection.BottomLayerGroup;
+      SortAndDeleteExtraItems;
+    finally
+      EndUpdate;
+    end;
+  end;
+end;
+
+function TChildDiscretizationCollection.BottomLayerIndex: integer;
+var
+  ChildModel: TChildModel;
+  PhastModel: TPhastModel;
+  GroupIndex: Integer;
+  LayerGroup: TLayerGroup;
+begin
+  Assert(Model <> nil);
+  ChildModel := Model as TChildModel;
+  PhastModel := ChildModel.ParentModel as TPhastModel;
+  result := -1;
+  for GroupIndex := 1 to PhastModel.LayerStructure.Count - 1 do
+  begin
+    LayerGroup := PhastModel.LayerStructure[GroupIndex];
+    if LayerGroup = ChildModel.Discretization.BottomLayerGroup then
+    begin
+      Inc(result, ChildModel.Discretization.BottomLayerInUnit+1);
+      Exit;
+    end
+    else
+    begin
+      Inc(result, LayerGroup.LayerCount);
+    end;
+  end;
+end;
+
+function TChildDiscretizationCollection.BottomModflowParentLayerNumber: integer;
+var
+  ChildModel: TChildModel;
+  PhastModel: TPhastModel;
+  GroupIndex: Integer;
+  LayerGroup: TLayerGroup;
+begin
+  Assert(Model <> nil);
+  ChildModel := Model as TChildModel;
+  PhastModel := ChildModel.ParentModel as TPhastModel;
+  result := 0;
+  for GroupIndex := 1 to PhastModel.LayerStructure.Count - 1 do
+  begin
+    LayerGroup := PhastModel.LayerStructure[GroupIndex];
+    if LayerGroup.Simulated then
+    begin
+      if LayerGroup = ChildModel.Discretization.BottomLayerGroup then
+      begin
+        Inc(result, ChildModel.Discretization.BottomLayerInUnit + 1);
+        Exit;
+      end
+      else
+      begin
+        Inc(result, LayerGroup.LayerCount);
+      end;
+    end;
+  end;
+end;
+
+constructor TChildDiscretizationCollection.Create(Model: TBaseModel);
+begin
+  inherited Create(TChildDiscretization, Model);
+  FBottomLayerInUnit := 0;
+end;
+
+{ TChildModelEdit }
+
+procedure TChildModelEdit.Assign(Source: TPersistent);
+  procedure AssignSourceModel(SourceModel: TChildModel);
+  begin
+    ModelName := SourceModel.ModelName;
+    Discretization := SourceModel.Discretization;
+    ChildCellsPerParentCell := SourceModel.ChildCellsPerParentCell;
+    StartingHeadSource := SourceModel.StartingHeadSource;
+//    OneWayCoupling := SourceModel.OneWayCoupling;
+    CouplingMethod := SourceModel.CouplingMethod;
+    MaxIterations := SourceModel.MaxIterations;
+    LgrPrintChoice := SourceModel.LgrPrintChoice;
+    HeadRelaxationFactor := SourceModel.HeadRelaxationFactor;
+    FluxRelaxationFactor := SourceModel.FluxRelaxationFactor;
+    HeadClosureCriterion := SourceModel.HeadClosureCriterion;
+    FluxClosureCriterion := SourceModel.FluxClosureCriterion;
+    FChildModel := SourceModel;
+  end;
+var
+  SourceItem: TChildModelEdit;
+begin
+    // When editing this section, be sure to edit TChildModel
+    // and TChildModelItem too
+  if Source is TChildModelEdit then
+  begin
+    SourceItem := TChildModelEdit(Source);
+    ModelName := SourceItem.ModelName;
+    Discretization := SourceItem.Discretization;
+    ChildCellsPerParentCell := SourceItem.ChildCellsPerParentCell;
+    StartingHeadSource := SourceItem.StartingHeadSource;
+//    OneWayCoupling := SourceItem.OneWayCoupling;
+    CouplingMethod := SourceItem.CouplingMethod;
+    MaxIterations := SourceItem.MaxIterations;
+    LgrPrintChoice := SourceItem.LgrPrintChoice;
+    HeadRelaxationFactor := SourceItem.HeadRelaxationFactor;
+    FluxRelaxationFactor := SourceItem.FluxRelaxationFactor;
+    HeadClosureCriterion := SourceItem.HeadClosureCriterion;
+    FluxClosureCriterion := SourceItem.FluxClosureCriterion;
+    FChildModel := SourceItem.FChildModel;
+  end
+  else if Source is TChildModel then
+  begin
+    AssignSourceModel(TChildModel(Source));
+  end
+  else if Source is TChildModelItem then
+  begin
+    AssignSourceModel(TChildModelItem(Source).ChildModel);
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+procedure TChildModelEdit.AssignTo(Dest: TPersistent);
+var
+  DestModel: TChildModel;
+begin
+    // When editing this section, be sure to edit TChildModel
+    // and TChildModelItem too
+  if Dest is TChildModel then
+  begin
+    DestModel := TChildModel(Dest);
+    DestModel.ModelName := ModelName;
+    DestModel.Discretization := Discretization;
+    DestModel.ChildCellsPerParentCell := ChildCellsPerParentCell;
+    DestModel.StartingHeadSource := StartingHeadSource;
+//    DestModel.OneWayCoupling := OneWayCoupling;
+    DestModel.CouplingMethod := CouplingMethod;
+    DestModel.MaxIterations := MaxIterations;
+    DestModel.LgrPrintChoice := LgrPrintChoice;
+    DestModel.HeadRelaxationFactor := HeadRelaxationFactor;
+    DestModel.FluxRelaxationFactor := FluxRelaxationFactor;
+    DestModel.HeadClosureCriterion := HeadClosureCriterion;
+    DestModel.FluxClosureCriterion := FluxClosureCriterion;
+    DestModel.UpdateGrid;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TChildModelEdit.Create(Collection: TCollection);
+begin
+  inherited;
+  FChildCellsPerParentCell := 3;
+  FStartingHeadSource := shsSelf;
+  FMaxIterations := 20;
+  FLgrPrintChoice := lpcListing;
+  FFluxRelaxationFactor := 0.5;
+  FHeadRelaxationFactor := 0.5;
+  FHeadClosureCriterion := 5E-3;
+  FFluxClosureCriterion := 5E-2;
+  FDiscretization := TChildDiscretizationCollection.Create(nil);
+end;
+
+destructor TChildModelEdit.Destroy;
+begin
+  FDiscretization.Free;
+  inherited;
+end;
+
+function TChildModelEdit.IsSame(AnotherItem: TOrderedItem): boolean;
+var
+  AnotherEdit: TChildModelEdit;
+  ChildModel: TChildModel;
+begin
+    // When editing this section, be sure to edit TChildModel
+    // and TChildModelItem too
+  result := AnotherItem is TChildModelEdit;
+  if result then
+  begin
+    AnotherEdit := TChildModelEdit(AnotherItem);
+    result := (ModelName = AnotherEdit.ModelName)
+      and (ChildCellsPerParentCell = AnotherEdit.ChildCellsPerParentCell)
+      and Discretization.IsSame(AnotherEdit.Discretization)
+      and (StartingHeadSource = AnotherEdit.StartingHeadSource)
+//      and (OneWayCoupling = AnotherEdit.OneWayCoupling)
+      and (CouplingMethod = AnotherEdit.CouplingMethod)
+      and (MaxIterations = AnotherEdit.MaxIterations)
+      and (LgrPrintChoice = AnotherEdit.LgrPrintChoice)
+      and (HeadRelaxationFactor = AnotherEdit.HeadRelaxationFactor)
+      and (FluxRelaxationFactor = AnotherEdit.FluxRelaxationFactor)
+      and (HeadClosureCriterion = AnotherEdit.HeadClosureCriterion)
+      and (FluxClosureCriterion = AnotherEdit.FluxClosureCriterion)
+  end
+  else
+  begin
+    result := AnotherItem is TChildModelItem;
+    if result then
+    begin
+      ChildModel := TChildModelItem(AnotherItem).ChildModel;
+      result := (ModelName = ChildModel.ModelName)
+        and (ChildCellsPerParentCell = ChildModel.ChildCellsPerParentCell)
+        and Discretization.IsSame(ChildModel.Discretization)
+        and (StartingHeadSource = ChildModel.StartingHeadSource)
+//        and (OneWayCoupling = ChildModel.OneWayCoupling)
+        and (CouplingMethod = ChildModel.CouplingMethod)
+        and (MaxIterations = ChildModel.MaxIterations)
+        and (LgrPrintChoice = ChildModel.LgrPrintChoice)
+        and (HeadRelaxationFactor = ChildModel.HeadRelaxationFactor)
+        and (FluxRelaxationFactor = ChildModel.FluxRelaxationFactor)
+        and (HeadClosureCriterion = ChildModel.HeadClosureCriterion)
+        and (FluxClosureCriterion = ChildModel.FluxClosureCriterion)
+    end;
+  end;
+end;
+
+procedure TChildModelEdit.SetChildCellsPerParentCell(const Value: integer);
+begin
+  FChildCellsPerParentCell := Value;
+end;
+
+procedure TChildModelEdit.SetCouplingMethod(const Value: TCouplingMethod);
+begin
+  FCouplingMethod := Value;
+end;
+
+procedure TChildModelEdit.SetDiscretization(
+  const Value: TChildDiscretizationCollection);
+begin
+  FDiscretization.Assign(Value);
+end;
+
+procedure TChildModelEdit.SetFluxClosureCriterion(const Value: double);
+begin
+  FFluxClosureCriterion := Value;
+end;
+
+procedure TChildModelEdit.SetFluxRelaxationFactor(const Value: double);
+begin
+  FFluxRelaxationFactor := Value;
+end;
+
+procedure TChildModelEdit.SetHeadClosureCriterion(const Value: double);
+begin
+  FHeadClosureCriterion := Value;
+end;
+
+procedure TChildModelEdit.SetHeadRelaxationFactor(const Value: double);
+begin
+  FHeadRelaxationFactor := Value;
+end;
+
+procedure TChildModelEdit.SetLgrPrintChoice(const Value: TLgrPrintChoice);
+begin
+  FLgrPrintChoice := Value;
+end;
+
+procedure TChildModelEdit.SetMaxIterations(const Value: integer);
+begin
+  FMaxIterations := Value;
+end;
+
+procedure TChildModelEdit.SetModelName(const Value: string);
+begin
+  FModelName := Value;
+end;
+
+//procedure TChildModelEdit.SetOneWayCoupling(const Value: boolean);
+//begin
+//  CouplingMethod := TCouplingMethod(Ord(Value));
+//end;
+
+procedure TChildModelEdit.SetStartingHeadSource(
+  const Value: TStartingHeadSource);
+begin
+  FStartingHeadSource := Value;
+end;
+
+{ TChildModelEditCollection }
+
+constructor TChildModelEditCollection.Create;
+begin
+  inherited Create(TChildModelEdit, nil);
 end;
 
 initialization
@@ -15581,3 +22389,4 @@ initialization
   RegisterClass(TChildModel);
 
 end.
+

@@ -1,6 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<!-- edited with XMLSpy v2008 rel. 2 (http://www.altova.com) by Alexander Halser (EC Software GmbH) -->
-<!-- (C) Copyright EC Software GmbH, 2006-2008 -->
+<?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XInclude" xmlns:xml="http://www.w3.org/XML/1998/namespace" elementFormDefault="unqualified" attributeFormDefault="unqualified">
 	<xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="http://www.w3.org/XML/1998/namespace"/>
 	<xs:element name="helpproject">
@@ -131,6 +129,7 @@
 												<xs:attribute name="name" type="xs:string" use="required"/>
 												<xs:attribute name="parentclass" type="xs:string"/>
 												<xs:attribute name="shortcut" type="xs:integer"/>
+												<xs:attribute name="mode" type="xs:integer"/>
 											</xs:complexType>
 										</xs:element>
 										<xs:element name="tablestyleclass" minOccurs="0" maxOccurs="unbounded">
@@ -156,6 +155,7 @@
 												</xs:sequence>
 												<xs:attribute name="name" type="xs:string" use="required"/>
 												<xs:attribute name="parentclass" type="xs:string"/>
+												<xs:attribute name="mode" type="xs:integer"/>
 											</xs:complexType>
 										</xs:element>
 									</xs:sequence>
@@ -177,6 +177,7 @@
 									</xs:sequence>
 								</xs:complexType>
 							</xs:element>
+							<xs:element name="repository" type="repository.class" minOccurs="0"/>
 						</xs:sequence>
 						<xs:attribute ref="xml:base"/>
 					</xs:complexType>
@@ -200,6 +201,7 @@
 				</xs:element>
 			</xs:sequence>
 			<xs:attribute name="isskin" type="xs:boolean"/>
+			<xs:attribute name="isrepository" type="xs:boolean"/>
 			<xs:attribute name="version" type="xs:string"/>
 		</xs:complexType>
 	</xs:element>
@@ -802,6 +804,12 @@
 			<xs:documentation>Help topic</xs:documentation>
 		</xs:annotation>
 		<xs:choice maxOccurs="unbounded">
+			<xs:element name="meta" minOccurs="0">
+				<xs:complexType>
+					<xs:attribute name="name" type="xs:string" use="required"/>
+					<xs:attribute name="value" type="xs:string" use="required"/>
+				</xs:complexType>
+			</xs:element>
 			<xs:element name="title" type="caption.class" minOccurs="0"/>
 			<xs:element name="keywords" type="keywords.class" minOccurs="0"/>
 			<xs:element name="a-keywords" minOccurs="0">
@@ -852,6 +860,17 @@
 			<xs:extension base="xs:string">
 				<xs:attribute name="styleclass" type="xs:string"/>
 				<xs:attribute name="style" type="xs:string"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="repository.class" mixed="false">
+		<xs:annotation>
+			<xs:documentation>Repository binding in project</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="name" type="xs:string"/>
+				<xs:attribute name="href" type="xs:string"/>
 			</xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>

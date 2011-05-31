@@ -90,7 +90,7 @@ inherited frmModflowTime: TfrmModflowTime
       Width = 145
       Height = 26
       Style = csDropDownList
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 5
       Text = 'seconds (1)'
       Items.Strings = (
@@ -124,10 +124,6 @@ inherited frmModflowTime: TfrmModflowTime
     object tabEdit: TTabSheet
       Caption = 'Edit'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlTop: TPanel
         Left = 0
         Top = 0
@@ -176,7 +172,7 @@ inherited frmModflowTime: TfrmModflowTime
           Height = 27
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 0
           Text = '0'
           OnChange = rdePeriodLengthChange
@@ -192,7 +188,7 @@ inherited frmModflowTime: TfrmModflowTime
           Height = 27
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 1
           Text = '0'
           OnChange = rdeMaxFirstStepLengthChange
@@ -208,7 +204,7 @@ inherited frmModflowTime: TfrmModflowTime
           Height = 27
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 0
+          ItemHeight = 18
           TabOrder = 2
           Text = '0'
           OnChange = rdeMultiplierChange
@@ -257,10 +253,11 @@ inherited frmModflowTime: TfrmModflowTime
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
         TabOrder = 1
-        OnMouseDown = dgTimeMouseDown
         OnMouseUp = dgTimeMouseUp
         OnSelectCell = dgTimeSelectCell
         OnSetEditText = dgTimeSetEditText
+        ExtendedAutoDistributeText = False
+        AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = True

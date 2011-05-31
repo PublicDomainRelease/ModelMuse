@@ -5,12 +5,11 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, rmOutlook, ExtCtrls, Buttons, Grids,
-  Mask, JvExMask, JvSpin, TntStdCtrls, TntExDropDownEdit,
-  TntExDropDownVirtualStringTree, JvExStdCtrls, JvCombobox, VirtualTrees,
+  Mask, JvExMask, JvSpin, JvExStdCtrls, JvCombobox, VirtualTrees,
   DataSetUnit, RbwDataGrid4, RbwDataGrid, Contnrs, DrawTextUnit,
   InPlaceEditUnit, Types, LegendUnit, GR32, RbwRuler, ExtDlgs, ComCtrls,
-  DisplaySettingsUnit, TntButtons, JvExExtCtrls, JvNetscapeSplitter, Menus,
-  JvToolEdit;
+  DisplaySettingsUnit, JvExExtCtrls, JvNetscapeSplitter, Menus,
+  JvToolEdit, JvExButtons, JvBitBtn;
 
 type
   TfrmExportImage = class(TfrmCustomGoPhast)
@@ -49,7 +48,6 @@ type
     btnRefresh: TBitBtn;
     btnManageSettings: TButton;
     lblSelectedView: TLabel;
-    btnSaveImage: TTntBitBtn;
     opAnimation: TrmOutlookPage;
     vstDataSets: TVirtualStringTree;
     rdgDataSets: TRbwDataGrid4;
@@ -64,6 +62,8 @@ type
     btnStop: TButton;
     btnSaveMultipleImages: TBitBtn;
     JvNetscapeSplitter1: TJvNetscapeSplitter;
+    btnSaveImage1: TJvBitBtn;
+    JvBitBtn1: TJvBitBtn;
     procedure FormCreate(Sender: TObject); override;
     procedure seImageHeightChange(Sender: TObject);
     procedure seImageWidthChange(Sender: TObject);
@@ -106,6 +106,7 @@ type
     procedure btnStopClick(Sender: TObject);
     procedure btnSaveMultipleImagesClick(Sender: TObject);
     procedure btnCloseClick(Sender: TObject);
+    procedure JvBitBtn1Click(Sender: TObject);
   private
     FShouldDraw: Boolean;
     FTextItems: TList;
@@ -127,6 +128,7 @@ type
     FDataSetDummyObjects: TList;
     FShouldStop: Boolean;
     FRightOffset: Integer;
+    FRunning: Boolean;
     procedure GetData;
     procedure DrawImageAfterDelay;
     procedure DrawTitle(DrawingRect: TRect; ACanvas: TCanvas;
@@ -190,7 +192,7 @@ uses
   CompressedImageUnit, frameViewUnit, PhastModelUnit, frmGoToUnit,
   frmContourDataUnit, frmGridColorUnit, UndoItems, frmManageSettingsUnit,
   UndoItemsScreenObjects, ClassificationUnit, frmProgressUnit,
-  frmErrorsAndWarningsUnit;
+  frmErrorsAndWarningsUnit, Clipbrd;
 
 const
   StrSP = '%SP';
@@ -242,6 +244,7 @@ var
 begin
   inherited;
   FShouldStop := False;
+  FRunning := True;
   DataSetList := TList.Create;
   Legend := TLegend.Create(nil);
   try
@@ -312,6 +315,7 @@ begin
             begin
               DataArray.ContourLimits := PriorDataArray.ContourLimits;
               DataArray.Contours := PriorDataArray.Contours;
+              DataArray.Contours.SpecifyContours := True;
               Legend.Assign(frmGoPhast.PhastModel.ContourLegend);
             end;
             case DataArray.Orientation of
@@ -385,7 +389,6 @@ begin
               Legend.Assign(frmGoPhast.PhastModel.ContourLegend);
             end;
         end;
-
       end;
 
       FreeAndNil(FModelImage);
@@ -424,6 +427,7 @@ begin
     frmProgressMM.Hide;
     DataSetList.Free;
     Legend.Free;
+    FRunning := False;
     if frmErrorsAndWarnings.HasMessages then
     begin
       frmErrorsAndWarnings.Show;
@@ -803,6 +807,9 @@ var
   ScreenObjectIndex: Integer;
   ViewDirection: TViewDirection;
   Orientation: TDataSetOrientation;
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if FModelImage = nil then
   begin
@@ -824,11 +831,28 @@ begin
 
     DrawBackgroundImages(FModelImage);
 
-    frmGoPhast.Grid.DrawColoredGridLines := cbShowColoredGridLines.Checked;
+    LocalModel := frmGoPhast.PhastModel;
+    LocalModel.Grid.DrawColoredGridLines := cbShowColoredGridLines.Checked;
+    if LocalModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+        ChildModel.Grid.DrawColoredGridLines := cbShowColoredGridLines.Checked;
+      end;
+    end;
     try
       frmGoPhast.Grid.Draw(FModelImage, ViewDirection);
     finally
       frmGoPhast.Grid.DrawColoredGridLines := True;
+      if LocalModel.LgrUsed then
+      begin
+        for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+        begin
+          ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+          ChildModel.Grid.DrawColoredGridLines := True;
+        end;
+      end;
     end;
 
     for ScreenObjectIndex := 0 to
@@ -845,9 +869,9 @@ begin
       vdSide: Orientation := dsoSide;
       else Assert(False);
     end;
-    frmGoPhast.PhastModel.Pathline.Draw(Orientation, FModelImage);
-    frmGoPhast.PhastModel.EndPoints.Draw(Orientation, FModelImage);
-    frmGoPhast.PhastModel.TimeSeries.Draw(Orientation, FModelImage);
+    LocalModel.Pathlines.Draw(Orientation, FModelImage);
+    LocalModel.EndPoints.Draw(Orientation, FModelImage);
+    LocalModel.TimeSeries.Draw(Orientation, FModelImage);
 
     if ViewDirection = vdSide then
     begin
@@ -1568,7 +1592,7 @@ begin
   end;
 
   PhastModel.EndPoints.Assign(ASetting.ModpathEndPointSettings);
-  PhastModel.PathLine.Assign(ASetting.ModpathPathLineSettings);
+  PhastModel.PathLines.Assign(ASetting.ModpathPathLineSettings);
   PhastModel.TimeSeries.Assign(ASetting.ModpathTimeSeriesSettings);
 
   ApplyContourDisplaySettings(ASetting.ContourDisplaySettings);
@@ -1673,7 +1697,7 @@ begin
     ASetting.ShowColoredGridLines := cbShowColoredGridLines.Checked;
     ASetting.GridDisplayChoice := PhastModel.Grid.GridLineDrawingChoice;
     ASetting.ModpathEndPointSettings := PhastModel.EndPoints;
-    ASetting.ModpathPathLineSettings := PhastModel.PathLine;
+    ASetting.ModpathPathLineSettings := PhastModel.PathLines;
     ASetting.ModpathTimeSeriesSettings := PhastModel.TimeSeries;
     SaveContourSettings(ASetting.ContourDisplaySettings);
     SaveColorDisplaySettings(ASetting.ColorDisplaySettings);
@@ -2338,6 +2362,11 @@ end;
 procedure TfrmExportImage.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
+  FShouldStop := True;
+  if FRunning then
+  begin
+    Application.ProcessMessages;
+  end;
   if FQuerySaveSettings then
   begin
     FQuerySaveSettings := False;
@@ -2490,6 +2519,20 @@ begin
   FQuerySaveSettings := True;
 end;
 
+procedure TfrmExportImage.JvBitBtn1Click(Sender: TObject);
+var
+  ABitMap: TBitmap;
+begin
+  inherited;
+  ABitMap := TBitMap.Create;
+  try
+    ABitMap.Assign(imagePreview.Picture);
+    Clipboard.Assign(ABitMap);
+  finally
+    ABitMap.Free;
+  end;
+end;
+
 procedure TfrmExportImage.memoTitleChange(Sender: TObject);
 begin
   inherited;
@@ -2519,7 +2562,7 @@ begin
     try
       imagePreview.Canvas.Font := FDefaultFont;
       Lines.Text := MaskEdit.Text;
-      if StrRight(MaskEdit.Text, 2) = #13#10 then
+      if StrRight(MaskEdit.Text, 2) = sLineBreak then
       begin
         Lines.Add(' ')
       end;

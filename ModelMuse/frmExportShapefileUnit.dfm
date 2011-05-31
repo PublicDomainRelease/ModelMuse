@@ -2,10 +2,10 @@ inherited frmExportShapefile: TfrmExportShapefile
   HelpType = htKeyword
   HelpKeyword = 'Export_Shapefile_Dialog_Box'
   Caption = 'Export Grid Data to Shapefile'
-  ClientHeight = 470
+  ClientHeight = 539
   ClientWidth = 456
   ExplicitWidth = 464
-  ExplicitHeight = 504
+  ExplicitHeight = 573
   PixelsPerInch = 96
   TextHeight = 18
   object lblExportItems: TLabel
@@ -36,7 +36,7 @@ inherited frmExportShapefile: TfrmExportShapefile
   end
   object lblElements: TLabel
     Left = 8
-    Top = 264
+    Top = 279
     Width = 170
     Height = 18
     Caption = '&Element Shapefile name'
@@ -44,7 +44,7 @@ inherited frmExportShapefile: TfrmExportShapefile
   end
   object lblNodes: TLabel
     Left = 8
-    Top = 320
+    Top = 335
     Width = 151
     Height = 18
     Caption = '&Node Shapefile name'
@@ -52,7 +52,7 @@ inherited frmExportShapefile: TfrmExportShapefile
   end
   object lblHorizontalFlowBarrier: TLabel
     Left = 8
-    Top = 374
+    Top = 445
     Width = 263
     Height = 18
     Caption = '&Horizontal flow barrier Shapefile name'
@@ -82,8 +82,8 @@ inherited frmExportShapefile: TfrmExportShapefile
     RowCount = 2
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
     TabOrder = 1
-    OnMouseDown = rdgTimeMouseDown
     OnSetEditText = rdgTimeSetEditText
+    AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = True
@@ -130,7 +130,7 @@ inherited frmExportShapefile: TfrmExportShapefile
   end
   object jfeElements: TJvFilenameEdit
     Left = 8
-    Top = 288
+    Top = 303
     Width = 440
     Height = 26
     DialogKind = dkSave
@@ -159,11 +159,12 @@ inherited frmExportShapefile: TfrmExportShapefile
   end
   object jfeNodes: TJvFilenameEdit
     Left = 8
-    Top = 343
+    Top = 358
     Width = 440
     Height = 26
     DialogKind = dkSave
     DefaultExt = '.shp'
+    Filter = 'Shapefiles (*.shp)|*.shp'
     DialogOptions = [ofOverwritePrompt, ofHideReadOnly]
     Enabled = False
     Glyph.Data = {
@@ -187,11 +188,12 @@ inherited frmExportShapefile: TfrmExportShapefile
   end
   object jfeHorizontalFlowBarrier: TJvFilenameEdit
     Left = 8
-    Top = 398
+    Top = 469
     Width = 440
     Height = 26
     DialogKind = dkSave
     DefaultExt = '.shp'
+    Filter = 'Shapefiles (*.shp)|*.shp'
     DialogOptions = [ofOverwritePrompt, ofHideReadOnly]
     Enabled = False
     Glyph.Data = {
@@ -215,7 +217,7 @@ inherited frmExportShapefile: TfrmExportShapefile
   end
   object btnCancel: TBitBtn
     Left = 366
-    Top = 429
+    Top = 500
     Width = 82
     Height = 34
     Anchors = [akTop, akRight]
@@ -224,7 +226,7 @@ inherited frmExportShapefile: TfrmExportShapefile
   end
   object btnOK: TBitBtn
     Left = 278
-    Top = 428
+    Top = 499
     Width = 82
     Height = 34
     Anchors = [akTop, akRight]
@@ -234,7 +236,7 @@ inherited frmExportShapefile: TfrmExportShapefile
   end
   object btnHelp: TBitBtn
     Left = 190
-    Top = 428
+    Top = 499
     Width = 82
     Height = 34
     Anchors = [akTop, akRight]
@@ -246,15 +248,30 @@ inherited frmExportShapefile: TfrmExportShapefile
     Left = 8
     Top = 211
     Width = 440
-    Height = 46
+    Height = 62
     Anchors = [akLeft, akTop, akRight]
-    Caption = 'E&xport as...'
+    Caption = 'E&xport data sets as...'
     Columns = 2
     ItemIndex = 0
     Items.Strings = (
-      'polygons'
-      'points')
+      '2D polygons'
+      '2D points'
+      '3D polyhedrons'
+      '3D points')
     TabOrder = 3
+  end
+  object rgHfbDimensions: TRadioGroup
+    Left = 8
+    Top = 390
+    Width = 433
+    Height = 49
+    Caption = 'Export horizontal flow barriers as...'
+    Columns = 2
+    ItemIndex = 0
+    Items.Strings = (
+      '2D polylines'
+      '3D triangle strips')
+    TabOrder = 10
   end
   object ilCheckImages: TImageList
     Left = 136

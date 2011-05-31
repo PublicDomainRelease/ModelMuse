@@ -1,13 +1,21 @@
 inherited framePackageUZF: TframePackageUZF
+  Width = 548
   Height = 467
+  ExplicitWidth = 548
   ExplicitHeight = 467
   DesignSize = (
-    477
+    548
     467)
+  inherited memoComments: TMemo
+    Width = 517
+    ExplicitWidth = 517
+  end
   inherited pnLayerOption: TPanel
     Top = 156
+    Width = 548
     Height = 311
     ExplicitTop = 156
+    ExplicitWidth = 548
     ExplicitHeight = 311
     inherited lblLayerOption: TLabel
       Top = 5
@@ -145,6 +153,20 @@ inherited framePackageUZF: TframePackageUZF
       CheckMin = True
       ChangeDisabledColor = True
     end
+    object rgAssignmentMethod: TRbwRadioGroup
+      Left = 240
+      Top = 104
+      Width = 293
+      Height = 80
+      Caption = 'Infiltration assignment method'
+      Enabled = False
+      ItemIndex = 1
+      Items.Strings = (
+        'Objects overwrite values of previous objects'
+        'Sum values of all objects')
+      TabOrder = 8
+      WordWrap = True
+    end
   end
   inherited rcSelectionController: TRbwController
     ControlList = <
@@ -179,6 +201,9 @@ inherited framePackageUZF: TframePackageUZF
       end
       item
         Control = lblVerticalKSource
+      end
+      item
+        Control = rgAssignmentMethod
       end>
   end
 end

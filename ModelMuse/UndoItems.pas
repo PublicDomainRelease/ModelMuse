@@ -42,6 +42,8 @@ type
     // @name tells the model that the grid has changed and that related
     // things need to be updated.
     procedure InvalidateGrid;
+    procedure DisallowChildGridUpdates;
+    procedure AllowChildGridUpdates;
   public
     // @name calls @link(TUndoItem.DoCommand).
     procedure Redo; override;
@@ -546,6 +548,7 @@ type
   // for use in @link(TUndoChangeDataSets).
   TPhastDataSetStorage = class(TObject)
   private
+    FNeedToInvalidate: boolean;
     // @name is the @link(TDataArray) whose values are being stored.
     FDataSet: TDataArray;
     // See @link(Name).
@@ -578,6 +581,7 @@ type
     function GetFormula: string;
     procedure SetFormula(const Value: string);
     procedure SetDataSet(const Value: TDataArray);
+//    procedure UpdateStoredFormula;
   public
     procedure AssignBasicProperties;
     // @name is the @link(TDataArray) whose values are being stored.
@@ -642,8 +646,9 @@ type
     FNewDataSetProperties: TList;
     FOldNames: TStringList;
     FNewNames: TStringList;
-    // @name stores the current state of @link(TPhastModel.DataSets
-    // frmGoPhast.Model.DataSets) and the @link(TDataArray)s that are being
+    // @name stores the current state of @link(TDataArrayManager.DataSets
+    // frmGoPhast.Model.FDataArrayManager.DataSets)
+    // and the @link(TDataArray)s that are being
     // used to color the grid.
     procedure StoreData;
     // @name clears expressions and variables in @link(frmGoPhast).
@@ -660,6 +665,8 @@ type
     // @name describes what @classname does.
     function Description: string; override;
   public
+//    procedure UpdateNewStoredFormulas;
+
     // @name creates and instance of @classname
     // @param(DeletedDataSets DeletedDataSets contains a series of
     // @link(TDataArray)s that have been deleted.)
@@ -728,7 +735,7 @@ constructor TUndoDeleteRow.Create(const ARow: integer);
 begin
   inherited Create;
   FRow := ARow;
-  FSelectedRow := frmGoPhast.Grid.SelectedRow;
+  FSelectedRow := frmGoPhast.PhastModel.SelectedRow;
   FRowPosition := frmGoPhast.Grid.RowPosition[FRow];
 end;
 
@@ -742,10 +749,10 @@ procedure TUndoDeleteRow.DoCommand;
 begin
   frmGoPhast.CanDraw := False;
   try
-    if FRow <= frmGoPhast.Grid.SelectedRow then
+    if FRow <= frmGoPhast.PhastModel.SelectedRow then
     begin
-      frmGoPhast.Grid.SelectedRow :=
-        frmGoPhast.Grid.SelectedRow - 1;
+      frmGoPhast.PhastModel.SelectedRow :=
+        frmGoPhast.PhastModel.SelectedRow - 1;
     end;
     frmGoPhast.Grid.DeleteRow(FRow);
     frmGoPhast.frameFrontView.ItemChange(nil);
@@ -761,7 +768,7 @@ begin
   frmGoPhast.CanDraw := False;
   try
     frmGoPhast.Grid.AddRow(FRowPosition);
-    frmGoPhast.Grid.SelectedRow := FSelectedRow;
+    frmGoPhast.PhastModel.SelectedRow := FSelectedRow;
     frmGoPhast.frameFrontView.ItemChange(nil);
     InvalidateGrid;
     inherited;
@@ -775,7 +782,7 @@ end;
 constructor TUndoDeleteColumn.Create(const AColumn: integer);
 begin
   inherited Create;
-  FSelectedColumn := frmGoPhast.Grid.SelectedColumn;
+  FSelectedColumn := frmGoPhast.PhastModel.SelectedColumn;
   FColumn := AColumn;
   FColumnPosition := frmGoPhast.Grid.ColumnPosition[FColumn];
 end;
@@ -790,10 +797,10 @@ procedure TUndoDeleteColumn.DoCommand;
 begin
   frmGoPhast.CanDraw := False;
   try
-    if FColumn <= frmGoPhast.Grid.SelectedColumn then
+    if FColumn <= frmGoPhast.PhastModel.SelectedColumn then
     begin
-      frmGoPhast.Grid.SelectedColumn :=
-        frmGoPhast.Grid.SelectedColumn - 1;
+      frmGoPhast.PhastModel.SelectedColumn :=
+        frmGoPhast.PhastModel.SelectedColumn - 1;
     end;
     frmGoPhast.Grid.DeleteColumn(FColumn);
     frmGoPhast.frameSideView.ItemChange(nil);
@@ -809,7 +816,7 @@ begin
   frmGoPhast.CanDraw := False;
   try
     frmGoPhast.Grid.AddColumn(FColumnPosition);
-    frmGoPhast.Grid.SelectedColumn := FSelectedColumn;
+    frmGoPhast.PhastModel.SelectedColumn := FSelectedColumn;
     frmGoPhast.frameSideView.ItemChange(nil);
     InvalidateGrid;
     inherited;
@@ -1029,7 +1036,7 @@ end;
 constructor TUndoAddColumn.Create(const NewPosition: real);
 begin
   inherited Create;
-  FSelectedColumn := frmGoPhast.Grid.SelectedColumn;
+  FSelectedColumn := frmGoPhast.PhastModel.SelectedColumn;
   FColumnPosition := NewPosition;
 end;
 
@@ -1044,10 +1051,10 @@ begin
   try
     frmGoPhast.Grid.AddColumn(FColumnPosition);
     FColumn := frmGoPhast.Grid.NearestColumnPosition(FColumnPosition);
-    if FColumn <= frmGoPhast.Grid.SelectedColumn then
+    if FColumn <= frmGoPhast.PhastModel.SelectedColumn then
     begin
-      frmGoPhast.Grid.SelectedColumn :=
-        frmGoPhast.Grid.SelectedColumn + 1;
+      frmGoPhast.PhastModel.SelectedColumn :=
+        frmGoPhast.PhastModel.SelectedColumn + 1;
     end;
     frmGoPhast.frameSideView.ItemChange(nil);
     InvalidateGrid;
@@ -1062,7 +1069,7 @@ begin
   frmGoPhast.CanDraw := False;
   try
     frmGoPhast.Grid.DeleteColumn(FColumn);
-    frmGoPhast.Grid.SelectedColumn := FSelectedColumn;
+    frmGoPhast.PhastModel.SelectedColumn := FSelectedColumn;
     frmGoPhast.frameSideView.ItemChange(nil);
     InvalidateGrid;
     inherited;
@@ -1076,7 +1083,7 @@ end;
 constructor TUndoAddRow.Create(const NewPosition: real);
 begin
   inherited Create;
-  SelectedRow := frmGoPhast.Grid.SelectedRow;
+  SelectedRow := frmGoPhast.PhastModel.SelectedRow;
   RowPosition := NewPosition;
 end;
 
@@ -1091,9 +1098,9 @@ begin
   try
     frmGoPhast.Grid.AddRow(RowPosition);
     Row := frmGoPhast.Grid.NearestRowPosition(RowPosition);
-    if Row <= frmGoPhast.Grid.SelectedRow then
+    if Row <= frmGoPhast.PhastModel.SelectedRow then
     begin
-      frmGoPhast.Grid.SelectedRow := frmGoPhast.Grid.SelectedRow + 1;
+      frmGoPhast.PhastModel.SelectedRow := frmGoPhast.PhastModel.SelectedRow + 1;
     end;
     frmGoPhast.frameFrontView.ItemChange(nil);
     InvalidateGrid;
@@ -1108,7 +1115,7 @@ begin
   frmGoPhast.CanDraw := False;
   try
     frmGoPhast.Grid.DeleteRow(Row);
-    frmGoPhast.Grid.SelectedRow := SelectedRow;
+    frmGoPhast.PhastModel.SelectedRow := SelectedRow;
     frmGoPhast.frameFrontView.ItemChange(nil);
     InvalidateGrid;
     inherited;
@@ -1512,15 +1519,15 @@ begin
     // Make sure the grid is visible on the screen.
     if (ColumnCount > 0) and (RowCount > 0) then
     begin
-      MoveToTopCell(ColumnCount div 2, RowCount div 2);
+      MoveToTopCell(frmGoPhast.Grid, ColumnCount div 2, RowCount div 2);
     end;
     if (ColumnCount > 0) and (LayerCount > 0) then
     begin
-      MoveToFrontCell(ColumnCount div 2, LayerCount div 2);
+      MoveToFrontCell(frmGoPhast.Grid, ColumnCount div 2, LayerCount div 2);
     end;
     if (RowCount > 0) and (LayerCount > 0) then
     begin
-      MoveToSideCell(RowCount div 2, LayerCount div 2);
+      MoveToSideCell(frmGoPhast.Grid, RowCount div 2, LayerCount div 2);
     end;
   end;
 
@@ -1548,7 +1555,7 @@ end;
 procedure TUndoEditGridLines.DoCommand;
 begin
   frmGoPhast.CanDraw := False;
-  frmGoPhast.Grid.BeginGridChange;
+  frmGoPhast.PhastModel.BeginGridChange;
   try
     frmGoPhast.Grid.BeginRowChange;
     try
@@ -1579,7 +1586,7 @@ begin
       frmGoPhast.ModflowGrid.UpdateCellElevations;
     end;
   finally
-    frmGoPhast.Grid.EndGridChange;
+    frmGoPhast.PhastModel.EndGridChange;
     frmGoPhast.CanDraw := True;
   end;
   inherited;
@@ -1743,18 +1750,8 @@ begin
 end;
 
 procedure TCustomUndoChangeGridDimensions.UpdateDataSets;
-var
-  Index: integer;
-  PhastModel: TPhastModel;
-  ChildModel: TChildModel;
 begin
-  PhastModel := frmGoPhast.PhastModel;
-  PhastModel.DataArrayManager.UpdateDataSetDimensions;
-  for Index := 0 to PhastModel.ChildModels.Count - 1 do
-  begin
-    ChildModel := PhastModel.ChildModels[Index].ChildModel;
-    ChildModel.DataArrayManager.UpdateDataSetDimensions;
-  end;
+  frmGoPhast.PhastModel.UpdateDataSetDimensions;
 end;
 { TUndoCreateGrid }
 
@@ -1913,87 +1910,92 @@ var
   ShouldInvalidateDataArray: array of boolean;
   DataArrayManager: TDataArrayManager;
 begin
-  UpdateFormulas(DataSetProperties);
+  DisallowChildGridUpdates;
+  try
+    UpdateFormulas(DataSetProperties);
 
-  UpdateObjectDisplay := (DeletedDataSets.Count > 0)
-    or (AddedDataSets.Count > 0);
-  ClearExpressionsAndVariables;
-  frmGoPhast.PhastModel.CreateGlobalVariables;
-  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
-  DataArrayManager.HandleDeletedDataArrays(DeletedDataSets);
-  // extract any data sets that have been deleted and store them.
-  DataArrayManager.HandleAddedDataArrays(AddedDataSets);
+    UpdateObjectDisplay := (DeletedDataSets.Count > 0)
+      or (AddedDataSets.Count > 0);
+    ClearExpressionsAndVariables;
+    frmGoPhast.PhastModel.CreateGlobalVariables;
+    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    DataArrayManager.HandleDeletedDataArrays(DeletedDataSets);
+    // extract any data sets that have been deleted and store them.
+    DataArrayManager.HandleAddedDataArrays(AddedDataSets);
 
-  for Index := 0 to DataSetProperties.Count - 1 do
-  begin
-    DataStorage := DataSetProperties[Index];
-    if (DataStorage.Name <> DataStorage.FDataSet.Name) then
+    for Index := 0 to DataSetProperties.Count - 1 do
     begin
-      UpdateObjectDisplay := True;
-    end;
-    DataStorage.AssignBasicProperties;
-    frmGoPhast.PhastModel.CreateVariables(DataStorage.FDataSet);
-  end;
-
-  // update the properties of the data sets.
-  SetLength(ShouldInvalidateDataArray, DataSetProperties.Count);
-  for Index := 0 to DataSetProperties.Count - 1 do
-  begin
-    // set the data set properties except for the formula.
-    DataStorage := DataSetProperties[Index];
-    if (DataStorage.Name <> DataStorage.FDataSet.Name) then
-    begin
-      UpdateObjectDisplay := True;
+      DataStorage := DataSetProperties[Index];
+      if (DataStorage.Name <> DataStorage.FDataSet.Name) then
+      begin
+        UpdateObjectDisplay := True;
+      end;
+      DataStorage.AssignBasicProperties;
+      frmGoPhast.PhastModel.CreateVariables(DataStorage.FDataSet);
     end;
 
-    DataStorage.AssignToDataSet(ShouldInvalidateDataArray[Index]);
-    DataStorage.FDataSet.UpdateDimensions(frmGoPhast.Grid.LayerCount,
-      frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
-//    frmGoPhast.PhastModel.CreateVariables(DataStorage.FDataSet);
-  end;
-
-  // After all the data set names have been updated,
-  // update the data set formulas.
-  for Index := 0 to DataSetProperties.Count - 1 do
-  begin
-    DataStorage := DataSetProperties[Index];
-    DataStorage.AssignFormulasToDataSet;
-    if ShouldInvalidateDataArray[Index] then
+    // update the properties of the data sets.
+    SetLength(ShouldInvalidateDataArray, DataSetProperties.Count);
+    for Index := 0 to DataSetProperties.Count - 1 do
     begin
-      DataStorage.DataSet.Invalidate;
+      // set the data set properties except for the formula.
+      DataStorage := DataSetProperties[Index];
+      if (DataStorage.Name <> DataStorage.FDataSet.Name) then
+      begin
+        UpdateObjectDisplay := True;
+      end;
+
+      DataStorage.AssignToDataSet(ShouldInvalidateDataArray[Index]);
+      DataStorage.FDataSet.UpdateDimensions(frmGoPhast.Grid.LayerCount,
+        frmGoPhast.Grid.RowCount, frmGoPhast.Grid.ColumnCount);
+  //    frmGoPhast.PhastModel.CreateVariables(DataStorage.FDataSet);
     end;
-  end;
 
-  if FOldNames.Count > 0 then
-  begin
-    frmGoPhast.PhastModel.FormulaManager.RestoreSubscriptions;
-  end;
+    // After all the data set names have been updated,
+    // update the data set formulas.
+    for Index := 0 to DataSetProperties.Count - 1 do
+    begin
+      DataStorage := DataSetProperties[Index];
+      DataStorage.AssignFormulasToDataSet;
+      if ShouldInvalidateDataArray[Index] then
+      begin
+        DataStorage.DataSet.Invalidate;
+      end;
+    end;
 
-  // make sure that if the orientation of the data set has
-  // changed that the data sets that are used to color the
-  // grid are still valid.
-  if (frmGoPhast.Grid.TopDataSet <> nil)
-    and not (frmGoPhast.Grid.TopDataSet.Orientation
-    in [dsoTop, dso3D]) then
-  begin
-    frmGoPhast.Grid.TopDataSet := nil;
-  end;
-  if (frmGoPhast.Grid.FrontDataSet <> nil)
-    and not (frmGoPhast.Grid.FrontDataSet.Orientation
-    in [dsoFront, dso3D]) then
-  begin
-    frmGoPhast.Grid.FrontDataSet := nil;
-  end;
-  if (frmGoPhast.Grid.SideDataSet <> nil)
-    and not (frmGoPhast.Grid.SideDataSet.Orientation
-    in [dsoSide, dso3D]) then
-  begin
-    frmGoPhast.Grid.SideDataSet := nil;
-  end;
+    if FOldNames.Count > 0 then
+    begin
+      frmGoPhast.PhastModel.FormulaManager.RestoreSubscriptions;
+    end;
 
-  if UpdateObjectDisplay and (frmShowHideObjects <> nil) then
-  begin
-    frmShowHideObjects.UpdateScreenObjects;
+    // make sure that if the orientation of the data set has
+    // changed that the data sets that are used to color the
+    // grid are still valid.
+    if (frmGoPhast.Grid.TopDataSet <> nil)
+      and not (frmGoPhast.Grid.TopDataSet.Orientation
+      in [dsoTop, dso3D]) then
+    begin
+      frmGoPhast.Grid.TopDataSet := nil;
+    end;
+    if (frmGoPhast.Grid.FrontDataSet <> nil)
+      and not (frmGoPhast.Grid.FrontDataSet.Orientation
+      in [dsoFront, dso3D]) then
+    begin
+      frmGoPhast.Grid.FrontDataSet := nil;
+    end;
+    if (frmGoPhast.Grid.SideDataSet <> nil)
+      and not (frmGoPhast.Grid.SideDataSet.Orientation
+      in [dsoSide, dso3D]) then
+    begin
+      frmGoPhast.Grid.SideDataSet := nil;
+    end;
+
+    if UpdateObjectDisplay and (frmShowHideObjects <> nil) then
+    begin
+      frmShowHideObjects.UpdateScreenObjects;
+    end;
+  finally
+    AllowChildGridUpdates;
   end;
 
 end;
@@ -2072,6 +2074,16 @@ begin
 //  frmGoPhast.PhastModel.DataArrayNameChangeWarning;
 end;
 
+procedure TCustomUndo.AllowChildGridUpdates;
+begin
+  frmGoPhast.PhastModel.AllowChildGridUpdates;
+end;
+
+procedure TCustomUndo.DisallowChildGridUpdates;
+begin
+  frmGoPhast.PhastModel.DisallowChildGridUpdates;
+end;
+
 procedure TUndoChangeDataSets.UpdateFormulas(DataSetProperties: TList);
 var
   VarIndex: Integer;
@@ -2126,6 +2138,18 @@ begin
   end;
 end;
 
+//procedure TUndoChangeDataSets.UpdateNewStoredFormulas;
+//var
+//  Index: Integer;
+//  DataStorage: TPhastDataSetStorage;
+//begin
+//  for Index := 0 to FNewDataSetProperties.Count - 1 do
+//  begin
+//    DataStorage := FNewDataSetProperties[Index];
+//    DataStorage.UpdateStoredFormula;
+//  end;
+//end;
+
 function TUndoChangeDataSets.DataSetsChanged: boolean;
 var
   Index: integer;
@@ -2164,25 +2188,118 @@ begin
 end;
 
 procedure TPhastDataSetStorage.AssignFormulasToDataSet;
+var
+  LocalModel: TPhastModel;
+  Index: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
 begin
+  if FDataSet.Model is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FDataSet.Model);
+//    if LocalModel.LgrUsed then
+    begin
+      for Index := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[Index].ChildModel;
+        ChildDataArray := ChildModel.DataArrayManager.
+          GetDataSetByName(FDataSet.Name);
+        if ChildDataArray <> nil then
+        begin
+          ChildDataArray.Formula := Formula;
+          if ChildDataArray is TCustomPhastDataSet then
+          begin
+            ChildDataArray.Assign(PhastInterpolationValues);
+          end;
+        end;
+      end;
+    end;
+  end;
   FDataSet.Formula := Formula;
   if FDataSet is TCustomPhastDataSet then
   begin
     FDataSet.Assign(PhastInterpolationValues);
   end;
+//  if FDataSet.Model is TPhastModel then
+//  begin
+//    LocalModel := TPhastModel(FDataSet.Model);
+//    for Index := 0 to LocalModel.ChildModels.Count - 1 do
+//    begin
+//      ChildModel := LocalModel.ChildModels[Index].ChildModel;
+//      ChildModel.CanUpdateGrid := True;
+//    end;
+//  end;
 end;
 
 procedure TPhastDataSetStorage.AssignBasicProperties;
+var
+  LocalModel: TPhastModel;
+  Index: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
 begin
+  if FDataSet.Model is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FDataSet.Model);
+//    if LocalModel.LgrUsed then
+    begin
+      for Index := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[Index].ChildModel;
+        ChildDataArray := ChildModel.DataArrayManager.
+          GetDataSetByName(FDataSet.Name);
+//        Assert(ChildDataArray <> nil);
+        if ChildDataArray <> nil then
+        begin
+          ChildDataArray.Name := Name;
+          ChildDataArray.UpdateWithoutNotification(Orientation, EvaluatedAt,
+            DataType, FNeedToInvalidate);
+        end;
+  //      ChildDataArray.Orientation := Orientation;
+  //      ChildDataArray.EvaluatedAt := EvaluatedAt;
+  //      ChildDataArray.DataType := DataType;
+      end;
+    end;
+  end;
   FDataSet.Name := Name;
-  FDataSet.Orientation := Orientation;
-  FDataSet.EvaluatedAt := EvaluatedAt;
-  FDataSet.DataType := DataType;
+  FDataSet.UpdateWithoutNotification(Orientation, EvaluatedAt,
+    DataType, FNeedToInvalidate);
+//  FDataSet.Orientation := Orientation;
+//  FDataSet.EvaluatedAt := EvaluatedAt;
+//  FDataSet.DataType := DataType;
 end;
 
 procedure TPhastDataSetStorage.AssignToDataSet(out ShouldInvalidate: boolean);
+var
+  LocalModel: TPhastModel;
+  Index: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
 begin
-  ShouldInvalidate := False;
+  if FDataSet.Model is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FDataSet.Model);
+//    if LocalModel.LgrUsed then
+    begin
+      for Index := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[Index].ChildModel;
+        ChildDataArray := ChildModel.DataArrayManager.
+          GetDataSetByName(FDataSet.Name);
+        if ChildDataArray <> nil then
+        begin
+          ChildDataArray.Name := Name;
+          ChildDataArray.Orientation := Orientation;
+          ChildDataArray.EvaluatedAt := EvaluatedAt;
+          ChildDataArray.DataType := DataType;
+          ChildDataArray.Units := Units;
+          ChildDataArray.TwoDInterpolator := TwoDInterpolator;
+          ChildDataArray.Comment := Comment;
+        end;
+      end;
+    end;
+  end;
+  ShouldInvalidate := FNeedToInvalidate;
   if (FDataSet.Name <> Name)
     or (FDataSet.Orientation <> Orientation)
     or (FDataSet.EvaluatedAt <> EvaluatedAt)
@@ -2190,35 +2307,32 @@ begin
     or (FDataSet.Units <> Units) then
   begin
     ShouldInvalidate := True;
-//    FDataSet.Invalidate;
   end
   else if (FDataSet.TwoDInterpolator = nil) <> (TwoDInterpolator = nil) then
   begin
     ShouldInvalidate := True;
-//    FDataSet.Invalidate;
   end
   else if (FDataSet.TwoDInterpolator <> nil)
     and (TwoDInterpolator <> nil)
     and not FDataSet.TwoDInterpolator.SameAs(TwoDInterpolator) then
   begin
     ShouldInvalidate := True;
-//    FDataSet.Invalidate;
   end;
 
-
   FDataSet.Name := Name;
-//  FDataSet.Visible := Visible;
   FDataSet.Orientation := Orientation;
   FDataSet.EvaluatedAt := EvaluatedAt;
   FDataSet.DataType := DataType;
   FDataSet.Units := Units;
   FDataSet.TwoDInterpolator := TwoDInterpolator;
   FDataSet.Comment := Comment;
+  FNeedToInvalidate := False;
 end;
 
 constructor TPhastDataSetStorage.Create;
 begin
   inherited;
+  FNeedToInvalidate := False;
   FFormula := frmGoPhast.PhastModel.FormulaManager.Add;
   FTwoDInterpolator := nil;
   FPhastInterpolationValues := TPhastInterpolationValues.Create;
@@ -2311,6 +2425,11 @@ begin
     FTwoDInterpolator.Assign(Value);
   end;
 end;
+
+//procedure TPhastDataSetStorage.UpdateStoredFormula;
+//begin
+//  Formula := FDataSet.Formula;
+//end;
 
 { TUndoEditFluxObservations }
 

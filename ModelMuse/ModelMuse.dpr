@@ -1049,13 +1049,19 @@ uses
   frmExportCSVUnit in 'frmExportCSVUnit.pas' {frmExportCSV},
   frmNewVersionUnit in 'frmNewVersionUnit.pas' {frmNewVersion},
   NatNeigh in 'NatNeigh.pas',
-  Delaunay in 'Delaunay.pas';
+  Delaunay in 'Delaunay.pas',
+  frmChildModelsUnit in 'frmChildModelsUnit.pas' {frmChildModels},
+  AsciiRasterReaderUnit in 'AsciiRasterReaderUnit.pas',
+  frmImportAsciiRasterUnit in 'frmImportAsciiRasterUnit.pas' {frmImportAsciiRaster},
+  framePackageRCHUnit in 'framePackageRCHUnit.pas' {framePackageRCH: TFrame},
+  ModflowLgr_WriterUnit in 'ModflowLgr_WriterUnit.pas';
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.CreateForm(TfrmGoPhast, frmGoPhast);
+  Application.CreateForm(TfrmScreenObjectProperties, frmScreenObjectProperties);
   Application.CreateForm(TfrmProgressMM, frmProgressMM);
   Application.CreateForm(TfrmSelectedObjects, frmSelectedObjects);
   Application.CreateForm(TfrmColors, frmColors);

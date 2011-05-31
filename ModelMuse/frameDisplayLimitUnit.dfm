@@ -25,7 +25,7 @@ object frameDisplayLimit: TframeDisplayLimit
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 0
+    ItemHeight = 13
     TabOrder = 1
     Text = '0'
     OnExit = rdeLimitExit

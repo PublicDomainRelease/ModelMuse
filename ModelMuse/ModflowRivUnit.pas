@@ -4,7 +4,7 @@ interface
 
 uses Windows, ZLib, SysUtils, Classes, Contnrs, ModflowBoundaryUnit,
   OrderedCollectionUnit, DataSetUnit, ModflowCellUnit, FormulaManagerUnit,
-  SubscriptionUnit, SparseDataSets, RbwParser;
+  SubscriptionUnit, SparseDataSets, RbwParser, GoPhastTypes;
 
 type
   TRivRecord = record
@@ -84,9 +84,7 @@ type
     property Conductance: string read GetConductance write SetConductance;
   end;
 
-  // @name represents MODFLOW River boundaries
-  // for a series of time intervals.
-  TRivCollection = class(TCustomMF_ListBoundColl)
+  TRivTimeListLink = class(TTimeListsModelLink)
   private
     // @name is used to compute the River Bottoms for a series of
     // River Boundaries over a series of time intervals.
@@ -97,15 +95,26 @@ type
     // @name is used to compute the Conductances for a series of
     // River Boundaries over a series of time intervals.
     FConductanceData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
+
+  // @name represents MODFLOW River boundaries
+  // for a series of time intervals.
+  TRivCollection = class(TCustomMF_ListBoundColl)
+  private
     procedure InvalidateStageData(Sender: TObject);
     procedure InvalidateConductanceData(Sender: TObject);
     procedure InvalidateRiverBottomData(Sender: TObject);
   protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
-      Variables, DataSets: TList); override;
+      Variables, DataSets: TList; AModel: TBaseModel); override;
     function AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
       override;
     procedure AddSpecificBoundary; override;
@@ -123,13 +132,6 @@ type
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
-  public
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
   end;
 
   // Each @name stores a @link(TRivCollection).
@@ -153,10 +155,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -192,7 +197,7 @@ type
     // each stress period.  Each such TObjectList is filled with
     // @link(TRiv_Cell)s for that stress period.
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-      ValueTimeList: TList); override;
+      ValueTimeList: TList; AModel: TBaseModel); override;
     // See @link(TModflowBoundary.BoundaryCollectionClass
     // TModflowBoundary.BoundaryCollectionClass).
     class function BoundaryCollectionClass: TMF_BoundCollClass; override;
@@ -212,15 +217,15 @@ type
     // with each @link(TRivStorage) in @link(TCustomMF_BoundColl.Boundaries
     // Param.Param.Boundaries)
     // Those represent parameter boundary conditions.
-    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
-      override;
+    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel); override;
     procedure InvalidateDisplay; override;
   end;
 
 implementation
 
 uses PhastModelUnit, ScreenObjectUnit, ModflowTimeUnit, TempFiles, 
-  GoPhastTypes, frmGoPhastUnit;
+  frmGoPhastUnit;
 
 const
   StagePosition = 0;
@@ -390,39 +395,9 @@ end;
 
 { TRivCollection }
 
-constructor TRivCollection.Create(Boundary: TModflowBoundary;
-  Model, ScreenObject: TObject);
+function TRivCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FRiverBottomData := TModflowTimeList.Create(Model, ScreenObject);
-  FRiverStageData := TModflowTimeList.Create(Model, ScreenObject);
-  FConductanceData := TModflowTimeList.Create(Model, ScreenObject);
-
-  FRiverStageData.NonParamDescription := 'River stage';
-  FRiverStageData.ParamDescription := ' river stage';
-  FConductanceData.NonParamDescription := 'Conductance';
-  FConductanceData.ParamDescription := ' conductance multiplier';
-  FRiverBottomData.NonParamDescription := 'River bottom';
-  FRiverBottomData.ParamDescription := ' river bottom';
-
-  if Model <> nil then
-  begin
-    FRiverStageData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivStage;
-    FConductanceData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivConductance;
-    FRiverBottomData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivBottom;
-  end;
-
-  AddTimeList(FRiverStageData);
-  AddTimeList(FConductanceData);
-  AddTimeList(FRiverBottomData);
-end;
-
-destructor TRivCollection.Destroy;
-begin
-  FRiverStageData.Free;
-  FConductanceData.Free;
-  FRiverBottomData.Free;
-  inherited;
+  result := TRivTimeListLink;
 end;
 
 procedure TRivCollection.TestIfObservationsPresent(
@@ -509,7 +484,8 @@ end;
 
 procedure TRivCollection.AssignCellList(Expression: TExpression;
   ACellList: TObject; BoundaryStorage: TCustomBoundaryStorage;
-  BoundaryFunctionIndex: integer; Variables, DataSets: TList);
+  BoundaryFunctionIndex: integer; Variables, DataSets: TList;
+  AModel: TBaseModel);
 var
   RivStorage: TRivStorage;
   CellList: TCellAssignmentList;
@@ -524,7 +500,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell);
+    UpdataRequiredData(DataSets, Variables, ACell, AModel);
 
     Expression.Evaluate;
     with RivStorage.RivArray[Index] do
@@ -565,6 +541,10 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
+    if ACell.LgrEdge then
+    begin
+      Continue;
+    end;
     with RivStorage.RivArray[Index] do
     begin
       Cell.Layer := ACell.Layer;
@@ -583,26 +563,65 @@ begin
 end;
 
 procedure TRivCollection.InvalidateConductanceData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TRivTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FConductanceData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TRivTimeListLink;
+    Link.FConductanceData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TRivTimeListLink;
+      Link.FConductanceData.Invalidate;
+    end;
   end;
 end;
 
 procedure TRivCollection.InvalidateRiverBottomData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TRivTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FRiverBottomData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TRivTimeListLink;
+    Link.FRiverBottomData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TRivTimeListLink;
+      Link.FRiverBottomData.Invalidate;
+    end;
   end;
 end;
 
 procedure TRivCollection.InvalidateStageData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TRivTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FRiverStageData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TRivTimeListLink;
+    Link.FRiverStageData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TRivTimeListLink;
+      Link.FRiverStageData.Invalidate;
+    end;
   end;
 end;
 
@@ -620,7 +639,7 @@ end;
 
 { TRiv_Cell }
 
-function TRiv_Cell.GetRealAnnotation(Index: integer): string;
+function TRiv_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -631,7 +650,7 @@ begin
   end;
 end;
 
-function TRiv_Cell.GetRealValue(Index: integer): double;
+function TRiv_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -684,13 +703,13 @@ begin
   result := Values.ConductanceAnnotation;
 end;
 
-function TRiv_Cell.GetIntegerAnnotation(Index: integer): string;
+function TRiv_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TRiv_Cell.GetIntegerValue(Index: integer): integer;
+function TRiv_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -740,10 +759,25 @@ begin
   StressPeriod := ReadCompInt(Decomp);
 end;
 
+procedure TRiv_Cell.SetColumn(const Value: integer);
+begin
+  Values.Cell.Column := Value;
+end;
+
+procedure TRiv_Cell.SetLayer(const Value: integer);
+begin
+  Values.Cell.Layer := Value;
+end;
+
+procedure TRiv_Cell.SetRow(const Value: integer);
+begin
+  Values.Cell.Row := Value;
+end;
+
 { TRivBoundary }
 
 procedure TRivBoundary.AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-  ValueTimeList: TList);
+  ValueTimeList: TList; AModel: TBaseModel);
 var
   Cell: TRiv_Cell;
   BoundaryValues: TRivRecord;
@@ -752,10 +786,12 @@ var
   TimeIndex: Integer;
   Cells: TValueCellList;
   LocalBoundaryStorage: TRivStorage;
+  LocalModel: TCustomModel;
 begin
+  LocalModel := AModel as TCustomModel;
   LocalBoundaryStorage := BoundaryStorage as TRivStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    LocalModel.ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -766,12 +802,16 @@ begin
       Cells := TValueCellList.Create(TRiv_Cell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
+      if Cells.Capacity < Length(LocalBoundaryStorage.RivArray) then
+      begin
+        Cells.Capacity := Length(LocalBoundaryStorage.RivArray); 
+      end;
 //      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.RivArray) - 1 do
       begin
@@ -783,6 +823,7 @@ begin
         Cell.StressPeriod := TimeIndex;
         Cell.Values := BoundaryValues;
         Cell.ScreenObject := ScreenObject;
+        LocalModel.AdjustCellPosition(Cell);
       end;
       Cells.Cache;
     end;
@@ -796,7 +837,7 @@ begin
 end;
 
 procedure TRivBoundary.GetCellValues(ValueTimeList: TList;
-  ParamList: TStringList);
+  ParamList: TStringList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TRivStorage;
@@ -812,7 +853,7 @@ var
   ValueCount: Integer;
   Item: TCustomModflowBoundaryItem;
 begin
-  EvaluateListBoundaries;
+  EvaluateListBoundaries(AModel);
   TestIfObservationsPresent(EndOfLastStressPeriod, StartOfFirstStressPeriod,
     ObservationsPresent);
   PriorTime := StartOfFirstStressPeriod;
@@ -827,7 +868,7 @@ begin
         if ValueCount < Values.BoundaryCount then
         begin
           BoundaryStorage := Values.Boundaries[ValueCount] as TRivStorage;
-          AssignCells(BoundaryStorage, ValueTimeList);
+          AssignCells(BoundaryStorage, ValueTimeList, AModel);
           Inc(ValueCount);
         end;
       end;
@@ -836,7 +877,7 @@ begin
     if ValueCount < Values.BoundaryCount then
     begin
       BoundaryStorage := Values.Boundaries[ValueCount] as TRivStorage;
-      AssignCells(BoundaryStorage, ValueTimeList);
+      AssignCells(BoundaryStorage, ValueTimeList, AModel);
       Inc(ValueCount);
     end;
     if (ValueIndex = Values.Count - 1) and ObservationsPresent then
@@ -846,7 +887,7 @@ begin
         if ValueCount < Values.BoundaryCount then
         begin
           BoundaryStorage := Values.Boundaries[ValueCount] as TRivStorage;
-          AssignCells(BoundaryStorage, ValueTimeList);
+          AssignCells(BoundaryStorage, ValueTimeList, AModel);
           Inc(ValueCount);
         end;
       end;
@@ -878,7 +919,7 @@ begin
           if ValueCount < Param.Param.BoundaryCount then
           begin
             BoundaryStorage := Param.Param.Boundaries[ValueCount] as TRivStorage;
-            AssignCells(BoundaryStorage, Times);
+            AssignCells(BoundaryStorage, Times, AModel);
             Inc(ValueCount);
           end;
         end;
@@ -887,7 +928,7 @@ begin
       if ValueCount < Param.Param.BoundaryCount then
       begin
         BoundaryStorage := Param.Param.Boundaries[ValueCount] as TRivStorage;
-        AssignCells(BoundaryStorage, Times);
+        AssignCells(BoundaryStorage, Times, AModel);
         Inc(ValueCount);
       end;
       if {(ValueIndex = Param.Param.Count - 1) and} ObservationsPresent then
@@ -897,7 +938,7 @@ begin
           if ValueCount < Param.Param.BoundaryCount then
           begin
             BoundaryStorage := Param.Param.Boundaries[ValueCount] as TRivStorage;
-            AssignCells(BoundaryStorage, Times);
+            AssignCells(BoundaryStorage, Times, AModel);
             Inc(ValueCount);
           end;
         end;
@@ -911,9 +952,9 @@ var
   Model: TPhastModel;
 begin
   inherited;
-  if Used and (PhastModel <> nil) then
+  if Used and (ParentModel <> nil) then
   begin
-    Model := PhastModel as TPhastModel;
+    Model := ParentModel as TPhastModel;
     Model.InvalidateMfRivConductance(self);
     Model.InvalidateMfRivStage(self);
     Model.InvalidateMfRivBottom(self);
@@ -945,7 +986,7 @@ begin
   LocalScreenObject := ScreenObject as TScreenObject;
   LocalPhastModel := LocalScreenObject.Model as TPhastModel;
   Assert(LocalPhastModel <> nil);
-  ObservationsPresent := LocalPhastModel.ModflowPackages.RvobPackage.IsSelected
+  ObservationsPresent := LocalPhastModel.RvobIsSelected
     and (LocalPhastModel.RiverObservations.Count > 0);
   StartOfFirstStressPeriod := 0;
   EndOfLastStressPeriod := 0;
@@ -1059,6 +1100,42 @@ begin
     RestoreData;
   end;
   result := FRivArray;
+end;
+
+{ TRivTimeListLink }
+
+procedure TRivTimeListLink.CreateTimeLists;
+var
+  LocalModel: TCustomModel;
+begin
+  inherited;
+  FRiverBottomData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FRiverStageData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FConductanceData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FRiverStageData.NonParamDescription := 'River stage';
+  FRiverStageData.ParamDescription := ' river stage';
+  FConductanceData.NonParamDescription := 'Conductance';
+  FConductanceData.ParamDescription := ' conductance multiplier';
+  FRiverBottomData.NonParamDescription := 'River bottom';
+  FRiverBottomData.ParamDescription := ' river bottom';
+  if Model <> nil then
+  begin
+    LocalModel := Model as TCustomModel;
+    FRiverStageData.OnInvalidate := LocalModel.InvalidateMfRivStage;
+    FConductanceData.OnInvalidate := LocalModel.InvalidateMfRivConductance;
+    FRiverBottomData.OnInvalidate := LocalModel.InvalidateMfRivBottom;
+  end;
+  AddTimeList(FRiverStageData);
+  AddTimeList(FConductanceData);
+  AddTimeList(FRiverBottomData);
+end;
+
+destructor TRivTimeListLink.Destroy;
+begin
+  FRiverStageData.Free;
+  FConductanceData.Free;
+  FRiverBottomData.Free;
+  inherited;
 end;
 
 end.

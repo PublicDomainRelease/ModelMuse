@@ -103,8 +103,6 @@ located at http://jvcl.sourceforge.net
     procedure rdgFluxObsTimesBeforeDrawCell(Sender: TObject; ACol,
       ARow: Integer);
     procedure rdgFluxObsTimesEndUpdate(Sender: TObject);
-    procedure rdgFluxObsTimesMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure edObservationNameExit(Sender: TObject);
     procedure rdgFluxObsTimesHorizontalScroll(Sender: TObject);
     procedure tabObservationsTimesResize(Sender: TObject);
@@ -135,7 +133,7 @@ located at http://jvcl.sourceforge.net
     FDrobNode: TTreeNode;
     FRvobNode: TTreeNode;
     FSettingTimeCount: Boolean;
-    FHidingColumns: Boolean;
+//    FHidingColumns: Boolean;
     procedure SetSelectedObservation(const Value: TFluxObservationGroup);
     procedure AssignObsNames;
     procedure DisplayFactor;
@@ -159,7 +157,7 @@ located at http://jvcl.sourceforge.net
     procedure EnableMultiEditControl(Grid: TRbwDataGrid4; AControl: TControl;
       const StartCol, EndCol: integer);
     procedure SetSelectedGroupAndObservation(TreeView: TTreeView);
-    procedure HideUcodeColumns;
+//    procedure HideUcodeColumns;
     procedure SetStatFlagLabels;
   public
     procedure SetButtons;
@@ -215,21 +213,21 @@ begin
   TRbwDataGrid4Crack(rdgFluxObsTimes).HideEditor;
 end;
 
-procedure TfrmManageFluxObservations.HideUcodeColumns;
-begin
-  if FHidingColumns then Exit;
-  FHidingColumns := True;
-  try
-    if not frmGoPhast.ShowUcodeInterface then
-    begin
-      rdgFluxObsTimes.ColWidths[Ord(fcStatistic)] := 0;
-      rdgFluxObsTimes.ColWidths[Ord(fcStatFlag)] := 0;
-    end;
-    comboMultiStatFlag.Visible := frmGoPhast.ShowUcodeInterface;
-  finally
-    FHidingColumns := False;
-  end;
-end;
+//procedure TfrmManageFluxObservations.HideUcodeColumns;
+//begin
+//  if FHidingColumns then Exit;
+//  FHidingColumns := True;
+//  try
+//    if not frmGoPhast.ShowUcodeInterface then
+//    begin
+//      rdgFluxObsTimes.ColWidths[Ord(fcStatistic)] := 0;
+//      rdgFluxObsTimes.ColWidths[Ord(fcStatFlag)] := 0;
+//    end;
+//    comboMultiStatFlag.Visible := frmGoPhast.ShowUcodeInterface;
+//  finally
+//    FHidingColumns := False;
+//  end;
+//end;
 
 procedure TfrmManageFluxObservations.SetSelectedGroupAndObservation(TreeView: TTreeView);
 begin
@@ -285,11 +283,11 @@ begin
   AColVisible := False;
   for Index := Ord(fcTime) to Ord(fcStatFlag) do
   begin
-    if not frmGoPhast.ShowUcodeInterface
-      and (TFluxColumns(Index) in [fcStatistic, fcStatFlag]) then
-    begin
-      break;
-    end;
+//    if not frmGoPhast.ShowUcodeInterface
+//      and (TFluxColumns(Index) in [fcStatistic, fcStatFlag]) then
+//    begin
+//      break;
+//    end;
     if rdgFluxObsTimes.ColVisible[Index] then
     begin
       LayoutControls(rdgFluxObsTimes, rdeMultiValueEdit, nil, Index,
@@ -308,7 +306,7 @@ begin
   LayoutControls(rdgFluxObsTimes, comboMultiStatFlag, nil, Ord(fcStatFlag),
     rdgFluxObsTimes.Margins.Left);
   comboMultiStatFlag.Width := rdgFluxObsTimes.ColWidths[Ord(fcStatFlag)];
-  HideUcodeColumns;
+//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.CheckErrors;
@@ -320,7 +318,7 @@ var
 begin
   for Index := 0 to FPriorErrors.Count - 1 do
   begin
-    frmErrorsAndWarnings.RemoveErrorGroup(FPriorErrors[Index]);
+    frmErrorsAndWarnings.RemoveErrorGroup(frmGoPhast.PhastModel, FPriorErrors[Index]);
   end;
   FPriorErrors.Clear;
 
@@ -339,7 +337,7 @@ begin
     for ErrorIndex := 0 to ErrorRoots.Count - 1 do
     begin
       FPriorErrors.Add(ErrorRoots[ErrorIndex]);
-      frmErrorsAndWarnings.AddError(ErrorRoots[ErrorIndex],
+      frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, ErrorRoots[ErrorIndex],
         ErrorMessages[ErrorIndex]);
     end;
     if ErrorRoots.Count > 0 then
@@ -465,14 +463,19 @@ begin
     SetStatFlagLabels;
     if FSelectedObservation.Purpose = ofPredicted then
     begin
-      for Index := 1 to rdgFluxObsTimes.RowCount - 1 do
-      begin
-        if rdgFluxObsTimes.ItemIndex[Ord(fcStatFlag), Index] < 0 then
+      rdgFluxObsTimes.BeginUpdate;
+      try
+        for Index := 1 to rdgFluxObsTimes.RowCount - 1 do
         begin
-          rdgFluxObsTimes.ItemIndex[Ord(fcStatFlag), Index] := 0;
+          if rdgFluxObsTimes.ItemIndex[Ord(fcStatFlag), Index] < 0 then
+          begin
+            rdgFluxObsTimes.ItemIndex[Ord(fcStatFlag), Index] := 0;
+          end;
         end;
+        rdgFluxObsTimesExit(nil);
+      finally
+        rdgFluxObsTimes.EndUpdate;
       end;
-      rdgFluxObsTimesExit(nil);
     end;
   end;
 end;
@@ -485,7 +488,7 @@ var
   Item: TFluxObservationGroup;
   ANode: TTreeNode;
 begin
-  if Package.IsSelected then
+  if frmGoPhast.PhastModel.PackageIsSelected(Package) then
   begin
     ParentNode := tvFluxObservations.Items.Add(nil, Package.PackageIdentifier);
     ParentNode.Data := FluxObservations;
@@ -536,15 +539,20 @@ begin
     NewRowCount := Max(1, seNumObsTimes.AsInteger) + 1;
     if NewRowCount < rdgFluxObsTimes.RowCount then
     begin
-      for Index := NewRowCount to rdgFluxObsTimes.RowCount - 1 do
-      begin
-        rdgFluxObsTimes.Cells[Ord(fcName),Index] := '';
-        rdgFluxObsTimes.Cells[Ord(fcTime),Index] := '';
-        rdgFluxObsTimes.Cells[Ord(fcValue),Index] := '';
-        rdgFluxObsTimes.Cells[Ord(fcStatistic),Index] := '';
-        rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index] := '';
-        rdgFluxObsTimes.Cells[Ord(fcComment),Index] := '';
-        rdgFluxObsTimes.Objects[Ord(fcName),Index] := nil;
+      rdgFluxObsTimes.BeginUpdate;
+      try
+        for Index := NewRowCount to rdgFluxObsTimes.RowCount - 1 do
+        begin
+          rdgFluxObsTimes.Cells[Ord(fcName),Index] := '';
+          rdgFluxObsTimes.Cells[Ord(fcTime),Index] := '';
+          rdgFluxObsTimes.Cells[Ord(fcValue),Index] := '';
+          rdgFluxObsTimes.Cells[Ord(fcStatistic),Index] := '';
+          rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index] := '';
+          rdgFluxObsTimes.Cells[Ord(fcComment),Index] := '';
+          rdgFluxObsTimes.Objects[Ord(fcName),Index] := nil;
+        end;
+      finally
+        rdgFluxObsTimes.EndUpdate;
       end;
     end;
     if seNumObsTimes.AsInteger = 0 then
@@ -562,76 +570,81 @@ begin
       and (seNumObsTimes.AsInteger >= 1);
     if not FSettingObservation and (FSelectedObservation <> nil) then
     begin
-      for Index := 1 to seNumObsTimes.AsInteger do
-      begin
-        if rdgFluxObsTimes.Objects[Ord(fcName),Index] = nil then
+      rdgFluxObsTimes.BeginUpdate;
+      try
+        for Index := 1 to seNumObsTimes.AsInteger do
         begin
-          ObsTime := FSelectedObservation.ObservationTimes.Add;
-          ObsTime.Index := Index-1;
-          rdgFluxObsTimes.Objects[Ord(fcName),Index] := ObsTime;
-          if rdgFluxObsTimes.Cells[Ord(fcTime),Index] = '' then
+          if rdgFluxObsTimes.Objects[Ord(fcName),Index] = nil then
           begin
-            ObsTime.Time := 0;
-            rdgFluxObsTimes.Cells[Ord(fcTime),Index] := '0';
-          end
-          else
-          begin
-            ObsTime.Time := StrToFloat(rdgFluxObsTimes.Cells[Ord(fcTime),Index]);
-          end;
+            ObsTime := FSelectedObservation.ObservationTimes.Add;
+            ObsTime.Index := Index-1;
+            rdgFluxObsTimes.Objects[Ord(fcName),Index] := ObsTime;
+            if rdgFluxObsTimes.Cells[Ord(fcTime),Index] = '' then
+            begin
+              ObsTime.Time := 0;
+              rdgFluxObsTimes.Cells[Ord(fcTime),Index] := '0';
+            end
+            else
+            begin
+              ObsTime.Time := StrToFloat(rdgFluxObsTimes.Cells[Ord(fcTime),Index]);
+            end;
 
-          if rdgFluxObsTimes.Cells[Ord(fcValue),Index] = '' then
-          begin
-            ObsTime.ObservedValue := 0;
-            rdgFluxObsTimes.Cells[Ord(fcValue),Index] := '0';
-          end
-          else
-          begin
-            ObsTime.ObservedValue := StrToFloat(rdgFluxObsTimes.Cells[Ord(fcValue),Index]);
-          end;
+            if rdgFluxObsTimes.Cells[Ord(fcValue),Index] = '' then
+            begin
+              ObsTime.ObservedValue := 0;
+              rdgFluxObsTimes.Cells[Ord(fcValue),Index] := '0';
+            end
+            else
+            begin
+              ObsTime.ObservedValue := StrToFloat(rdgFluxObsTimes.Cells[Ord(fcValue),Index]);
+            end;
 
-          if rdgFluxObsTimes.Cells[Ord(fcStatistic),Index] = '' then
-          begin
-            ObsTime.Statistic := 0;
-            rdgFluxObsTimes.Cells[Ord(fcStatistic),Index] := '0';
-          end
-          else
-          begin
-            ObsTime.Statistic := StrToFloat(rdgFluxObsTimes.Cells[Ord(fcStatistic),Index]);
-          end;
-          if rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index] = '' then
-          begin
-            ObsTime.StatFlag := Low(TStatFlag);
-            rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index] :=
-              rdgFluxObsTimes.Columns[Ord(fcStatFlag)].PickList[0];
-          end
-          else
-          begin
-            ObsTime.StatFlag := TStatFlag(rdgFluxObsTimes.Columns[Ord(fcStatFlag)].
-              PickList.IndexOf(rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index]));
-          end;
-          if rdgFluxObsTimes.Cells[Ord(fcComment),Index] = '' then
-          begin
-            ObsTime.Comment := '';
-            rdgFluxObsTimes.Cells[Ord(fcComment),Index] := '';
-          end
-          else
-          begin
-            ObsTime.Comment := rdgFluxObsTimes.Cells[Ord(fcComment),Index];
+            if rdgFluxObsTimes.Cells[Ord(fcStatistic),Index] = '' then
+            begin
+              ObsTime.Statistic := 0;
+              rdgFluxObsTimes.Cells[Ord(fcStatistic),Index] := '0';
+            end
+            else
+            begin
+              ObsTime.Statistic := StrToFloat(rdgFluxObsTimes.Cells[Ord(fcStatistic),Index]);
+            end;
+            if rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index] = '' then
+            begin
+              ObsTime.StatFlag := Low(TStatFlag);
+              rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index] :=
+                rdgFluxObsTimes.Columns[Ord(fcStatFlag)].PickList[0];
+            end
+            else
+            begin
+              ObsTime.StatFlag := TStatFlag(rdgFluxObsTimes.Columns[Ord(fcStatFlag)].
+                PickList.IndexOf(rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index]));
+            end;
+            if rdgFluxObsTimes.Cells[Ord(fcComment),Index] = '' then
+            begin
+              ObsTime.Comment := '';
+              rdgFluxObsTimes.Cells[Ord(fcComment),Index] := '';
+            end
+            else
+            begin
+              ObsTime.Comment := rdgFluxObsTimes.Cells[Ord(fcComment),Index];
+            end;
           end;
         end;
+        for Index := FSelectedObservation.ObservationTimes.Count-1
+          downto seNumObsTimes.AsInteger do
+        begin
+          FSelectedObservation.ObservationTimes.Delete(Index);
+        end;
+        InitializeFirstRow;
+      finally
+        rdgFluxObsTimes.EndUpdate;
       end;
-      for Index := FSelectedObservation.ObservationTimes.Count-1
-        downto seNumObsTimes.AsInteger do
-      begin
-        FSelectedObservation.ObservationTimes.Delete(Index);
-      end;
-      InitializeFirstRow;
     end;
     AssignObsNames;
   finally
     FSettingTimeCount := False;
   end;
-  HideUcodeColumns;
+//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.SetData;
@@ -772,30 +785,35 @@ begin
         seNumObsTimes.AsInteger := FSelectedObservation.ObservationTimes.Count;
         InitializeFirstRow;
         MaxTimeStringLength := Length(IntToStr(FSelectedObservation.ObservationTimes.Count));
-        for Index := 0 to FSelectedObservation.ObservationTimes.Count - 1 do
-        begin
-          ObsTime := FSelectedObservation.ObservationTimes[Index];
-          TimeString := IntToStr(Index+1);
-          While Length(TimeString) < MaxTimeStringLength do
+        rdgFluxObsTimes.BeginUpdate;
+        try
+          for Index := 0 to FSelectedObservation.ObservationTimes.Count - 1 do
           begin
-            TimeString := '0' + TimeString;
+            ObsTime := FSelectedObservation.ObservationTimes[Index];
+            TimeString := IntToStr(Index+1);
+            While Length(TimeString) < MaxTimeStringLength do
+            begin
+              TimeString := '0' + TimeString;
+            end;
+            rdgFluxObsTimes.Cells[Ord(fcName),Index+1] :=
+              FSelectedObservation.ObservationName + '_' + TimeString;
+            rdgFluxObsTimes.Cells[Ord(fcTime),Index+1] :=
+              FloatToStr(ObsTime.Time);
+            rdgFluxObsTimes.Cells[Ord(fcValue),Index+1] :=
+              FloatToStr(ObsTime.ObservedValue);
+            rdgFluxObsTimes.Cells[Ord(fcStatistic),Index+1] :=
+              FloatToStr(ObsTime.Statistic);
+            rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index+1] :=
+              rdgFluxObsTimes.Columns[Ord(fcStatFlag)].
+              PickList[Ord(ObsTime.StatFlag)];
+            rdgFluxObsTimes.Cells[Ord(fcComment),Index+1] :=
+              ObsTime.Comment;
+            rdgFluxObsTimes.Objects[Ord(fcName),Index+1] := ObsTime;
           end;
-          rdgFluxObsTimes.Cells[Ord(fcName),Index+1] :=
-            FSelectedObservation.ObservationName + '_' + TimeString;
-          rdgFluxObsTimes.Cells[Ord(fcTime),Index+1] :=
-            FloatToStr(ObsTime.Time);
-          rdgFluxObsTimes.Cells[Ord(fcValue),Index+1] :=
-            FloatToStr(ObsTime.ObservedValue);
-          rdgFluxObsTimes.Cells[Ord(fcStatistic),Index+1] :=
-            FloatToStr(ObsTime.Statistic);
-          rdgFluxObsTimes.Cells[Ord(fcStatFlag),Index+1] :=
-            rdgFluxObsTimes.Columns[Ord(fcStatFlag)].
-            PickList[Ord(ObsTime.StatFlag)];
-          rdgFluxObsTimes.Cells[Ord(fcComment),Index+1] :=
-            ObsTime.Comment;
-          rdgFluxObsTimes.Objects[Ord(fcName),Index+1] := ObsTime;
+          rdgFluxObsTimes.Invalidate;
+        finally
+          rdgFluxObsTimes.EndUpdate;
         end;
-        rdgFluxObsTimes.Invalidate;
       end;
     finally
       FSettingObservation := False;
@@ -973,7 +991,7 @@ begin
   tvFluxObservations.Selected := ANode;
   SetSelectedGroupAndObservation(tvFluxObservations);
 
-  HideUcodeColumns;
+//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.btnDeleteClick(Sender: TObject);
@@ -1000,7 +1018,7 @@ begin
     seNumObsTimes.AsInteger := seNumObsTimes.AsInteger -1;
     AssignObsNames;
   end;
-  HideUcodeColumns;
+//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.btnDeleteObservationClick(Sender: TObject);
@@ -1027,7 +1045,7 @@ begin
   end;
   tvFluxObservations.Items.Delete(tvFluxObservations.Selected);
   SelectedObservation := nil;
-  HideUcodeColumns;
+//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.btnFactorFormulaClick(Sender: TObject);
@@ -1109,19 +1127,24 @@ var
   TimeString: string;
 begin
   MaxStringLength := Length(IntToStr(seNumObsTimes.AsInteger));
-  for Index := 1 to seNumObsTimes.AsInteger do
-  begin
-    TimeString := IntToStr(Index);
-    While Length(TimeString) < MaxStringLength do
+  rdgFluxObsTimes.BeginUpdate;
+  try
+    for Index := 1 to seNumObsTimes.AsInteger do
     begin
-      TimeString := '0' + TimeString;
+      TimeString := IntToStr(Index);
+      While Length(TimeString) < MaxStringLength do
+      begin
+        TimeString := '0' + TimeString;
+      end;
+      rdgFluxObsTimes.Cells[Ord(fcName), Index] :=
+        edObservationName.Text + '_' + TimeString;
     end;
-    rdgFluxObsTimes.Cells[Ord(fcName), Index] :=
-      edObservationName.Text + '_' + TimeString;
-  end;
-  if seNumObsTimes.AsInteger = 0 then
-  begin
-    rdgFluxObsTimes.Cells[Ord(fcName), 1] := '';
+    if seNumObsTimes.AsInteger = 0 then
+    begin
+      rdgFluxObsTimes.Cells[Ord(fcName), 1] := '';
+    end;
+  finally
+    rdgFluxObsTimes.EndUpdate;
   end;
 end;
 
@@ -1255,7 +1278,7 @@ procedure TfrmManageFluxObservations.tvFluxObservationsChange(Sender: TObject;
 begin
   inherited;
   SetSelectedGroupAndObservation(tvFluxObservations);
-  HideUcodeColumns;
+//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.UpdateObjectsInSelectedObservation;
@@ -1433,7 +1456,7 @@ begin
 
   GetData;
 
-  HideUcodeColumns;
+//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.FormDestroy(Sender: TObject);
@@ -1551,7 +1574,7 @@ procedure TfrmManageFluxObservations.ListClick(Sender: TObject);
 begin
   SetButtons;
   DisplayFactor;
-  HideUcodeColumns;
+//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.OkBtnClick(Sender: TObject);
@@ -1592,7 +1615,7 @@ begin
   if not FSettingTimeCount then
   begin
     seNumObsTimes.AsInteger := rdgFluxObsTimes.RowCount -1;
-    HideUcodeColumns;
+//    HideUcodeColumns;
   end;
 end;
 
@@ -1626,21 +1649,6 @@ procedure TfrmManageFluxObservations.rdgFluxObsTimesHorizontalScroll(
 begin
   inherited;
   LayoutMultiFluxEdits;
-end;
-
-procedure TfrmManageFluxObservations.rdgFluxObsTimesMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    rdgFluxObsTimes.Options := rdgFluxObsTimes.Options + [goEditing];
-  end
-  else
-  begin
-    rdgFluxObsTimes.Options := rdgFluxObsTimes.Options - [goEditing];
-  end;
-
 end;
 
 procedure TfrmManageFluxObservations.rdgFluxObsTimesSelectCell(Sender: TObject;

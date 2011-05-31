@@ -105,6 +105,7 @@ type
     // @name is used to indicate that the user has specified a value
     // for in @link(seRow1) that is greater than the one in @link(seRow2).
     FReversedRows: boolean;
+    FGettingData: Boolean;
     // @name makes sure that the OK button can only be clicked if there
     // is valid data specified in @classname.
     procedure EnableOK;
@@ -275,124 +276,129 @@ var
   temp: integer;
   Spacing: real;
 begin
-  FReversedCols := False;
-  FReversedRows := False;
-  FReversedLayers := False;
-  seCol1.MinValue := 1;
-  seCol2.MinValue := 1;
-  seRow1.MinValue := 1;
-  seRow2.MinValue := 1;
-  seLayer1.MinValue := 1;
-  seLayer2.MinValue := 1;
+  FGettingData := True;
+  try
+    FReversedCols := False;
+    FReversedRows := False;
+    FReversedLayers := False;
+    seCol1.MinValue := 1;
+    seCol2.MinValue := 1;
+    seRow1.MinValue := 1;
+    seRow2.MinValue := 1;
+    seLayer1.MinValue := 1;
+    seLayer2.MinValue := 1;
 
-  seCol1.MaxValue := frmGoPhast.Grid.ColumnCount;
-  seCol2.MaxValue := frmGoPhast.Grid.ColumnCount;
-  seRow1.MaxValue := frmGoPhast.Grid.RowCount;
-  seRow2.MaxValue := frmGoPhast.Grid.RowCount;
-  seLayer1.MaxValue := frmGoPhast.Grid.LayerCount;
-  seLayer2.MaxValue := frmGoPhast.Grid.LayerCount;
+    seCol1.MaxValue := frmGoPhast.Grid.ColumnCount;
+    seCol2.MaxValue := frmGoPhast.Grid.ColumnCount;
+    seRow1.MaxValue := frmGoPhast.Grid.RowCount;
+    seRow2.MaxValue := frmGoPhast.Grid.RowCount;
+    seLayer1.MaxValue := frmGoPhast.Grid.LayerCount;
+    seLayer2.MaxValue := frmGoPhast.Grid.LayerCount;
 
-  seLayer1.Enabled := frmGoPhast.PhastModel.ModelSelection = msPhast;
-  seLayer2.Enabled := frmGoPhast.PhastModel.ModelSelection = msPhast;
+    seLayer1.Enabled := frmGoPhast.PhastModel.ModelSelection = msPhast;
+    seLayer2.Enabled := frmGoPhast.PhastModel.ModelSelection = msPhast;
 
-  if (SpacingGridTool.FirstSpacingColumn >= 0)
-    and (SpacingGridTool.LastSpacingColumn >= 0) then
-  begin
-    seCol1.Value := SpacingGridTool.FirstSpacingColumn + 1;
-    seCol2.Value := SpacingGridTool.LastSpacingColumn + 1;
-    if seCol1.Value > seCol2.Value then
+    if (SpacingGridTool.FirstSpacingColumn >= 0)
+      and (SpacingGridTool.LastSpacingColumn >= 0) then
     begin
-      FReversedCols := True;
-      Temp := seCol1.AsInteger;
-      seCol1.Value := seCol2.Value;
-      seCol2.Value := Temp;
-    end;
-    with frmGoPhast.Grid do
-    begin
-      Spacing := (ColumnPosition[seCol2.AsInteger]
-        - ColumnPosition[seCol1.AsInteger - 1]) / (seCol2.AsInteger - seCol1.Value +
-        1);
-      if frmGoPhast.Grid.ColumnDirection = cdEastToWest then
+      seCol1.Value := SpacingGridTool.FirstSpacingColumn + 1;
+      seCol2.Value := SpacingGridTool.LastSpacingColumn + 1;
+      if seCol1.Value > seCol2.Value then
       begin
-        Spacing := -Spacing;
+        FReversedCols := True;
+        Temp := seCol1.AsInteger;
+        seCol1.Value := seCol2.Value;
+        seCol2.Value := Temp;
       end;
-      rdeCol.Text := FloatToStr(Spacing);
-    end;
-  end
-  else
-  begin
-    cbColumns.Enabled := False;
-  end;
-  if (SpacingGridTool.FirstSpacingRow >= 0)
-    and (SpacingGridTool.LastSpacingRow >= 0) then
-  begin
-    seRow1.Value := SpacingGridTool.FirstSpacingRow + 1;
-    seRow2.Value := SpacingGridTool.LastSpacingRow + 1;
-    if seRow1.Value > seRow2.Value then
-    begin
-      FReversedRows := True;
-      Temp := seRow1.AsInteger;
-      seRow1.Value := seRow2.Value;
-      seRow2.Value := Temp;
-    end;
-    with frmGoPhast.Grid do
-    begin
-      Spacing := (RowPosition[seRow2.AsInteger]
-        - RowPosition[seRow1.AsInteger - 1]) / (seRow2.AsInteger - seRow1.Value + 1);
-      if frmGoPhast.Grid.RowDirection = rdNorthToSouth then
+      with frmGoPhast.Grid do
       begin
-        Spacing := -Spacing;
+        Spacing := (ColumnPosition[seCol2.AsInteger]
+          - ColumnPosition[seCol1.AsInteger - 1]) / (seCol2.AsInteger - seCol1.Value +
+          1);
+        if frmGoPhast.Grid.ColumnDirection = cdEastToWest then
+        begin
+          Spacing := -Spacing;
+        end;
+        rdeCol.Text := FloatToStr(Spacing);
       end;
-      rdeRow.Text := FloatToStr(Spacing);
-    end;
-  end
-  else
-  begin
-    cbRows.Enabled := False;
-  end;
-  if (SpacingGridTool.FirstSpacingLayer >= 0)
-    and (SpacingGridTool.LastSpacingLayer >= 0) then
-  begin
-    seLayer1.Value := SpacingGridTool.FirstSpacingLayer + 1;
-    seLayer2.Value := SpacingGridTool.LastSpacingLayer + 1;
-    if seLayer1.Value > seLayer2.Value then
+    end
+    else
     begin
-      FReversedLayers := True;
-      Temp := seLayer1.AsInteger;
-      seLayer1.Value := seLayer2.Value;
-      seLayer2.Value := Temp;
+      cbColumns.Enabled := False;
     end;
-    if frmGoPhast.PhastModel.ModelSelection = msPhast then
+    if (SpacingGridTool.FirstSpacingRow >= 0)
+      and (SpacingGridTool.LastSpacingRow >= 0) then
     begin
-      with frmGoPhast.PhastGrid do
+      seRow1.Value := SpacingGridTool.FirstSpacingRow + 1;
+      seRow2.Value := SpacingGridTool.LastSpacingRow + 1;
+      if seRow1.Value > seRow2.Value then
       begin
-        Spacing := (LayerElevation[seLayer2.AsInteger]
-            - LayerElevation[seLayer1.AsInteger - 1]) / (seLayer2.Value - seLayer1.Value
-          + 1);
-      if frmGoPhast.Grid.LayerDirection = ldTopToBottom then
+        FReversedRows := True;
+        Temp := seRow1.AsInteger;
+        seRow1.Value := seRow2.Value;
+        seRow2.Value := Temp;
+      end;
+      with frmGoPhast.Grid do
       begin
-        Spacing := -Spacing;
+        Spacing := (RowPosition[seRow2.AsInteger]
+          - RowPosition[seRow1.AsInteger - 1]) / (seRow2.AsInteger - seRow1.Value + 1);
+        if frmGoPhast.Grid.RowDirection = rdNorthToSouth then
+        begin
+          Spacing := -Spacing;
+        end;
+        rdeRow.Text := FloatToStr(Spacing);
       end;
-        rdeLayer.Text := FloatToStr(Spacing);
-      end;
+    end
+    else
+    begin
+      cbRows.Enabled := False;
     end;
-  end
-  else
-  begin
-    cbLayers.Enabled := False;
-  end;
-  seCol1.MaxValue := frmGoPhast.Grid.ColumnCount;
-  seCol2.MaxValue := frmGoPhast.Grid.ColumnCount;
-  seRow1.MaxValue := frmGoPhast.Grid.RowCount;
-  seRow2.MaxValue := frmGoPhast.Grid.RowCount;
-  seLayer1.MaxValue := frmGoPhast.Grid.LayerCount;
-  seLayer2.MaxValue := frmGoPhast.Grid.LayerCount;
+    if (SpacingGridTool.FirstSpacingLayer >= 0)
+      and (SpacingGridTool.LastSpacingLayer >= 0) then
+    begin
+      seLayer1.Value := SpacingGridTool.FirstSpacingLayer + 1;
+      seLayer2.Value := SpacingGridTool.LastSpacingLayer + 1;
+      if seLayer1.Value > seLayer2.Value then
+      begin
+        FReversedLayers := True;
+        Temp := seLayer1.AsInteger;
+        seLayer1.Value := seLayer2.Value;
+        seLayer2.Value := Temp;
+      end;
+      if frmGoPhast.PhastModel.ModelSelection = msPhast then
+      begin
+        with frmGoPhast.PhastGrid do
+        begin
+          Spacing := (LayerElevation[seLayer2.AsInteger]
+              - LayerElevation[seLayer1.AsInteger - 1]) / (seLayer2.Value - seLayer1.Value
+            + 1);
+        if frmGoPhast.Grid.LayerDirection = ldTopToBottom then
+        begin
+          Spacing := -Spacing;
+        end;
+          rdeLayer.Text := FloatToStr(Spacing);
+        end;
+      end;
+    end
+    else
+    begin
+      cbLayers.Enabled := False;
+    end;
+    seCol1.MaxValue := frmGoPhast.Grid.ColumnCount;
+    seCol2.MaxValue := frmGoPhast.Grid.ColumnCount;
+    seRow1.MaxValue := frmGoPhast.Grid.RowCount;
+    seRow2.MaxValue := frmGoPhast.Grid.RowCount;
+    seLayer1.MaxValue := frmGoPhast.Grid.LayerCount;
+    seLayer2.MaxValue := frmGoPhast.Grid.LayerCount;
 
-  if frmGoPhast.PhastModel.ModelSelection <> msPhast then
-  begin
-    seLayer1.Enabled := False;
-    seLayer2.Enabled := False;
-    rdeLayer.Enabled := False;
+    if frmGoPhast.PhastModel.ModelSelection <> msPhast then
+    begin
+      seLayer1.Enabled := False;
+      seLayer2.Enabled := False;
+      rdeLayer.Enabled := False;
+    end;
+  finally
+    FGettingData := False;
   end;
 
 //  SetSpinColor;
@@ -562,6 +568,10 @@ end;
 procedure TfrmSetSpacing.cbColumnsClick(Sender: TObject);
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   EnableOK;
   seCol1.Enabled := cbColumns.Checked;
   seCol2.Enabled := cbColumns.Checked;
@@ -572,6 +582,10 @@ end;
 procedure TfrmSetSpacing.cbRowsClick(Sender: TObject);
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   EnableOK;
   seRow1.Enabled := cbRows.Checked;
   seRow2.Enabled := cbRows.Checked;
@@ -582,6 +596,10 @@ end;
 procedure TfrmSetSpacing.cbLayersClick(Sender: TObject);
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   EnableOK;
   seLayer1.Enabled := cbLayers.Checked;
   seLayer2.Enabled := cbLayers.Checked;
@@ -622,12 +640,20 @@ end;
 procedure TfrmSetSpacing.rdeChange(Sender: TObject);
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   EnableOK;
 end;
 
 procedure TfrmSetSpacing.seCol1Change(Sender: TObject);
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   if not (csCreating in ControlState) then
   begin
     if FReversedCols then
@@ -647,6 +673,10 @@ end;
 procedure TfrmSetSpacing.seCol2Change(Sender: TObject);
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   if not (csCreating in ControlState) then
   begin
     if FReversedCols then
@@ -666,6 +696,10 @@ end;
 procedure TfrmSetSpacing.seRow1Change(Sender: TObject);
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   if not (csCreating in ControlState) then
   begin
     if FReversedRows then
@@ -685,6 +719,10 @@ end;
 procedure TfrmSetSpacing.seRow2Change(Sender: TObject);
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   if not (csCreating in ControlState) then
   begin
     if FReversedRows then
@@ -704,6 +742,10 @@ end;
 procedure TfrmSetSpacing.seLayer1Change(Sender: TObject);
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   if not (csCreating in ControlState) then
   begin
     if FReversedLayers then
@@ -723,6 +765,10 @@ end;
 procedure TfrmSetSpacing.seLayer2Change(Sender: TObject);
 begin
   inherited;
+  if FGettingData then
+  begin
+    Exit;
+  end;
   if not (csCreating in ControlState) then
   begin
     if FReversedLayers then

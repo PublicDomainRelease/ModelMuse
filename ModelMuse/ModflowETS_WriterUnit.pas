@@ -111,10 +111,14 @@ var
   Boundary: TEtsBoundary;
 begin
   inherited Evaluate;
-  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
-    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
     if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    if not ScreenObject.UsedModels.UsesModel(Model) then
     begin
       Continue;
     end;
@@ -145,7 +149,7 @@ end;
 
 function TModflowETS_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.EtsPackage;
+  result := Model.ModflowPackages.EtsPackage;
 end;
 
 function TModflowETS_Writer.ParameterType: TParameterType;
@@ -188,8 +192,8 @@ const
   D7PNameIname = '';
   D7PName = '';
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(EtsSurfaceError);
-  frmErrorsAndWarnings.RemoveErrorGroup(EtsDepthError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, EtsSurfaceError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, EtsDepthError);
 
 
   if not Package.IsSelected then
@@ -204,15 +208,15 @@ begin
     begin
       Exit;
     end;
-    ClearTimeLists;
+    ClearTimeLists(Model);
     ParamDefArrays := TObjectList.Create;
     DepthFractionList := TList.Create;
     EtFractionList := TList.Create;
     try
-      EvaluateParameterDefinitions(ParamDefArrays, ErrorRoot);
+      EvaluateParameterDefinitions(ParamDefArrays, ErrorRoot, umAssign);
       NPETS := ParameterCount;
-      NETSOP := Ord(PhastModel.ModflowPackages.EtsPackage.LayerOption) + 1;
-      NETSEG := PhastModel.ModflowPackages.EtsPackage.SegmentCount;
+      NETSOP := Ord(Model.ModflowPackages.EtsPackage.LayerOption) + 1;
+      NETSEG := Model.ModflowPackages.EtsPackage.SegmentCount;
 
       for SegmentIndex := 2 to NETSEG - 1 do
       begin
@@ -220,13 +224,13 @@ begin
         + 'segment should be greater than the depth fraction of the previous '
         + 'segment.  At the following locations in segment '
         + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
-        frmErrorsAndWarnings.RemoveErrorGroup(ErrorString);
+        frmErrorsAndWarnings.RemoveErrorGroup(Model, ErrorString);
 
         ErrorString := 'In the ETS package, rate fraction of each succeeding '
           + 'segment should be less than the rate fraction of the previous '
           + 'segment.  At the following locations in segment '
           + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
-        frmErrorsAndWarnings.RemoveErrorGroup(ErrorString);
+        frmErrorsAndWarnings.RemoveErrorGroup(Model, ErrorString);
       end;
 
       EvapRateTimes := TimeLists[0];
@@ -287,7 +291,7 @@ begin
           begin
             DepthSurfaceCellList := nil;
             EvapSurfArray.UpToDate := True;
-            frmErrorsAndWarnings.AddError(EtsSurfaceError, EtsSurfaceErrorMessage);
+            frmErrorsAndWarnings.AddError(Model, EtsSurfaceError, EtsSurfaceErrorMessage);
           end;
           EvapSurfArray.CacheData;
 
@@ -302,6 +306,8 @@ begin
             DefArrayList := ParamDefArrays[TimeIndex];
             UpdateTransient2DArray(EvapRateArray, DefArrayList);
           end;
+          Model.AdjustDataArray(EvapRateArray);
+          EvapRateArray.CacheData;
 
           // data set 8
 
@@ -313,15 +319,15 @@ begin
           else
           begin
             EvapDepthArray.UpToDate := True;
-            frmErrorsAndWarnings.AddError(EtsDepthError, EtsDepthErrorMessage);
+            frmErrorsAndWarnings.AddError(Model, EtsDepthError, EtsDepthErrorMessage);
           end;
           EvapDepthArray.CacheData;
 
           if EvapLayerArray <> nil then
           begin
-            if (PhastModel.ModflowPackages.EtsPackage.
+            if (Model.ModflowPackages.EtsPackage.
               LayerOption = loSpecified)
-              and not PhastModel.ModflowPackages.EtsPackage.
+              and not Model.ModflowPackages.EtsPackage.
               TimeVaryingLayers and (ParameterCount > 0)  then
             begin
               RetrieveParametersForStressPeriod(D7PNameIname, D7PName, 0,
@@ -403,9 +409,9 @@ begin
 //      + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
 //    frmErrorsAndWarnings.RemoveErrorGroup(ErrorRoot);
     Assert(NewArray.UpToDate);
-    for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+    for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
     begin
-      for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+      for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
       begin
         NewValue := NewArray.RealData[0, RowIndex, ColIndex];
         PriorValue := FPriorRateFractionArray.RealData[0, RowIndex, ColIndex];
@@ -413,7 +419,7 @@ begin
         begin
           Error := '(' + IntToStr(RowIndex + 1) + ', '
             + IntToStr(ColIndex + 1) + ')';
-          frmErrorsAndWarnings.AddError(ErrorRoot, Error);
+          frmErrorsAndWarnings.AddError(Model, ErrorRoot, Error);
         end;
       end;
     end;
@@ -438,9 +444,9 @@ begin
 //    + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
 //    frmErrorsAndWarnings.RemoveErrorGroup(ErrorRoot);
     Assert(NewArray.UpToDate);
-    for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+    for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
     begin
-      for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+      for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
       begin
         NewValue := NewArray.RealData[0, RowIndex, ColIndex];
         PriorValue := FPriorDepthFractionArray.RealData[0, RowIndex, ColIndex];
@@ -448,7 +454,7 @@ begin
         begin
           Error := '(' + IntToStr(RowIndex + 1) + ', '
             + IntToStr(ColIndex + 1) + ')';
-          frmErrorsAndWarnings.AddError(ErrorRoot, Error);
+          frmErrorsAndWarnings.AddError(Model, ErrorRoot, Error);
         end;
       end;
     end;
@@ -464,17 +470,17 @@ const
   VariableIdentifiers = 'Condfact';
 begin
   WriteParameterDefinitions(DS3, DS3Instances, DS4A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot);
+    VariableIdentifiers, ErrorRoot, umAssign);
 end;
 
 procedure TModflowETS_Writer.WriteDataSet1;
 var
   IEVTCB: integer;
 begin
-  NETSOP := Ord(PhastModel.ModflowPackages.EtsPackage.LayerOption) + 1;
+  NETSOP := Ord(Model.ModflowPackages.EtsPackage.LayerOption) + 1;
   GetFlowUnitNumber(IEVTCB);
   NPETS := ParameterCount;
-  NETSEG := PhastModel.ModflowPackages.EtsPackage.SegmentCount;
+  NETSEG := Model.ModflowPackages.EtsPackage.SegmentCount;
 
   WriteInteger(NETSOP);
   WriteInteger(IEVTCB);
@@ -500,19 +506,19 @@ procedure TModflowETS_Writer.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(EtsSurfaceError);
-  frmErrorsAndWarnings.RemoveErrorGroup(EtsDepthError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, EtsSurfaceError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, EtsDepthError);
   if not Package.IsSelected then
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrETS) then
+  if Model.PackageGeneratedExternally(StrETS) then
   begin
     Exit;
   end;
 //  frmProgress.AddMessage('Evaluating ETS Package data.');
   NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrETS, PhastModel.UnitNumbers.UnitNumber(StrETS),
+  WriteToNameFile(StrETS, Model.UnitNumbers.UnitNumber(StrETS),
     NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
@@ -520,7 +526,7 @@ begin
   begin
     Exit;
   end;
-  ClearTimeLists;
+  ClearTimeLists(Model);
   OpenFile(FileName(AFileName));
   try
     frmProgressMM.AddMessage('Writing ETS Package input.');
@@ -569,7 +575,7 @@ begin
   DataTypeIndex := 0;
   Comment := DataSetIdentifier + ' ' + VariableIdentifiers;
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-    CellList, Dummy);
+    CellList, umAssign, True, Dummy);
 end;
 
 procedure TModflowETS_Writer.WriteEvapotranspirationSurface(CellList: TList);
@@ -585,7 +591,7 @@ begin
   DataTypeIndex := 0;
   Comment := 'Data Set 5: ETSS';
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-    CellList, Dummy);
+    CellList, umAssign, False, Dummy);
 end;
 
 procedure TModflowETS_Writer.WriteExtinctionDepth(CellList: TList);
@@ -601,7 +607,7 @@ begin
   DataTypeIndex := 1;
   Comment := 'Data Set 8: ETSX';
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-    CellList, Dummy);
+    CellList, umAssign, False, Dummy);
 end;
 
 procedure TModflowETS_Writer.WriteDepthFraction(CellList: TList;
@@ -618,7 +624,7 @@ begin
   DataTypeIndex := SegmentIndex*2;
   Comment := 'Data Set 10: PXDP';
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-    CellList, NewArray, False);
+    CellList, umAssign, False, NewArray, False);
   CheckDepthFraction(NewArray, SegmentIndex);
   FPriorDepthFractionArray.Free;
   FPriorDepthFractionArray := NewArray;
@@ -638,7 +644,7 @@ begin
   DataTypeIndex := SegmentIndex*2+1;
   Comment := 'Data Set 11: PETM';
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-    CellList, NewArray, False);
+    CellList, umAssign, False, NewArray, False);
   CheckRateFraction(NewArray, SegmentIndex);
   FPriorRateFractionArray.Free;
   FPriorRateFractionArray := NewArray;
@@ -668,13 +674,13 @@ begin
     + 'segment should be greater than the depth fraction of the previous '
     + 'segment.  At the following locations in segment '
     + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
-    frmErrorsAndWarnings.RemoveErrorGroup(ErrorString);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, ErrorString);
 
     ErrorString := 'In the ETS package, rate fraction of each succeeding '
       + 'segment should be less than the rate fraction of the previous '
       + 'segment.  At the following locations in segment '
       + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
-    frmErrorsAndWarnings.RemoveErrorGroup(ErrorString);
+    frmErrorsAndWarnings.RemoveErrorGroup(Model, ErrorString);
   end;
 
   ParameterValues := TList.Create;
@@ -682,7 +688,7 @@ begin
     Comment := 'Data Set 9: IETS';
     if Values.Count = 0 then
     begin
-      frmErrorsAndWarnings.AddError('No evapotranspiration segments defined',
+      frmErrorsAndWarnings.AddError(Model, 'No evapotranspiration segments defined',
         'The Evapotranspiration Segments package is active but '
         + 'no evapotranspiration segments have been defined '
         + 'for any stress period.');
@@ -811,7 +817,7 @@ begin
           else
           begin
 //            DepthSurfaceCellList := nil;
-            frmErrorsAndWarnings.AddError(EtsSurfaceError, EtsSurfaceErrorMessage);
+            frmErrorsAndWarnings.AddError(Model, EtsSurfaceError, EtsSurfaceErrorMessage);
           end;
         end;
 
@@ -856,7 +862,7 @@ begin
           end
           else
           begin
-            frmErrorsAndWarnings.AddError(EtsDepthError, EtsDepthErrorMessage);
+            frmErrorsAndWarnings.AddError(Model, EtsDepthError, EtsDepthErrorMessage);
           end;
 
         end;

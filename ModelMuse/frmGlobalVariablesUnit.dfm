@@ -4,6 +4,7 @@ inherited frmGlobalVariables: TfrmGlobalVariables
   Caption = 'Global Variables'
   ClientWidth = 494
   ExplicitWidth = 502
+  ExplicitHeight = 268
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
@@ -78,9 +79,9 @@ inherited frmGlobalVariables: TfrmGlobalVariables
     RowCount = 2
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
     TabOrder = 1
-    OnMouseDown = rdgGlobalVariablesMouseDown
     OnSelectCell = rdgGlobalVariablesSelectCell
     OnSetEditText = rdgGlobalVariablesSetEditText
+    AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = True

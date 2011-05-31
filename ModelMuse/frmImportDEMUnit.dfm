@@ -86,7 +86,7 @@ inherited frmImportDEM: TfrmImportDEM
     Height = 22
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 0
+    ItemHeight = 18
     TabOrder = 12
     Text = '-32767'
     DataType = dtInteger
@@ -98,5 +98,7 @@ inherited frmImportDEM: TfrmImportDEM
   end
   inherited OpenDialogFile: TOpenDialog
     Filter = ''
+    Options = [ofHideReadOnly, ofAllowMultiSelect, ofEnableSizing]
+    Title = 'Open one or more DEM files'
   end
 end

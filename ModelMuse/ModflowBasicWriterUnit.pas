@@ -19,13 +19,14 @@ type
   protected
     class function Extension: string; override;
   public
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(AModel: TCustomModel); override;
     procedure WriteFile(const AFileName: string);
   end;
 
 implementation
 
-uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmProgressUnit, Forms;
+uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmProgressUnit, Forms, 
+  RbwParser, GoPhastTypes;
 
 resourcestring
   StrFileForTheInitial = 'File for the initial heads does not exist.';
@@ -43,14 +44,14 @@ var
   Active: boolean;
 begin
   ErrorString := 'Initial Head is below the bottom of the layer.';
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsModflow_Initial_Head);
+  DataArray := Model.DataArrayManager.GetDataSetByName(rsModflow_Initial_Head);
   DataArray.Initialize;
-  ActiveArray := PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+  ActiveArray := Model.DataArrayManager.GetDataSetByName(rsActive);
   ActiveArray.Initialize;
 
-  for LayerIndex := 0 to PhastModel.ModflowGrid.LayerCount - 1 do
+  for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
   begin
-    if PhastModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+    if Model.IsLayerSimulated(LayerIndex) then
     begin
       for RowIndex := 0 to DataArray.RowCount - 1 do
       begin
@@ -60,10 +61,10 @@ begin
           if Active then
           begin
             Head := DataArray.RealData[LayerIndex, RowIndex, ColIndex];
-            Bottom := PhastModel.ModflowGrid.CellElevation[ColIndex, RowIndex, LayerIndex+1];
+            Bottom := Model.ModflowGrid.CellElevation[ColIndex, RowIndex, LayerIndex+1];
             if Bottom > Head then
             begin
-              frmErrorsAndWarnings.AddWarning(ErrorString,
+              frmErrorsAndWarnings.AddWarning(Model, ErrorString,
                 'Layer: ' + IntToStr(LayerIndex+1)
                 + '; Row: ' + IntToStr(RowIndex+1)
                 + '; Column: ' + IntToStr(ColIndex+1));
@@ -73,15 +74,15 @@ begin
       end;
     end;
   end;
-  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
-  PhastModel.DataArrayManager.AddDataSetToCache(ActiveArray);
+  Model.DataArrayManager.AddDataSetToCache(DataArray);
+  Model.DataArrayManager.AddDataSetToCache(ActiveArray);
 
 end;
 
-constructor TModflowBasicWriter.Create(Model: TCustomModel);
+constructor TModflowBasicWriter.Create(AModel: TCustomModel);
 begin
   inherited;
-  XSECTION := PhastModel.ModflowGrid.RowCount = 1;
+  XSECTION := Model.ModflowGrid.RowCount = 1;
 end;
 
 class function TModflowBasicWriter.Extension: string;
@@ -91,9 +92,9 @@ end;
 
 procedure TModflowBasicWriter.WriteDataSet0;
 begin
-  WriteCommentLines(PhastModel.ModflowOptions.Description);
+  WriteCommentLines(Model.ModflowOptions.Description);
   WriteCommentLine('Basic Package file created on ' + DateToStr(Now) + ' by '
-    + PhastModel.ProgramName
+    + Model.ProgramName
     + ' version ' + ModelVersion + '.');
 end;
 
@@ -105,8 +106,8 @@ var
   PRINTTIME: boolean;
 //  SHOWPROGRESS: boolean;
 begin
-  CHTOCH := PhastModel.ModflowOptions.ComputeFluxesBetweenConstantHeadCells;
-  PRINTTIME := PhastModel.ModflowOptions.PrintTime;
+  CHTOCH := Model.ModflowOptions.ComputeFluxesBetweenConstantHeadCells;
+  PRINTTIME := Model.ModflowOptions.PrintTime;
 //  SHOWPROGRESS := PhastModel.ModflowOptions.ShowProgress;
   if FREE then
   begin
@@ -136,17 +137,92 @@ procedure TModflowBasicWriter.WriteDataSet2;
 var
   DataArray: TDataArray;
   DataSetName: string;
+  LocalChildModel: TChildModel;
+  PhastModel: TPhastModel;
+  EdgeValue: Integer;
+  ExportArray: TDataArray;
+  TempArray: TDataArray;
+  LayerIndex: Integer;
+  RowIndex: Integer;
+  ColIndex: Integer;
 begin
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsActive);
-  DataSetName := 'IBOUND';
-  WriteDataSet(DataSetName, DataArray);
-  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
-  PhastModel.DataArrayManager.CacheDataArrays;
+  TempArray := nil;
+  try
+    DataArray := Model.DataArrayManager.GetDataSetByName(rsActive);
+    if Model is TChildModel then
+    begin
+      LocalChildModel := TChildModel(Model);
+      EdgeValue := LocalChildModel.EdgeIndex;
+
+      DataArray.Initialize;
+      TempArray := TDataArray.Create(Model);
+      TempArray.DataType := rdtInteger;
+      TempArray.EvaluatedAt := eaBlocks;
+      TempArray.Orientation := dso3D;
+      TempArray.UpdateDimensions(DataArray.LayerCount,
+        DataArray.RowCount, DataArray.ColumnCount);
+
+      for LayerIndex := 0 to DataArray.LayerCount - 1 do
+      begin
+        for RowIndex := 1 to DataArray.RowCount - 2 do
+        begin
+          for ColIndex := 1 to DataArray.ColumnCount - 2 do
+          begin
+            if DataArray.BooleanData[LayerIndex, RowIndex, ColIndex] then
+            begin
+              TempArray.IntegerData[LayerIndex, RowIndex, ColIndex] := 1;
+            end
+            else
+            begin
+              TempArray.IntegerData[LayerIndex, RowIndex, ColIndex] := 0;
+            end;
+          end;
+          TempArray.IntegerData[LayerIndex, RowIndex, 0] := EdgeValue;
+          TempArray.IntegerData[LayerIndex, RowIndex,
+            DataArray.ColumnCount - 1] := EdgeValue;
+        end;
+        for ColIndex := 0 to DataArray.ColumnCount - 1 do
+        begin
+          TempArray.IntegerData[LayerIndex, 0, ColIndex] := EdgeValue;
+          TempArray.IntegerData[LayerIndex,
+            DataArray.RowCount - 1, ColIndex] := EdgeValue;
+        end;
+      end;
+
+      PhastModel := LocalChildModel.ParentModel as TPhastModel;
+      if (LocalChildModel.Discretization.BottomLayerGroup <>
+        PhastModel.LayerStructure[PhastModel.LayerStructure.Count-1])
+        or (LocalChildModel.Discretization.BottomLayerGroup.LayerCount-1
+        <> LocalChildModel.Discretization.BottomLayerInUnit) then
+      begin
+        for RowIndex := 1 to DataArray.RowCount - 2 do
+        begin
+          for ColIndex := 1 to DataArray.ColumnCount - 2 do
+          begin
+            TempArray.IntegerData[DataArray.LayerCount - 1,
+              RowIndex, ColIndex] := EdgeValue;
+          end;
+        end;
+      end;
+      TempArray.UpToDate := True;
+      ExportArray := TempArray;
+    end
+    else
+    begin
+      ExportArray := DataArray;
+    end;
+    DataSetName := 'IBOUND';
+    WriteDataSet(DataSetName, ExportArray);
+    Model.DataArrayManager.AddDataSetToCache(DataArray);
+    Model.DataArrayManager.CacheDataArrays;
+  finally
+    TempArray.Free;
+  end;
 end;
 
 procedure TModflowBasicWriter.WriteDataSet3;
 begin
-  WriteFloat(PhastModel.ModflowOptions.HNoFlow);
+  WriteFloat(Model.ModflowOptions.HNoFlow);
   WriteString(' # HNOFLO');
   NewLine;
 end;
@@ -159,36 +235,36 @@ var
   UnitNumber: Integer;
   LayerIndex: Integer;
 begin
-  if PhastModel.ModflowOptions.InitialHeadFileName = '' then
+  if Model.ModflowOptions.InitialHeadFileName = '' then
   begin
-    DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsModflow_Initial_Head);
+    DataArray := Model.DataArrayManager.GetDataSetByName(rsModflow_Initial_Head);
     DataSetName := 'STRT';
     WriteDataSet(DataSetName, DataArray);
-    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
-    PhastModel.DataArrayManager.CacheDataArrays;
+    Model.DataArrayManager.AddDataSetToCache(DataArray);
+    Model.DataArrayManager.CacheDataArrays;
   end
   else
   begin
-    if not FileExists(PhastModel.ModflowOptions.InitialHeadFileName) then
+    if not FileExists(Model.ModflowOptions.InitialHeadFileName) then
     begin
-      frmErrorsAndWarnings.AddError(StrFileForTheInitial, 'The file '
-        + PhastModel.ModflowOptions.InitialHeadFileName
+      frmErrorsAndWarnings.AddError(Model, StrFileForTheInitial, 'The file '
+        + Model.ModflowOptions.InitialHeadFileName
         + ' does not exist.');
       Exit;
     end;
     RelativeFileName := ExtractRelativePath(
       IncludeTrailingPathDelimiter(ExtractFileDir(FNameOfFile)),
-      PhastModel.ModflowOptions.InitialHeadFileName);
-    UnitNumber := PhastModel.UnitNumbers.UnitNumber(BAS_InitialHeads);
-    if SameText(ExtractFileExt(PhastModel.ModflowOptions.InitialHeadFileName), StrBhd) then
+      Model.ModflowOptions.InitialHeadFileName);
+    UnitNumber := Model.UnitNumbers.UnitNumber(BAS_InitialHeads);
+    if SameText(ExtractFileExt(Model.ModflowOptions.InitialHeadFileName), StrBhd) then
     begin
       WriteToNameFile(StrDATABINARY, UnitNumber, RelativeFileName,
         foInput, True);
     end
     else
     begin
-      frmErrorsAndWarnings.AddError(StrWrongExtension, 'The file '
-        + PhastModel.ModflowOptions.InitialHeadFileName
+      frmErrorsAndWarnings.AddError(Model, StrWrongExtension, 'The file '
+        + Model.ModflowOptions.InitialHeadFileName
         + ' must have an extension equal to "' + StrBhd + '".');
       Exit;
     end;
@@ -204,9 +280,9 @@ begin
     end
     else
     begin
-      for LayerIndex := 0 to PhastModel.ModflowGrid.LayerCount - 1 do
+      for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
       begin
-        if PhastModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+        if Model.IsLayerSimulated(LayerIndex) then
         begin
           WriteString('EXTERNAL');
           WriteInteger(UnitNumber);
@@ -223,15 +299,15 @@ end;
 
 procedure TModflowBasicWriter.WriteFile(const AFileName: string);
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(StrFileForTheInitial);
-  frmErrorsAndWarnings.RemoveErrorGroup(StrWrongExtension);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrFileForTheInitial);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrWrongExtension);
 
   FNameOfFile := FileName(AFileName);
-  if PhastModel.PackageGeneratedExternally(StrBAS) then
+  if Model.PackageGeneratedExternally(StrBAS) then
   begin
     Exit;
   end;
-  WriteToNameFile(StrBAS, PhastModel.UnitNumbers.UnitNumber(StrBAS),
+  WriteToNameFile(StrBAS, Model.UnitNumbers.UnitNumber(StrBAS),
     FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try
@@ -295,12 +371,12 @@ begin
   end
   else
   begin
-    for LayerIndex := 0 to PhastModel.ModflowGrid.LayerCount - 1 do
+    for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
     begin
-      if PhastModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+      if Model.IsLayerSimulated(LayerIndex) then
       begin
         WriteArray(DataArray, LayerIndex, DataSetName + ' '
-          + PhastModel.LayerStructure.ModflowLayerBottomDescription(LayerIndex));
+          + Model.ModflowLayerBottomDescription(LayerIndex));
       end;
     end;
   end;

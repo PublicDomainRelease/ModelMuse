@@ -201,10 +201,10 @@ var
 
 begin
   Packages := frmGoPhast.PhastModel.ModflowPackages;
-  clbSFR.Enabled := Packages.SfrPackage.IsSelected;
-  clbSub.Enabled := Packages.SubPackage.IsSelected;
-  comboLayerGroup.Enabled := Packages.SubPackage.IsSelected;
-  comboNoDelayBed.Enabled := Packages.SubPackage.IsSelected;
+  clbSFR.Enabled := frmGoPhast.PhastModel.SfrIsSelected;
+  clbSub.Enabled := frmGoPhast.PhastModel.SubIsSelected;
+  comboLayerGroup.Enabled := frmGoPhast.PhastModel.SubIsSelected;
+  comboNoDelayBed.Enabled := frmGoPhast.PhastModel.SubIsSelected;
 
   comboLayerGroup.Items.Clear;
   LayerStructure := frmGoPhast.PhastModel.LayerStructure;

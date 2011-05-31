@@ -74,7 +74,7 @@ type
     // If Source is a @classname, @name copies the contents
     // of @classname from the source.
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
     // @name provides read and write access to the @link(TFluxObservation)s
     // stored in @classname.
     property Items[Index: integer]: TFluxObservation read GetItems
@@ -141,7 +141,7 @@ type
   public
     // if Source is a @classname, @name copies the contents of Source.
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
     // @name provides access to the @link(TObservationFactor)s in
     // the @classname.
     property Items[Index: integer]: TObservationFactor read GetItems
@@ -235,7 +235,7 @@ type
   public
     // If Source is a @classname, @name copies the contents of Source.
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
    // @name provides read and write access to the @link(TFluxObservationGroup)
    // stored in the @classname.
     property Items[Index: integer]: TFluxObservationGroup read GetItems
@@ -571,7 +571,7 @@ begin
   end;
 end;
 
-constructor TFluxObservations.Create(Model: TComponent);
+constructor TFluxObservations.Create(Model: TBaseModel);
 begin
   inherited Create(TFluxObservation, Model);
 end;
@@ -635,7 +635,7 @@ begin
   end;
 end;
 
-constructor TFluxObservationGroups.Create(Model: TComponent);
+constructor TFluxObservationGroups.Create(Model: TBaseModel);
 begin
   inherited Create(TFluxObservationGroup, Model);
 end;
@@ -741,7 +741,7 @@ end;
 
 procedure TObservationFactor.Loaded;
 begin
-  ScreenObject := ((Collection as TPhastCollection).Model as TPhastModel).
+  ScreenObject := ((Collection as TPhastCollection).Model as TCustomModel).
     GetScreenObjectByName(ObjectName);
   Assert(ScreenObject <> nil);
 end;
@@ -812,7 +812,7 @@ begin
   end;
 end;
 
-constructor TObservationFactors.Create(Model: TComponent);
+constructor TObservationFactors.Create(Model: TBaseModel);
 begin
   inherited Create(TObservationFactor, Model);
 end;

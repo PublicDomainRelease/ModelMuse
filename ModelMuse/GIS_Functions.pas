@@ -88,9 +88,11 @@ type
 procedure AddGIS_Functions(const Parser: TRbwParser;
   ModelSelection: TModelSelection; EvalAt: TEvaluatedAt);
 
+procedure UpdateCurrentModel(const AModel: TBaseModel);
+
 // @name updates a series of global values related to location.
 procedure UpdateGlobalLocations(const Col, Row, Layer: integer;
-  const EvaluatedAt: TEvaluatedAt);
+  const EvaluatedAt: TEvaluatedAt; Model: TBaseModel);
 
 // @name stores AScreenObject in a global variable and resets the global
 // variable for TCellElementSegment to nil.
@@ -133,6 +135,11 @@ const
   StrInterpolatedVertexValues = 'InterpolatedVertexValue';
   StrVertexInterpolate = 'VertexInterpolate';
   StrNodeInterpolate = 'NodeInterpolate';
+  StrGridNumber = 'GridNumber';
+  StrGridName = 'GridName';
+  StrParentLayer = 'ParentLayer';
+  StrParentRow = 'ParentRow';
+  StrParentColumn = 'ParentColumn';
 
 function GetColumnWidth(Column: Integer): Double;
 function GetRowWidth(Row: Integer): Double;
@@ -142,7 +149,8 @@ implementation
 
 uses frmGoPhastUnit, DataSetUnit, FastGEO, LayerStructureUnit, PhastModelUnit,
   ValueArrayStorageUnit, HufDefinition, OrderedCollectionUnit,
-  ModflowPackageSelectionUnit, Math, ModflowGridUnit, ModflowParameterUnit;
+  ModflowPackageSelectionUnit, Math, ModflowGridUnit, ModflowParameterUnit,
+  frmErrorsAndWarningsUnit;
 
 var  
   SpecialImplementors: TList;
@@ -160,6 +168,7 @@ type
     GlobalCurrentScreenObject: TScreenObject;
     GlobalCurrentSegment: TCellElementSegment;
     GlobalSection: integer;
+    GlobalCurrentModel: TBaseModel;
   end;
 
 
@@ -167,12 +176,14 @@ var
   NodeDistancesSet: boolean;
   FNodeDistances: array of double;
 
+  GlobalCurrentModel: TBaseModel;
   GlobalX, GlobalY, GlobalZ: real;
   GlobalXPrime, GlobalYPrime: real;
   GlobalColumn, GlobalRow, GlobalLayer: integer;
   GlobalCurrentScreenObject: TScreenObject;
   GlobalCurrentSegment: TCellElementSegment;
   GlobalSection: integer;
+
 
   GlobalStack: array of TGlobalValues;
 
@@ -217,6 +228,9 @@ var
   CurrentNodeYFunction: TFunctionRecord;
   CurrentNodeZFunction: TFunctionRecord;
   CurrentSegmentLengthFunction: TFunctionRecord;
+  CurrentSegmentAngleFunction: TFunctionRecord;
+  CurrentSegmentAngleDegreesFunction: TFunctionRecord;
+  CurrentSegmentAngleLimitedegreesFunction: TFunctionRecord;
   CurrentSectionIndexFunction: TFunctionRecord;
   FractionOfObjectLengthFunction: TFunctionRecord;
   NodeCountFunction: TFunctionRecord;
@@ -231,6 +245,12 @@ var
   ImportedValuesIFunction: TFunctionRecord;
   ImportedValuesBFunction: TFunctionRecord;
   ImportedValuesTFunction: TFunctionRecord;
+
+  GridNumberFunction: TFunctionRecord;
+  GridNameFunction: TFunctionRecord;
+  ParentLayerFunction: TFunctionRecord;
+  ParentRowFunction: TFunctionRecord;
+  ParentColumnFunction: TFunctionRecord;
 
   NodeInterpolate: TFunctionClass;
   NodeInterpolateSpecialImplementor: TSpecialImplementor;
@@ -274,6 +294,7 @@ var
 begin
   Position := Length(GlobalStack);
   SetLength(GlobalStack, Position + 1);
+
   GlobalStack[Position].GlobalX := GlobalX;
   GlobalStack[Position].GlobalY := GlobalY;
   GlobalStack[Position].GlobalZ := GlobalZ;
@@ -285,6 +306,7 @@ begin
   GlobalStack[Position].GlobalCurrentScreenObject := GlobalCurrentScreenObject;
   GlobalStack[Position].GlobalCurrentSegment := GlobalCurrentSegment;
   GlobalStack[Position].GlobalSection := GlobalSection;
+  GlobalStack[Position].GlobalCurrentModel := GlobalCurrentModel;
 end;
 
 procedure PopGlobalStack;
@@ -292,6 +314,7 @@ var
   Position: Integer;
 begin
   Position := Length(GlobalStack) -1;
+
   GlobalX := GlobalStack[Position].GlobalX;
   GlobalY := GlobalStack[Position].GlobalY;
   GlobalZ := GlobalStack[Position].GlobalZ;
@@ -303,6 +326,8 @@ begin
   GlobalCurrentScreenObject := GlobalStack[Position].GlobalCurrentScreenObject;
   GlobalCurrentSegment := GlobalStack[Position].GlobalCurrentSegment;
   GlobalSection := GlobalStack[Position].GlobalSection;
+  GlobalCurrentModel := GlobalStack[Position].GlobalCurrentModel;
+
   SetLength(GlobalStack, Position);
 end;
 
@@ -388,6 +413,9 @@ begin
   AddItem(CurrentNodeYFunction, True);
   AddItem(CurrentNodeZFunction, True);
   AddItem(CurrentSegmentLengthFunction, True);
+  AddItem(CurrentSegmentAngleFunction, True);
+  AddItem(CurrentSegmentAngleDegreesFunction, True);
+  AddItem(CurrentSegmentAngleLimitedegreesFunction, True);
   AddItem(CurrentSectionIndexFunction, True);
   AddItem(FractionOfObjectLengthFunction, True);
   AddItem(NodeCountFunction, True);
@@ -400,6 +428,11 @@ begin
   AddItem(ImportedValuesBFunction, True);
   AddItem(ImportedValuesTFunction, True);
   AddItem(InterpolationedValuesFunction, True);
+  AddItem(GridNumberFunction, True);
+  AddItem(GridNameFunction, True);
+  AddItem(ParentLayerFunction, True);
+  AddItem(ParentRowFunction, True);
+  AddItem(ParentColumnFunction, True);
 end;
 
 procedure GetCellIndicies(var Column, Row, Layer: Integer;
@@ -488,34 +521,37 @@ begin
 end;
 
 procedure UpdateGlobalLocations(const Col, Row, Layer: integer;
-  const EvaluatedAt: TEvaluatedAt);
+  const EvaluatedAt: TEvaluatedAt; Model: TBaseModel);
 var
   CC2D: TPoint2D;
   CC3D: T3DRealPoint;
+  LocalModel: TCustomModel;
 begin
   GlobalColumn := Col + 1;
   GlobalRow := Row + 1;
   GlobalLayer := Layer + 1;
+  UpdateCurrentModel(Model);
+  LocalModel := Model as TCustomModel;
 
   case EvaluatedAt of
     eaBlocks:
       begin
-        CC2D := frmGoPhast.Grid.TwoDElementCenter(Col, Row);
+        CC2D := LocalModel.Grid.TwoDElementCenter(Col, Row);
         GlobalX := CC2D.X;
         GlobalY := CC2D.Y;
 
-        CC3D := frmGoPhast.Grid.ThreeDElementCenter(Col, Row, Layer);
+        CC3D := LocalModel.Grid.ThreeDElementCenter(Col, Row, Layer);
         GlobalZ := CC3D.Z;
         GlobalXPrime := CC3D.X;
         GlobalYPrime := CC3D.Y;
       end;
     eaNodes:
       begin
-        CC2D := frmGoPhast.Grid.TwoDElementCorner(Col, Row);
+        CC2D := LocalModel.Grid.TwoDElementCorner(Col, Row);
         GlobalX := CC2D.X;
         GlobalY := CC2D.Y;
 
-        CC3D := frmGoPhast.Grid.ThreeDElementCorner(Col, Row, Layer);
+        CC3D := LocalModel.Grid.ThreeDElementCorner(Col, Row, Layer);
         GlobalZ := CC3D.Z;
         GlobalXPrime := CC3D.X;
         GlobalYPrime := CC3D.Y;
@@ -542,6 +578,12 @@ begin
   begin
     UpdateCurrentSection(ASegment.SectionIndex);
   end;
+end;
+
+procedure UpdateCurrentModel(const AModel: TBaseModel);
+begin
+  Assert(AModel is TCustomModel);
+  GlobalCurrentModel := AModel;
 end;
 
 procedure UpdateCurrentScreenObject(const AScreenObject: TScreenObject);
@@ -764,6 +806,56 @@ begin
   end;
 end;
 
+function _CurrentSegmentAngle(Values: array of pointer): double;
+var
+  Point1, Point2: TPoint2D;
+begin
+  if (GlobalCurrentSegment = nil) or (GlobalCurrentScreenObject = nil)
+    or (GlobalCurrentScreenObject.Count <= 1) then
+  begin
+    result := 0;
+  end
+  else
+  begin
+    Point1 := GlobalCurrentScreenObject.Points[GlobalCurrentSegment.VertexIndex];
+    Point2 := GlobalCurrentScreenObject.Points[
+      GlobalCurrentSegment.VertexIndex + 1];
+
+    result := 0;
+    case GlobalCurrentScreenObject.ViewDirection of
+      vdTop, vdFront:
+        begin
+          result := ArcTan2(Point2.y - Point1.y, Point2.x - Point1.x);
+        end;
+      vdSide:
+        begin
+          result := ArcTan2(Point2.x - Point1.x, Point2.y - Point1.y);
+        end;
+      else
+        Assert(False);
+    end;
+
+  end;
+end;
+
+function _CurrentSegmentAngleDegrees(Values: array of pointer): double;
+begin
+  result := _CurrentSegmentAngle(Values)*180/Pi;
+end;
+
+function _CurrentSegmentAngleLimitedDegrees(Values: array of pointer): double;
+begin
+  result := _CurrentSegmentAngleDegrees(Values);
+  while result > 90 do
+  begin
+    result := result -180;
+  end;
+  while result < -90 do
+  begin
+    result := result +180;
+  end;
+end;
+
 function _CurrentSegmentLength(Values: array of pointer): double;
 var
   Point1, Point2: TPoint2D;
@@ -878,6 +970,23 @@ begin
     or (GlobalCurrentScreenObject.PointPositionValues = nil) then
   begin
     result := 0;
+    if (GlobalCurrentSegment = nil) or (GlobalCurrentScreenObject = nil) then
+    begin
+        frmErrorsAndWarnings.AddWarning(GlobalCurrentModel, 'The '
+          + StrInterpolatedVertexValues
+          + ' function can only be used with objects.',
+          '');
+        frmErrorsAndWarnings.Show;
+    end
+    else
+    begin
+        frmErrorsAndWarnings.AddWarning(GlobalCurrentModel, 'The '
+          + StrInterpolatedVertexValues + ' function is used '
+          + 'but no values have been assigned to individual nodes.',
+          'Object: ' + GlobalCurrentScreenObject.Name
+          + '; invalid key: ' + VertexValueName);
+        frmErrorsAndWarnings.Show;
+    end;
   end
   else
   begin
@@ -916,6 +1025,11 @@ begin
       if AfterPosition = -1 then
       begin
         result := 0;
+        frmErrorsAndWarnings.AddWarning(GlobalCurrentModel, 'Invalid key in '
+          + StrInterpolatedVertexValues + ' function.',
+          'Object: ' + GlobalCurrentScreenObject.Name
+          + '; invalid key: ' + VertexValueName);
+        frmErrorsAndWarnings.Show;
       end
       else
       begin
@@ -924,7 +1038,7 @@ begin
     end
     else
     begin
-      LocalEpsilon := GlobalCurrentSegment.Length/100000;
+      LocalEpsilon := GlobalCurrentSegment.SegmentLength/100000;
       if AfterPosition = -1 then
       begin
         result := BeforeValue;
@@ -1086,13 +1200,13 @@ begin
   begin
     Col := GlobalColumn - 1;
   end;
-  if (Col < 0) or (Col > frmGoPhast.Grid.ColumnCount-1) then
+  if (Col < 0) or (Col > TCustomModel(GlobalCurrentModel).Grid.ColumnCount-1) then
   begin
     result := 0;
   end
   else
   begin
-    result := frmGoPhast.Grid.ColumnCenter(Col);
+    result := TCustomModel(GlobalCurrentModel).Grid.ColumnCenter(Col);
   end;
 end;
 
@@ -1108,13 +1222,13 @@ begin
   begin
     Row := GlobalRow - 1;
   end;
-  if (Row < 0) or (Row > frmGoPhast.Grid.RowCount-1) then
+  if (Row < 0) or (Row > TCustomModel(GlobalCurrentModel).Grid.RowCount-1) then
   begin
     result := 0;
   end
   else
   begin
-    result := frmGoPhast.Grid.RowCenter(Row);
+    result := TCustomModel(GlobalCurrentModel).Grid.RowCenter(Row);
   end;
 end;
 
@@ -1158,8 +1272,8 @@ begin
               begin
                 result := frmGoPhast.PhastModel.
                   PhastGrid.NearestLayerCenter(Elevation);
-                result := frmGoPhast.PhastModel.LayerStructure.
-                  DataSetLayerToModflowLayer(result);
+//                result := frmGoPhast.PhastModel.LayerStructure.
+//                  DataSetLayerToModflowLayer(result);
               end;
             end;
           else Assert(False);
@@ -1239,7 +1353,7 @@ begin
     msModflow, msModflowLGR:
       begin
         Assert(GlobalEvaluatedAt = eaBlocks);
-        result := frmGoPhast.PhastModel.ModflowGrid.
+        result := TCustomModel(GlobalCurrentModel).ModflowGrid.
           GetContainingLayer(GlobalColumn-1, GlobalRow-1, Elevation);
       end;
     else Assert(False);
@@ -1257,13 +1371,13 @@ begin
   case GlobalEvaluatedAt of
     eaBlocks:
       begin
-        if (Column < 0) or (Column >= frmGoPhast.Grid.ColumnCount) then
+        if (Column < 0) or (Column >= TCustomModel(GlobalCurrentModel).Grid.ColumnCount) then
         begin
           Result := 0;
         end
         else
         begin
-          Result := frmGoPhast.Grid.ColumnWidth[Column];
+          Result := TCustomModel(GlobalCurrentModel).Grid.ColumnWidth[Column];
         end;
       end;
     eaNodes:
@@ -1317,13 +1431,13 @@ begin
   case GlobalEvaluatedAt of
     eaBlocks:
       begin
-        if (Row < 0) or (Row >= frmGoPhast.Grid.RowCount) then
+        if (Row < 0) or (Row >= TCustomModel(GlobalCurrentModel).Grid.RowCount) then
         begin
           Result := 0;
         end
         else
         begin
-          Result := frmGoPhast.Grid.RowWidth[Row];
+          Result := TCustomModel(GlobalCurrentModel).Grid.RowWidth[Row];
         end;
       end;
     eaNodes:
@@ -1384,7 +1498,7 @@ begin
   begin
     Layer := GlobalLayer - 1;
   end;
-  result := frmGoPhast.PhastModel.LayerStructure.IsLayerSimulated(Layer);
+  result := frmGoPhast.PhastModel.IsLayerSimulated(Layer);
 end;
 
 procedure ExtractColRowLayer(var Lay, Row, Col: Integer;
@@ -1466,15 +1580,15 @@ begin
       end;
     msModflow, msModflowLGR:
       begin
-        if (Lay < 0) or (Lay > frmGoPhast.ModflowGrid.LayerCount - 1)
-          or (Row < 0) or (Row > frmGoPhast.ModflowGrid.RowCount - 1)
-          or (Col < 0) or (Col > frmGoPhast.ModflowGrid.ColumnCount - 1) then
+        if (Lay < 0) or (Lay > TCustomModel(GlobalCurrentModel).ModflowGrid.LayerCount - 1)
+          or (Row < 0) or (Row > TCustomModel(GlobalCurrentModel).ModflowGrid.RowCount - 1)
+          or (Col < 0) or (Col > TCustomModel(GlobalCurrentModel).ModflowGrid.ColumnCount - 1) then
         begin
           Result := 0;
         end
         else
         begin
-          Result := frmGoPhast.ModflowGrid.CellThickness[Col, Row, Lay];
+          Result := TCustomModel(GlobalCurrentModel).ModflowGrid.CellThickness[Col, Row, Lay];
         end;
       end;
   else
@@ -1545,7 +1659,7 @@ begin
           Row := PInteger(Values[1])^ - 1;
           Layer := PInteger(Values[2])^ - 1;
         end;
-        CellPoints := frmGoPhast.ModflowGrid.FrontCellPoints(Row);
+        CellPoints := TCustomModel(GlobalCurrentModel).ModflowGrid.FrontCellPoints(Row);
         SetLength(CellOutline, 6);
         CellOutline[5] := CellPoints[Col*2,Layer];
         CellOutline[4] := CellPoints[Col*2+1,Layer];
@@ -1611,7 +1725,7 @@ begin
           Row := PInteger(Values[1])^ - 1;
           Layer := PInteger(Values[2])^ - 1;
         end;
-        CellPoints := frmGoPhast.ModflowGrid.SideCellPoints(Col);
+        CellPoints := TCustomModel(GlobalCurrentModel).ModflowGrid.SideCellPoints(Col);
         SetLength(CellOutline, 6);
         CellOutline[0] := CellPoints[Row*2,Layer];
         CellOutline[1] := CellPoints[Row*2+1,Layer];
@@ -1652,13 +1766,13 @@ begin
   begin
     Column := GlobalColumn - 1;
   end;
-  if (Column < 0) or (Column > frmGoPhast.Grid.ColumnCount) then
+  if (Column < 0) or (Column > TCustomModel(GlobalCurrentModel).Grid.ColumnCount) then
   begin
     Result := 0;
   end
   else
   begin
-    Result := frmGoPhast.Grid.ColumnPosition[Column];
+    Result := TCustomModel(GlobalCurrentModel).Grid.ColumnPosition[Column];
   end;
 end;
 
@@ -1674,13 +1788,13 @@ begin
   begin
     Row := GlobalRow - 1;
   end;
-  if (Row < 0) or (Row > frmGoPhast.Grid.RowCount) then
+  if (Row < 0) or (Row > TCustomModel(GlobalCurrentModel).Grid.RowCount) then
   begin
     Result := 0;
   end
   else
   begin
-    Result := frmGoPhast.Grid.RowPosition[Row];
+    Result := TCustomModel(GlobalCurrentModel).Grid.RowPosition[Row];
   end;
 end;
 
@@ -1703,16 +1817,16 @@ begin
       end;
     msModflow, msModflowLGR:
       begin
-        if (Lay < 0) or (Lay > frmGoPhast.ModflowGrid.LayerCount)
-         or (Row < 0) or (Row > frmGoPhast.ModflowGrid.RowCount-1)
-         or (Col < 0) or (Col > frmGoPhast.ModflowGrid.ColumnCount-1) then
+        if (Lay < 0) or (Lay > TCustomModel(GlobalCurrentModel).ModflowGrid.LayerCount)
+         or (Row < 0) or (Row > TCustomModel(GlobalCurrentModel).ModflowGrid.RowCount-1)
+         or (Col < 0) or (Col > TCustomModel(GlobalCurrentModel).ModflowGrid.ColumnCount-1) then
         begin
           Result := 0;
           InvalidIndex := True;
         end
         else
         begin
-          Result := frmGoPhast.ModflowGrid.CellElevation[Col, Row, Lay];
+          Result := TCustomModel(GlobalCurrentModel).ModflowGrid.CellElevation[Col, Row, Lay];
         end;
       end;
   else
@@ -1758,17 +1872,17 @@ end;
 
 function _LayerCount(Values: array of pointer): integer;
 begin
-  Result := frmGoPhast.Grid.LayerCount + 1;
+  Result := TCustomModel(GlobalCurrentModel).Grid.LayerCount + 1;
 end;
 
 function _RowCount(Values: array of pointer): integer;
 begin
-  Result := frmGoPhast.Grid.RowCount + 1;
+  Result := TCustomModel(GlobalCurrentModel).Grid.RowCount + 1;
 end;
 
 function _ColumnCount(Values: array of pointer): integer;
 begin
-  Result := frmGoPhast.Grid.ColumnCount + 1;
+  Result := TCustomModel(GlobalCurrentModel).Grid.ColumnCount + 1;
 end;
 
 function _ObjectLength(Values: array of pointer): double;
@@ -1832,7 +1946,7 @@ begin
       Layer := GlobalLayer - 1;
     end;
     result := GlobalCurrentScreenObject.ObjectIntersectLength(Column, Row,
-      Layer);
+      Layer, GlobalCurrentModel);
   end;
 end;
 
@@ -1881,7 +1995,7 @@ begin
       Layer := GlobalLayer - 1;
     end;
     result := GlobalCurrentScreenObject.ObjectSectionIntersectLength(Column, Row,
-      Layer, Section);
+      Layer, Section, GlobalCurrentModel);
   end;
 end;
 
@@ -1921,7 +2035,8 @@ begin
     begin
       Layer := GlobalLayer - 1;
     end;
-    result := GlobalCurrentScreenObject.ObjectIntersectArea(Column, Row, Layer);
+    result := GlobalCurrentScreenObject.ObjectIntersectArea(
+      Column, Row, Layer, GlobalCurrentModel);
   end;
 end;
 
@@ -1950,7 +2065,7 @@ var
   ArrayLength: integer;
   Column, Row, Layer: integer;
 begin
-  DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
+  DataArray := TCustomModel(GlobalCurrentModel).DataArrayManager.GetDataSetByName(DataSetName);
   Assert(DataArray <> nil);
   PushGlobalStack;
   try
@@ -1979,7 +2094,7 @@ var
   DataArray: TDataArray;
   ArrayLength: Integer;
 begin
-  DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+  DataArray := TCustomModel(GlobalCurrentModel).DataArrayManager.GetDataSetByName(rsActive);
   Assert(DataArray <> nil);
   PushGlobalStack;
   try
@@ -2166,10 +2281,10 @@ function GetDataSetValue(Column: Integer; Row: Integer;Layer: Integer;
   const DataSetName: string): Double;
 var
   DataArray: TDataArray;
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
 begin
-  PhastModel := frmGoPhast.PhastModel;
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
+  AModel := TCustomModel(GlobalCurrentModel);
+  DataArray := AModel.DataArrayManager.GetDataSetByName(DataSetName);
   Assert(DataArray <> nil);
   PushGlobalStack;
   try
@@ -2182,7 +2297,7 @@ end;
 
 
 procedure UpdateCellValue(var CellValue: Double;
-  Param: THufUsedParameter; PhastModel: TPhastModel; Column, Row: Integer;
+  Param: THufUsedParameter; PhastModel: TCustomModel; Column, Row: Integer;
   var Updated: boolean);
 var
   Multiplier: Double;
@@ -2222,7 +2337,7 @@ var
   Layer: Integer;
   Row: Integer;
   Column: Integer;
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
   KzDataArray: TDataArray;
   TopLayer: Integer;
   KzNonSimDataArray: TDataArray;
@@ -2236,8 +2351,8 @@ begin
   GetCellIndicies(Column, Row, Layer, Values);
 
   result := 0;
-  PhastModel := frmGoPhast.PhastModel;
-  Grid := PhastModel.ModflowGrid;
+  AModel := TCustomModel(GlobalCurrentModel);
+  Grid := AModel.ModflowGrid;
   if (Grid.LayerCount -1 <= Layer)
     or (Layer < 0) then
   begin
@@ -2245,7 +2360,7 @@ begin
     Exit;
   end;
 
-  while not PhastModel.LayerStructure.IsLayerSimulated(Layer)
+  while not AModel.IsLayerSimulated(Layer)
     and (Layer >= 0) do
   begin
     Dec(Layer);
@@ -2254,9 +2369,9 @@ begin
   KzNonSimDataArray := nil;
   TopLayer := Layer;
   Inc(Layer);
-  if not PhastModel.LayerStructure.IsLayerSimulated(Layer) then
+  if not AModel.IsLayerSimulated(Layer) then
   begin
-    KzNonSimDataArray := PhastModel.DataArrayManager.GetDataSetByName(rsModflow_CBKz);
+    KzNonSimDataArray := AModel.DataArrayManager.GetDataSetByName(rsModflow_CBKz);
     Assert(KzNonSimDataArray <> nil);
     PushGlobalStack;
     try
@@ -2268,7 +2383,7 @@ begin
   end;
   BottomLayer := Layer;
 
-  KzDataArray := PhastModel.DataArrayManager.GetDataSetByName(rsKz);
+  KzDataArray := AModel.DataArrayManager.GetDataSetByName(rsKz);
   Assert(KzDataArray <> nil);
   PushGlobalStack;
   try
@@ -2285,7 +2400,7 @@ begin
     begin
       Exit;
     end;
-    if PhastModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+    if AModel.IsLayerSimulated(LayerIndex) then
     begin
       VK := KzDataArray.RealData[LayerIndex, Row, Column];
       LayerThickness := LayerThickness/2;
@@ -2313,12 +2428,12 @@ var
   ParamIndex: Integer;
   Param: THufUsedParameter;
   Parameter: TModflowParameter;
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
   HufThickness: Double;
   HaniUsed: boolean;
 begin
   result := 1;
-  PhastModel := frmGoPhast.PhastModel;
+  AModel := TCustomModel(GlobalCurrentModel);
   HufThickness := GetDataSetValue(Column, Row, 0, HufUnit.ThickessDataArrayName);
   if HufThickness <= 0 then
   begin
@@ -2333,7 +2448,7 @@ begin
     Parameter := Param.Parameter;
     if Parameter.ParameterType = ptHUF_HANI then
     begin
-      UpdateCellValue(HorizontalAnisotropy, Param, PhastModel, Column, Row, HaniUsed);
+      UpdateCellValue(HorizontalAnisotropy, Param, AModel, Column, Row, HaniUsed);
     end
   end;
   if not HaniUsed then
@@ -2353,7 +2468,7 @@ var
   ParamIndex: Integer;
   Param: THufUsedParameter;
   Parameter: TModflowParameter;
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
   KDepMult: double;
   GroundSurface: Double;
   HufTop: Double;
@@ -2364,7 +2479,7 @@ var
   Kx_Used: Boolean;
 begin
   result := 0;
-  PhastModel := frmGoPhast.PhastModel;
+  AModel := TCustomModel(GlobalCurrentModel);
   HufThickness := GetDataSetValue(Column, Row, 0, HufUnit.ThickessDataArrayName);
   if HufThickness <= 0 then
   begin
@@ -2381,11 +2496,11 @@ begin
     Parameter := Param.Parameter;
     if Parameter.ParameterType = ptHUF_HK then
     begin
-      UpdateCellValue(HufK, Param, PhastModel, Column, Row, Kx_Used);
+      UpdateCellValue(HufK, Param, AModel, Column, Row, Kx_Used);
     end
     else if Parameter.ParameterType = ptHUF_KDEP then
     begin
-      UpdateCellValue(Lambda, Param, PhastModel, Column, Row, KDEP_Used);
+      UpdateCellValue(Lambda, Param, AModel, Column, Row, KDEP_Used);
     end;
   end;
   if not Kx_Used then
@@ -2396,7 +2511,7 @@ begin
   KDepMult := 1.;
   if KDEP_Used then
   begin
-    if PhastModel.ModflowPackages.HufPackage.ReferenceChoice
+    if AModel.ModflowPackages.HufPackage.ReferenceChoice
       = hrcReferenceLayer then
     begin
       GroundSurface := GetDataSetValue(Column, Row, 0, StrHufReferenceSurface);
@@ -2466,11 +2581,11 @@ var
   ParamIndex: Integer;
   Param: THufUsedParameter;
   Parameter: TModflowParameter;
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
   HufThickness: Double;
 begin
   result := 0;
-  PhastModel := frmGoPhast.PhastModel;
+  AModel := TCustomModel(GlobalCurrentModel);
   HufThickness := GetDataSetValue(Column, Row, 0, HufUnit.ThickessDataArrayName);
   if HufThickness <= 0 then
   begin
@@ -2484,7 +2599,7 @@ begin
     Parameter := Param.Parameter;
     if Parameter.ParameterType = Paramtype then
     begin
-      UpdateCellValue(CellValue, Param, PhastModel, Column, Row, Updated);
+      UpdateCellValue(CellValue, Param, AModel, Column, Row, Updated);
     end
   end;
 
@@ -2522,7 +2637,7 @@ begin
   end;
 //  GetCellIndicies(Dummy, Column, Row,  Values);
   SteadyParameters := frmGoPhast.PhastModel.ModflowSteadyParameters;
-  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  DataArrayManager := TCustomModel(GlobalCurrentModel).DataArrayManager;
   result := 0;
   for Index := 0 to SteadyParameters.Count - 1 do
   begin
@@ -2567,7 +2682,7 @@ var
   Column: Integer;
   Row: Integer;
   Layer: Integer;
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
   LayerBottom: Double;
   LayerTop: Double;
   HydrogeologicUnits: THydrogeologicUnits;
@@ -2582,10 +2697,10 @@ begin
   Head := PDouble(Values[0])^;
   GetCellIndicies(Column, Row, Layer, Values, 1);
 
-  PhastModel := frmGoPhast.PhastModel;
+  AModel := TCustomModel(GlobalCurrentModel);
 
   result := 0;
-  if not PhastModel.LayerStructure.IsLayerSimulated(Layer) then
+  if not AModel.IsLayerSimulated(Layer) then
   begin
     Exit;
   end;
@@ -2596,7 +2711,7 @@ begin
     Exit;
   end;
 
-  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  HydrogeologicUnits := AModel.HydrogeologicUnits;
   for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
   begin
     HufUnit := HydrogeologicUnits[HufUnitIndex];
@@ -2644,7 +2759,7 @@ var
   HufUnitIndex: Integer;
   HydrogeologicUnits: THydrogeologicUnits;
   HufUnit: THydrogeologicUnit;
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
   HufThickness: Double;
   HufTop: Double;
   HufBottom: Double;
@@ -2663,7 +2778,7 @@ begin
   // and ptHUF_KDEP parameters
   // may be affected by StrHufReferenceSurface either
   // or StrModelTop depending on
-  // PhastModel.ModflowPackages.HufPackage.ReferenceChoice
+  // AModel.ModflowPackages.HufPackage.ReferenceChoice
   // and whether or not KDEP is used.
 
   Assert(Length(Values) >= 1);
@@ -2671,10 +2786,10 @@ begin
 
   GetCellIndicies(Column, Row, Layer, Values, 1);
 
-  PhastModel := frmGoPhast.PhastModel;
+  AModel := TCustomModel(GlobalCurrentModel);
 
   result := 0;
-  if not PhastModel.LayerStructure.IsLayerSimulated(Layer) then
+  if not AModel.IsLayerSimulated(Layer) then
   begin
     Exit;
   end;
@@ -2685,7 +2800,7 @@ begin
     Exit;
   end;
 
-  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  HydrogeologicUnits := AModel.HydrogeologicUnits;
   CumulativeHufThickness := 0.;
   for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
   begin
@@ -2778,7 +2893,7 @@ var
   Column: Integer;
   Row: Integer;
   Layer: Integer;
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
   UpperLayerBottom: Double;
   UpperLayerTop: Double;
   LowerLayerBottom: Double;
@@ -2812,15 +2927,15 @@ begin
 //  LowerHead := PDouble(Values[2])^;
   GetCellIndicies(Column, Row, Layer, Values, 1);
 
-  PhastModel := frmGoPhast.PhastModel;
+  AModel := TCustomModel(GlobalCurrentModel);
 
   result := 0;
-  if not PhastModel.LayerStructure.IsLayerSimulated(Layer) then
+  if not AModel.IsLayerSimulated(Layer) then
   begin
     Exit;
   end;
 
-  if (PhastModel.ModflowGrid.LayerCount -1 <= Layer)
+  if (AModel.ModflowGrid.LayerCount -1 <= Layer)
     or (Layer < 0) then
   begin
     // no vertical hydraulic conductivity is defined
@@ -2846,7 +2961,7 @@ begin
   IntervalTop := (UpperLayerTop + UpperLayerBottom)/2;
   IntervalBottom := (LowerLayerTop + LowerLayerBottom)/2;
 
-  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  HydrogeologicUnits := AModel.HydrogeologicUnits;
   CumulativeHufThickness := 0.;
   for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
   begin
@@ -2884,11 +2999,11 @@ begin
               Parameter := Param.Parameter;
               if Parameter.ParameterType = ptHUF_VK then
               begin
-                UpdateCellValue(VK, Param, PhastModel, Column, Row, VK_Used);
+                UpdateCellValue(VK, Param, AModel, Column, Row, VK_Used);
               end
               else if Parameter.ParameterType = ptHUF_VANI then
               begin
-                UpdateCellValue(Vani, Param, PhastModel, Column, Row, Vani_Used);
+                UpdateCellValue(Vani, Param, AModel, Column, Row, Vani_Used);
               end;
             end;
 
@@ -2972,7 +3087,7 @@ var
   HufUnitIndex: Integer;
   HydrogeologicUnits: THydrogeologicUnits;
   HufUnit: THydrogeologicUnit;
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
   HufThickness: Double;
   HufTop: Double;
   HufBottom: Double;
@@ -2989,10 +3104,10 @@ begin
   Head := PDouble(Values[0])^;
   GetCellIndicies(Column, Row, Layer, Values, 1);
 
-  PhastModel := frmGoPhast.PhastModel;
+  AModel := TCustomModel(GlobalCurrentModel);
 
   result := 0;
-  if not PhastModel.LayerStructure.IsLayerSimulated(Layer) then
+  if not AModel.IsLayerSimulated(Layer) then
   begin
     Exit;
   end;
@@ -3003,7 +3118,7 @@ begin
     Exit;
   end;
 
-  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  HydrogeologicUnits := AModel.HydrogeologicUnits;
   CumulativeHufThickness := 0.;
   for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
   begin
@@ -3051,6 +3166,82 @@ end;
 function _HufAverageSY(Values: array of pointer): double;
 begin
   result := HufAveragParam(Values, ptHUF_SY);
+end;
+
+function _GridNumber(Values: array of pointer): integer;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  result := 0;
+  if GlobalCurrentModel = frmGoPhast.PhastModel then
+  begin
+    result := 1;
+  end
+  else
+  begin
+    if frmGoPhast.PhastModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+        if ChildModel = GlobalCurrentModel then
+        begin
+          result := ChildIndex + 2;
+          Exit;
+        end;
+      end;
+    end;
+  end;
+end;
+
+function _GridName(Values: array of pointer): string;
+var
+  ChildModel: TChildModel;
+begin
+  result := '';
+  if GlobalCurrentModel = frmGoPhast.PhastModel then
+  begin
+    result := 'Parent Grid';
+  end
+  else
+  begin
+    if frmGoPhast.PhastModel.LgrUsed and (GlobalCurrentModel <> nil) then
+    begin
+      ChildModel := GlobalCurrentModel as TChildModel;
+      result := ChildModel.ModelName;
+    end;
+  end;
+end;
+
+function _ParentLayer(Values: array of pointer): integer;
+begin
+  result := _Layer(Values);
+  if GlobalCurrentModel <> frmGoPhast.PhastModel then
+  begin
+    result := (GlobalCurrentModel as TChildModel).
+      ChildLayerToParentLayer(result-1)+1;
+  end;
+end;
+
+function _ParentRow(Values: array of pointer): integer;
+begin
+  result := _Row(Values);
+  if GlobalCurrentModel <> frmGoPhast.PhastModel then
+  begin
+    result := (GlobalCurrentModel as TChildModel).
+      ChildRowToParentRow(result-1)+1;
+  end;
+end;
+
+function _ParentColumn(Values: array of pointer): integer;
+begin
+  result := _Column(Values);
+  if GlobalCurrentModel <> frmGoPhast.PhastModel then
+  begin
+    result := (GlobalCurrentModel as TChildModel).
+      ChildColToParentCol(result-1)+1;
+  end;
 end;
 
 { TNodeInterpolateExpression }
@@ -3102,7 +3293,7 @@ begin
     Value1 := AVariable.DoubleResult;
     Point1 := GlobalCurrentScreenObject.Points[
       GlobalCurrentSegment.VertexIndex];
-    Point1 := frmGoPhast.Grid.
+    Point1 := TCustomModel(GlobalCurrentModel).Grid.
       RotateFromRealWorldCoordinatesToGridCoordinates(Point1);
     IsFirstPoint := False;
     case GlobalCurrentScreenObject.ViewDirection of
@@ -3134,7 +3325,7 @@ begin
     Value2 := AVariable.DoubleResult;
     Point2 := GlobalCurrentScreenObject.Points[
       GlobalCurrentSegment.VertexIndex + 1];
-    Point2 := frmGoPhast.Grid.
+    Point2 := TCustomModel(GlobalCurrentModel).Grid.
       RotateFromRealWorldCoordinatesToGridCoordinates(Point2);
     IsLastPoint := False;
     case GlobalCurrentScreenObject.ViewDirection of
@@ -3216,13 +3407,13 @@ var
 begin
   result := inherited GetVariablesUsed;
   result.Add(rsKz);
-  if frmGoPhast.PhastModel.LayerStructure.NonSimulatedLayersPresent then
+  if TCustomModel(GlobalCurrentModel).LayerStructure.NonSimulatedLayersPresent then
   begin
     result.Add(rsModflow_CBKz);
   end;
-  for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  for Index := 0 to TCustomModel(GlobalCurrentModel).LayerStructure.Count - 1 do
   begin
-    GeoUnit := frmGoPhast.PhastModel.LayerStructure[Index];
+    GeoUnit := TCustomModel(GlobalCurrentModel).LayerStructure[Index];
     result.Add(GeoUnit.DataArrayName);
   end;
 end;
@@ -3235,12 +3426,12 @@ begin
   result := inherited UsesVariable(Variable)
     or SameText(Variable.Name, rsKz)
     or (SameText(Variable.Name, rsModflow_CBKz)
-    and frmGoPhast.PhastModel.LayerStructure.NonSimulatedLayersPresent);
+    and TCustomModel(GlobalCurrentModel).LayerStructure.NonSimulatedLayersPresent);
   if not result then
   begin
-    for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+    for Index := 0 to TCustomModel(GlobalCurrentModel).LayerStructure.Count - 1 do
     begin
-      GeoUnit := frmGoPhast.PhastModel.LayerStructure[Index];
+      GeoUnit := TCustomModel(GlobalCurrentModel).LayerStructure[Index];
       result := SameText(Variable.Name, GeoUnit.DataArrayName);
       if result then
       begin
@@ -3254,7 +3445,7 @@ end;
 
 function THufKx.GetVariablesUsed: TStringList;
 var
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
   HydrogeologicUnits: THydrogeologicUnits;
   HufUnitIndex: Integer;
   HufUnit: THydrogeologicUnit;
@@ -3268,12 +3459,12 @@ var
 begin
   result := inherited GetVariablesUsed;
 
-  PhastModel := frmGoPhast.PhastModel;
+  AModel := TCustomModel(GlobalCurrentModel);
 
   InitialHeadUsed := False;
-  for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  for Index := 0 to TCustomModel(GlobalCurrentModel).LayerStructure.Count - 1 do
   begin
-    GeoUnit := frmGoPhast.PhastModel.LayerStructure[Index];
+    GeoUnit := TCustomModel(GlobalCurrentModel).LayerStructure[Index];
     result.Add(GeoUnit.DataArrayName);
     if GeoUnit.AquiferType <> 0 then
     begin
@@ -3287,7 +3478,7 @@ begin
   end;
 
   KDEP_Used := False;
-  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  HydrogeologicUnits := AModel.HydrogeologicUnits;
   for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
   begin
     HufUnit := HydrogeologicUnits[HufUnitIndex];
@@ -3325,7 +3516,7 @@ begin
 
   if KDEP_Used then
   begin
-    case PhastModel.ModflowPackages.HufPackage.ReferenceChoice of
+    case AModel.ModflowPackages.HufPackage.ReferenceChoice of
       hrcModelTop:
         begin
 //          StrModelTop added previously.
@@ -3371,7 +3562,7 @@ end;
 
 function THufKy.GetVariablesUsed: TStringList;
 var
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
   HydrogeologicUnits: THydrogeologicUnits;
   HufUnitIndex: Integer;
   HufUnit: THydrogeologicUnit;
@@ -3380,8 +3571,8 @@ var
   Parameter: TModflowParameter;
 begin
   result := inherited GetVariablesUsed;
-  PhastModel := frmGoPhast.PhastModel;
-  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  AModel := TCustomModel(GlobalCurrentModel);
+  HydrogeologicUnits := AModel.HydrogeologicUnits;
   for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
   begin
     HufUnit := HydrogeologicUnits[HufUnitIndex];
@@ -3408,7 +3599,7 @@ end;
 
 function THufKz.GetVariablesUsed: TStringList;
 var
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
   HydrogeologicUnits: THydrogeologicUnits;
   HufUnitIndex: Integer;
   HufUnit: THydrogeologicUnit;
@@ -3417,8 +3608,8 @@ var
   Parameter: TModflowParameter;
 begin
   result := inherited GetVariablesUsed;
-  PhastModel := frmGoPhast.PhastModel;
-  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  AModel := TCustomModel(GlobalCurrentModel);
+  HydrogeologicUnits := AModel.HydrogeologicUnits;
   for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
   begin
     HufUnit := HydrogeologicUnits[HufUnitIndex];
@@ -3456,7 +3647,7 @@ end;
 
 function THufSS.GetVariablesUsed: TStringList;
 var
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
   Index: Integer;
   GeoUnit: TLayerGroup;
   HydrogeologicUnits: THydrogeologicUnits;
@@ -3469,11 +3660,11 @@ var
 begin
   result := inherited GetVariablesUsed;
 
-  PhastModel := frmGoPhast.PhastModel;
+  AModel := TCustomModel(GlobalCurrentModel);
   InitialHeadUsed := False;
-  for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  for Index := 0 to AModel.LayerStructure.Count - 1 do
   begin
-    GeoUnit := frmGoPhast.PhastModel.LayerStructure[Index];
+    GeoUnit := AModel.LayerStructure[Index];
     result.Add(GeoUnit.DataArrayName);
     if GeoUnit.AquiferType <> 0 then
     begin
@@ -3486,7 +3677,7 @@ begin
     result.Add(rsModflow_Initial_Head);
   end;
 
-  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  HydrogeologicUnits := AModel.HydrogeologicUnits;
   for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
   begin
     HufUnit := HydrogeologicUnits[HufUnitIndex];
@@ -3515,7 +3706,7 @@ end;
 
 function THufSY.GetVariablesUsed: TStringList;
 var
-  PhastModel: TPhastModel;
+  AModel: TCustomModel;
   Index: Integer;
   GeoUnit: TLayerGroup;
   HydrogeologicUnits: THydrogeologicUnits;
@@ -3528,11 +3719,11 @@ var
 begin
   result := inherited GetVariablesUsed;
 
-  PhastModel := frmGoPhast.PhastModel;
+  AModel := TCustomModel(GlobalCurrentModel);
   InitialHeadUsed := False;
-  for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  for Index := 0 to AModel.LayerStructure.Count - 1 do
   begin
-    GeoUnit := frmGoPhast.PhastModel.LayerStructure[Index];
+    GeoUnit := AModel.LayerStructure[Index];
     result.Add(GeoUnit.DataArrayName);
     if GeoUnit.AquiferType <> 0 then
     begin
@@ -3545,7 +3736,7 @@ begin
     result.Add(rsModflow_Initial_Head);
   end;
 
-  HydrogeologicUnits := PhastModel.HydrogeologicUnits;
+  HydrogeologicUnits := AModel.HydrogeologicUnits;
   for HufUnitIndex := 0 to HydrogeologicUnits.Count - 1 do
   begin
     HufUnit := HydrogeologicUnits[HufUnitIndex];
@@ -3574,15 +3765,15 @@ end;
 
 function THufSYTP.GetVariablesUsed: TStringList;
 var
-  PhastModel: TPhastModel;
+  AtModel: TCustomModel;
   SteadyParameters: TModflowSteadyParameters;
   Index: Integer;
   AParam: TModflowSteadyParameter;
 begin
   result := inherited GetVariablesUsed;
 
-  PhastModel := frmGoPhast.PhastModel;
-  SteadyParameters := PhastModel.ModflowSteadyParameters;
+  AtModel := TCustomModel(GlobalCurrentModel);
+  SteadyParameters := AtModel.ModflowSteadyParameters;
   for Index := 0 to SteadyParameters.Count - 1 do
   begin
     AParam := SteadyParameters[Index];
@@ -3979,6 +4170,27 @@ initialization
   SetLength(CurrentNodeZFunction.Synonyms, 1);
   CurrentNodeZFunction.Synonyms[0] := 'ObjectCurrentNodeZ';
 
+  CurrentSegmentAngleFunction.ResultType := rdtDouble;
+  CurrentSegmentAngleFunction.RFunctionAddr := _CurrentSegmentAngle;
+  CurrentSegmentAngleFunction.OptionalArguments := 0;
+  CurrentSegmentAngleFunction.CanConvertToConstant := False;
+  CurrentSegmentAngleFunction.Name := 'ObjectCurrentSegmentAngle';
+  CurrentSegmentAngleFunction.Prototype := 'Object|ObjectCurrentSegmentAngle';
+
+  CurrentSegmentAngleDegreesFunction.ResultType := rdtDouble;
+  CurrentSegmentAngleDegreesFunction.RFunctionAddr := _CurrentSegmentAngleDegrees;
+  CurrentSegmentAngleDegreesFunction.OptionalArguments := 0;
+  CurrentSegmentAngleDegreesFunction.CanConvertToConstant := False;
+  CurrentSegmentAngleDegreesFunction.Name := 'ObjectCurrentSegmentAngleDegrees';
+  CurrentSegmentAngleDegreesFunction.Prototype := 'Object|ObjectCurrentSegmentAngleDegrees';
+
+  CurrentSegmentAngleLimitedegreesFunction.ResultType := rdtDouble;
+  CurrentSegmentAngleLimitedegreesFunction.RFunctionAddr := _CurrentSegmentAngleLimitedDegrees;
+  CurrentSegmentAngleLimitedegreesFunction.OptionalArguments := 0;
+  CurrentSegmentAngleLimitedegreesFunction.CanConvertToConstant := False;
+  CurrentSegmentAngleLimitedegreesFunction.Name := 'ObjectCurrentSegmentAngleLimitedDegrees';
+  CurrentSegmentAngleLimitedegreesFunction.Prototype := 'Object|ObjectCurrentSegmentAngleLimitedDegrees';
+
   CurrentSegmentLengthFunction.ResultType := rdtDouble;
   CurrentSegmentLengthFunction.RFunctionAddr := _CurrentSegmentLength;
   CurrentSegmentLengthFunction.OptionalArguments := 0;
@@ -4094,6 +4306,51 @@ initialization
   ModflowLayerSimulatedFunction.CanConvertToConstant := False;
   ModflowLayerSimulatedFunction.Name := 'SimulatedLayer';
   ModflowLayerSimulatedFunction.Prototype := 'MODFLOW|SimulatedLayer({Layer})';
+
+  GridNumberFunction.ResultType := rdtInteger;
+  GridNumberFunction.IFunctionAddr := _GridNumber;
+  SetLength(GridNumberFunction.InputDataTypes, 0);
+  GridNumberFunction.OptionalArguments := 0;
+  GridNumberFunction.CanConvertToConstant := False;
+  GridNumberFunction.Name := StrGridNumber;
+  GridNumberFunction.Prototype := 'MODFLOW-LGR|' + StrGridNumber;
+  GridNumberFunction.Hidden := False;
+
+  GridNameFunction.ResultType := rdtString;
+  GridNameFunction.SFunctionAddr := _GridName;
+  SetLength(GridNameFunction.InputDataTypes, 0);
+  GridNameFunction.OptionalArguments := 0;
+  GridNameFunction.CanConvertToConstant := False;
+  GridNameFunction.Name := StrGridName;
+  GridNameFunction.Prototype := 'MODFLOW-LGR|' + StrGridName;
+  GridNameFunction.Hidden := False;
+
+  ParentLayerFunction.ResultType := rdtInteger;
+  ParentLayerFunction.IFunctionAddr := _ParentLayer;
+  SetLength(ParentLayerFunction.InputDataTypes, 0);
+  ParentLayerFunction.OptionalArguments := 0;
+  ParentLayerFunction.CanConvertToConstant := False;
+  ParentLayerFunction.Name := StrParentLayer;
+  ParentLayerFunction.Prototype := 'MODFLOW-LGR|' + StrParentLayer;
+  ParentLayerFunction.Hidden := False;
+
+  ParentRowFunction.ResultType := rdtInteger;
+  ParentRowFunction.IFunctionAddr := _ParentRow;
+  SetLength(ParentRowFunction.InputDataTypes, 0);
+  ParentRowFunction.OptionalArguments := 0;
+  ParentRowFunction.CanConvertToConstant := False;
+  ParentRowFunction.Name := StrParentRow;
+  ParentRowFunction.Prototype := 'MODFLOW-LGR|' + StrParentRow;
+  ParentRowFunction.Hidden := False;
+
+  ParentColumnFunction.ResultType := rdtInteger;
+  ParentColumnFunction.IFunctionAddr := _ParentColumn;
+  SetLength(ParentColumnFunction.InputDataTypes, 0);
+  ParentColumnFunction.OptionalArguments := 0;
+  ParentColumnFunction.CanConvertToConstant := False;
+  ParentColumnFunction.Name := StrParentColumn;
+  ParentColumnFunction.Prototype := 'MODFLOW-LGR|' + StrParentColumn;
+  ParentColumnFunction.Hidden := False;
 
   NodeInterpolate := TFunctionClass.Create;
   NodeInterpolate.InputDataCount := 3;

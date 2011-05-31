@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
-<topic template="Default" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
+<topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
   <title translate="true">Water Supply: Merging Objects</title>
   <body>
     <header>
       <para style="margin-bottom:10px; line-height:2.0;"><text styleclass="Heading1" translate="true">Water Supply: Merging Objects</text></para>
     </header>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">Some of the objects that were imported from the DXF file define zones of different thickness in the aquifer. &#160;However, those objects are discontinuous. &#160;They will need to be merged into single objects in order to be used. &#160;The key in the DXF file indicates what the different colors of objects represents. </text></para>
-    <para styleclass="Normal" style="text-align:center;"><table rowcount="4" colcount="2" style="cell-padding:2px; cell-spacing:2px; border-width:1px; cell-border-width:1px; border-color:#000000; border-style:raised-color;">
+    <para styleclass="Normal" style="text-align:center;"><table rowcount="4" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Color</text></para>
@@ -41,9 +41,9 @@
         </td>
       </tr>
     </table></para>
-    <para styleclass="Normal"><text styleclass="Normal" translate="true">The colored grid makes it a little difficult to see the objects so it is helpful to hide the grid. &#160;First turn of the grid coloring by selecting </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Data|Color Grid...</text><text styleclass="Normal" translate="true"> &#160;</text><image src="ColorGirdButton.bmp" scale="100.00%" styleclass="Normal"><title translate="true">Color Grid button</title></image><text styleclass="Normal" translate="true">, select &quot;none&quot; and click the </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Apply</text><text styleclass="Normal" translate="true"> button. &#160;Then click on the </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Show 2-D gridlines</text><text styleclass="Normal" translate="true"> button </text><image src="Show2dGrid.bmp" scale="100.00%" styleclass="Image Caption"><title translate="true">Show 2D Gridlines button</title></image><text styleclass="Normal" translate="true"> so that it is in the up position. The grid lines in the 2-D view will disappear except for those that show the selected column, row, and layer.</text></para>
+    <para styleclass="Normal"><text styleclass="Normal" translate="true">The colored grid makes it a little difficult to see the objects so it is helpful to hide the grid. &#160;First turn off the grid coloring by selecting </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Data|Color Grid...</text><text styleclass="Normal" translate="true"> &#160;</text><image src="ColorGirdButton.bmp" scale="100.00%" styleclass="Normal"><title translate="true">Color Grid button</title></image><text styleclass="Normal" translate="true">, select &quot;none&quot; and click the </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Apply</text><text styleclass="Normal" translate="true"> button. &#160;Then click on the </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Show 2-D gridlines</text><text styleclass="Normal" translate="true"> button </text><image src="ShowGridLines.bmp" scale="100.00%" styleclass="Image Caption"></image><text styleclass="Normal" translate="true"> and select </text><image src="ShowGridOutline.bmp" scale="100.00%" styleclass="Image Caption"></image><text styleclass="Normal" translate="true">&#32;</text><text styleclass="Strong" translate="true">Show exterior</text><text styleclass="Normal" translate="true">. The grid lines in the 2-D view will disappear except for those that show the selected column, row, and layer.</text></para>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">Next select the two blue objects near the south end of the model. &#160;(Click on the first one to select it then hold down the Shift key and click on the second one.) &#160;Then right click on the top view of the model and select </text><text styleclass="Normal" style="font-weight:bold;" translate="true">Merge objects...</text><text styleclass="Normal" translate="true"> to merge the objects (fig. 124). &#160;Hide the object after the objects have been merged.</text></para>
-    <para styleclass="Normal" style="text-align:center;"><table rowcount="3" colcount="2" style="cell-padding:0px; cell-spacing:0px; border-width:0px; cell-border-width:0px;">
+    <para styleclass="Normal" style="text-align:center;"><table rowcount="3" colcount="2" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td>
           <para styleclass="Image Caption"><image src="WaterSupply2ObjectsSelected.bmp" scale="100.00%" styleclass="Image Caption"><title translate="true">See caption</title></image></para>
@@ -60,7 +60,7 @@
           <para styleclass="Image Caption"><text styleclass="Image Caption" translate="true">B</text></para>
         </td>
       </tr>
-      <tr>
+      <tr style="vertical-align:top">
         <td colspan="2">
           <para styleclass="Image Caption"><text styleclass="Image Number" translate="true">Figure 124</text><text styleclass="Image Caption" translate="true">. Objects (A) before and (B) after merging.</text></para>
         </td>

@@ -90,12 +90,6 @@ type
     FPoints : TPointList;
     xmin, xmax, ymin, ymax : extended;
     Rxmin,Rxmax,Rymin,Rymax : extended;
-//    FShowInnerTriangles: boolean;
-//    FShowPoints: boolean;
-//    FShowVertexLabels: boolean;
-//    FShowOuterTriangles: boolean;
-//    FShowPointLabels: boolean;
-//    FShowTessellation: boolean;
     FQuadTree: TRbwQuadTree;
     // @name finds the vertex number of a Voronoi vertex that
     // is closer to the last Delaunay point than to the closest of its
@@ -118,7 +112,6 @@ type
       VerticesToDelete : TLongIntList);
     procedure TestNewVertices(NewVertices: TVertexList;
       NewVertexPositions: TLongIntList);
-//    function CreateMetaFile(pw,ph : integer; xmin,ymin,xmax,ymax : extended) : TMetaFile;
     function GetPoint(Index: integer): TDelaunayPoint;
     function GetPointCount: integer;
     function GetVertexCount: integer;
@@ -144,14 +137,6 @@ type
     procedure AddPoint(DelaunayPoint : TDelaunayPoint);
     procedure CheckNewPoint(DelaunayPoint: TDelaunayPoint;
       NewVertexPositions: TLongIntList; New_Vertices: TVertexList);
-//    function Copy : TVoronoiDiagram;
-//    procedure DrawImage(Image : TImage; xmin,ymin,xmax,ymax : extended);
-//    property ShowInnerTriangles : boolean read FShowInnerTriangles write FShowInnerTriangles;
-//    property ShowOuterTriangles : boolean read FShowOuterTriangles write FShowOuterTriangles;
-//    property ShowTessellation : boolean read FShowTessellation write FShowTessellation;
-//    property ShowPoints : boolean read FShowPoints write FShowPoints;
-//    property ShowPointLabels : boolean read FShowPointLabels write FShowPointLabels;
-//    property ShowVertexLabels : boolean read FShowVertexLabels write FShowVertexLabels;
     property PointCount: integer read GetPointCount write SetPointCount;
     property Points[Index: integer]: TDelaunayPoint read GetPoint write SetPoint;
     property VertexCount: integer read GetVertexCount write SetVertexCount;
@@ -1074,183 +1059,6 @@ begin
     VertexIndicesToRestore.Free;
   end;
 end;
-
-//function TVoronoiDiagram.CreateMetaFile(pw,ph : integer;xmin,ymin,xmax,ymax : extended) : TMetaFile;
-//var
-//  MetaFile : TMetaFile;
-//
-//function PixelX(x : extended) : integer;
-//begin
-//  Result:= Round((x-xmin)*MetaFile.Width/(xmax-xmin));
-//end;
-//function PixelY(y : extended) : integer;
-//begin
-//  Result:= Round((ymax-y)*MetaFile.Height/(ymax-ymin));
-//end;
-//var
-//  i, j : longint;
-//  x1, y1, x2, y2 : integer;
-//  NV : longint;
-//  V, U : TVoronoiVertex;
-//  P : TDelaunayPoint;
-//  Canvas : TMetaFileCanvas;
-//  xm, ym, w, h : extended;
-//  OuterTriangle : boolean;
-//begin
-//  MetaFile:= TMetaFile.Create;
-//  Canvas:= TMetaFileCanvas.Create(MetaFile,0);
-//  try
-//    MetaFile.Width:= pw;
-//    MetaFile.Height:= ph;
-//    w:= xmax-xmin;
-//    h:= ymax-ymin;
-//    xm:= (xmin+xmax)/2;
-//    ym:= (ymin+ymax)/2;
-//    if w>h then
-//    begin
-//      ymin:= ym - w/2;
-//      ymax:= ym + w/2;
-//    end
-//    else
-//    begin
-//      xmin:= xm - h/2;
-//      xmax:= xm + h/2;
-//    end;
-//    for i:= 0 to FVerticies.Count-1 do
-//    begin
-//      V:= FVerticies.Items[i];
-//      if ShowTessellation then
-//      begin
-//        Canvas.Pen.Width:= 1;
-//        x1:= PixelX(V.x);
-//        y1:= PixelY(V.y);
-//        for j:= 0 to 2 do
-//        begin
-//          NV:= V.NeighborVoronoiVertexIndices[j];
-//          if NV>=0 then
-//          begin
-//            U:= FVerticies.Items[NV];
-//            x2:= PixelX(U.x);
-//            y2:= PixelY(U.y);
-//          end
-//          else
-//          begin
-//            if V.FormingDelaunayPointIndices[j]=0 then
-//            begin
-//              x2:= PixelX((Rxmax+Rxmin)/2);
-//              y2:= PixelY(ymin);
-//            end
-//            else if V.FormingDelaunayPointIndices[j]=1 then
-//            begin
-//              x2:= PixelX(xmax);
-//              y2:= PixelY((Rymax+Rymin)/2);
-//            end
-//            else if V.FormingDelaunayPointIndices[j]=2 then
-//            begin
-//              x2:= PixelX((Rxmax+Rxmin)/2);
-//              y2:= PixelY(ymax);
-//            end
-//            else if V.FormingDelaunayPointIndices[j]=3 then
-//            begin
-//              x2:= PixelX(xmin);
-//              y2:= PixelY((Rymax+Rymin)/2);
-//            end
-//            else
-//            begin
-//              Assert(False);
-//            end;
-//          end;
-//          Canvas.MoveTo(x1,y1);
-//          Canvas.LineTo(x2,y2);
-//        end;
-//      end;
-//      Canvas.Pen.Width:= 2;
-//      OuterTriangle:= false;
-//      for j:= 0 to 2 do
-//      begin
-//        if V.FormingDelaunayPointIndices[j]<=3 then
-//        begin
-//          OuterTriangle:= True;
-//        end;
-//      end;
-//      if (ShowInnerTriangles and not OuterTriangle)
-//        or (ShowOuterTriangles and OuterTriangle) then
-//      begin
-//        for j:= 0 to 2 do
-//        begin
-//          P:= FPoints.Items[V.FormingDelaunayPointIndices[j]];
-//          x1:= PixelX(P.x);
-//          y1:= PixelY(P.y);
-//          if j=2 then
-//          begin
-//            P:= FPoints.Items[V.FormingDelaunayPointIndices[0]];
-//          end
-//          else
-//          begin
-//            P:= FPoints.Items[V.FormingDelaunayPointIndices[j+1]];
-//          end;
-//          x2:= PixelX(P.x);
-//          y2:= PixelY(P.y);
-//          Canvas.MoveTo(x1,y1);
-//          Canvas.LineTo(x2,y2);
-//        end;
-//      end;
-//    end;
-//    if ShowPoints then
-//    begin
-//      Canvas.Brush.Style:= bsSolid;
-//      Canvas.Brush.Color:= clBlack;
-//      for i:= 0 to FPoints.Count-1 do
-//      begin
-//        P:= FPoints.Items[i];
-//        x1:= PixelX(P.x)-5;
-//        y1:= PixelY(P.y)-5;
-//        x2:= x1+10;
-//        y2:= y1+10;
-//        Canvas.Ellipse(x1,y1,x2,y2);
-//      end;
-//    end;
-//    if ShowPointLabels then
-//    begin
-//      Canvas.Brush.Style:= bsClear;
-//      Canvas.Font.Color := clBlack;
-//      for i := 0 to FPoints.Count-1 do
-//      begin
-//        P := FPoints.Items[i];
-//        x1:= PixelX(P.x);
-//        y1:= PixelY(P.y);
-//        Canvas.TextOut(x1, y1, FloatToStr(i+1));
-//      end;
-//    end;
-//    if ShowVertexLabels then
-//    begin
-//      Canvas.Brush.Style:= bsClear;
-//      Canvas.Font.Color := clBlue;
-//      for i := 0 to FVerticies.Count-1 do
-//      begin
-//        V := FVerticies.Items[i];
-//        x1:= PixelX(V.x);
-//        y1:= PixelY(V.y);
-//        Canvas.TextOut(x1, y1, FloatToStr(i+1));
-//      end;
-//    end;
-//  finally
-//    Canvas.Free;
-//  end;
-//  Result:= MetaFile;
-//end;
-
-//procedure TVoronoiDiagram.DrawImage(Image : TImage; xmin,ymin,xmax,ymax : extended);
-//var
-//  meta : TMetaFile;
-//begin
-//  meta:= CreateMetaFile(Image.Width,Image.Height,xmin,ymin,xmax,ymax);
-//  try
-//    Image.Picture.Graphic:= meta;
-//  finally
-//    meta.Free;
-//  end;
-//end;
 
 procedure TVoronoiDiagram.UpdateRemainingLinkages(vertex_mapping: TLongIntList;
       VertexIndicesToRestore: TLongIntList; VerticesToRestore: TVertexList);

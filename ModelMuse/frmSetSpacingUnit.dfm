@@ -17,6 +17,7 @@ inherited frmSetSpacing: TfrmSetSpacing
     Top = 200
     Width = 91
     Height = 33
+    Anchors = [akTop, akRight]
     TabOrder = 0
     Kind = bkCancel
   end
@@ -25,6 +26,7 @@ inherited frmSetSpacing: TfrmSetSpacing
     Top = 200
     Width = 91
     Height = 33
+    Anchors = [akTop, akRight]
     Enabled = False
     TabOrder = 2
     OnClick = btnOKClick
@@ -35,6 +37,7 @@ inherited frmSetSpacing: TfrmSetSpacing
     Top = 200
     Width = 91
     Height = 33
+    Anchors = [akTop, akRight]
     TabOrder = 1
     OnClick = btnHelpClick
     Kind = bkHelp
@@ -150,7 +153,7 @@ inherited frmSetSpacing: TfrmSetSpacing
     end
     object cbRows: TCheckBox
       Left = 11
-      Top = 16
+      Top = 19
       Width = 101
       Height = 29
       Caption = 'Rows'
@@ -230,7 +233,7 @@ inherited frmSetSpacing: TfrmSetSpacing
     end
     object cbLayers: TCheckBox
       Left = 11
-      Top = 15
+      Top = 19
       Width = 101
       Height = 29
       Caption = 'Layers'

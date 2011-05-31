@@ -1622,15 +1622,24 @@ Begin
 //   except
 //       TmpS := '0.00' ;
 //   end ;
+// RBW begin change
    repeat
      try
-         TmpS := FloatToStrF( Data , ffFixed , 17 , XDEC-1 ) ;
+         TmpS := FloatToStrF( Data , ffFixed , 18 , XDEC ) ;
      except
          TmpS := '0.00' ;
      end ;
-     TmpS := TmpS + AnsiChar(0);
      Dec(XDEC)
    until (Length(TmpS) <= LocalFieldSize);
+//   repeat
+//     try
+//         TmpS := FloatToStrF( Data , ffFixed , 17 , XDEC-1 ) ;
+//     except
+//         TmpS := '0.00' ;
+//     end ;
+//     TmpS := TmpS + AnsiChar(0);
+//     Dec(XDEC)
+//   until (Length(TmpS) <= LocalFieldSize);
 // RBW end change
    PutFieldByNumber(FieldNum , TmpS ) ; // <<V1.10>>
    DecimalSeparator := SaveDecSep ;

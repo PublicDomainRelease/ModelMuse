@@ -453,7 +453,7 @@ var
   RunnerDir, DirSep, Messg: string;
   OK: boolean;
 begin
-  DirSep := '\';
+  DirSep := PathDelimiter;
   OK := False;
   PRBlock.Clear;
   NumToUse := self.ParallelControl.NumRunnersToUse;
@@ -875,14 +875,14 @@ begin
           end;
         slExport.Add('END OMIT_DATA');
         case self.UcMode of
-          umFwd: OmitFile := Directory + '\' + OutputPrefix + '.omit';
-          umSensAnal: OmitFile := Directory + '\' + OutputPrefix + '.omit';
-          umParEst: OmitFile := Directory + '\' + OutputPrefix + '.omit';
-          umTestLin: OmitFile := Directory + '\' + OutputPrefix + '.omit';
-          umPred: OmitFile := Directory + '\' + OutputPrefixPred + '.omit';
-          umAdvTestLin: OmitFile := Directory + '\' + OutputPrefix + '.omit';
-          umNonlinUncert: OmitFile := Directory + '\' + OutputPrefix + '.omit';
-          umInvObjFunc: OmitFile := Directory + '\' + OutputPrefix + '.omit';
+          umFwd: OmitFile := Directory + PathDelimiter + OutputPrefix + '.omit';
+          umSensAnal: OmitFile := Directory + PathDelimiter + OutputPrefix + '.omit';
+          umParEst: OmitFile := Directory + PathDelimiter + OutputPrefix + '.omit';
+          umTestLin: OmitFile := Directory + PathDelimiter + OutputPrefix + '.omit';
+          umPred: OmitFile := Directory + PathDelimiter + OutputPrefixPred + '.omit';
+          umAdvTestLin: OmitFile := Directory + PathDelimiter + OutputPrefix + '.omit';
+          umNonlinUncert: OmitFile := Directory + PathDelimiter + OutputPrefix + '.omit';
+          umInvObjFunc: OmitFile := Directory + PathDelimiter + OutputPrefix + '.omit';
         end;
         slExport.SaveToFile(OmitFile);
       finally
@@ -916,7 +916,7 @@ var
   Errors, I: integer;
 begin
   Errors := 0;
-  DirSep := '\';
+  DirSep := PathDelimiter;
   result := False;
 //  StrTemp := self.AbsMainInputFileName(muCalib);
   Dir := ExtractFileDir(AbsMainInputFileName(muCalib));
@@ -1034,7 +1034,7 @@ var
   MFileDate, RFileDate: TDateTime;
 begin
   ErrMsg := '';
-  DirSep := '\';
+  DirSep := PathDelimiter;
   result := True;
   NFiles := 0;
   NDir := 0;
@@ -1124,7 +1124,7 @@ begin
   result := 0;
   if ModeIsParallelizable then
     begin
-      DirSep := '\';
+      DirSep := PathDelimiter;
       NumRunners := ParallelRunners.Count;
       if NumRunners > 0 then
         begin

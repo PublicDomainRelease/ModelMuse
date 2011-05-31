@@ -1,6 +1,6 @@
-{ @abstract(The main purpose of @name is to define @link(TfrmProgress) which
+{ @abstract(The main purpose of @name is to define @link(TfrmProgressMM) which
   is used to display a progress bar to the user with extra
-  information displayed in @link(TfrmProgress.memoMessages)
+  information displayed in @link(TfrmProgressMM.memoMessages)
   about what is happening.)}
 unit frmProgressUnit;
 
@@ -62,7 +62,7 @@ type
   end;
 
 var
-  // @name is the instance of @link(TfrmProgress).
+  // @name is the instance of @link(TfrmProgressMM).
   frmProgressMM: TfrmProgressMM = nil;
   frmFileProgress: TfrmProgressMM;
 
@@ -73,7 +73,7 @@ implementation
 const
   HalfSecond = 1/24/3600/2;
 
-{ TfrmProgress }
+{ TfrmProgressMM }
 
 procedure TfrmProgressMM.StepIt;
 begin

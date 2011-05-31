@@ -144,7 +144,7 @@ type
 
 implementation
 
-uses frmGoPhastUnit, frameViewUnit, ScreenObjectUnit;
+uses frmGoPhastUnit, frameViewUnit, ScreenObjectUnit, PhastModelUnit;
 
 type
   {@abstract(@name handles changes in the selected column.)}
@@ -297,35 +297,37 @@ end;
 { TColumnSelector }
 
 procedure TColumnSelector.ColumnHasChanged;
+var
+  LocalModel: TPhastModel;
+  ColumnCount: Integer;
 begin
     // @name is used to change how the column is displayed in
     // TCustomLayerRowColumnSelector.@link(
     // TCustomLayerRowColumnSelector.FModelCube).
   if frmGoPhast.Grid <> nil then
   begin
-    with frmGoPhast.Grid do
+    LocalModel := frmGoPhast.PhastModel;
+    ColumnCount := LocalModel.CombinedColumnCount;
+    if LocalModel.CombinedColumnCount <= 0 then
     begin
-      if ColumnCount <= 0 then
-      begin
-        FModelCube.Selection2 := 0;
-        FModelCube.Selection1 := 0;
-      end
+      FModelCube.Selection2 := 0;
+      FModelCube.Selection1 := 0;
+    end
+    else
+    begin
+      case EvaluatedAt of
+        eaBlocks:
+          begin
+            FModelCube.Selection2 := (LocalModel.CombinedDisplayColumn + 1) / (ColumnCount);
+            FModelCube.Selection1 := (LocalModel.CombinedDisplayColumn) / (ColumnCount);
+          end;
+        eaNodes:
+          begin
+            FModelCube.Selection2 := (LocalModel.CombinedDisplayColumn) / (ColumnCount);
+            FModelCube.Selection1 := FModelCube.Selection2;
+          end;
       else
-      begin
-        case EvaluatedAt of
-          eaBlocks:
-            begin
-              FModelCube.Selection2 := (SelectedColumn + 1) / (ColumnCount);
-              FModelCube.Selection1 := (DisplayColumn) / (ColumnCount);
-            end;
-          eaNodes:
-            begin
-              FModelCube.Selection2 := (SelectedColumn) / (ColumnCount);
-              FModelCube.Selection1 := FModelCube.Selection2;
-            end;
-        else
-          Assert(False);
-        end;
+        Assert(False);
       end;
     end;
   end;
@@ -367,18 +369,18 @@ begin
   Done := False;
   while not Done do
   begin
-    PriorColumn := frmGoPhast.Grid.DisplayColumn;
+    PriorColumn := frmGoPhast.PhastModel.CombinedDisplayColumn;
     if FModelCube.XOrigin = xoWest then
     begin
       if ClickDirection = cdWest then
       begin
-        frmGoPhast.Grid.DisplayColumn :=
-          frmGoPhast.Grid.DisplayColumn - Increment;
+        frmGoPhast.PhastModel.CombinedDisplayColumn :=
+          frmGoPhast.PhastModel.CombinedDisplayColumn - Increment;
       end
       else if ClickDirection = cdEast then
       begin
-        frmGoPhast.Grid.DisplayColumn :=
-          frmGoPhast.Grid.DisplayColumn
+        frmGoPhast.PhastModel.CombinedDisplayColumn :=
+          frmGoPhast.PhastModel.CombinedDisplayColumn
           + Increment;
       end;
     end
@@ -386,20 +388,20 @@ begin
     begin
       if ClickDirection = cdWest then
       begin
-        frmGoPhast.Grid.DisplayColumn :=
-          frmGoPhast.Grid.DisplayColumn
+        frmGoPhast.PhastModel.CombinedDisplayColumn :=
+          frmGoPhast.PhastModel.CombinedDisplayColumn
           + Increment;
       end
       else if ClickDirection = cdEast then
       begin
-        frmGoPhast.Grid.DisplayColumn :=
-          frmGoPhast.Grid.DisplayColumn
+        frmGoPhast.PhastModel.CombinedDisplayColumn :=
+          frmGoPhast.PhastModel.CombinedDisplayColumn
           - Increment;
       end;
     end;
     if FJumpType = jtToMouse then
     begin
-      Done := (PriorColumn = frmGoPhast.Grid.DisplayColumn) or
+      Done := (PriorColumn = frmGoPhast.PhastModel.CombinedDisplayColumn) or
         (ClickDirection <> FModelCube.ClickDirection(FCubeX, FCubeY));
     end
     else
@@ -438,32 +440,34 @@ end;
 { TRowSelector }
 
 procedure TRowSelector.RowHasChanged;
+var
+  RowCount: Integer;
+  LocalModel: TPhastModel;
 begin
   if frmGoPhast.Grid <> nil then
+  begin
+    LocalModel := frmGoPhast.PhastModel;
+    RowCount := LocalModel.CombinedRowCount;
+    if RowCount <= 0 then
     begin
-    with frmGoPhast.Grid do
+      FModelCube.Selection2 := 0;
+      FModelCube.Selection1 := 0;
+    end
+    else
     begin
-      if RowCount <= 0 then
-      begin
-        FModelCube.Selection2 := 0;
-        FModelCube.Selection1 := 0;
-      end
+      case EvaluatedAt of
+        eaBlocks:
+          begin
+            FModelCube.Selection2 := (LocalModel.CombinedDisplayRow + 1) / (RowCount);
+            FModelCube.Selection1 := (LocalModel.CombinedDisplayRow) / (RowCount);
+          end;
+        eaNodes:
+          begin
+            FModelCube.Selection2 := (LocalModel.CombinedDisplayRow) / (RowCount);
+            FModelCube.Selection1 := FModelCube.Selection2;
+          end;
       else
-      begin
-        case EvaluatedAt of
-          eaBlocks:
-            begin
-              FModelCube.Selection2 := (SelectedRow + 1) / (RowCount);
-              FModelCube.Selection1 := (DisplayRow) / (RowCount);
-            end;
-          eaNodes:
-            begin
-              FModelCube.Selection2 := (SelectedRow) / (RowCount);
-              FModelCube.Selection1 := FModelCube.Selection2;
-            end;
-        else
-          Assert(False);
-        end;
+        Assert(False);
       end;
     end;
   end;
@@ -504,17 +508,17 @@ begin
   Done := False;
   while not Done do
   begin
-    PriorRow := frmGoPhast.Grid.DisplayRow;
+    PriorRow := frmGoPhast.PhastModel.CombinedDisplayRow;
     if FModelCube.YOrigin = yoSouth then
     begin
       if ClickDirection = cdNorth then
       begin
-        frmGoPhast.Grid.DisplayRow := frmGoPhast.Grid.DisplayRow +
+        frmGoPhast.PhastModel.CombinedDisplayRow := frmGoPhast.PhastModel.CombinedDisplayRow +
           Increment;
       end
       else if ClickDirection = cdSouth then
       begin
-        frmGoPhast.Grid.DisplayRow := frmGoPhast.Grid.DisplayRow -
+        frmGoPhast.PhastModel.CombinedDisplayRow := frmGoPhast.PhastModel.CombinedDisplayRow -
           Increment;
       end;
     end
@@ -522,18 +526,18 @@ begin
     begin
       if ClickDirection = cdNorth then
       begin
-        frmGoPhast.Grid.DisplayRow := frmGoPhast.Grid.DisplayRow -
+        frmGoPhast.PhastModel.CombinedDisplayRow := frmGoPhast.PhastModel.CombinedDisplayRow -
           Increment;
       end
       else if ClickDirection = cdSouth then
       begin
-        frmGoPhast.Grid.DisplayRow := frmGoPhast.Grid.DisplayRow +
+        frmGoPhast.PhastModel.CombinedDisplayRow := frmGoPhast.PhastModel.CombinedDisplayRow +
           Increment;
       end;
     end;
     if FJumpType = jtToMouse then
     begin
-      Done := (PriorRow = frmGoPhast.Grid.DisplayRow)
+      Done := (PriorRow = frmGoPhast.PhastModel.CombinedDisplayRow)
         or (ClickDirection <> FModelCube.ClickDirection(FCubeX, FCubeY));
     end
     else
@@ -547,7 +551,7 @@ end;
 procedure TRowSelector.DisplayRow;
 begin
   frmGoPhast.sbMain.Panels[1].Text := 'Selected Row: '
-    + IntToStr(frmGoPhast.Grid.SelectedRow + 1);
+    + IntToStr(frmGoPhast.PhastModel.SelectedRow + 1);
 end;
 
 procedure TRowSelector.ItemChange(Sender: TObject);
@@ -570,34 +574,36 @@ end;
 { TLayerSelector }
 
 procedure TLayerSelector.LayerHasChanged;
+var
+  LayerCount: Integer;
+  LocalModel: TPhastModel;
 begin
   if frmGoPhast.Grid <> nil then
   begin
-    with frmGoPhast.Grid do
+    LocalModel := frmGoPhast.PhastModel;
+    LayerCount := LocalModel.CombinedLayerCount;
+    if LayerCount <= 0 then
     begin
-      if LayerCount <= 0 then
-      begin
-        FModelCube.Selection2 := 0;
-        FModelCube.Selection1 := 0;
-      end
+      FModelCube.Selection2 := 0;
+      FModelCube.Selection1 := 0;
+    end
+    else
+    begin
+      case EvaluatedAt of
+        eaBlocks:
+          begin
+            FModelCube.Selection2 := (LocalModel.CombinedDisplayLayer + 1) / (LayerCount);
+            FModelCube.Selection1 := (LocalModel.CombinedDisplayLayer) / (LayerCount);
+          end;
+        eaNodes:
+          begin
+            FModelCube.Selection2 := (LocalModel.CombinedDisplayLayer) / (LayerCount);
+            FModelCube.Selection1 := FModelCube.Selection2;
+          end;
       else
-      begin
-        case EvaluatedAt of
-          eaBlocks:
-            begin
-              FModelCube.Selection2 := (SelectedLayer + 1) / (LayerCount);
-              FModelCube.Selection1 := (DisplayLayer) / (LayerCount);
-            end;
-          eaNodes:
-            begin
-              FModelCube.Selection2 := (SelectedLayer) / (LayerCount);
-              FModelCube.Selection1 := FModelCube.Selection2;
-            end;
-        else
-          Assert(False);
-        end;
-
+        Assert(False);
       end;
+
     end;
   end;
   frmGoPhast.TopGridChanged := True;
@@ -637,36 +643,36 @@ begin
   Done := False;
   while not Done do
   begin
-    PriorLayer := frmGoPhast.Grid.DisplayLayer;
+    PriorLayer := frmGoPhast.PhastModel.CombinedDisplayLayer;
     if FModelCube.ZOrigin = zoBottom then
     begin
       if ClickDirection = cdUp then
       begin
-        frmGoPhast.Grid.DisplayLayer := frmGoPhast.Grid.DisplayLayer
-          + Increment;
+        frmGoPhast.PhastModel.CombinedDisplayLayer :=
+          frmGoPhast.PhastModel.CombinedDisplayLayer + Increment;
       end
       else if ClickDirection = cdDown then
       begin
-        frmGoPhast.Grid.DisplayLayer := frmGoPhast.Grid.DisplayLayer
-          - Increment;
+        frmGoPhast.PhastModel.CombinedDisplayLayer :=
+          frmGoPhast.PhastModel.CombinedDisplayLayer - Increment;
       end;
     end
     else
     begin
       if ClickDirection = cdUp then
       begin
-        frmGoPhast.Grid.DisplayLayer := frmGoPhast.Grid.DisplayLayer
-          - Increment;
+        frmGoPhast.PhastModel.CombinedDisplayLayer :=
+          frmGoPhast.PhastModel.CombinedDisplayLayer - Increment;
       end
       else if ClickDirection = cdDown then
       begin
-        frmGoPhast.Grid.DisplayLayer := frmGoPhast.Grid.DisplayLayer
-          + Increment;
+        frmGoPhast.PhastModel.CombinedDisplayLayer :=
+          frmGoPhast.PhastModel.CombinedDisplayLayer + Increment;
       end;
     end;
     if FJumpType = jtToMouse then
     begin
-      Done := (PriorLayer = frmGoPhast.Grid.DisplayLayer)
+      Done := (PriorLayer = frmGoPhast.PhastModel.CombinedDisplayLayer)
         or (ClickDirection <> FModelCube.ClickDirection(FCubeX, FCubeY));
     end
     else
@@ -680,7 +686,7 @@ end;
 procedure TLayerSelector.DisplayLayer;
 begin
   frmGoPhast.sbMain.Panels[1].Text := 'Selected Layer: '
-    + IntToStr(frmGoPhast.Grid.SelectedLayer + 1);
+    + IntToStr(frmGoPhast.PhastModel.SelectedLayer + 1);
 end;
 
 procedure TLayerSelector.ItemChange(Sender: TObject);

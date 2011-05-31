@@ -110,7 +110,8 @@ type
 implementation
 
 uses frmGoPhastUnit, DataSetUnit, ScreenObjectUnit, UndoItemsScreenObjects,
-  GoPhastTypes, UndoItems, GIS_Functions, RbwParser, FastGEO, PhastModelUnit;
+  GoPhastTypes, UndoItems, GIS_Functions, RbwParser, FastGEO, PhastModelUnit,
+  ModelMuseUtilities;
 
 {$R *.dfm}
 
@@ -309,9 +310,9 @@ var
             APoint := RotateFromGridCoordinatesToRealWorldCoordinates(APoint);
             AScreenObject.AddPoint(APoint, False);
           end;
-          AScreenObject.HigherElevationFormula := FloatToStr(UpperZ +
+          AScreenObject.HigherElevationFormula := FortranFloatToStr(UpperZ +
             MinLayWidth);
-          AScreenObject.LowerElevationFormula := FloatToStr(LowerZ -
+          AScreenObject.LowerElevationFormula := FortranFloatToStr(LowerZ -
             MinLayWidth);
         end;
       vdFront:
@@ -338,9 +339,9 @@ var
             APoint.Y := LowerZ - MinLayWidth;
             AScreenObject.AddPoint(APoint, False);
           end;
-          AScreenObject.HigherElevationFormula := FloatToStr(UpperY +
+          AScreenObject.HigherElevationFormula := FortranFloatToStr(UpperY +
             MinRowWidth);
-          AScreenObject.LowerElevationFormula := FloatToStr(LowerY -
+          AScreenObject.LowerElevationFormula := FortranFloatToStr(LowerY -
             MinRowWidth);
         end;
       vdSide:
@@ -367,9 +368,9 @@ var
             APoint.X := LowerZ - MinLayWidth;
             AScreenObject.AddPoint(APoint, False);
           end;
-          AScreenObject.HigherElevationFormula := FloatToStr(UpperX +
+          AScreenObject.HigherElevationFormula := FortranFloatToStr(UpperX +
             MinColWidth);
-          AScreenObject.LowerElevationFormula := FloatToStr(LowerX -
+          AScreenObject.LowerElevationFormula := FortranFloatToStr(LowerX -
             MinColWidth);
         end;
     else

@@ -7,8 +7,7 @@ uses
   Dialogs, frmCustomGoPhastUnit, Grids, RbwDataGrid4, JvPageList,  ExtCtrls,
   JvExControls, ComCtrls, StdCtrls, Buttons, Mask, FastGEO, JvExMask, JvSpin,
   DataSetUnit, ScreenObjectUnit, ValueArrayStorageUnit, GoPhastTypes,
-  UndoItemsScreenObjects, JvLabel, TntStdCtrls, TntExDropDownEdit,
-  TntExDropDownVirtualStringTree, VirtualTrees;
+  UndoItemsScreenObjects, JvLabel, VirtualTrees, SsButtonEd, RbwStringTreeCombo;
 
 type
   TfrmImportGriddedData = class(TfrmCustomGoPhast)
@@ -37,7 +36,8 @@ type
     lblIgnoreValueCount: TLabel;
     lblColumns: TLabel;
     lblRows: TJvLabel;
-    combotreeDataSets: TTntExDropDownVirtualStringTree;
+    combotreeDataSets: TRbwStringTreeCombo;
+    cbMultipleDataRows: TCheckBox;
     procedure comboMethodChange(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
@@ -59,6 +59,10 @@ type
       var CellText: WideString);
     procedure combotreeDataSetsClosedUp(Sender: TObject);
     procedure combotreeDataSetsDropDownTreeEnter(Sender: TObject);
+    procedure combotreeDataSets1TreeInitNode(Sender: TBaseVirtualTree;
+      ParentNode, Node: PVirtualNode;
+      var InitialStates: TVirtualNodeInitStates);
+    procedure cbMultipleDataRowsClick(Sender: TObject);
   private
     FGrids: TList;
     FRealIgnoreValues: array of double;
@@ -383,6 +387,7 @@ begin
         lblRows.Caption := 'Rows';
         InitializeTabSheetFor2DGriddedData(DataSet);
         Grid := FGrids[0];
+        Grid.ExtendedAutoDistributeText := cbMultipleDataRows.Checked;
         case DataSet.EvaluatedAt of
           eaBlocks:
             begin
@@ -430,6 +435,7 @@ begin
         lblRows.Caption := 'Layers';
         InitializeTabSheetFor2DGriddedData(DataSet);
         Grid := FGrids[0];
+        Grid.ExtendedAutoDistributeText := cbMultipleDataRows.Checked;
         case DataSet.EvaluatedAt of
           eaBlocks:
             begin
@@ -477,6 +483,7 @@ begin
         lblRows.Caption := 'Layers';
         InitializeTabSheetFor2DGriddedData(DataSet);
         Grid := FGrids[0];
+        Grid.ExtendedAutoDistributeText := cbMultipleDataRows.Checked;
         case DataSet.EvaluatedAt of
           eaBlocks:
             begin
@@ -552,12 +559,15 @@ begin
           if Index < FGrids.Count then
           begin
             Grid := FGrids[Index];
+            Grid.ExtendedAutoDistributeText := cbMultipleDataRows.Checked;
           end
           else
           begin
             Grid := TRbwDataGrid4.Create(nil);
             FGrids.Add(Grid);
             Grid.AutoDistributeText := True;
+            Grid.AutoMultiEdit := True;
+            Grid.ExtendedAutoDistributeText := cbMultipleDataRows.Checked;
           end;
           Grid.Parent := pcGriddedData.Pages[Index];
           case DataSet.EvaluatedAt of
@@ -602,10 +612,10 @@ begin
             ColumnsForward, RowsForward);
         end;
       end;
-  else
-    begin
-      Assert(False);
-    end;
+    else
+      begin
+        Assert(False);
+      end;
   end;
 end;
 
@@ -638,6 +648,7 @@ begin
     Grid := TRbwDataGrid4.Create(nil);
     FGrids.Add(Grid);
     Grid.AutoDistributeText := True;
+    Grid.AutoMultiEdit := True;
   end;
   Grid.Parent := pcGriddedData.Pages[0];
 end;
@@ -1645,10 +1656,34 @@ begin
   end;
 end;
 
+procedure TfrmImportGriddedData.cbMultipleDataRowsClick(Sender: TObject);
+var
+  GridIndex: Integer;
+  Grid: TRbwDataGrid4;
+begin
+  inherited;
+  for GridIndex := 0 to FGrids.Count - 1 do
+  begin
+    Grid := FGrids[GridIndex];
+    Grid.ExtendedAutoDistributeText := cbMultipleDataRows.Checked;
+  end;
+end;
+
 procedure TfrmImportGriddedData.comboMethodChange(Sender: TObject);
 begin
   inherited;
   AssignDataSetValue;
+  cbMultipleDataRows.Enabled := comboMethod.ItemIndex = 1;
+end;
+
+procedure TfrmImportGriddedData.combotreeDataSets1TreeInitNode(
+  Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
+  var InitialStates: TVirtualNodeInitStates);
+var
+  CellText: WideString;
+begin
+  inherited;
+  GetNodeCaption(Node, CellText, Sender);
 end;
 
 procedure TfrmImportGriddedData.combotreeDataSetsClosedUp(Sender: TObject);

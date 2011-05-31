@@ -72,10 +72,14 @@ var
   Boundary: TEvtBoundary;
 begin
   inherited;
-  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
-    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
     if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    if not ScreenObject.UsedModels.UsesModel(Model) then
     begin
       Continue;
     end;
@@ -103,7 +107,7 @@ end;
 
 function TModflowEVT_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.EvtPackage;
+  result := Model.ModflowPackages.EvtPackage;
 end;
 
 function TModflowEVT_Writer.ParameterType: TParameterType;
@@ -149,8 +153,8 @@ const
   D7PNameIname = '';
   D7PName = '';
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(EtSurfaceError);
-  frmErrorsAndWarnings.RemoveErrorGroup(EtDepthError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, EtSurfaceError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, EtDepthError);
   if not Package.IsSelected then
   begin
     UpdateNotUsedDisplay(TimeLists);
@@ -163,12 +167,12 @@ begin
     begin
       Exit;
     end;
-    ClearTimeLists;
+    ClearTimeLists(Model);
     ParamDefArrays := TObjectList.Create;
     try
-      EvaluateParameterDefinitions(ParamDefArrays, ErrorRoot);
+      EvaluateParameterDefinitions(ParamDefArrays, ErrorRoot, umAssign);
       NPEVT := ParameterCount;
-      NEVTOP := Ord(PhastModel.ModflowPackages.EvtPackage.LayerOption) + 1;
+      NEVTOP := Ord(Model.ModflowPackages.EvtPackage.LayerOption) + 1;
       EvapRateTimes := TimeLists[0];
       EvapotranspirationSurfaceTimes := TimeLists[1];
       EvapotranspirationDepthTimes := TimeLists[2];
@@ -216,7 +220,7 @@ begin
           begin
             DepthSurfaceCellList := nil;
             EvapSurfArray.UpToDate := True;
-            frmErrorsAndWarnings.AddError(EtSurfaceError, EtSurfaceErrorMessage);
+            frmErrorsAndWarnings.AddError(Model, EtSurfaceError, EtSurfaceErrorMessage);
           end;
           EvapSurfArray.CacheData;
 
@@ -231,6 +235,7 @@ begin
             DefArrayList := ParamDefArrays[TimeIndex];
             UpdateTransient2DArray(EvapRateArray, DefArrayList);
           end;
+          Model.AdjustDataArray(EvapRateArray);
           EvapRateArray.CacheData;
 
           // data set 9
@@ -242,16 +247,16 @@ begin
           else
           begin
             EvapDepthArray.UpToDate := True;
-            frmErrorsAndWarnings.AddError(EtDepthError, EtDepthErrorMessage);
+            frmErrorsAndWarnings.AddError(Model, EtDepthError, EtDepthErrorMessage);
           end;
           EvapDepthArray.CacheData;
 
           // data set 10
           if EvapLayerArray <> nil then
           begin
-            if (PhastModel.ModflowPackages.EvtPackage.
+            if (Model.ModflowPackages.EvtPackage.
               LayerOption = loSpecified)
-              and not PhastModel.ModflowPackages.EvtPackage.
+              and not Model.ModflowPackages.EvtPackage.
               TimeVaryingLayers and (ParameterCount > 0)  then
             begin
               List.Cache;
@@ -298,7 +303,7 @@ const
   VariableIdentifiers = 'Condfact';
 begin
   WriteParameterDefinitions(DS3, DS3Instances, DS4A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot);
+    VariableIdentifiers, ErrorRoot, umAssign);
 end;
 
 procedure TModflowEVT_Writer.WriteDataSet1;
@@ -317,7 +322,7 @@ procedure TModflowEVT_Writer.WriteDataSet2;
 var
   IEVTCB: integer;
 begin
-  NEVTOP := Ord(PhastModel.ModflowPackages.EvtPackage.LayerOption) + 1;
+  NEVTOP := Ord(Model.ModflowPackages.EvtPackage.LayerOption) + 1;
   GetFlowUnitNumber(IEVTCB);
 
   WriteInteger(NEVTOP);
@@ -342,19 +347,19 @@ procedure TModflowEVT_Writer.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
-  frmErrorsAndWarnings.RemoveErrorGroup(EtSurfaceError);
-  frmErrorsAndWarnings.RemoveErrorGroup(EtDepthError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, EtSurfaceError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, EtDepthError);
   if not Package.IsSelected then
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrEVT) then
+  if Model.PackageGeneratedExternally(StrEVT) then
   begin
     Exit;
   end;
 //  frmProgress.AddMessage('Evaluating EVT Package data.');
   NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrEVT, PhastModel.UnitNumbers.UnitNumber(StrEVT),
+  WriteToNameFile(StrEVT, Model.UnitNumbers.UnitNumber(StrEVT),
     NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
@@ -362,7 +367,7 @@ begin
   begin
     Exit;
   end;
-  ClearTimeLists;
+  ClearTimeLists(Model);
   OpenFile(FileName(AFileName));
   try
     frmProgressMM.AddMessage('Writing EVT Package input.');
@@ -420,7 +425,7 @@ begin
   DataTypeIndex := 0;
   Comment := DataSetIdentifier + ' ' + VariableIdentifiers;
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-    CellList, Dummy);
+    CellList, umAssign, True, Dummy);
 end;
 
 procedure TModflowEVT_Writer.WriteEvapotranspirationSurface(CellList: TValueCellList);
@@ -436,7 +441,7 @@ begin
   DataTypeIndex := 0;
   Comment := 'Data Set 6: SURF';
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-    CellList, Dummy);
+    CellList, umAssign, False, Dummy);
 end;
 
 procedure TModflowEVT_Writer.WriteExtinctionDepth(CellList: TValueCellList);
@@ -452,7 +457,7 @@ begin
   DataTypeIndex := 1;
   Comment := 'Data Set 9: EXDP';
   WriteTransient2DArray(Comment, DataTypeIndex, DataType, DefaultValue,
-    CellList, Dummy);
+    CellList, umAssign, False, Dummy);
 end;
 
 procedure TModflowEVT_Writer.WriteStressPeriods(const VariableIdentifiers,
@@ -477,7 +482,7 @@ begin
     Comment := 'Data Set 10: IEVT';
     if Values.Count = 0 then
     begin
-      frmErrorsAndWarnings.AddError('No evapotranspiration defined',
+      frmErrorsAndWarnings.AddError(Model, 'No evapotranspiration defined',
         'The Evapotranspiration package is active but '
         + 'no evapotranspiration has been defined for any stress period.');
     end;
@@ -604,8 +609,8 @@ begin
           end
           else
           begin
-            DepthSurfaceCellList := nil;
-            frmErrorsAndWarnings.AddError(EtSurfaceError, EtSurfaceErrorMessage);
+//            DepthSurfaceCellList := nil;
+            frmErrorsAndWarnings.AddError(Model, EtSurfaceError, EtSurfaceErrorMessage);
           end;
 
         end;
@@ -653,7 +658,7 @@ begin
           end
           else
           begin
-            frmErrorsAndWarnings.AddError(EtDepthError, EtDepthErrorMessage);
+            frmErrorsAndWarnings.AddError(Model, EtDepthError, EtDepthErrorMessage);
           end;
         end;
 

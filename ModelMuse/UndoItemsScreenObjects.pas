@@ -49,6 +49,7 @@ type
     procedure UpdateShowHideObjects;
     procedure EnableInvertSelection;
     procedure WarnSfrLengthProblems(List: TList);
+    procedure UpdateChildGrids;
   end;
 
   { @abstract(@name is used to change or restore which
@@ -81,6 +82,8 @@ type
     #)
   }
   TUndoChangeSelection = class(TCustomUpdateScreenObjectDisplayUndo)
+  strict private
+    FOldChildModelScreenObjects: TList;
   private
     procedure ResetVisible(const ScreenObjects: TList);
   protected
@@ -163,14 +166,68 @@ type
   end;
 
   TUndoPasteScreenObjects = class(TCustomImportMultipleScreenObjects)
+  private
+    FOldChildModelScreenObjects: TList;
   protected
     // @name describes what this @classname does.  It is used in menu captions
     // and hints.
     function Description: string; override;
   public
+    constructor Create;
+    destructor Destroy; override;
     procedure StoreNewScreenObjects(const ListOfScreenObjects: TList); override;
     procedure DoCommand; override;
     procedure Undo; override;
+    procedure Redo; override;
+  end;
+
+  TCustomUndoDivideScreenObject = class(TCustomImportMultipleScreenObjects)
+  private
+    FOldChildModelScreenObjects: TList;
+    FObjectToSplit: TList;
+    FOldScreenObjectSettings: TList;
+  protected
+    function ShouldDivideScreenScreenObject(AScreenObject: TScreenObject): boolean; virtual; abstract;
+    procedure UnselectAllVertices(AScreenObject: TScreenObject);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure DoCommand; override;
+    procedure Undo; override;
+  end;
+
+  TUndoMakeSelectedVerticesNewScreenObject = class(TCustomUndoDivideScreenObject)
+  protected
+    // @name describes what this @classname does.  It is used in menu captions
+    // and hints.
+    function Description: string; override;
+    function ShouldDivideScreenScreenObject(AScreenObject: TScreenObject): boolean; override;
+  public
+    constructor Create;
+    procedure Redo; override;
+  end;
+
+  TUndoSplitScreenObject = class(TCustomUndoDivideScreenObject)
+  protected
+    // @name describes what this @classname does.  It is used in menu captions
+    // and hints.
+    function Description: string; override;
+    function ShouldDivideScreenScreenObject(AScreenObject: TScreenObject): boolean; override;
+  public
+    constructor Create;
+    procedure Redo; override;
+  end;
+
+  TUndoExplodeScreenObject = class(TCustomUndoDivideScreenObject)
+  private
+    procedure DeleteAllButFirstSection;
+  protected
+    // @name describes what this @classname does.  It is used in menu captions
+    // and hints.
+    function Description: string; override;
+    function ShouldDivideScreenScreenObject(AScreenObject: TScreenObject): boolean; override;
+  public
+    constructor Create;
     procedure Redo; override;
   end;
 
@@ -200,7 +257,11 @@ type
     FScreenObject: TScreenObject;
     FUndoEditFluxObservations: TUndoEditFluxObservations;
     FSectionStarts: TValueArrayStorage;
+    FChildModelName: string;
+    FOldChildModelScreenObjects: TList;
+//    FChildModel: TBaseModel;
     procedure WarnSfrLengthProblem;
+    procedure DisplayScreenObject;
   protected
     // @name describes what this @classname does.  It is used in menu captions
     // and hints.
@@ -511,6 +572,7 @@ type
   // @link(TScreenObject).)
   TUndoSetScreenObjectProperties = class(TCustomUpdateScreenObjectDisplayUndo)
   private
+    FOldChildModelScreenObjects: TList;
     FNewScreenObjects: TScreenObjectEditCollection;
     FOldScreenObjects: TScreenObjectEditCollection;
     FExistingScreenObjects: TScreenObjectEditCollection;
@@ -519,6 +581,7 @@ type
     // are being changed.
     FListOfScreenObjects: TList;
     FUndoEditFluxObservations: TUndoEditFluxObservations;
+    FNewChildModelScreenObjects: TList;
   protected
     // If @name is true then @link(frmShowHideObjects) can be updated.
     // Descendants should set @name to @false before calling inherited
@@ -536,6 +599,7 @@ type
     // TScreenObject.ResetBoundaryMixtureSubscriptions) for each
     // @link(TScreenObject).
     procedure ResetScreenObjectDataSetSubscriptions;
+    procedure SetObjectProperties;
   public
     // @name determines whether or not the
     // @link(TUndoSetScreenObjectProperties)
@@ -544,6 +608,7 @@ type
     FSetCellsColor: boolean;
     // @name assigns the new values to the @link(TScreenObject)s.
     procedure DoCommand; override;
+    procedure Redo; override;
     // @name restores the old values to the @link(TScreenObject)s.
     procedure Undo; override;
     // @name stores the @link(TScreenObject)s in AListOfScreenObjects and reads
@@ -551,7 +616,8 @@ type
     // @param(AListOfScreenObjects contains the @link(TScreenObject)s
     // that will be affected by this @classname.)
     constructor Create(const AListOfScreenObjects: TList; var NewScreenObjects,
-      OldScreenObjects: TScreenObjectEditCollection);
+      OldScreenObjects: TScreenObjectEditCollection;
+      var OldChildModelScreenObjects: TList);
     // @name destroys the @link(TUndoSetScreenObjectProperties)
     // and releases its memory.
     destructor Destroy; override;
@@ -646,6 +712,11 @@ type
     // be deleted.
     FScreenObjects: TList;
     FVertexValues: TList;
+    FOldImportedElevations: TList;
+    FOldHigherImportedElevations: TList;
+    FOldLowerImportedElevations: TList;
+    FOldImportedValues: TList;
+
   protected
     // @name tells what @classname does.
     function Description: string; override;
@@ -678,14 +749,15 @@ type
   protected
     // @name tells what @classname does.
     property Capacity: integer read FCapacity write SetCapacity;
-    property Count: integer read FCount;
     function Description: string; override;
   public
+    property Count: integer read FCount;
     procedure AddPoint(Point: TPoint2D);
     Constructor Create(ScreenObject: TScreenObject);
     procedure DoCommand; override;
     procedure Redo; override;
     procedure Undo; override;
+    procedure DeleteLastPoint;
   end;
 
 implementation
@@ -699,6 +771,16 @@ uses Math, frmGoPhastUnit, frmSelectedObjectsUnit, frmShowHideObjectsUnit,
 procedure TCustomUpdateScreenObjectDisplayUndo.EnableInvertSelection;
 begin
   frmGoPhast.EnableInvertSelection;
+end;
+
+procedure TCustomUpdateScreenObjectDisplayUndo.UpdateChildGrids;
+var
+  ChildIndex: Integer;
+begin
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel.CanUpdateGrid := True;
+  end;
 end;
 
 procedure TCustomUpdateScreenObjectDisplayUndo.UpdateDisplay;
@@ -738,12 +820,12 @@ var
   Item: TSfrItem;
   ErrorFound: boolean;
 begin
-  if not frmGoPhast.PhastModel.ModflowPackages.SfrPackage.IsSelected then
+  if not frmGoPhast.PhastModel.SfrIsSelected then
   begin
     Exit;
   end;
 
-  frmErrorsAndWarnings.RemoveWarningGroup(WarningRoot);
+  frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel, WarningRoot);
   ErrorFound := False;
   for ScreenObjectIndex := 0 to List.Count - 1 do
   begin
@@ -766,7 +848,8 @@ begin
     if (Trim(Item.ReachLength) = '0') then
     begin
       ErrorFound := True;
-      frmErrorsAndWarnings.AddWarning(WarningRoot, AScreenObject.Name);
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
+        WarningRoot, AScreenObject.Name);
       Continue;
     end;
 
@@ -778,7 +861,8 @@ begin
     if (UpperCase(Item.ReachLength) = UpperCase(StrObjectIntersectLength)) then
     begin
       ErrorFound := True;
-      frmErrorsAndWarnings.AddWarning(WarningRoot, AScreenObject.Name);
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
+        WarningRoot, AScreenObject.Name);
     end;
   end;
   if ErrorFound then
@@ -790,12 +874,23 @@ end;
 { TUndoChangeSelection }
 
 constructor TUndoChangeSelection.Create;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   inherited;
+  FOldChildModelScreenObjects := TList.Create;
   FOldSelectedScreenObjects := TList.Create;
   FNewSelectedScreenObjects := TList.Create;
   FOldVisibleScreenObjects := TList.Create;
   FNewVisibleScreenObjects := TList.Create;
+
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    FOldChildModelScreenObjects.Add(ChildModel.HorizontalPositionScreenObject);
+  end;
+
   SetPriorSelection;
   FShouldUpdateShowHideObjectsDisplay := True;
 end;
@@ -811,13 +906,14 @@ begin
   FNewSelectedScreenObjects.Free;
   FOldVisibleScreenObjects.Free;
   FNewVisibleScreenObjects.Free;
+  FOldChildModelScreenObjects.Free;
   inherited;
 end;
 
 procedure TUndoChangeSelection.DoCommand;
 begin
   InvalidateImages;
-//  FShouldUpdateShowHideObjects := True;
+  FShouldUpdateShowHideObjects := True;
   UpdateDisplay;
 end;
 
@@ -1022,6 +1118,10 @@ begin
 end;
 
 procedure TUndoChangeSelection.Undo;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  AScreenObject: TScreenObject;
 begin
   ResetSelection(FOldSelectedScreenObjects, FOldSelectedVertices);
   if FUpdateVisible then
@@ -1030,6 +1130,15 @@ begin
   end;
   SelectScreenObjectTool.ShouldDrawSelectionRectangle :=
     FOldSelectedScreenObjects.Count > 0;
+
+  Assert(frmGoPhast.PhastModel.ChildModels.Count = FOldChildModelScreenObjects.Count);
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    AScreenObject := FOldChildModelScreenObjects[ChildIndex];
+    ChildModel.HorizontalPositionScreenObject := AScreenObject;
+  end;
+
   InvalidateImages;
   UpdateDisplay;
 end;
@@ -1037,8 +1146,19 @@ end;
 { TUndoCreateScreenObject }
 
 constructor TUndoCreateScreenObject.Create(const AScreenObject: TScreenObject);
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   inherited Create;
+
+  FOldChildModelScreenObjects := TList.Create;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    FOldChildModelScreenObjects.Add(ChildModel.HorizontalPositionScreenObject)
+  end;
+
   HasBeenUsed := False;
   Assert(AScreenObject <> nil);
   FScreenObject := AScreenObject;
@@ -1057,10 +1177,11 @@ destructor TUndoCreateScreenObject.Destroy;
 begin
   FUndoEditFluxObservations.Free;
   FSectionStarts.Free;
+  FOldChildModelScreenObjects.Free;
   inherited;
 end;
 
-procedure TUndoCreateScreenObject.DoCommand;
+procedure TUndoCreateScreenObject.DisplayScreenObject;
 begin
   HasBeenUsed := True;
   if FScreenObject.Count = 0 then
@@ -1077,20 +1198,58 @@ begin
   FUndoEditFluxObservations.DoCommand;
   FShouldUpdateShowHideObjects := True;
   UpdateDisplay;
+  UpdateChildGrids;
   WarnSfrLengthProblem;
 
+end;
+
+procedure TUndoCreateScreenObject.DoCommand;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  DisplayScreenObject;
+  FChildModelName := '';
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    if ChildModel.HorizontalPositionScreenObject = FScreenObject then
+    begin
+      if (FScreenObject.ElevationCount = ecZero)
+        and (FScreenObject.ViewDirection = vdTop) then
+      begin
+        FChildModelName := ChildModel.ModelName;
+        FScreenObject.ChildModel := ChildModel;
+      end
+      else
+      begin
+        ChildModel.HorizontalPositionScreenObject := nil;
+      end;
+      break;
+    end;
+  end;
+
+  FShouldUpdateShowHideObjects := True;
+  UpdateDisplay;
+  
 end;
 
 procedure TUndoCreateScreenObject.Redo;
 begin
-  DoCommand;
+  DisplayScreenObject;
+  FScreenObject.ChildModelName := FChildModelName;
   inherited;
   FShouldUpdateShowHideObjects := True;
   UpdateDisplay;
+  UpdateChildGrids;
   WarnSfrLengthProblem;
 end;
 
 procedure TUndoCreateScreenObject.Undo;
+var
+  ChildModelIndex: Integer;
+  ChildModel: TChildModel;
+  AScreenObject: TScreenObject;
 begin
   inherited;
   HasBeenUsed := True;
@@ -1099,10 +1258,24 @@ begin
     FScreenObject.Deleted := True;
     FScreenObject.Invalidate;
     UpdateScreenObject(FScreenObject);
+    FScreenObject.ChildModelName := '';
   end;
   FUndoEditFluxObservations.Undo;
+
+  Assert(frmGoPhast.PhastModel.ChildModels.Count =
+    FOldChildModelScreenObjects.Count);
+  for ChildModelIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildModelIndex].ChildModel;
+    AScreenObject := FOldChildModelScreenObjects[ChildModelIndex];
+    ChildModel.HorizontalPositionScreenObject := AScreenObject;
+  end;
+
+  UpdateChildGrids;
+
   FShouldUpdateShowHideObjects := True;
   UpdateDisplay;
+
   WarnSfrLengthProblem;
 end;
 
@@ -1855,13 +2028,19 @@ end;
 
 constructor TUndoSetScreenObjectProperties.Create(
   const AListOfScreenObjects: TList; var NewScreenObjects,
-  OldScreenObjects: TScreenObjectEditCollection);
+  OldScreenObjects: TScreenObjectEditCollection;
+  var OldChildModelScreenObjects: TList);
 var
   AScreenObject: TScreenObject;
   ScreenObjectIndex: integer;
   Item: TScreenObjectEditItem;
 begin
   inherited Create;
+  FOldChildModelScreenObjects := OldChildModelScreenObjects;
+  OldChildModelScreenObjects := nil;
+
+  FNewChildModelScreenObjects := TList.Create;
+
   FExistingScreenObjects := TScreenObjectEditCollection.Create;
   FExistingScreenObjects.OwnScreenObject := False;
   FNewScreenObjects := NewScreenObjects;
@@ -1894,10 +2073,25 @@ begin
   FExistingScreenObjects.Free;
   FNewScreenObjects.Free;
   FOldScreenObjects.Free;
+  FOldChildModelScreenObjects.Free;
+  FNewChildModelScreenObjects.Free;
   inherited;
 end;
 
 procedure TUndoSetScreenObjectProperties.DoCommand;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  SetObjectProperties;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    FNewChildModelScreenObjects.Add(ChildModel.HorizontalPositionScreenObject);
+  end;
+end;
+
+procedure TUndoSetScreenObjectProperties.SetObjectProperties;
 var
   ScreenObjectIndex: integer;
   AScreenObject: TScreenObject;
@@ -1935,14 +2129,32 @@ begin
     end;
     AScreenObject.UpToDate := True;
   end;
-  UpdateDisplay;
-  FShouldUpdateShowHideObjects := True;
+//  UpdateDisplay;
 
   FExistingScreenObjects.Assign(FNewScreenObjects);
   FUndoEditFluxObservations.DoCommand;
 
-  UpdateShowHideObjects;
+  UpdateChildGrids;
+
+  FShouldUpdateShowHideObjects := True;
+  UpdateDisplay;
+
   WarnSfrLengthProblems(FListOfScreenObjects);
+end;
+
+procedure TUndoSetScreenObjectProperties.Redo;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ScreenObject: TScreenObject;
+begin
+  SetObjectProperties;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    ScreenObject := FNewChildModelScreenObjects[ChildIndex];
+    ChildModel.HorizontalPositionScreenObject := ScreenObject;
+  end;
 end;
 
 procedure TUndoSetScreenObjectProperties.ResetScreenObjectDataSetSubscriptions;
@@ -1968,6 +2180,8 @@ procedure TUndoSetScreenObjectProperties.Undo;
 var
   ScreenObjectIndex: integer;
   AScreenObject: TScreenObject;
+  ChildModelIndex: Integer;
+  ChildModel: TChildModel;
 begin
   FShouldUpdateShowHideObjects := False;
   ResetScreenObjectDataSetSubscriptions;
@@ -1984,6 +2198,19 @@ begin
   FShouldUpdateShowHideObjects := True;
   FExistingScreenObjects.Assign(FOldScreenObjects);
   FUndoEditFluxObservations.Undo;
+  if FOldChildModelScreenObjects <> nil then
+  begin
+    Assert(frmGoPhast.PhastModel.ChildModels.Count =
+      FOldChildModelScreenObjects.Count);
+    for ChildModelIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildModelIndex].ChildModel;
+      AScreenObject := FOldChildModelScreenObjects[ChildModelIndex];
+      ChildModel.HorizontalPositionScreenObject := AScreenObject;
+    end;
+  end;
+
+  UpdateChildGrids;
   UpdateShowHideObjects;
   WarnSfrLengthProblems(FListOfScreenObjects);
 end;
@@ -2141,10 +2368,19 @@ var
   AScreenObject: TScreenObject;
   PointPositionValues: TPointPositionValues;
   OldPointPositionValues: TPointPositionValues;
+  Varray: TValueArrayStorage;
+  VCollection: TValueCollection;
+  ImportIndex: Integer;
 begin
   inherited Create;
   FScreenObjects := TList.Create;
   FVertexValues := TObjectList.Create;
+
+  FOldImportedElevations := TObjectList.Create;
+  FOldHigherImportedElevations := TObjectList.Create;
+  FOldLowerImportedElevations := TObjectList.Create;
+  FOldImportedValues := TObjectList.Create;
+
   FScreenObjects.Capacity := ListOfScreenObjects.Count;
   for Index := 0 to ListOfScreenObjects.Count - 1 do
   begin
@@ -2163,6 +2399,28 @@ begin
         OldPointPositionValues.Assign(PointPositionValues);
         FVertexValues.Add(OldPointPositionValues);
       end;
+      Varray := TValueArrayStorage.Create;
+      Varray.Assign(AScreenObject.ImportedHigherSectionElevations);
+      Varray.RestoreData;
+      FOldHigherImportedElevations.Add(Varray);
+
+      Varray := TValueArrayStorage.Create;
+      Varray.Assign(AScreenObject.ImportedLowerSectionElevations);
+      Varray.RestoreData;
+      FOldLowerImportedElevations.Add(Varray);
+
+      Varray := TValueArrayStorage.Create;
+      Varray.Assign(AScreenObject.ImportedSectionElevations);
+      Varray.RestoreData;
+      FOldImportedElevations.Add(Varray);
+
+      VCollection := TValueCollection.Create;
+      for ImportIndex := 0 to AScreenObject.ImportedValues.Count - 1 do
+      begin
+        AScreenObject.ImportedValues.Items[ImportIndex].Values.RestoreData;
+      end;
+      VCollection.Assign(AScreenObject.ImportedValues);
+      FOldImportedValues.Add(VCollection);
     end;
   end;
   SetLength(FPoints, FScreenObjects.Count);
@@ -2185,6 +2443,10 @@ destructor TUndoDeleteVertices.Destroy;
 var
   Index: Integer;
 begin
+  FOldImportedElevations.Free;
+  FOldHigherImportedElevations.Free;
+  FOldLowerImportedElevations.Free;
+  FOldImportedValues.Free;
   FVertexValues.Free;
   FScreenObjects.Free;
   for Index := 0 to Length(FSectionStarts) - 1 do
@@ -2214,179 +2476,165 @@ var
   CurrentStart: integer;
   CurrentEnd: integer;
   TempIndex: integer;
+  InnerVertexIndex: Integer;
 begin
-  FCanDeleteVertices := True;
-  for Index := 0 to FScreenObjects.Count - 1 do
-  begin
-    AScreenObject := FScreenObjects[Index];
-    if AScreenObject.SelectedVertexCount = AScreenObject.Count then
+  frmGoPhast.CanDraw := False;
+  try
+    FCanDeleteVertices := True;
+    for Index := 0 to FScreenObjects.Count - 1 do
     begin
-      AScreenObject.Deleted := True;
-    end
-    else
-    begin
-      if AScreenObject.SelectedVertexCount > 0 then
+      AScreenObject := FScreenObjects[Index];
+      if AScreenObject.SelectedVertexCount = AScreenObject.Count then
       begin
-        CloseScreenObject := AScreenObject.Closed
-          and AScreenObject.SelectedVertices[0];
+        AScreenObject.Deleted := True;
+      end
+      else
+      begin
+        if AScreenObject.SelectedVertexCount > 0 then
+        begin
+          CloseScreenObject := AScreenObject.Closed
+            and AScreenObject.SelectedVertices[0];
 
-        TempScreenObject := frmGoPhast.PhastModel.ScreenObjectClass.Create(nil);
-        try
-          PointCount := 0;
-          SectionIndex := AScreenObject.SectionCount -1;
-          NextEnd := AScreenObject.SectionEnd[SectionIndex];
-          NewSection := False;
-          ClosedSection := AScreenObject.SectionClosed[SectionIndex];
-          for VertexIndex := AScreenObject.Count - 1 downto 0 do
-          begin
-            NextPart := VertexIndex = NextEnd;
-            if NextPart then
+          TempScreenObject := frmGoPhast.PhastModel.ScreenObjectClass.Create(nil);
+          try
+            PointCount := 0;
+            SectionIndex := AScreenObject.SectionCount -1;
+            NextEnd := AScreenObject.SectionEnd[SectionIndex];
+            NewSection := False;
+            ClosedSection := AScreenObject.SectionClosed[SectionIndex];
+            for VertexIndex := AScreenObject.Count - 1 downto 0 do
             begin
-              ClosedSection := AScreenObject.SectionClosed[SectionIndex];
-              NewSection := True;
-              Dec(SectionIndex);
-              if SectionIndex >= 0  then
+              NextPart := VertexIndex = NextEnd;
+              if NextPart then
               begin
-                NextEnd := AScreenObject.SectionEnd[SectionIndex];
+                ClosedSection := AScreenObject.SectionClosed[SectionIndex];
+                NewSection := True;
+                Dec(SectionIndex);
+                if SectionIndex >= 0  then
+                begin
+                  NextEnd := AScreenObject.SectionEnd[SectionIndex];
+                end;
               end;
-            end;
-            if AScreenObject.SelectedVertices[VertexIndex] then
-            begin
-              TempIndex := TempScreenObject.SectionCount-1;
-              if ClosedSection and not
-                TempScreenObject.SectionClosed[TempIndex]
-                and (TempScreenObject.SectionLength[TempIndex] > 2) then
+              if AScreenObject.SelectedVertices[VertexIndex] then
               begin
-                TempIndex := TempScreenObject.SectionStart[TempIndex];
-                LastPoint := TempScreenObject.Points[TempIndex];
-                TempScreenObject.AddPoint(LastPoint, False);
+                TempIndex := TempScreenObject.SectionCount-1;
+                if ClosedSection and not
+                  TempScreenObject.SectionClosed[TempIndex]
+                  and (TempScreenObject.SectionLength[TempIndex] > 2) then
+                begin
+                  TempIndex := TempScreenObject.SectionStart[TempIndex];
+                  LastPoint := TempScreenObject.Points[TempIndex];
+                  TempScreenObject.AddPoint(LastPoint, False);
+                  Inc(PointCount);
+                  if PointCount <> TempScreenObject.Count then
+                  begin
+                    FCanDeleteVertices := false;
+                  end;
+                end;
+              end
+              else
+              begin
+                TempScreenObject.AddPoint(AScreenObject.Points[VertexIndex],
+                  NewSection);
+                NewSection := False;
                 Inc(PointCount);
                 if PointCount <> TempScreenObject.Count then
                 begin
                   FCanDeleteVertices := false;
+                  break;
                 end;
               end;
-            end
-            else
+            end;
+
+            if FCanDeleteVertices and CloseScreenObject then
             begin
-              TempScreenObject.AddPoint(AScreenObject.Points[VertexIndex],
-                NewSection);
-              NewSection := False;
+              TempSectionIndex := TempScreenObject.SectionCount -1;
+              TempVertextIndex := TempScreenObject.SectionStart[TempSectionIndex];
+              TempScreenObject.AddPoint(TempScreenObject.Points[TempVertextIndex], False);
               Inc(PointCount);
               if PointCount <> TempScreenObject.Count then
               begin
                 FCanDeleteVertices := false;
-                break;
               end;
             end;
+          finally
+            TempScreenObject.Free;
           end;
 
-          if FCanDeleteVertices and CloseScreenObject then
+          if FCanDeleteVertices then
           begin
-            TempSectionIndex := TempScreenObject.SectionCount -1;
-            TempVertextIndex := TempScreenObject.SectionStart[TempSectionIndex];
-            TempScreenObject.AddPoint(TempScreenObject.Points[TempVertextIndex], False);
-            Inc(PointCount);
-            if PointCount <> TempScreenObject.Count then
+            SectionIndex := AScreenObject.SectionCount -1;
+            NextEnd := AScreenObject.SectionEnd[SectionIndex];
+            CurrentStart := AScreenObject.SectionStart[SectionIndex];
+            CurrentEnd := NextEnd;
+            NeedToCloseSection := False;
+            ClosedSection := AScreenObject.SectionClosed[SectionIndex];
+            for VertexIndex := AScreenObject.Count - 1 downto 0 do
             begin
-              FCanDeleteVertices := false;
-            end;
-          end;
-        finally
-          TempScreenObject.Free;
-        end;
-
-        if FCanDeleteVertices then
-        begin
-//          PointPositionValues := AScreenObject.PointPositionValues;
-//          if PointPositionValues <> nil then
-//          begin
-//            PointPositionValues.Sort;
-//            Assert(PointPositionValues.Count > 0);
-//            PointPositionIndex := 0;
-//            Item := PointPositionValues.Items[PointPositionIndex]
-//              as TPointValuesItem;
-//            AmountToReduce := 0;
-//            for VertexIndex := 0 to AScreenObject.Count - 1 do
-//            begin
-//              if AScreenObject.SelectedVertices[VertexIndex] then
-//              begin
-//                Inc(AmountToReduce);
-//              end;
-//              if Item.Position = VertexIndex then
-//              begin
-//                Item.Position := Item.Position - AmountToReduce;
-//                Inc(PointPositionIndex);
-//                if PointPositionIndex < PointPositionValues.Count then
-//                begin
-//                  Item := PointPositionValues.Items[PointPositionIndex]
-//                    as TPointValuesItem;
-//                end
-//                else
-//                begin
-//                  break;
-//                end;
-//              end;
-//            end;
-//          end;
-
-          SectionIndex := AScreenObject.SectionCount -1;
-          NextEnd := AScreenObject.SectionEnd[SectionIndex];
-          CurrentStart := AScreenObject.SectionStart[SectionIndex];
-          CurrentEnd := NextEnd;
-          NeedToCloseSection := False;
-          ClosedSection := AScreenObject.SectionClosed[SectionIndex];
-          for VertexIndex := AScreenObject.Count - 1 downto 0 do
-          begin
-            NextPart := VertexIndex = NextEnd;
-            if NextPart then
-            begin
-              CurrentStart := AScreenObject.SectionStart[SectionIndex];
-              CurrentEnd := AScreenObject.SectionEnd[SectionIndex];
-              ClosedSection := AScreenObject.SectionClosed[SectionIndex];
-              Dec(SectionIndex);
-              if SectionIndex >= 0  then
+              NextPart := VertexIndex = NextEnd;
+              if NextPart then
               begin
-                NextEnd := AScreenObject.SectionEnd[SectionIndex];
+                NeedToCloseSection := False;
+                CurrentStart := AScreenObject.SectionStart[SectionIndex];
+                CurrentEnd := AScreenObject.SectionEnd[SectionIndex];
+                ClosedSection := AScreenObject.SectionClosed[SectionIndex];
+                Dec(SectionIndex);
+                if SectionIndex >= 0  then
+                begin
+                  NextEnd := AScreenObject.SectionEnd[SectionIndex];
+                end;
               end;
-            end;
-            if AScreenObject.SelectedVertices[VertexIndex] then
-            begin
-              if ClosedSection and
-                ((VertexIndex = CurrentStart) or (VertexIndex = CurrentEnd)) then
+              if AScreenObject.SelectedVertices[VertexIndex] then
               begin
-                NeedToCloseSection := true;
+                if ClosedSection and (VertexIndex = CurrentEnd) then
+                begin
+                  NeedToCloseSection := False;
+                  for InnerVertexIndex := CurrentStart to CurrentEnd do
+                  begin
+                    if not AScreenObject.SelectedVertices[InnerVertexIndex] then
+                    begin
+                      NeedToCloseSection := True;
+                      break;
+                    end;
+                  end;
+                end;
+                AScreenObject.DeletePoint(VertexIndex);
               end;
-              AScreenObject.DeletePoint(VertexIndex);
+              if (VertexIndex < AScreenObject.Count) then
+              begin
+                if NeedToCloseSection and (VertexIndex = CurrentStart)
+                  and not AScreenObject.SectionClosed[SectionIndex+1]
+                  and (AScreenObject.SectionLength[SectionIndex+1] > 2) then
+                begin
+                  LastPoint := AScreenObject.Points[VertexIndex];
+                  CurrentEnd := AScreenObject.SectionEnd[SectionIndex+1];
+                  AScreenObject.InsertPoint(CurrentEnd+1, LastPoint);
+                  NeedToCloseSection := False;
+                end;
+              end;
             end;
-            if NeedToCloseSection and (VertexIndex = CurrentStart)
-              and not AScreenObject.SectionClosed[SectionIndex+1]
-              and (AScreenObject.SectionLength[SectionIndex+1] > 2) then
+            if not AScreenObject.UpToDate then
             begin
-              LastPoint := AScreenObject.Points[VertexIndex];
-              CurrentEnd := AScreenObject.SectionEnd[SectionIndex+1];
-              AScreenObject.InsertPoint(CurrentEnd+1, LastPoint);
+              AScreenObject.UpToDate := True;
             end;
-          end;
-          if not AScreenObject.UpToDate then
-          begin
+            AScreenObject.Invalidate;
             AScreenObject.UpToDate := True;
           end;
-          AScreenObject.Invalidate;
-          AScreenObject.UpToDate := True;
         end;
       end;
+      for DataSetIndex := 0 to AScreenObject.DataSetCount - 1 do
+      begin
+        AScreenObject.DataSets[DataSetIndex].Invalidate;
+        AScreenObject.UpToDate := True;
+      end;
     end;
-    for DataSetIndex := 0 to AScreenObject.DataSetCount - 1 do
-    begin
-      AScreenObject.DataSets[DataSetIndex].Invalidate;
-      AScreenObject.UpToDate := True;
-    end;
+    frmGoPhast.TopScreenObjectsChanged := True;
+    frmGoPhast.FrontScreenObjectsChanged := True;
+    frmGoPhast.SideScreenObjectsChanged := True;
+    FShouldUpdateShowHideObjects := True;
+  finally
+    frmGoPhast.CanDraw := True;
   end;
-  frmGoPhast.TopScreenObjectsChanged := True;
-  frmGoPhast.FrontScreenObjectsChanged := True;
-  frmGoPhast.SideScreenObjectsChanged := True;
-  FShouldUpdateShowHideObjects := True;
   UpdateDisplay;
 end;
 
@@ -2405,36 +2653,64 @@ var
   AScreenObject: TScreenObject;
   DataSetIndex: integer;
   OldPointPositionValues: TPointPositionValues;
+  Varray: TValueArrayStorage;
+  VCollection: TValueCollection;
+  ImportIndex: Integer;
 begin
   if FCanDeleteVertices then
   begin
-    for Index := 0 to FScreenObjects.Count - 1 do
-    begin
-      AScreenObject := FScreenObjects[Index];
-      if AScreenObject.Deleted then
+    frmGoPhast.CanDraw := False;
+    try
+      for Index := 0 to FScreenObjects.Count - 1 do
       begin
-        AScreenObject.Deleted := False;
-      end
-      else
-      begin
-        AScreenObject.Count := Length(FPoints[Index]);
-        AScreenObject.MoveToPoints(FPoints[Index]);
-        AScreenObject.SectionStarts := FSectionStarts[Index];
-        OldPointPositionValues := FVertexValues[Index];
-        AScreenObject.PointPositionValues := OldPointPositionValues;
-        AScreenObject.Invalidate;
-        AScreenObject.UpToDate := True;
+        AScreenObject := FScreenObjects[Index];
+        if AScreenObject.Deleted then
+        begin
+          AScreenObject.Deleted := False;
+        end
+        else
+        begin
+          AScreenObject.Count := Length(FPoints[Index]);
+          AScreenObject.MoveToPoints(FPoints[Index]);
+          AScreenObject.SectionStarts := FSectionStarts[Index];
+          OldPointPositionValues := FVertexValues[Index];
+          AScreenObject.PointPositionValues := OldPointPositionValues;
+          AScreenObject.Invalidate;
+          AScreenObject.UpToDate := True;
+        end;
+
+        Varray := FOldImportedElevations[Index];
+        Varray.RestoreData;
+        AScreenObject.ImportedSectionElevations := Varray;
+
+        Varray := FOldHigherImportedElevations[Index];
+        Varray.RestoreData;
+        AScreenObject.ImportedHigherSectionElevations := Varray;
+
+        Varray := FOldLowerImportedElevations[Index];
+        Varray.RestoreData;
+        AScreenObject.ImportedLowerSectionElevations := Varray;
+
+        VCollection := FOldImportedValues[Index];
+        for ImportIndex := 0 to VCollection.Count - 1 do
+        begin
+          VCollection.Items[ImportIndex].Values.RestoreData;
+        end;
+        AScreenObject.ImportedValues := VCollection;
+
+        for DataSetIndex := 0 to AScreenObject.DataSetCount - 1 do
+        begin
+          AScreenObject.DataSets[DataSetIndex].Invalidate;
+          AScreenObject.UpToDate := True;
+        end;
       end;
-      for DataSetIndex := 0 to AScreenObject.DataSetCount - 1 do
-      begin
-        AScreenObject.DataSets[DataSetIndex].Invalidate;
-        AScreenObject.UpToDate := True;
-      end;
+      frmGoPhast.TopScreenObjectsChanged := True;
+      frmGoPhast.FrontScreenObjectsChanged := True;
+      frmGoPhast.SideScreenObjectsChanged := True;
+      inherited;
+    finally
+      frmGoPhast.CanDraw := True;
     end;
-    frmGoPhast.TopScreenObjectsChanged := True;
-    frmGoPhast.FrontScreenObjectsChanged := True;
-    frmGoPhast.SideScreenObjectsChanged := True;
-    inherited;
   end;
 end;
 
@@ -2536,6 +2812,12 @@ constructor TUndoAddPart.Create(ScreenObject: TScreenObject);
 begin
   inherited Create;
   FScreenObject := ScreenObject;
+end;
+
+procedure TUndoAddPart.DeleteLastPoint;
+begin
+  Assert(Count > 0);
+  Dec(FCount);
 end;
 
 function TUndoAddPart.Description: string;
@@ -3085,22 +3367,54 @@ end;
 { TUndoPasteScreenObjects }
 
 
+constructor TUndoPasteScreenObjects.Create;
+begin
+  FOldChildModelScreenObjects := TList.Create;
+  inherited;
+end;
+
 function TUndoPasteScreenObjects.Description: string;
 begin
   result := 'paste object(s)';
 end;
 
+destructor TUndoPasteScreenObjects.Destroy;
+begin
+  FOldChildModelScreenObjects.Free;
+  inherited;
+end;
+
 procedure TUndoPasteScreenObjects.DoCommand;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   UnDeleteNewScreenObjects;
   FShouldUpdateShowHideObjects := True;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    FOldChildModelScreenObjects.Add(ChildModel.HorizontalPositionScreenObject)
+  end;
+
   inherited;
 end;
 
 procedure TUndoPasteScreenObjects.Redo;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ScreenObject: TScreenObject;
 begin
   UnDeleteNewScreenObjects;
   FShouldUpdateShowHideObjects := True;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    ScreenObject := FOldChildModelScreenObjects[ChildIndex];
+    ChildModel.HorizontalPositionScreenObject := ScreenObject;
+  end;
+
   inherited;
 end;
 
@@ -3118,6 +3432,390 @@ begin
   DeleteNewScreenObjects;
   FShouldUpdateShowHideObjects := True;
   inherited;
+end;
+
+{ TUndoExplodeScreenObject }
+
+constructor TUndoExplodeScreenObject.Create;
+var
+  Index: Integer;
+  AScreenObject: TScreenObject;
+  SectionIndex: Integer;
+  NewScreenObject: TScreenObject;
+  InnerSectionIndex: Integer;
+  PointIndex: Integer;
+  NewScreenObjects: TList;
+  NewIndex: Integer;
+begin
+  inherited Create;
+
+  NewIndex := frmGoPhast.PhastModel.ScreenObjectCount;
+  NewScreenObjects := TList.Create;
+  try
+    for Index := 0 to FObjectToSplit.Count - 1 do
+    begin
+      AScreenObject := FObjectToSplit[Index];
+      for SectionIndex := 1 to AScreenObject.SectionCount - 1 do
+      begin
+        NewScreenObject :=  TScreenObjectClass(AScreenObject.ClassType).
+          Create(frmGoPhast.PhastModel);
+        NewScreenObjects.Add(NewScreenObject);
+        NewScreenObject.Assign(AScreenObject);
+        NewScreenObject.Name := ObjectPrefix + IntToStr(NewIndex);
+        Inc(NewIndex);
+        for InnerSectionIndex := NewScreenObject.SectionCount - 1 downto 0 do
+        begin
+          if InnerSectionIndex = SectionIndex then
+          begin
+            Continue
+          end;
+          for PointIndex := NewScreenObject.SectionEnd[InnerSectionIndex]
+            downto NewScreenObject.SectionStart[InnerSectionIndex] do
+          begin
+            NewScreenObject.DeletePoint(PointIndex);
+          end;
+        end;
+      end;
+      for PointIndex := AScreenObject.Count -1 downto
+        AScreenObject.SectionEnd[0]+1 do
+      begin
+        AScreenObject.DeletePoint(PointIndex);
+      end;
+      UnselectAllVertices(AScreenObject);
+    end;
+    for Index := 0 to NewScreenObjects.Count - 1 do
+    begin
+      AScreenObject := NewScreenObjects[Index];
+      UnselectAllVertices(AScreenObject);
+    end;
+    StoreNewScreenObjects(NewScreenObjects);
+    DeleteAllButFirstSection;
+    for Index := 0 to FObjectToSplit.Count - 1 do
+    begin
+      AScreenObject := FObjectToSplit[Index];
+      AScreenObject.Selected := True;
+    end;
+    SetPostSelection;
+  finally
+    NewScreenObjects.Free;
+  end;
+
+end;
+
+function TUndoExplodeScreenObject.Description: string;
+begin
+  result := 'split selected objects';
+end;
+
+constructor TCustomUndoDivideScreenObject.Create;
+var
+  Index: Integer;
+  AScreenObject: TScreenObject;
+  OldSettings: TScreenObject;
+begin
+  inherited Create;
+  FOldChildModelScreenObjects := TList.Create;
+  FObjectToSplit := TList.Create;
+  FOldScreenObjectSettings := TObjectList.Create;
+  for Index := 0 to FOldSelectedScreenObjects.Count - 1 do
+  begin
+    AScreenObject := FOldSelectedScreenObjects[Index];
+    if ShouldDivideScreenScreenObject(AScreenObject) then
+    begin
+      FObjectToSplit.Add(AScreenObject);
+      OldSettings := TScreenObjectClass(AScreenObject.ClassType).Create(nil);
+      OldSettings.Assign(AScreenObject);
+      FOldScreenObjectSettings.Add(OldSettings)
+    end;
+  end;
+end;
+
+destructor TCustomUndoDivideScreenObject.Destroy;
+begin
+  FObjectToSplit.Free;
+  FOldScreenObjectSettings.Free;
+  FOldChildModelScreenObjects.Free;
+  inherited;
+end;
+
+procedure TCustomUndoDivideScreenObject.DoCommand;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  UnDeleteNewScreenObjects;
+  FShouldUpdateShowHideObjects := True;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    FOldChildModelScreenObjects.Add(ChildModel.HorizontalPositionScreenObject)
+  end;
+
+  inherited;
+end;
+
+procedure TUndoExplodeScreenObject.Redo;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ScreenObject: TScreenObject;
+begin
+  UnDeleteNewScreenObjects;
+  FShouldUpdateShowHideObjects := True;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    ScreenObject := FOldChildModelScreenObjects[ChildIndex];
+    ChildModel.HorizontalPositionScreenObject := ScreenObject;
+  end;
+  DeleteAllButFirstSection;
+  inherited;
+end;
+
+function TUndoExplodeScreenObject.ShouldDivideScreenScreenObject(
+  AScreenObject: TScreenObject): boolean;
+begin
+  result := AScreenObject.SectionCount > 1;
+end;
+
+procedure TUndoExplodeScreenObject.DeleteAllButFirstSection;
+var
+  Index: Integer;
+  PointIndex: Integer;
+  AScreenObject: TScreenObject;
+begin
+  for Index := 0 to FObjectToSplit.Count - 1 do
+  begin
+    AScreenObject := FObjectToSplit[Index];
+    for PointIndex := AScreenObject.Count - 1 downto AScreenObject.SectionEnd[0] + 1 do
+    begin
+      AScreenObject.DeletePoint(PointIndex);
+    end;
+  end;
+end;
+
+procedure TCustomUndoDivideScreenObject.Undo;
+var
+  Index: Integer;
+  AScreenObject, OldSettings: TScreenObject;
+begin
+  DeleteNewScreenObjects;
+  FShouldUpdateShowHideObjects := True;
+  Assert(FObjectToSplit.Count = FOldScreenObjectSettings.Count);
+  for Index := 0 to FObjectToSplit.Count - 1 do
+  begin
+    AScreenObject := FObjectToSplit[Index];
+    OldSettings := FOldScreenObjectSettings[Index];
+    AScreenObject.Assign(OldSettings);
+  end;
+  inherited;
+end;
+
+{ TUndoSplitScreenObject }
+
+constructor TUndoMakeSelectedVerticesNewScreenObject.Create;
+var
+  NewIndex: Integer;
+  NewScreenObjects: TList;
+  Index: Integer;
+  AScreenObject: TScreenObject;
+  NewScreenObject: TScreenObject;
+  PointIndex: Integer;
+begin
+  inherited Create;
+  NewIndex := frmGoPhast.PhastModel.ScreenObjectCount;
+  NewScreenObjects := TList.Create;
+  try
+    for Index := 0 to FObjectToSplit.Count - 1 do
+    begin
+      AScreenObject := FObjectToSplit[Index];
+
+      NewScreenObject :=  TScreenObjectClass(AScreenObject.ClassType).
+        Create(frmGoPhast.PhastModel);
+      NewScreenObjects.Add(NewScreenObject);
+      NewScreenObject.Assign(AScreenObject);
+      NewScreenObject.Name := ObjectPrefix + IntToStr(NewIndex);
+      Inc(NewIndex);
+
+      for PointIndex := AScreenObject.Count - 1 downto 0 do
+      begin
+        if AScreenObject.SelectedVertices[PointIndex] then
+        begin
+          AScreenObject.DeletePoint(PointIndex);
+        end
+        else
+        begin
+          NewScreenObject.DeletePoint(PointIndex);
+        end;
+      end;
+      UnselectAllVertices(AScreenObject);
+      UnselectAllVertices(NewScreenObject);
+    end;
+    StoreNewScreenObjects(NewScreenObjects);
+    for Index := 0 to FObjectToSplit.Count - 1 do
+    begin
+      AScreenObject := FObjectToSplit[Index];
+      AScreenObject.Selected := True;
+    end;
+    SetPostSelection;
+  finally
+    NewScreenObjects.Free;
+  end;
+end;
+
+function TUndoMakeSelectedVerticesNewScreenObject.Description: string;
+begin
+  result := 'make selected vertices a separate object';
+end;
+
+procedure TUndoMakeSelectedVerticesNewScreenObject.Redo;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ScreenObject: TScreenObject;
+  Index: Integer;
+  AScreenObject: TScreenObject;
+  PointIndex: Integer;
+begin
+  UnDeleteNewScreenObjects;
+  FShouldUpdateShowHideObjects := True;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    ScreenObject := FOldChildModelScreenObjects[ChildIndex];
+    ChildModel.HorizontalPositionScreenObject := ScreenObject;
+  end;
+  for Index := 0 to FObjectToSplit.Count - 1 do
+  begin
+    AScreenObject := FObjectToSplit[Index];
+
+    for PointIndex := AScreenObject.Count - 1 downto 0 do
+    begin
+      if AScreenObject.SelectedVertices[PointIndex] then
+      begin
+        AScreenObject.DeletePoint(PointIndex);
+      end
+    end;
+  end;
+  inherited;
+end;
+
+function TUndoMakeSelectedVerticesNewScreenObject.ShouldDivideScreenScreenObject(
+  AScreenObject: TScreenObject): boolean;
+begin
+  result := (AScreenObject.SelectedVertexCount > 0)
+    and (AScreenObject.SelectedVertexCount < AScreenObject.Count);
+end;
+
+{ TUndoSplitScreenObject }
+
+constructor TUndoSplitScreenObject.Create;
+var
+  NewIndex: Integer;
+  NewScreenObjects: TList;
+  Index: Integer;
+  AScreenObject: TScreenObject;
+  NewScreenObject: TScreenObject;
+  PointIndex: Integer;
+  ScreenObjects: array[0..1] of TScreenObject;
+  SelectedIndex: integer;
+begin
+  inherited Create;
+  NewIndex := frmGoPhast.PhastModel.ScreenObjectCount;
+  NewScreenObjects := TList.Create;
+  try
+    for Index := 0 to FObjectToSplit.Count - 1 do
+    begin
+      AScreenObject := FObjectToSplit[Index];
+
+      NewScreenObject :=  TScreenObjectClass(AScreenObject.ClassType).
+        Create(frmGoPhast.PhastModel);
+      NewScreenObjects.Add(NewScreenObject);
+      NewScreenObject.Assign(AScreenObject);
+      NewScreenObject.Name := ObjectPrefix + IntToStr(NewIndex);
+      Inc(NewIndex);
+
+      ScreenObjects[0] := AScreenObject;
+      ScreenObjects[1] := NewScreenObject;
+      SelectedIndex := 0;
+
+      for PointIndex := AScreenObject.Count - 1 downto 0 do
+      begin
+        if AScreenObject.SelectedVertices[PointIndex] then
+        begin
+          SelectedIndex := 1 - SelectedIndex;
+        end
+        else
+        begin
+          ScreenObjects[SelectedIndex].DeletePoint(PointIndex);
+        end;
+      end;
+      UnselectAllVertices(AScreenObject);
+      UnselectAllVertices(NewScreenObject);
+    end;
+    StoreNewScreenObjects(NewScreenObjects);
+    for Index := 0 to FObjectToSplit.Count - 1 do
+    begin
+      AScreenObject := FObjectToSplit[Index];
+      AScreenObject.Selected := True;
+    end;
+    SetPostSelection;
+  finally
+    NewScreenObjects.Free;
+  end;
+end;
+
+function TUndoSplitScreenObject.Description: string;
+begin
+  result := 'split object at selected vertices';
+end;
+
+procedure TUndoSplitScreenObject.Redo;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ScreenObject: TScreenObject;
+  Index: Integer;
+  AScreenObject: TScreenObject;
+  PointIndex: Integer;
+  ShouldDelete: Boolean;
+begin
+  UnDeleteNewScreenObjects;
+  FShouldUpdateShowHideObjects := True;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    ScreenObject := FOldChildModelScreenObjects[ChildIndex];
+    ChildModel.HorizontalPositionScreenObject := ScreenObject;
+  end;
+  for Index := 0 to FObjectToSplit.Count - 1 do
+  begin
+    AScreenObject := FObjectToSplit[Index];
+    ShouldDelete := True;
+    for PointIndex := AScreenObject.Count - 1 downto 0 do
+    begin
+      if AScreenObject.SelectedVertices[PointIndex] then
+      begin
+        ShouldDelete := not ShouldDelete;
+      end
+      else if ShouldDelete then
+      begin
+        AScreenObject.DeletePoint(PointIndex);
+      end;
+    end;
+  end;
+  inherited;
+end;
+
+procedure TCustomUndoDivideScreenObject.UnselectAllVertices(AScreenObject: TScreenObject);
+begin
+  AScreenObject.ClearSelectedVertices;
+end;
+
+function TUndoSplitScreenObject.ShouldDivideScreenScreenObject(
+  AScreenObject: TScreenObject): boolean;
+begin
+  result := (AScreenObject.SelectedVertexCount > 0);
 end;
 
 end.

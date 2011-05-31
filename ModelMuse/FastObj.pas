@@ -72,6 +72,10 @@ Cautions:
 
 {$Include FastObj.inc}
 
+{$Ifdef FullDebugMode}
+  {$UNDEF UseFastMM}
+{$EndIf}
+
 interface
 
 

@@ -29,14 +29,14 @@ end;
 
 function TSipWriter.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.SipPackage;
+  result := Model.ModflowPackages.SipPackage;
 end;
 
 procedure TSipWriter.WriteDataSet1;
 var
   SIP: TSIPPackageSelection;
 begin
-  SIP := PhastModel.ModflowPackages.SipPackage;
+  SIP := Model.ModflowPackages.SipPackage;
   WriteInteger(SIP.MXITER);
   WriteInteger(SIP.NPARM);
   WriteString(' # Data Set 1: MXITER NPARM');
@@ -47,7 +47,7 @@ procedure TSipWriter.WriteDataSet2;
 var
   SIP: TSIPPackageSelection;
 begin
-  SIP := PhastModel.ModflowPackages.SipPackage;
+  SIP := Model.ModflowPackages.SipPackage;
   WriteFloat(SIP.ACCL.Value);
   WriteFloat(SIP.HCLOSE.Value);
   WriteInteger(SIP.IPCALC);
@@ -70,7 +70,7 @@ begin
     Exit;
   end;
   NameOfFile := FileName(AFileName);
-  WriteToNameFile('SIP', PhastModel.UnitNumbers.UnitNumber(StrSIP), NameOfFile, foInput);
+  WriteToNameFile('SIP', Model.UnitNumbers.UnitNumber(StrSIP), NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
     frmProgressMM.AddMessage('Writing SIP Package input.');

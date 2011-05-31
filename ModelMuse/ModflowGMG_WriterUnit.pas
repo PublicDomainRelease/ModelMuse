@@ -32,14 +32,14 @@ end;
 
 function TGmgWriter.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.GmgPackage;
+  result := Model.ModflowPackages.GmgPackage;
 end;
 
 procedure TGmgWriter.WriteDataSet1;
 var
   GMG : TGmgPackageSelection;
 begin
-  GMG := PhastModel.ModflowPackages.GmgPackage;
+  GMG := Model.ModflowPackages.GmgPackage;
   WriteFloat(GMG.RCLOSE.Value);
   WriteInteger(GMG.IITER);
   WriteFloat(GMG.HCLOSE.Value);
@@ -54,13 +54,13 @@ var
   IUNITMHC: integer;
   OutputFile: string;
 begin
-  GMG := PhastModel.ModflowPackages.GmgPackage;
+  GMG := Model.ModflowPackages.GmgPackage;
   WriteFloat(GMG.DAMP.Value);
   WriteInteger(GMG.IADAMP);
   WriteInteger(GMG.IOUTGMG);
   if GMG.IUNITMHC then
   begin
-    IUNITMHC := PhastModel.UnitNumbers.UnitNumber(StrIUNITMHC);
+    IUNITMHC := Model.UnitNumbers.UnitNumber(StrIUNITMHC);
     OutputFile := ChangeFileExt(NameOfFile, '.gmgout');
     WriteToNameFile(StrDATA, IUNITMHC, OutputFile, foOutput);
   end
@@ -77,7 +77,7 @@ procedure TGmgWriter.WriteDataSet3;
 var
   GMG : TGmgPackageSelection;
 begin
-  GMG := PhastModel.ModflowPackages.GmgPackage;
+  GMG := Model.ModflowPackages.GmgPackage;
   WriteInteger(GMG.ISM);
   WriteInteger(GMG.ISM);
   if True then
@@ -93,7 +93,7 @@ procedure TGmgWriter.WriteDataSet4;
 var
   GMG : TGmgPackageSelection;
 begin
-  GMG := PhastModel.ModflowPackages.GmgPackage;
+  GMG := Model.ModflowPackages.GmgPackage;
   if GMG.ISC = 4 then
   begin
     WriteFloat(GMG.RELAX.Value);
@@ -111,7 +111,7 @@ begin
     Exit;
   end;
   NameOfFile := FileName(AFileName);
-  WriteToNameFile('GMG', PhastModel.UnitNumbers.UnitNumber(StrGMG), NameOfFile, foInput);
+  WriteToNameFile('GMG', Model.UnitNumbers.UnitNumber(StrGMG), NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
     frmProgressMM.AddMessage('Writing GMG Package input.');

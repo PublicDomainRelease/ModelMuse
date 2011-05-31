@@ -98,10 +98,10 @@ inherited frmPrintFrequency: TfrmPrintFrequency
     RowCount = 22
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
     TabOrder = 1
-    OnMouseDown = rdgPrintFrequencyMouseDown
     OnMouseUp = rdgPrintFrequencyMouseUp
     OnSelectCell = rdgPrintFrequencySelectCell
     OnSetEditText = rdgPrintFrequencySetEditText
+    AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = True
     AutoIncreaseRowCount = False
@@ -254,7 +254,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 0
       Text = '0'
       OnChange = rdeTimeChange

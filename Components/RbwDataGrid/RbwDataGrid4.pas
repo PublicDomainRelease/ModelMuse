@@ -496,6 +496,8 @@ type
     FOnDistributeTextProgress: TDistributeTextProgressEvent;
     FAutoIncreaseColCount: boolean;
     FDistributingText: Boolean;
+    FAutoMultiEdit: boolean;
+    FExtendedAutoDistributeText: boolean;
     function CollectionItem(const ACol, ARow: Longint): TCustomRowOrColumn; virtual; abstract;
     function GetCellVisible(ACol, ARow: Integer): boolean;
     function GetChecked(const ACol, ARow: integer): boolean;
@@ -544,6 +546,8 @@ type
     function GetColVisible(ACol: Integer): boolean;
     function GetItemIndex(const ACol, ARow: integer): integer;
     procedure SetItemIndex(const ACol, ARow, Value: integer);
+    procedure SetExtendedAutoDistributeText(const Value: boolean);
+    procedure SetAutoIncreaseColCount(const Value: boolean);
   protected
     FColorSelectedColumnOrRow: boolean;
     FdgColumn: integer;
@@ -596,6 +600,7 @@ type
     function WidthNeededToFitText(const ACol, ARow: Integer): integer;
     procedure SelectAll;
     procedure ClearSelection;
+    procedure CopyAllCellsToClipboard;
     procedure CopySelectedCellsToClipboard;
     procedure UpdateEditor;
     procedure BeginUpdate; virtual;
@@ -638,10 +643,13 @@ type
     property ItemIndex[const ACol, ARow: integer]: integer read GetItemIndex
       write SetItemIndex;
   published
+    property ExtendedAutoDistributeText: boolean
+      read FExtendedAutoDistributeText write SetExtendedAutoDistributeText;
+    property AutoMultiEdit: boolean read FAutoMultiEdit write FAutoMultiEdit;
     property AutoDistributeText: boolean read FAutoDistributeText
       write FAutoDistributeText;
     property AutoIncreaseColCount: boolean read FAutoIncreaseColCount
-      write FAutoIncreaseColCount;
+      write SetAutoIncreaseColCount;
     property AutoIncreaseRowCount: boolean read FAutoIncreaseRowCount
       write FAutoIncreaseRowCount;
     property ColCount: Longint read GetColCount write SetColCount default 5;
@@ -1501,6 +1509,54 @@ procedure TCustomRBWDataGrid.ClearSelection;
 begin
   FRangeSelections.Clear;
   Invalidate;
+end;
+
+procedure TCustomRBWDataGrid.CopyAllCellsToClipboard;
+var
+  CopiedText: TStringList;
+  RowIndex: Integer;
+  Line: string;
+  ColIndex: Integer;
+begin
+  CopiedText := TStringList.Create;
+  try
+    for RowIndex := 0 to RowCount-1 do
+    begin
+      Line := '';
+      for ColIndex := 0 to ColCount-1 do
+      begin
+        if (GetCellFormat(ColIndex, RowIndex) = rcf4Boolean)
+          and (ColIndex >= FixedCols) and (RowIndex >= FixedRows) then
+        begin
+          case State[ColIndex, RowIndex] of
+            cbUnchecked:
+              begin
+                Line := Line + ''#9'' + 'False';
+              end;
+            cbChecked:
+              begin
+                Line := Line + ''#9'' + 'True';
+              end;
+            cbGrayed:
+              begin
+                Line := Line + ''#9'' + 'Undefined';
+              end;
+          else
+            Assert(False);
+          end;
+        end
+        else
+        begin
+          Line := Line + ''#9'' + Cells[ColIndex, RowIndex];
+        end;
+      end;
+      Line := Copy(Line, 2, MAXINT);
+      CopiedText.Add(Line);
+    end;
+    ClipBoard.AsText := CopiedText.Text;
+  finally
+    CopiedText.Free;
+  end
 end;
 
 procedure TCustomRBWDataGrid.CopySelectedCellsToClipboard;
@@ -3006,6 +3062,15 @@ begin
   result := inherited Cells[ACol, ARow];
 end;
 
+procedure TCustomRBWDataGrid.SetAutoIncreaseColCount(const Value: boolean);
+begin
+  FAutoIncreaseColCount := Value;
+  if FAutoIncreaseColCount then
+  begin
+    ExtendedAutoDistributeText := False;
+  end;
+end;
+
 procedure TCustomRBWDataGrid.SetCells(ACol, ARow: Integer; const Value: string);
 begin
   if (ACol >= 0) and (ARow >= 0) then
@@ -3101,6 +3166,17 @@ var
   NewSelection : TGridRect;
 begin
   inherited;
+  if AutoMultiEdit then
+  begin
+    if ([ssShift, ssCtrl] * Shift) = [] then
+    begin
+      Options := Options + [goEditing];
+    end
+    else
+    begin
+      Options := Options - [goEditing];
+    end;
+  end;
   fMouseIsDown := True;
   MouseToCell(X, Y, ACol, ARow);
   CanSelect := inherited SelectCell(ACol, ARow);
@@ -3626,13 +3702,14 @@ var
   AStringList: TStringList;
   LineIndex: integer;
   AString: string;
-  Row: integer;
+  NewRow: integer;
   NewString: String;
   WordIndex: integer;
   TabCount: Integer;
   MaxTabCount: Integer;
   CharIndex: Integer;
   CellFormat: TRbwColumnFormat4;
+  NewCol: Integer;
   function ExtractWord(var AString: string): string;
   var
     TabPos: integer;
@@ -3649,6 +3726,54 @@ var
       AString := '';
     end;
   end;
+  procedure AssignTextToCell;
+  begin
+    if NewCol < ColCount then
+    begin
+      if SelectCell(NewCol, NewRow) then
+      begin
+        CellFormat := CollectionItem(NewCol,NewRow).Format;
+        if UseSpecialFormat[NewCol,NewRow] then
+        begin
+          CellFormat := SpecialFormat[NewCol,NewRow];
+        end;
+        if CellFormat = rcf4Boolean then
+        begin
+          if UpperCase(NewString) = 'TRUE' then
+          begin
+            Checked[NewCol, NewRow] := True;
+          end
+          else if UpperCase(NewString) = 'UNDEFINED' then
+          begin
+            State[NewCol, NewRow] := cbGrayed;
+          end
+          else if NewString <> '' then
+          begin
+            Checked[NewCol, NewRow] := False;
+          end;
+        end
+        else if CollectionItem(NewCol,NewRow).ComboUsed
+          and CollectionItem(NewCol,NewRow).LimitToList then
+        begin
+          if CollectionItem(NewCol,NewRow).PickList.IndexOf(NewString) >= 0 then
+          begin
+            Cells[NewCol, NewRow] := NewString;
+            SetEditText(NewCol, NewRow, NewString);
+          end
+          else
+          begin
+            Cells[NewCol, NewRow] := '';
+            SetEditText(NewCol, NewRow, '');
+          end;
+        end
+        else
+        begin;
+          Cells[NewCol, Row] := NewString;
+          SetEditText(NewCol, Row, NewString);
+        end;
+      end;
+    end
+  end;
 begin
   BeginUpdate;
   AStringList := TStringList.Create;
@@ -3659,106 +3784,98 @@ begin
     begin
       FDistributingText := True;
       try
-        if AutoIncreaseRowCount then
+        if ExtendedAutoDistributeText then
         begin
-          if RowCount < ARow + AStringList.Count then
+          Assert(not AutoIncreaseColCount);
+          NewRow := ARow;
+          NewCol := ACol;
+          LineIndex := 0;
+          While LineIndex < AStringList.Count do
           begin
-            RowCount := ARow + AStringList.Count;
-          end;
-        end;
-        if AutoIncreaseColCount then
-        begin
-          MaxTabCount := 0;
-          for LineIndex := 0 to AStringList.Count -1 do
-          begin
-            TabCount := 0;
             AString := AStringList[LineIndex];
-            for CharIndex := 1 to Length(AString) do
-            begin
-              if AString[CharIndex] = #9 then
-              begin
-                Inc(TabCount);
-              end;
-            end;
-            if TabCount > MaxTabCount then
-            begin
-              MaxTabCount := TabCount;
-            end;
-          end;
-          if ColCount <= ACol + MaxTabCount+1 then
-          begin
-            ColCount := ACol + MaxTabCount+1
-          end;
-        end;
-        for LineIndex := 0 to AStringList.Count -1 do
-        begin
-          AString := AStringList[LineIndex];
-          Row := ARow + LineIndex;
-          WordIndex := 0;
-          if AString = '' then
-          begin
-            if SelectCell(ACol, Row) then
-            begin
-              Cells[ACol, Row] := '';
-              SetEditText(ACol, Row, '');
-            end;
-          end
-          else
-          begin
             while Length(AString) > 0 do
             begin
               NewString := ExtractWord(AString);
-              if ACol + WordIndex < ColCount then
+              AssignTextToCell;
+              Inc(NewCol);
+              if NewCol >= ColCount then
               begin
-                if SelectCell(ACol + WordIndex, Row) then
+                NewCol := ACol;
+                Inc(NewRow);
+                if AutoIncreaseRowCount and (NewRow >= RowCount) then
                 begin
-                  CellFormat := CollectionItem(ACol + WordIndex,Row).Format;
-                  if UseSpecialFormat[ACol + WordIndex,Row] then
-                  begin
-                    CellFormat := SpecialFormat[ACol + WordIndex,Row];
-                  end;
-                  if CellFormat = rcf4Boolean then
-                  begin
-                    if UpperCase(NewString) = 'TRUE' then
-                    begin
-                      Checked[ACol + WordIndex, Row] := True;
-                    end
-                    else if UpperCase(NewString) = 'UNDEFINED' then
-                    begin
-                      State[ACol + WordIndex, Row] := cbGrayed;
-                    end
-                    else if NewString <> '' then
-                    begin
-                      Checked[ACol + WordIndex, Row] := False;
-                    end;
-                  end
-                  else if CollectionItem(ACol + WordIndex,Row).ComboUsed
-                    and CollectionItem(ACol + WordIndex,Row).LimitToList then
-                  begin
-                    if CollectionItem(ACol + WordIndex,Row).PickList.IndexOf(NewString) >= 0 then
-                    begin
-                      Cells[ACol + WordIndex, Row] := NewString;
-                      SetEditText(ACol + WordIndex, Row, NewString);
-                    end
-                    else
-                    begin
-                      Cells[ACol + WordIndex, Row] := '';
-                      SetEditText(ACol + WordIndex, Row, '');
-                    end;
-                  end
-                  else
-                  begin;
-                    Cells[ACol + WordIndex, Row] := NewString;
-                    SetEditText(ACol + WordIndex, Row, NewString);
-                  end;
+                  RowCount := RowCount + 1;
                 end;
+                break;
               end;
-              Inc(WordIndex);
+            end;
+            Inc(LineIndex);
+            if Assigned(FOnDistributeTextProgress) then
+            begin
+              FOnDistributeTextProgress(self, LineIndex+1, AStringList.Count);
             end;
           end;
-          if Assigned(FOnDistributeTextProgress) then
+        end
+        else
+        begin
+          if AutoIncreaseRowCount then
           begin
-            FOnDistributeTextProgress(self, LineIndex+1, AStringList.Count);
+            if RowCount < ARow + AStringList.Count then
+            begin
+              RowCount := ARow + AStringList.Count;
+            end;
+          end;
+          if AutoIncreaseColCount then
+          begin
+            MaxTabCount := 0;
+            for LineIndex := 0 to AStringList.Count -1 do
+            begin
+              TabCount := 0;
+              AString := AStringList[LineIndex];
+              for CharIndex := 1 to Length(AString) do
+              begin
+                if AString[CharIndex] = #9 then
+                begin
+                  Inc(TabCount);
+                end;
+              end;
+              if TabCount > MaxTabCount then
+              begin
+                MaxTabCount := TabCount;
+              end;
+            end;
+            if ColCount <= ACol + MaxTabCount+1 then
+            begin
+              ColCount := ACol + MaxTabCount+1
+            end;
+          end;
+          for LineIndex := 0 to AStringList.Count -1 do
+          begin
+            AString := AStringList[LineIndex];
+            NewRow := ARow + LineIndex;
+            WordIndex := 0;
+            if AString = '' then
+            begin
+              if SelectCell(ACol, NewRow) then
+              begin
+                Cells[ACol, NewRow] := '';
+                SetEditText(ACol, NewRow, '');
+              end;
+            end
+            else
+            begin
+              while Length(AString) > 0 do
+              begin
+                NewString := ExtractWord(AString);
+                NewCol := ACol + WordIndex;
+                AssignTextToCell;
+                Inc(WordIndex);
+              end;
+            end;
+            if Assigned(FOnDistributeTextProgress) then
+            begin
+              FOnDistributeTextProgress(self, LineIndex+1, AStringList.Count);
+            end;
           end;
         end;
       finally
@@ -3874,8 +3991,18 @@ begin
       end;
     end;
 
+    if (ACol < 0) or (ARow < 0) or (ACol >= ColCount) or (ARow >= RowCount) then
+    begin
+      inherited;
+      Exit;
+    end;
 
     ColumnOrRow := CollectionItem(ACol, ARow);
+    if ColumnOrRow = nil then
+    begin
+      inherited;
+      Exit;
+    end;
     ColumnOrRow.CheckCell(ACol, ARow);
     if ColumnOrRow.LimitToList then
     begin
@@ -4410,6 +4537,16 @@ begin
   else
   begin
     dgRow := Row;
+  end;
+end;
+
+procedure TCustomRBWDataGrid.SetExtendedAutoDistributeText(
+  const Value: boolean);
+begin
+  FExtendedAutoDistributeText := Value;
+  if FExtendedAutoDistributeText then
+  begin
+    AutoIncreaseColCount := False;
   end;
 end;
 

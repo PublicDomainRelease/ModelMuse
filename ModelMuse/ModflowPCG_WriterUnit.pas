@@ -29,14 +29,14 @@ end;
 
 function TPcgWriter.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.PcgPackage;
+  result := Model.ModflowPackages.PcgPackage;
 end;
 
 procedure TPcgWriter.WriteDataSet1;
 var
   PCG: TPcgSelection;
 begin
-  PCG := PhastModel.ModflowPackages.PcgPackage;
+  PCG := Model.ModflowPackages.PcgPackage;
   WriteInteger(PCG.MXITER);
   WriteInteger(PCG.ITER1);
   WriteInteger(Ord(PCG.NPCOND)+1);
@@ -48,7 +48,7 @@ procedure TPcgWriter.WriteDataSet2;
 var
   PCG: TPcgSelection;
 begin
-  PCG := PhastModel.ModflowPackages.PcgPackage;
+  PCG := Model.ModflowPackages.PcgPackage;
   WriteFloat(PCG.HCLOSE.Value);
   WriteFloat(PCG.RCLOSE.Value);
   WriteFloat(PCG.RELAX.Value);
@@ -82,7 +82,7 @@ begin
     Exit;
   end;
   NameOfFile := FileName(AFileName);
-  WriteToNameFile('PCG', PhastModel.UnitNumbers.UnitNumber(StrPCG),
+  WriteToNameFile('PCG', Model.UnitNumbers.UnitNumber(StrPCG),
     NameOfFile, foInput);
   OpenFile(NameOfFile);
   try

@@ -1,3 +1,17 @@
+
+
+
+
+{TODO -cLGR : Allow the user to assign aquifer properties to parent model cells based on the values assigned in the child model.}
+
+{TODO -cLGR : Allow the user to hide or display any of the model grids.}
+
+
+
+
+{TODO -cLGR : Link streams between grids}
+{TODO -cLGR : Other changes to the documentation}
+
 {TODO : import ascii rasters}
 {TODO : add ability to Lock objects so the can't be be moved accidentally}
 {TODO : Add a "ruler" feature}

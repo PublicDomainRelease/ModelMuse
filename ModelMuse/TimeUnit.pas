@@ -42,7 +42,7 @@ type
   published
   public
     // @name creates an instance of @classname.
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
     // @name returns the time-step length of the first @link(TTimeItem)
     // whose ending time is greater than Time.
     function TimeStepLength(const Time: double): double;
@@ -111,7 +111,7 @@ begin
   inherited;
 end;
 
-constructor TTimeCollection.Create(Model: TComponent);
+constructor TTimeCollection.Create(Model: TBaseModel);
 begin
   inherited Create(TTimeItem, Model);
   FStartTime:= TRealStorage.Create;

@@ -57,13 +57,13 @@ inherited frmSpecifyContours: TfrmSpecifyContours
       BevelOuter = bvNone
       ColumnCollection = <
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end>
       ControlCollection = <
         item
@@ -212,9 +212,9 @@ inherited frmSpecifyContours: TfrmSpecifyContours
     RowCount = 2
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
     TabOrder = 1
-    OnMouseDown = rdgContourDataMouseDown
     OnMouseUp = rdgContourDataMouseUp
     OnSelectCell = rdgContourDataSelectCell
+    AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = True
@@ -327,7 +327,7 @@ inherited frmSpecifyContours: TfrmSpecifyContours
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 0
       Text = '2'
       OnChange = rdeLineThicknessChange

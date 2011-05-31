@@ -60,15 +60,11 @@ inherited frmImportPoints: TfrmImportPoints
     Top = 0
     Width = 357
     Height = 480
-    ActivePage = tabControls
+    ActivePage = tabData
     Align = alClient
     TabOrder = 1
     object tabControls: TTabSheet
       Caption = 'Controls'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlRadioGroups: TPanel
         Left = 0
         Top = 167
@@ -201,10 +197,6 @@ inherited frmImportPoints: TfrmImportPoints
     object tabData: TTabSheet
       Caption = 'Data'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlDataTabControls: TPanel
         Left = 0
         Top = 401
@@ -268,7 +260,7 @@ inherited frmImportPoints: TfrmImportPoints
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColMoving, goEditing, goTabs, goAlwaysShowEditor]
         TabOrder = 0
-        OnSetEditText = dgDataSetEditText
+        AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = True
@@ -320,6 +312,7 @@ inherited frmImportPoints: TfrmImportPoints
             WordWrapCells = False
             AutoAdjustColWidths = True
           end>
+        OnEndUpdate = dgDataEndUpdate
       end
     end
   end

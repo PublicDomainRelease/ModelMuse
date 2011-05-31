@@ -2,8 +2,6 @@ inherited frmContourData: TfrmContourData
   HelpType = htKeyword
   HelpKeyword = 'Contour_Data_Dialog_Box'
   Caption = 'Contour Data'
-  ExplicitWidth = 320
-  ExplicitHeight = 240
   DesignSize = (
     606
     489)
@@ -42,27 +40,37 @@ inherited frmContourData: TfrmContourData
   inherited pcChoices: TPageControl
     TabOrder = 2
     inherited tabSelection: TTabSheet
-      inherited virttreecomboDataSets: TTntExDropDownVirtualStringTree
-        Top = 29
-        Width = 337
-        Anchors = [akLeft, akTop, akRight]
-        Tree.OnGetNodeDataSize = virttreecomboDataSetsDropDownTreeGetNodeDataSize
-        PanelWidth = 337
-        ExplicitTop = 29
-        ExplicitWidth = 337
+      ExplicitLeft = 4
+      ExplicitTop = 29
+      ExplicitWidth = 598
+      ExplicitHeight = 407
+      inherited lblDataSet: TLabel
+        Width = 59
+        Caption = 'Data set'
+        ExplicitWidth = 59
       end
       inherited cbLogTransform: TCheckBox
         OnClick = cbLogTransformClick
       end
       inherited udDataSets: TJvUpDown
         Left = 351
-        Top = 27
+        Top = 33
         Anchors = [akTop, akRight]
         ExplicitLeft = 351
-        ExplicitTop = 27
+        ExplicitTop = 33
+      end
+      inherited virttreecomboDataSets1: TRbwStringTreeCombo
+        Width = 342
+        Tree.OnGetNodeDataSize = virttreecomboDataSetsDropDownTreeGetNodeDataSize
+        Anchors = [akLeft, akTop, akRight]
+        ExplicitWidth = 342
       end
     end
     inherited tabFilters: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 29
+      ExplicitWidth = 598
+      ExplicitHeight = 407
       inherited lblLowerLimit: TLabel
         Anchors = [akLeft, akTop, akBottom]
       end
@@ -83,6 +91,12 @@ inherited frmContourData: TfrmContourData
         ExplicitTop = 77
         ExplicitHeight = 296
       end
+    end
+    inherited tabLegend: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 29
+      ExplicitWidth = 598
+      ExplicitHeight = 407
     end
   end
   inherited Panel1: TPanel

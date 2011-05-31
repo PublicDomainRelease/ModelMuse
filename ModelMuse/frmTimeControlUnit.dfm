@@ -42,7 +42,7 @@ inherited frmTimeControl: TfrmTimeControl
       Left = 5
       Top = 6
       Width = 84
-      Height = 25
+      Height = 26
       ButtonKind = bkClassic
       MaxValue = 100.000000000000000000
       MinValue = 1.000000000000000000
@@ -85,7 +85,7 @@ inherited frmTimeControl: TfrmTimeControl
       Top = 37
       Width = 84
       Height = 22
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 4
       Text = '0'
       DataType = dtReal
@@ -112,9 +112,9 @@ inherited frmTimeControl: TfrmTimeControl
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowMoving, goEditing, goTabs]
     ParentFont = False
     TabOrder = 0
-    OnMouseDown = dgTimeMouseDown
     OnMouseUp = dgTimeMouseUp
     OnSetEditText = dgTimeSetEditText
+    AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = True
@@ -210,7 +210,7 @@ inherited frmTimeControl: TfrmTimeControl
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 0
       Text = '0'
       OnChange = rdeLengthChange

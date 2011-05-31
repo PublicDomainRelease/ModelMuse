@@ -63,22 +63,28 @@ uses frmGoPhastUnit;
 
 procedure TfrmSelectColRowLayer.GetData;
 begin
-  seCol.Value := frmGoPhast.Grid.SelectedColumn + 1;
-  seCol.MaxValue := frmGoPhast.Grid.ColumnCount;
+  seCol.Value := frmGoPhast.PhastModel.SelectedModel.SelectedColumn + 1;
+  seCol.MaxValue := frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount;
   seCol.MinValue := 1;
-  seRow.Value := frmGoPhast.Grid.SelectedRow + 1;
-  seRow.MaxValue := frmGoPhast.Grid.RowCount;
+  seRow.Value := frmGoPhast.PhastModel.SelectedModel.SelectedRow + 1;
+  seRow.MaxValue := frmGoPhast.PhastModel.SelectedModel.Grid.RowCount;
   seRow.MinValue := 1;
-  seLayer.Value := frmGoPhast.Grid.SelectedLayer + 1;
-  seLayer.MaxValue := frmGoPhast.Grid.LayerCount;
+  seLayer.Value := frmGoPhast.PhastModel.SelectedModel.SelectedLayer + 1;
+  seLayer.MaxValue := frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount;
   seLayer.MinValue := 1;
 end;
 
 procedure TfrmSelectColRowLayer.SetData;
 begin
-  frmGoPhast.Grid.SelectedColumn := seCol.AsInteger - 1;
-  frmGoPhast.Grid.SelectedRow := seRow.AsInteger - 1;
-  frmGoPhast.Grid.SelectedLayer := seLayer.AsInteger - 1;
+  frmGoPhast.PhastModel.SelectedModel.SelectedColumn := seCol.AsInteger - 1;
+  frmGoPhast.PhastModel.SelectedModel.SelectedRow := seRow.AsInteger - 1;
+  frmGoPhast.PhastModel.SelectedModel.SelectedLayer := seLayer.AsInteger - 1;
+  frmGoPhast.PhastModel.UpdateCombinedDisplayColumn;
+  frmGoPhast.frameSideView.ItemChange(nil);
+  frmGoPhast.PhastModel.UpdateCombinedDisplayRow;
+  frmGoPhast.frameFrontView.ItemChange(nil);
+  frmGoPhast.PhastModel.UpdateCombinedDisplayLayer;
+  frmGoPhast.frameTopView.ItemChange(nil);
 end;
 
 procedure TfrmSelectColRowLayer.FormCreate(Sender: TObject);

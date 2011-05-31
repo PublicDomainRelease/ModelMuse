@@ -114,12 +114,12 @@ type
     FInsertionNeeded: boolean;
 
   protected
-    function Model: TObject;
+    function Model: TBaseModel;
     // @name tests whether another @classname is identical to the current one.
     function IsSame(AnotherItem: TOrderedItem): boolean; virtual; abstract;
     // @name invalidates the model.
     // @seeAlso(TOrderedCollection.InvalidateModel)
-    // @seeAlso(TPhastModel.Invalidate)
+    // @seeAlso(TBaseModel.Invalidate)
     procedure InvalidateModel; virtual;
     // if @name is @true, @link(FForeignId) will always be assigned during
     // @link(Assign).  Otherwise, @link(FForeignId) will only be assigned if
@@ -154,21 +154,23 @@ type
   TOrderedCollection = class(TCollection)
   private
     // See @link(Model).
-    FModel: TObject;
+    FModel: TBaseModel;
   protected
     // @name invalidates the model.
-    // @seeAlso(TPhastModel.Invalidate)
+    // @seeAlso(TBaseModel.Invalidate)
     procedure InvalidateModel; virtual;
   public
+    function First: TCollectionItem;
+    function Last: TCollectionItem;
     // @name tests whether the contents of AnOrderedCollection are the same
     // as the current @classname.
     function IsSame(AnOrderedCollection: TOrderedCollection): boolean; virtual;
     // @name is a @link(TPhastModel) or nil.
-    property Model: TObject read FModel;
+    property Model: TBaseModel read FModel;
     // @name creates an instance of @classname.
     // @param(ItemClass ItemClass must be a descendant of @link(TOrderedItem).)
     // @param(Model Model must be a @link(TPhastModel) or nil.)
-    constructor Create(ItemClass: TCollectionItemClass; Model: TObject);
+    constructor Create(ItemClass: TCollectionItemClass; Model: TBaseModel);
     // @name copies the source @classname to itself.  If @link(Model) is nil,
     // it uses the inherited method which causes it to delete all its items,
     // and copy new ones from the source.  If @link(Model) is assigned,
@@ -197,7 +199,7 @@ type
   // @name is a @link(TEnhancedOrderedCollection) that stores of list of
   // @link(TDataArray)s that it can delete. The list (@link(NewDataSets))
   // is not created by the @classname.  Instead another class
-  // creates it and assigns it to @classname. @link(TUndoChangePackageSelection)
+  // creates it and assigns it to @classname. @link(TUndoChangeLgrPackageSelection)
   // is an example of a class that assigns @link(NewDataSets).
   //
   // When a new @link(TDataArray) is created, it should be added to
@@ -240,7 +242,6 @@ type
     // See @link(ParameterType).
     procedure SetParameterType(const Value: TParameterType); virtual;
     // See @link(ParameterName).
-    function CorrectParamName(const Value: string): string;
     procedure SetParameterName(const Value: string); virtual; abstract;
     // See @link(Value).
     procedure SetValue(Value : double); virtual;
@@ -271,6 +272,7 @@ type
   end;
 
 function ParmeterTypeToStr(ParmType: TParameterType): string;
+function CorrectParamName(const Value: string): string;
 
 implementation
 
@@ -305,11 +307,16 @@ begin
 end;
 
 constructor TOrderedCollection.Create(ItemClass: TCollectionItemClass;
-  Model: TObject);
+  Model: TBaseModel);
 begin
   inherited Create(ItemClass);
-  Assert((Model = nil) or (Model is TPhastModel));
+  Assert((Model = nil) or (Model is TCustomModel));
   FModel := Model;
+end;
+
+function TOrderedCollection.First: TCollectionItem;
+begin
+  result := Items[0];
 end;
 
 function TOrderedCollection.IsSame(
@@ -329,6 +336,11 @@ begin
   end;
 end;
 
+function TOrderedCollection.Last: TCollectionItem;
+begin
+  result := Items[Count-1];
+end;
+
 procedure TOrderedCollection.Assign(Source: TPersistent);
 var
   Index: integer;
@@ -337,6 +349,7 @@ var
   ForeignItem: TOrderedItem;
 //  TempList: TList;
   ID_Array: array of integer;
+  ItemIndex: Integer;
   function FindUnitByForeignId(ForeignId: integer): TOrderedItem;
   var
     Index: integer;
@@ -365,7 +378,25 @@ begin
         AnItem := AnotherOrderedCollection.Items[Index] as TOrderedItem;
         ID_Array[Index] := AnItem.ID;
       end;
-      inherited;
+      BeginUpdate;
+      try
+        While Count > AnotherOrderedCollection.Count do
+        begin
+          Delete(Count -1);
+        end;
+        While Count < AnotherOrderedCollection.Count do
+        begin
+          Add;
+        end;
+        for ItemIndex := 0 to Count - 1 do
+        begin
+          Items[ItemIndex].Assign(
+            AnotherOrderedCollection.Items[ItemIndex]);
+        end;
+      finally
+        EndUpdate;
+      end;
+//      inherited;
       for Index := 0 to Count - 1 do
       begin
         AnItem := Items[Index] as TOrderedItem;
@@ -439,16 +470,16 @@ begin
   (Collection as TOrderedCollection).InvalidateModel;
 end;
 
-function TOrderedItem.Model: TObject;
+function TOrderedItem.Model: TBaseModel;
 begin
   result := (Collection as TOrderedCollection).Model;
 end;
 
 procedure TOrderedCollection.InvalidateModel;
 begin
-  If (FModel <> nil) and (FModel is TPhastModel) then
+  If (FModel <> nil) then
   begin
-    TPhastModel(FModel).Invalidate;
+    FModel.Invalidate;
   end;
 end;
 
@@ -462,14 +493,41 @@ procedure TLayerOwnerCollection.RemoveNewDataSets;
 var
   DataArray: TDataArray;
   Index: integer;
+  LocalModel: TCustomModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
+  PhastModel: TPhastModel;
 begin
   Assert(FNewDataSets <> nil);
   Assert(FModel <> nil);
+  LocalModel := FModel as TCustomModel;
+  if FModel is TPhastModel then
+  begin
+     PhastModel := TPhastModel(FModel);
+  end
+  else
+  begin
+    PhastModel:= nil;
+  end;
   for Index := 0 to FNewDataSets.Count - 1 do
   begin
     DataArray := FNewDataSets[Index];
-    (FModel as TPhastModel).RemoveVariables(DataArray);
-    (FModel as TPhastModel).DataArrayManager.ExtractDataSet(DataArray);
+    if PhastModel <> nil then
+    begin
+
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildDataArray := ChildModel.DataArrayManager.GetDataSetByName(DataArray.Name);
+      Assert(ChildDataArray <> nil);
+      ChildModel.RemoveVariables(ChildDataArray);
+      ChildModel.DataArrayManager.ExtractDataSet(ChildDataArray);
+      ChildDataArray.Free;
+    end;
+    end;
+    LocalModel.RemoveVariables(DataArray);
+    LocalModel.DataArrayManager.ExtractDataSet(DataArray);
     DataArray.Free;
   end;
   ClearNewDataSets;
@@ -498,11 +556,11 @@ begin
   inherited;
 end;
 
-function TModflowParameter.CorrectParamName(const Value: string): string;
+function CorrectParamName(const Value: string): string;
 var
   Index: integer;
 begin
-  result := Value;
+  result := Trim(Value);
   if Length(result) >= 1 then
   begin
     if not (result[1] in ['_', 'A'..'Z', 'a'..'z', '_']) then

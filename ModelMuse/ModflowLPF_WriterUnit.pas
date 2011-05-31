@@ -39,6 +39,9 @@ implementation
 uses ModflowUnitNumbers, ModflowOutputControlUnit, DataSetUnit,
   LayerStructureUnit, frmErrorsAndWarningsUnit, frmProgressUnit, Forms;
 
+resourcestring
+  StrParameterZonesNot = 'Parameter zones not defined.';
+
 
 { TModflowLPF_Writer }
 
@@ -48,18 +51,67 @@ var
   HDRY: double;
   Options: string;
   LocalPackage: TLpfSelection;
+  LayerCount: Integer;
+  ValidParamTypes: TParameterTypes;
+  ParamIndex: Integer;
+  Param: TModflowSteadyParameter;
+  NCLU: Integer;
+  Clusters: TOneDIntegerArray;
+  UniformLayers: TBooleanDynArray;
 begin
   ILPFCB := 0;
   GetFlowUnitNumber(ILPFCB);
-  HDRY := PhastModel.ModflowOptions.HDry;
-  if PhastModel.ModflowFullStressPeriods.TransientModel then
+  HDRY := Model.ModflowOptions.HDry;
+  if Model.ModflowFullStressPeriods.TransientModel then
   begin
-    NPLPF := PhastModel.ModflowSteadyParameters.CountParameters(AllLpfParameters);
+    NPLPF := Model.ModflowSteadyParameters.CountParameters(AllLpfParameters);
   end
   else
   begin
-    NPLPF := PhastModel.ModflowSteadyParameters.CountParameters(SteadyLpfParameters);
+    NPLPF := Model.ModflowSteadyParameters.CountParameters(SteadyLpfParameters);
   end;
+
+  if NPLPF > 0 then
+  begin
+    LayerCount := Model.ModflowLayerCount;
+    if Model.ModflowFullStressPeriods.TransientModel then
+    begin
+      ValidParamTypes := AllLpfParameters;
+    end
+    else
+    begin
+      ValidParamTypes := SteadyLpfParameters;
+    end;
+    for ParamIndex := 0 to Model.ModflowSteadyParameters.Count - 1 do
+    begin
+      Param := Model.ModflowSteadyParameters.Items[ParamIndex];
+      if Param.ParameterType in ValidParamTypes then
+      begin
+        if not Param.UseZone then
+        begin
+          if Param.ParameterType = ptLPF_VKCB then
+          begin
+            NCLU := Model.ModflowConfiningBedCount;
+          end
+          else
+          begin
+            NCLU := Model.ModflowLayerCount;
+          end;
+//          SetLength(Clusters, 0);
+        end
+        else
+        begin
+          IdentifyZoneClusters(NCLU, Clusters, UniformLayers, LayerCount, Param);
+        end;
+        if NCLU = 0 then
+        begin
+          Dec(NPLPF);
+        end;
+      end;
+    end;
+  end;
+
+
   LocalPackage := Package as TLpfSelection;
   Options := '';
   if LocalPackage.UseStorageCoefficient then
@@ -103,7 +155,7 @@ var
   LAYTYP: TOneDIntegerArray;
   LayerIndex: Integer;
 begin
-  LAYTYP := PhastModel.LayerStructure.Laytyp;
+  LAYTYP := Model.Laytyp;
   for LayerIndex := 0 to Length(LAYTYP) - 1 do
   begin
     WriteInteger(LAYTYP[LayerIndex]);
@@ -117,7 +169,7 @@ var
   LAYAVG: TOneDIntegerArray;
   LayerIndex: Integer;
 begin
-  LAYAVG := PhastModel.LayerStructure.Layavg;
+  LAYAVG := Model.Layavg;
   for LayerIndex := 0 to Length(LAYAVG) - 1 do
   begin
     WriteInteger(LAYAVG[LayerIndex]);
@@ -131,7 +183,7 @@ var
   CHANI: TOneDIntegerArray;
   LayerIndex: Integer;
 begin
-  CHANI := PhastModel.LayerStructure.Chani;
+  CHANI := Model.Chani;
   for LayerIndex := 0 to Length(CHANI) - 1 do
   begin
     WriteInteger(CHANI[LayerIndex]);
@@ -145,7 +197,7 @@ var
   LAYVKA: TOneDIntegerArray;
   LayerIndex: Integer;
 begin
-  LAYVKA := PhastModel.LayerStructure.Layvka;
+  LAYVKA := Model.Layvka;
   for LayerIndex := 0 to Length(LAYVKA) - 1 do
   begin
     WriteInteger(LAYVKA[LayerIndex]);
@@ -159,11 +211,11 @@ var
   index: Integer;
   LAYTYP: TOneDIntegerArray;
 begin
-  LAYTYP := PhastModel.LayerStructure.Laytyp;
+  LAYTYP := Model.Laytyp;
   FConvertibleLayerPresent := False;
-  for index := 0 to PhastModel.LayerStructure.ModflowLayerCount - 1 do
+  for index := 0 to Model.ModflowLayerCount - 1 do
   begin
-    if PhastModel.ModflowWettingOptions.WettingActive
+    if Model.ModflowWettingOptions.WettingActive
       and (LAYTYP[index] <> 0) then
     begin
       WriteInteger(1);
@@ -184,12 +236,12 @@ var
   IWETIT: integer;
   IHDWET: integer;
 begin
-  if PhastModel.ModflowWettingOptions.WettingActive
+  if Model.ModflowWettingOptions.WettingActive
     and FConvertibleLayerPresent then
   begin
-    WETFCT := PhastModel.ModflowWettingOptions.WettingFactor;
-    IWETIT := PhastModel.ModflowWettingOptions.WettingIterations;
-    IHDWET := PhastModel.ModflowWettingOptions.WettingEquation;
+    WETFCT := Model.ModflowWettingOptions.WettingFactor;
+    IWETIT := Model.ModflowWettingOptions.WettingIterations;
+    IHDWET := Model.ModflowWettingOptions.WettingEquation;
     WriteFloat(WETFCT);
     WriteInteger(IWETIT);
     WriteInteger(IHDWET);
@@ -200,7 +252,7 @@ end;
 
 procedure TModflowLPF_Writer.WriteDataSets10to16;
 var
-  GroupIndex: integer;
+//  GroupIndex: integer;
   Group, NextGroup: TLayerGroup;
   MFLayerIndex: integer;
   LayerIndex: integer;
@@ -209,30 +261,19 @@ var
   TransientModel: boolean;
 begin
   MFLayerIndex := 0;
-  TransientModel := PhastModel.ModflowFullStressPeriods.TransientModel;
-  for GroupIndex := 1 to PhastModel.LayerStructure.Count -1 do
+  TransientModel := Model.ModflowFullStressPeriods.TransientModel;
+  for LayerIndex := 0 to Model.LayerCount - 1 do
   begin
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
-
-    Group := PhastModel.LayerStructure.LayerGroups[GroupIndex];
-    if Group.Simulated then
+    if Model.IsLayerSimulated(LayerIndex) then
     begin
-      for LayerIndex := 0 to Group.ModflowLayerCount -1 do
-      begin
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-
-        Inc(MFLayerIndex);
-        ArrayIndex := PhastModel.LayerStructure.
-          ModflowLayerToDataSetLayer(MFLayerIndex);
-
+      Inc(MFLayerIndex);
+      ArrayIndex := LayerIndex;
+      Group := Model.GetLayerGroupByLayer(LayerIndex);
         // Data Set 10;
         if FParameterUsed[ptLPF_HK] then
         begin
@@ -245,7 +286,7 @@ begin
         begin
           frmProgressMM.AddMessage('  Writing Data Set 10 for layer '
             + IntToStr(MFLayerIndex));
-          DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsKx);
+          DataArray := Model.DataArrayManager.GetDataSetByName(rsKx);
           Assert(DataArray <> nil);
           WriteArray(DataArray, ArrayIndex, 'HK ' + Group.AquiferName
             + ' Layer ' + IntToStr(MFLayerIndex));
@@ -271,7 +312,7 @@ begin
         begin
           frmProgressMM.AddMessage('  Writing Data Set 11 for layer '
             + IntToStr(MFLayerIndex));
-          DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsHorizontalAnisotropy);
+          DataArray := Model.DataArrayManager.GetDataSetByName(rsHorizontalAnisotropy);
           Assert(DataArray <> nil);
           WriteArray(DataArray, ArrayIndex, 'HANI ' + Group.AquiferName
             + ' Layer ' + IntToStr(MFLayerIndex));
@@ -299,11 +340,11 @@ begin
           begin
             frmProgressMM.AddMessage('  Writing Data Set 12 for layer '
               + IntToStr(MFLayerIndex));
-            DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsKz);
+            DataArray := Model.DataArrayManager.GetDataSetByName(rsKz);
             Assert(DataArray <> nil);
             WriteArray(DataArray, ArrayIndex, 'VKA ' + Group.AquiferName
               + ' Layer ' + IntToStr(MFLayerIndex));
-            if PhastModel.Grid.LayerCount > 1 then
+            if Model.Grid.LayerCount > 1 then
             begin
               CheckArray(DataArray, ArrayIndex, 'Negative '
                 + rsKz + ' value',
@@ -324,11 +365,11 @@ begin
           begin
             frmProgressMM.AddMessage('  Writing Data Set 12 for layer '
               + IntToStr(MFLayerIndex));
-            DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsVerticalAnisotropy);
+            DataArray := Model.DataArrayManager.GetDataSetByName(rsVerticalAnisotropy);
             Assert(DataArray <> nil);
             WriteArray(DataArray, ArrayIndex, 'VKA ' + Group.AquiferName
               + ' Layer ' + IntToStr(MFLayerIndex));
-            if PhastModel.Grid.LayerCount > 1 then
+            if Model.Grid.LayerCount > 1 then
             begin
               CheckArray(DataArray, ArrayIndex, 'Negative or zero '
                 + rsVerticalAnisotropy + ' value',
@@ -357,7 +398,7 @@ begin
           begin
             frmProgressMM.AddMessage('  Writing Data Set 13 for layer '
               + IntToStr(MFLayerIndex));
-            DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsSpecific_Storage);
+            DataArray := Model.DataArrayManager.GetDataSetByName(rsSpecific_Storage);
             Assert(DataArray <> nil);
             WriteArray(DataArray, ArrayIndex, 'SS ' + Group.AquiferName
               + ' Layer ' + IntToStr(MFLayerIndex));
@@ -386,7 +427,7 @@ begin
           begin
             frmProgressMM.AddMessage('  Writing Data Set 14 for layer '
               + IntToStr(MFLayerIndex));
-            DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsSpecificYield);
+            DataArray := Model.DataArrayManager.GetDataSetByName(rsSpecificYield);
             Assert(DataArray <> nil);
             WriteArray(DataArray, ArrayIndex, 'SY ' + Group.AquiferName
               + ' Layer ' + IntToStr(MFLayerIndex));
@@ -402,10 +443,10 @@ begin
         end;
 
         // Data set 15
-        if (LayerIndex = Group.ModflowLayerCount -1) and
-          (GroupIndex < PhastModel.LayerStructure.Count-1) then
+        if (LayerIndex < Model.LayerCount -1) then
         begin
-          NextGroup := PhastModel.LayerStructure.LayerGroups[GroupIndex+1];
+          NextGroup := Model.GetLayerGroupByLayer(LayerIndex+1);
+//          NextGroup := Model.LayerStructure.LayerGroups[GroupIndex+1];
           if not NextGroup.Simulated then
           begin
             if FParameterUsed[ptLPF_VKCB] then
@@ -419,7 +460,7 @@ begin
             begin
               frmProgressMM.AddMessage('  Writing Data Set 15 for layer '
                 + IntToStr(MFLayerIndex));
-              DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsModflow_CBKz);
+              DataArray := Model.DataArrayManager.GetDataSetByName(rsModflow_CBKz);
               Assert(DataArray <> nil);
               WriteArray(DataArray, ArrayIndex+1, 'VKCB ' + NextGroup.AquiferName
                 + ' Layer ' + IntToStr(MFLayerIndex));
@@ -436,13 +477,13 @@ begin
         end;
 
         // Data set 16
-        if PhastModel.ModflowWettingOptions.WettingActive
+        if Model.ModflowWettingOptions.WettingActive
           and (Group.AquiferType <> 0) then
         begin
           { TODO : Consider supporting LAYWET }
           frmProgressMM.AddMessage('  Writing Data Set 16 for layer '
             + IntToStr(MFLayerIndex));
-          DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsWetDry);
+          DataArray := Model.DataArrayManager.GetDataSetByName(rsWetDry);
           Assert(DataArray <> nil);
           WriteArray(DataArray, ArrayIndex, 'WETDRY ' + Group.AquiferName
             + ' Layer ' + IntToStr(MFLayerIndex));
@@ -452,16 +493,263 @@ begin
         begin
           Exit;
         end;
-      end;
+
     end;
   end;
+//  for GroupIndex := 1 to Model.LayerStructure.Count -1 do
+//  begin
+//    Application.ProcessMessages;
+//    if not frmProgressMM.ShouldContinue then
+//    begin
+//      Exit;
+//    end;
+//
+//    Group := Model.LayerStructure.LayerGroups[GroupIndex];
+//    if Group.Simulated then
+//    begin
+//      for LayerIndex := 0 to Group.ModflowLayerCount -1 do
+//      begin
+//        Application.ProcessMessages;
+//        if not frmProgressMM.ShouldContinue then
+//        begin
+//          Exit;
+//        end;
+//
+//        Inc(MFLayerIndex);
+//        ArrayIndex := Model.LayerStructure.
+//          ModflowLayerToDataSetLayer(MFLayerIndex);
+//
+//        // Data Set 10;
+//        if FParameterUsed[ptLPF_HK] then
+//        begin
+//          WriteInteger(IPRN_Real);
+//          WriteString(' # HK ' + Group.AquiferName
+//            + ' Layer ' + IntToStr(MFLayerIndex));
+//          NewLine;
+//        end
+//        else
+//        begin
+//          frmProgressMM.AddMessage('  Writing Data Set 10 for layer '
+//            + IntToStr(MFLayerIndex));
+//          DataArray := Model.DataArrayManager.GetDataSetByName(rsKx);
+//          Assert(DataArray <> nil);
+//          WriteArray(DataArray, ArrayIndex, 'HK ' + Group.AquiferName
+//            + ' Layer ' + IntToStr(MFLayerIndex));
+//          CheckArray(DataArray, ArrayIndex, 'Negative '
+//            + rsKx + ' value',
+//            cvmGreaterEqual, 0, etError);
+//        end;
+//        Application.ProcessMessages;
+//        if not frmProgressMM.ShouldContinue then
+//        begin
+//          Exit;
+//        end;
+//
+//        // Data set 11
+//        if FParameterUsed[ptLPF_HANI] then
+//        begin
+//          WriteInteger(IPRN_Real);
+//          WriteString(' # HANI ' + Group.AquiferName
+//            + ' Layer ' + IntToStr(MFLayerIndex));
+//          NewLine;
+//        end
+//        else
+//        begin
+//          frmProgressMM.AddMessage('  Writing Data Set 11 for layer '
+//            + IntToStr(MFLayerIndex));
+//          DataArray := Model.DataArrayManager.GetDataSetByName(rsHorizontalAnisotropy);
+//          Assert(DataArray <> nil);
+//          WriteArray(DataArray, ArrayIndex, 'HANI ' + Group.AquiferName
+//            + ' Layer ' + IntToStr(MFLayerIndex));
+//          CheckArray(DataArray, ArrayIndex, 'Negative '
+//            + rsHorizontalAnisotropy + ' value',
+//            cvmGreaterEqual, 0, etError);
+//        end;
+//        Application.ProcessMessages;
+//        if not frmProgressMM.ShouldContinue then
+//        begin
+//          Exit;
+//        end;
+//
+//        // Data set 12
+//        if Group.VerticalHydraulicConductivityMethod = 0 then
+//        begin
+//          if FParameterUsed[ptLPF_VK] then
+//          begin
+//            WriteInteger(IPRN_Real);
+//            WriteString(' # VKA ' + Group.AquiferName
+//              + ' Layer ' + IntToStr(MFLayerIndex));
+//            NewLine;
+//          end
+//          else
+//          begin
+//            frmProgressMM.AddMessage('  Writing Data Set 12 for layer '
+//              + IntToStr(MFLayerIndex));
+//            DataArray := Model.DataArrayManager.GetDataSetByName(rsKz);
+//            Assert(DataArray <> nil);
+//            WriteArray(DataArray, ArrayIndex, 'VKA ' + Group.AquiferName
+//              + ' Layer ' + IntToStr(MFLayerIndex));
+//            if Model.Grid.LayerCount > 1 then
+//            begin
+//              CheckArray(DataArray, ArrayIndex, 'Negative '
+//                + rsKz + ' value',
+//                cvmGreaterEqual, 0, etError);
+//            end;
+//          end;
+//        end
+//        else
+//        begin
+//          if FParameterUsed[ptLPF_VANI] then
+//          begin
+//            WriteInteger(IPRN_Real);
+//            WriteString(' # VKA ' + Group.AquiferName
+//              + ' Layer ' + IntToStr(MFLayerIndex));
+//            NewLine;
+//          end
+//          else
+//          begin
+//            frmProgressMM.AddMessage('  Writing Data Set 12 for layer '
+//              + IntToStr(MFLayerIndex));
+//            DataArray := Model.DataArrayManager.GetDataSetByName(rsVerticalAnisotropy);
+//            Assert(DataArray <> nil);
+//            WriteArray(DataArray, ArrayIndex, 'VKA ' + Group.AquiferName
+//              + ' Layer ' + IntToStr(MFLayerIndex));
+//            if Model.Grid.LayerCount > 1 then
+//            begin
+//              CheckArray(DataArray, ArrayIndex, 'Negative or zero '
+//                + rsVerticalAnisotropy + ' value',
+//                cvmGreater, 0, etError);
+//            end;
+//          end;
+//        end;
+//        Application.ProcessMessages;
+//        if not frmProgressMM.ShouldContinue then
+//        begin
+//          Exit;
+//        end;
+//
+//        // Data set 13
+//        if TransientModel then
+//        begin
+//          { TODO : Check on SPECIFICSTORAGE option in MODFLOW-2005. }
+//          if FParameterUsed[ptLPF_SS] then
+//          begin
+//            WriteInteger(IPRN_Real);
+//            WriteString(' # SS ' + Group.AquiferName
+//              + ' Layer ' + IntToStr(MFLayerIndex));
+//            NewLine;
+//          end
+//          else
+//          begin
+//            frmProgressMM.AddMessage('  Writing Data Set 13 for layer '
+//              + IntToStr(MFLayerIndex));
+//            DataArray := Model.DataArrayManager.GetDataSetByName(rsSpecific_Storage);
+//            Assert(DataArray <> nil);
+//            WriteArray(DataArray, ArrayIndex, 'SS ' + Group.AquiferName
+//              + ' Layer ' + IntToStr(MFLayerIndex));
+//            CheckArray(DataArray, ArrayIndex, 'Negative '
+//              + rsSpecific_Storage + ' value',
+//              cvmGreaterEqual, 0, etError);
+//          end;
+//        end;
+//        Application.ProcessMessages;
+//        if not frmProgressMM.ShouldContinue then
+//        begin
+//          Exit;
+//        end;
+//
+//        // Data set 14
+//        if TransientModel and (Group.AquiferType <> 0) then
+//        begin
+//          if FParameterUsed[ptLPF_SY] then
+//          begin
+//            WriteInteger(IPRN_Real);
+//            WriteString(' # SY ' + Group.AquiferName
+//              + ' Layer ' + IntToStr(MFLayerIndex));
+//            NewLine;
+//          end
+//          else
+//          begin
+//            frmProgressMM.AddMessage('  Writing Data Set 14 for layer '
+//              + IntToStr(MFLayerIndex));
+//            DataArray := Model.DataArrayManager.GetDataSetByName(rsSpecificYield);
+//            Assert(DataArray <> nil);
+//            WriteArray(DataArray, ArrayIndex, 'SY ' + Group.AquiferName
+//              + ' Layer ' + IntToStr(MFLayerIndex));
+//            CheckArray(DataArray, ArrayIndex, 'Negative '
+//              + rsSpecificYield + ' value',
+//              cvmGreaterEqual, 0, etError);
+//          end;
+//        end;
+//        Application.ProcessMessages;
+//        if not frmProgressMM.ShouldContinue then
+//        begin
+//          Exit;
+//        end;
+//
+//        // Data set 15
+//        if (LayerIndex = Group.ModflowLayerCount -1) and
+//          (GroupIndex < Model.LayerStructure.Count-1) then
+//        begin
+//          NextGroup := Model.LayerStructure.LayerGroups[GroupIndex+1];
+//          if not NextGroup.Simulated then
+//          begin
+//            if FParameterUsed[ptLPF_VKCB] then
+//            begin
+//              WriteInteger(IPRN_Real);
+//              WriteString(' # VKCB ' + NextGroup.AquiferName
+//                + ' Layer ' + IntToStr(MFLayerIndex));
+//              NewLine;
+//            end
+//            else
+//            begin
+//              frmProgressMM.AddMessage('  Writing Data Set 15 for layer '
+//                + IntToStr(MFLayerIndex));
+//              DataArray := Model.DataArrayManager.GetDataSetByName(rsModflow_CBKz);
+//              Assert(DataArray <> nil);
+//              WriteArray(DataArray, ArrayIndex+1, 'VKCB ' + NextGroup.AquiferName
+//                + ' Layer ' + IntToStr(MFLayerIndex));
+//              CheckArray(DataArray, ArrayIndex, 'Negative '
+//                + rsKz + ' value',
+//                cvmGreaterEqual, 0, etError);
+//            end;
+//          end;
+//        end;
+//        Application.ProcessMessages;
+//        if not frmProgressMM.ShouldContinue then
+//        begin
+//          Exit;
+//        end;
+//
+//        // Data set 16
+//        if Model.ModflowWettingOptions.WettingActive
+//          and (Group.AquiferType <> 0) then
+//        begin
+//          { TODO : Consider supporting LAYWET }
+//          frmProgressMM.AddMessage('  Writing Data Set 16 for layer '
+//            + IntToStr(MFLayerIndex));
+//          DataArray := Model.DataArrayManager.GetDataSetByName(rsWetDry);
+//          Assert(DataArray <> nil);
+//          WriteArray(DataArray, ArrayIndex, 'WETDRY ' + Group.AquiferName
+//            + ' Layer ' + IntToStr(MFLayerIndex));
+//        end;
+//        Application.ProcessMessages;
+//        if not frmProgressMM.ShouldContinue then
+//        begin
+//          Exit;
+//        end;
+//      end;
+//    end;
+//  end;
 end;
 
 procedure TModflowLPF_Writer.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
-  if not PhastModel.ModflowPackages.LpfPackage.IsSelected then
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrParameterZonesNot);
+
+  if not Model.ModflowPackages.LpfPackage.IsSelected then
   begin
     Exit
   end;
@@ -470,7 +758,7 @@ begin
     Exit;
   end;
   NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrLPF, PhastModel.UnitNumbers.UnitNumber(StrLPF),
+  WriteToNameFile(StrLPF, Model.UnitNumbers.UnitNumber(StrLPF),
     NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
@@ -565,7 +853,7 @@ end;
 
 function TModflowLPF_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.LpfPackage;
+  result := Model.ModflowPackages.LpfPackage;
 end;
 
 class function TModflowLPF_Writer.Extension: string;
@@ -593,10 +881,10 @@ var
 const
   IZ = 1;
 begin
-  LayerCount := PhastModel.LayerStructure.ModflowLayerCount;
+  LayerCount := Model.ModflowLayerCount;
   if NPLPF > 0 then
   begin
-    if PhastModel.ModflowFullStressPeriods.TransientModel then
+    if Model.ModflowFullStressPeriods.TransientModel then
     begin
       ValidParamTypes := AllLpfParameters;
     end
@@ -604,9 +892,9 @@ begin
     begin
       ValidParamTypes := SteadyLpfParameters;
     end;
-    for ParamIndex := 0 to PhastModel.ModflowSteadyParameters.Count - 1 do
+    for ParamIndex := 0 to Model.ModflowSteadyParameters.Count - 1 do
     begin
-      Param := PhastModel.ModflowSteadyParameters.Items[ParamIndex];
+      Param := Model.ModflowSteadyParameters.Items[ParamIndex];
       if Param.ParameterType in ValidParamTypes then
       begin
         Application.ProcessMessages;
@@ -615,6 +903,7 @@ begin
           Exit;
         end;
 
+        Param.ClearArrayNames;
         PARNAM := Param.ParameterName;
         case Param.ParameterType of
           ptLPF_HK: PARTYP := 'HK';
@@ -631,9 +920,9 @@ begin
         PARVAL := Param.Value;
 
         if (Param.ParameterType = ptLPF_VKCB) and
-          (PhastModel.LayerStructure.ModflowConfiningBedCount = 0) then
+          (Model.ModflowConfiningBedCount = 0) then
         begin
-          frmErrorsAndWarnings.AddError('VKCB parameter improperly defined.',
+          frmErrorsAndWarnings.AddError(Model, 'VKCB parameter improperly defined.',
             Param.ParameterName + ' is a VKCB parameter but all the layers '
             + 'in the model are simulated');
         end;
@@ -642,33 +931,34 @@ begin
         begin
           if Param.ParameterType = ptLPF_VKCB then
           begin
-            NCLU := PhastModel.LayerStructure.ModflowConfiningBedCount;
+            NCLU := Model.ModflowConfiningBedCount;
           end
           else
           begin
-            NCLU := PhastModel.LayerStructure.ModflowLayerCount;
+            NCLU := Model.ModflowLayerCount;
           end;
           SetLength(Clusters, 0);
         end
         else
         begin
           IdentifyZoneClusters(NCLU, Clusters, UniformLayers, LayerCount, Param);
-          if NCLU = 0 then
+        end;
+        if NCLU = 0 then
+        begin
+          Error := 'Parameter ' + Param.ParameterName + ' in the LPF package '
+            + 'is skipped because it is not applied to any cells.  Check that '
+            + Param.ZoneName + ' is set to "True" in at least one ';
+          if Param.ParameterType = ptLPF_VKCB then
           begin
-            Error := 'Parameter ' + Param.ParameterName
-              + ' is not applied to any cells.  Check that '
-              + Param.ZoneName + ' is set to "True" in at least one ';
-            if Param.ParameterType = ptLPF_VKCB then
-            begin
-              Error := Error + 'non-simulated unit.';
-            end
-            else
-            begin
-              Error := Error + 'simulated unit.';
-            end;
-            frmErrorsAndWarnings.AddError('Parameter zones not defined.',
-              Error);
+            Error := Error + 'non-simulated unit.';
+          end
+          else
+          begin
+            Error := Error + 'simulated unit.';
           end;
+          frmErrorsAndWarnings.AddWarning(Model, StrParameterZonesNot,
+            Error);
+          Continue;
         end;
 
         // Data set 8
@@ -680,7 +970,7 @@ begin
         WriteString(' # PARNAM, PARTYP, PARVAL, NCLU');
         NewLine;
 
-        PhastModel.WritePValAndTemplate(PARNAM,PARVAL);
+        Model.WritePValAndTemplate(PARNAM,PARVAL);
 
         // Data set 9
         frmProgressMM.AddMessage('  Writing Data Set 9 for parameter: ' + PARNAM);
@@ -695,7 +985,7 @@ begin
             end
             else
             begin
-              ZONARR := Param.ZoneArrayName(LAYER);
+              ZONARR := Param.ZoneArrayName(LAYER, Model);
               UsedZoneArrayNames.Add(ZONARR);
             end;
           end
@@ -707,7 +997,7 @@ begin
           ZONARR := ' ' + ZONARR;
           if Param.UseMultiplier then
           begin
-            MLTARR := Param.MultiplierArrayName(LAYER);
+            MLTARR := Param.MultiplierArrayName(LAYER, Model);
             UsedMultiplierArrayNames.Add(MLTARR);
           end
           else
@@ -729,7 +1019,7 @@ begin
           end;
           NewLine;
         end;
-        PhastModel.DataArrayManager.CacheDataArrays;
+        Model.DataArrayManager.CacheDataArrays;
       end;
     end;
   end;

@@ -74,15 +74,7 @@ var
   FilesExist: Boolean;
   function CheckControl(Edit: TJvFilenameEdit): boolean;
   begin
-//    if Edit = fedTextEditor then
-//    begin
-//      result := FileExists(Edit.FileName) or (Edit.FileName = '')
-//        or (LowerCase(Edit.FileName) = 'notepad.exe');
-//    end
-//    else
-    begin
-      result := FileExists(Edit.FileName);
-    end;
+    result := FileExists(Edit.FileName);
     if result then
     begin
       Edit.Color := clWindow;
@@ -93,11 +85,7 @@ var
     end;
   end;
 begin
-//  CheckControl(fedModelMonitor);
   FilesExist := CheckControl(fedPhast);
-//    and (CheckControl(fedModpath)
-//    or not frmGoPhast.PhastModel.ModflowPackages.ModPath.IsSelected)
-//    and CheckControl(fedTextEditor);
   btnOK.Enabled := FilesExist;
 end;
 

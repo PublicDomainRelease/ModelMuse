@@ -17,10 +17,6 @@ inherited frmCustomColor: TfrmCustomColor
     TabOrder = 0
     object tabSelection: TTabSheet
       Caption = 'Selection'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         598
         407)
@@ -82,7 +78,7 @@ inherited frmCustomColor: TfrmCustomColor
         Anchors = [akLeft, akTop, akRight, akBottom]
         Enabled = False
         ReadOnly = True
-        TabOrder = 2
+        TabOrder = 1
       end
       object comboColorScheme: TComboBox
         Left = 8
@@ -94,7 +90,7 @@ inherited frmCustomColor: TfrmCustomColor
         DropDownCount = 12
         ItemHeight = 18
         ItemIndex = 0
-        TabOrder = 3
+        TabOrder = 2
         Text = 'Rainbow'
         OnChange = comboColorSchemeChange
         Items.Strings = (
@@ -121,7 +117,7 @@ inherited frmCustomColor: TfrmCustomColor
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
         Anchors = [akRight, akBottom]
-        TabOrder = 4
+        TabOrder = 3
         OnChange = comboColorSchemeChange
         OnKeyUp = seCyclesKeyUp
       end
@@ -132,7 +128,7 @@ inherited frmCustomColor: TfrmCustomColor
         Height = 40
         Increment = 2
         MaxValue = 200
-        TabOrder = 5
+        TabOrder = 4
         Value = 40
         Anchors = [akLeft, akBottom]
         OnChange = jsColorExponentChange
@@ -148,39 +144,8 @@ inherited frmCustomColor: TfrmCustomColor
         ValueType = vtFloat
         Value = 0.400000000000000000
         Anchors = [akLeft, akBottom]
-        TabOrder = 6
+        TabOrder = 5
         OnChange = seColorExponentChange
-      end
-      object virttreecomboDataSets: TTntExDropDownVirtualStringTree
-        Left = 8
-        Top = 27
-        Width = 465
-        Height = 26
-        TabOrder = 0
-        OnChange = virttreecomboDataSetsChange
-        Tree.Left = 0
-        Tree.Top = 0
-        Tree.Width = 200
-        Tree.Height = 100
-        Tree.Header.AutoSizeIndex = 0
-        Tree.Header.DefaultHeight = 17
-        Tree.Header.Font.Charset = DEFAULT_CHARSET
-        Tree.Header.Font.Color = clWindowText
-        Tree.Header.Font.Height = -11
-        Tree.Header.Font.Name = 'Tahoma'
-        Tree.Header.Font.Style = []
-        Tree.Header.MainColumn = -1
-        Tree.Header.Options = [hoColumnResize, hoDrag]
-        Tree.TabOrder = 0
-        Tree.Visible = False
-        Tree.OnChange = virttreecomboDataSetsDropDownTreeChange
-        Tree.OnEnter = virttreecomboDataSetsDropDownTreeEnter
-        Tree.OnGetText = virttreecomboDataSetsDropDownTreeGetText
-        Tree.Columns = <>
-        PanelAutoWidth = True
-        PanelWidth = 465
-        PanelHeight = 168
-        OnClosedUp = virttreecomboDataSetsClosedUp
       end
       object cbLogTransform: TCheckBox
         Left = 247
@@ -189,14 +154,14 @@ inherited frmCustomColor: TfrmCustomColor
         Height = 17
         Anchors = [akLeft, akBottom]
         Caption = 'Log transform'
-        TabOrder = 7
+        TabOrder = 6
       end
       object udDataSets: TJvUpDown
         Left = 479
         Top = 28
         Width = 17
         Height = 25
-        TabOrder = 1
+        TabOrder = 0
         OnChangingEx = udDataSetsChangingEx
       end
       object rgUpdateLimitChoice: TRadioGroup
@@ -210,16 +175,61 @@ inherited frmCustomColor: TfrmCustomColor
         Items.Strings = (
           'Update limits and legend (default)'
           'Retain limits and legend (animations)')
+        TabOrder = 7
+      end
+      object virttreecomboDataSets1: TRbwStringTreeCombo
+        Left = 8
+        Top = 25
+        Width = 465
+        Height = 26
+        Tree.Left = 0
+        Tree.Top = 0
+        Tree.Width = 312
+        Tree.Height = 206
+        Tree.Align = alClient
+        Tree.Header.AutoSizeIndex = 0
+        Tree.Header.DefaultHeight = 17
+        Tree.Header.Font.Charset = DEFAULT_CHARSET
+        Tree.Header.Font.Color = clWindowText
+        Tree.Header.Font.Height = -11
+        Tree.Header.Font.Name = 'Tahoma'
+        Tree.Header.Font.Style = []
+        Tree.Header.MainColumn = -1
+        Tree.TabOrder = 0
+        Tree.OnChange = virttreecomboDataSetsDropDownTreeChange
+        Tree.OnGetText = virttreecomboDataSetsDropDownTreeGetText
+        Tree.OnInitNode = virttreecomboDataSets1TreeInitNode
+        Tree.ExplicitWidth = 200
+        Tree.ExplicitHeight = 100
+        Tree.Columns = <>
+        Enabled = True
+        Glyph.Data = {
+          36020000424D3602000000000000360000002800000010000000080000000100
+          2000000000000002000000000000000000000000000000000000D8E9EC00D8E9
+          EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+          EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+          EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+          EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+          EC00D8E9EC0000000000D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+          EC00D8E9EC00C0C0C000D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+          EC00000000000000000000000000D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+          EC00C0C0C000C0C0C000C0C0C000D8E9EC00D8E9EC00D8E9EC00D8E9EC000000
+          000000000000000000000000000000000000D8E9EC00D8E9EC00D8E9EC00C0C0
+          C000C0C0C000C0C0C000C0C0C000C0C0C000D8E9EC00D8E9EC00000000000000
+          00000000000000000000000000000000000000000000D8E9EC00C0C0C000C0C0
+          C000C0C0C000C0C0C000C0C0C000C0C0C000C0C0C000D8E9EC00D8E9EC00D8E9
+          EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+          EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+          EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+          EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00}
+        NumGlyphs = 2
         TabOrder = 8
+        OnChange = virttreecomboDataSetsChange
       end
     end
     object tabFilters: TTabSheet
       Caption = 'Filters'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         598
         407)
@@ -325,6 +335,7 @@ inherited frmCustomColor: TfrmCustomColor
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
         TabOrder = 3
+        AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = True
@@ -385,10 +396,6 @@ inherited frmCustomColor: TfrmCustomColor
       Caption = 'Legend'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object imLegend: TImage
         Left = 218
         Top = 0
@@ -468,6 +475,7 @@ inherited frmCustomColor: TfrmCustomColor
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
           TabOrder = 2
           OnSetEditText = rdgLegendSetEditText
+          AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False
           AutoIncreaseRowCount = True

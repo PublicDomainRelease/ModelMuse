@@ -65,7 +65,7 @@ type
     // each stress period.  Each such TObjectList is filled with
     // @link(TSfr_Cell)s for that stress period.
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-      ValueTimeList: TList); override;
+      ValueTimeList: TList; AModel: TBaseModel); override;
     // See @link(TModflowBoundary.BoundaryCollectionClass
     // TModflowBoundary.BoundaryCollectionClass).
     class function BoundaryCollectionClass: TMF_BoundCollClass; override;
@@ -83,15 +83,16 @@ type
     // with each @link(TSfrStorage) in @link(TCustomMF_BoundColl.Boundaries
     // Param.Param.Boundaries)
     // Those represent parameter boundary conditions.
-    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
-      override;
+    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel); override;
     procedure InvalidateDisplay; override;
-    Constructor Create(Model, ScreenObject: TObject);
+    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     destructor Destroy; override;
-    procedure EvaluateArrayBoundaries; override;
+    procedure EvaluateArrayBoundaries(AModel: TBaseModel); override;
     function Used: boolean; override;
     property ISFROPT: integer read GetISFROPT write FIFSROPT;
-    procedure UpdateTimes(Times: TRealList); override;
+    procedure UpdateTimes(Times: TRealList; StartTestTime, EndTestTime: double;
+      var StartRangeExtended, EndRangeExtended: boolean); override;
     procedure Clear; override;
     property OutTypes: TByteSet read GetOutTypes;
   published
@@ -144,7 +145,7 @@ begin
     Sfr := TSfrBoundary(Source);
     if Used <> Sfr.Used then
     begin
-      if (PhastModel <> nil) and (ScreenObject <> nil)
+      if (ParentModel <> nil) and (ScreenObject <> nil)
         and (ScreenObject as TScreenObject).CanInvalidateModel  then
       begin
         InvalidateDisplayTimeLists;
@@ -175,7 +176,7 @@ begin
 end;
 
 procedure TSfrBoundary.AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-  ValueTimeList: TList);
+  ValueTimeList: TList; AModel: TBaseModel);
 var
   Cell: TSfr_Cell;
   BoundaryValues: TSfrRecord;
@@ -183,7 +184,9 @@ var
   TimeIndex: Integer;
   Cells: TValueCellList;
   LocalBoundaryStorage: TSfrStorage;
+  LocalModel: TCustomModel;
 begin
+  LocalModel := AModel as TCustomModel;
   LocalBoundaryStorage := BoundaryStorage as TSfrStorage;
   TimeIndex := 0;
   if TimeIndex < ValueTimeList.Count then
@@ -196,6 +199,10 @@ begin
     ValueTimeList.Add(Cells);
   end;
 
+  if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.SfrArray) then
+  begin
+    Cells.Capacity := Cells.Count + Length(LocalBoundaryStorage.SfrArray)
+  end;
 //  Cells.CheckRestore;
   for BoundaryIndex := 0 to Length(LocalBoundaryStorage.SfrArray) - 1 do
   begin
@@ -206,6 +213,7 @@ begin
     Cells.Add(Cell);
     Cell.StressPeriod := TimeIndex;
     Cell.Values := BoundaryValues;
+    LocalModel.AdjustCellPosition(Cell);
   end;
   Cells.Cache;
   LocalBoundaryStorage.CacheData;
@@ -230,7 +238,7 @@ begin
   ParamIcalc.Clear;
 end;
 
-constructor TSfrBoundary.Create(Model, ScreenObject: TObject);
+constructor TSfrBoundary.Create(Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited;
   if Model <> nil then
@@ -266,41 +274,41 @@ begin
   inherited;
 end;
 
-procedure TSfrBoundary.EvaluateArrayBoundaries;
+procedure TSfrBoundary.EvaluateArrayBoundaries(AModel: TBaseModel);
 begin
   inherited;
-  ChannelValues.EvaluateBoundaries;
-  UpstreamSegmentValues.EvaluateArrayBoundaries;
-  DownstreamSegmentValues.EvaluateArrayBoundaries;
-  UpstreamUnsatSegmentValues.EvaluateArrayBoundaries;
-  DownstreamUnsatSegmentValues.EvaluateArrayBoundaries;
+  ChannelValues.EvaluateBoundaries(AModel);
+  UpstreamSegmentValues.EvaluateArrayBoundaries(AModel);
+  DownstreamSegmentValues.EvaluateArrayBoundaries(AModel);
+  UpstreamUnsatSegmentValues.EvaluateArrayBoundaries(AModel);
+  DownstreamUnsatSegmentValues.EvaluateArrayBoundaries(AModel);
   EquationValues.EvaluateBoundaries;
   TableCollection.EvaluateBoundaries;
   SegmentFlows.EvaluateBoundaries;
 end;
 
 procedure TSfrBoundary.GetCellValues(ValueTimeList: TList;
-  ParamList: TStringList);
+  ParamList: TStringList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TSfrStorage;
 begin
-  EvaluateArrayBoundaries;
+  EvaluateArrayBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
     if ValueIndex < Values.BoundaryCount then
     begin
       BoundaryStorage := Values.Boundaries[ValueIndex] as TSfrStorage;
-      AssignCells(BoundaryStorage, ValueTimeList);
+      AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;
 end;
 
 function TSfrBoundary.GetISFROPT: integer;
 begin
-  if PhastModel <> nil then
+  if ParentModel <> nil then
   begin
-    result := (PhastModel as TPhastModel).ModflowPackages.SfrPackage.Isfropt;
+    result := (ParentModel as TPhastModel).ModflowPackages.SfrPackage.Isfropt;
   end
   else
   begin
@@ -351,7 +359,7 @@ end;
 procedure TSfrBoundary.InvalidateDisplay;
 begin
   inherited;
-  if Used and (PhastModel <> nil) then
+  if Used and (ParentModel <> nil) then
   begin
     InvalidateDisplayTimeLists;
   end;
@@ -465,9 +473,9 @@ begin
     FSegementNumber := Value;
     if (ScreenObject <> nil)
         and (ScreenObject as TScreenObject).CanInvalidateModel
-        and (PhastModel <> nil) then
+        and (ParentModel <> nil) then
     begin
-      (PhastModel as TPhastModel).DischargeRoutingUpdate;
+      (ParentModel as TPhastModel).DischargeRoutingUpdate;
     end;
   end;
 end;
@@ -493,24 +501,40 @@ begin
   FUpstreamUnsatSegmentValues.Assign(Value);
 end;
 
-procedure TSfrBoundary.UpdateTimes(Times: TRealList);
+procedure TSfrBoundary.UpdateTimes(Times: TRealList;
+  StartTestTime, EndTestTime: double; var StartRangeExtended, EndRangeExtended: boolean);
 begin
+  // it isn't clear whether or not inherited should be called.
   inherited;
-  AddBoundaryTimes(ChannelValues, Times);
-  AddBoundaryTimes(UpstreamSegmentValues, Times);
-  AddBoundaryTimes(DownstreamSegmentValues, Times);
-  AddBoundaryTimes(UpstreamUnsatSegmentValues, Times);
-  AddBoundaryTimes(DownstreamUnsatSegmentValues, Times);
-  AddBoundaryTimes(TableCollection, Times);
-  AddBoundaryTimes(SegmentFlows, Times);
-  AddBoundaryTimes(EquationValues, Times);
+  AddBoundaryTimes(ParamIcalc, Times, StartTestTime, EndTestTime,
+    StartRangeExtended, EndRangeExtended);
+//  AddBoundaryTimes(ChannelValues, Times, StartTestTime, EndTestTime,
+//    StartRangeExtended, EndRangeExtended);
+//  AddBoundaryTimes(UpstreamSegmentValues, Times, StartTestTime, EndTestTime,
+//    StartRangeExtended, EndRangeExtended);
+//  AddBoundaryTimes(DownstreamSegmentValues, Times, StartTestTime, EndTestTime,
+//    StartRangeExtended, EndRangeExtended);
+//  AddBoundaryTimes(TableCollection, Times, StartTestTime, EndTestTime,
+//    StartRangeExtended, EndRangeExtended);
+//  AddBoundaryTimes(SegmentFlows, Times, StartTestTime, EndTestTime,
+//    StartRangeExtended, EndRangeExtended);
+//  AddBoundaryTimes(EquationValues, Times, StartTestTime, EndTestTime,
+//    StartRangeExtended, EndRangeExtended);
+
+// The unsatured data is stored in a TCustomModflowBoundaryItem
+// but the start and end times are not used.
+
+//  AddBoundaryTimes(UpstreamUnsatSegmentValues, Times, StartTestTime,
+//    EndTestTime, StartRangeExtended, EndRangeExtended);
+//  AddBoundaryTimes(DownstreamUnsatSegmentValues, Times, StartTestTime,
+//    EndTestTime, StartRangeExtended, EndRangeExtended);
 end;
 
 procedure TSfrBoundary.InvalidateDisplayTimeLists;
 var
   Model: TPhastModel;
 begin
-  Model := PhastModel as TPhastModel;
+  Model := ParentModel as TPhastModel;
   Model.InvalidateMfSfrSegmentReachAndIcalc(self);
   Model.InvalidateMfSfrIprior(self);
   Model.InvalidateMfSfrVerticalUnsatK(self);
@@ -556,9 +580,9 @@ procedure TSfrBoundary.InvalidateSegmentNumberArray;
 begin
   if (ScreenObject <> nil)
     and (ScreenObject as TScreenObject).CanInvalidateModel
-    and (PhastModel <> nil) then
+    and (ParentModel <> nil) then
   begin
-    (PhastModel as TPhastModel).InvalidateMfSfrSegmentReachAndIcalc(self);
+    (ParentModel as TPhastModel).InvalidateMfSfrSegmentReachAndIcalc(self);
   end;
 end;
 

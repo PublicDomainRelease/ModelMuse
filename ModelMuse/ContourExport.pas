@@ -40,7 +40,7 @@ type
   public
     procedure CreateShapes(ValueList: TValueArrayStorage; DataArray: TDataArray;
       FileName: string);
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
   end;
 
@@ -57,7 +57,7 @@ implementation
 
 uses
   PhastModelUnit, frmGoPhastUnit, Contnrs, Math,
-  ShapefileUnit, XBase1, frmExportShapefileUnit, RbwParser;
+  ShapefileUnit, XBase1, frmExportShapefileUnit, RbwParser, ModelMuseUtilities;
 
 procedure GlobalImportSegments(Sender: TObject;
   const Segments: TLine2DArray; Epsilon: Real;
@@ -390,7 +390,7 @@ end;
 
 { TContourExtractor }
 
-constructor TContourExtractor.Create(Model: TObject);
+constructor TContourExtractor.Create(Model: TBaseModel);
 begin
   FModelGrid := (Model as TPhastModel).Grid;
 end;
@@ -427,13 +427,14 @@ begin
   Contours :=  DataSet.Contours;
   DSValues := TStringList.Create;
   try
-    AssignGridValues(MinValue, MaxValue, FModelGrid.SelectedLayer, DSValues);
+    AssignGridValues(MinValue, MaxValue, FModelGrid.SelectedLayer, DSValues, vdTop);
 
     ShapeDataBase := TXBase.Create(nil);
     try
       Fields := TStringList.Create;
       try
         FieldName := UpperCase(Copy(DataArray.Name, 1, 10));
+        FieldName := FixShapeFileFieldName(FieldName);
         case DataArray.DataType of
           rdtDouble:
             FieldFormat := 'N18,10';

@@ -9,6 +9,7 @@ uses
 type
   TfrmRunModflow = class(TCustomExtendedDialog)
     cbRun: TCheckBox;
+    comboModelSelection: TComboBox;
   private
     { Private declarations }
   public

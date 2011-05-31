@@ -139,8 +139,6 @@ type
     procedure dgFlowTimesSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure rdeFlowFormulaChange(Sender: TObject);
-    procedure dgFlowTimesMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure dgFlowTimesMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure dgFlowTimesColSize(Sender: TObject; ACol, PriorWidth: Integer);
@@ -201,8 +199,6 @@ type
     procedure rdgNetworkColSize(Sender: TObject; ACol, PriorWidth: Integer);
     procedure rdgNetworkMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure rdgNetworkMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure rdgNetworkSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure rdgNetworkSetEditText(Sender: TObject; ACol, ARow: Integer;
@@ -256,7 +252,6 @@ type
     procedure GetEndTimes(Grid: TRbwDataGrid4; Col: integer);
     procedure AssignSelectedCellsInGrid(DataGrid: TRbwDataGrid4;
       const NewText: string);
-    procedure DataGridMouseDown(Shift: TShiftState; DataGrid: TRbwDataGrid4);
     procedure EnableMultiEditControl(EdControl: TControl; DataGrid: TRbwDataGrid4);
     procedure LayoutMultiRowFlowEditControls;
     procedure UpdateSpinEditValue(DataGrid: TRbwDataGrid4; SpinEdit: TJvSpinEdit);
@@ -481,12 +476,6 @@ end;
 procedure TframeScreenObjectSFR.rdgNetworkHorizontalScroll(Sender: TObject);
 begin
   LayoutMultiRowNetworkControls;
-end;
-
-procedure TframeScreenObjectSFR.rdgNetworkMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  DataGridMouseDown(Shift, Sender as TRbwDataGrid4);
 end;
 
 procedure TframeScreenObjectSFR.rdgNetworkMouseUp(Sender: TObject;
@@ -1190,18 +1179,6 @@ begin
     end;
   end;
   EdControl.Enabled := ShouldEnable;
-end;
-
-procedure TframeScreenObjectSFR.DataGridMouseDown(Shift: TShiftState; DataGrid: TRbwDataGrid4);
-begin
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    DataGrid.Options := DataGrid.Options + [goEditing];
-  end
-  else
-  begin
-    DataGrid.Options := DataGrid.Options - [goEditing];
-  end;
 end;
 
 procedure TframeScreenObjectSFR.AssignSelectedCellsInGrid(
@@ -2127,23 +2104,22 @@ begin
     else
     begin
       ClearTable(dgSfrEquation);
-//      for Row := 1 to dgSfrEquation.RowCount - 1 do
-//      begin
-//        for Col := 0 to dgSfrEquation.ColCount - 1 do
-//        begin
-//          dgSfrEquation.Cells[Col, Row] := '';
-//        end;
-//      end;
     end;
   end
   else
   begin
+    // The following While loop is to compensate for a bug that has
+    // since been fixed.
+    While seParametersCount.AsInteger < Boundary.EquationValues.Count do
+    begin
+      Boundary.EquationValues.Delete(Boundary.EquationValues.Count-1);
+    end;
+
     Assert(seParametersCount.AsInteger >= Boundary.EquationValues.Count);
 
     for TableIndex := 0 to Boundary.EquationValues.Count - 1 do
     begin
       Item := Boundary.EquationValues.Items[TableIndex] as TSfrEquationItem;
-//      Row := TableIndex + 1;
       Row := LocateRowFromStartAndEndTimes(Item.StartTime, Item.EndTime);
       if Row >= 1 then
       begin
@@ -2554,12 +2530,6 @@ end;
 procedure TframeScreenObjectSFR.dgFlowTimesHorizontalScroll(Sender: TObject);
 begin
   LayoutMultiRowFlowEditControls;
-end;
-
-procedure TframeScreenObjectSFR.dgFlowTimesMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  DataGridMouseDown(Shift, Sender as TRbwDataGrid4);
 end;
 
 procedure TframeScreenObjectSFR.dgFlowTimesMouseUp(Sender: TObject;
@@ -3584,6 +3554,7 @@ var
 begin
   FDeletingTime := True;
   try
+    FTimesChanged := True;
     ItemCount := seParametersCount.AsInteger;
     Assert(ItemCount >= 0);
     if ItemCount = 0 then
@@ -3632,7 +3603,8 @@ begin
       FrameCrossSection.dg8Point.OnSetEditText :=
         dgCrossSectionSetEditText;
       FrameCrossSection.dg8Point.OnButtonClick := OnButtonClick;
-      FrameCrossSection.dg8Point.OnMouseDown := dgFlowTimesMouseDown;
+      FrameCrossSection.dg8Point.AutoMultiEdit := True;
+//      FrameCrossSection.dg8Point.OnMouseDown := dgFlowTimesMouseDown;
     end;
     if ItemCount = 0 then
     begin
@@ -3650,7 +3622,7 @@ begin
       FrameFlowTable.dgSfrTable.OnSetEditText := dgFlowTableSetEditText;
       FrameFlowTable.dgSfrTable.OnButtonClick := OnButtonClick;
       FrameFlowTable.dgSfrTable.OnSelectCell := dgSfrTableSelectCell;
-      FrameFlowTable.dgSfrTable.OnMouseDown := dgFlowTimesMouseDown;
+      FrameFlowTable.dgSfrTable.AutoMultiEdit := True;
       FrameFlowTable.dgSfrTable.Width := FrameFlowTable.ClientWidth;
       FrameFlowTable.dgSfrTable.Height := FrameFlowTable.seTableCount.Top -6;
     end;

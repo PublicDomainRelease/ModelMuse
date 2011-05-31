@@ -12,8 +12,6 @@ implementation
 
 Procedure AssignErrorStrings;
 begin
-//  MaxError = 113;
-//  ErrorValues: array[0..MaxError] of string =
     ErrorValues.Add('INVALID VALUE FOR IFREQ PARAMETER:');
     ErrorValues.Add('ERROR IN GMG INPUT');
     ErrorValues.Add('ALLOCATION ERROR IN SUBROUTINE GMG1ALG');
@@ -135,9 +133,23 @@ begin
     ErrorValues.Add('THIS WILL CAUSE PROBLEMS IN COMPUTING LAKE STAGE USING THE NEWTON METHOD.');
     ErrorValues.Add('***NLAKES too large for BUFF in Subroutine GWF2LAK7SFR7RPS***  STOP EXECUTION');
     ErrorValues.Add('FAILED TO CONVERGE');
+    ErrorValues.Add('Can''t find name file');
+    ErrorValues.Add('INVALID INPUT FOR GRIDSTATUS IN LGR INPUT FILE:');
+    ErrorValues.Add('GRIDSTATUS MUST BE PARENTONLY, CHILDONLY, OR PARENTANDCHILD');
+    ErrorValues.Add('IBFLG MUST BE < 0 FOR CHILD GRID');
+    ErrorValues.Add('RELAXATION FACTORS RELAXH AND RELAXF MUST BE > 0');
+    ErrorValues.Add('NPLBEG IS NOT = 1  REFINEMENT MUST BEGIN IN TOP LAYER');
+    ErrorValues.Add('NCPP MUST BE AN ODD INTEGER');
+    ErrorValues.Add('NROW AND NCPP DOES NOT ALIGN WITH NPREND - NPRBEG');
+    ErrorValues.Add('NCOL AND NCPP DOES NOT ALIGN WITH NPCEND - NPCBEG');
+    ErrorValues.Add('NCPPL MUST BE AN ODD INTEGER');
+    ErrorValues.Add('VERTICAL REFINEMENT DOES NOT ALIGN WITH NLAY');
+    ErrorValues.Add('HEAD BELOW BOTTOM AT SHARED NODE');
+    ErrorValues.Add('INVALID INPUT IN BFH FILE:');
+    ErrorValues.Add('ISCHILD AND BTEXT ARE NOT COMPATIBLE');
+    ErrorValues.Add('MNW1 and MNW2 cannot both be active in the same grid');
 
-//  MaxWarning = 2;
-//  WarningValues: array[0..MaxWarning] of string =
+
     WarningValues.Add('**WARNING**');
     WarningValues.Add('*** WARNING ***');
     WarningValues.Add('CELL CONVERSIONS FOR ITER');
@@ -161,7 +173,10 @@ begin
     WarningValues.Add('***WARNING*** CWC<0 in Well ');
     WarningValues.Add('***WARNING*** CWC<0 reset to CWC=0');
     WarningValues.Add('WARNING');
-
+    WarningValues.Add('LARGE RESIDUAL L2 NORM FOR THIS SOLUTION');
+    WarningValues.Add('CHECK THAT MASS BALANCE ERROR NOT EXCESSIVE');
+    WarningValues.Add('MXLGRITER EXCEEDED FOR GRID NUMBER');
+    WarningValues.Add('CHECK BUDGET OF PARENT GRID TO ASSESS QUALITY OF THE LGR SOLUTION');
 end;
 
 initialization

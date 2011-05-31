@@ -63,7 +63,8 @@ implementation
 
 uses
   frmModflowNameFileUnit, ModflowUnitNumbers, ScreenObjectUnit,
-  GoPhastTypes, frmProgressUnit, frmErrorsAndWarningsUnit, FastGEO, Forms;
+  GoPhastTypes, frmProgressUnit, frmErrorsAndWarningsUnit, FastGEO, Forms, 
+  frmGoPhastUnit;
 
 { TModflowHydmodWriter }
 
@@ -107,9 +108,9 @@ var
     RowIndex: Integer;
     ColIndex: Integer;
   begin
-    for RowIndex := 0 to PhastModel.Grid.RowCount - 1 do
+    for RowIndex := 0 to Model.Grid.RowCount - 1 do
     begin
-      for ColIndex := 0 to PhastModel.Grid.ColumnCount - 1 do
+      for ColIndex := 0 to Model.Grid.ColumnCount - 1 do
       begin
         CheckArray[RowIndex,ColIndex] := False;
       end;
@@ -129,13 +130,13 @@ var
   begin
     if Length(SegmentReachArray) = 0 then
     begin
-      SetLength(SegmentReachArray, PhastModel.Grid.LayerCount,
-        PhastModel.Grid.RowCount, PhastModel.Grid.ColumnCount);
-      for LayerIndex := 0 to PhastModel.Grid.LayerCount - 1 do
+      SetLength(SegmentReachArray, Model.Grid.LayerCount,
+        Model.Grid.RowCount, Model.Grid.ColumnCount);
+      for LayerIndex := 0 to Model.Grid.LayerCount - 1 do
       begin
-        for RowIndex := 0 to PhastModel.Grid.RowCount - 1 do
+        for RowIndex := 0 to Model.Grid.RowCount - 1 do
         begin
-          for ColIndex := 0 to PhastModel.Grid.ColumnCount - 1 do
+          for ColIndex := 0 to Model.Grid.ColumnCount - 1 do
           begin
             SegmentReachArray[LayerIndex,RowIndex,ColIndex] := nil;
           end;
@@ -163,13 +164,17 @@ var
   end;
 begin
   try
-  SetLength(CheckArray, PhastModel.Grid.RowCount, PhastModel.Grid.ColumnCount);
-  X0 := PhastModel.Grid.ColumnPosition[0];
-  Y0 := PhastModel.Grid.RowPosition[PhastModel.Grid.RowCount];
-  for Index := 0 to PhastModel.ScreenObjectCount - 1 do
+  SetLength(CheckArray, Model.Grid.RowCount, Model.Grid.ColumnCount);
+  X0 := Model.Grid.ColumnPosition[0];
+  Y0 := Model.Grid.RowPosition[Model.Grid.RowCount];
+  for Index := 0 to Model.ScreenObjectCount - 1 do
   begin
-    ScreenObject := PhastModel.ScreenObjects[Index];
+    ScreenObject := Model.ScreenObjects[Index];
     if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    if not ScreenObject.UsedModels.UsesModel(Model) then
     begin
       Continue;
     end;
@@ -178,8 +183,8 @@ begin
     begin
       CellList := TCellAssignmentList.Create;
       try
-        ScreenObject.GetCellsToAssign(PhastModel.Grid, '0',
-          nil, nil, CellList, alAll);
+        ScreenObject.GetCellsToAssign(Model.Grid, '0',
+          nil, nil, CellList, alAll, Model);
         if (ScreenObject.ViewDirection = vdTop)
           and (ScreenObject.Count = ScreenObject.SectionCount)
           and (not HydmodData.SfrStage)
@@ -194,7 +199,7 @@ begin
           AssignmentMethod := amCell;
           if AssignmentMethod <> HydmodData.AssignmentMethod then
           begin
-            frmErrorsAndWarnings.AddWarning(
+            frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
               'The interpolation assignment method in HYDMOD package '
               + 'is invalid for the following objects.  The cell method has '
               + 'been used instead.',
@@ -209,7 +214,7 @@ begin
                 for CellIndex := 0 to CellList.Count - 1 do
                 begin
                   ACell := CellList[CellIndex];
-                  APoint := PhastModel.Grid.UnrotatedTwoDElementCenter(
+                  APoint := Model.Grid.UnrotatedTwoDElementCenter(
                     ACell.Column, ACell.Row);
                   if HydmodData.Head then
                   begin
@@ -237,7 +242,7 @@ begin
                   end;
                 end;
               end;
-              if PhastModel.ModflowPackages.SubPackage.IsSelected
+              if Model.ModflowPackages.SubPackage.IsSelected
                 and (HydmodData.SubPreconsolidationHead
                 or HydmodData.SubCompaction or HydmodData.SubSubsidence) then
               begin
@@ -249,7 +254,7 @@ begin
                   if not CheckArray[ACell.Row, ACell.Column] then
                   begin
                     CheckArray[ACell.Row, ACell.Column] := True;
-                    APoint := PhastModel.Grid.UnrotatedTwoDElementCenter(
+                    APoint := Model.Grid.UnrotatedTwoDElementCenter(
                       ACell.Column, ACell.Row);
                     for LayerIndex := 0 to Length(IntArray) - 1 do
                     begin
@@ -293,7 +298,7 @@ begin
                   end;
                 end;
               end;
-              if PhastModel.ModflowPackages.SfrPackage.IsSelected
+              if Model.ModflowPackages.SfrPackage.IsSelected
                 and (HydmodData.SfrStage or HydmodData.SfrInFlow
                 or HydmodData.SfrOutFlow or HydmodData.SfrAquiferExchange) then
               begin
@@ -304,7 +309,7 @@ begin
                   List := SegmentReachArray[ACell.Layer, ACell.Row, ACell.Column];
                   if List <> nil then
                   begin
-                    APoint := PhastModel.Grid.UnrotatedTwoDElementCenter(
+                    APoint := Model.Grid.UnrotatedTwoDElementCenter(
                       ACell.Column, ACell.Row);
                     for ReachIndex := 0 to List.Count - 1 do
                     begin
@@ -395,7 +400,7 @@ begin
                   end;
                 end;
               end;
-              if PhastModel.ModflowPackages.SubPackage.IsSelected
+              if Model.ModflowPackages.SubPackage.IsSelected
                 and (HydmodData.SubPreconsolidationHead
                 or HydmodData.SubCompaction or HydmodData.SubSubsidence) then
               begin
@@ -464,11 +469,11 @@ begin
   finally
     if Length(SegmentReachArray) > 0 then
     begin
-      for LayerIndex := 0 to PhastModel.Grid.LayerCount - 1 do
+      for LayerIndex := 0 to Model.Grid.LayerCount - 1 do
       begin
-        for RowIndex := 0 to PhastModel.Grid.RowCount - 1 do
+        for RowIndex := 0 to Model.Grid.RowCount - 1 do
         begin
-          for ColIndex := 0 to PhastModel.Grid.ColumnCount - 1 do
+          for ColIndex := 0 to Model.Grid.ColumnCount - 1 do
           begin
             SegmentReachArray[LayerIndex,RowIndex, ColIndex].Free;
           end;
@@ -485,7 +490,7 @@ end;
 
 function TModflowHydmodWriter.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.HydmodPackage;
+  result := Model.ModflowPackages.HydmodPackage;
 end;
 
 procedure TModflowHydmodWriter.WriteDataSet1;
@@ -495,7 +500,7 @@ var
   HydModOutFileName: string;
 begin
   NHYD := FLocations.Count;
-  IHYDUN := PhastModel.UnitNumbers.UnitNumber(StrHydmodOut);
+  IHYDUN := Model.UnitNumbers.UnitNumber(StrHydmodOut);
 
   HydModOutFileName := ExtractFileName(ChangeFileExt(FNameOfFile, '.hyd_out'));
   WriteToNameFile(StrDATABINARY, IHYDUN,
@@ -528,13 +533,13 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrHYD) then
+  if Model.PackageGeneratedExternally(StrHYD) then
   begin
     Exit;
   end;
   FSfrWriter := SfrWriter;
   FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrHYD, PhastModel.UnitNumbers.UnitNumber(StrHYD), FNameOfFile, foInput);
+  WriteToNameFile(StrHYD, Model.UnitNumbers.UnitNumber(StrHYD), FNameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then

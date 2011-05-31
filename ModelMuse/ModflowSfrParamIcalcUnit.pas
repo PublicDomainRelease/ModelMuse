@@ -35,7 +35,6 @@ type
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
-    procedure InvalidateModel; override;
     function BoundaryFormulaCount: integer; override;
   published
     // @name copies Source to this @classname.
@@ -200,12 +199,6 @@ end;
 procedure TSfrParamIcalcItem.GetPropertyObserver(Sender: TObject; List: TList);
 begin
   // do nothing
-end;
-
-procedure TSfrParamIcalcItem.InvalidateModel;
-begin
-  inherited;
-
 end;
 
 function TSfrParamIcalcItem.IsSame(AnotherItem: TOrderedItem): boolean;

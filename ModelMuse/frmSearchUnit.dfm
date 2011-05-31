@@ -7,7 +7,6 @@ inherited frmSearch: TfrmSearch
   HelpKeyword = 'Search_for_Objects_Dialog_Box'
   VertScrollBar.Range = 105
   Caption = 'Search for Objects'
-  ExplicitTop = -9
   ExplicitWidth = 422
   ExplicitHeight = 579
   PixelsPerInch = 96
@@ -16,7 +15,7 @@ inherited frmSearch: TfrmSearch
     Top = 489
     Width = 414
     Height = 56
-    ExplicitTop = 441
+    ExplicitTop = 489
     ExplicitWidth = 414
     ExplicitHeight = 56
     inherited btnClose: TBitBtn
@@ -52,8 +51,7 @@ inherited frmSearch: TfrmSearch
     Width = 414
     Height = 489
     OnChecked = vstObjectsChecked
-    ExplicitTop = 161
     ExplicitWidth = 414
-    ExplicitHeight = 238
+    ExplicitHeight = 489
   end
 end

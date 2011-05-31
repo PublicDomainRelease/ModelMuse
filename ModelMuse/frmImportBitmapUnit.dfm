@@ -292,8 +292,8 @@ inherited frmImportBitmap: TfrmImportBitmap
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
     TabOrder = 0
     OnExit = dgPointsExit
-    OnMouseDown = dgPointsMouseDown
     OnSetEditText = dgPointsSetEditText
+    AutoMultiEdit = False
     AutoDistributeText = True
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = True

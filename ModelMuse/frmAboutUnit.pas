@@ -48,8 +48,6 @@ type
     pnlTop: TPanel;
     dgCredit: TRbwDataGrid4;
     JvHTLabel1: TJvHTLabel;
-    menuModelMate: TPopupMenu;
-    miEnableModelMateInterface: TMenuItem;
     reReference: TRichEdit;
     JvHTLabel2: TJvHTLabel;
     btnGoToWeb: TBitBtn;
@@ -63,7 +61,6 @@ type
     // @name displays the version of GoPhast that created the file that
     // is currently open.
     procedure ImageLogoDblClick(Sender: TObject);
-    procedure miEnableModelMateInterfaceClick(Sender: TObject);
     procedure btnGoToWebClick(Sender: TObject);
   private
     { Private declarations }
@@ -101,7 +98,7 @@ var
   Row: integer;
 begin
   inherited;
-  miEnableModelMateInterface.Checked := frmGoPhast.ShowUcodeInterface;
+//  miEnableModelMateInterface.Checked := frmGoPhast.ShowUcodeInterface;
   dgCredit.FixedColor := Color;
 
   lblVersion.Caption := frmGoPhast.PhastModel.Version;
@@ -394,7 +391,7 @@ begin
     dgCredit.Cells[2, Row] := 'http://www.cs.man.ac.uk/~toby/alan/software/ '
       + 'http://www.cs.man.ac.uk/~toby/alan/software/gpc.html';
 
-    Inc(Row);
+{    Inc(Row);
     Assert(Row < dgCredit.RowCount);
     dgCredit.Cells[0, Row] := 'TntControls';
     dgCredit.Cells[1, Row] := 'Troy Wolbrink';
@@ -404,7 +401,7 @@ begin
     Assert(Row < dgCredit.RowCount);
     dgCredit.Cells[0, Row] := 'TntExtendedEditors';
     dgCredit.Cells[1, Row] := 'Matt Harrison (matt@lummiec.co.uk)';
-    dgCredit.Cells[2, Row] := 'http://lummie.co.uk/delphi-components/tnt-extended-editors/';
+    dgCredit.Cells[2, Row] := 'http://lummie.co.uk/delphi-components/tnt-extended-editors/'; }
 
     Inc(Row);
     Assert(Row < dgCredit.RowCount);
@@ -452,6 +449,12 @@ begin
     dgCredit.Cells[0, Row] := 'MadExcept version 3';
     dgCredit.Cells[1, Row] := 'Mathias Rauen';
     dgCredit.Cells[2, Row] := 'http://www.madshi.net/madExceptDescription.htm';
+
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'ssButtonEd.pas';
+    dgCredit.Cells[1, Row] := 'Simon Armstrong';
+    dgCredit.Cells[2, Row] := 'http://www.simes.clara.co.uk';
   finally
     dgCredit.EndUpdate
   end;
@@ -468,13 +471,6 @@ procedure TfrmAbout.ImageLogoDblClick(Sender: TObject);
 begin
   inherited;
   lblFileVersion.Visible := not lblFileVersion.Visible;
-end;
-
-procedure TfrmAbout.miEnableModelMateInterfaceClick(Sender: TObject);
-begin
-  inherited;
-  frmGoPhast.ShowUcodeInterface := miEnableModelMateInterface.Checked;
-  frmGoPhast.WriteIniFile;
 end;
 
 end.

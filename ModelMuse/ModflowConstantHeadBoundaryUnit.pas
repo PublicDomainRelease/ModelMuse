@@ -4,10 +4,9 @@ interface
 
 uses Windows, ZLib, SysUtils, Classes, Contnrs, OrderedCollectionUnit,
   ModflowBoundaryUnit, DataSetUnit, ModflowCellUnit, FormulaManagerUnit,
-  SubscriptionUnit, SparseDataSets, RbwParser;
+  SubscriptionUnit, SparseDataSets, RbwParser, GoPhastTypes;
 
 type
-
   // @name stores data for one CHD cell in a time increment defined by
   // @link(StartingTime) and @link(EndingTime).
   // The @link(StartingTime) and @link(EndingTime) may or may not be
@@ -50,6 +49,59 @@ type
 
   TChdArray = array of TChdRecord;
 
+  TChdStorage = class(TCustomBoundaryStorage)
+  private
+    FChdArray: TChdArray;
+    function GetChdArray: TChdArray;
+  protected
+    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
+    procedure Store(Compressor: TCompressionStream); override;
+    procedure Clear; override;
+  public
+    property ChdArray: TChdArray read GetChdArray;
+  end;
+
+  TChdTimeListLink = class(TTimeListsModelLink)
+  private
+    FStartData: TModflowTimeList;
+    FEndData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
+
+  // @name represents MODFLOW Constant-Head boundaries
+  // for a series of time intervals.
+  TChdCollection = class(TCustomMF_ListBoundColl)
+  protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
+    procedure InvalidateStartData(Sender: TObject);
+    procedure InvalidateEndData(Sender: TObject);
+    procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+    // @name returns @link(TChdItem).
+    class function ItemClass: TMF_BoundItemClass; override;
+    procedure AddSpecificBoundary; override;
+    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
+      ACellList: TObject); override;
+    procedure AssignCellList(Expression: TExpression; ACellList: TObject;
+      BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
+      Variables, DataSets: TList; AModel: TBaseModel); override;
+    function AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
+      override;
+  public
+    constructor Create(Boundary: TModflowBoundary;
+      Model: TBaseModel; ScreenObject: TObject); override;
+  end;
+
+  // Each @name stores a @link(TChdCollection).
+  // @classname is stored by @link(TModflowParameters).
+  TChdParamItem = class(TModflowParamItem)
+  protected
+    class function BoundaryClass: TMF_BoundCollClass; override;
+  end;
+  
   // @name represents a MODFLOW Constant-Head boundary for one time interval.
   // @name is stored by TChdCollection.
   TChdItem = class(TCustomModflowBoundaryItem)
@@ -100,10 +152,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -124,75 +179,26 @@ type
   TChdBoundary = class(TModflowParamBoundary)
   protected
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-      ValueTimeList: TList);  override;        
+      ValueTimeList: TList; AModel: TBaseModel);  override;
     class function BoundaryCollectionClass: TMF_BoundCollClass; override;
     class function ModflowParamItemClass: TModflowParamItemClass; override;
     function ParameterType: TParameterType; override;
   public
-    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
-      override;
+    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel); override;
     procedure InvalidateDisplay; override;
   end;
 
 implementation
 
 uses PhastModelUnit, ScreenObjectUnit, ModflowTimeUnit, TempFiles,
-  GoPhastTypes, frmGoPhastUnit, GIS_Functions;
+  frmGoPhastUnit, GIS_Functions;
 
 const
   StartHeadPosition = 0;
   EndHeadPosition = 1;
 
-type
-  TChdStorage = class(TCustomBoundaryStorage)
-  private
-    FChdArray: TChdArray;
-    function GetChdArray: TChdArray;
-  protected
-    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
-    procedure Store(Compressor: TCompressionStream); override;
-    procedure Clear; override;
-  public
-    property ChdArray: TChdArray read GetChdArray;
-  end;
 
-  // @name represents MODFLOW Constant-Head boundaries
-  // for a series of time intervals.
-  TChdCollection = class(TCustomMF_ListBoundColl)
-  private
-    FStartData: TModflowTimeList;
-    FEndData: TModflowTimeList;
-  protected
-    procedure InvalidateStartData(Sender: TObject);
-    procedure InvalidateEndData(Sender: TObject);
-    procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
-//    procedure AssignCellValues(DataSets: TList;
-//      Sections: T3DSparseIntegerArray; ItemIndex: Integer); override;
-//    procedure InitializeTimeLists(ListOfTimeLists: TList); override;
-
-    // @name returns @link(TChdItem).
-    class function ItemClass: TMF_BoundItemClass; override;
-    procedure AddSpecificBoundary; override;
-    procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
-      ACellList: TObject); override;
-    procedure AssignCellList(Expression: TExpression; ACellList: TObject;
-      BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
-      Variables, DataSets: TList); override;
-    function AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
-      override;
-  public
-    constructor Create(Boundary: TModflowBoundary;
-      Model, ScreenObject: TObject); override;
-    destructor Destroy; override;
-  end;
-
-  // Each @name stores a @link(TChdCollection).
-  // @classname is stored by @link(TModflowParameters).
-  TChdParamItem = class(TModflowParamItem)
-  protected
-    class function BoundaryClass: TMF_BoundCollClass; override;
-  end;
 
 
 { TChdItem }
@@ -339,32 +345,9 @@ end;
 
 { TChdCollection }
 
-constructor TChdCollection.Create(Boundary: TModflowBoundary;
-  Model, ScreenObject: TObject);
+function TChdCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FStartData := TModflowTimeList.Create(Model, ScreenObject);
-  FEndData := TModflowTimeList.Create(Model, ScreenObject);
-  FStartData.NonParamDescription := 'Starting head';
-  FStartData.ParamDescription := ' starting head multiplier';
-  FEndData.NonParamDescription := 'Ending head';
-  FEndData.ParamDescription := ' ending head multiplier';
-
-  if Model <> nil then
-  begin
-    FStartData.OnInvalidate := (Model as TPhastModel).InvalidateMfChdStartingHead;
-    FEndData.OnInvalidate := (Model as TPhastModel).InvalidateMfChdEndingHead;
-  end;
-
-  AddTimeList(FStartData);
-  AddTimeList(FEndData);
-end;
-
-destructor TChdCollection.Destroy;
-begin
-  inherited;
-  FStartData.Free;
-  FEndData.Free;
+  result := TChdTimeListLink;
 end;
 
 procedure TChdCollection.AddSpecificBoundary;
@@ -383,7 +366,8 @@ end;
 
 procedure TChdCollection.AssignCellList(Expression: TExpression;
   ACellList: TObject; BoundaryStorage: TCustomBoundaryStorage;
-  BoundaryFunctionIndex: integer; Variables, DataSets: TList);
+  BoundaryFunctionIndex: integer; Variables, DataSets: TList;
+  AModel: TBaseModel);
 var
   ChdStorage: TChdStorage;
   CellList: TCellAssignmentList;
@@ -397,7 +381,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell);
+    UpdataRequiredData(DataSets, Variables, ACell, AModel);
     Expression.Evaluate;
     with ChdStorage.ChdArray[Index] do
     begin
@@ -441,6 +425,13 @@ begin
   end;
 end;
 
+constructor TChdCollection.Create(Boundary: TModflowBoundary; Model: TBaseModel;
+  ScreenObject: TObject);
+begin
+  inherited;
+  DuplicatesAllowed := False;
+end;
+
 procedure TChdCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
   Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
 begin
@@ -449,18 +440,44 @@ begin
 end;
 
 procedure TChdCollection.InvalidateEndData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TChdTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FEndData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TChdTimeListLink;
+    Link.FEndData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TChdTimeListLink;
+      Link.FEndData.Invalidate;
+    end;
   end;
 end;
 
 procedure TChdCollection.InvalidateStartData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TChdTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FStartData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TChdTimeListLink;
+    Link.FStartData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TChdTimeListLink;
+      Link.FStartData.Invalidate;
+    end;
   end;
 end;
 
@@ -472,7 +489,7 @@ end;
 { TChdBoundary }
 
 procedure TChdBoundary.AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-  ValueTimeList: TList);
+  ValueTimeList: TList; AModel: TBaseModel);
 const
   FormatString =
     'Assigned by interpolation between the starting head of %f at '
@@ -488,10 +505,12 @@ var
   TimeIndex: Integer;
   Cells: TValueCellList;
   LocalBoundaryStorage: TChdStorage;
+  LocalModel: TCustomModel;
 begin
+  LocalModel := AModel as TCustomModel;
   LocalBoundaryStorage := BoundaryStorage as TChdStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    LocalModel.ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -502,8 +521,7 @@ begin
       Cells := TValueCellList.Create(TCHD_Cell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).
-      ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
@@ -536,6 +554,10 @@ begin
           (StressPeriod.EndTime - LocalBoundaryStorage.StartingTime)
           / (LocalBoundaryStorage.EndingTime
           - LocalBoundaryStorage.StartingTime);
+      end;
+      if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.ChdArray) then
+      begin
+        Cells.Capacity := Cells.Count + Length(LocalBoundaryStorage.ChdArray)
       end;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.ChdArray) - 1 do
       begin
@@ -575,6 +597,8 @@ begin
             BoundaryValues.EndingTime, BoundaryValues.EndAnnotation]);
         end;
         Cell.ScreenObject := ScreenObject;
+        // don't move CHD cells away from the edge of child  model grids.
+//        LocalModel.AdjustCellPosition(Cell);
       end;
       Cells.Cache;
     end;
@@ -588,7 +612,7 @@ begin
 end;
 
 procedure TChdBoundary.GetCellValues(ValueTimeList: TList;
-  ParamList: TStringList);
+  ParamList: TStringList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TCustomBoundaryStorage;
@@ -598,13 +622,13 @@ var
   Position: integer;
   ParamName: string;
 begin
-  EvaluateListBoundaries;
+  EvaluateListBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
     if ValueIndex < Values.BoundaryCount then
     begin
       BoundaryStorage := Values.Boundaries[ValueIndex] as TChdStorage;
-      AssignCells(BoundaryStorage, ValueTimeList);
+      AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;
   for ParamIndex := 0 to Parameters.Count - 1 do
@@ -626,7 +650,7 @@ begin
       if ValueIndex < Param.Param.BoundaryCount then
       begin
         BoundaryStorage := Param.Param.Boundaries[ValueIndex];
-        AssignCells(BoundaryStorage, Times);
+        AssignCells(BoundaryStorage, Times, AModel);
       end;
     end;
   end;
@@ -637,9 +661,9 @@ var
   Model: TPhastModel;
 begin
   inherited;
-  if Used and (PhastModel <> nil) then
+  if Used and (ParentModel <> nil) then
   begin
-    Model := PhastModel as TPhastModel;
+    Model := ParentModel as TPhastModel;
     Model.InvalidateMfChdStartingHead(self);
     Model.InvalidateMfChdEndingHead(self);
   end;
@@ -679,13 +703,13 @@ begin
   result := Values.EndAnnotation;
 end;
 
-function TCHD_Cell.GetIntegerAnnotation(Index: integer): string;
+function TCHD_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TCHD_Cell.GetIntegerValue(Index: integer): integer;
+function TCHD_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -696,7 +720,7 @@ begin
   result := Values.Cell.Layer;
 end;
 
-function TCHD_Cell.GetRealAnnotation(Index: integer): string;
+function TCHD_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -706,7 +730,7 @@ begin
   end;
 end;
 
-function TCHD_Cell.GetRealValue(Index: integer): double;
+function TCHD_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -763,6 +787,21 @@ begin
   inherited;
   Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
+end;
+
+procedure TCHD_Cell.SetColumn(const Value: integer);
+begin
+  Values.Cell.Column := Value;
+end;
+
+procedure TCHD_Cell.SetLayer(const Value: integer);
+begin
+  Values.Cell.Layer := Value;
+end;
+
+procedure TCHD_Cell.SetRow(const Value: integer);
+begin
+  Values.Cell.Row := Value;
 end;
 
 { TChdRecord }
@@ -861,6 +900,35 @@ begin
   end;
   result := FChdArray;
 
+end;
+
+{ TChdTimeListLink }
+
+procedure TChdTimeListLink.CreateTimeLists;
+var
+  LocalModel: TCustomModel;
+begin
+  FStartData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FEndData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FStartData.NonParamDescription := 'Starting head';
+  FStartData.ParamDescription := ' starting head multiplier';
+  FEndData.NonParamDescription := 'Ending head';
+  FEndData.ParamDescription := ' ending head multiplier';
+  if Model <> nil then
+  begin
+    LocalModel := Model as TCustomModel;
+    FStartData.OnInvalidate := LocalModel.InvalidateMfChdStartingHead;
+    FEndData.OnInvalidate := LocalModel.InvalidateMfChdEndingHead;
+  end;
+  AddTimeList(FStartData);
+  AddTimeList(FEndData);
+end;
+
+destructor TChdTimeListLink.Destroy;
+begin
+  FStartData.Free;
+  FEndData.Free;
+  inherited;
 end;
 
 end.

@@ -2352,16 +2352,6 @@ function TRbwParser.CreateVariable(const Name, Classification: string;
   const Value: integer): TIntegerVariable;
 begin
   result := CreateVariable(Name, Classification, Value, TIntegerVariable);
-//  if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
-//  begin
-//    raise ErbwParserError.CreateMode('Error: A Variable named ' + Name +
-//      ' already exists', 1);
-//  end;
-//  result := TIntegerVariable.Create(Name);
-//  result.Classification := Classification;
-//  result.Value := Value;
-//  FVariables.AddObject(result.Name, result);
-//  FOwnedVariables.Add(result);
 end;
 
 function TRbwParser.CreateVariable(const Name, Classification: string;
@@ -2385,16 +2375,6 @@ function TRbwParser.CreateVariable(const Name, Classification: string;
   const Value: boolean): TBooleanVariable;
 begin
   result := CreateVariable(Name, Classification, Value, TBooleanVariable);
-//  if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
-//  begin
-//    raise ErbwParserError.CreateMode('Error: A Variable named ' + Name +
-//      ' already exists', 1);
-//  end;
-//  result := TBooleanVariable.Create(Name);
-//  result.Classification := Classification;
-//  result.Value := Value;
-//  FVariables.AddObject(result.Name, result);
-//  FOwnedVariables.Add(result);
 end;
 
 function TRbwParser.CreateVariable(const Name, Classification: string;
@@ -2417,32 +2397,12 @@ function TRbwParser.CreateVariable(const Name, Classification,
   Value: string): TStringVariable;
 begin
   result := CreateVariable(Name, Classification, Value, TStringVariable);
-//  if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
-//  begin
-//    raise ErbwParserError.CreateMode('Error: A Variable named ' + Name +
-//      ' already exists', 1);
-//  end;
-//  result := TStringVariable.Create(Name);
-//  result.Classification := Classification;
-//  result.Value := Value;
-//  FVariables.AddObject(result.Name, result);
-//  FOwnedVariables.Add(result);
 end;
 
 function TRbwParser.CreateVariable(const Name, Classification: string;
   const Value: double): TRealVariable;
 begin
   result := CreateVariable(Name, Classification, Value, TRealVariable);
-//  if FVariables.IndexOf(Trim(UpperCase(Name))) >= 0 then
-//  begin
-//    raise ErbwParserError.CreateMode('Error: A Variable named ' + Name +
-//      ' already exists', 1);
-//  end;
-//  result := TRealVariable.Create(Name);
-//  result.Classification := Classification;
-//  result.Value := Value;
-//  FVariables.AddObject(result.Name, result);
-//  FOwnedVariables.Add(result);
 end;
 
 function TRbwParser.CreateVariable(const Name, Classification: string;
@@ -4064,7 +4024,6 @@ begin
         begin
           raise ErbwParserError.Create('Error in parsing "+ Token + " sign.');
         end;
-        //            AnArgument := Objects[Index - 1] as TConstant;
         result := (Objects[Index - 1] = nil);
       end;
     end;
@@ -4092,13 +4051,19 @@ begin
     if (Objects[Index + 1] = nil) then
     begin
       raise ErbwParserError.Create('Error in parsing "'
-        + OperatorDefinition.OperatorName + '" operator.');
+        + OperatorDefinition.OperatorName + '" operator '
+        + 'because '
+        + Strings[Index + 1]
+        + ' is undefined.');
     end;
     try
       AnArgument := Objects[Index + 1] as TConstant;
     except on EInvalidCast do
       raise ErbwParserError.Create('Error in parsing "'
-        + OperatorDefinition.OperatorName + '" operator.');
+        + OperatorDefinition.OperatorName + '" operator '  
+        + 'because of an error in'
+        + Strings[Index + 1]
+        + '.');
     end;
     if (OperatorDefinition.ArgumentDefinitions.Count < 1) then
     begin
@@ -4253,10 +4218,38 @@ begin
   SubsequentArgument := Objects[Index + 1] as TConstant;
   if ((PriorArgument = nil) or (SubsequentArgument = nil)) then
   begin
-    raise ErbwParserError.Create('Error in parsing "'
-    + OperatorDefinition.OperatorName + '" operator.  '
-    + 'Check to make sure that all the variables in the formula have '
-    + 'been defined.');
+    if ((PriorArgument = nil) and (SubsequentArgument = nil)) then
+    begin
+      raise ErbwParserError.Create('Error in parsing "'
+        + OperatorDefinition.OperatorName + '" operator '
+        + 'because '
+        + Strings[Index - 1]
+        + ' and '
+        + Strings[Index + 1]
+        + ' are undefined.  '
+        + 'Check to make sure that all the variables in the formula have '
+        + 'been defined.');
+    end
+    else if (PriorArgument = nil) then
+    begin
+      raise ErbwParserError.Create('Error in parsing "'
+        + OperatorDefinition.OperatorName + '" operator '
+        + 'because '
+        + Strings[Index - 1]
+        + ' is undefined.  '
+        + 'Check to make sure that all the variables in the formula have '
+        + 'been defined.');
+    end
+    else
+    begin
+      raise ErbwParserError.Create('Error in parsing "'
+        + OperatorDefinition.OperatorName + '" operator '
+        + 'because '
+        + Strings[Index + 1]
+        + ' is undefined.  '
+        + 'Check to make sure that all the variables in the formula have '
+        + 'been defined.');
+    end;
   end;
   UsedDef := nil;
   Assert(OperatorDefinition.ArgumentDefinitions.Count >= 1);

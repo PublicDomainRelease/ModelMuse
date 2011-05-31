@@ -17,7 +17,7 @@ inherited frameModpathSelection: TframeModpathSelection
     Top = 135
     Width = 600
     Height = 364
-    ActivePage = tabResponse
+    ActivePage = tabOutputTimes
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 1
     object tabInput: TTabSheet
@@ -609,7 +609,7 @@ inherited frameModpathSelection: TframeModpathSelection
           RowCount = 2
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
           TabOrder = 0
-          OnMouseDown = rdgTimesMouseDown
+          AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False
           AutoIncreaseRowCount = True

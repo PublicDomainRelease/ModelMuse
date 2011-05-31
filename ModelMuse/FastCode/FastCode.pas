@@ -26,25 +26,6 @@ unit Fastcode;
  *
  * ***** END LICENSE BLOCK ***** *)
 
-{#Backup AnsiStringReplaceJOHIA32Unit12.pas}
-{#Backup AnsiStringReplaceJOHPASUnit12.pas}
-{#Backup FastcodeAnsiStringReplaceUnit.pas}
-{#Backup FastcodeCompareMemUnit.pas}
-{#Backup FastcodeCompareStrUnit.pas}
-{#Backup FastcodeCompareTextUnit.pas}
-{#Backup FastcodeCPUID.pas}
-{#Backup FastcodeFillCharUnit.pas}
-{#Backup FastcodeLowerCaseUnit.pas}
-{#Backup FastcodePatch.pas}
-{#Backup FastcodePosExUnit.pas}
-{#Backup FastcodePosUnit.pas}
-{#Backup FastcodeStrCompUnit.pas}
-{#Backup FastcodeStrCopyUnit.pas}
-{#Backup FastcodeStrICompUnit.pas}
-{#Backup FastCodeStrLenUnit.pas}
-{#Backup FastcodeStrToInt32Unit.pas}
-{#Backup FastcodeUpperCaseUnit.pas}
- 
 interface
 
 {$I Fastcode.inc}

@@ -53,15 +53,11 @@ inherited frmEndPointDisplay: TfrmEndPointDisplay
     Top = 0
     Width = 468
     Height = 317
-    ActivePage = tabBasic
+    ActivePage = tabOptions
     Align = alClient
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         460
         284)
@@ -200,10 +196,6 @@ inherited frmEndPointDisplay: TfrmEndPointDisplay
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         460
         284)
@@ -266,6 +258,7 @@ inherited frmEndPointDisplay: TfrmEndPointDisplay
         TabOrder = 3
         OnSelectCell = rdgLimitsSelectCell
         OnSetEditText = rdgLimitsSetEditText
+        AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False

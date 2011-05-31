@@ -22,26 +22,12 @@ inherited frmModflowPackages: TfrmModflowPackages
     ExplicitTop = -14
     ExplicitHeight = 252
   end
-  object tvPackages: TTreeView
-    Left = 0
-    Top = 0
-    Width = 177
-    Height = 503
-    Align = alLeft
-    HideSelection = False
-    Indent = 19
-    ReadOnly = True
-    StateImages = ilCheckImages
-    TabOrder = 0
-    OnChange = tvPackagesChange
-    OnMouseUp = tvPackagesMouseUp
-  end
   object jvplPackages: TJvPageList
     Left = 187
     Top = 0
     Width = 605
     Height = 503
-    ActivePage = jvspSWT
+    ActivePage = jvspUZF
     PropagateEnable = False
     Align = alClient
     OnChange = jvplPackagesChange
@@ -208,7 +194,6 @@ inherited frmModflowPackages: TfrmModflowPackages
               WordWrapCells = False
               AutoAdjustColWidths = True
             end>
-          ExplicitTop = 60
           ExplicitWidth = 468
           ExplicitHeight = 101
         end
@@ -1444,15 +1429,16 @@ inherited frmModflowPackages: TfrmModflowPackages
       HelpType = htKeyword
       HelpKeyword = 'RCH_Recharge_Package_Pane'
       Caption = 'jvspRCH'
-      inline framePkgRCH: TframePackageTransientLayerChoice
+      inline framePkgRCH: TframePackageRCH
         Left = 0
         Top = 0
         Width = 605
-        Height = 201
+        Height = 249
         Align = alTop
         TabOrder = 0
         TabStop = True
         ExplicitWidth = 605
+        ExplicitHeight = 249
         inherited lblComments: TLabel
           Width = 76
           Height = 18
@@ -1467,10 +1453,14 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
         inherited memoComments: TMemo
           Width = 584
+          Height = 81
           ExplicitWidth = 584
+          ExplicitHeight = 81
         end
         inherited pnLayerOption: TPanel
+          Top = 149
           Width = 605
+          ExplicitTop = 149
           ExplicitWidth = 605
           inherited lblLayerOption: TLabel
             Width = 173
@@ -1486,6 +1476,10 @@ inherited frmModflowPackages: TfrmModflowPackages
           end
           inherited cbTimeVaryingLayers: TCheckBox
             Caption = 'Time varying recharge layers'
+          end
+          inherited rgAssignmentMethod: TRadioGroup
+            Width = 584
+            ExplicitWidth = 584
           end
         end
         inherited rcSelectionController: TRbwController
@@ -1506,6 +1500,9 @@ inherited frmModflowPackages: TfrmModflowPackages
               Control = framePkgRCH.lblLayerOption
             end
             item
+              Control = framePkgRCH.rgAssignmentMethod
+            end
+            item
               Control = frameRchParameterDefinition
             end>
           OnEnabledChange = framePkgRCHrcSelectionControllerEnabledChange
@@ -1513,20 +1510,20 @@ inherited frmModflowPackages: TfrmModflowPackages
       end
       inline frameRchParameterDefinition: TframeListParameterDefinition
         Left = 0
-        Top = 201
+        Top = 249
         Width = 605
-        Height = 302
+        Height = 254
         Align = alClient
         Enabled = False
         TabOrder = 1
         TabStop = True
-        ExplicitTop = 201
+        ExplicitTop = 249
         ExplicitWidth = 605
-        ExplicitHeight = 302
+        ExplicitHeight = 254
         inherited pnlParameterCount: TPanel
-          Top = 254
+          Top = 206
           Width = 605
-          ExplicitTop = 254
+          ExplicitTop = 206
           ExplicitWidth = 605
           inherited lblNumParameters: TLabel
             Width = 156
@@ -1547,9 +1544,9 @@ inherited frmModflowPackages: TfrmModflowPackages
         end
         inherited dgParameters: TRbwDataGrid4
           Width = 599
-          Height = 248
+          Height = 200
           ExplicitWidth = 599
-          ExplicitHeight = 248
+          ExplicitHeight = 200
         end
       end
     end
@@ -2059,12 +2056,15 @@ inherited frmModflowPackages: TfrmModflowPackages
         Top = 0
         Width = 605
         Height = 503
-        ActivePage = tabSfrGeneral
+        ActivePage = tabSfrParameters
         Align = alClient
         TabOrder = 0
         ClientBorderWidth = 0
         object tabSfrGeneral: TTabSheet
           Caption = 'General'
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           inline framePkgSFR: TframePackageSFR
             Left = 0
             Top = 0
@@ -2339,6 +2339,9 @@ inherited frmModflowPackages: TfrmModflowPackages
         object tabSfrParameters: TTabSheet
           Caption = 'Parameters'
           ImageIndex = 1
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object splitSFR: TSplitter
             Left = 0
             Top = 257
@@ -2425,6 +2428,9 @@ inherited frmModflowPackages: TfrmModflowPackages
         TabStop = True
         ExplicitWidth = 605
         ExplicitHeight = 503
+        DesignSize = (
+          605
+          503)
         inherited lblComments: TLabel
           Top = 39
           Width = 76
@@ -2548,6 +2554,14 @@ inherited frmModflowPackages: TfrmModflowPackages
             ItemHeight = 18
             ExplicitTop = 303
           end
+          inherited rgAssignmentMethod: TRbwRadioGroup
+            Left = 297
+            Top = 112
+            Height = 92
+            ExplicitLeft = 297
+            ExplicitTop = 112
+            ExplicitHeight = 92
+          end
         end
         inherited rcSelectionController: TRbwController
           ControlList = <
@@ -2581,6 +2595,7 @@ inherited frmModflowPackages: TfrmModflowPackages
               Control = framePkgUZF.rdeNumberOfWaveSets
             end
             item
+              Control = framePkgUZF.rgAssignmentMethod
             end
             item
               Control = framePkgUZF.lblNumberOfWaveSets
@@ -3520,13 +3535,11 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboEvtSink: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboRchSource: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited rdeBeginningTime: TRbwDataEntry
@@ -3602,7 +3615,6 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboTrackingDirection: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited comboWeakSinkTreatment: TJvImageComboBox
@@ -3619,7 +3631,6 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboWhichEndpoints: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited rdeErrorTolerance: TRbwDataEntry
@@ -3673,7 +3684,6 @@ inherited frmModflowPackages: TfrmModflowPackages
             inherited comboTimeMethod: TJvImageComboBox
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitHeight = 28
             end
             inherited rdeParticleInterval: TRbwDataEntry
@@ -3969,7 +3979,6 @@ inherited frmModflowPackages: TfrmModflowPackages
           Top = 368
           Height = 28
           ItemHeight = 22
-          ItemIndex = -1
           ExplicitTop = 368
           ExplicitHeight = 28
         end
@@ -4492,7 +4501,6 @@ inherited frmModflowPackages: TfrmModflowPackages
               Top = 114
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitTop = 114
               ExplicitHeight = 28
             end
@@ -4500,7 +4508,6 @@ inherited frmModflowPackages: TfrmModflowPackages
               Top = 173
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitTop = 173
               ExplicitHeight = 28
             end
@@ -4508,12 +4515,12 @@ inherited frmModflowPackages: TfrmModflowPackages
               Top = 236
               Height = 28
               ItemHeight = 22
-              ItemIndex = -1
               ExplicitTop = 236
               ExplicitHeight = 28
             end
           end
           inherited tabPrintSave: TTabSheet
+            ExplicitLeft = 4
             ExplicitTop = 29
             ExplicitWidth = 597
             ExplicitHeight = 334
@@ -5297,7 +5304,7 @@ inherited frmModflowPackages: TfrmModflowPackages
     Height = 41
     Align = alBottom
     BevelOuter = bvNone
-    TabOrder = 2
+    TabOrder = 1
     DesignSize = (
       792
       41)
@@ -5329,6 +5336,54 @@ inherited frmModflowPackages: TfrmModflowPackages
       Anchors = [akTop, akRight]
       TabOrder = 2
       Kind = bkCancel
+    end
+  end
+  object pnlLeft: TPanel
+    Left = 0
+    Top = 0
+    Width = 177
+    Height = 503
+    Align = alLeft
+    TabOrder = 2
+    object pnlModel: TPanel
+      Left = 1
+      Top = 1
+      Width = 175
+      Height = 64
+      Align = alTop
+      BevelOuter = bvNone
+      TabOrder = 0
+      object lblModel: TLabel
+        Left = 8
+        Top = 11
+        Width = 43
+        Height = 18
+        Caption = 'Model'
+      end
+      object comboModel: TComboBox
+        Left = 8
+        Top = 32
+        Width = 162
+        Height = 26
+        Style = csDropDownList
+        ItemHeight = 0
+        TabOrder = 0
+        OnChange = comboModelChange
+      end
+    end
+    object tvPackages: TTreeView
+      Left = 1
+      Top = 65
+      Width = 175
+      Height = 437
+      Align = alClient
+      HideSelection = False
+      Indent = 19
+      ReadOnly = True
+      StateImages = ilCheckImages
+      TabOrder = 1
+      OnChange = tvPackagesChange
+      OnMouseUp = tvPackagesMouseUp
     end
   end
   object rbwLpfParamCountController: TRbwController

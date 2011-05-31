@@ -122,10 +122,9 @@ type
     // @name reads data from a file into @link(dgData).
     procedure btnOpenFileClick(Sender: TObject);
     procedure seRowsChange(Sender: TObject);
-    procedure dgDataSetEditText(Sender: TObject; ACol, ARow: Integer;
-      const Value: string);
     procedure dgDataDistributeTextProgress(Sender: TObject; Position,
       Max: Integer);
+    procedure dgDataEndUpdate(Sender: TObject);
   private
     // @name is the column that specifies the X coordinate.
     XCol: integer;
@@ -527,8 +526,7 @@ begin
   end;
 end;
 
-procedure TfrmImportPoints.dgDataSetEditText(Sender: TObject; ACol,
-  ARow: Integer; const Value: string);
+procedure TfrmImportPoints.dgDataEndUpdate(Sender: TObject);
 begin
   inherited;
   seRows.Value := dgData.RowCount -1;

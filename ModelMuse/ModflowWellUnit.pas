@@ -4,7 +4,7 @@ interface
 
 uses Windows, ZLib, SysUtils, Classes, Contnrs, OrderedCollectionUnit,
   ModflowBoundaryUnit, DataSetUnit, ModflowCellUnit, FormulaManagerUnit,
-  SubscriptionUnit, SparseDataSets, RbwParser;
+  SubscriptionUnit, SparseDataSets, RbwParser, GoPhastTypes;
 
 type
   {
@@ -79,15 +79,24 @@ type
     property PumpingRate: string read GetPumpingRate write SetPumpingRate;
   end;
 
-  // @name represents MODFLOW Well boundaries
-  // for a series of time intervals.
-  TWellCollection = class(TCustomMF_ListBoundColl)
+  TMfWelTimeListLink = class(TTimeListsModelLink)
   private
     // @name is used to compute the pumping rates for a series of
     // Well over a series of time intervals.
     FPumpingRateData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
+
+  // @name represents MODFLOW Well boundaries
+  // for a series of time intervals.
+  TWellCollection = class(TCustomMF_ListBoundColl)
+  private
     procedure InvalidatePumpingRateData(Sender: TObject);
   protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     function AdjustedFormula(FormulaIndex, ItemIndex: integer): string; override;
     procedure AddSpecificBoundary; override;
 
@@ -106,14 +115,7 @@ type
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
-      Variables, DataSets: TList); override;
-  public
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
+      Variables, DataSets: TList; AModel: TBaseModel); override;
   end;
 
   // Each @name stores a @link(TWellCollection).
@@ -133,10 +135,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -166,7 +171,7 @@ type
     // each stress period.  Each such TObjectList is filled with
     // @link(TWell_Cell)s for that stress period.
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-      ValueTimeList: TList); override;
+      ValueTimeList: TList; AModel: TBaseModel); override;
     // See @link(TModflowBoundary.BoundaryCollectionClass
     // TModflowBoundary.BoundaryCollectionClass).
     class function BoundaryCollectionClass: TMF_BoundCollClass; override;
@@ -187,10 +192,11 @@ type
     // with each @link(TWellStorage) in @link(TCustomMF_BoundColl.Boundaries
     // Param.Param.Boundaries)
     // Those represent parameter boundary conditions.
-    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
-      override;
+    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel); override;
     // ultimately make this virtual;
-    procedure GetCellListValues(ValueTimeList: TList; ParamList: TStringList);
+    procedure GetCellListValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel);
     procedure InvalidateDisplay; override;
   end;
 
@@ -199,7 +205,7 @@ type
 implementation
 
 uses ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit, TempFiles, 
-  GoPhastTypes, frmGoPhastUnit, GIS_Functions;
+  frmGoPhastUnit, GIS_Functions;
 
 const
   PumpingRatePosition = 0;  
@@ -315,7 +321,8 @@ end;
 
 procedure TWellCollection.AssignCellList(Expression: TExpression;
   ACellList: TObject; BoundaryStorage: TCustomBoundaryStorage;
-  BoundaryFunctionIndex: integer; Variables, DataSets: TList);
+  BoundaryFunctionIndex: integer; Variables, DataSets: TList;
+  AModel: TBaseModel);
 var
   WellStorage: TWellStorage;
   CellList: TCellAssignmentList;
@@ -330,7 +337,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell);
+    UpdataRequiredData(DataSets, Variables, ACell, AModel);
     // 2. update locations
     Expression.Evaluate;
     with WellStorage.WellArray[Index] do
@@ -354,6 +361,10 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
+    if ACell.LgrEdge then
+    begin
+      Continue;
+    end;
     with WellStorage.WellArray[Index] do
     begin
       Cell.Layer := ACell.Layer;
@@ -364,82 +375,9 @@ begin
   end;
 end;
 
-{procedure TWellCollection.AssignCellValues(DataSets: TList;
-  Sections: T3DSparseIntegerArray; ItemIndex: Integer);
-var
-  PumpingRateArray: TDataArray;
-  Boundary: TWellStorage;
-  LayerIndex: Integer;
-  RowIndex: Integer;
-  ColIndex: Integer;
-  BoundaryIndex: Integer;
-  LocalModel: TPhastModel;
-  LayerMin: Integer;
-  RowMin: Integer;
-  ColMin: Integer;
-  LayerMax: Integer;
-  RowMax: Integer;
-  ColMax: Integer;
+function TWellCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  LocalModel := Model as TPhastModel;
-  BoundaryIndex := 0;
-  PumpingRateArray := DataSets[0];
-  Boundary := Boundaries[ItemIndex] as TWellStorage;
-  PumpingRateArray.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
-    LayerMax, RowMax, ColMax);
-  if LayerMin >= 0 then
-  begin
-    for LayerIndex := LayerMin to LayerMax do
-    begin
-      if LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
-      begin
-        for RowIndex := RowMin to RowMax do
-        begin
-          for ColIndex := ColMin to ColMax do
-          begin
-            if PumpingRateArray.IsValue[LayerIndex, RowIndex, ColIndex] then
-            begin
-              with Boundary.WellArray[BoundaryIndex] do
-              begin
-                Cell.Layer := LayerIndex;
-                Cell.Row := RowIndex;
-                Cell.Column := ColIndex;
-                Cell.Section := Sections[LayerIndex, RowIndex, ColIndex];
-                PumpingRate := PumpingRateArray.
-                  RealData[LayerIndex, RowIndex, ColIndex];
-                PumpingRateAnnotation := PumpingRateArray.
-                  Annotation[LayerIndex, RowIndex, ColIndex];
-              end;
-              Inc(BoundaryIndex);
-            end;
-          end;
-        end;
-      end;
-    end;
-  end;
-  PumpingRateArray.CacheData;
-  Boundary.CacheData;
-end;  }
-
-constructor TWellCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
-begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FPumpingRateData := TModflowTimeList.Create(Model, ScreenObject);
-  FPumpingRateData.NonParamDescription := 'Pumping rate';
-  FPumpingRateData.ParamDescription := ' pumping rate multiplier';
-  if Model <> nil then
-  begin
-    FPumpingRateData.OnInvalidate := (Model as TPhastModel).InvalidateMfWellPumpage;
-  end;
-  
-  AddTimeList(FPumpingRateData);
-end;
-
-destructor TWellCollection.Destroy;
-begin
-  FPumpingRateData.Free;
-  inherited;
+  result := TMfWelTimeListLink;
 end;
 
 function TWellCollection.AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
@@ -589,10 +527,23 @@ begin
 end;
 
 procedure TWellCollection.InvalidatePumpingRateData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TMfWelTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FPumpingRateData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TMfWelTimeListLink;
+    Link.FPumpingRateData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TMfWelTimeListLink;
+      Link.FPumpingRateData.Invalidate;
+    end;
   end;
 end;
 
@@ -629,13 +580,13 @@ begin
   result := Values.Cell.Column;
 end;
 
-function TWell_Cell.GetIntegerAnnotation(Index: integer): string;
+function TWell_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TWell_Cell.GetIntegerValue(Index: integer): integer;
+function TWell_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -656,7 +607,7 @@ begin
   result := Values.PumpingRateAnnotation;
 end;
 
-function TWell_Cell.GetRealAnnotation(Index: integer): string;
+function TWell_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -665,7 +616,7 @@ begin
   end;
 end;
 
-function TWell_Cell.GetRealValue(Index: integer): double;
+function TWell_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -711,10 +662,25 @@ begin
   StressPeriod := ReadCompInt(Decomp);
 end;
 
+procedure TWell_Cell.SetColumn(const Value: integer);
+begin
+  Values.Cell.Column := Value;
+end;
+
+procedure TWell_Cell.SetLayer(const Value: integer);
+begin
+  Values.Cell.Layer := Value;
+end;
+
+procedure TWell_Cell.SetRow(const Value: integer);
+begin
+  Values.Cell.Row := Value;
+end;
+
 { TMfWellBoundary }
 
 procedure TMfWellBoundary.AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-  ValueTimeList: TList);
+  ValueTimeList: TList; AModel: TBaseModel);
 var
   Cell: TWell_Cell;
   BoundaryValues: TWellRecord;
@@ -723,10 +689,12 @@ var
   TimeIndex: Integer;
   Cells: TValueCellList;
   LocalBoundaryStorage: TWellStorage;
+  LocalModel: TCustomModel;
 begin
+  LocalModel := AModel as TCustomModel;
   LocalBoundaryStorage := BoundaryStorage as TWellStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    LocalModel.ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -737,12 +705,16 @@ begin
       Cells := TValueCellList.Create(TWell_Cell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
+      if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.WellArray) then
+      begin
+        Cells.Capacity := Cells.Count + Length(LocalBoundaryStorage.WellArray)
+      end;
 //      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.WellArray) - 1 do
       begin
@@ -753,6 +725,7 @@ begin
         Cells.Add(Cell);
         Cell.StressPeriod := TimeIndex;
         Cell.Values := BoundaryValues;
+        LocalModel.AdjustCellPosition(Cell);
       end;
       Cells.Cache;
     end;
@@ -772,7 +745,7 @@ end;
 //end;
 
 procedure TMfWellBoundary.GetCellListValues(ValueTimeList: TList;
-  ParamList: TStringList);
+  ParamList: TStringList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TWellStorage;
@@ -782,53 +755,13 @@ var
   Position: integer;
   ParamName: string;
 begin
-  EvaluateListBoundaries;
-  for ValueIndex := 0 to Values.Count - 1 do
-  begin
-    BoundaryStorage := Values.Boundaries[ValueIndex] as TWellStorage;
-    AssignCells(BoundaryStorage, ValueTimeList);
-  end;
-  for ParamIndex := 0 to Parameters.Count - 1 do
-  begin
-    Param := Parameters[ParamIndex];
-    ParamName := Param.Param.ParamName;
-    Position := ParamList.IndexOf(ParamName);
-    if Position < 0 then
-    begin
-      Times := TObjectList.Create;
-      ParamList.AddObject(ParamName, Times);
-    end
-    else
-    begin
-      Times := ParamList.Objects[Position] as TList;
-    end;
-    for ValueIndex := 0 to Param.Param.Count - 1 do
-    begin
-      BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TWellStorage;
-      AssignCells(BoundaryStorage, Times);
-    end;
-  end;
-end;
-
-procedure TMfWellBoundary.GetCellValues(ValueTimeList: TList;
-  ParamList: TStringList);
-var
-  ValueIndex: Integer;
-  BoundaryStorage: TWellStorage;
-  ParamIndex: Integer;
-  Param: TModflowParamItem;
-  Times: TList;
-  Position: integer;
-  ParamName: string;
-begin
-//  EvaluateArrayBoundaries;
-  EvaluateListBoundaries;
+  EvaluateListBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
     if ValueIndex < Values.BoundaryCount then
     begin
       BoundaryStorage := Values.Boundaries[ValueIndex] as TWellStorage;
-      AssignCells(BoundaryStorage, ValueTimeList);
+      AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;
   for ParamIndex := 0 to Parameters.Count - 1 do
@@ -850,7 +783,53 @@ begin
       if ValueIndex < Param.Param.BoundaryCount then
       begin
         BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TWellStorage;
-        AssignCells(BoundaryStorage, Times);
+        AssignCells(BoundaryStorage, Times, AModel);
+      end;
+    end;
+  end;
+end;
+
+procedure TMfWellBoundary.GetCellValues(ValueTimeList: TList;
+  ParamList: TStringList; AModel: TBaseModel);
+var
+  ValueIndex: Integer;
+  BoundaryStorage: TWellStorage;
+  ParamIndex: Integer;
+  Param: TModflowParamItem;
+  Times: TList;
+  Position: integer;
+  ParamName: string;
+begin
+//  EvaluateArrayBoundaries;
+  EvaluateListBoundaries(AModel);
+  for ValueIndex := 0 to Values.Count - 1 do
+  begin
+    if ValueIndex < Values.BoundaryCount then
+    begin
+      BoundaryStorage := Values.Boundaries[ValueIndex] as TWellStorage;
+      AssignCells(BoundaryStorage, ValueTimeList, AModel);
+    end;
+  end;
+  for ParamIndex := 0 to Parameters.Count - 1 do
+  begin
+    Param := Parameters[ParamIndex];
+    ParamName := Param.Param.ParamName;
+    Position := ParamList.IndexOf(ParamName);
+    if Position < 0 then
+    begin
+      Times := TObjectList.Create;
+      ParamList.AddObject(ParamName, Times);
+    end
+    else
+    begin
+      Times := ParamList.Objects[Position] as TList;
+    end;
+    for ValueIndex := 0 to Param.Param.Count - 1 do
+    begin
+      if ValueIndex < Param.Param.BoundaryCount then
+      begin
+        BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TWellStorage;
+        AssignCells(BoundaryStorage, Times, AModel);
       end;
     end;
   end;
@@ -859,9 +838,9 @@ end;
 procedure TMfWellBoundary.InvalidateDisplay;
 begin
   inherited;
-  if Used and (PhastModel <> nil) then
+  if Used and (ParentModel <> nil) then
   begin
-    (PhastModel as TPhastModel).InvalidateMfWellPumpage(self);
+    (ParentModel as TPhastModel).InvalidateMfWellPumpage(self);
   end;
 end;
 
@@ -963,6 +942,27 @@ begin
     RestoreData;
   end;
   result := FWellArray;
+end;
+
+{ TMfWelTimeListLink }
+
+procedure TMfWelTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  FPumpingRateData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FPumpingRateData.NonParamDescription := 'Pumping rate';
+  FPumpingRateData.ParamDescription := ' pumping rate multiplier';
+  if Model <> nil then
+  begin
+    FPumpingRateData.OnInvalidate := (Model as TCustomModel).InvalidateMfWellPumpage;
+  end;
+  AddTimeList(FPumpingRateData);
+end;
+
+destructor TMfWelTimeListLink.Destroy;
+begin
+  FPumpingRateData.Free;
+  inherited;
 end;
 
 end.

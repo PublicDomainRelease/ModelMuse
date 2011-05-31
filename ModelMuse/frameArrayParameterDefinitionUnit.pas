@@ -63,8 +63,6 @@ type
     procedure cbUseMultiplierClick(Sender: TObject);
     procedure dgParametersColSize(Sender: TObject; ACol, PriorWidth: Integer);
     procedure dgParametersHorizontalScroll(Sender: TObject);
-    procedure dgParametersMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure dgParametersMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
   private
@@ -168,21 +166,6 @@ procedure TframeArrayParameterDefinition.dgParametersHorizontalScroll(
 begin
   inherited;
   ArrangeMultiEditControls;
-end;
-
-procedure TframeArrayParameterDefinition.dgParametersMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    dgParameters.Options := dgParameters.Options + [goEditing];
-  end
-  else
-  begin
-    dgParameters.Options := dgParameters.Options - [goEditing];
-  end;
-
 end;
 
 procedure TframeArrayParameterDefinition.dgParametersMouseUp(Sender: TObject;

@@ -4,10 +4,11 @@ interface
 
 // Windows is used so that AnsiCompareText will be inlined. 
 uses Windows, SubscriptionUnit, SysUtils, Classes, Contnrs, JclSysUtils,
-  ModflowPackageSelectionUnit, Dialogs;
+  ModflowPackageSelectionUnit, Dialogs, Types;
 
 type
   TProgressHandler = procedure(Position, Total: integer) of object;
+  TModelType = (mtParent, mtChild); 
 
 {
 Import the MODFLOW-2005 model whose name file is ListFileName.
@@ -24,7 +25,7 @@ TArrayImporter, and TObjectArray.
 }
 procedure ImportModflow2005(const ListFileName: string;
   XOrigin, YOrigin, GridAngle: double; textHandler: TTextHandler;
-  ProgressHandler: TProgressHandler);
+  ProgressHandler: TProgressHandler; ModelType: TModelType);
 
 implementation
 
@@ -42,7 +43,7 @@ uses ModflowGridUnit, AbstractGridUnit, ScreenObjectUnit, GoPhastTypes,
   ModflowHobUnit, ModflowHfbUnit, ModflowLakUnit, ModflowDrtUnit, 
   ModflowEtsUnit, ModflowResUnit, ModflowUzfUnit, ModflowGageUnit, 
   HufDefinition, FluxObservationUnit, ModflowMnw2Unit, ModflowSubsidenceDefUnit,
-  ModflowHydmodUnit, ContourExport;
+  ModflowHydmodUnit, ContourExport, ModelMuseUtilities;
 
 resourcestring
   StrHydCondAlongRows = 'HYD. COND. ALONG ROWS';
@@ -105,6 +106,10 @@ resourcestring
   StrVOIDRATIO = 'VOID RATIO';
   StrPRECONSOLSTRESS = 'PRECONSOL.   STRESS';
   StrNDSys = 'ND_Sys';
+  StrImportedUZFInfiltr = 'Imported_UZF_Infil_Str_P';
+  StrImportedUZFEvapotr = 'Imported_UZF_ET_Str_P';
+  StrImportedUZFExtinct = 'Imported_UZF_Extinct_Depth_Str_P';
+  StrImportedUZFExWC = 'Imported_UZF_Extinct_Wat_Cont_Str_P';
 
 const
   StrConstant1DRealArray = 'CONSTANT 1D REAL ARRAY:';
@@ -275,13 +280,19 @@ Type
     Destructor Destroy; override;
   end;
 
+  TBasImporter = class;
+
   TDisImporter = class(TPackageImporter)
-  strict private
-    FOriginPoint: TPoint2D;
-    FGridAngle: Double;
+  private
     NLAY: integer;
     NROW: integer;
     NCOL: integer;
+    FHasFixedElevations: Boolean;
+    procedure ImportElevationsAndReleaseMemory;
+  strict private
+    FBas: TBasImporter;
+    FOriginPoint: TPoint2D;
+    FGridAngle: Double;
     NPER: integer;
     ITMUNI: integer;
     LENUNI: integer;
@@ -307,11 +318,13 @@ Type
     procedure ReadStressPeriod;
     procedure InitializeView;
     procedure ReleaseMemory;
+    procedure FixElevations;
   protected
     procedure ReadData(const ALabel: string); override;
     procedure HandlePackage; override;
   public
     Constructor Create(Importer: TModflow2005Importer;
+      Bas: TBasImporter;
       XOrigin, YOrigin, GridAngle: double);
   end;
 
@@ -1046,6 +1059,9 @@ Type
   end;
 
   TBasImporter = class(TCustomChdImporter)
+  private
+    FIbound: T3DIntArray;
+    FConstantIbound : TIntegerConstantArray;
   strict private
     FHeading1: string;
     FHeading2: string;
@@ -1053,8 +1069,6 @@ Type
     FPrintTime: Boolean;
     FHNoFlo: double;
     FCrossSection: Boolean;
-    FIbound: T3DIntArray;
-    FConstantIbound : TIntegerConstantArray;
     FStrt: T3DDoubleArray;
     FConstantStrt : TRealConstantRecordArray;
     FSpecifiedHeadsList: TList;
@@ -1072,7 +1086,9 @@ Type
     procedure ReadConstantIboundForLayer;
     procedure ReleaseMemory;
   private
-    FInitialCHDLocations: array of array of array of boolean;
+    FInitialCHDLocations: array of array of TBooleanDynArray;
+    FHasReadIBound: Boolean;
+    FDis: TDisImporter;
     procedure ImportSpecifiedHeads;
   protected
     procedure ReadData(const ALabel: string); override;
@@ -1081,6 +1097,7 @@ Type
   public
     Constructor Create(Importer: TModflow2005Importer);
     Destructor Destroy; override;
+    property Dis: TDisImporter read FDis write FDis;
   end;
 
   TChdImporter = class(TCustomChdImporter)
@@ -1458,7 +1475,7 @@ Type
     FPointLists: TList;
     FEpsilon: Real;
     FRequiredType: string;
-    FReuseLayerIndicator: array of boolean;
+    FReuseLayerIndicator: TBooleanDynArray;
     FConstantLayerIndicators: TIntegerConstantArray;
     FVariableLayerIndicators: T3DIntArray;
     procedure ReadNumberOfParameters;
@@ -1523,6 +1540,11 @@ Type
       const Root: string; DataArray: TDataArray;
       ValueList: TIntegerList); overload;
     procedure InitializeEpsilon;
+  protected
+    procedure CreateTransientRealDataArray(StressPeriodIndex: Integer;
+      Reuse: TBooleanDynArray; DataArrayRoot: string;
+      ConstantValues: TRealConstantRecordArray; VariableValues: T3DDoubleArray;
+      ImportedValueName: string);
   public
     Constructor Create(Importer: TModflow2005Importer;
       const PackageIdentifier: string; ZoneImporter: TMultZoneImporter);
@@ -1534,7 +1556,7 @@ Type
     NRCHOP: integer;
     FConstantRecharge: TRealConstantRecordArray;
     FVariableRecharge: T3DDoubleArray;
-    FReuseRecharge: array of boolean;
+    FReuseRecharge: TBooleanDynArray;
     FRchPackage: TRchPackageSelection;
     procedure InitializeReuseRecharge;
     procedure SetRechargeOption;
@@ -1564,9 +1586,9 @@ Type
 
   TCustomETImporter = class(TTransientArrayImporter)
   protected
-    FReuseEtSurface: array of boolean;
-    FReuseEtExtinctionDepth: array of boolean;
-    FReuseEtRate: array of boolean;
+    FReuseEtSurface: TBooleanDynArray;
+    FReuseEtExtinctionDepth: TBooleanDynArray;
+    FReuseEtRate: TBooleanDynArray;
     FConstantEtSurface: TRealConstantRecordArray;
     FVariableEtSurface: T3DDoubleArray;
     FConstantEtRate: TRealConstantRecordArray;
@@ -1639,7 +1661,7 @@ Type
   TEtsImporter = class(TCustomETImporter)
   private
     FCurrentSegment: Integer;
-    FReuseSegmentDefinition: array of boolean;
+    FReuseSegmentDefinition: TBooleanDynArray;
     FConstantDepthProportions: array of TRealConstantRecordArray;
     FVariableDepthProportions: array of T3DDoubleArray;
     FConstantRateProportions: array of TRealConstantRecordArray;
@@ -2217,6 +2239,10 @@ Type
     NSETS2: integer;
     NUZGAG: integer;
     SURFDEP: double;
+    FReuseInfiltration: TBooleanDynArray;
+    FReuseET: TBooleanDynArray;
+    FReuseExtictionDepth: TBooleanDynArray;
+    FReuseExtictionWaterContent: TBooleanDynArray;
     FGages: TUzfGageArray;
     FCurrentGage: integer;
     FConstantInfiltration: TRealConstantRecordArray;
@@ -2246,6 +2272,21 @@ Type
     ConstThti: double;
     THTI: T2DDoubleArray;
     FUzfPackage: TUzfPackageSelection;
+    procedure CreateInfiltrationDataArray(StressPeriodIndex: integer);
+    procedure CreateETDataArray(StressPeriodIndex: integer);
+    procedure CreateExtinctionDepthDataArray(StressPeriodIndex: integer);
+    procedure CreateExtinctionWaterContentDataArray(StressPeriodIndex: integer);
+    procedure AssignEt(NewItemsNeeded: boolean; Boundary: TUzfBoundary;
+      var EvtItem: TEvtItem; const EtRate: string; StressPeriodIndex: Integer);
+    procedure AssignExtinctionDepth(NewItemsNeeded: boolean;
+      Boundary: TUzfBoundary; var ExtinctDepthItem: TUzfExtinctDepthItem;
+      const ExtinctionDepth: string; StressPeriodIndex: Integer);
+    procedure AssignInfiltation(NewItemsNeeded: boolean; Boundary: TUzfBoundary;
+      var InfiltrationItem: TRchItem; const InfiltationRate: string;
+      StressPeriodIndex: Integer);
+    procedure AssignWaterContent(NewItemsNeeded: boolean;
+      Boundary: TUzfBoundary; var WaterContentItem: TUzfWaterContentItem;
+      const WaterContent: string; StressPeriodIndex: Integer);
   protected
     procedure ReadData(const ALabel: string); override;
     procedure HandlePackage; override;
@@ -2811,14 +2852,28 @@ Type
 
 var
   GlobalCellCenterScreenObject: TScreenObject = nil;
+  GlobalModelType: TModelType;
+  LayerString: string;
 
 procedure ImportModflow2005(const ListFileName: string;
   XOrigin, YOrigin, GridAngle: double; textHandler: TTextHandler;
-  ProgressHandler: TProgressHandler);
+  ProgressHandler: TProgressHandler; ModelType: TModelType);
 var
   Importer: TModflow2005Importer;
 begin
   Assert(Assigned(textHandler));
+  GlobalModelType := ModelType;
+  case ModelType of
+    mtParent:
+      begin
+        LayerString := StrParentLayer;
+      end;
+    mtChild:
+      begin
+        LayerString := 'Layer';
+      end;
+    else Assert(False);
+  end;
   frmGoPhast.CanDraw:= False;
   frmGoPhast.PhastModel.ImportingModel := True;
   Importer := TModflow2005Importer.Create(ListFileName,
@@ -2860,10 +2915,10 @@ begin
   FPackageIdentifiers:= TStringList.Create;
   Nam := TNamImporter.Create(self);
   FPackageIdentifiers.AddObject('NAM:', Nam);
-  FPackageIdentifiers.AddObject('DIS:', TDisImporter.Create(self,
-    XOrigin, YOrigin, GridAngle));
   Bas := TBasImporter.Create(self);
   FPackageIdentifiers.AddObject('BAS:', Bas);
+  FPackageIdentifiers.AddObject('DIS:', TDisImporter.Create(self,
+    Bas, XOrigin, YOrigin, GridAngle));
 
   MZImporter := TMultZoneImporter.Create(self);
   
@@ -3220,12 +3275,26 @@ end;
 { TDisImporter }
 
 constructor TDisImporter.Create(Importer: TModflow2005Importer;
+  Bas: TBasImporter;
   XOrigin, YOrigin, GridAngle: double);
 begin
   inherited Create(Importer, 'DIS:');
+  FBas := Bas;
+  Bas.Dis := self;
   FOriginPoint.x := XOrigin;
   FOriginPoint.y := YOrigin;
   FGridAngle := GridAngle;
+end;
+
+procedure TDisImporter.ImportElevationsAndReleaseMemory;
+begin
+  if FBas.FHasReadIBound then
+  begin
+    FixElevations;
+    ImportElevations;
+    InitializeView;
+    ReleaseMemory;
+  end;
 end;
 
 procedure TDisImporter.InitializeView;
@@ -3360,13 +3429,13 @@ begin
     begin
       NewLayerStructure.LayerGroups[GroupIndex].Simulated := True;
       NewLayerStructure.LayerGroups[GroupIndex].AquiferName :=
-        'Layer ' + IntToStr(LayerIndex + 1);
+        'Layer ' + IntToStr(GroupIndex);
       if LAYCBD[LayerIndex] <> 0 then
       begin
         Inc(GroupIndex);
         NewLayerStructure.LayerGroups[GroupIndex].Simulated := False;
         NewLayerStructure.LayerGroups[GroupIndex].AquiferName :=
-          'Confining Bed ' + IntToStr(LayerIndex + 1);
+          'Confining Bed ' + IntToStr(GroupIndex);
       end;
       Inc(GroupIndex);
     end;
@@ -3382,7 +3451,7 @@ begin
     Assert(DataArray <> nil);
     if FConstantElevations[GroupIndex].IsConstant then
     begin
-      DataArray.Formula := FloatToStr(FConstantElevations[GroupIndex].
+      DataArray.Formula := FortranFloatToStr(FConstantElevations[GroupIndex].
         RealValue);
     end
     else
@@ -3572,10 +3641,272 @@ begin
   end;
 end;
 
+procedure TDisImporter.FixElevations;
+var
+  LayerIndex: Integer;
+  ModelMuseLayIndex: Integer;
+  Changed: boolean;
+  RowIndex: Integer;
+  ColIndex: Integer;
+  MinThickness: double;
+  TopElev: Double;
+  BotElev: Double;
+  Thickness: Double;
+  procedure ConvertElevToVariable(ModelMuseLayIndex: integer);
+  var
+    RowIndex: integer;
+    ColIndex: Integer;
+  begin
+    SetLength(FElevations[ModelMuseLayIndex], NROW, NCOL);
+    for RowIndex := 0 to NROW - 1 do
+    begin
+      for ColIndex := 0 to NCOL - 1 do
+      begin
+        FElevations[ModelMuseLayIndex, RowIndex, ColIndex]
+          := FConstantElevations[ModelMuseLayIndex].RealValue;
+      end;
+    end;
+    FConstantElevations[ModelMuseLayIndex].IsConstant := False;
+  end;
+  procedure HandleLayerGoingUp(SimulatedLayer: boolean);
+  var
+    RowIndex: integer;
+    ColIndex: Integer;
+    TopElevation: Double;
+    Active: Boolean;
+    BottomElevation: Double;
+    AboveActive: Boolean;
+    AltLayerIndex: Integer;
+    AltModelMuseLayIndex: Integer;
+  begin
+    for RowIndex := 0 to NROW - 1 do
+    begin
+      for ColIndex := 0 to NCOL - 1 do
+      begin
+        if SimulatedLayer then
+        begin
+          if FBas.FConstantIbound[LayerIndex].IsConstant then
+          begin
+            Active := FBas.FConstantIbound[LayerIndex].IntegerValue <> 0;
+          end
+          else
+          begin
+            Active := FBas.FIbound[LayerIndex, RowIndex, ColIndex] <> 0;
+          end;
+        end
+        else
+        begin
+          Active := False;
+        end;
+        if SimulatedLayer and ((LayerIndex = 0) or (LAYCBD[LayerIndex-1] <> 0)) then
+        begin
+          AboveActive := False;
+        end
+        else
+        begin
+          if SimulatedLayer then
+          begin
+            AltLayerIndex := LayerIndex-1;
+          end
+          else
+          begin
+            AltLayerIndex := LayerIndex;
+          end;
+          if FBas.FConstantIbound[AltLayerIndex].IsConstant then
+          begin
+            AboveActive := FBas.FConstantIbound[AltLayerIndex].IntegerValue <> 0;
+          end
+          else
+          begin
+            AboveActive := FBas.FIbound[AltLayerIndex, RowIndex, ColIndex] <> 0;
+          end;
+        end;
+
+        if not Active and not AboveActive then
+        begin
+          if FConstantElevations[ModelMuseLayIndex].IsConstant then
+          begin
+            TopElevation := FConstantElevations[ModelMuseLayIndex].RealValue;
+          end
+          else
+          begin
+            TopElevation := FElevations[ModelMuseLayIndex, RowIndex, ColIndex];
+          end;
+          AltModelMuseLayIndex := ModelMuseLayIndex + 1;
+          if FConstantElevations[AltModelMuseLayIndex].IsConstant then
+          begin
+            BottomElevation := FConstantElevations[AltModelMuseLayIndex].RealValue;
+          end
+          else
+          begin
+            BottomElevation := FElevations[AltModelMuseLayIndex, RowIndex, ColIndex];
+          end;
+          if TopElevation <= BottomElevation then
+          begin
+            Changed := True;
+            TopElevation := BottomElevation + MinThickness;
+            if FConstantElevations[ModelMuseLayIndex].IsConstant then
+            begin
+              ConvertElevToVariable(ModelMuseLayIndex);
+            end;
+            FElevations[ModelMuseLayIndex, RowIndex, ColIndex] := TopElevation;
+          end;
+        end;
+      end;
+    end;
+  end;
+  procedure HandleLayerGoingDown(SimulatedLayer: boolean);
+  var
+    RowIndex: integer;
+    ColIndex: Integer;
+    TopElevation: Double;
+    Active: Boolean;
+    BottomElevation: Double;
+    BelowActive: Boolean;
+    AltModelMuseLayIndex: Integer;
+  begin
+    for RowIndex := 0 to NROW - 1 do
+    begin
+      for ColIndex := 0 to NCOL - 1 do
+      begin
+        if SimulatedLayer then
+        begin
+          if FBas.FConstantIbound[LayerIndex].IsConstant then
+          begin
+            Active := FBas.FConstantIbound[LayerIndex].IntegerValue <> 0;
+          end
+          else
+          begin
+            Active := FBas.FIbound[LayerIndex, RowIndex, ColIndex] <> 0;
+          end;
+        end
+        else
+        begin
+          Active := False;
+        end;
+        if SimulatedLayer and ((LayerIndex = NLAY-1) or (LAYCBD[LayerIndex] <> 0)) then
+        begin
+          BelowActive := False;
+        end
+        else
+        begin
+          if FBas.FConstantIbound[LayerIndex+1].IsConstant then
+          begin
+            BelowActive := FBas.FConstantIbound[LayerIndex+1].IntegerValue <> 0;
+          end
+          else
+          begin
+            BelowActive := FBas.FIbound[LayerIndex+1, RowIndex, ColIndex] <> 0;
+          end;
+        end;
+
+        if not Active and not BelowActive then
+        begin
+          if FConstantElevations[ModelMuseLayIndex].IsConstant then
+          begin
+            BottomElevation := FConstantElevations[ModelMuseLayIndex].RealValue;
+          end
+          else
+          begin
+            BottomElevation := FElevations[ModelMuseLayIndex, RowIndex, ColIndex];
+          end;
+          AltModelMuseLayIndex := ModelMuseLayIndex - 1;
+          if FConstantElevations[AltModelMuseLayIndex].IsConstant then
+          begin
+            TopElevation := FConstantElevations[AltModelMuseLayIndex].RealValue;
+          end
+          else
+          begin
+            TopElevation := FElevations[AltModelMuseLayIndex, RowIndex, ColIndex];
+          end;
+          if TopElevation <= BottomElevation then
+          begin
+            Changed := True;
+            BottomElevation := TopElevation - MinThickness;
+            if FConstantElevations[ModelMuseLayIndex].IsConstant then
+            begin
+              ConvertElevToVariable(ModelMuseLayIndex);
+            end;
+            FElevations[ModelMuseLayIndex, RowIndex, ColIndex] := BottomElevation;
+          end;
+        end;
+      end;
+    end;
+  end;
+begin
+  Assert(FBas.FHasReadIBound);
+
+  MinThickness := 0.0;
+  for LayerIndex := 0 to Length(FConstantElevations) - 2 do
+  begin
+    for RowIndex := 0 to NROW - 1 do
+    begin
+      for ColIndex := 0 to NCOL - 1 do
+      begin
+        if FConstantElevations[LayerIndex].IsConstant then
+        begin
+          TopElev := FConstantElevations[LayerIndex].RealValue;
+        end
+        else
+        begin
+          TopElev := FElevations[LayerIndex, RowIndex, ColIndex];
+        end;
+        if FConstantElevations[LayerIndex+1].IsConstant then
+        begin
+          BotElev := FConstantElevations[LayerIndex+1].RealValue;
+        end
+        else
+        begin
+          BotElev := FElevations[LayerIndex+1, RowIndex, ColIndex];
+        end;
+        Thickness := TopElev - BotElev;
+        if Thickness > 0 then
+        begin
+          if (MinThickness = 0) or (MinThickness > Thickness)  then
+          begin
+            MinThickness := Thickness
+          end;
+        end;
+      end;
+    end;
+  end;
+  MinThickness := MinThickness /(NLAY + 1);
+  if MinThickness = 0 then
+  begin
+    MinThickness := 1;
+  end;
+
+  repeat
+    Changed := False;
+    for LayerIndex := NLAY - 1 downto 0 do
+    begin
+      if LAYCBD[LayerIndex] <> 0 then
+      begin
+        ModelMuseLayIndex := GetConfiningBedBottomIndex(LayerIndex+1)-1;
+        HandleLayerGoingUp(False);
+      end;
+      ModelMuseLayIndex := GetLayerBottomIndex(LayerIndex+1)-1;
+      HandleLayerGoingUp(True);
+    end;
+    for LayerIndex := 0 to NLAY - 1 do
+    begin
+      ModelMuseLayIndex := GetLayerBottomIndex(LayerIndex+1);
+      HandleLayerGoingDown(True);
+      if LAYCBD[LayerIndex] <> 0 then
+      begin
+        ModelMuseLayIndex := GetConfiningBedBottomIndex(LayerIndex+1);
+        HandleLayerGoingDown(False);
+      end;
+    end;
+  until not Changed;
+  FHasFixedElevations := True;
+end;
+
 function TDisImporter.GetConfiningBedBottomIndex(Layer: Integer): integer;
 var
   Index: Integer;
 begin
+  Assert((Layer >= 1) and (Layer <= NLAY));
   result := Layer;
   for Index := 0 to Layer - 1 do
   begin
@@ -3590,6 +3921,7 @@ function TDisImporter.GetLayerBottomIndex(Layer: Integer): integer;
 var
   Index: Integer;
 begin
+  Assert((Layer >= 1) and (Layer <= NLAY));
   result := Layer;
   for Index := 0 to Layer - 2 do
   begin
@@ -3614,10 +3946,8 @@ begin
   FModel.ModflowOptions.TimeUnit := ITMUNI;
 
   ImportRowsAndColumns;
-  ImportElevations;
   ImportStressPeriods;
-  InitializeView;
-  ReleaseMemory;
+  ImportElevationsAndReleaseMemory;
 end;
 
 procedure TDisImporter.ReadVariableDelrDelc;
@@ -3924,6 +4254,7 @@ begin
   FConstantIbound[Layer].IsConstant := True;
   FConstantIbound[Layer].IntegerValue := IntegerConstant;
   FProgressHandler(FilePos(FImporter.FFile));
+  FHasReadIBound := True;
 end;
 
 procedure TBasImporter.ReadConstantIboundForCrossSection;
@@ -3948,6 +4279,7 @@ begin
     end;
   end;
   FProgressHandler(FilePos(FImporter.FFile));
+  FHasReadIBound := True;
 end;
 
 procedure TBasImporter.ReadVariableIboundForLayer;
@@ -3962,6 +4294,7 @@ begin
   Dec(Layer);
   IntArray := FIbound[Layer];
   ReadVariable2DIntArray(IntArray);
+  FHasReadIBound := True;
 end;
 
 procedure TBasImporter.ReadVariableIboundForCrossSection;
@@ -3983,6 +4316,7 @@ begin
     ReadLn(FImporter.FFile);
   end;
   FProgressHandler(FilePos(FImporter.FFile));
+  FHasReadIBound := True;
 end;
 
 procedure TBasImporter.ReadConstantInitialHeadForCrossSection;
@@ -4153,7 +4487,7 @@ begin
     LayerIndex := -1;
     if FModel.LayerStructure.Count > 2 then
     begin
-      ActiveFormula := 'CaseB(Layer, ';
+      ActiveFormula := 'CaseB(' + LayerString + ', ';
     end
     else
     begin
@@ -4245,7 +4579,7 @@ var
   AnotherBoundary: TChdLocationObject;
 begin
   InstanceCount := 0;
-  SpecifiedHeadLocations := nil;
+//  SpecifiedHeadLocations := nil;
 
   // Only define CHD objects in first stress period.  The constant
   // head boundary will persist into later stress periods where it
@@ -4361,14 +4695,14 @@ begin
   if IsConstant then
   begin
     DataArray := FModel.DataArrayManager.GetDataSetByName(rsModflow_Initial_Head);
-    DataArray.Formula := FloatToStr(ConstantValue);
+    DataArray.Formula := FortranFloatToStr(ConstantValue);
   end
   else
   begin
     LayerIndex := -1;
     if FModel.LayerStructure.Count > 2 then
     begin
-      InitialHeadFormula := 'CaseR(Layer, ';
+      InitialHeadFormula := 'CaseR(' + LayerString + ', ';
     end
     else
     begin
@@ -4383,7 +4717,7 @@ begin
         if FConstantStrt[LayerIndex].IsConstant then
         begin
           InitialHeadFormula := InitialHeadFormula
-            + FloatToStr(FConstantStrt[LayerIndex].RealValue);
+            + FortranFloatToStr(FConstantStrt[LayerIndex].RealValue);
         end
         else
         begin
@@ -4429,6 +4763,10 @@ end;
 procedure TBasImporter.HandlePackage;
 begin
   inherited;
+  if not FDis.FHasFixedElevations then
+  begin
+    FDis.ImportElevationsAndReleaseMemory;
+  end;
   if FHeading2 <> '' then
   begin
     FModel.ModflowOptions.Description.Insert(0, FHeading2);
@@ -4462,9 +4800,9 @@ begin
 
   if (FIbound = nil) or (FStrt = nil) then
   begin
-    NLAY := FModel.LayerStructure.ModflowLayerCount;
-    NROW := FGrid.RowCount;
-    NCOL := FGrid.ColumnCount;
+    NLAY := FDis.NLAY;
+    NROW := FDis.NROW;
+    NCOL := FDis.NCOL;
     if FIbound = nil then
     begin
       SetLength(FIbound, NLAY, NROW, NCOL);
@@ -4719,7 +5057,7 @@ begin
     end;
     if FConstantMultArrays[MultIndex].IsConstant then
     begin
-      DataArray.Formula := FloatToStr(FConstantMultArrays[MultIndex].RealValue);
+      DataArray.Formula := FortranFloatToStr(FConstantMultArrays[MultIndex].RealValue);
     end
     else
     begin
@@ -4992,7 +5330,7 @@ begin
   DataArray := FModel.DataArrayManager.GetDataSetByName(ImportArrayName);
   if TwoDConstRecord.IsConstant then
   begin
-    DataArray.Formula := FloatToStr(TwoDConstRecord.RealValue);
+    DataArray.Formula := FortranFloatToStr(TwoDConstRecord.RealValue);
   end
   else
   begin
@@ -5036,14 +5374,14 @@ begin
     if IsConstant then
     begin
       DataArray := FModel.DataArrayManager.GetDataSetByName(ImportArrayName);
-      DataArray.Formula := FloatToStr(ConstantValue);
+      DataArray.Formula := FortranFloatToStr(ConstantValue);
     end
     else
     begin
       LayerIndex := -1;
       if FModel.LayerStructure.Count > 2 then
       begin
-        DataSetFormula := 'CaseR(Layer, ';
+        DataSetFormula := 'CaseR(' + LayerString + ', ';
       end
       else
       begin
@@ -5061,7 +5399,7 @@ begin
           and ThreeDConstRealArray[LayerIndex].IsConstant then
         begin
           DataSetFormula := DataSetFormula
-            + FloatToStr(ThreeDConstRealArray[LayerIndex].RealValue);
+            + FortranFloatToStr(ThreeDConstRealArray[LayerIndex].RealValue);
         end
         else
         begin
@@ -5168,7 +5506,7 @@ begin
     if IsConstant then
     begin
       DataArray := FModel.DataArrayManager.GetDataSetByName(rsKz);
-      DataArray.Formula := FloatToStr(ConstantValueK);
+      DataArray.Formula := FortranFloatToStr(ConstantValueK);
     end
     else
     begin
@@ -5176,8 +5514,8 @@ begin
       UseAnisotropy := False;
       if FModel.LayerStructure.Count > 2 then
       begin
-        DataSetFormulaKz := 'CaseR(Layer, ';
-        AnisotropyFormulaKz := 'CaseR(Layer, ';
+        DataSetFormulaKz := 'CaseR(' + LayerString + ', ';
+        AnisotropyFormulaKz := 'CaseR(' + LayerString + ', ';
       end
       else
       begin
@@ -5206,7 +5544,7 @@ begin
           begin
             AnisotropyFormulaKz := AnisotropyFormulaKz + '0';
             DataSetFormulaKz := DataSetFormulaKz
-              + FloatToStr(FVerticalKConst[LayerIndex].RealValue);
+              + FortranFloatToStr(FVerticalKConst[LayerIndex].RealValue);
           end
           else if UseAnisotropyInLayer
             and ((FHorizontalToVerticalAnisotropyConst <> nil)
@@ -5215,7 +5553,7 @@ begin
           begin
               DataSetFormulaKz := DataSetFormulaKz + '0';
               AnisotropyFormulaKz := AnisotropyFormulaKz
-                + FloatToStr(FHorizontalToVerticalAnisotropyConst[
+                + FortranFloatToStr(FHorizontalToVerticalAnisotropyConst[
                 LayerIndex].RealValue);
 
           end
@@ -5274,7 +5612,7 @@ begin
           begin
             AnisotropyFormulaKz := AnisotropyFormulaKz + '0';
             DataSetFormulaKz := DataSetFormulaKz
-              + FloatToStr(FQuasiVerticalKConst[LayerIndex].RealValue);
+              + FortranFloatToStr(FQuasiVerticalKConst[LayerIndex].RealValue);
           end
           else
           begin
@@ -5431,12 +5769,12 @@ begin
       if Param.ParameterType = ptLPF_VKCB then
       begin
         Param.UseMultiplier := MultUsed or
-          (IntList.Count < FModel.LayerStructure.ModflowConfiningBedCount);
+          (IntList.Count < FModel.ModflowConfiningBedCount);
       end
       else
       begin
         Param.UseMultiplier := MultUsed or
-          (IntList.Count < FModel.LayerStructure.ModflowLayerCount);
+          (IntList.Count < FModel.ModflowLayerCount);
       end;
       if Param.UseMultiplier then
       begin
@@ -5450,12 +5788,12 @@ begin
       if Param.ParameterType = ptLPF_VKCB then
       begin
         Param.UseZone := ZoneUsed or
-          (IntList.Count < FModel.LayerStructure.ModflowConfiningBedCount);
+          (IntList.Count < FModel.ModflowConfiningBedCount);
       end
       else
       begin
         Param.UseZone := ZoneUsed or
-          (IntList.Count < FModel.LayerStructure.ModflowLayerCount);
+          (IntList.Count < FModel.ModflowLayerCount);
       end;
       if Param.UseZone then
       begin
@@ -5480,7 +5818,7 @@ begin
       for ClusterIndex := 0 to Length(Instance.Clusters) - 1 do
       begin
         Cluster := Instance.Clusters[ClusterIndex];
-        LayerIndex := FModel.LayerStructure.
+        LayerIndex := FModel.
           ModflowLayerToDataSetLayer(Cluster.Layer);
         if Param.ParameterType = ptLPF_VKCB then
         begin
@@ -5515,7 +5853,7 @@ begin
       end;
       if MultDataArray <> nil then
       begin
-        MultFunction := 'CaseR(Layer, ';
+        MultFunction := 'CaseR(' + LayerString + ', ';
         for MultIndex := 0 to MultFunctionList.Count - 1 do
         begin
           MultFunction := MultFunction + MultFunctionList[MultIndex];
@@ -5535,7 +5873,7 @@ begin
         end
         else
         begin
-          ZoneFunction := 'CaseB(Layer, ';
+          ZoneFunction := 'CaseB(' + LayerString + ', ';
           for ZoneIndex := 0 to ZoneFunctionList.Count - 1 do
           begin
             ZoneFunction := ZoneFunction + ZoneFunctionList[ZoneIndex];
@@ -5646,13 +5984,13 @@ begin
   end;
   if IsConstant then
   begin
-    HorizontalAnisotropyFormula := FloatToStr(ConstantValue);
+    HorizontalAnisotropyFormula := FortranFloatToStr(ConstantValue);
   end
   else
   begin
     if FModel.LayerStructure.Count > 2 then
     begin
-      HorizontalAnisotropyFormula := 'CaseR(Layer, ';
+      HorizontalAnisotropyFormula := 'CaseR(' + LayerString + ', ';
     end
     else
     begin
@@ -5671,13 +6009,13 @@ begin
       if Value > 0 then
       begin
         HorizontalAnisotropyFormula :=
-          HorizontalAnisotropyFormula + FloatToStr(Value);
+          HorizontalAnisotropyFormula + FortranFloatToStr(Value);
       end
       else if (FHorizontalAnisotropyConst <> nil)
         and FHorizontalAnisotropyConst[LayerIndex].IsConstant then
       begin
         HorizontalAnisotropyFormula := HorizontalAnisotropyFormula
-          + FloatToStr(FHorizontalAnisotropyConst[LayerIndex].RealValue);
+          + FortranFloatToStr(FHorizontalAnisotropyConst[LayerIndex].RealValue);
       end
       else if (FHorizontalAnisotropy <> nil)
         and (FHorizontalAnisotropy[LayerIndex] <> nil) then
@@ -5821,7 +6159,7 @@ begin
   begin
     if FHkConst = nil then
     begin
-      SetLength(FHkConst, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FHkConst, FModel.ModflowLayerCount);
       InitializeConstArray(FHkConst);
     end;
     ConstArray := FHkConst;
@@ -5831,7 +6169,7 @@ begin
     if FHorizontalAnisotropyConst = nil then
     begin
       SetLength(FHorizontalAnisotropyConst,
-        FModel.LayerStructure.ModflowLayerCount);
+        FModel.ModflowLayerCount);
       InitializeConstArray(FHorizontalAnisotropyConst);
     end;
     ConstArray := FHorizontalAnisotropyConst;
@@ -5840,7 +6178,7 @@ begin
   begin
     if FVerticalKConst = nil then
     begin
-      SetLength(FVerticalKConst, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FVerticalKConst, FModel.ModflowLayerCount);
       InitializeConstArray(FVerticalKConst);
     end;
     ConstArray := FVerticalKConst;
@@ -5850,7 +6188,7 @@ begin
     if FHorizontalToVerticalAnisotropyConst = nil then
     begin
       SetLength(FHorizontalToVerticalAnisotropyConst,
-        FModel.LayerStructure.ModflowLayerCount);
+        FModel.ModflowLayerCount);
       InitializeConstArray(FHorizontalToVerticalAnisotropyConst);
     end;
     ConstArray := FHorizontalToVerticalAnisotropyConst;
@@ -5859,7 +6197,7 @@ begin
   begin
     if FQuasiVerticalKConst = nil then
     begin
-      SetLength(FQuasiVerticalKConst, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FQuasiVerticalKConst, FModel.ModflowLayerCount);
       InitializeConstArray(FQuasiVerticalKConst);
     end;
     ConstArray := FQuasiVerticalKConst;
@@ -5868,7 +6206,7 @@ begin
   begin
     if FSpecificStorageConst = nil then
     begin
-      SetLength(FSpecificStorageConst, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FSpecificStorageConst, FModel.ModflowLayerCount);
       InitializeConstArray(FSpecificStorageConst);
     end;
     ConstArray := FSpecificStorageConst;
@@ -5877,7 +6215,7 @@ begin
   begin
     if FSpecificYieldConst = nil then
     begin
-      SetLength(FSpecificYieldConst, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FSpecificYieldConst, FModel.ModflowLayerCount);
       InitializeConstArray(FSpecificYieldConst);
     end;
     ConstArray := FSpecificYieldConst;
@@ -5886,7 +6224,7 @@ begin
   begin
     if FWetDryConst = nil then
     begin
-      SetLength(FWetDryConst, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FWetDryConst, FModel.ModflowLayerCount);
       InitializeConstArray(FWetDryConst);
     end;
     ConstArray := FWetDryConst;
@@ -5896,7 +6234,7 @@ begin
     if FStorageCoefficientConst = nil then
     begin
       SetLength(FStorageCoefficientConst,
-        FModel.LayerStructure.ModflowLayerCount);
+        FModel.ModflowLayerCount);
       InitializeConstArray(FStorageCoefficientConst);
     end;
     ConstArray := FStorageCoefficientConst;
@@ -5924,7 +6262,7 @@ begin
   begin
     if FHk = nil then
     begin
-      SetLength(FHk, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FHk, FModel.ModflowLayerCount);
     end;
     ThreeDArray := FHk;
   end
@@ -5933,7 +6271,7 @@ begin
     if FHorizontalAnisotropy = nil then
     begin
       SetLength(FHorizontalAnisotropy,
-        FModel.LayerStructure.ModflowLayerCount);
+        FModel.ModflowLayerCount);
     end;
     ThreeDArray := FHorizontalAnisotropy;
   end
@@ -5941,7 +6279,7 @@ begin
   begin
     if FVerticalK = nil then
     begin
-      SetLength(FVerticalK, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FVerticalK, FModel.ModflowLayerCount);
     end;
     ThreeDArray := FVerticalK;
   end
@@ -5950,7 +6288,7 @@ begin
     if FHorizontalToVerticalAnisotropy = nil then
     begin
       SetLength(FHorizontalToVerticalAnisotropy,
-        FModel.LayerStructure.ModflowLayerCount);
+        FModel.ModflowLayerCount);
     end;
     ThreeDArray := FHorizontalToVerticalAnisotropy;
   end
@@ -5958,7 +6296,7 @@ begin
   begin
     if FQuasiVerticalK = nil then
     begin
-      SetLength(FQuasiVerticalK, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FQuasiVerticalK, FModel.ModflowLayerCount);
     end;
     ThreeDArray := FQuasiVerticalK;
   end
@@ -5966,7 +6304,7 @@ begin
   begin
     if FSpecificStorage = nil then
     begin
-      SetLength(FSpecificStorage, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FSpecificStorage, FModel.ModflowLayerCount);
     end;
     ThreeDArray := FSpecificStorage;
   end
@@ -5974,7 +6312,7 @@ begin
   begin
     if FSpecificYield = nil then
     begin
-      SetLength(FSpecificYield, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FSpecificYield, FModel.ModflowLayerCount);
     end;
     ThreeDArray := FSpecificYield;
   end
@@ -5982,7 +6320,7 @@ begin
   begin
     if FWetDry = nil then
     begin
-      SetLength(FWetDry, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FWetDry, FModel.ModflowLayerCount);
     end;
     ThreeDArray := FWetDry;
   end
@@ -5990,7 +6328,7 @@ begin
   begin
     if FStorageCoefficient = nil then
     begin
-      SetLength(FStorageCoefficient, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FStorageCoefficient, FModel.ModflowLayerCount);
     end;
     ThreeDArray := FStorageCoefficient;
   end
@@ -6022,7 +6360,7 @@ begin
   if (LAYTYP = nil) or (LAYAVG = nil) or (CHANI = nil)
     or (LAYVKA = nil) or (LAYWET = nil) then
   begin
-    NLAY := FModel.LayerStructure.ModflowLayerCount;
+    NLAY := FModel.ModflowLayerCount;
     if (LAYTYP = nil) then
     begin
       SetLength(LAYTYP, NLAY);
@@ -6995,9 +7333,9 @@ begin
   end;
   inherited;
   SetLength(FBasImporter.FInitialCHDLocations,
-    FModel.LayerStructure.ModflowLayerCount, FModel.Grid.RowCount,
+    FModel.ModflowLayerCount, FModel.Grid.RowCount,
     FModel.Grid.ColumnCount);
-  for LayerIndex := 0 to FModel.LayerStructure.ModflowLayerCount - 1 do
+  for LayerIndex := 0 to FModel.ModflowLayerCount - 1 do
   begin
     for RowIndex := 0 to FModel.Grid.RowCount - 1 do
     begin
@@ -7589,7 +7927,7 @@ begin
       Boundary.Column - 1], True);
     ImportedElevations.RealValues[Index] :=
       FGrid.LayerCenter(Boundary.Column - 1, Boundary.Row - 1,
-      FModel.LayerStructure.ModflowLayerToDataSetLayer(Boundary.Layer));
+      FModel.ModflowLayerToDataSetLayer(Boundary.Layer));
   end;
   result.ElevationFormula := rsObjectImportedValuesR
     + '("' + StrImportedElevations + '")';
@@ -7745,7 +8083,7 @@ var
   EndTime: Double;
   StartTime: Double;
   StressPeriodIndex: Integer;
-  UsedLocations: array of array of boolean;
+  UsedLocations: array of TBooleanDynArray;
   LocationsToUse: TList;
   InnerBoundaryIndex: Integer;
   InstanceCount: integer;
@@ -7866,7 +8204,7 @@ var
   SO_Boundary: TModflowParamBoundary;
   ScreenObject: TScreenObject;
   Boundary: TLocation;
-  UsedLocations: array of array of boolean;
+  UsedLocations: array of TBooleanDynArray;
   LocationsToUse: TList;
   InnerBoundaryIndex: Integer;
   AnotherBoundary: TLocation;
@@ -9417,7 +9755,7 @@ begin
       and FConstantLayerIndicators[0].IsConstant then
     begin
       Layer := FConstantLayerIndicators[0].IntegerValue;
-      Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer(Layer);
+      Layer := FModel.ModflowLayerToDataSetLayer(Layer);
       DSAbove := FModel.LayerStructure.LayerGroups[Layer].DataArrayName;
       DSBelow := FModel.LayerStructure.LayerGroups[Layer + 1].DataArrayName;
       AssignedLayerDataSet.Formula := '(' + DSAbove + ' + ' + DSBelow + ')/2';
@@ -9438,7 +9776,7 @@ begin
         for ColumnIndex := 0 to FGrid.ColumnCount - 1 do
         begin
           Layer := FVariableLayerIndicators[0, RowIndex, ColumnIndex];
-          Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer(Layer);
+          Layer := FModel.ModflowLayerToDataSetLayer(Layer);
           ImportedData[RowIndex, ColumnIndex] :=
             FGrid.LayerCenter(ColumnIndex, RowIndex, Layer);
         end;
@@ -9867,83 +10205,86 @@ begin
 end;
 
 procedure TRchImporter.CreateRechargeRateDataSet(StressPeriodIndex: Integer);
-var
-  RechargeDataSet: TDataArray;
-  ScreenObject: TScreenObject;
-  ValueList: TRealList;
-  Values: T2DDoubleArray;
-  RowIndex: Integer;
-  ColIndex: Integer;
-  Value: Double;
-  MaxCount: integer;
-  Root: string;
+//var
+//  RechargeDataSet: TDataArray;
+//  ScreenObject: TScreenObject;
+//  ValueList: TRealList;
+//  Values: T2DDoubleArray;
+//  RowIndex: Integer;
+//  ColIndex: Integer;
+//  Value: Double;
+//  MaxCount: integer;
+//  Root: string;
 begin
-  ScreenObject := nil;
-  if not FReuseRecharge[StressPeriodIndex] then
-  begin
-    CreateDataSet(StressPeriodIndex, StrImportedRechargeSt,
-      rdtDouble, RechargeDataSet);
-    if (FConstantRecharge <> nil)
-      and FConstantRecharge[StressPeriodIndex].IsConstant then
-    begin
-      RechargeDataSet.Formula :=
-        FloatToStr(FConstantRecharge[StressPeriodIndex].RealValue);
-    end
-    else
-    begin
-      RechargeDataSet.Formula := '0';
-      Assert(FVariableRecharge <> nil);
-      Assert(FVariableRecharge[StressPeriodIndex] <> nil);
+  CreateTransientRealDataArray(StressPeriodIndex, FReuseRecharge,
+    StrImportedRechargeSt, FConstantRecharge, FVariableRecharge,
+    'Imported_RCH_Values_SP_');
 
-      ValueList := TRealList.Create;
-      try
-        ValueList.Sorted := True;
-        Values := FVariableRecharge[StressPeriodIndex];
-        MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
-        for RowIndex := 0 to Length(Values) - 1 do
-        begin
-          for ColIndex := 0 to Length(Values[0]) - 1 do
-          begin
-            Value := Values[RowIndex,ColIndex];
-            ValueList.AddUnique(Value);
-            if ValueList.Count >= MaxCount then
-            begin
-              break;
-            end;
-          end;
-          if ValueList.Count >= MaxCount then
-          begin
-            break;
-          end;
-        end;
-        if ValueList.Count >= MaxCount then
-        begin
-          if ScreenObject = nil then
-          begin
-            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
-//            ScreenObject.Name := 'Imported_RCH_Values_SP_'
-//              + GetStressPeriodString(StressPeriodIndex);
-          end;
-          AssignRealValuesToCellCenters(RechargeDataSet, ScreenObject,
-            FVariableRecharge[StressPeriodIndex]);
-        end
-        else if ValueList.Count = 1 then
-        begin
-          RechargeDataSet.Formula :=
-            FloatToStr(ValueList[0]);
-        end
-        else
-        begin
-          Root := 'Imported_RCH_Values_SP_'
-            + GetStressPeriodString(StressPeriodIndex) + '_Obj_';
-          CreateScreenObjectsAroundValues(Values, Root,
-            RechargeDataSet, ValueList);
-        end;
-      finally
-        ValueList.Free;
-      end;
-    end;
-  end;
+
+//  ScreenObject := nil;
+//  if not FReuseRecharge[StressPeriodIndex] then
+//  begin
+//    CreateDataSet(StressPeriodIndex, StrImportedRechargeSt,
+//      rdtDouble, RechargeDataSet);
+//    if (FConstantRecharge <> nil)
+//      and FConstantRecharge[StressPeriodIndex].IsConstant then
+//    begin
+//      RechargeDataSet.Formula :=
+//        FortranFloatToStr(FConstantRecharge[StressPeriodIndex].RealValue);
+//    end
+//    else
+//    begin
+//      RechargeDataSet.Formula := '0';
+//      Assert(FVariableRecharge <> nil);
+//      Assert(FVariableRecharge[StressPeriodIndex] <> nil);
+//
+//      ValueList := TRealList.Create;
+//      try
+//        ValueList.Sorted := True;
+//        Values := FVariableRecharge[StressPeriodIndex];
+//        MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
+//        for RowIndex := 0 to Length(Values) - 1 do
+//        begin
+//          for ColIndex := 0 to Length(Values[0]) - 1 do
+//          begin
+//            Value := Values[RowIndex,ColIndex];
+//            ValueList.AddUnique(Value);
+//            if ValueList.Count >= MaxCount then
+//            begin
+//              break;
+//            end;
+//          end;
+//          if ValueList.Count >= MaxCount then
+//          begin
+//            break;
+//          end;
+//        end;
+//        if ValueList.Count >= MaxCount then
+//        begin
+//          if ScreenObject = nil then
+//          begin
+//            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
+//          end;
+//          AssignRealValuesToCellCenters(RechargeDataSet, ScreenObject,
+//            FVariableRecharge[StressPeriodIndex]);
+//        end
+//        else if ValueList.Count = 1 then
+//        begin
+//          RechargeDataSet.Formula :=
+//            FortranFloatToStr(ValueList[0]);
+//        end
+//        else
+//        begin
+//          Root := 'Imported_RCH_Values_SP_'
+//            + GetStressPeriodString(StressPeriodIndex) + '_Obj_';
+//          CreateScreenObjectsAroundValues(Values, Root,
+//            RechargeDataSet, ValueList);
+//        end;
+//      finally
+//        ValueList.Free;
+//      end;
+//    end;
+//  end;
 end;
 
 procedure TRchImporter.AssignParamRechargeRate(ScreenObject: TScreenObject;
@@ -10162,7 +10503,8 @@ begin
         try
           ValueList.Sorted := True;
           Values := FVariableLayerIndicators[StressPeriodIndex];
-          MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
+//          MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
+          MaxCount := 2;
           for RowIndex := 0 to Length(Values) - 1 do
           begin
             for ColIndex := 0 to Length(Values[0]) - 1 do
@@ -10378,7 +10720,7 @@ begin
       Value := ValueList[ValueIndex];
       DSIndex := ScreenObject.AddDataSet(DataArray);
       ScreenObject.DataSetFormulas[DSIndex] :=
-        FloatToStr(Value);
+        FortranFloatToStr(Value);
 
       for RowIndex := 0 to Length(Values) - 1 do
       begin
@@ -10488,7 +10830,7 @@ begin
       Value := ValueList[ValueIndex];
       DSIndex := ScreenObject.AddDataSet(DataArray);
       ScreenObject.DataSetFormulas[DSIndex] :=
-        FloatToStr(Value);
+        FortranFloatToStr(Value);
 
       for RowIndex := 0 to Length(Values) - 1 do
       begin
@@ -11211,6 +11553,80 @@ begin
   end;
 end;
 
+procedure TTransientArrayImporter.CreateTransientRealDataArray(
+  StressPeriodIndex: Integer; Reuse: TBooleanDynArray; DataArrayRoot: string;
+  ConstantValues: TRealConstantRecordArray; VariableValues: T3DDoubleArray;
+  ImportedValueName: string);
+var
+  ScreenObject: TScreenObject;
+  ADataArray: TDataArray;
+  ValueList: TRealList;
+  Values: T2DDoubleArray;
+  MaxCount: Integer;
+  RowIndex: Integer;
+  ColIndex: Integer;
+  Value: Double;
+  Root: string;
+begin
+  ScreenObject := nil;
+  if not Reuse[StressPeriodIndex] then
+  begin
+    CreateDataSet(StressPeriodIndex, DataArrayRoot, rdtDouble, ADataArray);
+    if (ConstantValues <> nil) and ConstantValues[StressPeriodIndex].IsConstant then
+    begin
+      ADataArray.Formula := FortranFloatToStr(ConstantValues[StressPeriodIndex].RealValue);
+    end
+    else
+    begin
+      ADataArray.Formula := '0';
+      Assert(VariableValues <> nil);
+      Assert(VariableValues[StressPeriodIndex] <> nil);
+      ValueList := TRealList.Create;
+      try
+        ValueList.Sorted := True;
+        Values := VariableValues[StressPeriodIndex];
+//        MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
+        MaxCount := 2;
+        for RowIndex := 0 to Length(Values) - 1 do
+        begin
+          for ColIndex := 0 to Length(Values[0]) - 1 do
+          begin
+            Value := Values[RowIndex, ColIndex];
+            ValueList.AddUnique(Value);
+            if ValueList.Count >= MaxCount then
+            begin
+              break;
+            end;
+          end;
+          if ValueList.Count >= MaxCount then
+          begin
+            break;
+          end;
+        end;
+        if ValueList.Count >= MaxCount then
+        begin
+          if ScreenObject = nil then
+          begin
+            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
+          end;
+          AssignRealValuesToCellCenters(ADataArray, ScreenObject, VariableValues[StressPeriodIndex]);
+        end
+        else if ValueList.Count = 1 then
+        begin
+          ADataArray.Formula := FortranFloatToStr(ValueList[0]);
+        end
+        else
+        begin
+          Root := ImportedValueName + GetStressPeriodString(StressPeriodIndex) + '_Obj_';
+          CreateScreenObjectsAroundValues(Values, Root, ADataArray, ValueList);
+        end;
+      finally
+        ValueList.Free;
+      end;
+    end;
+  end;
+end;
+
 procedure TEvtImporter.AssignEvtSurfaceNonParam(
   EvtSurfaceName, EvtExtinctName: string;
   NewItemNeeded: Boolean; var EvtItem: TEvtSurfDepthItem;
@@ -11339,81 +11755,86 @@ begin
 end;
 
 procedure TCustomETImporter.CreateEtSurfaceDataSet(StressPeriodIndex: Integer);
-var
-  DataSet: TDataArray;
-  ScreenObject: TScreenObject;
-  ValueList: TRealList;
-  Values: T2DDoubleArray;
-  MaxCount: Integer;
-  RowIndex: Integer;
-  ColIndex: Integer;
-  Value: Double;
-  Root: string;
+//var
+//  DataSet: TDataArray;
+//  ScreenObject: TScreenObject;
+//  ValueList: TRealList;
+//  Values: T2DDoubleArray;
+//  MaxCount: Integer;
+//  RowIndex: Integer;
+//  ColIndex: Integer;
+//  Value: Double;
+//  Root: string;
 begin
-  ScreenObject := nil;
-  if not FReuseEtSurface[StressPeriodIndex] then
-  begin
-    CreateDataSet(StressPeriodIndex, ImportedEtSurfaceName,
-      rdtDouble, DataSet);
-    if (FConstantEtSurface <> nil)
-      and FConstantEtSurface[StressPeriodIndex].IsConstant then
-    begin
-      DataSet.Formula :=
-        FloatToStr(FConstantEtSurface[StressPeriodIndex].RealValue);
-    end
-    else
-    begin
-      DataSet.Formula := '0';
-      Assert(FVariableEtSurface <> nil);
-      Assert(FVariableEtSurface[StressPeriodIndex] <> nil);
+  CreateTransientRealDataArray(StressPeriodIndex, FReuseEtSurface,
+    ImportedEtSurfaceName, FConstantEtSurface, FVariableEtSurface,
+    ImportedEtSurfaceSP);
 
-      ValueList := TRealList.Create;
-      try
-        ValueList.Sorted := True;
-        Values := FVariableEtSurface[StressPeriodIndex];
-        MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
-        for RowIndex := 0 to Length(Values) - 1 do
-        begin
-          for ColIndex := 0 to Length(Values[0]) - 1 do
-          begin
-            Value := Values[RowIndex,ColIndex];
-            ValueList.AddUnique(Value);
-            if ValueList.Count >= MaxCount then
-            begin
-              break;
-            end;
-          end;
-          if ValueList.Count >= MaxCount then
-          begin
-            break;
-          end;
-        end;
-        if ValueList.Count >= MaxCount then
-        begin
-          if ScreenObject = nil then
-          begin
-            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
-          end;
-          AssignRealValuesToCellCenters(DataSet, ScreenObject,
-            FVariableEtSurface[StressPeriodIndex]);
-        end
-        else if ValueList.Count = 1 then
-        begin
-          DataSet.Formula :=
-            FloatToStr(ValueList[0]);
-        end
-        else
-        begin
-          Root := ImportedEtSurfaceSP
-            + GetStressPeriodString(StressPeriodIndex) + '_Obj_';
-          CreateScreenObjectsAroundValues(Values, Root,
-            DataSet, ValueList);
-        end;
-      finally
-        ValueList.Free;
-      end;
-    end;
-  end;
+
+//  ScreenObject := nil;
+//  if not FReuseEtSurface[StressPeriodIndex] then
+//  begin
+//    CreateDataSet(StressPeriodIndex, ImportedEtSurfaceName,
+//      rdtDouble, DataSet);
+//    if (FConstantEtSurface <> nil)
+//      and FConstantEtSurface[StressPeriodIndex].IsConstant then
+//    begin
+//      DataSet.Formula :=
+//        FortranFloatToStr(FConstantEtSurface[StressPeriodIndex].RealValue);
+//    end
+//    else
+//    begin
+//      DataSet.Formula := '0';
+//      Assert(FVariableEtSurface <> nil);
+//      Assert(FVariableEtSurface[StressPeriodIndex] <> nil);
+//
+//      ValueList := TRealList.Create;
+//      try
+//        ValueList.Sorted := True;
+//        Values := FVariableEtSurface[StressPeriodIndex];
+//        MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
+//        for RowIndex := 0 to Length(Values) - 1 do
+//        begin
+//          for ColIndex := 0 to Length(Values[0]) - 1 do
+//          begin
+//            Value := Values[RowIndex,ColIndex];
+//            ValueList.AddUnique(Value);
+//            if ValueList.Count >= MaxCount then
+//            begin
+//              break;
+//            end;
+//          end;
+//          if ValueList.Count >= MaxCount then
+//          begin
+//            break;
+//          end;
+//        end;
+//        if ValueList.Count >= MaxCount then
+//        begin
+//          if ScreenObject = nil then
+//          begin
+//            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
+//          end;
+//          AssignRealValuesToCellCenters(DataSet, ScreenObject,
+//            FVariableEtSurface[StressPeriodIndex]);
+//        end
+//        else if ValueList.Count = 1 then
+//        begin
+//          DataSet.Formula :=
+//            FortranFloatToStr(ValueList[0]);
+//        end
+//        else
+//        begin
+//          Root := ImportedEtSurfaceSP
+//            + GetStressPeriodString(StressPeriodIndex) + '_Obj_';
+//          CreateScreenObjectsAroundValues(Values, Root,
+//            DataSet, ValueList);
+//        end;
+//      finally
+//        ValueList.Free;
+//      end;
+//    end;
+//  end;
 end;
 
 class function TEvtImporter.EtExtinctionDepth_Name: string;
@@ -11434,81 +11855,86 @@ end;
 
 procedure TCustomETImporter.CreateEtExtinctionDepthDataSet(
   StressPeriodIndex: Integer);
-var
-  DataSet: TDataArray;
-  ScreenObject: TScreenObject;
-  ValueList: TRealList;
-  Values: T2DDoubleArray;
-  MaxCount: Integer;
-  RowIndex: Integer;
-  ColIndex: Integer;
-  Value: Double;
-  Root: string;
+//var
+//  DataSet: TDataArray;
+//  ScreenObject: TScreenObject;
+//  ValueList: TRealList;
+//  Values: T2DDoubleArray;
+//  MaxCount: Integer;
+//  RowIndex: Integer;
+//  ColIndex: Integer;
+//  Value: Double;
+//  Root: string;
 begin
-  ScreenObject := nil;
-  if not FReuseEtExtinctionDepth[StressPeriodIndex] then
-  begin
-    CreateDataSet(StressPeriodIndex, EtExtinctionDepth_Name,
-      rdtDouble, DataSet);
-    if (FConstantExtinctionDepth <> nil)
-      and FConstantExtinctionDepth[StressPeriodIndex].IsConstant then
-    begin
-      DataSet.Formula :=
-        FloatToStr(FConstantExtinctionDepth[StressPeriodIndex].RealValue);
-    end
-    else
-    begin
-      DataSet.Formula := '0';
-      Assert(FVariableExtinctionDepth <> nil);
-      Assert(FVariableExtinctionDepth[StressPeriodIndex] <> nil);
+  CreateTransientRealDataArray(StressPeriodIndex, FReuseEtExtinctionDepth,
+    EtExtinctionDepth_Name, FConstantExtinctionDepth, FVariableExtinctionDepth,
+    EtExtinctionDepth_SP);
 
-      ValueList := TRealList.Create;
-      try
-        ValueList.Sorted := True;
-        Values := FVariableExtinctionDepth[StressPeriodIndex];
-        MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
-        for RowIndex := 0 to Length(Values) - 1 do
-        begin
-          for ColIndex := 0 to Length(Values[0]) - 1 do
-          begin
-            Value := Values[RowIndex,ColIndex];
-            ValueList.AddUnique(Value);
-            if ValueList.Count >= MaxCount then
-            begin
-              break;
-            end;
-          end;
-          if ValueList.Count >= MaxCount then
-          begin
-            break;
-          end;
-        end;
-        if ValueList.Count >= MaxCount then
-        begin
-          if ScreenObject = nil then
-          begin
-            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
-          end;
-          AssignRealValuesToCellCenters(DataSet, ScreenObject,
-            FVariableExtinctionDepth[StressPeriodIndex]);
-        end
-        else if ValueList.Count = 1 then
-        begin
-          DataSet.Formula :=
-            FloatToStr(ValueList[0]);
-        end
-        else
-        begin
-          Root := EtExtinctionDepth_SP
-            + GetStressPeriodString(StressPeriodIndex) + '_Obj_';
-          CreateScreenObjectsAroundValues(Values, Root,
-            DataSet, ValueList);
-        end;
-      finally
-        ValueList.Free;
-      end;
-    end;
-  end;
+
+//  ScreenObject := nil;
+//  if not FReuseEtExtinctionDepth[StressPeriodIndex] then
+//  begin
+//    CreateDataSet(StressPeriodIndex, EtExtinctionDepth_Name,
+//      rdtDouble, DataSet);
+//    if (FConstantExtinctionDepth <> nil)
+//      and FConstantExtinctionDepth[StressPeriodIndex].IsConstant then
+//    begin
+//      DataSet.Formula :=
+//        FortranFloatToStr(FConstantExtinctionDepth[StressPeriodIndex].RealValue);
+//    end
+//    else
+//    begin
+//      DataSet.Formula := '0';
+//      Assert(FVariableExtinctionDepth <> nil);
+//      Assert(FVariableExtinctionDepth[StressPeriodIndex] <> nil);
+//
+//      ValueList := TRealList.Create;
+//      try
+//        ValueList.Sorted := True;
+//        Values := FVariableExtinctionDepth[StressPeriodIndex];
+//        MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
+//        for RowIndex := 0 to Length(Values) - 1 do
+//        begin
+//          for ColIndex := 0 to Length(Values[0]) - 1 do
+//          begin
+//            Value := Values[RowIndex,ColIndex];
+//            ValueList.AddUnique(Value);
+//            if ValueList.Count >= MaxCount then
+//            begin
+//              break;
+//            end;
+//          end;
+//          if ValueList.Count >= MaxCount then
+//          begin
+//            break;
+//          end;
+//        end;
+//        if ValueList.Count >= MaxCount then
+//        begin
+//          if ScreenObject = nil then
+//          begin
+//            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
+//          end;
+//          AssignRealValuesToCellCenters(DataSet, ScreenObject,
+//            FVariableExtinctionDepth[StressPeriodIndex]);
+//        end
+//        else if ValueList.Count = 1 then
+//        begin
+//          DataSet.Formula :=
+//            FortranFloatToStr(ValueList[0]);
+//        end
+//        else
+//        begin
+//          Root := EtExtinctionDepth_SP
+//            + GetStressPeriodString(StressPeriodIndex) + '_Obj_';
+//          CreateScreenObjectsAroundValues(Values, Root,
+//            DataSet, ValueList);
+//        end;
+//      finally
+//        ValueList.Free;
+//      end;
+//    end;
+//  end;
 end;
 
 class function TEvtImporter.ImportedEtRateName: string;
@@ -11522,81 +11948,9 @@ begin
 end;
 
 procedure TCustomETImporter.CreateEvtRateDataSet(StressPeriodIndex: Integer);
-var
-  EtRateDataSet: TDataArray;
-  ScreenObject: TScreenObject;
-  ValueList: TRealList;
-  Values: T2DDoubleArray;
-  MaxCount: Integer;
-  RowIndex: Integer;
-  ColIndex: Integer;
-  Value: Double;
-  Root: string;
 begin
-  ScreenObject := nil;
-  if not FReuseEtRate[StressPeriodIndex] then
-  begin
-    CreateDataSet(StressPeriodIndex, ImportedEtRateName,
-      rdtDouble, EtRateDataSet);
-    if (FConstantEtRate <> nil)
-      and FConstantEtRate[StressPeriodIndex].IsConstant then
-    begin
-      EtRateDataSet.Formula :=
-        FloatToStr(FConstantEtRate[StressPeriodIndex].RealValue);
-    end
-    else
-    begin
-      EtRateDataSet.Formula := '0';
-      Assert(FVariableEtRate <> nil);
-      Assert(FVariableEtRate[StressPeriodIndex] <> nil);
-
-      ValueList := TRealList.Create;
-      try
-        ValueList.Sorted := True;
-        Values := FVariableEtRate[StressPeriodIndex];
-        MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
-        for RowIndex := 0 to Length(Values) - 1 do
-        begin
-          for ColIndex := 0 to Length(Values[0]) - 1 do
-          begin
-            Value := Values[RowIndex,ColIndex];
-            ValueList.AddUnique(Value);
-            if ValueList.Count >= MaxCount then
-            begin
-              break;
-            end;
-          end;
-          if ValueList.Count >= MaxCount then
-          begin
-            break;
-          end;
-        end;
-        if ValueList.Count >= MaxCount then
-        begin
-          if ScreenObject = nil then
-          begin
-            CreateOrRetrieveCellCenterScreenObject(ScreenObject);
-          end;
-          AssignRealValuesToCellCenters(EtRateDataSet, ScreenObject,
-            FVariableEtRate[StressPeriodIndex]);
-        end
-        else if ValueList.Count = 1 then
-        begin
-          EtRateDataSet.Formula :=
-            FloatToStr(ValueList[0]);
-        end
-        else
-        begin
-          Root := ImportedEtValuesName
-            + GetStressPeriodString(StressPeriodIndex) + '_Obj_';
-          CreateScreenObjectsAroundValues(Values, Root,
-            EtRateDataSet, ValueList);
-        end;
-      finally
-        ValueList.Free;
-      end;
-    end;
-  end;
+  CreateTransientRealDataArray(StressPeriodIndex, FReuseEtRate,
+    ImportedEtRateName, FConstantEtRate, FVariableEtRate, ImportedEtValuesName);
 end;
 
 procedure TEvtImporter.HandlePackage;
@@ -12176,7 +12530,7 @@ begin
       Reach.Column - 1], True);
     ImportedElevations.RealValues[Index] :=
       FGrid.LayerCenter(Reach.Column - 1, Reach.Row - 1,
-      FModel.LayerStructure.ModflowLayerToDataSetLayer(Reach.Layer));
+      FModel.ModflowLayerToDataSetLayer(Reach.Layer));
   end;
   result.ElevationFormula := rsObjectImportedValuesR
     + '("' + StrImportedElevations + '")';
@@ -12352,17 +12706,17 @@ begin
     begin
       UpstreamUnsatItem := FSfrBoundary.
         UpstreamUnsatSegmentValues[IcalcIndex] as TSfrUnsatSegmentItem;
-      UpstreamUnsatItem.BrooksCoreyExponent := FloatToStr(Segment.EPS1);
-      UpstreamUnsatItem.InitialWaterContent := FloatToStr(Segment.THTI1);
-      UpstreamUnsatItem.SaturatedWaterContent := FloatToStr(Segment.THTS1);
-      UpstreamUnsatItem.VerticalSaturatedK := FloatToStr(Segment.UHC1);
+      UpstreamUnsatItem.BrooksCoreyExponent := FortranFloatToStr(Segment.EPS1);
+      UpstreamUnsatItem.InitialWaterContent := FortranFloatToStr(Segment.THTI1);
+      UpstreamUnsatItem.SaturatedWaterContent := FortranFloatToStr(Segment.THTS1);
+      UpstreamUnsatItem.VerticalSaturatedK := FortranFloatToStr(Segment.UHC1);
 
       DownstreamUnsatItem := FSfrBoundary.
         DownstreamUnsatSegmentValues[IcalcIndex] as TSfrUnsatSegmentItem;
-      DownstreamUnsatItem.BrooksCoreyExponent := FloatToStr(Segment.EPS2);
-      DownstreamUnsatItem.InitialWaterContent := FloatToStr(Segment.THTI2);
-      DownstreamUnsatItem.SaturatedWaterContent := FloatToStr(Segment.THTS2);
-      DownstreamUnsatItem.VerticalSaturatedK := FloatToStr(Segment.UHC2);
+      DownstreamUnsatItem.BrooksCoreyExponent := FortranFloatToStr(Segment.EPS2);
+      DownstreamUnsatItem.InitialWaterContent := FortranFloatToStr(Segment.THTI2);
+      DownstreamUnsatItem.SaturatedWaterContent := FortranFloatToStr(Segment.THTS2);
+      DownstreamUnsatItem.VerticalSaturatedK := FortranFloatToStr(Segment.UHC2);
     end;
   end;
 end;
@@ -12376,32 +12730,32 @@ begin
     DownstreamSegmentValues[IcalcIndex] as TSfrSegmentItem;
   if FSfrPackage.Isfropt in [0, 4, 5] then
   begin
-    DownstreamItem.HydraulicConductivity := FloatToStr(Segment.HCOND2);
+    DownstreamItem.HydraulicConductivity := FortranFloatToStr(Segment.HCOND2);
     if FSfrPackage.Isfropt = 0 then
     begin
-      DownstreamItem.StreamBedThickness := FloatToStr(Segment.THICKM2);
-      DownstreamItem.StreambedElevation := FloatToStr(Segment.ELEVDN);
-      DownstreamItem.StreamWidth := FloatToStr(Segment.WIDTH2);
-      DownstreamItem.StreamDepth := FloatToStr(Segment.DEPTH2);
+      DownstreamItem.StreamBedThickness := FortranFloatToStr(Segment.THICKM2);
+      DownstreamItem.StreambedElevation := FortranFloatToStr(Segment.ELEVDN);
+      DownstreamItem.StreamWidth := FortranFloatToStr(Segment.WIDTH2);
+      DownstreamItem.StreamDepth := FortranFloatToStr(Segment.DEPTH2);
     end;
   end;
   if FSfrPackage.Isfropt in [4, 5] then
   begin
     if (Segment.ICalc in [1, 2]) and (StressPeriodIndex = 0) then
     begin
-      DownstreamItem.StreamBedThickness := FloatToStr(Segment.THICKM2);
-      DownstreamItem.StreambedElevation := FloatToStr(Segment.ELEVDN);
+      DownstreamItem.StreamBedThickness := FortranFloatToStr(Segment.THICKM2);
+      DownstreamItem.StreambedElevation := FortranFloatToStr(Segment.ELEVDN);
     end;
   end;
   if FSfrPackage.Isfropt <= 1 then
   begin
-    DownstreamItem.StreamWidth := FloatToStr(Segment.WIDTH2);
+    DownstreamItem.StreamWidth := FortranFloatToStr(Segment.WIDTH2);
   end
   else
   begin
     if StressPeriodIndex = 0 then
     begin
-      DownstreamItem.StreamWidth := FloatToStr(Segment.WIDTH2);
+      DownstreamItem.StreamWidth := FortranFloatToStr(Segment.WIDTH2);
     end;
   end;
 end;
@@ -12415,32 +12769,32 @@ begin
     UpstreamSegmentValues[IcalcIndex] as TSfrSegmentItem;
   if FSfrPackage.Isfropt in [0, 4, 5] then
   begin
-    UpstreamItem.HydraulicConductivity := FloatToStr(Segment.HCOND1);
+    UpstreamItem.HydraulicConductivity := FortranFloatToStr(Segment.HCOND1);
     if FSfrPackage.Isfropt = 0 then
     begin
-      UpstreamItem.StreamBedThickness := FloatToStr(Segment.THICKM1);
-      UpstreamItem.StreambedElevation := FloatToStr(Segment.ELEVUP);
-      UpstreamItem.StreamWidth := FloatToStr(Segment.WIDTH1);
-      UpstreamItem.StreamDepth := FloatToStr(Segment.DEPTH1);
+      UpstreamItem.StreamBedThickness := FortranFloatToStr(Segment.THICKM1);
+      UpstreamItem.StreambedElevation := FortranFloatToStr(Segment.ELEVUP);
+      UpstreamItem.StreamWidth := FortranFloatToStr(Segment.WIDTH1);
+      UpstreamItem.StreamDepth := FortranFloatToStr(Segment.DEPTH1);
     end;
   end;
   if FSfrPackage.Isfropt in [4, 5] then
   begin
     if (Segment.ICalc in [1, 2]) and (StressPeriodIndex = 0) then
     begin
-      UpstreamItem.StreamBedThickness := FloatToStr(Segment.THICKM1);
-      UpstreamItem.StreambedElevation := FloatToStr(Segment.ELEVUP);
+      UpstreamItem.StreamBedThickness := FortranFloatToStr(Segment.THICKM1);
+      UpstreamItem.StreambedElevation := FortranFloatToStr(Segment.ELEVUP);
     end;
   end;
   if FSfrPackage.Isfropt <= 1 then
   begin
-    UpstreamItem.StreamWidth := FloatToStr(Segment.WIDTH1);
+    UpstreamItem.StreamWidth := FortranFloatToStr(Segment.WIDTH1);
   end
   else
   begin
     if StressPeriodIndex = 0 then
     begin
-      UpstreamItem.StreamWidth := FloatToStr(Segment.WIDTH1);
+      UpstreamItem.StreamWidth := FortranFloatToStr(Segment.WIDTH1);
     end;
   end;
 end;
@@ -12453,10 +12807,10 @@ begin
   if Segment.ICalc = 3 then
   begin
     EqItem := FSfrBoundary.EquationValues[IcalcIndex] as TSfrEquationItem;
-    EqItem.DepthCoefficient := FloatToStr(Segment.CDPTH);
-    EqItem.DepthExponent := FloatToStr(Segment.FDPTH);
-    EqItem.WidthCoefficient := FloatToStr(Segment.AWDTH);
-    EqItem.WidthExponent := FloatToStr(Segment.BWDTH);
+    EqItem.DepthCoefficient := FortranFloatToStr(Segment.CDPTH);
+    EqItem.DepthExponent := FortranFloatToStr(Segment.FDPTH);
+    EqItem.WidthCoefficient := FortranFloatToStr(Segment.AWDTH);
+    EqItem.WidthExponent := FortranFloatToStr(Segment.BWDTH);
   end;
 end;
 
@@ -12469,10 +12823,10 @@ begin
   if Segment.ICalc in [1, 2] then
   begin
     ChannelItem := FSfrBoundary.ChannelValues[IcalcIndex] as TSfrChannelItem;
-    ChannelItem.ChannelRoughness := FloatToStr(Segment.ROUGHCH);
+    ChannelItem.ChannelRoughness := FortranFloatToStr(Segment.ROUGHCH);
     if Segment.ICalc = 2 then
     begin
-      ChannelItem.BankRoughness := FloatToStr(Segment.ROUGHBK);
+      ChannelItem.BankRoughness := FortranFloatToStr(Segment.ROUGHBK);
     end;
     if Segment.ICalc = 2 then
     begin
@@ -12481,9 +12835,9 @@ begin
         for CrossSectionIndex := 0 to 7 do
         begin
           ChannelItem.X[CrossSectionIndex] :=
-            FloatToStr(Segment.TableX[CrossSectionIndex]);
+            FortranFloatToStr(Segment.TableX[CrossSectionIndex]);
           ChannelItem.Z[CrossSectionIndex] :=
-            FloatToStr(Segment.TableZ[CrossSectionIndex]);
+            FortranFloatToStr(Segment.TableZ[CrossSectionIndex]);
         end;
       end;
     end;
@@ -12496,10 +12850,10 @@ var
   FlowItem: TSfrSegmentFlowItem;
 begin
   FlowItem := FSfrBoundary.SegmentFlows[IcalcIndex] as TSfrSegmentFlowItem;
-  FlowItem.Flow := FloatToStr(Segment.FLOW);
-  FlowItem.Precipitation := FloatToStr(Segment.PPTSW);
-  FlowItem.Evapotranspiration := FloatToStr(Segment.ETSW);
-  FlowItem.Runnoff := FloatToStr(Segment.RUNOFF);
+  FlowItem.Flow := FortranFloatToStr(Segment.FLOW);
+  FlowItem.Precipitation := FortranFloatToStr(Segment.PPTSW);
+  FlowItem.Evapotranspiration := FortranFloatToStr(Segment.ETSW);
+  FlowItem.Runnoff := FortranFloatToStr(Segment.RUNOFF);
 end;
 
 procedure TSfrImporter.AssignFlowTableValues(IcalcIndex: Integer;
@@ -12517,9 +12871,9 @@ begin
     begin
       TableRow := Table.SfrTable.Add as TSfrTableRowItem;
       TableItem := Segment.FFlowTable[TableIndex];
-      TableRow.Flow := FloatToStr(TableItem.FLOWTAB);
-      TableRow.Depth := FloatToStr(TableItem.DPTHTAB);
-      TableRow.Width := FloatToStr(TableItem.WDTHTAB);
+      TableRow.Flow := FortranFloatToStr(TableItem.FLOWTAB);
+      TableRow.Depth := FortranFloatToStr(TableItem.DPTHTAB);
+      TableRow.Width := FortranFloatToStr(TableItem.WDTHTAB);
     end;
   end;
 end;
@@ -12667,7 +13021,7 @@ begin
   else
   begin
     Reach := List[0];
-    Item.ReachLength := FloatToStr(Reach.RCHLEN);
+    Item.ReachLength := FortranFloatToStr(Reach.RCHLEN);
   end;
   if FSfrPackage.Isfropt in [1, 2, 3] then
   begin
@@ -12688,7 +13042,7 @@ begin
     else
     begin
       Reach := List[0];
-      Item.StreambedElevation := FloatToStr(Reach.STRTOP);
+      Item.StreambedElevation := FortranFloatToStr(Reach.STRTOP);
     end;
     if List.Count > 1 then
     begin
@@ -12707,7 +13061,7 @@ begin
     else
     begin
       Reach := List[0];
-      Item.StreamSlope := FloatToStr(Reach.SLOPE);
+      Item.StreamSlope := FortranFloatToStr(Reach.SLOPE);
     end;
     if List.Count > 1 then
     begin
@@ -12726,7 +13080,7 @@ begin
     else
     begin
       Reach := List[0];
-      Item.StreamBedThickness := FloatToStr(Reach.STRTHICK);
+      Item.StreamBedThickness := FortranFloatToStr(Reach.STRTHICK);
     end;
     if List.Count > 1 then
     begin
@@ -12745,7 +13099,7 @@ begin
     else
     begin
       Reach := List[0];
-      Item.HydraulicConductivity := FloatToStr(Reach.STRHC1);
+      Item.HydraulicConductivity := FortranFloatToStr(Reach.STRHC1);
     end;
   end;
   if FSfrPackage.Isfropt in [2, 3] then
@@ -12767,7 +13121,7 @@ begin
     else
     begin
       Reach := List[0];
-      Item.SaturatedWaterContent := FloatToStr(Reach.THTS);
+      Item.SaturatedWaterContent := FortranFloatToStr(Reach.THTS);
     end;
     if List.Count > 1 then
     begin
@@ -12786,7 +13140,7 @@ begin
     else
     begin
       Reach := List[0];
-      Item.InitialWaterContent := FloatToStr(Reach.THTI);
+      Item.InitialWaterContent := FortranFloatToStr(Reach.THTI);
     end;
     if List.Count > 1 then
     begin
@@ -12805,7 +13159,7 @@ begin
     else
     begin
       Reach := List[0];
-      Item.BrooksCoreyExponent := FloatToStr(Reach.EPS);
+      Item.BrooksCoreyExponent := FortranFloatToStr(Reach.EPS);
     end;
   end;
   if FSfrPackage.Isfropt in [2, 3] then
@@ -12827,7 +13181,7 @@ begin
     else
     begin
       Reach := List[0];
-      Item.VerticalK := FloatToStr(Reach.UHC);
+      Item.VerticalK := FortranFloatToStr(Reach.UHC);
     end;
   end;
   ScreenObject.ImportedValues.CacheData;
@@ -13811,20 +14165,20 @@ begin
       end;
       ScreenObject.ElevationCount := ecTwo;
 
-      Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer(HighLayer);
+      Layer := FModel.ModflowLayerToDataSetLayer(HighLayer);
       Elevation := FModel.Grid.ThreeDElementCenter(Column, Obs.Row, Layer).Z;
-      ScreenObject.HigherElevationFormula := FloatToStr(Elevation);
+      ScreenObject.HigherElevationFormula := FortranFloatToStr(Elevation);
 
-      Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer(LowLayer);
+      Layer := FModel.ModflowLayerToDataSetLayer(LowLayer);
       Elevation := FModel.Grid.ThreeDElementCenter(Column, Row, Layer).Z;
-      ScreenObject.LowerElevationFormula := FloatToStr(Elevation);
+      ScreenObject.LowerElevationFormula := FortranFloatToStr(Elevation);
     end
     else
     begin
-      Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer(Obs.Layer);
+      Layer := FModel.ModflowLayerToDataSetLayer(Obs.Layer);
       Elevation := FModel.Grid.ThreeDElementCenter(Column, Row, Layer).Z;
       ScreenObject.ElevationCount := ecOne;
-      ScreenObject.ElevationFormula := FloatToStr(Elevation);
+      ScreenObject.ElevationFormula := FortranFloatToStr(Elevation);
     end;
 
     ScreenObject.CreateHeadObservations;
@@ -13870,7 +14224,7 @@ begin
         begin
           ML := ML_List[LayerIndex];
           MHItem := HeadObservations.LayerFractions.Add as TMultiHeadItem;
-          Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer(ML.Layer)+1;
+          Layer := FModel.ModflowLayerToDataSetLayer(ML.Layer)+1;
           MHItem.Layer := Layer;
           MHItem.Proportion := ML.Proportion;
         end;
@@ -14120,16 +14474,16 @@ begin
   ScreenObject.Name := ScreenObjectNameRoot + '_'
     + IntToStr(Count);
   FModel.AddScreenObject(ScreenObject);
-  ScreenObject.ElevationCount := ecOne;
+  ScreenObject.ElevationCount := ecTwo;
   ScreenObject.SetValuesOfIntersectedCells := True;
   ScreenObject.EvaluatedAt := eaBlocks;
   ScreenObject.Visible := False;
   ScreenObject.Capacity := 2;
 
-  Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer(Location.Layer);
+  Layer := FModel.ModflowLayerToDataSetLayer(Location.Layer);
   Grid := FModel.Grid;
-  APoint := Grid.ThreeDElementCenter(Location.Column-1, Location.Row-1, Layer);
-  ScreenObject.ElevationFormula := FloatToStr(APoint.Z);
+//  APoint := Grid.ThreeDElementCenter(Location.Column-1, Location.Row-1, Layer);
+//  ScreenObject.ElevationFormula := FortranFloatToStr(APoint.Z);
 
   Column := Max(Location.Column, Location.Col2)-1;
   Row := Max(Location.Row, Location.Row2)-1;
@@ -14138,10 +14492,22 @@ begin
   if Location.Column = Location.Col2 then
   begin
     Inc(Column);
+    APoint := Grid.ThreeDRowEdgeCenter(Column, Row, Layer);
+    ScreenObject.HigherElevationFormula := FortranFloatToStr(APoint.Z);
+    APoint := Grid.ThreeDRowEdgeCenter(Column, Row, Layer+1);
+    ScreenObject.LowerElevationFormula := FortranFloatToStr(APoint.Z);
+//  ScreenObject.ElevationFormula := FortranFloatToStr(APoint.Z);
+
   end
   else
   begin
     Inc(Row);
+    APoint := Grid.ThreeDColumnEdgeCenter(Column, Row, Layer);
+    ScreenObject.HigherElevationFormula := FortranFloatToStr(APoint.Z);
+    APoint := Grid.ThreeDColumnEdgeCenter(Column, Row, Layer+1);
+    ScreenObject.LowerElevationFormula := FortranFloatToStr(APoint.Z);
+//  APoint := Grid.ThreeDElementCenter(Location.Column-1, Location.Row-1, Layer);
+//  ScreenObject.ElevationFormula := FortranFloatToStr(APoint.Z);
   end;
   Point2 := Grid.TwoDElementCorner(Column, Row);
 
@@ -14151,7 +14517,7 @@ begin
   ScreenObject.CreateHfbBoundary;
   Boundary := ScreenObject.ModflowHfbBoundary;
   Boundary.IsUsed := True;
-  Boundary.HydraulicConductivityFormula := FloatToStr(Location.Factor);
+  Boundary.HydraulicConductivityFormula := FortranFloatToStr(Location.Factor);
   Boundary.ThicknessFormula := '1';
   Boundary.AdjustmentMethod := amNone;
   Boundary.ParameterName := ParamName;
@@ -14403,7 +14769,7 @@ begin
     if FConstantLkarr[LayerIndex].IsConstant and
       (FConstantLkarr[LayerIndex].IntegerValue <> 0) then
     begin
-      Layer := FModel.LayerStructure.
+      Layer := FModel.
         ModflowLayerToDataSetLayer(LayerIndex+1);
 
       for RowIndex := 0 to Length(FLakeOutline) - 1 do
@@ -14433,7 +14799,7 @@ begin
         FLakeOutline[RowIndex, ColIndex] := 0;
         for LayerIndex := 0 to Length(LKARR) - 1 do
         begin
-          Layer := FModel.LayerStructure.
+          Layer := FModel.
             ModflowLayerToDataSetLayer(LayerIndex+1);
           if LKARR[LayerIndex, RowIndex, ColIndex] <> 0 then
           begin
@@ -14526,7 +14892,7 @@ begin
   end;
   if ConstantLakeBottom then
   begin
-    BottomFormula := FloatToStr(FirstValue);
+    BottomFormula := FortranFloatToStr(FirstValue);
   end
   else
   begin
@@ -14580,12 +14946,12 @@ begin
             LakeItem := LakeBoundary.Values.Add as TLakItem;
             LakeItem.StartTime := StressPeriod.StartTime;
             LakeItem.EndTime := StressPeriod.EndTime;
-            LakeItem.MinimumStage := FloatToStr(LakeValues.SSMN);
-            LakeItem.MaximumStage := FloatToStr(LakeValues.SSMX);
-            LakeItem.Precipitation := FloatToStr(LakeValues.PRCPLK);
-            LakeItem.Evaporation := FloatToStr(LakeValues.EVAPLK);
-            LakeItem.OverlandRunoff := FloatToStr(LakeValues.RNF);
-            LakeItem.Withdrawal := FloatToStr(LakeValues.WTHDRW);
+            LakeItem.MinimumStage := FortranFloatToStr(LakeValues.SSMN);
+            LakeItem.MaximumStage := FortranFloatToStr(LakeValues.SSMX);
+            LakeItem.Precipitation := FortranFloatToStr(LakeValues.PRCPLK);
+            LakeItem.Evaporation := FortranFloatToStr(LakeValues.EVAPLK);
+            LakeItem.OverlandRunoff := FortranFloatToStr(LakeValues.RNF);
+            LakeItem.Withdrawal := FortranFloatToStr(LakeValues.WTHDRW);
           end;
         end;
       end;
@@ -14631,7 +14997,7 @@ begin
   ScreenObject := nil;
   if IsConstant then
   begin
-    Formula := FloatToStr(FirstValue);
+    Formula := FortranFloatToStr(FirstValue);
   end
   else
   begin
@@ -14645,11 +15011,11 @@ begin
 
       for LayerIndex := 0 to Length(FConstantBdlknc) - 1 do
       begin
-        Layer :=FModel.LayerStructure.
+        Layer :=FModel.
           ModflowLayerToDataSetLayer(LayerIndex + 1);
         if FConstantBdlknc[LayerIndex].IsConstant then
         begin
-          Values[Layer] := FloatToStr(FConstantBdlknc[LayerIndex].RealValue);
+          Values[Layer] := FortranFloatToStr(FConstantBdlknc[LayerIndex].RealValue);
         end
         else
         begin
@@ -14692,7 +15058,7 @@ begin
   SetLength(MinStages, NLAKES);
   SetLength(MaxStages, NLAKES);
 
-  NLAY := FModel.LayerStructure.ModflowLayerCount;
+  NLAY := FModel.ModflowLayerCount;
   NROW := FGrid.RowCount;
   NCOL := FGrid.ColumnCount;
 
@@ -15460,7 +15826,7 @@ var
   EndTime: Double;
   StartTime: Double;
   StressPeriodIndex: Integer;
-  UsedLocations: array of array of boolean;
+  UsedLocations: array of TBooleanDynArray;
   LocationsToUse: TList;
   InnerBoundaryIndex: Integer;
   InstanceCount: integer;
@@ -15586,7 +15952,7 @@ var
   SO_Boundary: TModflowParamBoundary;
   ScreenObject: TScreenObject;
   Boundary: TDrtLocationObject;
-  UsedLocations: array of array of boolean;
+  UsedLocations: array of TBooleanDynArray;
   LocationsToUse: TList;
   InnerBoundaryIndex: Integer;
   AnotherBoundary: TDrtLocationObject;
@@ -15807,7 +16173,7 @@ begin
 
   if DrtBoundary.LayR > 0 then
   begin
-    Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer
+    Layer := FModel.ModflowLayerToDataSetLayer
       (DrtBoundary.LayR);
     ReturnLocation := FModel.ModflowGrid.ThreeDElementCenter(DrtBoundary.ColR-1,
       DrtBoundary.RowR-1, Layer);
@@ -15820,7 +16186,7 @@ begin
     DrainReturn.ReturnLocation.Y := APoint.Y;
     DrainReturn.ReturnLocation.Z := ReturnLocation.Z;
 
-    DrtItem.ReturnFraction := FloatToStr(DrtBoundary.Rfprop);
+    DrtItem.ReturnFraction := FortranFloatToStr(DrtBoundary.Rfprop);
   end
   else
   begin
@@ -16013,7 +16379,7 @@ begin
       StressPeriodIndex].IsConstant then
     begin
       DataSet.Formula :=
-        FloatToStr(FConstantDepthProportions[SegmentIndex-1][
+        FortranFloatToStr(FConstantDepthProportions[SegmentIndex-1][
         StressPeriodIndex].RealValue);
     end
     else
@@ -16027,7 +16393,8 @@ begin
       try
         ValueList.Sorted := True;
         Values := FVariableDepthProportions[SegmentIndex-1][StressPeriodIndex];
-        MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
+//        MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
+        MaxCount := 2;
         for RowIndex := 0 to Length(Values) - 1 do
         begin
           for ColIndex := 0 to Length(Values[0]) - 1 do
@@ -16056,7 +16423,7 @@ begin
         else if ValueList.Count = 1 then
         begin
           DataSet.Formula :=
-            FloatToStr(ValueList[0]);
+            FortranFloatToStr(ValueList[0]);
         end
         else
         begin
@@ -16100,7 +16467,7 @@ begin
       StressPeriodIndex].IsConstant then
     begin
       DataSet.Formula :=
-        FloatToStr(FConstantRateProportions[SegmentIndex-1][
+        FortranFloatToStr(FConstantRateProportions[SegmentIndex-1][
         StressPeriodIndex].RealValue);
     end
     else
@@ -16114,7 +16481,8 @@ begin
       try
         ValueList.Sorted := True;
         Values := FVariableRateProportions[SegmentIndex-1][StressPeriodIndex];
-        MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
+//        MaxCount := Min((Length(Values) * Length(Values[0])) div 10, 100);
+        MaxCount := 2;
         for RowIndex := 0 to Length(Values) - 1 do
         begin
           for ColIndex := 0 to Length(Values[0]) - 1 do
@@ -16143,7 +16511,7 @@ begin
         else if ValueList.Count = 1 then
         begin
           DataSet.Formula :=
-            FloatToStr(ValueList[0]);
+            FortranFloatToStr(ValueList[0]);
         end
         else
         begin
@@ -16763,7 +17131,7 @@ begin
       Cluster := TClusterObject.Create;
       try
         SetLength(Cluster.Zones, 1);
-        for LayerIndex := 1 to FModel.LayerStructure.ModflowLayerCount do
+        for LayerIndex := 1 to FModel.ModflowLayerCount do
         begin
           Cluster.Zones[0] := LayerIndex;
           ScreenObjectName := 'Imported_RES_Layer_' + IntToStr(LayerIndex);
@@ -16784,7 +17152,7 @@ begin
   Assert(DataArray <> nil);
   if ConstantLandSurface then
   begin
-    DataArray.Formula := FloatToStr(LandSurface[0,0]);
+    DataArray.Formula := FortranFloatToStr(LandSurface[0,0]);
   end
   else
   begin
@@ -16800,7 +17168,7 @@ begin
   Assert(DataArray <> nil);
   if ConstantVertK then
   begin
-    DataArray.Formula := FloatToStr(VertK[0,0]);
+    DataArray.Formula := FortranFloatToStr(VertK[0,0]);
   end
   else
   begin
@@ -16816,7 +17184,7 @@ begin
   Assert(DataArray <> nil);
   if ConstantBedThick then
   begin
-    DataArray.Formula := FloatToStr(BedThickness[0,0]);
+    DataArray.Formula := FortranFloatToStr(BedThickness[0,0]);
   end
   else
   begin
@@ -16848,8 +17216,8 @@ begin
         ResValues := ResStressPeriod[ResIndex-1];
         ResItem.StartTime := StressPeriod.StartTime;
         ResItem.EndTime := StressPeriod.EndTime;
-        ResItem.StartHead := FloatToStr(ResValues.Ststage);
-        ResItem.EndHead := FloatToStr(ResValues.Endstage);
+        ResItem.StartHead := FortranFloatToStr(ResValues.Ststage);
+        ResItem.EndHead := FortranFloatToStr(ResValues.Endstage);
       end;
     end;
   finally
@@ -17045,6 +17413,34 @@ begin
   ScreenObject.CreateUzfBoundary;
 end;
 
+procedure TUzfImporter.CreateInfiltrationDataArray(StressPeriodIndex: integer);
+begin
+  CreateTransientRealDataArray(StressPeriodIndex, FReuseInfiltration,
+    StrImportedUZFInfiltr, FConstantInfiltration,
+    FVariableInfiltration, 'Imported_UZF_Infiltration_Values_SP_');
+end;
+
+procedure TUzfImporter.CreateETDataArray(StressPeriodIndex: integer);
+begin
+  CreateTransientRealDataArray(StressPeriodIndex, FReuseET,
+    StrImportedUZFEvapotr, FConstantET,
+    FVariableET, 'Imported_UZF_Evapotranspiration_Values_SP_');
+end;
+
+procedure TUzfImporter.CreateExtinctionDepthDataArray(StressPeriodIndex: integer);
+begin
+  CreateTransientRealDataArray(StressPeriodIndex, FReuseExtictionDepth,
+    StrImportedUZFExtinct, FConstantExtinctDepth,
+    FVariableExtinctDepth, 'Imported_UZF_Extinction_Depth_Values_SP_');
+end;
+
+procedure TUzfImporter.CreateExtinctionWaterContentDataArray(StressPeriodIndex: integer);
+begin
+  CreateTransientRealDataArray(StressPeriodIndex, FReuseExtictionWaterContent,
+    StrImportedUZFExWC, FConstantExtinctWaterContent,
+    FVariableExtinctWaterContent, 'Imported_UZF_Extinction_Water_Content_Values_SP_');
+end;
+
 destructor TUzfImporter.Destroy;
 begin
   FGages.Free;
@@ -17085,22 +17481,27 @@ var
   APoint: TPoint2D;
   Boundary: TUzfBoundary;
   StressPeriodIndex: Integer;
-  StressPeriod: TModflowStressPeriod;
+//  StressPeriod: TModflowStressPeriod;
   InfiltrationItem: TRchItem;
-  ImportedValues: TValueArrayItem;
-  ImportedData: T2DDoubleArray;
+//  ImportedValues: TValueArrayItem;
+//  ImportedData: T2DDoubleArray;
   EvtItem: TEvtItem;
-  ExtinctDetphItem: TUzfExtinctDepthItem;
+  ExtinctDepthItem: TUzfExtinctDepthItem;
   WaterContentItem: TUzfWaterContentItem;
   CellCenterScreenObject: TScreenObject;
-  UndoCreateScreenObject: TCustomUndo;
-  RowIndex: Integer;
-  ColIndex: Integer;
-  ReUse: Boolean;
-  PriorInfiltrationItem: TRchItem;
-  PriorEvtItem: TEvtItem;
-  PriorWaterContentItem: TUzfWaterContentItem;
-  PriorExtinctDetphItem: TUzfExtinctDepthItem;
+//  UndoCreateScreenObject: TCustomUndo;
+//  RowIndex: Integer;
+//  ColIndex: Integer;
+//  ReUse: Boolean;
+//  PriorInfiltrationItem: TRchItem;
+//  PriorEvtItem: TEvtItem;
+//  PriorWaterContentItem: TUzfWaterContentItem;
+//  PriorExtinctDetphItem: TUzfExtinctDepthItem;
+  NewItemsNeeded: Boolean;
+  InfiltrationName: string;
+  EtName: string;
+  ExtinctionDepthName: string;
+  ExtinctionWaterContentName: string;
   procedure AssignVariableIntValues(const ScreenObjectName: string;
     Data: T2DIntArray);
   var
@@ -17187,7 +17588,7 @@ begin
     DataArray := FModel.DataArrayManager.GetDataSetByName(StrUzfVerticalK);
     if IsConstVks then
     begin
-      DataArray.Formula := FloatToStr(ConstVks);
+      DataArray.Formula := FortranFloatToStr(ConstVks);
     end
     else
     begin
@@ -17198,7 +17599,7 @@ begin
   DataArray := FModel.DataArrayManager.GetDataSetByName(StrUzfBrooksCoreyEpsilon);
   if IsConstEps then
   begin
-    DataArray.Formula := FloatToStr(ConstEps);
+    DataArray.Formula := FortranFloatToStr(ConstEps);
   end
   else
   begin
@@ -17208,7 +17609,7 @@ begin
   DataArray := FModel.DataArrayManager.GetDataSetByName(StrUzfSaturatedWaterContent);
   if IsConstThts then
   begin
-    DataArray.Formula := FloatToStr(ConstThts);
+    DataArray.Formula := FortranFloatToStr(ConstThts);
   end
   else
   begin
@@ -17220,7 +17621,7 @@ begin
     DataArray := FModel.DataArrayManager.GetDataSetByName(StrUzfInitialUnsaturatedWaterContent);
     if IsConstThti then
     begin
-      DataArray.Formula := FloatToStr(ConstThti);
+      DataArray.Formula := FortranFloatToStr(ConstThti);
     end
     else
     begin
@@ -17267,198 +17668,360 @@ begin
 
   InfiltrationItem := nil;
   EvtItem := nil;
-  ExtinctDetphItem := nil;
+  ExtinctDepthItem := nil;
   WaterContentItem := nil;
-  AScreenObject := nil;
+//  AScreenObject := nil;
+
   for StressPeriodIndex := 0 to FModel.ModflowStressPeriods.Count - 1 do
   begin
-    StressPeriod := FModel.ModflowStressPeriods[StressPeriodIndex];
-
-    ReUse := FStressPeriods[StressPeriodIndex].Reuse;
-    if ReUse and FUzfPackage.SimulateET then
+    CreateInfiltrationDataArray(StressPeriodIndex);
+    if FUzfPackage.SimulateET then
     begin
-      ReUse := FEtStressPeriods[StressPeriodIndex].Reuse
-        and FEtExtinctDepthStressPeriods[StressPeriodIndex].Reuse
-        and FEtExtinctWaterContentStressPeriods[StressPeriodIndex].Reuse;
+      CreateETDataArray(StressPeriodIndex);
+      CreateExtinctionDepthDataArray(StressPeriodIndex);
+      CreateExtinctionWaterContentDataArray(StressPeriodIndex);
+    end;
+  end;
+
+  AScreenObject := CreateScreenObjectAroundGrid('Imported_UZF_Rates');
+  AScreenObject.ElevationFormula := StrModelTop;
+
+  CreateBoundary(AScreenObject);
+  Boundary := AScreenObject.ModflowUzfBoundary;
+  InfiltrationItem := nil;
+  EvtItem := nil;
+
+  InfiltrationName := '';
+  EtName := '';
+  ExtinctionDepthName := '';
+  ExtinctionWaterContentName := '';
+
+  for StressPeriodIndex := 0 to FModel.ModflowStressPeriods.Count - 1 do
+  begin
+    NewItemsNeeded := not FReuseInfiltration[StressPeriodIndex];
+    if FUzfPackage.SimulateET then
+    begin
+      NewItemsNeeded
+        or not FReuseET[StressPeriodIndex]
+        or not FReuseExtictionDepth[StressPeriodIndex]
+        or not FReuseExtictionWaterContent[StressPeriodIndex];
     end;
 
-    if Reuse then
+    if not FReuseInfiltration[StressPeriodIndex] then
     begin
-      InfiltrationItem.EndTime := StressPeriod.EndTime;
-      if FUzfPackage.SimulateET then
+      InfiltrationName := StrImportedUZFInfiltr
+        + GetStressPeriodString(StressPeriodIndex);
+    end;
+
+    if FUzfPackage.SimulateET then
+    begin
+      if not FReuseET[StressPeriodIndex] then
       begin
-        EvtItem.EndTime := StressPeriod.EndTime;
-        ExtinctDetphItem.EndTime := StressPeriod.EndTime;
-        WaterContentItem.EndTime := StressPeriod.EndTime;
+        EtName := StrImportedUZFEvapotr
+          + GetStressPeriodString(StressPeriodIndex);
       end;
+
+      if not FReuseExtictionDepth[StressPeriodIndex] then
+      begin
+        ExtinctionDepthName := StrImportedUZFExtinct
+          + GetStressPeriodString(StressPeriodIndex);
+      end;
+
+      if not FReuseExtictionWaterContent[StressPeriodIndex] then
+      begin
+        ExtinctionWaterContentName := StrImportedUZFExWC
+          + GetStressPeriodString(StressPeriodIndex);
+      end;
+
+      AssignInfiltation(NewItemsNeeded, Boundary, InfiltrationItem,
+        InfiltrationName, StressPeriodIndex);
+      AssignEt(NewItemsNeeded, Boundary, EvtItem,
+        EtName, StressPeriodIndex);
+      AssignExtinctionDepth(NewItemsNeeded, Boundary, ExtinctDepthItem,
+        ExtinctionDepthName, StressPeriodIndex);
+      AssignWaterContent(NewItemsNeeded, Boundary, WaterContentItem,
+        ExtinctionWaterContentName, StressPeriodIndex);
+    end;
+  end;
+
+
+//  for StressPeriodIndex := 0 to FModel.ModflowStressPeriods.Count - 1 do
+//  begin
+//    StressPeriod := FModel.ModflowStressPeriods[StressPeriodIndex];
+//
+//    ReUse := FStressPeriods[StressPeriodIndex].Reuse;
+//    if ReUse and FUzfPackage.SimulateET then
+//    begin
+//      ReUse := FEtStressPeriods[StressPeriodIndex].Reuse
+//        and FEtExtinctDepthStressPeriods[StressPeriodIndex].Reuse
+//        and FEtExtinctWaterContentStressPeriods[StressPeriodIndex].Reuse;
+//    end;
+//
+//    if Reuse then
+//    begin
+//      InfiltrationItem.EndTime := StressPeriod.EndTime;
+//      if FUzfPackage.SimulateET then
+//      begin
+//        EvtItem.EndTime := StressPeriod.EndTime;
+//        ExtinctDepthItem.EndTime := StressPeriod.EndTime;
+//        WaterContentItem.EndTime := StressPeriod.EndTime;
+//      end;
+//    end
+//    else
+//    begin
+////      Boundary := nil;
+//      if AScreenObject = nil then
+//      begin
+//        AScreenObject := TScreenObject.CreateWithViewDirection(FModel, vdTop,
+//          UndoCreateScreenObject, False);
+//        AScreenObject.Name := 'Imported_UZF_Rates';
+//
+//        FModel.AddScreenObject(AScreenObject);
+//        AScreenObject.ElevationCount := ecZero;
+//        AScreenObject.SetValuesByInterpolation := True;
+//        AScreenObject.EvaluatedAt := eaBlocks;
+//        AScreenObject.Visible := False;
+//        AScreenObject.Capacity := FGrid.RowCount * FGrid.ColumnCount;
+//        for RowIndex := 0 to FGrid.RowCount - 1 do
+//        begin
+//          for ColIndex := 0 to FGrid.ColumnCount - 1 do
+//          begin
+//            AScreenObject.AddPoint(FImporter.
+//              CenterPoints[RowIndex, ColIndex], True);
+//          end;
+//        end;
+//        AScreenObject.SectionStarts.CacheData;
+//        AScreenObject.SetValuesOfIntersectedCells := True;
+//        AScreenObject.SetValuesByInterpolation := False;
+//
+//        CreateBoundary(AScreenObject);
+//      end;
+//      Boundary := AScreenObject.ModflowUzfBoundary;
+//      InfiltrationItem := Boundary.Values.Add as TRchItem;
+//      InfiltrationItem.StartTime := StressPeriod.StartTime;
+//      InfiltrationItem.EndTime := StressPeriod.EndTime;
+//
+//      if FStressPeriods[StressPeriodIndex].Reuse then
+//      begin
+//        PriorInfiltrationItem := Boundary.Values[Boundary.Values.Count -2]
+//          as TRchItem;
+//        InfiltrationItem.RechargeRate := PriorInfiltrationItem.RechargeRate
+//      end
+//      else
+//      begin
+//        if FConstantInfiltration[StressPeriodIndex].IsConstant then
+//        begin
+//          InfiltrationItem.RechargeRate :=
+//            FortranFloatToStr(FConstantInfiltration[StressPeriodIndex].RealValue)
+//        end
+//        else
+//        begin
+//          ImportedData := FVariableInfiltration[StressPeriodIndex];
+//          ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
+//          ImportedValues.Name := 'Imported_UZF_Infiltration_'
+//            + IntToStr(StressPeriodIndex+1);
+//          AssignImportedValues(ImportedValues, ImportedData);
+//          InfiltrationItem.RechargeRate := rsObjectImportedValuesR
+//            + '("' + ImportedValues.Name + '")';
+//        end;
+//      end;
+//      if FUzfPackage.SimulateET then
+//      begin
+//        if Reuse then
+//        begin
+//          EvtItem.EndTime := StressPeriod.EndTime;
+//        end
+//        else
+//        begin
+//          EvtItem := Boundary.EvapotranspirationDemand.Add as TEvtItem;
+//          EvtItem.StartTime := StressPeriod.StartTime;
+//          EvtItem.EndTime := StressPeriod.EndTime;
+//          if FEtStressPeriods[StressPeriodIndex].Reuse then
+//          begin
+//            PriorEvtItem := Boundary.EvapotranspirationDemand.Items[
+//              Boundary.EvapotranspirationDemand.Count-2] as TEvtItem;
+//            EvtItem.EvapotranspirationRate :=
+//              PriorEvtItem.EvapotranspirationRate;
+//          end
+//          else
+//          begin
+//            if FConstantET[StressPeriodIndex].IsConstant then
+//            begin
+//              EvtItem.EvapotranspirationRate :=
+//                FortranFloatToStr(FConstantET[StressPeriodIndex].RealValue)
+//            end
+//            else
+//            begin
+//              ImportedData := FVariableET[StressPeriodIndex];
+//              ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
+//              ImportedValues.Name := 'Imported_UZF_ET_'
+//                + IntToStr(StressPeriodIndex+1);
+//              AssignImportedValues(ImportedValues, ImportedData);
+//              EvtItem.EvapotranspirationRate := rsObjectImportedValuesR
+//                + '("' + ImportedValues.Name + '")';
+//            end;
+//          end;
+//        end;
+//
+//        if Reuse then
+//        begin
+//          ExtinctDepthItem.EndTime := StressPeriod.EndTime;
+//        end
+//        else
+//        begin
+//          ExtinctDepthItem := Boundary.ExtinctionDepth.Add as TUzfExtinctDepthItem;
+//          ExtinctDepthItem.StartTime := StressPeriod.StartTime;
+//          ExtinctDepthItem.EndTime := StressPeriod.EndTime;
+//          if FEtExtinctDepthStressPeriods[StressPeriodIndex].Reuse then
+//          begin
+//            PriorExtinctDetphItem := Boundary.ExtinctionDepth.Items[
+//              Boundary.ExtinctionDepth.Count-2] as TUzfExtinctDepthItem;
+//            ExtinctDepthItem.UzfExtinctDepth :=
+//              PriorExtinctDetphItem.UzfExtinctDepth;
+//          end
+//          else
+//          begin
+//            if FConstantExtinctDepth[StressPeriodIndex].IsConstant then
+//            begin
+//              ExtinctDepthItem.UzfExtinctDepth :=
+//                FortranFloatToStr(FConstantExtinctDepth[StressPeriodIndex].RealValue)
+//            end
+//            else
+//            begin
+//              ImportedData := FVariableExtinctDepth[StressPeriodIndex];
+//              ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
+//              ImportedValues.Name := 'Imported_UZF_ExtinctionDepth_'
+//                + IntToStr(StressPeriodIndex+1);
+//              AssignImportedValues(ImportedValues, ImportedData);
+//              ExtinctDepthItem.UzfExtinctDepth := rsObjectImportedValuesR
+//                + '("' + ImportedValues.Name + '")';
+//            end;
+//          end;
+//        end;
+//
+//        if Reuse then
+//        begin
+//          WaterContentItem.EndTime := StressPeriod.EndTime;
+//        end
+//        else
+//        begin
+//          WaterContentItem := Boundary.WaterContent.Add as TUzfWaterContentItem;
+//          WaterContentItem.StartTime := StressPeriod.StartTime;
+//          WaterContentItem.EndTime := StressPeriod.EndTime;
+//          if FEtExtinctWaterContentStressPeriods[StressPeriodIndex].Reuse then
+//          begin
+//            PriorWaterContentItem := Boundary.WaterContent.Items[
+//              Boundary.WaterContent.Count-2] as TUzfWaterContentItem;
+//            WaterContentItem.UzfWaterContent := PriorWaterContentItem.UzfWaterContent;
+//          end
+//          else
+//          begin
+//            if FConstantExtinctWaterContent[StressPeriodIndex].IsConstant then
+//            begin
+//              WaterContentItem.UzfWaterContent :=
+//                FortranFloatToStr(FConstantExtinctWaterContent[StressPeriodIndex].RealValue)
+//            end
+//            else
+//            begin
+//              ImportedData := FVariableExtinctWaterContent[StressPeriodIndex];
+//              ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
+//              ImportedValues.Name := 'Imported_UZF_ExtinctionWaterContent_'
+//                + IntToStr(StressPeriodIndex+1);
+//              AssignImportedValues(ImportedValues, ImportedData);
+//              WaterContentItem.UzfWaterContent := rsObjectImportedValuesR
+//                + '("' + ImportedValues.Name + '")';
+//            end;
+//          end;
+//        end;
+//      end;
+//    end;
+//  end;
+end;
+
+procedure TUzfImporter.AssignInfiltation(NewItemsNeeded: boolean;
+  Boundary: TUzfBoundary; var InfiltrationItem: TRchItem;
+  const InfiltationRate: string; StressPeriodIndex: Integer);
+begin
+  if NewItemsNeeded then
+  begin
+    Assert(InfiltationRate <> '');
+    InfiltrationItem := Boundary.Values.Add as TRchItem;
+    InfiltrationItem.RechargeRate := InfiltationRate;
+    InfiltrationItem.StartTime :=
+      FModel.ModflowStressPeriods[StressPeriodIndex].StartTime;
+    InfiltrationItem.EndTime := FModel.ModflowStressPeriods[StressPeriodIndex].EndTime;
+  end
+  else
+  begin
+    InfiltrationItem.EndTime := FModel.ModflowStressPeriods[StressPeriodIndex].EndTime;
+  end;
+end;
+
+procedure TUzfImporter.AssignEt(NewItemsNeeded: boolean;
+  Boundary: TUzfBoundary;
+  var EvtItem: TEvtItem;
+  const EtRate: string; StressPeriodIndex: Integer);
+begin
+  if FUzfPackage.SimulateET then
+  begin
+    if NewItemsNeeded then
+    begin
+      Assert(EtRate <> '');
+      EvtItem := Boundary.EvapotranspirationDemand.Add as TEvtItem;
+      EvtItem.EvapotranspirationRate := EtRate;
+      EvtItem.StartTime :=
+        FModel.ModflowStressPeriods[StressPeriodIndex].StartTime;
+      EvtItem.EndTime := FModel.ModflowStressPeriods[StressPeriodIndex].EndTime;
     end
     else
     begin
-//      Boundary := nil;
-      if AScreenObject = nil then
-      begin
-        AScreenObject := TScreenObject.CreateWithViewDirection(FModel, vdTop,
-          UndoCreateScreenObject, False);
-        AScreenObject.Name := 'Imported_UZF_Rates';
+      EvtItem.EndTime := FModel.ModflowStressPeriods[StressPeriodIndex].EndTime;
+    end;
+  end;
+end;
 
-        FModel.AddScreenObject(AScreenObject);
-        AScreenObject.ElevationCount := ecZero;
-        AScreenObject.SetValuesByInterpolation := True;
-        AScreenObject.EvaluatedAt := eaBlocks;
-        AScreenObject.Visible := False;
-        AScreenObject.Capacity := FGrid.RowCount * FGrid.ColumnCount;
-        for RowIndex := 0 to FGrid.RowCount - 1 do
-        begin
-          for ColIndex := 0 to FGrid.ColumnCount - 1 do
-          begin
-            AScreenObject.AddPoint(FImporter.
-              CenterPoints[RowIndex, ColIndex], True);
-          end;
-        end;
-        AScreenObject.SectionStarts.CacheData;
-        AScreenObject.SetValuesOfIntersectedCells := True;
-        AScreenObject.SetValuesByInterpolation := False;
+procedure TUzfImporter.AssignExtinctionDepth(NewItemsNeeded: boolean;
+  Boundary: TUzfBoundary;  var ExtinctDepthItem: TUzfExtinctDepthItem;
+  const ExtinctionDepth: string; StressPeriodIndex: Integer);
+begin
+  if FUzfPackage.SimulateET then
+  begin
+    if NewItemsNeeded then
+    begin
+      Assert(ExtinctionDepth <> '');
+      ExtinctDepthItem := Boundary.ExtinctionDepth.Add as TUzfExtinctDepthItem;
+      ExtinctDepthItem.UzfExtinctDepth := ExtinctionDepth;
+      ExtinctDepthItem.StartTime :=
+        FModel.ModflowStressPeriods[StressPeriodIndex].StartTime;
+      ExtinctDepthItem.EndTime := FModel.ModflowStressPeriods[StressPeriodIndex].EndTime;
+    end
+    else
+    begin
+      ExtinctDepthItem.EndTime := FModel.ModflowStressPeriods[StressPeriodIndex].EndTime;
+    end;
+  end;
+end;
 
-        CreateBoundary(AScreenObject);
-      end;
-      Boundary := AScreenObject.ModflowUzfBoundary;
-      InfiltrationItem := Boundary.Values.Add as TRchItem;
-      InfiltrationItem.StartTime := StressPeriod.StartTime;
-      InfiltrationItem.EndTime := StressPeriod.EndTime;
 
-      if FStressPeriods[StressPeriodIndex].Reuse then
-      begin
-        PriorInfiltrationItem := Boundary.Values[Boundary.Values.Count -2]
-          as TRchItem;
-        InfiltrationItem.RechargeRate := PriorInfiltrationItem.RechargeRate
-      end
-      else
-      begin
-        if FConstantInfiltration[StressPeriodIndex].IsConstant then
-        begin
-          InfiltrationItem.RechargeRate :=
-            FloatToStr(FConstantInfiltration[StressPeriodIndex].RealValue)
-        end
-        else
-        begin
-          ImportedData := FVariableInfiltration[StressPeriodIndex];
-          ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
-          ImportedValues.Name := 'Imported_UZF_Infiltration_'
-            + IntToStr(StressPeriodIndex+1);
-          AssignImportedValues(ImportedValues, ImportedData);
-          InfiltrationItem.RechargeRate := rsObjectImportedValuesR
-            + '("' + ImportedValues.Name + '")';
-        end;
-      end;
-      if FUzfPackage.SimulateET then
-      begin
-        if Reuse then
-        begin
-          EvtItem.EndTime := StressPeriod.EndTime;
-        end
-        else
-        begin
-          EvtItem := Boundary.EvapotranspirationDemand.Add as TEvtItem;
-          EvtItem.StartTime := StressPeriod.StartTime;
-          EvtItem.EndTime := StressPeriod.EndTime;
-          if FEtStressPeriods[StressPeriodIndex].Reuse then
-          begin
-            PriorEvtItem := Boundary.EvapotranspirationDemand.Items[
-              Boundary.EvapotranspirationDemand.Count-2] as TEvtItem;
-            EvtItem.EvapotranspirationRate :=
-              PriorEvtItem.EvapotranspirationRate;
-          end
-          else
-          begin
-            if FConstantET[StressPeriodIndex].IsConstant then
-            begin
-              EvtItem.EvapotranspirationRate :=
-                FloatToStr(FConstantET[StressPeriodIndex].RealValue)
-            end
-            else
-            begin
-              ImportedData := FVariableET[StressPeriodIndex];
-              ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
-              ImportedValues.Name := 'Imported_UZF_ET_'
-                + IntToStr(StressPeriodIndex+1);
-              AssignImportedValues(ImportedValues, ImportedData);
-              EvtItem.EvapotranspirationRate := rsObjectImportedValuesR
-                + '("' + ImportedValues.Name + '")';
-            end;
-          end;
-        end;
-
-        if Reuse then
-        begin
-          ExtinctDetphItem.EndTime := StressPeriod.EndTime;
-        end
-        else
-        begin
-          ExtinctDetphItem := Boundary.ExtinctionDepth.Add as TUzfExtinctDepthItem;
-          ExtinctDetphItem.StartTime := StressPeriod.StartTime;
-          ExtinctDetphItem.EndTime := StressPeriod.EndTime;
-          if FEtExtinctDepthStressPeriods[StressPeriodIndex].Reuse then
-          begin
-            PriorExtinctDetphItem := Boundary.ExtinctionDepth.Items[
-              Boundary.ExtinctionDepth.Count-2] as TUzfExtinctDepthItem;
-            ExtinctDetphItem.UzfExtinctDepth :=
-              PriorExtinctDetphItem.UzfExtinctDepth;
-          end
-          else
-          begin
-            if FConstantExtinctDepth[StressPeriodIndex].IsConstant then
-            begin
-              ExtinctDetphItem.UzfExtinctDepth :=
-                FloatToStr(FConstantExtinctDepth[StressPeriodIndex].RealValue)
-            end
-            else
-            begin
-              ImportedData := FVariableExtinctDepth[StressPeriodIndex];
-              ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
-              ImportedValues.Name := 'Imported_UZF_ExtinctionDepth_'
-                + IntToStr(StressPeriodIndex+1);
-              AssignImportedValues(ImportedValues, ImportedData);
-              ExtinctDetphItem.UzfExtinctDepth := rsObjectImportedValuesR
-                + '("' + ImportedValues.Name + '")';
-            end;
-          end;
-        end;
-
-        if Reuse then
-        begin
-          WaterContentItem.EndTime := StressPeriod.EndTime;
-        end
-        else
-        begin
-          WaterContentItem := Boundary.WaterContent.Add as TUzfWaterContentItem;
-          WaterContentItem.StartTime := StressPeriod.StartTime;
-          WaterContentItem.EndTime := StressPeriod.EndTime;
-          if FEtExtinctWaterContentStressPeriods[StressPeriodIndex].Reuse then
-          begin
-            PriorWaterContentItem := Boundary.WaterContent.Items[
-              Boundary.WaterContent.Count-2] as TUzfWaterContentItem;
-            WaterContentItem.UzfWaterContent := PriorWaterContentItem.UzfWaterContent;
-          end
-          else
-          begin
-            if FConstantExtinctWaterContent[StressPeriodIndex].IsConstant then
-            begin
-              WaterContentItem.UzfWaterContent :=
-                FloatToStr(FConstantExtinctWaterContent[StressPeriodIndex].RealValue)
-            end
-            else
-            begin
-              ImportedData := FVariableExtinctWaterContent[StressPeriodIndex];
-              ImportedValues := AScreenObject.ImportedValues.Add as TValueArrayItem;
-              ImportedValues.Name := 'Imported_UZF_ExtinctionWaterContent_'
-                + IntToStr(StressPeriodIndex+1);
-              AssignImportedValues(ImportedValues, ImportedData);
-              WaterContentItem.UzfWaterContent := rsObjectImportedValuesR
-                + '("' + ImportedValues.Name + '")';
-            end;
-          end;
-        end;
-      end;
+procedure TUzfImporter.AssignWaterContent(NewItemsNeeded: boolean;
+  Boundary: TUzfBoundary;
+  var WaterContentItem: TUzfWaterContentItem;
+  const WaterContent: string; StressPeriodIndex: Integer);
+begin
+  if FUzfPackage.SimulateET then
+  begin
+    if NewItemsNeeded then
+    begin
+      Assert(WaterContent <> '');
+      WaterContentItem := Boundary.WaterContent.Add as TUzfWaterContentItem;
+      WaterContentItem.UzfWaterContent := WaterContent;
+      WaterContentItem.StartTime :=
+        FModel.ModflowStressPeriods[StressPeriodIndex].StartTime;
+      WaterContentItem.EndTime := FModel.ModflowStressPeriods[StressPeriodIndex].EndTime;
+    end
+    else
+    begin
+      WaterContentItem.EndTime := FModel.ModflowStressPeriods[StressPeriodIndex].EndTime;
     end;
   end;
 end;
@@ -17544,8 +18107,11 @@ begin
         FModel.ModflowStressPeriods.Count);
       SetLength(FVariableInfiltration,
         FModel.ModflowStressPeriods.Count);
+      SetLength(FReuseInfiltration,
+        FModel.ModflowStressPeriods.Count);
     end;
     FStressPeriods[FCurrentStressPeriod].Reuse := nuzf1 < 0;
+    FReuseInfiltration[FCurrentStressPeriod] := nuzf1 < 0;
   end
   else if ALabel = 'nuzf2:' then
   begin
@@ -17560,8 +18126,11 @@ begin
         FModel.ModflowStressPeriods.Count);
       SetLength(FVariableET,
         FModel.ModflowStressPeriods.Count);
+      SetLength(FReuseET,
+        FModel.ModflowStressPeriods.Count);
     end;
     FEtStressPeriods[FCurrentStressPeriod].Reuse := nuzf2 < 0;
+    FReuseET[FCurrentStressPeriod] := nuzf2 < 0;
   end
   else if ALabel = 'nuzf3:' then
   begin
@@ -17576,8 +18145,12 @@ begin
         FModel.ModflowStressPeriods.Count);
       SetLength(FVariableExtinctDepth,
         FModel.ModflowStressPeriods.Count);
+      SetLength(FReuseExtictionDepth,
+        FModel.ModflowStressPeriods.Count);
+
     end;
     FEtExtinctDepthStressPeriods[FCurrentStressPeriod].Reuse := nuzf3 < 0;
+    FReuseExtictionDepth[FCurrentStressPeriod] := nuzf3 < 0;
   end
   else if ALabel = 'nuzf4:' then
   begin
@@ -17592,9 +18165,12 @@ begin
         FModel.ModflowStressPeriods.Count);
       SetLength(FVariableExtinctWaterContent,
         FModel.ModflowStressPeriods.Count);
+      SetLength(FReuseExtictionWaterContent,
+        FModel.ModflowStressPeriods.Count);
     end;
     FEtExtinctWaterContentStressPeriods[FCurrentStressPeriod].
       Reuse := nuzf4 < 0;
+    FReuseExtictionWaterContent[FCurrentStressPeriod] := nuzf4 < 0;
   end
   else if ALabel = StrConstant2DRealArray then
   begin
@@ -17864,7 +18440,7 @@ begin
             if (Gage.GAGESEG = Reach.SegmentNumber)
               and (Gage.GAGERCH = Reach.ReachNumber) then
             begin
-              Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer(
+              Layer := FModel.ModflowLayerToDataSetLayer(
                 Reach.Layer);
               Point3D := FGrid.ThreeDElementCenter(
                 Reach.Column-1, Reach.Row-1, Layer);
@@ -17876,7 +18452,7 @@ begin
               ScreenObject.SetValuesOfEnclosedCells := False;
               ScreenObject.SetValuesOfIntersectedCells := True;
 
-              ScreenObject.ElevationFormula := FloatToStr(Point3D.Z);
+              ScreenObject.ElevationFormula := FortranFloatToStr(Point3D.Z);
               ScreenObject.CreateGagBoundary;
               ScreenObject.ModflowStreamGage;
               SfrGage := ScreenObject.ModflowStreamGage;
@@ -18344,7 +18920,7 @@ begin
       and FConstantTopElevations[HufIndex].IsConstant then
     begin
       TopArray.Formula :=
-        FloatToStr(FConstantTopElevations[HufIndex].RealValue);
+        FortranFloatToStr(FConstantTopElevations[HufIndex].RealValue);
     end
     else
     begin
@@ -18368,7 +18944,7 @@ begin
       and FConstantThicknesses[HufIndex].IsConstant then
     begin
       ThicknessArray.Formula :=
-        FloatToStr(FConstantThicknesses[HufIndex].RealValue);
+        FortranFloatToStr(FConstantThicknesses[HufIndex].RealValue);
     end
     else
     begin
@@ -18703,7 +19279,7 @@ begin
   begin
     if FWetDryConst = nil then
     begin
-      SetLength(FWetDryConst, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FWetDryConst, FModel.ModflowLayerCount);
       InitializeConstArray(FWetDryConst);
       for Index := 0 to Length(FWetDryConst) - 1 do
       begin
@@ -18737,7 +19313,7 @@ begin
   begin
     if FWetDryConst = nil then
     begin
-      SetLength(FWetDryConst, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FWetDryConst, FModel.ModflowLayerCount);
       InitializeConstArray(FWetDryConst);
       for Index := 0 to Length(FWetDryConst) - 1 do
       begin
@@ -18746,7 +19322,7 @@ begin
     end;
     if FWetDry = nil then
     begin
-      SetLength(FWetDry, FModel.LayerStructure.ModflowLayerCount);
+      SetLength(FWetDry, FModel.ModflowLayerCount);
     end;
     ThreeDArray := FWetDry;
   end
@@ -18790,7 +19366,7 @@ var
   Index: Integer;
   NLAY: Integer;
 begin
-  NLAY := FModel.LayerStructure.ModflowLayerCount;
+  NLAY := FModel.ModflowLayerCount;
   SetLength(LAYWT, NLAY);
   for Index := 0 to NLAY - 1 do
   begin
@@ -18805,7 +19381,7 @@ var
   Index: Integer;
   NLAY: Integer;
 begin
-  NLAY := FModel.LayerStructure.ModflowLayerCount;
+  NLAY := FModel.ModflowLayerCount;
   SetLength(LTHUF, NLAY);
   for Index := 0 to NLAY - 1 do
   begin
@@ -18899,7 +19475,7 @@ begin
     Assert(RefDataArray <> nil);
     if FIsConstantGroundSurface then
     begin
-      RefDataArray.Formula := FloatToStr(FConstantGroundSurface);
+      RefDataArray.Formula := FortranFloatToStr(FConstantGroundSurface);
     end
     else
     begin
@@ -19189,7 +19765,7 @@ begin
         end;
       end;
       Param.UseMultiplier := MultUsed or
-        (IntList.Count < FModel.LayerStructure.ModflowLayerCount);
+        (IntList.Count < FModel.ModflowLayerCount);
       if Param.UseMultiplier then
       begin
         MultName := Param.MultiplierName;
@@ -19200,7 +19776,7 @@ begin
         MultDataArray := nil;
       end;
       Param.UseZone := ZoneUsed or
-        (IntList.Count < FModel.LayerStructure.ModflowLayerCount);
+        (IntList.Count < FModel.ModflowLayerCount);
       if Param.UseZone then
       begin
         ZoneName := Param.ZoneName;
@@ -19224,7 +19800,7 @@ begin
       for ClusterIndex := 0 to Length(Instance.Clusters) - 1 do
       begin
         Cluster := Instance.Clusters[ClusterIndex];
-        LayerIndex := FModel.LayerStructure.
+        LayerIndex := FModel.
           ModflowLayerToDataSetLayer(Cluster.Layer);
         if Param.ParameterType = ptLPF_VKCB then
         begin
@@ -19259,7 +19835,7 @@ begin
       end;
       if MultDataArray <> nil then
       begin
-        MultFunction := 'CaseR(Layer, ';
+        MultFunction := 'CaseR(' + LayerString + ', ';
         for MultIndex := 0 to MultFunctionList.Count - 1 do
         begin
           MultFunction := MultFunction + MultFunctionList[MultIndex];
@@ -19279,7 +19855,7 @@ begin
         end
         else
         begin
-          ZoneFunction := 'CaseB(Layer, ';
+          ZoneFunction := 'CaseB(' + LayerString + ', ';
           for ZoneIndex := 0 to ZoneFunctionList.Count - 1 do
           begin
             ZoneFunction := ZoneFunction + ZoneFunctionList[ZoneIndex];
@@ -19840,8 +20416,8 @@ begin
   AScreenObject.Capacity := 1;
   AScreenObject.ElevationCount := ecTwo;
   FirstScreen := AWell.FScreens[0];
-  AScreenObject.HigherElevationFormula := FloatToStr(FirstScreen.Ztop);
-  AScreenObject.LowerElevationFormula := FloatToStr(FirstScreen.Zbotm);
+  AScreenObject.HigherElevationFormula := FortranFloatToStr(FirstScreen.Ztop);
+  AScreenObject.LowerElevationFormula := FortranFloatToStr(FirstScreen.Zbotm);
   APoint := FGrid.TwoDElementCenter(FirstScreen.IC - 1, FirstScreen.IR - 1);
   AScreenObject.AddPoint(APoint, True);
   APoint3D := FGrid.ThreeDElementCenter(FirstScreen.IC - 1,
@@ -19854,7 +20430,7 @@ begin
     begin
       SpatialItem := AScreenObject.ModflowMnw2Boundary.Values.Add
         as TMnw2SpatialItem;
-      SpatialItem.WellRadius := FloatToStr(FirstScreen.Rw);
+      SpatialItem.WellRadius := FortranFloatToStr(FirstScreen.Rw);
     end;
   end;
   if AWell.LossType = mltSkin then
@@ -19864,8 +20440,8 @@ begin
       SpatialItem := AScreenObject.ModflowMnw2Boundary.Values.Add
         as TMnw2SpatialItem;
     end;
-    SpatialItem.SkinRadius := FloatToStr(FirstScreen.Rskin);
-    SpatialItem.SkinK := FloatToStr(FirstScreen.Kskin);
+    SpatialItem.SkinRadius := FortranFloatToStr(FirstScreen.Rskin);
+    SpatialItem.SkinK := FortranFloatToStr(FirstScreen.Kskin);
   end;
   if AWell.LossType = mltEquation then
   begin
@@ -19874,9 +20450,9 @@ begin
       SpatialItem := AScreenObject.ModflowMnw2Boundary.Values.Add
         as TMnw2SpatialItem;
     end;
-    SpatialItem.B := FloatToStr(FirstScreen.B);
-    SpatialItem.C := FloatToStr(FirstScreen.C);
-    SpatialItem.P := FloatToStr(FirstScreen.P);
+    SpatialItem.B := FortranFloatToStr(FirstScreen.B);
+    SpatialItem.C := FortranFloatToStr(FirstScreen.C);
+    SpatialItem.P := FortranFloatToStr(FirstScreen.P);
   end;
   if AWell.LossType = mtlSpecify then
   begin
@@ -19885,7 +20461,7 @@ begin
       SpatialItem := AScreenObject.ModflowMnw2Boundary.Values.Add
         as TMnw2SpatialItem;
     end;
-    SpatialItem.CellToWellConductance := FloatToStr(FirstScreen.CWC);
+    SpatialItem.CellToWellConductance := FortranFloatToStr(FirstScreen.CWC);
   end;
 
   if AWell.FScreens.ArrayLength > 1 then
@@ -19899,13 +20475,13 @@ begin
         as TVerticalScreen;
       VerticalScreen.ZTop := AScreen.Ztop;
       VerticalScreen.ZBottom := AScreen.Zbotm;
-      VerticalScreen.WellRadius := FloatToStr(AScreen.Rw);
-      VerticalScreen.SkinRadius := FloatToStr(AScreen.Rskin);
-      VerticalScreen.SkinK := FloatToStr(AScreen.Kskin);
-      VerticalScreen.B := FloatToStr(AScreen.B);
-      VerticalScreen.C := FloatToStr(AScreen.C);
-      VerticalScreen.P := FloatToStr(AScreen.P);
-      VerticalScreen.CellToWellConductance := FloatToStr(AScreen.CWC);
+      VerticalScreen.WellRadius := FortranFloatToStr(AScreen.Rw);
+      VerticalScreen.SkinRadius := FortranFloatToStr(AScreen.Rskin);
+      VerticalScreen.SkinK := FortranFloatToStr(AScreen.Kskin);
+      VerticalScreen.B := FortranFloatToStr(AScreen.B);
+      VerticalScreen.C := FortranFloatToStr(AScreen.C);
+      VerticalScreen.P := FortranFloatToStr(AScreen.P);
+      VerticalScreen.CellToWellConductance := FortranFloatToStr(AScreen.CWC);
     end;
   end;
 end;
@@ -19959,7 +20535,7 @@ begin
     end
     else
     begin
-      AScreenObject.ElevationFormula := FloatToStr(APoint3D.Z);
+      AScreenObject.ElevationFormula := FortranFloatToStr(APoint3D.Z);
     end;
     ImportedRwData[CellIndex] := ACell.Rw;
     ImportedRSkinData[CellIndex] := ACell.Rskin;
@@ -19981,7 +20557,7 @@ begin
     if UniformArray(ImportedRwData) then
     begin
       AValue := ImportedRwData[0];
-      SpatialItem.WellRadius := FloatToStr(AValue);
+      SpatialItem.WellRadius := FortranFloatToStr(AValue);
     end
     else
     begin
@@ -20002,7 +20578,7 @@ begin
     if UniformArray(ImportedRSkinData) then
     begin
       AValue := ImportedRSkinData[0];
-      SpatialItem.SkinRadius := FloatToStr(AValue);
+      SpatialItem.SkinRadius := FortranFloatToStr(AValue);
     end
     else
     begin
@@ -20015,7 +20591,7 @@ begin
     if UniformArray(ImportedKSkinData) then
     begin
       AValue := ImportedKSkinData[0];
-      SpatialItem.SkinK := FloatToStr(AValue);
+      SpatialItem.SkinK := FortranFloatToStr(AValue);
     end
     else
     begin
@@ -20036,7 +20612,7 @@ begin
     if UniformArray(ImportedBData) then
     begin
       AValue := ImportedBData[0];
-      SpatialItem.B := FloatToStr(AValue);
+      SpatialItem.B := FortranFloatToStr(AValue);
     end
     else
     begin
@@ -20049,7 +20625,7 @@ begin
     if UniformArray(ImportedCData) then
     begin
       AValue := ImportedCData[0];
-      SpatialItem.C := FloatToStr(AValue);
+      SpatialItem.C := FortranFloatToStr(AValue);
     end
     else
     begin
@@ -20062,7 +20638,7 @@ begin
     if UniformArray(ImportedPData) then
     begin
       AValue := ImportedPData[0];
-      SpatialItem.P := FloatToStr(AValue);
+      SpatialItem.P := FortranFloatToStr(AValue);
     end
     else
     begin
@@ -20083,7 +20659,7 @@ begin
     if UniformArray(ImportedCWCData) then
     begin
       AValue := ImportedCWCData[0];
-      SpatialItem.CellToWellConductance := FloatToStr(AValue);
+      SpatialItem.CellToWellConductance := FortranFloatToStr(AValue);
     end
     else
     begin
@@ -20694,14 +21270,14 @@ begin
               as TMnw2TimeItem;
             TimeItem.StartTime := StressPeriod.StartTime;
             TimeItem.EndTime := StressPeriod.EndTime;
-            TimeItem.PumpingRate := FloatToStr(MnwStressPeriod.QDes);
+            TimeItem.PumpingRate := FortranFloatToStr(MnwStressPeriod.QDes);
             TimeItem.HeadCapacityMultiplier :=
-              FloatToStr(MnwStressPeriod.CapMult);
-            TimeItem.LimitingWaterLevel := FloatToStr(MnwStressPeriod.Hlim);
+              FortranFloatToStr(MnwStressPeriod.CapMult);
+            TimeItem.LimitingWaterLevel := FortranFloatToStr(MnwStressPeriod.Hlim);
             TimeItem.InactivationPumpingRate :=
-              FloatToStr(MnwStressPeriod.Qfrcmn);
+              FortranFloatToStr(MnwStressPeriod.Qfrcmn);
             TimeItem.ReactivationPumpingRate :=
-              FloatToStr(MnwStressPeriod.Qfrcmx);
+              FortranFloatToStr(MnwStressPeriod.Qfrcmx);
             if MnwStressPeriod.QCUT > 0 then
             begin
               TimeItem.LimitMethod := mlmRate;
@@ -21152,7 +21728,7 @@ begin
   Assert(Length(LAYCON) = Length(TRPY));
   for LayerIndex := 0 to Length(LAYCON) - 1 do
   begin
-    Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer(LayerIndex + 1);
+    Layer := FModel.ModflowLayerToDataSetLayer(LayerIndex + 1);
     LayerGroup := FModel.LayerStructure[Layer + 1];
     LayerGroup.AquiferType := LAYCON[LayerIndex] mod 10;
     LayerGroup.InterblockTransmissivityMethod := LAYCON[LayerIndex] div 10;
@@ -21407,6 +21983,9 @@ end;
 procedure TBcfImporter.HandlePackage;
 var
   BcfPackage: TModflowPackageSelection;
+  PriorLayer: Integer;
+  RowIndex: Integer;
+  ColIndex: Integer;
 begin
   inherited;
   BcfPackage := FModel.ModflowPackages.BcfPackage;
@@ -21427,6 +22006,30 @@ begin
     ImportDataSet(rsSpecificYield, rsSpecificYield,
       FSpecificYield_Const, FSpecificYield);
     ImportDataSet(rsWetDry, rsWetDry, FWetDry_Const, FWetDry);
+    if Length(FVcont_Const) > 1 then
+    begin
+      PriorLayer := Length(FVcont_Const)-2;
+      Assert(FVcont_Const[Length(FVcont_Const)-1].IsConstant);
+      if FVcont_Const[PriorLayer].IsConstant then
+      begin
+        FVcont_Const[Length(FVcont_Const)-1].RealValue
+          := FVcont_Const[PriorLayer].RealValue
+      end
+      else
+      begin
+        FVcont_Const[Length(FVcont_Const)-1].IsConstant := False;
+        SetLength(FVcont[PriorLayer+1], Length(FVcont[PriorLayer]),
+          Length(FVcont[PriorLayer, 0]));
+        for RowIndex := 0 to Length(FVcont[PriorLayer]) - 1 do
+        begin
+          for ColIndex := 0 to Length(FVcont[PriorLayer, 0]) - 1 do
+          begin
+            FVcont[PriorLayer+1, RowIndex, ColIndex]
+              := FVcont[PriorLayer, RowIndex, ColIndex];
+          end;
+        end;
+      end;
+    end;
     ImportDataSet(StrVerticalConductance, StrVerticalConductance,
       FVcont_Const, FVcont);
   end;
@@ -21674,9 +22277,9 @@ begin
   if FConstNZ[Index].IsConstant then
   begin
     Zone := FMaterialZones[FConstNZ[Index].IntegerValue - 1];
-    VKDataArray.Formula := FloatToStr(Zone.VerticalHydraulicConductivity);
-    ElastSS.Formula := FloatToStr(Zone.ElasticSpecificStorage);
-    InelastSS.Formula := FloatToStr(Zone.InelasticSpecificStorage);
+    VKDataArray.Formula := FortranFloatToStr(Zone.VerticalHydraulicConductivity);
+    ElastSS.Formula := FortranFloatToStr(Zone.ElasticSpecificStorage);
+    InelastSS.Formula := FortranFloatToStr(Zone.InelasticSpecificStorage);
   end
   else
   begin
@@ -21764,7 +22367,7 @@ begin
   Assert(DataArray <> nil);
   if FConstDZ[Index].IsConstant then
   begin
-    DataArray.Formula := FloatToStr(FConstDZ[Index].RealValue);
+    DataArray.Formula := FortranFloatToStr(FConstDZ[Index].RealValue);
   end
   else
   begin
@@ -21791,7 +22394,7 @@ begin
   Assert(DataArray <> nil);
   if FConstDCOM[Index].IsConstant then
   begin
-    DataArray.Formula := FloatToStr(FConstDCOM[Index].RealValue);
+    DataArray.Formula := FortranFloatToStr(FConstDCOM[Index].RealValue);
   end
   else
   begin
@@ -21818,7 +22421,7 @@ begin
   Assert(DataArray <> nil);
   if FConstDHC[Index].IsConstant then
   begin
-    DataArray.Formula := FloatToStr(FConstDHC[Index].RealValue);
+    DataArray.Formula := FortranFloatToStr(FConstDHC[Index].RealValue);
   end
   else
   begin
@@ -21845,7 +22448,7 @@ begin
   Assert(DataArray <> nil);
   if FConstDstart[Index].IsConstant then
   begin
-    DataArray.Formula := FloatToStr(FConstDstart[Index].RealValue);
+    DataArray.Formula := FortranFloatToStr(FConstDstart[Index].RealValue);
   end
   else
   begin
@@ -21870,7 +22473,7 @@ begin
   Assert(DataArray <> nil);
   if FConstRNB[Index].IsConstant then
   begin
-    DataArray.Formula := FloatToStr(FConstRNB[Index].RealValue);
+    DataArray.Formula := FortranFloatToStr(FConstRNB[Index].RealValue);
   end
   else
   begin
@@ -21896,7 +22499,7 @@ begin
   Assert(DataArray <> nil);
   if FConstCom[Index].IsConstant then
   begin
-    DataArray.Formula := FloatToStr(FConstCom[Index].RealValue);
+    DataArray.Formula := FortranFloatToStr(FConstCom[Index].RealValue);
   end
   else
   begin
@@ -21922,7 +22525,7 @@ begin
   Assert(DataArray <> nil);
   if FConstSfv[Index].IsConstant then
   begin
-    DataArray.Formula := FloatToStr(FConstSfv[Index].RealValue);
+    DataArray.Formula := FortranFloatToStr(FConstSfv[Index].RealValue);
   end
   else
   begin
@@ -21949,7 +22552,7 @@ begin
   Assert(DataArray <> nil);
   if FConstSfe[Index].IsConstant then
   begin
-    DataArray.Formula := FloatToStr(FConstSfe[Index].RealValue);
+    DataArray.Formula := FortranFloatToStr(FConstSfe[Index].RealValue);
   end
   else
   begin
@@ -21976,7 +22579,7 @@ begin
   Assert(DataArray <> nil);
   if FConstHC[Index].IsConstant then
   begin
-    DataArray.Formula := FloatToStr(FConstHC[Index].RealValue);
+    DataArray.Formula := FortranFloatToStr(FConstHC[Index].RealValue);
   end
   else
   begin
@@ -23036,7 +23639,7 @@ begin
   Assert(DataArray <> nil);
   if ConstArray[Index].IsConstant then
   begin
-    DataArray.Formula := FloatToStr(ConstArray[Index].RealValue);
+    DataArray.Formula := FortranFloatToStr(ConstArray[Index].RealValue);
   end
   else
   begin
@@ -23535,7 +24138,7 @@ begin
   ScreenObject := CreateScreenObject('ImportedHydmod' + IntToStr(Index + 1));
   ScreenObject.SetValuesOfEnclosedCells := False;
   ScreenObject.SetValuesOfIntersectedCells := True;
-  ScreenObject.ElevationFormula := FloatToStr(Z);
+  ScreenObject.ElevationFormula := FortranFloatToStr(Z);
   APoint := FModel.Grid.RotateFromGridCoordinatesToRealWorldCoordinates(APoint);
   ScreenObject.AddPoint(APoint, True);
   ScreenObject.CreateHydmodData;
@@ -23624,7 +24227,7 @@ begin
     begin
       APoint := GetObservationLocation(Location);
       ACell := FModel.Grid.TopContainingCell(APoint, eaBlocks, False);
-      Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer(Location.KLAY);
+      Layer := FModel.ModflowLayerToDataSetLayer(Location.KLAY);
       Z := FModel.Grid.LayerCenter(ACell.Col, ACell.Row,Layer);
       StoreCommonData(Z, APoint, Location, Index, HydModData);
       if Location.ARR = 'HD' then
@@ -23689,7 +24292,7 @@ begin
 
       APoint := FModel.Grid.UnrotatedTwoDElementCenter(
         SelectedReach.Column-1, SelectedReach.Row-1);
-      Layer := FModel.LayerStructure.ModflowLayerToDataSetLayer(
+      Layer := FModel.ModflowLayerToDataSetLayer(
         SelectedReach.Layer);
       Z := FModel.Grid.LayerCenter(
         SelectedReach.Column-1, SelectedReach.Row-1,Layer);

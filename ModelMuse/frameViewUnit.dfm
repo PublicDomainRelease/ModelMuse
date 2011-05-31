@@ -116,7 +116,7 @@ object frameView: TframeView
     Exaggeration = 1.000000000000000000
     HorizontalDirection = hdRight
     Image32.Left = 0
-    Image32.Top = 167
+    Image32.Top = 0
     Image32.Width = 467
     Image32.Height = 208
     Image32.Anchors = [akLeft, akBottom]
@@ -132,7 +132,6 @@ object frameView: TframeView
     Image32.OnMouseDown = ZoomBoxImage32MouseDown
     Image32.OnMouseMove = ZoomBoxImage32MouseMove
     Image32.OnMouseUp = ZoomBoxImage32MouseUp
-    Image32.ExplicitTop = 0
     ImmediateResize = True
     Magnification = 1.000000000000000000
     VerticalDirection = vdUp
@@ -148,24 +147,28 @@ object frameView: TframeView
     Top = 64
     object ToFront: TMenuItem
       Caption = 'To Front'
+      HelpContext = 1530
       OnClick = ToFrontClick
     end
     object ToBack: TMenuItem
       Caption = 'To Back'
+      HelpContext = 1530
       OnClick = ToBackClick
     end
     object ForwardOne: TMenuItem
       Caption = 'Forward One'
+      HelpContext = 1530
       OnClick = ForwardOneClick
     end
     object BackOne: TMenuItem
       Caption = 'Back One'
+      HelpContext = 1530
       OnClick = BackOneClick
     end
-    object Hide: TMenuItem
+    object miHide: TMenuItem
       Caption = 'Hide Selected Objects'
       Hint = 'Hide selected objects'
-      OnClick = HideClick
+      OnClick = miHideClick
     end
     object HideAllOthers: TMenuItem
       Caption = 'Hide Unselected Objects'
@@ -182,10 +185,17 @@ object frameView: TframeView
     end
     object miMergeObjects: TMenuItem
       Caption = '&Merge Objects'
+      HelpContext = 1890
       OnClick = miMergeObjectsClick
     end
     object miEditSelectedObjects: TMenuItem
       Caption = 'Edit Selected Objects'
+      HelpContext = 1890
+    end
+    object miInvertSelectedVertices: TMenuItem
+      Caption = 'Invert Selected Vertices'
+      HelpContext = 1520
+      OnClick = miInvertSelectedVerticesClick
     end
   end
 end

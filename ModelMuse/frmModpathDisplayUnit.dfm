@@ -53,7 +53,7 @@ inherited frmModpathDisplay: TfrmModpathDisplay
     Top = 0
     Width = 467
     Height = 327
-    ActivePage = tabBasic
+    ActivePage = tabOptions
     Align = alClient
     TabOrder = 1
     object tabBasic: TTabSheet
@@ -203,10 +203,6 @@ inherited frmModpathDisplay: TfrmModpathDisplay
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         459
         294)
@@ -253,6 +249,7 @@ inherited frmModpathDisplay: TfrmModpathDisplay
         TabOrder = 2
         OnSelectCell = rdgLimitsSelectCell
         OnSetEditText = rdgLimitsSetEditText
+        AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False

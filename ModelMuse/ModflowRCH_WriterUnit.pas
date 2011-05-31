@@ -36,8 +36,8 @@ Type
 implementation
 
 uses RbwParser, ModflowUnitNumbers, ModflowTransientListParameterUnit,
-  frmErrorsAndWarningsUnit, DataSetUnit, ModflowRchUnit, GoPhastTypes, 
-  frmProgressUnit, Forms;
+  frmErrorsAndWarningsUnit, DataSetUnit, ModflowRchUnit, GoPhastTypes,
+  frmProgressUnit, Forms, Windows;
 
 const
   ErrorRoot = 'One or more %s parameters have been eliminated '
@@ -57,10 +57,14 @@ var
   Boundary: TRchBoundary;
 begin
   inherited;
-  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
-    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
     if ScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    if not ScreenObject.UsedModels.UsesModel(Model) then
     begin
       Continue;
     end;
@@ -86,7 +90,7 @@ end;
 
 function TModflowRCH_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.RchPackage;
+  result := Model.ModflowPackages.RchPackage;
 end;
 
 function TModflowRCH_Writer.ParameterType: TParameterType;
@@ -134,12 +138,13 @@ begin
     begin
       Exit;
     end;
-    ClearTimeLists;
+    ClearTimeLists(Model);
     ParamDefArrays := TObjectList.Create;
     try
-      EvaluateParameterDefinitions(ParamDefArrays, ErrorRoot);
+      EvaluateParameterDefinitions(ParamDefArrays, ErrorRoot,
+        Model.ModflowPackages.RchPackage.AssignmentMethod);
       NPRCH := ParameterCount;
-      NRCHOP := Ord(PhastModel.ModflowPackages.RchPackage.LayerOption) + 1;
+      NRCHOP := Ord(Model.ModflowPackages.RchPackage.LayerOption) + 1;
       RechRateTimes := TimeLists[0];
       RechLayerTimes := TimeLists[1];
 
@@ -173,7 +178,8 @@ begin
           if NPRCH = 0 then
           begin
             // data set 6
-            AssignTransient2DArray(RechRateArray, 0, List, 0, rdtDouble, umAssign);
+            AssignTransient2DArray(RechRateArray, 0, List, 0, rdtDouble,
+              Model.ModflowPackages.RchPackage.AssignmentMethod);
           end
           else
           begin
@@ -181,14 +187,15 @@ begin
             DefArrayList := ParamDefArrays[TimeIndex];
             UpdateTransient2DArray(RechRateArray, DefArrayList);
           end;
+          Model.AdjustDataArray(RechRateArray);
           RechRateArray.CacheData;
 
           // Data set 8
           if RechLayerArray <> nil then
           begin
-            if (PhastModel.ModflowPackages.RchPackage.
+            if (Model.ModflowPackages.RchPackage.
               LayerOption = loSpecified)
-              and not PhastModel.ModflowPackages.RchPackage.
+              and not Model.ModflowPackages.RchPackage.
               TimeVaryingLayers and (ParameterCount > 0) then
             begin
               RetrieveParametersForStressPeriod(D7PNameIname, D7PName, 0,
@@ -236,7 +243,7 @@ procedure TModflowRCH_Writer.WriteDataSet2;
 var
   IRCHCB: integer;
 begin
-  NRCHOP := Ord(PhastModel.ModflowPackages.RchPackage.LayerOption) + 1;
+  NRCHOP := Ord(Model.ModflowPackages.RchPackage.LayerOption) + 1;
   GetFlowUnitNumber(IRCHCB);
 
   WriteInteger(NRCHOP);
@@ -254,7 +261,8 @@ const
   VariableIdentifiers = 'Condfact';
 begin
   WriteParameterDefinitions(DS3, DS3Instances, DS4A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot);
+    VariableIdentifiers, ErrorRoot,
+    Model.ModflowPackages.RchPackage.AssignmentMethod);
 end;
 
 procedure TModflowRCH_Writer.WriteDataSets5To8;
@@ -273,17 +281,18 @@ procedure TModflowRCH_Writer.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
+//  OutputDebugString('SAMPLING ON');
   if not Package.IsSelected then
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrRCH) then
+  if Model.PackageGeneratedExternally(StrRCH) then
   begin
     Exit;
   end;
 //  frmProgress.AddMessage('Evaluating RCH Package data.');
   NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrRCH, PhastModel.UnitNumbers.UnitNumber(StrRCH),
+  WriteToNameFile(StrRCH, Model.UnitNumbers.UnitNumber(StrRCH),
     NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
@@ -291,7 +300,7 @@ begin
   begin
     Exit;
   end;
-  ClearTimeLists;
+  ClearTimeLists(Model);
   OpenFile(FileName(AFileName));
   try
     frmProgressMM.AddMessage('Writing RCH Package input.');
@@ -333,6 +342,7 @@ begin
     CloseFile;
 //    Clear;
   end;
+//  OutputDebugString('SAMPLING OFF');
 end;
 
 procedure TModflowRCH_Writer.WriteCells(CellList: TValueCellList;
@@ -348,8 +358,11 @@ begin
   DataType := rdtDouble;
   DataTypeIndex := 0;
   Comment := DataSetIdentifier + ' ' + VariableIdentifiers;
+
+
   WriteTransient2DArray(Comment, DataTypeIndex, DataType,
-    DefaultValue, CellList, Dummy);
+    DefaultValue, CellList, Model.ModflowPackages.RchPackage.AssignmentMethod,
+    True, Dummy);
 end;
 
 procedure TModflowRCH_Writer.WriteStressPeriods(const VariableIdentifiers,
@@ -371,7 +384,7 @@ begin
     Comment := '# Data Set 8: IRCH';
     if Values.Count = 0 then
     begin
-      frmErrorsAndWarnings.AddError('No recharge defined',
+      frmErrorsAndWarnings.AddError(Model, 'No recharge defined',
         'The recharge package is active but '
         + 'no recharge has been defined for any stress period.');
     end;

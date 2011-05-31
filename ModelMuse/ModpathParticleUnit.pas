@@ -9,7 +9,7 @@ type
   private
     FMaxParticleSize: double;
   public
-    Constructor Create(Model: TComponent);
+    Constructor Create(Model: TBaseModel);
     procedure Assign(Source: TPersistent); override;
     procedure UpdateMaxParticleSize(ParticleSize: Double);
     procedure ClearSpheres;
@@ -73,7 +73,7 @@ type
     procedure InvalidateModel; override;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     property Particles: TParticles read GetParticles;
     Destructor Destroy; override;
   published
@@ -117,7 +117,7 @@ type
     procedure InvalidateModel; override;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     property Particles: TParticles read GetParticles;
     Destructor Destroy; override;
   published
@@ -150,7 +150,7 @@ type
   TModpathTimes = class(TPhastCollection)
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TComponent);
+    Constructor Create(Model: TBaseModel);
   end;
 
   TParticleStorage = class(TGoPhastPersistent)
@@ -177,7 +177,7 @@ type
     procedure SetReleaseTimes(const Value: TModpathTimes);
   public
     procedure ClearSpheres;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     property Particles: TParticles read GetParticles;
     property MaxSphereSize: double read GetMaxSphereSize;
@@ -226,7 +226,7 @@ begin
   end;
 end;
 
-constructor TParticles.Create(Model: TComponent);
+constructor TParticles.Create(Model: TBaseModel);
 begin
   inherited Create(TParticleLocation, Model);
   FMaxParticleSize := 1;
@@ -354,7 +354,7 @@ begin
   CustomParticles.ClearSpheres;
 end;
 
-constructor TParticleStorage.Create(Model: TObject);
+constructor TParticleStorage.Create(Model: TBaseModel);
 begin
   inherited;
   FGridParticles := TGridDistribution.Create(Model);
@@ -562,7 +562,7 @@ begin
   end;
 end;
 
-constructor TGridDistribution.Create(Model: TObject);
+constructor TGridDistribution.Create(Model: TBaseModel);
 begin
   inherited;
   FInternal := True;
@@ -848,7 +848,7 @@ begin
   end;
 end;
 
-constructor TCylSphereDistribution.Create(Model: TObject);
+constructor TCylSphereDistribution.Create(Model: TBaseModel);
 begin
   inherited;
   FCircleParticleCount := 8;
@@ -1276,7 +1276,7 @@ begin
   inherited;
 end;
 
-constructor TModpathTimes.Create(Model: TComponent);
+constructor TModpathTimes.Create(Model: TBaseModel);
 begin
   inherited Create(TModpathTimeItem, Model);
 end;

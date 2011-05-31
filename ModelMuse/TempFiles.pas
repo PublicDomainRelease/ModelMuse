@@ -32,6 +32,8 @@ procedure ZipAFile(const FileName: string; InStream: TMemoryStream);
 // sets the position of OutStream to 0.
 procedure ExtractAFile(const FileName: string; OutStream: TMemoryStream);
 
+procedure FreeMemory(const FileName: string);
+
 function MemoryUsed(out FileCount: integer): Int64;
 
 //procedure ReclaimMemory;
@@ -40,7 +42,7 @@ implementation
 
 uses RTLConsts, Contnrs, Forms, ModelMuseUtilities;
 
-var MaxItems: integer = 1000;
+var MaxItems: integer = 250;
 
 type
 //  TInt64Array = array of Int64;
@@ -376,11 +378,11 @@ end;
 { TTempFileStream }
 
 constructor TTempFileStream.Create(const AFileName: string; Mode: Word);
-const
+{const
   AccessModes: array[0..2] of DWORD =
     (GENERIC_READ, GENERIC_WRITE, GENERIC_READ or GENERIC_WRITE);
   ShareMode: DWORD = FILE_SHARE_DELETE or FILE_SHARE_READ or FILE_SHARE_WRITE;
-  Flags : DWORD = FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE;
+  Flags : DWORD = FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE;  }
 begin
   if not FileExists(AFileName) then
   begin
@@ -456,6 +458,15 @@ begin
   OutStream.Position := 0;
 end;
 
+procedure FreeMemory(const FileName: string);
+var
+  StoredStream: TMemoryStream;
+begin
+  UpdateCurrentTempItems(FileName);
+  StoredStream := CurrentTempItems.StreamFromFileName(FileName, True);
+  StoredStream.Clear;
+  CurrentTempItems.SetDirtyFile(FileName);
+end;
 
 { TTempItems }
 
@@ -590,7 +601,10 @@ begin
           FPositions[FileIndex] := Position;
           InStream := FStreamList[FileIndex];
           InStream.Position := 0;
-          InStream.SaveToStream(FileStream);
+          if InStream.Size > 0 then
+          begin
+            InStream.SaveToStream(FileStream);
+          end;
           IsDirty[FileIndex] := False;
           Position := Position + InStream.Size;
           InStream.Clear;
@@ -617,7 +631,7 @@ begin
     end;
     FFileList.Clear;
   end;
-  DSiTrimWorkingSet;
+//  DSiTrimWorkingSet;
 end;
 
 function TTempItems.StreamFromFileName(const FileName: string; RestoreIfCached: boolean): TMemoryStream;
@@ -691,8 +705,11 @@ begin
         begin
           StreamSize := FPositions[StreamIndex + 1] - FPositions[StreamIndex];
 //          SetLength(ByteArray, StreamSize);
-          FileStream.Position := FPositions[StreamIndex];
-          Instream.CopyFrom(FileStream, StreamSize * SizeOf(Byte));
+          if StreamSize > 0 then
+          begin
+            FileStream.Position := FPositions[StreamIndex];
+            Instream.CopyFrom(FileStream, StreamSize * SizeOf(Byte));
+          end;
 //          FileStream.Read(ByteArray[0], Length(ByteArray) * SizeOf(Byte));
 //          Instream.Position := 0;
 //          Instream.Write(ByteArray[0], Length(ByteArray) * SizeOf(Byte));

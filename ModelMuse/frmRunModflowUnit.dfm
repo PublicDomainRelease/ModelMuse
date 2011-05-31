@@ -4,7 +4,7 @@ object frmRunModflow: TfrmRunModflow
   BorderStyle = bsNone
   Caption = 'frmRunModflow'
   ClientHeight = 31
-  ClientWidth = 118
+  ClientWidth = 364
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -23,5 +23,14 @@ object frmRunModflow: TfrmRunModflow
     Checked = True
     State = cbChecked
     TabOrder = 0
+  end
+  object comboModelSelection: TComboBox
+    Left = 104
+    Top = 6
+    Width = 241
+    Height = 21
+    Style = csDropDownList
+    ItemHeight = 13
+    TabOrder = 1
   end
 end

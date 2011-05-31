@@ -105,10 +105,9 @@ begin
         mtError, [mbOK], 0);
       Exit;
     end;
-    ListFileName := ExtractFileDir(edNameFile.FileName)
-      + '\' + ListFileName;
-
     SetCurrentDir(ExtractFileDir(edNameFile.FileName));
+    ListFileName := ExpandFileName(ListFileName);
+
     FReadModflowInputProperly := False;
     Execute('"' + ModflowImporterName + '" '
       + ExtractFileName(edNameFile.FileName), HandleModflowConsolLine);
@@ -131,7 +130,7 @@ begin
     FreeAndNil(frmShowHideObjects);
     FreeAndNil(frmGridColor);
     ImportModflow2005(ListFileName, XOrigin, YOrigin, GridAngle,
-      UpdateStatusBar, ShowProgress);
+      UpdateStatusBar, ShowProgress, mtParent);
 
   finally
     SetCurrentDir(CurrentDir);

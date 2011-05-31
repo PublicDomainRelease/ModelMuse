@@ -94,15 +94,15 @@ var
 
 begin
   // based on the subroutine  CBFSIZ in the MODPATH source code.
-  NSTEPS := PhastModel.ModflowFullStressPeriods.NumberOfSteps;
-  Grid := PhastModel.ModflowGrid;
+  NSTEPS := Model.ModflowFullStressPeriods.NumberOfSteps;
+  Grid := Model.ModflowGrid;
   NROW := Grid.RowCount;
   NCOL := Grid.ColumnCount;
-  NLAY := PhastModel.LayerStructure.ModflowLayerCount;
+  NLAY := Model.ModflowLayerCount;
   NHLAY := 0;
-  for GroupIndex := 1 to PhastModel.LayerStructure.Count - 1 do
+  for GroupIndex := 1 to Model.LayerStructure.Count - 1 do
   begin
-    Group := PhastModel.LayerStructure.LayerGroups[GroupIndex];
+    Group := Model.LayerStructure.LayerGroups[GroupIndex];
     if Group.Simulated then
     begin
       if Group.AquiferType > 0 then
@@ -156,7 +156,7 @@ begin
 
     CBF_Option := GetCBF_Option(AFileName);
 
-    if not PhastModel.ModflowStressPeriods.TransientModel then
+    if not Model.ModflowStressPeriods.TransientModel then
     begin
       // 'DO YOU WANT TO STOP COMPUTING PATHS AFTER A SPECIFIED LENGTH OF TIME ?';
       WriteString('* DO YOU WANT TO STOP COMPUTING PATHS AFTER A SPECIFIED LENGTH OF TIME ?');

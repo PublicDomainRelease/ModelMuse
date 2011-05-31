@@ -4,7 +4,7 @@ interface
 
 uses SysUtils, Classes, Contnrs, CustomModflowWriterUnit, ModflowDrtUnit,
   PhastModelUnit, ScreenObjectUnit, ModflowBoundaryUnit, ModflowCellUnit,
-  ModflowPackageSelectionUnit, OrderedCollectionUnit;
+  ModflowPackageSelectionUnit, OrderedCollectionUnit, GoPhastTypes;
 
 type
   TModflowDRT_Writer = class(TCustomListWriter)
@@ -23,7 +23,8 @@ type
     function Package: TModflowPackageSelection; override;
     function ParameterType: TParameterType; override;
     procedure WriteParameterCells(CellList: TValueCellList; NLST: Integer;
-      const VariableIdentifiers, DataSetIdentifier: string); override;
+      const VariableIdentifiers, DataSetIdentifier: string;
+      AssignmentMethod: TUpdateMethod); override;
     procedure WriteCell(Cell: TValueCell;
       const DataSetIdentifier, VariableIdentifiers: string); override;
   public
@@ -62,7 +63,7 @@ end;
 
 function TModflowDRT_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.DrtPackage;
+  result := Model.ModflowPackages.DrtPackage;
 end;
 
 function TModflowDRT_Writer.ParameterType: TParameterType;
@@ -77,7 +78,7 @@ var
   LocalLayer: integer;
 begin
   Drt_Cell := Cell as TDrt_Cell;
-  LocalLayer := PhastModel.LayerStructure.
+  LocalLayer := Model.
     DataSetLayerToModflowLayer(Drt_Cell.Layer);
   WriteInteger(LocalLayer);
   WriteInteger(Drt_Cell.Row+1);
@@ -140,7 +141,7 @@ const
   VariableIdentifiers = 'Condfact IFACE';
 begin
   WriteParameterDefinitions(DS2, DS2Instances, DS3A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot);
+    VariableIdentifiers, ErrorRoot, umAssign);
 end;
 
 procedure TModflowDRT_Writer.WriteDataSets4To6;
@@ -159,23 +160,23 @@ procedure TModflowDRT_Writer.WriteFile(const AFileName: string);
 var
   NameOfFile: string;
 begin
-  if not PhastModel.ModflowPackages.DrtPackage.IsSelected then
+  if not Model.ModflowPackages.DrtPackage.IsSelected then
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrDRT) then
+  if Model.PackageGeneratedExternally(StrDRT) then
   begin
     Exit;
   end;
   NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrDRT, PhastModel.UnitNumbers.UnitNumber(StrDRT), NameOfFile, foInput);
+  WriteToNameFile(StrDRT, Model.UnitNumbers.UnitNumber(StrDRT), NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
-  ClearTimeLists;
+  ClearTimeLists(Model);
   OpenFile(FileName(AFileName));
   try
     frmProgressMM.AddMessage('Writing DRN Package input.');
@@ -210,8 +211,9 @@ begin
   end;
 end;
 
-procedure TModflowDRT_Writer.WriteParameterCells(CellList: TValueCellList; NLST: Integer;
-  const VariableIdentifiers, DataSetIdentifier: string);
+procedure TModflowDRT_Writer.WriteParameterCells(CellList: TValueCellList;
+  NLST: Integer; const VariableIdentifiers, DataSetIdentifier: string;
+  AssignmentMethod: TUpdateMethod);
 var
   Cell: TDrt_Cell;
   CellIndex: Integer;

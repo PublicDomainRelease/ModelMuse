@@ -71,21 +71,25 @@ type
     FDataSet: TDataArray;
     FViewDirection: TViewDirection;
     FGrid: T2DGrid;
+    procedure EvaluateMinMaxLgr(out MaxValue, MinValue: Double;
+      DSValues: TStringList; 
+      ViewDirection: TViewDirection);
   protected
     // @name set Active for the selected column, row, or layer based
     // on @link(ActiveDataSet)
-    procedure EvaluateActive(var Active: T3DBooleanDataSet); 
+    procedure EvaluateActive(var Active: T3DBooleanDataSet;
+      AnActiveDataSet: TDataArray);
     {If @link(DataSet).DataType is rdtString, DSValues will contain a sorted
     list of the unigue values in @link(DataSet).  Otherwise,
     MaxValue and MinValue will be set to the maximum and minimum values in
     @link(DataSet) where Active is true.}
     procedure EvaluateMinMax(out MaxValue, MinValue: Double;
-      DSValues: TStringList; Active: T3DBooleanDataSet;
+      DSValues: TStringList; Active: T3DBooleanDataSet; ADataArray: TDataArray;
       SelectedColRowLayer: Integer);
       // @name calls @link(EvaluateActive) and @link(EvaluateMinMax)
       // and then assigns values to @link(FGrid).
     procedure AssignGridValues(out MinValue, MaxValue: double;
-      SelectedColRowLayer: integer; DSValues: TStringList);
+      SelectedColRowLayer: integer; DSValues: TStringList; ViewDirection: TViewDirection);
   public
     property ActiveDataSet: TDataArray read FActiveDataSet write FActiveDataSet;
     property DataSet: TDataArray read FDataSet write FDataSet;
@@ -103,11 +107,12 @@ type
     procedure CreateAndDrawContours(const ContourValues,
       LineThicknesses: TOneDRealArray; const ContourColors: TArrayOfColor32);
     // @name initializes the @link(TDataArray)s and then calls
-    // @link(AssignGridValues) and @link(CreateContours).
-    // @name is called if @link(TContours.SpecifyContour
+    // @link(AssignGridValues) and @link(CreateAndDrawContours).
+    // @name is called if @link(TContours.SpecifyContours
     // DataSet.Contours.SpecifyContours) is true;
     procedure DrawContours(const ContourValues, LineThicknesses: TOneDRealArray;
-      const ContourColors: TArrayOfColor32; SelectedColRowLayer: integer); overload;
+      const ContourColors: TArrayOfColor32; SelectedColRowLayer: integer;
+        ViewDirection: TViewDirection); overload;
     // @name updates MinValue and MaxValue base on limits
     // in @link(DataSet).ContourLimits.
     procedure GetSpecifiedMinMax(var MinValue: Double; var MaxValue: Double;
@@ -128,13 +133,13 @@ type
     property BitMap: TBitmap32 read FBitMap write FBitMap;
     property ZoomBox: TQRbwZoomBox2 read FZoomBox write FZoomBox;
     procedure DrawContours(SelectedColRowLayer: integer;
-      ColorParameters: TColorParameters); overload;
+      ColorParameters: TColorParameters; ViewDirection: TViewDirection); overload;
   end;
 
 
 implementation
 
-uses Math, RbwParser, BigCanvasMethods, frmContourDataUnit;
+uses Math, RbwParser, BigCanvasMethods, frmContourDataUnit, PhastModelUnit;
 
 function Interpolate(const C1, C2 : TPoint2D; Val1, Val2 : TFloat;
   ContourValue: TFloat) : TPoint2D;
@@ -472,7 +477,7 @@ end;
 
 procedure TMultipleContourCreator.DrawContours(const ContourValues,
   LineThicknesses: TOneDRealArray; const ContourColors: TArrayOfColor32;
-  SelectedColRowLayer: integer);
+  SelectedColRowLayer: integer; ViewDirection: TViewDirection);
 var
   DSValues: TStringList;
   MinValue, MaxValue: double;
@@ -490,15 +495,18 @@ begin
 
   DSValues := TStringList.Create;
   try
-    AssignGridValues(MinValue, MaxValue, SelectedColRowLayer, DSValues);
+    AssignGridValues(MinValue, MaxValue, SelectedColRowLayer, DSValues,
+      ViewDirection);
   finally
     DSValues.Free;
   end;
+  Assert(Length(ContourValues) = Length(LineThicknesses));
+  Assert(Length(ContourValues) = Length(ContourColors));
   CreateAndDrawContours(ContourValues, LineThicknesses, ContourColors);
 end;
 
 procedure TCustomContourCreator.AssignGridValues(out MinValue, MaxValue: double;
-  SelectedColRowLayer: integer; DSValues: TStringList);
+  SelectedColRowLayer: integer; DSValues: TStringList; ViewDirection: TViewDirection);
 var
   Active: T3DBooleanDataSet;
   ColIndex: Integer;
@@ -515,8 +523,8 @@ var
   Index: Integer;
   ColumnLimit, RowLimit, LayerLimit: integer;
 begin
-  EvaluateActive(Active);
-  EvaluateMinMax(MaxValue, MinValue, DSValues, Active, SelectedColRowLayer);
+  EvaluateMinMaxLgr(MaxValue, MinValue, DSValues, ViewDirection);
+  EvaluateActive(Active, ActiveDataSet);
 
   LayerLimit := -1;
   RowLimit := -1;
@@ -701,7 +709,7 @@ begin
 end;
 
 procedure TMultipleContourCreator.DrawContours(SelectedColRowLayer: integer;
-  ColorParameters: TColorParameters);
+  ColorParameters: TColorParameters; ViewDirection: TViewDirection);
 var
   DSValues: TStringList;
   ContourValues: TOneDRealArray;
@@ -746,8 +754,16 @@ begin
           Contours.Count := 0;
         end;
       end;
-      DrawContours(Contours.ContourValues, Contours.LineThicknesses,
-        Contours.ContourColors, SelectedColRowLayer);
+      // Make copies of arrays so they don't get
+      // altered in DrawContours.
+      // Even though they are passed as const variables,
+      // ContourColors can be altered in DataSet.Initialize.
+      ContourValues := Contours.ContourValues;
+      LineThicknesses := Contours.LineThicknesses;
+      ContourColors := Contours.ContourColors;
+
+      DrawContours(ContourValues, LineThicknesses,
+        ContourColors, SelectedColRowLayer, ViewDirection);
       Exit;
     end;
 
@@ -756,7 +772,8 @@ begin
 
     DSValues := TStringList.Create;
     try
-      AssignGridValues(MinValue, MaxValue, SelectedColRowLayer, DSValues);
+      AssignGridValues(MinValue, MaxValue, SelectedColRowLayer, DSValues,
+        ViewDirection);
       GetSpecifiedMinMax(MinValue, MaxValue, DSValues);
 
       if MaxValue > MinValue then
@@ -790,6 +807,8 @@ begin
       CreateAndDrawContours(ContourValues, LineThicknesses, ContourColors);
       Contours := TContours.Create;
       try
+        Assert(Length(ContourValues) = Length(LineThicknesses));
+        Assert(Length(ContourValues) = Length(ContourColors));
         Contours.ContourValues := ContourValues;
         Contours.LineThicknesses := LineThicknesses;
         Contours.ContourColors := ContourColors;
@@ -962,8 +981,95 @@ begin
   end;
 end;
 
+procedure TCustomContourCreator.EvaluateMinMaxLgr(out MaxValue, MinValue: Double;
+  DSValues: TStringList; 
+  ViewDirection: TViewDirection);
+var
+  LocalPhastModel: TPhastModel;
+  Active: T3DBooleanDataSet;
+  AnActiveDataSet: TDataArray;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildMaxValue: Double;
+  ChildMinValue: Double;
+begin
+  if DataSet.Model is TPhastModel then
+  begin
+    LocalPhastModel := TPhastModel(DataSet.Model);
+  end
+  else
+  begin
+    LocalPhastModel := (DataSet.Model as TChildModel).ParentModel as TPhastModel;
+  end;
+
+  AnActiveDataSet := LocalPhastModel.DataArrayManager.GetDataSetByName(rsActive);
+  EvaluateActive(Active, AnActiveDataSet);
+  case ViewDirection of
+    vdTop:
+      begin
+        EvaluateMinMax(MaxValue, MinValue, DSValues, Active,
+          LocalPhastModel.Grid.TopContourDataSet,
+          LocalPhastModel.Grid.SelectedLayer);
+      end;
+    vdFront:
+      begin
+        EvaluateMinMax(MaxValue, MinValue, DSValues, Active,
+          LocalPhastModel.Grid.FrontContourDataSet,
+          LocalPhastModel.Grid.SelectedRow);
+      end;
+    vdSide:
+      begin
+        EvaluateMinMax(MaxValue, MinValue, DSValues, Active,
+          LocalPhastModel.Grid.SideContourDataSet,
+          LocalPhastModel.Grid.SelectedColumn);
+      end;
+    else
+      Assert(False);
+  end;
+
+  if LocalPhastModel.LgrUsed then
+  begin
+    for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+      AnActiveDataSet := ChildModel.DataArrayManager.GetDataSetByName(rsActive);
+      EvaluateActive(Active, AnActiveDataSet);
+      case ViewDirection of
+        vdTop:
+          begin
+            EvaluateMinMax(ChildMaxValue, ChildMinValue, DSValues, Active,
+              ChildModel.Grid.TopContourDataSet,
+              ChildModel.Grid.SelectedLayer);
+          end;
+        vdFront:
+          begin
+            EvaluateMinMax(ChildMaxValue, ChildMinValue, DSValues, Active,
+              ChildModel.Grid.FrontContourDataSet,
+              ChildModel.Grid.SelectedRow);
+          end;
+        vdSide:
+          begin
+            EvaluateMinMax(ChildMaxValue, ChildMinValue, DSValues, Active,
+              ChildModel.Grid.SideContourDataSet,
+              ChildModel.Grid.SelectedColumn);
+          end;
+        else
+          Assert(False);
+      end;
+      if MinValue > ChildMinValue then
+      begin
+        MinValue := ChildMinValue;
+      end;
+      if MaxValue < ChildMaxValue then
+      begin
+        MaxValue := ChildMaxValue;
+      end;
+    end;
+  end;
+end;
+
 procedure TCustomContourCreator.EvaluateMinMax(out MaxValue, MinValue: Double;
-  DSValues: TStringList; Active: T3DBooleanDataSet;
+  DSValues: TStringList; Active: T3DBooleanDataSet; ADataArray: TDataArray;
   SelectedColRowLayer: Integer);
 var
   LayerIndex: Integer;
@@ -972,14 +1078,15 @@ var
   FoundFirst: Boolean;
   ActiveColumn, ActiveRow, ActiveLayer: integer;
 begin
+  ADataArray.Initialize;
   DSValues.Sorted := True;
   DSValues.Duplicates := dupIgnore;
   MinValue := 0;
   MaxValue := 0;
   FoundFirst := false;
-  for ColIndex := 0 to DataSet.ColumnCount - 1 do
+  for ColIndex := 0 to ADataArray.ColumnCount - 1 do
   begin
-    if DataSet.Orientation = dsoSide then
+    if ADataArray.Orientation = dsoSide then
     begin
       ActiveColumn := SelectedColRowLayer;
     end
@@ -987,9 +1094,9 @@ begin
     begin
       ActiveColumn := ColIndex;
     end;
-    for RowIndex := 0 to DataSet.RowCount - 1 do
+    for RowIndex := 0 to ADataArray.RowCount - 1 do
     begin
-      if DataSet.Orientation = dsoFront then
+      if ADataArray.Orientation = dsoFront then
       begin
         ActiveRow := SelectedColRowLayer;
       end
@@ -997,9 +1104,9 @@ begin
       begin
         ActiveRow := RowIndex;
       end;
-      for LayerIndex := 0 to DataSet.LayerCount - 1 do
+      for LayerIndex := 0 to ADataArray.LayerCount - 1 do
       begin
-        if DataSet.Orientation = dsoTop then
+        if ADataArray.Orientation = dsoTop then
         begin
           ActiveLayer := SelectedColRowLayer;
         end
@@ -1008,31 +1115,31 @@ begin
           ActiveLayer := LayerIndex;
         end;
         if Active[ActiveColumn, ActiveRow, ActiveLayer]
-          and DataSet.ContourGridValueOK(LayerIndex, RowIndex, ColIndex) then
+          and ADataArray.ContourGridValueOK(LayerIndex, RowIndex, ColIndex) then
         begin
-          if DataSet.DataType = rdtString then
+          if ADataArray.DataType = rdtString then
           begin
             FoundFirst := True;
-            DSValues.Add(DataSet.StringData[LayerIndex, RowIndex, ColIndex]);
+            DSValues.Add(ADataArray.StringData[LayerIndex, RowIndex, ColIndex]);
           end
           else if not FoundFirst then
           begin
-            case DataSet.DataType of
+            case ADataArray.DataType of
               rdtDouble:
                 begin
-                  MinValue := DataSet.RealData[LayerIndex, RowIndex, ColIndex];
+                  MinValue := ADataArray.RealData[LayerIndex, RowIndex, ColIndex];
                   MaxValue := MinValue;
                   FoundFirst := True;
                 end;
               rdtInteger:
                 begin
-                  MinValue := DataSet.IntegerData[LayerIndex, RowIndex, ColIndex];
+                  MinValue := ADataArray.IntegerData[LayerIndex, RowIndex, ColIndex];
                   MaxValue := MinValue;
                   FoundFirst := True;
                 end;
               rdtBoolean:
                 begin
-                  MinValue := Ord(DataSet.BooleanData[LayerIndex, RowIndex, ColIndex]);
+                  MinValue := Ord(ADataArray.BooleanData[LayerIndex, RowIndex, ColIndex]);
                   MaxValue := MinValue;
                   FoundFirst := True;
                 end;
@@ -1042,38 +1149,38 @@ begin
           end
           else
           begin
-            case DataSet.DataType of
+            case ADataArray.DataType of
               rdtDouble:
                 begin
-                  if MinValue > DataSet.RealData[LayerIndex, RowIndex, ColIndex] then
+                  if MinValue > ADataArray.RealData[LayerIndex, RowIndex, ColIndex] then
                   begin
-                    MinValue := DataSet.RealData[LayerIndex, RowIndex, ColIndex];
+                    MinValue := ADataArray.RealData[LayerIndex, RowIndex, ColIndex];
                   end
-                  else if MaxValue < DataSet.RealData[LayerIndex, RowIndex, ColIndex] then
+                  else if MaxValue < ADataArray.RealData[LayerIndex, RowIndex, ColIndex] then
                   begin
-                    MaxValue := DataSet.RealData[LayerIndex, RowIndex, ColIndex];
+                    MaxValue := ADataArray.RealData[LayerIndex, RowIndex, ColIndex];
                   end;
                 end;
               rdtInteger:
                 begin
-                  if MinValue > DataSet.IntegerData[LayerIndex, RowIndex, ColIndex] then
+                  if MinValue > ADataArray.IntegerData[LayerIndex, RowIndex, ColIndex] then
                   begin
-                    MinValue := DataSet.IntegerData[LayerIndex, RowIndex, ColIndex];
+                    MinValue := ADataArray.IntegerData[LayerIndex, RowIndex, ColIndex];
                   end
-                  else if MaxValue < DataSet.IntegerData[LayerIndex, RowIndex, ColIndex] then
+                  else if MaxValue < ADataArray.IntegerData[LayerIndex, RowIndex, ColIndex] then
                   begin
-                    MaxValue := DataSet.IntegerData[LayerIndex, RowIndex, ColIndex];
+                    MaxValue := ADataArray.IntegerData[LayerIndex, RowIndex, ColIndex];
                   end;
                 end;
               rdtBoolean:
                 begin
-                  if MinValue > Ord(DataSet.BooleanData[LayerIndex, RowIndex, ColIndex]) then
+                  if MinValue > Ord(ADataArray.BooleanData[LayerIndex, RowIndex, ColIndex]) then
                   begin
-                    MinValue := Ord(DataSet.BooleanData[LayerIndex, RowIndex, ColIndex]);
+                    MinValue := Ord(ADataArray.BooleanData[LayerIndex, RowIndex, ColIndex]);
                   end
-                  else if MaxValue < Ord(DataSet.BooleanData[LayerIndex, RowIndex, ColIndex]) then
+                  else if MaxValue < Ord(ADataArray.BooleanData[LayerIndex, RowIndex, ColIndex]) then
                   begin
-                    MaxValue := Ord(DataSet.BooleanData[LayerIndex, RowIndex, ColIndex]);
+                    MaxValue := Ord(ADataArray.BooleanData[LayerIndex, RowIndex, ColIndex]);
                   end;
                 end;
             else
@@ -1084,34 +1191,36 @@ begin
       end;
     end;
   end;
-  if DataSet.DataType = rdtString then
+  if ADataArray.DataType = rdtString then
   begin
     MinValue := 0;
     MaxValue := DSValues.Count - 1;
   end;
 end;
 
-procedure TCustomContourCreator.EvaluateActive(var Active: T3DBooleanDataSet);
+procedure TCustomContourCreator.EvaluateActive(var Active: T3DBooleanDataSet;
+  AnActiveDataSet: TDataArray);
 var
   LayerIndex: Integer;
   RowIndex: Integer;
   ColIndex: Integer;
 begin
+  AnActiveDataSet.Initialize;
   case DataSet.EvaluatedAt of
     eaBlocks:
       begin
-        SetLength(Active, ActiveDataSet.ColumnCount,
-          ActiveDataSet.RowCount, ActiveDataSet.LayerCount);
+        SetLength(Active, AnActiveDataSet.ColumnCount,
+          AnActiveDataSet.RowCount, AnActiveDataSet.LayerCount);
       end;
     eaNodes:
       begin
-        SetLength(Active, ActiveDataSet.ColumnCount + 1,
-          ActiveDataSet.RowCount + 1, ActiveDataSet.LayerCount + 1);
-        for ColIndex := 0 to ActiveDataSet.ColumnCount do
+        SetLength(Active, AnActiveDataSet.ColumnCount + 1,
+          AnActiveDataSet.RowCount + 1, AnActiveDataSet.LayerCount + 1);
+        for ColIndex := 0 to AnActiveDataSet.ColumnCount do
         begin
-          for RowIndex := 0 to ActiveDataSet.RowCount do
+          for RowIndex := 0 to AnActiveDataSet.RowCount do
           begin
-            for LayerIndex := 0 to ActiveDataSet.LayerCount do
+            for LayerIndex := 0 to AnActiveDataSet.LayerCount do
             begin
               Active[ColIndex, RowIndex, LayerIndex] := False;
             end;
@@ -1121,21 +1230,21 @@ begin
   else
     Assert(False);
   end;
-  for ColIndex := 0 to ActiveDataSet.ColumnCount - 1 do
+  for ColIndex := 0 to AnActiveDataSet.ColumnCount - 1 do
   begin
-    for RowIndex := 0 to ActiveDataSet.RowCount - 1 do
+    for RowIndex := 0 to AnActiveDataSet.RowCount - 1 do
     begin
-      for LayerIndex := 0 to ActiveDataSet.LayerCount - 1 do
+      for LayerIndex := 0 to AnActiveDataSet.LayerCount - 1 do
       begin
         case DataSet.EvaluatedAt of
           eaBlocks:
             begin
               Active[ColIndex, RowIndex, LayerIndex] :=
-                ActiveDataSet.BooleanData[LayerIndex, RowIndex, ColIndex];
+                AnActiveDataSet.BooleanData[LayerIndex, RowIndex, ColIndex];
             end;
           eaNodes:
             begin
-              if ActiveDataSet.BooleanData[LayerIndex, RowIndex, ColIndex] then
+              if AnActiveDataSet.BooleanData[LayerIndex, RowIndex, ColIndex] then
               begin
                 Active[ColIndex, RowIndex, LayerIndex] := True;
                 Active[ColIndex + 1, RowIndex, LayerIndex] := True;
@@ -1163,6 +1272,8 @@ var
   ContourCreator: TContourCreator;
   AValue: Double;
 begin
+  Assert(Length(ContourValues) = Length(LineThicknesses));
+  Assert(Length(ContourValues) = Length(ContourColors));
   ContourCreator := TContourCreator.Create;
   try
     ContourCreator.BitMap := BitMap;

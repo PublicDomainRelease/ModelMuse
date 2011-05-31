@@ -65,6 +65,7 @@ type
   { Public declarations }
   protected
     FSettingData2: boolean;
+    FvstChildModelNode: PVirtualNode;
     FvstModpathRoot: PVirtualNode;
     FvstModflowHfbNode: PVirtualNode;
     FvstModflowHobNode: PVirtualNode;
@@ -75,6 +76,7 @@ type
     FvstModflowEvtNode: PVirtualNode;
     FvstModflowRchNode: PVirtualNode;
     FvstModflowDrtNode: PVirtualNode;
+    FvstModflowDrtReturnLocation: PVirtualNode;
     FvstModflowDrnNode: PVirtualNode;
     FvstModflowRivNode: PVirtualNode;
     FvstModflowWellNode: PVirtualNode;
@@ -128,6 +130,7 @@ type
     FSettingData: boolean;
     FSettingData3: boolean;
     FDrtList: TList;
+    FDrtReturnList: TList;
     FHobList: TList;
     FDrnList: TList;
     FRivList: TList;
@@ -159,6 +162,7 @@ type
     FRiverList: TList;
     FMfWellList: TList;
     FModpathList: TList;
+    FChildModelList: TList;
     FUzfList: TList;
     // @name holds the lists of @link(TScreenObject)s that set PHAST Leaky
     // boundary conditions.
@@ -172,6 +176,7 @@ type
     // @name holds the lists of @link(TScreenObject)s that don't do anything.
     FOtherObjectsList: TList;
     FRchList: TList;
+    procedure SetCheckStates;
     function ShouldCheckBoxBeChecked(ScreenObject: TScreenObject): boolean;
       virtual; abstract;
     // @name adds one or more PVirtualNodes to @link(vstObjects)
@@ -180,7 +185,7 @@ type
     procedure AddScreenObject(AScreenObject: TScreenObject;
       const DataSetList: TStringList);
     // @name removes all base nodes that have no children.
-    procedure ClearBaseNodes(DataSetList: TStringList);
+    procedure ClearEmptyBaseNodes(DataSetList: TStringList);
     // @name creates all the basal nodes of @link(vstObjects)
     // that will hold the nodes
     // that have data about the @link(TScreenObject TScreenObjects).
@@ -259,7 +264,7 @@ uses StrUtils, ModflowPackagesUnit, ModflowPackageSelectionUnit,
   GoPhastTypes, frmGoPhastUnit, PhastModelUnit, SubscriptionUnit,
   ModflowHfbUnit, ModflowSfrUnit, ModflowEvtUnit, ModflowGageUnit, DataSetUnit,
   ModpathParticleUnit, ModflowUzfUnit, ModflowHobUnit, ModflowRchUnit,
-  ModflowEtsUnit, ModflowBoundaryUnit, ClassificationUnit;
+  ModflowEtsUnit, ModflowBoundaryUnit, ClassificationUnit, ModflowDrtUnit;
 
 {$R *.dfm}
 procedure TfrmCustomSelectObjects.vstObjectsInitNode(Sender: TBaseVirtualTree;
@@ -388,6 +393,12 @@ begin
       Data.Caption := Packages.DrtPackage.PackageIdentifier;
       Node.CheckType := ctTriStateCheckBox;
     end
+    else if Node = FvstModflowDrtReturnLocation then
+    begin
+      Data.Caption := 'Return location for '
+        + Packages.DrtPackage.PackageIdentifier;
+      Node.CheckType := ctTriStateCheckBox;
+    end
     else if Node = FvstModflowRchNode then
     begin
       Data.Caption := Packages.RchPackage.PackageIdentifier;
@@ -438,6 +449,11 @@ begin
       Data.Caption := Packages.ModPath.PackageIdentifier;
       Node.CheckType := ctTriStateCheckBox;
     end
+    else if Node = FvstChildModelNode then
+    begin
+      Data.Caption := 'Child Models';
+      Node.CheckType := ctTriStateCheckBox;
+    end
     else if Node = FvstModflowHydmodNode then
     begin
       Data.Caption := Packages.HydmodPackage.PackageIdentifier;
@@ -448,6 +464,9 @@ begin
     begin
       Exit;
     end;
+
+    if not (vsInitialized in ParentNode.States) then
+      Sender.IsVisible[ParentNode];
 
     ParentData := GetNodeData(ParentNode);
     if not Assigned(ParentData) or (ParentData.ScreenObjects = nil) then
@@ -799,6 +818,11 @@ begin
       InitializeData(FvstModflowDrtNode);
     end;
 
+    if AScreenObject.Tag = 1 then
+    begin
+      InitializeData(FvstModflowDrtReturnLocation);
+    end;
+
     if (AScreenObject.ModflowRchBoundary <> nil)
       and AScreenObject.ModflowRchBoundary.Used then
     begin
@@ -864,6 +888,10 @@ begin
       InitializeData(FvstModpathRoot);
     end;
 
+    if AScreenObject.ChildModel <> nil then
+    begin
+      InitializeData(FvstChildModelNode);
+    end;
 
     if PutInOtherObjects then
     begin
@@ -880,7 +908,7 @@ begin
   result := True;
 end;
 
-procedure TfrmCustomSelectObjects.ClearBaseNodes(DataSetList: TStringList);
+procedure TfrmCustomSelectObjects.ClearEmptyBaseNodes(DataSetList: TStringList);
 var
   DataSetIndex: integer;
   vstDataSetNode: PVirtualNode;
@@ -929,6 +957,7 @@ begin
   vstCheckDeleteNode(FvstModflowRivNode);
   vstCheckDeleteNode(FvstModflowDrnNode);
   vstCheckDeleteNode(FvstModflowDrtNode);
+  vstCheckDeleteNode(FvstModflowDrtReturnLocation);
   vstCheckDeleteNode(FvstModflowRchNode);
   vstCheckDeleteNode(FvstModflowResNode);
   vstCheckDeleteNode(FvstModflowEvtNode);
@@ -942,6 +971,7 @@ begin
 
   vstCheckDeleteNode(FvstModflowBoundaryConditionsRoot);
   vstCheckDeleteNode(FvstModpathRoot);
+  vstCheckDeleteNode(FvstChildModelNode);
 
   ParentNodes := TList.Create;
   try
@@ -1142,10 +1172,18 @@ begin
   end;
   InitializeNodeData(FvstModpathRoot, FModpathList);
 
+  if FvstChildModelNode = nil then
+  begin
+    FvstChildModelNode := vstObjects.InsertNode(
+      FvstModflowBoundaryConditionsRoot, amInsertAfter);
+    vstObjects.ReinitNode(FvstChildModelNode, False);
+  end;
+  InitializeNodeData(FvstChildModelNode, FChildModelList);
+
   if FvstOtherObjectsNode = nil then
   begin
     FvstOtherObjectsNode := vstObjects.InsertNode(
-      FvstModflowBoundaryConditionsRoot, amInsertAfter);
+      FvstChildModelNode, amInsertAfter);
     vstObjects.ReinitNode(FvstOtherObjectsNode, False);
   end;
   InitializeNodeData(FvstOtherObjectsNode, FOtherObjectsList);
@@ -1202,6 +1240,7 @@ begin
 
   InitializeMF_BoundaryNode(FvstModflowDrnNode, PriorNode, FDrnList);
   InitializeMF_BoundaryNode(FvstModflowDrtNode, PriorNode, FDrtList);
+  InitializeMF_BoundaryNode(FvstModflowDrtReturnLocation, PriorNode, FDrtReturnList);
   InitializeMF_BoundaryNode(FvstModflowEtsNode, PriorNode, FEtsList);
   InitializeMF_BoundaryNode(FvstModflowEvtNode, PriorNode, FEvtList);
   InitializeMF_BoundaryNode(FvstModflowGhbNode, PriorNode, FGhbList);
@@ -1333,6 +1372,7 @@ begin
   FRivList.Free;
   FDrnList.Free;
   FDrtList.Free;
+  FDrtReturnList.Free;
   FRchList.Free;
   FEvtList.Free;
   FEtsList.Free;
@@ -1343,6 +1383,7 @@ begin
   FHobList.Free;
   FHfbList.Free;
   FModpathList.Free;
+  FChildModelList.Free;
 
   inherited;
 end;
@@ -1371,6 +1412,7 @@ begin
   FRivList := TList.Create;
   FDrnList := TList.Create;
   FDrtList := TList.Create;
+  FDrtReturnList := TList.Create;
   FRchList := TList.Create;
   FEvtList := TList.Create;
   FEtsList := TList.Create;
@@ -1381,6 +1423,7 @@ begin
   FHobList := TList.Create;
   FHfbList := TList.Create;
   FModpathList := TList.Create;
+  FChildModelList := TList.Create;
 
   FCanEdit := True;
 
@@ -1421,6 +1464,7 @@ begin
   FvstModflowRivNode := nil;
   FvstModflowDrnNode := nil;
   FvstModflowDrtNode := nil;
+  FvstModflowDrtReturnLocation := nil;
   FvstModflowRchNode := nil;
   FvstModflowEvtNode := nil;
   FvstModflowEtsNode := nil;
@@ -1432,6 +1476,7 @@ begin
   FvstModflowGagNode := nil;
 
   FvstModpathRoot := nil;
+  FvstChildModelNode := nil;
 end;
 
 procedure TfrmCustomSelectObjects.SetCanEdit(const Value: boolean);
@@ -1523,6 +1568,7 @@ begin
   FRivList.Sort(ScreenObjectCompare);
   FDrnList.Sort(ScreenObjectCompare);
   FDrtList.Sort(ScreenObjectCompare);
+  FDrtReturnList.Sort(ScreenObjectCompare);
   FRchList.Sort(ScreenObjectCompare);
   FEvtList.Sort(ScreenObjectCompare);
   FEtsList.Sort(ScreenObjectCompare);
@@ -1533,6 +1579,7 @@ begin
   FHobList.Sort(ScreenObjectCompare);
   FHfbList.Sort(ScreenObjectCompare);
   FModpathList.Sort(ScreenObjectCompare);
+  FChildModelList.Sort(ScreenObjectCompare);
   for Index := 0 to FDataSetLists.Count - 1 do
   begin
     List := FDataSetLists[Index] as TList;
@@ -1576,6 +1623,8 @@ begin
     ChildData := vstObjects.GetNodeData(ChildNode);
     if ChildData.ScreenObjects <> nil then
     begin
+      UpdateChildCheck(ChildNode);
+      StateChanged := False;
       for ScreenObjectIndex := 0 to ChildData.ScreenObjects.Count - 1 do
       begin
         ScreenObject := ChildData.ScreenObjects[ScreenObjectIndex];
@@ -1585,12 +1634,12 @@ begin
         end
         else
         begin
-          StateChanged := False;
+//          StateChanged := False;
           SetSubsequentNodesCheckState(StateChanged, ScreenObject, ChildData);
-          if StateChanged then
-          begin
-            break;
-          end;
+//          if StateChanged then
+//          begin
+//            break;
+//          end;
         end;
       end;
     end;
@@ -1603,7 +1652,7 @@ begin
       if Data.GroupState <> ChildData.GroupState then
       begin
         Data.GroupState := vgs3State;
-        break;
+//        break;
       end;
     end;
   end;
@@ -1968,6 +2017,8 @@ var
   Index: Integer;
   DataSetList: TStringList;
   SortedDataSetList: TStringList;
+  DrainReturn: TDrainReturn;
+  ReturnLocationObject: TScreenObject;
 begin
   if FSettingData then
   begin
@@ -1983,19 +2034,37 @@ begin
         CreateBaseNodes(DataSetList);
         SortedDataSetList.Assign(DataSetList);
         SortedDataSetList.Sorted := True;
+
+        for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+        begin
+          AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
+          AScreenObject.Tag := 0
+        end;
+        for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+        begin
+          AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
+
+          if (AScreenObject.ModflowDrtBoundary <> nil)
+            and AScreenObject.ModflowDrtBoundary.Used then
+          begin
+            DrainReturn := AScreenObject.ModflowDrtBoundary.DrainReturn;
+            if DrainReturn.ReturnChoice = rtObject then
+            begin
+              ReturnLocationObject := DrainReturn.ReturnObject.
+                ScreenObject as TScreenObject;
+              ReturnLocationObject.Tag := 1;
+            end;
+          end;
+        end;
+
         for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
         begin
           AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
           AddScreenObject(AScreenObject, SortedDataSetList);
         end;
         SortScreenObjectLists;
-        ClearBaseNodes(DataSetList);
-        UpdateChildCheck(FvstAllObjectsNode);
-        UpdateChildCheck(FvstOtherObjectsNode);
-        SetRootNodeStates(FvstPhastBoundaryConditionsRoot);
-        SetRootNodeStates(FvstModflowBoundaryConditionsRoot);
-        UpdateChildCheck(FvstModpathRoot);
-        SetRootNodeStates(FvstDataSetRootNode);
+        ClearEmptyBaseNodes(DataSetList);
+        SetCheckStates;
       finally
         vstObjects.EndUpdate;
       end;
@@ -2006,6 +2075,19 @@ begin
   finally
     FSettingData := False;
   end;
+end;
+
+procedure TfrmCustomSelectObjects.SetCheckStates;
+begin
+  UpdateChildCheck(FvstAllObjectsNode);
+  UpdateChildCheck(FvstOtherObjectsNode);
+  SetRootNodeStates(FvstPhastBoundaryConditionsRoot);
+  SetRootNodeStates(FvstModflowBoundaryConditionsRoot);
+  UpdateChildCheck(FvstModpathRoot);
+  SetRootNodeStates(FvstDataSetRootNode);
+  UpdateChildCheck(FvstChildModelNode);
+  UpdateChildCheck(FvstSizeNode);
+
 end;
 
 procedure TfrmCustomSelectObjects.GetData;

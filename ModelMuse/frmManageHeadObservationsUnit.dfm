@@ -82,10 +82,10 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
         TabOrder = 0
         OnExit = rdgObservationsExit
-        OnMouseDown = rdgObservationsMouseDown
         OnMouseUp = rdgObservationsMouseUp
         OnSelectCell = rdgObservationsSelectCell
         OnSetEditText = rdgObservationsSetEditText
+        AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False
@@ -377,10 +377,6 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
     object tabFilters: TTabSheet
       Caption = 'Filters'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgRowFilter: TRbwRowDataGrid
         Left = 0
         Top = 0
@@ -394,6 +390,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
         TabOrder = 0
         OnSetEditText = rdgRowFilterSetEditText
+        AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False

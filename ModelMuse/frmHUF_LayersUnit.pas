@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, ExtCtrls, ComCtrls, Buttons,
   ArgusDataEntry, JvExStdCtrls, JvCombobox, JvListComb, Grids, RbwDataGrid4,
-  CheckLst, HufDefinition, RequiredDataSetsUndoUnit;
+  CheckLst, HufDefinition, RequiredDataSetsUndoUnit, GoPhastTypes;
 
 type
   THufParamGridColumns = (hpgcName, hpgcType, hpgcUseZone, hpgcUseMultiplier);
@@ -88,6 +88,8 @@ type
       FNewHydrogeologicUnits: THydrogeologicUnits;
       FOldHydrogeologicUnits: THydrogeologicUnits;
       FNewDataSets: TList;
+    procedure AssignNewHufUnits(AModel: TBaseModel);
+    procedure AssignOldHufUnits(AModel: TBaseModel);
     protected
       function Description: string; override;
     Public
@@ -103,7 +105,7 @@ var
 implementation
 
 uses
-  frmGoPhastUnit, OrderedCollectionUnit;
+  frmGoPhastUnit, OrderedCollectionUnit, PhastModelUnit;
 
 {$R *.dfm}
 
@@ -140,7 +142,7 @@ begin
         result := MessageDlg('No parameters have been associated '
           +'with the following Hydrogeologic units.  '
           +'Are you sure you want to close the dialog box?'
-          + #13#10#13#10
+          + sLineBreak + sLineBreak
           + Names.Text,
           mtConfirmation, [mbYes, mbNo], 0) = mrYes;
       end;
@@ -174,7 +176,7 @@ begin
           result := MessageDlg('The following parameters are not associated '
             +'with any Hydrogeologic units.  '
             +'Are you sure you want to close the dialog box?'
-            + #13#10#13#10
+            + sLineBreak + sLineBreak
             + Names.Text,
             mtConfirmation, [mbYes, mbNo], 0) = mrYes;
         end;
@@ -990,21 +992,67 @@ begin
 end;
 
 procedure TUndoHufLayers.DoCommand;
+var
+  AModel: TBaseModel;
 begin
   inherited;
-  frmGoPhast.PhastModel.HydrogeologicUnits.NewDataSets := FNewDataSets;
-  frmGoPhast.PhastModel.HydrogeologicUnits.ClearNewDataSets;
-  frmGoPhast.PhastModel.HydrogeologicUnits := FNewHydrogeologicUnits;
+  AModel := frmGoPhast.PhastModel;
+  AssignNewHufUnits(AModel);
   UpdatedRequiredDataSets;
 end;
 
 procedure TUndoHufLayers.Undo;
+var
+  AModel: TBaseModel;
 begin
   inherited;
-  frmGoPhast.PhastModel.HydrogeologicUnits.NewDataSets := FNewDataSets;
-  frmGoPhast.PhastModel.HydrogeologicUnits.RemoveNewDataSets;
-  frmGoPhast.PhastModel.HydrogeologicUnits := FOldHydrogeologicUnits;
+  AModel := frmGoPhast.PhastModel;
+  AssignOldHufUnits(AModel);
   UpdatedRequiredDataSets;
+end;
+
+procedure TUndoHufLayers.AssignOldHufUnits(AModel: TBaseModel);
+var
+  LocalModel: TCustomModel;
+  ChildIndex: Integer;
+  PhastModel: TPhastModel;
+  ChildModel: TChildModel;
+begin
+  LocalModel := AModel as TCustomModel;
+  LocalModel.HydrogeologicUnits.NewDataSets := FNewDataSets;
+  LocalModel.HydrogeologicUnits.RemoveNewDataSets;
+  LocalModel.HydrogeologicUnits := FOldHydrogeologicUnits;
+  if AModel is TPhastModel then
+  begin
+    PhastModel := TPhastModel(AModel);
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      AssignOldHufUnits(ChildModel);
+    end;
+  end;
+end;
+
+procedure TUndoHufLayers.AssignNewHufUnits(AModel: TBaseModel);
+var
+  LocalModel: TCustomModel;
+  ChildIndex: Integer;
+  PhastModel: TPhastModel;
+  ChildModel: TChildModel;
+begin
+  LocalModel := AModel as TCustomModel;
+  LocalModel.HydrogeologicUnits.NewDataSets := FNewDataSets;
+  LocalModel.HydrogeologicUnits.ClearNewDataSets;
+  LocalModel.HydrogeologicUnits := FNewHydrogeologicUnits;
+  if AModel is TPhastModel then
+  begin
+    PhastModel := TPhastModel(AModel);
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      AssignNewHufUnits(ChildModel);
+    end;
+  end;
 end;
 
 end.

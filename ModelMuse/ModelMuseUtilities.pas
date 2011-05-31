@@ -54,6 +54,8 @@ procedure SubtractVectors(const v1, v2: T3DRealPoint; out result: T3DRealPoint);
 
 function FortranFloatToStr(Value: Extended): string;
 
+function FortranStrToFloat(AString: string): Extended;
+
 function TitleCase(AString: string): string;
 
 // @name converts Value to a string that includes the thousands separator
@@ -63,6 +65,8 @@ function IntToStrFormatted(Value: integer): string;
 procedure DSiTrimWorkingSet;
 
 function QuoteFileName(AName: string): string;
+
+function FixShapeFileFieldName(FieldName: string): string;
 
 implementation
 
@@ -182,6 +186,22 @@ begin
   end;
 end;
 
+function FortranStrToFloat(AString: string): Extended;
+var
+  OldDecimalSeparator: Char;
+begin
+  OldDecimalSeparator := DecimalSeparator;
+  try
+    DecimalSeparator := '.';
+    AString := StringReplace(AString, ',', '.', [rfReplaceAll, rfIgnoreCase]);
+    AString := StringReplace(AString, 'd', 'e', [rfReplaceAll, rfIgnoreCase]);
+    result := StrToFloat(AString);
+  finally
+    DecimalSeparator := OldDecimalSeparator;
+  end;
+end;
+
+
 function IntToStrFormatted(Value: integer): string;
 var
   Negative: Boolean;
@@ -241,6 +261,15 @@ begin
   begin
     result := AName;
   end;
+end;
+
+function FixShapeFileFieldName(FieldName: string): string;
+begin
+  While (Length(FieldName) > 0) and (FieldName[Length(FieldName)] = '_') do
+  begin
+    SetLength(FieldName, Length(FieldName) -1);
+  end;
+  result := FieldName;
 end;
 
 end.

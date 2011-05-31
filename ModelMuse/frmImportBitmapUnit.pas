@@ -106,8 +106,6 @@ type
     procedure rgViewDirectionClick(Sender: TObject);
     procedure ZoomBoxImage32MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer; Layer: TCustomLayer);
-    procedure dgPointsMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure seNumRowsChange(Sender: TObject);
     procedure sbAddRowClick(Sender: TObject);
     procedure sbInsertRowClick(Sender: TObject);
@@ -248,20 +246,6 @@ begin
   ZoomBox.Image32.Invalidate;
 end;
 
-procedure TfrmImportBitmap.dgPointsMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    dgPoints.Options := dgPoints.Options + [goEditing];
-  end
-  else
-  begin
-    dgPoints.Options := dgPoints.Options - [goEditing];
-  end;
-end;
-  
 procedure TfrmImportBitmap.EnableOKButton;
 var
   ShouldEnable: boolean;
@@ -608,6 +592,7 @@ procedure TfrmImportBitmap.ImportWorldFile(const FileName: string);
     SpacePosition: integer;
     CommaPosition: integer;
   begin
+    try
     SpacePosition := Pos(Space,AString);
     CommaPosition := Pos(Comma,AString);
     if (SpacePosition > 0) and (CommaPosition > 0) then
@@ -637,6 +622,9 @@ procedure TfrmImportBitmap.ImportWorldFile(const FileName: string);
     begin
       Result := AString;
       AString := '';
+    end;
+    finally
+      result := Trim(Result);
     end;
   end;
 var
@@ -714,12 +702,12 @@ begin
       sftRaster:
         begin
           Assert(WorldFile.Count >= 6);
-          A := StrToFloat(WorldFile[0]);
-          D := StrToFloat(WorldFile[1]);
-          B := StrToFloat(WorldFile[2]);
-          E := StrToFloat(WorldFile[3]);
-          C := StrToFloat(WorldFile[4]);
-          F := StrToFloat(WorldFile[5]);
+          A := StrToFloat(Trim(WorldFile[0]));
+          D := StrToFloat(Trim(WorldFile[1]));
+          B := StrToFloat(Trim(WorldFile[2]));
+          E := StrToFloat(Trim(WorldFile[3]));
+          C := StrToFloat(Trim(WorldFile[4]));
+          F := StrToFloat(Trim(WorldFile[5]));
           PixelX := 0;
           PixelY := 0;
           RealWorldX := A*PixelX + B*PixelY + C;

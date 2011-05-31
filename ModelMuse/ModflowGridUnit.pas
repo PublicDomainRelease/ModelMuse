@@ -6,7 +6,7 @@ uses
   Types, // included to allow inlining or "Point" function.
   SysUtils, Classes, Controls, Graphics, Forms,
   GR32, // TBitmap32 and TFloatRect are declared in GR32.
-  GoPhastTypes, AbstractGridUnit, ZoomBox2, OpenGL12x;
+  GoPhastTypes, AbstractGridUnit, ZoomBox2, OpenGL12x, DataSetUnit;
 
 type
   TModflowGrid = class(TCustomGrid)
@@ -72,6 +72,8 @@ type
     {@name draws a side view of the grid on TBitmap32.}
     procedure DrawSide(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2); override;
+    procedure DrawTop(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2); override;
     // @name sets Elevations to a 3D array of real numbers.  Each
     // number in the array is the elevation of one corner of a cell or
     // element.
@@ -94,13 +96,25 @@ type
     procedure SetCellThickness(const Column, Row, Layer: integer;
       const Value: real); override;
     function GetTwoDCellElevations(const Col, Row: integer): TOneDRealArray; override;
+    procedure SetFrontContourDataSet(const Value: TDataArray); override;
+    procedure SetSideContourDataSet(const Value: TDataArray); override;
+    procedure SetThreeDContourDataSet(const Value: TDataArray); override;
+    procedure SetTopContourDataSet(const Value: TDataArray); override;
+    // See @link(SideDataSet).
+    procedure SetSideDataSet(const Value: TDataArray); override;
+    // See @link(ThreeDDataSet).
+    procedure SetThreeDDataSet(const Value: TDataArray); override;
+    // See @link(TopDataSet).
+    procedure SetTopDataSet(const Value: TDataArray); override;
+    // See @link(FrontDataSet).
+    procedure SetFrontDataSet(const Value: TDataArray); override;
   public
     procedure UpdateCellElevations;
     procedure NotifyGridChanged(Sender: TObject);
     {Copies the properties of Source into self.  Only those properties that
      normally would be saved to file are copied.}
     procedure Assign(Source: TPersistent); override;
-    constructor Create;
+    constructor Create(Model: TBaseModel);
     function ThreeDElementCorner(const Column, Row, Layer: integer):
       T3DRealPoint; override;
     // @name is the elevations of the top and bottom of the model layers
@@ -142,7 +156,7 @@ type
     procedure WriteDELC(const DiscretizationWriter: TObject);
     procedure WriteTOP(const DiscretizationWriter: TObject);
     procedure WriteBOTM(const DiscretizationWriter: TObject;
-      const Model: TObject);
+      const Model: TBaseModel);
     procedure CheckColumnWidths;
     procedure CheckRowHeights;
     procedure CheckRowToColumnRatios;
@@ -152,7 +166,7 @@ type
 implementation
 
 uses GR32_Polygons, BigCanvasMethods, frmGoPhastUnit, SparseArrayUnit,
-  ModelMuseUtilities, LayerStructureUnit, DataSetUnit, FastGEO,
+  ModelMuseUtilities, LayerStructureUnit, FastGEO,
   ModflowDiscretizationWriterUnit, PhastModelUnit, frmErrorsAndWarningsUnit, 
   IsosurfaceUnit;
 
@@ -299,6 +313,14 @@ var
   UnitBottom, UnitTop, UnitHeight: Real;
   FractionIndex: Integer;
   DataArrayManager: TDataArrayManager;
+  Model: TCustomModel;
+  LayerFractions: TDoubleDynArray;
+  ChildModel: TChildModel;
+  Discretization: TChildDiscretizationCollection;
+  CheckIndex: Integer;
+  UnitThickness: Real;
+  LayerTop: Real;
+  LayerBottom: Real;
 begin
   if not FCellElevationsNeedUpdating then Exit;
   if (ColumnCount <= 0) or (RowCount <= 0) or (LayerCount <= 0) then
@@ -306,21 +328,45 @@ begin
     Exit;
   end;
 
-  Assert(frmGoPhast.PhastModel.LayerStructure.LayerCount = LayerCount);
+  Model := FModel as TCustomModel;
+  Assert(Model.LayerCount = LayerCount);
   BeginLayerChange;
   try
     LayerIndex := -1;
-    UnitTopIndex := 0;
+    UnitTopIndex := -1;
     SetLength(FLayerElevations, ColumnCount, RowCount, LayerCount+1);
 
-    DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+    DataArrayManager := Model.DataArrayManager;
     for LayerGroupIndex := 0 to
-      frmGoPhast.PhastModel.LayerStructure.Count -1 do
+      Model.LayerStructure.Count -1 do
     begin
-      LayerGroup := frmGoPhast.PhastModel.LayerStructure.
+      LayerGroup := Model.LayerStructure.
         Items[LayerGroupIndex] as TLayerGroup;
-      UnitBottomIndex := LayerIndex + LayerGroup.LayerCount;
+      if not Model.LayerGroupUsed(LayerGroup) then
+      begin
+        Continue;
+      end;
+      if LayerGroup.Simulated then
+      begin
+        LayerFractions := Model.LayerFractions(LayerGroup);
+        UnitBottomIndex := UnitTopIndex + Length(LayerFractions) + 1;
+        
+        // Check that LayerFractions is valid.
+        if Length(LayerFractions) >= 2 then
+        begin
+          for CheckIndex := 0 to Length(LayerFractions) - 2 do
+          begin
+            Assert(LayerFractions[CheckIndex] > LayerFractions[CheckIndex+1]); 
+          end;
+        end;
+      end
+      else
+      begin
+        UnitBottomIndex := UnitTopIndex + 1;
+        LayerFractions := nil;
+      end;
       DataArray := DataArrayManager.GetDataSetByName(LayerGroup.DataArrayName);
+      Assert(DataArray <> nil);
       DataArray.Initialize;
       for ColIndex := 0 to ColumnCount - 1 do
       begin
@@ -335,10 +381,9 @@ begin
       Inc(LayerIndex);
       if LayerGroup.Simulated then
       begin
-        for FractionIndex := 0 to LayerGroup.LayerCollection.Count - 1 do
+        for FractionIndex := 0 to Length(LayerFractions) - 1 do
         begin
-          Fraction := (LayerGroup.LayerCollection.Items[FractionIndex]
-            as TLayerFraction).Fraction;
+          Fraction := LayerFractions[FractionIndex];
           for ColIndex := 0 to ColumnCount - 1 do
           begin
             for RowIndex := 0 to RowCount - 1 do
@@ -348,10 +393,38 @@ begin
               UnitHeight := UnitTop - UnitBottom;
 
               CellElevation[ColIndex,RowIndex,LayerIndex] :=
-                UnitHeight*Fraction + UnitBottom;
+                UnitBottom + UnitHeight*Fraction;
             end;
           end;
           Inc(LayerIndex);
+        end;
+      end;
+      if (Model is TChildModel) then
+      begin
+        ChildModel := TChildModel(Model);
+        if LayerGroup = ChildModel.Discretization.BottomLayerGroup then
+        begin
+          Discretization := ChildModel.Discretization;
+          if (LayerGroupIndex < Model.LayerStructure.Count -1)
+            or (Discretization.BottomLayerInUnit < LayerGroup.LayerCount -1) then
+          begin
+            for ColIndex := 0 to ColumnCount - 1 do
+            begin
+              for RowIndex := 0 to RowCount - 1 do
+              begin
+                UnitTop := CellElevation[ColIndex,RowIndex,UnitTopIndex];
+                UnitBottom := CellElevation[ColIndex,RowIndex,UnitBottomIndex];
+                UnitThickness := UnitTop - UnitBottom;
+                LayerTop := UnitTop - UnitThickness/LayerGroup.LayerCount
+                  * Discretization.BottomLayerInUnit;
+                LayerBottom := UnitTop - UnitThickness/LayerGroup.LayerCount
+                  * (Discretization.BottomLayerInUnit+1);
+
+                CellElevation[ColIndex,RowIndex,UnitBottomIndex] :=
+                  (LayerTop + LayerBottom)/2;
+              end;
+            end;
+          end;
         end;
       end;
       UnitTopIndex := UnitBottomIndex;
@@ -501,16 +574,16 @@ begin
 end;
 
 procedure TModflowGrid.WriteBOTM(const DiscretizationWriter: TObject;
-  const Model: TObject);
+  const Model: TBaseModel);
 var
-  PhastModel: TPhastModel;
+  LocalModel: TCustomModel;
   LayerIndex: integer;
 begin
-  PhastModel := Model as TPhastModel;
+  LocalModel := Model as TCustomModel;
   for LayerIndex := 1 to LayerCount do
   begin
     WriteALayerArray(DiscretizationWriter, LayerIndex, 'BOTM, '
-      + PhastModel.LayerStructure.ModflowLayerBottomDescription(LayerIndex-1));
+      + LocalModel.ModflowLayerBottomDescription(LayerIndex-1));
   end;
 end;
 
@@ -676,6 +749,10 @@ begin
 end;
 
 procedure TModflowGrid.NotifyGridChanged(Sender: TObject);
+var
+  ChildIndex: Integer;
+  LocalModel: TPhastModel;
+  ChildModel: TChildModel;
 begin
   if frmGoPhast.PhastModel <> nil then
   begin
@@ -684,6 +761,18 @@ begin
   FCellElevationsNeedUpdating:= True;
   FCellPointsNeedUpdating:= True;
   NeedToRecalculateCellColors;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+      if ChildModel <> nil then
+      begin
+        ChildModel.ModflowGrid.NotifyGridChanged(Sender);
+      end;
+    end;
+  end;
   frmGoPhast.InvalidateAllViews;
 end;
 
@@ -694,26 +783,40 @@ var
   WarningString: string;
   ErrorString: string;
   Ratio: double;
+  Start: Integer;
+  Stop: Integer;
 begin
   ErrorString := 'The width of one or more ' + WarningRoot   + ' is zero.';
   for Index := 0 to Length(AnArray) - 1 do
   begin
     if AnArray[Index] = 0 then
     begin
-      frmErrorsAndWarnings.AddError(ErrorString, IntToStr(Index+1));
+      frmErrorsAndWarnings.AddError(FModel, ErrorString, IntToStr(Index+1));
     end;
+  end;
+
+  if FModel is TChildModel then
+  begin
+    // don' check the outside rows and columns in child models.
+    Start := 1;
+    Stop := Length(AnArray) - 1
+  end
+  else
+  begin
+    Start := 0;
+    Stop := Length(AnArray)
   end;
 
   WarningString := 'The ratio between the widths of two adjacent '
     + WarningRoot + ' exceeds the recommended maximum of 1.5';
-  for Index := 1 to Length(AnArray) - 1 do
+  for Index := Start+1 to Stop - 1 do
   begin
     if (AnArray[Index-1] <> 0) and (AnArray[Index] <> 0) then
     begin
       Ratio := AnArray[Index-1]/AnArray[Index];
       if (Ratio > 1.5) or (Ratio < 1/1.5) then
       begin
-        frmErrorsAndWarnings.AddWarning(WarningString,
+        frmErrorsAndWarnings.AddWarning(FModel, WarningString,
           IntToStr(Index) + ', ' + IntToStr(Index+1));
       end;
     end;
@@ -750,7 +853,7 @@ begin
           Elevations[ColIndex, RowIndex, LayerIndex-1])
           and Active.BooleanData[LayerIndex-1, RowIndex, ColIndex] then
         begin
-          frmErrorsAndWarnings.AddError(ErrorString,
+          frmErrorsAndWarnings.AddError(FModel,ErrorString,
             'Column = ' + IntToStr(ColIndex+1)
             + '; Row = ' + IntToStr(RowIndex+1)
             + '; Layer = ' + IntToStr(LayerIndex));
@@ -1338,19 +1441,19 @@ begin
     + 'exceed the recommended maximum of 10.';
   if (MinCol <> 0) and (MaxRow/MinCol > 10) then
   begin
-    frmErrorsAndWarnings.AddWarning(WarningString,
+    frmErrorsAndWarnings.AddWarning(FModel, WarningString,
       'Column ' + IntToStr(MinColIndex+1) + ', '
       + 'Row ' + IntToStr(MaxRowIndex+1));
   end;
   if (MinRow <> 0) and (MaxCol/MinRow > 10) then
   begin
-    frmErrorsAndWarnings.AddWarning(WarningString,
+    frmErrorsAndWarnings.AddWarning(FModel, WarningString,
       'Column ' + IntToStr(MaxColIndex+1) + ', '
       + 'Row ' + IntToStr(MinRowIndex+1));
   end;
 end;
 
-constructor TModflowGrid.Create;
+constructor TModflowGrid.Create(Model: TBaseModel);
 begin
   inherited;
   FCellElevationsNeedUpdating:= True;
@@ -1371,6 +1474,9 @@ var
   ColumnLimit, LayerLimit: integer;
   P: TPolygon32;
   MultiplePolygons: boolean;
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModelItem: TChildModelItem;
 begin
   // for the time being, don't worry about coloring the grid.
   FrontPoints := FrontCellPoints(SelectedRow);
@@ -1475,6 +1581,19 @@ begin
   DrawOrdinaryFrontLayers(BitMap, ZoomBox, FrontPoints);
   DrawOrdinaryFrontColumns(BitMap, ZoomBox, FrontPoints);
   DrawFrontContours(ZoomBox, BitMap);
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.ModelSelection = msModflowLGR then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModelItem := LocalModel.ChildModels[ChildIndex];
+//        ChildModelItem.ChildModel.DataArrayManager.UpdateDataSetDimensions;
+        ChildModelItem.ChildModel.ModflowGrid.DrawFront(BitMap, ZoomBox);
+      end;
+    end;
+  end;
 end;
 
 function TModflowGrid.SideCellPoints(Col: integer): T2DRealPointArray;
@@ -1514,6 +1633,9 @@ var
   RowLimit, LayerLimit: integer;
   P: TPolygon32;
   MultiplePolygons: boolean;
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModelItem: TChildModelItem;
 begin
   // for the time being, don't worry about coloring the grid.
   SidePoints := SideCellPoints(SelectedColumn);
@@ -1617,6 +1739,42 @@ begin
   DrawOrdinarySideLayers(BitMap, ZoomBox, SidePoints);
   DrawOrdinarySideRows(BitMap, ZoomBox, SidePoints);
   DrawSideContours(ZoomBox, BitMap);
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.ModelSelection = msModflowLGR then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModelItem := LocalModel.ChildModels[ChildIndex];
+//        ChildModelItem.ChildModel.DataArrayManager.UpdateDataSetDimensions;
+        ChildModelItem.ChildModel.ModflowGrid.DrawSide(BitMap, ZoomBox);
+      end;
+    end;
+  end;
+end;
+
+procedure TModflowGrid.DrawTop(const BitMap: TBitmap32;
+  const ZoomBox: TQRbwZoomBox2);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModelItem: TChildModelItem;
+begin
+  inherited;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.ModelSelection = msModflowLGR then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModelItem := LocalModel.ChildModels[ChildIndex];
+//        ChildModelItem.ChildModel.DataArrayManager.UpdateDataSetDimensions;
+        ChildModelItem.ChildModel.ModflowGrid.DrawTop(BitMap, ZoomBox);
+      end;
+    end;
+  end;
 end;
 
 procedure TModflowGrid.GetCellCornerElevations(const EvalAt: TEvaluatedAt;
@@ -2746,6 +2904,68 @@ begin
   end;
 end;
 
+procedure TModflowGrid.SetFrontContourDataSet(const Value: TDataArray);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
+begin
+  inherited;
+  if (Value <> nil) and (Value.Name = '') then
+  begin
+    Exit;
+  end;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+        ChildDataArray := GetChildDataArray(Value, ChildModel);
+        if (Value <> nil) and (ChildDataArray <> nil) then
+        begin
+          ChildDataArray.ContourLimits := Value.ContourLimits;
+        end;
+        ChildModel.Grid.FrontContourDataSet := ChildDataArray;
+      end;
+    end;
+  end;
+end;
+
+procedure TModflowGrid.SetFrontDataSet(const Value: TDataArray);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
+begin
+  inherited;
+  if (Value <> nil) and (Value.Name = '') then
+  begin
+    Exit;
+  end;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+        ChildDataArray := GetChildDataArray(Value, ChildModel);
+        if (Value <> nil) and (ChildDataArray <> nil) then
+        begin
+          ChildDataArray.Limits := Value.Limits;
+        end;
+        ChildModel.Grid.FrontDataSet := ChildDataArray;
+      end;
+    end;
+  end;
+end;
+
 procedure TModflowGrid.SetLayerElevations(const Value: TThreeDRealArray);
 var
   FirstLength: integer;
@@ -2899,7 +3119,11 @@ procedure TModflowGrid.SetLayerLineWidth(var LineWidth: single;
   LayerIndex: Integer; var UnitIndex: Integer; DividedUnits: Boolean;
   LayerBoundaries: TOneDIntegerArray);
 begin
-  if DividedUnits then
+  if FModel is TChildModel then
+  begin
+    LineWidth := OrdinaryGridLineThickness;
+  end
+  else if DividedUnits then
   begin
     if LayerBoundaries[UnitIndex] = LayerIndex then
     begin
@@ -2920,6 +3144,192 @@ begin
     else
     begin
       LineWidth := OrdinaryGridLineThickness;
+    end;
+  end;
+end;
+
+procedure TModflowGrid.SetSideContourDataSet(const Value: TDataArray);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
+begin
+  inherited;
+  if (Value <> nil) and (Value.Name = '') then
+  begin
+    Exit;
+  end;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+        ChildDataArray := GetChildDataArray(Value, ChildModel);
+        if (Value <> nil) and (ChildDataArray <> nil) then
+        begin
+          ChildDataArray.ContourLimits := Value.ContourLimits;
+        end;
+        ChildModel.Grid.SideContourDataSet := ChildDataArray;
+      end;
+    end;
+  end;
+end;
+
+procedure TModflowGrid.SetSideDataSet(const Value: TDataArray);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
+begin
+  inherited;
+  if (Value <> nil) and (Value.Name = '') then
+  begin
+    Exit;
+  end;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+        ChildDataArray := GetChildDataArray(Value, ChildModel);
+        if (Value <> nil) and (ChildDataArray <> nil) then
+        begin
+          ChildDataArray.Limits := Value.Limits;
+        end;
+        ChildModel.Grid.SideDataSet := ChildDataArray;
+      end;
+    end;
+  end;
+end;
+
+procedure TModflowGrid.SetThreeDContourDataSet(const Value: TDataArray);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
+begin
+  inherited;
+  if (Value <> nil) and (Value.Name = '') then
+  begin
+    Exit;
+  end;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+        ChildDataArray := GetChildDataArray(Value, ChildModel);
+        if (Value <> nil) and (ChildDataArray <> nil) then
+        begin
+          ChildDataArray.ContourLimits := Value.ContourLimits;
+        end;
+        ChildModel.Grid.ThreeDContourDataSet := ChildDataArray;
+      end;
+    end;
+  end;
+end;
+
+procedure TModflowGrid.SetThreeDDataSet(const Value: TDataArray);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
+begin
+  inherited;
+  if (Value <> nil) and (Value.Name = '') then
+  begin
+    Exit;
+  end;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+        ChildDataArray := GetChildDataArray(Value, ChildModel);
+        if (Value <> nil) and (ChildDataArray <> nil) then
+        begin
+          ChildDataArray.Limits := Value.Limits;
+        end;
+        ChildModel.Grid.ThreeDDataSet := ChildDataArray;
+      end;
+    end;
+  end;
+end;
+
+procedure TModflowGrid.SetTopContourDataSet(const Value: TDataArray);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
+begin
+  inherited;
+  if (Value <> nil) and (Value.Name = '') then
+  begin
+    Exit;
+  end;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+        ChildDataArray := GetChildDataArray(Value, ChildModel);
+        if (Value <> nil) and (ChildDataArray <> nil) then
+        begin
+          ChildDataArray.ContourLimits := Value.ContourLimits;
+        end;
+        ChildModel.Grid.TopContourDataSet := ChildDataArray;
+      end;
+    end;
+  end;
+end;
+
+procedure TModflowGrid.SetTopDataSet(const Value: TDataArray);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ChildDataArray: TDataArray;
+begin
+  inherited;
+  if (Value <> nil) and (Value.Name = '') then
+  begin
+    Exit;
+  end;
+  if FModel is TPhastModel then
+  begin
+    LocalModel := TPhastModel(FModel);
+    if LocalModel.LgrUsed then
+    begin
+      for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+        ChildDataArray := GetChildDataArray(Value, ChildModel);
+        if (Value <> nil) and (ChildDataArray <> nil) then
+        begin
+          ChildDataArray.Limits := Value.Limits;
+        end;
+        ChildModel.Grid.TopDataSet := ChildDataArray;
+      end;
     end;
   end;
 end;

@@ -29,14 +29,14 @@ end;
 
 function TDe4Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.De4Package;
+  result := Model.ModflowPackages.De4Package;
 end;
 
 procedure TDe4Writer.WriteDataSet1;
 var
   DE4: TDE4PackageSelection;
 begin
-  DE4 := PhastModel.ModflowPackages.De4Package;
+  DE4 := Model.ModflowPackages.De4Package;
   WriteInteger(DE4.ITMX);
   WriteInteger(DE4.MXUP);
   WriteInteger(DE4.MXLOW);
@@ -49,7 +49,7 @@ procedure TDe4Writer.WriteDataSet2;
 var
   DE4: TDE4PackageSelection;
 begin
-  DE4 := PhastModel.ModflowPackages.De4Package;
+  DE4 := Model.ModflowPackages.De4Package;
   WriteInteger(DE4.IFREQ);
   WriteInteger(DE4.MUTD4);
   WriteFloat(DE4.ACCL.Value);
@@ -72,7 +72,7 @@ begin
     Exit;
   end;
   NameOfFile := FileName(AFileName);
-  WriteToNameFile('DE4', PhastModel.UnitNumbers.UnitNumber(StrDE4), NameOfFile, foInput);
+  WriteToNameFile('DE4', Model.UnitNumbers.UnitNumber(StrDE4), NameOfFile, foInput);
   OpenFile(NameOfFile);
   try
     frmProgressMM.AddMessage('Writing DE4 Package input.');

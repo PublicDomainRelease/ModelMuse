@@ -22,6 +22,7 @@ inherited frmManageParameters: TfrmManageParameters
     OnMouseUp = rdgParametersMouseUp
     OnSelectCell = rdgParametersSelectCell
     OnSetEditText = rdgParametersSetEditText
+    AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = False

@@ -84,7 +84,7 @@ type
     // Source before calling inherited.
     procedure Assign(Source: TPersistent); override;
     // @name creates an instance of @classname.
-    constructor Create;
+    constructor Create(Model: TBaseModel);
     // @name deletes the layer boundary with the number ALayer.
     procedure DeleteLayer(const ALayer: integer);
     // @name returns the cell (viewed from the front) containing APoint.
@@ -169,7 +169,7 @@ begin
   LayersChanged;
 end;
 
-constructor TPhastGrid.Create;
+constructor TPhastGrid.Create(Model: TBaseModel);
 begin
   inherited;
   SetLength(FLayerElevations, 0);
@@ -434,6 +434,7 @@ begin
   FNeedToRecalculateSideCellColors := True;
   NeedToRecalculate3DCellColors := True;
   frmGoPhast.PhastModel.InvalidateSegments;
+  frmGoPhast.UpdateDataSetDimensions;
   frmGoPhast.InvalidateModel;
   ARealList := TRealList.Create;
   try

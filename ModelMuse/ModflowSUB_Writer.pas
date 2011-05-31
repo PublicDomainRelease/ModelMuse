@@ -11,8 +11,8 @@ type
     VerticalK: double;
     ElasticSpecificStorage: double;
     InelasticSpecificStorage: double;
-    class operator Equal(Var1, Var2: TMaterialZone): boolean;
-    class operator NotEqual(Var1, Var2: TMaterialZone): boolean;
+    class operator Equal(Var1: TMaterialZone; Var2: TMaterialZone): boolean;
+    class operator NotEqual(Var1: TMaterialZone; Var2: TMaterialZone): boolean;
     function ID: Integer;
   end;
 
@@ -107,6 +107,9 @@ uses
   GoPhastTypes, RbwParser, ModflowUnitNumbers, frmProgressUnit,
   frmErrorsAndWarningsUnit, Forms;
 
+resourcestring
+  StrSubsidenceNotSuppo = 'Subsidence not supported with MODFLOW-LGR';
+
 function TMaterialZone.ID: Integer;
 begin
   result := Integer(CRC32(self, SizeOf(TMaterialZone)));
@@ -199,7 +202,7 @@ begin
     VK_Array.Initialize;
     ElasticSSArray.Initialize;
     InElasticSSArray.Initialize;
-    MaterialZoneArray := TDataArray.Create(PhastModel);
+    MaterialZoneArray := TDataArray.Create(Model);
     FNZ_List.Add(MaterialZoneArray);
     MaterialZoneArray.Orientation := dsoTop;
     MaterialZoneArray.DataType := rdtInteger;
@@ -227,7 +230,7 @@ end;
 
 function TModflowSUB_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.SubPackage;
+  result := Model.ModflowPackages.SubPackage;
 end;
 
 procedure TModflowSUB_Writer.RetrieveArrays;
@@ -253,7 +256,7 @@ var
   InterbedStartingCompactionDataArray: TDataArray;
   InterbedEquivalentThicknessDataArray: TDataArray;
 begin
-  Layers := PhastModel.LayerStructure;
+  Layers := Model.LayerStructure;
   MFLayer_Group := 0;
   for GroupIndex := 1 to Layers.Count - 1 do
   begin
@@ -264,19 +267,19 @@ begin
       begin
         NoDelayItem := Group.SubNoDelayBedLayers[SubsidenceIndex];
 
-        PreconsolidationHeadDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        PreconsolidationHeadDataArray := Model.DataArrayManager.GetDataSetByName(
           NoDelayItem.PreconsolidationHeadDataArrayName);
         Assert(PreconsolidationHeadDataArray <> nil);
 
-        ElasticSkeletalStorageCoefficientDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        ElasticSkeletalStorageCoefficientDataArray := Model.DataArrayManager.GetDataSetByName(
           NoDelayItem.ElasticSkeletalStorageCoefficientDataArrayName);
         Assert(ElasticSkeletalStorageCoefficientDataArray <> nil);
 
-        InelasticSkeletalStorageCoefficientDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        InelasticSkeletalStorageCoefficientDataArray := Model.DataArrayManager.GetDataSetByName(
           NoDelayItem.InelasticSkeletalStorageCoefficientDataArrayName);
         Assert(InelasticSkeletalStorageCoefficientDataArray <> nil);
 
-        InitialCompactionDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        InitialCompactionDataArray := Model.DataArrayManager.GetDataSetByName(
           NoDelayItem.InitialCompactionDataArrayName);
         Assert(InitialCompactionDataArray <> nil);
         
@@ -322,41 +325,41 @@ begin
       begin
         DelayItem := Group.SubDelayBedLayers[SubsidenceIndex];
 
-        EquivNumberDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        EquivNumberDataArray := Model.DataArrayManager.GetDataSetByName(
           DelayItem.EquivNumberDataArrayName);
         Assert(EquivNumberDataArray <> nil);
 
-        VerticalHydraulicConductivityDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        VerticalHydraulicConductivityDataArray := Model.DataArrayManager.GetDataSetByName(
           DelayItem.VerticalHydraulicConductivityDataArrayName);
         Assert(VerticalHydraulicConductivityDataArray <> nil);
 
-        ElasticSpecificStorageDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        ElasticSpecificStorageDataArray := Model.DataArrayManager.GetDataSetByName(
           DelayItem.ElasticSpecificStorageDataArrayName);
         Assert(ElasticSpecificStorageDataArray <> nil);
 
-        InelasticSpecificStorageDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        InelasticSpecificStorageDataArray := Model.DataArrayManager.GetDataSetByName(
           DelayItem.InelasticSpecificStorageDataArrayName);
         Assert(InelasticSpecificStorageDataArray <> nil);
 
-        InterbedStartingHeadDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        InterbedStartingHeadDataArray := Model.DataArrayManager.GetDataSetByName(
           DelayItem.InterbedStartingHeadDataArrayName);
         if FSubPackage.ReadDelayRestartFileName = '' then
         begin
           Assert(InterbedStartingHeadDataArray <> nil);
         end;
 
-        InterbedPreconsolidationHeadDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        InterbedPreconsolidationHeadDataArray := Model.DataArrayManager.GetDataSetByName(
           DelayItem.InterbedPreconsolidationHeadDataArrayName);
         if FSubPackage.ReadDelayRestartFileName = '' then
         begin
           Assert(InterbedPreconsolidationHeadDataArray <> nil);
         end;
 
-        InterbedStartingCompactionDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        InterbedStartingCompactionDataArray := Model.DataArrayManager.GetDataSetByName(
           DelayItem.InterbedStartingCompactionDataArrayName);
         Assert(InterbedStartingCompactionDataArray <> nil);
 
-        InterbedEquivalentThicknessDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        InterbedEquivalentThicknessDataArray := Model.DataArrayManager.GetDataSetByName(
           DelayItem.InterbedEquivalentThicknessDataArrayName);
         Assert(InterbedEquivalentThicknessDataArray <> nil);
 
@@ -444,8 +447,8 @@ var
 begin
   GetFlowUnitNumber(ISUBCB);
   ISUBOC := FSubPackage.PrintChoices.Count;
-  NNDB := PhastModel.LayerStructure.NoDelayCount;
-  NDB := PhastModel.LayerStructure.DelayCount;
+  NNDB := Model.LayerStructure.NoDelayCount;
+  NDB := Model.LayerStructure.DelayCount;
   NMZ := FDP_List.Count;
   NN := FSubPackage.NumberOfNodes;
   AC1 := FSubPackage.AccelerationParameter1;
@@ -454,7 +457,7 @@ begin
   SaveRestartFileName := '';
   if FSubPackage.SaveDelayRestart then
   begin
-    IDSAVE := PhastModel.UnitNumbers.UnitNumber(StrSUBSaveRestart);
+    IDSAVE := Model.UnitNumbers.UnitNumber(StrSUBSaveRestart);
 
     SaveRestartFileName := ExtractFileName(ChangeFileExt(FNameOfFile, '.rst'));
     WriteToNameFile(StrDATABINARY, IDSAVE,
@@ -471,12 +474,12 @@ begin
   end
   else
   begin
-    IDREST := PhastModel.UnitNumbers.UnitNumber(StrSUBReadRestart);
+    IDREST := Model.UnitNumbers.UnitNumber(StrSUBReadRestart);
     ReadRestartFileName := ExtractRelativePath(FNameOfFile, 
       FSubPackage.ReadDelayRestartFileName);
     if SaveRestartFileName = ReadRestartFileName then
     begin
-      frmErrorsAndWarnings.AddError(
+      frmErrorsAndWarnings.AddError(Model, 
         'Restart File names identical for SUB package',
         'The restart file saved by the Subsidence package has the same name '
         + 'as the restart file read by Subsidence package to define the '
@@ -531,7 +534,7 @@ var
   SubFileName: string;
   function GetCombinedUnitNumber: integer;
   begin
-    result := PhastModel.UnitNumbers.UnitNumber(StrSubSUB_Out);
+    result := Model.UnitNumbers.UnitNumber(StrSubSUB_Out);
     if SubFileName = '' then
     begin
       SubFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubOut));
@@ -575,7 +578,7 @@ begin
           end;
         sbocMultipleFiles:
           begin
-            Iun1 := PhastModel.UnitNumbers.UnitNumber(StrSubSUB_Out);
+            Iun1 := Model.UnitNumbers.UnitNumber(StrSubSUB_Out);
             AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubSubOut));
             WriteToNameFile(StrDATABINARY, Iun1,
               AFileName, foOutput);
@@ -595,7 +598,7 @@ begin
           end;
         sbocMultipleFiles:
           begin
-            Iun2 := PhastModel.UnitNumbers.UnitNumber(StrSubCOM_ML_Out);
+            Iun2 := Model.UnitNumbers.UnitNumber(StrSubCOM_ML_Out);
             AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubComMlOut));
             WriteToNameFile(StrDATABINARY, Iun2,
               AFileName, foOutput);
@@ -615,7 +618,7 @@ begin
           end;
         sbocMultipleFiles:
           begin
-            Iun3 := PhastModel.UnitNumbers.UnitNumber(StrSubCOM_IS_Out);
+            Iun3 := Model.UnitNumbers.UnitNumber(StrSubCOM_IS_Out);
             AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubComIsOut));
             WriteToNameFile(StrDATABINARY, Iun3,
               AFileName, foOutput);
@@ -635,7 +638,7 @@ begin
           end;
         sbocMultipleFiles:
           begin
-            Iun4 := PhastModel.UnitNumbers.UnitNumber(StrSub_VD_Out);
+            Iun4 := Model.UnitNumbers.UnitNumber(StrSub_VD_Out);
             AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubVdOut));
             WriteToNameFile(StrDATABINARY, Iun4,
               AFileName, foOutput);
@@ -655,7 +658,7 @@ begin
           end;
         sbocMultipleFiles:
           begin
-            Iun5 := PhastModel.UnitNumbers.UnitNumber(StrSub_NDPCH_Out);
+            Iun5 := Model.UnitNumbers.UnitNumber(StrSub_NDPCH_Out);
             AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubNdCritHeadOut));
             WriteToNameFile(StrDATABINARY, Iun5,
               AFileName, foOutput);
@@ -675,7 +678,7 @@ begin
           end;
         sbocMultipleFiles:
           begin
-            Iun6 := PhastModel.UnitNumbers.UnitNumber(StrSub_DPCH_Out);
+            Iun6 := Model.UnitNumbers.UnitNumber(StrSub_DPCH_Out);
             AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSubDCritHeadOut));
             WriteToNameFile(StrDATABINARY, Iun6,
               AFileName, foOutput);
@@ -805,9 +808,9 @@ begin
   begin
     DataArray := FRNB_List[Index];
     WriteArray(DataArray, 0, 'RNB');
-    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+    Model.DataArrayManager.AddDataSetToCache(DataArray);
   end;
-  PhastModel.DataArrayManager.CacheDataArrays;
+  Model.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSUB_Writer.WriteDataSet9;
@@ -841,26 +844,26 @@ begin
     begin
       DataArray := FDstart_List[Index];
       WriteArray(DataArray, 0, 'Dstart');
-      PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+      Model.DataArrayManager.AddDataSetToCache(DataArray);
 
       DataArray := FDHC_List[Index];
       WriteArray(DataArray, 0, 'DHC');
-      PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+      Model.DataArrayManager.AddDataSetToCache(DataArray);
     end;
 
     DataArray := FDCOM_List[Index];
     WriteArray(DataArray, 0, 'DCOM');
-    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+    Model.DataArrayManager.AddDataSetToCache(DataArray);
     
     DataArray := FDZ_List[Index];
     WriteArray(DataArray, 0, 'DZ');
-    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+    Model.DataArrayManager.AddDataSetToCache(DataArray);
     
     DataArray := FNZ_List[Index];
     WriteArray(DataArray, 0, 'NZ');
     // This one isn't cached because it is temporary
   end;
-  PhastModel.DataArrayManager.CacheDataArrays;
+  Model.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSUB_Writer.WriteDataSets5to8;
@@ -872,18 +875,18 @@ begin
   begin
     DataArray := FHC_List[Index];
     WriteArray(DataArray, 0, 'HC');
-    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+    Model.DataArrayManager.AddDataSetToCache(DataArray);
     DataArray := FSfe_List[Index];
     WriteArray(DataArray, 0, 'Sfe');
-    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+    Model.DataArrayManager.AddDataSetToCache(DataArray);
     DataArray := FSfv_List[Index];
     WriteArray(DataArray, 0, 'Sfv');
-    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+    Model.DataArrayManager.AddDataSetToCache(DataArray);
     DataArray := FCom_List[Index];
     WriteArray(DataArray, 0, 'Com');
-    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+    Model.DataArrayManager.AddDataSetToCache(DataArray);
   end;
-  PhastModel.DataArrayManager.CacheDataArrays;
+  Model.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSUB_Writer.WriteFile(const AFileName: string);
@@ -893,12 +896,21 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrSUB) then
+  if Model.PackageGeneratedExternally(StrSUB) then
   begin
     Exit;
   end;
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrSubsidenceNotSuppo);
+  if Model is TChildModel then
+  begin
+    frmErrorsAndWarnings.AddError(Model,
+      StrSubsidenceNotSuppo,
+      'ModelMuse does not currently support the use of the '
+      + 'Subsidence package in MODFLOW-LGR.');
+  end;
+
   FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrSUB, PhastModel.UnitNumbers.UnitNumber(StrSUB),
+  WriteToNameFile(StrSUB, Model.UnitNumbers.UnitNumber(StrSUB),
     FNameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;

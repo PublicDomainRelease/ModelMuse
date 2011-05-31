@@ -4,7 +4,7 @@ interface
 
 uses Windows, ZLib, SysUtils, Classes, Contnrs, ModflowBoundaryUnit,
   OrderedCollectionUnit, DataSetUnit, ModflowCellUnit, FormulaManagerUnit,
-  SubscriptionUnit, SparseDataSets, RbwParser;
+  SubscriptionUnit, SparseDataSets, RbwParser, GoPhastTypes;
 
 type
   TGhbRecord = record
@@ -74,9 +74,7 @@ type
     property Conductance: string read GetConductance write SetConductance;
   end;
 
-  // @name represents MODFLOW General Head boundaries
-  // for a series of time intervals.
-  TGhbCollection = class(TCustomMF_ListBoundColl)
+  TGhbTimeListLink = class(TTimeListsModelLink)
   private
     // @name is used to compute the Boundary Heads for a series of
     // General Head Boundaries over a series of time intervals.
@@ -84,14 +82,31 @@ type
     // @name is used to compute the Conductances for a series of
     // General Head Boundaries over a series of time intervals.
     FConductanceData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
+
+  // @name represents MODFLOW General Head boundaries
+  // for a series of time intervals.
+  TGhbCollection = class(TCustomMF_ListBoundColl)
+  private
+    // @name is used to compute the Boundary Heads for a series of
+    // General Head Boundaries over a series of time intervals.
+//    FBoundaryHeadData: TModflowTimeList;
+    // @name is used to compute the Conductances for a series of
+    // General Head Boundaries over a series of time intervals.
+//    FConductanceData: TModflowTimeList;
     procedure InvalidateHeadData(Sender: TObject);
     procedure InvalidateConductanceData(Sender: TObject);
   protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
-      Variables, DataSets: TList); override;
+      Variables, DataSets: TList; AModel: TBaseModel); override;
     function AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
       override;
     procedure AddSpecificBoundary; override;
@@ -110,13 +125,6 @@ type
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
     procedure InvalidateModel; override;
-  public
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
   end;
 
   // Each @name stores a @link(TGhbCollection).
@@ -138,10 +146,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -175,7 +186,7 @@ type
     // each stress period.  Each such TObjectList is filled with
     // @link(TGhb_Cell)s for that stress period.
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-      ValueTimeList: TList); override;
+      ValueTimeList: TList; AModel: TBaseModel); override;
     // See @link(TModflowBoundary.BoundaryCollectionClass
     // TModflowBoundary.BoundaryCollectionClass).
     class function BoundaryCollectionClass: TMF_BoundCollClass; override;
@@ -195,15 +206,15 @@ type
     // with each @link(TGhbStorage) in @link(TCustomMF_BoundColl.Boundaries
     // Param.Param.Boundaries)
     // Those represent parameter boundary conditions.
-    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
-      override;
+    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel); override;
     procedure InvalidateDisplay; override;
   end;
 
 implementation
 
 uses PhastModelUnit, ScreenObjectUnit, ModflowTimeUnit, TempFiles, 
-  GoPhastTypes, frmGoPhastUnit;
+  frmGoPhastUnit;
 
 const
   HeadPosition = 0;
@@ -345,35 +356,9 @@ end;
 
 { TGhbCollection }
 
-constructor TGhbCollection.Create(Boundary: TModflowBoundary;
-  Model, ScreenObject: TObject);
+function TGhbCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FBoundaryHeadData := TModflowTimeList.Create(Model, ScreenObject);
-  FConductanceData := TModflowTimeList.Create(Model, ScreenObject);
-  FBoundaryHeadData.NonParamDescription := 'Boundary head';
-  FBoundaryHeadData.ParamDescription := ' boundary head';
-  FConductanceData.NonParamDescription := 'Conductance';
-  FConductanceData.ParamDescription := ' conductance multiplier';
-
-  if Model <> nil then
-  begin
-    FConductanceData.OnInvalidate :=
-      (Model as TPhastModel).InvalidateMfGhbConductance;
-
-    FBoundaryHeadData.OnInvalidate :=
-      (Model as TPhastModel).InvalidateMfGhbBoundaryHead;
-  end;
-
-  AddTimeList(FBoundaryHeadData);
-  AddTimeList(FConductanceData);
-end;
-
-destructor TGhbCollection.Destroy;
-begin
-  FBoundaryHeadData.Free;
-  FConductanceData.Free;
-  inherited;
+  result := TGhbTimeListLink;
 end;
 
 procedure TGhbCollection.TestIfObservationsPresent(
@@ -460,7 +445,8 @@ end;
 
 procedure TGhbCollection.AssignCellList(Expression: TExpression;
   ACellList: TObject; BoundaryStorage: TCustomBoundaryStorage;
-  BoundaryFunctionIndex: integer; Variables, DataSets: TList);
+  BoundaryFunctionIndex: integer; Variables, DataSets: TList;
+  AModel: TBaseModel);
 var
   GhbStorage: TGhbStorage;
   CellList: TCellAssignmentList;
@@ -475,7 +461,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell);
+    UpdataRequiredData(DataSets, Variables, ACell, AModel);
 
     Expression.Evaluate;
     with GhbStorage.GhbArray[Index] do
@@ -511,6 +497,10 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
+    if ACell.LgrEdge then
+    begin
+      Continue;
+    end;
     with GhbStorage.GhbArray[Index] do
     begin
       Cell.Layer := ACell.Layer;
@@ -529,18 +519,44 @@ begin
 end;
 
 procedure TGhbCollection.InvalidateConductanceData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TGhbTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FConductanceData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TGhbTimeListLink;
+    Link.FConductanceData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TGhbTimeListLink;
+      Link.FConductanceData.Invalidate;
+    end;
   end;
 end;
 
 procedure TGhbCollection.InvalidateHeadData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TGhbTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FBoundaryHeadData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TGhbTimeListLink;
+    Link.FBoundaryHeadData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TGhbTimeListLink;
+      Link.FBoundaryHeadData.Invalidate;
+    end;
   end;
 end;
 
@@ -604,13 +620,13 @@ begin
   result := Values.ConductanceAnnotation;
 end;
 
-function TGhb_Cell.GetIntegerAnnotation(Index: integer): string;
+function TGhb_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TGhb_Cell.GetIntegerValue(Index: integer): integer;
+function TGhb_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -621,7 +637,7 @@ begin
   result := Values.Cell.Layer;
 end;
 
-function TGhb_Cell.GetRealAnnotation(Index: integer): string;
+function TGhb_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   case Index of
     HeadPosition:
@@ -636,7 +652,7 @@ begin
   end;
 end;
 
-function TGhb_Cell.GetRealValue(Index: integer): double;
+function TGhb_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -690,10 +706,25 @@ begin
   StressPeriod := ReadCompInt(Decomp);
 end;
 
+procedure TGhb_Cell.SetColumn(const Value: integer);
+begin
+  Values.Cell.Column := Value;
+end;
+
+procedure TGhb_Cell.SetLayer(const Value: integer);
+begin
+  Values.Cell.Layer := Value;
+end;
+
+procedure TGhb_Cell.SetRow(const Value: integer);
+begin
+  Values.Cell.Row := Value;
+end;
+
 { TGhbBoundary }
 
 procedure TGhbBoundary.AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-  ValueTimeList: TList);
+  ValueTimeList: TList; AModel: TBaseModel);
 var
   Cell: TGhb_Cell;
   BoundaryValues: TGhbRecord;
@@ -702,10 +733,12 @@ var
   TimeIndex: Integer;
   Cells: TValueCellList;
   LocalBoundaryStorage: TGhbStorage;
+  LocalModel: TCustomModel;
 begin
+  LocalModel := AModel as TCustomModel;
   LocalBoundaryStorage := BoundaryStorage as TGhbStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    LocalModel.ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -716,12 +749,16 @@ begin
       Cells := TValueCellList.Create(TGhb_Cell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
+      if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.GhbArray) then
+      begin
+        Cells.Capacity := Cells.Count + Length(LocalBoundaryStorage.GhbArray)
+      end;
 //      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.GhbArray) - 1 do
       begin
@@ -733,6 +770,7 @@ begin
         Cell.StressPeriod := TimeIndex;
         Cell.Values := BoundaryValues;
         Cell.ScreenObject := ScreenObject;
+        LocalModel.AdjustCellPosition(Cell);
       end;
       Cells.Cache;
     end;
@@ -746,7 +784,7 @@ begin
 end;
 
 procedure TGhbBoundary.GetCellValues(ValueTimeList: TList;
-  ParamList: TStringList);
+  ParamList: TStringList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TGhbStorage;
@@ -762,7 +800,7 @@ var
   ValueCount: Integer;
   Item: TCustomModflowBoundaryItem;
 begin
-  EvaluateListBoundaries;
+  EvaluateListBoundaries(AModel);
   TestIfObservationsPresent(EndOfLastStressPeriod, StartOfFirstStressPeriod,
     ObservationsPresent);
   PriorTime := StartOfFirstStressPeriod;
@@ -777,7 +815,7 @@ begin
         if ValueCount < Values.BoundaryCount then
         begin
           BoundaryStorage := Values.Boundaries[ValueCount] as TGhbStorage;
-          AssignCells(BoundaryStorage, ValueTimeList);
+          AssignCells(BoundaryStorage, ValueTimeList, AModel);
           Inc(ValueCount);
         end;
       end;
@@ -786,7 +824,7 @@ begin
     if ValueCount < Values.BoundaryCount then
     begin
       BoundaryStorage := Values.Boundaries[ValueCount] as TGhbStorage;
-      AssignCells(BoundaryStorage, ValueTimeList);
+      AssignCells(BoundaryStorage, ValueTimeList, AModel);
       Inc(ValueCount);
     end;
     if (ValueIndex = Values.Count - 1) and ObservationsPresent then
@@ -796,7 +834,7 @@ begin
         if ValueCount < Values.BoundaryCount then
         begin
           BoundaryStorage := Values.Boundaries[ValueCount] as TGhbStorage;
-          AssignCells(BoundaryStorage, ValueTimeList);
+          AssignCells(BoundaryStorage, ValueTimeList, AModel);
           Inc(ValueCount);
         end;
       end;
@@ -828,7 +866,7 @@ begin
           if ValueCount < Param.Param.BoundaryCount then
           begin
             BoundaryStorage := Param.Param.Boundaries[ValueCount] as TGhbStorage;
-            AssignCells(BoundaryStorage, Times);
+            AssignCells(BoundaryStorage, Times, AModel);
             Inc(ValueCount);
           end;
         end;
@@ -837,7 +875,7 @@ begin
       if ValueCount < Param.Param.BoundaryCount then
       begin
         BoundaryStorage := Param.Param.Boundaries[ValueCount] as TGhbStorage;
-        AssignCells(BoundaryStorage, Times);
+        AssignCells(BoundaryStorage, Times, AModel);
         Inc(ValueCount);
       end;
       if {(ValueIndex = Param.Param.Count - 1) and} ObservationsPresent then
@@ -847,7 +885,7 @@ begin
           if ValueCount < Param.Param.BoundaryCount then
           begin
             BoundaryStorage := Param.Param.Boundaries[ValueCount] as TGhbStorage;
-            AssignCells(BoundaryStorage, Times);
+            AssignCells(BoundaryStorage, Times, AModel);
             Inc(ValueCount);
           end;
         end;
@@ -861,9 +899,9 @@ var
   Model: TPhastModel;
 begin
   inherited;
-  if Used and (PhastModel <> nil) then
+  if Used and (ParentModel <> nil) then
   begin
-    Model := PhastModel as TPhastModel;
+    Model := ParentModel as TPhastModel;
     Model.InvalidateMfGhbConductance(self);
     Model.InvalidateMfGhbBoundaryHead(self);
   end;
@@ -894,7 +932,7 @@ begin
   LocalScreenObject := ScreenObject as TScreenObject;
   LocalPhastModel := LocalScreenObject.Model as TPhastModel;
   Assert(LocalPhastModel <> nil);
-  ObservationsPresent := LocalPhastModel.ModflowPackages.GbobPackage.IsSelected
+  ObservationsPresent := LocalPhastModel.GbobIsSelected
     and (LocalPhastModel.GhbObservations.Count > 0);
   StartOfFirstStressPeriod := 0;
   EndOfLastStressPeriod := 0;
@@ -1002,6 +1040,36 @@ begin
     RestoreData;
   end;
   result := FGhbArray;
+end;
+
+{ TGhbTimeListLink }
+
+procedure TGhbTimeListLink.CreateTimeLists;
+var
+  LocalModel: TCustomModel;
+begin
+  inherited;
+  FBoundaryHeadData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FConductanceData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FBoundaryHeadData.NonParamDescription := 'Boundary head';
+  FBoundaryHeadData.ParamDescription := ' boundary head';
+  FConductanceData.NonParamDescription := 'Conductance';
+  FConductanceData.ParamDescription := ' conductance multiplier';
+  if Model <> nil then
+  begin
+    LocalModel := Model as TCustomModel;
+    FConductanceData.OnInvalidate := LocalModel.InvalidateMfGhbConductance;
+    FBoundaryHeadData.OnInvalidate := LocalModel.InvalidateMfGhbBoundaryHead;
+  end;
+  AddTimeList(FBoundaryHeadData);
+  AddTimeList(FConductanceData);
+end;
+
+destructor TGhbTimeListLink.Destroy;
+begin
+  FBoundaryHeadData.Free;
+  FConductanceData.Free;
+  inherited;
 end;
 
 end.

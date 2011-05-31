@@ -39,7 +39,7 @@ type
       EdgeDisplay: TCustomModflowGridEdgeDisplay);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     property ValueSource: TPersistent read FValueSource write SetValueSource;
     procedure AutoAssignValues;
@@ -660,7 +660,7 @@ begin
   end;
 end;
 
-constructor TLegend.Create(Model: TObject);
+constructor TLegend.Create(Model: TBaseModel);
 begin
   inherited;
   FValueSource := nil;

@@ -34,13 +34,13 @@ end;
 
 function TModflowLVDA_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.HufPackage;
+  result := Model.ModflowPackages.HufPackage;
 end;
 
 function TModflowLVDA_Writer.PackageID_Comment: string;
 begin
   result := 'LVDA file created on '
-    + DateToStr(Now) + ' by ' + PhastModel.ProgramName + ' version '
+    + DateToStr(Now) + ' by ' + Model.ProgramName + ' version '
     + ModelVersion + '.';
 end;
 
@@ -53,7 +53,7 @@ procedure TModflowLVDA_Writer.WriteDataSet1;
 var
   NPLVDA: Integer;
 begin
-  NPLVDA := PhastModel.ModflowSteadyParameters.CountParameters([ptHUF_LVDA]);
+  NPLVDA := Model.ModflowSteadyParameters.CountParameters([ptHUF_LVDA]);
   WriteInteger(NPLVDA);
   WriteString(' # Data Set 1: NPLVDA');
   NewLine;
@@ -78,10 +78,10 @@ var
 const
   IZ = 1;
 begin
-  LayerCount := PhastModel.LayerStructure.ModflowLayerCount;
-  for ParamIndex := 0 to PhastModel.ModflowSteadyParameters.Count - 1 do
+  LayerCount := Model.ModflowLayerCount;
+  for ParamIndex := 0 to Model.ModflowSteadyParameters.Count - 1 do
   begin
-    Param := PhastModel.ModflowSteadyParameters.Items[ParamIndex];
+    Param := Model.ModflowSteadyParameters.Items[ParamIndex];
     if Param.ParameterType = ptHUF_LVDA then
     begin
       Application.ProcessMessages;
@@ -90,13 +90,14 @@ begin
         Exit;
       end;
 
+      Param.ClearArrayNames;
       PARNAM := Param.ParameterName;
       PARTYP := ' LVDA';
       PARVAL := Param.Value;
 
       if not Param.UseZone then
       begin
-        NCLU := PhastModel.LayerStructure.ModflowLayerCount;
+        NCLU := Model.ModflowLayerCount;
         SetLength(Clusters, 0);
       end
       else
@@ -115,7 +116,7 @@ begin
           begin
             Error := Error + 'simulated unit.';
           end;
-          frmErrorsAndWarnings.AddError('Parameter zones not defined.',
+          frmErrorsAndWarnings.AddError(Model, 'Parameter zones not defined.',
             Error);
         end;
       end;
@@ -129,7 +130,7 @@ begin
       WriteString(' # PARNAM, PARTYP, PARVAL, NCLU');
       NewLine;
 
-      PhastModel.WritePValAndTemplate(PARNAM,PARVAL);
+      Model.WritePValAndTemplate(PARNAM,PARVAL);
 
       // Data set 9
       frmProgressMM.AddMessage('  Writing Data Set 9 for parameter: ' + PARNAM);
@@ -144,7 +145,7 @@ begin
           end
           else
           begin
-            ZONARR := Param.ZoneArrayName(LAYER);
+            ZONARR := Param.ZoneArrayName(LAYER, Model);
             UsedZoneArrayNames.Add(ZONARR);
           end;
         end
@@ -156,7 +157,7 @@ begin
         ZONARR := ' ' + ZONARR;
         if Param.UseMultiplier then
         begin
-          MLTARR := Param.MultiplierArrayName(LAYER);
+          MLTARR := Param.MultiplierArrayName(LAYER, Model);
           UsedMultiplierArrayNames.Add(MLTARR);
         end
         else
@@ -178,7 +179,7 @@ begin
         end;
         NewLine;
       end;
-      PhastModel.DataArrayManager.CacheDataArrays;
+      Model.DataArrayManager.CacheDataArrays;
     end;
   end;
 end;
@@ -189,17 +190,17 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrLVDA) then
+  if Model.PackageGeneratedExternally(StrLVDA) then
   begin
     Exit;
   end;
-  if PhastModel.ModflowSteadyParameters.CountParameters([ptHUF_LVDA]) = 0 then
+  if Model.ModflowSteadyParameters.CountParameters([ptHUF_LVDA]) = 0 then
   begin
     Exit;
   end;
 
   FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrLVDA, PhastModel.UnitNumbers.UnitNumber(StrLVDA),
+  WriteToNameFile(StrLVDA, Model.UnitNumbers.UnitNumber(StrLVDA),
     FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try

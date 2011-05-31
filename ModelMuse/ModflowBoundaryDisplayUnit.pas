@@ -2,7 +2,8 @@ unit ModflowBoundaryDisplayUnit;
 
 interface
 
-uses Windows, SysUtils, Classes, DataSetUnit, SparseDataSets, ZLib;
+uses Windows, SysUtils, Classes, DataSetUnit, SparseDataSets, ZLib,
+  GoPhastTypes;
 
 type
   TOnGetUseList = procedure (Sender: TObject;
@@ -17,7 +18,7 @@ type
     procedure Clear; override;
     procedure SetDimensions(const SetToZero: boolean); override;
     procedure SetUpToDate(const Value: boolean); override;
-    procedure StoreData(Compressor: TCompressionStream); override;
+    procedure StoreData(Stream: TStream); override;
     procedure ReadData(DecompressionStream: TDecompressionStream); override;
   public
     procedure AddDataArray(DataArray: TDataArray);
@@ -46,7 +47,7 @@ type
     property OnGetUseList: TOnGetUseList read FOnGetUseList
       write FOnGetUseList;
     // @name creates an instance of @classname.
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     // @name destroys the current instance of @classname.
     // Do not call @name directly. Call Free instead.
     destructor Destroy; override;
@@ -81,7 +82,7 @@ type
 
 implementation
 
-uses GoPhastTypes, SparseArrayUnit, PhastModelUnit, frmGoPhastUnit,
+uses SparseArrayUnit, PhastModelUnit, frmGoPhastUnit,
   ModflowTimeUnit, SubscriptionUnit, RealListUnit, ScreenObjectUnit,
   ModflowHobUnit, TempFiles, IntListUnit, CustomModflowWriterUnit, 
   frmProgressUnit;
@@ -321,7 +322,7 @@ begin
 end;
 
 procedure TModflowBoundaryDisplayDataArray.StoreData(
-  Compressor: TCompressionStream);
+  Stream: TStream);
 var
   Count: Integer;
   LayerLimit: Integer;
@@ -338,7 +339,7 @@ var
   RowIndex: Integer;
   ColIndex: Integer;
 begin
-  inherited StoreData(Compressor);
+  inherited StoreData(Stream);
   Count := 0;
   CountValues(LayerLimit, RowLimit, ColLimit, Count);
   GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
@@ -367,11 +368,11 @@ begin
         end;
       end;
     end;
-    Compressor.Write(Count, SizeOf(Count));
-    Compressor.Write(LayerArray[0], Count*SizeOf(integer));
-    Compressor.Write(RowArray[0], Count*SizeOf(integer));
-    Compressor.Write(ColumnArray[0], Count*SizeOf(integer));
-    Compressor.Write(IntegerValues[0], Count*SizeOf(integer));
+    Stream.Write(Count, SizeOf(Count));
+    Stream.Write(LayerArray[0], Count*SizeOf(integer));
+    Stream.Write(RowArray[0], Count*SizeOf(integer));
+    Stream.Write(ColumnArray[0], Count*SizeOf(integer));
+    Stream.Write(IntegerValues[0], Count*SizeOf(integer));
 
   end;
 
@@ -392,7 +393,7 @@ begin
   end;
 end;
 
-constructor TModflowBoundaryDisplayTimeList.Create(Model: TObject);
+constructor TModflowBoundaryDisplayTimeList.Create(Model: TBaseModel);
 begin
   inherited;
   FUseList := TStringList.Create;
@@ -409,7 +410,7 @@ end;
 
 procedure TModflowBoundaryDisplayTimeList.Initialize;
 var
-  Model: TPhastModel;
+  LocalModel: TCustomModel;
   TimeIndex: Integer;
   Index: Integer;
 begin
@@ -423,26 +424,26 @@ begin
     frmProgressMM.Caption := 'Progress';
   end;
   frmProgressMM.Show;
-  Model := frmGoPhast.PhastModel;
-  Model.UpdateModflowFullStressPeriods;
-  TimeIndex := Model.ModflowFullStressPeriods.
-    FindStressPeriod(Model.ThreeDDisplayTime);
+  LocalModel := Model as TCustomModel;
+  LocalModel.UpdateModflowFullStressPeriods;
+  TimeIndex := LocalModel.ModflowFullStressPeriods.
+    FindStressPeriod(LocalModel.ThreeDDisplayTime);
   if TimeIndex < 0 then
   begin
     TimeIndex := 0;
   end;
 
-  Model.ModflowFullStressPeriods.BeginUpdate;
+  LocalModel.ModflowFullStressPeriods.BeginUpdate;
   try
-    for Index := Model.ModflowFullStressPeriods.Count - 1 downto 0 do
+    for Index := LocalModel.ModflowFullStressPeriods.Count - 1 downto 0 do
     begin
       if Index <> TimeIndex then
       begin
-        Model.ModflowFullStressPeriods.Delete(Index);
+        LocalModel.ModflowFullStressPeriods.Delete(Index);
       end;
     end;
   finally
-    Model.ModflowFullStressPeriods.EndUpdate;
+    LocalModel.ModflowFullStressPeriods.EndUpdate;
   end;
 
   Assert(Assigned(OnInitialize));
@@ -470,15 +471,15 @@ var
   Index: Integer;
   DataArray: TModflowBoundaryDisplayDataArray;
   TimeIndex: Integer;
-  Model: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  Model := frmGoPhast.PhastModel;
+  LocalModel := Model as TCustomModel;
   for TimeIndex := 0 to Count - 1 do
   begin
     DataArray := Items[TimeIndex] as TModflowBoundaryDisplayDataArray;
     for Index := 0 to FUseList.Count - 1 do
     begin
-      ObservedItem := Model.GetObserverByName(FUseList[Index]);
+      ObservedItem := LocalModel.GetObserverByName(FUseList[Index]);
       if ObservedItem <> nil then
       begin
         ObservedItem.StopsTalkingTo(DataArray);
@@ -511,26 +512,26 @@ var
   StressPeriod: TModflowStressPeriod;
   TimeIndex: Integer;
   Index: Integer;
-  Model: TPhastModel;
+  LocalModel: TCustomModel;
   ObservedItem: TObserver;
   DataArray: TModflowBoundaryDisplayDataArray;
 begin
-  Model := frmGoPhast.PhastModel;
+  LocalModel := Model as TCustomModel;
   FUseList.Sorted := True;
   OnGetUseList(self, FUseList);
-  for TimeIndex := 0 to Model.ModflowFullStressPeriods.Count - 1 do
+  for TimeIndex := 0 to LocalModel.ModflowFullStressPeriods.Count - 1 do
   begin
-    StressPeriod := Model.ModflowFullStressPeriods[TimeIndex];
-    DataArray := TModflowBoundaryDisplayDataArray.Create(Model);
+    StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
+    DataArray := TModflowBoundaryDisplayDataArray.Create(LocalModel);
     DataArray.Orientation := dso3D;
     DataArray.EvaluatedAt := eaBlocks;
     DataArray.Limits := Limits;
     Add(StressPeriod.StartTime, DataArray);
-    DataArray.UpdateDimensions(Model.ModflowGrid.LayerCount,
-      Model.ModflowGrid.RowCount, Model.ModflowGrid.ColumnCount);
+    DataArray.UpdateDimensions(LocalModel.ModflowGrid.LayerCount,
+      LocalModel.ModflowGrid.RowCount, LocalModel.ModflowGrid.ColumnCount);
     for Index := 0 to FUseList.Count - 1 do
     begin
-      ObservedItem := Model.GetObserverByName(FUseList[Index]);
+      ObservedItem := LocalModel.GetObserverByName(FUseList[Index]);
       Assert(ObservedItem <> nil);
       ObservedItem.TalksTo(DataArray);
     end;
@@ -571,7 +572,7 @@ end;
 procedure THobDisplayTimeList.CreateNewDataSets;
 var
   Times: TRealList;
-  Model: TPhastModel;
+  LocalModel: TCustomModel;
   ScreenObjectIndex: Integer;
   ScreenObject: TScreenObject;
   TimeIndex: Integer;
@@ -581,15 +582,15 @@ var
   Index: Integer;
   ObservedItem: TObserver;
 begin
-  Model := frmGoPhast.PhastModel;
+  LocalModel := Model as TCustomModel;
   FUseList.Sorted := True;
   OnGetUseList(self, FUseList);
   Times := TRealList.Create;
   try
     Times.Sorted := True;
-    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
+    for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
     begin
-      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
+      ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
       if ScreenObject.Deleted then
       begin
         Continue;
@@ -607,15 +608,15 @@ begin
     end;
     for TimeIndex := 0 to Times.Count - 1 do
     begin
-      DataArray := TModflowBoundaryDisplayDataArray.Create(Model);
+      DataArray := TModflowBoundaryDisplayDataArray.Create(LocalModel);
       DataArray.Orientation := dso3D;
       DataArray.EvaluatedAt := eaBlocks;
       Add(Times[TimeIndex], DataArray);
-      DataArray.UpdateDimensions(Model.ModflowGrid.LayerCount,
-        Model.ModflowGrid.RowCount, Model.ModflowGrid.ColumnCount);
+      DataArray.UpdateDimensions(LocalModel.ModflowGrid.LayerCount,
+        LocalModel.ModflowGrid.RowCount, LocalModel.ModflowGrid.ColumnCount);
       for Index := 0 to FUseList.Count - 1 do
       begin
-        ObservedItem := Model.GetObserverByName(FUseList[Index]);
+        ObservedItem := LocalModel.GetObserverByName(FUseList[Index]);
         Assert(ObservedItem <> nil);
         ObservedItem.TalksTo(DataArray);
       end;

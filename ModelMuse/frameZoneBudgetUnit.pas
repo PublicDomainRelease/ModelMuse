@@ -22,8 +22,6 @@ type
     procedure rdgCompositeZonesEndUpdate(Sender: TObject);
     procedure btnInsertZoneClick(Sender: TObject);
     procedure btnDeleteZoneClick(Sender: TObject);
-    procedure rdgCompositeZonesMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure rcSelectionControllerEnabledChange(Sender: TObject);
     procedure cbExportZblstClick(Sender: TObject);
     procedure cbExportCsvClick(Sender: TObject);
@@ -178,20 +176,6 @@ procedure TframeZoneBudget.rdgCompositeZonesEndUpdate(Sender: TObject);
 begin
   inherited;
   UpdateSpinEdit;
-end;
-
-procedure TframeZoneBudget.rdgCompositeZonesMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    rdgCompositeZones.Options := rdgCompositeZones.Options + [goEditing];
-  end
-  else
-  begin
-    rdgCompositeZones.Options := rdgCompositeZones.Options - [goEditing];
-  end;
 end;
 
 procedure TframeZoneBudget.seNumberOfZonesChange(Sender: TObject);

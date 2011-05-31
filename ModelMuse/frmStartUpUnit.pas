@@ -136,7 +136,7 @@ type
 implementation
 
 uses Math, Contnrs, frmGoPhastUnit, GoPhastTypes, frmGoToUnit, DataSetUnit,
-  RbwParser, LayerStructureUnit, PhastModelUnit;
+  RbwParser, LayerStructureUnit, PhastModelUnit, ModelMuseUtilities;
 
 
 {$R *.dfm}
@@ -435,7 +435,7 @@ begin
       NewDataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerGroup.DataArrayName);
       Assert(NewDataArray <> nil);
 //      NewDataArray := frmGoPhast.PhastModel.DataSets[DataArrayIndex];
-      NewDataArray.Formula := FloatToStr(LayerStorage.Elevation);
+      NewDataArray.Formula := FortranFloatToStr(LayerStorage.Elevation);
       for ColIndex := 0 to ColCount - 1 do
       begin
         for RowIndex := 0 to RowCount - 1 do

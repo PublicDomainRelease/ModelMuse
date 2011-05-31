@@ -251,7 +251,7 @@ type
     procedure SetRulerValues(const Value: TRulerValues);
     // See @link(RulerDesiredSpacing).
     function GetRulerDesiredSpacing: integer;
-    // @name is the event handler for @linkg(FPainter.OnInvalidate).
+    // @name is the event handler for @link(TRulerPainter.OnInvalidate).
     // It calls Invalidate.
     procedure PainterInvalidate(Sender: TObject);
     // See @link(RulerDigits).
@@ -320,8 +320,7 @@ type
     // @name is the length of the minor ticks in pixels.
     property RulerMinorTickLength: integer read GetRulerMinorTickLength
       write SetRulerMinorTickLength;
-    // @name specifies the orientation of the main line on the
-    // ruler. @name controls @link(RulerOrientation).
+    // See @link(TRulerPainter.RulerPosition).
     property RulerPosition: TRulerPosition read GetRulerPosition
       write SetRulerPosition;
     // @name specifies how many digits appear in the

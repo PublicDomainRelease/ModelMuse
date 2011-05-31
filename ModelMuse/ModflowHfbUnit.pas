@@ -43,7 +43,7 @@ type
     property UsedObserver: TObserver read GetUsedObserver;
   public
     Procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model, ScreenObject: TObject);
+    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     destructor Destroy; override;
     function Used: boolean; override;
     property HfbObserver: TObserver read FHfbObserver;
@@ -85,20 +85,21 @@ begin
   end;
 end;
 
-constructor THfbBoundary.Create(Model, ScreenObject: TObject);
+constructor THfbBoundary.Create(Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited;
-//  Assert((Model = nil) or (Model is TPhastModel));
-  Assert((ScreenObject <> nil) and (ScreenObject is TScreenObject));
-//  FScreenObject := ScreenObject;
-  FPhastModel := Model;
-  if TScreenObject(FScreenObject).CanInvalidateModel then
+  Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
+  FModel := Model;
+  if ScreenObject <> nil then
   begin
-    FHfbObserver := TObserver.Create(nil);
-    FHfbObserver.UpdateWithName('HfbBoundary_'
-      + TScreenObject(FScreenObject).Name);
-    TScreenObject(FScreenObject).TalksTo(FHfbObserver);
-    FHfbObserver.UpToDate:= True;
+    if TScreenObject(FScreenObject).CanInvalidateModel then
+    begin
+      FHfbObserver := TObserver.Create(nil);
+      FHfbObserver.UpdateWithName('HfbBoundary_'
+        + TScreenObject(FScreenObject).Name);
+      TScreenObject(FScreenObject).TalksTo(FHfbObserver);
+      FHfbObserver.UpToDate:= True;
+    end;
   end;
   FThickness := '1';
   HydraulicConductivityFormula := '1e-8';
@@ -167,12 +168,14 @@ var
 begin
   if FAdjustmentMethod <> Value then
   begin
-    ScreenObject := FScreenObject as TScreenObject;
-    if ScreenObject.CanInvalidateModel then
+    if FScreenObject <> nil then
     begin
-      HandleChangedValue(AdjustmentMethodObserver);
+      ScreenObject := FScreenObject as TScreenObject;
+      if ScreenObject.CanInvalidateModel then
+      begin
+        HandleChangedValue(AdjustmentMethodObserver);
+      end;
     end;
-
     FAdjustmentMethod := Value;
     InvalidateModel;
   end;
@@ -184,11 +187,14 @@ var
 begin
   if FHydraulicConductivity <> Value then
   begin
-    ScreenObject := FScreenObject as TScreenObject;
-    if ScreenObject.CanInvalidateModel then
+    if FScreenObject <> nil then
     begin
-      HandleChangedFormula(FHydraulicConductivity, Value,
-        HydraulicConductivityObserver);
+      ScreenObject := FScreenObject as TScreenObject;
+      if ScreenObject.CanInvalidateModel then
+      begin
+        HandleChangedFormula(FHydraulicConductivity, Value,
+          HydraulicConductivityObserver);
+      end;
     end;
     FHydraulicConductivity := Value;
     InvalidateModel;
@@ -218,10 +224,13 @@ var
 begin
   if FThickness <> Value then
   begin
-    ScreenObject := FScreenObject as TScreenObject;
-    if ScreenObject.CanInvalidateModel then
+    if FScreenObject <> nil then
     begin
-      HandleChangedFormula(Value, FThickness, ThicknessObserver);
+      ScreenObject := FScreenObject as TScreenObject;
+      if ScreenObject.CanInvalidateModel then
+      begin
+        HandleChangedFormula(Value, FThickness, ThicknessObserver);
+      end;
     end;
     FThickness := Value;
     InvalidateModel;
@@ -235,9 +244,13 @@ begin
   if FUsed <> Value then
   begin
     ScreenObject := FScreenObject as TScreenObject;
-    if ScreenObject.CanInvalidateModel then
+    if FScreenObject <> nil then
     begin
-      HandleChangedValue(UsedObserver);
+
+      if ScreenObject.CanInvalidateModel then
+      begin
+        HandleChangedValue(UsedObserver);
+      end;
     end;
 
     FUsed := Value;
@@ -257,7 +270,7 @@ var
   Model: TPhastModel;
 begin
   ScreenObject := FScreenObject as TScreenObject;
-  Model := FPhastModel as TPhastModel;
+  Model := FModel as TPhastModel;
   Assert(ScreenObject.CanInvalidateModel);
   Assert(Model <> nil);
   Observer := TObserver.Create(nil);
@@ -271,20 +284,25 @@ end;
 procedure THfbBoundary.HandleChangedValue(Observer: TObserver);
 var
   Model: TPhastModel;
+  ChildIndex: Integer;
 begin
-  Model := FPhastModel as TPhastModel;
+  Model := FModel as TPhastModel;
   if not (csDestroying in Model.ComponentState) then
   begin
     Observer.UpToDate := True;
     Observer.UpToDate := False;
     Model.HfbDisplayer.Invalidate;
+    for ChildIndex := 0 to Model.ChildModels.Count - 1 do
+    begin
+      Model.ChildModels[ChildIndex].ChildModel.HfbDisplayer.Invalidate;
+    end;
     Observer.UpToDate := True;
   end;
 end;
 
 procedure THfbBoundary.InvalidateDisplay;
 begin
-  if Used and (PhastModel <> nil) then
+  if Used and (ParentModel <> nil) then
   begin
     HandleChangedValue(HydraulicConductivityObserver);
     HandleChangedValue(ThicknessObserver);
@@ -303,7 +321,7 @@ var
   NewUseList: TStringList;
   Compiler: TRbwParser;
 begin
-  Model := FPhastModel as TPhastModel;
+  Model := FModel as TPhastModel;
   InvalidateModel;
   if OldFormula = '' then
   begin
@@ -335,14 +353,14 @@ begin
     end;
     for UseIndex := 0 to OldUseList.Count - 1 do
     begin
-      UsedVariable := (FPhastModel as TPhastModel).
+      UsedVariable := (FModel as TPhastModel).
         GetObserverByName(OldUseList[UseIndex]);
       Assert(UsedVariable <> nil);
       UsedVariable.StopsTalkingTo(Observer);
     end;
     for UseIndex := 0 to NewUseList.Count - 1 do
     begin
-      UsedVariable := (FPhastModel as TPhastModel).
+      UsedVariable := (FModel as TPhastModel).
         GetObserverByName(NewUseList[UseIndex]);
       Assert(UsedVariable <> nil);
       UsedVariable.TalksTo(Observer);

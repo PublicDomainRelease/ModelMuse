@@ -6,12 +6,11 @@
   @link(TfrmModflowPackages.jvplPackages)
   and put a @link(TFramePackage) or one of its descendants on it.
   Add additional controls if required.
-  Add a new package to @link(TPhastModel.ModflowPackages
+  Add a new package to @link(TCustomModel.ModflowPackages
   frmGoPhast.PhastModel.ModflowPackages).
   Modfify @link(TfrmModflowPackages.GetData) and
   @link(TfrmModflowPackages.SetData) to use the new package and
-  @link(TFramePackage). Modify TUndoChangePackageSelection.Changed to reflect
-  the new package. Update @link(TModflowPackages.Assign),
+  @link(TFramePackage). Update @link(TModflowPackages.Assign),
   @link(TModflowPackages.Create), @link(TModflowPackages.Destroy),
   @link(TModflowPackages.Reset).
 }
@@ -35,9 +34,37 @@ uses
   frameDe4Unit, JvExComCtrls, JvComCtrls, RequiredDataSetsUndoUnit,
   framePackageHobUnit, framePackageLpfUnit, frameModpathSelectionUnit,
   framePackageHufUnit, HufDefinition, framePackageMnw2Unit, framePackageSubUnit,
-  frameZoneBudgetUnit, framePackageSwtUnit, framePkgHydmodUnit;
+  frameZoneBudgetUnit, framePackageSwtUnit, framePkgHydmodUnit,
+  framePackageRCHUnit;
 
 type
+
+  TTempPackageItem = class(TCollectionItem)
+  private
+    FPackages: TModflowPackages;
+  public
+    property Packages: TModflowPackages read FPackages;
+    Constructor Create(Collection: TCollection); override;
+    Destructor Destroy; override;
+  end;
+
+  TTempPackageCollection = class(TCollection)
+  private
+    function GetItem(Index: integer): TTempPackageItem;
+    procedure SetItem(Index: integer; const Value: TTempPackageItem);
+  public
+    constructor Create;
+    function Add: TTempPackageItem;
+    property Items[Index: integer]: TTempPackageItem read GetItem
+      write SetItem; default;
+  end;
+
+  TFrameNodeLink = class(TObject)
+    Frame: TframePackage;
+    Node: TTreeNode;
+//    Package: TModflowPackageSelection;
+  end;
+
   TfrmModflowPackages = class(TfrmCustomGoPhast)
     tvPackages: TTreeView;
     JvNetscapeSplitter1: TJvNetscapeSplitter;
@@ -75,7 +102,7 @@ type
     jvspEVT: TJvStandardPage;
     framePkgEVT: TframePackageTransientLayerChoice;
     frameEvtParameterDefinition: TframeListParameterDefinition;
-    framePkgRCH: TframePackageTransientLayerChoice;
+    framePkgRCH: TframePackageRCH;
     frameRchParameterDefinition: TframeListParameterDefinition;
     jvspETS: TJvStandardPage;
     framePkgETS: TframeEtsPackage;
@@ -137,6 +164,10 @@ type
     framePkgSwt: TframePackageSwt;
     jvspHydmod: TJvStandardPage;
     framePkgHydmod: TframePkgHydmod;
+    pnlLeft: TPanel;
+    pnlModel: TPanel;
+    comboModel: TComboBox;
+    lblModel: TLabel;
     procedure tvPackagesChange(Sender: TObject; Node: TTreeNode);
     procedure btnOKClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
@@ -167,14 +198,18 @@ type
     procedure framePkgHufrcSelectionControllerEnabledChange(Sender: TObject);
     procedure framePkgUZFrcSelectionControllerEnabledChange(Sender: TObject);
     procedure framePkgBCFrcSelectionControllerEnabledChange(Sender: TObject);
+    procedure comboModelChange(Sender: TObject);
   private
     IsLoaded: boolean;
     CurrentParameterType: TParameterType;
-    SteadyParameters: TModflowSteadyParameters;
-    HufParameters: THufModflowParameters;
-    TransientListParameters: TModflowTransientListParameters;
-    PackageList: TList;
+    FSteadyParameters: TModflowSteadyParameters;
+    FHufParameters: THufModflowParameters;
+    FTransientListParameters: TModflowTransientListParameters;
+    FPackageList: TList;
     FSfrParameterInstances: TSfrParamInstances;
+    FNewPackages: TTempPackageCollection;
+    FCurrentPackages: TModflowPackages;
+    FFrameNodeLinks: TList;
     procedure AssignParameterToRow(ActiveGrid: TRbwDataGrid4; RowIndex: Integer;
       Parameter: TModflowParameter);
     procedure SetData;
@@ -208,18 +243,22 @@ type
       ParameterFrameController: TRbwController);
     procedure ActivateHufReferenceChoice;
     procedure EnableUzfVerticalKSource;
+    procedure StorePackages;
+    procedure SetCurrentPackages(const Value: TModflowPackages);
+    property CurrentPackages: TModflowPackages read FCurrentPackages
+      write SetCurrentPackages;
+    procedure StorePackageDataInFrames(Packages: TModflowPackages);
+    procedure StoreFrameDataInPackages(Packages: TModflowPackages);
     { Private declarations }
   public
     procedure GetData;
     { Public declarations }
   end;
 
-  TUndoChangePackageSelection = class(TCustomUndoChangeParameters)
+{  TUndoChangePackageSelection = class(TCustomUndoChangeParameters)
   private
     FOldPackages: TModflowPackages;
     FNewPackages: TModflowPackages;
-//    FOldSfrParameterInstances: TSfrParamInstances;
-//    FNewSfrParameterInstances: TSfrParamInstances;
     FOldHydroGeologicUnits: THydrogeologicUnits;
     FOldInterBlockTransmissivity: array of integer;
     FOldAquiferType: array of integer;
@@ -234,6 +273,29 @@ type
     Destructor Destroy; override;
     procedure DoCommand; override;
     procedure Undo; override;
+  end;  }
+
+  // @name is used to reversibly change which packages are selected and
+  // the properties of those packages.
+  TUndoChangeLgrPackageSelection = class(TCustomUndoChangeParameters)
+  private
+    FOldPackages: TTempPackageCollection;
+    FNewPackages: TTempPackageCollection;
+    FOldHydroGeologicUnits: THydrogeologicUnits;
+    FOldInterBlockTransmissivity: array of integer;
+    FOldAquiferType: array of integer;
+    procedure UpdateLayerGroupProperties(BcfPackage: TModflowPackageSelection);
+  protected
+    function Description: string; override;
+  public
+    Constructor Create(var NewSteadyParameters: TModflowSteadyParameters;
+      var NewTransientParameters: TModflowTransientListParameters;
+      var SfrParameterInstances: TSfrParamInstances;
+      var NewHufModflowParameters: THufModflowParameters;
+      var NewPackages: TTempPackageCollection);
+    Destructor Destroy; override;
+    procedure DoCommand; override;
+    procedure Undo; override;
   end;
 
 var
@@ -245,6 +307,7 @@ uses Contnrs, JvListComb, frmGoPhastUnit, ScreenObjectUnit,
   ModflowConstantHeadBoundaryUnit, frmGridColorUnit, frmShowHideObjectsUnit,
   frameSfrParamInstancesUnit, LayerStructureUnit, frmErrorsAndWarningsUnit, 
   frmManageFluxObservationsUnit, ModflowSubsidenceDefUnit;
+
 
 {$R *.dfm}
 
@@ -273,9 +336,9 @@ var
   Package: TModflowPackageSelection;
 begin
   result := false;
-  for PackageIndex := 0 to PackageList.Count - 1 do
+  for PackageIndex := 0 to FPackageList.Count - 1 do
   begin
-    Package := PackageList[PackageIndex];
+    Package := FPackageList[PackageIndex];
     if Package.PackageIdentifier = ID then
     begin
       result := Package.IsSelected;
@@ -335,12 +398,12 @@ begin
       end;
     end;
 
-    frmErrorsAndWarnings.RemoveWarningGroup('SFR Parameters');
+    frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel, 'SFR Parameters');
     if InvalidParameterNames.Count > 0 then
     begin
       for ParamNameIndex := 0 to InvalidParameterNames.Count - 1 do
       begin
-        frmErrorsAndWarnings.AddWarning('SFR Parameters',
+        frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'SFR Parameters',
           'The SFR parameter named "' + InvalidParameterNames[ParamNameIndex]
           + '" can''t be used because no parameter instances are defined '
           + 'for it.');
@@ -349,6 +412,20 @@ begin
     end;
   finally
     InvalidParameterNames.Free;
+  end;
+end;
+
+procedure TfrmModflowPackages.comboModelChange(Sender: TObject);
+begin
+  inherited;
+  if comboModel.ItemIndex < 0 then
+  begin
+    CurrentPackages := nil;
+  end
+  else
+  begin
+    CurrentPackages := comboModel.Items.Objects[
+      comboModel.ItemIndex] as TModflowPackages;
   end;
 end;
 
@@ -377,9 +454,9 @@ begin
   VANI_Defined := False;
   SS_Defined := False;
   SY_Defined := False;
-  for ParamIndex := 0 to SteadyParameters.Count - 1 do
+  for ParamIndex := 0 to FSteadyParameters.Count - 1 do
   begin
-    Param := SteadyParameters[ParamIndex];
+    Param := FSteadyParameters[ParamIndex];
     case Param.ParameterType of
       ptLPF_VK: VK_Defined := True;
       ptLPF_VANI: VANI_Defined := True;
@@ -392,7 +469,7 @@ begin
   Quasi3dUsed := False;
   VerticalHydraulicConductivityUsed := False;
   VerticalAnisotropyUsed := False;
-  if frmGoPhast.PhastModel.LayerStructure.ModflowLayerCount > 1 then
+  if frmGoPhast.PhastModel.ModflowLayerCount > 1 then
   begin
     // Skip the top of the model: it doesn't count.
     for UnitIndex := 1 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
@@ -416,7 +493,7 @@ begin
     end;
   end;
 
-  frmErrorsAndWarnings.RemoveWarningGroup('LPF Parameters');
+  frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel, 'LPF Parameters');
   SpecificStorageUsed := False;
   SpecificYieldUsed := False;
   if frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel then
@@ -440,7 +517,7 @@ begin
   if VKCB_Defined and not Quasi3dUsed then
   begin
     ShowErrors := True;
-    frmErrorsAndWarnings.AddWarning('LPF Parameters',
+    frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
       'One or more VKCB parameters are defined in the LPF package '
       + 'but they won''t be used because'
       + ' all the layers are simulated.');
@@ -449,16 +526,16 @@ begin
   if VK_Defined and not VerticalHydraulicConductivityUsed then
   begin
     ShowErrors := True;
-    if frmGoPhast.PhastModel.LayerStructure.ModflowLayerCount = 1 then
+    if frmGoPhast.PhastModel.ModflowLayerCount = 1 then
     begin
-      frmErrorsAndWarnings.AddWarning('LPF Parameters',
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
         'One or more VK parameters are defined in the LPF package '
         + 'but they won''t be used because'
         + ' there is only one layer in the model.');
     end
     else
     begin
-      frmErrorsAndWarnings.AddWarning('LPF Parameters',
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
         'One or more VK parameters are defined in the LPF package '
         + 'but they won''t be used because'
         + ' vertical anisotropy is used for all the layers. '
@@ -470,16 +547,16 @@ begin
   if VANI_Defined and not VerticalAnisotropyUsed then
   begin
     ShowErrors := True;
-    if frmGoPhast.PhastModel.LayerStructure.ModflowLayerCount = 1 then
+    if frmGoPhast.PhastModel.ModflowLayerCount = 1 then
     begin
-      frmErrorsAndWarnings.AddWarning('LPF Parameters',
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
         'One or more VANI parameters are defined in the LPF package '
         + 'but they won''t be used because'
         + ' there is only one layer in the model.');
     end
     else
     begin
-      frmErrorsAndWarnings.AddWarning('LPF Parameters',
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
         'One or more VANI parameters are defined in the LPF package '
         + 'but they won''t be used because'
         + ' vertical hydraulic hydraulic conductivity is used for all the layers. '
@@ -491,7 +568,7 @@ begin
   if SS_Defined and not SpecificStorageUsed then
   begin
     ShowErrors := True;
-    frmErrorsAndWarnings.AddWarning('LPF Parameters',
+    frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
       'One or more SS parameters are defined in the LPF package '
       + 'but they won''t be used because'
       + ' there are no transient stress periods in the model.');
@@ -502,14 +579,14 @@ begin
     ShowErrors := True;
     if not frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel then
     begin
-      frmErrorsAndWarnings.AddWarning('LPF Parameters',
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
         'One or more SY parameters are defined in the LPF package '
         + 'but they won''t be used because'
         + ' there are no transient stress periods in the model.');
     end
     else
     begin
-      frmErrorsAndWarnings.AddWarning('LPF Parameters',
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
         'One or more SY parameters are defined in the LPF package '
         + 'but they won''t be used because'
         + ' all of the layers are confined.');
@@ -695,7 +772,6 @@ procedure TfrmModflowPackages.framePkgEVTrcSelectionControllerEnabledChange(
   Sender: TObject);
 begin
   inherited;
-//  framePkgEVT.rcSelectionControllerEnabledChange(nil);
   EnableEvtModpathOption;
 end;
 
@@ -942,17 +1018,20 @@ end;
 procedure TfrmModflowPackages.FormCreate(Sender: TObject);
 begin
   inherited;
+  FFrameNodeLinks := TObjectList.Create;
   framePkgGMG.pcGMG.ActivePageIndex := 0;
 end;
 
 procedure TfrmModflowPackages.FormDestroy(Sender: TObject);
 begin
   inherited;
-  SteadyParameters.Free;
-  HufParameters.Free;
-  TransientListParameters.Free;
-  PackageList.Free;
+  FSteadyParameters.Free;
+  FHufParameters.Free;
+  FTransientListParameters.Free;
+  FPackageList.Free;
   FSfrParameterInstances.Free;
+  FNewPackages.Free;
+  FFrameNodeLinks.Free;
 end;
 
 procedure TfrmModflowPackages.FormResize(Sender: TObject);
@@ -981,15 +1060,15 @@ begin
   case CurrentParameterType of
     ptLPF_HK..ptLPF_VKCB, ptHFB, ptHUF_SYTP, ptHUF_LVDA:
       begin
-        SteadyParameters.Remove(ActiveFrame.CurrentParameter);
+        FSteadyParameters.Remove(ActiveFrame.CurrentParameter);
       end;
     ptCHD..ptDRT, ptSFR, ptRCH, ptEVT, ptETS:
       begin
-        TransientListParameters.Remove(ActiveFrame.CurrentParameter);
+        FTransientListParameters.Remove(ActiveFrame.CurrentParameter);
       end;
     ptHUF_HK..ptHUF_SY, ptHUF_KDEP:
       begin
-        HufParameters.Remove(ActiveFrame.CurrentParameter);
+        FHufParameters.Remove(ActiveFrame.CurrentParameter);
       end
     else Assert(False);
   end;
@@ -1017,7 +1096,7 @@ procedure TfrmModflowPackages.ActivateHufReferenceChoice;
 begin
   framePkgHuf.rgElevationSurfaceChoice.Enabled :=
     framePkgHuf.rcSelectionController.Enabled
-    and (HufParameters.CountParameters([ptHUF_KDEP]) > 0);
+    and (FHufParameters.CountParameters([ptHUF_KDEP]) > 0);
 end;
 
 procedure TfrmModflowPackages.frameParameterDefinition_seNumberOfParametersChange(
@@ -1051,15 +1130,15 @@ begin
     case CurrentParameterType of
       ptLPF_HK..ptLPF_VKCB, ptHFB, ptHUF_SYTP, ptHUF_LVDA:
         begin
-          Parameter := SteadyParameters.Add as TModflowParameter;
+          Parameter := FSteadyParameters.Add as TModflowParameter;
         end;
       ptCHD..ptSFR, ptRCH, ptEVT, ptETS:
         begin
-          Parameter := TransientListParameters.Add as TModflowParameter;
+          Parameter := FTransientListParameters.Add as TModflowParameter;
         end;
       ptHUF_HK..ptHUF_SY, ptHUF_KDEP:
         begin
-          Parameter := HufParameters.Add as TModflowParameter;
+          Parameter := FHufParameters.Add as TModflowParameter;
         end;
       else Assert(False);
     end;
@@ -1078,16 +1157,16 @@ begin
       
       if Parameter is TModflowSteadyParameter then
       begin
-        SteadyParameters.Remove(Parameter);
+        FSteadyParameters.Remove(Parameter);
       end
       else if Parameter is TModflowTransientListParameter then
       begin
-        TransientListParameters.Remove(Parameter);
+        FTransientListParameters.Remove(Parameter);
       end
       else
       begin
         Assert(Parameter is THufParameter);
-        HufParameters.Remove(Parameter);
+        FHufParameters.Remove(Parameter);
       end;
     end;
   end;
@@ -1276,37 +1355,39 @@ var
   Frame: TframePackage;
   Page: TJvStandardPage;
   PriorNode: TTreeNode;
-  TreeNodeList: TStringList;
   ParentNode: TTreeNode;
   ChildNode: TTreeNode;
   NodeIndex: integer;
   AControl: TControl;
+  FTreeNodeList: TStringList;
+  Link: TFrameNodeLink;
   procedure AddNode(const Key, Caption: string; var PriorNode: TTreeNode);
   begin
     PriorNode := tvPackages.Items.Add(PriorNode, Caption);
-    TreeNodeList.AddObject(Key, PriorNode);
+    FTreeNodeList.AddObject(Key, PriorNode);
   end;
   procedure AddChildNode(const Key, Caption: string; ParentNode: TTreeNode);
   var
     ChildNode: TTreeNode;
   begin
     ChildNode := tvPackages.Items.AddChild(ParentNode, Caption);
-    TreeNodeList.AddObject(Key, ChildNode);
+    FTreeNodeList.AddObject(Key, ChildNode);
   end;
 begin
   frameSFRParameterDefinition.seNumberOfParameters.AsInteger := 0;
   frameSFRParameterDefinitionseNumberOfParametersChange(
     frameSFRParameterDefinition.seNumberOfParameters);
 
-  SteadyParameters.Assign(frmGoPhast.PhastModel.ModflowSteadyParameters);
-  TransientListParameters.Assign(frmGoPhast.PhastModel.ModflowTransientParameters);
-  HufParameters.Assign(frmGoPhast.PhastModel.HufParameters);
+  FSteadyParameters.Assign(frmGoPhast.PhastModel.ModflowSteadyParameters);
+  FTransientListParameters.Assign(frmGoPhast.PhastModel.ModflowTransientParameters);
+  FHufParameters.Assign(frmGoPhast.PhastModel.HufParameters);
 
   AddPackagesToList(frmGoPhast.PhastModel.ModflowPackages);
 
   tvPackages.Items.Clear;
-  TreeNodeList := TStringList.Create;
+  FTreeNodeList := TStringList.Create;
   try
+
     PriorNode := nil;
     AddNode(StrFlow, StrFlow, PriorNode);
     AddNode(StrBoundaryCondition, StrBoundaryCondition, PriorNode);
@@ -1319,22 +1400,30 @@ begin
     AddNode(StrOutput, StrOutput, PriorNode);
     AddNode(StrPostProcessors, StrPostProcessors, PriorNode);
 
-    for Index := 0 to PackageList.Count - 1 do
+    for Index := 0 to FPackageList.Count - 1 do
     begin
-      APackage := PackageList[Index];
+      APackage := FPackageList[Index];
       Frame := APackage.Frame;
       Frame.NilNode;
     end;
 
-    for Index := 0 to PackageList.Count - 1 do
+    FFrameNodeLinks.Clear;
+    for Index := 0 to FPackageList.Count - 1 do
     begin
-      APackage := PackageList[Index];
+      APackage := FPackageList[Index];
       Frame := APackage.Frame;
       Assert(Frame <> nil);
-      NodeIndex := TreeNodeList.IndexOf(APackage.Classification);
+      NodeIndex := FTreeNodeList.IndexOf(APackage.Classification);
       Assert(NodeIndex >= 0);
-      ParentNode := TreeNodeList.Objects[NodeIndex] as TTreeNode;
+      ParentNode := FTreeNodeList.Objects[NodeIndex] as TTreeNode;
       ChildNode := tvPackages.Items.AddChild(ParentNode, APackage.PackageIdentifier);
+
+      Link := TFrameNodeLink.Create;
+      Link.Frame := Frame;
+      Link.Node := ChildNode;
+//      Link.Package := APackage;
+      FFrameNodeLinks.Add(Link);
+
       AControl := Frame;
       Page := nil;
       while AControl.Parent <> nil do
@@ -1351,8 +1440,9 @@ begin
       Frame.GetData(APackage);
     end;
   finally
-    TreeNodeList.Free;
+    FTreeNodeList.Free;
   end;
+
   FillLpfTree;
   FillHufTree;
   FillTransientGrids;
@@ -1365,14 +1455,15 @@ procedure TfrmModflowPackages.GetData;
 begin
   IsLoaded := False;
   try
-    PackageList.Free;
-    PackageList := TList.Create;
-    SteadyParameters.Free;
-    SteadyParameters := TModflowSteadyParameters.Create(nil);
-    HufParameters.Free;
-    HufParameters := THufModflowParameters.Create(nil);
-    TransientListParameters.Free;
-    TransientListParameters := TModflowTransientListParameters.Create(nil);
+    StorePackages;
+    FPackageList.Free;
+    FPackageList := TList.Create;
+    FSteadyParameters.Free;
+    FSteadyParameters := TModflowSteadyParameters.Create(nil);
+    FHufParameters.Free;
+    FHufParameters := THufModflowParameters.Create(nil);
+    FTransientListParameters.Free;
+    FTransientListParameters := TModflowTransientListParameters.Create(nil);
     pcSFR.ActivePageIndex := 0;
     framePkgLPF.OnSelectedChange := framePkgLPFSelectedChange;
     framePkgCHD.OnSelectedChange :=  ChdSelectedChange;
@@ -1384,6 +1475,8 @@ begin
     framePkgGBOB.CanSelect := False;
     framePkgRVOB.CanSelect := False;
     ReadPackages;
+    comboModel.ItemIndex := 0;
+    comboModelChange(nil);
     if frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected then
     begin
       jvplPackages.ActivePage := jvspLPF;
@@ -1401,14 +1494,80 @@ begin
       jvplPackages.ActivePage := jvspLPF;
     end;
     jvplPackagesChange(nil);
-    framePkgLPFSelectedChange(nil);
     HelpKeyword := 'MODFLOW_Packages_Dialog_Box';
+    framePkgLPFSelectedChange(nil);
     ChdSelectedChange(nil);
     DrnSelectedChange(nil);
     GhbSelectedChange(nil);
     RivSelectedChange(nil);
+    pnlModel.Visible := frmGoPhast.PhastModel.LgrUsed;
   finally
     IsLoaded := True;
+  end;
+end;
+
+procedure TfrmModflowPackages.StoreFrameDataInPackages(
+  Packages: TModflowPackages);
+var
+  Index: Integer;
+  APackage: TModflowPackageSelection;
+  Frame: TframePackage;
+  Link : TFrameNodeLink;
+begin
+  AddPackagesToList(Packages);
+  for Index := 0 to FPackageList.Count - 1 do
+  begin
+    APackage := FPackageList[Index];
+    Frame := APackage.Frame;
+    Link := FFrameNodeLinks[Index];
+    Assert(Frame = Link.Frame);
+    APackage.Node := Link.Node;
+    Frame.SetData(APackage);
+  end;
+end;
+
+procedure TfrmModflowPackages.StorePackageDataInFrames(
+  Packages: TModflowPackages);
+var
+  Index: Integer;
+  APackage: TModflowPackageSelection;
+  Frame: TframePackage;
+  Link : TFrameNodeLink;
+begin
+  AddPackagesToList(Packages);
+  for Index := 0 to FPackageList.Count - 1 do
+  begin
+    APackage := FPackageList[Index];
+    Frame := APackage.Frame;
+    Link := FFrameNodeLinks[Index];
+    Assert(Frame = Link.Frame);
+    APackage.Node := Link.Node;
+    Frame.GetData(APackage);
+  end;
+end;
+
+procedure TfrmModflowPackages.StorePackages;
+var
+  Item: TTempPackageItem;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  FCurrentPackages := nil;
+  FNewPackages.Free;
+  comboModel.Items.Clear;
+  FNewPackages := TTempPackageCollection.Create;
+  Item := FNewPackages.Add;
+  Item.Packages.Assign(frmGoPhast.PhastModel.ModflowPackages);
+  comboModel.AddItem(StrParentModel, Item.Packages);
+  if frmGoPhast.PhastModel.ModelSelection = msModflowLGR then
+  begin
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      Item := FNewPackages.Add;
+      Item.Packages.Assign(ChildModel.ModflowPackages);
+      comboModel.AddItem(ChildModel.ModelName, Item.Packages);
+    end;
   end;
 end;
 
@@ -1676,9 +1835,9 @@ begin
     ptUndefined: Assert(False);
     ptLPF_HK..ptLPF_VKCB, ptHFB, ptHUF_SYTP, ptHUF_LVDA:
       begin
-        for Index := 0 to SteadyParameters.Count - 1 do
+        for Index := 0 to FSteadyParameters.Count - 1 do
         begin
-          Param := SteadyParameters[Index];
+          Param := FSteadyParameters[Index];
           ParamUpRoot := UpperCase(Param.ParameterName);
           if Pos(UpRoot, ParamUpRoot) > 0 then
           begin
@@ -1695,9 +1854,9 @@ begin
       end;
     ptCHD..ptSFR, ptRCH, ptEVT, ptETS:
       begin
-        for Index := 0 to TransientListParameters.Count - 1 do
+        for Index := 0 to FTransientListParameters.Count - 1 do
         begin
-          Param := TransientListParameters[Index];
+          Param := FTransientListParameters[Index];
           ParamUpRoot := UpperCase(Param.ParameterName);
           if Pos(UpRoot, ParamUpRoot) > 0 then
           begin
@@ -1714,9 +1873,9 @@ begin
       end;
     ptHUF_HK..ptHUF_SY, ptHUF_KDEP:
       begin
-        for Index := 0 to HufParameters.Count - 1 do
+        for Index := 0 to FHufParameters.Count - 1 do
         begin
-          Param := HufParameters.Items[Index] as TModflowParameter;
+          Param := FHufParameters.Items[Index] as TModflowParameter;
           ParamUpRoot := UpperCase(Param.ParameterName);
           if Pos(UpRoot, ParamUpRoot) > 0 then
           begin
@@ -1737,26 +1896,63 @@ begin
   result := Root + IntToStr(MaxCount);
 end;
 
+procedure TfrmModflowPackages.SetCurrentPackages(const Value: TModflowPackages);
+var
+  PackageIndex: Integer;
+  OtherPackages: TTempPackageItem;
+begin
+  if (FCurrentPackages <> Value) then
+  begin
+    if (FCurrentPackages <> nil) then
+    begin
+      StoreFrameDataInPackages(FCurrentPackages);
+      for PackageIndex := 0 to FNewPackages.Count - 1 do
+      begin
+        OtherPackages := FNewPackages[PackageIndex];
+        if OtherPackages.Packages <> FCurrentPackages then
+        begin
+          OtherPackages.Packages.LpfPackage.IsSelected
+            := FCurrentPackages.LpfPackage.IsSelected;
+          OtherPackages.Packages.BcfPackage.IsSelected
+            := FCurrentPackages.BcfPackage.IsSelected;
+          OtherPackages.Packages.HufPackage.IsSelected
+            := FCurrentPackages.HufPackage.IsSelected;
+        end;
+      end;
+    end;
+
+    FCurrentPackages := Value;
+    if (FCurrentPackages <> nil) then
+    begin
+      StorePackageDataInFrames(FCurrentPackages);
+    end;
+  end;
+end;
+
 procedure TfrmModflowPackages.SetData;
 var
-  Undo: TUndoChangePackageSelection;
-  Index: Integer;
-  APackage: TModflowPackageSelection;
-  Frame: TframePackage;
+  Undo: TUndoChangeLgrPackageSelection;
 begin
   SetSfrParamInstances;
-  Undo := TUndoChangePackageSelection.Create(SteadyParameters,
-    TransientListParameters, FSfrParameterInstances, HufParameters);
+
+  CurrentPackages := nil;
+
+{  Undo := TUndoChangePackageSelection.Create(FSteadyParameters,
+    FTransientListParameters, FSfrParameterInstances, FHufParameters);
 
   AddPackagesToList(Undo.FNewPackages);
 
-  for Index := 0 to PackageList.Count - 1 do
+  for Index := 0 to FPackageList.Count - 1 do
   begin
-    APackage := PackageList[Index];
+    APackage := FPackageList[Index];
     Frame := APackage.Frame;
     Assert(Frame <> nil);
     Frame.SetData(APackage);
-  end;
+  end; }
+
+  Undo := TUndoChangeLgrPackageSelection.Create(FSteadyParameters,
+    FTransientListParameters, FSfrParameterInstances, FHufParameters,
+    FNewPackages);
 
   frmGoPhast.UndoStack.Submit(Undo);
 end;
@@ -1876,10 +2072,10 @@ var
   ActiveGrid: TRbwDataGrid4;
 begin
   InitializeFrame(frameHfbParameterDefinition);
-  for ParamIndex := 0 to SteadyParameters.Count - 1 do
+  for ParamIndex := 0 to FSteadyParameters.Count - 1 do
   begin
     ActiveFrame := nil;
-    Param := SteadyParameters[ParamIndex];
+    Param := FSteadyParameters[ParamIndex];
     case Param.ParameterType of
       ptLPF_HK, ptLPF_HANI, ptLPF_VK,
         ptLPF_VANI, ptLPF_SS, ptLPF_SY, ptLPF_VKCB, ptHUF_SYTP, ptHUF_LVDA: ;  // do nothing
@@ -1918,10 +2114,10 @@ begin
   InitializeFrame(frameEtsParameterDefinition);
   InitializeFrame(frameSfrParameterDefinition);
 
-  for ParamIndex := 0 to TransientListParameters.Count - 1 do
+  for ParamIndex := 0 to FTransientListParameters.Count - 1 do
   begin
     ActiveFrame := nil;
-    Param := TransientListParameters[ParamIndex];
+    Param := FTransientListParameters[ParamIndex];
     case Param.ParameterType of
       ptCHD: ActiveFrame := frameChdParameterDefinition;
       ptGHB: ActiveFrame := frameGhbParameterDefinition;
@@ -1933,7 +2129,6 @@ begin
       ptEVT: ActiveFrame := frameEvtParameterDefinition;
       ptETS: ActiveFrame := frameEtsParameterDefinition;
       ptSFR: ActiveFrame := frameSfrParameterDefinition;
-//      ptHFB: ActiveFrame := frameHFBParameterDefinition;
       else Assert(False);
     end;
     ActiveGrid := ActiveFrame.dgParameters;
@@ -1943,112 +2138,110 @@ begin
     begin
       ActiveFrame.seNumberOfParameters.OnChange(ActiveFrame.seNumberOfParameters);
     end;
-//    frameParameterDefinition_seNumberOfParametersChange(
-//      ActiveFrame.seNumberOfParameters);
     AssignParameterToRow(ActiveGrid, ActiveGrid.RowCount -1, Param);
   end;
 end;
 
 procedure TfrmModflowPackages.AddPackagesToList(Packages: TModflowPackages);
 begin
-  PackageList.Clear;
+  FPackageList.Clear;
 
   // add to list in alphabetical order.
   Packages.BcfPackage.Frame := framePkgBCF;
-  PackageList.Add(Packages.BcfPackage);
+  FPackageList.Add(Packages.BcfPackage);
 
   Packages.ChdBoundary.Frame := framePkgCHD;
-  PackageList.Add(Packages.ChdBoundary);
+  FPackageList.Add(Packages.ChdBoundary);
 
   Packages.DrnPackage.Frame := framePkgDRN;
-  PackageList.Add(Packages.DrnPackage);
+  FPackageList.Add(Packages.DrnPackage);
 
   Packages.DrtPackage.Frame := framePkgDRT;
-  PackageList.Add(Packages.DrtPackage);
+  FPackageList.Add(Packages.DrtPackage);
 
   Packages.ETSPackage.Frame := framePkgETS;
-  PackageList.Add(Packages.ETSPackage);
+  FPackageList.Add(Packages.ETSPackage);
 
   Packages.EVTPackage.Frame := framePkgEVT;
-  PackageList.Add(Packages.EVTPackage);
+  FPackageList.Add(Packages.EVTPackage);
 
   Packages.GhbBoundary.Frame := framePkgGHB;
-  PackageList.Add(Packages.GhbBoundary);
+  FPackageList.Add(Packages.GhbBoundary);
 
   Packages.LakPackage.Frame := framePkgLAK;
-  PackageList.Add(Packages.LakPackage);
+  FPackageList.Add(Packages.LakPackage);
 
   Packages.LpfPackage.Frame := framePkgLPF;
-  PackageList.Add(Packages.LpfPackage);
+  FPackageList.Add(Packages.LpfPackage);
 
   Packages.HufPackage.Frame := framePkgHuf;
-  PackageList.Add(Packages.HufPackage);
+  FPackageList.Add(Packages.HufPackage);
 
   Packages.PcgPackage.Frame := framePCG;
-  PackageList.Add(Packages.PcgPackage);
+  FPackageList.Add(Packages.PcgPackage);
 
   Packages.Mnw2Package.Frame := framePkgMnw2;
-  PackageList.Add(Packages.Mnw2Package);
+  FPackageList.Add(Packages.Mnw2Package);
 
   Packages.RCHPackage.Frame := framePkgRCH;
-  PackageList.Add(Packages.RCHPackage);
+  FPackageList.Add(Packages.RCHPackage);
 
   Packages.ResPackage.Frame := framePkgRES;
-  PackageList.Add(Packages.ResPackage);
+  FPackageList.Add(Packages.ResPackage);
 
   Packages.RivPackage.Frame := framePkgRIV;
-  PackageList.Add(Packages.RivPackage);
+  FPackageList.Add(Packages.RivPackage);
 
   Packages.WelPackage.Frame := framePkgWEL;
-  PackageList.Add(Packages.WelPackage);
+  FPackageList.Add(Packages.WelPackage);
 
   Packages.SfrPackage.Frame := framePkgSFR;
-  PackageList.Add(Packages.SfrPackage);
+  FPackageList.Add(Packages.SfrPackage);
 
   Packages.HfbPackage.Frame := framePkgHFB;
-  PackageList.Add(Packages.HfbPackage);
+  FPackageList.Add(Packages.HfbPackage);
 
   Packages.UzfPackage.Frame := framePkgUZF;
-  PackageList.Add(Packages.UzfPackage);
+  FPackageList.Add(Packages.UzfPackage);
 
   Packages.GmgPackage.Frame := framePkgGMG;
-  PackageList.Add(Packages.GmgPackage);
+  FPackageList.Add(Packages.GmgPackage);
 
   Packages.SipPackage.Frame := framePkgSIP;
-  PackageList.Add(Packages.SipPackage);
+  FPackageList.Add(Packages.SipPackage);
 
   Packages.De4Package.Frame := framePkgDE4;
-  PackageList.Add(Packages.De4Package);
+  FPackageList.Add(Packages.De4Package);
 
   Packages.SubPackage.Frame := framePkgSub;
-  PackageList.Add(Packages.SubPackage);
+  FPackageList.Add(Packages.SubPackage);
 
   Packages.SwtPackage.Frame := framePkgSwt;
-  PackageList.Add(Packages.SwtPackage);
+  FPackageList.Add(Packages.SwtPackage);
 
   Packages.HobPackage.Frame := framePkgHOB;
-  PackageList.Add(Packages.HobPackage);
+  FPackageList.Add(Packages.HobPackage);
 
   Packages.ModPath.Frame := frameModpath;
-  PackageList.Add(Packages.ModPath);
+  FPackageList.Add(Packages.ModPath);
 
   Packages.ChobPackage.Frame := framePkgCHOB;
-  PackageList.Add(Packages.ChobPackage);
+  FPackageList.Add(Packages.ChobPackage);
 
   Packages.DrobPackage.Frame := framePkgDROB;
-  PackageList.Add(Packages.DrobPackage);
+  FPackageList.Add(Packages.DrobPackage);
 
   Packages.GbobPackage.Frame := framePkgGBOB;
-  PackageList.Add(Packages.GbobPackage);
+  FPackageList.Add(Packages.GbobPackage);
 
   Packages.RvobPackage.Frame := framePkgRVOB;
-  PackageList.Add(Packages.RvobPackage);
+  FPackageList.Add(Packages.RvobPackage);
 
   Packages.ZoneBudget.Frame := frameZoneBudget;
-  PackageList.Add(Packages.ZoneBudget);
+  FPackageList.Add(Packages.ZoneBudget);
 
   Packages.HydmodPackage.Frame := framePkgHydmod;
-  PackageList.Add(Packages.HydmodPackage);
+  FPackageList.Add(Packages.HydmodPackage);
 
 end;
 
@@ -2060,12 +2253,12 @@ begin
   if CurrentParameterType in [ptHUF_SYTP, ptHUF_LVDA] then
   begin
     UpdateFlowParamGrid(Node, frameHufParameterDefinition,
-      SteadyParameters, rbwHufParamCountController);
+      FSteadyParameters, rbwHufParamCountController);
   end
   else
   begin
     UpdateFlowParamGrid(Node, frameHufParameterDefinition,
-      HufParameters, rbwHufParamCountController);
+      FHufParameters, rbwHufParamCountController);
   end;
 end;
 
@@ -2074,12 +2267,12 @@ procedure TfrmModflowPackages.tvLpfParameterTypesChange(Sender: TObject;
 begin
   inherited;
   UpdateFlowParamGrid(Node, frameLpfParameterDefinition,
-    SteadyParameters, rbwLpfParamCountController);
+    FSteadyParameters, rbwLpfParamCountController);
 end;
 
 { TUndoChangePackageSelection }
 
-constructor TUndoChangePackageSelection.Create(
+{constructor TUndoChangePackageSelection.Create(
   var NewSteadyParameters: TModflowSteadyParameters;
   var NewTransientParameters: TModflowTransientListParameters;
   var SfrParameterInstances: TSfrParamInstances;
@@ -2179,7 +2372,216 @@ var
   Index: Integer;
   LayerGroup: TLayerGroup;
 begin
-  if frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected <> BcfPackage.IsSelected then
+  if frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected
+    <> BcfPackage.IsSelected then
+  begin
+    if BcfPackage.IsSelected then
+    begin
+      for Index := 1 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+      begin
+        LayerGroup := frmGoPhast.PhastModel.LayerStructure[Index];
+        if LayerGroup.InterblockTransmissivityMethod >= 1 then
+        begin
+          LayerGroup.InterblockTransmissivityMethod :=
+            LayerGroup.InterblockTransmissivityMethod + 1;
+        end;
+        if LayerGroup.AquiferType = 1 then
+        begin
+          LayerGroup.AquiferType := 3;
+        end;
+      end;
+    end
+    else
+    begin
+      for Index := 1 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+      begin
+        LayerGroup := frmGoPhast.PhastModel.LayerStructure[Index];
+        if LayerGroup.InterblockTransmissivityMethod >= 1 then
+        begin
+          LayerGroup.InterblockTransmissivityMethod :=
+            LayerGroup.InterblockTransmissivityMethod - 1;
+        end;
+        if LayerGroup.AquiferType > 1 then
+        begin
+          LayerGroup.AquiferType := 1;
+        end;
+      end;
+    end;
+  end;
+end;}
+
+{ TTempPackageItem }
+
+constructor TTempPackageItem.Create(Collection: TCollection);
+begin
+  inherited;
+  FPackages := TModflowPackages.Create(nil);
+end;
+
+destructor TTempPackageItem.Destroy;
+begin
+  FPackages.Free;
+  inherited;
+end;
+
+{ TTempPackageCollection }
+
+function TTempPackageCollection.Add: TTempPackageItem;
+begin
+  result := inherited Add as TTempPackageItem
+end;
+
+constructor TTempPackageCollection.Create;
+begin
+  inherited Create(TTempPackageItem);
+end;
+
+function TTempPackageCollection.GetItem(Index: integer): TTempPackageItem;
+begin
+  result := inherited Items[Index] as TTempPackageItem
+end;
+
+procedure TTempPackageCollection.SetItem(Index: integer;
+  const Value: TTempPackageItem);
+begin
+  inherited Items[Index] := Value;
+end;
+
+{ TUndoChangeLgrPackageSelection }
+
+constructor TUndoChangeLgrPackageSelection.Create(
+  var NewSteadyParameters: TModflowSteadyParameters;
+  var NewTransientParameters: TModflowTransientListParameters;
+  var SfrParameterInstances: TSfrParamInstances;
+  var NewHufModflowParameters: THufModflowParameters;
+  var NewPackages: TTempPackageCollection);
+var
+  Index: Integer;
+  LayerGroup: TLayerGroup;
+  TempParentPackages: TTempPackageItem;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  inherited Create(NewSteadyParameters, NewTransientParameters,
+    NewHufModflowParameters, SfrParameterInstances);
+
+  // take ownership of NewPackages.
+  FNewPackages := NewPackages;
+  NewPackages := nil;
+
+  SetLength(FOldInterBlockTransmissivity, frmGoPhast.PhastModel.LayerStructure.Count);
+  SetLength(FOldAquiferType, frmGoPhast.PhastModel.LayerStructure.Count);
+  for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+  begin
+    LayerGroup := frmGoPhast.PhastModel.LayerStructure[Index];
+    FOldInterBlockTransmissivity[Index] := LayerGroup.InterblockTransmissivityMethod;
+    FOldAquiferType[Index] := LayerGroup.AquiferType;
+  end;
+
+  FOldHydroGeologicUnits := THydrogeologicUnits.Create(nil);
+  FOldHydroGeologicUnits.Assign(frmGoPhast.PhastModel.HydrogeologicUnits);
+
+  FOldPackages := TTempPackageCollection.Create;
+
+  TempParentPackages := FOldPackages.Add;
+  TempParentPackages.Packages.Assign(frmGoPhast.PhastModel.ModflowPackages);
+  if frmGoPhast.PhastModel.ModelSelection = msModflowLGR then
+  begin
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      TempParentPackages := FOldPackages.Add;
+      TempParentPackages.Packages.Assign(ChildModel.ModflowPackages);
+    end;
+  end;
+end;
+
+function TUndoChangeLgrPackageSelection.Description: string;
+begin
+  result := 'change packages';
+end;
+
+destructor TUndoChangeLgrPackageSelection.Destroy;
+begin
+  FOldHydroGeologicUnits.Free;
+  FOldPackages.Free;
+  FNewPackages.Free;
+  inherited;
+end;
+
+procedure TUndoChangeLgrPackageSelection.DoCommand;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  inherited;
+  frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := False;
+  try
+    UpdateLayerGroupProperties(FNewPackages[0].Packages.BcfPackage);
+    frmGoPhast.PhastModel.ModflowPackages := FNewPackages[0].Packages;
+    if frmGoPhast.PhastModel.ModelSelection = msModflowLGR then
+    begin
+      Assert(frmGoPhast.PhastModel.ChildModels.Count = FNewPackages.Count -1);
+      for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+        ChildModel.ModflowPackages := FNewPackages[ChildIndex+1].Packages;
+      end;
+    end;
+  finally
+    frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := True;
+  end;
+  inherited;
+  frmGoPhast.EnableLinkStreams;
+  frmGoPhast.EnableManageFlowObservations;
+  frmGoPhast.EnableManageHeadObservations;
+  frmGoPhast.EnableHufMenuItems;
+end;
+
+procedure TUndoChangeLgrPackageSelection.Undo;
+var
+  Index: Integer;
+  LayerGroup: TLayerGroup;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := False;
+  try
+    for Index := 0 to frmGoPhast.PhastModel.LayerStructure.Count - 1 do
+    begin
+      LayerGroup := frmGoPhast.PhastModel.LayerStructure[Index];
+      LayerGroup.InterblockTransmissivityMethod := FOldInterBlockTransmissivity[Index];
+      LayerGroup.AquiferType := FOldAquiferType[Index];
+    end;
+    frmGoPhast.PhastModel.ModflowPackages := FOldPackages[0].Packages;
+    if frmGoPhast.PhastModel.ModelSelection = msModflowLGR then
+    begin
+      Assert(frmGoPhast.PhastModel.ChildModels.Count = FOldPackages.Count -1);
+      for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+      begin
+        ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+        ChildModel.ModflowPackages := FOldPackages[ChildIndex+1].Packages;
+      end;
+    end;
+  finally
+    frmGoPhast.PhastModel.ModflowPackages.SfrPackage.AssignParameterInstances := True;
+  end;
+  inherited;
+  frmGoPhast.PhastModel.HydrogeologicUnits.Assign(FOldHydroGeologicUnits);
+  frmGoPhast.EnableLinkStreams;
+  frmGoPhast.EnableHufMenuItems;
+  frmGoPhast.EnableManageFlowObservations;
+  frmGoPhast.EnableManageHeadObservations;
+end;
+
+procedure TUndoChangeLgrPackageSelection.UpdateLayerGroupProperties(
+  BcfPackage: TModflowPackageSelection);
+var
+  Index: Integer;
+  LayerGroup: TLayerGroup;
+begin
+  if frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected
+    <> BcfPackage.IsSelected then
   begin
     if BcfPackage.IsSelected then
     begin

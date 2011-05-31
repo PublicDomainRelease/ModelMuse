@@ -111,13 +111,13 @@ var
   Boundary: TMnw2Boundary;
 begin
   frmProgressMM.AddMessage('Evaluating MNWI Package data.');
-  for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+  for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
-    ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+    ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
     if ScreenObject.Deleted then
     begin
       Continue;
@@ -150,14 +150,18 @@ begin
   frmProgressMM.AddMessage('Evaluating MNW2 Package data.');
   Dummy := TStringList.Create;
   try
-    for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
     begin
       if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
-      ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+      ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
       if ScreenObject.Deleted then
+      begin
+        Continue;
+      end;
+      if not ScreenObject.UsedModels.UsesModel(Model) then
       begin
         Continue;
       end;
@@ -168,14 +172,14 @@ begin
       end;
 
       Item := Boundary.Values[0];
-      StressPeriod := PhastModel.ModflowFullStressPeriods[0];
+      StressPeriod := Model.ModflowFullStressPeriods[0];
       Item.StartTime := StressPeriod.StartTime;
-      StressPeriod := PhastModel.ModflowFullStressPeriods[
-        PhastModel.ModflowFullStressPeriods.Count-1];
+      StressPeriod := Model.ModflowFullStressPeriods[
+        Model.ModflowFullStressPeriods.Count-1];
       Item.EndTime := StressPeriod.EndTime;
 
       frmProgressMM.AddMessage('    Evaluating ' + ScreenObject.Name);
-      Boundary.GetCellValues(FValues, Dummy);
+      Boundary.GetCellValues(FValues, Dummy, Model);
       if (FValues.Count >= 1) then
       begin
         Assert(FValues.Count = 1);
@@ -205,7 +209,7 @@ end;
 
 function TModflowMNW2_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.Mnw2Package;
+  result := Model.ModflowPackages.Mnw2Package;
 end;
 
 procedure TModflowMNW2_Writer.UpdateDisplay(
@@ -346,14 +350,14 @@ begin
                   or (Sign(TimeItem.InactivationPumpingRateValue)
                   <> Sign(TimeItem.ReactivationPumpingRateValue)) then
                 begin
-                  frmErrorsAndWarnings.AddError(SignError,
+                  frmErrorsAndWarnings.AddError(Model, SignError,
                     'Object = ' + Well.FScreenObject.Name
                     + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
                 end;
                 if Abs(TimeItem.InactivationPumpingRateValue) >=
                   Abs(TimeItem.ReactivationPumpingRateValue) then
                 begin
-                  frmErrorsAndWarnings.AddError(RelativeSizeError,
+                  frmErrorsAndWarnings.AddError(Model, RelativeSizeError,
                     'Object = ' + Well.FScreenObject.Name
                     + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
                 end;
@@ -362,7 +366,7 @@ begin
                   or (Abs(TimeItem.ReactivationPumpingRateValue)
                   >= Abs(TimeItem.PumpingRateValue)) then
                 begin
-                  frmErrorsAndWarnings.AddError(SizeError,
+                  frmErrorsAndWarnings.AddError(Model, SizeError,
                     'Object = ' + Well.FScreenObject.Name
                     + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
                 end;
@@ -377,14 +381,14 @@ begin
                   or (TimeItem.ReactivationPumpingRateValue < 0)
                   or (TimeItem.ReactivationPumpingRateValue > 1) then
                 begin
-                  frmErrorsAndWarnings.AddError(InvalidFractionError,
+                  frmErrorsAndWarnings.AddError(Model, InvalidFractionError,
                     'Object = ' + Well.FScreenObject.Name
                     + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
                 end;
                 if Abs(TimeItem.InactivationPumpingRateValue) >=
                   Abs(TimeItem.ReactivationPumpingRateValue) then
                 begin
-                  frmErrorsAndWarnings.AddError(RelativeSizeError,
+                  frmErrorsAndWarnings.AddError(Model, RelativeSizeError,
                     'Object = ' + Well.FScreenObject.Name
                     + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
                 end;
@@ -411,7 +415,7 @@ begin
     on E: ERbwParserError do
     begin
       LocalScreenObject := WellBoundary.ScreenObject as TScreenObject;
-      frmFormulaErrors.AddError(LocalScreenObject.Name, '', Formula, E.Message + '; Error in formula for ' + ADataName + '.');
+      frmFormulaErrors.AddFormulaError(LocalScreenObject.Name, '', Formula, E.Message + '; Error in formula for ' + ADataName + '.');
       Formula := '0';
       Compiler.Compile(Formula);
     end;
@@ -430,7 +434,7 @@ var
 begin
   MNWMAX := FWells.Count;
   GetFlowUnitNumber(IWL2CB);
-  MNWPRNT := Ord(PhastModel.ModflowPackages.Mnw2Package.PrintOption);
+  MNWPRNT := Ord(Model.ModflowPackages.Mnw2Package.PrintOption);
   WriteInteger(MNWMAX);
   WriteInteger(IWL2CB);
   WriteInteger(MNWPRNT);
@@ -468,12 +472,12 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrMNW2) then
+  if Model.PackageGeneratedExternally(StrMNW2) then
   begin
     Exit;
   end;
   FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrMNW2, PhastModel.UnitNumbers.UnitNumber(StrMNW2),
+  WriteToNameFile(StrMNW2, Model.UnitNumbers.UnitNumber(StrMNW2),
     FNameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
@@ -529,17 +533,17 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrMNWI) then
+  if Model.PackageGeneratedExternally(StrMNWI) then
   begin
     Exit;
   end;
   EvaluateMnwi;
-  FMnwPackage := PhastModel.ModflowPackages.Mnw2Package;
+  FMnwPackage := Model.ModflowPackages.Mnw2Package;
   if (FMnwiWells.Count > 0) or FMnwPackage.CreateWellFile
     or FMnwPackage.SummarizeByWell or FMnwPackage.SummarizeByNode then
   begin
     NameOfMnwiFile := ChangeFileExt(AFileName, '.mnwi');;
-    WriteToNameFile(StrMNWI, PhastModel.UnitNumbers.UnitNumber(StrMNWI),
+    WriteToNameFile(StrMNWI, Model.UnitNumbers.UnitNumber(StrMNWI),
       NameOfMnwiFile, foInput);
 
     OpenFile(NameOfMnwiFile);
@@ -639,7 +643,7 @@ begin
   AFileName := ChangeFileExt(AFileName, '');
   if FMnwPackage.CreateWellFile then
   begin
-    WEL1flag := PhastModel.UnitNumbers.UnitNumber(StrMNWI_Wells);
+    WEL1flag := Model.UnitNumbers.UnitNumber(StrMNWI_Wells);
     OutputFileName := ChangeFileExt(AFileName, '.wel_out');
     WriteToNameFile(StrDATA, WEL1flag,
       OutputFileName, foOutput);
@@ -650,7 +654,7 @@ begin
   end;
   if FMnwPackage.SummarizeByWell then
   begin
-    QSUMflag := PhastModel.UnitNumbers.UnitNumber(StrMNWI_SummarizeByWell);
+    QSUMflag := Model.UnitNumbers.UnitNumber(StrMNWI_SummarizeByWell);
     OutputFileName := ChangeFileExt(AFileName, '.QSUM_out');
     WriteToNameFile(StrDATA, QSUMflag,
       OutputFileName, foOutput);
@@ -661,7 +665,7 @@ begin
   end;
   if FMnwPackage.SummarizeByNode then
   begin
-    BYNDflag := PhastModel.UnitNumbers.UnitNumber(StrMNWI_SummarizeByNode);
+    BYNDflag := Model.UnitNumbers.UnitNumber(StrMNWI_SummarizeByNode);
     OutputFileName := ChangeFileExt(AFileName, '.BYND_out');
     WriteToNameFile(StrDATA, BYNDflag,
       OutputFileName, foOutput);
@@ -831,9 +835,9 @@ var
   StressPeriod: TModflowStressPeriod;
 begin
   for StressPeriodIndex := 0 to
-    PhastModel.ModflowFullStressPeriods.Count - 1 do
+    Model.ModflowFullStressPeriods.Count - 1 do
   begin
-    StressPeriod := PhastModel.ModflowFullStressPeriods[StressPeriodIndex];
+    StressPeriod := Model.ModflowFullStressPeriods[StressPeriodIndex];
     WriteDataSet3(StressPeriod.StartTime, StressPeriodIndex);
     WriteDataSet4(StressPeriod.StartTime);
   end;
@@ -908,7 +912,7 @@ begin
     end
     else
     begin
-      PumpLocation := WellBoundary.TargetCellLocation;
+      PumpLocation := WellBoundary.TargetCellLocation(Model);
       WriteInteger(PumpLocation.Layer);
       WriteInteger(PumpLocation.Row);
       WriteInteger(PumpLocation.Column);
@@ -1015,7 +1019,7 @@ begin
         WriteInteger(COL);
         Comment := ' # Data Set 2D; Ztop, Zbotm, ROW, COL';
 
-        Compiler := PhastModel.rpThreeDFormulaCompiler;
+        Compiler := Model.rpThreeDFormulaCompiler;
 
         case WellBoundary.LossType of
           mltNone: Assert(False);
@@ -1289,7 +1293,8 @@ begin
   begin
     if NNODES <> 1 then
     begin
-      frmErrorsAndWarnings.AddError(LossTypeError, Well.FScreenObject.Name);
+      frmErrorsAndWarnings.AddError(Model,
+        LossTypeError, Well.FScreenObject.Name);
     end;
   end;
   LOSSTYPE := LossTypes[WellBoundary.LossType];
@@ -1361,7 +1366,7 @@ begin
   WELLID := WellBoundary.WellID;
   if FWellNames.IndexOf(WELLID) >= 0 then
   begin
-    frmErrorsAndWarnings.AddError(ErrorRoot,
+    frmErrorsAndWarnings.AddError(Model, ErrorRoot,
       'Object = ' + Well.FScreenObject.Name
       + '; ' + 'WELLID = ' + WELLID);
   end;
@@ -1378,7 +1383,7 @@ begin
     begin
       if WellBoundary.VerticalScreens.Count > 0 then
       begin
-        frmErrorsAndWarnings.AddError(ErrorRoot2,
+        frmErrorsAndWarnings.AddError(Model, ErrorRoot2,
           'Object = ' + Well.FScreenObject.Name
           + '; ' + 'WELLID = ' + WELLID);
       end;

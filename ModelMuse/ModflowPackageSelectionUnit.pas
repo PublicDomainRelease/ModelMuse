@@ -22,7 +22,7 @@ Type
   TModflowPackageSelection = class(TPersistent)
   private
     FComments: TStrings;
-    FModel: TObject;
+    FModel: TBaseModel;
     FPackageIdentifier: string;
     FClassification: string;
     FFrame: pointer;
@@ -45,7 +45,7 @@ Type
       Item: TCustomModflowBoundaryItem);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     // @name is a string used to label items related to the package.
     // For example, in @link(TfrmShowHideObjects), @name is used to
@@ -79,7 +79,7 @@ Type
     procedure InitializeMfWellPumpage(Sender: TObject);
     procedure GetMfWellUseList(Sender: TObject; NewUseList: TStringList);
   public
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfWellPumpage: TModflowBoundaryDisplayTimeList
       read FMfWellPumpage;
@@ -96,7 +96,7 @@ Type
       NewUseList: TStringList);
     procedure InitializeGhbDisplay(Sender: TObject);
   public
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfGhbConductance: TModflowBoundaryDisplayTimeList
       read FMfGhbConductance;
@@ -115,7 +115,7 @@ Type
     procedure GetMfDrnElevationUseList(Sender: TObject;
       NewUseList: TStringList);
   public
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfDrnConductance: TModflowBoundaryDisplayTimeList
       read FMfDrnConductance;
@@ -137,7 +137,7 @@ Type
     procedure GetMfDrtReturnFractionUseList(Sender: TObject;
       NewUseList: TStringList);
   public
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfDrtConductance: TModflowBoundaryDisplayTimeList
       read FMfDrtConductance;
@@ -159,7 +159,7 @@ Type
     procedure GetMfRivStageUseList(Sender: TObject; NewUseList: TStringList);
     procedure GetMfRivBottomUseList(Sender: TObject; NewUseList: TStringList);
   public
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfRivConductance: TModflowBoundaryDisplayTimeList
       read FMfRivConductance;
@@ -178,7 +178,7 @@ Type
     procedure GetMfChdEndingHeadUseList(Sender: TObject;
       NewUseList: TStringList);
   public
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfChdStartingHead: TModflowBoundaryDisplayTimeList
       read FMfChdStartingHead;
@@ -201,7 +201,7 @@ Type
     procedure SetUseStorageCoefficient(const Value: boolean);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
   published
     property UseConstantCV: boolean read FUseConstantCV write SetUseConstantCV;
     property UseSaturatedThickness: boolean read FUseSaturatedThickness
@@ -225,7 +225,7 @@ Type
     procedure SetReferenceChoice(const Value: THufReferenceChoice);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     procedure InitializeVariables;
   published
     property SaveHeads: boolean read FSaveHeads write SetSaveHeads default True;
@@ -264,7 +264,7 @@ Type
     procedure SetDAMPPCGT(const Value: TRealStorage);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables;
   published
@@ -313,7 +313,7 @@ Type
     procedure SetRELAX(const Value: TRealStorage);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables;
   published
@@ -351,7 +351,7 @@ Type
     procedure SetWSEED(const Value: TRealStorage);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables;
   published
@@ -386,7 +386,7 @@ Type
     procedure SetMXUP(const Value: integer);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InitializeVariables;
   published
@@ -412,7 +412,7 @@ Type
     FOnLayerChoiceChange: TNotifyEvent;
     procedure SetLayerOption(const Value: TLayerOption);
   public
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     procedure Assign(Source: TPersistent); override;
     property OnLayerChoiceChange: TNotifyEvent read FOnLayerChoiceChange
       write FOnLayerChoiceChange;
@@ -434,7 +434,7 @@ Type
       ScreenObject: TScreenObject; NewUseList: TStringList);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
   published
     property TimeVaryingLayers: boolean
       read GetTimeVaryingLayers write SetTimeVaryingLayers;
@@ -454,7 +454,7 @@ Type
     procedure UpdateEvtUseList(NewUseList: TStringList;
       ParamType: TParameterType; DataIndex: integer; const DisplayName: string);
   public
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure InvalidateAllTimeLists; override;
     property MfEvtEvapDepth: TModflowBoundaryDisplayTimeList
@@ -472,16 +472,24 @@ Type
   private
     FMfRchLayer: TModflowBoundaryDisplayTimeList;
     FMfRchRate: TModflowBoundaryDisplayTimeList;
+//    FAddCells: boolean;
+    FAssignmentMethod: TUpdateMethod;
     procedure GetMfRchRateUseList(Sender: TObject; NewUseList: TStringList);
     procedure GetMfRchLayerUseList(Sender: TObject; NewUseList: TStringList);
     procedure InitializeRchDisplay(Sender: TObject);
+//    procedure SetAddCells(const Value: boolean);
+    procedure SetAssignmentMethod(const Value: TUpdateMethod);
   public
-    Constructor Create(Model: TObject);
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfRchRate: TModflowBoundaryDisplayTimeList read FMfRchRate;
     property MfRchLayer: TModflowBoundaryDisplayTimeList read FMfRchLayer;
     procedure InvalidateAllTimeLists; override;
     procedure InvalidateMfRchLayer(Sender: TObject);
+  published
+    property AssignmentMethod: TUpdateMethod read FAssignmentMethod
+      write SetAssignmentMethod Stored True;
   end;
 
   TEtsPackageSelection = class(TCustomTransientLayerPackageSelection)
@@ -507,7 +515,7 @@ Type
       ParamType: TParameterType; DataIndex: integer; const DisplayName: string);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfEtsEvapRate: TModflowBoundaryDisplayTimeList
       read FMfEtsEvapRate;
@@ -535,7 +543,7 @@ Type
     procedure SetTableStages(const Value: integer);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
   published
     property PrintStage: boolean read FPrintStage write SetPrintStage default True;
     property TableStages: integer read FTableStages write SetTableStages default 15;
@@ -557,7 +565,7 @@ Type
     procedure SetIsSelected(const Value: boolean); override;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
   published
     property ConvergenceCriterion: double read FConvergenceCriterion write SetConvergenceCriterion;
@@ -593,7 +601,7 @@ Type
     function GetItems(Index: integer): TSfrParamInstance;
     procedure SetItems(Index: integer; const Value: TSfrParamInstance);
   public
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TSfrParamInstance read GetItems write SetItems;
     function ParameterInstanceExists(const ParamName, InstaName: string): boolean;
     procedure DeleteInstancesOfParameter(const ParamName: string);
@@ -775,7 +783,7 @@ Type
     procedure SetIsSelected(const Value: boolean); override;
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     Function StreamConstant: double;
     property AssignParameterInstances: boolean read FAssignParameterInstances
@@ -908,6 +916,7 @@ Type
     FMfUzfExtinctionDepth: TModflowBoundaryDisplayTimeList;
     FMfUzfWaterContent: TModflowBoundaryDisplayTimeList;
     FMfUzfEtDemand: TModflowBoundaryDisplayTimeList;
+    FAssignmentMethod: TUpdateMethod;
     procedure SetNumberOfTrailingWaves(const Value: integer);
     procedure SetNumberOfWaveSets(const Value: integer);
     procedure SetRouteDischargeToStreams(const Value: boolean);
@@ -924,9 +933,10 @@ Type
       NewUseList: TStringList);
     procedure GetMfUzfWaterContentUseList(Sender: TObject;
       NewUseList: TStringList);
+    procedure SetAssignmentMethod(const Value: TUpdateMethod);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property MfUzfInfiltration: TModflowBoundaryDisplayTimeList
       read FMfUzfInfiltration;
@@ -945,6 +955,8 @@ Type
     property NumberOfWaveSets: integer read FNumberOfWaveSets write SetNumberOfWaveSets;
     property PrintSummary: integer read FPrintSummary write SetPrintSummary;
     property DepthOfUndulations: double read FDepthOfUndulations write SetDepthOfUndulations;
+    property AssignmentMethod: TUpdateMethod read FAssignmentMethod
+      write SetAssignmentMethod stored True;
   end;
 
   THobPackageSelection = class(TModflowPackageSelection)
@@ -953,7 +965,7 @@ Type
     procedure SetDryHead(const Value: double);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     procedure InitializeVariables;
   published
     property DryHead: double read FDryHead write SetDryHead;
@@ -1017,7 +1029,7 @@ Type
     procedure SetTimeSeriesMethod(const Value: TTimeSeriesMethod);
     procedure SetBackwardsTrackingReleaseTime(const Value: double);
   public
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
     procedure InitializeVariables;
@@ -1084,7 +1096,7 @@ Type
     procedure SetZoneName(Value: string);
   public
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     function IsSame(AnOrderedCollection: TOrderedCollection): boolean; override;
     property Items[Index: integer]: ZZoneItem read GetItem
       write SetItem; default;
@@ -1110,7 +1122,7 @@ Type
     function GetItem(Index: integer): TCompositeZoneItem;
     procedure SetItem(Index: integer; const Value: TCompositeZoneItem);
   public
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TCompositeZoneItem read GetItem
       write SetItem; default;
   end;
@@ -1127,7 +1139,7 @@ Type
     procedure SetExportZBLST(const Value: boolean);
   public
     procedure InitializeVariables;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
   published
@@ -1172,7 +1184,7 @@ Type
     procedure GetMfMnwPartialPenetrationUseList(Sender: TObject;
       NewUseList: TStringList);
   public
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
     property MfMnwWellRadius: TModflowBoundaryDisplayTimeList
@@ -1288,7 +1300,7 @@ Type
     function GetItem(Index: integer): TSubPrintItem;
     procedure SetItem(Index: integer; const Value: TSubPrintItem);
   public
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TSubPrintItem read GetItem
       write SetItem; default;
     procedure ReportErrors;
@@ -1354,7 +1366,7 @@ Type
   public
     procedure Assign(Source: TPersistent); override;
     procedure InitializeVariables;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
   published
     property PrintFormats: TSubPrintFormats read FPrintFormats
@@ -1529,7 +1541,7 @@ Type
     function GetItem(Index: integer): TSwtPrintItem;
     procedure SetItem(Index: integer; const Value: TSwtPrintItem);
   public
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     property Items[Index: integer]: TSwtPrintItem read GetItem
       write SetItem; default;
     procedure ReportErrors;
@@ -1699,7 +1711,7 @@ Type
   public
     procedure Assign(Source: TPersistent); override;
     procedure InitializeVariables;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
   published
     // Data set 1, ITHK
@@ -1736,7 +1748,7 @@ Type
     procedure SetHYDNOH(const Value: double);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property HYDNOH: double read GetHYDNOH write SetHYDNOH;
     procedure InitializeVariables;
@@ -1756,7 +1768,8 @@ uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
   ModflowSfrWriterUnit, ModflowSfrUnit, ModflowSfrReachUnit, ModflowSfrFlows, 
   ModflowSfrChannelUnit, ModflowSfrEquationUnit, ModflowSfrSegment, 
   ModflowSfrUnsatSegment, ModflowMNW2_WriterUnit, ModflowMnw2Unit,
-  LayerStructureUnit, ModflowSubsidenceDefUnit, frmGridValueUnit;
+  LayerStructureUnit, ModflowSubsidenceDefUnit, frmGridValueUnit, 
+  frmGoPhastUnit;
 
 
 { TModflowPackageSelection }
@@ -1764,7 +1777,7 @@ uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
 procedure TModflowPackageSelection.AddTimeList(TimeList: TCustomTimeList);
 begin
   Assert(FModel <> nil);
-  (FModel as TPhastModel).AddTimeList(TimeList);
+  (FModel as TCustomModel).AddTimeList(TimeList);
 end;
 
 procedure TModflowPackageSelection.Assign(Source: TPersistent);
@@ -1783,10 +1796,10 @@ begin
   end;
 end;
 
-constructor TModflowPackageSelection.Create(Model: TObject);
+constructor TModflowPackageSelection.Create(Model: TBaseModel);
 begin
   inherited Create;
-  Assert((Model = nil) or (Model is TPhastModel));
+  Assert((Model = nil) or (Model is TCustomModel));
   FModel := Model;
   FComments := TStringList.Create;
 end;
@@ -1806,7 +1819,7 @@ procedure TModflowPackageSelection.InvalidateModel;
 begin
   if FModel <> nil then
   begin
-    (FModel as TPhastModel).Invalidate;
+    FModel.Invalidate;
   end;
 end;
 
@@ -1817,7 +1830,7 @@ end;
 
 procedure TModflowPackageSelection.RemoveTimeList(TimeList: TCustomTimeList);
 begin
-  (FModel as TPhastModel).RemoveTimeList(TimeList);
+  (FModel as TCustomModel).RemoveTimeList(TimeList);
 end;
 
 procedure TModflowPackageSelection.SetComments(const Value: TStrings);
@@ -1834,6 +1847,7 @@ begin
     FIsSelected := Value;
     if FModel <> nil then
     begin
+      InvalidateAllTimeLists;
       UpdateFrmGridColor;
       UpdateFrmContourData;
       UpdateFrmGridValue;
@@ -1844,7 +1858,7 @@ end;
 procedure TModflowPackageSelection.UpdateDisplayUseList(NewUseList: TStringList;
   ParamType: TParameterType; DataIndex: integer; const DisplayName: string);
 begin
-  (FModel as TPhastModel).UpdateDisplayUseList(NewUseList,
+  (FModel as TCustomModel).UpdateDisplayUseList(NewUseList,
     ParamType, DataIndex, DisplayName);
 end;
 
@@ -1857,14 +1871,14 @@ var
   ScreenObject: TScreenObject;
   Parser: TRbwParser;
 begin
-  Parser := (FModel as TPhastModel).rpThreeDFormulaCompiler;
+  Parser := (FModel as TCustomModel).rpThreeDFormulaCompiler;
   Formula := Item.BoundaryFormula[DataIndex];
   try
     Parser.Compile(Formula);
   except on E: ErbwParserError do
     begin
       ScreenObject := Item.ScreenObject as TScreenObject;
-      frmFormulaErrors.AddError(ScreenObject.Name, StrModflowSfrReachLength,
+      frmFormulaErrors.AddFormulaError(ScreenObject.Name, StrModflowSfrReachLength,
         Formula, E.Message);
       Formula := '0';
       Parser.Compile(Formula);
@@ -1887,12 +1901,12 @@ var
   VariableIndex: Integer;
   Parser : TRbwParser;
 begin
-  Parser := (FModel as TPhastModel).rpTopFormulaCompiler;
+  Parser := (FModel as TCustomModel).rpTopFormulaCompiler;
   try
     Parser.Compile(Formula);
   except on E: ErbwParserError do
     begin
-      frmFormulaErrors.AddError(ScreenObject.Name, 'Elevation formula',
+      frmFormulaErrors.AddFormulaError(ScreenObject.Name, 'Elevation formula',
         Formula, E.Message);
       Formula := '0';
       Parser.Compile(Formula);
@@ -1932,7 +1946,7 @@ begin
   inherited;
 end;
 
-constructor TPcgSelection.Create(Model: TObject);
+constructor TPcgSelection.Create(Model: TBaseModel);
 begin
   inherited;
   FHCLOSE := TRealStorage.Create;
@@ -2081,7 +2095,7 @@ begin
   inherited;
 end;
 
-constructor TCustomTransientLayerPackageSelection.Create(Model: TObject);
+constructor TCustomTransientLayerPackageSelection.Create(Model: TBaseModel);
 begin
   inherited Create(Model);
   FLayerOption := loTop;
@@ -2115,12 +2129,22 @@ end;
 
 { TRchPackageSelection }
 
-constructor TRchPackageSelection.Create(Model: TObject);
+procedure TRchPackageSelection.Assign(Source: TPersistent);
+begin
+  if Source is TRchPackageSelection then
+  begin
+    AssignmentMethod := TRchPackageSelection(Source).AssignmentMethod;
+  end;
+  inherited;
+end;
+
+constructor TRchPackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
+//  FAssignmentMethod := umAdd;
   if Model <> nil then
   begin
-    OnLayerChoiceChange := (Model as TPhastModel).InvalidateMfRchLayer;
+    OnLayerChoiceChange := (Model as TCustomModel).InvalidateMfRchLayer;
 
     FMfRchRate := TModflowBoundaryDisplayTimeList.Create(Model);
     MfRchRate.OnInitialize := InitializeRchDisplay;
@@ -2153,9 +2177,9 @@ var
   Item: TRchLayerItem;
   ValueIndex: Integer;
   Boundary: TRchBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -2224,7 +2248,7 @@ begin
 
 
   List := TModflowBoundListOfTimeLists.Create;
-  RchWriter := TModflowRCH_Writer.Create(FModel as TPhastModel);
+  RchWriter := TModflowRCH_Writer.Create(FModel as TCustomModel);
   try
     List.Add(MfRchRate);
     if LayerOption = loSpecified then
@@ -2246,7 +2270,7 @@ end;
 procedure TRchPackageSelection.InvalidateAllTimeLists;
 begin
   inherited;
-  if PackageUsed(FModel) then
+//  if PackageUsed(FModel) then
   begin
     MfRchRate.Invalidate;
     MfRchLayer.Invalidate;
@@ -2258,10 +2282,24 @@ begin
   MfRchLayer.Invalidate;
 end;
 
+procedure TRchPackageSelection.SetAssignmentMethod(const Value: TUpdateMethod);
+begin
+  if FAssignmentMethod <> Value then
+  begin
+    FAssignmentMethod := Value;
+    InvalidateModel;
+    if FModel <> nil then
+    begin
+      MfRchRate.Invalidate;
+    end;
+  end;
+end;
+
 { TEtsPackageSelection }
 
 procedure TEtsPackageSelection.Assign(Source: TPersistent);
 begin
+  inherited;
   if Source is TEtsPackageSelection then
   begin
     SegmentCount := TEtsPackageSelection(Source).SegmentCount;
@@ -2270,10 +2308,9 @@ begin
       UpdateEtsSegmentCount;
     end;
   end;
-  inherited;
 end;
 
-constructor TEtsPackageSelection.Create(Model: TObject);
+constructor TEtsPackageSelection.Create(Model: TBaseModel);
 begin
   inherited Create(Model);
   FSegmentCount := 1;
@@ -2353,9 +2390,9 @@ var
   Item: TEvtLayerItem;
   ValueIndex: Integer;
   Boundary: TEtsBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -2445,7 +2482,7 @@ begin
   end;
 
   List := TModflowBoundListOfTimeLists.Create;
-  EtsWriter := TModflowETS_Writer.Create(FModel as TPhastModel);
+  EtsWriter := TModflowETS_Writer.Create(FModel as TCustomModel);
   try
     List.Add(MfEtsEvapRate);
     List.Add(MfEtsEvapSurface);
@@ -2480,7 +2517,7 @@ end;
 procedure TEtsPackageSelection.InvalidateAllTimeLists;
 begin
   inherited;
-  if PackageUsed(nil) then
+//  if PackageUsed(nil) then
   begin
     MfEtsEvapDepth.Invalidate;
     InvalidateMfEtsEvapLayer(nil);
@@ -2592,9 +2629,9 @@ var
   Item: TCustomModflowBoundaryItem;
   ValueIndex: Integer;
   Boundary: TEtsBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -2629,7 +2666,7 @@ begin
   inherited;
 end;
 
-constructor TResPackageSelection.Create(Model: TObject);
+constructor TResPackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
   FPrintStage := True;
@@ -2672,7 +2709,7 @@ begin
   inherited;
 end;
 
-constructor TLakePackageSelection.Create(Model: TObject);
+constructor TLakePackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
   FTheta := 0.5;
@@ -2742,7 +2779,7 @@ end;
 
 { TEvtPackageSelection }
 
-constructor TEvtPackageSelection.Create(Model: TObject);
+constructor TEvtPackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
   if Model <> nil then
@@ -2802,9 +2839,9 @@ var
   Item: TEvtLayerItem;
   ValueIndex: Integer;
   Boundary: TEvtBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -2882,7 +2919,7 @@ begin
 
 
   List := TModflowBoundListOfTimeLists.Create;
-  EvtWriter := TModflowEVT_Writer.Create(FModel as TPhastModel);
+  EvtWriter := TModflowEVT_Writer.Create(FModel as TCustomModel);
   try
     List.Add(MfEvtEvapRate);
     List.Add(MfEvtEvapSurface);
@@ -2906,7 +2943,7 @@ end;
 procedure TEvtPackageSelection.InvalidateAllTimeLists;
 begin
   inherited;
-  if PackageUsed(FModel) then
+//  if PackageUsed(FModel) then
   begin
     MfEvtEvapDepth.Invalidate;
     MfEvtEvapLayer.Invalidate;
@@ -2928,9 +2965,9 @@ var
   Item: TCustomModflowBoundaryItem;
   ValueIndex: Integer;
   Boundary: TEvtBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -2977,7 +3014,7 @@ begin
   inherited;
 end;
 
-constructor TSfrPackageSelection.Create(Model: TObject);
+constructor TSfrPackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
   Dleak := 0.0001;
@@ -3404,9 +3441,9 @@ var
   Item: TSfrChannelItem;
   ValueIndex: Integer;
   Boundary: TSfrBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -3482,9 +3519,9 @@ var
   Item: TSfrSegmentItem;
   ValueIndex: Integer;
   Boundary: TSfrBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -3525,9 +3562,9 @@ var
   Item: TSfrUnsatSegmentItem;
   ValueIndex: Integer;
   Boundary: TSfrBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   if (Isfropt >= 2) then
   begin
     for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
@@ -3571,9 +3608,9 @@ var
   Item: TSfrEquationItem;
   ValueIndex: Integer;
   Boundary: TSfrBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -3607,9 +3644,9 @@ var
   Item: TSfrSegmentFlowItem;
   ValueIndex: Integer;
   Boundary: TSfrBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -3655,9 +3692,9 @@ var
   Item: TSfrItem;
   ValueIndex: Integer;
   Boundary: TSfrBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -3763,9 +3800,9 @@ var
   Item: TSfrSegmentItem;
   ValueIndex: Integer;
   Boundary: TSfrBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -3805,9 +3842,9 @@ var
   Item: TSfrUnsatSegmentItem;
   ValueIndex: Integer;
   Boundary: TSfrBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   if (Isfropt >= 2) then
   begin
     for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
@@ -3872,7 +3909,7 @@ var
   DisplayList: TModflowBoundaryDisplayTimeList;
 begin
   List := TModflowBoundListOfTimeLists.Create;
-  SfrWriter := TModflowSFR_Writer.Create(FModel as TPhastModel);
+  SfrWriter := TModflowSFR_Writer.Create(FModel as TCustomModel);
   try
     List.Add(MfSfrSegmentNumber);
     List.Add(MfSfrReachNumber);
@@ -3941,7 +3978,7 @@ end;
 procedure TSfrPackageSelection.InvalidateAllTimeLists;
 begin
   inherited;
-  if PackageUsed(nil) then
+//  if PackageUsed(nil) then
   begin
     MfSfrBankRoughness.Invalidate;
     MfSfrBrooksCorey.Invalidate;
@@ -4075,7 +4112,7 @@ end;
 procedure TSfrPackageSelection.SetIsfropt(const Value: integer);
 var
   SelectionChanged: boolean;
-  PhastModel: TPhastModel;
+  PhastModel: TCustomModel;
 begin
   if FIsfropt <> Value then
   begin
@@ -4086,7 +4123,7 @@ begin
       PhastModel := nil;
       if SelectionChanged then
       begin
-        PhastModel := FModel as TPhastModel;
+        PhastModel := FModel as TCustomModel;
         PhastModel.InvalidateMfSfrStreamTop(self);
         PhastModel.InvalidateMfSfrStreamSlope(self);
         PhastModel.InvalidateMfSfrStreamThickness(self);
@@ -4097,7 +4134,7 @@ begin
       begin
         if PhastModel = nil then
         begin
-          PhastModel := FModel as TPhastModel;
+          PhastModel := FModel as TCustomModel;
         end;
         PhastModel.InvalidateMfSfrSaturatedWaterContent(self);
         PhastModel.InvalidateMfSfrInitialWaterContent(self);
@@ -4108,7 +4145,7 @@ begin
       begin
         if PhastModel = nil then
         begin
-          PhastModel := FModel as TPhastModel;
+          PhastModel := FModel as TCustomModel;
         end;
         PhastModel.InvalidateMfSfrVerticalUnsatK(self);
       end;
@@ -4117,7 +4154,7 @@ begin
       begin
         if PhastModel = nil then
         begin
-          PhastModel := FModel as TPhastModel;
+          PhastModel := FModel as TCustomModel;
         end;
         PhastModel.InvalidateMfSfrUpstreamHydraulicConductivity(self);
         PhastModel.InvalidateMfSfrDownstreamHydraulicConductivity(self);
@@ -4127,7 +4164,7 @@ begin
       begin
         if PhastModel = nil then
         begin
-          PhastModel := FModel as TPhastModel;
+          PhastModel := FModel as TCustomModel;
         end;
         PhastModel.InvalidateMfSfrUpstreamWidth(self);
         PhastModel.InvalidateMfSfrDownstreamWidth(self);
@@ -4137,7 +4174,7 @@ begin
       begin
         if PhastModel = nil then
         begin
-          PhastModel := FModel as TPhastModel;
+          PhastModel := FModel as TCustomModel;
         end;
         PhastModel.InvalidateMfSfrUpstreamThickness(self);
         PhastModel.InvalidateMfSfrDownstreamThickness(self);
@@ -4149,7 +4186,7 @@ begin
       begin
         if PhastModel = nil then
         begin
-          PhastModel := FModel as TPhastModel;
+          PhastModel := FModel as TCustomModel;
         end;
         PhastModel.InvalidateMfSfrUpstreamUnsaturatedWaterContent(self);
         PhastModel.InvalidateMfSfrDownstreamUnsaturatedWaterContent(self);
@@ -4163,7 +4200,7 @@ begin
       begin
         if PhastModel = nil then
         begin
-          PhastModel := FModel as TPhastModel;
+          PhastModel := FModel as TCustomModel;
         end;
         PhastModel.InvalidateMfSfrUpstreamUnsatKz(self);
         PhastModel.InvalidateMfSfrDownstreamUnsatKz(self);
@@ -4285,13 +4322,13 @@ var
   ErrorMessage: string;
 begin
   result := 1;
-  ModflowOptions := (FModel as TPhastModel).ModflowOptions;
+  ModflowOptions := (FModel as TCustomModel).ModflowOptions;
   case ModflowOptions.LengthUnit of
     0: // undefined
       begin
         ErrorMessage :=
           'Length units for model are undefined';
-        frmErrorsAndWarnings.AddError(SfrError, ErrorMessage);
+        frmErrorsAndWarnings.AddError(FModel, SfrError, ErrorMessage);
       end;
     1: // feet
       begin
@@ -4316,7 +4353,7 @@ begin
       begin
         ErrorMessage :=
           'Time units for model are undefined';
-        frmErrorsAndWarnings.AddError(SfrError, ErrorMessage);
+        frmErrorsAndWarnings.AddError(FModel, SfrError, ErrorMessage);
       end;
     1: // Seconds
       begin
@@ -4424,8 +4461,10 @@ var
   ScreenObject: TScreenObject;
   ParamIndex: Integer;
   Item: TSfrParamIcalcItem;
+  NewName: string;
 begin
-  if FParameterName <> Value then
+  NewName := CorrectParamName(Value);
+  if FParameterName <> NewName then
   begin
     InvalidateModel;
     PhastModel := (Collection as TOrderedCollection).Model as TPhastModel;
@@ -4441,13 +4480,13 @@ begin
             Item := ScreenObject.ModflowSfrBoundary.ParamIcalc.Items[ParamIndex];
             if Item.Param = FParameterName then
             begin
-              Item.Param := Value;
+              Item.Param := NewName;
             end;
           end;
         end;
       end;
     end;
-    FParameterName := Value;
+    FParameterName := NewName;
   end;
 end;
 
@@ -4462,7 +4501,7 @@ end;
 
 { TSfrParamInstances }
 
-constructor TSfrParamInstances.Create(Model: TObject);
+constructor TSfrParamInstances.Create(Model: TBaseModel);
 begin
   inherited Create(TSfrParamInstance, Model);
 end;
@@ -4536,7 +4575,7 @@ begin
   inherited;
 end;
 
-constructor TCustomLayerPackageSelection.Create(Model: TObject);
+constructor TCustomLayerPackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
   FLayerOption := loTop;
@@ -4571,13 +4610,15 @@ begin
     NumberOfWaveSets := UZF.NumberOfWaveSets;
     PrintSummary := UZF.PrintSummary;
     DepthOfUndulations := UZF.DepthOfUndulations;
+    AssignmentMethod := UZF.AssignmentMethod;
   end;
   inherited;
 end;
 
-constructor TUzfPackageSelection.Create(Model: TObject);
+constructor TUzfPackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
+//  FAssignmentMethod := umAdd;
   VerticalKSource := 1;
   RouteDischargeToStreams := True;
   SimulateET := True;
@@ -4635,9 +4676,9 @@ var
   Item: TCustomModflowBoundaryItem;
   ValueIndex: Integer;
   Boundary: TUzfBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -4665,9 +4706,9 @@ var
   Item: TCustomModflowBoundaryItem;
   ValueIndex: Integer;
   Boundary: TUzfBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -4695,9 +4736,9 @@ var
   Item: TCustomModflowBoundaryItem;
   ValueIndex: Integer;
   Boundary: TUzfBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -4725,9 +4766,9 @@ var
   Item: TCustomModflowBoundaryItem;
   ValueIndex: Integer;
   Boundary: TUzfBoundary;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := FModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
@@ -4772,7 +4813,7 @@ begin
   end;
 
   List := TModflowBoundListOfTimeLists.Create;
-  UzfWriter := TModflowUzfWriter.Create(FModel as TPhastModel);
+  UzfWriter := TModflowUzfWriter.Create(FModel as TCustomModel);
   try
     List.Add(MfUzfInfiltration);
     if SimulateET then
@@ -4797,7 +4838,7 @@ end;
 procedure TUzfPackageSelection.InvalidateAllTimeLists;
 begin
   inherited;
-  if PackageUsed(FModel) then
+//  if PackageUsed(FModel) then
   begin
     MfUzfInfiltration.Invalidate;
     MfUzfEtDemand.Invalidate;
@@ -4809,6 +4850,19 @@ end;
 function TUzfPackageSelection.ModflowUztEtSimulated(Sender: TObject): boolean;
 begin
   result := PackageUsed(Sender) and SimulateET;
+end;
+
+procedure TUzfPackageSelection.SetAssignmentMethod(const Value: TUpdateMethod);
+begin
+  if FAssignmentMethod <> Value then
+  begin
+    FAssignmentMethod := Value;
+    InvalidateModel;
+    if FModel <> nil then
+    begin
+      MfUzfInfiltration.Invalidate;
+    end;
+  end;
 end;
 
 procedure TUzfPackageSelection.SetDepthOfUndulations(const Value: double);
@@ -4879,7 +4933,7 @@ procedure TModflowPackageSelection.DischargeRoutingUpdate;
 begin
   if FModel <> nil then
   begin
-    (FModel as TPhastModel).DischargeRoutingUpdate;
+    (FModel as TCustomModel).DischargeRoutingUpdate;
   end;
 end;
 
@@ -4910,7 +4964,7 @@ begin
   inherited;
 end;
 
-constructor TGmgPackageSelection.Create(Model: TObject);
+constructor TGmgPackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
   FCHGLIMIT:= TRealStorage.Create;
@@ -5099,7 +5153,7 @@ begin
   inherited;
 end;
 
-constructor TSIPPackageSelection.Create(Model: TObject);
+constructor TSIPPackageSelection.Create(Model: TBaseModel);
 begin
   inherited Create(Model);
   FACCL := TRealStorage.Create;
@@ -5212,7 +5266,7 @@ begin
   inherited;
 end;
 
-constructor TDE4PackageSelection.Create(Model: TObject);
+constructor TDE4PackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
   FHCLOSE := TRealStorage.Create;
@@ -5332,7 +5386,7 @@ begin
   inherited;
 end;
 
-constructor THobPackageSelection.Create(Model: TObject);
+constructor THobPackageSelection.Create(Model: TBaseModel);
 begin
   inherited Create(Model);
   InitializeVariables;
@@ -5369,7 +5423,7 @@ begin
   inherited;
 end;
 
-constructor TLpfSelection.Create(Model: TObject);
+constructor TLpfSelection.Create(Model: TBaseModel);
 begin
   inherited;
   FUseCvCorrection := True;
@@ -5462,10 +5516,10 @@ begin
   inherited;
 end;
 
-constructor TModpathSelection.Create(Model: TObject);
+constructor TModpathSelection.Create(Model: TBaseModel);
 begin
   inherited;
-  FOutputTimes := TModpathTimes.Create(Model as TComponent);
+  FOutputTimes := TModpathTimes.Create(Model);
   FEVT_Sink := sapVertical;
   FRCH_Source := sapVertical;
   FMakeBigBudgetFile := True;
@@ -5730,7 +5784,7 @@ end;
 
 { TWellPackage }
 
-constructor TWellPackage.Create(Model: TObject);
+constructor TWellPackage.Create(Model: TBaseModel);
 begin
   inherited;
   if Model <> nil then
@@ -5763,7 +5817,7 @@ var
 begin
   MfWellPumpage.CreateDataSets;
   List := TModflowBoundListOfTimeLists.Create;
-  WellWriter := TModflowWEL_Writer.Create(FModel as TPhastModel);
+  WellWriter := TModflowWEL_Writer.Create(FModel as TCustomModel);
   try
     List.Add(MfWellPumpage);
     WellWriter.UpdateDisplay(List, [0]);
@@ -5777,7 +5831,7 @@ end;
 procedure TWellPackage.InvalidateAllTimeLists;
 begin
   inherited;
-  if PackageUsed(FModel) then
+//  if PackageUsed(FModel) then
   begin
     InvalidateMfWellPumpage(FModel);
   end;
@@ -5790,7 +5844,7 @@ end;
 
 { TGhbPackage }
 
-constructor TGhbPackage.Create(Model: TObject);
+constructor TGhbPackage.Create(Model: TBaseModel);
 begin
   inherited;
   if Model <> nil then
@@ -5839,7 +5893,7 @@ begin
   MfGhbBoundaryHead.CreateDataSets;
 
   List := TModflowBoundListOfTimeLists.Create;
-  GhbWriter := TModflowGHB_Writer.Create(FModel as TPhastModel);
+  GhbWriter := TModflowGHB_Writer.Create(FModel as TCustomModel);
   try
     List.Add(MfGhbBoundaryHead);
     List.Add(MfGhbConductance);
@@ -5854,7 +5908,7 @@ end;
 
 procedure TGhbPackage.InvalidateAllTimeLists;
 begin
-  if PackageUsed(FModel) then
+//  if PackageUsed(FModel) then
   begin
     MfGhbBoundaryHead.Invalidate;
     MfGhbConductance.Invalidate;
@@ -5863,7 +5917,7 @@ end;
 
 { TDrnPackage }
 
-constructor TDrnPackage.Create(Model: TObject);
+constructor TDrnPackage.Create(Model: TBaseModel);
 begin
   inherited;
   if Model <> nil then
@@ -5912,7 +5966,7 @@ begin
   MfDrnElevation.CreateDataSets;
 
   List := TModflowBoundListOfTimeLists.Create;
-  DrnWriter := TModflowDRN_Writer.Create(FModel as TPhastModel);
+  DrnWriter := TModflowDRN_Writer.Create(FModel as TCustomModel);
   try
     List.Add(MfDrnElevation);
     List.Add(MfDrnConductance);
@@ -5927,7 +5981,7 @@ end;
 
 procedure TDrnPackage.InvalidateAllTimeLists;
 begin
-  if PackageUsed(FModel) then
+//  if PackageUsed(FModel) then
   begin
     MfDrnElevation.Invalidate;
     MfDrnConductance.Invalidate;
@@ -5936,7 +5990,7 @@ end;
 
 { TDrtPackage }
 
-constructor TDrtPackage.Create(Model: TObject);
+constructor TDrtPackage.Create(Model: TBaseModel);
 begin
   inherited;
   if Model <> nil then
@@ -6000,7 +6054,7 @@ begin
   MfDrtReturnFraction.CreateDataSets;
 
   List := TModflowBoundListOfTimeLists.Create;
-  DrtWriter := TModflowDRT_Writer.Create(FModel as TPhastModel);
+  DrtWriter := TModflowDRT_Writer.Create(FModel as TCustomModel);
   try
     List.Add(MfDrtElevation);
     List.Add(MfDrtConductance);
@@ -6018,7 +6072,7 @@ end;
 procedure TDrtPackage.InvalidateAllTimeLists;
 begin
   inherited;
-  if PackageUsed(FModel) then
+//  if PackageUsed(FModel) then
   begin
     MfDrtConductance.Invalidate;
     MfDrtElevation.Invalidate;
@@ -6028,7 +6082,7 @@ end;
 
 { TRivPackage }
 
-constructor TRivPackage.Create(Model: TObject);
+constructor TRivPackage.Create(Model: TBaseModel);
 begin
   inherited;
   if Model <> nil then
@@ -6092,7 +6146,7 @@ begin
   MfRivBottom.CreateDataSets;
 
   List := TModflowBoundListOfTimeLists.Create;
-  RivWriter := TModflowRIV_Writer.Create(FModel as TPhastModel);
+  RivWriter := TModflowRIV_Writer.Create(FModel as TCustomModel);
   try
     List.Add(MfRivStage);
     List.Add(MfRivConductance);
@@ -6110,7 +6164,7 @@ end;
 procedure TRivPackage.InvalidateAllTimeLists;
 begin
   inherited;
-  if PackageUsed(FModel) then
+//  if PackageUsed(FModel) then
   begin
     MfRivConductance.Invalidate;
     MfRivStage.Invalidate;
@@ -6120,7 +6174,7 @@ end;
 
 { TChdPackage }
 
-constructor TChdPackage.Create(Model: TObject);
+constructor TChdPackage.Create(Model: TBaseModel);
 begin
   inherited;
   if Model <> nil then
@@ -6169,7 +6223,7 @@ begin
   MfChdEndingHead.CreateDataSets;
 
   List := TModflowBoundListOfTimeLists.Create;
-  ChdWriter := TModflowCHD_Writer.Create(FModel as TPhastModel);
+  ChdWriter := TModflowCHD_Writer.Create(FModel as TCustomModel);
   try
     List.Add(MfChdStartingHead);
     List.Add(MfChdEndingHead);
@@ -6185,7 +6239,7 @@ end;
 procedure TChdPackage.InvalidateAllTimeLists;
 begin
   inherited;
-  if PackageUsed(FModel) then
+//  if PackageUsed(FModel) then
   begin
     FMfChdStartingHead.Invalidate;
     FMfChdEndingHead.Invalidate;
@@ -6209,7 +6263,7 @@ begin
 
 end;
 
-constructor THufPackageSelection.Create(Model: TObject);
+constructor THufPackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
   InitializeVariables;
@@ -6267,7 +6321,7 @@ begin
   inherited;
 end;
 
-constructor TMultinodeWellSelection.Create(Model: TObject);
+constructor TMultinodeWellSelection.Create(Model: TBaseModel);
 begin
   inherited;
   FPrintOption := mpoMost;
@@ -6354,9 +6408,9 @@ var
   Item: TCustomModflowBoundaryItem;
   ValueIndex: Integer;
   Boundary: TMnw2Boundary;
-  PhastModel: TPhastModel;
+  PhastModel: TCustomModel;
 begin
-  PhastModel := FModel as TPhastModel;
+  PhastModel := FModel as TCustomModel;
   for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
@@ -6435,7 +6489,7 @@ var
   TimeList: TModflowBoundaryDisplayTimeList;
 begin
   List := TModflowBoundListOfTimeLists.Create;
-  Mnw2Writer := TModflowMNW2_Writer.Create(FModel as TPhastModel);
+  Mnw2Writer := TModflowMNW2_Writer.Create(FModel as TCustomModel);
   try
     List.Add(MfMnwWellRadius);
     List.Add(MfMnwSkinRadius);
@@ -6621,7 +6675,7 @@ begin
 end;
 
 { TSubPrintCollection }
-constructor TSubPrintCollection.Create(Model: TObject);
+constructor TSubPrintCollection.Create(Model: TBaseModel);
 begin
   inherited Create(TSubPrintItem, Model);
 end;
@@ -6644,7 +6698,7 @@ begin
     PrintChoice := Items[Index];
     if PrintChoice.StartTime > PrintChoice.EndTime then
     begin
-      frmErrorsAndWarnings.AddError(ErrorRoot,
+      frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, ErrorRoot,
         'StartingTime: ' + FloatToStr(PrintChoice.StartTime)
         + '; EndingTime: ' + FloatToStr(PrintChoice.EndTime));
     end;
@@ -6681,7 +6735,7 @@ begin
 
 end;
 
-constructor TSubPackageSelection.Create(Model: TObject);
+constructor TSubPackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
   FPrintChoices := TSubPrintCollection.Create(Model);
@@ -6771,7 +6825,7 @@ begin
     if FModel <> nil then
     begin
       // ensure that related data sets have been created.
-      LayerStructure := (FModel as TPhastModel).LayerStructure;
+      LayerStructure := (FModel as TCustomModel).LayerStructure;
       for LayerIndex := 0 to LayerStructure.Count - 1 do
       begin
         LayerGroup := LayerStructure[LayerIndex];
@@ -6916,7 +6970,7 @@ begin
   inherited;
 end;
 
-constructor TCompositeZone.Create(Model: TObject);
+constructor TCompositeZone.Create(Model: TBaseModel);
 begin
   inherited Create(ZZoneItem, Model);
 end;
@@ -6995,7 +7049,7 @@ end;
 
 { TCompositeZoneCollection }
 
-constructor TCompositeZoneCollection.Create(Model: TObject);
+constructor TCompositeZoneCollection.Create(Model: TBaseModel);
 begin
   inherited Create(TCompositeZoneItem, Model);
 end;
@@ -7028,7 +7082,7 @@ begin
   inherited;
 end;
 
-constructor TZoneBudgetSelect.Create(Model: TObject);
+constructor TZoneBudgetSelect.Create(Model: TBaseModel);
 begin
   inherited;
   FCompositeZones := TCompositeZoneCollection.Create(Model);
@@ -7415,7 +7469,7 @@ end;
 
 { TSwtPrintCollection }
 
-constructor TSwtPrintCollection.Create(Model: TObject);
+constructor TSwtPrintCollection.Create(Model: TBaseModel);
 begin
   inherited Create(TSwtPrintItem, Model);
 end;
@@ -7439,7 +7493,7 @@ begin
     PrintChoice := Items[Index];
     if PrintChoice.StartTime > PrintChoice.EndTime then
     begin
-      frmErrorsAndWarnings.AddError(ErrorRoot,
+      frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, ErrorRoot,
         'StartingTime: ' + FloatToStr(PrintChoice.StartTime)
         + '; EndingTime: ' + FloatToStr(PrintChoice.EndTime));
     end;
@@ -7585,7 +7639,7 @@ begin
   inherited;
 end;
 
-constructor TSwtPackageSelection.Create(Model: TObject);
+constructor TSwtPackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
   FPrintChoices := TSwtPrintCollection.Create(Model);
@@ -7630,21 +7684,24 @@ begin
     if FModel <> nil then
     begin
       // ensure that related data sets have been created.
-      LayerStructure := (FModel as TPhastModel).LayerStructure;
-      for LayerIndex := 0 to LayerStructure.Count - 1 do
+      LayerStructure := (FModel as TCustomModel).LayerStructure;
+      if LayerStructure <> nil then
       begin
-        LayerGroup := LayerStructure[LayerIndex];
-        for Index := 0 to LayerGroup.WaterTableLayers.Count - 1 do
+        for LayerIndex := 0 to LayerStructure.Count - 1 do
         begin
-          WtItem := LayerGroup.WaterTableLayers[Index];
-          WtItem.WaterTableInitialElasticSkeletalSpecificStorageDataArrayName :=
-            WtItem.WaterTableInitialElasticSkeletalSpecificStorageDataArrayName;
-          WtItem.WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName :=
-            WtItem.WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName;
-          WtItem.WaterTableRecompressionIndexDataArrayName :=
-            WtItem.WaterTableRecompressionIndexDataArrayName;
-          WtItem.WaterTableCompressionIndexDataArrayName :=
-            WtItem.WaterTableCompressionIndexDataArrayName;
+          LayerGroup := LayerStructure[LayerIndex];
+          for Index := 0 to LayerGroup.WaterTableLayers.Count - 1 do
+          begin
+            WtItem := LayerGroup.WaterTableLayers[Index];
+            WtItem.WaterTableInitialElasticSkeletalSpecificStorageDataArrayName :=
+              WtItem.WaterTableInitialElasticSkeletalSpecificStorageDataArrayName;
+            WtItem.WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName :=
+              WtItem.WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName;
+            WtItem.WaterTableRecompressionIndexDataArrayName :=
+              WtItem.WaterTableRecompressionIndexDataArrayName;
+            WtItem.WaterTableCompressionIndexDataArrayName :=
+              WtItem.WaterTableCompressionIndexDataArrayName;
+          end;
         end;
       end;
     end;
@@ -7740,7 +7797,7 @@ begin
   inherited;
 end;
 
-constructor THydPackageSelection.Create(Model: TObject);
+constructor THydPackageSelection.Create(Model: TBaseModel);
 begin
   inherited;
   FStoredHYDNOH := TRealStorage.Create;

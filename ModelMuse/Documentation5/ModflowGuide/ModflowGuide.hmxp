@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<helpproject xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="helpproject.xsd" version="1.5" isskin="false">
+<helpproject xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="helpproject.xsd" version="1.5" isskin="false" isrepository="false">
   <config>
     <namespaces/>
     <helpwindows>
@@ -86,18 +86,24 @@
       <config-value name="autohelpstart">0</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">0</config-value>
-      <config-value name="searchpath">.\</config-value>
+      <config-value name="searchpath">.\;.\Figures\</config-value>
       <config-value name="imageshortcuts"></config-value>
       <config-group name="custombuilds">
-        <config-value name="demo">Demo Build</config-value>
-        <config-value name="user1">User defined 1</config-value>
-        <config-value name="user2">User defined 2</config-value>
-        <config-value name="user3">User defined 3</config-value>
+        <config-value name="ALLMODELS">ALLMODELS</config-value>
+        <config-value name="DEMO">Demo Build</config-value>
+        <config-value name="MODFLOW-2000">MODFLOW-2000</config-value>
+        <config-value name="MODFLOW-2005">MODFLOW-2005</config-value>
+        <config-value name="MODFLOW-CFP">MODFLOW-CFP</config-value>
+        <config-value name="MODFLOW-LGR">MODFLOW-LGR</config-value>
+        <config-value name="USER1">User defined 1</config-value>
+        <config-value name="USER2">User defined 2</config-value>
+        <config-value name="USER3">User defined 3</config-value>
+        <config-value name="MODFLOW-NWT">MODFLOW-NWT</config-value>
       </config-group>
       <config-value name="imageshortcuts_includebaggage">1</config-value>
-      <config-value name="make0include">CHM,OPT_3FRAME,OPT_ATOC,OPT_BREADTRAIL,OPT_FB,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
+      <config-value name="make0include">CHM,ALLMODELS,OPT_ATOC,OPT_BREADTRAIL,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
       <config-value name="make0status">*</config-value>
-      <config-value name="make3include">HTML,OPT_ATOC,OPT_BREADTRAIL,OPT_FB,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
+      <config-value name="make3include">HTML,MODFLOW-NWT</config-value>
       <config-value name="make3status">*</config-value>
     </config-group>
     <config-group name="hlp">
@@ -119,7 +125,7 @@
       <config-value name="usesecondarywindows">1</config-value>
       <config-value name="outputfile">ModflowGuide.chm</config-value>
       <config-value name="deletetemp">1</config-value>
-      <config-value name="skin">C:\Program Files (x86)\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.2 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin</config-value>
+      <config-value name="skin">C:\Program Files\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.4 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin</config-value>
     </config-group>
     <config-group name="hxs">
       <config-value name="namespace"></config-value>
@@ -133,149 +139,31 @@
       <config-value name="deletetemp">0</config-value>
     </config-group>
     <config-group name="html">
-      <config-value name="topiceditor">1</config-value>
-      <config-value name="topicsimpletext1" translate="true"></config-value>
-      <config-value name="topicsimpletext2" translate="true"></config-value>
+      <config-value name="topiceditor">0</config-value>
       <config-value name="topicsimplebuttons">1</config-value>
       <config-group name="topicsimplebutton1">
-        <config-value name="caption" translate="true">Top</config-value>
-        <config-value name="image" translate="true"></config-value>
+        <config-value name="CAPTION" translate="true">Top</config-value>
       </config-group>
       <config-group name="topicsimplebutton2">
-        <config-value name="caption" translate="true">Previous</config-value>
-        <config-value name="image" translate="true"></config-value>
+        <config-value name="CAPTION" translate="true">Previous</config-value>
       </config-group>
       <config-group name="topicsimplebutton3">
-        <config-value name="caption" translate="true">Next</config-value>
-        <config-value name="image" translate="true"></config-value>
+        <config-value name="CAPTION" translate="true">Next</config-value>
       </config-group>
       <config-group name="topictemplates">
-        <config-value name="default" translate="true"><![CDATA[<%DOCTYPE%> 
-<html> 
-<head> 
-   <title><%TOPIC_TITLE%></title> 
-   <meta name="generator" content="Help & Manual"> 
-   <meta name="keywords" content="<%TOPIC_KEYWORDS%>"> 
-   <meta http-equiv="Content-Type" content="text/html; charset=<%DOCCHARSET%>"> 
-   <link type="text/css" href="<%STYLESHEET%>" rel="stylesheet"> 
+        <config-value name="default" translate="true"><![CDATA[<%DOCTYPE%>
+<html>
+<head>
+   <title><%TOPIC_TITLE%></title>
+   <meta name="generator" content="Help &amp; Manual" />
+   <meta name="keywords" content="<%TOPIC_KEYWORDS%>" />
+   <meta http-equiv="Content-Type" content="text/html; charset=<%DOCCHARSET%>" />
+   <meta http-equiv="Content-Style-Type" content="text/css" />
+   <link type="text/css" href="<%STYLESHEET%>" rel="stylesheet" />
+</head>
+<body style="margin: 0px 0px 0px 0px; background: #FFFFFF;">
 
-<!-- non-scrolling headers for CHM and browser-based help--> 
-<style type="text/css" media="screen"> 
-<!-- 
-   body { 
-      margin:0; 
-      padding:0; 
-      overflow: auto; 
-      background: #FFFFFF; 
-   } 
-   #idheader { 
-      width:100%; 
-      height:auto; 
-      padding: 0; 
-      margin: 0; 
-      background: #649CCC; 
-   } 
-
-   /* Set the padding in the OUTER div for MSIE and CHM to prevent the 
-      width bug and the horizontal scrollbar bug from activating. */ 
-
-  #idcontent {    
-      width: 100%; 
-      padding: 0px !important; 
-      padding: 10px 15px 5px 10px; 
-   } 
-
-/* Set the padding in the INNER div for all other browsers. */ 
-
-  #innerdiv {    
-      padding: 10px 5px 5px 10px !important;  
-      padding: 0px; 
-   } 
-
-         /* These styles are for the header, the print link 
-         and the navigation links. Change .topichead padding
-         to 5px 5px 0px 5px if you use the Print Topic link.  */
-
-    .topichead {
-       padding: 5px;
-    }
-    
-    .navlinks {
-      font-size: 10pt;
-    }
-    .navlinks a {
-      text-decoration: none;
-      color: blue;
-    }
-    .navlinks a:visited {
-      text-decoration: none;
-      color: blue;
-    }
-    .navlinks a:hover {
-      text-decoration: underline;
-      color: blue;
-    }
-
-    /* These styles are dynamically assigned with Javascript. 
-    Since the media type is "screen", they do not apply for print */ 
-
-   html.nonscroll { 
-      overflow:hidden; 
-   } 
-   body.nonscroll {    
-      overflow:hidden; 
-      height:100%; 
-   } 
-   div.nonscroll { 
-      overflow:auto; 
-   } 
-   --> 
-   </style> 
-
- <IFNOT_EBOOK><style TYPE="text/css" media="print">
-   <!--
-
-     /* Hide navigation links and add space between header and
-      text in the printed version. DON'T change this instance for
-     adding the Print Topic link, you need the instance further up! */
-
-     #idnav { display:none;	}
-     .topichead { padding: 5px 5px 20px 5px; }
-   -->
-   </style></IFNOT_EBOOK>
-
-   <script type="text/javascript"> 
-   <!-- 
-   function doResize() { 
-     var clheight, headheight; 
-     if (self.innerHeight) // all except Explorer 
-      { clheight = self.innerHeight; } 
-     else if (document.documentElement && document.documentElement.clientHeight) // Explorer 6 Strict Mode 
-      { clheight = document.documentElement.clientHeight; } 
-     else if (document.body) // other Explorers 
-      { clheight = document.body.clientHeight; } 
-     headheight = document.getElementById('idheader').clientHeight;
-     if (clheight < headheight ) {clheight = headheight + 1;}
-     document.getElementById('idcontent').style.height = clheight - document.getElementById('idheader').clientHeight +'px'; 
-   } 
-
-   function nsrInit() { 
-     contentbody = document.getElementById('idcontent'); 
-     if (contentbody) { 
-       contentbody.className = 'nonscroll'; 
-       document.getElementsByTagName('body')[0].className = 'nonscroll'; 
-       document.getElementsByTagName('html')[0].className = 'nonscroll'; 
-       window.onresize = doResize; 
-       doResize(); 
-      } 
-   } 
---> 
-   </script> 
-   
-</head> 
-
-<body> 
-<IF_TOPIC_HEADER><div id="idheader"> 
+<IF_TOPIC_HEADER>
 <table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#649CCC">
   <tr valign="middle">
     <td align="left">
@@ -284,33 +172,20 @@
     <td align="right">
      <span style="font-size: 9pt">
      <a href="<%HREF_DEFAULT_PAGE%>">Top</a>&nbsp;
-     <IF_PREVIOUS_PAGE><a href="<%HREF_PREVIOUS_PAGE%>"></IF_PREVIOUS_PAGE>Previous<IF_PREVIOUS_PAGE></a></IF_PREVIOUS_PAGE>&nbsp;
-     <IF_NEXT_PAGE><a href="<%HREF_NEXT_PAGE%>"></IF_NEXT_PAGE>Next<IF_NEXT_PAGE></a></IF_NEXT_PAGE>
-     <IFNOT_EBOOK>
-     &nbsp;<a href="javascript: print();">Print</a>
-     </IFNOT_EBOOK>
+     <IF_PREVIOUS_PAGE><a href="<%HREF_PREVIOUS_PAGE%>">Previous</a>&nbsp;</IF_PREVIOUS_PAGE>
+     <IF_NEXT_PAGE><a href="<%HREF_NEXT_PAGE%>">Next</a></IF_NEXT_PAGE>
      </span>
     </td>
   </tr>
 </table>
-</div></IF_TOPIC_HEADER> 
+</IF_TOPIC_HEADER>
 
-<div id="idcontent"><div id="innerdiv"> 
-<%TOPIC_TEXT%> 
-</div></div> 
+<!-- Placeholder for topic body. -->
+<table width="100%" border="0" cellspacing="0" cellpadding="5"><tr valign="top"><td align="left">
+<%TOPIC_TEXT%>
+</td></tr></table>
 
-<IF_TOPIC_HEADER><script type="text/javascript"> 
-<!-- 
-var lastSlashPos = document.URL.lastIndexOf("/") >
-document.URL.lastIndexOf("\\") ? document.URL.lastIndexOf("/") :
-document.URL.lastIndexOf("\\");
-if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() != "~hh" )
-{
-    nsrInit();
-}
---> 
-</script></IF_TOPIC_HEADER> 
-</body> 
+</body>
 </html>]]></config-value>
         <config-value name="popup" translate="true"><![CDATA[<%DOCTYPE%>
 <html>
@@ -412,7 +287,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <config-value name="jpgquality">90</config-value>
       <config-value name="imagehint">1</config-value>
       <config-value name="outputfile">.\HTML\index.html</config-value>
-      <config-value name="skin">C:\Program Files (x86)\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.2 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin</config-value>
+      <config-value name="skin">C:\Program Files\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.31 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin</config-value>
     </config-group>
     <config-group name="pdf">
       <config-value name="template"></config-value>
@@ -506,6 +381,11 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
     <config-group name="user">
       <config-group name="rbwinst-pr">
         <config-group name="project">
+          <config-value name="lastexport">0</config-value>
+        </config-group>
+      </config-group>
+      <config-group name="bshoemak">
+        <config-group name="project">
           <config-value name="lastexport">3</config-value>
         </config-group>
       </config-group>
@@ -525,9 +405,45 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
   <xi:include parse="xml" href="Maps/table_of_contents.xml"/>
   <project-files>
     <file href="Topics/*.xml" build="ALL" filetype="topic">
-      <file-mod href="Parallel_Modflow.xml"/>
+      <file-mod href="Parameter_Value_File.xml" build="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
+      <file-mod href="UZF_Unsaturated-Zone_Flow_Pack.xml" build="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
+      <file-mod href="BFH_-_Boundary_Flow_and_Head_P.xml" build="ALLMODELS,MODFLOW-LGR"/>
+      <file-mod href="LGR_Control_File.xml" build="MODFLOW-LGR"/>
+      <file-mod href="PCGN.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005"/>
+      <file-mod href="SOR.xml" build="ALLMODELS,MODFLOW-2000"/>
+      <file-mod href="ADV2.xml" build="ALLMODELS,MODFLOW-2000"/>
+      <file-mod href="OBS.xml" build="ALLMODELS,MODFLOW-2000"/>
+      <file-mod href="DTOB.xml" build="ALLMODELS,MODFLOW-2000"/>
+      <file-mod href="Sensitivity_Process.xml" build="ALLMODELS,MODFLOW-2000"/>
+      <file-mod href="SEN.xml" build="ALLMODELS,MODFLOW-2000"/>
+      <file-mod href="Parameter_Estimation_Process.xml" build="ALLMODELS,MODFLOW-2000"/>
+      <file-mod href="PES.xml" build="ALLMODELS,MODFLOW-2000"/>
+      <file-mod href="UZF_-_Unsaturated_Zone_Flow_Pa_3.xml" build="ALLMODELS,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
+      <file-mod href="DAFLOW.xml" build="ALLMODELS,MODFLOW-2000"/>
+      <file-mod href="Conduit_Flow_Process.xml" build="ALLMODELS,MODFLOW-CFP"/>
+      <file-mod href="CFP.xml" build="ALLMODELS,MODFLOW-CFP"/>
+      <file-mod href="CRCH.xml" build="ALLMODELS,MODFLOW-CFP"/>
+      <file-mod href="COC.xml" build="ALLMODELS,MODFLOW-CFP"/>
+      <file-mod href="GMG.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-LGR"/>
+      <file-mod href="MNW2.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
+      <file-mod href="MNWI.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
+      <file-mod href="LMG.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005"/>
+      <file-mod href="LMT6.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
+      <file-mod href="HYD.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
+      <file-mod href="STOB.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR"/>
+      <file-mod href="SWT.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR,MODFLOW-NWT"/>
+      <file-mod href="Suggestions_on_Compiling.xml" build="MODFLOW-2000"/>
+      <file-mod href="UPW_Upstream_Weighting_Package.xml" build="ALLMODELS,MODFLOW-NWT"/>
+      <file-mod href="NWT_Newton_Solver.xml" build="ALLMODELS,MODFLOW-NWT"/>
+      <file-mod href="STR.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR"/>
+      <file-mod href="Suggested_input_values_for_the.xml" build="ALLMODELS,MODFLOW-NWT"/>
     </file>
-    <file href="Topics/Invisible/*.xml" build="ALL" filetype="topic"/>
+    <file href="Topics/Invisible/*.xml" build="ALL" filetype="topic">
+      <file-mod href="Daflow_linkage.xml" build="ALLMODELS,MODFLOW-2000"/>
+      <file-mod href="HOB_STAT-FLAG_PLOT-SYMBOL.xml" build="ALLMODELS,MODFLOW-2000"/>
+      <file-mod href="StrAdditionalVariables.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR"/>
+      <file-mod href="StrLocationVariables.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR"/>
+    </file>
     <file href="Baggage/*.*" build="ALL" filetype="baggage"/>
   </project-files>
 </helpproject>

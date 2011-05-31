@@ -4,9 +4,33 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ExtCtrls, VirtualTrees;
+  Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ExtCtrls, VirtualTrees,
+  GoPhastTypes;
 
 type
+  TModelMessages = class(TObject)
+  private
+    FModel: TBaseModel;
+    FChildNodes: TList;
+    FNode: PVirtualNode;
+    FMessages: TStringList;
+  public
+    Constructor Create(Model: TBaseModel);
+    Destructor Destroy; override;
+  end;
+
+  TModelMessageList = class(TObject)
+  private
+    FList: TList;
+    function GetModelMessages(Model: TBaseModel): TModelMessages;
+  public
+    Constructor Create;
+    Destructor Destroy; override;
+    property ModelMessages[Model: TBaseModel]: TModelMessages
+      read GetModelMessages;
+    procedure Clear;
+  end;
+
   // @name is used to display error and warning messages that are generated
   // during export of a model.
   TfrmErrorsAndWarnings = class(TfrmCustomGoPhast)
@@ -22,6 +46,7 @@ type
     btnSave: TButton;
     sdSaveFileDlg: TSaveDialog;
     btnClear: TButton;
+    btnCopy: TButton;
     // @name creates @link(ErrorChildNodes),
     // @link(Errors), @link(WarningChildNodes) and
     // @link(Warnings).
@@ -46,27 +71,32 @@ type
     procedure Timer1Timer(Sender: TObject);
     procedure btnSaveClick(Sender: TObject);
     procedure btnClearClick(Sender: TObject);
+    procedure btnCopyClick(Sender: TObject);
   private
     // @name is a list of the PVirtualNodes beneath @link(ErrorNode).
-    ErrorChildNodes: TList;
+    FErrorChildNodes: TList;
     // @name is the node in @link(vstWarningsAndErrors) that has
     // beneath it all the error messages. @link(Errors) is associated with
     // @name through the data record associated with @name.
-    ErrorNode: PVirtualNode;
+    FErrorNode: PVirtualNode;
     // @name is a list of the error messages generated during export
-    // of a project.  Its Objects property contains lists of the cells
+    // of a project.  Its Objects property contains lists of the locations
     // to which the error messages apply.
-    Errors: TStringList;
+    FErrorModels: TStringList;
+    FErrorModelMessageList: TModelMessageList;
+
     // @name is a list of the PVirtualNodes beneath @link(WarningNode).
-    WarningChildNodes: TList;
+    FWarningChildNodes: TList;
     // @name is the node in @link(vstWarningsAndErrors) that has
     // beneath it all the warning messages. @link(Warnings) is associated with
     // @name through the data record associated with @name.
-    WarningNode: PVirtualNode;
+    FWarningNode: PVirtualNode;
     // @name is a list of the warning messages generated during export
     // of a project.  Its Objects property contains lists of the cells
     // to which the warning messages apply.
-    Warnings: TStringList;
+    FWarningModels: TStringList;
+    FWarningModelMessageList: TModelMessageList;
+
     // @name is used to add an error or warning to @classname.
     // It first creates RootNode if it does not exist and associates
     // RootList with it.  Then if checks if an error message like
@@ -76,33 +106,39 @@ type
     // The TStringList is also stored in RootList in its Objects property.
     // Finally, ErrorOrWarning is added to the TStringList and a new
     // PVirtualNode is created.
-    procedure AddErrorOrWarning(RootList: TStringList;
+    procedure AddErrorOrWarning(Model: TBaseModel; RootList: TStringList;
       const TypeOfErrorOrWarning, ErrorOrWarning: string;
-      var RootNode: PVirtualNode; Children: TList);
+      var RootNode: PVirtualNode; Children: TList;
+      ModelMessageList: TModelMessageList);
+    procedure RemoveWarningOrErrorGroup(Model: TBaseModel;
+      const TypeOfErrorOrWarning: string;
+      RootList: TStringList; Children: TList;
+      ModelMessageList: TModelMessageList);
+    procedure CheckDeleteRootNode(Model: TBaseModel; var Node: PVirtualNode;
+      RootList: TStringList; ModelMessageList: TModelMessageList);
+    procedure GetErrorsAndWarnings(ErrorsAndWarings: TStringList);
     // @name frees everything in the Objects property of List.
-    procedure ClearABaseStringList(List: TStringList);
+//    procedure ClearABaseStringList(List: TStringList);
+
     // @name creates a new root node (PVirtualNode) and associates List
     // with it. @seealso(ErrorNode) @seealso(WarningNode)
     procedure InitializeRootNode(var Node: PVirtualNode; List: TStringList);
-    procedure RemoveWarningOrErrorGroup(const TypeOfErrorOrWarning: string;
-      RootList: TStringList; Children: TList);
-    procedure CheckDeleteRootNode(var Node: PVirtualNode);
     { Private declarations }
   public
     function HasMessages: boolean;
     // @name is used to add a new error message to @classname.
     // Root is the type of error, Error is the specific cell to which the
     // error applies.
-    Procedure AddError(const Root, Error: string);
+    Procedure AddError(Model: TBaseModel; const Root, Error: string);
     // @name is used to add a new warning message to @classname.
     // Root is the type of warning, Warning is the specific cell to which the
     // warning applies.
-    Procedure AddWarning(const Root, Warning: string);
+    Procedure AddWarning(Model: TBaseModel; const Root, Warning: string);
     // @name deletes the warning and error messages and clears
     // @link(vstWarningsAndErrors).
     Procedure Clear;
-    procedure RemoveWarningGroup(const TypeOfWarning: string);
-    procedure RemoveErrorGroup(const TypeOfError: string);
+    procedure RemoveWarningGroup(Model: TBaseModel; const TypeOfWarning: string);
+    procedure RemoveErrorGroup(Model: TBaseModel; const TypeOfError: string);
     procedure ShowAfterDelay;
     { Public declarations }
   end;
@@ -111,7 +147,7 @@ function frmErrorsAndWarnings: TfrmErrorsAndWarnings;
 
 implementation
 
-uses Math, frmProgressUnit;
+uses Math, frmProgressUnit, Clipbrd, contnrs;
 {$R *.dfm}
 
 var
@@ -128,7 +164,6 @@ begin
   if FfrmErrorsAndWarnings = nil then
   begin
     FfrmErrorsAndWarnings := TfrmErrorsAndWarnings.Create(nil);
-//    Application.CreateForm(TfrmErrorsAndWarnings, FfrmErrorsAndWarnings);
   end;
   FfrmErrorsAndWarnings.Handle;
   result := FfrmErrorsAndWarnings;
@@ -136,32 +171,47 @@ end;
 
 { TfrmErrorsAndWarnings }
 
-procedure TfrmErrorsAndWarnings.AddErrorOrWarning(RootList: TStringList;
+procedure TfrmErrorsAndWarnings.AddErrorOrWarning(Model: TBaseModel;
+  RootList: TStringList;
   const TypeOfErrorOrWarning, ErrorOrWarning: string;
-  var RootNode: PVirtualNode; Children: TList);
+  var RootNode: PVirtualNode; Children: TList;
+  ModelMessageList: TModelMessageList);
 var
   ChildNode: PVirtualNode;
   RootIndex: integer;
   Data: PErrorWarningRec;
   ErrorMessages: TStringList;
+  ModelMessages: TModelMessages;
 begin
+  Assert(Model <> nil);
   if RootNode = nil then
   begin
     InitializeRootNode(RootNode, RootList);
   end;
 
-  RootIndex := RootList.IndexOf(TypeOfErrorOrWarning);
+  ModelMessages := ModelMessageList.GetModelMessages(Model);
+  if (ModelMessages.FNode = nil) then
+  begin
+    vstWarningsAndErrors.ChildCount[RootNode] := RootNode.ChildCount + 1;
+    ModelMessages.FNode := RootNode.LastChild;
+    Data := vstWarningsAndErrors.GetNodeData(ModelMessages.FNode);
+    Data.List := ModelMessages.FMessages;
+    vstWarningsAndErrors.HasChildren[ModelMessages.FNode] := True;
+    RootList.Add(Model.DisplayName);
+  end;
+
+  RootIndex := ModelMessages.FMessages.IndexOf(TypeOfErrorOrWarning);
   if RootIndex >= 0 then
   begin
-    ErrorMessages := RootList.Objects[RootIndex] as TStringList;
-    ChildNode := Children[RootIndex];
+    ErrorMessages := ModelMessages.FMessages.Objects[RootIndex] as TStringList;
+    ChildNode := ModelMessages.FChildNodes[RootIndex];
   end
   else
   begin
     ErrorMessages := TStringList.Create;
-    RootList.AddObject(TypeOfErrorOrWarning, ErrorMessages);
-    ChildNode := vstWarningsAndErrors.AddChild(RootNode);
-    Children.Add(ChildNode);
+    ModelMessages.FMessages.AddObject(TypeOfErrorOrWarning, ErrorMessages);
+    ChildNode := vstWarningsAndErrors.AddChild(ModelMessages.FNode);
+    ModelMessages.FChildNodes.Add(ChildNode);
     Data := vstWarningsAndErrors.GetNodeData(ChildNode);
     Data.List := ErrorMessages;
     vstWarningsAndErrors.HasChildren[ChildNode] := True;
@@ -188,29 +238,69 @@ begin
   vstWarningsAndErrors.HasChildren[Node] := True;
 end;
 
-procedure TfrmErrorsAndWarnings.RemoveWarningOrErrorGroup(
-  const TypeOfErrorOrWarning: string; RootList: TStringList; Children: TList);
+procedure TfrmErrorsAndWarnings.RemoveWarningOrErrorGroup(Model: TBaseModel;
+  const TypeOfErrorOrWarning: string; RootList: TStringList; Children: TList;
+      ModelMessageList: TModelMessageList);
 var
   RootIndex: Integer;
   ErrorMessages: TStringList;
   ChildNode: PVirtualNode;
+  ModelMessages: TModelMessages;
 begin
-  RootIndex := RootList.IndexOf(TypeOfErrorOrWarning);
+  Assert(Model <> nil);
+  ModelMessages := ModelMessageList.GetModelMessages(Model);
+  if (ModelMessages.FNode = nil) then
+  begin
+    Exit;
+  end;
+  RootIndex := ModelMessages.FMessages.IndexOf(TypeOfErrorOrWarning);
   if RootIndex >= 0 then
   begin
-    ErrorMessages := RootList.Objects[RootIndex] as TStringList;
-    ChildNode := Children[RootIndex];
+    ErrorMessages := ModelMessages.FMessages.Objects[RootIndex] as TStringList;
+    ChildNode := ModelMessages.FChildNodes[RootIndex];
 
     vstWarningsAndErrors.DeleteNode(ChildNode);
-    RootList.Delete(RootIndex);
-    Children.Delete(RootIndex);
+    ModelMessages.FMessages.Delete(RootIndex);
+    ModelMessages.FChildNodes.Delete(RootIndex);
     ErrorMessages.Free;
   end
+//  RootIndex := RootList.IndexOf(TypeOfErrorOrWarning);
+//  if RootIndex >= 0 then
+//  begin
+//    ErrorMessages := RootList.Objects[RootIndex] as TStringList;
+//    ChildNode := Children[RootIndex];
+//
+//    vstWarningsAndErrors.DeleteNode(ChildNode);
+//    RootList.Delete(RootIndex);
+//    Children.Delete(RootIndex);
+//    ErrorMessages.Free;
+//  end
 end;
 
 procedure TfrmErrorsAndWarnings.ShowAfterDelay;
 begin
   Timer1.Enabled := True;
+end;
+
+procedure TfrmErrorsAndWarnings.GetErrorsAndWarnings(ErrorsAndWarings: TStringList);
+const
+  TabChar = ''#9'';
+var
+  Index: Integer;
+  ALine: string;
+  Node: PVirtualNode;
+begin
+  Node := vstWarningsAndErrors.GetFirst;
+  while Node <> nil do
+  begin
+    ALine := '';
+    for Index := 0 to vstWarningsAndErrors.GetNodeLevel(Node) do
+    begin
+      ALine := ALine + TabChar;
+    end;
+    ErrorsAndWarings.Add(ALine + vstWarningsAndErrors.Text[Node, 0]);
+    Node := vstWarningsAndErrors.GetNext(Node);
+  end;
 end;
 
 procedure TfrmErrorsAndWarnings.Timer1Timer(Sender: TObject);
@@ -220,35 +310,66 @@ begin
   Show;
 end;
 
-procedure TfrmErrorsAndWarnings.RemoveErrorGroup(const TypeOfError: string);
+procedure TfrmErrorsAndWarnings.RemoveErrorGroup(Model: TBaseModel;
+  const TypeOfError: string);
 begin
-  RemoveWarningOrErrorGroup(TypeOfError, Errors, ErrorChildNodes);
-  CheckDeleteRootNode(ErrorNode);
+  RemoveWarningOrErrorGroup(Model, TypeOfError, FErrorModels,
+    FErrorChildNodes, FErrorModelMessageList);
+  CheckDeleteRootNode(Model, FErrorNode, FErrorModels, FErrorModelMessageList);
 end;
 
-procedure TfrmErrorsAndWarnings.CheckDeleteRootNode(var Node: PVirtualNode);
+procedure TfrmErrorsAndWarnings.CheckDeleteRootNode(Model: TBaseModel;
+  var Node: PVirtualNode; RootList: TStringList; ModelMessageList: TModelMessageList);
+var
+  ModelMessages: TModelMessages;
+  RootIndex: Integer;
 begin
+  Assert(Model <> nil);
+  ModelMessages := ModelMessageList.GetModelMessages(Model);
+  if (ModelMessages.FNode <> nil)
+    and not vstWarningsAndErrors.HasChildren[ModelMessages.FNode] then
+  begin
+    vstWarningsAndErrors.DeleteNode(ModelMessages.FNode);
+    ModelMessages.FNode := nil
+  end;
+
+  if ModelMessages.FNode = nil then
+  begin
+    RootIndex := RootList.IndexOf(Model.DisplayName);
+    if RootIndex >= 0 then
+    begin
+      RootList.Delete(RootIndex);
+    end;
+  end;
+
   if (Node <> nil) and not vstWarningsAndErrors.HasChildren[Node] then
   begin
+
     vstWarningsAndErrors.DeleteNode(Node);
     Node := nil;
   end;
 end;
 
-procedure TfrmErrorsAndWarnings.RemoveWarningGroup(const TypeOfWarning: string);
+procedure TfrmErrorsAndWarnings.RemoveWarningGroup(Model: TBaseModel;
+  const TypeOfWarning: string);
 begin
-  RemoveWarningOrErrorGroup(TypeOfWarning, Warnings, WarningChildNodes);
-  CheckDeleteRootNode(WarningNode);
+  RemoveWarningOrErrorGroup(Model, TypeOfWarning, FWarningModels,
+    FWarningChildNodes, FWarningModelMessageList);
+  CheckDeleteRootNode(Model, FWarningNode, FWarningModels, FWarningModelMessageList);
 end;
 
-procedure TfrmErrorsAndWarnings.AddError(const Root, Error: string);
+procedure TfrmErrorsAndWarnings.AddError(Model: TBaseModel;
+  const Root, Error: string);
 begin
-  AddErrorOrWarning(Errors, Root, Error, ErrorNode, ErrorChildNodes);
+  AddErrorOrWarning(Model, FErrorModels, Root, Error, FErrorNode,
+    FErrorChildNodes, FErrorModelMessageList);
 end;
 
-procedure TfrmErrorsAndWarnings.AddWarning(const Root, Warning: string);
+procedure TfrmErrorsAndWarnings.AddWarning(Model: TBaseModel;
+  const Root, Warning: string);
 begin
-  AddErrorOrWarning(Warnings, Root, Warning, WarningNode, WarningChildNodes);
+  AddErrorOrWarning(Model, FWarningModels, Root, Warning,
+    FWarningNode, FWarningChildNodes, FWarningModelMessageList);
 end;
 
 procedure TfrmErrorsAndWarnings.btnClearClick(Sender: TObject);
@@ -257,32 +378,30 @@ begin
   Clear;
 end;
 
-procedure TfrmErrorsAndWarnings.btnSaveClick(Sender: TObject);
-const
-  TabChar = #9;
+procedure TfrmErrorsAndWarnings.btnCopyClick(Sender: TObject);
 var
   ErrorsAndWarings: TStringList;
-  Node: PVirtualNode;
-  ALine: string;
-  Index: Integer;
+begin
+  inherited;
+  ErrorsAndWarings := TStringList.Create;
+  try
+    GetErrorsAndWarnings(ErrorsAndWarings);
+    Clipboard.AsText := ErrorsAndWarings.Text;
+  finally
+    ErrorsAndWarings.Free;
+  end;
+end;
+
+procedure TfrmErrorsAndWarnings.btnSaveClick(Sender: TObject);
+var
+  ErrorsAndWarings: TStringList;
 begin
   inherited;
   if sdSaveFileDlg.Execute then
   begin
     ErrorsAndWarings := TStringList.Create;
     try
-      Node := vstWarningsAndErrors.GetFirst;
-      While Node <> nil do
-      begin
-        ALine := '';
-        for Index := 0 to vstWarningsAndErrors.GetNodeLevel(Node) do
-        begin
-          ALine := ALine + TabChar;
-        end;
-        ErrorsAndWarings.Add(ALine + vstWarningsAndErrors.Text[Node, 0]);
-        Node := vstWarningsAndErrors.GetNext(Node);
-      end;
-
+      GetErrorsAndWarnings(ErrorsAndWarings);
       ErrorsAndWarings.SaveToFile(sdSaveFileDlg.FileName);
     finally
       ErrorsAndWarings.Free;
@@ -290,54 +409,64 @@ begin
   end;
 end;
 
-procedure TfrmErrorsAndWarnings.ClearABaseStringList(List: TStringList);
-var
-  Index: Integer;
-begin
-  for Index := List.Count - 1 downto 0 do
-  begin
-    List.Objects[Index].Free;
-  end;
-  List.Clear;
-end;
+//procedure TfrmErrorsAndWarnings.ClearABaseStringList(List: TStringList);
+//var
+//  Index: Integer;
+//begin
+//  for Index := List.Count - 1 downto 0 do
+//  begin
+//    List.Objects[Index].Free;
+//  end;
+//  List.Clear;
+//end;
 
 procedure TfrmErrorsAndWarnings.Clear;
 begin
   vstWarningsAndErrors.Clear;
-  ErrorNode := nil;
-  WarningNode := nil;
-  ClearABaseStringList(Errors);
-  ClearABaseStringList(Warnings);
-  ErrorChildNodes.Clear;
-  WarningChildNodes.Clear;
+  FErrorNode := nil;
+  FWarningNode := nil;
+  FErrorModels.Clear;
+  FWarningModels.Clear;
+//  ClearABaseStringList(FErrorModels);
+//  ClearABaseStringList(FWarningModels);
+  FErrorChildNodes.Clear;
+  FWarningChildNodes.Clear;
+  FWarningModelMessageList.Clear;
+  FErrorModelMessageList.Clear;
 end;
 
 procedure TfrmErrorsAndWarnings.FormCreate(Sender: TObject);
 begin
   inherited;
   vstWarningsAndErrors.NodeDataSize := SizeOf(TErrorWarningRec);
-  Errors := TStringList.Create;
-  Warnings := TStringList.Create;
-  ErrorChildNodes:= TList.Create;
-  WarningChildNodes:= TList.Create;
+  FErrorModels := TStringList.Create;
+  FWarningModels := TStringList.Create;
+  FErrorModelMessageList:= TModelMessageList.Create;
+
+  FErrorChildNodes:= TList.Create;
+  FWarningChildNodes:= TList.Create;
+  FWarningModelMessageList:= TModelMessageList.Create;
 end;
 
 procedure TfrmErrorsAndWarnings.FormDestroy(Sender: TObject);
-var
-  Node: PVirtualNode;
+//var
+//  Node: PVirtualNode;
 begin
   inherited;
   Clear;
-  Errors.Free;
-  Warnings.Free;
-  ErrorChildNodes.Free;
-  WarningChildNodes.Free;
-  Node := vstWarningsAndErrors.GetFirst;
-  while Node <> nil do
-  begin
-    vstWarningsAndErrors.DeleteNode(Node);
-    Node := vstWarningsAndErrors.GetFirst;
-  end;
+  FErrorModels.Free;
+  FWarningModels.Free;
+  FErrorChildNodes.Free;
+  FWarningChildNodes.Free;
+  FErrorModelMessageList.Free;
+  FWarningModelMessageList.Free;
+//  Node := vstWarningsAndErrors.GetFirst;
+  vstWarningsAndErrors.Clear;
+//  while Node <> nil do
+//  begin
+//    vstWarningsAndErrors.DeleteNode(Node);
+//    Node := vstWarningsAndErrors.GetFirst;
+//  end;
 end;
 
 procedure TfrmErrorsAndWarnings.FormResize(Sender: TObject);
@@ -355,7 +484,7 @@ end;
 
 function TfrmErrorsAndWarnings.HasMessages: boolean;
 begin
-  result := (Errors.Count > 0) or (Warnings.Count > 0)
+  result := (FErrorModels.Count > 0) or (FWarningModels.Count > 0)
 end;
 
 procedure TfrmErrorsAndWarnings.vstWarningsAndErrorsGetText(
@@ -371,11 +500,11 @@ begin
   Data := Sender.GetNodeData(Node);
   if Assigned(Data) then
   begin
-    if Node = ErrorNode then
+    if Node = FErrorNode then
     begin
       CellText := 'Errors';
     end
-    else if Node = WarningNode then
+    else if Node = FWarningNode then
     begin
       CellText := 'Warnings';
     end
@@ -434,6 +563,64 @@ begin
         Length(TextString), Rect, Flags) + 4;
 
   vstWarningsAndErrors.NodeHeight[Node] := NodeHeight;
+end;
+
+{ TModelMessages }
+
+constructor TModelMessages.Create(Model: TBaseModel);
+begin
+  FModel := Model;
+  FMessages := TStringList.Create;
+  FChildNodes:= TList.Create;
+end;
+
+destructor TModelMessages.Destroy;
+var
+  Index: Integer;
+begin
+  FChildNodes.Free;
+  for Index := FMessages.Count - 1 downto 0 do
+  begin
+    FMessages.Objects[Index].Free;
+  end;
+  FMessages.Free;
+  inherited;
+end;
+
+{ TModelMessageList }
+
+procedure TModelMessageList.Clear;
+begin
+  FList.Clear;
+end;
+
+constructor TModelMessageList.Create;
+begin
+  FList := TObjectList.Create;
+end;
+
+destructor TModelMessageList.Destroy;
+begin
+  FList.Free;
+  inherited;
+end;
+
+function TModelMessageList.GetModelMessages(Model: TBaseModel): TModelMessages;
+var
+  Index: Integer;
+  Item: TModelMessages;
+begin
+  for Index := 0 to FList.Count - 1 do
+  begin
+    Item := FList[Index];
+    if Item.FModel = Model then
+    begin
+      result := Item;
+      Exit;
+    end;
+  end;
+  result := TModelMessages.Create(Model);
+  FList.Add(result);
 end;
 
 initialization

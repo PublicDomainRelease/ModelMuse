@@ -73,8 +73,8 @@ type
 
   TUndoImportPathline = class(TCustomUndo)
   private
-    FExistingPathLine: TPathLineReader;
-    FNewPathLine: TPathLineReader;
+    FExistingPathLines: TPathLineReader;
+    FNewPathLines: TPathLineReader;
     FImportedNewFile: Boolean;
     procedure ForceRedraw;
     procedure EnableMenuItems;
@@ -172,7 +172,7 @@ end;
 
 procedure TfrmModpathDisplay.GetData;
 var
-  PathLine: TPathLineReader;
+  PathLines: TPathLineReader;
   Limits: TPathLineDisplayLimits;
   ColorParameters: TColorParameters;
   ALimitRow: TPathlineLimits;
@@ -187,9 +187,9 @@ begin
   begin
     fedModpathFile.DefaultExt := '.path';
   end;
-  PathLine := frmGoPhast.PhastModel.PathLine;
-  fedModpathFile.FileName := PathLine.FileName;
-  if PathLine.Lines.TestGetMaxTime(MaxTime) then
+  PathLines := frmGoPhast.PhastModel.PathLines;
+  fedModpathFile.FileName := PathLines.FileName;
+  if PathLines.Lines.TestGetMaxTime(MaxTime) then
   begin
     lblMaxTime.Caption := 'Maximum time = '
       + FloatToStrF(MaxTime, ffGeneral, 7, 0);
@@ -199,8 +199,8 @@ begin
     lblMaxTime.Caption := 'Maximum time = ?';
   end;
 
-  cbShowPathlines.Checked := PathLine.Visible;
-  Limits := PathLine.DisplayLimits;
+  cbShowPathlines.Checked := PathLines.Visible;
+  Limits := PathLines.DisplayLimits;
 
   cbLimitToCurrentIn2D.Checked := Limits.LimitToCurrentIn2D;
   rgShow2D.ItemIndex := Ord(Limits.ShowChoice);
@@ -211,18 +211,18 @@ begin
 
   ReadFloatLimits(Limits.TimeLimits, plTime);
 
-  rgColorBy.ItemIndex := Ord(PathLine.ColorLimits.ColoringChoice);
+  rgColorBy.ItemIndex := Ord(PathLines.ColorLimits.ColoringChoice);
 
   ALimitRow := plColors;
   ARow := Ord(ALimitRow);
-  rdgLimits.Checked[0, ARow] := PathLine.ColorLimits.UseLimit;
-  if PathLine.ColorLimits.UseLimit then
+  rdgLimits.Checked[0, ARow] := PathLines.ColorLimits.UseLimit;
+  if PathLines.ColorLimits.UseLimit then
   begin
-    rdgLimits.Cells[1, ARow] := FloatToStr(PathLine.ColorLimits.MinColorLimit);
-    rdgLimits.Cells[2, ARow] := FloatToStr(PathLine.ColorLimits.MaxColorLimit);
+    rdgLimits.Cells[1, ARow] := FloatToStr(PathLines.ColorLimits.MinColorLimit);
+    rdgLimits.Cells[2, ARow] := FloatToStr(PathLines.ColorLimits.MaxColorLimit);
   end;
 
-  ColorParameters := PathLine.ColorParameters;
+  ColorParameters := PathLines.ColorParameters;
   comboColorScheme.ItemIndex := ColorParameters.ColorScheme;
   seCycles.AsInteger := ColorParameters.ColorCycles;
   seColorExponent.Value := ColorParameters.ColorExponent;
@@ -364,7 +364,7 @@ var
   Limits: TPathLineDisplayLimits;
   ColorParameters: TColorParameters;
   Grid: TModflowGrid;
-  ExistingPathLine: TPathLineReader;
+  ExistingPathLines: TPathLineReader;
   ADate: TDateTime;
   Undo: TUndoImportPathline;
   ColorLimits: TPathlineColorLimits;
@@ -374,10 +374,10 @@ begin
   inherited;
   ImportedNewFile := False;
   Grid := frmGoPhast.ModflowGrid;
-  ExistingPathLine := frmGoPhast.PhastModel.PathLine;
+  ExistingPathLines := frmGoPhast.PhastModel.PathLines;
   PathLine := TPathLineReader.Create;
   try
-    PathLine.Assign(ExistingPathLine);
+    PathLine.Assign(ExistingPathLines);
 
     PathLine.FileName := fedModpathFile.FileName;
     if PathLine.FileName = '' then
@@ -388,7 +388,7 @@ begin
     begin
       if FileExists(PathLine.FileName) then
       begin
-        if(PathLine.FileName <> ExistingPathLine.FileName) then
+        if(PathLine.FileName <> ExistingPathLines.FileName) then
         begin
           PathLine.ReadFile;
           ImportedNewFile := True;
@@ -489,10 +489,10 @@ constructor TUndoImportPathline.Create(var NewPathLine: TPathLineReader;
   ImportedNewFile: boolean);
 begin
   FImportedNewFile := ImportedNewFile;
-  FExistingPathLine:= TPathLineReader.Create;
-  FExistingPathLine.Assign(frmGoPhast.PhastModel.PathLine);
+  FExistingPathLines:= TPathLineReader.Create;
+  FExistingPathLines.Assign(frmGoPhast.PhastModel.PathLines);
   // Take ownership of NewPathLine.
-  FNewPathLine := NewPathLine;
+  FNewPathLines := NewPathLine;
   NewPathLine := nil;
 end;
 
@@ -510,21 +510,21 @@ end;
 
 destructor TUndoImportPathline.Destroy;
 begin
-  FExistingPathLine.Free;
-  FNewPathLine.Free;
+  FExistingPathLines.Free;
+  FNewPathLines.Free;
   inherited;
 end;
 
 procedure TUndoImportPathline.DoCommand;
 begin
-  frmGoPhast.PhastModel.PathLine := FNewPathLine;
+  frmGoPhast.PhastModel.PathLines := FNewPathLines;
   EnableMenuItems;
   ForceRedraw;
 end;
 
 procedure TUndoImportPathline.Undo;
 begin
-  frmGoPhast.PhastModel.PathLine := FExistingPathLine;
+  frmGoPhast.PhastModel.PathLines := FExistingPathLines;
   EnableMenuItems;
   ForceRedraw;
 end;
@@ -532,14 +532,14 @@ end;
 procedure TUndoImportPathline.EnableMenuItems;
 begin
   frmGoPhast.miConfigurePathlines.Enabled :=
-    frmGoPhast.PhastModel.PathLine.Lines.Count > 0;
+    frmGoPhast.PhastModel.PathLines.Lines.Count > 0;
   frmGoPhast.miPathlinestoShapefile.Enabled :=
     frmGoPhast.miConfigurePathlines.Enabled;
 end;
 
 procedure TUndoImportPathline.ForceRedraw;
 begin
-  frmGoPhast.PhastModel.PathLine.Invalidate;
+  frmGoPhast.PhastModel.PathLines.Invalidate;
   frmGoPhast.frame3DView.glWidModelView.Invalidate;
 
   frmGoPhast.frameTopView.ModelChanged := True;

@@ -41,8 +41,6 @@ type
     procedure seNumPeriodsChange(Sender: TObject);
     procedure btnDeleteClick(Sender: TObject);
     procedure btnInsertClick(Sender: TObject);
-    procedure dgTimeMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure dgTimeMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure dgTimeColSize(Sender: TObject; ACol, PriorWidth: Integer);
@@ -282,20 +280,6 @@ begin
   LayoutMultiRowEditControls;
 end;
 
-procedure TfrmModflowTime.dgTimeMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    dgTime.Options := dgTime.Options + [goEditing];
-  end
-  else
-  begin
-    dgTime.Options := dgTime.Options - [goEditing];
-  end;
-end;
-
 procedure TfrmModflowTime.dgTimeMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
@@ -494,25 +478,30 @@ begin
   seNumPeriods.AsInteger := frmGoPhast.PhastModel.ModflowStressPeriods.Count;
 //  dgTime.RowCount := frmGoPhast.PhastModel.ModflowStressPeriods.Count + 1;
   FillEmptyCells;
-  for RowIndex := 1 to dgTime.RowCount - 1 do
-  begin
-    StressPeriod := frmGoPhast.PhastModel.ModflowStressPeriods[RowIndex-1];
-    dgTime.Cells[ord(tcStartTime), RowIndex]
-      := FloatToStr(StressPeriod.StartTime);
-    dgTime.Cells[ord(tcEndTime), RowIndex]
-      := FloatToStr(StressPeriod.EndTime);
-    dgTime.Cells[ord(tcLength), RowIndex]
-      := FloatToStr(StressPeriod.PeriodLength);
-    dgTime.Cells[ord(tcTimeFirstStep), RowIndex]
-      := FloatToStr(StressPeriod.MaxLengthOfFirstTimeStep);
-    dgTime.Cells[ord(tcMultiplier), RowIndex]
-      := FloatToStr(StressPeriod.TimeStepMultiplier);
-    dgTime.Cells[ord(tcSteady), RowIndex]
-      := dgTime.Columns[Ord(tcSteady)].
-      PickList[Ord(StressPeriod.StressPeriodType)];
-    dgTime.Checked[ord(tcDrawDownReference), RowIndex]
-      := StressPeriod.DrawDownReference;
-    UpdateNumberOfTimeSteps(RowIndex);
+  dgTime.BeginUpdate;
+  try
+    for RowIndex := 1 to dgTime.RowCount - 1 do
+    begin
+      StressPeriod := frmGoPhast.PhastModel.ModflowStressPeriods[RowIndex-1];
+      dgTime.Cells[ord(tcStartTime), RowIndex]
+        := FloatToStr(StressPeriod.StartTime);
+      dgTime.Cells[ord(tcEndTime), RowIndex]
+        := FloatToStr(StressPeriod.EndTime);
+      dgTime.Cells[ord(tcLength), RowIndex]
+        := FloatToStr(StressPeriod.PeriodLength);
+      dgTime.Cells[ord(tcTimeFirstStep), RowIndex]
+        := FloatToStr(StressPeriod.MaxLengthOfFirstTimeStep);
+      dgTime.Cells[ord(tcMultiplier), RowIndex]
+        := FloatToStr(StressPeriod.TimeStepMultiplier);
+      dgTime.Cells[ord(tcSteady), RowIndex]
+        := dgTime.Columns[Ord(tcSteady)].
+        PickList[Ord(StressPeriod.StressPeriodType)];
+      dgTime.Checked[ord(tcDrawDownReference), RowIndex]
+        := StressPeriod.DrawDownReference;
+      UpdateNumberOfTimeSteps(RowIndex);
+    end;
+  finally
+    dgTime.EndUpdate
   end;
 end;
 
@@ -694,6 +683,9 @@ begin
 end;
 
 procedure TfrmModflowTime.FormCreate(Sender: TObject);
+var
+  ColIndex: Integer;
+  NewWidth: Integer;
 begin
   inherited;
   FModflowStressPeriods:= TModflowStressPeriods.Create(nil);
@@ -720,6 +712,19 @@ begin
   FillEmptyCells;
   GetData;
   SetDeleteButtonEnabled;
+  NewWidth := 24;
+  for ColIndex := 0 to dgTime.ColCount - 1 do
+  begin
+    NewWidth := NewWidth + dgTime.ColWidths[ColIndex];
+  end;
+  if NewWidth > Screen.Width then
+  begin
+    NewWidth := Screen.Width
+  end;
+  if NewWidth > ClientWidth then
+  begin
+    ClientWidth := NewWidth;
+  end;
 end;
 
 procedure TfrmModflowTime.FormDestroy(Sender: TObject);

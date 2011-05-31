@@ -161,6 +161,7 @@ type
   TSkipRealCollection = class(TCustomSkipCollection)
   public
     constructor Create;
+    function IndexOf(AValue: double): integer;
   end;
 
   TSkipInteger = class(TCollectionItem)
@@ -402,6 +403,7 @@ type
     FHash: longint;
     FReadDataFromFile: Boolean;
     FUpdatingProgress: Boolean;
+    FUseLgrEdgeCells: boolean;
     // See @link(TwoDInterpolatorClass).
     function GetTwoDInterpolatorClass: string;
     // @name is called if an invalid formula has been specified.
@@ -469,7 +471,7 @@ type
     // See @link(IsUniform).
     FIsUniform: TIsUniform;
     // @name is the @link(TPhastModel) that owns the @classname.
-    FPhastModel: TComponent;
+    FModel: TBaseModel;
     // @name is @true if the @classname has been cleared.
     FCleared: boolean;
     // @name is true if the @classname data has been stored in a temporary file.
@@ -479,7 +481,6 @@ type
     FTempFileName: string;
     // When values are beginning to be assigned to a @classname,
     // @name is set to to the current time.
-    FEvalTime: Extended;
     procedure UpdateDialogBoxes;
     // See @link(EvaluatedAt).
     procedure SetEvaluatedAt(const Value: TEvaluatedAt); virtual;
@@ -487,8 +488,6 @@ type
     function GetCompiler: TRbwParser;
     // See @link(Orientation).
     procedure SetOrientation(const Value: TDataSetOrientation); virtual;
-    // @name sets @link(FEvalTime) to the current time.
-    procedure UpdateEvalTime;
     // @name returns the dimensions of the @classname.
     procedure GetLimits(out ColLimit, RowLimit, LayerLimit: Integer);
     // @name reads the data that has been previously stored in a temporary file.
@@ -497,7 +496,7 @@ type
     // stored in the @classname.
     procedure CountValues(out LayerLimit, RowLimit, ColLimit, Count: Integer);
     // @name stores the data in @classname to a temporary file.
-    procedure StoreData(Compressor: TCompressionStream); virtual;
+    procedure StoreData(Stream: TStream); virtual;
     // @name restores the dimensions of the @classname to what they should be.
     procedure RestoreArraySize;
     // @name changes OldFormula to NewFormula and in the process updates
@@ -592,7 +591,12 @@ type
     procedure RemoveSubscription(Sender: TObject; const AName: string);
     procedure RestoreSubscription(Sender: TObject; const AName: string);
     procedure UpdateNotifiers; virtual;
+    function IsSparseArray: boolean; virtual;
   public
+    procedure UpdateWithoutNotification(NewOrientation: TDataSetOrientation;
+      NewEvaluatedAt: TEvaluatedAt; NewDataType: TRbwDataType;
+      var NeedToInvalidate: boolean);
+    procedure UpdateWithName(const AName: string); override;
     procedure RestoreUpToDataStatus;
     Procedure SetModelToNil;
     procedure RefreshUseList;
@@ -708,15 +712,15 @@ type
       NumberOfColumns: integer);
     // @name returns true unless @link(OnDataSetUsed) is assigned.
     // in which case it calls @link(OnDataSetUsed) and returns its result.
-    // See TPhastModel.@link(TPhastModel.ChemistryUsed).
-    // See TPhastModel.@link(TPhastModel.EquilibriumPhasesUsed).
-    // See TPhastModel.@link(TPhastModel.ExchangeUsed).
-    // See TPhastModel.@link(TPhastModel.GasPhaseUsed).
-    // See TPhastModel.@link(TPhastModel.InitialHeadUsed).
-    // See TPhastModel.@link(TPhastModel.KineticsUsed).
-    // See TPhastModel.@link(TPhastModel.SolidSolutionUsed).
-    // See TPhastModel.@link(TPhastModel.SurfacesUsed).
-    // See TPhastModel.@link(TPhastModel.InitialWaterTableUsed).
+    // See TPhastModel.@link(TCustomModel.ChemistryUsed).
+    // See TPhastModel.@link(TCustomModel.EquilibriumPhasesUsed).
+    // See TPhastModel.@link(TCustomModel.ExchangeUsed).
+    // See TPhastModel.@link(TCustomModel.GasPhaseUsed).
+    // See TPhastModel.@link(TCustomModel.InitialHeadUsed).
+    // See TPhastModel.@link(TCustomModel.KineticsUsed).
+    // See TPhastModel.@link(TCustomModel.SolidSolutionUsed).
+    // See TPhastModel.@link(TCustomModel.SurfacesUsed).
+    // See TPhastModel.@link(TCustomModel.InitialWaterTableUsed).
     function UsedByModel: boolean;
     // @name is a list of the variables used by the @link(Formula).
     property UseList: TStringList read GetUseList;
@@ -768,6 +772,8 @@ type
     property Hash: longint read GetHash;
     function IdenticalDataArrayContents(ADataArray: TDataArray): boolean;
     procedure AssignProperties(Source: TDataArray); virtual;
+    property Model: TBaseModel read FModel;
+    property UseLgrEdgeCells: boolean read FUseLgrEdgeCells write FUseLgrEdgeCells;
   published
     // @name indicates the hierarchical position of this instance of
     // @classname when it is required by MODFLOW.
@@ -864,14 +870,14 @@ type
     FModelList: TList;
     FDataArrayList: TList;
     FOwnsDataArrays: boolean;
-    function GetDataArray(Model: TObject; Index: integer): TDataArray;
-    function GetDataArrayList(Model: TObject): TDataArrayList;
+    function GetDataArray(Model: TBaseModel; Index: integer): TDataArray;
+    function GetDataArrayList(Model: TBaseModel): TDataArrayList;
     procedure SetOwnsDataArrays(const Value: boolean);
   public
     constructor Create;
     destructor Destroy; override;
-    property DataArrayList[Model: TObject]: TDataArrayList read GetDataArrayList;
-    property DataArray[Model: TObject; Index: integer]: TDataArray read GetDataArray;
+    property DataArrayList[Model: TBaseModel]: TDataArrayList read GetDataArrayList;
+    property DataArray[Model: TBaseModel; Index: integer]: TDataArray read GetDataArray;
     property OwnsDataArrays: boolean read FOwnsDataArrays write SetOwnsDataArrays;
   end;
 
@@ -912,11 +918,12 @@ type
     // See @link(OnInitialize).
     FOnInitialize: TInitializeDataSetInterpolator;
   protected
+    FModel: TBaseModel;
     // @name fills ListOfScreenObjects with all the @link(TScreenObject)s
     // that should be used to assign values to cells with
     // this @classname.  The order of @link(TScreenObject)s
     // is the same as the order in
-    // frmGoPhast.Model.@link(TPhastModel.ScreenObjects).
+    // frmGoPhast.Model.@link(TCustomModel.ScreenObjects).
     procedure FillScreenObjectList(const ListOfScreenObjects: TList);
     procedure EvaluateExpression(Compiler: TRbwParser;
       var Expression: TExpression; AScreenObject: TObject);
@@ -1017,6 +1024,7 @@ type
     // Layer, Row, Col.
     procedure SetIsValue(const Layer, Row, Col: Integer;
       const Value: boolean);override;
+    function IsSparseArray: boolean; override;
   public
     procedure Invalidate; override;
     // @name creates an instance of @classname and sets
@@ -1065,6 +1073,7 @@ type
     procedure SetRealData(const Layer, Row, Col: integer;
       const Value: double); override;
   public
+    procedure RemoveValue(const Layer, Row, Col: Integer);
     procedure GetMinMaxStoredLimits(out LayerMin, RowMin, ColMin,
       LayerMax, RowMax, ColMax: integer); override;
     // @name creates an instance of @classname and sets
@@ -1132,8 +1141,8 @@ type
   // with a specific time.
   TCustomTimeList = Class(TObject)
   private
-    // @name is either nil or a @link(TPhastModel).
-    FModel: TObject;
+    // @name is either nil or a @link(TCustomModel).
+    FModel: TBaseModel;
     // @name stores the @link(TDataArray)s.
     // @name is instantiated as a TObjectList.
     FData: TList;
@@ -1191,6 +1200,7 @@ type
     procedure SetMin(const Value: double);
 
   protected
+    property Model: TBaseModel read FModel;
     // See @link(UpToDate).
     function GetUpToDate: boolean; virtual;
     // See @link(UpToDate).
@@ -1217,7 +1227,7 @@ type
     property Count: integer read GetCount;
 
     // @name creates an instance of @classname.
-    constructor Create(Model: TObject);
+    constructor Create(AModel: TBaseModel);
     // @name destroys the current instance of @classname.
     // Do not call @name directly. Call Free instead.
     destructor Destroy; override;
@@ -1362,12 +1372,12 @@ begin
       TempFormula := FFormula;
     end;
   end;
-  if (FPhastModel <> nil)
-    and not (csDestroying in FPhastModel.ComponentState) 
-    and not (FPhastModel as TPhastModel).Clearing
+  if (FModel <> nil)
+    and not (csDestroying in FModel.ComponentState)
+    and not (FModel as TCustomModel).Clearing
     and not ClearingDeletedDataSets then
   begin
-    frmFormulaErrors.AddError('', Name, TempFormula, ErrorMessage);
+    frmFormulaErrors.AddFormulaError('', Name, TempFormula, ErrorMessage);
   end;
   case DataType of
     rdtDouble, rdtInteger:
@@ -1400,10 +1410,12 @@ begin
 end;
 
 destructor TDataArray.Destroy;
+var
+  LocalModel: TCustomModel;
 begin
-  if (FPhastModel <> nil)
-    and (not (csDestroying in FPhastModel.ComponentState))
-    and not (FPhastModel as TPhastModel).Clearing then
+  if (FModel <> nil)
+    and (not (csDestroying in FModel.ComponentState))
+    and not (FModel as TCustomModel).Clearing then
   begin
     if Assigned(OnDestroy) then
     begin
@@ -1416,77 +1428,79 @@ begin
       rdtString: Formula := '""';
     end;
 
-    if frmGoPhast.PhastGrid <> nil then
+    LocalModel := FModel as TCustomModel;
+    LocalModel.ModelObserversStopTalkingTo(self);
+    if LocalModel.PhastGrid <> nil then
     begin
-      if frmGoPhast.PhastModel.PhastGrid.TopDataSet = self then
+      if LocalModel.PhastGrid.TopDataSet = self then
       begin
-        frmGoPhast.PhastModel.PhastGrid.TopDataSet := nil
+        LocalModel.PhastGrid.TopDataSet := nil
       end;
-      if frmGoPhast.PhastModel.PhastGrid.FrontDataSet = self then
+      if LocalModel.PhastGrid.FrontDataSet = self then
       begin
-        frmGoPhast.PhastModel.PhastGrid.FrontDataSet := nil
+        LocalModel.PhastGrid.FrontDataSet := nil
       end;
-      if frmGoPhast.PhastModel.PhastGrid.SideDataSet = self then
+      if LocalModel.PhastGrid.SideDataSet = self then
       begin
-        frmGoPhast.PhastModel.PhastGrid.SideDataSet := nil
+        LocalModel.PhastGrid.SideDataSet := nil
       end;
-      if frmGoPhast.PhastModel.PhastGrid.ThreeDDataSet = self then
+      if LocalModel.PhastGrid.ThreeDDataSet = self then
       begin
-        frmGoPhast.PhastModel.PhastGrid.ThreeDDataSet := nil
+        LocalModel.PhastGrid.ThreeDDataSet := nil
       end;
 
-      if frmGoPhast.PhastModel.PhastGrid.TopContourDataSet = self then
+      if LocalModel.PhastGrid.TopContourDataSet = self then
       begin
-        frmGoPhast.PhastModel.PhastGrid.TopContourDataSet := nil
+        LocalModel.PhastGrid.TopContourDataSet := nil
       end;
-      if frmGoPhast.PhastModel.PhastGrid.FrontContourDataSet = self then
+      if LocalModel.PhastGrid.FrontContourDataSet = self then
       begin
-        frmGoPhast.PhastModel.PhastGrid.FrontContourDataSet := nil
+        LocalModel.PhastGrid.FrontContourDataSet := nil
       end;
-      if frmGoPhast.PhastModel.PhastGrid.SideContourDataSet = self then
+      if LocalModel.PhastGrid.SideContourDataSet = self then
       begin
-        frmGoPhast.PhastModel.PhastGrid.SideContourDataSet := nil
+        LocalModel.PhastGrid.SideContourDataSet := nil
       end;
-      if frmGoPhast.PhastModel.PhastGrid.ThreeDContourDataSet = self then
+      if LocalModel.PhastGrid.ThreeDContourDataSet = self then
       begin
-        frmGoPhast.PhastModel.PhastGrid.ThreeDContourDataSet := nil
+        LocalModel.PhastGrid.ThreeDContourDataSet := nil
       end;
     end;
 
-    if frmGoPhast.ModflowGrid <> nil then
+    if LocalModel.ModflowGrid <> nil then
     begin
-      if frmGoPhast.PhastModel.ModflowGrid.TopDataSet = self then
+      if LocalModel.ModflowGrid.TopDataSet = self then
       begin
-        frmGoPhast.PhastModel.ModflowGrid.TopDataSet := nil
+        LocalModel.ModflowGrid.TopDataSet := nil
       end;
-      if frmGoPhast.PhastModel.ModflowGrid.FrontDataSet = self then
+      if LocalModel.ModflowGrid.FrontDataSet = self then
       begin
-        frmGoPhast.PhastModel.ModflowGrid.FrontDataSet := nil
+        LocalModel.ModflowGrid.FrontDataSet := nil
       end;
-      if frmGoPhast.PhastModel.ModflowGrid.SideDataSet = self then
+      if LocalModel.ModflowGrid.SideDataSet = self then
       begin
-        frmGoPhast.PhastModel.ModflowGrid.SideDataSet := nil
+        LocalModel.ModflowGrid.SideDataSet := nil
       end;
-      if frmGoPhast.PhastModel.ModflowGrid.ThreeDDataSet = self then
+      if LocalModel.ModflowGrid.ThreeDDataSet = self then
       begin
-        frmGoPhast.PhastModel.ModflowGrid.ThreeDDataSet := nil
+        LocalModel.ModflowGrid.ThreeDDataSet := nil
       end;
 
-      if frmGoPhast.PhastModel.ModflowGrid.TopContourDataSet = self then
+      if LocalModel.ModflowGrid.TopContourDataSet = self then
       begin
-        frmGoPhast.PhastModel.ModflowGrid.TopContourDataSet := nil
+        LocalModel.ModflowGrid.TopContourDataSet := nil
       end;
-      if frmGoPhast.PhastModel.ModflowGrid.FrontContourDataSet = self then
+      if LocalModel.ModflowGrid.FrontContourDataSet = self then
       begin
-        frmGoPhast.PhastModel.ModflowGrid.FrontContourDataSet := nil
+        LocalModel.ModflowGrid.FrontContourDataSet := nil
       end;
-      if frmGoPhast.PhastModel.ModflowGrid.SideContourDataSet = self then
+      if LocalModel.ModflowGrid.SideContourDataSet = self then
       begin
-        frmGoPhast.PhastModel.ModflowGrid.SideContourDataSet := nil
+        LocalModel.ModflowGrid.SideContourDataSet := nil
       end;
-      if frmGoPhast.PhastModel.ModflowGrid.ThreeDContourDataSet = self then
+      if LocalModel.ModflowGrid.ThreeDContourDataSet = self then
       begin
-        frmGoPhast.PhastModel.ModflowGrid.ThreeDContourDataSet := nil
+        LocalModel.ModflowGrid.ThreeDContourDataSet := nil
       end;
     end;
   end;
@@ -1517,9 +1531,9 @@ begin
     DeleteFile(FTempFileName);
   end;
 
-  if FPhastModel <> nil then
+  if FModel <> nil then
   begin
-    (FPhastModel as TPhastModel).FormulaManager.Remove(FFormulaObject,
+    (FModel as TCustomModel).FormulaManager.Remove(FFormulaObject,
       GlobalDataArrayRemoveSubscription,
       GlobalDataArrayRestoreSubscription, self);
   end;
@@ -1645,7 +1659,7 @@ procedure TDataArray.UpdateDialogBoxes;
 var
   Grid: TCustomGrid;
 begin
-  Grid := (FPhastModel as TPhastModel).Grid;
+  Grid := (FModel as TCustomModel).Grid;
   if Grid <> nil then
   begin
     if Grid.ThreeDContourDataSet = self then
@@ -1670,17 +1684,21 @@ begin
 end;
 
 procedure TDataArray.UpdateNotifiers;
+var
+  LocalModel: TCustomModel;
 begin
   case FOrientation of
     dsoTop:
       begin
-        (FPhastModel as TPhastModel).ThreeDGridObserver.StopsTalkingTo(self);
-        (FPhastModel as TPhastModel).TopGridObserver.TalksTo(self);
+        LocalModel := FModel as TCustomModel;
+        LocalModel.ThreeDGridObserver.StopsTalkingTo(self);
+        LocalModel.TopGridObserver.TalksTo(self);
       end;
     dsoFront, dsoSide, dso3D:
       begin
-        (FPhastModel as TPhastModel).ThreeDGridObserver.TalksTo(self);
-        (FPhastModel as TPhastModel).TopGridObserver.StopsTalkingTo(self);
+        LocalModel := FModel as TCustomModel;
+        LocalModel.ThreeDGridObserver.TalksTo(self);
+        LocalModel.TopGridObserver.StopsTalkingTo(self);
       end;
   else
     Assert(False);
@@ -1692,9 +1710,9 @@ var
   ObservedItem: TObserver;
   OtherIndex: Integer;
   Index: Integer;
-  Model: TPhastModel;
+  Model: TCustomModel;
 begin
-  Model := FPhastModel as TPhastModel;
+  Model := FModel as TCustomModel;
   for Index := OldUseList.Count - 1 downto 0 do
   begin
     OtherIndex := NewUseList.IndexOf(OldUseList[Index]);
@@ -1760,6 +1778,8 @@ var
   AValue: double;
   HideProgressForm: Boolean;
   DataArrayManager: TDataArrayManager;
+  Grid: TCustomGrid;
+  LocalModel: TCustomModel;
   procedure GetLimits;
   begin
     case EvaluatedAt of
@@ -1810,13 +1830,15 @@ begin
     Exit;
   end;
 
+//  OutputDebugString('SAMPLING ON');
   if UpToDate and not DimensionsChanged then
   begin
     CheckRestoreData;
     Exit;
   end;
 
-  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
+  LocalModel := FModel as TCustomModel;
+  DataArrayManager := LocalModel.DataArrayManager;
   HideProgressForm := False;
   if (Name <> '') and (frmProgressMM <> nil) then
   begin
@@ -1835,7 +1857,6 @@ begin
   end;
 
   FDataCached := False;
-  FEvalTime := Now;
 
   InterpAnnString := '';
   FreeStack := (Stack = nil);
@@ -1884,11 +1905,11 @@ begin
                     for ColIndex := 0 to ColLimit do
                     begin
                       CellCenter :=
-                        frmGoPhast.Grid.TwoDElementCenter(ColIndex,
+                        LocalModel.Grid.TwoDElementCenter(ColIndex,
                         RowIndex);
 
                       UpdateGlobalLocations(ColIndex,
-                        RowIndex, 0, EvaluatedAt);
+                        RowIndex, 0, EvaluatedAt, FModel);
 
                       case Datatype of
                         rdtDouble:
@@ -1898,13 +1919,13 @@ begin
                             begin
                               if Name = '' then
                               begin
-                                frmErrorsAndWarnings.AddError(
+                                frmErrorsAndWarnings.AddError(Model,
                                   ErrorMessageInterpUnNamed, Format(ErrorString,
                                   [1,RowIndex+1,ColIndex+1] ));
                               end
                               else
                               begin
-                                frmErrorsAndWarnings.AddError(
+                                frmErrorsAndWarnings.AddError(Model,
                                   Format(ErrorMessageInterpNamed, [Name]),
                                   Format(ErrorString,
                                   [1,RowIndex+1,ColIndex+1]));
@@ -1947,10 +1968,10 @@ begin
                     for ColIndex := 0 to ColLimit do
                     begin
                       CellCorner :=
-                        frmGoPhast.Grid.TwoDElementCorner(ColIndex,
+                        LocalModel.Grid.TwoDElementCorner(ColIndex,
                         RowIndex);
                       UpdateGlobalLocations(ColIndex,
-                        RowIndex, 0, EvaluatedAt);
+                        RowIndex, 0, EvaluatedAt, FModel);
 
                       case Datatype of
                         rdtDouble:
@@ -1960,13 +1981,13 @@ begin
                             begin
                               if Name = '' then
                               begin
-                                frmErrorsAndWarnings.AddError(
+                                frmErrorsAndWarnings.AddError(Model,
                                   ErrorMessageInterpUnNamed,
                                   Format(ErrorString, [1,RowIndex+1,ColIndex+1] ));
                               end
                               else
                               begin
-                                frmErrorsAndWarnings.AddError(
+                                frmErrorsAndWarnings.AddError(Model,
                                   Format(ErrorMessageInterpNamed, [Name]),
                                   Format(ErrorString,
                                   [1,RowIndex+1,ColIndex+1]));
@@ -2017,11 +2038,11 @@ begin
                   begin
                     for ColIndex := 0 to ColLimit do
                     begin
-                      CellCenter3D := frmGoPhast.Grid.ThreeDElementCenter(
+                      CellCenter3D := LocalModel.Grid.ThreeDElementCenter(
                         ColIndex, 0, LayerIndex);
 
                       UpdateGlobalLocations(ColIndex, 0,
-                        LayerIndex, EvaluatedAt);
+                        LayerIndex, EvaluatedAt, FModel);
 
                       CellCenter.X := CellCenter3D.X;
                       CellCenter.Y := CellCenter3D.Z;
@@ -2034,13 +2055,13 @@ begin
                             begin
                               if Name = '' then
                               begin
-                                frmErrorsAndWarnings.AddError(
+                                frmErrorsAndWarnings.AddError(Model,
                                   ErrorMessageInterpUnNamed, Format(ErrorString,
                                   [LayerIndex+1,1,ColIndex+1] ));
                               end
                               else
                               begin
-                                frmErrorsAndWarnings.AddError(
+                                frmErrorsAndWarnings.AddError(Model,
                                   Format(ErrorMessageInterpNamed, [Name]),
                                   Format(ErrorString,
                                   [LayerIndex+1,1,ColIndex+1]));
@@ -2082,11 +2103,11 @@ begin
                   begin
                     for ColIndex := 0 to ColLimit do
                     begin
-                      CellCorner3D := frmGoPhast.Grid.ThreeDElementCorner(
+                      CellCorner3D := LocalModel.Grid.ThreeDElementCorner(
                         ColIndex, 0, LayerIndex);
 
                       UpdateGlobalLocations(ColIndex, 0,
-                        LayerIndex, EvaluatedAt);
+                        LayerIndex, EvaluatedAt, FModel);
 
                       CellCorner.X := CellCorner3D.X;
                       CellCorner.Y := CellCorner3D.Z;
@@ -2099,13 +2120,13 @@ begin
                             begin
                               if Name = '' then
                               begin
-                                frmErrorsAndWarnings.AddError(
+                                frmErrorsAndWarnings.AddError(Model,
                                   ErrorMessageInterpUnNamed, Format(ErrorString,
                                   [LayerIndex+1,1,ColIndex+1] ));
                               end
                               else
                               begin
-                                frmErrorsAndWarnings.AddError(
+                                frmErrorsAndWarnings.AddError(Model,
                                   Format(ErrorMessageInterpNamed, [Name]),
                                   Format(ErrorString,
                                   [LayerIndex+1,1,ColIndex+1]));
@@ -2157,11 +2178,11 @@ begin
                   begin
                     for RowIndex := 0 to RowLimit do
                     begin
-                      CellCenter3D := frmGoPhast.Grid.ThreeDElementCenter(
+                      CellCenter3D := LocalModel.Grid.ThreeDElementCenter(
                         0, RowIndex, LayerIndex);
 
                       UpdateGlobalLocations(0,
-                        RowIndex, LayerIndex, EvaluatedAt);
+                        RowIndex, LayerIndex, EvaluatedAt, FModel);
 
                       CellCenter.X := CellCenter3D.Y;
                       CellCenter.Y := CellCenter3D.Z;
@@ -2174,13 +2195,13 @@ begin
                             begin
                               if Name = '' then
                               begin
-                                frmErrorsAndWarnings.AddError(
+                                frmErrorsAndWarnings.AddError(Model,
                                   ErrorMessageInterpUnNamed, Format(ErrorString,
                                   [LayerIndex+1,RowIndex+1,1] ));
                               end
                               else
                               begin
-                                frmErrorsAndWarnings.AddError(
+                                frmErrorsAndWarnings.AddError(Model,
                                   Format(ErrorMessageInterpNamed, [Name]),
                                   Format(ErrorString,
                                   [LayerIndex+1,RowIndex+1,1]));
@@ -2223,11 +2244,11 @@ begin
                     for RowIndex := 0 to RowLimit do
                     begin
                       CellCorner3D :=
-                        frmGoPhast.Grid.ThreeDElementCorner(
+                        LocalModel.Grid.ThreeDElementCorner(
                         0, RowIndex, LayerIndex);
 
                       UpdateGlobalLocations(0,
-                        RowIndex, LayerIndex, EvaluatedAt);
+                        RowIndex, LayerIndex, EvaluatedAt, FModel);
 
                       CellCorner.X := CellCorner3D.Y;
                       CellCorner.Y := CellCorner3D.Z;
@@ -2240,13 +2261,13 @@ begin
                             begin
                               if Name = '' then
                               begin
-                                frmErrorsAndWarnings.AddError(
+                                frmErrorsAndWarnings.AddError(Model,
                                   ErrorMessageInterpUnNamed, Format(ErrorString,
                                   [LayerIndex+1,RowIndex+1,1] ));
                               end
                               else
                               begin
-                                frmErrorsAndWarnings.AddError(
+                                frmErrorsAndWarnings.AddError(Model,
                                   Format(ErrorMessageInterpNamed, [Name]),
                                   Format(ErrorString,
                                   [LayerIndex+1,RowIndex+1,1]));
@@ -2401,7 +2422,7 @@ begin
             begin
 
               UpdateGlobalLocations(ColIndex, RowIndex, LayerIndex,
-                EvaluatedAt);
+                EvaluatedAt, FModel);
 
               for VarIndex := 0 to TempUseList.Count - 1 do
               begin
@@ -2416,6 +2437,7 @@ begin
                     AnotherDataSet :=
                       DataArrayManager.DataSets[DataSetIndex];
                     Assert(AnotherDataSet <> self);
+                    Assert(Model = AnotherDataSet.Model);
                     Assert(AnotherDataSet.DataType = Variable.ResultType);
                     if AnotherDataSet.Orientation = dsoTop then
                     begin
@@ -2493,13 +2515,13 @@ begin
                     begin
                       if Name = '' then
                       begin
-                        frmErrorsAndWarnings.AddError(
+                        frmErrorsAndWarnings.AddError(Model,
                           ErrorMessageFormulaUnNamed, Format(ErrorString,
                           [LayerIndex+1,RowIndex+1,ColIndex+1] ));
                       end
                       else
                       begin
-                        frmErrorsAndWarnings.AddError(
+                        frmErrorsAndWarnings.AddError(Model,
                           Format(ErrorMessageFormulaNamed, [Name]),
                           Format(ErrorString,
                           [LayerIndex+1,RowIndex+1,ColIndex+1]));
@@ -2540,13 +2562,14 @@ begin
 
     if not ParameterUsed then
     begin
+      Grid := (FModel as TCustomModel).Grid;
       for ScreenObjectIndex := 0 to
         frmGoPhast.PhastModel.ScreenObjectCount - 1 do
       begin
         AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
         if not AScreenObject.Deleted then
         begin
-          AScreenObject.AssignValuesToPhastDataSet(frmGoPhast.Grid, self);
+          AScreenObject.AssignValuesToPhastDataSet(Grid, self, FModel, UseLgrEdgeCells);
         end;
       end;
     end;
@@ -2556,6 +2579,7 @@ begin
       FreeAndNil(Stack);
       DataArrayManager.DontCache(self);
       DataArrayManager.CacheDataArrays;
+//      OutputDebugString('SAMPLING OFF');
     end;
     if HideProgressForm then
     begin
@@ -2575,6 +2599,11 @@ begin
   UpToDate := False;
 end;
 
+function TDataArray.IsSparseArray: boolean;
+begin
+  result := false;
+end;
+
 procedure TDataArray.SetDataType(const Value: TRbwDataType);
 var
   NumberOfLayers, NumberOfRows, NumberOfColumns: integer;
@@ -2590,7 +2619,7 @@ begin
     // The formulas of screen objects that set the value
     // of this data set indirectly are not changed.
 
-    if frmGoPhast.PhastModel <> nil then
+    if (frmGoPhast.PhastModel <> nil) and (Formula <> '') then
     begin
       for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
       begin
@@ -2701,46 +2730,66 @@ begin
   NumberOfRows := Math.Max(NumberOfRows, 0);
   NumberOfColumns := Math.Max(NumberOfColumns, 0);
 
-  case FDataType of
-    rdtDouble:
-      begin
-        SetLength(T3DRealDataSet(FDataArray), NumberOfLayers, NumberOfRows,
-          NumberOfColumns);
-      end;
-    rdtInteger:
-      begin
-        SetLength(T3DIntegerDataSet(FDataArray), NumberOfLayers, NumberOfRows,
-          NumberOfColumns);
-      end;
-    rdtBoolean:
-      begin
-        SetLength(T3DBooleanDataSet(FDataArray), NumberOfLayers, NumberOfRows,
-          NumberOfColumns);
-      end;
-    rdtString:
-      begin
-        SetLength(T3DStringDataSet(FDataArray), NumberOfLayers, NumberOfRows,
-          NumberOfColumns);
-      end;
-  else
-    Assert(False);
+  if not IsSparseArray then
+  begin
+    case FDataType of
+      rdtDouble:
+        begin
+          SetLength(T3DRealDataSet(FDataArray), NumberOfLayers, NumberOfRows,
+            NumberOfColumns);
+        end;
+      rdtInteger:
+        begin
+          SetLength(T3DIntegerDataSet(FDataArray), NumberOfLayers, NumberOfRows,
+            NumberOfColumns);
+        end;
+      rdtBoolean:
+        begin
+          SetLength(T3DBooleanDataSet(FDataArray), NumberOfLayers, NumberOfRows,
+            NumberOfColumns);
+        end;
+      rdtString:
+        begin
+          SetLength(T3DStringDataSet(FDataArray), NumberOfLayers, NumberOfRows,
+            NumberOfColumns);
+        end;
+    else
+      Assert(False);
+    end;
+    SetLength(FAnnotation, NumberOfLayers, NumberOfRows, NumberOfColumns);
   end;
-  SetLength(FAnnotation, NumberOfLayers, NumberOfRows, NumberOfColumns);
   FDimensionsChanged := False;
 end;
 
 procedure TDataArray.SetFormula(const Value: string);
 var
   P: Pointer;
+  ChildIndex: Integer;
+  LocalModel: TPhastModel;
+  ChildItem: TChildModelItem;
+  ChildDataArray: TDataArray;
 begin
   FFormula := Formula;
   ChangeAFormula(Value, FFormula, FUseListUpToDate, GetUseList);
   P := Addr(GlobalDataArrayRemoveSubscription);
   if Assigned(P) then
   begin
-    TPhastModel(FPhastModel).FormulaManager.ChangeFormula(FFormulaObject,
+    TCustomModel(FModel).FormulaManager.ChangeFormula(FFormulaObject,
       FFormula, GetCompiler, GlobalDataArrayRemoveSubscription,
       GlobalDataArrayRestoreSubscription, self);
+  end;
+  if (Name <> '') and (FModel <> nil) and (FModel is TPhastModel) then
+  begin
+    LocalModel := TPhastModel(FModel);
+    for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+    begin
+      ChildItem := LocalModel.ChildModels[ChildIndex];
+      ChildDataArray := ChildItem.ChildModel.DataArrayManager.GetDataSetByName(Name);
+      if ChildDataArray <> nil then
+      begin
+        ChildDataArray.Formula := Formula;
+      end;
+    end;
   end;
 end;
 
@@ -2839,6 +2888,7 @@ end;
 procedure TDataArray.SetUpToDate(const Value: boolean);
 var
   Updated: boolean;
+  LocalModel: TCustomModel;
 begin
   if (frmGoPhast.PhastModel <> nil)
     and (csDestroying in frmGoPhast.PhastModel.ComponentState) then Exit;
@@ -2862,39 +2912,40 @@ begin
   begin
     UpdateMinMaxValues;
   end;
-  if frmGoPhast.Grid <> nil then
+  LocalModel := FModel as TCustomModel;
+  if (LocalModel <> nil) and (LocalModel.Grid <> nil) then
   begin
-    if ((frmGoPhast.Grid.TopDataSet <> nil)
-      and not frmGoPhast.Grid.TopDataSet.UpToDate)
-      or ((frmGoPhast.Grid.TopContourDataSet <> nil)
-      and not frmGoPhast.Grid.TopContourDataSet.UpToDate) then
+    if ((LocalModel.Grid.TopDataSet <> nil)
+      and not LocalModel.Grid.TopDataSet.UpToDate)
+      or ((LocalModel.Grid.TopContourDataSet <> nil)
+      and not LocalModel.Grid.TopContourDataSet.UpToDate) then
     begin
-      frmGoPhast.Grid.NeedToRecalculateTopCellColors := True;
+      LocalModel.Grid.NeedToRecalculateTopCellColors := True;
       frmGoPhast.frameTopView.ZoomBox.Image32.Invalidate;
     end;
-    if ((frmGoPhast.Grid.FrontDataSet <> nil)
-      and not frmGoPhast.Grid.FrontDataSet.UpToDate)
-      or ((frmGoPhast.Grid.FrontContourDataSet <> nil)
-      and not frmGoPhast.Grid.FrontContourDataSet.UpToDate) then
+    if ((LocalModel.Grid.FrontDataSet <> nil)
+      and not LocalModel.Grid.FrontDataSet.UpToDate)
+      or ((LocalModel.Grid.FrontContourDataSet <> nil)
+      and not LocalModel.Grid.FrontContourDataSet.UpToDate) then
     begin
-      frmGoPhast.Grid.NeedToRecalculateFrontCellColors := True;
+      LocalModel.Grid.NeedToRecalculateFrontCellColors := True;
       frmGoPhast.frameFrontView.ZoomBox.Image32.Invalidate;
     end;
-    if ((frmGoPhast.Grid.SideDataSet <> nil)
-      and not frmGoPhast.Grid.SideDataSet.UpToDate)
-      or ((frmGoPhast.Grid.SideContourDataSet <> nil)
-      and not frmGoPhast.Grid.SideContourDataSet.UpToDate) then
+    if ((LocalModel.Grid.SideDataSet <> nil)
+      and not LocalModel.Grid.SideDataSet.UpToDate)
+      or ((LocalModel.Grid.SideContourDataSet <> nil)
+      and not LocalModel.Grid.SideContourDataSet.UpToDate) then
     begin
-      frmGoPhast.Grid.NeedToRecalculateSideCellColors := True;
+      LocalModel.Grid.NeedToRecalculateSideCellColors := True;
       frmGoPhast.frameSideView.ZoomBox.Image32.Invalidate;
     end;
-    if ((frmGoPhast.Grid.ThreeDDataSet <> nil)
-      and not frmGoPhast.Grid.ThreeDDataSet.UpToDate)
-      or ((frmGoPhast.Grid.ThreeDContourDataSet <> nil)
-      and not frmGoPhast.Grid.ThreeDContourDataSet.UpToDate) then
+    if ((LocalModel.Grid.ThreeDDataSet <> nil)
+      and not LocalModel.Grid.ThreeDDataSet.UpToDate)
+      or ((LocalModel.Grid.ThreeDContourDataSet <> nil)
+      and not LocalModel.Grid.ThreeDContourDataSet.UpToDate) then
     begin
-      frmGoPhast.Grid.NeedToRecalculate3DCellColors := True;
-      frmGoPhast.Grid.GridChanged;
+      LocalModel.Grid.NeedToRecalculate3DCellColors := True;
+      LocalModel.Grid.GridChanged;
     end;
   end;
 end;
@@ -2994,13 +3045,50 @@ begin
   FUseListUpToDate := True;
 end;
 
+procedure TDataArray.UpdateWithName(const AName: string);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildItem: TChildModelItem;
+  ChildDataArray: TDataArray;
+begin
+  inherited;
+  if (FModel <> nil) and (FModel is TPhastModel) then
+  begin
+    LocalModel := TPhastModel(FModel);
+    for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+    begin
+      ChildItem := LocalModel.ChildModels[ChildIndex];
+      ChildDataArray := ChildItem.ChildModel.DataArrayManager.GetDataSetByName(Name);
+      if ChildDataArray <> nil then
+      begin
+        ChildDataArray.UpdateWithName(AName);
+      end;
+    end;
+  end;
+end;
+
+procedure TDataArray.UpdateWithoutNotification(
+  NewOrientation: TDataSetOrientation; NewEvaluatedAt: TEvaluatedAt;
+  NewDataType: TRbwDataType; var NeedToInvalidate: boolean);
+begin
+  NeedToInvalidate := NeedToInvalidate
+    or (FOrientation<> NewOrientation)
+    or (FEvaluatedAt <> NewEvaluatedAt)
+    or (FDataType <> NewDataType);
+  FOrientation := NewOrientation;
+  FEvaluatedAt := NewEvaluatedAt;
+  FDataType := NewDataType;
+end;
+
 constructor TDataArray.Create(AnOwner: TComponent);
 begin
+  FUseLgrEdgeCells := True;
   Assert(AnOwner <> nil);
-  Assert(AnOwner is TPhastModel);
-  FPhastModel := AnOwner;
+//  Assert(AnOwner is TCustomModel);
+  FModel := AnOwner as TCustomModel;
   inherited Create(nil);
-  FFormulaObject := TPhastModel(AnOwner).FormulaManager.Add;
+  FFormulaObject := TCustomModel(AnOwner).FormulaManager.Add;
   FFormulaObject.AddSubscriptionEvents(GlobalDataArrayRemoveSubscription,
       GlobalDataArrayRestoreSubscription, self);
   FLimits := TColoringLimits.Create;
@@ -3036,7 +3124,7 @@ end;
 
 procedure TDataArray.SetModelToNil;
 begin
-  FPhastModel := nil;
+  FModel := nil;
 end;
 
 procedure TDataArray.SetClassification(const Value: string);
@@ -3070,7 +3158,7 @@ begin
   CheckRestoreData;
   GetBoolArray(AnArray);
   result := AnArray[Layer, Row, Col];
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 function TDataArray.GetClassification: string;
@@ -3165,14 +3253,24 @@ end;
 
 function TDataArray.GetCompiler: TRbwParser;
 var
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
+  ChildModel: TChildModel;
 begin
-  LocalModel := FPhastModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
+  if LocalModel is TChildModel then
+  begin
+    ChildModel := TChildModel(LocalModel);
+    if ChildModel.ParentModel <> nil then
+    begin
+      LocalModel := ChildModel.ParentModel;
+    end;
+  end;
   result := LocalModel.GetCompiler(Orientation, EvaluatedAt);
 end;
 
 function TDataArray.GetFormula: string;
 begin
+  Assert(FFormulaObject <> nil);
   result := FFormulaObject.Formula;
 end;
 
@@ -3193,7 +3291,7 @@ begin
   CheckRestoreData;
   GetIntegerArray(AnArray);
   result := AnArray[Layer, Row, Col];
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 function TDataArray.GetRealData(const Layer, Row, Col: integer): double;
@@ -3208,7 +3306,7 @@ begin
   CheckRestoreData;
   GetRealArray(AnArray);
   result := AnArray[Layer, Row, Col];
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 function TDataArray.GetStringData(const Layer, Row, Col: integer): string;
@@ -3223,7 +3321,7 @@ begin
   CheckRestoreData;
   GetStringArray(AnArray);
   result := AnArray[Layer, Row, Col];
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 procedure TDataArray.SetBooleanData(const Layer, Row, Col: integer;
@@ -3233,7 +3331,7 @@ var
 begin
   GetBoolArray(AnArray);
   AnArray[Layer, Row, Col] := Value;
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 procedure TDataArray.SetIntegerData(const Layer, Row, Col, Value: integer);
@@ -3253,18 +3351,7 @@ begin
   begin
     AnArray[Layer, Row, Col] := Value;
   end;
-  UpdateEvalTime;
-end;
-
-procedure TDataArray.UpdateEvalTime;
-const
-  TenthSecond = 1/24/3600/10;
-begin
-  if (Now - FEvalTime) > TenthSecond then
-  begin
-    FEvalTime := Now;
-//    Application.ProcessMessages;
-  end;
+//  UpdateEvalTime;
 end;
 
 procedure TDataArray.SetRealData(const Layer, Row, Col: integer;
@@ -3285,7 +3372,7 @@ begin
   begin
     AnArray[Layer, Row, Col] := Value;
   end;
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 procedure TDataArray.SetStringData(const Layer, Row, Col: integer;
@@ -3295,7 +3382,7 @@ var
 begin
   GetStringArray(AnArray);
   AnArray[Layer, Row, Col] := Value;
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 function TDataArray.GetIsValue(const Layer, Row, Col: Integer): boolean;
@@ -3348,14 +3435,14 @@ begin
   end;
   CheckRestoreData;
   result := FAnnotation[Layer, Row, Col];
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 procedure TDataArray.SetAnnotation(const Layer, Row, Col: integer;
   const Value: string);
 begin
   FAnnotation[Layer, Row, Col] := Value;
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 function TDataArray.DisplayRealValue: boolean;
@@ -3375,12 +3462,12 @@ end;
 
 procedure TDataArray.SetName(const Value: TComponentName);
 var
-  LocalModel :  TPhastModel;
+  LocalModel :  TCustomModel;
   MustAdd: boolean;
   NameChanged: Boolean;
 begin
   NameChanged := Name <> Value;
-  LocalModel := FPhastModel as TPhastModel;
+  LocalModel := FModel as TCustomModel;
   MustAdd := False;
   if NameChanged and (Name <> '') then
   begin
@@ -3433,6 +3520,8 @@ function TDataArray.ColorGridValueOK(const Layer, Row, Col: integer): boolean;
 begin
   Result := ValueOK(Layer, Row, Col, Limits);
 end;
+
+{$OVERFLOWCHECKS OFF}
 
 procedure TDataArray.ComputeHash;
 const
@@ -3536,6 +3625,9 @@ begin
   end;
 end;
 
+{$OVERFLOWCHECKS ON}
+
+
 procedure TDataArray.UpdateMinMaxValues;
 var
   LayerIndex: Integer;
@@ -3552,7 +3644,7 @@ var
   ColLimit: Integer;
   RowLimit: Integer;
   LayerLimit: Integer;
-  PhastModel: TPhastModel;
+  PhastModel: TCustomModel;
   Grid: TCustomGrid;
   LayerMin: Integer;
   RowMin: Integer;
@@ -3788,9 +3880,9 @@ begin
   else
     Assert(False);
   end;
-  if (FPhastModel <> nil) then
+  if (FModel <> nil) then
   begin
-    PhastModel := FPhastModel as TPhastModel;
+    PhastModel := FModel as TCustomModel;
     Grid := PhastModel.Grid;
     if Grid <> nil then
     begin
@@ -3991,10 +4083,10 @@ end;
 
 procedure TDataArray.RemoveSubscription(Sender: TObject; const AName: string);
 var
-  Model: TPhastModel;
+  Model: TCustomModel;
   ObservedItem: TObserver;
 begin
-  Model := FPhastModel as TPhastModel;
+  Model := FModel as TCustomModel;
   ObservedItem := Model.GetObserverByName(AName);
   if ObservedItem <> nil then
   begin
@@ -4035,7 +4127,7 @@ begin
   end;
 end;
 
-procedure TDataArray.StoreData(Compressor: TCompressionStream);
+procedure TDataArray.StoreData(Stream: TStream);
 var
   ValueLength: Integer;
   StringValue: string;
@@ -4133,34 +4225,34 @@ begin
       end;
     end;
     AnnCount := LocalAnnotatations.Count;
-    Compressor.Write(AnnCount, SizeOf(AnnCount));
+    Stream.Write(AnnCount, SizeOf(AnnCount));
     for Index := 0 to LocalAnnotatations.Count - 1 do
     begin
       LocalAnnotation := LocalAnnotatations[Index];
       AnnSize := Length(LocalAnnotation);
-      Compressor.Write(AnnSize, SizeOf(AnnSize));
-      Compressor.WriteBuffer(Pointer(LocalAnnotation)^,
+      Stream.Write(AnnSize, SizeOf(AnnSize));
+      Stream.WriteBuffer(Pointer(LocalAnnotation)^,
         Length(LocalAnnotation) * SizeOf(Char));
     end;
-    Compressor.Write(Count, SizeOf(Count));
+    Stream.Write(Count, SizeOf(Count));
     if Count > 0 then
     begin
-      Compressor.Write(LayerArray[0], Count*SizeOf(integer));
-      Compressor.Write(RowArray[0], Count*SizeOf(integer));
-      Compressor.Write(ColumnArray[0], Count*SizeOf(integer));
-      Compressor.Write(AnnotationIndexArray[0], Count*SizeOf(integer));
+      Stream.Write(LayerArray[0], Count*SizeOf(integer));
+      Stream.Write(RowArray[0], Count*SizeOf(integer));
+      Stream.Write(ColumnArray[0], Count*SizeOf(integer));
+      Stream.Write(AnnotationIndexArray[0], Count*SizeOf(integer));
       case DataType of
-        rdtDouble: Compressor.Write(RealValues[0], Count*SizeOf(double));
-        rdtInteger: Compressor.Write(IntegerValues[0], Count*SizeOf(integer));
-        rdtBoolean: Compressor.Write(BoooleanValues[0], Count*SizeOf(Boolean));
+        rdtDouble: Stream.Write(RealValues[0], Count*SizeOf(double));
+        rdtInteger: Stream.Write(IntegerValues[0], Count*SizeOf(integer));
+        rdtBoolean: Stream.Write(BoooleanValues[0], Count*SizeOf(Boolean));
         rdtString:
           begin
             for Index := 0 to StringValues.Count - 1 do
             begin
               StringValue := StringValues[Index];
               ValueLength := Length(StringValue);
-              Compressor.Write(ValueLength, SizeOf(ValueLength));
-              Compressor.WriteBuffer(Pointer(StringValue)^, Length(StringValue) * SizeOf(Char));
+              Stream.Write(ValueLength, SizeOf(ValueLength));
+              Stream.WriteBuffer(Pointer(StringValue)^, Length(StringValue) * SizeOf(Char));
             end;
           end;
         else Assert(False);
@@ -4318,6 +4410,10 @@ begin
   begin
     Exit;
   end;
+  if (FModel <> nil) and (csDestroying in FModel.ComponentState) then
+  begin
+    Exit;
+  end;
   OldUseList := TStringList.Create;
   NewUseList := TStringList.Create;
   try
@@ -4331,7 +4427,7 @@ begin
     FUseListUpToDate := False;
     NewUseList.Assign(GetUseList);
 
-    if not (FPhastModel as TPhastModel).Clearing then
+    if not (FModel as TCustomModel).Clearing then
     begin
       UpdateSubscriptions(NewUseList, OldUseList);
     end;
@@ -4478,6 +4574,7 @@ begin
     Exit;
   end;
   FDataSet := AOwner as TDataArray;
+  FModel := FDataSet.FModel;
   if not (FDataSet.DataType in ValidReturnTypes) then
   begin
     raise EInterpolationException.Create(
@@ -4514,7 +4611,8 @@ begin
   begin
     AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
     if AScreenObject.Deleted
-      or not AScreenObject.SetValuesByInterpolation then
+      or not AScreenObject.SetValuesByInterpolation
+      or not AScreenObject.UsedModels.UsesModel(DataSet.Model) then
     begin
       continue;
     end;
@@ -4688,7 +4786,7 @@ function TCustomSparseDataSet.GetAnnotation(const Layer, Row,
   Col: integer): string;
 begin
   result := FAnnotation[Layer, Row, Col];
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 procedure TCustomSparseDataSet.Initialize;
@@ -4709,7 +4807,6 @@ begin
     Exit;
   end;
   FDataCached := False;
-  FEvalTime := Now;
 
   FreeStack := (Stack = nil);
   try
@@ -4734,7 +4831,8 @@ begin
       AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
       if not AScreenObject.Deleted then
       begin
-        AScreenObject.AssignValuesToPhastDataSet(frmGoPhast.Grid, self);
+        AScreenObject.AssignValuesToPhastDataSet(frmGoPhast.Grid, self, FModel,
+          UseLgrEdgeCells);
       end;
     end;
 
@@ -4758,6 +4856,11 @@ begin
   FPriorLayer := -1;
   FPriorRow := -1;
   FPriorCol := -1;
+end;
+
+function TCustomSparseDataSet.IsSparseArray: boolean;
+begin
+  result := True;
 end;
 
 procedure TCustomSparseDataSet.SetAnnotation(const Layer, Row,
@@ -4830,6 +4933,14 @@ function TRealSparseDataSet.GetRealData(const Layer, Row,
 begin
   Assert(IsValue[Layer, Row, Col]);
   result := FRealValues[Layer, Row, Col];
+end;
+
+procedure TRealSparseDataSet.RemoveValue(const Layer, Row, Col: Integer);
+begin
+  if IsValue[Layer, Row, Col] then
+  begin
+    FRealValues.RemoveValue(Layer, Row, Col);
+  end;
 end;
 
 procedure TRealSparseDataSet.SetDataType(const Value: TRbwDataType);
@@ -5380,17 +5491,40 @@ end;
 
 procedure TCustomTimeList.Invalidate;
 var
-  Model: TPhastModel;
+  Model: TCustomModel;
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  ATimeList: TCustomTimeList;
 begin
   SetUpToDate(False);
   if FModel <> nil then
   begin
-    Model := FModel as TPhastModel;
+    Model := FModel as TCustomModel;
     if self = Model.ThreeDTimeList then
     begin
       if Model.Grid <> nil then
       begin
         Model.Grid.GridChanged;
+      end;
+    end;
+    if (Name <> '') and (Model is TPhastModel) then
+    begin
+      LocalModel := TPhastModel(Model);
+      if LocalModel.ChildModels <> nil then
+      begin
+        for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+        begin
+          ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+          if ChildModel <> nil then
+          begin
+            ATimeList := ChildModel.GetTimeListByName(Name);
+            if ATimeList <> nil then
+            begin
+              ATimeList.Invalidate;
+            end;
+          end;
+        end;
       end;
     end;
   end;
@@ -5433,6 +5567,8 @@ end;
 function TCustomTimeList.Add(const ATime: double;
   const Data: TDataArray): integer;
 begin
+  Assert(Data <> nil);
+  Assert(Model = Data.Model);
   result := IndexOf(ATime);
   if result >= 0 then
   begin
@@ -5735,11 +5871,11 @@ begin
   Invalidate;
 end;
 
-constructor TCustomTimeList.Create(Model: TObject);
+constructor TCustomTimeList.Create(AModel: TBaseModel);
 begin
   inherited Create;
-  Assert((Model = nil) or (Model is TPhastModel));
-  FModel := Model;
+  Assert((AModel = nil) or (AModel is TCustomModel));
+  FModel := AModel;
   FLimits := TColoringLimits.Create;
   FTimes := TRealList.Create;
   FTimes.Sorted := True;
@@ -5752,11 +5888,11 @@ end;
 
 destructor TCustomTimeList.Destroy;
 var
-  Model: TPhastModel;
+  Model: TCustomModel;
 begin
   if (FModel <> nil) and not (csDestroying in Application.ComponentState) then
   begin
-    Model := FModel as TPhastModel;
+    Model := FModel as TCustomModel;
     if Model.TopTimeList = self then
     begin
       Model.TopTimeList := nil;
@@ -5908,6 +6044,11 @@ begin
 end;
 
 procedure TDataArray.AssignProperties(Source: TDataArray);
+var
+  LocalModel: TPhastModel;
+  ChildIndex: Integer;
+  ChildItem: TChildModelItem;
+  ChildDataArray: TDataArray;
 begin
   Name := Source.Name;
   CheckMax := Source.CheckMax;
@@ -5920,12 +6061,24 @@ begin
   Orientation := Source.Orientation;
   TwoDInterpolator := Source.TwoDInterpolator;
   Units := Source.Units;
+  if (FModel <> nil) and (FModel is TPhastModel) then
+  begin
+    LocalModel := TPhastModel(FModel);
+    for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+    begin
+      ChildItem := LocalModel.ChildModels[ChildIndex];
+      ChildDataArray := ChildItem.ChildModel.DataArrayManager.
+        GetDataSetByName(Source.Name);
+      ChildDataArray.AssignProperties(Source);
+    end;
+  end;
 end;
 
 procedure TDataArray.CacheData;
 var
   MemStream: TMemoryStream;
   Compressor: TCompressionStream;
+  TempStream: TMemoryStream;
 begin
   if UpToDate then
   begin
@@ -5944,11 +6097,14 @@ begin
       MemStream := TMemoryStream.Create;
       try
         Compressor := TCompressionStream.Create(clDefault, MemStream);
+        TempStream := TMemoryStream.Create;
         try
           MemStream.Position := 0;
-          StoreData(Compressor);
+          StoreData(TempStream);
+          TempStream.SaveToStream(Compressor);
         finally
           Compressor.Free;
+          TempStream.Free;
         end;
         MemStream.Position := 0;
         ZipAFile(FTempFileName, MemStream);
@@ -5968,7 +6124,7 @@ var
 begin
   if FCleared then
   begin
-    Grid := frmGoPhast.Grid;
+    Grid := (Model as TCustomModel).Grid;
     UpDateDimensions(Grid.LayerCount, Grid.RowCount, Grid.ColumnCount);
     SetDimensions(False);
   end;
@@ -6180,12 +6336,13 @@ end;
 procedure TDataArray.DefineProperties(Filer: TFiler);
   function StoreCompressedData: boolean;
   var
-    Model: TPhastModel;
+    Model: TCustomModel;
   begin
-    result := UpToDate and (IsUniform <> iuTrue);
+    result := UpToDate and (IsUniform <> iuTrue)
+      and (frmGoPhast.PhastModel.SaveDataSetValues = sdsvAlways);
     if result then
     begin
-      Model := FPhastModel as TPhastModel;
+      Model := FModel as TCustomModel;
       result := Model.DataArrayManager.StoreCachedData;
     end;
   end;
@@ -6219,10 +6376,10 @@ end;
 
 procedure TDataArray.RestoreSubscription(Sender: TObject; const AName: string);
 var
-  Model: TPhastModel;
+  Model: TCustomModel;
   ObservedItem: TObserver;
 begin
-  Model := FPhastModel as TPhastModel;
+  Model := FModel as TCustomModel;
   ObservedItem := Model.GetObserverByName(AName);
   Assert(ObservedItem <> nil);
   ObservedItem.TalksTo(self);
@@ -6358,6 +6515,23 @@ begin
   inherited Create(TSkipReal);
 end;
 
+function TSkipRealCollection.IndexOf(AValue: double): integer;
+var
+  Index: Integer;
+  AnItem: TSkipReal;
+begin
+  result := -1;
+  for Index := 0 to Count - 1 do
+  begin
+    AnItem := Items[Index] as TSkipReal;
+    if AnItem.RealValue = AValue then
+    begin
+      result := Index;
+      Exit; 
+    end;
+  end;
+end;
+
 { TSkipIntegerCollection }
 
 constructor TSkipIntegerCollection.Create;
@@ -6448,13 +6622,13 @@ begin
   inherited;
 end;
 
-function TTempDataArrayStorage.GetDataArray(Model: TObject;
+function TTempDataArrayStorage.GetDataArray(Model: TBaseModel;
   Index: integer): TDataArray;
 begin
   result := DataArrayList[Model][Index];
 end;
 
-function TTempDataArrayStorage.GetDataArrayList(Model: TObject): TDataArrayList;
+function TTempDataArrayStorage.GetDataArrayList(Model: TBaseModel): TDataArrayList;
 var
   Index: Integer;
 begin

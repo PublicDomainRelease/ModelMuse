@@ -1,9 +1,8 @@
 inherited frameArrayParameterDefinition: TframeArrayParameterDefinition
   inherited dgParameters: TRbwDataGrid4
-    Top = 57
-    Height = 135
+    Top = 60
+    Height = 129
     ColCount = 4
-    OnMouseDown = dgParametersMouseDown
     OnMouseUp = dgParametersMouseUp
     OnColSize = dgParametersColSize
     OnHorizontalScroll = dgParametersHorizontalScroll
@@ -92,8 +91,8 @@ inherited frameArrayParameterDefinition: TframeArrayParameterDefinition
         WordWrapCells = False
         AutoAdjustColWidths = False
       end>
-    ExplicitTop = 57
-    ExplicitHeight = 135
+    ExplicitTop = 60
+    ExplicitHeight = 129
   end
   object pnlTop: TPanel
     Left = 0
@@ -118,7 +117,7 @@ inherited frameArrayParameterDefinition: TframeArrayParameterDefinition
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 0
+      ItemHeight = 13
       TabOrder = 0
       Text = '0'
       OnChange = rdeParamValueChange

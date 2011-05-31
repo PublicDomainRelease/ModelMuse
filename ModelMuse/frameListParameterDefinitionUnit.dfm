@@ -88,9 +88,9 @@ object frameListParameterDefinition: TframeListParameterDefinition
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
     TabOrder = 1
     OnExit = dgParametersExit
-    OnMouseDown = dgParametersMouseDown
     OnSelectCell = dgParametersSelectCell
     OnSetEditText = dgParametersSetEditText
+    AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = True

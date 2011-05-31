@@ -2,7 +2,7 @@ unit ModflowTimeUnit;
 
 interface
 
-uses SysUtils, Classes, RbwDataGrid4;
+uses SysUtils, Classes, RbwDataGrid4, GoPhastTypes;
 
 type
   // @name defines the types of stress periods supported by MODFLOW.
@@ -26,7 +26,7 @@ type
     // See @link(TimeStepMultiplier).
     FTimeStepMultiplier: double;
     FDrawDownReference: boolean;
-    // @name calls @link(TPhastModel.Invalidate) indirectly.
+    // @name calls @link(TBaseModel.Invalidate) indirectly.
     procedure InvalidateModel;
     // See @link(EndTime).
     procedure SetEndTime(const Value: double);
@@ -85,10 +85,10 @@ type
   TModflowStressPeriods = class(TCollection)
   private
     // @name is either nil or a TPhastModel.
-    FModel: TComponent;
+    FModel: TBaseModel;
     // See @link(Items).
     function GetItems(Index: Integer): TModflowStressPeriod;
-    // @name calls @link(TPhastModel.Invalidate) indirectly.
+    // @name calls @link(TBaseModel.Invalidate) indirectly.
     procedure InvalidateModel;
     // See @link(Items).
     procedure SetItems(Index: Integer; const Value: TModflowStressPeriod);
@@ -98,7 +98,7 @@ type
     procedure Assign(Source: TPersistent); override;
     // @name creates an instance of @classname.
     // Model must be either nil or a TPhastModel.
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
     // @name is used to access a @link(TModflowStressPeriod)
     // stored in @classname.
     property Items[Index: Integer]: TModflowStressPeriod
@@ -348,7 +348,7 @@ begin
   end;
 end;
 
-constructor TModflowStressPeriods.Create(Model: TComponent);
+constructor TModflowStressPeriods.Create(Model: TBaseModel);
 begin
   Assert((Model = nil) or (Model is TPhastModel));
   FModel := Model;
@@ -394,7 +394,7 @@ procedure TModflowStressPeriods.InvalidateModel;
 begin
   if FModel <> nil then
   begin
-    (FModel as TPhastModel).Invalidate;
+    FModel.Invalidate;
   end;
 end;
 
@@ -546,13 +546,14 @@ begin
     begin
       if StressPeriod.DrawDownReference then
       begin
-        frmErrorsAndWarnings.AddWarning(StrUnusualUseOfDrawd, StrTheFirstAndOnlyS);
+        frmErrorsAndWarnings.AddWarning(DisWriter.Model,
+          StrUnusualUseOfDrawd, StrTheFirstAndOnlyS);
       end;
     end;
     if StressPeriod.DrawDownReference
       and (StressPeriod.StressPeriodType = sptTransient) then
     begin
-      frmErrorsAndWarnings.AddWarning(StrUnusualUseOfDrawd,
+      frmErrorsAndWarnings.AddWarning(DisWriter.Model, StrUnusualUseOfDrawd,
         'In stress period ' + IntToStr(Index+1) + ', a transient stress '
         + 'period is used as a reference stress period for '
         + 'computing drawdown.');

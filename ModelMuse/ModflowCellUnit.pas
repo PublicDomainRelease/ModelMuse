@@ -21,7 +21,7 @@ type
     Row: integer;
     Column: integer;
     Section: integer;
-    class operator Equal(ACell, BCELL: TCellLocation): boolean;
+    class operator Equal(ACell: TCellLocation; BCell: TCellLocation): boolean;
   end;
 
   TValueCell = class(TObject)
@@ -33,10 +33,13 @@ type
     function GetColumn: integer; virtual; abstract;
     function GetLayer: integer; virtual; abstract;
     function GetRow: integer; virtual; abstract;
-    function GetIntegerValue(Index: integer): integer; virtual; abstract;
-    function GetRealValue(Index: integer): double; virtual; abstract;
-    function GetRealAnnotation(Index: integer): string; virtual; abstract;
-    function GetIntegerAnnotation(Index: integer): string; virtual; abstract;
+    procedure SetColumn(const Value: integer); virtual; abstract;
+    procedure SetLayer(const Value: integer); virtual; abstract;
+    procedure SetRow(const Value: integer); virtual; abstract;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; virtual; abstract;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; virtual; abstract;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; virtual; abstract;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; virtual; abstract;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); virtual;
     procedure Restore(Decomp: TDecompressionStream;
       Annotations: TStringList); virtual;
@@ -46,17 +49,17 @@ type
     Constructor Create; virtual; 
     // @name is the layer number for this cell. Valid values range from 0 to
     // the number of layers in the grid minus 1.
-    property Layer: integer read GetLayer;
+    property Layer: integer read GetLayer write SetLayer;
     // @name is the row number for this cell. Valid values range from 0 to
     // the number of rows in the grid minus 1.
-    property Row: integer read GetRow;
+    property Row: integer read GetRow write SetRow;
     // @name is the column number for this cell. Valid values range from 0 to
     // the number of columns in the grid minus 1.
-    property Column: integer read GetColumn;
-    property IntegerValue[Index: integer]: integer read GetIntegerValue;
-    property RealValue[Index: integer]: double read GetRealValue;
-    property RealAnnotation[Index: integer]: string read GetRealAnnotation;
-    property IntegerAnnotation[Index: integer]: string read GetIntegerAnnotation;
+    property Column: integer read GetColumn write SetColumn;
+    property IntegerValue[Index: integer; AModel: TBaseModel]: integer read GetIntegerValue;
+    property RealValue[Index: integer; AModel: TBaseModel]: double read GetRealValue;
+    property RealAnnotation[Index: integer; AModel: TBaseModel]: string read GetRealAnnotation;
+    property IntegerAnnotation[Index: integer; AModel: TBaseModel]: string read GetIntegerAnnotation;
     property IFace: TIface read FIFace write FIFace;
     // @name is the @link(TScreenObject) used to assign this
     // @classname.  @name is assigned in @link(TModflowBoundary.AssignCells).
@@ -76,16 +79,17 @@ type
   private
     FCachedCount: integer;
     FCached: Boolean;
-    FTempFileNames: TStringList;
+//    FTempFileNames: TStringList;
     FCleared: Boolean;
     FValueCellType: TValueCellType;
-    FCondensedCount: integer;
+//    FCondensedCount: integer;
+    FTempFileName: string;
     function GetCount: integer;
     procedure SetCount(const Value: integer);
     function GetItem(Index: integer): TValueCell;
     procedure SetItem(Index: integer; const Value: TValueCell);
     procedure Restore(Start: integer = 0);
-    procedure Condense;
+//    procedure Condense;
   public
     function Add(Item: TValueCell): integer;
     procedure Cache;
@@ -100,11 +104,13 @@ type
 
 procedure WriteCompInt(Stream: TStream; Value: integer);
 procedure WriteCompReal(Stream: TStream; Value: double);
+procedure WriteCompBoolean(Stream: TStream; Value: Boolean);
 procedure WriteCompString(Stream: TStream; Value: string);
 procedure WriteCompCell(Stream: TStream; Cell: TCellLocation);
 
 function ReadCompInt(Stream: TStream): integer;
 function ReadCompReal(Stream: TStream): double;
+function ReadCompBoolean(Stream: TStream): Boolean;
 function ReadCompStringSimple(Stream: TStream): string;
 function ReadCompString(Stream: TStream; Annotations: TStringList): string;
 function ReadCompCell(Stream: TStream): TCellLocation;
@@ -132,6 +138,16 @@ begin
 end;
 
 function ReadCompReal(Stream: TStream): double;
+begin
+  Stream.Read(result, SizeOf(result));
+end;
+
+procedure WriteCompBoolean(Stream: TStream; Value: Boolean);
+begin
+  Stream.Write(Value, SizeOf(Value));
+end;
+
+function ReadCompBoolean(Stream: TStream): Boolean;
 begin
   Stream.Read(result, SizeOf(result));
 end;
@@ -185,45 +201,45 @@ end;
 
 function TValueCellList.Add(Item: TValueCell): integer;
 begin
-//  if FCached and fCleared then
-//  begin
-//    Restore;
-//  end;
+  if FCached and fCleared then
+  begin
+    Restore;
+  end;
   FCached := False;
   result := inherited Add(Item);
 end;
 
-procedure TValueCellList.Condense;
-var
-  TempList: TList;
-  Index: Integer;
-begin
-  if FCondensedCount >= MaxCondensed then
-  begin
-    FCondensedCount := 0;
-  end;
-  TempList := TList.Create;
-  try
-    TempList.Capacity := inherited Count;
-    for Index := 0 to inherited Count - 1 do
-    begin
-      TempList.Add(inherited Items[Index])
-    end;
-    OwnsObjects := False;
-    Clear;
-    FCleared := True;
-    OwnsObjects := True;
-    FCached := True;
-    Restore(FCondensedCount);
-    for Index := 0 to TempList.Count - 1 do
-    begin
-      Add(TempList[Index]);
-    end;
-    Inc(FCondensedCount);
-  finally
-    TempList.Free;
-  end;
-end;
+//procedure TValueCellList.Condense;
+//var
+//  TempList: TList;
+//  Index: Integer;
+//begin
+//  if FCondensedCount >= MaxCondensed then
+//  begin
+//    FCondensedCount := 0;
+//  end;
+//  TempList := TList.Create;
+//  try
+//    TempList.Capacity := inherited Count;
+//    for Index := 0 to inherited Count - 1 do
+//    begin
+//      TempList.Add(inherited Items[Index])
+//    end;
+//    OwnsObjects := False;
+//    Clear;
+//    FCleared := True;
+//    OwnsObjects := True;
+//    FCached := True;
+//    Restore(FCondensedCount);
+//    for Index := 0 to TempList.Count - 1 do
+//    begin
+//      Add(TempList[Index]);
+//    end;
+//    Inc(FCondensedCount);
+//  finally
+//    TempList.Free;
+//  end;
+//end;
 
 function TValueCellList.AreIntegerValuesIdentical(AnotherList: TValueCellList;
   DataIndex: integer): boolean;
@@ -267,60 +283,74 @@ end;
 
 procedure TValueCellList.Cache;
 var
-  TempFile: TTempFileStream;
+//  TempFile: TTempFileStream;
   Compressor: TCompressionStream;
   Index: Integer;
   Cell: TValueCell;
   LocalCount: integer;
-  NewTempFileName: string;
+//  NewTempFileName: string;
   Strings: TStringList;
   StringIndex: Integer;
+  TempFile: TMemoryStream;
 begin
-  LocalCount := inherited Count;
-  if LocalCount > 0 then
+  { TODO : Investigate why this this if statement doesn't work. }
+  if not FCached then
   begin
-    if FTempFileNames.Count  >= FCondensedCount + MaxCondensed then
+    LocalCount := inherited Count;
+    if LocalCount > 0 then
     begin
-      Condense;
-      LocalCount := inherited Count;
-    end;
-    NewTempFileName := TempFileName;
-    FTempFileNames.Add(NewTempFileName);
-    TempFile := TTempFileStream.Create(NewTempFileName, fmOpenReadWrite);
-    Compressor := TCompressionStream.Create(clDefault, TempFile);
-    try
-      FCachedCount := FCachedCount + LocalCount;
-
-      Strings := TStringList.Create;
-      try
-        Strings.Sorted := True;
-        Strings.Duplicates := dupIgnore;
-        for Index := 0 to LocalCount - 1 do
-        begin
-          Cell := inherited Items[Index] as TValueCell;
-          Cell.RecordStrings(Strings);
-        end;
-
-        WriteCompInt(Compressor, Strings.Count);
-        for StringIndex := 0 to Strings.Count - 1 do
-        begin
-          WriteCompString(Compressor, Strings[StringIndex])
-        end;
-
-        WriteCompInt(Compressor, LocalCount);
-        for Index := 0 to LocalCount - 1 do
-        begin
-          Cell := inherited Items[Index] as TValueCell;
-          Cell.Cache(Compressor, Strings);
-        end;
-      finally
-        Strings.Free;
+      if FTempFileName = '' then
+      begin
+        FTempFileName := TempFileName;
       end;
-    finally
-      Compressor.Free;
-      TempFile.Free;
+//      if FTempFileNames.Count  >= FCondensedCount + MaxCondensed then
+//      begin
+//        Condense;
+//        LocalCount := inherited Count;
+//      end;
+//      NewTempFileName := TempFileName;
+//      FTempFileNames.Add(NewTempFileName);
+//      TempFile := TTempFileStream.Create(NewTempFileName, fmOpenReadWrite);
+      TempFile := TMemoryStream.Create;
+      try
+        Compressor := TCompressionStream.Create(clDefault, TempFile);
+        try
+          FCachedCount := {FCachedCount +} LocalCount;
+
+          Strings := TStringList.Create;
+          try
+            Strings.Sorted := True;
+            Strings.Duplicates := dupIgnore;
+            for Index := 0 to LocalCount - 1 do
+            begin
+              Cell := inherited Items[Index] as TValueCell;
+              Cell.RecordStrings(Strings);
+            end;
+
+            WriteCompInt(Compressor, Strings.Count);
+            for StringIndex := 0 to Strings.Count - 1 do
+            begin
+              WriteCompString(Compressor, Strings[StringIndex])
+            end;
+
+            WriteCompInt(Compressor, LocalCount);
+            for Index := 0 to LocalCount - 1 do
+            begin
+              Cell := inherited Items[Index] as TValueCell;
+              Cell.Cache(Compressor, Strings);
+            end;
+          finally
+            Strings.Free;
+          end;
+        finally
+          Compressor.Free;
+        end;
+        ZipAFile(FTempFileName, TempFile);
+      finally
+        TempFile.Free;
+      end;
+      FCached := True;
     end;
-    FCached := True;
   end;
   Clear;
   FCleared := True;
@@ -337,22 +367,28 @@ end;
 constructor TValueCellList.Create(ValueCellType: TValueCellType);
 begin
   inherited Create;
-  FTempFileNames := TStringList.Create;
+  FCached := False;
+//  FTempFileNames := TStringList.Create;
+  FTempFileName := '';
   FValueCellType := ValueCellType;
 end;
 
 destructor TValueCellList.Destroy;
-var
-  Index: Integer;
+//var
+//  Index: Integer;
 begin
-  for Index := 0 to FTempFileNames.Count - 1 do
+  if FTempFileName <> '' then
   begin
-    if FileExists(FTempFileNames[Index]) then
-    begin
-      DeleteFile(FTempFileNames[Index]);
-    end;
+    FreeMemory(FTempFileName);
   end;
-  FTempFileNames.Free;
+//  for Index := 0 to FTempFileNames.Count - 1 do
+//  begin
+//    if FileExists(FTempFileNames[Index]) then
+//    begin
+//      DeleteFile(FTempFileNames[Index]);
+//    end;
+//  end;
+//  FTempFileNames.Free;
   inherited;
 end;
 
@@ -376,17 +412,18 @@ end;
 
 procedure TValueCellList.Restore(Start: integer = 0);
 var
-  TempFile: TTempFileStream;
+//  TempFile: TTempFileStream;
   DecompressionStream: TDecompressionStream;
   ValueCell: TValueCell;
-  Index: Integer;
+//  Index: Integer;
   LocalCount : integer;
-  CacheFileName: string;
+//  CacheFileName: string;
   CellIndex: Integer;
-  SumOfLocalCounts: integer;
+//  SumOfLocalCounts: integer;
   Annotations: TStringList;
   StringIndex: Integer;
   StringCount: Integer;
+  TempFile: TMemoryStream;
 begin
   Assert(FCached);
   Assert(FCleared);
@@ -394,13 +431,19 @@ begin
   Annotations := TStringList.Create;
   try
 //    Annotations.Sorted := True;
-    Capacity := FCachedCount;
-    SumOfLocalCounts := 0;
-    for Index := Start to FTempFileNames.Count -1 do
+    if Capacity < FCachedCount then
     begin
-      CacheFileName := FTempFileNames[Index];
-      Assert(FileExists(CacheFileName));
-      TempFile := TTempFileStream.Create(CacheFileName, fmOpenRead);
+      Capacity := FCachedCount;
+    end;
+
+//    SumOfLocalCounts := 0;
+//    for Index := Start to FTempFileNames.Count -1 do
+    begin
+//      CacheFileName := FTempFileNames[Index];
+//      Assert(FileExists(CacheFileName));
+//      TempFile := TTempFileStream.Create(CacheFileName, fmOpenRead);
+      TempFile := TMemoryStream.Create;
+      ExtractAFile(FTempFileName, TempFile);
       DecompressionStream := TDecompressionStream.Create(TempFile);
       try
         StringCount := ReadCompInt(DecompressionStream);
@@ -412,7 +455,7 @@ begin
         end;
 
         LocalCount := ReadCompInt(DecompressionStream);
-        SumOfLocalCounts := SumOfLocalCounts + LocalCount;
+//        SumOfLocalCounts := SumOfLocalCounts + LocalCount;
         for CellIndex := 0 to LocalCount - 1 do
         begin
           ValueCell := FValueCellType.Create;
@@ -422,15 +465,15 @@ begin
       finally
         DecompressionStream.Free;
         TempFile.Free;
-        DeleteFile(CacheFileName);
+//        DeleteFile(CacheFileName);
       end;
     end;
     FCleared := False;
-    While FTempFileNames.Count > Start do
-    begin
-      FTempFileNames.Delete(FTempFileNames.Count-1);
-    end;
-    FCachedCount := FCachedCount - SumOfLocalCounts;
+//    While FTempFileNames.Count > Start do
+//    begin
+//      FTempFileNames.Delete(FTempFileNames.Count-1);
+//    end;
+//    FCachedCount := FCachedCount - SumOfLocalCounts;
   finally
     Annotations.Free;
   end;
@@ -455,13 +498,13 @@ end;
 function TValueCell.AreIntegerValuesIdentical(AnotherCell: TValueCell;
   DataIndex: integer): boolean;
 begin
-  result := IntegerValue[DataIndex] = AnotherCell.IntegerValue[DataIndex];
+  result := IntegerValue[DataIndex, nil] = AnotherCell.IntegerValue[DataIndex, nil];
 end;
 
 function TValueCell.AreRealValuesIdentical(AnotherCell: TValueCell;
   DataIndex: integer): boolean;
 begin
-  result := RealValue[DataIndex] = AnotherCell.RealValue[DataIndex];
+  result := RealValue[DataIndex, nil] = AnotherCell.RealValue[DataIndex, nil];
 end;
 
 procedure TValueCell.Cache(Comp: TCompressionStream; Strings: TStringList);
@@ -517,7 +560,8 @@ end;
 
 { TCellLocation }
 
-class operator TCellLocation.Equal(ACell, BCell: TCellLocation): boolean;
+class operator TCellLocation.Equal(ACell: TCellLocation;
+  BCell: TCellLocation): boolean;
 begin
   result :=
     (ACell.Layer = BCell.Layer)

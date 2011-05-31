@@ -7,9 +7,9 @@ uses
   Forms, Dialogs, frmCustomGoPhastUnit, GoPhastTypes, frameDisplayLimitUnit,
   StdCtrls, JvExStdCtrls, JvRichEdit, ExtCtrls, Mask, JvExMask, JvSpin,
   JvExControls, JvxSlider, Buttons, DataSetUnit, SubscriptionUnit,
-  ClassificationUnit, frmGoPhastUnit, PhastModelUnit, TntStdCtrls,
-  TntExDropDownEdit, TntExDropDownVirtualStringTree, VirtualTrees, JvExComCtrls,
-  JvUpDown, Grids, RbwDataGrid4, RbwParser, ArgusDataEntry, LegendUnit, Math;
+  ClassificationUnit, frmGoPhastUnit, PhastModelUnit, VirtualTrees,
+  JvExComCtrls, JvUpDown, Grids, RbwDataGrid4, RbwParser, ArgusDataEntry,
+  LegendUnit, Math, SsButtonEd, RbwStringTreeCombo;
 
 type
   TfrmCustomColor = class(TfrmCustomGoPhast)
@@ -45,7 +45,6 @@ type
     btnOK: TBitBtn;
     // Clicking @name closes the @classname without changing anything.
     btnCancel: TBitBtn;
-    virttreecomboDataSets: TTntExDropDownVirtualStringTree;
     pcChoices: TPageControl;
     tabSelection: TTabSheet;
     tabFilters: TTabSheet;
@@ -71,6 +70,7 @@ type
     udDataSets: TJvUpDown;
     timerLegend: TTimer;
     rgUpdateLimitChoice: TRadioGroup;
+    virttreecomboDataSets1: TRbwStringTreeCombo;
     // @name gives a preview of the color scheme
     // selected in @link(comboColorScheme).
     procedure pbColorSchemePaint(Sender: TObject);
@@ -104,6 +104,9 @@ type
     procedure timerLegendTimer(Sender: TObject);
     procedure rdgLegendStateChange(Sender: TObject; ACol, ARow: Integer;
       const Value: TCheckBoxState);
+    procedure virttreecomboDataSets1TreeInitNode(Sender: TBaseVirtualTree;
+      ParentNode, Node: PVirtualNode;
+      var InitialStates: TVirtualNodeInitStates);
   private
     // @name is implemented as a TObjectList.
     FDataSetDummyObjects: TList;
@@ -373,6 +376,16 @@ begin
   end;
 end;
 
+procedure TfrmCustomColor.virttreecomboDataSets1TreeInitNode(
+  Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
+  var InitialStates: TVirtualNodeInitStates);
+var
+  CellText: WideString;
+begin
+  inherited;
+  GetNodeCaption(Node, CellText, Sender);
+end;
+
 procedure TfrmCustomColor.virttreecomboDataSetsChange(Sender: TObject);
 begin
   inherited;
@@ -457,9 +470,9 @@ end;
 procedure TfrmCustomColor.FormShow(Sender: TObject);
 begin
   inherited;
-  udDataSets.Left := virttreecomboDataSets.Left + virttreecomboDataSets.Width;
-  udDataSets.Top := virttreecomboDataSets.Top;
-  udDataSets.Height := virttreecomboDataSets.Height;
+  udDataSets.Left := virttreecomboDataSets1.Left + virttreecomboDataSets1.Width;
+  udDataSets.Top := virttreecomboDataSets1.Top;
+  udDataSets.Height := virttreecomboDataSets1.Height;
 
 end;
 
@@ -475,7 +488,7 @@ end;
 
 procedure TfrmCustomColor.GetDataSets;
 begin
-  FillVirtualStringTreeWithDataSets(virttreecomboDataSets.Tree,
+  FillVirtualStringTreeWithDataSets(virttreecomboDataSets1.Tree,
     FDataSetDummyObjects, GetSelectedArray, CanColorDataSet);
 end;
 
@@ -564,8 +577,8 @@ begin
   end
   else
   begin
-    virttreecomboDataSets.Tree.Selected[NewSelection] := True;
-    SetSelectedNode(virttreecomboDataSets.Tree, NewSelection);
+    virttreecomboDataSets1.Tree.Selected[NewSelection] := True;
+    SetSelectedNode(virttreecomboDataSets1.Tree, NewSelection);
     if Assigned(btnOK.OnClick) then
     begin
       btnOK.OnClick(nil);
@@ -728,7 +741,7 @@ end;
 
 procedure TfrmCustomColor.ResetTreeText;
 begin
-  UpdateTreeComboText(SelectedVirtNode, virttreecomboDataSets);
+  UpdateTreeComboText(SelectedVirtNode, virttreecomboDataSets1);
 end;
 
 procedure TfrmCustomColor.UpdateLegendAfterDelay;
@@ -747,7 +760,7 @@ end;
 
 procedure TfrmCustomColor.SetSelectedNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
-  SelectOnlyLeaves(Node, virttreecomboDataSets, Sender, FSelectedVirtNode);
+  SelectOnlyLeaves(Node, virttreecomboDataSets1, Sender, FSelectedVirtNode);
 end;
 
 procedure TfrmCustomColor.RetrieveSelectedObject(var AnObject: TObject);
@@ -761,7 +774,7 @@ begin
   end
   else
   begin
-    NodeData := virttreecomboDataSets.Tree.GetNodeData(SelectedVirtNode);
+    NodeData := virttreecomboDataSets1.Tree.GetNodeData(SelectedVirtNode);
     if Assigned(NodeData) and Assigned(NodeData.ClassificationObject) then
     begin
       if NodeData.ClassificationObject is TBoundaryClassification then

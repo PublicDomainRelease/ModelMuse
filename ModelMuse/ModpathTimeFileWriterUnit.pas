@@ -29,7 +29,7 @@ end;
 
 procedure TModpathTimeFileWriter.WriteDataSet1;
 begin
-  WriteInteger(PhastModel.ModflowPackages.ModPath.OutputTimes.Count);
+  WriteInteger(Model.ModflowPackages.ModPath.OutputTimes.Count);
   WriteInteger(1);
   NewLine;
 end;
@@ -39,9 +39,9 @@ var
   Index: Integer;
   Item: TModpathTimeItem;
 begin
-  for Index := 0 to PhastModel.ModflowPackages.ModPath.OutputTimes.Count - 1 do
+  for Index := 0 to Model.ModflowPackages.ModPath.OutputTimes.Count - 1 do
   begin
-    Item := PhastModel.ModflowPackages.ModPath.
+    Item := Model.ModflowPackages.ModPath.
       OutputTimes.Items[Index] as TModpathTimeItem;
     WriteFloat(Item.Time);
     NewLine;

@@ -3,7 +3,7 @@ unit ModflowMultiplierZoneWriterUnit;
 interface
 
 uses LayerStructureUnit, Classes, PhastModelUnit, SysUtils, HufDefinition,
-  CustomModflowWriterUnit, ModflowParameterUnit, DataSetUnit;
+  CustomModflowWriterUnit, ModflowParameterUnit, DataSetUnit, GoPhastTypes;
 
 type
   TCustomMultZoneWriter = class(TCustomModflowWriter)
@@ -17,7 +17,7 @@ type
     function GetDataArray(Param: TModflowSteadyParameter): TDataArray;
       virtual; abstract;
     function GetArrayName(Param: TModflowSteadyParameter;
-      LayerIndex: integer): string; virtual; abstract;
+      LayerIndex: integer; AModel: TBaseModel): string; virtual; abstract;
     function ArrayUsed(const ArrayName: string): boolean; virtual; abstract;
     function ArrayType: string; virtual; abstract;
     function DataSet2Comment: string; virtual; abstract;
@@ -29,7 +29,7 @@ type
     function UsesHufParam(UsedParam: THufUsedParameter;
       var ArrayName: string; var DataArray: TDataArray): boolean; virtual;
   public
-    procedure WriteFile(const AFileName: string);
+    function WriteFile(const AFileName: string): boolean;
   end;
 
   TModflowZoneWriter = class(TCustomMultZoneWriter)
@@ -41,7 +41,7 @@ type
     function GetDataArray(Param: TModflowSteadyParameter): TDataArray;
       override;
     function GetArrayName(Param: TModflowSteadyParameter;
-      LayerIndex: integer): string; override;
+      LayerIndex: integer; AModel: TBaseModel): string; override;
     function ArrayUsed(const ArrayName: string): boolean; override;
     function ArrayType: string; override;
     function DataSet2Comment: string; override;
@@ -51,7 +51,7 @@ type
     function UsesHufParam(UsedParam: THufUsedParameter;
       var ArrayName: string; var DataArray: TDataArray): boolean; override;
   public
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(AModel: TCustomModel); override;
   end;
 
   TModflowMultiplierWriter = class(TCustomMultZoneWriter)
@@ -63,7 +63,7 @@ type
     function GetDataArray(Param: TModflowSteadyParameter): TDataArray;
       override;
     function GetArrayName(Param: TModflowSteadyParameter;
-      LayerIndex: integer): string; override;
+      LayerIndex: integer; AModel: TBaseModel): string; override;
     function ArrayUsed(const ArrayName: string): boolean; override;
     function ArrayType: string; override;
     function DataSet2Comment: string; override;
@@ -73,7 +73,7 @@ type
     function UsesHufParam(UsedParam: THufUsedParameter;
       var ArrayName: string; var DataArray: TDataArray): boolean; override;
   public
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(AModel: TCustomModel); override;
   end;
 
 implementation
@@ -96,12 +96,12 @@ begin
       end;
     ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI, ptHUF_KDEP, ptHUF_LVDA:
       begin
-        result := PhastModel.ModflowPackages.HufPackage.IsSelected;
+        result := Model.ModflowPackages.HufPackage.IsSelected;
       end;
     ptHUF_SS, ptHUF_SY, ptHUF_SYTP:
       begin
-        result := PhastModel.ModflowPackages.HufPackage.IsSelected
-          and PhastModel.ModflowFullStressPeriods.TransientModel;
+        result := Model.ModflowPackages.HufPackage.IsSelected
+          and Model.ModflowFullStressPeriods.TransientModel;
       end;
     else Assert(False);
   end;
@@ -114,21 +114,21 @@ begin
   case Param.ParameterType of
     ptLPF_HK, ptLPF_HANI, ptLPF_VK, ptLPF_VANI, ptLPF_VKCB:
       begin
-        result := PhastModel.ModflowPackages.LpfPackage.IsSelected;
+        result := Model.ModflowPackages.LpfPackage.IsSelected;
       end;
     ptLPF_SS, ptLPF_SY:
       begin
-        result := PhastModel.ModflowPackages.LpfPackage.IsSelected
-          and PhastModel.ModflowFullStressPeriods.TransientModel;
+        result := Model.ModflowPackages.LpfPackage.IsSelected
+          and Model.ModflowFullStressPeriods.TransientModel;
       end;
     ptHUF_LVDA:
       begin
-        result := PhastModel.ModflowPackages.HufPackage.IsSelected;
+        result := Model.ModflowPackages.HufPackage.IsSelected;
       end;
     ptHUF_SYTP:
       begin
-        result := PhastModel.ModflowPackages.HufPackage.IsSelected
-          and PhastModel.ModflowFullStressPeriods.TransientModel;
+        result := Model.ModflowPackages.HufPackage.IsSelected
+          and Model.ModflowFullStressPeriods.TransientModel;
       end;
     ptUndefined, ptRCH, ptEVT, ptETS, ptCHD, ptGHB, ptQ,
     ptRIV, ptDRN, ptDRT, ptSFR, ptHFB,
@@ -157,21 +157,21 @@ var
   UsedParam: THufUsedParameter;
   Description: string;
 begin
-  LayerCount := PhastModel.LayerStructure.ModflowLayerCount;
-  for ParamIndex := 0 to PhastModel.ModflowSteadyParameters.Count - 1 do
+  LayerCount := Model.ModflowLayerCount;
+  for ParamIndex := 0 to Model.ModflowSteadyParameters.Count - 1 do
   begin
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
     begin
       Exit;
     end;
-    Param := PhastModel.ModflowSteadyParameters.Items[ParamIndex];
+    Param := Model.ModflowSteadyParameters.Items[ParamIndex];
     if UseSteadyParameter(Param) then
     begin
       DataArray := GetDataArray(Param);
       for LayerIndex := 1 to LayerCount do
       begin
-        ArrayName := GetArrayName(Param, LayerIndex);
+        ArrayName := GetArrayName(Param, LayerIndex, Model);
         if ArrayUsed(ArrayName) then
         begin
           Assert(ArrayName <> '');
@@ -180,12 +180,13 @@ begin
             ArrayName := ArrayName + ' ';
           end;
           // Data set 2;
+          Assert(Length(ArrayName) = 10);
           WriteString(ArrayName);
           WriteString(DataSet2Comment);
           NewLine;
 
           // Data set 3
-          ArrayIndex := PhastModel.LayerStructure.
+          ArrayIndex := Model.
             ModflowLayerToDataSetLayer(LayerIndex);
           if Param.ParameterType = ptLPF_VKCB then
           begin
@@ -193,19 +194,19 @@ begin
           end;
           WriteArray(DataArray, ArrayIndex, ArrayType + ' array for '
             + Param.ParameterName + ' in '
-            + PhastModel.LayerStructure.ModflowLayerBottomDescription(ArrayIndex));
+            + Model.ModflowLayerBottomDescription(ArrayIndex));
         end;
       end;
-      PhastModel.DataArrayManager.CacheDataArrays;
+      Model.DataArrayManager.CacheDataArrays;
       DataArray.CacheData;
     end;
   end;
 
-  if PhastModel.ModflowPackages.HufPackage.IsSelected then
+  if Model.ModflowPackages.HufPackage.IsSelected then
   begin
-    for UnitIndex := 0 to PhastModel.HydrogeologicUnits.Count - 1 do
+    for UnitIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
     begin
-      HGU := PhastModel.HydrogeologicUnits[UnitIndex];
+      HGU := Model.HydrogeologicUnits[UnitIndex];
       for ParamIndex := 0 to HGU.HufUsedParameters.Count - 1 do
       begin
         UsedParam := HGU.HufUsedParameters[ParamIndex];
@@ -213,6 +214,7 @@ begin
         begin
           // Data set 2;
           Assert(ArrayName <> '');
+          Assert(Length(ArrayName) <= 10);
           WriteString(ArrayName);
           WriteString('          ');
           WriteString(DataSet2Comment);
@@ -221,7 +223,7 @@ begin
           // Data set 3
           Description := UsedParam.Description;
           WriteArray(DataArray, 0, Description);
-          PhastModel.DataArrayManager.CacheDataArrays;
+          Model.DataArrayManager.CacheDataArrays;
           DataArray.CacheData;
         end;
       end;
@@ -258,6 +260,7 @@ begin
       begin
         ArrayName := ArrayName + ' ';
       end;
+      Assert(Length(ArrayName) = 10); 
 
           // Data set 2;
       WriteString(ArrayName);
@@ -265,22 +268,23 @@ begin
       NewLine;
 
       // Data set 3
-      ArrayIndex := PhastModel.LayerStructure.
+      ArrayIndex := Model.
         ModflowLayerToDataSetLayer(LayerIndex);
 
-      WriteArray(DataArray, ArrayIndex, ArrayType + ' array');
+      WriteArray(DataArray, ArrayIndex, ArrayType + ' array ' + ArrayName);
     end;
-    PhastModel.DataArrayManager.CacheDataArrays;
+    Model.DataArrayManager.CacheDataArrays;
     DataArray.CacheData;
   end;
 end;
 
-procedure TCustomMultZoneWriter.WriteFile(const AFileName: string);
+function TCustomMultZoneWriter.WriteFile(const AFileName: string): boolean;
 var
   NameOfFile: string;
 begin
+  result := NumberOfArrays > 0;
   if NumberOfArrays = 0 then Exit;
-  if PhastModel.PackageGeneratedExternally(FileType) then
+  if Model.PackageGeneratedExternally(FileType) then
   begin
     Exit;
   end;
@@ -325,10 +329,10 @@ begin
   result := UsedZoneArrayNames.IndexOf(ArrayName) >= 0
 end;
 
-constructor TModflowZoneWriter.Create(Model: TCustomModel);
+constructor TModflowZoneWriter.Create(AModel: TCustomModel);
 begin
   inherited;
-  FFileUnit := PhastModel.UnitNumbers.UnitNumber(StrZONE);
+  FFileUnit := Model.UnitNumbers.UnitNumber(StrZONE);
   FFileType := 'ZONE';
 end;
 
@@ -343,15 +347,15 @@ begin
 end;
 
 function TModflowZoneWriter.GetArrayName(Param: TModflowSteadyParameter;
-  LayerIndex: integer): string;
+  LayerIndex: integer; AModel: TBaseModel): string;
 begin
-  result := Param.ZoneArrayName(LayerIndex);
+  result := Param.ZoneArrayName(LayerIndex, AModel);
 end;
 
 function TModflowZoneWriter.GetDataArray(
   Param: TModflowSteadyParameter): TDataArray;
 begin
-  result := PhastModel.DataArrayManager.GetDataSetByName(Param.ZoneName);
+  result := Model.DataArrayManager.GetDataSetByName(Param.ZoneName);
 end;
 
 function TModflowZoneWriter.NumberOfArrays: integer;
@@ -378,7 +382,7 @@ end;
 
 function TModflowZoneWriter.TransientArrayList: TList;
 begin
-  result := PhastModel.TransientZoneArrays;
+  result := Model.TransientZoneArrays;
 end;
 
 function TModflowZoneWriter.UsesHufParam(UsedParam: THufUsedParameter;
@@ -397,7 +401,7 @@ begin
         ArrayName := UsedParam.ZoneArrayName;
         UsedZoneArrayNames.Add(ArrayName);
       end;
-      DataArray := PhastModel.DataArrayManager.GetDataSetByName(UsedParam.ZoneDataSetName);
+      DataArray := Model.DataArrayManager.GetDataSetByName(UsedParam.ZoneDataSetName);
     end;
   end;
 end;
@@ -415,7 +419,7 @@ end;
 procedure TModflowZoneWriter.WriteDataSet0;
 begin
   WriteCommentLine('Zone (ZONE) File created on '
-    + DateToStr(Now) + ' by ' + PhastModel.ProgramName
+    + DateToStr(Now) + ' by ' + Model.ProgramName
     + ' version ' + ModelVersion + '.');
 end;
 
@@ -429,11 +433,11 @@ var
   DataArray: TDataArray;
 begin
   //  If required, update UsedZoneArrayNames
-  if PhastModel.ModflowPackages.HufPackage.IsSelected then
+  if Model.ModflowPackages.HufPackage.IsSelected then
   begin
-    for UnitIndex := 0 to PhastModel.HydrogeologicUnits.Count - 1 do
+    for UnitIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
     begin
-      HGU := PhastModel.HydrogeologicUnits[UnitIndex];
+      HGU := Model.HydrogeologicUnits[UnitIndex];
       for ParamIndex := 0 to HGU.HufUsedParameters.Count - 1 do
       begin
         UsedParam := HGU.HufUsedParameters[ParamIndex];
@@ -459,10 +463,10 @@ begin
   result := UsedMultiplierArrayNames.IndexOf(ArrayName) >= 0
 end;
 
-constructor TModflowMultiplierWriter.Create(Model: TCustomModel);
+constructor TModflowMultiplierWriter.Create(AModel: TCustomModel);
 begin
   inherited;
-  FFileUnit := PhastModel.UnitNumbers.UnitNumber(StrMULT);
+  FFileUnit := Model.UnitNumbers.UnitNumber(StrMULT);
   FFileType := 'MULT';
 end;
 
@@ -477,15 +481,15 @@ begin
 end;
 
 function TModflowMultiplierWriter.GetArrayName(Param: TModflowSteadyParameter;
-  LayerIndex: integer): string;
+  LayerIndex: integer; AModel: TBaseModel): string;
 begin
-  result := Param.MultiplierArrayName(LayerIndex);
+  result := Param.MultiplierArrayName(LayerIndex, AModel);
 end;
 
 function TModflowMultiplierWriter.GetDataArray(
   Param: TModflowSteadyParameter): TDataArray;
 begin
-  result := PhastModel.DataArrayManager.GetDataSetByName(Param.MultiplierName);
+  result := Model.DataArrayManager.GetDataSetByName(Param.MultiplierName);
 end;
 
 function TModflowMultiplierWriter.NumberOfArrays: integer;
@@ -512,7 +516,7 @@ end;
 
 function TModflowMultiplierWriter.TransientArrayList: TList;
 begin
-  result := PhastModel.TransientMultiplierArrays;
+  result := Model.TransientMultiplierArrays;
 end;
 
 function TModflowMultiplierWriter.UsesHufParam(UsedParam: THufUsedParameter;
@@ -531,7 +535,7 @@ begin
         ArrayName := UsedParam.MultiplierArrayName;
         UsedMultiplierArrayNames.Add(ArrayName);
       end;
-      DataArray := PhastModel.DataArrayManager.GetDataSetByName(UsedParam.MultiplierDataSetName);
+      DataArray := Model.DataArrayManager.GetDataSetByName(UsedParam.MultiplierDataSetName);
     end;
   end;
 end;
@@ -549,7 +553,7 @@ end;
 procedure TModflowMultiplierWriter.WriteDataSet0;
 begin
   WriteCommentLine('Multiplier (MULT) File created on '
-    + DateToStr(Now) + ' by ' + PhastModel.ProgramName
+    + DateToStr(Now) + ' by ' + Model.ProgramName
     + ' version ' + ModelVersion + '.');
 end;
 
@@ -563,11 +567,11 @@ var
   DataArray: TDataArray;
 begin
   //  If required, update UsedMultiplierArrayNames
-  if PhastModel.ModflowPackages.HufPackage.IsSelected then
+  if Model.ModflowPackages.HufPackage.IsSelected then
   begin
-    for UnitIndex := 0 to PhastModel.HydrogeologicUnits.Count - 1 do
+    for UnitIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
     begin
-      HGU := PhastModel.HydrogeologicUnits[UnitIndex];
+      HGU := Model.HydrogeologicUnits[UnitIndex];
       for ParamIndex := 0 to HGU.HufUsedParameters.Count - 1 do
       begin
         UsedParam := HGU.HufUsedParameters[ParamIndex];

@@ -73,6 +73,7 @@ type
     procedure SetSubNoDelayBedLayers(const Value: TSubNoDelayBedLayers);
     function SubsidenceLayerCount(SubLayers: TCustomSubLayer): integer;
     procedure SetWaterTableLayers(const Value: TWaterTableLayers);
+    procedure UpdateChildModels(PriorCount: Integer);
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
   public
@@ -96,15 +97,28 @@ type
        @item(2, limited convertible in BCF with constant transmissivity)
        @item(3, fully convertible in BCF with variable transmissivity)
       )
+      2 and 3 are not defined for LPF and HUF.
     }
     property AquiferType: integer read FAquiferType write SetAquiferType;
     property DataArrayName :  string read FDataArrayName write SetDataArrayName;
+    // When a layer group is split into more than one layer, @name defines
+    // how the thickness of those layers is specified.
     property GrowthMethod: TGrowthMethod read FGrowthMethod
       write SetGrowthMethod;
+    // When @link(GrowthMethod) is  @link(TGrowthMethod gmUp),
+    // @link(TGrowthMethod gmDown),
+    // @link(TGrowthMethod gmMiddle), or @link(TGrowthMethod gmEdge),
+    // @name is used to help define
+    // how the thickness of those layers is calculated.
     property GrowthRate: Real read FGrowthRate write SetGrowthRate;
     property LayerCollection: TLayerCollection read FLayerCollection
       write SetLayerCollection stored FSimulated;
     property Simulated: boolean read GetSimulated write SetSimulated;
+    // @name represents the first digit of Ltype in the BCF package
+    // and LAYAVG in the LPF package. @name is not used in the HUF package.
+    // However, Ltype and LAYAVG are not defined in exactly the same way
+    // Ltype = 1 in BCF means use an arithmetic mean.  There is no such
+    // option in LPF. Options 2 and 3 in BCF correspond to 1 and 2 in LPF.
     property InterblockTransmissivityMethod: integer
       read FInterblockTransmissivityMethod
       write SetInterblockTransmissivityMethod;
@@ -114,7 +128,7 @@ type
     property UseStartingHeadForSaturatedThickness: boolean
       read FUseStartingHeadForSaturatedThickness
       write SetUseStartingHeadForSaturatedThickness;
-    // TRPY in BCF package.
+    // TRPY in the BCF package.
     property HorizontalAnisotropy: double read FHorizontalAnisotropy
       write SetHorizontalAnisotropy;
     property SubNoDelayBedLayers: TSubNoDelayBedLayers
@@ -133,10 +147,12 @@ type
     function IntegerArray(Method: TIntTypeMethod): TOneDIntegerArray;
     function FloatArray(Method: TFloatTypeMethod): TOneDRealArray;
   public
+    function First: TLayerGroup;
+    function Last: TLayerGroup;
     function NonSimulatedLayersPresent: boolean;
     procedure AssignAssociatedInputDataSets;
     procedure Assign(Source: TPersistent);override;
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     property LayerGroups[const Index: integer]: TLayerGroup
       read GetLayerGroup; default;
@@ -226,7 +242,8 @@ begin
   FSubNoDelayBedLayers := TSubNoDelayBedLayers.Create(Model);
   FSubDelayBedLayers := TSubDelayBedLayers.Create(Model);
   FWaterTableLayers := TWaterTableLayers.Create(Model);
-  AquiferName := 'New Layer Group';
+//  AquiferName := 'New Layer Group';
+//  AquiferName := '';
   FGrowthRate := 1.2;
   FHorizontalAnisotropy := 1;
   FSimulated := True;
@@ -241,6 +258,12 @@ destructor TLayerGroup.Destroy;
 var
   Model: TPhastModel;
   DataArray: TDataArray;
+  ChildIndex: Integer;
+//  ChildModel: TChildModel;
+  OtherGroup: TLayerGroup;
+  Discretization: TChildDiscretizationCollection;
+  DisIndex: Integer;
+  DisItem: TChildDiscretization;
 begin
   FWaterTableLayers.Free;
   FSubDelayBedLayers.Free;
@@ -254,6 +277,36 @@ begin
       if DataArray <> nil then
       begin
         DataArray.Lock := [];
+      end;
+      for ChildIndex := 0 to Model.ChildModels.Count - 1 do
+      begin
+        Discretization := Model.ChildModels[ChildIndex].ChildModel.Discretization;
+        if Discretization.BottomLayerGroup = self then
+        begin
+          if Index > 1 then
+          begin
+            OtherGroup := Collection.Items[Index-1] as TLayerGroup;
+            Discretization.BottomLayerInUnit := OtherGroup.LayerCount-1;
+          end
+          else if Collection.Count > Index+1 then
+          begin
+            OtherGroup := Collection.Items[Index+1] as TLayerGroup;
+            Discretization.BottomLayerInUnit := 0;
+          end
+          else
+          begin
+            OtherGroup := nil;
+          end;
+          Discretization.BottomLayerGroup := OtherGroup;
+          for DisIndex := Discretization.Count - 1 downto 0 do
+          begin
+            DisItem := Discretization[DisIndex];
+            if DisItem.LayerGroup = self then
+            begin
+              Discretization.Delete(DisIndex);
+            end;
+          end;
+        end;
       end;
     end;
   end;
@@ -318,13 +371,11 @@ end;
 procedure TLayerGroup.Loaded;
 var
   Model: TPhastModel;
-//  DataArrayIndex: Integer;
   DataArray: TDataArray;
 begin
   Model := Collection.Model as TPhastModel;
   DataArray := Model.DataArrayManager.GetDataSetByName(FDataArrayName);
   Assert( DataArray <> nil);
-//  DataArray := Model.DataSets[DataArrayIndex];
   Model.TopGridObserver.TalksTo(DataArray);
   DataArray.TalksTo(Model.ThreeDGridObserver);
   Model.ThreeDGridObserver.StopsTalkingTo(DataArray);
@@ -566,8 +617,12 @@ begin
 end;
 
 procedure TLayerGroup.SetLayerCollection(const Value: TLayerCollection);
+var
+  PriorCount: Integer;
 begin
+  PriorCount := FLayerCollection.Count;
   FLayerCollection.Assign(Value);
+  UpdateChildModels(PriorCount);
 end;
 
 procedure TLayerGroup.SetSimulated(const Value: boolean);
@@ -586,6 +641,7 @@ begin
     Notifier := (Collection as TLayerStructure).SimulatedNotifier;
     Notifier.UpToDate := False;
     Notifier.UpToDate := True;
+    UpdateChildModels(FLayerCollection.Count);
     InvalidateModel;
   end;
 end;
@@ -642,6 +698,43 @@ begin
   result := SubsidenceLayerCount(WaterTableLayers);
 end;
 
+procedure TLayerGroup.UpdateChildModels(PriorCount: Integer);
+var
+  PriorGroup: TLayerGroup;
+  Discretization: TChildDiscretizationCollection;
+  ChildItem: TChildModelItem;
+  ChildIndex: Integer;
+  PhastModel: TPhastModel;
+begin
+  PhastModel := Model as TPhastModel;
+  if (PhastModel <> nil) and (PriorCount <> FLayerCollection.Count) then
+  begin
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildItem := PhastModel.ChildModels[ChildIndex];
+      Discretization := ChildItem.ChildModel.Discretization;
+      if (Discretization.BottomLayerGroup = self) then
+      begin
+        if not Simulated then
+        begin
+          PriorGroup := Collection.Items[Index - 1] as TLayerGroup;
+          Discretization.BottomLayerGroup := PriorGroup;
+          Discretization.BottomLayerInUnit := PriorGroup.LayerCount - 1;
+        end
+        else if (Discretization.BottomLayerInUnit = PriorCount) then
+        begin
+          Discretization.BottomLayerInUnit := LayerCount - 1;
+        end
+        else if Discretization.BottomLayerInUnit > LayerCount - 1 then
+        begin
+          Discretization.BottomLayerInUnit := LayerCount - 1;
+        end;
+      end;
+      Discretization.SortAndDeleteExtraItems;
+    end;
+  end;
+end;
+
 procedure TLayerGroup.WriteLAYCB(const DiscretizationWriter: TObject);
 var
   DisWriter: TModflowDiscretizationWriter;
@@ -665,12 +758,19 @@ end;
 procedure TLayerStructure.Assign(Source: TPersistent);
 var
   PhastModel: TPhastModel;
+  Index: Integer;
+  Child: TChildModelItem;
 begin
   inherited;
   if Model <> nil then
   begin
     PhastModel := Model as TPhastModel;
     PhastModel.Grid.LayerCount := LayerCount;
+    for Index := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      Child := PhastModel.ChildModels[Index];
+      Child.ChildModel.UpdateLayerCount;
+    end;
     PhastModel.InvalidateMfEtsEvapLayer(self);
     PhastModel.InvalidateMfEvtEvapLayer(self);
     PhastModel.InvalidateMfRchLayer(self);
@@ -689,7 +789,7 @@ begin
   end;
 end;
 
-constructor TLayerStructure.Create(Model: TObject);
+constructor TLayerStructure.Create(Model: TBaseModel);
 begin
   inherited Create(TLayerGroup, Model);
   FSimulatedNotifier := TObserver.Create(nil);
@@ -737,13 +837,14 @@ begin
   for LayerGroupIndex := 1 to Count - 1 do
   begin
     LayerGroup := LayerGroups[LayerGroupIndex];
-    LayerCount := LayerCount + LayerGroup.LayerCollection.Count +1;
+    LayerCount := LayerCount + LayerGroup.LayerCount;
     if LayerCount >= LayerID+1 then
     begin
       result := LayerGroup.Simulated;
       Exit;
     end;
   end;
+  Assert(False);
 end;
 
 function TLayerStructure.IntegerArray(Method: TIntTypeMethod):
@@ -801,6 +902,11 @@ begin
   Assert(MFLayIndex = LayerCount);
 end;
 
+function TLayerStructure.Last: TLayerGroup;
+begin
+  result := inherited Last as TLayerGroup;
+end;
+
 function TLayerStructure.Layavg: TOneDIntegerArray;
 begin
   result := IntegerArray(itmLayavg);
@@ -856,7 +962,7 @@ begin
   for LayerGroupIndex := 1 to Count - 1 do
   begin
     LayerGroup := LayerGroups[LayerGroupIndex];
-    LayerCount := LayerCount + LayerGroup.LayerCollection.Count +1;
+    LayerCount := LayerCount + LayerGroup.LayerCount;
     if LayerCount >= LayerID+1 then
     begin
       result := LayerGroup.AquiferName;
@@ -949,6 +1055,11 @@ begin
   FAquiferTypeNotifier.Free;
   FSimulatedNotifier.Free;
   inherited;
+end;
+
+function TLayerStructure.First: TLayerGroup;
+begin
+  result := inherited First as TLayerGroup;
 end;
 
 function TLayerStructure.FloatArray(Method: TFloatTypeMethod): TOneDRealArray;
@@ -1270,3 +1381,4 @@ begin
 end;
 
 end.
+

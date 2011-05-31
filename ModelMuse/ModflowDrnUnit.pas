@@ -4,7 +4,7 @@ interface
 
 uses Windows, ZLib, SysUtils, Classes, Contnrs, ModflowBoundaryUnit,
   OrderedCollectionUnit, DataSetUnit, ModflowCellUnit, FormulaManagerUnit,
-  SubscriptionUnit, SparseDataSets, RbwParser;
+  SubscriptionUnit, SparseDataSets, RbwParser, GoPhastTypes;
 
 type
   TDrnRecord = record
@@ -74,9 +74,7 @@ type
     property Conductance: string read GetConductance write SetConductance;
   end;
 
-  // @name represents MODFLOW Drain boundaries
-  // for a series of time intervals.
-  TDrnCollection = class(TCustomMF_ListBoundColl)
+  TDrnTimeListLink = class(TTimeListsModelLink)
   private
     // @name is used to perform notifications of the Elevations for a series of
     // Drain Boundaries over a series of time intervals.
@@ -85,14 +83,25 @@ type
     // for a series of
     // Drain Boundaries over a series of time intervals.
     FConductanceData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
+
+  // @name represents MODFLOW Drain boundaries
+  // for a series of time intervals.
+  TDrnCollection = class(TCustomMF_ListBoundColl)
+  private
     procedure InvalidateElevationData(Sender: TObject);
     procedure InvalidateConductanceData(Sender: TObject);
   protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
       BoundaryStorage: TCustomBoundaryStorage; BoundaryFunctionIndex: integer;
-      Variables, DataSets: TList); override;
+      Variables, DataSets: TList; AModel: TBaseModel); override;
     function AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
       override;
     procedure AddSpecificBoundary; override;
@@ -110,13 +119,6 @@ type
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
-  public
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
   end;
 
   // Each @name stores a @link(TDrnCollection).
@@ -138,10 +140,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -175,7 +180,7 @@ type
     // each stress period.  Each such TObjectList is filled with
     // @link(TDrn_Cell)s for that stress period.
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-      ValueTimeList: TList); override;
+      ValueTimeList: TList; AModel: TBaseModel); override;
     // See @link(TModflowBoundary.BoundaryCollectionClass
     // TModflowBoundary.BoundaryCollectionClass).
     class function BoundaryCollectionClass: TMF_BoundCollClass; override;
@@ -195,15 +200,15 @@ type
     // with each @link(TDrnStorage) in @link(TCustomMF_BoundColl.Boundaries
     // Param.Param.Boundaries)
     // Those represent parameter boundary conditions.
-    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
-      override;
+    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel); override;
     procedure InvalidateDisplay; override;
   end;
 
 implementation
 
 uses PhastModelUnit, ScreenObjectUnit, ModflowTimeUnit, TempFiles,
-  GoPhastTypes, frmGoPhastUnit;
+  frmGoPhastUnit;
 
 const
   ElevationPosition = 0;
@@ -345,32 +350,9 @@ end;
 
 { TDrnCollection }
 
-constructor TDrnCollection.Create(Boundary: TModflowBoundary;
-  Model, ScreenObject: TObject);
+function TDrnCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FElevationData := TModflowTimeList.Create(Model, ScreenObject);
-  FConductanceData := TModflowTimeList.Create(Model, ScreenObject);
-
-  FElevationData.NonParamDescription := 'Elevation';
-  FElevationData.ParamDescription := ' elevation';
-  FConductanceData.NonParamDescription := 'Conductance';
-  FConductanceData.ParamDescription := ' conductance multiplier';
-  if Model <> nil then
-  begin
-    FElevationData.OnInvalidate := (Model as TPhastModel).InvalidateMfDrnElevation;
-    FConductanceData.OnInvalidate := (Model as TPhastModel).InvalidateMfDrnConductance;
-  end;
-
-  AddTimeList(FElevationData);
-  AddTimeList(FConductanceData);
-end;
-
-destructor TDrnCollection.Destroy;
-begin
-  FElevationData.Free;
-  FConductanceData.Free;
-  inherited;
+  result := TDrnTimeListLink;
 end;
 
 procedure TDrnCollection.TestIfObservationsPresent(
@@ -457,7 +439,8 @@ end;
 
 procedure TDrnCollection.AssignCellList(Expression: TExpression;
   ACellList: TObject; BoundaryStorage: TCustomBoundaryStorage;
-  BoundaryFunctionIndex: integer; Variables, DataSets: TList);
+  BoundaryFunctionIndex: integer; Variables, DataSets: TList;
+  AModel: TBaseModel);
 var
   DrnStorage: TDrnStorage;
   CellList: TCellAssignmentList;
@@ -472,7 +455,7 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
-    UpdataRequiredData(DataSets, Variables, ACell);
+    UpdataRequiredData(DataSets, Variables, ACell, AModel);
     // 2. update locations
     Expression.Evaluate;
     with DrnStorage.DrnArray[Index] do
@@ -508,6 +491,10 @@ begin
   for Index := 0 to CellList.Count - 1 do
   begin
     ACell := CellList[Index];
+    if ACell.LgrEdge then
+    begin
+      Continue;
+    end;
     with DrnStorage.DrnArray[Index] do
     begin
       Cell.Layer := ACell.Layer;
@@ -525,18 +512,44 @@ begin
 end;
 
 procedure TDrnCollection.InvalidateConductanceData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TDrnTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FConductanceData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TDrnTimeListLink;
+    Link.FConductanceData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TDrnTimeListLink;
+      Link.FConductanceData.Invalidate;
+    end;
   end;
 end;
 
 procedure TDrnCollection.InvalidateElevationData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TDrnTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FElevationData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TDrnTimeListLink;
+    Link.FElevationData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TDrnTimeListLink;
+      Link.FElevationData.Invalidate;
+    end;
   end;
 end;
 
@@ -564,13 +577,13 @@ begin
   result := Values.ElevationAnnotation;
 end;
 
-function TDrn_Cell.GetIntegerAnnotation(Index: integer): string;
+function TDrn_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TDrn_Cell.GetIntegerValue(Index: integer): integer;
+function TDrn_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -603,7 +616,7 @@ begin
   result := Values.Cell.Layer;
 end;
 
-function TDrn_Cell.GetRealAnnotation(Index: integer): string;
+function TDrn_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -613,7 +626,7 @@ begin
   end;
 end;
 
-function TDrn_Cell.GetRealValue(Index: integer): double;
+function TDrn_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -661,9 +674,24 @@ begin
   StressPeriod := ReadCompInt(Decomp);
 end;
 
+procedure TDrn_Cell.SetColumn(const Value: integer);
+begin
+  Values.Cell.Column := Value;
+end;
+
+procedure TDrn_Cell.SetLayer(const Value: integer);
+begin
+  Values.Cell.Layer := Value;
+end;
+
+procedure TDrn_Cell.SetRow(const Value: integer);
+begin
+  Values.Cell.Row := Value;
+end;
+
 { TDrnBoundary }
 procedure TDrnBoundary.AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-  ValueTimeList: TList);
+  ValueTimeList: TList; AModel: TBaseModel);
 var
   Cell: TDrn_Cell;
   BoundaryValues: TDrnRecord;
@@ -672,10 +700,12 @@ var
   TimeIndex: Integer;
   Cells: TValueCellList;
   LocalBoundaryStorage: TDrnStorage;
+  LocalModel: TCustomModel;
 begin
+  LocalModel := AModel as TCustomModel;
   LocalBoundaryStorage := BoundaryStorage as TDrnStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    LocalModel.ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -686,12 +716,16 @@ begin
       Cells := TValueCellList.Create(TDrn_Cell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
+      if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.DrnArray) then
+      begin
+        Cells.Capacity := Cells.Count + Length(LocalBoundaryStorage.DrnArray)
+      end;
 //      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.DrnArray) - 1 do
       begin
@@ -703,6 +737,7 @@ begin
         Cell.StressPeriod := TimeIndex;
         Cell.Values := BoundaryValues;
         Cell.ScreenObject := ScreenObject;
+        LocalModel.AdjustCellPosition(Cell);
       end;
       Cells.Cache;
     end;
@@ -716,7 +751,7 @@ begin
 end;
 
 procedure TDrnBoundary.GetCellValues(ValueTimeList: TList;
-  ParamList: TStringList);
+  ParamList: TStringList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TDrnStorage;
@@ -732,7 +767,7 @@ var
   ValueCount: Integer;
   Item: TCustomModflowBoundaryItem;
 begin
-  EvaluateListBoundaries;
+  EvaluateListBoundaries(AModel);
   TestIfObservationsPresent(EndOfLastStressPeriod, StartOfFirstStressPeriod,
     ObservationsPresent);
   PriorTime := StartOfFirstStressPeriod;
@@ -747,7 +782,7 @@ begin
         if ValueCount < Values.BoundaryCount then
         begin
           BoundaryStorage := Values.Boundaries[ValueCount] as TDrnStorage;
-          AssignCells(BoundaryStorage, ValueTimeList);
+          AssignCells(BoundaryStorage, ValueTimeList, AModel);
           Inc(ValueCount);
         end;
       end;
@@ -756,7 +791,7 @@ begin
     if ValueCount < Values.BoundaryCount then
     begin
       BoundaryStorage := Values.Boundaries[ValueCount] as TDrnStorage;
-      AssignCells(BoundaryStorage, ValueTimeList);
+      AssignCells(BoundaryStorage, ValueTimeList, AModel);
       Inc(ValueCount);
     end;
     if (ValueIndex = Values.Count - 1) and ObservationsPresent then
@@ -766,7 +801,7 @@ begin
         if ValueCount < Values.BoundaryCount then
         begin
           BoundaryStorage := Values.Boundaries[ValueCount] as TDrnStorage;
-          AssignCells(BoundaryStorage, ValueTimeList);
+          AssignCells(BoundaryStorage, ValueTimeList, AModel);
           Inc(ValueCount);
         end;
       end;
@@ -798,7 +833,7 @@ begin
           if ValueCount < Param.Param.BoundaryCount then
           begin
             BoundaryStorage := Param.Param.Boundaries[ValueCount] as TDrnStorage;
-            AssignCells(BoundaryStorage, Times);
+            AssignCells(BoundaryStorage, Times, AModel);
             Inc(ValueCount);
           end;
         end;
@@ -807,7 +842,7 @@ begin
       if ValueCount < Param.Param.BoundaryCount then
       begin
         BoundaryStorage := Param.Param.Boundaries[ValueCount] as TDrnStorage;
-        AssignCells(BoundaryStorage, Times);
+        AssignCells(BoundaryStorage, Times, AModel);
         Inc(ValueCount);
       end;
       if {(ValueIndex = Param.Param.Count - 1) and} ObservationsPresent then
@@ -817,7 +852,7 @@ begin
           if ValueCount < Param.Param.BoundaryCount then
           begin
             BoundaryStorage := Param.Param.Boundaries[ValueCount] as TDrnStorage;
-            AssignCells(BoundaryStorage, Times);
+            AssignCells(BoundaryStorage, Times, AModel);
             Inc(ValueCount);
           end;
         end;
@@ -831,9 +866,9 @@ var
   Model: TPhastModel;
 begin
   inherited;
-  if Used and (PhastModel <> nil) then
+  if Used and (ParentModel <> nil) then
   begin
-    Model := PhastModel as TPhastModel;
+    Model := ParentModel as TPhastModel;
     Model.InvalidateMfDrnConductance(self);
     Model.InvalidateMfDrnElevation(self);
   end;
@@ -858,7 +893,7 @@ begin
   LocalScreenObject := ScreenObject as TScreenObject;
   LocalPhastModel := LocalScreenObject.Model as TPhastModel;
   Assert(LocalPhastModel <> nil);
-  ObservationsPresent := LocalPhastModel.ModflowPackages.DrobPackage.IsSelected
+  ObservationsPresent := LocalPhastModel.DrobIsSelected
     and (LocalPhastModel.DrainObservations.Count > 0);
   StartOfFirstStressPeriod := 0;
   EndOfLastStressPeriod := 0;
@@ -965,6 +1000,36 @@ begin
     RestoreData;
   end;
   result := FDrnArray;
+end;
+
+{ TDrnimeListLink }
+
+procedure TDrnTimeListLink.CreateTimeLists;
+var
+  LocalModel: TCustomModel;
+begin
+  inherited;
+  FElevationData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FConductanceData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FElevationData.NonParamDescription := 'Elevation';
+  FElevationData.ParamDescription := ' elevation';
+  FConductanceData.NonParamDescription := 'Conductance';
+  FConductanceData.ParamDescription := ' conductance multiplier';
+  if Model <> nil then
+  begin
+    LocalModel := Model as TCustomModel;
+    FElevationData.OnInvalidate := LocalModel.InvalidateMfDrnElevation;
+    FConductanceData.OnInvalidate := LocalModel.InvalidateMfDrnConductance;
+  end;
+  AddTimeList(FElevationData);
+  AddTimeList(FConductanceData);
+end;
+
+destructor TDrnTimeListLink.Destroy;
+begin
+  FElevationData.Free;
+  FConductanceData.Free;
+  inherited;
 end;
 
 end.

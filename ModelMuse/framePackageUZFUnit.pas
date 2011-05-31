@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, framePackageLayerChoiceUnit, RbwController, StdCtrls, ExtCtrls,
   ArgusDataEntry, framePackageTransientLayerChoiceUnit,
-  ModflowPackageSelectionUnit;
+  ModflowPackageSelectionUnit, RbwRadioGroup;
 
 type
   TframePackageUZF = class(TframePackageLayerChoice)
@@ -21,6 +21,7 @@ type
     cbPrintSummary: TCheckBox;
     lblSURFDEP: TLabel;
     rdeSURFDEP: TRbwDataEntry;
+    rgAssignmentMethod: TRbwRadioGroup;
   private
     { Private declarations }
   public
@@ -33,6 +34,9 @@ var
   framePackageUZF: TframePackageUZF;
 
 implementation
+
+uses
+  GoPhastTypes;
 
 {$R *.dfm}
 
@@ -51,6 +55,7 @@ begin
   rdeNumberOfWaveSets.Text := IntToStr(Uzf.NumberOfWaveSets);
   cbPrintSummary.Checked := Uzf.PrintSummary = 1;
   rdeSURFDEP.Text := FloatToStr(Uzf.DepthOfUndulations);
+  rgAssignmentMethod.ItemIndex := Ord(Uzf.AssignmentMethod);
 end;
 
 procedure TframePackageUZF.SetData(Package: TModflowPackageSelection);
@@ -84,6 +89,7 @@ begin
   begin
     Uzf.DepthOfUndulations := RValue;
   end;
+  Uzf.AssignmentMethod := TUpdateMethod(rgAssignmentMethod.ItemIndex);
 end;
 
 end.

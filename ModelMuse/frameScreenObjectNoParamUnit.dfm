@@ -160,10 +160,11 @@ object frameScreenObjectNoParam: TframeScreenObjectNoParam
       RowCount = 2
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs]
       TabOrder = 1
-      OnMouseDown = dgModflowBoundaryMouseDown
       OnMouseUp = dgModflowBoundaryMouseUp
       OnSelectCell = dgModflowBoundarySelectCell
       OnSetEditText = dgModflowBoundarySetEditText
+      ExtendedAutoDistributeText = False
+      AutoMultiEdit = True
       AutoDistributeText = True
       AutoIncreaseColCount = False
       AutoIncreaseRowCount = True

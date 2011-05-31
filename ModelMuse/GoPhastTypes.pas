@@ -213,17 +213,24 @@ type
 
   TObservationPurpose = (ofObserved, ofPredicted, ofInacative);
 
+  // @name is used in @link(TCustomTransientWriter.AssignTransient2DArray).
+  // @value(umAssign Replace existing values with new values.)
+  // @value(umAdd Add new values to existing values.)
+  TUpdateMethod = (umAssign, umAdd);
+
+  TBaseModel = class;
+
   // @abstract(@name invalidates the model when it is changed.)
   TPhastCollection = class(TCollection)
   protected
-    FModel: TComponent;
+    FModel: TBaseModel;
   public
     procedure InvalidateModel;
-    property Model: TComponent read FModel;
+    property Model: TBaseModel read FModel;
     // @name invalidates the model.
     procedure Notify(Item: TCollectionItem; Action: TCollectionNotification);
       override;
-    constructor Create(ItemClass: TCollectionItemClass; Model: TComponent);
+    constructor Create(ItemClass: TCollectionItemClass; Model: TBaseModel);
   end;
 
   TPhastCollectionItem = class(TCollectionItem)
@@ -234,7 +241,7 @@ type
     procedure SetStringProperty(var AField: string; const NewValue: string);
   public
     procedure InvalidateModel;
-    function Model: TComponent;
+    function Model: TBaseModel;
   end;
 
   TPointArray = array of TPoint;
@@ -254,7 +261,7 @@ type
 
   TGoPhastPersistent = class(TPersistent)
   protected
-    FModel: TObject;
+    FModel: TBaseModel;
     procedure InvalidateModel; virtual;
     procedure SetBooleanProperty(var AField: boolean; const NewValue: boolean);
     procedure SetIntegerProperty(var AField: integer; const NewValue: integer);
@@ -262,7 +269,26 @@ type
     procedure SetStringProperty(var AField: string; const NewValue: string);
     procedure SetPointProperty(var AField: TPoint; const NewValue: TPoint);
   public
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
+  end;
+
+  TBaseModel = class abstract(TComponent)
+  private
+    // See @link(UpToDate).
+    FUpToDate: boolean;
+  protected
+    // See @link(UpToDate).
+    procedure SetUpToDate(const Value : boolean); virtual;
+    function GetDisplayName: string; virtual; abstract;
+  public
+    // Call @name to indicate that the model has changed in some important
+    // respect.  The user will be prompted to save the model when closing.
+    procedure Invalidate; virtual;
+
+    // @name indicates whether or not the model needs to be saved to file.
+    // See @link(Invalidate).
+    property UpToDate: boolean read FUpToDate write SetUpToDate;
+    property DisplayName: string read GetDisplayName;
   end;
 
   function EvalAtToString(const Eval: TEvaluatedAt;
@@ -270,6 +296,8 @@ type
 
   function ValidName(const OriginalName: string): string;
   function RightCopy(const Source: string; LengthToCopy: integer): string;
+
+  function OrientationToViewDirection(Orientation: TDataSetOrientation): TViewDirection;
 
 const
   StrModelTop = 'Model_Top';
@@ -364,11 +392,7 @@ const
   StrSqRtWt = 'Sq. rt. of weight (4)';
 
   // @name represents the characters used to define the end of a line.
-  EndOfLine =
-{$IFDEF MSWINDOWS}#13#10;
-{$ENDIF}
-{$IFDEF LINUX}#10;
-{$ENDIF}
+  EndOfLine = sLineBreak;
 
   // On Linux, @name is used to control the access permissions of files.
   // @name has no effect in Windows.
@@ -384,6 +408,7 @@ const
   StrStressPeriodLabel = 'Stress Period: ';
   StrTimeStepLabel = 'Time Step: ';
   StrElapsedTimeLabel = 'Elapsed Time: ';
+  StrParentModel = 'Parent model';
 
 
 var
@@ -417,7 +442,7 @@ end;
 { TPhastCollection }
 
 constructor TPhastCollection.Create(ItemClass: TCollectionItemClass;
-  Model: TComponent);
+  Model: TBaseModel);
 begin
   FModel := Model;
   inherited Create(ItemClass);
@@ -427,7 +452,7 @@ procedure TPhastCollection.InvalidateModel;
 begin
   if Model <> nil then
   begin
-    (Model as TPhastModel).Invalidate;
+    Model.Invalidate;
   end;
 end;
 
@@ -474,10 +499,10 @@ end;
 
 { TGoPhastPersistent }
 
-constructor TGoPhastPersistent.Create(Model: TObject);
+constructor TGoPhastPersistent.Create(Model: TBaseModel);
 begin
   inherited Create;
-  Assert((Model = nil) or (Model is TPhastModel));
+  Assert((Model = nil) or (Model is TCustomModel));
   FModel := Model;
 end;
 
@@ -485,7 +510,7 @@ procedure TGoPhastPersistent.InvalidateModel;
 begin
   if FModel <> nil then
   begin
-    (FModel as TPhastModel).Invalidate;
+    FModel.Invalidate;
   end;
 end;
 
@@ -610,8 +635,12 @@ end;
 { TPhastCollectionItem }
 
 procedure TPhastCollectionItem.InvalidateModel;
+var
+  PhastCollection: TPhastCollection;
 begin
-  (Collection as TPhastCollection).InvalidateModel;
+  PhastCollection := Collection as TPhastCollection;
+  PhastCollection.Update(self);
+  PhastCollection.InvalidateModel;
 end;
 
 function ValidName(const OriginalName: string): string;
@@ -656,7 +685,7 @@ begin
   result := Copy(Source, Start, LengthToCopy);
 end;
 
-function TPhastCollectionItem.Model: TComponent;
+function TPhastCollectionItem.Model: TBaseModel;
 begin
   result := (Collection as TPhastCollection).Model;
 end;
@@ -716,6 +745,28 @@ begin
   PredictionStatFlagLabels.Add(StrStdDev);
 end;
 
+procedure TBaseModel.SetUpToDate(const Value : boolean);
+begin
+  FUpToDate := Value;
+end;
+
+procedure TBaseModel.Invalidate;
+begin
+  UpToDate := False;
+end;
+
+function OrientationToViewDirection(Orientation: TDataSetOrientation): TViewDirection;
+begin
+  result := vdTop;
+  case Orientation of
+    dsoTop: result := vdTop;
+    dsoFront: result := vdFront;
+    dsoSide: result := vdSide;
+    else Assert(False);
+  end;
+end;
+
+
 initialization
   InitializeStatTypeLabels;
 
@@ -724,4 +775,3 @@ finalization
   PredictionStatFlagLabels.Free;
 
 end.
-

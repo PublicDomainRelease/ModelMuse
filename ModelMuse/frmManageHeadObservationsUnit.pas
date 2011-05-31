@@ -28,7 +28,7 @@ type
     Statistic: double;
     StatFlag: TStatFlag;
     // @name is the position of @link(ObsItem) in
-    // @link(ScreenObject.ModflowHeadObservations).
+    // @link(TScreenObject.ModflowHeadObservations).
     TimeIndex: integer;
     function ChangedValues: boolean;
   end;
@@ -61,8 +61,6 @@ type
     procedure btnOKClick(Sender: TObject);
     procedure btnHighlightObjectClick(Sender: TObject);
     procedure rdgObservationsExit(Sender: TObject);
-    procedure rdgObservationsMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure rdgObservationsColSize(Sender: TObject; ACol,
       PriorWidth: Integer);
     procedure FormResize(Sender: TObject);
@@ -529,6 +527,9 @@ begin
 end;
 
 procedure TfrmManageHeadObservations.FormCreate(Sender: TObject);
+var
+  TotalWidth: Integer;
+  ColIndex: Integer;
 begin
   inherited;
   pcMain.ActivePageIndex := 0;
@@ -564,6 +565,21 @@ begin
   FObsEdits:= TObjectList.Create;
 
   GetData;
+
+  TotalWidth := 20;
+  for ColIndex := 0 to rdgObservations.ColCount - 1 do
+  begin
+    TotalWidth := TotalWidth + rdgObservations.ColWidths[ColIndex];
+  end;
+  if TotalWidth > Screen.Width then
+  begin
+    TotalWidth := Screen.Width
+  end;
+  if ClientWidth < TotalWidth then
+  begin
+    ClientWidth := TotalWidth
+  end;
+
 end;
 
 procedure TfrmManageHeadObservations.FormDestroy(Sender: TObject);
@@ -587,26 +603,26 @@ var
   ObsItem: THobItem;
   ObsEdit: TObsEdit;
 begin
-  if frmGoPhast.ShowUcodeInterface then
-  begin
+//  if frmGoPhast.ShowUcodeInterface then
+//  begin
     rdeStatistic.Visible := True;
     comboStatFlag.Visible := True;
     rdgObservations.Columns[Ord(ocStatistic)].AutoAdjustColWidths := True;
     rdgObservations.Columns[Ord(ocStatFlag)].AutoAdjustColWidths := True;
     rdgRowFilter.RowHeights[Ord(frStatistic)] := rdgRowFilter.DefaultRowHeight;
     rdgRowFilter.RowHeights[Ord(frStatFlag)] := rdgRowFilter.DefaultRowHeight;
-  end
-  else
-  begin
-    rdeStatistic.Visible := False;
-    comboStatFlag.Visible := False;
-    rdgObservations.Columns[Ord(ocStatistic)].AutoAdjustColWidths := False;
-    rdgObservations.Columns[Ord(ocStatFlag)].AutoAdjustColWidths := False;
-    rdgObservations.ColWidths[Ord(ocStatistic)] := 0;
-    rdgObservations.ColWidths[Ord(ocStatFlag)] := 0;
-    rdgRowFilter.RowHeights[Ord(frStatistic)] := 0;
-    rdgRowFilter.RowHeights[Ord(frStatFlag)] := 0;
-  end;
+//  end
+//  else
+//  begin
+//    rdeStatistic.Visible := False;
+//    comboStatFlag.Visible := False;
+//    rdgObservations.Columns[Ord(ocStatistic)].AutoAdjustColWidths := False;
+//    rdgObservations.Columns[Ord(ocStatFlag)].AutoAdjustColWidths := False;
+//    rdgObservations.ColWidths[Ord(ocStatistic)] := 0;
+//    rdgObservations.ColWidths[Ord(ocStatFlag)] := 0;
+//    rdgRowFilter.RowHeights[Ord(frStatistic)] := 0;
+//    rdgRowFilter.RowHeights[Ord(frStatFlag)] := 0;
+//  end;
 
   PhastModel := frmGoPhast.PhastModel;
   for Index := 0 to PhastModel.ScreenObjectCount - 1 do
@@ -643,6 +659,14 @@ begin
   end;
   DisplayFilteredList;
   FLoaded := True;
+  if FObsEdits.Count = 0 then
+  begin
+    Beep;
+    MessageDlg('The Manage Head Observations dialog box can not be displayed '
+      + 'until some head observations have been defined in one or more objects.',
+      mtWarning, [mbOK], 0);
+    ModalResult := mrCancel;
+  end;
 end;
 
 procedure TfrmManageHeadObservations.LayoutMultiRowEditControls;
@@ -656,7 +680,7 @@ begin
   LayoutControls(rdgObservations, comboITT, nil, Ord(ocITT));
   LayoutControls(rdgObservations, rdeValue, nil, Ord(ocValue));
   LayoutControls(rdgObservations, rdeTime, nil, Ord(ocTime));
-  if frmGoPhast.ShowUcodeInterface then
+//  if frmGoPhast.ShowUcodeInterface then
   begin
     LayoutControls(rdgObservations, rdeStatistic, nil, Ord(ocStatistic));
     LayoutControls(rdgObservations, comboStatFlag, nil, Ord(ocStatFlag));
@@ -705,20 +729,6 @@ begin
   LayoutMultiRowEditControls;
 end;
 
-procedure TfrmManageHeadObservations.rdgObservationsMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    rdgObservations.Options := rdgObservations.Options + [goEditing];
-  end
-  else
-  begin
-    rdgObservations.Options := rdgObservations.Options - [goEditing];
-  end;
-end;
-
 procedure TfrmManageHeadObservations.EnableMultiEditControls;
   procedure UpdateColor(Cntl: TControl);
   begin
@@ -737,7 +747,7 @@ begin
   EnableMultiEditControl(rdgObservations, comboITT, Ord(ocITT));
   EnableMultiEditControl(rdgObservations, rdeValue, Ord(ocValue));
   EnableMultiEditControl(rdgObservations, rdeTime, Ord(ocTime));
-  if frmGoPhast.ShowUcodeInterface then
+//  if frmGoPhast.ShowUcodeInterface then
   begin
     EnableMultiEditControl(rdgObservations, rdeStatistic, Ord(ocStatistic));
     EnableMultiEditControl(rdgObservations, comboStatFlag, Ord(ocStatFlag));
@@ -746,7 +756,7 @@ begin
   UpdateColor(edObsGroupName);
   UpdateColor(comboObsPred);
   UpdateColor(comboITT);
-  if frmGoPhast.ShowUcodeInterface then
+//  if frmGoPhast.ShowUcodeInterface then
   begin
     UpdateColor(comboStatFlag);
   end;
@@ -874,7 +884,7 @@ begin
                 AnotherObsEdit.Purpose := ObsEdit.Purpose;
                 rdgObservations.ItemIndex[Ord(ocObsPred), RowIndex] :=
                   Ord(ObsEdit.Purpose);
-                if frmGoPhast.ShowUcodeInterface then
+//                if frmGoPhast.ShowUcodeInterface then
                 begin
                   if (AnotherObsEdit.Purpose = ofPredicted)
                     and not (AnotherObsEdit.StatFlag in
@@ -1009,6 +1019,7 @@ var
   ScreenObjectClass: TScreenObjectClass;
   NewHobItem: THobItem;
   Undo: TUndoSetHeadObs;
+  OldChildModels: TList;
 begin
   for Index := FObsEdits.Count - 1 downto 0 do
   begin
@@ -1064,10 +1075,11 @@ begin
         NewHobItem.Statistic := ObsEdit.Statistic;
         NewHobItem.StatFlag := ObsEdit.StatFlag;
       end;
-        Undo := TUndoSetHeadObs.Create(ScreenObjects, NewScreenObjects,
-          OldScreenObjects);
-        Undo.UpdateObservations;
-        frmGoPhast.UndoStack.Submit(Undo);
+      OldChildModels := nil;
+      Undo := TUndoSetHeadObs.Create(ScreenObjects, NewScreenObjects,
+        OldScreenObjects, OldChildModels);
+      Undo.UpdateObservations;
+      frmGoPhast.UndoStack.Submit(Undo);
     finally
       ScreenObjects.Free;
       NewScreenObjects.Free;

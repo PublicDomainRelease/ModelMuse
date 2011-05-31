@@ -3,7 +3,7 @@ object frmSaveArchive: TfrmSaveArchive
   Top = 0
   BorderStyle = bsNone
   Caption = 'frmSaveArchive'
-  ClientHeight = 30
+  ClientHeight = 57
   ClientWidth = 218
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -23,5 +23,13 @@ object frmSaveArchive: TfrmSaveArchive
     Checked = True
     State = cbChecked
     TabOrder = 0
+  end
+  object cbSaveDataSetValues: TCheckBox
+    Left = 8
+    Top = 31
+    Width = 153
+    Height = 17
+    Caption = 'Save data set values'
+    TabOrder = 1
   end
 end

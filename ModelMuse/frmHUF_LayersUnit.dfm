@@ -31,13 +31,13 @@ inherited frmHUF_Layers: TfrmHUF_Layers
       Align = alBottom
       ColumnCollection = <
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end>
       ControlCollection = <
         item
@@ -311,6 +311,7 @@ inherited frmHUF_Layers: TfrmHUF_Layers
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing]
         TabOrder = 0
         OnSelectCell = rdgParametersSelectCell
+        AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False
@@ -412,6 +413,8 @@ inherited frmHUF_Layers: TfrmHUF_Layers
             WordWrapCells = False
             AutoAdjustColWidths = True
           end>
+        ExplicitLeft = 2
+        ExplicitTop = 2
       end
     end
     object tabPrint: TTabSheet

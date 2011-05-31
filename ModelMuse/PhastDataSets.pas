@@ -215,7 +215,7 @@ type
     procedure SetEvaluatedAt(const Value: TEvaluatedAt); override;
     procedure SetOrientation(const Value: TDataSetOrientation); override;
     procedure ReadData(DecompressionStream: TDecompressionStream); override;
-    procedure StoreData(Compressor: TCompressionStream); override;
+    procedure StoreData(Stream: TStream); override;
     // @name is the first of the distances used for PHAST-style interpolation.
     function GetCellDistance1(const ALay, ARow, ACol: integer): double; virtual;
       abstract;
@@ -477,7 +477,7 @@ to elements or cells.}
     procedure SetValue2(const Value: integer);
   protected
     procedure ReadData(DecompressionStream: TDecompressionStream); override;
-    procedure StoreData(Compressor: TCompressionStream); override;
+    procedure StoreData(Stream: TStream); override;
     // @name returns @link(RealValue).
     function GetRealData(const Layer, Row, Col: integer): double; override;
     // @name sets @link(TDataArray.IntegerData), and @link(Fraction),
@@ -551,7 +551,7 @@ to elements or cells.}
     procedure SetValue2(const Value: double);
   protected
     procedure ReadData(DecompressionStream: TDecompressionStream); override;
-    procedure StoreData(Compressor: TCompressionStream); override;
+    procedure StoreData(Stream: TStream); override;
     // @name sets @link(TDataArray.RealData) for each cell in the grid.
     procedure InitializePhastArrays; override;
     // @name checks that the TRbwDataType represents a real number.
@@ -658,6 +658,7 @@ to elements or cells.}
     // See TCustomPhastDataSet.@link(TDataArray.IsValue).
     procedure SetIsValue(const Layer, Row, Col: Integer;
       const Value: boolean); override;
+    function IsSparseArray: boolean; override;
   public
     // @name is the data set used to indicate what type of boundary
     // is at a specific location.
@@ -710,7 +711,7 @@ to elements or cells.}
     procedure SetValue2(const Value: double);
   protected
     procedure ReadData(DecompressionStream: TDecompressionStream); override;
-    procedure StoreData(Compressor: TCompressionStream); override;
+    procedure StoreData(Stream: TStream); override;
     // See TCustomPhastDataSet.@link(TDataArray.IsValue).
     function GetIsValue(const Index1, Index2, Index3: Integer): boolean;
       override;
@@ -804,7 +805,7 @@ to elements or cells.}
     procedure SetValue2(const Value: integer);
   protected
     procedure ReadData(DecompressionStream: TDecompressionStream); override;
-    procedure StoreData(Compressor: TCompressionStream); override;
+    procedure StoreData(Stream: TStream); override;
     // See @link(TDataArray.IntegerData).
     function GetIntegerData(const Layer, Row, Col: integer): integer; override;
     // See TCustomPhastDataSet.@link(TDataArray.IsValue).
@@ -890,7 +891,7 @@ to elements or cells.}
     function GetItemOfDataSet(const DataSet: TDataArray): TInterpValuesItem;
   public
     // @name creates an instance of @classname.
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
     // @name provides a way to retrieve the @link(TInterpValuesItem)
     // associated with a particular data set.
     property ItemOfDataSet[const DataSet: TDataArray]: TInterpValuesItem
@@ -957,7 +958,7 @@ to elements or cells.}
     // the @classname.
     procedure Clear; override;
     // @name creates an instance of @classname.
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     // @name destroys the current instance of @classname.
     // Do not call @name directly. Call Free instead.
     destructor Destroy; override;
@@ -976,7 +977,8 @@ to elements or cells.}
 implementation
 
 uses Contnrs, ScreenObjectUnit, frmGoPhastUnit, frmDataSetsUnits,
-  GIS_Functions, frmFormulaErrorsUnit, SubscriptionUnit, PhastModelUnit;
+  GIS_Functions, frmFormulaErrorsUnit, SubscriptionUnit, PhastModelUnit,
+  ModelMuseUtilities;
 
 resourcestring
   StrSetByPHASTstyleI = 'Set by PHAST-style interpolation';
@@ -1389,7 +1391,7 @@ begin
     CheckRestoreData;
     Exit;
   end;
-  FEvalTime := Now;
+//  FEvalTime := Now;
   FDataCached := False;
 
   FreeStack := (Stack = nil);
@@ -1425,7 +1427,7 @@ begin
         if not AScreenObject.Deleted then
         begin
           AScreenObject.AssignValuesToPhastDataSet(
-            frmGoPhast.Grid, self);
+            frmGoPhast.Grid, self, FModel, True);
         end;
       end;
 
@@ -1503,8 +1505,8 @@ var
   TempFormula: string;
 begin
   TempFormula := MixtureFormula;
-  frmFormulaErrors.AddError('', Name, TempFormula, ErrorMessage);
-  TempFormula := FloatToStr(0.5);
+  frmFormulaErrors.AddFormulaError('', Name, TempFormula, ErrorMessage);
+  TempFormula := FortranFloatToStr(0.5);
   FMixtureFormula := TempFormula;
   frmGoPhast.PhastModel.FormulaManager.ChangeFormula(
     FMixtureFormulaObject, FMixtureFormula, GetCompiler,
@@ -1578,7 +1580,7 @@ begin
   end;
 end;
 
-procedure TCustomPhastDataSet.StoreData(Compressor: TCompressionStream);
+procedure TCustomPhastDataSet.StoreData(Stream: TStream);
 var
   LayerLimit: Integer;
   RowLimit: Integer;
@@ -1593,7 +1595,7 @@ var
 begin
   inherited;
   CountValues(LayerLimit, RowLimit, ColLimit, Count);
-  Compressor.Write(Count, SizeOf(Count));
+  Stream.Write(Count, SizeOf(Count));
   if Count > 0 then
   begin
     for LayerIndex := 0 to LayerLimit do
@@ -1604,19 +1606,19 @@ begin
         begin
           if IsValue[LayerIndex, RowIndex, ColIndex] then
           begin
-            Compressor.Write(LayerIndex, SizeOf(LayerIndex));
-            Compressor.Write(RowIndex, SizeOf(RowIndex));
-            Compressor.Write(ColIndex, SizeOf(ColIndex));
+            Stream.Write(LayerIndex, SizeOf(LayerIndex));
+            Stream.Write(RowIndex, SizeOf(RowIndex));
+            Stream.Write(ColIndex, SizeOf(ColIndex));
             IsInterp := IsInterpolatedCell[LayerIndex, RowIndex, ColIndex];
-            Compressor.Write(IsInterp, SizeOf(IsInterp));
+            Stream.Write(IsInterp, SizeOf(IsInterp));
             if IsInterp then
             begin
               Distance := CellDistance1[LayerIndex, RowIndex, ColIndex];
-              Compressor.Write(Distance, SizeOf(Distance));
+              Stream.Write(Distance, SizeOf(Distance));
               Distance := CellDistance2[LayerIndex, RowIndex, ColIndex];
-              Compressor.Write(Distance, SizeOf(Distance));
+              Stream.Write(Distance, SizeOf(Distance));
               Direction := CellInterpolationDirection[LayerIndex, RowIndex, ColIndex];
-              Compressor.Write(Direction, SizeOf(Direction));
+              Stream.Write(Direction, SizeOf(Direction));
             end;
           end;
         end;
@@ -1681,16 +1683,16 @@ end;
 
 destructor TCustomPhastDataSet.Destroy;
 begin
-  if (FPhastModel <> nil)
-    and (not (csDestroying in FPhastModel.ComponentState))
-    and not (FPhastModel as TPhastModel).Clearing then
+  if (Model <> nil)
+    and (not (csDestroying in Model.ComponentState))
+    and not (Model as TPhastModel).Clearing then
   begin
     MixtureFormula := '0.';
   end;
   FMixtureUseList.Free;
-  if FPhastModel <> nil then
+  if Model <> nil then
   begin
-    (FPhastModel as TPhastModel).FormulaManager.Remove(FMixtureFormulaObject,
+    (Model as TCustomModel).FormulaManager.Remove(FMixtureFormulaObject,
       GlobalDataArrayRemoveSubscription,
       GlobalDataArrayRestoreSubscription, self);
   end;
@@ -1712,7 +1714,7 @@ begin
   TempFormula := FMixtureFormula;
   if TempFormula = '' then
   begin
-    TempFormula := FloatToStr(0.5);
+    TempFormula := FortranFloatToStr(0.5);
   end;
   try
     Compiler.Compile(TempFormula);
@@ -1805,7 +1807,7 @@ begin
   if DimensionsChanged then
     SetDimensions(False);
   result := FIsInterpolatedCell[ALay, ARow, ACol];
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 procedure TArrayPhastDataSet.SetCellDistance1(const ALay, ARow,
@@ -1893,7 +1895,7 @@ begin
   if DimensionsChanged then
     SetDimensions(False);
   FIsInterpolatedCell[ALay, ARow, ACol] := Value;
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 procedure TArrayPhastDataSet.ResetCellsPhastInterpolation;
@@ -2219,7 +2221,7 @@ begin
                     Expression.Evaluate;
                   except on E: ERbwParserError do
                     begin
-                      frmFormulaErrors.AddError('',
+                      frmFormulaErrors.AddFormulaError('',
                         'Mixture formula for: ' + Name ,
                         MixtureFormula, E.Message);
                       MixtureFormula := '0.5';
@@ -2376,7 +2378,7 @@ begin
   end;
 end;
 
-procedure TIntegerPhastDataSet.StoreData(Compressor: TCompressionStream);
+procedure TIntegerPhastDataSet.StoreData(Stream: TStream);
 var
   ColLimit: integer;
   RowLimit: Integer;
@@ -2388,7 +2390,7 @@ var
   Value: Integer;
   FractionalValue: double;
 begin
-  inherited StoreData(Compressor);
+  inherited StoreData(Stream);
   GetLimits(ColLimit, RowLimit, LayerLimit);
   Count := 0;
   for LayerIndex := 0 to LayerLimit do
@@ -2405,7 +2407,7 @@ begin
       end;
     end;
   end;
-  Compressor.Write(Count, SizeOf(Count));
+  Stream.Write(Count, SizeOf(Count));
   if Count > 0 then
   begin
     for LayerIndex := 0 to LayerLimit do
@@ -2417,15 +2419,15 @@ begin
           if IsValue[LayerIndex, RowIndex, ColIndex]
             and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
           begin
-            Compressor.Write(LayerIndex, SizeOf(LayerIndex));
-            Compressor.Write(RowIndex, SizeOf(RowIndex));
-            Compressor.Write(ColIndex, SizeOf(ColIndex));
+            Stream.Write(LayerIndex, SizeOf(LayerIndex));
+            Stream.Write(RowIndex, SizeOf(RowIndex));
+            Stream.Write(ColIndex, SizeOf(ColIndex));
             Value := CellValue1[LayerIndex, RowIndex, ColIndex];
-            Compressor.Write(Value, SizeOf(Value));
+            Stream.Write(Value, SizeOf(Value));
             Value := CellValue2[LayerIndex, RowIndex, ColIndex];
-            Compressor.Write(Value, SizeOf(Value));
+            Stream.Write(Value, SizeOf(Value));
             FractionalValue := Fraction[LayerIndex, RowIndex, ColIndex];
-            Compressor.Write(FractionalValue, SizeOf(FractionalValue));
+            Stream.Write(FractionalValue, SizeOf(FractionalValue));
           end;
         end;
       end;
@@ -2485,6 +2487,7 @@ var
   LayIndex, RowIndex, ColIndex: integer;
   Distance: double;
   Fraction: double;
+  LocalModel: TCustomModel;
 begin
   inherited;
   GetRequiredDimensions(NumberOfLayers, NumberOfRows, NumberOfColumns);
@@ -2502,6 +2505,7 @@ begin
   if UsePHAST_InterpolationForAllCells then
   begin
     Distance := 0;
+    LocalModel := Model as TCustomModel;
     for LayIndex := 0 to NumberOfLayers - 1 do
     begin
       for RowIndex := 0 to NumberOfRows - 1 do
@@ -2514,13 +2518,13 @@ begin
                 case EvaluatedAt of
                   eaBlocks:
                     begin
-                      Distance := (frmGoPhast.PhastGrid.ColumnPosition[ColIndex]
-                        + frmGoPhast.PhastGrid.ColumnPosition[ColIndex + 1]) /
+                      Distance := (LocalModel.PhastGrid.ColumnPosition[ColIndex]
+                        + LocalModel.PhastGrid.ColumnPosition[ColIndex + 1]) /
                         2;
                     end;
                   eaNodes:
                     begin
-                      Distance := frmGoPhast.PhastGrid.ColumnPosition[ColIndex];
+                      Distance := LocalModel.PhastGrid.ColumnPosition[ColIndex];
                     end;
                 else
                   Assert(False);
@@ -2531,12 +2535,12 @@ begin
                 case EvaluatedAt of
                   eaBlocks:
                     begin
-                      Distance := (frmGoPhast.PhastGrid.RowPosition[RowIndex]
-                        + frmGoPhast.PhastGrid.RowPosition[RowIndex + 1]) / 2;
+                      Distance := (LocalModel.PhastGrid.RowPosition[RowIndex]
+                        + LocalModel.PhastGrid.RowPosition[RowIndex + 1]) / 2;
                     end;
                   eaNodes:
                     begin
-                      Distance := frmGoPhast.PhastGrid.RowPosition[RowIndex];
+                      Distance := LocalModel.PhastGrid.RowPosition[RowIndex];
                     end;
                 else
                   Assert(False);
@@ -2547,13 +2551,13 @@ begin
                 case EvaluatedAt of
                   eaBlocks:
                     begin
-                      Distance := (frmGoPhast.PhastGrid.LayerElevation[LayIndex]
-                        + frmGoPhast.PhastGrid.LayerElevation[LayIndex + 1]) /
+                      Distance := (LocalModel.PhastGrid.LayerElevation[LayIndex]
+                        + LocalModel.PhastGrid.LayerElevation[LayIndex + 1]) /
                         2;
                     end;
                   eaNodes:
                     begin
-                      Distance := frmGoPhast.PhastGrid.LayerElevation[LayIndex];
+                      Distance := LocalModel.PhastGrid.LayerElevation[LayIndex];
                     end;
                 else
                   Assert(False);
@@ -2667,7 +2671,7 @@ begin
     frmGoPhast.InvalidateModel;
   end;
 end;
-procedure TRealPhastDataSet.StoreData(Compressor: TCompressionStream);
+procedure TRealPhastDataSet.StoreData(Stream: TStream);
 var
   ColLimit: integer;
   RowLimit: Integer;
@@ -2678,7 +2682,7 @@ var
   Count: Integer;
   Value: double;
 begin
-  inherited StoreData(Compressor);
+  inherited StoreData(Stream);
   GetLimits(ColLimit, RowLimit, LayerLimit);
   Count := 0;
   for LayerIndex := 0 to LayerLimit do
@@ -2695,7 +2699,7 @@ begin
       end;
     end;
   end;
-  Compressor.Write(Count, SizeOf(Count));
+  Stream.Write(Count, SizeOf(Count));
   if Count > 0 then
   begin
     for LayerIndex := 0 to LayerLimit do
@@ -2707,13 +2711,13 @@ begin
           if IsValue[LayerIndex, RowIndex, ColIndex]
             and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
           begin
-            Compressor.Write(LayerIndex, SizeOf(LayerIndex));
-            Compressor.Write(RowIndex, SizeOf(RowIndex));
-            Compressor.Write(ColIndex, SizeOf(ColIndex));
+            Stream.Write(LayerIndex, SizeOf(LayerIndex));
+            Stream.Write(RowIndex, SizeOf(RowIndex));
+            Stream.Write(ColIndex, SizeOf(ColIndex));
             Value := CellValue1[LayerIndex, RowIndex, ColIndex];
-            Compressor.Write(Value, SizeOf(Value));
+            Stream.Write(Value, SizeOf(Value));
             Value := CellValue2[LayerIndex, RowIndex, ColIndex];
-            Compressor.Write(Value, SizeOf(Value));
+            Stream.Write(Value, SizeOf(Value));
           end;
         end;
       end;
@@ -2757,7 +2761,7 @@ end;
 
 { TInterpValuesCollection }
 
-constructor TInterpValuesCollection.Create(Model: TComponent);
+constructor TInterpValuesCollection.Create(Model: TBaseModel);
 begin
   inherited Create(TInterpValuesItem, Model);
 end;
@@ -2812,7 +2816,7 @@ begin
   if DimensionsChanged then
     SetDimensions(False);
   result := FAnnotation[Layer, Row, Col];
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 function TSparseArrayPhastInterpolationDataSet.GetCellDistance1(
@@ -2850,7 +2854,7 @@ begin
   if DimensionsChanged then
     SetDimensions(False);
   result := FIsInterpolatedCell[ALay, ARow, ACol];
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 function TSparseArrayPhastInterpolationDataSet.GetIsValue(
@@ -2892,7 +2896,7 @@ begin
   if UpToDate and not DimensionsChanged then
     Exit;
 
-  FEvalTime := Now;
+//  FEvalTime := Now;
   FreeStack := (Stack = nil);
   try
     if FreeStack then
@@ -2917,7 +2921,7 @@ begin
       if not AScreenObject.Deleted then
       begin
         AScreenObject.AssignValuesToPhastDataSet(
-          frmGoPhast.PhastGrid, self);
+          frmGoPhast.PhastGrid, self, FModel, True);
       end;
     end;
   finally
@@ -2934,6 +2938,11 @@ begin
 
 end;
 
+function TSparseArrayPhastInterpolationDataSet.IsSparseArray: boolean;
+begin
+  result := True;
+end;
+
 procedure TSparseArrayPhastInterpolationDataSet.ResetCellsPhastInterpolation;
 begin
   FIsInterpolatedCell.Clear;
@@ -2945,7 +2954,7 @@ begin
   if DimensionsChanged then
     SetDimensions(False);
   FAnnotation[Layer, Row, Col] := Value;
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 procedure TSparseArrayPhastInterpolationDataSet.SetCellDistance1(
@@ -3005,7 +3014,7 @@ begin
   if DimensionsChanged then
     SetDimensions(False);
   FIsInterpolatedCell[ALay, ARow, ACol] := Value;
-  UpdateEvalTime;
+//  UpdateEvalTime;
 end;
 
 procedure TSparseArrayPhastInterpolationDataSet.SetIsValue(
@@ -3191,7 +3200,7 @@ begin
   end;
 end;
 
-procedure TSparseRealPhastDataSet.StoreData(Compressor: TCompressionStream);
+procedure TSparseRealPhastDataSet.StoreData(Stream: TStream);
 var
   ColLimit: integer;
   RowLimit: Integer;
@@ -3202,7 +3211,7 @@ var
   Count: Integer;
   Value: double;
 begin
-  inherited StoreData(Compressor);
+  inherited StoreData(Stream);
   GetLimits(ColLimit, RowLimit, LayerLimit);
   Count := 0;
   for LayerIndex := 0 to LayerLimit do
@@ -3219,7 +3228,7 @@ begin
       end;
     end;
   end;
-  Compressor.Write(Count, SizeOf(Count));
+  Stream.Write(Count, SizeOf(Count));
   if Count > 0 then
   begin
     for LayerIndex := 0 to LayerLimit do
@@ -3231,13 +3240,13 @@ begin
           if IsValue[LayerIndex, RowIndex, ColIndex]
             and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
           begin
-            Compressor.Write(LayerIndex, SizeOf(LayerIndex));
-            Compressor.Write(RowIndex, SizeOf(RowIndex));
-            Compressor.Write(ColIndex, SizeOf(ColIndex));
+            Stream.Write(LayerIndex, SizeOf(LayerIndex));
+            Stream.Write(RowIndex, SizeOf(RowIndex));
+            Stream.Write(ColIndex, SizeOf(ColIndex));
             Value := CellValue1[LayerIndex, RowIndex, ColIndex];
-            Compressor.Write(Value, SizeOf(Value));
+            Stream.Write(Value, SizeOf(Value));
             Value := CellValue2[LayerIndex, RowIndex, ColIndex];
-            Compressor.Write(Value, SizeOf(Value));
+            Stream.Write(Value, SizeOf(Value));
           end;
         end;
       end;
@@ -3475,7 +3484,7 @@ begin
   end;
 end;
 
-procedure TSparseIntegerPhastDataSet.StoreData(Compressor: TCompressionStream);
+procedure TSparseIntegerPhastDataSet.StoreData(Stream: TStream);
 var
   ColLimit: integer;
   RowLimit: Integer;
@@ -3487,7 +3496,7 @@ var
   Value: Integer;
   FractionalValue: Double;
 begin
-  inherited StoreData(Compressor);
+  inherited StoreData(Stream);
   GetLimits(ColLimit, RowLimit, LayerLimit);
   Count := 0;
   for LayerIndex := 0 to LayerLimit do
@@ -3504,7 +3513,7 @@ begin
       end;
     end;
   end;
-  Compressor.Write(Count, SizeOf(Count));
+  Stream.Write(Count, SizeOf(Count));
   if Count > 0 then
   begin
     for LayerIndex := 0 to LayerLimit do
@@ -3516,15 +3525,15 @@ begin
           if IsValue[LayerIndex, RowIndex, ColIndex]
             and IsInterpolatedCell[LayerIndex, RowIndex, ColIndex] then
           begin
-            Compressor.Write(LayerIndex, SizeOf(LayerIndex));
-            Compressor.Write(RowIndex, SizeOf(RowIndex));
-            Compressor.Write(ColIndex, SizeOf(ColIndex));
+            Stream.Write(LayerIndex, SizeOf(LayerIndex));
+            Stream.Write(RowIndex, SizeOf(RowIndex));
+            Stream.Write(ColIndex, SizeOf(ColIndex));
             Value := CellValue1[LayerIndex, RowIndex, ColIndex];
-            Compressor.Write(Value, SizeOf(Value));
+            Stream.Write(Value, SizeOf(Value));
             Value := CellValue2[LayerIndex, RowIndex, ColIndex];
-            Compressor.Write(Value, SizeOf(Value));
+            Stream.Write(Value, SizeOf(Value));
             FractionalValue := Fraction[LayerIndex, RowIndex, ColIndex];
-            Compressor.Write(FractionalValue, SizeOf(FractionalValue));
+            Stream.Write(FractionalValue, SizeOf(FractionalValue));
           end;
         end;
       end;
@@ -3576,7 +3585,7 @@ begin
   inherited;
 end;
 
-constructor TPhastTimeList.Create(Model: TObject);
+constructor TPhastTimeList.Create(Model: TBaseModel);
 begin
   inherited;
   FBoundaryTypeDataSets := TBoundaryTypeList.Create;
@@ -3782,7 +3791,7 @@ begin
           end;
 
           AScreenObject.AssignValuesToPhastDataSet(
-            frmGoPhast.PhastGrid, DataSet);
+            frmGoPhast.PhastGrid, DataSet, Model, True);
         end;
       end;
     end;

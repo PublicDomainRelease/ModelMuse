@@ -47,8 +47,6 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure dgTimeColSize(Sender: TObject; ACol, PriorWidth: Integer);
     procedure dgTimeHorizontalScroll(Sender: TObject);
-    procedure dgTimeMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure dgTimeMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure rdeLengthChange(Sender: TObject);
@@ -341,20 +339,6 @@ procedure TfrmTimeControl.dgTimeHorizontalScroll(Sender: TObject);
 begin
   inherited;
   LayoutMultiRowEditControl;
-end;
-
-procedure TfrmTimeControl.dgTimeMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    dgTime.Options := dgTime.Options + [goEditing];
-  end
-  else
-  begin
-    dgTime.Options := dgTime.Options - [goEditing];
-  end;
 end;
 
 procedure TfrmTimeControl.dgTimeMouseUp(Sender: TObject; Button: TMouseButton;

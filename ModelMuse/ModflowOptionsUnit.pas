@@ -2,12 +2,12 @@ unit ModflowOptionsUnit;
 
 interface
 
-uses SysUtils, Classes;
+uses SysUtils, Classes, GoPhastTypes;
 
 Type
   TModflowOptions = class(TPersistent)
   private
-    FModel: TComponent;
+    FModel: TBaseModel;
     FLengthUnit: integer;
     FPrintTime: boolean;
     FProjectName: string;
@@ -42,7 +42,7 @@ Type
     procedure WriteHNoFlow(Writer: TWriter);
   public
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
     destructor Destroy; override;
     procedure Clear;
   published
@@ -66,7 +66,7 @@ Type
 
   TWettingOptions = class(TPersistent)
   private
-    FModel: TComponent;
+    FModel: TBaseModel;
     FWettingFactor: real;
     FWettingEquation: integer;
     FWettingActive: boolean;
@@ -78,7 +78,7 @@ Type
     procedure SetWettingIterations(Value: integer);
   published
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
     property WettingActive: boolean read FWettingActive write SetWettingActive;
     property WettingFactor: real read FWettingFactor write SetWettingFactor;
     property WettingIterations: integer read FWettingIterations
@@ -123,7 +123,7 @@ begin
   end;
 end;
 
-constructor TModflowOptions.Create(Model: TComponent);
+constructor TModflowOptions.Create(Model: TBaseModel);
 begin
   inherited Create;
   FDescription := TStringList.Create;
@@ -131,7 +131,7 @@ begin
   FModel := Model;
   if Assigned(FModel) then
   begin
-    Assert(FModel is TPhastModel);
+    Assert(FModel is TCustomModel);
   end;
   FProjectDate := DateTimeToStr(Trunc(Now));
 end;
@@ -172,7 +172,7 @@ procedure TModflowOptions.InvalidateModel;
 begin
   if Assigned(FModel) then
   begin
-    (FModel as TPhastModel).Invalidate;
+    FModel.Invalidate;
   end;
 end;
 
@@ -316,12 +316,12 @@ begin
   end;
 end;
 
-constructor TWettingOptions.Create(Model: TComponent);
+constructor TWettingOptions.Create(Model: TBaseModel);
 begin
   FModel := Model;
   if Assigned(FModel) then
   begin
-    Assert(FModel is TPhastModel);
+    Assert(FModel is TCustomModel);
   end;
   FWettingFactor := 1;
   FWettingIterations := 1;
@@ -331,7 +331,7 @@ procedure TWettingOptions.InvalidateModel;
 begin
   if Assigned(FModel) then
   begin
-    (FModel as TPhastModel).Invalidate;
+    FModel.Invalidate;
   end;
 end;
 

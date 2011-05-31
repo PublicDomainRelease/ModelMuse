@@ -25,6 +25,7 @@ inherited framePackageLpf: TframePackageLpf
     FixedRows = 0
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
     TabOrder = 1
+    AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = False

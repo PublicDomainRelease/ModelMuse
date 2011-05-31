@@ -28,7 +28,6 @@ type
     // tab of ParentPageControl.
     // @name is used in @link(TframeGMG).
     procedure MoveControlsToTab(ParentPageControl: TPageControl);
-    procedure ChangeGridOptions(DataGrid: TRbwDataGrid4; Shift: TShiftState);
     procedure EnableMultiEditControl(Control: TControl;
       DataGrid: TRbwDataGrid4);
   public
@@ -170,18 +169,6 @@ begin
   Node := nil;
 end;
 
-procedure TframePackage.ChangeGridOptions(DataGrid: TRbwDataGrid4;
-  Shift: TShiftState);
-begin
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    DataGrid.Options := DataGrid.Options + [goEditing];
-  end
-  else
-  begin
-    DataGrid.Options := DataGrid.Options - [goEditing];
-  end;
-end;
 
 procedure TframePackage.EnableMultiEditControl(Control: TControl;
   DataGrid: TRbwDataGrid4);

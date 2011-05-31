@@ -211,6 +211,7 @@ begin
       FreeAndNil(FUndoShowHide);
       raise;
     end;
+    SetCheckStates;
   finally
     Sender.EndUpdate;
     FSettingData := False;

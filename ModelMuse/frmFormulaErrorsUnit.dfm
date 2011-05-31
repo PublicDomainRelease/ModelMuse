@@ -57,13 +57,25 @@ inherited frmFormulaErrors: TfrmFormulaErrors
       Kind = bkHelp
     end
     object btnClear: TButton
-      Left = 95
+      Left = 182
       Top = 6
       Width = 81
       Height = 33
       Caption = 'Clear'
       TabOrder = 3
       OnClick = btnClearClick
+    end
+    object btnSave: TButton
+      Left = 95
+      Top = 6
+      Width = 81
+      Height = 33
+      Hint = 'Copy table to clipboard'
+      Caption = 'Save'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 4
+      OnClick = btnSaveClick
     end
   end
   object pnlTop: TPanel
@@ -98,6 +110,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
     RowCount = 2
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
     TabOrder = 2
+    AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = False
@@ -200,5 +213,12 @@ inherited frmFormulaErrors: TfrmFormulaErrors
     OnTimer = TimerTimer
     Left = 144
     Top = 112
+  end
+  object sdErrors: TSaveDialog
+    DefaultExt = '.txt'
+    Filter = 'Text files (*.txt)|*.txt|All files (*.*)|*.*'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
+    Left = 360
+    Top = 104
   end
 end

@@ -6,9 +6,9 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomColorUnit, StdCtrls, Buttons, JvExControls, JvxSlider, Mask,
   JvExMask, JvSpin, frameDisplayLimitUnit, JvExStdCtrls, JvRichEdit, ExtCtrls,
-  ComCtrls, DataSetUnit, JvCheckBox, TntStdCtrls, TntExDropDownEdit,
-  TntExDropDownVirtualStringTree, VirtualTrees, JvExComCtrls, JvUpDown, Grids,
-  RbwDataGrid4, RbwParser, ArgusDataEntry;
+  ComCtrls, DataSetUnit, JvCheckBox, VirtualTrees, JvExComCtrls, JvUpDown,
+  Grids, RbwDataGrid4, RbwParser, ArgusDataEntry, SsButtonEd,
+  RbwStringTreeCombo;
 
 type
   TfrmContourData = class(TfrmCustomColor)
@@ -55,7 +55,8 @@ implementation
 uses
   PhastModelUnit, frmGoPhastUnit, GoPhastTypes, frmProgressUnit,
   frmErrorsAndWarningsUnit, ColorSchemes, frmSpecifyContoursUnit, 
-  frmCustomGoPhastUnit, ClassificationUnit, Math, LegendUnit;
+  frmCustomGoPhastUnit, ClassificationUnit, Math, LegendUnit,
+  frmFormulaErrorsUnit;
 
 {$R *.dfm}
 
@@ -168,13 +169,13 @@ var
 begin
   FGettingData := True;
   try
-    virttreecomboDataSets.Tree.Clear;
+    virttreecomboDataSets1.Tree.Clear;
     FFrontItems.Clear;
     FSideItems.Clear;
     FTopItems.Clear;
 
-    VirtNoneNode := virttreecomboDataSets.Tree.AddChild(nil);
-    virttreecomboDataSets.Tree.Selected[VirtNoneNode] := True;
+    VirtNoneNode := virttreecomboDataSets1.Tree.AddChild(nil);
+    virttreecomboDataSets1.Tree.Selected[VirtNoneNode] := True;
 
     if csDestroying in frmGoPhast.PhastModel.ComponentState then
     begin
@@ -206,6 +207,7 @@ procedure TfrmContourData.SetData;
 var
   AnObject: TObject;
 begin
+  frmFormulaErrors.sgErrors.BeginUpdate;
   Screen.Cursor := crHourGlass;
   try
 
@@ -219,6 +221,7 @@ begin
 
   finally
     Screen.Cursor := crDefault;
+    frmFormulaErrors.sgErrors.EndUpdate;
   end;
 end;
 
@@ -300,7 +303,8 @@ begin
     end;
     DataArrayManager.CacheDataArrays;
     if (frmGoPhast.Grid.ThreeDContourDataSet <> nil)
-      and (rgUpdateLimitChoice.ItemIndex = 1) then
+      and (rgUpdateLimitChoice.ItemIndex = 1)
+      and not cbSpecifyContours.Checked then
     begin
       FStoredLegend := TLegend.Create(nil);
       FStoredLegend.Assign(frmGoPhast.PhastModel.ContourLegend);

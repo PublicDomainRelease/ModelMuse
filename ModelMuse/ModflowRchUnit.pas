@@ -4,7 +4,7 @@ interface
 
 uses Windows, ZLib, SysUtils, Classes, Contnrs, OrderedCollectionUnit,
   ModflowBoundaryUnit, DataSetUnit, ModflowCellUnit, FormulaManagerUnit,
-  SubscriptionUnit, SparseDataSets;
+  SubscriptionUnit, SparseDataSets, GoPhastTypes;
 
 type
   {
@@ -52,7 +52,8 @@ type
     FRchArray: TRchArray;
     function GetRchArray: TRchArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
+    procedure Restore(DecompressionStream: TDecompressionStream;
+      Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -64,7 +65,8 @@ type
     FRchLayerArray: TRchLayerArray;
     function GetRchLayerArray: TRchLayerArray;
   protected
-    procedure Restore(DecompressionStream: TDecompressionStream; Annotations: TStringList); override;
+    procedure Restore(DecompressionStream: TDecompressionStream;
+      Annotations: TStringList); override;
     procedure Store(Compressor: TCompressionStream); override;
     procedure Clear; override;
   public
@@ -133,22 +135,34 @@ type
     property RechargeLayer: string read GetRechargeLayer write SetRechargeLayer;
   end;
 
+  TRchTimeListLink = class(TTimeListsModelLink)
+  private
+    // @name is used to compute the recharge rates for a series of
+    // cells over a series of time intervals.
+    FRechargeRateData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+    property RechargeRateData: TModflowTimeList read FRechargeRateData;
+  public
+    Destructor Destroy; override;
+  end;
+
   // @name represents MODFLOW Recharge boundaries
   // for a series of time intervals.
   TRchCollection = class(TCustomMF_ArrayBoundColl)
   private
     procedure InvalidateRechargeData(Sender: TObject);
   protected
-    // @name is used to compute the recharge rates for a series of
-    // cells over a series of time intervals.
-    FRechargeRateData: TModflowTimeList;
+    function PackageAssignmentMethod(AModel: TBaseModel): TUpdateMethod; virtual;
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary; override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer); override;
+    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+      AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
     // TCustomMF_ArrayBoundColl.InitializeTimeLists)
-    procedure InitializeTimeLists(ListOfTimeLists: TList); override;
+    procedure InitializeTimeLists(ListOfTimeLists: TList; AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
     class function ItemClass: TMF_BoundItemClass; override;
@@ -159,29 +173,32 @@ type
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+  end;
+
+  TRchLayerTimeListLink = class(TTimeListsModelLink)
+    // @name is used to compute the recharge layers for a series of
+    // cells over a series of time intervals.
+    FRechargeLayerData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
   public
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
+    Destructor Destroy; override;
   end;
 
   TRchLayerCollection = class(TCustomMF_ArrayBoundColl)
   private
-    // @name is used to compute the recharge rates for a series of
-    // cells over a series of time intervals.
-    FRechargeLayerData: TModflowTimeList;
     procedure InvalidateRechLayerData(Sender: TObject);
   protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary; override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer); override;
+    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+      AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
     // TCustomMF_ArrayBoundColl.InitializeTimeLists)
-    procedure InitializeTimeLists(ListOfTimeLists: TList); override;
+    procedure InitializeTimeLists(ListOfTimeLists: TList;
+      AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
     class function ItemClass: TMF_BoundItemClass; override;
@@ -192,13 +209,6 @@ type
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
-  public
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
   end;
 
 
@@ -221,10 +231,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -244,10 +257,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -271,7 +287,7 @@ type
     // each stress period.  Each such TObjectList is filled with
     // @link(TRch_Cell)s for that stress period.
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-      ValueTimeList: TList); override;
+      ValueTimeList: TList; AModel: TBaseModel); override;
     // See @link(TModflowBoundary.BoundaryCollectionClass
     // TModflowBoundary.BoundaryCollectionClass).
     class function BoundaryCollectionClass: TMF_BoundCollClass; override;
@@ -282,7 +298,7 @@ type
   public
     procedure Assign(Source: TPersistent);override;
 
-    Constructor Create(Model, ScreenObject: TObject);
+    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     Destructor Destroy; override;
     // @name fills ValueTimeList via a call to AssignCells for each
     // link  @link(TRchStorage) in
@@ -295,10 +311,10 @@ type
     // with each @link(TRchStorage) in @link(TCustomMF_BoundColl.Boundaries
     // Param.Param.Boundaries)
     // Those represent parameter boundary conditions.
-    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
-      override;
+    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel); override;
     function Used: boolean; override;
-    procedure EvaluateArrayBoundaries; override;
+    procedure EvaluateArrayBoundaries(AModel: TBaseModel); override;
     function NonParameterColumns: integer; override;
     property TimeVaryingRechargeLayers: boolean
       read GetTimeVaryingRechargeLayers;
@@ -313,7 +329,8 @@ type
 implementation
 
 uses RbwParser, ScreenObjectUnit, PhastModelUnit, ModflowTimeUnit,
-  ModflowTransientListParameterUnit, frmGoPhastUnit, TempFiles, GoPhastTypes;
+  ModflowTransientListParameterUnit, frmGoPhastUnit, TempFiles,
+  AbstractGridUnit;
 
 const
   StrAssignedFromTheCe = 'assigned from the cell''s layer';
@@ -416,7 +433,8 @@ begin
   AddBoundary(TRchStorage.Create);
 end;
 
-procedure TRchCollection.AssignCellValues(DataSets: TList; ItemIndex: Integer);
+procedure TRchCollection.AssignCellValues(DataSets: TList; ItemIndex: Integer;
+  AModel: TBaseModel);
 var
   RechargeRateArray: TDataArray;
   Boundary: TRchStorage;
@@ -424,7 +442,7 @@ var
   RowIndex: Integer;
   ColIndex: Integer;
   BoundaryIndex: Integer;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
   LayerMin: Integer;
   RowMin: Integer;
   ColMin: Integer;
@@ -432,7 +450,7 @@ var
   RowMax: Integer;
   ColMax: Integer;
 begin
-  LocalModel := Model as TPhastModel;
+  LocalModel := AModel as TCustomModel;
   BoundaryIndex := 0;
   RechargeRateArray := DataSets[RechPosition];
   Boundary := Boundaries[ItemIndex] as TRchStorage;
@@ -442,7 +460,7 @@ begin
   begin
     for LayerIndex := LayerMin to LayerMax do
     begin
-      if LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+      if LocalModel.IsLayerSimulated(LayerIndex) then
       begin
         for RowIndex := RowMin to RowMax do
         begin
@@ -472,34 +490,28 @@ begin
   Boundary.CacheData;
 end;
 
-constructor TRchCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
+function TRchCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FRechargeRateData := TModflowTimeList.Create(Model, ScreenObject);
-  FRechargeRateData.NonParamDescription := 'Recharge rate';
-  FRechargeRateData.ParamDescription := ' recharge rate multiplier';
-  AddTimeList(FRechargeRateData);
-  if Model <> nil then
-  begin
-    FRechargeRateData.OnInvalidate :=
-      (Model as TPhastModel).InvalidateMfRchRate;
-  end;
+  result := TRchTimeListLink;
 end;
 
-destructor TRchCollection.Destroy;
-begin
-  FRechargeRateData.Free;
-  inherited;
-end;
-
-procedure TRchCollection.InitializeTimeLists(ListOfTimeLists: TList);
+procedure TRchCollection.InitializeTimeLists(ListOfTimeLists: TList;
+  AModel: TBaseModel);
 var
   TimeIndex: Integer;
   BoundaryValues: TBoundaryValueArray;
   Index: Integer;
   Item: TRchItem;
   ScreenObject: TScreenObject;
+  ALink: TRchTimeListLink;
+  RechargeRateData: TModflowTimeList;
+  DataArrayIndex: Integer;
+  DataArray: TTransientRealSparseDataSet;
+  Grid: TCustomGrid;
+  RowIndex: Integer;
+  ColIndex: Integer;
+  LayerIndex: Integer;
+  ShouldRemove: Boolean;
 begin
   ScreenObject := BoundaryGroup.ScreenObject as TScreenObject;
   SetLength(BoundaryValues, Count);
@@ -509,28 +521,79 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := Item.RechargeRate;
   end;
-  FRechargeRateData.Initialize(BoundaryValues, ScreenObject);
-  Assert(FRechargeRateData.Count = Count);
+  ALink := TimeListLink.GetLink(AModel) as TRchTimeListLink;
+  RechargeRateData := ALink.FRechargeRateData;
+  RechargeRateData.Initialize(BoundaryValues, ScreenObject, True);
+  Assert(RechargeRateData.Count = Count);
+
+  if PackageAssignmentMethod(AModel) = umAdd then
+  begin
+    Grid := (AModel as TCustomModel).Grid;
+    for DataArrayIndex := 0 to RechargeRateData.Count - 1 do
+    begin
+      DataArray := RechargeRateData[DataArrayIndex] as TTransientRealSparseDataSet;
+      for RowIndex := 0 to Grid.RowCount - 1 do
+      begin
+        for ColIndex := 0 to Grid.ColumnCount - 1 do
+        begin
+          ShouldRemove := False;
+          for LayerIndex := Grid.LayerCount -1 downto 0 do
+          begin
+            if ShouldRemove then
+            begin
+              DataArray.RemoveValue(LayerIndex, RowIndex, ColIndex);
+            end
+            else
+            begin
+              ShouldRemove := DataArray.IsValue[LayerIndex, RowIndex, ColIndex];
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+
   ClearBoundaries;
-  SetBoundaryCapacity(FRechargeRateData.Count);
-  for TimeIndex := 0 to FRechargeRateData.Count - 1 do
+  SetBoundaryCapacity(RechargeRateData.Count);
+  for TimeIndex := 0 to RechargeRateData.Count - 1 do
   begin
     AddBoundary(TRchStorage.Create);
   end;
-  ListOfTimeLists.Add(FRechargeRateData);
+  ListOfTimeLists.Add(RechargeRateData);
 end;
 
 procedure TRchCollection.InvalidateRechargeData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TRchTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FRechargeRateData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TRchTimeListLink;
+    Link.FRechargeRateData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TRchTimeListLink;
+      Link.FRechargeRateData.Invalidate;
+    end;
   end;
 end;
 
 class function TRchCollection.ItemClass: TMF_BoundItemClass;
 begin
   result := TRchItem;
+end;
+
+function TRchCollection.PackageAssignmentMethod(AModel: TBaseModel): TUpdateMethod;
+var
+  LocalModel: TCustomModel;
+begin
+  LocalModel := AModel as TCustomModel;
+  result := LocalModel.ModflowPackages.RchPackage.AssignmentMethod;
 end;
 
 procedure TRchCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
@@ -561,7 +624,7 @@ begin
   result := Values.Cell.Column;
 end;
 
-function TRch_Cell.GetIntegerAnnotation(Index: integer): string;
+function TRch_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -570,12 +633,12 @@ begin
   end;
 end;
 
-function TRch_Cell.GetIntegerValue(Index: integer): integer;
+function TRch_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   case Index of
-    RechPosition: result := frmGoPhast.PhastModel.LayerStructure.
-         DataSetLayerToModflowLayer(Layer);
+    RechPosition: result := (AModel as TCustomModel).
+      DataSetLayerToModflowLayer(Layer);
     else Assert(False);
   end;
 end;
@@ -585,7 +648,7 @@ begin
   result := Values.Cell.Layer;
 end;
 
-function TRch_Cell.GetRealAnnotation(Index: integer): string;
+function TRch_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -594,7 +657,7 @@ begin
   end;
 end;
 
-function TRch_Cell.GetRealValue(Index: integer): double;
+function TRch_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -636,6 +699,21 @@ begin
   StressPeriod := ReadCompInt(Decomp);
 end;
 
+procedure TRch_Cell.SetColumn(const Value: integer);
+begin
+  FValues.Cell.Column := Value;
+end;
+
+procedure TRch_Cell.SetLayer(const Value: integer);
+begin
+  FValues.Cell.Layer := Value;
+end;
+
+procedure TRch_Cell.SetRow(const Value: integer);
+begin
+  FValues.Cell.Row := Value;
+end;
+
 { TRchBoundary }
 
 procedure TRchBoundary.Assign(Source: TPersistent);
@@ -663,7 +741,7 @@ var
 begin
   LocalBoundaryStorage := BoundaryStorage;// as TRchStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    (ParentModel as TCustomModel).ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -674,7 +752,7 @@ begin
       Cells := TValueCellList.Create(TRechargeLayerCell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).
+    StressPeriod := (ParentModel as TCustomModel).
       ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
@@ -700,7 +778,7 @@ end;
 
 
 procedure TRchBoundary.AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-  ValueTimeList: TList);
+  ValueTimeList: TList; AModel: TBaseModel);
 var
   Cell: TRch_Cell;
   BoundaryValues: TRchRecord;
@@ -709,10 +787,12 @@ var
   TimeIndex: Integer;
   Cells: TValueCellList;
   LocalBoundaryStorage: TRchStorage;
+  LocalModel: TCustomModel;
 begin
+  LocalModel := AModel as TCustomModel;
   LocalBoundaryStorage := BoundaryStorage as TRchStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    LocalModel.ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -723,13 +803,16 @@ begin
       Cells := TValueCellList.Create(TRch_Cell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).
-      ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
+      if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.RchArray) then
+      begin
+        Cells.Capacity := Cells.Count + Length(LocalBoundaryStorage.RchArray)
+      end;
 //      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.RchArray) - 1 do
       begin
@@ -738,6 +821,7 @@ begin
         Cells.Add(Cell);
         Cell.StressPeriod := TimeIndex;
         Cell.Values := BoundaryValues;
+//        LocalModel.AdjustCellPosition(Cell);
       end;
       Cells.Cache;
     end;
@@ -756,7 +840,7 @@ begin
   RechargeLayers.Clear;
 end;
 
-constructor TRchBoundary.Create(Model, ScreenObject: TObject);
+constructor TRchBoundary.Create(Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited Create(Model, ScreenObject);
   FRechargeLayers := TRchLayerCollection.Create(self, Model, ScreenObject);
@@ -768,13 +852,13 @@ begin
   inherited;
 end;
 
-procedure TRchBoundary.EvaluateArrayBoundaries;
+procedure TRchBoundary.EvaluateArrayBoundaries(AModel: TBaseModel);
 begin
   inherited;
-  if (PhastModel as TPhastModel).
+  if (ParentModel as TCustomModel).
     ModflowPackages.RchPackage.TimeVaryingLayers then
   begin
-    RechargeLayers.EvaluateArrayBoundaries;
+    RechargeLayers.EvaluateArrayBoundaries(AModel);
   end;
 end;
 
@@ -783,21 +867,24 @@ var
   ValueIndex: Integer;
   BoundaryStorage: TRchLayerStorage;
 begin
-  if not (PhastModel as TPhastModel).ModflowPackages.
+  if not (ParentModel as TCustomModel).ModflowPackages.
     RchPackage.TimeVaryingLayers then
   begin
     Exit;
   end;
   for ValueIndex := 0 to RechargeLayers.Count - 1 do
   begin
-    BoundaryStorage := RechargeLayers.Boundaries[ValueIndex]
-      as TRchLayerStorage;
-    AssignRechargeLayerCells(BoundaryStorage, LayerTimeList);
+    if ValueIndex < RechargeLayers.BoundaryCount then
+    begin
+      BoundaryStorage := RechargeLayers.Boundaries[ValueIndex]
+        as TRchLayerStorage;
+      AssignRechargeLayerCells(BoundaryStorage, LayerTimeList);
+    end;
   end;
 end;
 
 procedure TRchBoundary.GetCellValues(ValueTimeList: TList;
-  ParamList: TStringList);
+  ParamList: TStringList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TRchStorage;
@@ -806,10 +893,10 @@ var
   Times: TList;
   Position: integer;
   ParamName: string;
-  Model: TPhastModel;
+  Model: TCustomModel;
 begin
-  EvaluateArrayBoundaries;
-  Model := PhastModel as TPhastModel;
+  EvaluateArrayBoundaries(AModel);
+  Model := ParentModel as TCustomModel;
   if Model.ModflowTransientParameters.CountParam(ParameterType) = 0 then
   begin
     for ValueIndex := 0 to Values.Count - 1 do
@@ -817,7 +904,7 @@ begin
       if ValueIndex < Values.BoundaryCount then
       begin
         BoundaryStorage := Values.Boundaries[ValueIndex] as TRchStorage;
-        AssignCells(BoundaryStorage, ValueTimeList);
+        AssignCells(BoundaryStorage, ValueTimeList, AModel);
       end;
     end;
   end
@@ -842,7 +929,7 @@ begin
         if ValueIndex < Param.Param.BoundaryCount then
         begin
           BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TRchStorage;
-          AssignCells(BoundaryStorage, Times);
+          AssignCells(BoundaryStorage, Times, AModel);
         end;
       end;
     end;
@@ -852,26 +939,26 @@ end;
 
 function TRchBoundary.GetTimeVaryingRechargeLayers: boolean;
 begin
-  if PhastModel = nil then
+  if ParentModel = nil then
   begin
     result := frmGoPhast.PhastModel.ModflowPackages.
       RchPackage.TimeVaryingLayers;
   end
   else
   begin
-    result := (PhastModel as TPhastModel).ModflowPackages.
+    result := (ParentModel as TCustomModel).ModflowPackages.
       RchPackage.TimeVaryingLayers;
   end;
 end;
 
 procedure TRchBoundary.InvalidateDisplay;
 var
-  Model: TPhastModel;
+  Model: TCustomModel;
 begin
   inherited;
-  if Used and (PhastModel <> nil) then
+  if Used and (ParentModel <> nil) then
   begin
-    Model := PhastModel as TPhastModel;
+    Model := ParentModel as TCustomModel;
     Model.InvalidateMfRchRate(self);
     Model.InvalidateMfRchLayer(self);
   end;
@@ -887,7 +974,7 @@ begin
   result := inherited NonParameterColumns;
   if TimeVaryingRechargeLayers then
   begin
-    result := result + RechargeLayers.TimeListCount;
+    result := result + RechargeLayers.TimeListCount(frmGoPhast.PhastModel);
   end;
 end;
 
@@ -903,13 +990,13 @@ end;
 
 function TRchBoundary.Used: boolean;
 var
-  Model: TPhastModel;
+  Model: TCustomModel;
   ParamIndex: Integer;
   Param: TModflowTransientListParameter;
 begin
-  if PhastModel <> nil then
+  if ParentModel <> nil then
   begin
-    Model := PhastModel as TPhastModel;
+    Model := ParentModel as TCustomModel;
     result := Model.ModflowPackages.RchPackage.TimeVaryingLayers
       and RechargeLayers.Used;
   end
@@ -919,9 +1006,9 @@ begin
   end;
   if result then Exit;
   result := inherited Used;
-  if result and (PhastModel <> nil) then
+  if result and (ParentModel <> nil) then
   begin
-    Model := PhastModel as TPhastModel;
+    Model := ParentModel as TCustomModel;
     for ParamIndex := 0 to Model.ModflowTransientParameters.Count - 1 do
     begin
       Param := Model.ModflowTransientParameters[ParamIndex];
@@ -1031,7 +1118,7 @@ begin
 end;
 
 procedure TRchLayerCollection.AssignCellValues(DataSets: TList;
-  ItemIndex: Integer);
+  ItemIndex: Integer; AModel: TBaseModel);
 var
   RechargeLayerArray: TDataArray;
   Boundary: TRchLayerStorage;
@@ -1082,29 +1169,13 @@ begin
   Boundary.CacheData;
 end;
 
-constructor TRchLayerCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
+function TRchLayerCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FRechargeLayerData := TModflowTimeList.Create(Model, ScreenObject);
-  FRechargeLayerData.NonParamDescription := 'Recharge layer';
-  FRechargeLayerData.ParamDescription := ' recharge layer';
-  FRechargeLayerData.DataType := rdtInteger;
-  AddTimeList(FRechargeLayerData);
-  if Model <> nil then
-  begin
-    FRechargeLayerData.OnInvalidate :=
-      (Model as TPhastModel).InvalidateMfRchLayer;
-  end;
+  result := TRchLayerTimeListLink;
 end;
 
-destructor TRchLayerCollection.Destroy;
-begin
-  FRechargeLayerData.Free;
-  inherited;
-end;
-
-procedure TRchLayerCollection.InitializeTimeLists(ListOfTimeLists: TList);
+procedure TRchLayerCollection.InitializeTimeLists(ListOfTimeLists: TList;
+  AModel: TBaseModel);
 var
   TimeIndex: Integer;
   BoundaryValues: TBoundaryValueArray;
@@ -1112,6 +1183,8 @@ var
   Item: TRchLayerItem;
   Boundary: TRchBoundary;
   ScreenObject: TScreenObject;
+  ALink: TRchLayerTimeListLink;
+  RechargeLayerData: TModflowTimeList;
 begin
   Boundary := BoundaryGroup as TRchBoundary;
   ScreenObject := Boundary.ScreenObject as TScreenObject;
@@ -1122,22 +1195,37 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := Item.RechargeLayer;
   end;
-  FRechargeLayerData.Initialize(BoundaryValues, ScreenObject);
-  Assert(FRechargeLayerData.Count = Count);
+  ALink := TimeListLink.GetLink(AModel) as TRchLayerTimeListLink;
+  RechargeLayerData := ALink.FRechargeLayerData;
+  RechargeLayerData.Initialize(BoundaryValues, ScreenObject, True);
+  Assert(RechargeLayerData.Count = Count);
   ClearBoundaries;
-  SetBoundaryCapacity(FRechargeLayerData.Count);
-  for TimeIndex := 0 to FRechargeLayerData.Count - 1 do
+  SetBoundaryCapacity(RechargeLayerData.Count);
+  for TimeIndex := 0 to RechargeLayerData.Count - 1 do
   begin
     AddBoundary(TRchLayerStorage.Create);
   end;
-  ListOfTimeLists.Add(FRechargeLayerData);
+  ListOfTimeLists.Add(RechargeLayerData);
 end;
 
 procedure TRchLayerCollection.InvalidateRechLayerData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TRchLayerTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FRechargeLayerData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TRchLayerTimeListLink;
+    Link.FRechargeLayerData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TRchLayerTimeListLink;
+      Link.FRechargeLayerData.Invalidate;
+    end;
   end;
 end;
 
@@ -1168,7 +1256,7 @@ begin
   result := Values.Cell.Column;
 end;
 
-function TRechargeLayerCell.GetIntegerAnnotation(Index: integer): string;
+function TRechargeLayerCell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -1177,7 +1265,7 @@ begin
   end;
 end;
 
-function TRechargeLayerCell.GetIntegerValue(Index: integer): integer;
+function TRechargeLayerCell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   case Index of
@@ -1193,13 +1281,13 @@ begin
   result := Values.RechargeLayer-1;
 end;
 
-function TRechargeLayerCell.GetRealAnnotation(Index: integer): string;
+function TRechargeLayerCell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TRechargeLayerCell.GetRealValue(Index: integer): double;
+function TRechargeLayerCell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   Assert(False);
@@ -1226,6 +1314,21 @@ begin
   inherited;
   Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
+end;
+
+procedure TRechargeLayerCell.SetColumn(const Value: integer);
+begin
+  Values.Cell.Column := Value;
+end;
+
+procedure TRechargeLayerCell.SetLayer(const Value: integer);
+begin
+  Values.Cell.Layer := Value;
+end;
+
+procedure TRechargeLayerCell.SetRow(const Value: integer);
+begin
+  Values.Cell.Row := Value;
 end;
 
 { TRchStorage }
@@ -1406,6 +1509,49 @@ begin
   EndingTime := ReadCompReal(Decomp);
   RechargeLayerAnnotation := Annotations[ReadCompInt(Decomp)];
 //  RechargeLayerAnnotation := ReadCompString(Decomp, Annotations);
+end;
+
+{ TRchLayerTimeListLink }
+
+procedure TRchLayerTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  FRechargeLayerData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FRechargeLayerData.NonParamDescription := 'Recharge layer';
+  FRechargeLayerData.ParamDescription := ' recharge layer';
+  FRechargeLayerData.DataType := rdtInteger;
+  AddTimeList(FRechargeLayerData);
+  if Model <> nil then
+  begin
+    FRechargeLayerData.OnInvalidate := (Model as TCustomModel).InvalidateMfRchLayer;
+  end;
+end;
+
+destructor TRchLayerTimeListLink.Destroy;
+begin
+  FRechargeLayerData.Free;
+  inherited;
+end;
+
+{ TRchTimeListLink }
+
+procedure TRchTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  FRechargeRateData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FRechargeRateData.NonParamDescription := 'Recharge rate';
+  FRechargeRateData.ParamDescription := ' recharge rate multiplier';
+  AddTimeList(FRechargeRateData);
+  if Model <> nil then
+  begin
+    FRechargeRateData.OnInvalidate := (Model as TCustomModel).InvalidateMfRchRate;
+  end;
+end;
+
+destructor TRchTimeListLink.Destroy;
+begin
+  FRechargeRateData.Free;
+  inherited;
 end;
 
 end.

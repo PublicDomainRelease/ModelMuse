@@ -75,7 +75,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 1
       Text = '0'
       DataType = dtReal
@@ -88,7 +88,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 0
       Text = '0'
       DataType = dtReal
@@ -101,7 +101,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 3
       Text = '0'
       DataType = dtReal
@@ -114,7 +114,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 2
       Text = '0'
       DataType = dtReal
@@ -127,7 +127,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 4
       Text = '0'
       DataType = dtReal
@@ -140,7 +140,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 0
+      ItemHeight = 18
       TabOrder = 5
       Text = '0'
       DataType = dtReal
@@ -237,6 +237,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
     FixedCols = 1
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
     TabOrder = 1
+    AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False
     AutoIncreaseRowCount = False

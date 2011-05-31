@@ -40,8 +40,8 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       Kind = bkCancel
     end
     object btnOK: TBitBtn
-      Left = 551
-      Top = 4
+      Left = 552
+      Top = 6
       Width = 115
       Height = 33
       Anchors = [akTop, akRight]
@@ -90,10 +90,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         781
         472)
@@ -365,6 +361,15 @@ inherited frmImportShapeFile: TfrmImportShapeFile
         TabOrder = 16
         OnClick = btnElevFormulaEdit
       end
+      object memoMultipleParts: TMemo
+        Left = 407
+        Top = 181
+        Width = 371
+        Height = 114
+        Anchors = [akLeft, akTop, akRight]
+        ScrollBars = ssVertical
+        TabOrder = 17
+      end
     end
     object tabData: TTabSheet
       Caption = 'Data'
@@ -428,6 +433,8 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           OnDrawCell = dgFieldsDrawCell
           OnSelectCell = dgFieldsSelectCell
           OnSetEditText = dgFieldsSetEditText
+          ExtendedAutoDistributeText = False
+          AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False
           AutoIncreaseRowCount = False
@@ -527,10 +534,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       Caption = 'Features'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlBoundaryCondition: TPanel
         Left = 0
         Top = 0
@@ -609,6 +612,8 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           RowCount = 2
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goTabs, goAlwaysShowEditor]
           TabOrder = 1
+          ExtendedAutoDistributeText = False
+          AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False
           AutoIncreaseRowCount = True
@@ -709,7 +714,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
           Top = 217
           Width = 779
           Height = 254
-          ActivePage = jvspModflowSFR
+          ActivePage = jvspPhastWell
           PropagateEnable = False
           Align = alBottom
           object jvspNone: TJvStandardPage
@@ -1011,6 +1016,8 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowMoving, goEditing, goTabs, goAlwaysShowEditor]
               ParentFont = False
               TabOrder = 1
+              ExtendedAutoDistributeText = False
+              AutoMultiEdit = True
               AutoDistributeText = True
               AutoIncreaseColCount = False
               AutoIncreaseRowCount = True
@@ -1432,9 +1439,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 Caption = 'tabDrtLocation'
                 ImageIndex = 2
                 TabVisible = False
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblDrtX: TLabel
                   Left = 3
                   Top = 7
@@ -1509,9 +1513,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
                 Caption = 'tabDrtCell'
                 ImageIndex = 3
                 TabVisible = False
-                ExplicitTop = 0
-                ExplicitWidth = 0
-                ExplicitHeight = 0
                 object lblDrtCol: TLabel
                   Left = 3
                   Top = 7
@@ -1740,7 +1741,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
               Top = 0
               Width = 779
               Height = 254
-              ActivePage = tabDischargeAdjustment
+              ActivePage = tabBasic
               Align = alClient
               TabOrder = 0
               object tabBasic: TTabSheet
@@ -2106,10 +2107,6 @@ inherited frmImportShapeFile: TfrmImportShapeFile
     object tabCoordinateConversion: TTabSheet
       Caption = 'Coordinate Conversion'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object imageUtmZones: TImage
         Left = 8
         Top = 96

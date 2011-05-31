@@ -25,7 +25,8 @@ type
     function Package: TModflowPackageSelection; override;
     function ParameterType: TParameterType; override;
     procedure WriteParameterCells(CellList: TValueCellList; NLST: Integer;
-      const VariableIdentifiers, DataSetIdentifier: string); override;
+      const VariableIdentifiers, DataSetIdentifier: string;
+      AssignmentMethod: TUpdateMethod); override;
     procedure WriteCell(Cell: TValueCell;
       const DataSetIdentifier, VariableIdentifiers: string); override;
     class function ObservationExtension: string; override;
@@ -72,7 +73,7 @@ end;
 
 function TModflowGHB_Writer.ObservationPackage: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.GbobPackage;
+  result := Model.ModflowPackages.GbobPackage;
 end;
 
 function TModflowGHB_Writer.ObsNameWarningString: string;
@@ -82,7 +83,7 @@ end;
 
 function TModflowGHB_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.GhbBoundary;
+  result := Model.ModflowPackages.GhbBoundary;
 end;
 
 function TModflowGHB_Writer.ParameterType: TParameterType;
@@ -97,7 +98,7 @@ var
   LocalLayer: integer;
 begin
   GHB_Cell := Cell as TGhb_Cell;
-  LocalLayer := PhastModel.LayerStructure.
+  LocalLayer := Model.
     DataSetLayerToModflowLayer(GHB_Cell.Layer);
   WriteInteger(LocalLayer);
   WriteInteger(GHB_Cell.Row+1);
@@ -156,7 +157,7 @@ const
   VariableIdentifiers = 'Condfact IFACE';
 begin
   WriteParameterDefinitions(DS3, DS3Instances, DS4A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot);
+    VariableIdentifiers, ErrorRoot, umAssign);
 end;
 
 procedure TModflowGHB_Writer.WriteDataSets5To7;
@@ -181,9 +182,9 @@ begin
   begin
     Exit
   end;
-  ShouldWriteFile := not PhastModel.PackageGeneratedExternally(StrGHB);
+  ShouldWriteFile := not Model.PackageGeneratedExternally(StrGHB);
   ShouldWriteObservationFile := ObservationPackage.IsSelected
-    and not PhastModel.PackageGeneratedExternally(StrGBOB);
+    and not Model.PackageGeneratedExternally(StrGBOB);
 
   if not ShouldWriteFile and not ShouldWriteObservationFile then
   begin
@@ -192,7 +193,7 @@ begin
   NameOfFile := FileName(AFileName);
   if ShouldWriteFile then
   begin
-    WriteToNameFile(StrGHB, PhastModel.UnitNumbers.UnitNumber(StrGHB),
+    WriteToNameFile(StrGHB, Model.UnitNumbers.UnitNumber(StrGHB),
       NameOfFile, foInput);
   end;
   if ShouldWriteFile or ShouldWriteObservationFile then
@@ -203,7 +204,7 @@ begin
     begin
       Exit;
     end;
-    ClearTimeLists;
+    ClearTimeLists(Model);
   end;
   if not ShouldWriteFile then
   begin
@@ -261,11 +262,12 @@ const
 begin
   WriteFluxObsFile(AFileName, StrIUGBOBSV, PackageAbbreviation,
     DataSet1Comment, DataSet2Comment, DataSet3Comment,
-    PhastModel.GhbObservations, Purpose);
+    Model.GhbObservations, Purpose);
 end;
 
 procedure TModflowGHB_Writer.WriteParameterCells(CellList: TValueCellList;
-  NLST: Integer; const VariableIdentifiers, DataSetIdentifier: string);
+  NLST: Integer; const VariableIdentifiers, DataSetIdentifier: string;
+  AssignmentMethod: TUpdateMethod);
 var
   Cell: TGhb_Cell;
   CellIndex: Integer;

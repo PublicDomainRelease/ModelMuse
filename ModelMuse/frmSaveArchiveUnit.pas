@@ -9,6 +9,7 @@ uses
 type
   TfrmSaveArchive = class(TCustomExtendedDialog)
     cbSaveArchive: TCheckBox;
+    cbSaveDataSetValues: TCheckBox;
     { Private declarations }
   public
     procedure SetSaveEnabled(enable: boolean);

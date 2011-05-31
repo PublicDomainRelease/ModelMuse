@@ -39,7 +39,7 @@
         </td>
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">The Discretization File &#160;is used to specify certain data used in all models. These include</text></para>
-          <list id="5" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
+          <list id="6" type="ol" listtype="decimal" formatstring="&#37;&#48;&#58;&#115;&#46;" format-charset="DEFAULT_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">the number of rows, columns and layers</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">the cell sizes</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">the presence of Quasi-3D confining beds</text></li>
@@ -52,7 +52,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Documentation</text></para>
         </td>
         <td>
-          <list id="6" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="weblink" href="http://pubs.er.usgs.gov/usgspubs/ofr/ofr200092" target="_blank" styleclass="Citation" translate="true">Harbaugh, A.W., Banta, E.R., Hill, M.C., and McDonald, M.G., 2000, MODFLOW-2000, the U.S. Geological Survey modular ground-water model -- User guide to modularization concepts and the Ground-Water Flow Process: U.S. Geological Survey Open-File Report 00-92, 121 p.</link></li>
             <li styleclass="Normal"><link displaytype="text" defaultstyle="true" type="filelink" href="Mf2k.txt" styleclass="Normal" translate="true">Mf2k.txt</link></li>
           </list>
@@ -63,9 +63,16 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Supported in</text></para>
         </td>
         <td>
-          <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2000</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-2005</text></li>
+          </list>
+          <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-LGR</text></li>
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-CFP</text></li>
+          </list>
+          <list id="16" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+            <li styleclass="Normal"><text styleclass="Normal" translate="true">MODFLOW-NWT</text></li>
           </list>
         </td>
       </tr>
@@ -130,11 +137,11 @@
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><anchor id="NCOL" styleclass="Normal"></anchor><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[NCOL]]></caption></toggle></para>
+                <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[NCOL]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">NCOL—is the number of columns in the model grid.</text></para>
+                      <para styleclass="Normal"><anchor id="NCOL" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">NCOL—is the number of columns in the model grid.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -150,8 +157,8 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><anchor id="ITMUNI" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">ITMUNI—indicates the time unit of model data, which must be consistent for all data values that involve time </text><text styleclass="New Materials" translate="true">except for certain variables in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DAFLOW" styleclass="New Materials" translate="true">DAFLOW</link><text styleclass="New Materials" translate="true"> package</text><text styleclass="Normal" translate="true">. For example, if years is the chosen time unit, stress-period length, time-step length, transmissivity, and so on, must all be expressed using years for their time units. Note that the program will still run even if “undefined” time units are specified because the fundamental equations used in MODFLOW do not require that the time unit be identified. But be sure to use consistent units for all input data even when ITMUNI indicates an undefined time unit. When the time unit is defined, MODFLOW uses it to print a table of elapsed simulation time:</text></para>
-                      <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <para styleclass="Normal"><anchor id="ITMUNI" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">ITMUNI—indicates the time unit of model data, which must be consistent for all data values that involve time</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000"/><text styleclass="Normal" translate="true">&#32;</text><text styleclass="New Materials" translate="true">except for certain variables in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DAFLOW" styleclass="New Materials" translate="true">DAFLOW</link><text styleclass="New Materials" translate="true"> package</text><conditional-text type="END"/><text styleclass="Normal" translate="true">. For example, if years is the chosen time unit, stress-period length, time-step length, transmissivity, and so on, must all be expressed using years for their time units. Note that the program will still run even if “undefined” time units are specified because the fundamental equations used in MODFLOW do not require that the time unit be identified. But be sure to use consistent units for all input data even when ITMUNI indicates an undefined time unit. When the time unit is defined, MODFLOW uses it to print a table of elapsed simulation time:</text></para>
+                      <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">0 - undefined</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1 - seconds</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">2 - minutes</text></li>
@@ -166,14 +173,14 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><anchor id="LENUNI" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">LENUNI—indicates the length unit of model data, which must be consistent for all data values that involve length </text><text styleclass="New Materials" translate="true">except for certain variables in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DAFLOW" styleclass="New Materials" translate="true">DAFLOW</link><text styleclass="New Materials" translate="true"> package</text><text styleclass="Normal" translate="true">. For example, if feet is the chosen length unit, grid spacing, head, hydraulic conductivity, water volumes, and so forth, must all be expressed using feet for their length units. Note that the program will still run even if “undefined” length units are specified because the fundamental equations used in MODFLOW do not require that the length unit be identified. But be sure to use consistent units for all input data even when LENUNI indicates an undefined length unit:</text></para>
-                      <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <para styleclass="Normal"><anchor id="LENUNI" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">LENUNI—indicates the length unit of model data, which must be consistent for all data values that involve length</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000"/><text styleclass="Normal" translate="true">&#32;</text><text styleclass="New Materials" translate="true">except for certain variables in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DAFLOW" styleclass="New Materials" translate="true">DAFLOW</link><text styleclass="New Materials" translate="true"> package</text><conditional-text type="END"/><text styleclass="Normal" translate="true">. For example, if feet is the chosen length unit, grid spacing, head, hydraulic conductivity, water volumes, and so forth, must all be expressed using feet for their length units. Note that the program will still run even if “undefined” length units are specified because the fundamental equations used in MODFLOW do not require that the length unit be identified. But be sure to use consistent units for all input data even when LENUNI indicates an undefined length unit:</text></para>
+                      <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">0 - undefined</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1 - feet</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">2 - meters</text></li>
-                        <li styleclass="Normal"><text styleclass="Normal" translate="true">3 - centimeters</text></li>
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">3 - centimeters</text><conditional-text type="IF" value="ALLMODELS,MODFLOW-2000"/></li>
                       </list>
-                      <para styleclass="Normal"><text styleclass="New Materials" translate="true">If using the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DAFLOW" styleclass="New Materials" translate="true">DAFLOW</link><text styleclass="New Materials" translate="true"> package, make LENUNI consistent with the value specified for IENG.</text></para>
+                      <para styleclass="Normal"><text styleclass="New Materials" translate="true">If using the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DAFLOW" styleclass="New Materials" translate="true">DAFLOW</link><text styleclass="New Materials" translate="true"> package, make LENUNI consistent with the value specified for </text><link displaytype="text" defaultstyle="true" type="topiclink" href="DAFLOW" anchor="IENG" styleclass="New Materials" translate="true">IENG</link><text styleclass="New Materials" translate="true">.</text><conditional-text type="END"/></para>
                     </td>
                   </tr>
                 </table></para>
@@ -272,7 +279,7 @@
           <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 7</text></para>
         </td>
         <td>
-          <para styleclass="Normal"><anchor id="PERLEN" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">PERLEN </text><anchor id="NSTP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">NSTP </text><anchor id="TSMULT" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">TSMULT </text><anchor id="Sstr" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Ss/tr</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">PERLEN NSTP TSMULT Ss/tr</text></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[<%EXPLANATIONOFVARIABLES%>]]></caption></toggle></para>
           <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
             <tr style="vertical-align:top">
@@ -281,7 +288,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">PERLEN—is the length of a stress period.</text></para>
+                      <para styleclass="Normal"><anchor id="PERLEN" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">PERLEN—is the length of a stress period.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -289,7 +296,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">NSTP—is the number of time steps in a stress period.</text></para>
+                      <para styleclass="Normal"><anchor id="NSTP" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">NSTP—is the number of time steps in a stress period.</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -297,7 +304,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">TSMULT—is the multiplier for the length of successive time steps. The length of a time step is calculated by multiplying the length of the previous time step by TSMULT. The length of the first time step, Dt1, is related to PERLEN, NSTP, and TSMULT by the relation</text></para>
+                      <para styleclass="Normal"><anchor id="TSMULT" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">TSMULT—is the multiplier for the length of successive time steps. The length of a time step is calculated by multiplying the length of the previous time step by TSMULT. The length of the first time step, Dt1, is related to PERLEN, NSTP, and TSMULT by the relation</text></para>
                       <para styleclass="Normal"></para>
                       <para styleclass="Normal" style="text-align:center;"><image src="TimeStepFormula.PNG" scale="100.00%" styleclass="Image Caption"><title translate="true">Time step formula</title></image></para>
                     </td>
@@ -307,7 +314,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table rowcount="1" colcount="1" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">Ss/tr—is a character variable that indicates if the stress period is transient or steady state. The only allowed options are “SS” and “TR”, but these are case insensitive.</text></para>
+                      <para styleclass="Normal"><anchor id="Sstr" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">Ss/tr—is a character variable that indicates if the stress period is transient or steady state. The only allowed options are “SS” and “TR”, but these are case insensitive.</text></para>
                     </td>
                   </tr>
                 </table></para>

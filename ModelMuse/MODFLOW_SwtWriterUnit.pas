@@ -84,7 +84,7 @@ end;
 
 function TModflowSWT_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.SwtPackage;
+  result := Model.ModflowPackages.SwtPackage;
 end;
 
 procedure TModflowSWT_Writer.RetrieveArrays;
@@ -104,7 +104,7 @@ var
   InitialCompactionDataArray: TDataArray;
   LayerIndex: Integer;
 begin
-  Layers := PhastModel.LayerStructure;
+  Layers := Model.LayerStructure;
   MFLayer_Group := 0;
   for GroupIndex := 1 to Layers.Count - 1 do
   begin
@@ -114,43 +114,43 @@ begin
       for SubsidenceIndex := 0 to Group.WaterTableLayers.Count - 1 do
       begin
         WT_Item := Group.WaterTableLayers[SubsidenceIndex];
-        CompressibleThicknessDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        CompressibleThicknessDataArray := Model.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableCompressibleThicknessDataArrayName);
         Assert(CompressibleThicknessDataArray <> nil);
 
-        InitialElasticSkeletalSpecificStorageDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        InitialElasticSkeletalSpecificStorageDataArray := Model.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableInitialElasticSkeletalSpecificStorageDataArrayName);
         if FSwtPackage.CompressionSource = csSpecificStorage then
         begin
           Assert(InitialElasticSkeletalSpecificStorageDataArray <> nil);
         end;
 
-        InitialInelasticSkeletalSpecificStorageDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        InitialInelasticSkeletalSpecificStorageDataArray := Model.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableInitialInelasticSkeletalSpecificStorageDataArrayName);
         if FSwtPackage.CompressionSource = csSpecificStorage then
         begin
           Assert(InitialInelasticSkeletalSpecificStorageDataArray <> nil);
         end;
 
-        RecompressionIndexDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        RecompressionIndexDataArray := Model.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableRecompressionIndexDataArrayName);
         if FSwtPackage.CompressionSource = csCompressionReComp then
         begin
           Assert(RecompressionIndexDataArray <> nil);
         end;
 
-        CompressionIndexDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        CompressionIndexDataArray := Model.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableCompressionIndexDataArrayName);
         if FSwtPackage.CompressionSource = csCompressionReComp then
         begin
           Assert(CompressionIndexDataArray <> nil);
         end;
 
-        InitialVoidRatioDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        InitialVoidRatioDataArray := Model.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableInitialVoidRatioDataArrayName);
         Assert(InitialVoidRatioDataArray <> nil);
 
-        InitialCompactionDataArray := PhastModel.DataArrayManager.GetDataSetByName(
+        InitialCompactionDataArray := Model.DataArrayManager.GetDataSetByName(
           WT_Item.WaterTableInitialCompactionDataArrayName);
         Assert(InitialCompactionDataArray <> nil);
 
@@ -218,7 +218,7 @@ var
 begin
   GetFlowUnitNumber(ISWTCB);
   ISWTOC := FSwtPackage.PrintChoices.Count;
-  NSYSTM := PhastModel.LayerStructure.WaterTableCount;
+  NSYSTM := Model.LayerStructure.WaterTableCount;
   ITHK := Ord(FSwtPackage.ThickResponse);
   IVOID := Ord(FSwtPackage.VoidRatioResponse);
   ISTPCS := Ord(FSwtPackage.PreconsolidationSource);
@@ -239,15 +239,33 @@ procedure TModflowSWT_Writer.WriteDataSet14;
 var
   DataArray: TDataArray;
   MFLayerIndex: Integer;
-  GroupIndex: Integer;
-  Group: TLayerGroup;
+//  GroupIndex: Integer;
+//  Group: TLayerGroup;
   LayerIndex: Integer;
   ArrayIndex: Integer;
 begin
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrInitialPreOffsets);
+  DataArray := Model.DataArrayManager.GetDataSetByName(StrInitialPreOffsets);
 
   MFLayerIndex := 0;
-  for GroupIndex := 1 to PhastModel.LayerStructure.Count -1 do
+  for LayerIndex := 0 to Model.LayerCount - 1 do
+  begin
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+    if Model.IsLayerSimulated(LayerIndex) then
+    begin
+      Inc(MFLayerIndex);
+      ArrayIndex := Model.
+        ModflowLayerToDataSetLayer(MFLayerIndex);
+
+      WriteArray(DataArray, ArrayIndex,
+        'Data Set 14: PCSOFF, Layer ' + IntToStr(MFLayerIndex));
+    end;
+  end;
+
+{  for GroupIndex := 1 to Model.LayerStructure.Count -1 do
   begin
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -255,7 +273,7 @@ begin
       Exit;
     end;
 
-    Group := PhastModel.LayerStructure.LayerGroups[GroupIndex];
+    Group := Model.LayerStructure.LayerGroups[GroupIndex];
     if Group.Simulated then
     begin
       for LayerIndex := 0 to Group.ModflowLayerCount -1 do
@@ -267,31 +285,50 @@ begin
         end;
 
         Inc(MFLayerIndex);
-        ArrayIndex := PhastModel.LayerStructure.
+        ArrayIndex := Model.
           ModflowLayerToDataSetLayer(MFLayerIndex);
 
         WriteArray(DataArray, ArrayIndex,
           'Data Set 14: PCSOFF, Layer ' + IntToStr(MFLayerIndex));
       end;
     end;
-  end;
-  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
-  PhastModel.DataArrayManager.CacheDataArrays;
+  end;  }
+  Model.DataArrayManager.AddDataSetToCache(DataArray);
+  Model.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSWT_Writer.WriteDataSet15;
 var
   DataArray: TDataArray;
   MFLayerIndex: Integer;
-  GroupIndex: Integer;
-  Group: TLayerGroup;
+//  GroupIndex: Integer;
+//  Group: TLayerGroup;
   LayerIndex: Integer;
   ArrayIndex: Integer;
 begin
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrInitialPreconsolida);
+  DataArray := Model.DataArrayManager.GetDataSetByName(StrInitialPreconsolida);
 
   MFLayerIndex := 0;
-  for GroupIndex := 1 to PhastModel.LayerStructure.Count -1 do
+  for LayerIndex := 0 to Model.LayerCount - 1 do
+  begin
+    Application.ProcessMessages;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+    if Model.IsLayerSimulated(LayerIndex) then
+    begin
+      Inc(MFLayerIndex);
+      ArrayIndex := Model.
+        ModflowLayerToDataSetLayer(MFLayerIndex);
+
+      WriteArray(DataArray, ArrayIndex,
+        'Data Set 15: PCS, Layer ' + IntToStr(MFLayerIndex));
+    end;
+  end;
+
+
+{  for GroupIndex := 1 to Model.LayerStructure.Count -1 do
   begin
     Application.ProcessMessages;
     if not frmProgressMM.ShouldContinue then
@@ -299,7 +336,7 @@ begin
       Exit;
     end;
 
-    Group := PhastModel.LayerStructure.LayerGroups[GroupIndex];
+    Group := Model.LayerStructure.LayerGroups[GroupIndex];
     if Group.Simulated then
     begin
       for LayerIndex := 0 to Group.ModflowLayerCount -1 do
@@ -311,16 +348,16 @@ begin
         end;
 
         Inc(MFLayerIndex);
-        ArrayIndex := PhastModel.LayerStructure.
+        ArrayIndex := Model.
           ModflowLayerToDataSetLayer(MFLayerIndex);
 
         WriteArray(DataArray, ArrayIndex,
           'Data Set 15: PCS, Layer ' + IntToStr(MFLayerIndex));
       end;
     end;
-  end;
-  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
-  PhastModel.DataArrayManager.CacheDataArrays;
+  end;  }
+  Model.DataArrayManager.AddDataSetToCache(DataArray);
+  Model.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSWT_Writer.WriteDataSet16;
@@ -371,7 +408,7 @@ var
   Iun13: Integer;
   function GetCombinedUnitNumber: integer;
   begin
-    result := PhastModel.UnitNumbers.UnitNumber(StrSwtSUB_Out);
+    result := Model.UnitNumbers.UnitNumber(StrSwtSUB_Out);
     if SwtFileName = '' then
     begin
       SwtFileName := ExtractFileName(ChangeFileExt(FNameOfFile, StrSwtOut));
@@ -393,7 +430,7 @@ var
           end;
         sbocMultipleFiles:
           begin
-            result := PhastModel.UnitNumbers.UnitNumber(Key);
+            result := Model.UnitNumbers.UnitNumber(Key);
             AFileName := ExtractFileName(ChangeFileExt(FNameOfFile, Extension));
             WriteToNameFile(StrDATABINARY, result, AFileName, foOutput);
           end
@@ -609,7 +646,7 @@ var
 begin
   if FLNWT.Count = 0 then
   begin
-    frmErrorsAndWarnings.AddError('No SWT layers defined',
+    frmErrorsAndWarnings.AddError(Model, 'No SWT layers defined',
       'In the SWT package, no systems of interbeds have been defined '
         + 'in the MODFLOW Layer Groups dialog box.');
     Exit;
@@ -662,30 +699,30 @@ procedure TModflowSWT_Writer.WriteDataSet4;
 var
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrGeostaticStress);
+  DataArray := Model.DataArrayManager.GetDataSetByName(StrGeostaticStress);
   WriteArray(DataArray, 0, 'Data Set 4: GL0');
-  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
-  PhastModel.DataArrayManager.CacheDataArrays;
+  Model.DataArrayManager.AddDataSetToCache(DataArray);
+  Model.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSWT_Writer.WriteDataSet5;
 var
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrSpecificGravityUns);
+  DataArray := Model.DataArrayManager.GetDataSetByName(StrSpecificGravityUns);
   WriteArray(DataArray, 0, 'Data Set 5: SGM');
-  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
-  PhastModel.DataArrayManager.CacheDataArrays;
+  Model.DataArrayManager.AddDataSetToCache(DataArray);
+  Model.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSWT_Writer.WriteDataSet6;
 var
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(StrSpecificGravitySat);
+  DataArray := Model.DataArrayManager.GetDataSetByName(StrSpecificGravitySat);
   WriteArray(DataArray, 0, 'Data Set 6: SGS');
-  PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
-  PhastModel.DataArrayManager.CacheDataArrays;
+  Model.DataArrayManager.AddDataSetToCache(DataArray);
+  Model.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSWT_Writer.WriteDataSets7to13;
@@ -697,39 +734,39 @@ begin
   begin
     DataArray := FTHICK_List[Index];
     WriteArray(DataArray, 0, 'Data set 7: THICK');
-    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+    Model.DataArrayManager.AddDataSetToCache(DataArray);
 
     if FSwtPackage.CompressionSource = csSpecificStorage then
     begin
       DataArray := FSse_List[Index];
       WriteArray(DataArray, 0, 'Data set 8: Sse');
-      PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+      Model.DataArrayManager.AddDataSetToCache(DataArray);
 
       DataArray := FSsv_List[Index];
       WriteArray(DataArray, 0, 'Data set 9: Ssv');
-      PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+      Model.DataArrayManager.AddDataSetToCache(DataArray);
     end;
 
     if FSwtPackage.CompressionSource = csCompressionReComp then
     begin
       DataArray := FCr_List[Index];
       WriteArray(DataArray, 0, 'Data set 10: Cr');
-      PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+      Model.DataArrayManager.AddDataSetToCache(DataArray);
 
       DataArray := FCc_List[Index];
       WriteArray(DataArray, 0, 'Data set 11: Cc');
-      PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+      Model.DataArrayManager.AddDataSetToCache(DataArray);
     end;
 
     DataArray := FVOID_List[Index];
     WriteArray(DataArray, 0, 'Data set 12: VOID');
-    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+    Model.DataArrayManager.AddDataSetToCache(DataArray);
 
     DataArray := FSUB_List[Index];
     WriteArray(DataArray, 0, 'Data set 13: SUB');
-    PhastModel.DataArrayManager.AddDataSetToCache(DataArray);
+    Model.DataArrayManager.AddDataSetToCache(DataArray);
   end;
-  PhastModel.DataArrayManager.CacheDataArrays;
+  Model.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowSWT_Writer.WriteFile(const AFileName: string);
@@ -739,12 +776,12 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrSWT) then
+  if Model.PackageGeneratedExternally(StrSWT) then
   begin
     Exit;
   end;
   FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrSWT, PhastModel.UnitNumbers.UnitNumber(StrSWT),
+  WriteToNameFile(StrSWT, Model.UnitNumbers.UnitNumber(StrSWT),
     FNameOfFile, foInput);
   RetrieveArrays;
   OpenFile(FNameOfFile);

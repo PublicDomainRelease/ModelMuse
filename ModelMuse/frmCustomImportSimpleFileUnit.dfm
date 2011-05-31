@@ -32,7 +32,7 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
     Width = 551
     Height = 26
     Style = csDropDownList
-    ItemHeight = 0
+    ItemHeight = 18
     TabOrder = 0
     OnChange = comboDataSetsChange
   end
@@ -42,7 +42,7 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
     Width = 257
     Height = 26
     Style = csDropDownList
-    ItemHeight = 0
+    ItemHeight = 18
     TabOrder = 1
     OnChange = comboInterpolatorsChange
   end

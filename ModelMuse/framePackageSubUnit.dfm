@@ -296,9 +296,9 @@ inherited framePackageSub: TframePackageSub
         FixedCols = 0
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
         TabOrder = 1
-        OnMouseDown = rdgOutputMouseDown
         OnMouseUp = rdgOutputMouseUp
         OnSelectCell = rdgOutputSelectCell
+        AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = True

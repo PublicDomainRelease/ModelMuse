@@ -53,15 +53,11 @@ inherited frmTimeSeriesDisplay: TfrmTimeSeriesDisplay
     Top = 0
     Width = 466
     Height = 357
-    ActivePage = tabBasic
+    ActivePage = tabOptions
     Align = alClient
     TabOrder = 1
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         458
         324)
@@ -130,7 +126,7 @@ inherited frmTimeSeriesDisplay: TfrmTimeSeriesDisplay
         Width = 145
         Height = 26
         Style = csDropDownList
-        ItemHeight = 0
+        ItemHeight = 18
         TabOrder = 1
         OnChange = comboTimeToPlotChange
       end
@@ -226,10 +222,6 @@ inherited frmTimeSeriesDisplay: TfrmTimeSeriesDisplay
     object tabOptions: TTabSheet
       Caption = 'Options'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         458
         324)
@@ -282,6 +274,7 @@ inherited frmTimeSeriesDisplay: TfrmTimeSeriesDisplay
         TabOrder = 2
         OnSelectCell = rdgLimitsSelectCell
         OnSetEditText = rdgLimitsSetEditText
+        AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False

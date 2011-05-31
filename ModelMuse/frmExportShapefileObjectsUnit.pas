@@ -104,7 +104,7 @@ implementation
 
 uses frmCustomGoPhastUnit, ClassificationUnit, PhastModelUnit, FastGEO,
   ConvexHullUnit, GPC_Classes, gpc, RbwParser, StrUtils,
-  frmErrorsAndWarningsUnit, GIS_Functions;
+  frmErrorsAndWarningsUnit, GIS_Functions, ModelMuseUtilities, frmGoPhastUnit;
 
 const
   StrFormulaTruncatedTo = 'Formula truncated to 254 characters';
@@ -201,7 +201,7 @@ var
 //  ShapeFileWriter: TShapefileGeometryWriter;
 begin
   FShowWarning := False;
-  frmErrorsAndWarnings.RemoveWarningGroup(StrFormulaTruncatedTo);
+  frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel, StrFormulaTruncatedTo);
 
   try
     InitializeDataBase;
@@ -247,7 +247,6 @@ begin
   APoint := AScreenObject.Points[0];
   Shape.FPoints[0].X := APoint.x;
   Shape.FPoints[0].Y := APoint.y;
-  Shape.UpdateBoundingBox;
 end;
 
 procedure TfrmExportShapefileObjects.DefineMultipointGeometry(
@@ -291,7 +290,6 @@ begin
       Shape.FNumParts := PointPosition;
       SetLength(Shape.FPoints, PointPosition);
       SetLength(Shape.FParts, PointPosition);
-      Shape.UpdateBoundingBox;
     end;
   end
   else
@@ -323,7 +321,6 @@ begin
     Shape.FNumParts := PointPosition;
     SetLength(Shape.FPoints, PointPosition);
     SetLength(Shape.FParts, PointPosition);
-    Shape.UpdateBoundingBox;
   end;
 end;
 
@@ -357,7 +354,6 @@ begin
       end;
       Shape.FNumPoints := PointPosition;
       Assert(Length(Shape.FPoints) = PointPosition);
-      Shape.UpdateBoundingBox;
     end;
   end
   else
@@ -386,7 +382,6 @@ begin
     end;
     Shape.FNumPoints := PointPosition;
     Assert(Length(Shape.FPoints) = PointPosition);
-    Shape.UpdateBoundingBox;
   end;
 end;
 
@@ -416,7 +411,7 @@ begin
       AScreenObject.CopyPoints(InputPoints, 0,
         AScreenObject.SectionStart[SectionIndex], CopyCount);
       ConvexHull2(InputPoints, InputOrientation, OutputPoints);
-      PointPosition := -1;
+      PointPosition := 0;
       if InputOrientation = Clockwise then
       begin
         PointPosition := 0;
@@ -448,7 +443,6 @@ begin
         end;
       end;
 //      Assert(Length(Shape.FPoints) = PointPosition);
-      Shape.UpdateBoundingBox;
     end;
   end
   else
@@ -486,7 +480,6 @@ begin
       end;
     end;
     Shape.FNumPoints := AScreenObject.Count;
-    Shape.UpdateBoundingBox;
   end;
 end;
 
@@ -615,7 +608,6 @@ begin
     GpcPolygon.Free;
     EmptyPolygon.Free;
   end;
-  Shape.UpdateBoundingBox;
 end;
 
 procedure TfrmExportShapefileObjects.SetFieldType(DataArrayIndex: Integer);
@@ -721,6 +713,7 @@ begin
   begin
     SetLength(FieldName, MaximumFieldNameLength);
   end;
+  FieldName := FixShapeFileFieldName(FieldName);
   if FieldNames.IndexOf(FieldName) >= 0 then
   begin
     Root := FieldName;
@@ -733,6 +726,7 @@ begin
         SetLength(Root, MaximumFieldNameLength - Length(Suffix));
       end;
       FieldName := Root + Suffix;
+      FieldName := FixShapeFileFieldName(FieldName);
     until (FieldNames.IndexOf(FieldName) < 0);
   end;
   FFieldDefinitions[DataArrayIndex].FieldName := FieldName;
@@ -1058,7 +1052,7 @@ begin
               rdtDouble:
                 begin
                   FloatValue := ImportedValues.RealValues[SectionIndex];
-                  Formula := FloatToStr(FloatValue);
+                  Formula := FortranFloatToStr(FloatValue);
                 end;
               rdtInteger:
                 begin
@@ -1148,7 +1142,7 @@ begin
                 FFieldDefinitions[FieldIndex].FieldName, Formula);
               if Length(Formula) > 254 then
               begin
-                frmErrorsAndWarnings.AddWarning(
+                frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
                   StrFormulaTruncatedTo,
                   ' Data set = ' + DataArray.Name
                   + '; Object = ' + AScreenObject.Name);
@@ -1265,7 +1259,7 @@ begin
               FFieldDefinitions[FieldIndex].FieldName, Formula);
             if Length(Formula) > 254 then
             begin
-              frmErrorsAndWarnings.AddWarning(
+              frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel,
                 StrFormulaTruncatedTo,
                 ' Data set = ' + DataArray.Name
                 + '; Object = ' + AScreenObject.Name);

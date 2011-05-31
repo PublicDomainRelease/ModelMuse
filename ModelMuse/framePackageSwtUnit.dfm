@@ -308,7 +308,7 @@ inherited framePackageSwt: TframePackageSwt
         ExplicitTop = 252
       end
       object rdgInitialPrintChoices: TRbwDataGrid4
-        Left = 12
+        Left = 3
         Top = 3
         Width = 528
         Height = 161
@@ -319,6 +319,7 @@ inherited framePackageSwt: TframePackageSwt
         RowCount = 6
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
         TabOrder = 0
+        AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = False
@@ -417,9 +418,9 @@ inherited framePackageSwt: TframePackageSwt
         RowCount = 3
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
         TabOrder = 1
-        OnMouseDown = rdgOutputMouseDown
         OnMouseUp = rdgOutputMouseUp
         OnSelectCell = rdgOutputSelectCell
+        AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
         AutoIncreaseRowCount = True

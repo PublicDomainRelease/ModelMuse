@@ -68,8 +68,6 @@ type
     procedure sbAddRowClick(Sender: TObject);
     procedure sbInsertRowClick(Sender: TObject);
     procedure sbDeleteRowClick(Sender: TObject);
-    procedure rdgTimesMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure rgOutputModeClick(Sender: TObject);
     procedure rdgTimesBeforeDrawCell(Sender: TObject; ACol, ARow: Integer);
     procedure cbStopAfterMaxTimeClick(Sender: TObject);
@@ -273,20 +271,6 @@ begin
   inherited;
   seTimeCount.AsInteger := rdgTimes.RowCount-1;
   UpdateTimes;
-end;
-
-procedure TframeModpathSelection.rdgTimesMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    rdgTimes.Options := rdgTimes.Options + [goEditing];
-  end
-  else
-  begin
-    rdgTimes.Options := rdgTimes.Options - [goEditing];
-  end;
 end;
 
 procedure TframeModpathSelection.rgOutputModeClick(Sender: TObject);

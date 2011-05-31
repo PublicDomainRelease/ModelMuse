@@ -4,7 +4,7 @@ interface
 
 uses Windows, ZLib, SysUtils, Classes, Contnrs, OrderedCollectionUnit,
   ModflowBoundaryUnit, ModflowCellUnit, DataSetUnit, FormulaManagerUnit,
-  SubscriptionUnit;
+  SubscriptionUnit, GoPhastTypes;
 
 type
   TLakRecord = record
@@ -114,10 +114,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -137,19 +140,26 @@ type
     property WithdrawalAnnotation: string read GetWithdrawalAnnotation;
   end;
 
-
-  // @name represents MODFLOW lake boundaries
-  // for a series of time intervals.
-  TLakCollection = class(TCustomMF_ArrayBoundColl)
+  TLakTimeListLink = class(TTimeListsModelLink)
   private
-    // @name is used to compute the Elevations for a series of
-    // Drain Boundaries over a series of time intervals.
+    // @name is used to compute the stages for a series of
+    // lake Boundaries over a series of time intervals.
     FMinimumStageData: TModflowTimeList;
     FMaximumStageData: TModflowTimeList;
     FPrecipitationData: TModflowTimeList;
     FEvaporationData: TModflowTimeList;
     FOverlandRunoffData: TModflowTimeList;
     FWithdrawalData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
+
+  // @name represents MODFLOW lake boundaries
+  // for a series of time intervals.
+  TLakCollection = class(TCustomMF_ArrayBoundColl)
+  private
     procedure InvalidateMinStageData(Sender: TObject);
     procedure InvalidateMaxStageData(Sender: TObject);
     procedure InvalidatePrecipData(Sender: TObject);
@@ -157,13 +167,16 @@ type
     procedure InvalidateRunoffData(Sender: TObject);
     procedure InvalidateWithdrawalData(Sender: TObject);
   protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary; override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer); override;
+    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+      AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
     // TCustomMF_ArrayBoundColl.InitializeTimeLists)
-    procedure InitializeTimeLists(ListOfTimeLists: TList); override;
+    procedure InitializeTimeLists(ListOfTimeLists: TList;
+      AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
     class function ItemClass: TMF_BoundItemClass; override;
@@ -174,13 +187,6 @@ type
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
-  public
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
   end;
 
   TLakBoundary = class(TModflowBoundary)
@@ -208,13 +214,13 @@ type
     procedure SetGage4(const Value: boolean);
   protected
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-      ValueTimeList: TList); override;
+      ValueTimeList: TList; AModel: TBaseModel); override;
     class function BoundaryCollectionClass: TMF_BoundCollClass; override;
   public
     procedure Assign(Source: TPersistent); override;
-    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
-      override;
-    Constructor Create(Model, ScreenObject: TObject);
+    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel); override;
+    Constructor Create(Model: TBaseModel; ScreenObject: TObject);
     // @name destroys the current instance of @classname.  Do not call
     // @name directly.  Call Free instead.
     Destructor Destroy; override;
@@ -239,7 +245,7 @@ type
 implementation
 
 uses RbwParser, ScreenObjectUnit, PhastModelUnit, ModflowTimeUnit,
-  ModflowTransientListParameterUnit, TempFiles, GoPhastTypes, 
+  ModflowTransientListParameterUnit, TempFiles, 
   frmFormulaErrorsUnit, frmGoPhastUnit;
 
 const
@@ -347,7 +353,7 @@ begin
   except on E: ERbwParserError do
     begin
       LocalScreenObject := ScreenObject as TScreenObject;
-      frmFormulaErrors.AddError(LocalScreenObject.Name,
+      frmFormulaErrors.AddFormulaError(LocalScreenObject.Name,
         '(evaporation for the Lake package)',
         Evaporation, E.Message);
       Evaporation := '0.';
@@ -460,7 +466,7 @@ begin
   except on E: ERbwParserError do
     begin
       LocalScreenObject := ScreenObject as TScreenObject;
-      frmFormulaErrors.AddError(LocalScreenObject.Name,
+      frmFormulaErrors.AddFormulaError(LocalScreenObject.Name,
         '(precipitation for the Lake package)',
         Precipitation, E.Message);
       Precipitation := '0.';
@@ -495,7 +501,7 @@ begin
   except on E: ERbwParserError do
     begin
       LocalScreenObject := ScreenObject as TScreenObject;
-      frmFormulaErrors.AddError(LocalScreenObject.Name,
+      frmFormulaErrors.AddFormulaError(LocalScreenObject.Name,
         '(runoff for the Lake package)',
         OverlandRunoff, E.Message);
       OverlandRunoff := '0.';
@@ -570,7 +576,7 @@ begin
   except on E: ERbwParserError do
     begin
       LocalScreenObject := ScreenObject as TScreenObject;
-      frmFormulaErrors.AddError(LocalScreenObject.Name,
+      frmFormulaErrors.AddFormulaError(LocalScreenObject.Name,
         '(minimum stage for the Lake package)',
         MinimumStage, E.Message);
       MinimumStage := '0.';
@@ -588,7 +594,7 @@ begin
   except on E: ERbwParserError do
     begin
       LocalScreenObject := ScreenObject as TScreenObject;
-      frmFormulaErrors.AddError(LocalScreenObject.Name,
+      frmFormulaErrors.AddFormulaError(LocalScreenObject.Name,
         '(maximum stage for the Lake package)',
         MaximumStage, E.Message);
       MaximumStage := '0.';
@@ -606,7 +612,7 @@ begin
   except on E: ERbwParserError do
     begin
       LocalScreenObject := ScreenObject as TScreenObject;
-      frmFormulaErrors.AddError(LocalScreenObject.Name,
+      frmFormulaErrors.AddFormulaError(LocalScreenObject.Name,
         '(withdrawal for the Lake package)',
         Withdrawal, E.Message);
       Withdrawal := '0.';
@@ -639,13 +645,13 @@ begin
   result := Values.EvaporationAnnotation;
 end;
 
-function TLak_Cell.GetIntegerAnnotation(Index: integer): string;
+function TLak_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TLak_Cell.GetIntegerValue(Index: integer): integer;
+function TLak_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -696,7 +702,7 @@ begin
   result := Values.PrecipitationAnnotation;
 end;
 
-function TLak_Cell.GetRealAnnotation(Index: integer): string;
+function TLak_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -710,7 +716,7 @@ begin
   end;
 end;
 
-function TLak_Cell.GetRealValue(Index: integer): double;
+function TLak_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -757,6 +763,21 @@ begin
   StressPeriod := ReadCompInt(Decomp);
 end;
 
+procedure TLak_Cell.SetColumn(const Value: integer);
+begin
+  Values.Cell.Column := Value;
+end;
+
+procedure TLak_Cell.SetLayer(const Value: integer);
+begin
+  Values.Cell.Layer := Value;
+end;
+
+procedure TLak_Cell.SetRow(const Value: integer);
+begin
+  Values.Cell.Row := Value;
+end;
+
 { TLakCollection }
 
 procedure TLakCollection.AddSpecificBoundary;
@@ -765,7 +786,7 @@ begin
 end;
 
 procedure TLakCollection.AssignCellValues(DataSets: TList;
-  ItemIndex: Integer);
+  ItemIndex: Integer; AModel: TBaseModel);
 var
   MinimumStageArray: TDataArray;
   MaximumStageArray: TDataArray;
@@ -778,7 +799,7 @@ var
   RowIndex: Integer;
   ColIndex: Integer;
   BoundaryIndex: Integer;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
   LayerMin: Integer;
   RowMin: Integer;
   ColMin: Integer;
@@ -786,7 +807,7 @@ var
   RowMax: Integer;
   ColMax: Integer;
 begin
-  LocalModel := Model as TPhastModel;
+  LocalModel := AModel as TCustomModel;
   BoundaryIndex := 0;
   MinimumStageArray := DataSets[0];
   MaximumStageArray := DataSets[1];
@@ -801,7 +822,7 @@ begin
   begin
     for LayerIndex := LayerMin to LayerMax do
     begin
-      if LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+      if LocalModel.IsLayerSimulated(LayerIndex) then
       begin
         for RowIndex := RowMin to RowMax do
         begin
@@ -866,63 +887,13 @@ begin
   Boundary.CacheData;
 end;
 
-constructor TLakCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
+function TLakCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FMinimumStageData := TModflowTimeList.Create(Model, ScreenObject);
-  FMaximumStageData := TModflowTimeList.Create(Model, ScreenObject);
-  FPrecipitationData := TModflowTimeList.Create(Model, ScreenObject);
-  FEvaporationData := TModflowTimeList.Create(Model, ScreenObject);
-  FOverlandRunoffData := TModflowTimeList.Create(Model, ScreenObject);
-  FWithdrawalData := TModflowTimeList.Create(Model, ScreenObject);
-
-  FMinimumStageData.NonParamDescription := 'Minimum stage';
-  FMinimumStageData.ParamDescription := ' minimum stage';
-
-  FMaximumStageData.NonParamDescription := 'Maximum stage';
-  FMaximumStageData.ParamDescription := ' maximum stage';
-
-  FPrecipitationData.NonParamDescription := 'Precipitaton';
-  FPrecipitationData.ParamDescription := ' precipitaton';
-
-  FEvaporationData.NonParamDescription := 'Evaporation';
-  FEvaporationData.ParamDescription := ' evaporation';
-
-  FOverlandRunoffData.NonParamDescription := 'Overland runoff';
-  FOverlandRunoffData.ParamDescription := ' overland runoff';
-  
-  FWithdrawalData.NonParamDescription := 'Withdrawal';
-  FWithdrawalData.ParamDescription := ' withdrawal';
-
-  FMinimumStageData.DataType := rdtDouble;
-  FMaximumStageData.DataType := rdtDouble;
-  FPrecipitationData.DataType := rdtDouble;
-  FEvaporationData.DataType := rdtDouble;
-  FOverlandRunoffData.DataType := rdtDouble;
-  FWithdrawalData.DataType := rdtDouble;
-
-  AddTimeList(FMinimumStageData);
-  AddTimeList(FMaximumStageData);
-  AddTimeList(FPrecipitationData);
-  AddTimeList(FEvaporationData);
-  AddTimeList(FOverlandRunoffData);
-  AddTimeList(FWithdrawalData);
+  result := TLakTimeListLink;
 end;
 
-destructor TLakCollection.Destroy;
-begin
-  FMinimumStageData.Free;
-  FMaximumStageData.Free;
-  FPrecipitationData.Free;
-  FEvaporationData.Free;
-  FOverlandRunoffData.Free;
-  FWithdrawalData.Free;
-
-  inherited;
-end;
-
-procedure TLakCollection.InitializeTimeLists(ListOfTimeLists: TList);
+procedure TLakCollection.InitializeTimeLists(ListOfTimeLists: TList;
+  AModel: TBaseModel);
 var
   TimeIndex: Integer;
   BoundaryValues: TBoundaryValueArray;
@@ -930,6 +901,13 @@ var
   Item: TLakItem;
   Boundary: TLakBoundary;
   ScreenObject: TScreenObject;
+  ALink: TLakTimeListLink;
+  MinimumStageData: TModflowTimeList;
+  MaximumStageData: TModflowTimeList;
+  PrecipitationData: TModflowTimeList;
+  EvaporationData: TModflowTimeList;
+  OverlandRunoffData: TModflowTimeList;
+  WithdrawalData: TModflowTimeList;
 begin
   Boundary := BoundaryGroup as TLakBoundary;
   ScreenObject := Boundary.ScreenObject as TScreenObject;
@@ -940,7 +918,9 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := Item.MinimumStage;
   end;
-  FMinimumStageData.Initialize(BoundaryValues, ScreenObject);
+  ALink := TimeListLink.GetLink(AModel) as TLakTimeListLink;
+  MinimumStageData := ALink.FMinimumStageData;
+  MinimumStageData.Initialize(BoundaryValues, ScreenObject, False);
 
   for Index := 0 to Count - 1 do
   begin
@@ -948,7 +928,8 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := Item.MaximumStage;
   end;
-  FMaximumStageData.Initialize(BoundaryValues, ScreenObject);
+  MaximumStageData := ALink.FMaximumStageData;
+  MaximumStageData.Initialize(BoundaryValues, ScreenObject, False);
 
   for Index := 0 to Count - 1 do
   begin
@@ -956,7 +937,8 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := Item.Precipitation;
   end;
-  FPrecipitationData.Initialize(BoundaryValues, ScreenObject);
+  PrecipitationData := ALink.FPrecipitationData;
+  PrecipitationData.Initialize(BoundaryValues, ScreenObject, False);
 
   for Index := 0 to Count - 1 do
   begin
@@ -964,7 +946,8 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := Item.Evaporation;
   end;
-  FEvaporationData.Initialize(BoundaryValues, ScreenObject);
+  EvaporationData := ALink.FEvaporationData;
+  EvaporationData.Initialize(BoundaryValues, ScreenObject, False);
 
   for Index := 0 to Count - 1 do
   begin
@@ -972,7 +955,8 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := Item.OverlandRunoff;
   end;
-  FOverlandRunoffData.Initialize(BoundaryValues, ScreenObject);
+  OverlandRunoffData := ALink.FOverlandRunoffData;
+  OverlandRunoffData.Initialize(BoundaryValues, ScreenObject, False);
 
   for Index := 0 to Count - 1 do
   begin
@@ -980,75 +964,154 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := Item.Withdrawal;
   end;
-  FWithdrawalData.Initialize(BoundaryValues, ScreenObject);
+  WithdrawalData := ALink.FWithdrawalData;
+  WithdrawalData.Initialize(BoundaryValues, ScreenObject, False);
 
-  Assert(FMinimumStageData.Count = Count);
-  Assert(FMaximumStageData.Count = Count);
-  Assert(FPrecipitationData.Count = Count);
-  Assert(FEvaporationData.Count = Count);
-  Assert(FOverlandRunoffData.Count = Count);
-  Assert(FWithdrawalData.Count = Count);
+  Assert(MinimumStageData.Count = Count);
+  Assert(MaximumStageData.Count = Count);
+  Assert(PrecipitationData.Count = Count);
+  Assert(EvaporationData.Count = Count);
+  Assert(OverlandRunoffData.Count = Count);
+  Assert(WithdrawalData.Count = Count);
 
   ClearBoundaries;
-  SetBoundaryCapacity(FMinimumStageData.Count);
-  for TimeIndex := 0 to FMinimumStageData.Count - 1 do
+  SetBoundaryCapacity(MinimumStageData.Count);
+  for TimeIndex := 0 to MinimumStageData.Count - 1 do
   begin
     AddBoundary(TLakStorage.Create);
   end;
 
-  ListOfTimeLists.Add(FMinimumStageData);
-  ListOfTimeLists.Add(FMaximumStageData);
-  ListOfTimeLists.Add(FPrecipitationData);
-  ListOfTimeLists.Add(FEvaporationData);
-  ListOfTimeLists.Add(FOverlandRunoffData);
-  ListOfTimeLists.Add(FWithdrawalData);
+  ListOfTimeLists.Add(MinimumStageData);
+  ListOfTimeLists.Add(MaximumStageData);
+  ListOfTimeLists.Add(PrecipitationData);
+  ListOfTimeLists.Add(EvaporationData);
+  ListOfTimeLists.Add(OverlandRunoffData);
+  ListOfTimeLists.Add(WithdrawalData);
 end;
 
 procedure TLakCollection.InvalidateEvapData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TLakTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FEvaporationData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TLakTimeListLink;
+    Link.FEvaporationData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TLakTimeListLink;
+      Link.FEvaporationData.Invalidate;
+    end;
   end;
 end;
 
 procedure TLakCollection.InvalidateMaxStageData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TLakTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FMaximumStageData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TLakTimeListLink;
+    Link.FMaximumStageData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TLakTimeListLink;
+      Link.FMaximumStageData.Invalidate;
+    end;
   end;
 end;
 
 procedure TLakCollection.InvalidateMinStageData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TLakTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FMinimumStageData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TLakTimeListLink;
+    Link.FMinimumStageData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TLakTimeListLink;
+      Link.FMinimumStageData.Invalidate;
+    end;
   end;
 end;
 
 procedure TLakCollection.InvalidatePrecipData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TLakTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FPrecipitationData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TLakTimeListLink;
+    Link.FPrecipitationData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TLakTimeListLink;
+      Link.FPrecipitationData.Invalidate;
+    end;
   end;
 end;
 
 procedure TLakCollection.InvalidateRunoffData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TLakTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FOverlandRunoffData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TLakTimeListLink;
+    Link.FOverlandRunoffData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TLakTimeListLink;
+      Link.FOverlandRunoffData.Invalidate;
+    end;
   end;
 end;
 
 procedure TLakCollection.InvalidateWithdrawalData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TLakTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FWithdrawalData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TLakTimeListLink;
+    Link.FWithdrawalData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TLakTimeListLink;
+      Link.FWithdrawalData.Invalidate;
+    end;
   end;
 end;
 
@@ -1092,7 +1155,7 @@ begin
 end;
 
 procedure TLakBoundary.AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-  ValueTimeList: TList);
+  ValueTimeList: TList; AModel: TBaseModel);
 var
   Cell: TLak_Cell;
   BoundaryValues: TLakRecord;
@@ -1101,10 +1164,12 @@ var
   TimeIndex: Integer;
   Cells: TValueCellList;
   LocalBoundaryStorage: TLakStorage;
+  LocalModel: TCustomModel;
 begin
+  LocalModel := AModel as TCustomModel;
   LocalBoundaryStorage := BoundaryStorage as TLakStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    LocalModel.ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -1115,12 +1180,16 @@ begin
       Cells := TValueCellList.Create(TLak_Cell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
+      if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.LakArray) then
+      begin
+        Cells.Capacity := Cells.Count + Length(LocalBoundaryStorage.LakArray)
+      end;
 //      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.LakArray) - 1 do
       begin
@@ -1129,6 +1198,7 @@ begin
         Cells.Add(Cell);
         Cell.StressPeriod := TimeIndex;
         Cell.Values := BoundaryValues;
+        LocalModel.AdjustCellPosition(Cell);
       end;
       Cells.Cache;
     end;
@@ -1146,7 +1216,7 @@ begin
   FSubLakes.Clear;
 end;
 
-constructor TLakBoundary.Create(Model, ScreenObject: TObject);
+constructor TLakBoundary.Create(Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited;
   FSubLakes:= TList.Create;
@@ -1164,18 +1234,18 @@ begin
 end;
 
 procedure TLakBoundary.GetCellValues(ValueTimeList: TList;
-  ParamList: TStringList);
+  ParamList: TStringList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TLakStorage;
 begin
-  EvaluateArrayBoundaries;
+  EvaluateArrayBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
     if ValueIndex < Values.BoundaryCount then
     begin
       BoundaryStorage := Values.Boundaries[ValueIndex] as TLakStorage;
-      AssignCells(BoundaryStorage, ValueTimeList);
+      AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;
 end;
@@ -1263,9 +1333,9 @@ begin
     InvalidateModel;
     if (ScreenObject <> nil)
         and (ScreenObject as TScreenObject).CanInvalidateModel
-        and (PhastModel <> nil) then
+        and (ParentModel <> nil) then
     begin
-      (PhastModel as TPhastModel).DischargeRoutingUpdate;
+      (ParentModel as TPhastModel).DischargeRoutingUpdate;
     end;
   end;
 end;
@@ -1408,6 +1478,54 @@ begin
     RestoreData;
   end;
   result := FLakArray;
+end;
+
+{ TLakTimeListLink }
+
+procedure TLakTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  FMinimumStageData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FMaximumStageData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FPrecipitationData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FEvaporationData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FOverlandRunoffData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FWithdrawalData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FMinimumStageData.NonParamDescription := 'Minimum stage';
+  FMinimumStageData.ParamDescription := ' minimum stage';
+  FMaximumStageData.NonParamDescription := 'Maximum stage';
+  FMaximumStageData.ParamDescription := ' maximum stage';
+  FPrecipitationData.NonParamDescription := 'Precipitaton';
+  FPrecipitationData.ParamDescription := ' precipitaton';
+  FEvaporationData.NonParamDescription := 'Evaporation';
+  FEvaporationData.ParamDescription := ' evaporation';
+  FOverlandRunoffData.NonParamDescription := 'Overland runoff';
+  FOverlandRunoffData.ParamDescription := ' overland runoff';
+  FWithdrawalData.NonParamDescription := 'Withdrawal';
+  FWithdrawalData.ParamDescription := ' withdrawal';
+  FMinimumStageData.DataType := rdtDouble;
+  FMaximumStageData.DataType := rdtDouble;
+  FPrecipitationData.DataType := rdtDouble;
+  FEvaporationData.DataType := rdtDouble;
+  FOverlandRunoffData.DataType := rdtDouble;
+  FWithdrawalData.DataType := rdtDouble;
+  AddTimeList(FMinimumStageData);
+  AddTimeList(FMaximumStageData);
+  AddTimeList(FPrecipitationData);
+  AddTimeList(FEvaporationData);
+  AddTimeList(FOverlandRunoffData);
+  AddTimeList(FWithdrawalData);
+end;
+
+destructor TLakTimeListLink.Destroy;
+begin
+  FMinimumStageData.Free;
+  FMaximumStageData.Free;
+  FPrecipitationData.Free;
+  FEvaporationData.Free;
+  FOverlandRunoffData.Free;
+  FWithdrawalData.Free;
+  inherited;
 end;
 
 end.

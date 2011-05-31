@@ -39,7 +39,7 @@ type
 implementation
 
 uses RbwParser, ModflowUnitNumbers, DataSetUnit, PhastModelUnit, ModflowResUnit,
-  ModflowTimeUnit, frmProgressUnit, frmFormulaErrorsUnit, Forms;
+  ModflowTimeUnit, frmProgressUnit, frmFormulaErrorsUnit, Forms, GoPhastTypes;
 
 { TModflowRES_Writer }
 
@@ -55,16 +55,21 @@ var
 begin
   frmProgressMM.AddMessage('Evaluating RES Package data.');
   NRES := 0;
-  for Index := 0 to PhastModel.ScreenObjectCount - 1 do
+  for Index := 0 to Model.ScreenObjectCount - 1 do
   begin
-    AScreenObject := PhastModel.ScreenObjects[Index];
+    AScreenObject := Model.ScreenObjects[Index];
     if AScreenObject.Deleted then
+    begin
+      Continue;
+    end;
+    if not AScreenObject.UsedModels.UsesModel(Model) then
     begin
       Continue;
     end;
     if (AScreenObject.ModflowResBoundary <> nil)
       and AScreenObject.ModflowResBoundary.Used then
     begin
+      Assert(AScreenObject.ViewDirection = vdTop);
       Inc(NRES);
       AScreenObject.ModflowResBoundary.ResId := NRES;
     end;
@@ -85,7 +90,7 @@ end;
 
 function TModflowRES_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.ResPackage;
+  result := Model.ModflowPackages.ResPackage;
 end;
 
 function TModflowRES_Writer.ParameterType: TParameterType;
@@ -112,7 +117,7 @@ begin
   DataTypeIndex := 0;
   Comment := DataSetIdentifier + ' ' + VariableIdentifiers;
   WriteTransient2DArray(Comment, DataTypeIndex, DataType,
-    DefaultValue, CellList, Dummy);
+    DefaultValue, CellList, umAssign, False, Dummy);
 end;
 
 procedure TModflowRES_Writer.WriteDataSet1;
@@ -120,12 +125,12 @@ var
   IRESCB, IRESPT, NPTS: integer;
 begin
   GetFlowUnitNumber(IRESCB);
-  case PhastModel.ModflowPackages.ResPackage.LayerOption of
+  case Model.ModflowPackages.ResPackage.LayerOption of
     loTop: NRESOP := 1;
     loSpecified: NRESOP := 2;
     loTopActive: NRESOP := 3;
   end;
-  if PhastModel.ModflowPackages.ResPackage.PrintStage then
+  if Model.ModflowPackages.ResPackage.PrintStage then
   begin
     IRESPT := 1;
   end
@@ -133,7 +138,7 @@ begin
   begin
     IRESPT := 0;
   end;
-  NPTS := PhastModel.ModflowPackages.ResPackage.TableStages;
+  NPTS := Model.ModflowPackages.ResPackage.TableStages;
 
   WriteString(FixedFormattedInteger(NRES, 10));
   WriteString(FixedFormattedInteger(IRESCB, 10));
@@ -163,7 +168,7 @@ var
 begin
   if NRESOP = 2 then
   begin
-    DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsResLayer);
+    DataArray := Model.DataArrayManager.GetDataSetByName(rsResLayer);
     Assert(DataArray <> nil);
 //    DataArray := PhastModel.DataSets[ArrayIndex];
     WriteArray(DataArray, 0, ' # Data Set 3: IRESL');
@@ -175,7 +180,7 @@ var
   DataArray: TDataArray;
 //  ArrayIndex: integer;
 begin
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsResBottom);
+  DataArray := Model.DataArrayManager.GetDataSetByName(rsResBottom);
   Assert(DataArray <> nil);
 //  DataArray := PhastModel.DataSets[ArrayIndex];
   WriteArray(DataArray, 0, ' # Data Set 4: BRES');
@@ -186,7 +191,7 @@ var
   DataArray: TDataArray;
 //  ArrayIndex: integer;
 begin
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsResKv);
+  DataArray := Model.DataArrayManager.GetDataSetByName(rsResKv);
   Assert(DataArray <> nil);
 //  DataArray := PhastModel.DataSets[ArrayIndex];
   WriteArray(DataArray, 0, ' # Data Set 5: HCres');
@@ -197,7 +202,7 @@ var
   DataArray: TDataArray;
 //  ArrayIndex: integer;
 begin
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsResBedThickness);
+  DataArray := Model.DataArrayManager.GetDataSetByName(rsResBedThickness);
   Assert(DataArray <> nil);
 //  DataArray := PhastModel.DataSets[ArrayIndex];
   WriteArray(DataArray, 0, ' # Data Set 6: Rbthck');
@@ -223,32 +228,32 @@ var
   Expression: TExpression;
   ScreenObject: TScreenObject;
 begin
-  Compiler := PhastModel.rpThreeDFormulaCompiler;
+  Compiler := Model.rpThreeDFormulaCompiler;
 
   Reservoirs := TList.Create;
   try
-    for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+    for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
     begin
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
-      AScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+      AScreenObject := Model.ScreenObjects[ScreenObjectIndex];
       if (AScreenObject.ModflowResBoundary <> nil)
         and AScreenObject.ModflowResBoundary.Used then
       begin
         Reservoirs.Add(AScreenObject.ModflowResBoundary);
       end;
     end;
-    for Index := 0 to PhastModel.ModflowFullStressPeriods.Count - 1 do
+    for Index := 0 to Model.ModflowFullStressPeriods.Count - 1 do
     begin
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
       begin
         Exit;
       end;
-      Item := PhastModel.ModflowFullStressPeriods.Items[Index];
+      Item := Model.ModflowFullStressPeriods.Items[Index];
       for ReservoirIndex := 0 to Reservoirs.Count - 1 do
       begin
         Application.ProcessMessages;
@@ -268,8 +273,8 @@ begin
         except on E: ERbwParserError do
           begin
             ScreenObject := Reservoir.ScreenObject as TScreenObject;
-            frmFormulaErrors.AddError(ScreenObject.Name,
-              '(Ending head for the '#13#10
+            frmFormulaErrors.AddFormulaError(ScreenObject.Name,
+              '(Ending head for the ' + sLineBreak
               + Package.PackageIdentifier + ')',
               TempFormula, E.Message);
 
@@ -301,8 +306,8 @@ begin
           except on E: ERbwParserError do
             begin
               ScreenObject := Reservoir.ScreenObject as TScreenObject;
-              frmFormulaErrors.AddError(ScreenObject.Name,
-                '(Starting head for the '#13#10
+              frmFormulaErrors.AddFormulaError(ScreenObject.Name,
+                '(Starting head for the ' + sLineBreak
                 + Package.PackageIdentifier + ')',
               TempFormula, E.Message);
 
@@ -323,8 +328,8 @@ begin
           except on E: ERbwParserError do
             begin
               ScreenObject := Reservoir.ScreenObject as TScreenObject;
-              frmFormulaErrors.AddError(ScreenObject.Name,
-                '(Ending head for the '#13#10
+              frmFormulaErrors.AddFormulaError(ScreenObject.Name,
+                '(Ending head for the ' + sLineBreak
                 + Package.PackageIdentifier + ')',
               TempFormula, E.Message);
 
@@ -393,19 +398,19 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrRES) then
+  if Model.PackageGeneratedExternally(StrRES) then
   begin
     Exit;
   end;
   NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrRES, PhastModel.UnitNumbers.UnitNumber(StrRES), NameOfFile, foInput);
+  WriteToNameFile(StrRES, Model.UnitNumbers.UnitNumber(StrRES), NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
   begin
     Exit;
   end;
-  ClearTimeLists;
+  ClearTimeLists(Model);
   OpenFile(FileName(AFileName));
   try
 //    WriteDataSet0;

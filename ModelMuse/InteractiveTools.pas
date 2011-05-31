@@ -417,6 +417,8 @@ Consider creating descendants that each only handle one view of the model. }
     FShift: TShiftState;
     FViewDirection: TViewDirection;
     FVisibleVertices: TRbwQuadTree;
+    // @name contains @link(TScreenPointStorage)s.
+    // @name is created and filled in @link(StorePointsOfOtherObjects).
     FStoredPoints: TList;
     // Store the screen coordinates of visible objects.
     procedure StorePointsOfOtherObjects(ScreenObject: TScreenObject);
@@ -463,6 +465,7 @@ Consider creating descendants that each only handle one view of the model. }
     // @name is used to set the default values for the elevation formulas
     // when creating a @link(TScreenObject).
     procedure SetDefaultElevationFormulas;
+    function ShouldClosePolygon(X, Y: integer): boolean; virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -578,12 +581,15 @@ Consider creating descendants that each only handle one view of the model. }
   {@abstract(@name is used to create a line or polygon @link(TScreenObject).)}
   TCreateLineScreenObjectTool = class(TCustomCreateScreenObjectTool32)
   private
+    FStartX: Integer;
+    FStartY: Integer;
     // @name creates TCustomCreateScreenObjectTool.@link(
     // TCustomStoreVerticesTool.CurrentScreenObject) if it does not
     // exist.  It adds a point at X,Y to @link(
     // TCustomStoreVerticesTool.CurrentScreenObject).
     procedure ContinueLineScreenObject(X, Y: Integer; Shift: TShiftState);
   protected
+    function ShouldClosePolygon(X, Y: integer): boolean; override;
     procedure DrawOnBitMap32(Sender: TObject; Buffer: TBitmap32); override;
     // Used to define @link(TCustomInteractiveTool.Hint)
     function GetHint: string; override;
@@ -734,6 +740,7 @@ Consider creating descendants that each only handle one view of the model. }
     FNewPart: boolean;
     FDoubleClicked: boolean;
     function GetCursor: TCursor; override;
+    function ShouldClosePolygon(X, Y: integer): boolean; virtual;
   public
     procedure FinishSection; virtual;
     procedure Activate; override;
@@ -743,9 +750,15 @@ Consider creating descendants that each only handle one view of the model. }
   end;
 
   TAddPolygonPartTool = class(TAddLinePartTool)
+  private
+    FStartX: Integer;
+    FStartY: Integer;
   protected
     function GetCursor: TCursor; override;
+    function ShouldClosePolygon(X, Y: integer): boolean; override;
   public
+    procedure MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer); override;
     procedure FinishSection; override;
   end;
 
@@ -904,7 +917,7 @@ Consider creating descendants that each only handle one view of the model. }
       read FShouldDrawSelectionRectangle write FShouldDrawSelectionRectangle;
   end;
 
-  TEditVertexValueTool = class(TCustomInteractiveTool)
+  TEditVertexValueTool = class(TCustomEditScreenObjectTool)
   private
     FDoubleClicked: boolean;
     procedure EditPoint(const X, Y: integer);
@@ -976,7 +989,8 @@ implementation
 
 uses Math, CursorsFoiledAgain, GR32_Polygons, frmGoPhastUnit, frmSubdivideUnit,
   frmSetSpacingUnit, frmScreenObjectPropertiesUnit, BigCanvasMethods,
-  LayerStructureUnit, DataSetUnit, ZoomBox2, Contnrs, frmPointValuesUnit;
+  LayerStructureUnit, DataSetUnit, ZoomBox2, Contnrs, frmPointValuesUnit, 
+  Dialogs;
 
 function ConvertSidePoint(APoint: TPoint2D): TPoint2D;
 begin
@@ -1285,17 +1299,17 @@ begin
           Column := frmGoPhast.Grid.ColumnCount-1
         end;
         Top := frmGoPhast.Grid.CellElevation[
-          Column,frmGoPhast.Grid.SelectedRow ,0];
+          Column,frmGoPhast.PhastModel.SelectedRow ,0];
         Bottom := frmGoPhast.Grid.CellElevation[
-          Column,frmGoPhast.Grid.SelectedRow,frmGoPhast.Grid.LayerCount];
+          Column,frmGoPhast.PhastModel.SelectedRow,frmGoPhast.Grid.LayerCount];
         if Column < frmGoPhast.Grid.ColumnCount-1 then
         begin
           Top :=
             Max(Top,frmGoPhast.Grid.CellElevation[
-            Column+1,frmGoPhast.Grid.SelectedRow,0]);
+            Column+1,frmGoPhast.PhastModel.SelectedRow,0]);
           Bottom :=
             Min(Bottom,frmGoPhast.Grid.CellElevation[Column+1,
-            frmGoPhast.Grid.SelectedRow,frmGoPhast.Grid.LayerCount]);
+            frmGoPhast.PhastModel.SelectedRow,frmGoPhast.Grid.LayerCount]);
         end;
 
         result := (APoint.Y >= Bottom) and (APoint.Y <= Top);
@@ -1400,17 +1414,17 @@ begin
         begin
           Row := frmGoPhast.Grid.RowCount-1;
         end;
-        Top := frmGoPhast.Grid.CellElevation[frmGoPhast.Grid.SelectedColumn,
+        Top := frmGoPhast.Grid.CellElevation[frmGoPhast.PhastModel.SelectedColumn,
           Row, 0];
-        Bottom := frmGoPhast.Grid.CellElevation[frmGoPhast.Grid.SelectedColumn,
+        Bottom := frmGoPhast.Grid.CellElevation[frmGoPhast.PhastModel.SelectedColumn,
           Row,frmGoPhast.Grid.LayerCount];
         if Row < frmGoPhast.Grid.RowCount-1 then
         begin
           Top :=
-            Max(Top,frmGoPhast.Grid.CellElevation[frmGoPhast.Grid.SelectedColumn,
+            Max(Top,frmGoPhast.Grid.CellElevation[frmGoPhast.PhastModel.SelectedColumn,
           Row+1, 0]);
           Bottom :=
-            Min(Bottom,frmGoPhast.Grid.CellElevation[frmGoPhast.Grid.SelectedColumn,
+            Min(Bottom,frmGoPhast.Grid.CellElevation[frmGoPhast.PhastModel.SelectedColumn,
             Row+1,frmGoPhast.Grid.LayerCount]);
         end;
 
@@ -1436,15 +1450,16 @@ begin
     if (frmGoPhast.tbMove.Down and MovingGridBoundaryTool.MovingColumn) or
       frmGoPhast.tbAddVerticalBoundary.Down then
     begin
-      if frmGoPhast.Grid.SelectedRow >= 0 then
+      if frmGoPhast.PhastModel.SelectedRow >= 0 then
       begin
         P1.X := CursorPoint.X;
         Column := frmGoPhast.Grid.NearestColumnCenter(P1.X);
-        P1.Y := frmGoPhast.Grid.CellElevation[Column,frmGoPhast.Grid.SelectedRow,0];
+        P1.Y := frmGoPhast.Grid.CellElevation[Column,
+          frmGoPhast.PhastModel.SelectedRow,0];
 
         P2.X := CursorPoint.X;
         P2.Y := frmGoPhast.Grid.CellElevation[Column,frmGoPhast.
-          Grid.SelectedRow,frmGoPhast.Grid.LayerCount];
+          PhastModel.SelectedRow,frmGoPhast.Grid.LayerCount];
 
         DrawBigPolyline32(BitMap, clBlack32, 1,
           [Point(ZoomBox.XCoord(P1.X),
@@ -1566,15 +1581,15 @@ begin
     else if (frmGoPhast.tbMove.Down and MovingGridBoundaryTool.MovingRow)
       or frmGoPhast.tbAddHorizontalBoundary.Down then
     begin
-      if frmGoPhast.Grid.SelectedColumn >= 0 then
+      if frmGoPhast.PhastModel.SelectedColumn >= 0 then
       begin
         P1.Y := CursorPoint.Y;
         Row := frmGoPhast.Grid.NearestRowCenter(P1.X);
-        P1.X := frmGoPhast.Grid.CellElevation[frmGoPhast.Grid.SelectedColumn,
+        P1.X := frmGoPhast.Grid.CellElevation[frmGoPhast.PhastModel.SelectedColumn,
           Row,0];
 
         P2.Y := CursorPoint.Y;
-        P2.X := frmGoPhast.Grid.CellElevation[frmGoPhast.Grid.SelectedColumn,
+        P2.X := frmGoPhast.Grid.CellElevation[frmGoPhast.PhastModel.SelectedColumn,
           Row,frmGoPhast.Grid.LayerCount];
 
         DrawBigPolyline32(BitMap, clBlack32, 1,
@@ -2944,8 +2959,8 @@ begin
       end;
     msModflow, msModflowLGR:
       begin
-        FrontPoints := frmGoPhast.PhastModel.ModflowGrid.FrontCellPoints(
-          frmGoPhast.PhastModel.ModflowGrid.SelectedRow);
+        FrontPoints := frmGoPhast.PhastModel.SelectedModel.ModflowGrid.FrontCellPoints(
+          frmGoPhast.PhastModel.SelectedModel.ModflowGrid.SelectedRow);
         if FrontPoints = nil then
         begin
           Exit;
@@ -2985,10 +3000,6 @@ begin
       Assert(False);
   end;
 
-  if frmGoPhast.PhastModel.ModelSelection = msPhast then
-
-  else
-  ;
 end;
 
 procedure TCustomCellSelectionTool.DrawSelectedSideCells(FirstRow, LastRow,
@@ -3080,10 +3091,10 @@ begin
       end;
     msModflow, msModflowLGR:
       begin
-        Assert(frmGoPhast.PhastModel.ModelSelection = msModflow);
+//        Assert(frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR]);
 
-        SidePoints := frmGoPhast.PhastModel.ModflowGrid.SideCellPoints(
-          frmGoPhast.PhastModel.ModflowGrid.SelectedColumn);
+        SidePoints := frmGoPhast.PhastModel.SelectedModel.ModflowGrid.SideCellPoints(
+          frmGoPhast.PhastModel.SelectedModel.ModflowGrid.SelectedColumn);
         if SidePoints = nil then
         begin
           Exit;
@@ -3164,30 +3175,30 @@ begin
 
   if GetEvalAt = eaBlocks then
   begin
-    APoint := frmGoPhast.Grid.TwoDElementCorner(C1, R1);
+    APoint := frmGoPhast.PhastModel.SelectedModel.Grid.TwoDElementCorner(C1, R1);
     Polygon[0] := View(Direction).ConvertPoint(APoint);
 
-    APoint := frmGoPhast.Grid.TwoDElementCorner(C1, R2);
+    APoint := frmGoPhast.PhastModel.SelectedModel.Grid.TwoDElementCorner(C1, R2);
     Polygon[1] := View(Direction).ConvertPoint(APoint);
 
-    APoint := frmGoPhast.Grid.TwoDElementCorner(C2, R2);
+    APoint := frmGoPhast.PhastModel.SelectedModel.Grid.TwoDElementCorner(C2, R2);
     Polygon[2] := View(Direction).ConvertPoint(APoint);
 
-    APoint := frmGoPhast.Grid.TwoDElementCorner(C2, R1);
+    APoint := frmGoPhast.PhastModel.SelectedModel.Grid.TwoDElementCorner(C2, R1);
     Polygon[3] := View(Direction).ConvertPoint(APoint);
   end
   else
   begin
-    APoint := frmGoPhast.Grid.TwoDCellCorner(C1, R1);
+    APoint := frmGoPhast.PhastModel.SelectedModel.Grid.TwoDCellCorner(C1, R1);
     Polygon[0] := View(Direction).ConvertPoint(APoint);
 
-    APoint := frmGoPhast.Grid.TwoDCellCorner(C1, R2);
+    APoint := frmGoPhast.PhastModel.SelectedModel.Grid.TwoDCellCorner(C1, R2);
     Polygon[1] := View(Direction).ConvertPoint(APoint);
 
-    APoint := frmGoPhast.Grid.TwoDCellCorner(C2, R2);
+    APoint := frmGoPhast.PhastModel.SelectedModel.Grid.TwoDCellCorner(C2, R2);
     Polygon[2] := View(Direction).ConvertPoint(APoint);
 
-    APoint := frmGoPhast.Grid.TwoDCellCorner(C2, R1);
+    APoint := frmGoPhast.PhastModel.SelectedModel.Grid.TwoDCellCorner(C2, R1);
     Polygon[3] := View(Direction).ConvertPoint(APoint);
   end;
 
@@ -3385,7 +3396,7 @@ procedure TCustomCreateScreenObjectTool.MouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
-  if FDoubleClicked then
+  if FDoubleClicked or ShouldClosePolygon(X, Y) then
   begin
     FinishScreenObjects;
     FDoubleClicked := False;
@@ -3407,6 +3418,12 @@ begin
   CurrentScreenObject.ElevationFormula :=
     frmGoPhast.PhastModel.DefaultElevationFormula(
     CurrentScreenObject.ViewDirection, CurrentScreenObject.EvaluatedAt);
+end;
+
+function TCustomCreateScreenObjectTool.ShouldClosePolygon(X,
+  Y: integer): boolean;
+begin
+  result := False;
 end;
 
 procedure TCustomStoreVerticesTool.StorePointsOfOtherObjects(
@@ -3558,6 +3575,19 @@ begin
   inherited;
 end;
 
+function TCreateLineScreenObjectTool.ShouldClosePolygon(X, Y: integer): boolean;
+begin
+  result := frmGoPhast.tbPolygon.Down
+    and (CurrentScreenObject <> nil)
+    and (CurrentScreenObject.Count > 3)
+    and (Abs(X- FStartX) < SelectionWidth)
+    and (Abs(Y- FStartY) < SelectionWidth);
+  if result then
+  begin
+    CurrentScreenObject.Count := CurrentScreenObject.Count -1;
+  end;
+end;
+
 procedure TCreateLineScreenObjectTool.ContinueLineScreenObject(X, Y: Integer;
   Shift: TShiftState);
 var
@@ -3579,6 +3609,8 @@ begin
         frmGoPhast.PhastModel.ScreenObjectClass.CreateWithViewDirection(
         frmGoPhast.PhastModel, ViewDirection, FCurrentUndo);
       ClearPoints;
+      FStartX := X;
+      FStartY := Y;
     end
     else
     begin
@@ -3599,9 +3631,10 @@ begin
   // Add a point at the current mouse position.
   try
     CurrentScreenObject.AddPoint(APoint, False);
-  except on EScreenObjectError do
+  except on E: EScreenObjectError do
     begin
       Beep;
+      MessageDlg(E.Message, mtError, [mbOK], 0);
     end;
   end;
 end;
@@ -3865,6 +3898,7 @@ begin
     except on E: EScreenObjectError do
       begin
         Beep;
+        MessageDlg(E.Message, mtError, [mbOK], 0);
       end
     end;
   end;
@@ -4175,16 +4209,24 @@ var
   Index: integer;
   AScreenObject: TScreenObject;
 begin
-  // This procedure returns True if any screen object is selected.
+  // This procedure returns True if any screen object
+  // that has a TScreenObject.ViewDirection
+  // that matches ViewDirection
+  // is selected.
   result := False;
-  for Index := frmGoPhast.PhastModel.ScreenObjectCount - 1 downto 0 do
+  if frmGoPhast.PhastModel.SelectedScreenObjectCount > 0 then
   begin
-    AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
-    if AScreenObject.Selected and (AScreenObject.ViewDirection = ViewDirection)
-      then
+    for Index := frmGoPhast.PhastModel.ScreenObjectCount - 1 downto 0 do
     begin
-      result := True;
-      Exit;
+      AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
+      if AScreenObject.Selected
+        and not AScreenObject.Deleted
+        and (AScreenObject.ViewDirection = ViewDirection)
+        then
+      begin
+        result := True;
+        Exit;
+      end;
     end;
   end;
 end;
@@ -5482,8 +5524,9 @@ begin
       end;
     else Assert(False);
   end;
-  DrawASelection(frmGoPhast.Grid.SelectedColumn, frmGoPhast.Grid.SelectedRow,
-    frmGoPhast.Grid.SelectedLayer,
+  DrawASelection(frmGoPhast.PhastModel.SelectedModel.SelectedColumn,
+    frmGoPhast.PhastModel.SelectedModel.SelectedRow,
+    frmGoPhast.PhastModel.SelectedModel.SelectedLayer,
     Color1, Color2, BitMap, Direction);
 end;
 
@@ -5497,14 +5540,14 @@ end;
 procedure TColRowLayerSelectorTool.DrawOnBitMap32(Sender: TObject;
   Buffer: TBitmap32);
 begin
-  if frmGoPhast.Grid = nil then
+  if frmGoPhast.PhastModel.SelectedModel.Grid = nil then
   begin
     Exit;
   end;
   
-  if (frmGoPhast.Grid.ColumnCount <= 0)
-    or (frmGoPhast.Grid.RowCount <= 0)
-    or (frmGoPhast.Grid.LayerCount <= 0) then
+  if (frmGoPhast.PhastModel.SelectedModel.Grid.ColumnCount <= 0)
+    or (frmGoPhast.PhastModel.SelectedModel.Grid.RowCount <= 0)
+    or (frmGoPhast.PhastModel.SelectedModel.Grid.LayerCount <= 0) then
   begin
     Exit
   end;
@@ -5637,7 +5680,7 @@ var
   Limit1: Integer;
 begin
   EvaluatedAt := GetEvaluatedAt(Direction);
-  frmGoPhast.Grid.GetLimits(EvaluatedAt, Direction, Limit1, Limit2);
+  frmGoPhast.PhastModel.SelectedModel.Grid.GetLimits(EvaluatedAt, Direction, Limit1, Limit2);
   case Direction of
     vdTop:
       begin
@@ -5665,18 +5708,30 @@ begin
   case ViewDirection of
     vdTop:
       begin
-          frmGoPhast.Grid.SelectedColumn := NewColumn;
-          frmGoPhast.Grid.SelectedRow := NewRow;
+        frmGoPhast.PhastModel.SelectedModel.SelectedColumn := NewColumn;
+        frmGoPhast.PhastModel.SelectedModel.SelectedRow := NewRow;
+        frmGoPhast.PhastModel.UpdateCombinedDisplayColumn;
+        frmGoPhast.frameSideView.ItemChange(nil);
+        frmGoPhast.PhastModel.UpdateCombinedDisplayRow;
+        frmGoPhast.frameFrontView.ItemChange(nil);
       end;
     vdFront:
       begin
-          frmGoPhast.Grid.SelectedLayer := NewLayer;
-          frmGoPhast.Grid.SelectedColumn := NewColumn;
+        frmGoPhast.PhastModel.SelectedModel.SelectedLayer := NewLayer;
+        frmGoPhast.PhastModel.SelectedModel.SelectedColumn := NewColumn;
+        frmGoPhast.PhastModel.UpdateCombinedDisplayColumn;
+        frmGoPhast.frameSideView.ItemChange(nil);
+        frmGoPhast.PhastModel.UpdateCombinedDisplayLayer;
+        frmGoPhast.frameTopView.ItemChange(nil);
       end;
     vdSide:
       begin
-          frmGoPhast.Grid.SelectedLayer := NewLayer;
-          frmGoPhast.Grid.SelectedRow := NewRow;
+        frmGoPhast.PhastModel.SelectedModel.SelectedLayer := NewLayer;
+        frmGoPhast.PhastModel.SelectedModel.SelectedRow := NewRow;
+        frmGoPhast.PhastModel.UpdateCombinedDisplayRow;
+        frmGoPhast.frameFrontView.ItemChange(nil);
+        frmGoPhast.PhastModel.UpdateCombinedDisplayLayer;
+        frmGoPhast.frameTopView.ItemChange(nil);
       end;
   else
     Assert(False);
@@ -5694,6 +5749,11 @@ begin
   FDoubleClicked := False;
 end;
 
+function TAddLinePartTool.ShouldClosePolygon(X, Y: integer): boolean;
+begin
+  result := False;
+end;
+
 procedure TAddLinePartTool.DoubleClick(Sender: TObject);
 begin
   inherited;
@@ -5706,6 +5766,7 @@ procedure TAddLinePartTool.MouseUp(Sender: TObject; Button: TMouseButton;
 var
   APoint: TPoint2D;
 begin
+  try
   inherited;
   if FDoubleClicked then
   begin
@@ -5731,6 +5792,17 @@ begin
       EnsureUndo;
       FUndoAddPart.AddPoint(APoint);
       FNewPart := False;
+      if ShouldClosePolygon(X, Y) then
+      begin
+        DoubleClick(Sender);
+        FDoubleClicked := False;
+      end;
+    end;
+  end;
+  except on E: EScreenObjectError do
+    begin
+      Beep;
+      MessageDlg(E.Message, mtError, [mbOK], 0);
     end;
   end;
 end;
@@ -5760,6 +5832,22 @@ begin
 end;
 
 { TAddClosedPartTool }
+
+function TAddPolygonPartTool.ShouldClosePolygon(X, Y: integer): boolean;
+begin
+  EnsureUndo;
+  result := FUndoAddPart.Count > 3;
+  if result then
+  begin
+    result := (Abs(X - FStartX) < SelectionWidth)
+      and (Abs(Y - FStartY) < SelectionWidth)
+  end;
+  if result then
+  begin
+    FUndoAddPart.DeleteLastPoint;
+    FCurrentScreenObject.Count := FCurrentScreenObject.Count -1;
+  end;
+end;
 
 procedure TAddPolygonPartTool.FinishSection;
 var
@@ -6033,6 +6121,17 @@ begin
   end;
 end;
 
+procedure TAddPolygonPartTool.MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if FNewPart then
+  begin
+    FStartX := X;
+    FStartY := Y;
+  end;
+  inherited;
+end;
+
 { TEditVertexValueTool }
 
 procedure TEditVertexValueTool.DoubleClick(Sender: TObject);
@@ -6086,6 +6185,11 @@ begin
   if FDoubleClicked then
   begin
     EditPoint(X, Y);
+  end
+  else if not AreScreenObjectsSelected then
+  begin
+    SelectScreenObjects(X, Y, (ssCtrl in Shift), (ssShift in Shift),
+      True);
   end;
   FDoubleClicked := False;
 //  FX := X;

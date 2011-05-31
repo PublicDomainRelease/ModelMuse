@@ -4,7 +4,7 @@ interface
 
 uses Windows, ZLib, SysUtils, Classes, Contnrs, OrderedCollectionUnit,
   ModflowBoundaryUnit, ModflowCellUnit, DataSetUnit, FormulaManagerUnit,
-  SubscriptionUnit, SparseDataSets;
+  SubscriptionUnit, SparseDataSets, GoPhastTypes;
 
 type
   TResRecord = record
@@ -81,10 +81,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -94,23 +97,33 @@ type
     property ResIdAnnotation: string read GetResIdAnnotation;
   end;
 
+  TResTimeListLink = class(TTimeListsModelLink)
+  private
+    FResIDData: TModflowTimeList;
+    FEndHeadData: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
 
   // @name represents MODFLOW Reservoir boundaries
   // for a series of time intervals.
   TResCollection = class(TCustomMF_ArrayBoundColl)
   private
-    FResIDData: TModflowTimeList;
-    FEndHeadData: TModflowTimeList;
     procedure InvalidateStartHeadData(Sender: TObject);
     procedure InvalidateEndHeadData(Sender: TObject);
   protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary; override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer); override;
+    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+      AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
     // TCustomMF_ArrayBoundColl.InitializeTimeLists)
-    procedure InitializeTimeLists(ListOfTimeLists: TList); override;
+    procedure InitializeTimeLists(ListOfTimeLists: TList;
+      AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
     class function ItemClass: TMF_BoundItemClass; override;
@@ -121,13 +134,6 @@ type
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
-  public
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
   end;
 
   TResBoundary = class(TModflowBoundary)
@@ -136,18 +142,18 @@ type
     procedure SetResId(const Value: integer);
   protected
     procedure AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-      ValueTimeList: TList); override;
+      ValueTimeList: TList; AModel: TBaseModel); override;
     class function BoundaryCollectionClass: TMF_BoundCollClass; override;
   public
-    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList);
-      override;
+    procedure GetCellValues(ValueTimeList: TList; ParamList: TStringList;
+      AModel: TBaseModel); override;
     property ResId: integer read FResId write SetResId;
   end;
 
 implementation
 
 uses RbwParser, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit, TempFiles, 
-  GoPhastTypes, frmGoPhastUnit;
+  frmGoPhastUnit;
 
 const
   StartPosition = 0;
@@ -281,7 +287,7 @@ begin
 end;
 
 procedure TResCollection.AssignCellValues(DataSets: TList;
-  ItemIndex: Integer);
+  ItemIndex: Integer; AModel: TBaseModel);
 var
   ResIDArray: TDataArray;
   Boundary: TResStorage;
@@ -289,7 +295,7 @@ var
   RowIndex: Integer;
   ColIndex: Integer;
   BoundaryIndex: Integer;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
   LayerMin: Integer;
   RowMin: Integer;
   ColMin: Integer;
@@ -297,7 +303,7 @@ var
   RowMax: Integer;
   ColMax: Integer;
 begin
-  LocalModel := Model as TPhastModel;
+  LocalModel := AModel as TCustomModel;
   BoundaryIndex := 0;
   ResIDArray := DataSets[0];
   Boundary := Boundaries[ItemIndex] as TResStorage;
@@ -307,7 +313,7 @@ begin
   begin
     for LayerIndex := LayerMin to LayerMax do
     begin
-      if LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+      if LocalModel.IsLayerSimulated(LayerIndex) then
       begin
         for RowIndex := RowMin to RowMax do
         begin
@@ -337,32 +343,13 @@ begin
   Boundary.CacheData;
 end;
 
-constructor TResCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
+function TResCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FResIDData := TModflowTimeList.Create(Model, ScreenObject);
-  FEndHeadData := TModflowTimeList.Create(Model, ScreenObject);
-
-  FResIDData.NonParamDescription := 'Starting stage';
-  FResIDData.ParamDescription := ' starting stage';
-  FEndHeadData.NonParamDescription := 'Ending stage';
-  FEndHeadData.ParamDescription := ' ending stage';
-
-  FResIDData.DataType := rdtInteger;
-
-  AddTimeList(FResIDData);
-  AddTimeList(FEndHeadData);
+  result := TResTimeListLink;
 end;
 
-destructor TResCollection.Destroy;
-begin
-  FResIDData.Free;
-  FEndHeadData.Free;
-  inherited;
-end;
-
-procedure TResCollection.InitializeTimeLists(ListOfTimeLists: TList);
+procedure TResCollection.InitializeTimeLists(ListOfTimeLists: TList;
+  AModel: TBaseModel);
 var
   TimeIndex: Integer;
   BoundaryValues: TBoundaryValueArray;
@@ -370,6 +357,8 @@ var
   Item: TResItem;
   Boundary: TResBoundary;
   ScreenObject: TScreenObject;
+  ALink: TResTimeListLink;
+  ResIDData: TModflowTimeList;
 begin
   Boundary := BoundaryGroup as TResBoundary;
   ScreenObject := Boundary.ScreenObject as TScreenObject;
@@ -380,24 +369,43 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := IntToStr(Boundary.ResID);
   end;
-  FResIDData.Initialize(BoundaryValues, ScreenObject);
+  ALink := TimeListLink.GetLink(AModel) as TResTimeListLink;
+  ResIDData := ALink.FResIDData;
+  ResIDData.Initialize(BoundaryValues, ScreenObject, False);
 
-  Assert(FResIDData.Count = Count);
+  Assert(ResIDData.Count = Count);
   ClearBoundaries;
-  SetBoundaryCapacity(FResIDData.Count);
-  for TimeIndex := 0 to FResIDData.Count - 1 do
+  SetBoundaryCapacity(ResIDData.Count);
+  for TimeIndex := 0 to ResIDData.Count - 1 do
   begin
     AddBoundary(TResStorage.Create);
   end;
-  ListOfTimeLists.Add(FResIDData);
+  ListOfTimeLists.Add(ResIDData);
 end;
 
 procedure TResCollection.InvalidateEndHeadData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TResTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FEndHeadData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TResTimeListLink;
+    Link.FEndHeadData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TResTimeListLink;
+      Link.FEndHeadData.Invalidate;
+    end;
   end;
+//  if not (Sender as TObserver).UpToDate then
+//  begin
+//    FEndHeadData.Invalidate;
+//  end;
 end;
 
 procedure TResCollection.InvalidateStartHeadData(Sender: TObject);
@@ -420,7 +428,7 @@ end;
 { TResBoundary }
 
 procedure TResBoundary.AssignCells(BoundaryStorage: TCustomBoundaryStorage;
-  ValueTimeList: TList);
+  ValueTimeList: TList; AModel: TBaseModel);
 var
   Cell: TRes_Cell;
   BoundaryValues: TResRecord;
@@ -429,10 +437,12 @@ var
   TimeIndex: Integer;
   Cells: TValueCellList;
   LocalBoundaryStorage: TResStorage;
+  LocalModel: TCustomModel;
 begin
+  LocalModel := AModel as TCustomModel;
   LocalBoundaryStorage := BoundaryStorage as TResStorage;
   for TimeIndex := 0 to
-    (PhastModel as TPhastModel).ModflowFullStressPeriods.Count - 1 do
+    LocalModel.ModflowFullStressPeriods.Count - 1 do
   begin
     if TimeIndex < ValueTimeList.Count then
     begin
@@ -443,12 +453,16 @@ begin
       Cells := TValueCellList.Create(TRes_Cell);
       ValueTimeList.Add(Cells);
     end;
-    StressPeriod := (PhastModel as TPhastModel).ModflowFullStressPeriods[TimeIndex];
+    StressPeriod := LocalModel.ModflowFullStressPeriods[TimeIndex];
     // Check if the stress period is completely enclosed within the times
     // of the LocalBoundaryStorage;
     if (StressPeriod.StartTime >= LocalBoundaryStorage.StartingTime)
       and (StressPeriod.EndTime <= LocalBoundaryStorage.EndingTime) then
     begin
+      if Cells.Capacity < Cells.Count + Length(LocalBoundaryStorage.ResArray) then
+      begin
+        Cells.Capacity := Cells.Count + Length(LocalBoundaryStorage.ResArray)
+      end;
 //      Cells.CheckRestore;
       for BoundaryIndex := 0 to Length(LocalBoundaryStorage.ResArray) - 1 do
       begin
@@ -459,6 +473,7 @@ begin
         Cells.Add(Cell);
         Cell.StressPeriod := TimeIndex;
         Cell.Values := BoundaryValues;
+        LocalModel.AdjustCellPosition(Cell);
       end;
       Cells.Cache;
     end;
@@ -472,18 +487,18 @@ begin
 end;
 
 procedure TResBoundary.GetCellValues(ValueTimeList: TList;
-  ParamList: TStringList);
+  ParamList: TStringList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TResStorage;
 begin
-  EvaluateArrayBoundaries;
+  EvaluateArrayBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
     if ValueIndex < Values.BoundaryCount then
     begin
       BoundaryStorage := Values.Boundaries[ValueIndex] as TResStorage;
-      AssignCells(BoundaryStorage, ValueTimeList);
+      AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;
 end;
@@ -511,7 +526,7 @@ begin
   result := Values.Cell.Column;
 end;
 
-function TRes_Cell.GetIntegerAnnotation(Index: integer): string;
+function TRes_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -520,7 +535,7 @@ begin
   end;
 end;
 
-function TRes_Cell.GetIntegerValue(Index: integer): integer;
+function TRes_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := -1;
   case Index of
@@ -534,13 +549,13 @@ begin
   result := Values.Cell.Layer;
 end;
 
-function TRes_Cell.GetRealAnnotation(Index: integer): string;
+function TRes_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TRes_Cell.GetRealValue(Index: integer): double;
+function TRes_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   Assert(False);
@@ -577,6 +592,21 @@ begin
   inherited;
   Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
+end;
+
+procedure TRes_Cell.SetColumn(const Value: integer);
+begin
+  Values.Cell.Column := Value;
+end;
+
+procedure TRes_Cell.SetLayer(const Value: integer);
+begin
+  Values.Cell.Layer := Value;
+end;
+
+procedure TRes_Cell.SetRow(const Value: integer);
+begin
+  Values.Cell.Row := Value;
 end;
 
 { TResRecord }
@@ -667,6 +697,29 @@ begin
     RestoreData;
   end;
   result := FResArray;
+end;
+
+{ TRchTimeListLink }
+
+procedure TResTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  FResIDData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FEndHeadData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FResIDData.NonParamDescription := 'Starting stage';
+  FResIDData.ParamDescription := ' starting stage';
+  FEndHeadData.NonParamDescription := 'Ending stage';
+  FEndHeadData.ParamDescription := ' ending stage';
+  FResIDData.DataType := rdtInteger;
+  AddTimeList(FResIDData);
+  AddTimeList(FEndHeadData);
+end;
+
+destructor TResTimeListLink.Destroy;
+begin
+  FResIDData.Free;
+  FEndHeadData.Free;
+  inherited;
 end;
 
 end.

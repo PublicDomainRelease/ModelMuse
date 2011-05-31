@@ -25,7 +25,8 @@ type
     function Package: TModflowPackageSelection; override;
     function ParameterType: TParameterType; override;
     procedure WriteParameterCells(CellList: TValueCellList; NLST: Integer;
-      const VariableIdentifiers, DataSetIdentifier: string); override;
+      const VariableIdentifiers, DataSetIdentifier: string;
+      AssignmentMethod: TUpdateMethod); override;
     procedure WriteCell(Cell: TValueCell;
       const DataSetIdentifier, VariableIdentifiers: string); override;
     class function ObservationExtension: string; override;
@@ -34,6 +35,7 @@ type
       var Expression: TExpression; DataSet5: TStringList; AllCells: TList;
       ScreenObject: TScreenObject; ObsFactor: TObservationFactor); override;
     function ObsNameWarningString: string; override;
+    procedure Evaluate; override;
   public
     procedure WriteFile(const AFileName: string);
     procedure WriteFluxObservationFile(const AFileName: string;
@@ -46,11 +48,31 @@ uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
   ModflowTransientListParameterUnit, ModflowUnitNumbers, frmProgressUnit, 
   ModflowGridUnit, Forms;
 
+resourcestring
+  StrErrorInCHDPackage = 'Error in CHD package';
+
 { TModflowCHD_Writer }
 
 function TModflowCHD_Writer.CellType: TValueCellType;
 begin
   result := TCHD_Cell;
+end;
+
+procedure TModflowCHD_Writer.Evaluate;
+var
+  ParamCount, ParamCellCount: Integer;
+  MXACTC: Integer;
+begin
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrErrorInCHDPackage);
+  inherited;
+  CountParametersAndParameterCells(ParamCount, ParamCellCount);
+  CountCells(MXACTC);
+  if (ParamCellCount = 0) and (MXACTC = 0) then
+  begin
+    frmErrorsAndWarnings.AddError(Model, StrErrorInCHDPackage,
+      'The CHD package is active but no CHD boundaries are assigned');
+  end;
+
 end;
 
 class function TModflowCHD_Writer.Extension: string;
@@ -96,7 +118,7 @@ var
   LocalLayer: integer;
 begin
   CHD_Cell := Cell as TCHD_Cell;
-  LocalLayer := PhastModel.LayerStructure.
+  LocalLayer := Model.
     DataSetLayerToModflowLayer(CHD_Cell.Layer);
   WriteInteger(LocalLayer);
   WriteInteger(CHD_Cell.Row+1);
@@ -120,7 +142,7 @@ const
   VariableIdentifiers = 'Shdfact Ehdfact IFACE';
 begin
   WriteParameterDefinitions(DS3, DS3Instances, DS4A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot);
+    VariableIdentifiers, ErrorRoot, umAssign);
 end;
 
 procedure TModflowCHD_Writer.WriteDataSets5To7;
@@ -145,9 +167,9 @@ begin
   begin
     Exit
   end;
-  ShouldWriteFile := not PhastModel.PackageGeneratedExternally(StrCHD);
+  ShouldWriteFile := not Model.PackageGeneratedExternally(StrCHD);
   ShouldWriteObservationFile := ObservationPackage.IsSelected
-    and not PhastModel.PackageGeneratedExternally(StrCHOB);
+    and not Model.PackageGeneratedExternally(StrCHOB);
 
   if not ShouldWriteFile and not ShouldWriteObservationFile then
   begin
@@ -157,7 +179,7 @@ begin
   NameOfFile := FileName(AFileName);
   if ShouldWriteFile then
   begin
-    WriteToNameFile(StrCHD, PhastModel.UnitNumbers.UnitNumber(StrCHD),
+    WriteToNameFile(StrCHD, Model.UnitNumbers.UnitNumber(StrCHD),
       NameOfFile, foInput);
   end;
   if ShouldWriteFile or ShouldWriteObservationFile then
@@ -168,7 +190,7 @@ begin
     begin
       Exit;
     end;
-    ClearTimeLists;
+    ClearTimeLists(Model);
   end;
   if not ShouldWriteFile then
   begin
@@ -226,7 +248,7 @@ const
 begin
   WriteFluxObsFile(AFileName, StrIUCHOBSV, PackageAbbreviation,
     DataSet1Comment, DataSet2Comment, DataSet3Comment,
-    PhastModel.HeadFluxObservations, Purpose);
+    Model.HeadFluxObservations, Purpose);
 end;
 
 procedure TModflowCHD_Writer.WriteObservationCells(Variables, DataSets: TList;
@@ -245,7 +267,7 @@ var
 begin
   TempCells := TList.Create;
   try
-    Grid := PhastModel.ModflowGrid;
+    Grid := Model.ModflowGrid;
     SetLength(CellArray, Grid.LayerCount, Grid.RowCount, Grid.ColumnCount);
 
     for TimeIndex := 0 to Values.Count - 1 do
@@ -294,8 +316,9 @@ begin
 
 end;
 
-procedure TModflowCHD_Writer.WriteParameterCells(CellList: TValueCellList; NLST: Integer;
-  const VariableIdentifiers, DataSetIdentifier: string);
+procedure TModflowCHD_Writer.WriteParameterCells(CellList: TValueCellList;
+  NLST: Integer; const VariableIdentifiers, DataSetIdentifier: string;
+  AssignmentMethod: TUpdateMethod);
 var
   Cell: TCHD_Cell;
   CellIndex: Integer;
@@ -351,7 +374,7 @@ end;
 
 function TModflowCHD_Writer.ObservationPackage: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.ChobPackage;
+  result := Model.ModflowPackages.ChobPackage;
 end;
 
 function TModflowCHD_Writer.ObsNameWarningString: string;
@@ -361,7 +384,7 @@ end;
 
 function TModflowCHD_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.ChdBoundary;
+  result := Model.ModflowPackages.ChdBoundary;
 end;
 
 function TModflowCHD_Writer.ParameterType: TParameterType;

@@ -4,7 +4,7 @@ interface
 
 uses Windows, ZLib, SysUtils, Classes, RbwParser, OrderedCollectionUnit,
   ModflowCellUnit, ModflowBoundaryUnit, DataSetUnit, FormulaManagerUnit,
-  SubscriptionUnit, SparseDataSets;
+  SubscriptionUnit, SparseDataSets, GoPhastTypes;
 
 type
   TSfrRecord = record
@@ -116,9 +116,7 @@ type
     property VerticalK: string read GetVerticalK write SetVerticalK;
   end;
 
-  // @name represents MODFLOW Streamflow Routing boundaries
-  // for a series of time intervals.
-  TSfrCollection = class(TCustomMF_ArrayBoundColl)
+  TSfrTimeListLink = class(TTimeListsModelLink)
   private
     // @name is used to compute the hydraulic conductivity for a series of
     // Streamflow Routing Boundaries over a series of time intervals.
@@ -137,6 +135,17 @@ type
     FBrooksCoreyExponent: TModflowTimeList;
     FVerticalK: TModflowTimeList;
     FReachLength: TModflowTimeList;
+  protected
+    procedure CreateTimeLists; override;
+  public
+    Destructor Destroy; override;
+  end;
+
+
+  // @name represents MODFLOW Streamflow Routing boundaries
+  // for a series of time intervals.
+  TSfrCollection = class(TCustomMF_ArrayBoundColl)
+  private
     procedure InvalidateReachLengthData(Sender: TObject);
     procedure InvalidateHydraulicConductivityData(Sender: TObject);
     procedure InvalidateBedThicknessData(Sender: TObject);
@@ -147,15 +156,18 @@ type
     procedure InvalidateBrooksCoreyExponentData(Sender: TObject);
     procedure InvalidateVerticalKData(Sender: TObject);
   protected
+    function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     procedure AddSpecificBoundary; override;
     procedure CountBoundaryCells(var BoundaryCount: Integer;
-      DataArray1: TDataArray; DataSets: TList); override;
+      DataArray1: TDataArray; DataSets: TList; AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
-    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer); override;
+    procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
+      AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.InitializeTimeLists
     // TCustomMF_ArrayBoundColl.InitializeTimeLists)
-    procedure InitializeTimeLists(ListOfTimeLists: TList); override;
+    procedure InitializeTimeLists(ListOfTimeLists: TList;
+      AModel: TBaseModel); override;
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
     class function ItemClass: TMF_BoundItemClass; override;
@@ -166,13 +178,6 @@ type
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
-  public
-    // @name creates an instance of @classname
-    constructor Create(Boundary: TModflowBoundary; Model,
-      ScreenObject: TObject); override;
-    // @name destroys the current instance of @classname.
-    // Do not call @name; call Free instead.
-    destructor Destroy; override;
   end;
 
   TSfr_Cell = class(TValueCell)
@@ -201,10 +206,13 @@ type
     function GetColumn: integer; override;
     function GetLayer: integer; override;
     function GetRow: integer; override;
-    function GetIntegerValue(Index: integer): integer; override;
-    function GetRealValue(Index: integer): double; override;
-    function GetRealAnnotation(Index: integer): string; override;
-    function GetIntegerAnnotation(Index: integer): string; override;
+    procedure SetColumn(const Value: integer); override;
+    procedure SetLayer(const Value: integer); override;
+    procedure SetRow(const Value: integer); override;
+    function GetIntegerValue(Index: integer; AModel: TBaseModel): integer; override;
+    function GetRealValue(Index: integer; AModel: TBaseModel): double; override;
+    function GetRealAnnotation(Index: integer; AModel: TBaseModel): string; override;
+    function GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string; override;
     procedure Cache(Comp: TCompressionStream; Strings: TStringList); override;
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList); override;
     function GetSection: integer; override;
@@ -237,7 +245,7 @@ type
 implementation
 
 uses Contnrs, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit,
-  ModflowSfrUnit, TempFiles, GoPhastTypes, frmGoPhastUnit;
+  ModflowSfrUnit, TempFiles, frmGoPhastUnit;
 
 const
   ReachLengthPosition = 0;
@@ -769,7 +777,7 @@ begin
 end;
 
 procedure TSfrCollection.AssignCellValues(DataSets: TList;
-  ItemIndex: Integer);
+  ItemIndex: Integer; AModel: TBaseModel);
 var
   ReachLengthArray: TDataArray;
   HydraulicConductivityArray: TDataArray;
@@ -790,9 +798,9 @@ var
   SegmentIndex: Integer;
   Segment: TCellElementSegment;
   PriorCol, PriorRow, PriorLayer: integer;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := Model as TPhastModel;
+  LocalModel := AModel as TCustomModel;
   PriorCol := -1;
   PriorRow := -1;
   PriorLayer := -1;
@@ -843,13 +851,13 @@ begin
   Boundary := Boundaries[ItemIndex] as TSfrStorage;
 
   LocalScreenObject := ScreenObject as TScreenObject;
-  for SegmentIndex := 0 to LocalScreenObject.Segments.Count - 1 do
+  for SegmentIndex := 0 to LocalScreenObject.Segments[LocalModel].Count - 1 do
   begin
-    Segment := LocalScreenObject.Segments[SegmentIndex];
+    Segment := LocalScreenObject.Segments[LocalModel][SegmentIndex];
     ColIndex := Segment.Col;
     RowIndex := Segment.Row;
     LayerIndex := Segment.Layer;
-    if not LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+    if not LocalModel.IsLayerSimulated(LayerIndex) then
     begin
       Continue;
     end;
@@ -986,7 +994,7 @@ begin
 end;
 
 procedure TSfrCollection.CountBoundaryCells(var BoundaryCount: Integer;
-  DataArray1: TDataArray; DataSets: TList);
+  DataArray1: TDataArray; DataSets: TList; AModel: TBaseModel);
 var
   DSIndex: Integer;
   ColIndex: Integer;
@@ -997,20 +1005,20 @@ var
   Index: Integer;
   Segment: TCellElementSegment;
   PriorCol, PriorRow, PriorLayer: integer;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
 begin
-  LocalModel := Model as TPhastModel;
+  LocalModel := AModel as TCustomModel;
   BoundaryCount := 0;
   PriorCol := -1;
   PriorRow := -1;
   PriorLayer := -1;
 
   SO := ScreenObject as TScreenObject;
-  for Index := 0 to SO.Segments.Count - 1 do
+  for Index := 0 to SO.Segments[LocalModel].Count - 1 do
   begin
-    Segment := SO.Segments[Index];
+    Segment := SO.Segments[LocalModel][Index];
     LayerIndex := Segment.Layer;
-    if not LocalModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+    if not LocalModel.IsLayerSimulated(LayerIndex) then
     begin
       Continue;
     end;
@@ -1034,76 +1042,13 @@ begin
   end;
 end;
 
-constructor TSfrCollection.Create(Boundary: TModflowBoundary; Model,
-  ScreenObject: TObject);
+function TSfrCollection.GetTimeListLinkClass: TTimeListsModelLinkClass;
 begin
-  inherited Create(Boundary, Model, ScreenObject);
-  FReachLength := TModflowTimeList.Create(Model, ScreenObject);
-  FHydraulicConductivityData := TModflowTimeList.Create(Model, ScreenObject);
-  FStreamBedThicknessData := TModflowTimeList.Create(Model, ScreenObject);
-  FStreamBedElevationData := TModflowTimeList.Create(Model, ScreenObject);
-  FStreamSlopeData := TModflowTimeList.Create(Model, ScreenObject);
-  FSaturatedWaterContent := TModflowTimeList.Create(Model, ScreenObject);
-  FInitialWaterContent := TModflowTimeList.Create(Model, ScreenObject);
-  FBrooksCoreyExponent := TModflowTimeList.Create(Model, ScreenObject);
-  FVerticalK := TModflowTimeList.Create(Model, ScreenObject);
-
-  FReachLength.NonParamDescription := 'Reach length';
-  FReachLength.ParamDescription := ' reach length';
-
-  FStreamBedThicknessData.NonParamDescription := 'Streambed thickness';
-  FStreamBedThicknessData.ParamDescription := ' streambed thickness';
-  FStreamBedElevationData.NonParamDescription := 'Streambed elevation';
-  FStreamBedElevationData.ParamDescription := ' streambed elevation';
-  FHydraulicConductivityData.NonParamDescription := 'Hydraulic conductivity';
-  FHydraulicConductivityData.ParamDescription := ' Hydraulic conductivity multiplier';
-  FStreamSlopeData.NonParamDescription := 'Slope';
-  FStreamSlopeData.ParamDescription := ' slope';
-
-  FSaturatedWaterContent.NonParamDescription := 'Saturated water content';
-  FSaturatedWaterContent.ParamDescription := ' saturated water content';
-  FInitialWaterContent.NonParamDescription := 'Initial water content';
-  FInitialWaterContent.ParamDescription := ' initial water content';
-  FBrooksCoreyExponent.NonParamDescription := 'Brooks-Corey exponent';
-  FBrooksCoreyExponent.ParamDescription := ' Brooks-Corey exponent';
-  FVerticalK.NonParamDescription := 'Maximum vertical unsaturated hydraulic conductivity';
-  FVerticalK.ParamDescription := ' maximum vertical unsaturated hydraulic conductivity';
-
-  if Model <> nil then
-  begin
-//    FStreamBedThicknessData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivStage;
-//    FStreamBedElevationData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivConductance;
-//    FHydraulicConductivityData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivBottom;
-//    FStreamSlopeData.OnInvalidate := (Model as TPhastModel).InvalidateMfRivBottom;
-  end;
-
-
-  AddTimeList(FReachLength);
-  AddTimeList(FHydraulicConductivityData);
-  AddTimeList(FStreamBedThicknessData);
-  AddTimeList(FStreamBedElevationData);
-  AddTimeList(FStreamSlopeData);
-  AddTimeList(FSaturatedWaterContent);
-  AddTimeList(FInitialWaterContent);
-  AddTimeList(FBrooksCoreyExponent);
-  AddTimeList(FVerticalK);
+  result := TSfrTimeListLink;
 end;
 
-destructor TSfrCollection.Destroy;
-begin
-  FReachLength.Free;
-  FHydraulicConductivityData.Free;
-  FStreamBedThicknessData.Free;
-  FStreamBedElevationData.Free;
-  FStreamSlopeData.Free;
-  FSaturatedWaterContent.Free;
-  FInitialWaterContent.Free;
-  FBrooksCoreyExponent.Free;
-  FVerticalK.Free;
-  inherited;
-end;
-
-procedure TSfrCollection.InitializeTimeLists(ListOfTimeLists: TList);
+procedure TSfrCollection.InitializeTimeLists(ListOfTimeLists: TList;
+  AModel: TBaseModel);
 var
   TimeIndex: Integer;
   BoundaryValues: TBoundaryValueArray;
@@ -1112,6 +1057,16 @@ var
   Boundary: TSfrBoundary;
   ScreenObject: TScreenObject;
   ISFROPT: integer;
+  ALink: TSfrTimeListLink;
+  HydraulicConductivityData: TModflowTimeList;
+  ReachLength: TModflowTimeList;
+  StreamBedThicknessData: TModflowTimeList;
+  StreamBedElevationData: TModflowTimeList;
+  StreamSlopeData: TModflowTimeList;
+  SaturatedWaterContent: TModflowTimeList;
+  InitialWaterContent: TModflowTimeList;
+  BrooksCoreyExponent: TModflowTimeList;
+  VerticalK: TModflowTimeList;
 begin
   ISFROPT := (Model as TPhastModel).ModflowPackages.SfrPackage.Isfropt;
 
@@ -1126,8 +1081,19 @@ begin
     BoundaryValues[Index].Time := Item.StartTime;
     BoundaryValues[Index].Formula := Item.ReachLength;
   end;
-  FReachLength.Initialize(BoundaryValues, ScreenObject);
-  Assert(FReachLength.Count = Count);
+  ALink := TimeListLink.GetLink(AModel) as TSfrTimeListLink;
+  ReachLength := ALink.FReachLength;
+  ReachLength.Initialize(BoundaryValues, ScreenObject, False);
+  Assert(ReachLength.Count = Count);
+
+  HydraulicConductivityData := ALink.FHydraulicConductivityData;
+  StreamBedThicknessData := ALink.FStreamBedThicknessData;
+  StreamBedElevationData := ALink.FStreamBedElevationData;
+  StreamSlopeData := ALink.FStreamSlopeData;
+  SaturatedWaterContent := ALink.FSaturatedWaterContent;
+  InitialWaterContent := ALink.FInitialWaterContent;
+  BrooksCoreyExponent := ALink.FBrooksCoreyExponent;
+  VerticalK := ALink.FVerticalK;
 
   if ISFROPT in [1,2,3] then
   begin
@@ -1137,8 +1103,8 @@ begin
       BoundaryValues[Index].Time := Item.StartTime;
       BoundaryValues[Index].Formula := Item.HydraulicConductivity;
     end;
-    FHydraulicConductivityData.Initialize(BoundaryValues, ScreenObject);
-    Assert(FHydraulicConductivityData.Count = Count);
+    HydraulicConductivityData.Initialize(BoundaryValues, ScreenObject, False);
+    Assert(HydraulicConductivityData.Count = Count);
 
     for Index := 0 to Count - 1 do
     begin
@@ -1146,8 +1112,8 @@ begin
       BoundaryValues[Index].Time := Item.StartTime;
       BoundaryValues[Index].Formula := Item.StreamBedThickness;
     end;
-    FStreamBedThicknessData.Initialize(BoundaryValues, ScreenObject);
-    Assert(FStreamBedThicknessData.Count = Count);
+    StreamBedThicknessData.Initialize(BoundaryValues, ScreenObject, False);
+    Assert(StreamBedThicknessData.Count = Count);
 
     for Index := 0 to Count - 1 do
     begin
@@ -1155,8 +1121,8 @@ begin
       BoundaryValues[Index].Time := Item.StartTime;
       BoundaryValues[Index].Formula := Item.StreamBedElevation;
     end;
-    FStreamBedElevationData.Initialize(BoundaryValues, ScreenObject);
-    Assert(FStreamBedElevationData.Count = Count);
+    StreamBedElevationData.Initialize(BoundaryValues, ScreenObject, False);
+    Assert(StreamBedElevationData.Count = Count);
 
     for Index := 0 to Count - 1 do
     begin
@@ -1164,8 +1130,8 @@ begin
       BoundaryValues[Index].Time := Item.StartTime;
       BoundaryValues[Index].Formula := Item.StreamSlope;
     end;
-    FStreamSlopeData.Initialize(BoundaryValues, ScreenObject);
-    Assert(FStreamSlopeData.Count = Count);
+    StreamSlopeData.Initialize(BoundaryValues, ScreenObject, False);
+    Assert(StreamSlopeData.Count = Count);
 
     if ISFROPT in [2,3] then
     begin
@@ -1175,8 +1141,8 @@ begin
         BoundaryValues[Index].Time := Item.StartTime;
         BoundaryValues[Index].Formula := Item.SaturatedWaterContent;
       end;
-      FSaturatedWaterContent.Initialize(BoundaryValues, ScreenObject);
-      Assert(FSaturatedWaterContent.Count = Count);
+      SaturatedWaterContent.Initialize(BoundaryValues, ScreenObject, False);
+      Assert(SaturatedWaterContent.Count = Count);
 
       for Index := 0 to Count - 1 do
       begin
@@ -1184,8 +1150,8 @@ begin
         BoundaryValues[Index].Time := Item.StartTime;
         BoundaryValues[Index].Formula := Item.InitialWaterContent;
       end;
-      FInitialWaterContent.Initialize(BoundaryValues, ScreenObject);
-      Assert(FInitialWaterContent.Count = Count);
+      InitialWaterContent.Initialize(BoundaryValues, ScreenObject, False);
+      Assert(InitialWaterContent.Count = Count);
 
       for Index := 0 to Count - 1 do
       begin
@@ -1193,8 +1159,8 @@ begin
         BoundaryValues[Index].Time := Item.StartTime;
         BoundaryValues[Index].Formula := Item.BrooksCoreyExponent;
       end;
-      FBrooksCoreyExponent.Initialize(BoundaryValues, ScreenObject);
-      Assert(FBrooksCoreyExponent.Count = Count);
+      BrooksCoreyExponent.Initialize(BoundaryValues, ScreenObject, False);
+      Assert(BrooksCoreyExponent.Count = Count);
 
       if ISFROPT = 3 then
       begin
@@ -1204,108 +1170,225 @@ begin
           BoundaryValues[Index].Time := Item.StartTime;
           BoundaryValues[Index].Formula := Item.VerticalK;
         end;
-        FVerticalK.Initialize(BoundaryValues, ScreenObject);
-        Assert(FVerticalK.Count = Count);
+        VerticalK.Initialize(BoundaryValues, ScreenObject, False);
+        Assert(VerticalK.Count = Count);
       end;
     end;
   end;
 
 
   ClearBoundaries;
-  SetBoundaryCapacity(FReachLength.Count);
-  for TimeIndex := 0 to FReachLength.Count - 1 do
+  SetBoundaryCapacity(ReachLength.Count);
+  for TimeIndex := 0 to ReachLength.Count - 1 do
   begin
     AddBoundary(TSfrStorage.Create);
   end;
-  ListOfTimeLists.Add(FReachLength);
+  ListOfTimeLists.Add(ReachLength);
   if ISFROPT in [1,2,3] then
   begin
-    ListOfTimeLists.Add(FHydraulicConductivityData);
-    ListOfTimeLists.Add(FStreamBedThicknessData);
-    ListOfTimeLists.Add(FStreamBedElevationData);
-    ListOfTimeLists.Add(FStreamSlopeData);
+    ListOfTimeLists.Add(HydraulicConductivityData);
+    ListOfTimeLists.Add(StreamBedThicknessData);
+    ListOfTimeLists.Add(StreamBedElevationData);
+    ListOfTimeLists.Add(StreamSlopeData);
     if ISFROPT in [2,3] then
     begin
-      ListOfTimeLists.Add(FSaturatedWaterContent);
-      ListOfTimeLists.Add(FInitialWaterContent);
-      ListOfTimeLists.Add(FBrooksCoreyExponent);
+      ListOfTimeLists.Add(SaturatedWaterContent);
+      ListOfTimeLists.Add(InitialWaterContent);
+      ListOfTimeLists.Add(BrooksCoreyExponent);
       if ISFROPT = 3 then
       begin
-        ListOfTimeLists.Add(FVerticalK);
+        ListOfTimeLists.Add(VerticalK);
       end;
     end;
   end;
 end;
 
 procedure TSfrCollection.InvalidateBedThicknessData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FStreamBedThicknessData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrTimeListLink;
+    Link.FStreamBedThicknessData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrTimeListLink;
+      Link.FStreamBedThicknessData.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrCollection.InvalidateBrooksCoreyExponentData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FBrooksCoreyExponent.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrTimeListLink;
+    Link.FBrooksCoreyExponent.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrTimeListLink;
+      Link.FBrooksCoreyExponent.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrCollection.InvalidateHydraulicConductivityData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FHydraulicConductivityData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrTimeListLink;
+    Link.FHydraulicConductivityData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrTimeListLink;
+      Link.FHydraulicConductivityData.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrCollection.InvalidateInitialWaterContentData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FInitialWaterContent.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrTimeListLink;
+    Link.FInitialWaterContent.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrTimeListLink;
+      Link.FInitialWaterContent.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrCollection.InvalidateReachLengthData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FReachLength.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrTimeListLink;
+    Link.FReachLength.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrTimeListLink;
+      Link.FReachLength.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrCollection.InvalidateSaturatedWaterContentData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FSaturatedWaterContent.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrTimeListLink;
+    Link.FSaturatedWaterContent.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrTimeListLink;
+      Link.FSaturatedWaterContent.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrCollection.InvalidateStreambedElevationData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FStreamBedElevationData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrTimeListLink;
+    Link.FStreamBedElevationData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrTimeListLink;
+      Link.FStreamBedElevationData.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrCollection.InvalidateStreamSlopeData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FStreamSlopeData.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrTimeListLink;
+    Link.FStreamSlopeData.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrTimeListLink;
+      Link.FStreamSlopeData.Invalidate;
+    end;
   end;
 end;
 
 procedure TSfrCollection.InvalidateVerticalKData(Sender: TObject);
+var
+  PhastModel: TPhastModel;
+  Link: TSfrTimeListLink;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   if not (Sender as TObserver).UpToDate then
   begin
-    FVerticalK.Invalidate;
+    PhastModel := frmGoPhast.PhastModel;
+    Link := TimeListLink.GetLink(PhastModel) as TSfrTimeListLink;
+    Link.FVerticalK.Invalidate;
+    for ChildIndex := 0 to PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := PhastModel.ChildModels[ChildIndex].ChildModel;
+      Link := TimeListLink.GetLink(ChildModel) as TSfrTimeListLink;
+      Link.FVerticalK.Invalidate;
+    end;
   end;
 end;
 
@@ -1365,13 +1448,13 @@ begin
   result := Values.InitialWaterContentAnnotation;
 end;
 
-function TSfr_Cell.GetIntegerAnnotation(Index: integer): string;
+function TSfr_Cell.GetIntegerAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   Assert(False);
 end;
 
-function TSfr_Cell.GetIntegerValue(Index: integer): integer;
+function TSfr_Cell.GetIntegerValue(Index: integer; AModel: TBaseModel): integer;
 begin
   result := 0;
   Assert(False);
@@ -1392,7 +1475,7 @@ begin
   result := Values.ReachLengthAnnotation;
 end;
 
-function TSfr_Cell.GetRealAnnotation(Index: integer): string;
+function TSfr_Cell.GetRealAnnotation(Index: integer; AModel: TBaseModel): string;
 begin
   result := '';
   case Index of
@@ -1409,7 +1492,7 @@ begin
   end;
 end;
 
-function TSfr_Cell.GetRealValue(Index: integer): double;
+function TSfr_Cell.GetRealValue(Index: integer; AModel: TBaseModel): double;
 begin
   result := 0;
   case Index of
@@ -1498,6 +1581,21 @@ begin
   inherited;
   Values.Restore(Decomp, Annotations);
   StressPeriod := ReadCompInt(Decomp);
+end;
+
+procedure TSfr_Cell.SetColumn(const Value: integer);
+begin
+  FValues.Cell.Column := Value;
+end;
+
+procedure TSfr_Cell.SetLayer(const Value: integer);
+begin
+  FValues.Cell.Layer := Value;
+end;
+
+procedure TSfr_Cell.SetRow(const Value: integer);
+begin
+  FValues.Cell.Row := Value;
 end;
 
 { TSfrRecord }
@@ -1655,6 +1753,66 @@ begin
     RestoreData;
   end;
   result := FSfrArray;
+end;
+
+{ TSfrTimeListLink }
+
+procedure TSfrTimeListLink.CreateTimeLists;
+begin
+  inherited;
+  FReachLength := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FHydraulicConductivityData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FStreamBedThicknessData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FStreamBedElevationData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FStreamSlopeData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FSaturatedWaterContent := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FInitialWaterContent := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FBrooksCoreyExponent := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FVerticalK := TModflowTimeList.Create(Model, Boundary.ScreenObject);
+  FReachLength.NonParamDescription := 'Reach length';
+  FReachLength.ParamDescription := ' reach length';
+  FStreamBedThicknessData.NonParamDescription := 'Streambed thickness';
+  FStreamBedThicknessData.ParamDescription := ' streambed thickness';
+  FStreamBedElevationData.NonParamDescription := 'Streambed elevation';
+  FStreamBedElevationData.ParamDescription := ' streambed elevation';
+  FHydraulicConductivityData.NonParamDescription := 'Hydraulic conductivity';
+  FHydraulicConductivityData.ParamDescription := ' Hydraulic conductivity multiplier';
+  FStreamSlopeData.NonParamDescription := 'Slope';
+  FStreamSlopeData.ParamDescription := ' slope';
+  FSaturatedWaterContent.NonParamDescription := 'Saturated water content';
+  FSaturatedWaterContent.ParamDescription := ' saturated water content';
+  FInitialWaterContent.NonParamDescription := 'Initial water content';
+  FInitialWaterContent.ParamDescription := ' initial water content';
+  FBrooksCoreyExponent.NonParamDescription := 'Brooks-Corey exponent';
+  FBrooksCoreyExponent.ParamDescription := ' Brooks-Corey exponent';
+  FVerticalK.NonParamDescription := 'Maximum vertical unsaturated hydraulic conductivity';
+  FVerticalK.ParamDescription := ' maximum vertical unsaturated hydraulic conductivity';
+  if Model <> nil then
+  begin
+  end;
+  AddTimeList(FReachLength);
+  AddTimeList(FHydraulicConductivityData);
+  AddTimeList(FStreamBedThicknessData);
+  AddTimeList(FStreamBedElevationData);
+  AddTimeList(FStreamSlopeData);
+  AddTimeList(FSaturatedWaterContent);
+  AddTimeList(FInitialWaterContent);
+  AddTimeList(FBrooksCoreyExponent);
+  AddTimeList(FVerticalK);
+end;
+
+destructor TSfrTimeListLink.Destroy;
+begin
+  FReachLength.Free;
+  FHydraulicConductivityData.Free;
+  FStreamBedThicknessData.Free;
+  FStreamBedElevationData.Free;
+  FStreamSlopeData.Free;
+  FSaturatedWaterContent.Free;
+  FInitialWaterContent.Free;
+  FBrooksCoreyExponent.Free;
+  FVerticalK.Free;
+  inherited;
 end;
 
 end.

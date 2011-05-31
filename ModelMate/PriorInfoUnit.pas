@@ -248,20 +248,20 @@ begin
   slPriStatFlag.Add('SQRWT');
   //
   slCMPriDefault := TStringList.Create;
-  slCMPriDefault.Add('Prior Information Table');
+  slCMPriDefault.Add('Prior-Information Table');
   slCMPriDefault.Add('No Table (use default)');
   //
   slCMPriGpsDefault := TStringList.Create;
-  slCMPriGpsDefault.Add('Prior Information Groups Table');
+  slCMPriGpsDefault.Add('Prior-Information Groups Table');
   slCMPriGpsDefault.Add('No Table (use default)');
   //
   slCMPriGps := TStringList.Create;
-  slCMPriGps.Add('Prior Information Table');
-  slCMPriGps.Add('Prior Information Groups Table');
+  slCMPriGps.Add('Prior-Information Table');
+  slCMPriGps.Add('Prior-Information Groups Table');
   //
   slCMPriAllOptions := TStringList.Create;
-  slCMPriAllOptions.Add('Prior Information Table');
-  slCMPriAllOptions.Add('Prior Information Groups Table');
+  slCMPriAllOptions.Add('Prior-Information Table');
+  slCMPriAllOptions.Add('Prior-Information Groups Table');
   slCMPriAllOptions.Add('No Table (use default)');
   //
   PriorChanged := False;

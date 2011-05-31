@@ -167,7 +167,10 @@ var
   ObsFactor: TObservationFactor;
   ObsState: TCheckBoxState;
 begin
-  Assert(rdgObservationGroups.RowCount = Observations.Count+1);
+  if Observations.Count > 0 then
+  begin
+    Assert(rdgObservationGroups.RowCount = Observations.Count+1);
+  end;
   for ObsevationIndex := 0 to Observations.Count - 1 do
   begin
     Observation:= Observations[ObsevationIndex];

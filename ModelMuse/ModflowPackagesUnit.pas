@@ -2,12 +2,12 @@ unit ModflowPackagesUnit;
 
 interface
 
-Uses Classes, ModflowPackageSelectionUnit;
+Uses Classes, ModflowPackageSelectionUnit, GoPhastTypes;
 
 type
   TModflowPackages = class(TPersistent)
   private
-    FModel: TObject;
+    FModel: TBaseModel;
     FChdBoundary: TChdPackage;
     FLpfPackage: TLpfSelection;
     FPcgPackage: TPcgSelection;
@@ -74,7 +74,7 @@ type
     procedure SetHydmodPackage(const Value: THydPackageSelection);
   public
     procedure Assign(Source: TPersistent); override;
-    constructor Create(Model: TObject);
+    constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     procedure Reset;
     // @name is used to set the progress bar limits when exporting
@@ -211,7 +211,7 @@ begin
   end;
 end;
 
-constructor TModflowPackages.Create(Model: TObject);
+constructor TModflowPackages.Create(Model: TBaseModel);
 begin
   inherited Create;
   FModel := Model;
@@ -587,12 +587,12 @@ begin
   if HufPackage.IsSelected then
   begin
     Inc(Result);
-    if (FModel as TPhastModel).HufParameters.CountParameters(
+    if (FModel as TCustomModel).HufParameters.CountParameters(
       [ptHUF_KDEP]) > 0 then
     begin
       Inc(Result);
     end;
-    if (FModel as TPhastModel).ModflowSteadyParameters.CountParameters(
+    if (FModel as TCustomModel).ModflowSteadyParameters.CountParameters(
       [ptHUF_LVDA]) > 0 then
     begin
       Inc(Result);

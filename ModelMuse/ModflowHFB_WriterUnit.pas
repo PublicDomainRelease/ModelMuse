@@ -4,7 +4,7 @@ interface
 
 uses SysUtils, Classes, Contnrs, PhastModelUnit, CustomModflowWriterUnit,
   ScreenObjectUnit, ModflowPackageSelectionUnit, ModflowParameterUnit,
-  EdgeDisplayUnit;
+  EdgeDisplayUnit, GoPhastTypes;
 
 type
   TModflowHfb_Writer = class;
@@ -80,7 +80,7 @@ type
 implementation
 
 uses Math, RbwParser, ModflowUnitNumbers, ModflowHfbUnit, OrderedCollectionUnit,
-  frmErrorsAndWarningsUnit, ModflowGridUnit, GoPhastTypes, GIS_Functions, 
+  frmErrorsAndWarningsUnit, ModflowGridUnit, GIS_Functions, 
   frmProgressUnit, frmFormulaErrorsUnit, Forms;
 
 { TModflowHfb_Writer }
@@ -136,13 +136,14 @@ var
       UpdateCurrentScreenObject(ScreenObject);
       UpdateCurrentSegment(Segment);
       UpdateCurrentSection(Segment.SectionIndex);
-      UpdateGlobalLocations(Segment.Col, Segment.Row, Segment.Layer, eaBlocks);
+      UpdateGlobalLocations(Segment.Col, Segment.Row, Segment.Layer, eaBlocks,
+        Model);
 
       try
         HydraulicConductivityExpression.Evaluate;
       except on E: ERbwParserError do
         begin
-          frmFormulaErrors.AddError(ScreenObject.Name,
+          frmFormulaErrors.AddFormulaError(ScreenObject.Name,
             '(hydraulic conductivity for the HFB package)',
             ScreenObject.ModflowHfbBoundary.HydraulicConductivityFormula,
             E.Message);
@@ -162,7 +163,7 @@ var
         ThicknessExpression.Evaluate;
       except on E: ERbwParserError do
         begin
-          frmFormulaErrors.AddError(ScreenObject.Name,
+          frmFormulaErrors.AddFormulaError(ScreenObject.Name,
             '(thickness for the HFB package)',
             ScreenObject.ModflowHfbBoundary.ThicknessFormula,
             E.Message);
@@ -193,11 +194,11 @@ var
     end;
   begin
     Start := ScreenObjectList.BarrierCount;
-    Grid := PhastModel.ModflowGrid;
+    Grid := Model.ModflowGrid;
     for SegmentIndex := 0 to SegmentList.Count - 1 do
     begin
       Segment := SegmentList[SegmentIndex];
-      if PhastModel.LayerStructure.IsLayerSimulated(Segment.Layer) then
+      if Model.IsLayerSimulated(Segment.Layer) then
       begin
         MinX := Min(Segment.X1, Segment.X2);
         MaxX := Max(Segment.X1, Segment.X2);
@@ -219,7 +220,7 @@ var
           end;
           if (CrossRow >=0) and (CrossRow < Grid.RowCount) then
           begin
-            Barrier := TBarrier.Create;
+            Barrier := TBarrier.Create(Model);
             Barrier.FCol1 := Segment.Col;
             Barrier.FCol2 := Segment.Col;
             Barrier.FRow1 := Segment.Row;
@@ -281,7 +282,7 @@ var
           end;
           if (CrossColumn >=0) and (CrossColumn < Grid.ColumnCount) then
           begin
-            Barrier := TBarrier.Create;
+            Barrier := TBarrier.Create(Model);
             Barrier.FCol1 := Segment.Col;
             Barrier.FCol2 := CrossColumn;
             Barrier.FRow1 := Segment.Row;
@@ -346,9 +347,17 @@ begin
       begin
         PriorCount := ScreenObjectList.BarrierCount;
         ScreenObject := ScreenObjectList[ScreenObjectIndex];
+        if ScreenObject.Deleted then
+        begin
+          Continue;
+        end;
+        if not ScreenObject.UsedModels.UsesModel(Model) then
+        begin
+          Continue;
+        end;
         DataToCompile := TModflowDataObject.Create;
         try
-          DataToCompile.Compiler := PhastModel.GetCompiler(dsoTop, eaBlocks);
+          DataToCompile.Compiler := Model.GetCompiler(dsoTop, eaBlocks);
           DataToCompile.DataSetFunction := ScreenObject.ModflowHfbBoundary.HydraulicConductivityFormula;
           DataToCompile.AlternateName := 'HFB Hydraulic Conductivity';
           DataToCompile.AlternateDataType := rdtDouble;
@@ -364,9 +373,9 @@ begin
         end;
         PriorSection := -1;
         SegmentList.Clear;
-        for SegmentIndex := 0 to ScreenObject.Segments.Count - 1 do
+        for SegmentIndex := 0 to ScreenObject.Segments[Model].Count - 1 do
         begin
-          ASegment := ScreenObject.Segments[SegmentIndex];
+          ASegment := ScreenObject.Segments[Model][SegmentIndex];
           if ASegment.SectionIndex <> PriorSection then
           begin
             HandleSection;
@@ -378,7 +387,7 @@ begin
         HandleSection;
         if PriorCount = ScreenObjectList.BarrierCount then
         begin
-          frmErrorsAndWarnings.AddWarning(
+          frmErrorsAndWarnings.AddWarning(Model,
             'In the HFB package, one or more objects '
             + 'do not define any barriers.',
             ScreenObject.Name
@@ -400,7 +409,7 @@ end;
 
 function TModflowHfb_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.HfbPackage;
+  result := Model.ModflowPackages.HfbPackage;
 end;
 
 procedure TModflowHfb_Writer.UpdateDisplay;
@@ -416,14 +425,14 @@ begin
   begin
     Exit;
   end;
-  PhastModel.HfbDisplayer.Clear;
+  Model.HfbDisplayer.Clear;
   for ParmIndex := 0 to FParameterScreenObjectList.Count - 1 do
   begin
     ScreenObjectList := FParameterScreenObjectList.Objects[ParmIndex]
       as TParamList;
     for BarrierIndex := 0 to ScreenObjectList.BarrierCount - 1 do
     begin
-      PhastModel.HfbDisplayer.Add(ScreenObjectList.Barriers[BarrierIndex]);
+      Model.HfbDisplayer.Add(ScreenObjectList.Barriers[BarrierIndex]);
     end;
     for ScreenObjectIndex := 0 to ScreenObjectList.ScreenObjectCount - 1 do
     begin
@@ -431,7 +440,7 @@ begin
       ScreenObject.ModflowHfbBoundary.HfbObserver.UpToDate := True;
     end;
   end;
-  PhastModel.HfbDisplayer.UpToDate := True;
+  Model.HfbDisplayer.UpToDate := True;
 end;
 
 procedure TModflowHfb_Writer.WriteDataSet1;
@@ -552,7 +561,7 @@ begin
       WriteString(' # Data set 2: PARNAM PARTYP Parval NLST');
       NewLine;
 
-      PhastModel.WritePValAndTemplate(ParamList.Parameter.ParameterName,
+      Model.WritePValAndTemplate(ParamList.Parameter.ParameterName,
         ParamList.Parameter.Value);
 
       // data set 3
@@ -578,12 +587,12 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrHFB) then
+  if Model.PackageGeneratedExternally(StrHFB) then
   begin
     Exit;
   end;
   NameOfFile := FileName(AFileName);
-  WriteToNameFile(StrHFB, PhastModel.UnitNumbers.UnitNumber(StrHFB), NameOfFile, foInput);
+  WriteToNameFile(StrHFB, Model.UnitNumbers.UnitNumber(StrHFB), NameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
@@ -662,18 +671,18 @@ var
 begin
   ClearParameterScreenObjectList;
   FParameterScreenObjectList.AddObject('', TParamList.Create(nil));
-  for ParamIndex := 0 to PhastModel.ModflowSteadyParameters.Count-1 do
+  for ParamIndex := 0 to Model.ModflowSteadyParameters.Count-1 do
   begin
-    Param := PhastModel.ModflowSteadyParameters[ParamIndex];
+    Param := Model.ModflowSteadyParameters[ParamIndex];
     if Param.ParameterType = ptHFB then
     begin
       FParameterScreenObjectList.AddObject(Param.ParameterName,
         TParamList.Create(Param));
     end;
   end;
-  for Index := 0 to PhastModel.ScreenObjectCount - 1 do
+  for Index := 0 to Model.ScreenObjectCount - 1 do
   begin
-    ScreenObject := PhastModel.ScreenObjects[Index];
+    ScreenObject := Model.ScreenObjects[Index];
     if ScreenObject.Deleted then
     begin
       Continue;
@@ -684,7 +693,7 @@ begin
       ParamIndex := FParameterScreenObjectList.IndexOf(Boundary.ParameterName);
       if ParamIndex < 0 then
       begin
-        frmErrorsAndWarnings.AddWarning(
+        frmErrorsAndWarnings.AddWarning(Model,
           'In the HFB package, a parameter has been used without being defined',
           'In ' + ScreenObject.Name + ' the HFB parameter has been specified '
           + 'as ' + Boundary.ParameterName
@@ -700,7 +709,7 @@ begin
     List := FParameterScreenObjectList.Objects[Index] as TParamList;
     if List.ScreenObjectCount = 0 then
     begin
-      frmErrorsAndWarnings.AddWarning(
+      frmErrorsAndWarnings.AddWarning(Model, 
         'No defined boundaries for an HFB parameter',
         'For the parameter ' + FParameterScreenObjectList[Index]
         + ', there are no objects that define the location of an HFB barrier');
@@ -837,7 +846,7 @@ procedure TBarrier.WriteBarrier(Writer: TModflowHfb_Writer;
 var
   ModelLayer: integer;
 begin
-  ModelLayer := Writer.PhastModel.LayerStructure.
+  ModelLayer := Writer.Model.
     DataSetLayerToModflowLayer(Layer);
   Writer.WriteInteger(ModelLayer);
   Writer.WriteInteger(Row1+1);

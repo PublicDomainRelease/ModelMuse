@@ -38,13 +38,13 @@ end;
 
 function TModflowKDEP_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.HufPackage;
+  result := Model.ModflowPackages.HufPackage;
 end;
 
 function TModflowKDEP_Writer.PackageID_Comment: string;
 begin
   result := 'KDEP file created on '
-    + DateToStr(Now) + ' by ' + PhastModel.ProgramName + ' version '
+    + DateToStr(Now) + ' by ' + Model.ProgramName + ' version '
     + ModelVersion + '.';
 end;
 
@@ -57,7 +57,7 @@ procedure TModflowKDEP_Writer.WriteDataSet1;
 var
   NPKDEP: Integer;
 begin
-  NPKDEP := PhastModel.HufParameters.CountParameters([ptHUF_KDEP]);
+  NPKDEP := Model.HufParameters.CountParameters([ptHUF_KDEP]);
   IFKDEP := Ord(THufPackageSelection(Package).ReferenceChoice);
   WriteInteger(NPKDEP);
   WriteInteger(IFKDEP);
@@ -71,9 +71,9 @@ var
 begin
   if IFKDEP > 0 then
   begin
-    RSArray := PhastModel.DataArrayManager.GetDataSetByName(StrHufReferenceSurface);
+    RSArray := Model.DataArrayManager.GetDataSetByName(StrHufReferenceSurface);
     WriteArray(RSArray, 0, ' # Data Set 2: RS');
-    PhastModel.DataArrayManager.CacheDataArrays;
+    Model.DataArrayManager.CacheDataArrays;
   end;
 end;
 
@@ -102,18 +102,18 @@ begin
   UsedParameters := TList.Create;
   UsedHufUnits := TList.Create;
   try
-    for ParamIndex := 0 to PhastModel.HufParameters.Count - 1 do
+    for ParamIndex := 0 to Model.HufParameters.Count - 1 do
     begin
-      Parameter := PhastModel.HufParameters[ParamIndex];
+      Parameter := Model.HufParameters[ParamIndex];
       if (Parameter.ParameterType <> ptHUF_KDEP) then
       begin
         Continue;
       end;
       UsedParameters.Clear;
       UsedHufUnits.Clear;
-      for HufUnitIndex := 0 to PhastModel.HydrogeologicUnits.Count - 1 do
+      for HufUnitIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
       begin
-        HGU := PhastModel.HydrogeologicUnits[HufUnitIndex];
+        HGU := Model.HydrogeologicUnits[HufUnitIndex];
         UsedParam := HGU.UsesParameter(Parameter);
         if UsedParam <> nil then
         begin
@@ -124,7 +124,7 @@ begin
 
       if UsedParameters.Count = 0 then
       begin
-        frmErrorsAndWarnings.AddWarning(NoClusters, Parameter.ParameterName);
+        frmErrorsAndWarnings.AddWarning(Model, NoClusters, Parameter.ParameterName);
       end;
 
       PARNAM := ExpandString(Parameter.ParameterName, 10);
@@ -142,7 +142,7 @@ begin
       WriteInteger(NCLU);
       WriteString(' # Data set 3: PARNAM PARTYP Parval NCLU');
       NewLine;
-      PhastModel.WritePValAndTemplate(PARNAM,PARVAL);
+      Model.WritePValAndTemplate(PARNAM,PARVAL);
 
       for ClusterIndex := 0 to UsedParameters.Count - 1 do
       begin
@@ -197,17 +197,17 @@ begin
   begin
     Exit
   end;
-  if PhastModel.PackageGeneratedExternally(StrKDEP) then
+  if Model.PackageGeneratedExternally(StrKDEP) then
   begin
     Exit;
   end;
-  if PhastModel.HufParameters.CountParameters([ptHUF_KDEP]) = 0 then
+  if Model.HufParameters.CountParameters([ptHUF_KDEP]) = 0 then
   begin
     Exit;
   end;
 
   FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrKDEP, PhastModel.UnitNumbers.UnitNumber(StrKDEP),
+  WriteToNameFile(StrKDEP, Model.UnitNumbers.UnitNumber(StrKDEP),
     FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try

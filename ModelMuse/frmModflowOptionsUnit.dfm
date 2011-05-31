@@ -2,28 +2,29 @@ inherited frmModflowOptions: TfrmModflowOptions
   HelpType = htKeyword
   HelpKeyword = 'MODFLOW_Options_Dialog_Box'
   Caption = 'MODFLOW Options'
-  ClientHeight = 361
+  ClientHeight = 406
   ClientWidth = 543
   ExplicitWidth = 551
-  ExplicitHeight = 395
+  ExplicitHeight = 440
   PixelsPerInch = 96
   TextHeight = 18
   object pcOptions: TPageControl
     Left = 0
     Top = 0
     Width = 543
-    Height = 320
-    ActivePage = TabSheet2
+    Height = 324
+    ActivePage = TabSheet1
     Align = alClient
     TabOrder = 0
     OnChange = pcOptionsChange
+    ExplicitTop = 41
     object TabSheet1: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'Description_Tab'
       Caption = 'Description'
       DesignSize = (
         535
-        287)
+        291)
       object Label3: TLabel
         Left = 8
         Top = 1
@@ -78,10 +79,10 @@ inherited frmModflowOptions: TfrmModflowOptions
         OnExit = edModelerExit
       end
       object memoComments: TMemo
-        Left = 8
-        Top = 132
+        Left = 12
+        Top = 130
         Width = 520
-        Height = 148
+        Height = 152
         Anchors = [akLeft, akTop, akRight, akBottom]
         ScrollBars = ssBoth
         TabOrder = 3
@@ -96,7 +97,7 @@ inherited frmModflowOptions: TfrmModflowOptions
       ImageIndex = 1
       DesignSize = (
         535
-        287)
+        291)
       object Label5: TLabel
         Left = 3
         Top = 103
@@ -379,9 +380,9 @@ inherited frmModflowOptions: TfrmModflowOptions
       end
     end
   end
-  object Panel1: TPanel
+  object pnlBottom: TPanel
     Left = 0
-    Top = 320
+    Top = 365
     Width = 543
     Height = 41
     Align = alBottom
@@ -437,6 +438,37 @@ inherited frmModflowOptions: TfrmModflowOptions
       Anchors = [akTop, akRight]
       TabOrder = 2
       Kind = bkCancel
+    end
+  end
+  object pnlModel: TPanel
+    Left = 0
+    Top = 324
+    Width = 543
+    Height = 41
+    Align = alBottom
+    TabOrder = 2
+    ExplicitTop = 0
+    DesignSize = (
+      543
+      41)
+    object lblModel: TLabel
+      Left = 489
+      Top = 11
+      Width = 43
+      Height = 18
+      Anchors = [akTop, akRight]
+      Caption = 'Model'
+    end
+    object comboModel: TComboBox
+      Left = 8
+      Top = 8
+      Width = 475
+      Height = 26
+      Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
+      ItemHeight = 18
+      TabOrder = 0
+      OnChange = comboModelChange
     end
   end
   object rconWet: TRbwController

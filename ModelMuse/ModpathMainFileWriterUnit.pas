@@ -58,8 +58,8 @@ var
   FirstTime: Double;
   ReferenceTime: Real;
 begin
-  ReferenceTime := PhastModel.ModflowPackages.ModPath.ReferenceTime;
-  FirstTime := PhastModel.ModflowFullStressPeriods.Items[0].StartTime;
+  ReferenceTime := Model.ModflowPackages.ModPath.ReferenceTime;
+  FirstTime := Model.ModflowFullStressPeriods.Items[0].StartTime;
   TBEGIN := FirstTime - ReferenceTime;
   WriteFloat(TBEGIN);
   WriteString(' # Data Set 6A: TBEGIN');
@@ -71,10 +71,10 @@ var
   BeginPeriod, BeginStep, EndPeriod, EndStep: integer;
   ATime: Real;
 begin
-    if PhastModel.ModflowStressPeriods.CompletelyTransient then
+    if Model.ModflowStressPeriods.CompletelyTransient then
     begin
-      ATime := PhastModel.ModflowPackages.ModPath.BeginningTime;
-      PhastModel.ModflowFullStressPeriods.TimeToPeriodAndStep(
+      ATime := Model.ModflowPackages.ModPath.BeginningTime;
+      Model.ModflowFullStressPeriods.TimeToPeriodAndStep(
         ATime, BeginPeriod, BeginStep);
       Inc(BeginPeriod);
       Inc(BeginStep);
@@ -84,8 +84,8 @@ begin
       BeginPeriod := 1;
       BeginStep := 1;
     end;
-    ATime := PhastModel.ModflowPackages.ModPath.EndingTime;
-    PhastModel.ModflowFullStressPeriods.TimeToPeriodAndStep(
+    ATime := Model.ModflowPackages.ModPath.EndingTime;
+    Model.ModflowFullStressPeriods.TimeToPeriodAndStep(
       ATime, EndPeriod, EndStep);
 
     Inc(EndPeriod);
@@ -107,12 +107,12 @@ var
   LayerCount: Integer;
   PorosityArray: TDataArray;
 begin
-  PorosityArray := PhastModel.DataArrayManager.GetDataSetByName(rsPorosity);
+  PorosityArray := Model.DataArrayManager.GetDataSetByName(rsPorosity);
   LayerCount := 0;
   Layer := -1;
-  for Index := 1 to PhastModel.LayerStructure.Count - 1 do
+  for Index := 1 to Model.LayerStructure.Count - 1 do
   begin
-    LayerGroup := PhastModel.LayerStructure[Index];
+    LayerGroup := Model.LayerStructure[Index];
     if LayerGroup.Simulated then
     begin
       for LayerIndex := 0 to LayerGroup.ModflowLayerCount - 1 do
@@ -121,7 +121,7 @@ begin
         Inc(Layer);
         WriteArray(PorosityArray, Layer, 'Data Set 5: POR' + ' Layer '
           + IntToStr(LayerCount) + ': '
-          + PhastModel.LayerStructure.ModflowLayerBottomDescription(LayerCount));
+          + Model.ModflowLayerBottomDescription(LayerCount));
       end;
     end
     else
@@ -129,7 +129,7 @@ begin
       Inc(Layer);
       WriteArray(PorosityArray, Layer, 'Data Set 5: PorCB' + ' Layer '
         + IntToStr(LayerCount) + ': '
-        + PhastModel.LayerStructure.ModflowLayerBottomDescription(LayerCount));
+        + Model.ModflowLayerBottomDescription(LayerCount));
     end;
   end;
 end;
@@ -138,7 +138,7 @@ procedure TModpathMainFileWriter.WriteDataSet4;
 var
   ZoneDataArray: TDataArray;
 begin
-  ZoneDataArray := PhastModel.DataArrayManager.GetDataSetByName(StrModpathZone);
+  ZoneDataArray := Model.DataArrayManager.GetDataSetByName(StrModpathZone);
   WriteDataSet('Data Set 4: IBOUND', ZoneDataArray);
 end;
 
@@ -155,12 +155,12 @@ begin
   end
   else
   begin
-    for LayerIndex := 0 to PhastModel.ModflowGrid.LayerCount - 1 do
+    for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
     begin
-      if PhastModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+      if Model.IsLayerSimulated(LayerIndex) then
       begin
         WriteArray(DataArray, LayerIndex, DataSetName + ' '
-          + PhastModel.LayerStructure.ModflowLayerBottomDescription(LayerIndex));
+          + Model.ModflowLayerBottomDescription(LayerIndex));
       end;
     end;
   end;
@@ -176,9 +176,9 @@ var
   LayerCount: Integer;
 begin
   LayerCount := 0;
-  for Index := 1 to PhastModel.LayerStructure.Count - 1 do
+  for Index := 1 to Model.LayerStructure.Count - 1 do
   begin
-    LayerGroup := PhastModel.LayerStructure[Index];
+    LayerGroup := Model.LayerStructure[Index];
     if LayerGroup.Simulated then
     begin
       LAYCON := LayerGroup.AquiferType;
@@ -203,25 +203,27 @@ procedure TModpathMainFileWriter.WriteDataSet2;
 var
   Option: string;
 begin
-  XSECTION := PhastModel.ModflowGrid.RowCount = 1;
+  XSECTION := Model.ModflowGrid.RowCount = 1;
   Option := '';
   if XSECTION then
   begin
     Option := Option + ' XSECTION';
   end;
-  if PhastModel.ModflowPackages.ModPath.Compact then
+  if Model.ModflowPackages.ModPath.Compact then
   begin
     Option := Option + ' COMPACT';
   end;
-  if PhastModel.ModflowPackages.ModPath.Binary then
+  if Model.ModflowPackages.ModPath.Binary then
   begin
     Option := Option + ' BINARY';
   end;
-  case PhastModel.ModflowOptions.LengthUnit of
+  case Model.ModflowOptions.LengthUnit of
     0:
       // undefined
       begin
-        frmErrorsAndWarnings.AddWarning('Undefined length units', 'The length units of the model are undefined. MODPATH-PLOT ' + 'will treat the units as feet');
+        frmErrorsAndWarnings.AddWarning(Model, 'Undefined length units',
+          'The length units of the model are undefined. MODPATH-PLOT '
+          + 'will treat the units as feet');
       end;
     1:
       // feet
@@ -235,7 +237,10 @@ begin
     3:
       // centimeters
       begin
-        frmErrorsAndWarnings.AddWarning('Unsupported length units for MODPATH-PLOT', 'The length units of the model are centimeters. MODPATH-PLOT ' + 'will treat the units as feet');
+        frmErrorsAndWarnings.AddWarning(Model,
+          'Unsupported length units for MODPATH-PLOT',
+          'The length units of the model are centimeters. MODPATH-PLOT '
+          + 'will treat the units as feet');
       end;
   else
     Assert(False);
@@ -254,12 +259,12 @@ var
   IRCHTP: Integer;
   IEVTTP: Integer;
 begin
-  MAXSIZ := PhastModel.ModflowPackages.ModPath.MaximumSize;
-  HNOFLO := PhastModel.ModflowOptions.HNoFlow;
-  HDRY := PhastModel.ModflowOptions.HDry;
+  MAXSIZ := Model.ModflowPackages.ModPath.MaximumSize;
+  HNOFLO := Model.ModflowOptions.HNoFlow;
+  HDRY := Model.ModflowOptions.HDry;
   NPART := 0;
-  IRCHTP := Ord(PhastModel.ModflowPackages.ModPath.RCH_Source);
-  IEVTTP := Ord(PhastModel.ModflowPackages.ModPath.EVT_Sink);
+  IRCHTP := Ord(Model.ModflowPackages.ModPath.RCH_Source);
+  IEVTTP := Ord(Model.ModflowPackages.ModPath.EVT_Sink);
   WriteInteger(MAXSIZ);
   WriteFloat(HNOFLO);
   WriteFloat(HDRY);

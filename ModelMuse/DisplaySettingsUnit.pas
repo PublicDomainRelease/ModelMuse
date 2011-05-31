@@ -27,7 +27,7 @@ type
   public
     procedure Assign(Source: TPersistent); override;
     procedure AssignTo(Dest: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
     property Rect: TRect read FRect write SetRect;
   published
@@ -53,7 +53,7 @@ type
   end;
 
   TTextCollection = class(TPhastCollection)
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
   end;
 
   TContourDisplaySettings= class(TGoPhastPersistent)
@@ -68,7 +68,7 @@ type
     procedure SetLimits(const Value: TColoringLimits);
   public
     procedure Assign(Source: TPersistent); override;
-    Constructor Create(Model: TObject);
+    Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
   published
     property DataSetName: string read FDataSetName write SetDataSetName;
@@ -211,7 +211,7 @@ type
   }
   TDisplaySettingsCollection = class(TPhastCollection)
   public
-    constructor Create(Model: TComponent);
+    constructor Create(Model: TBaseModel);
     function GetItemByName(const AName: string): TDisplaySettingsItem;
   end;
 
@@ -268,7 +268,7 @@ begin
   end;
 end;
 
-constructor TTextDisplay.Create(Model: TObject);
+constructor TTextDisplay.Create(Model: TBaseModel);
 begin
   inherited;
   FFont := TFont.Create;
@@ -395,7 +395,7 @@ end;
 
 { TTextCollection }
 
-constructor TTextCollection.Create(Model: TComponent);
+constructor TTextCollection.Create(Model: TBaseModel);
 begin
   inherited Create(TTextItem, Model);
 end;
@@ -614,7 +614,7 @@ end;
 
 { TDisplaySettingsCollection }
 
-constructor TDisplaySettingsCollection.Create(Model: TComponent);
+constructor TDisplaySettingsCollection.Create(Model: TBaseModel);
 begin
   inherited Create(TDisplaySettingsItem, Model);
 end;
@@ -657,7 +657,7 @@ begin
   end;
 end;
 
-constructor TContourDisplaySettings.Create(Model: TObject);
+constructor TContourDisplaySettings.Create(Model: TBaseModel);
 begin
   inherited;
   FLegend := TLegend.Create(FModel);

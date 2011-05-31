@@ -88,20 +88,20 @@ const
   OverlapWarning = 'Overlap between hydrogeologic units';
   WarningFormat = 'Column: %d; Row: %d; Higher unit: %s; Lower unit: %s';
 begin
-  DataArrayManager := PhastModel.DataArrayManager;
+  DataArrayManager := Model.DataArrayManager;
   ActiveDataArray := DataArrayManager.GetDataSetByName(rsActive);
   ActiveDataArray.Initialize;
 
   HguList := TObjectList.Create;
   try
-    for ColIndex := 0 to PhastModel.ModflowGrid.ColumnCount - 1 do
+    for ColIndex := 0 to Model.ModflowGrid.ColumnCount - 1 do
     begin
-      for RowIndex := 0 to PhastModel.ModflowGrid.RowCount - 1 do
+      for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
       begin
         CellUsed := False;
-        for LayerIndex := 0 to PhastModel.ModflowGrid.LayerCount - 1 do
+        for LayerIndex := 0 to Model.ModflowGrid.LayerCount - 1 do
         begin
-          if PhastModel.LayerStructure.IsLayerSimulated(LayerIndex) then
+          if Model.IsLayerSimulated(LayerIndex) then
           begin
             if ActiveDataArray.BooleanData[0, RowIndex, ColIndex] then
             begin
@@ -112,9 +112,9 @@ begin
         end;
         if CellUsed then
         begin
-          for HguIndex := 0 to PhastModel.HydrogeologicUnits.Count - 1 do
+          for HguIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
           begin
-            HGU := PhastModel.HydrogeologicUnits[HguIndex];
+            HGU := Model.HydrogeologicUnits[HguIndex];
             ThickArray := DataArrayManager.GetDataSetByName(HGU.ThickessDataArrayName);
             ThickArray.Initialize;
             DataArrayManager.AddDataSetToCache(ThickArray);
@@ -139,13 +139,13 @@ begin
             Delta := SortItem1.Bottom - SortItem2.Top;
             if Delta > Epsilon then
             begin
-              frmErrorsAndWarnings.AddWarning(GapWarning,
+              frmErrorsAndWarnings.AddWarning(Model, GapWarning,
                 Format(WarningFormat, [ColIndex+1, RowIndex+1,
                   SortItem1.HGU.HufName, SortItem2.HGU.HufName]));
             end
             else if Delta < -Epsilon then
             begin
-              frmErrorsAndWarnings.AddWarning(OverlapWarning,
+              frmErrorsAndWarnings.AddWarning(Model, OverlapWarning,
                 Format(WarningFormat, [ColIndex+1, RowIndex+1,
                   SortItem1.HGU.HufName, SortItem2.HGU.HufName]));
             end;
@@ -175,7 +175,7 @@ end;
 
 function TModflowHUF_Writer.Package: TModflowPackageSelection;
 begin
-  result := PhastModel.ModflowPackages.HufPackage;
+  result := Model.ModflowPackages.HufPackage;
 end;
 
 procedure TModflowHUF_Writer.WriteDataSet1;
@@ -190,22 +190,22 @@ var
 begin
   IHUFCB := 0;
   GetFlowUnitNumber(IHUFCB);
-  HDRY := PhastModel.ModflowOptions.HDry;
-  NHUF := PhastModel.HydrogeologicUnits.Count;
-  FTransient := PhastModel.ModflowFullStressPeriods.TransientModel;
+  HDRY := Model.ModflowOptions.HDry;
+  NHUF := Model.HydrogeologicUnits.Count;
+  FTransient := Model.ModflowFullStressPeriods.TransientModel;
   if FTransient then
   begin
-    NPHUF := PhastModel.HufParameters.CountParameters(HufSteadyAndTransientParameters) +
-      PhastModel.ModflowSteadyParameters.CountParameters([ptHUF_SYTP]);
+    NPHUF := Model.HufParameters.CountParameters(HufSteadyAndTransientParameters) +
+      Model.ModflowSteadyParameters.CountParameters([ptHUF_SYTP]);
   end
   else
   begin
-    NPHUF := PhastModel.HufParameters.CountParameters(HufSteadyParameters);
+    NPHUF := Model.HufParameters.CountParameters(HufSteadyParameters);
   end;
   if FHufPackage.SaveHeads then
   begin
-    IOHUFHEADS := PhastModel.UnitNumbers.UnitNumber(StrIOHUFHEADS);
-    if PhastModel.ModflowOutputControl.HeadOC.FormatDefined then
+    IOHUFHEADS := Model.UnitNumbers.UnitNumber(StrIOHUFHEADS);
+    if Model.ModflowOutputControl.HeadOC.FormatDefined then
     begin
       NameOfFile := ChangeFileExt(FNameOfFile, StrHuffhd);
       WriteToNameFile(StrDATA, IOHUFHEADS,
@@ -224,7 +224,7 @@ begin
   end;
   if FHufPackage.SaveFlows then
   begin
-    IOHUFFLOWS := PhastModel.UnitNumbers.UnitNumber(StrIOHUFFLOWS);
+    IOHUFFLOWS := Model.UnitNumbers.UnitNumber(StrIOHUFFLOWS);
     NameOfFile := ChangeFileExt(FNameOfFile, StrHufflow);
     WriteToNameFile(StrDATABINARY, IOHUFFLOWS,
       NameOfFile, foOutput);
@@ -254,9 +254,9 @@ var
   PrintItem: TPrintItem;
   PRINTFLAGS: string;
 begin
-  for UnitIndex := 0 to PhastModel.HydrogeologicUnits.Count - 1 do
+  for UnitIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
   begin
-    HGU := PhastModel.HydrogeologicUnits[UnitIndex];
+    HGU := Model.HydrogeologicUnits[UnitIndex];
     HGUNAM := HGU.HufName;
     PRINTCODE := HGU.PrintFormat;
     PRINTFLAGS := '';
@@ -284,7 +284,7 @@ var
   LTHUF: TOneDIntegerArray;
   LayerIndex: Integer;
 begin
-  LTHUF := PhastModel.LayerStructure.Laytyp;
+  LTHUF := Model.Laytyp;
   for LayerIndex := 0 to Length(LTHUF) - 1 do
   begin
     WriteInteger(LTHUF[LayerIndex]);
@@ -298,11 +298,11 @@ var
   index: Integer;
   LTHUF: TOneDIntegerArray;
 begin
-  LTHUF := PhastModel.LayerStructure.Laytyp;
+  LTHUF := Model.Laytyp;
   FConvertibleLayerPresent := False;
-  for index := 0 to PhastModel.LayerStructure.ModflowLayerCount - 1 do
+  for index := 0 to Model.ModflowLayerCount - 1 do
   begin
-    if PhastModel.ModflowWettingOptions.WettingActive
+    if Model.ModflowWettingOptions.WettingActive
       and (LTHUF[index] <> 0) then
     begin
       WriteInteger(1);
@@ -313,6 +313,7 @@ begin
       WriteInteger(0);
     end;
   end;
+
   WriteString(' # Data set 3: LAYWT');
   NewLine;
 end;
@@ -323,12 +324,12 @@ var
   IWETIT: integer;
   IHDWET: integer;
 begin
-  if PhastModel.ModflowWettingOptions.WettingActive
+  if Model.ModflowWettingOptions.WettingActive
     and FConvertibleLayerPresent then
   begin
-    WETFCT := PhastModel.ModflowWettingOptions.WettingFactor;
-    IWETIT := PhastModel.ModflowWettingOptions.WettingIterations;
-    IHDWET := PhastModel.ModflowWettingOptions.WettingEquation;
+    WETFCT := Model.ModflowWettingOptions.WettingFactor;
+    IWETIT := Model.ModflowWettingOptions.WettingIterations;
+    IHDWET := Model.ModflowWettingOptions.WettingEquation;
     WriteFloat(WETFCT);
     WriteInteger(IWETIT);
     WriteInteger(IHDWET);
@@ -345,21 +346,21 @@ var
   LayerDescription: string;
   LTHUF: TOneDIntegerArray;
 begin
-  LTHUF := PhastModel.LayerStructure.Laytyp;
-  if PhastModel.ModflowWettingOptions.WettingActive then
+  LTHUF := Model.Laytyp;
+  if Model.ModflowWettingOptions.WettingActive then
   begin
-    DataArray := PhastModel.DataArrayManager.GetDataSetByName(rsWetDry);
+    DataArray := Model.DataArrayManager.GetDataSetByName(rsWetDry);
     Assert(DataArray <> nil);
 
     try
-      for MFLayerIndex := 1 to PhastModel.LayerStructure.ModflowLayerCount do
+      for MFLayerIndex := 1 to Model.ModflowLayerCount do
       begin
         if LTHUF[MFLayerIndex-1] <> 0 then
         begin
-          DataArrayLayerIndex := PhastModel.LayerStructure.
+          DataArrayLayerIndex := Model.
             ModflowLayerToDataSetLayer(MFLayerIndex);
 
-          LayerDescription := PhastModel.LayerStructure.
+          LayerDescription := Model.
             ModflowLayerBottomDescription(DataArrayLayerIndex);
 
           WriteArray(DataArray, DataArrayLayerIndex, 'Data set 5: WETDRY ' + LayerDescription);
@@ -371,7 +372,7 @@ begin
         end;
       end;
     finally
-      PhastModel.DataArrayManager.CacheDataArrays;
+      Model.DataArrayManager.CacheDataArrays;
     end;
   end;
 end;
@@ -387,20 +388,20 @@ procedure TModflowHUF_Writer.WriteDataSet7(HGU: THydrogeologicUnit);
 var
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(HGU.TopDataArrayName);
+  DataArray := Model.DataArrayManager.GetDataSetByName(HGU.TopDataArrayName);
   Assert(DataArray <> nil);
   WriteArray(DataArray, 0, ' Data set 7: TOP ' + HGU.HufName);
-  PhastModel.DataArrayManager.CacheDataArrays;
+  Model.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowHUF_Writer.WriteDataSet8(HGU: THydrogeologicUnit);
 var
   DataArray: TDataArray;
 begin
-  DataArray := PhastModel.DataArrayManager.GetDataSetByName(HGU.ThickessDataArrayName);
+  DataArray := Model.DataArrayManager.GetDataSetByName(HGU.ThickessDataArrayName);
   Assert(DataArray <> nil);
   WriteArray(DataArray, 0, ' Data set 8:  THCK ' + HGU.HufName);
-  PhastModel.DataArrayManager.CacheDataArrays;
+  Model.DataArrayManager.CacheDataArrays;
 end;
 
 procedure TModflowHUF_Writer.WriteDataSet9;
@@ -413,9 +414,9 @@ var
   HGUVANI: double;
   HGUNAM: string;
 begin
-  for UnitIndex := 0 to PhastModel.HydrogeologicUnits.Count - 1 do
+  for UnitIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
   begin
-    HGU := PhastModel.HydrogeologicUnits[UnitIndex];
+    HGU := Model.HydrogeologicUnits[UnitIndex];
     HGUNAM := HGU.HufName;
     
     if HGU.UsesHaniParam then
@@ -436,9 +437,9 @@ begin
     if HGUVANI = 0 then
     begin
       if (not HGU.UsesVkParam)
-        and (PhastModel.LayerStructure.ModflowLayerCount > 1) then
+        and (Model.ModflowLayerCount > 1) then
       begin
-        frmErrorsAndWarnings.AddError(ErrorRoot, HGU.HufName);
+        frmErrorsAndWarnings.AddError(Model, ErrorRoot, HGU.HufName);
       end;
     end;
     WriteString(HGUNAM);
@@ -475,9 +476,9 @@ begin
   UsedParameters := TList.Create;
   UsedHufUnits := TList.Create;
   try
-    for ParamIndex := 0 to PhastModel.HufParameters.Count - 1 do
+    for ParamIndex := 0 to Model.HufParameters.Count - 1 do
     begin
-      Parameter := PhastModel.HufParameters[ParamIndex];
+      Parameter := Model.HufParameters[ParamIndex];
       if FTransient then
       begin
         if not (Parameter.ParameterType in HufSteadyAndTransientParameters) then
@@ -494,9 +495,9 @@ begin
       end;
       UsedParameters.Clear;
       UsedHufUnits.Clear;
-      for HufUnitIndex := 0 to PhastModel.HydrogeologicUnits.Count - 1 do
+      for HufUnitIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
       begin
-        HGU := PhastModel.HydrogeologicUnits[HufUnitIndex];
+        HGU := Model.HydrogeologicUnits[HufUnitIndex];
         UsedParam := HGU.UsesParameter(Parameter);
         if UsedParam <> nil then
         begin
@@ -507,7 +508,8 @@ begin
 
       if UsedParameters.Count = 0 then
       begin
-        frmErrorsAndWarnings.AddWarning(NoClusters, Parameter.ParameterName);
+        frmErrorsAndWarnings.AddWarning(Model,
+          NoClusters, Parameter.ParameterName);
       end;
 
       PARNAM := ExpandString(Parameter.ParameterName, 10);
@@ -530,7 +532,7 @@ begin
       WriteInteger(NCLU);
       WriteString(' # Data set 10: PARNAM PARTYP Parval NCLU');
       NewLine;
-      PhastModel.WritePValAndTemplate(PARNAM,PARVAL);
+      Model.WritePValAndTemplate(PARNAM,PARVAL);
 
       for ClusterIndex := 0 to UsedParameters.Count - 1 do
       begin
@@ -579,11 +581,12 @@ begin
 
   if FTransient then
   begin
-    for ParamIndex := 0 to PhastModel.ModflowSteadyParameters.Count - 1 do
+    for ParamIndex := 0 to Model.ModflowSteadyParameters.Count - 1 do
     begin
-      Param := PhastModel.ModflowSteadyParameters.Items[ParamIndex];
+      Param := Model.ModflowSteadyParameters.Items[ParamIndex];
       if Param.ParameterType = ptHUF_SYTP then
       begin
+        Param.ClearArrayNames;
         PARNAM := Param.ParameterName;
         PARTYP := ' SYTP';
         PARVAL := Param.Value;
@@ -600,7 +603,7 @@ begin
 
         if Param.UseMultiplier then
         begin
-          Mltarr := Param.MultiplierArrayName(1);
+          Mltarr := Param.MultiplierArrayName(1, Model);
           UsedMultiplierArrayNames.Add(Mltarr);
         end
         else
@@ -610,7 +613,7 @@ begin
 
         if Param.UseZone then
         begin
-          Zonarr := Param.ZoneArrayName(1);
+          Zonarr := Param.ZoneArrayName(1, Model);
           IZ := ' 1';
           UsedZoneArrayNames.Add(Zonarr);
         end
@@ -636,9 +639,9 @@ var
   UnitIndex: Integer;
   HGU: THydrogeologicUnit;
 begin
-  for UnitIndex := 0 to PhastModel.HydrogeologicUnits.Count - 1 do
+  for UnitIndex := 0 to Model.HydrogeologicUnits.Count - 1 do
   begin
-    HGU := PhastModel.HydrogeologicUnits[UnitIndex];
+    HGU := Model.HydrogeologicUnits[UnitIndex];
     frmProgressMM.AddMessage('  Writing Data Set 6 for ' + HGU.HufName);
     WriteDataSet6(HGU);
     frmProgressMM.AddMessage('  Writing Data Set 7 for ' + HGU.HufName);
@@ -659,7 +662,7 @@ begin
     Exit;
   end;
   FNameOfFile := FileName(AFileName);
-  WriteToNameFile(StrHUF2, PhastModel.UnitNumbers.UnitNumber(StrHUF2),
+  WriteToNameFile(StrHUF2, Model.UnitNumbers.UnitNumber(StrHUF2),
     FNameOfFile, foInput);
   OpenFile(FNameOfFile);
   try

@@ -5,10 +5,10 @@ unit frmFormulaUnit;
 interface
 
 uses
-  SysUtils, Types, Classes, StrUtils, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, frmCustomGoPhastUnit, Buttons, ExtCtrls, ComCtrls, RbwParser,
-  JvExExtCtrls, JvNetscapeSplitter, JvExStdCtrls, RichEdit, JvRichEdit,
-  ehshelprouter, ClassificationUnit, GoPhastTypes;
+  Windows, SysUtils, Types, Classes, StrUtils, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, frmCustomGoPhastUnit, Buttons, ExtCtrls, ComCtrls,
+  RbwParser, JvExExtCtrls, JvNetscapeSplitter, JvExStdCtrls, RichEdit,
+  JvRichEdit, ehshelprouter, ClassificationUnit, GoPhastTypes;
 
 type
   TVariableEdit = class(TClassificationObject)
@@ -313,6 +313,63 @@ uses Contnrs, GIS_Functions, IntListUnit, frmGoPhastUnit, GlobalVariablesUnit,
 var
   PriorSelectedText: string = '';
 
+{
+modified from http://delphi.about.com/od/tmemotrichedit/a/richedit-append.htm
+
+The AppendToRichEdit procedure takes two parameters. AppendToRichEdit copies
+the entire content of "source" rich editor to "destination" rich editor.
+Depending on the selection inside the destination rich editor and the position
+of the text cursor, the above procedure will either
+
+replace any current selection - if there's a selection in "destination",
+insert content from source to destination at the point of the cursor,
+append content from source to destination.
+Note: There's a LoadFromStream method exposed by TRichEdit butLoadFromStream
+does not append the loaded text to the text already in the editor. Also, to
+move RTF from one rich editor to another, you have to use streams - and that's
+what the above code does + plus some specifi rich editor callbacks.}
+procedure AppendToRichEdit(const source: TStringList; destination : TRichEdit) ;
+ var
+   rtfStream: TEditStream;
+   sourceStream : TMemoryStream;
+ 
+   function EditStreamReader(
+     dwCookie: DWORD;
+     pBuff: Pointer;
+     cb: LongInt;
+     pcb: PLongInt): DWORD; stdcall;
+   begin
+     result := $0000;
+     try
+       pcb^ := TStream(dwCookie).Read(pBuff^, cb) ;
+     except
+       result := $FFFF;
+     end;
+   end; (*EditStreamReader*)
+ begin
+   destination.Lines.BeginUpdate;
+   sourceStream := TMemoryStream.Create;
+   try
+     source.SaveToStream(sourceStream) ;
+     sourceStream.Position := 0;
+ 
+     destination.MaxLength := destination.MaxLength + sourceStream.Size;
+ 
+     rtfStream.dwCookie := DWORD(sourceStream) ;
+     rtfStream.dwError := $0000;
+     rtfStream.pfnCallback := @EditStreamReader;
+     destination.Perform(
+       EM_STREAMIN,
+       SFF_SELECTION or SF_RTF or SFF_PLAINRTF, LPARAM(@rtfStream)
+     ) ;
+     if rtfStream.dwError <> $0000 then
+       raise Exception.Create('Error appending RTF data.') ;
+   finally
+     sourceStream.Free;
+     destination.Lines.EndUpdate;
+   end;
+ end;
+
 procedure TfrmFormula.InsertText(const NewText: string);
 const
 {$IFDEF LINUX}
@@ -602,7 +659,7 @@ begin
 //  try
 //    jreFormula.WordWrap := False;
     result := jreFormula.Lines.Text;
-    result := StringReplace(result, #13#10, '', [rfReplaceAll, rfIgnoreCase]);
+    result := StringReplace(result, sLineBreak, '', [rfReplaceAll, rfIgnoreCase]);
 
 //    result := '';
 //    for Index := 0 to jreFormula.Lines.Count - 1 do
@@ -744,11 +801,11 @@ begin
     end;
 
     LineNumber := 0;
-    Index := PosEx(#13#10, AString, 1);
+    Index := PosEx(sLineBreak, AString, 1);
     while (Index < Start) and (Index > 0) do
     begin
       Inc(LineNumber);
-      Index := PosEx(#13#10, AString, Index+2);
+      Index := PosEx(sLineBreak, AString, Index+2);
     end;
     Start := Start - LineNumber*2;
     Stop := Stop - LineNumber*2;

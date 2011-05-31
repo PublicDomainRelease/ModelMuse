@@ -36,6 +36,9 @@ procedure PatchSystemFunctions;
 procedure FinalizeSingleElementArray(P: Pointer; TypeInfo: Pointer);
   
 {$Include FastObj.inc}
+{$Ifdef FullDebugMode}
+  {$UNDEF UseFastMM}
+{$EndIf}
 
 implementation
 uses

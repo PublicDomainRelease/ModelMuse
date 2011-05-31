@@ -7,103 +7,16 @@ uses
   Dialogs, frmCustomGoPhastUnit, StdCtrls, CheckLst, JvExCheckLst,
   JvCheckListBox, Buttons, JvDialogs, IntListUnit, ReadModflowArrayUnit,
   DataSetUnit, ScreenObjectUnit, StrUtils, UndoItems, Contnrs, RealListUnit,
-  ModflowGridUnit, ExtCtrls, EdgeDisplayUnit, GoPhastTypes;
+  ModflowGridUnit, ExtCtrls, EdgeDisplayUnit, GoPhastTypes, Grids, RbwDataGrid4,
+  PhastModelUnit;
 
 type
   TModflowResultFormat = (mrBinary, mrAscii, mrFlux, mrHufAscii, mrHufBinary,
     mrHufFlux, mfSubBinary);
 
+  TModelColumns = (mcModelName, mcUse, mcFileName);
+
   TDataArrayForm = (dafLayer, dafSystem, dafSubsidence, dafWaterTable);
-
-  TfrmSelectResultToImport = class(TfrmCustomGoPhast)
-    clData: TJvCheckListBox;
-    btnHelp: TBitBtn;
-    btnOK: TBitBtn;
-    btnCancel: TBitBtn;
-    odSelectFiles: TJvOpenDialog;
-    comboColorGrid: TComboBox;
-    Label1: TLabel;
-    btnSelectAll: TButton;
-    btnSelectNone: TButton;
-    rgDisplayChoice: TRadioGroup;
-    procedure clDataClickCheck(Sender: TObject);
-    procedure FormCreate(Sender: TObject); override;
-    procedure FormDestroy(Sender: TObject); override;
-    procedure btnOKClick(Sender: TObject);
-    procedure odSelectFilesTypeChange(Sender: TObject);
-    procedure btnSelectAllClick(Sender: TObject);
-    procedure btnSelectNoneClick(Sender: TObject);
-  private
-    FFileName: string;
-    FPeriods: TIntegerList;
-    FSteps: TIntegerList;
-    FDescriptions: TStringList;
-    FFileStream: TFileStream;
-    FFileVariable: TFileVariable;
-    FResultFormat: TModflowResultFormat;
-    FAskedUser: Boolean;
-    FCreateNewDataSet: Boolean;
-    FMaxPeriod: Integer;
-    FMaxStep: Integer;
-    FMaxLayer: Integer;
-    FGrid: TModflowGrid;
-    function DefaultFileName: string;
-    procedure OpenResultFile(out Precision: TModflowPrecision; out HufFormat: boolean);
-    procedure ReadArray(var AnArray: TModflowDoubleArray;
-      var EndReached: Boolean; var KPER, KSTP, ILAY: Integer;
-      var TOTIM: TModflowDouble;
-      var Description: string; Precision: TModflowPrecision);
-    procedure CreateOrRetrieveLayerDataSet(const Description: string;
-      KSTP, KPER, ILAY: integer; TOTIM: TModflowDouble;
-      out LayerData: TDataArray; out OldComment: string; NewDataSets: TList;
-      ScreenObjectsToDelete: TScreenObjectList; DataArrayForm: TDataArrayForm = dafLayer);
-    procedure CreateScreenObject(LayerIndex: integer;
-      out ScreenObject: TScreenObject);
-    procedure AssignValues(LayerIndex: integer; ScreenObject: TScreenObject; LayerData: TDataArray;
-      AnArray: TModflowDoubleArray; ValuesToIgnore: TOneDRealArray;
-      out MinMaxAssigned: boolean);
-    procedure CreateOrRetrieve3DDataSet(Description: string;
-      KPER, KSTP: integer; TOTIM: TModflowDouble;
-      LayerNumbers: TIntegerList; LayerDataSets: TList;
-      out New3DArray: TDataArray; out OldComment: string; FluxData: boolean; NewDataSets: TList);
-    procedure CloseFiles;
-    procedure Read3DArray(var NLAY: Integer; var EndReached: Boolean;
-      var KPER, KSTP: Integer; var TOTIM: TModflowDouble; var Description: string;
-      var A3DArray: T3DTModflowArray; Precision: TModflowPrecision; HufFormat: boolean);
-    procedure Assign3DValues(ScreenObject: TScreenObject; LayerData: TDataArray;
-      AnArray: T3DTModflowArray; LayerIndex: integer; CheckAllLayers: boolean;
-      ValuesToIgnore: TOneDRealArray);
-    procedure SetData;
-    function AskUserIfNewDataSet: boolean;
-    procedure AssignLimits(MinValues, MaxValues: TRealList;
-      New3DArray: TDataArray; ValuesToIgnore: TOneDRealArray);
-    procedure AssignObjectName(var ScreenObject: TScreenObject; LayerData: TDataArray);
-    procedure UpdateCombo;
-    procedure GetShouldIgnore(ValuesToIgnore: TOneDRealArray;
-      Temp: TModflowFloat; var ShouldIgnore: Boolean);
-    function SubsidenceDescription(DESC: string; ILAY: integer): string;
-    // In the label for data sets, TOTIM will be measured from the end of
-    // the first stress period if there are more than one stress period and
-    // the first stress period is a steady-state stress period.
-    procedure AdjustTotalTime(var TOTIM: TModflowDouble);
-    procedure AssignWaterTableArray(
-      var WaterTableArray: TModflowDoubleArray;
-      ILAY: Integer;
-      AnArray: TModflowDoubleArray;
-      ValuesToIgnore: TOneDRealArray;
-      const Description: string);
-    procedure AssignWaterTable(NewDataSets: TList; OldComments: TStringList;
-      DataSetNames: TStringList; ScreenObjectsToDelete: TScreenObjectList;
-      NewCreateScreenObjects: TList; KPER: Integer;
-      WaterTableArray: TModflowDoubleArray; KSTP: Integer;
-      const Description: string; ValuesToIgnore: TOneDRealArray;
-      TOTIM: TModflowDouble);
-    { Private declarations }
-
-  public
-    function SelectFiles: boolean;
-    { Public declarations }
-  end;
 
   TDisplayChoice = (dcColor, dcContour, dcNone);
 
@@ -143,13 +56,16 @@ type
     FNewDataSets: TList;
     FOldComments: TStringList;
     FNewComments: TStringList;
+    FModel: TCustomModel;
     procedure SetComments(Comments: TStringList);
   protected
     function Description: string; override;
   public
+//    procedure UpdateNewStoredFormulas;
     Constructor Create(NewDataSets: TList;
       DataSetNames, OldComments: TStringList;
-      DisplayDataSet: TDataArray; DisplayChoice: TDisplayChoice);
+      DisplayDataSet: TDataArray; DisplayChoice: TDisplayChoice;
+      AModel: TCustomModel);
     Destructor Destroy; override;
     // @name does the command for the first time.
     procedure DoCommand; override;
@@ -157,17 +73,160 @@ type
     procedure Undo; override;
   end;
 
+type
+  TFormulaAssigner = class(TObject)
+  strict private
+    FDataArray: TDataArray;
+    FFormulas: TStringList;
+    FModels: TList;
+  public
+    Constructor Create(ADataArray: TDataArray);
+    Destructor Destroy; override;
+    procedure AddFormula(AFormula: string; AModel: TBaseModel);
+    procedure AssignFinalFormula;
+    property DataArray: TDataArray read FDataArray;
+  end;
+
+  TFormulaAssignerList = class(TObject)
+  strict private
+    FList: TList;
+    function GetFormulaAssigner(ADataArray: TDataArray): TFormulaAssigner;
+  public
+    Constructor Create;
+    Destructor Destroy; override;
+    property FormulaAssigners[ADataArray: TDataArray]: TFormulaAssigner
+      read GetFormulaAssigner; default;
+    procedure AssignFinalFormulas;
+  end;
+
+  TfrmSelectResultToImport = class(TfrmCustomGoPhast)
+    btnHelp: TBitBtn;
+    btnOK: TBitBtn;
+    btnCancel: TBitBtn;
+    odSelectFiles: TJvOpenDialog;
+    comboColorGrid: TComboBox;
+    Label1: TLabel;
+    btnSelectAll: TButton;
+    btnSelectNone: TButton;
+    rgDisplayChoice: TRadioGroup;
+    Panel1: TPanel;
+    rdgModels: TRbwDataGrid4;
+    clData: TJvCheckListBox;
+    splitData: TSplitter;
+    procedure clDataClickCheck(Sender: TObject);
+    procedure FormCreate(Sender: TObject); override;
+    procedure FormDestroy(Sender: TObject); override;
+    procedure btnOKClick(Sender: TObject);
+    procedure odSelectFilesTypeChange(Sender: TObject);
+    procedure btnSelectAllClick(Sender: TObject);
+    procedure btnSelectNoneClick(Sender: TObject);
+    procedure rdgModelsBeforeDrawCell(Sender: TObject; ACol, ARow: Integer);
+    procedure rdgModelsButtonClick(Sender: TObject; ACol, ARow: Integer);
+  private
+    FPeriods: TIntegerList;
+    FSteps: TIntegerList;
+    FDescriptions: TStringList;
+    FFileStream: TFileStream;
+    FFileVariable: TFileVariable;
+    FResultFormat: TModflowResultFormat;
+    FAskedUser: Boolean;
+    FCreateNewDataSet: Boolean;
+    FMaxPeriod: Integer;
+    FMaxStep: Integer;
+    FMaxLayer: Integer;
+    FGrid: TModflowGrid;
+    FNewDataSetNames: TStringList;
+    FNewDefaultDataSetNames: TStringList;
+    FFormulaAssigners: TFormulaAssignerList;
+    FModifiedParentDataSets: TList;
+    function DefaultFileName(AModel: TCustomModel): string;
+    procedure OpenResultFile(AFileName: string;out Precision: TModflowPrecision;
+      out HufFormat: boolean);
+    procedure ReadArray(var AnArray: TModflowDoubleArray;
+      var EndReached: Boolean; var KPER, KSTP, ILAY: Integer;
+      var TOTIM: TModflowDouble;
+      var Description: string; Precision: TModflowPrecision;
+      ShouldReadArray: boolean);
+    procedure CreateOrRetrieveLayerDataSet(const Description: string;
+      KSTP, KPER, ILAY: integer; TOTIM: TModflowDouble;
+      out LayerData: TDataArray; out OldComment: string; NewDataSets: TList;
+      ScreenObjectsToDelete: TScreenObjectList; FileNames: string;
+      AModel: TCustomModel; DataArrayForm: TDataArrayForm = dafLayer);
+    procedure CreateScreenObject(LayerIndex: integer; AModel: TCustomModel;
+      out ScreenObject: TScreenObject);
+    procedure AssignValues(LayerIndex: integer; ScreenObject: TScreenObject;
+      LayerData: TDataArray; AnArray: TModflowDoubleArray;
+      ValuesToIgnore: TOneDRealArray; AModel: TCustomModel;
+      out MinMaxAssigned: boolean);
+    procedure CreateOrRetrieve3DDataSet(Description: string;
+      KPER, KSTP: integer; TOTIM: TModflowDouble;
+      LayerNumbers: TIntegerList; LayerDataSets: TList;
+      out New3DArray: TDataArray; out OldComment: string; FluxData: boolean;
+      NewDataSets: TList; FileNames: string; AModel: TCustomModel);
+    procedure CloseFiles;
+    procedure Read3DArray(var NLAY: Integer; var EndReached: Boolean;
+      var KPER, KSTP: Integer; var TOTIM: TModflowDouble;
+      var Description: string; var A3DArray: T3DTModflowArray;
+      Precision: TModflowPrecision; HufFormat: boolean;
+      ShouldReadArray: boolean);
+    procedure Assign3DValues(ScreenObject: TScreenObject; LayerData: TDataArray;
+      AnArray: T3DTModflowArray; LayerIndex: integer; CheckAllLayers: boolean;
+      ValuesToIgnore: TOneDRealArray; AModel: TCustomModel);
+    procedure SetData;
+    function AskUserIfNewDataSet: boolean;
+    procedure AssignLimits(MinValues, MaxValues: TRealList;
+      New3DArray: TDataArray; ValuesToIgnore: TOneDRealArray);
+    procedure AssignObjectName(var ScreenObject: TScreenObject; LayerData: TDataArray);
+    procedure UpdateCombo;
+    procedure GetShouldIgnore(ValuesToIgnore: TOneDRealArray;
+      Temp: TModflowFloat; var ShouldIgnore: Boolean);
+    function SubsidenceDescription(DESC: string; ILAY: integer): string;
+    // In the label for data sets, TOTIM will be measured from the end of
+    // the first stress period if there are more than one stress period and
+    // the first stress period is a steady-state stress period.
+    procedure AdjustTotalTime(var TOTIM: TModflowDouble);
+    procedure AssignWaterTableArray(
+      var WaterTableArray: TModflowDoubleArray;
+      ILAY: Integer;
+      AnArray: TModflowDoubleArray;
+      ValuesToIgnore: TOneDRealArray;
+      const Description: string);
+    procedure AssignWaterTable(NewDataSets: TList; OldComments: TStringList;
+      DataSetNames: TStringList; ScreenObjectsToDelete: TScreenObjectList;
+      NewCreateScreenObjects: TList; KPER: Integer;
+      WaterTableArray: TModflowDoubleArray; KSTP: Integer;
+      const Description: string; ValuesToIgnore: TOneDRealArray;
+      TOTIM: TModflowDouble; FileNames: string; AModel: TCustomModel);
+    procedure SetDefaultDisplayOption;
+    { Private declarations }
+    function ReadDataHeadings(AModel: TCustomModel; RowIndex: integer; AFileName: string): boolean;
+    procedure AddModelRow(AModel: TCustomModel; ARow: integer;
+      AFileName: string);
+    procedure UpdateOldComments(OldComments: TStringList;
+      ADataArray: TDataArray; OldComment: string);
+//    procedure SetData;
+  public
+    function SelectFiles: boolean;
+    { Public declarations }
+  end;
+
 var
   frmSelectResultToImport: TfrmSelectResultToImport;
-
+  // @name records how many times the user has chosen to color the grid,
+  // contour the data, or do nothing.  The most frequent choice is then
+  // selected at the default when the @link(TfrmSelectResultToImport) is
+  // created.
+  DisplayChoices : array[TDisplayChoice] of integer = (0, 0, 0);
+const
+  MaxDisplayChoiceCount = 10;
 
 implementation
 
 uses Math, frmGoPhastUnit, RbwParser,
-  GIS_Functions, ValueArrayStorageUnit, ModelMuseUtilities, PhastModelUnit,
+  GIS_Functions, ValueArrayStorageUnit, ModelMuseUtilities, 
   frmUpdateDataSetsUnit, UndoItemsScreenObjects, frmGridColorUnit,
   InterpolationUnit, frmContourDataUnit, HufDefinition, ModflowTimeUnit,
-  frmGridValueUnit;
+  frmGridValueUnit, shlobj, activex;
 
 resourcestring
   StrHead = 'Head';
@@ -198,14 +257,17 @@ procedure TfrmSelectResultToImport.CreateOrRetrieveLayerDataSet(
   const Description: string; KSTP, KPER, ILAY: integer;
   TOTIM: TModflowDouble;
   out LayerData: TDataArray; out OldComment: string; NewDataSets: TList;
-  ScreenObjectsToDelete: TScreenObjectList;
-  DataArrayForm: TDataArrayForm = dafLayer);
+  ScreenObjectsToDelete: TScreenObjectList; FileNames: string;
+  AModel: TCustomModel; DataArrayForm: TDataArrayForm = dafLayer);
 var
   NewName: string;
   Grid: TModflowGrid;
   CreateNewDataSet: boolean;
   Index: Integer;
   ScreenObject: TScreenObject;
+  NewDataSetPosition: Integer;
+  DefaultName: string;
+  ParentLayerData: TDataArray;
 begin
   NewName := TitleCase(Description);
   NewName := ValidName(NewName);
@@ -227,26 +289,38 @@ begin
     else
       Assert(False);
   end;
-  CreateNewDataSet := True;
-  if frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(NewName) <> nil then
+  DefaultName := NewName;
+  NewDataSetPosition := FNewDefaultDataSetNames.IndexOf(NewName);
+  if NewDataSetPosition >= 0 then
   begin
-    CreateNewDataSet := AskUserIfNewDataSet;
-    if CreateNewDataSet then
+    NewName := FNewDataSetNames[NewDataSetPosition];
+    CreateNewDataSet := False;
+  end
+  else
+  begin
+    CreateNewDataSet := True;
+    if AModel.DataArrayManager.GetDataSetByName(NewName) <> nil then
     begin
-      NewName := GenerateNewName(NewName, nil, '_');
+      CreateNewDataSet := AskUserIfNewDataSet;
+      if CreateNewDataSet then
+      begin
+        NewName := GenerateNewName(NewName, nil, '_');
+      end;
     end;
   end;
   if CreateNewDataSet then
   begin
+    FNewDefaultDataSetNames.Add(DefaultName);
+    FNewDataSetNames.Add(NewName);
     LayerData := TDataArray.Create(frmGoPhast.PhastModel);
     NewDataSets.Add(LayerData);
     LayerData.UpDateWithName(NewName);
 //    LayerData.OnNameChange := frmGoPhast.PhastModel.DataArrayNameChange;
-    frmGoPhast.PhastModel.DataArrayManager.AddDataSet(LayerData);
+    frmGoPhast.PhastModel.AddDataSet(LayerData);
     LayerData.DataType := rdtDouble;
     LayerData.Orientation := dsoTop;
     LayerData.Formula :=
-      FloatToStr(frmGoPhast.PhastModel.ModflowOptions.HNoFlow);
+      FortranFloatToStr(AModel.ModflowOptions.HNoFlow);
     LayerData.TwoInterpolatorClass := TLinearSfrpackInterpolator.ClassName;
 
     Grid := frmGoPhast.PhastModel.ModflowGrid;
@@ -262,16 +336,22 @@ begin
 
     LayerData.OnDataSetUsed := frmGoPhast.PhastModel.ModelResultsRequired;
     frmGoPhast.PhastModel.CreateVariables(LayerData);
-    OldComment := '';
+    LayerData := AModel.DataArrayManager.GetDataSetByName(NewName);
+    Grid := AModel.ModflowGrid;
+    LayerData.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+      Grid.ColumnCount);
   end
   else
   begin
-    LayerData := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(NewName);
-    OldComment := LayerData.Comment;
+    LayerData := AModel.DataArrayManager.GetDataSetByName(NewName);
+    Grid := AModel.ModflowGrid;
+    LayerData.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+      Grid.ColumnCount);
     for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
     begin
       ScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index];
-      if ScreenObject.IndexOfDataSet(LayerData) >= 0 then
+      if (ScreenObject.IndexOfDataSet(LayerData) >= 0)
+        and ScreenObject.UsedModels.UsesModel(AModel) then
       begin
         ScreenObject.Deleted := True;
         ScreenObjectsToDelete.Add(ScreenObject);
@@ -279,33 +359,79 @@ begin
     end;
   end;
   AdjustTotalTime(TOTIM);
-  LayerData.Comment := 'read from file: "' + FFileName
-    + '" on ' + DateTimeToStr(Now)
-    + #13#10 + StrStressPeriodLabel + IntToStr(KPER)
-    + #13#10 + StrTimeStepLabel + IntToStr(KSTP)
-    + #13#10 + StrElapsedTimeLabel + FloatToStr(TOTIM);
-  case DataArrayForm of
-    dafLayer:
-      begin
-        LayerData.Comment := LayerData.Comment
-          + #13#10 + 'Layer: ' + IntToStr(ILAY);
-      end;
-    dafSystem:
-      begin
-        LayerData.Comment := LayerData.Comment
-          + #13#10 + 'System: ' + IntToStr(ILAY);
-      end;
-    dafSubsidence, dafWaterTable:
-      begin
-        // do nothing
-      end;
-    else
-      Assert(False);
+  if LayerData.Model = frmGoPhast.PhastModel then
+  begin
+    ParentLayerData := LayerData;
+  end
+  else
+  begin
+    ParentLayerData := frmGoPhast.PhastModel.DataArrayManager.
+      GetDataSetByName(LayerData.Name);
+  end;
+  OldComment := ParentLayerData.Comment;
+  if LayerData = ParentLayerData then
+  begin
+    ParentLayerData.Comment := 'read from: "' + FileNames
+      + '" on ' + DateTimeToStr(Now)
+      + sLineBreak + StrStressPeriodLabel + IntToStr(KPER)
+      + sLineBreak + StrTimeStepLabel + IntToStr(KSTP)
+      + sLineBreak + StrElapsedTimeLabel + FloatToStr(TOTIM);
+    case DataArrayForm of
+      dafLayer:
+        begin
+          ParentLayerData.Comment := ParentLayerData.Comment
+            + sLineBreak + 'Layer: ' + IntToStr(ILAY);
+        end;
+      dafSystem:
+        begin
+          ParentLayerData.Comment := ParentLayerData.Comment
+            + sLineBreak + 'System: ' + IntToStr(ILAY);
+        end;
+      dafSubsidence, dafWaterTable:
+        begin
+          // do nothing
+        end;
+      else
+        Assert(False);
+    end;
+  end
+  else
+  begin
+    if ParentLayerData.Comment = '' then
+    begin
+      ParentLayerData.Comment := 'read from: "' + FileNames
+        + '" on ' + DateTimeToStr(Now)
+        + sLineBreak + StrStressPeriodLabel + IntToStr(KPER)
+        + sLineBreak + StrTimeStepLabel + IntToStr(KSTP)
+        + sLineBreak + StrElapsedTimeLabel + FloatToStr(TOTIM);
+    end;
+    case DataArrayForm of
+      dafLayer:
+        begin
+          ParentLayerData.Comment := ParentLayerData.Comment
+            + sLineBreak + 'Child Layer: ' + IntToStr(ILAY);
+        end;
+      dafSystem:
+        begin
+          ParentLayerData.Comment := ParentLayerData.Comment
+            + sLineBreak + 'Child System: ' + IntToStr(ILAY);
+        end;
+      dafSubsidence, dafWaterTable:
+        begin
+          // do nothing
+        end;
+      else
+        Assert(False);
+    end;
+  end;
+  if FModifiedParentDataSets.IndexOf(ParentLayerData) < 0 then
+  begin
+    FModifiedParentDataSets.Add(ParentLayerData);
   end;
 end;
 
 procedure TfrmSelectResultToImport.CreateScreenObject(LayerIndex: integer;
-  out ScreenObject: TScreenObject);
+  AModel: TCustomModel; out ScreenObject: TScreenObject);
 var
   RowIndex: Integer;
   ColIndex: Integer;
@@ -314,16 +440,22 @@ var
   ActiveDataSet: TDataArray;
   LI: Integer;
 begin
-  ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+  ActiveDataSet := AModel.DataArrayManager.GetDataSetByName(rsActive);
   ActiveDataSet.Initialize;
 
-  Grid := frmGoPhast.PhastModel.ModflowGrid;
+  Grid := AModel.ModflowGrid;
   ScreenObject := TScreenObject.CreateWithViewDirection(
     frmGoPhast.PhastModel, vdTop,
     UndoCreateScreenObject, False);
   frmGoPhast.PhastModel.AddScreenObject(ScreenObject);
   ScreenObject.ElevationCount := ecZero;
   ScreenObject.SetValuesOfIntersectedCells := True;
+
+  if frmGoPhast.PhastModel.LgrUsed then
+  begin
+    ScreenObject.UsedModels.UsedWithAllModels := False;
+    ScreenObject.UsedModels.AddModel(AModel);
+  end;
 
   // Don't SetValuesByInterpolation because it causes
   // inactive cells to be assigned inappropriate values.
@@ -361,20 +493,103 @@ begin
   end;
 end;
 
-function TfrmSelectResultToImport.DefaultFileName: string;
+function TfrmSelectResultToImport.DefaultFileName(AModel: TCustomModel): string;
 begin
   Assert(frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR]);
-  result := frmGoPhast.PhastModel.DefaultModflowOutputFileName;
+  result := AModel.DefaultModflowOutputFileName;
   if not FileExists(result) then
   begin
     result := '';
   end;
 end;
 
+procedure TfrmSelectResultToImport.AddModelRow(AModel: TCustomModel; ARow: integer; AFileName: string);
+begin
+  rdgModels.Objects[Ord(mcModelName), ARow] := AModel;
+  rdgModels.Cells[Ord(mcModelName), ARow] := AModel.DisplayName;
+  rdgModels.Cells[Ord(mcFileName), ARow] := AFileName;
+  rdgModels.Checked[Ord(mcUse), ARow] := FileExists(AFileName);
+end;
+
+function TfrmSelectResultToImport.SelectFiles: boolean;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+  AFileName: string;
+  Extension: string;
+begin
+  odSelectFiles.FileName := DefaultFileName(frmGoPhast.PhastModel);
+  result := odSelectFiles.Execute;
+  if result then
+  begin
+    rdgModels.BeginUpdate;
+    try
+        if frmGoPhast.PhastModel.LgrUsed then
+        begin
+          rdgModels.RowCount := 2 + frmGoPhast.PhastModel.ChildModels.Count;
+        end
+        else
+        begin
+          rdgModels.RowCount := 2;
+          rdgModels.Visible := False;
+          splitData.Visible := False;
+        end;
+        AFileName := odSelectFiles.FileName;
+        AddModelRow(frmGoPhast.PhastModel, 1,  AFileName);
+        result := ReadDataHeadings(frmGoPhast.PhastModel, 1, AFileName);
+        if result and frmGoPhast.PhastModel.LgrUsed then
+        begin
+          Extension := ExtractFileExt(AFileName);
+          for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+          begin
+            ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+            AFileName := DefaultFileName(ChildModel);
+            AFileName := ChangeFileExt(AFileName, Extension);
+            AddModelRow(ChildModel, ChildIndex + 2,  AFileName);
+            if FileExists(AFileName) then
+            begin
+              result := ReadDataHeadings(ChildModel, ChildIndex + 2,  AFileName);
+              if not result then
+              begin
+                Exit;
+              end;
+            end
+            else
+            begin
+
+            end;
+          end;
+        end;
+    finally
+      rdgModels.EndUpdate;
+    end;
+  end;
+end;
+
+procedure TfrmSelectResultToImport.UpdateOldComments(OldComments: TStringList;
+  ADataArray: TDataArray; OldComment: string);
+var
+  ParentDataArray: TDataArray;
+begin
+  if ADataArray.Model = frmGoPhast.PhastModel then
+  begin
+    ParentDataArray := ADataArray;
+  end
+  else
+  begin
+    ParentDataArray := frmGoPhast.PhastModel.
+      DataArrayManager.GetDataSetByName(ADataArray.Name);
+  end;
+  if OldComments.IndexOfObject(ParentDataArray) < 0 then
+  begin
+    OldComments.AddObject(OldComment, ParentDataArray);
+  end;
+end;
+
 procedure TfrmSelectResultToImport.AssignValues(LayerIndex: integer;
   ScreenObject: TScreenObject; LayerData: TDataArray;
   AnArray: TModflowDoubleArray; ValuesToIgnore: TOneDRealArray;
-  out MinMaxAssigned: boolean);
+  AModel: TCustomModel; out MinMaxAssigned: boolean);
 var
   RowIndex: Integer;
   ColIndex: Integer;
@@ -390,12 +605,23 @@ var
   ShouldIgnore: Boolean;
   IgnoreIndex: Integer;
   SkipReal: TSkipReal;
+  ParentDataSet: TDataArray;
+  ParentLayerData: TDataArray;
 begin
-  ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+  ActiveDataSet := AModel.DataArrayManager.GetDataSetByName(rsActive);
   ActiveDataSet.Initialize;
 
-  Grid := frmGoPhast.PhastModel.ModflowGrid;
-  DataSetIndex := ScreenObject.AddDataSet(LayerData);
+  Grid := AModel.ModflowGrid;
+  if AModel is TPhastModel then
+  begin
+    DataSetIndex := ScreenObject.AddDataSet(LayerData);
+  end
+  else
+  begin
+    ParentDataSet := frmGoPhast.PhastModel.DataArrayManager.
+      GetDataSetByName(LayerData.Name);
+    DataSetIndex := ScreenObject.AddDataSet(ParentDataSet);
+  end;
   ScreenObject.DataSetFormulas[DataSetIndex] := rsObjectImportedValuesR
     + '("' + LayerData.Name + '")';
 
@@ -461,25 +687,43 @@ begin
     end;
   end;
   ImportedValues.Values.Count := PointIndex;
-  LayerData.Limits.LowerLimit.UseLimit := True;
-  LayerData.Limits.LowerLimit.RealLimitValue := MinValue;
-  LayerData.Limits.UpperLimit.UseLimit := True;
-  LayerData.Limits.UpperLimit.RealLimitValue := MaxValue;
-  LayerData.Limits.Update;
-  LayerData.Comment := LayerData.Comment
-    + #13#10 + 'Minimum value: ' + FloatToStr(MinValue)
-    + #13#10 + 'Maximum value: ' + FloatToStr(MaxValue);
-  LayerData.Limits.RealValuesToSkip.Clear;
-  for IgnoreIndex := 0 to Length(ValuesToIgnore) - 1 do
+  ParentLayerData := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerData.Name);
+  if ParentLayerData = LayerData then
   begin
-    SkipReal := LayerData.Limits.RealValuesToSkip.Add as TSkipReal;
-    SkipReal.RealValue := ValuesToIgnore[IgnoreIndex];
+    ParentLayerData.Limits.LowerLimit.UseLimit := True;
+    ParentLayerData.Limits.LowerLimit.RealLimitValue := MinValue;
+    ParentLayerData.Limits.UpperLimit.UseLimit := True;
+    ParentLayerData.Limits.UpperLimit.RealLimitValue := MaxValue;
+    ParentLayerData.Limits.Update;
+    ParentLayerData.Limits.RealValuesToSkip.Clear;
+    for IgnoreIndex := 0 to Length(ValuesToIgnore) - 1 do
+    begin
+      SkipReal := ParentLayerData.Limits.RealValuesToSkip.Add as TSkipReal;
+      SkipReal.RealValue := ValuesToIgnore[IgnoreIndex];
+    end;
+  end
+  else
+  begin
+    LayerData.Limits.LowerLimit.RealLimitValue := MinValue;
+    LayerData.Limits.UpperLimit.RealLimitValue := MaxValue;
+    ParentLayerData.Limits.LowerLimit.RealLimitValue :=
+      Min(MinValue, ParentLayerData.Limits.LowerLimit.RealLimitValue);
+    ParentLayerData.Limits.UpperLimit.RealLimitValue :=
+      Max(MaxValue, ParentLayerData.Limits.UpperLimit.RealLimitValue);
+    for IgnoreIndex := 0 to Length(ValuesToIgnore) - 1 do
+    begin
+      if ParentLayerData.Limits.RealValuesToSkip.IndexOf(ValuesToIgnore[IgnoreIndex]) < 0 then
+      begin
+        SkipReal := ParentLayerData.Limits.RealValuesToSkip.Add as TSkipReal;
+        SkipReal.RealValue := ValuesToIgnore[IgnoreIndex];
+      end;
+    end;
   end;
 end;
 
 procedure TfrmSelectResultToImport.Assign3DValues(ScreenObject: TScreenObject;
   LayerData: TDataArray; AnArray: T3DTModflowArray; LayerIndex: integer;
-  CheckAllLayers: boolean; ValuesToIgnore: TOneDRealArray);
+  CheckAllLayers: boolean; ValuesToIgnore: TOneDRealArray; AModel: TCustomModel);
 var
   RowIndex: Integer;
   ColIndex: Integer;
@@ -494,13 +738,14 @@ var
   ShouldCheck: Boolean;
   LI: Integer;
   ShouldIgnore: Boolean;
+  ParentLayerData: TDataArray;
 begin
   AssignObjectName(ScreenObject, LayerData);
 
-  ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
+  ActiveDataSet := AModel.DataArrayManager.GetDataSetByName(rsActive);
   ActiveDataSet.Initialize;
 
-  Grid := frmGoPhast.PhastModel.ModflowGrid;
+  Grid := AModel.ModflowGrid;
   DataSetIndex := ScreenObject.AddDataSet(LayerData);
   ScreenObject.DataSetFormulas[DataSetIndex] := rsObjectImportedValuesR
     + '("' + LayerData.Name + '")';
@@ -564,20 +809,28 @@ begin
     end;
   end;
   ImportedValues.Values.Count := PointIndex;
-  LayerData.Limits.LowerLimit.UseLimit := True;
-  LayerData.Limits.LowerLimit.RealLimitValue := MinValue;
-  LayerData.Limits.UpperLimit.UseLimit := True;
-  LayerData.Limits.UpperLimit.RealLimitValue := MaxValue;
-  LayerData.Limits.Update;
-  LayerData.Comment := LayerData.Comment
-    + #13#10 + 'Minimum value: ' + FloatToStr(MinValue)
-    + #13#10 + 'Maximum value: ' + FloatToStr(MaxValue)
+  ParentLayerData := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerData.Name);
+  if ParentLayerData = LayerData then
+  begin
+    ParentLayerData.Limits.LowerLimit.UseLimit := True;
+    ParentLayerData.Limits.LowerLimit.RealLimitValue := MinValue;
+    ParentLayerData.Limits.UpperLimit.UseLimit := True;
+    ParentLayerData.Limits.UpperLimit.RealLimitValue := MaxValue;
+  end
+  else
+  begin
+    ParentLayerData.Limits.LowerLimit.RealLimitValue :=
+      Min(MinValue, ParentLayerData.Limits.LowerLimit.RealLimitValue);
+    ParentLayerData.Limits.UpperLimit.RealLimitValue := MaxValue;
+      Max(MaxValue, ParentLayerData.Limits.UpperLimit.RealLimitValue);
+  end;
+  ParentLayerData.Limits.Update;
 end;
 
 procedure TfrmSelectResultToImport.CreateOrRetrieve3DDataSet(Description: string;
   KPER, KSTP: integer; TOTIM: TModflowDouble; LayerNumbers: TIntegerList;
   LayerDataSets: TList; out New3DArray: TDataArray; out OldComment: string; FluxData: boolean;
-  NewDataSets: TList);
+  NewDataSets: TList; FileNames: string; AModel: TCustomModel);
 var
   NewName: string;
   NewFormula: string;
@@ -586,49 +839,86 @@ var
   DataArray: TDataArray;
   Grid: TModflowGrid;
   CreateNewDataSet: Boolean;
+  DefaultName: string;
+  NamePosition: Integer;
+  Assigner: TFormulaAssigner;
+  Parent3DArray: TDataArray;
 begin
   NewName := TitleCase(Description);
   NewName := ValidName(NewName);
   NewName := NewName + '_P' + PaddedIntToStr(KPER, FMaxPeriod) +
     '_S' + PaddedIntToStr(KSTP, FMaxStep);
-  CreateNewDataSet := True;
-  if frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(NewName) <> nil then
+
+  DefaultName := NewName;
+  NamePosition := FNewDefaultDataSetNames.IndexOf(DefaultName);
+  if NamePosition >= 0 then
   begin
-    CreateNewDataSet := AskUserIfNewDataSet;
-    if CreateNewDataSet then
+    NewName := FNewDataSetNames[NamePosition];
+    CreateNewDataSet := False;
+  end
+  else
+  begin
+    CreateNewDataSet := True;
+    if AModel.DataArrayManager.GetDataSetByName(NewName) <> nil then
     begin
-      NewName := GenerateNewName(NewName, nil, '_');
+      CreateNewDataSet := AskUserIfNewDataSet;
+      if CreateNewDataSet then
+      begin
+        NewName := GenerateNewName(NewName, nil, '_');
+      end;
     end;
   end;
-  Grid := frmGoPhast.PhastModel.ModflowGrid;
+//  Grid := AModel.ModflowGrid;
   if CreateNewDataSet then
   begin
+    FNewDefaultDataSetNames.Add(DefaultName);
+    FNewDataSetNames.Add(NewName);
     New3DArray := TDataArray.Create(frmGoPhast.PhastModel);
     NewDataSets.Add(New3DArray);
     New3DArray.UpDateWithName(NewName);
 //    New3DArray.OnNameChange := frmGoPhast.PhastModel.DataArrayNameChange;
-    frmGoPhast.PhastModel.DataArrayManager.AddDataSet(New3DArray);
+    AModel.AddDataSet(New3DArray);
     New3DArray.DataType := rdtDouble;
     New3DArray.Orientation := dso3D;
+    Grid := frmGoPhast.PhastModel.ModflowGrid;
     New3DArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
       Grid.ColumnCount);
     New3DArray.EvaluatedAt := eaBlocks;
     New3DArray.Classification := StrThreeDData;
-    New3DArray.OnDataSetUsed := frmGoPhast.PhastModel.ModelResultsRequired;
-    frmGoPhast.PhastModel.CreateVariables(New3DArray);
-    OldComment := '';
+    New3DArray.OnDataSetUsed := AModel.ModelResultsRequired;
+    AModel.CreateVariables(New3DArray);
+    New3DArray := AModel.DataArrayManager.GetDataSetByName(NewName);
+    Grid := AModel.ModflowGrid;
+    New3DArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+      Grid.ColumnCount);
   end
   else
   begin
-    New3DArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(NewName);
-    OldComment := New3DArray.Comment;
+    New3DArray := AModel.DataArrayManager.GetDataSetByName(NewName);
+    New3DArray.Orientation := dso3D;
+    Grid := AModel.ModflowGrid;
+    New3DArray.UpdateDimensions(Grid.LayerCount, Grid.RowCount,
+      Grid.ColumnCount);
   end;
   AdjustTotalTime(TOTIM);
-  New3DArray.Comment := 'read from file: "' + FFileName
-    + '" on ' + DateTimeToStr(Now)
-    + #13#10 + StrStressPeriodLabel + IntToStr(KPER)
-    + #13#10 + StrTimeStepLabel + IntToStr(KSTP)
-    + #13#10 + StrElapsedTimeLabel + FloatToStr(TOTIM);
+  if New3DArray.Model = frmGoPhast.PhastModel then
+  begin
+    Parent3DArray := New3DArray;
+  end
+  else
+  begin
+    Parent3DArray := frmGoPhast.PhastModel.DataArrayManager.
+      GetDataSetByName(New3DArray.Name);
+  end;
+  OldComment := Parent3DArray.Comment;
+  if (Parent3DArray = New3DArray) or (Parent3DArray.Comment = '') then
+  begin
+    Parent3DArray.Comment := 'read from: "' + FileNames
+      + '" on ' + DateTimeToStr(Now)
+      + sLineBreak + StrStressPeriodLabel + IntToStr(KPER)
+      + sLineBreak + StrTimeStepLabel + IntToStr(KSTP)
+      + sLineBreak + StrElapsedTimeLabel + FloatToStr(TOTIM);
+  end;
   if Grid.LayerCount = 1 then
   begin
     LayerPosition := LayerNumbers.IndexOf(1);
@@ -675,15 +965,42 @@ begin
     NewFormula := 'If((Layer <= ' + IntToStr(Grid.LayerCount)
       + '), ' + NewFormula + ', 0)'
   end;
-  New3DArray.Formula := NewFormula;
+  Assigner := FFormulaAssigners[Parent3DArray];
+  Assigner.AddFormula(NewFormula, AModel);
+//  New3DArray.Formula := NewFormula;
   LayerDataSets.Clear;
   LayerNumbers.Clear;
+  if FModifiedParentDataSets.IndexOf(Parent3DArray) < 0 then
+  begin
+    FModifiedParentDataSets.Add(Parent3DArray);
+  end;
 end;
 
 procedure TfrmSelectResultToImport.btnOKClick(Sender: TObject);
+var
+  RowIndex: Integer;
+  DisplayChoice: TDisplayChoice;
 begin
   inherited;
+  for RowIndex := 1 to rdgModels.RowCount - 1 do
+  begin
+    if rdgModels.Checked[Ord(mcUse), RowIndex]
+      and not FileExists(rdgModels.Cells[Ord(mcFileName), RowIndex]) then
+    begin
+      Beep;
+      MessageDlg('At least one of the result files does not exist.',
+        mtError, [mbOK], 0);
+      ModalResult := mrNone;
+      rdgModels.Row := RowIndex;
+      rdgModels.Col := Ord(mcUse);
+      Exit;
+    end;
+  end;
+
   SetData;
+  
+  DisplayChoice := TDisplayChoice(rgDisplayChoice.ItemIndex);
+  Inc(DisplayChoices[DisplayChoice]);
 end;
 
 procedure TfrmSelectResultToImport.btnSelectAllClick(Sender: TObject);
@@ -705,31 +1022,52 @@ procedure TfrmSelectResultToImport.AssignLimits( MinValues, MaxValues: TRealList
 var
   IgnoreIndex: Integer;
   SkipReal: TSkipReal;
+  ParentArray: TDataArray;
 begin
   MinValues.Sort;
   MaxValues.Sort;
-  if MinValues.Count > 0 then
+  ParentArray := frmGoPhast.PhastModel.DataArrayManager.
+    GetDataSetByName(New3DArray.Name);
+  if ParentArray = New3DArray then
   begin
-    New3DArray.Limits.LowerLimit.UseLimit := True;
-    New3DArray.Limits.LowerLimit.RealLimitValue := MinValues[0];
-    New3DArray.Limits.UpperLimit.UseLimit := True;
-    New3DArray.Limits.UpperLimit.RealLimitValue :=
-      MaxValues[MaxValues.Count -1];
+    if MinValues.Count > 0 then
+    begin
+      ParentArray.Limits.LowerLimit.UseLimit := True;
+      ParentArray.Limits.LowerLimit.RealLimitValue := MinValues[0];
+      ParentArray.Limits.UpperLimit.UseLimit := True;
+      ParentArray.Limits.UpperLimit.RealLimitValue :=
+        MaxValues[MaxValues.Count -1];
+    end;
+    ParentArray.Limits.RealValuesToSkip.Clear;
+    for IgnoreIndex := 0 to Length(ValuesToIgnore) - 1 do
+    begin
+      SkipReal := ParentArray.Limits.RealValuesToSkip.Add as TSkipReal;
+      SkipReal.RealValue := ValuesToIgnore[IgnoreIndex];
+    end;
+  end
+  else
+  begin
+    if MinValues.Count > 0 then
+    begin
+      ParentArray.Limits.LowerLimit.UseLimit := True;
+      ParentArray.Limits.LowerLimit.RealLimitValue :=
+        Min(MinValues[0], ParentArray.Limits.LowerLimit.RealLimitValue);;
+      ParentArray.Limits.UpperLimit.UseLimit := True;
+      ParentArray.Limits.UpperLimit.RealLimitValue :=
+        Max(MaxValues[MaxValues.Count -1], ParentArray.Limits.UpperLimit.RealLimitValue);
+    end;
+    for IgnoreIndex := 0 to Length(ValuesToIgnore) - 1 do
+    begin
+      if ParentArray.Limits.RealValuesToSkip.IndexOf(ValuesToIgnore[IgnoreIndex]) < 0 then
+      begin
+        SkipReal := ParentArray.Limits.RealValuesToSkip.Add as TSkipReal;
+        SkipReal.RealValue := ValuesToIgnore[IgnoreIndex];
+      end;
+    end;
   end;
-  New3DArray.Limits.Update;
+  ParentArray.Limits.Update;
   MinValues.Clear;
   MaxValues.Clear;
-  New3DArray.Comment := New3DArray.Comment
-    + #13#10 + 'Minimum value: '
-    + FloatToStr(New3DArray.Limits.LowerLimit.RealLimitValue)
-    + #13#10 + 'Maximum value: '
-    + FloatToStr(New3DArray.Limits.UpperLimit.RealLimitValue);
-  New3DArray.Limits.RealValuesToSkip.Clear;
-  for IgnoreIndex := 0 to Length(ValuesToIgnore) - 1 do
-  begin
-    SkipReal := New3DArray.Limits.RealValuesToSkip.Add as TSkipReal;
-    SkipReal.RealValue := ValuesToIgnore[IgnoreIndex];
-  end;
 end;
 
 procedure TfrmSelectResultToImport.SetData;
@@ -762,7 +1100,7 @@ var
   ScreenObjectsToDelete: TScreenObjectList;
   UndoDeleteScreenObjects: TUndoDeleteScreenObjects;
   NewCreateScreenObjects: TList;
-  MinValues,
+  MinValues: TRealList;
   MaxValues: TRealList;
   OldComments: TStringList;
   OldComment: string;
@@ -776,317 +1114,408 @@ var
   MinMaxAssigned: Boolean;
   TOTIM: TModflowDouble;
   WaterTableData: TDataArray;
+  DisplayChoice: TDisplayChoice;
+  AModel: TCustomModel;
+  AFileName: string;
+  LastItem: Integer;
+  RowIndex: Integer;
+  ParentArray: TDataArray;
+  FileNames: string;
+  AParentArray: TDataArray;
 begin
   inherited;
-  FGrid := frmGoPhast.PhastModel.ModflowGrid;
-  FFileStream := nil;
-  FFileVariable := nil;
+  FModifiedParentDataSets.Clear;
   MinValues := TRealList.Create;
   MaxValues := TRealList.Create;
-  LayerNumbers:= TIntegerList.Create;
-  LayerDataSets := TList.Create;
   NewDataSets := TList.Create;
   OldComments := TStringList.Create;
   DataSetNames := TStringList.Create;
   ScreenObjectsToDelete := TScreenObjectList.Create;
   NewCreateScreenObjects := TList.Create;
-  FMaxPeriod := Max(frmGoPhast.PhastModel.ModflowStressPeriods.Count,
-    frmGoPhast.PhastModel.ModflowFullStressPeriods.Count);
-  FMaxStep := frmGoPhast.PhastModel.ModflowStressPeriods.MaxStepsInAnyStressPeriod;
-  FMaxLayer := frmGoPhast.PhastModel.LayerStructure.ModflowLayerCount;
-  try
-    Assert(FileExists(FFileName));
-    OpenResultFile(Precision, HufFormat);
-    EndReached := False;
-    KPER := -1;
-    KSTP := -1;
-    Description := '';
-    Count := 0;
-    NLAY := 1;
-    if FResultFormat = mrFlux then
+  FileNames := '';
+  for RowIndex := 1 to rdgModels.RowCount - 1 do
+  begin
+    if rdgModels.Checked[Ord(mcUse), RowIndex] then
     begin
-      SetLength(ValuesToIgnore, 0);
-    end
-    else
-    begin
-      SetLength(ValuesToIgnore, 2);
-      ValuesToIgnore[0] := frmGoPhast.PhastModel.ModflowOptions.HDry;
-      ValuesToIgnore[1] := frmGoPhast.PhastModel.ModflowOptions.HNoFlow;
+      AFileName := rdgModels.Cells[Ord(mcFileName), RowIndex];
+      Assert(FileExists(AFileName));
+      if FileNames <> '' then
+      begin
+        FileNames := FileNames + sLineBreak;
+      end;
+      FileNames := FileNames + AFileName;
     end;
-    for Index := 0 to clData.Items.Count - 1 do
+  end;
+  try
+    FMaxLayer := 0;
+    for RowIndex := 1 to rdgModels.RowCount - 1 do
     begin
-      case FResultFormat of
-        mrBinary, mrAscii:
+      if rdgModels.Checked[Ord(mcUse), RowIndex] then
+      begin
+        AModel := rdgModels.Objects[Ord(mcModelName), RowIndex] as TCustomModel;
+        FMaxLayer := Max(FMaxLayer, AModel.ModflowLayerCount);
+      end;
+    end;
+    for RowIndex := 1 to rdgModels.RowCount - 1 do
+    begin
+      if rdgModels.Checked[Ord(mcUse), RowIndex] then
+      begin
+        AFileName := rdgModels.Cells[Ord(mcFileName), RowIndex];
+        Assert(FileExists(AFileName));
+
+        LayerNumbers:= TIntegerList.Create;
+        LayerDataSets := TList.Create;
+        try
+
+          AModel := rdgModels.Objects[Ord(mcModelName), RowIndex] as TCustomModel;
+          FGrid := AModel.ModflowGrid;
+          FFileStream := nil;
+          FFileVariable := nil;
+          FMaxPeriod := Max(frmGoPhast.PhastModel.ModflowStressPeriods.Count,
+            frmGoPhast.PhastModel.ModflowFullStressPeriods.Count);
+          FMaxStep := frmGoPhast.PhastModel.ModflowStressPeriods.MaxStepsInAnyStressPeriod;
+//          FMaxLayer := AModel.ModflowLayerCount;
+          OpenResultFile(AFileName, Precision, HufFormat);
+          EndReached := False;
+          KPER := -1;
+          KSTP := -1;
+          Description := '';
+          Count := 0;
+          NLAY := 1;
+          if FResultFormat = mrFlux then
           begin
-            if Index = 0 then
+            SetLength(ValuesToIgnore, 0);
+          end
+          else
+          begin
+            SetLength(ValuesToIgnore, 2);
+            ValuesToIgnore[0] := AModel.ModflowOptions.HDry;
+            ValuesToIgnore[1] := AModel.ModflowOptions.HNoFlow;
+          end;
+          LastItem := 0;
+          for Index := clData.Items.Count - 1 downto 0 do
+          begin
+            if clData.Checked[Index] then
             begin
-              ReadArray(AnArray, EndReached,
-                KPER, KSTP, ILAY, TOTIM, Description, Precision);
+              LastItem := Index;
+              break;
             end;
-            While (KPER = FPeriods[Index])
-              and (KSTP = FSteps[Index])
-              and (Description = FDescriptions[Index])
-              and not EndReached do
-            begin
-              if ILAY < 0 then
-              begin
-                // cross section
-                for LayerIndex := 1 to frmGoPhast.
-                  PhastModel.LayerStructure.ModflowLayerCount do
+          end;
+          for Index := 0 to LastItem do
+          begin
+            case FResultFormat of
+              mrBinary, mrAscii:
                 begin
-                  ILAY := LayerIndex;
-                  ILAY := frmGoPhast.PhastModel.LayerStructure.
-                    ModflowLayerToDataSetLayer(ILAY)+1;
-                  SetLength(LayerArray, 1, Length(AnArray[0]));
-                  for ColIndex := 0 to Length(AnArray[0]) - 1 do
+                  if Index = 0 then
                   begin
-                    LayerArray[0,ColIndex] := AnArray[LayerIndex-1,ColIndex];
+                    ReadArray(AnArray, EndReached,
+                      KPER, KSTP, ILAY, TOTIM, Description, Precision,
+                      clData.Checked[Index]);
                   end;
+                  While (KPER = FPeriods[Index])
+                    and (KSTP = FSteps[Index])
+                    and (Description = FDescriptions[Index])
+                    and not EndReached do
+                  begin
+                    if ILAY < 0 then
+                    begin
+                      // cross section
+                      for LayerIndex := 1 to AModel.ModflowLayerCount do
+                      begin
+                        ILAY := LayerIndex;
+                        ILAY := AModel.ModflowLayerToDataSetLayer(ILAY)+1;
+                        if clData.Checked[Index] then
+                        begin
+                          SetLength(LayerArray, 1, Length(AnArray[0]));
+                          for ColIndex := 0 to Length(AnArray[0]) - 1 do
+                          begin
+                            LayerArray[0,ColIndex] := AnArray[LayerIndex-1,ColIndex];
+                          end;
+                          AssignWaterTableArray(WaterTableArray,
+                            ILAY, LayerArray, ValuesToIgnore, Description);
+                          CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
+                            TOTIM, LayerData, OldComment, NewDataSets,
+                            ScreenObjectsToDelete, FileNames, AModel);
+                          CreateScreenObject(ILAY-1, AModel, ScreenObject);
+                          AssignValues(ILAY-1, ScreenObject, LayerData, LayerArray,
+                            ValuesToIgnore, AModel, MinMaxAssigned);
+                          LayerNumbers.Add(ILAY);
+                          LayerDataSets.Add(LayerData);
+                          Assert(FModifiedParentDataSets.Count> 0);
+                          UpdateOldComments(OldComments, LayerData, OldComment);
+                          DataSetNames.AddObject(LayerData.Name, LayerData);
+                          if MinMaxAssigned then
+                          begin
+                            MinValues.Add(LayerData.Limits.LowerLimit.RealLimitValue);
+                            MaxValues.Add(LayerData.Limits.UpperLimit.RealLimitValue);
+                          end;
+
+                          if ILAY = FGrid.LayerCount then
+                          begin
+                            Inc(Count);
+                            CreateOrRetrieve3DDataSet(Description, KPER, KSTP, TOTIM,
+                              LayerNumbers, LayerDataSets, New3DArray, OldComment,
+                              False, NewDataSets, FileNames, AModel);
+                            UpdateOldComments(OldComments, New3DArray, OldComment);
+                            DataSetNames.AddObject(New3DArray.Name, New3DArray);
+                            ParentArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(New3DArray.Name);
+                            comboColorGrid.Items.Objects[Count] := ParentArray;
+
+                            AssignLimits(MinValues, MaxValues, New3DArray,
+                              ValuesToIgnore);
+                          end;
+                          NewCreateScreenObjects.Add(
+                            TUndoCreateScreenObject.Create(ScreenObject));
+                        end
+                      end;
+                      if clData.Checked[Index] then
+                      begin
+                        AssignWaterTable(NewDataSets, OldComments, DataSetNames,
+                          ScreenObjectsToDelete, NewCreateScreenObjects, KPER,
+                          WaterTableArray, KSTP, Description, ValuesToIgnore,
+                          TOTIM, FileNames, AModel);
+                      end;
+                    end
+                    else
+                    begin
+                      Assert(ILAY > 0);
+                      if ILAY > FMaxLayer then
+                      begin
+                        Beep;
+                        MessageDlg('The file you are trying to read appears to have '
+                          + 'more simulated layers than does your model. '
+                          + 'Aborting data import.', mtError, [mbOK], 0);
+                        Exit;
+                      end;
+                      // not a cross section
+                      ILAY := AModel.ModflowLayerToDataSetLayer(ILAY)+1;
+                      if clData.Checked[Index] then
+                      begin
+                        AssignWaterTableArray(WaterTableArray, ILAY, AnArray,
+                          ValuesToIgnore, Description);
+                        CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
+                          TOTIM, LayerData, OldComment, NewDataSets,
+                          ScreenObjectsToDelete, FileNames, AModel);
+                        CreateScreenObject(ILAY-1, AModel, ScreenObject);
+                        AssignValues(ILAY-1, ScreenObject, LayerData, AnArray,
+                          ValuesToIgnore, AModel, MinMaxAssigned);
+                        LayerNumbers.Add(ILAY);
+                        LayerDataSets.Add(LayerData);
+                        UpdateOldComments(OldComments, LayerData, OldComment);
+                        DataSetNames.AddObject(LayerData.Name, LayerData);
+                        if MinMaxAssigned then
+                        begin
+                          MinValues.Add(LayerData.Limits.LowerLimit.RealLimitValue);
+                          MaxValues.Add(LayerData.Limits.UpperLimit.RealLimitValue);
+                        end;
+
+                        if ILAY = FGrid.LayerCount then
+                        begin
+                          Inc(Count);
+                          CreateOrRetrieve3DDataSet(Description, KPER, KSTP, TOTIM,
+                            LayerNumbers, LayerDataSets, New3DArray, OldComment,
+                            False, NewDataSets, FileNames, AModel);
+                          UpdateOldComments(OldComments, New3DArray, OldComment);
+                          DataSetNames.AddObject(New3DArray.Name, New3DArray);
+                          ParentArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(New3DArray.Name);
+                          comboColorGrid.Items.Objects[Count] := ParentArray;
+
+                          AssignLimits(MinValues, MaxValues, New3DArray,
+                            ValuesToIgnore);
+
+                        end;
+                        NewCreateScreenObjects.Add(
+                          TUndoCreateScreenObject.Create(ScreenObject));
+                        if ILAY = FGrid.LayerCount then
+                        begin
+                          AssignWaterTable(NewDataSets, OldComments, DataSetNames,
+                            ScreenObjectsToDelete, NewCreateScreenObjects, KPER,
+                            WaterTableArray, KSTP, Description, ValuesToIgnore,
+                            TOTIM, FileNames, AModel);
+                        end;
+                      end;
+                    end;
+
+                    // read next array
+                    if ILAY = FGrid.LayerCount then
+                    begin
+                      ReadArray(AnArray, EndReached,
+                        KPER, KSTP, ILAY, TOTIM, Description, Precision,
+                        (LastItem <> Index) and clData.Checked[Index+1])
+                    end
+                    else
+                    begin
+                      ReadArray(AnArray, EndReached,
+                        KPER, KSTP, ILAY, TOTIM, Description, Precision,
+                        clData.Checked[Index])
+                    end;
+                  end;
+                end;
+              mrFlux:
+                begin
+                  Read3DArray(NLAY, EndReached, KPER, KSTP, TOTIM, Description,
+                    A3DArray, Precision, HufFormat, clData.Checked[Index]);
                   if clData.Checked[Index] then
                   begin
-                    AssignWaterTableArray(WaterTableArray,
-                      ILAY, LayerArray, ValuesToIgnore, Description);
+                    for LayerIndex := 0 to Abs(NLAY) - 1 do
+                    begin
+                      ILAY := AModel.ModflowLayerToDataSetLayer(LayerIndex+1)+1;
+                      CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY,
+                        TOTIM, LayerData, OldComment, NewDataSets,
+                        ScreenObjectsToDelete, FileNames, AModel);
+                      CreateScreenObject(ILAY-1, AModel, ScreenObject);
+                      Assign3DValues(ScreenObject, LayerData, A3DArray, LayerIndex,
+                        False, ValuesToIgnore, AModel);
+                      LayerNumbers.Add(ILAY);
+                      LayerDataSets.Add(LayerData);
+                      UpdateOldComments(OldComments, LayerData, OldComment);
+                      DataSetNames.AddObject(LayerData.Name, LayerData);
+                      MinValues.Add(LayerData.Limits.LowerLimit.RealLimitValue);
+                      MaxValues.Add(LayerData.Limits.UpperLimit.RealLimitValue);
+                      NewCreateScreenObjects.Add(
+                        TUndoCreateScreenObject.Create(ScreenObject))
+                    end;
+                    Inc(Count);
+                    CreateOrRetrieve3DDataSet(Description, KPER, KSTP, TOTIM,
+                      LayerNumbers, LayerDataSets, New3DArray, OldComment, True,
+                      NewDataSets, FileNames, AModel);
+                    UpdateOldComments(OldComments, New3DArray, OldComment);
+                    DataSetNames.AddObject(New3DArray.Name, New3DArray);
+                    ParentArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(New3DArray.Name);
+                    comboColorGrid.Items.Objects[Count] := ParentArray;
+
+                    AssignLimits(MinValues, MaxValues, New3DArray, ValuesToIgnore);
+                  end;
+
+                end;
+              mrHufAscii, mrHufBinary:
+                begin
+                  ReadArray(AnArray, EndReached,
+                    KPER, KSTP, ILAY, TOTIM, Description, Precision,
+                    clData.Checked[Index]);
+                  Assert((KPER = FPeriods[Index])
+                    and (KSTP = FSteps[Index])
+                    and (Description = FDescriptions[Index]));
+                  Assert( ILAY > 0);
+                  // not a cross section
+                  if clData.Checked[Index] then
+                  begin
+                    HGU := AModel.HydrogeologicUnits[ILAY-1];
+                    Description := Description + ' ' + HGU.HufName;
                     CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
-                      LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
-                    CreateScreenObject(ILAY-1, ScreenObject);
-                    AssignValues(ILAY-1, ScreenObject, LayerData, LayerArray,
-                      ValuesToIgnore, MinMaxAssigned);
+                      LayerData, OldComment, NewDataSets,
+                      ScreenObjectsToDelete, FileNames, AModel);
+                    CreateScreenObject(-1, AModel, ScreenObject);
+                    AssignValues(-1, ScreenObject, LayerData, AnArray,
+                      ValuesToIgnore, AModel, MinMaxAssigned);
+                    UpdateOldComments(OldComments, LayerData, OldComment);
+                    DataSetNames.AddObject(LayerData.Name, LayerData);
+                    Inc(Count);
+                    ParentArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerData.Name);
+                    comboColorGrid.Items.Objects[Count] := ParentArray;
+                    NewCreateScreenObjects.Add(
+                      TUndoCreateScreenObject.Create(ScreenObject))
+                  end;
+                end;
+              mrHufFlux:
+                begin
+                  if (Index = 0) or ((Index mod NLAY) = 0) then
+                  begin
+                    Read3DArray(NLAY, EndReached, KPER, KSTP, TOTIM, Description,
+                      A3DArray, Precision, HufFormat, clData.Checked[Index]);
+                  end;
+
+                  if clData.Checked[Index] then
+                  begin
+                    LayerIndex := Index mod NLAY;
+                    ILAY := LayerIndex+1;
+                    HGU := AModel.HydrogeologicUnits[ILAY-1];
+                    LayerDescription := Description + ' ' + HGU.HufName;
+                    CreateOrRetrieveLayerDataSet(LayerDescription, KSTP, KPER, ILAY,
+                      TOTIM, LayerData, OldComment, NewDataSets,
+                      ScreenObjectsToDelete, FileNames, AModel);
+                    CreateScreenObject(-1, AModel, ScreenObject);
+                    Assign3DValues(ScreenObject, LayerData, A3DArray, LayerIndex,
+                      True, ValuesToIgnore, AModel);
+                    UpdateOldComments(OldComments, LayerData, OldComment);
+                    DataSetNames.AddObject(LayerData.Name, LayerData);
+                    Inc(Count);
+                    ParentArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerData.Name);
+                    comboColorGrid.Items.Objects[Count] := ParentArray;
+                    NewCreateScreenObjects.Add(
+                      TUndoCreateScreenObject.Create(ScreenObject))
+                  end;
+                end;
+              mfSubBinary:
+                begin
+                  ReadArray(AnArray, EndReached,
+                    KPER, KSTP, ILAY, TOTIM, Description, Precision,
+                    clData.Checked[Index]);
+                  Description := SubsidenceDescription(Description, ILAY);
+                  if clData.Checked[Index] then
+                  begin
+                    Inc(Count);
+                    CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
+                      LayerData, OldComment, NewDataSets, ScreenObjectsToDelete,
+                      FileNames, AModel, dafSubsidence);
+                    ParentArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerData.Name);
+                    comboColorGrid.Items.Objects[Count] := ParentArray;
+                    CreateScreenObject(ILAY-1, AModel, ScreenObject);
+                    AssignValues(ILAY-1, ScreenObject, LayerData, AnArray,
+                      ValuesToIgnore, AModel, MinMaxAssigned);
                     LayerNumbers.Add(ILAY);
                     LayerDataSets.Add(LayerData);
-                    OldComments.AddObject(OldComment, LayerData);
+                    UpdateOldComments(OldComments, LayerData, OldComment);
                     DataSetNames.AddObject(LayerData.Name, LayerData);
                     if MinMaxAssigned then
                     begin
                       MinValues.Add(LayerData.Limits.LowerLimit.RealLimitValue);
                       MaxValues.Add(LayerData.Limits.UpperLimit.RealLimitValue);
                     end;
-
-                    if ILAY = FGrid.LayerCount then
-                    begin
-                      Inc(Count);
-                      CreateOrRetrieve3DDataSet(Description, KPER, KSTP, TOTIM,
-                        LayerNumbers, LayerDataSets, New3DArray, OldComment,
-                        False, NewDataSets);
-                      OldComments.AddObject(OldComment, New3DArray);
-                      DataSetNames.AddObject(New3DArray.Name, New3DArray);
-                      comboColorGrid.Items.Objects[Count] := New3DArray;
-
-                      AssignLimits(MinValues, MaxValues, New3DArray,
-                        ValuesToIgnore);
-                    end;
-                    NewCreateScreenObjects.Add(
-                      TUndoCreateScreenObject.Create(ScreenObject));
-                  end
-                end;
-                if clData.Checked[Index] then
-                begin
-                  AssignWaterTable(NewDataSets, OldComments, DataSetNames,
-                    ScreenObjectsToDelete, NewCreateScreenObjects, KPER,
-                    WaterTableArray, KSTP, Description, ValuesToIgnore,
-                    TOTIM);
-                end;
-              end
-              else
-              begin
-                Assert(ILAY > 0);
-                if ILAY > FMaxLayer then
-                begin
-                  Beep;
-                  MessageDlg('The file you are trying to read appears to have '
-                    + 'more simulated layers than does your model. '
-                    + 'Aborting data import.', mtError, [mbOK], 0);
-                  Exit;
-                end;
-                // not a cross section
-                ILAY := frmGoPhast.PhastModel.LayerStructure.
-                  ModflowLayerToDataSetLayer(ILAY)+1;
-                if clData.Checked[Index] then
-                begin
-                  AssignWaterTableArray(WaterTableArray, ILAY, AnArray, ValuesToIgnore, Description);
-                  CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
-                    LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
-                  CreateScreenObject(ILAY-1, ScreenObject);
-                  AssignValues(ILAY-1, ScreenObject, LayerData, AnArray,
-                    ValuesToIgnore, MinMaxAssigned);
-                  LayerNumbers.Add(ILAY);
-                  LayerDataSets.Add(LayerData);
-                  OldComments.AddObject(OldComment, LayerData);
-                  DataSetNames.AddObject(LayerData.Name, LayerData);
-                  if MinMaxAssigned then
-                  begin
-                    MinValues.Add(LayerData.Limits.LowerLimit.RealLimitValue);
-                    MaxValues.Add(LayerData.Limits.UpperLimit.RealLimitValue);
                   end;
 
-                  if ILAY = FGrid.LayerCount then
-                  begin
-                    Inc(Count);
-                    CreateOrRetrieve3DDataSet(Description, KPER, KSTP, TOTIM,
-                      LayerNumbers, LayerDataSets, New3DArray, OldComment,
-                      False, NewDataSets);
-                    OldComments.AddObject(OldComment, New3DArray);
-                    DataSetNames.AddObject(New3DArray.Name, New3DArray);
-                    comboColorGrid.Items.Objects[Count] := New3DArray;
-
-                    AssignLimits(MinValues, MaxValues, New3DArray,
-                      ValuesToIgnore);
-
-                  end;
-                  NewCreateScreenObjects.Add(
-                    TUndoCreateScreenObject.Create(ScreenObject));
-                  if ILAY = FGrid.LayerCount then
-                  begin
-                    AssignWaterTable(NewDataSets, OldComments, DataSetNames,
-                      ScreenObjectsToDelete, NewCreateScreenObjects, KPER,
-                      WaterTableArray, KSTP, Description, ValuesToIgnore,
-                      TOTIM);
-                  end;
                 end;
-              end;
-
-              // read next array
-              ReadArray(AnArray, EndReached,
-                KPER, KSTP, ILAY, TOTIM, Description, Precision)
+              else Assert(False);
             end;
           end;
-        mrFlux:
-          begin
-            Read3DArray(NLAY, EndReached, KPER, KSTP, TOTIM, Description, A3DArray,
-              Precision, HufFormat);
-            if clData.Checked[Index] then
-            begin
-              for LayerIndex := 0 to Abs(NLAY) - 1 do
-              begin
-                ILAY := frmGoPhast.PhastModel.LayerStructure.
-                  ModflowLayerToDataSetLayer(LayerIndex+1)+1;
-                CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
-                  LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
-                CreateScreenObject(ILAY-1, ScreenObject);
-                Assign3DValues(ScreenObject, LayerData, A3DArray, LayerIndex,
-                  False, ValuesToIgnore);
-                LayerNumbers.Add(ILAY);
-                LayerDataSets.Add(LayerData);
-                OldComments.AddObject(OldComment, LayerData);
-                DataSetNames.AddObject(LayerData.Name, LayerData);
-                MinValues.Add(LayerData.Limits.LowerLimit.RealLimitValue);
-                MaxValues.Add(LayerData.Limits.UpperLimit.RealLimitValue);
-                NewCreateScreenObjects.Add(
-                  TUndoCreateScreenObject.Create(ScreenObject))
-              end;
-              Inc(Count);
-              CreateOrRetrieve3DDataSet(Description, KPER, KSTP, TOTIM, LayerNumbers,
-                LayerDataSets, New3DArray, OldComment, True, NewDataSets);
-              OldComments.AddObject(OldComment, New3DArray);
-              DataSetNames.AddObject(New3DArray.Name, New3DArray);
-              comboColorGrid.Items.Objects[Count] := New3DArray;
-
-              AssignLimits(MinValues, MaxValues, New3DArray, ValuesToIgnore);
-            end;
-
-          end;
-        mrHufAscii, mrHufBinary:
-          begin
-            ReadArray(AnArray, EndReached,
-              KPER, KSTP, ILAY, TOTIM, Description, Precision);
-            Assert((KPER = FPeriods[Index])
-              and (KSTP = FSteps[Index])
-              and (Description = FDescriptions[Index]));
-            Assert( ILAY > 0);
-            // not a cross section
-            if clData.Checked[Index] then
-            begin
-              HGU := frmGoPhast.PhastModel.HydrogeologicUnits[ILAY-1];
-              Description := Description + ' ' + HGU.HufName;
-              CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
-                LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
-              CreateScreenObject(-1, ScreenObject);
-              AssignValues(-1, ScreenObject, LayerData, AnArray,
-                ValuesToIgnore, MinMaxAssigned);
-              OldComments.AddObject(OldComment, LayerData);
-              DataSetNames.AddObject(LayerData.Name, LayerData);
-              Inc(Count);
-              comboColorGrid.Items.Objects[Count] := LayerData;
-              NewCreateScreenObjects.Add(
-                TUndoCreateScreenObject.Create(ScreenObject))
-            end;
-          end;
-        mrHufFlux:
-          begin
-            if (Index = 0) or ((Index mod NLAY) = 0) then
-            begin
-              Read3DArray(NLAY, EndReached, KPER, KSTP, TOTIM, Description, A3DArray,
-                Precision, HufFormat);
-            end;
-
-            if clData.Checked[Index] then
-            begin
-              LayerIndex := Index mod NLAY;
-              ILAY := LayerIndex+1;
-              HGU := frmGoPhast.PhastModel.HydrogeologicUnits[ILAY-1];
-              LayerDescription := Description + ' ' + HGU.HufName;
-              CreateOrRetrieveLayerDataSet(LayerDescription, KSTP, KPER, ILAY, TOTIM,
-                LayerData, OldComment, NewDataSets, ScreenObjectsToDelete);
-              CreateScreenObject(-1, ScreenObject);
-              Assign3DValues(ScreenObject, LayerData, A3DArray, LayerIndex,
-                True, ValuesToIgnore);
-              OldComments.AddObject(OldComment, LayerData);
-              DataSetNames.AddObject(LayerData.Name, LayerData);
-              Inc(Count);
-              comboColorGrid.Items.Objects[Count] := LayerData;
-              NewCreateScreenObjects.Add(
-                TUndoCreateScreenObject.Create(ScreenObject))
-            end;
-          end;
-        mfSubBinary:
-          begin
-            ReadArray(AnArray, EndReached,
-              KPER, KSTP, ILAY, TOTIM, Description, Precision);
-            Description := SubsidenceDescription(Description, ILAY);
-            if clData.Checked[Index] then
-            begin
-              Inc(Count);
-              CreateOrRetrieveLayerDataSet(Description, KSTP, KPER, ILAY, TOTIM,
-                LayerData, OldComment, NewDataSets, ScreenObjectsToDelete,
-                dafSubsidence);
-              comboColorGrid.Items.Objects[Count] := LayerData;
-              CreateScreenObject(ILAY-1, ScreenObject);
-              AssignValues(ILAY-1, ScreenObject, LayerData, AnArray,
-                ValuesToIgnore, MinMaxAssigned);
-              LayerNumbers.Add(ILAY);
-              LayerDataSets.Add(LayerData);
-              OldComments.AddObject(OldComment, LayerData);
-              DataSetNames.AddObject(LayerData.Name, LayerData);
-              if MinMaxAssigned then
-              begin
-                MinValues.Add(LayerData.Limits.LowerLimit.RealLimitValue);
-                MaxValues.Add(LayerData.Limits.UpperLimit.RealLimitValue);
-              end;
-            end;
-
-          end;
-        else Assert(False);
+        finally
+          CloseFiles;
+          LayerNumbers.Free;
+          LayerDataSets.Free;
+        end;
       end;
     end;
     New3DArray := comboColorGrid.Items.Objects[comboColorGrid.ItemIndex]
       as TDataArray;
+    DisplayChoice := TDisplayChoice(rgDisplayChoice.ItemIndex);
     if New3DArray <> nil then
     begin
-      case rgDisplayChoice.ItemIndex of
-        0:
+      case DisplayChoice of
+        dcColor:
           begin
             frmGoPhast.acColoredGrid.Enabled := True;
             frmGoPhast.acColoredGrid.Checked := True;
             frmGoPhast.tb3DColors.Down := True;
           end;
-        1, 2:
+        dcContour, dcNone:
           begin
             // do nothing
           end;
         else Assert(False);
       end;
     end;
+    for Index := 0 to FModifiedParentDataSets.Count - 1 do
+    begin
+      AParentArray := FModifiedParentDataSets[Index];
+      AParentArray.Comment := AParentArray.Comment
+        + sLineBreak + 'Minimum value: '
+        + FloatToStr(AParentArray.Limits.LowerLimit.RealLimitValue)
+        + sLineBreak + 'Maximum value: '
+        + FloatToStr(AParentArray.Limits.UpperLimit.RealLimitValue);
+    end;
+    FFormulaAssigners.AssignFinalFormulas;
     UndoImportResults := TUndoImportModelResults.Create(NewDataSets,
-      DataSetNames, OldComments, New3DArray, TDisplayChoice(rgDisplayChoice.ItemIndex));
+      DataSetNames, OldComments, New3DArray, DisplayChoice, frmGoPhast.PhastModel);
     DeletedDataSets := TList.Create;
     NewDataSetProperties := TObjectList.Create;
     try
@@ -1117,11 +1546,8 @@ begin
       UndoImportResults.FContainedUndos.Add(NewCreateScreenObjects[Index]);
     end;
 
-    frmGoPhast.UndoStack.Submit(UndoImportResults)
+    frmGoPhast.UndoStack.Submit(UndoImportResults);
   finally
-    CloseFiles;
-    LayerNumbers.Free;
-    LayerDataSets.Free;
     NewDataSets.Free;
     ScreenObjectsToDelete.Free;
     NewCreateScreenObjects.Free;
@@ -1129,8 +1555,6 @@ begin
     MaxValues.Free;
     OldComments.Free;
     DataSetNames.Free;
-//    Min3DValues.Free;
-//    Max3DValues.Free;
   end;
 
 end;
@@ -1166,10 +1590,21 @@ end;
 procedure TfrmSelectResultToImport.FormCreate(Sender: TObject);
 begin
   inherited;
+  FModifiedParentDataSets:= TList.Create;
+  FFormulaAssigners := TFormulaAssignerList.Create;
+
+  rdgModels.Cells[Ord(mcModelName), 0] := 'Model';
+  rdgModels.Cells[Ord(mcUse), 0] := 'Import Data';
+  rdgModels.Cells[Ord(mcFileName), 0] := 'FileName';
+
+  FNewDataSetNames:= TStringList.Create;
+  FNewDefaultDataSetNames:= TStringList.Create;
+
   FPeriods := TIntegerList.Create;
   FSteps := TIntegerList.Create;
   FDescriptions := TStringList.Create;
   FAskedUser := False;
+  SetDefaultDisplayOption;
 
   // The next time this is changed, it should be reorganized to read the
   // file extensions and descriptions from an array and then
@@ -1242,6 +1677,10 @@ begin
   FPeriods.Free;
   FSteps.Free;
   FDescriptions.Free;
+  FNewDataSetNames.Free;
+  FNewDefaultDataSetNames.Free;
+  FFormulaAssigners.Free;
+  FModifiedParentDataSets.Free;
 end;
 
 procedure TfrmSelectResultToImport.odSelectFilesTypeChange(Sender: TObject);
@@ -1282,7 +1721,8 @@ begin
   end;
 end;
 
-function TfrmSelectResultToImport.SelectFiles: boolean;
+function TfrmSelectResultToImport.ReadDataHeadings(AModel: TCustomModel;
+  RowIndex: integer; AFileName: string): boolean;
 var
   KSTP: Integer;
   AnArray: TModflowDoubleArray;
@@ -1301,6 +1741,7 @@ var
   HufFormat: boolean;
   LayerIndex: Integer;
   Description: string;
+  AFileStream: TFileStream;
   function WriteLabel(Description: string): string;
   var
     HGU: THydrogeologicUnit;
@@ -1311,7 +1752,7 @@ var
     Description := TitleCase(Description);
     if FResultFormat in [mrHufAscii, mrHufBinary, mrHufFlux] then
     begin
-      HGU := frmGoPhast.PhastModel.HydrogeologicUnits[ILAY-1];
+      HGU := AModel.HydrogeologicUnits[ILAY-1];
       HufName := ' ' + HGU.HufName;
     end
     else
@@ -1338,164 +1779,74 @@ var
     end;
   end;
 begin
-  odSelectFiles.FileName := DefaultFileName;
-  result := odSelectFiles.Execute;
-  if result then
-  begin
+  result := True;
+  try
+    if not FileExists(AFileName) then
+    begin
+      result := False;
+      Beep;
+      MessageDlg(AFileName + ' does not exist.', mtError, [mbOK], 0);
+      Exit;
+    end;
+
+    AFileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
     try
-      FFileName := odSelectFiles.FileName;
-      if not FileExists(FFileName) then
+      if AFileStream.Size = 0 then
       begin
         result := False;
         Beep;
-        MessageDlg(FFileName + ' does not exist.', mtError, [mbOK], 0);
+        MessageDlg(AFileName + ' is empty.', mtError, [mbOK], 0);
         Exit;
       end;
+    finally
+      AFileStream.Free;
+    end;
 
-      FFileStream := nil;
-      FFileVariable := nil;
-      OpenResultFile(Precision, HufFormat);
+    FFileStream := nil;
+    FFileVariable := nil;
+    try
+      OpenResultFile(AFileName, Precision, HufFormat);
+    except on EPrecisionReadError do
+      begin
+        result := False;
+        Beep;
+        MessageDlg('Error reading ' + AFileName + '.', mtError, [mbOK], 0);
+        Exit;
+      end;
+    end;
 
-      case FResultFormat of
-        mrBinary:
+    case FResultFormat of
+      mrBinary:
+        begin
+          while FFileStream.Position < FFileStream.Size do
           begin
-            while FFileStream.Position < FFileStream.Size do
-            begin
-              case Precision of
-                mpSingle:
-                  ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
-                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
-                mpDouble:
-                  ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
-                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
-                else Assert(False);
-              end;
-              RecordItem(DESC);
-              if frmGoPhast.ModflowGrid.RowCount = 1 then
-              begin
-                if (frmGoPhast.PhastModel.LayerStructure.ModflowLayerCount <> NROW)
-                  or (frmGoPhast.ModflowGrid.ColumnCount <> NCOL) then
-                begin
-                  Beep;
-                  MessageDlg('The number of layers or columns in the data set doesn''t'
-                    + ' match the number of layers or columns in the grid.',
-                    mtError, [mbOK], 0);
-                  result := False;
-                  break;
-                end;
-              end
-              else
-              begin
-                if (frmGoPhast.ModflowGrid.RowCount <> NROW)
-                  or (frmGoPhast.ModflowGrid.ColumnCount <> NCOL) then
-                begin
-                  Beep;
-                  MessageDlg('The number of rows or columns in the data set doesn''t'
-                    + ' match the number of rows or columns in the grid.',
-                    mtError, [mbOK], 0);
-                  result := False;
-                  break;
-                end;
-              end;
+            case Precision of
+              mpSingle:
+                ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
+                  PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+              mpDouble:
+                ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
+                  PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+              else Assert(False);
             end;
-          end;
-        mrAscii:
-          begin
-            while not EOF(FFileVariable.AFile) do
+            RecordItem(DESC);
+            if AModel.ModflowGrid.RowCount = 1 then
             begin
-              ReadModflowAsciiRealArray(FFileVariable, KSTP, KPER,
-                PERTIM, TOTIM, DESC2, NCOL, NROW, ILAY, AnArray);
-              RecordItem(DESC2);
-              if frmGoPhast.ModflowGrid.RowCount = 1 then
-              begin
-                if (frmGoPhast.PhastModel.LayerStructure.ModflowLayerCount <> NROW)
-                  or (frmGoPhast.ModflowGrid.ColumnCount <> NCOL) then
-                begin
-                  Beep;
-                  MessageDlg('The number of layers or columns in the data set doesn''t'
-                    + ' match the number of layers or columns in the grid.',
-                    mtError, [mbOK], 0);
-                  result := False;
-                  break;
-                end;
-              end
-              else
-              begin
-                if (frmGoPhast.ModflowGrid.RowCount <> NROW)
-                  or (frmGoPhast.ModflowGrid.ColumnCount <> NCOL) then
-                begin
-                  Beep;
-                  MessageDlg('The number of rows or columns in the data set doesn''t'
-                    + ' match the number of rows or columns in the grid.',
-                    mtError, [mbOK], 0);
-                  result := False;
-                  break;
-                end;
-              end;
-            end;
-          end;
-        mrFlux:
-          begin
-            while FFileStream.Position < FFileStream.Size do
-            begin
-              case Precision of
-                mpSingle:
-                  ReadModflowSinglePrecFluxArray(FFileStream, KSTP, KPER,
-                    PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat);
-                mpDouble:
-                  ReadModflowDoublePrecFluxArray(FFileStream, KSTP, KPER,
-                    PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat);
-                else Assert(False);
-              end;
-              RecordItem(DESC);
-              if (frmGoPhast.ModflowGrid.RowCount <> NROW)
-                or (frmGoPhast.ModflowGrid.ColumnCount <> NCOL)
-                or (frmGoPhast.PhastModel.LayerStructure.ModflowLayerCount <> Abs(NLAY)) then
+              if (AModel.ModflowLayerCount <> NROW)
+                or (AModel.ModflowGrid.ColumnCount <> NCOL) then
               begin
                 Beep;
-                MessageDlg('The number of rows, columns, or layers in the data set doesn''t'
-                  + ' match the number of rows, columns, or layers in the grid.',
-                  mtError, [mbOK], 0);
-                result := False;
-                break;
-              end;
-            end;
-          end;
-        mrHufAscii:
-          begin
-            while not EOF(FFileVariable.AFile) do
-            begin
-              ReadModflowAsciiRealArray(FFileVariable, KSTP, KPER,
-                PERTIM, TOTIM, DESC2, NCOL, NROW, ILAY, AnArray);
-              RecordItem(DESC2);
-              if (frmGoPhast.ModflowGrid.RowCount <> NROW)
-                or (frmGoPhast.ModflowGrid.ColumnCount <> NCOL) then
-              begin
-                Beep;
-                MessageDlg('The number of rows or columns in the data set doesn''t'
-                  + ' match the number of rows or columns in the grid.',
+                MessageDlg('The number of layers or columns in the data set doesn''t'
+                  + ' match the number of layers or columns in the grid.',
                   mtError, [mbOK], 0);
                 result := False;
                 break;
               end;
             end
-          end;
-        mrHufBinary:
-          begin
-            while FFileStream.Position < FFileStream.Size do
+            else
             begin
-              case Precision of
-                mpSingle:
-                  ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
-                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
-                mpDouble:
-                  ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
-                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
-                else Assert(False);
-              end;
-              RecordItem(DESC);
-              if (frmGoPhast.ModflowGrid.RowCount <> NROW)
-                or (frmGoPhast.ModflowGrid.ColumnCount <> NCOL) then
+              if (AModel.ModflowGrid.RowCount <> NROW)
+                or (AModel.ModflowGrid.ColumnCount <> NCOL) then
               begin
                 Beep;
                 MessageDlg('The number of rows or columns in the data set doesn''t'
@@ -1506,54 +1857,31 @@ begin
               end;
             end;
           end;
-        mrHufFlux:
+        end;
+      mrAscii:
+        begin
+          while not EOF(FFileVariable.AFile) do
           begin
-            while FFileStream.Position < FFileStream.Size do
+            ReadModflowAsciiRealArray(FFileVariable, KSTP, KPER,
+              PERTIM, TOTIM, DESC2, NCOL, NROW, ILAY, AnArray, False);
+            RecordItem(DESC2);
+            if AModel.ModflowGrid.RowCount = 1 then
             begin
-              case Precision of
-                mpSingle:
-                  ReadModflowSinglePrecFluxArray(FFileStream, KSTP, KPER,
-                    PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat);
-                mpDouble:
-                  ReadModflowDoublePrecFluxArray(FFileStream, KSTP, KPER,
-                    PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat);
-                else Assert(False);
-              end;
-              for LayerIndex := 0 to Abs(NLAY) - 1 do
-              begin
-                ILAY := LayerIndex+1;
-                RecordItem(DESC);
-              end;
-              if (frmGoPhast.ModflowGrid.RowCount <> NROW)
-                or (frmGoPhast.ModflowGrid.ColumnCount <> NCOL)
-                or (frmGoPhast.PhastModel.HydrogeologicUnits.Count <> Abs(NLAY)) then
+              if (AModel.ModflowLayerCount <> NROW)
+                or (AModel.ModflowGrid.ColumnCount <> NCOL) then
               begin
                 Beep;
-                MessageDlg('The number of rows, columns, or hydrogeologic units in the data set doesn''t'
-                  + ' match the number of rows, columns, or hydrogeologic units in the grid.',
+                MessageDlg('The number of layers or columns in the data set doesn''t'
+                  + ' match the number of layers or columns in the grid.',
                   mtError, [mbOK], 0);
                 result := False;
                 break;
               end;
-            end;
-          end;
-        mfSubBinary:
-          begin
-            while FFileStream.Position < FFileStream.Size do
+            end
+            else
             begin
-              case Precision of
-                mpSingle:
-                  ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
-                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
-                mpDouble:
-                  ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
-                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
-                else Assert(False);
-              end;
-              Description := SubsidenceDescription(DESC, ILAY);
-              RecordItem(Description);
-              if (frmGoPhast.ModflowGrid.RowCount <> NROW)
-                or (frmGoPhast.ModflowGrid.ColumnCount <> NCOL) then
+              if (AModel.ModflowGrid.RowCount <> NROW)
+                or (AModel.ModflowGrid.ColumnCount <> NCOL) then
               begin
                 Beep;
                 MessageDlg('The number of rows or columns in the data set doesn''t'
@@ -1562,25 +1890,177 @@ begin
                 result := False;
                 break;
               end;
+            end;
+          end;
+        end;
+      mrFlux:
+        begin
+          while FFileStream.Position < FFileStream.Size do
+          begin
+            case Precision of
+              mpSingle:
+                ReadModflowSinglePrecFluxArray(FFileStream, KSTP, KPER,
+                  PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat,
+                  False);
+              mpDouble:
+                ReadModflowDoublePrecFluxArray(FFileStream, KSTP, KPER,
+                  PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat,
+                  False);
+              else Assert(False);
+            end;
+            RecordItem(DESC);
+            if (AModel.ModflowGrid.RowCount <> NROW)
+              or (AModel.ModflowGrid.ColumnCount <> NCOL)
+              or (AModel.ModflowLayerCount <> Abs(NLAY)) then
+            begin
+              Beep;
+              MessageDlg('The number of rows, columns, or layers in the data set doesn''t'
+                + ' match the number of rows, columns, or layers in the grid.',
+                mtError, [mbOK], 0);
+              result := False;
+              break;
+            end;
+          end;
+        end;
+      mrHufAscii:
+        begin
+          while not EOF(FFileVariable.AFile) do
+          begin
+            ReadModflowAsciiRealArray(FFileVariable, KSTP, KPER,
+              PERTIM, TOTIM, DESC2, NCOL, NROW, ILAY, AnArray, False);
+            RecordItem(DESC2);
+            if (AModel.ModflowGrid.RowCount <> NROW)
+              or (AModel.ModflowGrid.ColumnCount <> NCOL) then
+            begin
+              Beep;
+              MessageDlg('The number of rows or columns in the data set doesn''t'
+                + ' match the number of rows or columns in the grid.',
+                mtError, [mbOK], 0);
+              result := False;
+              break;
             end;
           end
-        else Assert(False);
-      end;
-    finally
-      CloseFiles;
+        end;
+      mrHufBinary:
+        begin
+          while FFileStream.Position < FFileStream.Size do
+          begin
+            case Precision of
+              mpSingle:
+                ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
+                  PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+              mpDouble:
+                ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
+                  PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+              else Assert(False);
+            end;
+            RecordItem(DESC);
+            if (AModel.ModflowGrid.RowCount <> NROW)
+              or (AModel.ModflowGrid.ColumnCount <> NCOL) then
+            begin
+              Beep;
+              MessageDlg('The number of rows or columns in the data set doesn''t'
+                + ' match the number of rows or columns in the grid.',
+                mtError, [mbOK], 0);
+              result := False;
+              break;
+            end;
+          end;
+        end;
+      mrHufFlux:
+        begin
+          while FFileStream.Position < FFileStream.Size do
+          begin
+            case Precision of
+              mpSingle:
+                ReadModflowSinglePrecFluxArray(FFileStream, KSTP, KPER,
+                  PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat,
+                  False);
+              mpDouble:
+                ReadModflowDoublePrecFluxArray(FFileStream, KSTP, KPER,
+                  PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat,
+                  False);
+              else Assert(False);
+            end;
+            for LayerIndex := 0 to Abs(NLAY) - 1 do
+            begin
+              ILAY := LayerIndex+1;
+              RecordItem(DESC);
+            end;
+            if (AModel.ModflowGrid.RowCount <> NROW)
+              or (AModel.ModflowGrid.ColumnCount <> NCOL)
+              or (AModel.HydrogeologicUnits.Count <> Abs(NLAY)) then
+            begin
+              Beep;
+              MessageDlg('The number of rows, columns, or hydrogeologic units in the data set doesn''t'
+                + ' match the number of rows, columns, or hydrogeologic units in the grid.',
+                mtError, [mbOK], 0);
+              result := False;
+              break;
+            end;
+          end;
+        end;
+      mfSubBinary:
+        begin
+          while FFileStream.Position < FFileStream.Size do
+          begin
+            case Precision of
+              mpSingle:
+                ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP,
+                  KPER, PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray,
+                  False);
+              mpDouble:
+                ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP,
+                  KPER, PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray,
+                  False);
+              else Assert(False);
+            end;
+            Description := SubsidenceDescription(DESC, ILAY);
+            RecordItem(Description);
+            if (AModel.ModflowGrid.RowCount <> NROW)
+              or (AModel.ModflowGrid.ColumnCount <> NCOL) then
+            begin
+              Beep;
+              MessageDlg('The number of rows or columns in the data set doesn''t'
+                + ' match the number of rows or columns in the grid.',
+                mtError, [mbOK], 0);
+              result := False;
+              break;
+            end;
+          end;
+        end
+      else Assert(False);
     end;
-    if clData.Items.Count = 0 then
+  finally
+    CloseFiles;
+  end;
+  if clData.Items.Count = 0 then
+  begin
+    Beep;
+    MessageDlg('File is empty.', mtError, [mbOK], 0);
+    result := False;
+  end;
+  if clData.Items.Count >= 1 then
+  begin
+    clData.Checked[clData.Items.Count-1] := True;
+    clDataClickCheck(clData);
+  end;
+end;
+
+procedure TfrmSelectResultToImport.SetDefaultDisplayOption;
+var
+  Choice: TDisplayChoice;
+  DefaultChoice: TDisplayChoice;
+begin
+  DefaultChoice := dcColor;
+  for Choice := Low(TDisplayChoice) to High(TDisplayChoice) do
+  begin
+    if DisplayChoices[Choice] > DisplayChoices[DefaultChoice] then
     begin
-      Beep;
-      MessageDlg('File is empty.', mtInformation, [mbOK], 0);
-      result := False;
-    end;
-    if clData.Items.Count >= 1 then
-    begin
-      clData.Checked[clData.Items.Count-1] := True;
-      clDataClickCheck(clData);
+      DefaultChoice := Choice;
     end;
   end;
+  rgDisplayChoice.ItemIndex := Ord(DefaultChoice);
 end;
 
 procedure TfrmSelectResultToImport.AssignWaterTable(NewDataSets: TList;
@@ -1588,7 +2068,7 @@ procedure TfrmSelectResultToImport.AssignWaterTable(NewDataSets: TList;
   ScreenObjectsToDelete: TScreenObjectList; NewCreateScreenObjects: TList;
   KPER: Integer; WaterTableArray: TModflowDoubleArray; KSTP: Integer;
   const Description: string; ValuesToIgnore: TOneDRealArray;
-  TOTIM: TModflowDouble);
+  TOTIM: TModflowDouble; FileNames: string; AModel: TCustomModel);
 var
   WaterTableData: TDataArray;
   OldComment: string;
@@ -1598,12 +2078,12 @@ begin
   if Description = StrHead then
   begin
     CreateOrRetrieveLayerDataSet('Water Table', KSTP, KPER, -1, TOTIM,
-      WaterTableData, OldComment, NewDataSets, ScreenObjectsToDelete,
-      dafWaterTable);
-    CreateScreenObject(-1, ScreenObject);
+      WaterTableData, OldComment, NewDataSets, ScreenObjectsToDelete, FileNames,
+      AModel, dafWaterTable);
+    CreateScreenObject(-1, AModel, ScreenObject);
     AssignValues(-1, ScreenObject, WaterTableData, WaterTableArray,
-      ValuesToIgnore, MinMaxAssigned);
-    OldComments.AddObject(OldComment, WaterTableData);
+      ValuesToIgnore, AModel, MinMaxAssigned);
+    UpdateOldComments(OldComments, WaterTableData, OldComment);
     DataSetNames.AddObject(WaterTableData.Name, WaterTableData);
     NewCreateScreenObjects.Add(TUndoCreateScreenObject.Create(ScreenObject));
   end;
@@ -1758,8 +2238,9 @@ begin
 end;
 
 procedure TfrmSelectResultToImport.Read3DArray(var NLAY: Integer;
-   var EndReached: Boolean; var KPER, KSTP: Integer; var TOTIM: TModflowDouble; var Description: string;
-   var A3DArray: T3DTModflowArray; Precision: TModflowPrecision; HufFormat: boolean);
+   var EndReached: Boolean; var KPER, KSTP: Integer; var TOTIM: TModflowDouble;
+   var Description: string; var A3DArray: T3DTModflowArray;
+   Precision: TModflowPrecision; HufFormat: boolean; ShouldReadArray: boolean);
 var
   PERTIM: TModflowDouble;
   DESC: TModflowDesc;
@@ -1771,10 +2252,10 @@ begin
     case Precision of
       mpSingle:
         ReadModflowSinglePrecFluxArray(FFileStream, KSTP, KPER, PERTIM, TOTIM, DESC,
-          NCOL, NROW, NLAY, A3DArray, HufFormat);
+          NCOL, NROW, NLAY, A3DArray, HufFormat, ShouldReadArray);
       mpDouble:
         ReadModflowDoublePrecFluxArray(FFileStream, KSTP, KPER, PERTIM, TOTIM, DESC,
-          NCOL, NROW, NLAY, A3DArray, HufFormat);
+          NCOL, NROW, NLAY, A3DArray, HufFormat, ShouldReadArray);
       else Assert(False);
     end;
     Description := Trim(DESC);
@@ -1798,7 +2279,7 @@ end;
 procedure TfrmSelectResultToImport.ReadArray(var AnArray: TModflowDoubleArray;
   var EndReached: Boolean; var KPER, KSTP, ILAY: Integer;
   var TOTIM: TModflowDouble;
-  var Description: string; Precision: TModflowPrecision);
+  var Description: string; Precision: TModflowPrecision; ShouldReadArray: boolean);
 var
   NROW: Integer;
   DESC2: TModflowDesc2;
@@ -1815,10 +2296,12 @@ begin
           case Precision of
             mpSingle:
               ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP,
-                KPER, PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
+                KPER, PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray,
+                ShouldReadArray);
             mpDouble:
               ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP,
-                KPER, PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray);
+                KPER, PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray,
+                ShouldReadArray);
             else Assert(False);
           end;
           Description := Trim(DESC);
@@ -1833,7 +2316,7 @@ begin
         if not EOF(FFileVariable.AFile) then
         begin
           ReadModflowAsciiRealArray(FFileVariable, KSTP, KPER, PERTIM, TOTIM,
-            DESC2, NCOL, NROW, ILAY, AnArray);
+            DESC2, NCOL, NROW, ILAY, AnArray, ShouldReadArray);
           Description := Trim(DESC2);
         end
         else
@@ -1847,13 +2330,13 @@ begin
   Description := TitleCase(Description);
 end;
 
-procedure TfrmSelectResultToImport.OpenResultFile(
+procedure TfrmSelectResultToImport.OpenResultFile(AFileName: string;
   out Precision: TModflowPrecision; out HufFormat: boolean);
 var
-  Extension: string; 
+  Extension: string;
 begin
   Precision := mpSingle;
-  Extension := ExtractFileExt(FFileName);
+  Extension := ExtractFileExt(AFileName);
   if (SameText(Extension, StrBdn))
     or (CompareText(Extension, StrBhd) = 0) then
   begin
@@ -1974,18 +2457,18 @@ begin
   case FResultFormat of
     mrBinary, mrHufBinary, mfSubBinary:
       begin
-        FFileStream := TFileStream.Create(FFileName, fmOpenRead or fmShareDenyWrite);
+        FFileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
         Precision := CheckArrayPrecision(FFileStream);
       end;
     mrFlux, mrHufFlux:
       begin
-        FFileStream := TFileStream.Create(FFileName, fmOpenRead or fmShareDenyWrite);
+        FFileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
         Precision := CheckBudgetPrecision(FFileStream, HufFormat);
       end;
     mrAscii, mrHufAscii:
       begin
         FFileVariable := TFileVariable.Create;
-        AssignFile(FFileVariable.AFile, FFileName);
+        AssignFile(FFileVariable.AFile, AFileName);
         Reset(FFileVariable.AFile);
         Precision := mpDouble;
       end;
@@ -1993,11 +2476,59 @@ begin
   end;
 end;
 
+procedure TfrmSelectResultToImport.rdgModelsBeforeDrawCell(Sender: TObject;
+  ACol, ARow: Integer);
+begin
+  inherited;
+  if (ARow >= rdgModels.FixedRows) and (ACol = Ord(mcFileName)) then
+  begin
+    if (rdgModels.Cells[ACol, ARow] <> '')
+      and rdgModels.Checked[Ord(mcUse), ARow]
+      and not FileExists(rdgModels.Cells[ACol, ARow]) then
+    begin
+      rdgModels.Canvas.Brush.Color := clRed;
+    end;
+  end;
+end;
+
+procedure TfrmSelectResultToImport.rdgModelsButtonClick(Sender: TObject; ACol,
+  ARow: Integer);
+var
+  AModel: TCustomModel;
+  AFileName: string;
+  Extension: string;
+begin
+  inherited;
+  Assert(ACol = Ord(mcFileName));
+  AModel := rdgModels.Objects[Ord(mcModelName), ARow] as TCustomModel;
+  Assert(AModel <> nil);
+  if FileExists(rdgModels.Cells[ACol, ARow]) then
+  begin
+    odSelectFiles.FileName := rdgModels.Cells[ACol, ARow];
+  end
+  else
+  begin
+    AFileName := DefaultFileName(AModel);
+    if (ARow > 2) and FileExists(rdgModels.Cells[ACol, 2]) then
+    begin
+      Extension := ExtractFileExt(rdgModels.Cells[ACol, 2]);
+      AFileName := ChangeFileExt(AFileName, Extension);
+    end;
+    odSelectFiles.FileName := AFileName;
+  end;
+  if odSelectFiles.Execute then
+  begin
+    ReadDataHeadings(AModel, ARow, odSelectFiles.FileName);
+    AddModelRow(AModel, ARow,  odSelectFiles.FileName);
+  end;
+end;
+
 { TUndoImportModelResults }
 
 constructor TUndoImportModelResults.Create(NewDataSets: TList;
   DataSetNames, OldComments: TStringList;
-  DisplayDataSet: TDataArray; DisplayChoice: TDisplayChoice);
+  DisplayDataSet: TDataArray; DisplayChoice: TDisplayChoice;
+  AModel: TCustomModel);
 var
   DSIndex: Integer;
   DataArray: TDataArray;
@@ -2005,32 +2536,33 @@ var
 begin
   inherited Create;
 
-  FNewEdgeDisplay := frmGoPhast.PhastModel.EdgeDisplay;
-  FOldEdgeDisplay := frmGoPhast.PhastModel.EdgeDisplay;
-  FNew3DDataSet := frmGoPhast.Grid.ThreeDDataSet;
-  FOld3DDataSet := frmGoPhast.Grid.ThreeDDataSet;
-  FNewThreeDTimeList := frmGoPhast.PhastModel.ThreeDTimeList;
-  FOldThreeDTimeList := frmGoPhast.PhastModel.ThreeDTimeList;
-  FNewTopDataSet := frmGoPhast.Grid.TopDataSet;
-  FOldTopDataSet := frmGoPhast.Grid.TopDataSet;
-  FNewTopTimeList := frmGoPhast.PhastModel.TopTimeList;
-  FOldTopTimeList := frmGoPhast.PhastModel.TopTimeList;
-  FNewFrontDataSet := frmGoPhast.Grid.FrontDataSet;
-  FOldFrontDataSet := frmGoPhast.Grid.FrontDataSet;
-  FNewFrontTimeList := frmGoPhast.PhastModel.FrontTimeList;
-  FOldFrontTimeList := frmGoPhast.PhastModel.FrontTimeList;
-  FNewSideDataSet := frmGoPhast.Grid.SideDataSet;
-  FOldSideDataSet := frmGoPhast.Grid.SideDataSet;
-  FNewSideTimeList := frmGoPhast.PhastModel.SideTimeList;
-  FOldSideTimeList := frmGoPhast.PhastModel.SideTimeList;
-  FNewTopContourDataSet := frmGoPhast.Grid.TopContourDataSet;
-  FOldTopContourDataSet := frmGoPhast.Grid.TopContourDataSet;
-  FNewFrontContourDataSet := frmGoPhast.Grid.FrontContourDataSet;
-  FOldFrontContourDataSet := frmGoPhast.Grid.FrontContourDataSet;
-  FNewSideContourDataSet := frmGoPhast.Grid.SideContourDataSet;
-  FOldSideContourDataSet := frmGoPhast.Grid.SideContourDataSet;
-  FNew3DContourDataSet := frmGoPhast.Grid.ThreeDContourDataSet;
-  FOld3DContourDataSet := frmGoPhast.Grid.ThreeDContourDataSet;
+  FModel := AModel;
+  FNewEdgeDisplay := FModel.EdgeDisplay;
+  FOldEdgeDisplay := FModel.EdgeDisplay;
+  FNew3DDataSet := FModel.Grid.ThreeDDataSet;
+  FOld3DDataSet := FModel.Grid.ThreeDDataSet;
+  FNewThreeDTimeList := FModel.ThreeDTimeList;
+  FOldThreeDTimeList := FModel.ThreeDTimeList;
+  FNewTopDataSet := FModel.Grid.TopDataSet;
+  FOldTopDataSet := FModel.Grid.TopDataSet;
+  FNewTopTimeList := FModel.TopTimeList;
+  FOldTopTimeList := FModel.TopTimeList;
+  FNewFrontDataSet := FModel.Grid.FrontDataSet;
+  FOldFrontDataSet := FModel.Grid.FrontDataSet;
+  FNewFrontTimeList := FModel.FrontTimeList;
+  FOldFrontTimeList := FModel.FrontTimeList;
+  FNewSideDataSet := FModel.Grid.SideDataSet;
+  FOldSideDataSet := FModel.Grid.SideDataSet;
+  FNewSideTimeList := FModel.SideTimeList;
+  FOldSideTimeList := FModel.SideTimeList;
+  FNewTopContourDataSet := FModel.Grid.TopContourDataSet;
+  FOldTopContourDataSet := FModel.Grid.TopContourDataSet;
+  FNewFrontContourDataSet := FModel.Grid.FrontContourDataSet;
+  FOldFrontContourDataSet := FModel.Grid.FrontContourDataSet;
+  FNewSideContourDataSet := FModel.Grid.SideContourDataSet;
+  FOldSideContourDataSet := FModel.Grid.SideContourDataSet;
+  FNew3DContourDataSet := FModel.Grid.ThreeDContourDataSet;
+  FOld3DContourDataSet := FModel.Grid.ThreeDContourDataSet;
 
   if DisplayDataSet <> nil then
   begin
@@ -2100,7 +2632,11 @@ begin
     if Position >= 0 then
     begin
       DataSetNames.Delete(Position);
-      OldComments.Delete(Position);
+      Position := OldComments.IndexOfObject(DataArray);
+      if Position >= 0 then
+      begin
+        OldComments.Delete(Position);
+      end;
     end;
   end;
   FOldComments.Assign(OldComments);
@@ -2135,92 +2671,110 @@ var
   DataArrayManager: TDataArrayManager;
 begin
   inherited;
-  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
-  DataArrayManager.HandleAddedDataArrays(FNewDataSets);
+  frmGoPhast.PhastModel.BeginDataSetUpdate;
+  DisallowChildGridUpdates;
+  try
+    DataArrayManager := FModel.DataArrayManager;
+    DataArrayManager.HandleAddedDataArrays(FNewDataSets);
 
-  for Index := 0 to FContainedUndos.Count - 1 do
-  begin
-    AnUndo := FContainedUndos[Index];
-    AnUndo.DoCommand;
-  end;
-  for Index := 0 to DataArrayManager.DataSetCount - 1 do
-  begin
-    DataSet := DataArrayManager.DataSets[Index];
-    if FNewDataSets.IndexOf(DataSet) < 0 then
+    for Index := 0 to FContainedUndos.Count - 1 do
     begin
-      frmGoPhast.PhastModel.CreateVariables(DataSet);
+      AnUndo := FContainedUndos[Index];
+      AnUndo.DoCommand;
     end;
+    for Index := 0 to DataArrayManager.DataSetCount - 1 do
+    begin
+      DataSet := DataArrayManager.DataSets[Index];
+      if FNewDataSets.IndexOf(DataSet) < 0 then
+      begin
+        FModel.CreateVariables(DataSet);
+      end;
+    end;
+
+    SetComments(FNewComments);
+
+    FModel.EdgeDisplay := FNewEdgeDisplay;
+    FModel.Grid.ThreeDDataSet := FNew3DDataSet;
+    FModel.ThreeDTimeList := FNewThreeDTimeList;
+    FModel.Grid.TopDataSet := FNewTopDataSet;
+    FModel.TopTimeList := FNewTopTimeList;
+    FModel.Grid.FrontDataSet := FNewFrontDataSet;
+    FModel.FrontTimeList := FNewFrontTimeList;
+    FModel.Grid.SideDataSet := FNewSideDataSet;
+    FModel.SideTimeList := FNewSideTimeList;
+    FModel.Grid.TopContourDataSet := FNewTopContourDataSet;
+    FModel.Grid.FrontContourDataSet := FNewFrontContourDataSet;
+    FModel.Grid.SideContourDataSet := FNewSideContourDataSet;
+    FModel.Grid.ThreeDContourDataSet := FNew3DContourDataSet;
+    FModel.Grid.GridChanged;
+  finally
+    AllowChildGridUpdates;
+    frmGoPhast.PhastModel.EndDataSetUpdate;
   end;
-
-  SetComments(FNewComments);
-
-  frmGoPhast.PhastModel.EdgeDisplay := FNewEdgeDisplay;
-  frmGoPhast.Grid.ThreeDDataSet := FNew3DDataSet;
-  frmGoPhast.PhastModel.ThreeDTimeList := FNewThreeDTimeList;
-  frmGoPhast.Grid.TopDataSet := FNewTopDataSet;
-  frmGoPhast.PhastModel.TopTimeList := FNewTopTimeList;
-  frmGoPhast.Grid.FrontDataSet := FNewFrontDataSet;
-  frmGoPhast.PhastModel.FrontTimeList := FNewFrontTimeList;
-  frmGoPhast.Grid.SideDataSet := FNewSideDataSet;
-  frmGoPhast.PhastModel.SideTimeList := FNewSideTimeList;
-  frmGoPhast.Grid.TopContourDataSet := FNewTopContourDataSet;
-  frmGoPhast.Grid.FrontContourDataSet := FNewFrontContourDataSet;
-  frmGoPhast.Grid.SideContourDataSet := FNewSideContourDataSet;
-  frmGoPhast.Grid.ThreeDContourDataSet := FNew3DContourDataSet;
-  frmGoPhast.Grid.GridChanged;
-
-//  if frmContourData = nil then
-//  begin
-//    frmContourData := TfrmContourData.Create(nil);
-//  end;
-//  if frmGridColor = nil then
-//  begin
-//    frmGridColor := TfrmGridColor.Create(nil);
-//  end;
-
 
   UpdateFrmGridColor;
   UpdateFrmContourData;
   UpdateFrmGridValue;
+
 end;
 
 procedure TUndoImportModelResults.Undo;
 var
   Index: Integer;
   AnUndo: TCustomUndo;
-//  DataSet: TDataArray;
   DataArrayManager: TDataArrayManager;
 begin
   inherited;
-  for Index := FContainedUndos.Count - 1 downto 0 do
-  begin
-    AnUndo := FContainedUndos[Index];
-    AnUndo.Undo;
+  DisallowChildGridUpdates;
+  try
+    for Index := FContainedUndos.Count - 1 downto 0 do
+    begin
+      AnUndo := FContainedUndos[Index];
+      AnUndo.Undo;
+    end;
+    SetComments(FOldComments);
+
+    FModel.EdgeDisplay := FOldEdgeDisplay;
+    FModel.Grid.ThreeDDataSet := FOld3DDataSet;
+    FModel.ThreeDTimeList := FOldThreeDTimeList;
+    FModel.Grid.TopDataSet := FOldTopDataSet;
+    FModel.TopTimeList := FOldTopTimeList;
+    FModel.Grid.FrontDataSet := FOldFrontDataSet;
+    FModel.FrontTimeList := FOldFrontTimeList;
+    FModel.Grid.SideDataSet := FOldSideDataSet;
+    FModel.SideTimeList := FOldSideTimeList;
+    FModel.Grid.TopContourDataSet := FOldTopContourDataSet;
+    FModel.Grid.FrontContourDataSet := FOldFrontContourDataSet;
+    FModel.Grid.SideContourDataSet := FOldSideContourDataSet;
+    FModel.Grid.ThreeDContourDataSet := FOld3DContourDataSet;
+    FModel.Grid.GridChanged;
+
+
+    DataArrayManager := FModel.DataArrayManager;
+    DataArrayManager.HandleDeletedDataArrays(FNewDataSets);
+    finally
+    AllowChildGridUpdates;
+
   end;
-  SetComments(FOldComments);
-
-  frmGoPhast.PhastModel.EdgeDisplay := FOldEdgeDisplay;
-  frmGoPhast.Grid.ThreeDDataSet := FOld3DDataSet;
-  frmGoPhast.PhastModel.ThreeDTimeList := FOldThreeDTimeList;
-  frmGoPhast.Grid.TopDataSet := FOldTopDataSet;
-  frmGoPhast.PhastModel.TopTimeList := FOldTopTimeList;
-  frmGoPhast.Grid.FrontDataSet := FOldFrontDataSet;
-  frmGoPhast.PhastModel.FrontTimeList := FOldFrontTimeList;
-  frmGoPhast.Grid.SideDataSet := FOldSideDataSet;
-  frmGoPhast.PhastModel.SideTimeList := FOldSideTimeList;
-  frmGoPhast.Grid.TopContourDataSet := FOldTopContourDataSet;
-  frmGoPhast.Grid.FrontContourDataSet := FOldFrontContourDataSet;
-  frmGoPhast.Grid.SideContourDataSet := FOldSideContourDataSet;
-  frmGoPhast.Grid.ThreeDContourDataSet := FOld3DContourDataSet;
-  frmGoPhast.Grid.GridChanged;
-
   UpdateFrmGridColor;
   UpdateFrmContourData;
-
-  DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
-  DataArrayManager.HandleDeletedDataArrays(FNewDataSets);
   UpdateFrmGridValue;
 end;
+
+//procedure TUndoImportModelResults.UpdateNewStoredFormulas;
+//var
+//  Index: Integer;
+//  AnUndo: TCustomUndo;
+//begin
+//  for Index := 0 to FContainedUndos.Count - 1 do
+//  begin
+//    AnUndo := FContainedUndos[Index];
+//    if AnUndo is TUndoChangeDataSets then
+//    begin
+//      TUndoChangeDataSets(AnUndo).UpdateNewStoredFormulas;
+//    end;
+//  end;
+//end;
 
 procedure TUndoImportModelResults.SetComments(Comments: TStringList);
 var
@@ -2232,6 +2786,119 @@ begin
     DataArray := Comments.Objects[Index] as TDataArray;
     DataArray.Comment := Comments[Index];
   end;
+end;
+
+{ TFormulaAssigner }
+
+procedure TFormulaAssigner.AddFormula(AFormula: string; AModel: TBaseModel);
+begin
+  FFormulas.Add(AFormula);
+  FModels.Add(AModel);
+end;
+
+procedure TFormulaAssigner.AssignFinalFormula;
+var
+  FinalFormula: string;
+  ModelPosition: Integer;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
+begin
+  Assert(FFormulas.Count = FModels.Count);
+  Assert(FFormulas.Count >= 1);
+  if FFormulas.Count = 1 then
+  begin
+    FDataArray.Formula := FFormulas[0];
+  end
+  else
+  begin
+    Assert(frmGoPhast.PhastModel.LgrUsed);
+    FinalFormula := 'If('+ StrGridNumber + ' <= '
+      + IntToStr(frmGoPhast.PhastModel.ChildModels.Count+1) + ', Case(' + StrGridNumber;
+    ModelPosition := FModels.IndexOf(frmGoPhast.PhastModel);
+    if ModelPosition >= 0 then
+    begin
+      FinalFormula := FinalFormula + ', ' + FFormulas[ModelPosition];
+    end
+    else
+    begin
+      FinalFormula := FinalFormula + ', 0'
+    end;
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      ModelPosition := FModels.IndexOf(ChildModel);
+      if ModelPosition >= 0 then
+      begin
+        FinalFormula := FinalFormula + ', ' + FFormulas[ModelPosition];
+      end
+      else
+      begin
+        FinalFormula := FinalFormula + ', 0'
+      end;
+    end;
+    FinalFormula := FinalFormula + '0), 0)';
+    FDataArray.Formula := FinalFormula;
+  end;
+end;
+
+constructor TFormulaAssigner.Create(ADataArray: TDataArray);
+begin
+  FDataArray := ADataArray;
+  FFormulas := TStringList.Create;
+  FModels:= TList.Create;
+end;
+
+destructor TFormulaAssigner.Destroy;
+begin
+  FFormulas.Free;
+  FModels.Free;
+  inherited;
+end;
+
+{ TFormulaAssignerList }
+
+procedure TFormulaAssignerList.AssignFinalFormulas;
+var
+  Index: Integer;
+  AFormulaAssigner: TFormulaAssigner;
+begin
+  for Index := 0 to FList.Count - 1 do
+  begin
+    AFormulaAssigner := FList[Index];
+    AFormulaAssigner.AssignFinalFormula;
+  end;
+end;
+
+constructor TFormulaAssignerList.Create;
+begin
+  FList := TObjectList.Create;
+end;
+
+destructor TFormulaAssignerList.Destroy;
+begin
+  FList.Free;
+  inherited;
+end;
+
+function TFormulaAssignerList.GetFormulaAssigner(
+  ADataArray: TDataArray): TFormulaAssigner;
+var
+  Index: Integer;
+  AFormulaAssigner: TFormulaAssigner;
+begin
+  Assert(ADataArray <> nil);
+  Assert(ADataArray.Model = frmGoPhast.PhastModel);
+  for Index := 0 to FList.Count - 1 do
+  begin
+    AFormulaAssigner := FList[Index];
+    if AFormulaAssigner.DataArray = ADataArray then
+    begin
+      result := AFormulaAssigner;
+      Exit;
+    end;
+  end;
+  result := TFormulaAssigner.Create(ADataArray);
+  FList.Add(result);
 end;
 
 end.

@@ -69,7 +69,7 @@ type
     function GetItems(Index: integer): TSfrTableRowItem;
     procedure SetItems(Index: integer; const Value: TSfrTableRowItem);
   public
-    constructor Create(Model: TComponent; ScreenObject: TObject);
+    constructor Create(Model: TBaseModel; ScreenObject: TObject);
     property Items[Index: integer]: TSfrTableRowItem read GetItems
       write SetItems; default;
   end;
@@ -91,7 +91,6 @@ type
     procedure SetBoundaryFormula(Index: integer; const Value: string); override;
     // @name checks whether AnotherItem is the same as the current @classname.
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
-    procedure InvalidateModel; override;
     function BoundaryFormulaCount: integer; override;
   public
     // @name copies Source to this @classname.
@@ -220,12 +219,6 @@ begin
   // do nothing
 end;
 
-procedure TSfrTablelItem.InvalidateModel;
-begin
-  inherited;
-
-end;
-
 function TSfrTablelItem.IsSame(AnotherItem: TOrderedItem): boolean;
 var
   SfrTableItem: TSfrTablelItem;
@@ -320,7 +313,7 @@ begin
         Expression.Evaluate;
       except on E: ERbwParserError do
         begin
-          frmFormulaErrors.AddError(ScrObj.Name,
+          frmFormulaErrors.AddFormulaError(ScrObj.Name,
             '(flow table flow for the SFR package)',
             Formula, E.Message);
 
@@ -344,7 +337,7 @@ begin
         Expression.Evaluate;
       except on E: ERbwParserError do
         begin
-          frmFormulaErrors.AddError(ScrObj.Name,
+          frmFormulaErrors.AddFormulaError(ScrObj.Name,
             '(flow table depth for the SFR package)',
             Formula, E.Message);
 
@@ -368,7 +361,7 @@ begin
         Expression.Evaluate;
       except on E: ERbwParserError do
         begin
-          frmFormulaErrors.AddError(ScrObj.Name,
+          frmFormulaErrors.AddFormulaError(ScrObj.Name,
             '(flow table width for the SFR package)',
             Formula, E.Message);
 
@@ -411,7 +404,8 @@ begin
   ScreenObjectName := (ScreenObject as TScreenObject).Name;
   ErrorMessage := 'Object = ' + ScreenObjectName
     + '; Time = ' + FloatToStr(StartTime);
-  frmErrorsAndWarnings.AddError(StrIncompleteSFRData, ErrorMessage);
+  frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
+    StrIncompleteSFRData, ErrorMessage);
 end;
 
 function TSfrTableCollection.GetTableTimeValues(
@@ -751,7 +745,7 @@ end;
 
 { TSfrTable }
 
-constructor TSfrTable.Create(Model: TComponent; ScreenObject: TObject);
+constructor TSfrTable.Create(Model: TBaseModel; ScreenObject: TObject);
 begin
   inherited Create(TSfrTableRowItem, Model);
   FScreenObject := ScreenObject;

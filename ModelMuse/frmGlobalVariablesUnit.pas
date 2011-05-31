@@ -28,8 +28,6 @@ type
       ARow: Integer; const Value: string);
     procedure btnDeleteClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
-    procedure rdgGlobalVariablesMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure rdgGlobalVariablesEndUpdate(Sender: TObject);
     procedure rdgGlobalVariablesBeforeDrawCell(Sender: TObject; ACol,
       ARow: Integer);
@@ -122,20 +120,6 @@ begin
   end;
   btnOK.Enabled := ShouldEnableOkButton;
   rdgGlobalVariables.Invalidate;
-end;
-
-procedure TfrmGlobalVariables.rdgGlobalVariablesMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    rdgGlobalVariables.Options := rdgGlobalVariables.Options + [goEditing];
-  end
-  else
-  begin
-    rdgGlobalVariables.Options := rdgGlobalVariables.Options - [goEditing];
-  end;
 end;
 
 procedure TfrmGlobalVariables.rdgGlobalVariablesSelectCell(Sender: TObject;

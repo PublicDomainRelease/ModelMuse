@@ -48,10 +48,6 @@ type
     procedure seLayersChange(Sender: TObject);
     procedure rdgLayersSetEditText(Sender: TObject; ACol, ARow: Integer;
       const Value: string);
-    procedure rdgHeadsMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure rdgLayersMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure rdeMultiValueEditChange(Sender: TObject);
     procedure rdeMultiLayerEditChange(Sender: TObject);
     procedure rdgHeadsSelectCell(Sender: TObject; ACol, ARow: Integer;
@@ -73,21 +69,19 @@ type
     procedure edObsNameChange(Sender: TObject);
     procedure comboTreatmentChange(Sender: TObject);
     procedure rgMultiObsMethodClick(Sender: TObject);
-    procedure rdgHeadsEndUpdate(Sender: TObject);
   private
     FDeletingTime: Boolean;
     FDeletingLayer: Boolean;
     FChanged: Boolean;
-    FHidingColumns: Boolean;
+//    FHidingColumns: Boolean;
     FTimesCountChanged: Boolean;
     FLayerCountChanged: Boolean;
     procedure ClearGrid(Grid: TRbwDataGrid4);
-    procedure EnableMultiSelect(Shift: TShiftState; Grid: TRbwDataGrid4);
     procedure AssignValuesToSelectedGridCells(const NewText: string;
       Grid: TRbwDataGrid4; const StartCol, EndCol: integer);
     procedure EnableMultiEditControl(Grid: TRbwDataGrid4; AControl: TControl;
       const StartCol, EndCol: integer);
-    procedure DeleteSelectedRow(Grid: TRbwDataGrid4; SpinEdit: TJvSpinEdit; DeleteButton: TButton);
+    procedure DeleteSelectedRow(rdgGrid: TRbwDataGrid4; SpinEdit: TJvSpinEdit; DeleteButton: TButton);
     procedure UpdateSpinEdit(Grid: TRbwDataGrid4; SpinEdit: TJvSpinEdit);
     procedure InsertRow(Grid: TRbwDataGrid4; SpinEdit: TJvSpinEdit; DeleteButton: TButton);
     procedure EnableDeleteButton(DeleteButton: TButton; SpinEdit: TJvSpinEdit);
@@ -95,7 +89,7 @@ type
     procedure LayoutMultiHeadEditControls;
     { Private declarations }
   public
-    procedure HideUcodeColumns;
+//    procedure HideUcodeColumns;
     procedure GetData(List: TScreenObjectEditCollection);
     procedure SetData(List: TScreenObjectEditCollection; SetAll: boolean;
       ClearAll: boolean);
@@ -348,7 +342,7 @@ begin
     rdgHeads.EndUpdate;
     rdgLayers.EndUpdate;
   end;
-  HideUcodeColumns;
+//  HideUcodeColumns;
   FChanged := False;
   FTimesCountChanged := False;
   FLayerCountChanged := False;
@@ -383,7 +377,7 @@ begin
   lblTreatment.Top := comboTreatment.Top - lblTreatment.Height - 2;
 
   LayoutMultiHeadEditControls;
-  HideUcodeColumns;
+//  HideUcodeColumns;
 end;
 
 procedure TframeHeadObservations.LayoutMultiHeadEditControls;
@@ -465,28 +459,28 @@ begin
   begin
     SpinEdit.AsInteger := Grid.RowCount - 1;
   end;
-  HideUcodeColumns;
+//  HideUcodeColumns;
 end;
 
-procedure TframeHeadObservations.DeleteSelectedRow(Grid: TRbwDataGrid4;
+procedure TframeHeadObservations.DeleteSelectedRow(rdgGrid: TRbwDataGrid4;
   SpinEdit: TJvSpinEdit; DeleteButton: TButton);
 var
   ColIndex: Integer;
 begin
   FChanged := True;
-  if (Grid.SelectedRow > 0) and (Grid.SelectedRow < Grid.RowCount)
-    and (Grid.RowCount > 2) then
+  if (rdgGrid.SelectedRow > 0) and (rdgGrid.SelectedRow < rdgGrid.RowCount)
+    and (rdgGrid.RowCount > 2) then
   begin
-    Grid.DeleteRow(Grid.SelectedRow);
-    UpdateSpinEdit(Grid, SpinEdit);
+    rdgGrid.DeleteRow(rdgGrid.SelectedRow);
+    UpdateSpinEdit(rdgGrid, SpinEdit);
   end
-  else if (Grid.SelectedRow = 1) and (Grid.RowCount = 2) then
+  else if (rdgGrid.SelectedRow = 1) and (rdgGrid.RowCount = 2) then
   begin
-    for ColIndex := 0 to Grid.ColCount - 1 do
+    for ColIndex := 0 to rdgGrid.ColCount - 1 do
     begin
-      Grid.Cells[ColIndex,1] := '';
+      rdgGrid.Cells[ColIndex,1] := '';
     end;
-    UpdateSpinEdit(Grid, SpinEdit);
+    UpdateSpinEdit(rdgGrid, SpinEdit);
   end;
   EnableDeleteButton(DeleteButton, SpinEdit);
 end;
@@ -565,17 +559,6 @@ begin
   end;
 end;
 
-procedure TframeHeadObservations.EnableMultiSelect(Shift: TShiftState; Grid: TRbwDataGrid4);
-begin
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    Grid.Options := Grid.Options + [goEditing];
-  end
-  else
-  begin
-    Grid.Options := Grid.Options - [goEditing];
-  end;
-end;
 
 procedure TframeHeadObservations.FrameResize(Sender: TObject);
 begin
@@ -600,11 +583,6 @@ begin
   LayoutMultiHeadEditControls;
 end;
 
-procedure TframeHeadObservations.rdgHeadsEndUpdate(Sender: TObject);
-begin
-  HideUcodeColumns;
-end;
-
 procedure TframeHeadObservations.rdgHeadsExit(Sender: TObject);
 begin
   SetSpinCount(seTimes, rdgHeads);  
@@ -613,12 +591,6 @@ end;
 procedure TframeHeadObservations.rdgHeadsHorizontalScroll(Sender: TObject);
 begin
   LayoutMultiHeadEditControls;
-end;
-
-procedure TframeHeadObservations.rdgHeadsMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  EnableMultiSelect(Shift, rdgHeads);
 end;
 
 procedure TframeHeadObservations.rdgHeadsSelectCell(Sender: TObject; ACol,
@@ -644,12 +616,6 @@ end;
 procedure TframeHeadObservations.rdgLayersExit(Sender: TObject);
 begin
   SetSpinCount(seLayers, rdgLayers); 
-end;
-
-procedure TframeHeadObservations.rdgLayersMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  EnableMultiSelect(Shift, rdgLayers);
 end;
 
 procedure TframeHeadObservations.rdgLayersSelectCell(Sender: TObject; ACol,
@@ -851,20 +817,20 @@ begin
   end;
 end;
 
-procedure TframeHeadObservations.HideUcodeColumns;
-begin
-  if FHidingColumns then Exit;
-  FHidingColumns := True;
-  try
-    if not frmGoPhast.ShowUcodeInterface then
-    begin
-      rdgHeads.ColWidths[Ord(hocStatistic)] := 0;
-      rdgHeads.ColWidths[Ord(hocStatFlag)] := 0;
-    end;
-  finally
-    FHidingColumns := False;
-  end;
-end;
+//procedure TframeHeadObservations.HideUcodeColumns;
+//begin
+//  if FHidingColumns then Exit;
+//  FHidingColumns := True;
+//  try
+//    if not frmGoPhast.ShowUcodeInterface then
+//    begin
+//      rdgHeads.ColWidths[Ord(hocStatistic)] := 0;
+//      rdgHeads.ColWidths[Ord(hocStatFlag)] := 0;
+//    end;
+//  finally
+//    FHidingColumns := False;
+//  end;
+//end;
 
 procedure TframeHeadObservations.seTimesChange(Sender: TObject);
 var
@@ -905,7 +871,7 @@ begin
   finally
     FDeletingTime := False;
   end;
-  HideUcodeColumns;
+//  HideUcodeColumns;
 end;
 
 end.

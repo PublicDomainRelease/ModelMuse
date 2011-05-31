@@ -2,51 +2,87 @@ inherited frmDataSetValues: TfrmDataSetValues
   HelpType = htKeyword
   HelpKeyword = 'Data_Set_Values_Dialog_Box'
   Caption = 'Data Set Values'
+  ClientHeight = 304
   ClientWidth = 548
   ExplicitWidth = 556
+  ExplicitHeight = 338
   PixelsPerInch = 96
   TextHeight = 18
   object Panel1: TPanel
     Left = 0
-    Top = 186
+    Top = 199
     Width = 548
-    Height = 48
+    Height = 105
     Align = alBottom
     TabOrder = 0
     DesignSize = (
       548
-      48)
+      105)
+    object lblDataSet: TLabel
+      Left = 12
+      Top = 46
+      Width = 59
+      Height = 18
+      Caption = 'Data set'
+    end
+    object lblModel: TLabel
+      Left = 12
+      Top = 14
+      Width = 43
+      Height = 18
+      Caption = 'Model'
+    end
     object btnClose: TBitBtn
-      Left = 466
-      Top = 6
+      Left = 467
+      Top = 76
       Width = 75
-      Height = 33
+      Height = 25
       Anchors = [akTop, akRight]
       TabOrder = 0
       Kind = bkClose
     end
     object btnHelp: TBitBtn
-      Left = 385
-      Top = 6
+      Left = 467
+      Top = 44
       Width = 75
-      Height = 33
+      Height = 25
       Anchors = [akTop, akRight]
       TabOrder = 1
       OnClick = btnHelpClick
       Kind = bkHelp
     end
-    object treecomboDataSets: TTntExDropDownVirtualStringTree
-      Left = 104
-      Top = 8
-      Width = 275
-      Height = 26
-      Anchors = [akLeft, akTop, akRight]
+    object btnCopy: TButton
+      Left = 467
+      Top = 12
+      Width = 75
+      Height = 25
+      Anchors = [akTop, akRight]
+      Caption = 'Copy'
+      Enabled = False
       TabOrder = 2
-      OnChange = treecomboDataSetsChange
+      OnClick = btnCopyClick
+    end
+    object comboModel: TComboBox
+      Left = 89
+      Top = 11
+      Width = 356
+      Height = 26
+      Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
+      ItemHeight = 18
+      TabOrder = 3
+      OnChange = comboModelChange
+    end
+    object treecomboDataSets: TRbwStringTreeCombo
+      Left = 89
+      Top = 43
+      Width = 356
+      Height = 26
       Tree.Left = 0
       Tree.Top = 0
-      Tree.Width = 200
-      Tree.Height = 100
+      Tree.Width = 312
+      Tree.Height = 206
+      Tree.Align = alClient
       Tree.Header.AutoSizeIndex = 0
       Tree.Header.DefaultHeight = 17
       Tree.Header.Font.Charset = DEFAULT_CHARSET
@@ -56,33 +92,44 @@ inherited frmDataSetValues: TfrmDataSetValues
       Tree.Header.Font.Style = []
       Tree.Header.MainColumn = -1
       Tree.TabOrder = 0
-      Tree.Visible = False
       Tree.OnChange = treecomboDataSetsDropDownTreeChange
-      Tree.OnEnter = treecomboDataSetsDropDownTreeEnter
       Tree.OnGetText = treecomboDataSetsDropDownTreeGetText
       Tree.OnGetNodeDataSize = treecomboDataSetsDropDownTreeGetNodeDataSize
+      Tree.OnInitNode = treecomboDataSets1TreeInitNode
+      Tree.ExplicitWidth = 200
+      Tree.ExplicitHeight = 100
       Tree.Columns = <>
-      PanelAutoWidth = True
-      PanelWidth = 275
-      PanelHeight = 208
-      OnClosedUp = treecomboDataSetsClosedUp
-    end
-    object btnCopy: TButton
-      Left = 8
-      Top = 6
-      Width = 75
-      Height = 33
-      Caption = 'Copy'
-      Enabled = False
-      TabOrder = 3
-      OnClick = btnCopyClick
+      Anchors = [akLeft, akTop, akRight]
+      Enabled = True
+      Glyph.Data = {
+        36020000424D3602000000000000360000002800000010000000080000000100
+        2000000000000002000000000000000000000000000000000000D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC0000000000D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00C0C0C000D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00000000000000000000000000D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00C0C0C000C0C0C000C0C0C000D8E9EC00D8E9EC00D8E9EC00D8E9EC000000
+        000000000000000000000000000000000000D8E9EC00D8E9EC00D8E9EC00C0C0
+        C000C0C0C000C0C0C000C0C0C000C0C0C000D8E9EC00D8E9EC00000000000000
+        00000000000000000000000000000000000000000000D8E9EC00C0C0C000C0C0
+        C000C0C0C000C0C0C000C0C0C000C0C0C000C0C0C000D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9
+        EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00D8E9EC00}
+      NumGlyphs = 2
+      TabOrder = 4
+      OnChange = treecomboDataSetsChange
     end
   end
   object pcDataSet: TPageControl
     Left = 97
     Top = 0
     Width = 451
-    Height = 186
+    Height = 199
     Align = alClient
     TabOrder = 1
   end
@@ -90,11 +137,11 @@ inherited frmDataSetValues: TfrmDataSetValues
     Left = 0
     Top = 0
     Width = 97
-    Height = 186
+    Height = 199
     Align = alLeft
     Caption = 'Panel2'
     TabOrder = 2
-    object Label1: TLabel
+    object lblLayer: TLabel
       AlignWithMargins = True
       Left = 4
       Top = 4
@@ -109,7 +156,7 @@ inherited frmDataSetValues: TfrmDataSetValues
       Left = 1
       Top = 22
       Width = 95
-      Height = 163
+      Height = 176
       Align = alClient
       ItemHeight = 18
       Background.FillMode = bfmTile

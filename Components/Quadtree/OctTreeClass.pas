@@ -601,7 +601,7 @@ var
   ew: TEastOrWest;
   ud: TUpOrDown;
   AnOctNode: TOtreeNode;
-  Index, PointIndex: integer;
+  Index: integer;
   DataCount: integer;
 begin
   result := False;
@@ -657,10 +657,12 @@ begin
       begin
         AnOctNode.FPts[Index].Data.Free;
         AnOctNode.FPts[Index].Data := nil;
-        for PointIndex := Index + 1 to AnOctNode.NumPts - 1 do
-        begin
-          AnOctNode.FPts[PointIndex - 1] := AnOctNode.FPts[PointIndex];
-        end;
+        Move(AnOctNode.FPts[Index+1], AnOctNode.FPts[Index],
+          (AnOctNode.NumPts - Index - 1) * SizeOf(TOPoint));
+//        for PointIndex := Index + 1 to AnOctNode.NumPts - 1 do
+//        begin
+//          AnOctNode.FPts[PointIndex - 1] := AnOctNode.FPts[PointIndex];
+//        end;
         AnOctNode.NumPts := AnOctNode.NumPts - 1;
       end;
       Exit;

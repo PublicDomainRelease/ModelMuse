@@ -6,4 +6,7 @@ inherited frmImportDXF: TfrmImportDXF
   inherited btnOK: TBitBtn
     OnClick = btnOKClick
   end
+  inherited OpenDialogFile: TOpenDialog
+    Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+  end
 end

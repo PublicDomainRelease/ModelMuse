@@ -9,7 +9,7 @@ uses
   SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, frmCustomGoPhastUnit, ComCtrls, Grids, RbwDataGrid4,  
   Buttons, ExtCtrls, Clipbrd, GoPhastTypes, ArgusDataEntry, Spin, Mask,
-  JvExMask, JvSpin;
+  JvExMask, JvSpin, PhastModelUnit;
 
 type
   {@abstract(@name is used to specify the positions of grid lines in
@@ -89,6 +89,8 @@ type
     seColumns: TJvSpinEdit;
     seRows: TJvSpinEdit;
     seLayers: TJvSpinEdit;
+    comboModel: TComboBox;
+    lblModel: TLabel;
     // @name sets the column settings specified in @classname.
     // @name calls @link(SetData).
     procedure btnOKClick(Sender: TObject);
@@ -135,6 +137,7 @@ type
     // @name calls @link(UpdateGrid) with the proper parameters for
     // @link(dgRows).
     procedure seRowsChange(Sender: TObject);
+    procedure comboModelChange(Sender: TObject);
   private
     // @name is the column heading for column 1 in
     // @link(dgColumns).
@@ -147,8 +150,9 @@ type
     // @name is the column heading for column 1 in
     // @link(dgRows).
     FRowHeading: string;
+    FLabelText: string;
     // @name retrieves the locations of the grid lines in @link(TPhastGrid).
-    procedure GetData;
+    procedure GetData(Model: TCustomModel);
     // @name splits up Value into multiple values and pastes the values
     // into ADataGrid.
     procedure PasteMultipleCells(const ADataGrid: TRbwDataGrid4;
@@ -176,6 +180,10 @@ type
 implementation
 
 uses frmGoPhastUnit, AbstractGridUnit, UndoItems, CursorsFoiledAgain;
+
+resourcestring
+  StrChildGridsCanNot = ' Child grids can not be edited directly. Instead you'
+    + ' must edit the parent grid to change the child grid.';
 
 {$R *.dfm}
 
@@ -213,20 +221,20 @@ begin
   end;
 end;
 
-procedure TfrmGridSpacing.GetData;
+procedure TfrmGridSpacing.GetData(Model: TCustomModel);
 begin
-  SetGrid(frmGoPhast.Grid.ColumnPositions, dgColumns, seColumns);
+  SetGrid(Model.Grid.ColumnPositions, dgColumns, seColumns);
   FColHeading := 'Column Positions';
   dgColumns.Cells[1, 0] := FColHeading;
 
-  SetGrid(frmGoPhast.Grid.RowPositions, dgRows, seRows);
+  SetGrid(Model.Grid.RowPositions, dgRows, seRows);
   FRowHeading := 'Row Positions';
   dgRows.Cells[1, 0] := FRowHeading;
 
   if frmGoPhast.ModelSelection = msPhast then
   begin
     tabLayers.TabVisible := True;
-    SetGrid(frmGoPhast.PhastGrid.LayerElevations, dgLayers, seLayers);
+    SetGrid(Model.PhastGrid.LayerElevations, dgLayers, seLayers);
     FLayerHeading := 'Layer Elevations';
     dgLayers.Cells[1, 0] := FLayerHeading;
   end
@@ -391,7 +399,12 @@ begin
       Assert(False);
   end;
 
-  GetData;
+  FillComboWithModelNames(comboModel);
+  comboModel.Visible := frmGoPhast.PhastModel.LgrUsed;
+  lblModel.Visible := comboModel.Visible;
+  FLabelText := lblDescribe.Caption;
+
+  GetData(frmGoPhast.PhastModel);
 end;
 
 procedure TfrmGridSpacing.PasteMultipleCells(const ADataGrid: TRbwDataGrid4;
@@ -502,6 +515,25 @@ begin
   end;
 end;
 
+procedure TfrmGridSpacing.comboModelChange(Sender: TObject);
+var
+  Model: TCustomModel;
+begin
+  inherited;
+  Model := comboModel.Items.Objects[comboModel.ItemIndex] as TCustomModel;
+  GetData(Model);
+  if Model is TPhastModel then
+  begin
+    lblDescribe.Caption := FLabelText;
+    btnOK.Enabled := True;
+  end
+  else
+  begin
+    lblDescribe.Caption := FLabelText + StrChildGridsCanNot;
+    btnOK.Enabled := False;
+  end;
+end;
+
 procedure TfrmGridSpacing.dgKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
@@ -597,14 +629,14 @@ var
 begin
   inherited;
   DataGrid := Sender as TRbwDataGrid4;
-  if ([ssShift, ssCtrl] * Shift) = [] then
-  begin
-    DataGrid.Options := DataGrid.Options + [goEditing];
-  end
-  else
-  begin
-    DataGrid.Options := DataGrid.Options - [goEditing];
-  end;
+//  if ([ssShift, ssCtrl] * Shift) = [] then
+//  begin
+//    DataGrid.Options := DataGrid.Options + [goEditing];
+//  end
+//  else
+//  begin
+//    DataGrid.Options := DataGrid.Options - [goEditing];
+//  end;
   // rearranging the cells is handled by the control so it
   // doesn't need to be done here.  However, set the cursor
   // to give a visual indication of what is happening.

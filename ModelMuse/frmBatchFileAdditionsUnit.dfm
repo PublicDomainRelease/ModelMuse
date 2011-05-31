@@ -2,77 +2,20 @@ inherited frmBatchFileAdditions: TfrmBatchFileAdditions
   HelpType = htKeyword
   HelpKeyword = 'Batch_File_Additions_Dialog'
   Caption = 'Batch File Additions'
-  ClientHeight = 391
+  ClientHeight = 459
   ClientWidth = 328
   ExplicitWidth = 336
-  ExplicitHeight = 425
+  ExplicitHeight = 493
   PixelsPerInch = 96
   TextHeight = 18
-  object Splitter1: TSplitter
-    Left = 0
-    Top = 168
-    Width = 328
-    Height = 5
-    Cursor = crVSplit
-    Align = alTop
-    ExplicitTop = 194
-  end
-  inline frameBatchFileBefore: TframeBatchFileLines
-    Left = 0
-    Top = 0
-    Width = 328
-    Height = 168
-    Align = alTop
-    TabOrder = 0
-    TabStop = True
-    ExplicitWidth = 328
-    ExplicitHeight = 168
-    inherited lblLines: TLabel
-      Width = 263
-      Height = 18
-      Caption = 'Batch file lines executed before model'
-      ExplicitWidth = 263
-      ExplicitHeight = 18
-    end
-    inherited memoLines: TMemo
-      Width = 328
-      Height = 136
-      ExplicitWidth = 328
-      ExplicitHeight = 136
-    end
-  end
-  inline frameBatchFileAfter: TframeBatchFileLines
-    Left = 0
-    Top = 173
-    Width = 328
-    Height = 177
-    Align = alClient
-    TabOrder = 1
-    TabStop = True
-    ExplicitTop = 173
-    ExplicitWidth = 328
-    ExplicitHeight = 177
-    inherited lblLines: TLabel
-      Width = 249
-      Height = 18
-      Caption = 'Batch file lines executed after model'
-      ExplicitWidth = 249
-      ExplicitHeight = 18
-    end
-    inherited memoLines: TMemo
-      Width = 328
-      Height = 145
-      ExplicitWidth = 328
-      ExplicitHeight = 145
-    end
-  end
   object Panel1: TPanel
     Left = 0
-    Top = 350
+    Top = 418
     Width = 328
     Height = 41
     Align = alBottom
-    TabOrder = 2
+    TabOrder = 0
+    ExplicitTop = 350
     object btnHelp: TBitBtn
       Left = 38
       Top = 4
@@ -118,6 +61,115 @@ inherited frmBatchFileAdditions: TfrmBatchFileAdditions
       Height = 33
       TabOrder = 2
       Kind = bkCancel
+    end
+  end
+  object Panel2: TPanel
+    Left = 0
+    Top = 64
+    Width = 328
+    Height = 354
+    Align = alClient
+    Caption = 'Panel2'
+    TabOrder = 1
+    ExplicitLeft = 152
+    ExplicitTop = 0
+    ExplicitWidth = 185
+    ExplicitHeight = 41
+    object Splitter1: TSplitter
+      Left = 1
+      Top = 169
+      Width = 326
+      Height = 5
+      Cursor = crVSplit
+      Align = alTop
+      ExplicitLeft = 0
+      ExplicitTop = 194
+      ExplicitWidth = 328
+    end
+    inline frameBatchFileAfter: TframeBatchFileLines
+      Left = 1
+      Top = 174
+      Width = 326
+      Height = 179
+      Align = alClient
+      TabOrder = 0
+      TabStop = True
+      ExplicitLeft = 1
+      ExplicitTop = 173
+      ExplicitWidth = 328
+      ExplicitHeight = 177
+      inherited lblLines: TLabel
+        Width = 249
+        Height = 18
+        Caption = 'Batch file lines executed after model'
+        ExplicitWidth = 249
+        ExplicitHeight = 18
+      end
+      inherited memoLines: TMemo
+        Width = 326
+        Height = 147
+        ExplicitWidth = 328
+        ExplicitHeight = 145
+      end
+    end
+    inline frameBatchFileBefore: TframeBatchFileLines
+      Left = 1
+      Top = 1
+      Width = 326
+      Height = 168
+      Align = alTop
+      TabOrder = 1
+      TabStop = True
+      ExplicitLeft = 1
+      ExplicitTop = 1
+      ExplicitWidth = 328
+      ExplicitHeight = 168
+      inherited lblLines: TLabel
+        Width = 263
+        Height = 18
+        Caption = 'Batch file lines executed before model'
+        ExplicitWidth = 263
+        ExplicitHeight = 18
+      end
+      inherited memoLines: TMemo
+        Width = 326
+        Height = 136
+        ExplicitWidth = 328
+        ExplicitHeight = 136
+      end
+    end
+  end
+  object pnlModel: TPanel
+    Left = 0
+    Top = 0
+    Width = 328
+    Height = 64
+    Align = alTop
+    BevelOuter = bvNone
+    TabOrder = 2
+    ExplicitLeft = 1
+    ExplicitTop = 1
+    ExplicitWidth = 326
+    DesignSize = (
+      328
+      64)
+    object lblModel: TLabel
+      Left = 8
+      Top = 11
+      Width = 43
+      Height = 18
+      Caption = 'Model'
+    end
+    object comboModel: TComboBox
+      Left = 8
+      Top = 32
+      Width = 319
+      Height = 26
+      Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
+      ItemHeight = 0
+      TabOrder = 0
+      OnChange = comboModelChange
     end
   end
 end
