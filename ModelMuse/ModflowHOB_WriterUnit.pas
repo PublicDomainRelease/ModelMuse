@@ -36,7 +36,7 @@ type
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
   public
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     destructor Destroy; override;
     procedure UpdateDisplay(TimeLists: TModflowBoundListOfTimeLists;
       ParameterIndicies: TByteSet; Purpose: TObservationPurpose);
@@ -48,13 +48,17 @@ implementation
 uses ModflowUnitNumbers, ScreenObjectUnit, DataSetUnit,
   frmErrorsAndWarningsUnit, frmProgressUnit, Forms;
 
-const
+resourcestring
   ObsNameWarning = 'The following Head observation names may be valid for MODFLOW but they are not valid for UCODE.';
   MissingObsNameError = 'The head observation in the following objects do not have observations names assigned';
+  InvalidEndObsTime = 'Observation time after end of simulation';
+  InvalidStartObsTime = 'Observation time before beginning of simulation';
+  HeadOffGrid = 'One or more head observation are not located on the grid and will be ignored';
+  NoHeads = 'No head observations';
 
 { TModflowHobWriter }
 
-constructor TModflowHobWriter.Create(Model: TCustomModel);
+constructor TModflowHobWriter.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FObservations := TList.Create;
@@ -67,11 +71,6 @@ begin
 end;
 
 procedure TModflowHobWriter.Evaluate(Purpose: TObservationPurpose);
-const
-  InvalidEndObsTime = 'Observation time after end of simulation';
-  InvalidStartObsTime = 'Observation time before beginning of simulation';
-  HeadOffGrid = 'One or more head observation are not located on the grid and will be ignored';
-  NoHeads = 'No head observations';
 var
   ScreenObjectIndex: Integer;
   ScreenObject: TScreenObject;
@@ -97,6 +96,8 @@ begin
   frmErrorsAndWarnings.RemoveErrorGroup(Model, NoHeads);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidStartObsTime);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, InvalidEndObsTime);
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, NoHeads);
+
   for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
     ScreenObject := Model.ScreenObjects[ScreenObjectIndex];
@@ -144,14 +145,14 @@ begin
           for ObsIndex := 0 to Observations.Values.Count - 1 do
           begin
             Item := Observations.Values.HobItems[ObsIndex];
-            if Item.Time > FEndTime then
+            if (Item.Time > FEndTime) and (FEvaluationType = etExport) then
             begin
               ErrorMessage := 'Object: ' + ScreenObject.Name
                 + '; Time: ' + FloatToStr(Item.Time);
               frmErrorsAndWarnings.AddError(Model,
                 InvalidEndObsTime, ErrorMessage);
             end;
-            if Item.Time < FStartTime then
+            if (Item.Time < FStartTime) and (FEvaluationType = etExport) then
             begin
               ErrorMessage := 'Object: ' + ScreenObject.Name
                 + '; Time: ' + FloatToStr(Item.Time);
@@ -171,16 +172,35 @@ begin
   begin
     if WrongObservationTypesDefined then
     begin
-      frmErrorsAndWarnings.AddError(Model, NoHeads,
-        'No valid head observations were defined. '
-        + 'Check that "Model|Observation Type" is set to the '
-        + 'correct value and that the observation type for '
-        + 'each observation is set correctly.');
+      if (FEvaluationType = etExport) then
+      begin
+        frmErrorsAndWarnings.AddError(Model, NoHeads,
+          'No valid head observations were defined. '
+          + 'Check that "Model|Observation Type" is set to the '
+          + 'correct value and that the observation type for '
+          + 'each observation is set correctly.');
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddWarning(Model, NoHeads,
+          'No valid head observations were defined for the current stress period. '
+          + 'Check that "Model|Observation Type" is set to the '
+          + 'correct value and that the observation type for '
+          + 'each observation is set correctly.');
+      end;
     end
     else
     begin
-      frmErrorsAndWarnings.AddError(Model, NoHeads,
-        'No valid head observations were defined.');
+      if (FEvaluationType = etExport) then
+      begin
+        frmErrorsAndWarnings.AddError(Model, NoHeads,
+          'No valid head observations were defined.');
+      end
+      else
+      begin
+        frmErrorsAndWarnings.AddWarning(Model, NoHeads,
+          'No valid head observations were defined for the current stress period.');
+      end;
     end;
   end;
 end;

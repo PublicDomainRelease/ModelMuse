@@ -2,8 +2,8 @@ unit GuiSettingsUnit;
 
 interface
 
-uses Classes, Forms;
-            
+uses Classes, Forms, frameViewUnit, ZoomBox2, RbwRuler;
+
 type
   TGuiSettings = class(TPersistent)
   private
@@ -79,7 +79,18 @@ type
     procedure SetSideVerticalDesiredSpacing(const Value: integer);
     procedure SetTopHorizontalDesiredSpacing(const Value: integer);
     procedure SetTopVerticalDesiredSpacing(const Value: integer);
-  public
+    function GetTopView: TframeView;
+    function GetTopZoomBox: TQRbwZoomBox2;
+    function GetSideView: TframeView;
+    function GetSideZoomBox: TQRbwZoomBox2;
+    function GetFrontView: TframeView;
+    function GetFrontZoomBox: TQRbwZoomBox2;
+    function GetFrontHorizontalRuler: TRbwRuler;
+    function GetFrontVerticalRuler: TRbwRuler;
+    function GetSideVerticalRuler: TRbwRuler;
+    function GetSideHorizontalRuler: TRbwRuler;
+    function GetTopVerticalRuler: TRbwRuler;
+    function GetTopHorizontalRuler: TRbwRuler;
   published
     // @name stores the height in pixels of the front view of the model.
     property FrontHeight: integer read GetFrontHeight write SetFrontHeight;
@@ -171,52 +182,101 @@ uses frmGoPhastUnit;
 
 function TGuiSettings.GetFrontHeight: integer;
 begin
-  result := frmGoPhast.pnlBottom.Height;
+  if frmGoPhast.pnlBottom <> nil then
+  begin
+    result := frmGoPhast.pnlBottom.Height;
+  end
+  else
+  begin
+    result := 100;
+  end;
 end;
 
 procedure TGuiSettings.SetFrontHeight(Value : integer);
 begin
-  frmGoPhast.pnlBottom.Height := Value;
-  if frmGoPhast.pnlBottom.Top > frmGoPhast.sbMain.Top then
+  if frmGoPhast.pnlBottom <> nil then
   begin
-    frmGoPhast.sbMain.Top := frmGoPhast.pnlBottom.Top +
-      frmGoPhast.pnlBottom.Height;
-  end;
-  if frmGoPhast.splitHoriz.Top > frmGoPhast.pnlBottom.Top then
-  begin
-    frmGoPhast.splitHoriz.Top :=
-      frmGoPhast.pnlBottom.Top - frmGoPhast.splitHoriz.Height;
+    frmGoPhast.pnlBottom.Height := Value;
+    if (frmGoPhast.sbMain <> nil) and (frmGoPhast.splitHoriz <> nil) then
+    begin
+      if frmGoPhast.pnlBottom.Top > frmGoPhast.sbMain.Top then
+      begin
+        frmGoPhast.sbMain.Top := frmGoPhast.pnlBottom.Top +
+          frmGoPhast.pnlBottom.Height;
+      end;
+      if frmGoPhast.splitHoriz.Top > frmGoPhast.pnlBottom.Top then
+      begin
+        frmGoPhast.splitHoriz.Top :=
+          frmGoPhast.pnlBottom.Top - frmGoPhast.splitHoriz.Height;
+      end;
+    end;
   end;
 end;
 
 procedure TGuiSettings.SetFrontHorizontalDesiredSpacing(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameFrontView.rulHorizontal.RulerDesiredSpacing := Value;
+  Ruler := GetFrontHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerDesiredSpacing := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetFrontHorizontalDigits(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameFrontView.rulHorizontal.RulerDigits := Value;
+  Ruler := GetFrontHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerDigits := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetFrontHorizontalPrecision(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameFrontView.rulHorizontal.RulerPrecision := Value;
+  Ruler := GetFrontHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerPrecision := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetFrontVerticalDesiredSpacing(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameFrontView.rulVertical.RulerDesiredSpacing := Value;
+  Ruler := GetFrontVerticalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerDesiredSpacing := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetFrontVerticalDigits(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameFrontView.rulVertical.RulerDigits := Value;
+  Ruler := GetFrontVerticalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerDigits := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetFrontVerticalPrecision(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameFrontView.rulVertical.RulerPrecision := Value;
+  Ruler := GetFrontVerticalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerPrecision := Value;
+  end;
 end;
 
 function TGuiSettings.GetHeight: integer;
@@ -237,53 +297,145 @@ begin
 end;
 
 function TGuiSettings.GetFrontHorizontalDesiredSpacing: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameFrontView.rulHorizontal.RulerDesiredSpacing;
+  Ruler := GetFrontHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerDesiredSpacing;
+  end
+  else
+  begin
+    result := 50;
+  end;
 end;
 
 function TGuiSettings.GetFrontHorizontalDigits: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameFrontView.rulHorizontal.RulerDigits;
+  Ruler := GetFrontHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerDigits;
+  end
+  else
+  begin
+    result := 5;
+  end;
 end;
 
 function TGuiSettings.GetFrontHorizontalPrecision: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameFrontView.rulHorizontal.RulerPrecision;
+  Ruler := GetFrontHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerPrecision;
+  end
+  else
+  begin
+    result := 0;
+  end;
 end;
 
 function TGuiSettings.GetFrontVerticalDesiredSpacing: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameFrontView.rulVertical.RulerDesiredSpacing;
+  Ruler := GetFrontVerticalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerDesiredSpacing;
+  end
+  else
+  begin
+    result := 50;
+  end;
 end;
 
 function TGuiSettings.GetFrontVerticalDigits: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameFrontView.rulVertical.RulerDigits;
+  Ruler := GetFrontVerticalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerDigits;
+  end
+  else
+  begin
+    result := 5;
+  end;
 end;
 
 function TGuiSettings.GetFrontVerticalPrecision: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameFrontView.rulVertical.RulerPrecision;
+  Ruler := GetFrontVerticalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerPrecision;
+  end
+  else
+  begin
+    result := 0;
+  end;
 end;
 
 function TGuiSettings.GetFrontX: double;
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  result := frmGoPhast.frameFrontView.ZoomBox.OriginX;
+  ZoomBox := GetFrontZoomBox;
+  if ZoomBox <> nil then
+  begin
+    result := ZoomBox.OriginX;
+  end
+  else
+  begin
+    result := 0;
+  end;
 end;
 
 procedure TGuiSettings.SetFrontX(Value : double);
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  frmGoPhast.frameFrontView.ZoomBox.OriginX := Value;
+  ZoomBox := GetFrontZoomBox;
+  if ZoomBox <> nil then
+  begin
+    ZoomBox.OriginX := Value;
+  end;
 end;
 
 function TGuiSettings.GetFrontY: double;
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  result := frmGoPhast.frameFrontView.ZoomBox.OriginY;
+  ZoomBox := GetFrontZoomBox;
+  if ZoomBox <> nil then
+  begin
+    result := ZoomBox.OriginY;
+  end
+  else
+  begin
+    result := 0;
+  end;
 end;
 
 procedure TGuiSettings.SetFrontY(Value : double);
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  frmGoPhast.frameFrontView.ZoomBox.OriginY := Value;
+  ZoomBox := GetFrontZoomBox;
+  if ZoomBox <> nil then
+  begin
+    ZoomBox.OriginY := Value;
+  end;
 end;
 
 function TGuiSettings.GetLeft: integer;
@@ -297,146 +449,343 @@ begin
 end;
 
 function TGuiSettings.GetMagnificationFront: double;
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  result := frmGoPhast.frameFrontView.ZoomBox.Magnification;
+  ZoomBox := GetFrontZoomBox;
+  if ZoomBox <> nil then
+  begin
+    result := ZoomBox.Magnification;
+  end
+  else
+  begin
+    result := 1;
+  end;
 end;
 
 procedure TGuiSettings.SetMagnificationFront(Value : double);
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
   if Value = 0 then
   begin
     Value := 1;
   end;
-  frmGoPhast.frameFrontView.ZoomBox.Magnification := Value;
+  ZoomBox := GetFrontZoomBox;
+  if ZoomBox <> nil then
+  begin
+    ZoomBox.Magnification := Value;
+  end;
 end;
 
 function TGuiSettings.GetMagnificationSide: double;
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  result := frmGoPhast.frameSideView.ZoomBox.Magnification;
+  ZoomBox := GetSideZoomBox;
+  if ZoomBox <> nil then
+  begin
+    result := ZoomBox.Magnification;
+  end
+  else
+  begin
+    result := 1;
+  end;
 end;
 
 procedure TGuiSettings.SetMagnificationSide(Value : double);
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
   if Value = 0 then
   begin
     Value := 1;
   end;
-  frmGoPhast.frameSideView.ZoomBox.Magnification := Value;
+  ZoomBox := GetSideZoomBox;
+  if ZoomBox <> nil then
+  begin
+    ZoomBox.Magnification := Value;
+  end;
 end;
 
 function TGuiSettings.GetMagnificationTop: double;
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  result := frmGoPhast.frameTopView.ZoomBox.Magnification;
+  ZoomBox := GetTopZoomBox;
+  if ZoomBox <> nil then
+  begin
+    result := ZoomBox.Magnification;
+  end
+  else
+  begin
+    result := 1;
+  end;
 end;
 
 procedure TGuiSettings.SetMagnificationTop(Value : double);
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
   if Value = 0 then
   begin
     Value := 1;
   end;
-  frmGoPhast.frameTopView.ZoomBox.Magnification := Value;
+  ZoomBox := GetTopZoomBox;
+  if ZoomBox <> nil then
+  begin
+    ZoomBox.Magnification := Value;
+  end;
 end;
 
 function TGuiSettings.GetSideHorizontalDesiredSpacing: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameSideView.rulHorizontal.RulerDesiredSpacing
+  Ruler := GetSideHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerDesiredSpacing;
+  end
+  else
+  begin
+    result := 50;
+  end;
 end;
 
 function TGuiSettings.GetSideHorizontalDigits: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameSideView.rulHorizontal.RulerDigits;
+  Ruler := GetSideHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerDigits;
+  end
+  else
+  begin
+    result := 5;
+  end;
 end;
 
 function TGuiSettings.GetSideHorizontalPrecision: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameSideView.rulHorizontal.RulerPrecision;
+  Ruler := GetSideHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerPrecision;
+  end
+  else
+  begin
+    result := 0;
+  end;
 end;
 
 function TGuiSettings.GetSideVerticalDesiredSpacing: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameSideView.rulVertical.RulerDesiredSpacing;
+  Ruler := GetSideVerticalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerDesiredSpacing;
+  end
+  else
+  begin
+    result := 50;
+  end;
 end;
 
 function TGuiSettings.GetSideVerticalDigits: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameSideView.rulVertical.RulerDigits;
+  Ruler := GetSideVerticalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerDigits;
+  end
+  else
+  begin
+    result := 5;
+  end;
 end;
 
 function TGuiSettings.GetSideVerticalPrecision: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameSideView.rulVertical.RulerPrecision;
+  Ruler := GetSideVerticalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerPrecision;
+  end
+  else
+  begin
+    result := 5;
+  end;
 end;
 
 function TGuiSettings.GetSideWidth: integer;
+var
+  SideFrameView: TframeView;
 begin
-  result := frmGoPhast.frameSideView.Width;
+  SideFrameView := GetSideView;
+  if SideFrameView <> nil then
+  begin
+    result := SideFrameView.Width;
+  end
+  else
+  begin
+    result := 100;
+  end;
 end;
 
 procedure TGuiSettings.SetSideHorizontalDesiredSpacing(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameSideView.rulHorizontal.RulerDesiredSpacing := Value;
+  Ruler := GetSideHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerDesiredSpacing := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetSideHorizontalDigits(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameSideView.rulHorizontal.RulerDigits := Value;
+  Ruler := GetSideHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerDigits := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetSideHorizontalPrecision(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameSideView.rulHorizontal.RulerPrecision := Value;
+  Ruler := GetSideHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerPrecision := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetSideVerticalDesiredSpacing(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameSideView.rulVertical.RulerDesiredSpacing := Value;
+  Ruler := GetSideVerticalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerDesiredSpacing := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetSideVerticalDigits(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameSideView.rulVertical.RulerDigits := Value;
+  Ruler := GetSideVerticalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerDigits := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetSideVerticalPrecision(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameSideView.rulVertical.RulerPrecision := Value;
+  Ruler := GetSideVerticalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerPrecision := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetSideWidth(Value : integer);
+var
+  SideFrameView: TframeView;
 begin
-  frmGoPhast.frameSideView.Width := Value;
-  frmGoPhast.frame3DView.Width := Value;
-  if frmGoPhast.splitVertBottom.Left > frmGoPhast.frame3DView.Left then
+  SideFrameView := GetSideView;
+  if SideFrameView <> nil then
   begin
-    frmGoPhast.splitVertBottom.Left :=
-      frmGoPhast.frame3DView.Left - frmGoPhast.splitVertBottom.Width;
-  end;
-  if frmGoPhast.splitVertTop.Left > frmGoPhast.frameSideView.Left then
-  begin
-    frmGoPhast.splitVertTop.Left :=
-      frmGoPhast.frameSideView.Left - frmGoPhast.splitVertTop.Width;
+    SideFrameView.Width := Value;
+    if (frmGoPhast.frame3DView <> nil)
+      and (frmGoPhast.splitVertBottom <> nil)
+      and (frmGoPhast.splitVertTop <> nil) then
+    begin
+      frmGoPhast.frame3DView.Width := Value;
+      if frmGoPhast.splitVertBottom.Left > frmGoPhast.frame3DView.Left then
+      begin
+        frmGoPhast.splitVertBottom.Left :=
+          frmGoPhast.frame3DView.Left - frmGoPhast.splitVertBottom.Width;
+      end;
+      if frmGoPhast.splitVertTop.Left > SideFrameView.Left then
+      begin
+        frmGoPhast.splitVertTop.Left :=
+          SideFrameView.Left - frmGoPhast.splitVertTop.Width;
+      end;
+    end;
   end;
 end;
 
 function TGuiSettings.GetSideX: double;
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  result := frmGoPhast.frameSideView.ZoomBox.OriginX;
+  ZoomBox := GetSideZoomBox;
+  if ZoomBox <> nil then
+  begin
+    result := ZoomBox.OriginX;
+  end
+  else
+  begin
+    result := 0;
+  end;
 end;
 
 procedure TGuiSettings.SetSideX(Value : double);
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  frmGoPhast.frameSideView.ZoomBox.OriginX := Value;
+  ZoomBox := GetSideZoomBox;
+  if ZoomBox <> nil then
+  begin
+    ZoomBox.OriginX := Value;
+  end;
 end;
 
 function TGuiSettings.GetSideY: double;
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  result := frmGoPhast.frameSideView.ZoomBox.OriginY;
+  ZoomBox := GetSideZoomBox;
+  if ZoomBox <> nil then
+  begin
+    result := ZoomBox.OriginY;
+  end
+  else
+  begin
+    result := 0;
+  end;
 end;
 
 procedure TGuiSettings.SetSideY(Value : double);
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  frmGoPhast.frameSideView.ZoomBox.OriginY := Value;
+  ZoomBox := GetSideZoomBox;
+  if ZoomBox <> nil then
+  begin
+    ZoomBox.OriginY := Value;
+  end;
 end;
 
 function TGuiSettings.GetTop: integer;
@@ -445,18 +794,48 @@ begin
 end;
 
 function TGuiSettings.GetTopHorizontalDesiredSpacing: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameTopView.rulHorizontal.RulerDesiredSpacing
+  Ruler := GetTopHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerDesiredSpacing;
+  end
+  else
+  begin
+    result := 50;
+  end;
 end;
 
 function TGuiSettings.GetTopHorizontalDigits: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameTopView.rulHorizontal.RulerDigits;
+  Ruler := GetTopHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerDigits;
+  end
+  else
+  begin
+    result := 5;
+  end;
 end;
 
 function TGuiSettings.GetTopHorizontalPrecision: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameTopView.rulHorizontal.RulerPrecision;
+  Ruler := GetTopHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerPrecision;
+  end
+  else
+  begin
+    result := 0;
+  end;
 end;
 
 procedure TGuiSettings.SetTop(Value : integer);
@@ -465,88 +844,368 @@ begin
 end;
 
 function TGuiSettings.GetTopVerticalDesiredSpacing: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameTopView.rulVertical.RulerDesiredSpacing;
+  Ruler := GetTopVerticalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerDesiredSpacing;
+  end
+  else
+  begin
+    result := 50;
+  end;
 end;
 
 function TGuiSettings.GetTopVerticalDigits: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameTopView.rulVertical.RulerDigits;
+  Ruler := GetTopVerticalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerDigits;
+  end
+  else
+  begin
+    result := 5;
+  end;
 end;
 
 function TGuiSettings.GetTopVerticalPrecision: integer;
+var
+  Ruler: TRbwRuler;
 begin
-  result := frmGoPhast.frameTopView.rulVertical.RulerPrecision;
+  Ruler := GetTopVerticalRuler;
+  if Ruler <> nil then
+  begin
+    result := Ruler.RulerPrecision;
+  end
+  else
+  begin
+    result := 0;
+  end;
 end;
 
 procedure TGuiSettings.SetTopHorizontalDesiredSpacing(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameTopView.rulHorizontal.RulerDesiredSpacing := Value;
+  Ruler := GetTopHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerDesiredSpacing := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetTopHorizontalDigits(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameTopView.rulHorizontal.RulerDigits := Value;
+  Ruler := GetTopHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerDigits := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetTopHorizontalPrecision(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameTopView.rulHorizontal.RulerPrecision := Value;
+  Ruler := GetTopHorizontalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerPrecision := Value;
+  end;
 end;
 
 function TGuiSettings.GetTopViewHeight: integer;
+var
+  TopFrameView: TframeView;
 begin
-  result := frmGoPhast.frameTopView.Height;
+  TopFrameView := GetTopView;
+  if TopFrameView <> nil then
+  begin
+    result := TopFrameView.Height;
+  end
+  else
+  begin
+    result := 100;
+  end;
 end;
 
 procedure TGuiSettings.SetTopVerticalDesiredSpacing(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameTopView.rulVertical.RulerDesiredSpacing := Value;
+  Ruler := GetTopVerticalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerDesiredSpacing := Value;
+  end;
+end;
+
+function TGuiSettings.GetTopView: TframeView;
+begin
+  result := frmGoPhast.frameTopView;
+end;
+
+function TGuiSettings.GetTopZoomBox: TQRbwZoomBox2;
+var
+  TopFrameView: TframeView;
+begin
+  TopFrameView := GetTopView;
+  if TopFrameView <> nil then
+  begin
+    result := TopFrameView.ZoomBox;
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
+function TGuiSettings.GetSideView: TframeView;
+begin
+  result := frmGoPhast.frameSideView;
+end;
+
+function TGuiSettings.GetFrontView: TframeView;
+begin
+  result := frmGoPhast.frameFrontView;
+end;
+
+function TGuiSettings.GetSideZoomBox: TQRbwZoomBox2;
+var
+  SideFrameView: TframeView;
+begin
+  SideFrameView := GetSideView;
+  if SideFrameView <> nil then
+  begin
+    result := SideFrameView.ZoomBox;
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
+function TGuiSettings.GetFrontZoomBox: TQRbwZoomBox2;
+var
+  FrontFrameView: TframeView;
+begin
+  FrontFrameView := GetFrontView;
+  if FrontFrameView <> nil then
+  begin
+    result := FrontFrameView.ZoomBox;
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
+function TGuiSettings.GetFrontHorizontalRuler: TRbwRuler;
+var
+  FrontFrameView: TframeView;
+begin
+  FrontFrameView := GetFrontView;
+  if FrontFrameView <> nil then
+  begin
+    result := FrontFrameView.rulHorizontal;
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
+function TGuiSettings.GetTopVerticalRuler: TRbwRuler;
+var
+  FrameTopView: TframeView;
+begin
+  FrameTopView := GetTopView;
+  if FrameTopView <> nil then
+  begin
+    result := FrameTopView.rulVertical;
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
+function TGuiSettings.GetTopHorizontalRuler: TRbwRuler;
+var
+  FrameTopView: TframeView;
+begin
+  FrameTopView := GetTopView;
+  if FrameTopView <> nil then
+  begin
+    result := FrameTopView.rulHorizontal;
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
+function TGuiSettings.GetSideVerticalRuler: TRbwRuler;
+var
+  FrameSideView: TframeView;
+begin
+  FrameSideView := GetSideView;
+  if FrameSideView <> nil then
+  begin
+    result := FrameSideView.rulVertical;
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
+function TGuiSettings.GetSideHorizontalRuler: TRbwRuler;
+var
+  FrameSideView: TframeView;
+begin
+  FrameSideView := GetSideView;
+  if FrameSideView <> nil then
+  begin
+    result := FrameSideView.rulHorizontal;
+  end
+  else
+  begin
+    result := nil;
+  end;
+end;
+
+function TGuiSettings.GetFrontVerticalRuler: TRbwRuler;
+var
+  FrontFrameView: TframeView;
+begin
+  FrontFrameView := GetFrontView;
+  if FrontFrameView <> nil then
+  begin
+    result := FrontFrameView.rulVertical;
+  end
+  else
+  begin
+    result := nil;
+  end;
 end;
 
 procedure TGuiSettings.SetTopVerticalDigits(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameTopView.rulVertical.RulerDigits := Value;
+  Ruler := GetTopVerticalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerDigits := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetTopVerticalPrecision(const Value: integer);
+var
+  Ruler: TRbwRuler;
 begin
-  frmGoPhast.frameTopView.rulVertical.RulerPrecision := Value;
+  Ruler := GetTopVerticalRuler;
+  if Ruler <> nil then
+  begin
+    Ruler.RulerPrecision := Value;
+  end;
 end;
 
 procedure TGuiSettings.SetTopViewHeight(Value : integer);
+var
+  TopFrameView: TframeView;
 begin
-  frmGoPhast.frameTopView.Height := value;
+  TopFrameView := GetTopView;
+  if TopFrameView <> nil then
+  begin
+    TopFrameView.Height := value;
+  end;
 end;
 
 function TGuiSettings.GetTopViewWidth: integer;
+var
+  TopFrameView: TframeView;
 begin
-  result := frmGoPhast.frameTopView.Width;
+  TopFrameView := GetTopView;
+  if TopFrameView <> nil then
+  begin
+    result := TopFrameView.Width;
+  end
+  else
+  begin
+    result := 100;
+  end;
 end;
 
 procedure TGuiSettings.SetTopViewWidth(Value : integer);
+var
+  TopFrameView: TframeView;
 begin
-  frmGoPhast.frameTopView.Width := value;
+  TopFrameView := GetTopView;
+  if TopFrameView <> nil then
+  begin
+    TopFrameView.Width := value;
+  end;
 end;
 
 function TGuiSettings.GetTopX: double;
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  result := frmGoPhast.frameTopView.ZoomBox.OriginX;
+  ZoomBox := GetTopZoomBox;
+  if ZoomBox <> nil then
+  begin
+    result := ZoomBox.OriginX;
+  end
+  else
+  begin
+    result := 0;
+  end;
 end;
 
 procedure TGuiSettings.SetTopX(Value : double);
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  frmGoPhast.frameTopView.ZoomBox.OriginX := Value;
+  ZoomBox := GetTopZoomBox;
+  if ZoomBox <> nil then
+  begin
+    ZoomBox.OriginX := Value;
+  end;
 end;
 
 function TGuiSettings.GetTopY: double;
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  result := frmGoPhast.frameTopView.ZoomBox.OriginY;
+  ZoomBox := GetTopZoomBox;
+  if ZoomBox <> nil then
+  begin
+    result := ZoomBox.OriginY;
+  end
+  else
+  begin
+    result := 0;
+  end;
 end;
 
 procedure TGuiSettings.SetTopY(Value : double);
+var
+  ZoomBox: TQRbwZoomBox2;
 begin
-  frmGoPhast.frameTopView.ZoomBox.OriginY := Value;
+  ZoomBox := GetTopZoomBox;
+  if ZoomBox <> nil then
+  begin
+    ZoomBox.OriginY := Value;
+  end;
 end;
 
 function TGuiSettings.GetWidth: integer;

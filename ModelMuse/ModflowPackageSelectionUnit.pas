@@ -200,6 +200,7 @@ Type
     procedure SetUseVerticalFlowCorrection(const Value: boolean);
     procedure SetUseStorageCoefficient(const Value: boolean);
   public
+    procedure InitializeVariables;
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
   published
@@ -211,6 +212,21 @@ Type
     property UseVerticalFlowCorrection: boolean read FUseVerticalFlowCorrection
       write SetUseVerticalFlowCorrection default True;
     property UseStorageCoefficient: boolean read FUseStorageCoefficient write SetUseStorageCoefficient;
+  end;
+
+  THDryPrintOption = (hpoDontPrintHdry, hpoPrintHdry);
+
+  TUpwPackageSelection = class(TModflowPackageSelection)
+  private
+    FHDryPrintOption: THDryPrintOption;
+    procedure SetHDryPrintOption(const Value: THDryPrintOption);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    procedure InitializeVariables;
+  published
+    property HDryPrintOption: THDryPrintOption read FHDryPrintOption
+      write SetHDryPrintOption default hpoPrintHdry;
   end;
 
   THufReferenceChoice = (hrcModelTop, hrcReferenceLayer);
@@ -399,6 +415,156 @@ Type
     property ACCL: TRealStorage read FACCL write SetACCL;
     property HCLOSE: TRealStorage read FHCLOSE write SetHCLOSE;
     property IPRD4: integer read FIPRD4 write SetIPRD4;
+  end;
+
+  TNewtonSolverMethod = (nsmGmres, nsmChiMD);
+  TNewtonOption = (noSpecified, noSimple, noModerate, noComplex);
+  TNewtonIluMethod = (nimDropTol, nimKOrder);
+  TNewtonAccelMethod = (namCongGrad, namOthoMin, namBiCgstab);
+  TNewtonOrderingMethod = (nomRCM, nomMinimumOrdering);
+  TNewtonApplyReducedPrecondition = (narpDontApply, narpApply);
+  TNewtonUseDropTolerance = (nudtDontUse, nudtUse);
+
+  TNwtPackageSelection = class(TModflowPackageSelection)
+  private
+    FMaxGmresRestarts: integer;
+    FStopTolerance: TRealStorage;
+    FMomementumCoefficient: TRealStorage;
+    FLevel: integer;
+    FOrderingMethod: TNewtonOrderingMethod;
+    FDropTolerancePreconditioning: TRealStorage;
+    FCorrectForCellBottom: integer;
+    FFillLimit: integer;
+    FOption: TNewtonOption;
+    FSolverMethod: TNewtonSolverMethod;
+    FMaxBackIterations: integer;
+    FDBDKappa: TRealStorage;
+    FApplyReducedPrecondition: TNewtonApplyReducedPrecondition;
+    FIluMethod: TNewtonIluMethod;
+    FInnerHeadClosureCriterion: TRealStorage;
+    FDBDGamma: TRealStorage;
+    FFluxTolerance: TRealStorage;
+    FResidReducConv: TRealStorage;
+    FAccelMethod: TNewtonAccelMethod;
+    FMaxOuterIterations: integer;
+    FMaxIterInner: integer;
+    FUseDropTolerance: TNewtonUseDropTolerance;
+    FDBDTheta: TRealStorage;
+    FHeadTolerance: TRealStorage;
+    FFillLevel: integer;
+    FPrintFlag: integer;
+    FMaxInnerIterations: integer;
+    FNumberOfOrthogonalizations: integer;
+    FThicknessFactor: TRealStorage;
+    FBackReduce: TRealStorage;
+    FBackTol: TRealStorage;
+    FBackFlag: integer;
+    procedure SetRealProperty(Field, NewValue: TRealStorage);
+    procedure SetIntegerProperty(var Field: integer; NewValue: integer);
+    procedure SetAccelMethod(const Value: TNewtonAccelMethod);
+    procedure SetApplyReducedPrecondition(
+      const Value: TNewtonApplyReducedPrecondition);
+    procedure SetBackFlag(const Value: integer);
+    procedure SetBackReduce(const Value: TRealStorage);
+    procedure SetBackTol(const Value: TRealStorage);
+    procedure SetCorrectForCellBottom(const Value: integer);
+    procedure SetDBDGamma(const Value: TRealStorage);
+    procedure SetDBDKappa(const Value: TRealStorage);
+    procedure SetDBDTheta(const Value: TRealStorage);
+    procedure SetDropTolerancePreconditioning(const Value: TRealStorage);
+    procedure SetFillLevel(const Value: integer);
+    procedure SetFillLimit(const Value: integer);
+    procedure SetFluxTolerance(const Value: TRealStorage);
+    procedure SetHeadTolerance(const Value: TRealStorage);
+    procedure SetIluMethod(const Value: TNewtonIluMethod);
+    procedure SetInnerHeadClosureCriterion(const Value: TRealStorage);
+    procedure SetLevel(const Value: integer);
+    procedure SetMaxBackIterations(const Value: integer);
+    procedure SetMaxGmresRestarts(const Value: integer);
+    procedure SetMaxInnerIterations(const Value: integer);
+    procedure SetMaxIterInner(const Value: integer);
+    procedure SetMaxOuterIterations(const Value: integer);
+    procedure SetMomementumCoefficient(const Value: TRealStorage);
+    procedure SetNumberOfOrthogonalizations(const Value: integer);
+    procedure SetOption(const Value: TNewtonOption);
+    procedure SetOrderingMethod(const Value: TNewtonOrderingMethod);
+    procedure SetPrintFlag(const Value: integer);
+    procedure SetResidReducConv(const Value: TRealStorage);
+    procedure SetSolverMethod(const Value: TNewtonSolverMethod);
+    procedure SetStopTolerance(const Value: TRealStorage);
+    procedure SetThicknessFactor(const Value: TRealStorage);
+    procedure SetUseDropTolerance(const Value: TNewtonUseDropTolerance);
+  public
+    procedure Assign(Source: TPersistent); override;
+    Constructor Create(Model: TBaseModel);
+    Destructor Destroy; override;
+    procedure InitializeVariables;
+  published
+    // @name is HEADTOL.
+    property HeadTolerance: TRealStorage read FHeadTolerance write SetHeadTolerance;
+    // @name is FLUXTOL.
+    property FluxTolerance: TRealStorage read FFluxTolerance write SetFluxTolerance;
+    // @name is MAXITEROUT.
+    property MaxOuterIterations: integer read FMaxOuterIterations write SetMaxOuterIterations stored True;
+    // @name is THICKFACT.
+    // range = 0 to 1;
+    property ThicknessFactor: TRealStorage read FThicknessFactor write SetThicknessFactor;
+    // @name is LINMETH.
+    property SolverMethod: TNewtonSolverMethod read FSolverMethod write SetSolverMethod stored True;
+    // @name is IPRNWT.
+    // Zero or two (?).
+    property PrintFlag: integer read FPrintFlag write SetPrintFlag stored True;
+    // @name is IBOTAV.
+    // Zero or one.
+    Property CorrectForCellBottom: integer read FCorrectForCellBottom write SetCorrectForCellBottom stored True;
+    // @name is OPTIONS.
+    property Option: TNewtonOption read FOption write SetOption stored True;
+    property DBDTheta: TRealStorage read FDBDTheta write SetDBDTheta;
+    property DBDKappa: TRealStorage read FDBDKappa write SetDBDKappa;
+    property DBDGamma: TRealStorage read FDBDGamma write SetDBDGamma;
+    // @name is MOMFACT.
+    property MomementumCoefficient: TRealStorage read FMomementumCoefficient write SetMomementumCoefficient;
+    // Zero or one.
+    property BackFlag: integer read FBackFlag write SetBackFlag stored True;
+    // @name is MAXBACKITER.
+    property MaxBackIterations: integer read FMaxBackIterations write SetMaxBackIterations stored True;
+    // @name is BACKTOL.
+    // range = 1 to 2;
+    property BackTol: TRealStorage read FBackTol write SetBackTol;
+    // @name is BACKREDUCE.
+    property BackReduce: TRealStorage read FBackReduce write SetBackReduce;
+    // @name is MAXITINNER.
+    property MaxIterInner: integer read FMaxIterInner write SetMaxIterInner stored True;
+    // @name is ILUMETHOD.
+    property IluMethod: TNewtonIluMethod read FIluMethod write SetIluMethod stored True;
+    // @name is LEVFILL is the fill limit for ILUMETHOD = 1
+    property FillLimit: integer read FFillLimit write SetFillLimit stored True;
+    // @name is LEVFILL is the level of fill for ILUMETHOD = 2
+    property FillLevel: integer read FFillLevel write SetFillLevel stored True;
+    // @name is STOPTOL.
+    property StopTolerance: TRealStorage read FStopTolerance write SetStopTolerance;
+    // @name is MSDR.
+    property MaxGmresRestarts: integer read FMaxGmresRestarts write SetMaxGmresRestarts stored True;
+    // @name is IACL.
+    property AccelMethod: TNewtonAccelMethod read FAccelMethod write SetAccelMethod stored True;
+    // @name is NORDER.
+    property OrderingMethod: TNewtonOrderingMethod read FOrderingMethod write SetOrderingMethod stored True;
+    // @name is LEVEL.
+    property Level: integer read FLevel write SetLevel stored True;
+    // @name is NORTH.
+    property NumberOfOrthogonalizations: integer read FNumberOfOrthogonalizations write SetNumberOfOrthogonalizations stored True;
+    // @name is IREDSYS
+    property ApplyReducedPrecondition: TNewtonApplyReducedPrecondition read FApplyReducedPrecondition write SetApplyReducedPrecondition stored True;
+    // @name is RRCTOLS.
+    property ResidReducConv: TRealStorage read FResidReducConv write SetResidReducConv;
+    // @name is IDROPTOL.
+    property UseDropTolerance: TNewtonUseDropTolerance read FUseDropTolerance write SetUseDropTolerance stored True;
+    // @name is EPSRN.
+    property DropTolerancePreconditioning: TRealStorage read FDropTolerancePreconditioning write SetDropTolerancePreconditioning;
+    // @name is HCLOSEXMD.
+    property InnerHeadClosureCriterion: TRealStorage read FInnerHeadClosureCriterion write SetInnerHeadClosureCriterion;
+    // @name is MXITERXMD.
+    property MaxInnerIterations: integer read FMaxInnerIterations write SetMaxInnerIterations stored True;
   end;
 
   TLayerOption = (loTop, loSpecified, loTopActive);
@@ -1769,7 +1935,7 @@ uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
   ModflowSfrChannelUnit, ModflowSfrEquationUnit, ModflowSfrSegment, 
   ModflowSfrUnsatSegment, ModflowMNW2_WriterUnit, ModflowMnw2Unit,
   LayerStructureUnit, ModflowSubsidenceDefUnit, frmGridValueUnit, 
-  frmGoPhastUnit;
+  frmGoPhastUnit, CustomModflowWriterUnit;
 
 
 { TModflowPackageSelection }
@@ -2248,7 +2414,7 @@ begin
 
 
   List := TModflowBoundListOfTimeLists.Create;
-  RchWriter := TModflowRCH_Writer.Create(FModel as TCustomModel);
+  RchWriter := TModflowRCH_Writer.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfRchRate);
     if LayerOption = loSpecified then
@@ -2482,7 +2648,7 @@ begin
   end;
 
   List := TModflowBoundListOfTimeLists.Create;
-  EtsWriter := TModflowETS_Writer.Create(FModel as TCustomModel);
+  EtsWriter := TModflowETS_Writer.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfEtsEvapRate);
     List.Add(MfEtsEvapSurface);
@@ -2919,7 +3085,7 @@ begin
 
 
   List := TModflowBoundListOfTimeLists.Create;
-  EvtWriter := TModflowEVT_Writer.Create(FModel as TCustomModel);
+  EvtWriter := TModflowEVT_Writer.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfEvtEvapRate);
     List.Add(MfEvtEvapSurface);
@@ -3909,7 +4075,7 @@ var
   DisplayList: TModflowBoundaryDisplayTimeList;
 begin
   List := TModflowBoundListOfTimeLists.Create;
-  SfrWriter := TModflowSFR_Writer.Create(FModel as TCustomModel);
+  SfrWriter := TModflowSFR_Writer.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfSfrSegmentNumber);
     List.Add(MfSfrReachNumber);
@@ -4813,7 +4979,7 @@ begin
   end;
 
   List := TModflowBoundListOfTimeLists.Create;
-  UzfWriter := TModflowUzfWriter.Create(FModel as TCustomModel);
+  UzfWriter := TModflowUzfWriter.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfUzfInfiltration);
     if SimulateET then
@@ -5419,6 +5585,7 @@ begin
     UseSaturatedThickness := LpfSource.UseSaturatedThickness;
     UseCvCorrection := LpfSource.UseCvCorrection;
     UseVerticalFlowCorrection := LpfSource.UseVerticalFlowCorrection;
+    UseStorageCoefficient := LpfSource.UseStorageCoefficient;
   end;
   inherited;
 end;
@@ -5426,8 +5593,16 @@ end;
 constructor TLpfSelection.Create(Model: TBaseModel);
 begin
   inherited;
+  InitializeVariables;
+end;
+
+procedure TLpfSelection.InitializeVariables;
+begin
   FUseCvCorrection := True;
   FUseVerticalFlowCorrection := True;
+  FUseSaturatedThickness := False;
+  FUseConstantCV := False;
+  FUseStorageCoefficient := False;
 end;
 
 procedure TLpfSelection.SetUseConstantCV(const Value: boolean);
@@ -5459,7 +5634,7 @@ end;
 
 procedure TLpfSelection.SetUseStorageCoefficient(const Value: boolean);
 begin
-  if FUseVerticalFlowCorrection <> Value then
+  if FUseStorageCoefficient <> Value then
   begin
     InvalidateModel;
     FUseStorageCoefficient := Value;
@@ -5817,7 +5992,7 @@ var
 begin
   MfWellPumpage.CreateDataSets;
   List := TModflowBoundListOfTimeLists.Create;
-  WellWriter := TModflowWEL_Writer.Create(FModel as TCustomModel);
+  WellWriter := TModflowWEL_Writer.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfWellPumpage);
     WellWriter.UpdateDisplay(List, [0]);
@@ -5893,7 +6068,7 @@ begin
   MfGhbBoundaryHead.CreateDataSets;
 
   List := TModflowBoundListOfTimeLists.Create;
-  GhbWriter := TModflowGHB_Writer.Create(FModel as TCustomModel);
+  GhbWriter := TModflowGHB_Writer.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfGhbBoundaryHead);
     List.Add(MfGhbConductance);
@@ -5966,7 +6141,7 @@ begin
   MfDrnElevation.CreateDataSets;
 
   List := TModflowBoundListOfTimeLists.Create;
-  DrnWriter := TModflowDRN_Writer.Create(FModel as TCustomModel);
+  DrnWriter := TModflowDRN_Writer.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfDrnElevation);
     List.Add(MfDrnConductance);
@@ -6054,7 +6229,7 @@ begin
   MfDrtReturnFraction.CreateDataSets;
 
   List := TModflowBoundListOfTimeLists.Create;
-  DrtWriter := TModflowDRT_Writer.Create(FModel as TCustomModel);
+  DrtWriter := TModflowDRT_Writer.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfDrtElevation);
     List.Add(MfDrtConductance);
@@ -6146,7 +6321,7 @@ begin
   MfRivBottom.CreateDataSets;
 
   List := TModflowBoundListOfTimeLists.Create;
-  RivWriter := TModflowRIV_Writer.Create(FModel as TCustomModel);
+  RivWriter := TModflowRIV_Writer.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfRivStage);
     List.Add(MfRivConductance);
@@ -6223,7 +6398,7 @@ begin
   MfChdEndingHead.CreateDataSets;
 
   List := TModflowBoundListOfTimeLists.Create;
-  ChdWriter := TModflowCHD_Writer.Create(FModel as TCustomModel);
+  ChdWriter := TModflowCHD_Writer.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfChdStartingHead);
     List.Add(MfChdEndingHead);
@@ -6489,7 +6664,7 @@ var
   TimeList: TModflowBoundaryDisplayTimeList;
 begin
   List := TModflowBoundListOfTimeLists.Create;
-  Mnw2Writer := TModflowMNW2_Writer.Create(FModel as TCustomModel);
+  Mnw2Writer := TModflowMNW2_Writer.Create(FModel as TCustomModel, etDisplay);
   try
     List.Add(MfMnwWellRadius);
     List.Add(MfMnwSkinRadius);
@@ -7834,6 +8009,375 @@ begin
   if FStoredHYDNOH.Value <> Value.Value then
   begin
     FStoredHYDNOH.Assign(Value);
+    InvalidateModel;
+  end;
+end;
+
+{ TUpwPackageSelection }
+
+procedure TUpwPackageSelection.Assign(Source: TPersistent);
+begin
+  if Source is TUpwPackageSelection then
+  begin
+    HDryPrintOption := TUpwPackageSelection(Source).HDryPrintOption;
+  end;
+  inherited;
+
+end;
+
+constructor TUpwPackageSelection.Create(Model: TBaseModel);
+begin
+  inherited;
+  InitializeVariables;
+end;
+
+procedure TUpwPackageSelection.InitializeVariables;
+begin
+  FHDryPrintOption := hpoPrintHdry;
+end;
+
+procedure TUpwPackageSelection.SetHDryPrintOption(
+  const Value: THDryPrintOption);
+begin
+  if FHDryPrintOption <> Value then
+  begin
+    InvalidateModel;
+    FHDryPrintOption := Value;
+  end;
+end;
+
+{ TNwtPackageSelection }
+
+procedure TNwtPackageSelection.Assign(Source: TPersistent);
+var
+  SourceNwt: TNwtPackageSelection;
+begin
+  if Source is TNwtPackageSelection then
+  begin
+    SourceNwt := TNwtPackageSelection(Source);
+    HeadTolerance := SourceNwt.HeadTolerance;
+    FluxTolerance := SourceNwt.FluxTolerance;
+    MaxOuterIterations := SourceNwt.MaxOuterIterations;
+    ThicknessFactor := SourceNwt.ThicknessFactor;
+    SolverMethod := SourceNwt.SolverMethod;
+    PrintFlag := SourceNwt.PrintFlag;
+    CorrectForCellBottom := SourceNwt.CorrectForCellBottom;
+    Option := SourceNwt.Option;
+    DBDTheta := SourceNwt.DBDTheta;
+    DBDKappa := SourceNwt.DBDKappa;
+    DBDGamma := SourceNwt.DBDGamma;
+    MomementumCoefficient := SourceNwt.MomementumCoefficient;
+    BackFlag := SourceNwt.BackFlag;
+    MaxBackIterations := SourceNwt.MaxBackIterations;
+    BackTol := SourceNwt.BackTol;
+    BackReduce := SourceNwt.BackReduce;
+    MaxIterInner := SourceNwt.MaxIterInner;
+    IluMethod := SourceNwt.IluMethod;
+    FillLimit := SourceNwt.FillLimit;
+    FillLevel := SourceNwt.FillLevel;
+    StopTolerance := SourceNwt.StopTolerance;
+    MaxGmresRestarts := SourceNwt.MaxGmresRestarts;
+    AccelMethod := SourceNwt.AccelMethod;
+    OrderingMethod := SourceNwt.OrderingMethod;
+    Level := SourceNwt.Level;
+    NumberOfOrthogonalizations := SourceNwt.NumberOfOrthogonalizations;
+    ApplyReducedPrecondition := SourceNwt.ApplyReducedPrecondition;
+    ResidReducConv := SourceNwt.ResidReducConv;
+    UseDropTolerance := SourceNwt.UseDropTolerance;
+    DropTolerancePreconditioning := SourceNwt.DropTolerancePreconditioning;
+    InnerHeadClosureCriterion := SourceNwt.InnerHeadClosureCriterion;
+    MaxInnerIterations := SourceNwt.MaxInnerIterations;
+  end;
+  inherited;
+end;
+
+constructor TNwtPackageSelection.Create(Model: TBaseModel);
+begin
+  inherited;
+  FStopTolerance := TRealStorage.Create;
+  FMomementumCoefficient := TRealStorage.Create;
+  FDropTolerancePreconditioning := TRealStorage.Create;
+  FDBDKappa := TRealStorage.Create;
+  FInnerHeadClosureCriterion := TRealStorage.Create;
+  FDBDGamma := TRealStorage.Create;
+  FFluxTolerance := TRealStorage.Create;
+  FResidReducConv := TRealStorage.Create;
+  FDBDTheta := TRealStorage.Create;
+  FHeadTolerance := TRealStorage.Create;
+  FThicknessFactor := TRealStorage.Create;
+  FBackReduce := TRealStorage.Create;
+  FBackTol := TRealStorage.Create;
+  InitializeVariables;
+end;
+
+destructor TNwtPackageSelection.Destroy;
+begin
+  FBackTol.Free;
+  FBackReduce.Free;
+  FThicknessFactor.Free;
+  FHeadTolerance.Free;
+  FDBDTheta.Free;
+  FResidReducConv.Free;
+  FFluxTolerance.Free;
+  FDBDGamma.Free;
+  FInnerHeadClosureCriterion.Free;
+  FDBDKappa.Free;
+  FDropTolerancePreconditioning.Free;
+  FMomementumCoefficient.Free;
+  FStopTolerance.Free;
+  inherited;
+end;
+
+procedure TNwtPackageSelection.InitializeVariables;
+begin
+  HeadTolerance.Value := 1e-4;
+  // The recomended value is 500 with units of m and days
+  // The default units in ModelMuse are m and seconds
+  // 0.006 is approximately equal to 500/24/3600
+  FluxTolerance.Value := 0.006;
+  MaxOuterIterations := 100;
+  ThicknessFactor.Value := 0.00001;
+  SolverMethod := nsmGmres;
+  PrintFlag := 0;
+  CorrectForCellBottom := 0;
+  Option := noModerate;
+  DBDTheta.Value := 0.7;
+  DBDKappa.Value := 0.0001;
+  DBDGamma.Value := 0;
+  MomementumCoefficient.Value := 0.1;
+  BackFlag := 0;
+  MaxBackIterations := 50;
+  BackTol.Value := 1.5;
+  BackReduce.Value := 0.5;
+  MaxIterInner := 50;
+  IluMethod := nimKOrder;
+  FillLimit := 7;
+  FillLevel := 2;
+  StopTolerance.Value := 1e-10;
+  MaxGmresRestarts := 10;
+  AccelMethod := namBiCgstab;
+  OrderingMethod := nomMinimumOrdering;
+  Level := 1;
+  NumberOfOrthogonalizations := 2;
+  ApplyReducedPrecondition := narpDontApply;
+  ResidReducConv.Value := 0;
+  UseDropTolerance := nudtUse;
+  DropTolerancePreconditioning.Value := 1e-3;
+  InnerHeadClosureCriterion.Value := 1e-4;
+  MaxInnerIterations := 50;
+end;
+
+procedure TNwtPackageSelection.SetAccelMethod(const Value: TNewtonAccelMethod);
+begin
+  if FAccelMethod <> Value then
+  begin
+    FAccelMethod := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TNwtPackageSelection.SetApplyReducedPrecondition(
+  const Value: TNewtonApplyReducedPrecondition);
+begin
+  if FApplyReducedPrecondition <> Value then
+  begin
+    FApplyReducedPrecondition := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TNwtPackageSelection.SetBackFlag(const Value: integer);
+begin
+  SetIntegerProperty(FBackFlag , Value);
+end;
+
+procedure TNwtPackageSelection.SetBackReduce(const Value: TRealStorage);
+begin
+  SetRealProperty(FBackReduce , Value);
+end;
+
+procedure TNwtPackageSelection.SetBackTol(const Value: TRealStorage);
+begin
+  SetRealProperty(FBackTol , Value);
+end;
+
+procedure TNwtPackageSelection.SetCorrectForCellBottom(const Value: integer);
+begin
+  SetIntegerProperty(FCorrectForCellBottom , Value);
+end;
+
+procedure TNwtPackageSelection.SetDBDGamma(const Value: TRealStorage);
+begin
+  SetRealProperty(FDBDGamma , Value);
+end;
+
+procedure TNwtPackageSelection.SetDBDKappa(const Value: TRealStorage);
+begin
+  SetRealProperty(FDBDKappa , Value);
+end;
+
+procedure TNwtPackageSelection.SetDBDTheta(const Value: TRealStorage);
+begin
+  SetRealProperty(FDBDTheta , Value);
+end;
+
+procedure TNwtPackageSelection.SetDropTolerancePreconditioning(
+  const Value: TRealStorage);
+begin
+  SetRealProperty(FDropTolerancePreconditioning , Value);
+end;
+
+procedure TNwtPackageSelection.SetFillLevel(const Value: integer);
+begin
+  SetIntegerProperty(FFillLevel , Value);
+end;
+
+procedure TNwtPackageSelection.SetFillLimit(const Value: integer);
+begin
+  SetIntegerProperty(FFillLimit , Value);
+end;
+
+procedure TNwtPackageSelection.SetFluxTolerance(const Value: TRealStorage);
+begin
+  SetRealProperty(FFluxTolerance , Value);
+end;
+
+procedure TNwtPackageSelection.SetHeadTolerance(const Value: TRealStorage);
+begin
+  SetRealProperty(FHeadTolerance , Value);
+end;
+
+procedure TNwtPackageSelection.SetIluMethod(const Value: TNewtonIluMethod);
+begin
+  if FIluMethod <> Value then
+  begin
+    FIluMethod := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TNwtPackageSelection.SetInnerHeadClosureCriterion(
+  const Value: TRealStorage);
+begin
+  SetRealProperty(FInnerHeadClosureCriterion , Value);
+end;
+
+procedure TNwtPackageSelection.SetIntegerProperty(var Field: integer;
+  NewValue: integer);
+begin
+  if Field <> NewValue then
+  begin
+    Field := NewValue;
+    InvalidateModel;
+  end;
+end;
+
+procedure TNwtPackageSelection.SetLevel(const Value: integer);
+begin
+  SetIntegerProperty(FLevel , Value);
+end;
+
+procedure TNwtPackageSelection.SetMaxBackIterations(const Value: integer);
+begin
+  SetIntegerProperty(FMaxBackIterations , Value);
+end;
+
+procedure TNwtPackageSelection.SetMaxGmresRestarts(const Value: integer);
+begin
+  SetIntegerProperty(FMaxGmresRestarts , Value);
+end;
+
+procedure TNwtPackageSelection.SetMaxInnerIterations(const Value: integer);
+begin
+  SetIntegerProperty(FMaxInnerIterations , Value);
+end;
+
+procedure TNwtPackageSelection.SetMaxIterInner(const Value: integer);
+begin
+  SetIntegerProperty(FMaxIterInner , Value);
+end;
+
+procedure TNwtPackageSelection.SetMaxOuterIterations(const Value: integer);
+begin
+  SetIntegerProperty(FMaxOuterIterations , Value);
+end;
+
+procedure TNwtPackageSelection.SetMomementumCoefficient(
+  const Value: TRealStorage);
+begin
+  SetRealProperty(FMomementumCoefficient , Value);
+end;
+
+procedure TNwtPackageSelection.SetNumberOfOrthogonalizations(
+  const Value: integer);
+begin
+  SetIntegerProperty(FNumberOfOrthogonalizations , Value);
+end;
+
+procedure TNwtPackageSelection.SetOption(const Value: TNewtonOption);
+begin
+  if FOption <> Value then
+  begin
+    FOption := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TNwtPackageSelection.SetOrderingMethod(
+  const Value: TNewtonOrderingMethod);
+begin
+  if FOrderingMethod <> Value then
+  begin
+    FOrderingMethod := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TNwtPackageSelection.SetPrintFlag(const Value: integer);
+begin
+  SetIntegerProperty(FPrintFlag , Value);
+end;
+
+procedure TNwtPackageSelection.SetRealProperty(Field, NewValue: TRealStorage);
+begin
+  if Field.Value <> NewValue.Value then
+  begin
+    Field.Assign(NewValue);
+    InvalidateModel;
+  end;
+end;
+
+procedure TNwtPackageSelection.SetResidReducConv(const Value: TRealStorage);
+begin
+  SetRealProperty(FResidReducConv , Value);
+end;
+
+procedure TNwtPackageSelection.SetSolverMethod(
+  const Value: TNewtonSolverMethod);
+begin
+  if FSolverMethod <> Value then
+  begin
+    FSolverMethod := Value;
+    InvalidateModel;
+  end;
+end;
+
+procedure TNwtPackageSelection.SetStopTolerance(const Value: TRealStorage);
+begin
+  SetRealProperty(FStopTolerance , Value);
+end;
+
+procedure TNwtPackageSelection.SetThicknessFactor(const Value: TRealStorage);
+begin
+  SetRealProperty(FThicknessFactor , Value);
+end;
+
+procedure TNwtPackageSelection.SetUseDropTolerance(
+  const Value: TNewtonUseDropTolerance);
+begin
+  if FUseDropTolerance <> Value then
+  begin
+    FUseDropTolerance := Value;
     InvalidateModel;
   end;
 end;

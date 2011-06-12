@@ -267,6 +267,8 @@ begin
   rdgInitialLayers.Cells[0,4] := 'Lower Aquifer';
   rdgInitialLayers.Cells[1,4] := '-30';
 
+  rdgInitialLayers.Col := 1;
+
 end;
 
 procedure TfrmStartUp.SetExaggeration;

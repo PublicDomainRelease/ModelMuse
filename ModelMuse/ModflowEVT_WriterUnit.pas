@@ -33,7 +33,7 @@ Type
       DS5, D7PNameIname, D7PName: string); override;
     procedure Evaluate; override;
   public
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     // @name destroys the current instance of @classname.
     Destructor Destroy; override;
     procedure WriteFile(const AFileName: string);
@@ -53,7 +53,7 @@ begin
   result := TEvt_Cell
 end;
 
-constructor TModflowEVT_Writer.Create(Model: TCustomModel);
+constructor TModflowEVT_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FDepthSurface := TObjectList.Create;

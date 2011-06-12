@@ -396,7 +396,9 @@ inherited frmModflowTime: TfrmModflowTime
             ComboUsed = False
             Format = rcf4Real
             LimitToList = False
+            Max = 1.000000000000000000
             MaxLength = 0
+            Min = 1.000000000000000000
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False

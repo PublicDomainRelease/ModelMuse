@@ -20,7 +20,7 @@ type
   protected
     class function Extension: string; override;
   public
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     destructor Destroy; override;
     Procedure WriteU2DINTHeader(const Comment: string); override;
     procedure WriteFile(const AFileName: string);
@@ -37,7 +37,7 @@ type
     procedure WriteResponse5;
   public
     class function Extension: string; override;
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     procedure WriteFile(const AFileName: string);
   end;
 
@@ -61,7 +61,7 @@ resourcestring
 
 { TZoneBudgetWriter }
 
-constructor TZoneBudgetZoneFileWriter.Create(Model: TCustomModel);
+constructor TZoneBudgetZoneFileWriter.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FZoneBudget := Model.ModflowPackages.ZoneBudget;
@@ -298,7 +298,7 @@ end;
 
 { TZoneBudgetResponseFileWriter }
 
-constructor TZoneBudgetResponseFileWriter.Create(Model: TCustomModel);
+constructor TZoneBudgetResponseFileWriter.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FZoneBudget := Model.ModflowPackages.ZoneBudget;

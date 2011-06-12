@@ -125,7 +125,7 @@
       <config-value name="usesecondarywindows">1</config-value>
       <config-value name="outputfile">ModflowGuide.chm</config-value>
       <config-value name="deletetemp">1</config-value>
-      <config-value name="skin">C:\Program Files\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.4 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin</config-value>
+      <config-value name="skin">..\..\..\..\..\Program Files\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.4 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin</config-value>
     </config-group>
     <config-group name="hxs">
       <config-value name="namespace"></config-value>
@@ -287,7 +287,7 @@
       <config-value name="jpgquality">90</config-value>
       <config-value name="imagehint">1</config-value>
       <config-value name="outputfile">.\HTML\index.html</config-value>
-      <config-value name="skin">C:\Program Files\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.31 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin</config-value>
+      <config-value name="skin">..\..\..\..\..\Program Files\EC Software\HelpAndManual5\Templates\HTML Skins\Premium Pack 1.31 Skins\Skins Horizontal Tabs\sky_blue_horiz.hmskin</config-value>
     </config-group>
     <config-group name="pdf">
       <config-value name="template"></config-value>
@@ -381,7 +381,7 @@
     <config-group name="user">
       <config-group name="rbwinst-pr">
         <config-group name="project">
-          <config-value name="lastexport">0</config-value>
+          <config-value name="lastexport">3</config-value>
         </config-group>
       </config-group>
       <config-group name="bshoemak">

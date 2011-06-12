@@ -87,6 +87,10 @@ inherited frmStartUp: TfrmStartUp
       HelpType = htKeyword
       HelpKeyword = 'Start_Up_Dialog_Box'
       Caption = 'tabModelChoice'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rgChoice: TRadioGroup
         Left = 0
         Top = 0
@@ -166,7 +170,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 18
+          ItemHeight = 0
           TabOrder = 5
           Text = '5'
           DataType = dtReal
@@ -180,7 +184,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 18
+          ItemHeight = 0
           TabOrder = 4
           Text = '100'
           DataType = dtReal
@@ -194,7 +198,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 18
+          ItemHeight = 0
           TabOrder = 3
           Text = '100'
           DataType = dtReal
@@ -208,7 +212,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 18
+          ItemHeight = 0
           TabOrder = 2
           Text = '5'
           DataType = dtInteger
@@ -223,7 +227,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 18
+          ItemHeight = 0
           TabOrder = 1
           Text = '10'
           DataType = dtInteger
@@ -238,7 +242,7 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 18
+          ItemHeight = 0
           TabOrder = 0
           Text = '10'
           DataType = dtInteger
@@ -446,6 +450,7 @@ inherited frmStartUp: TfrmStartUp
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
           TabOrder = 5
           OnSelectCell = rdgInitialLayersSelectCell
+          ExtendedAutoDistributeText = False
           AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False

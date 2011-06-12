@@ -95,7 +95,7 @@
       <config-value name="deffont">font-family:'MS Sans Serif'; font-size:8pt; color:#000000;</config-value>
       <config-value name="contents"></config-value>
       <config-value name="topicprefix"></config-value>
-      <config-value name="autohelpstart">3613</config-value>
+      <config-value name="autohelpstart">3625</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">1</config-value>
       <config-value name="searchpath">.\;.\Used Images\;.\ScreenShots\;.\ModflowGuide\</config-value>
@@ -597,6 +597,18 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Creating_Objects" value="1460"/>
       <helpcontext-number href="Creating_Selecting_and_Editing" value="1450"/>
       <helpcontext-number href="Creating_the_Grid" value="2940"/>
+      <helpcontext-number href="Cross_Sectional_Model" value="3614"/>
+      <helpcontext-number href="Cross_Sectional_Model_Activati" value="3620"/>
+      <helpcontext-number href="Cross_Sectional_Model_Changing" value="3616"/>
+      <helpcontext-number href="Cross_Sectional_Model_Define_H" value="3623"/>
+      <helpcontext-number href="Cross_Sectional_Model_Importin" value="3617"/>
+      <helpcontext-number href="Cross_Sectional_Model_Inactive" value="3619"/>
+      <helpcontext-number href="Cross_Sectional_Model_Initial_" value="3615"/>
+      <helpcontext-number href="Cross_Sectional_Model_Recharge" value="3622"/>
+      <helpcontext-number href="Cross_Sectional_Model_Running_" value="3625"/>
+      <helpcontext-number href="Cross_Sectional_Model_Set_Hydr" value="3624"/>
+      <helpcontext-number href="Cross_Sectional_Model_Specifie" value="3621"/>
+      <helpcontext-number href="Cross_Sectional_Model_Specifyi" value="3618"/>
       <helpcontext-number href="Customize" value="2360"/>
       <helpcontext-number href="Data" value="1740"/>
       <helpcontext-number href="Data_displayed_in_the_Imported" value="3444"/>

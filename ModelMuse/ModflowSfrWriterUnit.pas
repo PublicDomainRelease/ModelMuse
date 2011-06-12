@@ -76,7 +76,7 @@ type
   public
     property Segments[Index: integer]: TSegment read GetSegment;
     property SegmentCount: integer read GetSegmentCount;
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     destructor Destroy; override;
     procedure WriteFile(const AFileName: string;
       var StartUnitNumber: integer; Lines: TStrings);
@@ -143,7 +143,7 @@ begin
   result := Segment1.OriginalSegmentNumber - Segment2.OriginalSegmentNumber;
 end;
 
-constructor TModflowSFR_Writer.Create(Model: TCustomModel);
+constructor TModflowSFR_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FValues := TObjectList.Create;

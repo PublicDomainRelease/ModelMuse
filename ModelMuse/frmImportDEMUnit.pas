@@ -90,6 +90,7 @@ var
   CentralMeridian: double;
   X: Double;
   Y: Double;
+  OldDecSep: Char;
 begin
   CentralMeridian := 0.0;
   for DemIndex := 0 to OpenDialogFile.Files.Count - 1 do
@@ -99,7 +100,12 @@ begin
       DemReader.ReadHeader(OpenDialogFile.Files[DemIndex]);
       if DemIndex = 0 then
       begin
-        CentralMeridian := DemReader.CentralMeridianRadians;
+        OldDecSep := DecimalSeparator;
+        try
+          CentralMeridian := DemReader.CentralMeridianRadians;
+        finally
+          DecimalSeparator := OldDecSep;
+        end;
       end;
       memoCorners.Lines.Add(OpenDialogFile.Files[DemIndex]);
       for CornerIndex := 0 to 3 do
@@ -137,10 +143,10 @@ end;
 procedure TfrmImportDEM.InvalidDem;
 begin
   Beep;
-MessageDlg('There was an error reading the DEM file.  Please check that the '
-  + 'format of the DEM is a format that ModelMuse supports.  Check the '
-  + 'ModelMuse help to see what formats ModelMuse supports.  For further '
-  + 'assistance contact rbwinst@usgs.gov.', mtError, [mbOK], 0);
+  MessageDlg('There was an error reading the DEM file.  Please check that the '
+    + 'format of the DEM is a format that ModelMuse supports.  Check the '
+    + 'ModelMuse help to see what formats ModelMuse supports.  For further '
+    + 'assistance contact rbwinst@usgs.gov.', mtError, [mbOK], 0);
 end;
 
 function TfrmImportDEM.GetData: boolean;
@@ -161,16 +167,23 @@ begin
   end;
   if result then
   begin
-    GetDataSets;
+  GetDataSets;
     GetInterpolators;
     UpdateEvalAt;
     SetCheckBoxCaptions;
     try
       DisplayCornerCoordinates;
-    except on EConvertError do
+    except
+      on EConvertError do
       begin
         result := False;
         InvalidDem
+      end;
+      on E: EInOutError do
+      begin
+        result := False;
+        Beep;
+        MessageDlg(E.Message, mtError, [mbOK], 0);
       end;
     end;
   end;

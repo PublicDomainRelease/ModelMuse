@@ -14497,6 +14497,9 @@ begin
 end;
 
 procedure TScreenObject.Loaded;
+var
+  Index: Integer;
+  Observer: TObserver;
 begin
   inherited;
   if FLeakyBoundary <> nil then
@@ -14612,6 +14615,25 @@ begin
   end;
   UpdateUzfGage1and2;
   UpdateUzfGage3;
+
+  if FDataSetSubscriptions <> nil then
+  begin
+    for Index := 0 to FDataSetSubscriptions.Count -1 do
+    begin
+      Observer := FDataSetSubscriptions[Index] as TObserver;
+      Observer.UpToDate := True;
+    end;
+  end;
+
+  if FDataSetMixtureSubscriptions <> nil then
+  begin
+    for Index := 0 to FDataSetMixtureSubscriptions.Count -1 do
+    begin
+      Observer := FDataSetMixtureSubscriptions[Index] as TObserver;
+      Observer.UpToDate := True;
+    end;
+  end;
+
 end;
 
 function TScreenObject.GetSelectedVertices(const index: integer): boolean;
@@ -17425,6 +17447,26 @@ begin
   begin
     if CanInvalidateModel and (Model <> nil) then
     begin
+      if FDataSetSubscriptions <> nil then
+      begin
+        for Index := 0 to FDataSetSubscriptions.Count -1 do
+        begin
+          Observer := FDataSetSubscriptions[Index] as TObserver;
+          Observer.UpToDate := True;
+          Observer.UpToDate := False;
+        end;
+      end;
+
+      if FDataSetMixtureSubscriptions <> nil then
+      begin
+        for Index := 0 to FDataSetMixtureSubscriptions.Count -1 do
+        begin
+          Observer := FDataSetMixtureSubscriptions[Index] as TObserver;
+          Observer.UpToDate := True;
+          Observer.UpToDate := False;
+        end;
+      end;
+
       LocalModel := Model as TPhastModel;
       if (ModflowHeadObservations <> nil) then
       begin

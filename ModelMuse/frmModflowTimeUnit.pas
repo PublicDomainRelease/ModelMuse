@@ -577,10 +577,19 @@ begin
     StressPeriod.DrawDownReference :=
       dgTime.Checked[Ord(tcDrawDownReference), Index]
   end;
+  if FModflowStressPeriods.Count > 0 then
+  begin
+    Undo:= TUndoModflowStressPeriods.Create(FModflowStressPeriods,
+      comboTimeUnit.ItemIndex);
+    frmGoPhast.UndoStack.Submit(Undo);
+  end
+  else
+  begin
+    Beep;
+    MessageDlg('No stress periods have been properly defined. Please check again.', mtError, [mbOK], 0);
+    ModalResult := mrNone;
+  end;
 
-  Undo:= TUndoModflowStressPeriods.Create(FModflowStressPeriods,
-    comboTimeUnit.ItemIndex);
-  frmGoPhast.UndoStack.Submit(Undo);
 end;
 
 procedure TfrmModflowTime.GetTimePeriodValues(ARow: Integer;

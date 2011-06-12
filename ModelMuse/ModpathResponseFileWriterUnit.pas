@@ -17,7 +17,7 @@ type
     class function Extension: string; override;
   public
     FLargeBudgetFileResponse: string;
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     procedure WriteFile(const AFileName: string; NewBudgetFile: boolean);
   end;
 
@@ -28,9 +28,9 @@ uses
 
 { TModpathResponseFileWriter }
 
-constructor TModpathResponseFileWriter.Create(Model: TCustomModel);
+constructor TModpathResponseFileWriter.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
- inherited Create(Model);
+ inherited Create(Model, EvaluationType);
  FOptions := Model.ModflowPackages.ModPath;
 end;
 

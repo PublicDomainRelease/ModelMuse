@@ -52,7 +52,7 @@ type
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
   public
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     Destructor Destroy; override;
     procedure WriteFile(const AFileName: string;
       SfrWriter: TModflowSFR_Writer);
@@ -68,7 +68,7 @@ uses
 
 { TModflowHydmodWriter }
 
-constructor TModflowHydmodWriter.Create(Model: TCustomModel);
+constructor TModflowHydmodWriter.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FLocations:= TObjectList.Create;

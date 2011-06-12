@@ -40,6 +40,8 @@ type
     FZoneBudget: TZoneBudgetSelect;
     FSwtPackage: TSwtPackageSelection;
     FHydmodPackage: THydPackageSelection;
+    FUpwPackage: TUpwPackageSelection;
+    FNwtPackage: TNwtPackageSelection;
     procedure SetChdBoundary(const Value: TChdPackage);
     procedure SetLpfPackage(const Value: TLpfSelection);
     procedure SetPcgPackage(const Value: TPcgSelection);
@@ -72,6 +74,8 @@ type
     procedure SetZoneBudget(const Value: TZoneBudgetSelect);
     procedure SetSwtPackage(const Value: TSwtPackageSelection);
     procedure SetHydmodPackage(const Value: THydPackageSelection);
+    procedure SetUpwPackage(const Value: TUpwPackageSelection);
+    procedure SetNwtPackage(const Value: TNwtPackageSelection);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TBaseModel);
@@ -136,6 +140,10 @@ type
       read FSwtPackage write SetSwtPackage;
     property HydmodPackage: THydPackageSelection
       read FHydmodPackage write SetHydmodPackage;
+    property UpwPackage: TUpwPackageSelection
+      read FUpwPackage write SetUpwPackage stored False;
+    property NwtPackage: TNwtPackageSelection
+      read FNwtPackage write SetNwtPackage stored False;
     // Assign, Create, Destroy, SelectedPackageCount
     // and Reset must be updated each time a new package is added.
   end;
@@ -157,6 +165,7 @@ const
   StrPostProcessors = 'Post processors';
   StrSubsidence = 'Subsidence';
   StrOutput = 'Output';
+  StrUPW_Identifier = 'UPW: Upstream Weighting Package';
 
 implementation
 
@@ -204,6 +213,8 @@ begin
     ZoneBudget := SourcePackages.ZoneBudget;
     SwtPackage := SourcePackages.SwtPackage;
     HydmodPackage := SourcePackages.HydmodPackage;
+    UpwPackage := SourcePackages.UpwPackage;
+    NwtPackage := SourcePackages.NwtPackage;
   end
   else
   begin
@@ -363,10 +374,22 @@ begin
   FHydmodPackage.PackageIdentifier := 'HYD: HYDMOD Package';
   FHydmodPackage.Classification := StrOutput;
   FHydmodPackage.SelectionType := stCheckBox;
+
+  FUpwPackage := TUpwPackageSelection.Create(Model);
+  FUpwPackage.PackageIdentifier := StrUPW_Identifier;
+  FUpwPackage.Classification := StrFlow;
+  FUpwPackage.SelectionType := stRadioButton;
+
+  FNwtPackage := TNwtPackageSelection.Create(Model);
+  FNwtPackage.PackageIdentifier := 'NWT Newton Solver';
+  FNwtPackage.Classification := StrSolver;
+  FNwtPackage.SelectionType := stRadioButton;
 end;
 
 destructor TModflowPackages.Destroy;
 begin
+  FNwtPackage.Free;
+  FUpwPackage.Free;
   FHydmodPackage.Free;
   FSwtPackage.Free;
   FZoneBudget.Free;
@@ -435,6 +458,8 @@ begin
   ZoneBudget.IsSelected := False;
   SwtPackage.IsSelected := False;
   HydmodPackage.IsSelected := False;
+  UpwPackage.IsSelected := False;
+  NwtPackage.IsSelected := False;
 
   DrtPackage.Comments.Clear;
   DrnPackage.Comments.Clear;
@@ -467,7 +492,10 @@ begin
   ZoneBudget.Comments.Clear;
   SwtPackage.Comments.Clear;
   HydmodPackage.Comments.Clear;
+  UpwPackage.Comments.Clear;
+  NwtPackage.Comments.Clear;
 
+  LpfPackage.InitializeVariables;
   PcgPackage.InitializeVariables;
   GmgPackage.InitializeVariables;
   SipPackage.InitializeVariables;
@@ -479,6 +507,8 @@ begin
   ZoneBudget.InitializeVariables;
   SwtPackage.InitializeVariables;
   HydmodPackage.InitializeVariables;
+  UpwPackage.InitializeVariables;
+  NwtPackage.InitializeVariables;
 end;
 
 function TModflowPackages.SelectedPackageCount: integer;
@@ -618,8 +648,17 @@ begin
   begin
     Inc(Result);
   end;
+  if UpwPackage.IsSelected then
+  begin
+    Inc(Result);
+  end;
+  if NwtPackage.IsSelected then
+  begin
+    Inc(Result);
+  end;
 
-  // Don't count ZoneBudget because it is exported seperately from MODFLOW.
+  // Don't count Modpath or ZoneBudget
+  // because they are exported seperately from MODFLOW.
 //  if ZoneBudget.IsSelected then
 //  begin
 //    Inc(Result);
@@ -740,6 +779,11 @@ begin
   FModPath.Assign(Value);
 end;
 
+procedure TModflowPackages.SetNwtPackage(const Value: TNwtPackageSelection);
+begin
+  FNwtPackage.Assign(Value);
+end;
+
 procedure TModflowPackages.SetPcgPackage(const Value: TPcgSelection);
 begin
   FPcgPackage.Assign(Value);
@@ -784,6 +828,11 @@ end;
 procedure TModflowPackages.SetSwtPackage(const Value: TSwtPackageSelection);
 begin
   FSwtPackage.Assign(Value);
+end;
+
+procedure TModflowPackages.SetUpwPackage(const Value: TUpwPackageSelection);
+begin
+  FUpwPackage.Assign(Value);
 end;
 
 procedure TModflowPackages.SetUzfPackage(const Value: TUzfPackageSelection);

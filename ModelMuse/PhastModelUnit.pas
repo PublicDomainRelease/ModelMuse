@@ -2487,6 +2487,9 @@ that affects the model output should also have a comment. }
     function SwtSpecifiedUsed(Sender: TObject): boolean; override;
     function WettingActive: boolean; override;
     procedure InternalExportModflowLgrFile(const FileName: string);
+    function GetCombinedDisplayColumn: integer;
+    function GetCombinedDisplayLayer: integer;
+    function GetCombinedDisplayRow: integer;
   protected
     procedure SetFileName(const Value: string); override;
     function GetFormulaManager: TFormulaManager; override;
@@ -3110,11 +3113,11 @@ that affects the model output should also have a comment. }
     property ModflowTransientParameters;
     property ModflowOutputControl;
     property DataSetList;
-    property CombinedDisplayColumn: integer read FCombinedDisplayColumn
+    property CombinedDisplayColumn: integer read GetCombinedDisplayColumn
       write SetCombinedDisplayColumn;
-    property CombinedDisplayRow: integer read FCombinedDisplayRow
+    property CombinedDisplayRow: integer read GetCombinedDisplayRow
       write SetCombinedDisplayRow;
-    property CombinedDisplayLayer: integer read FCombinedDisplayLayer
+    property CombinedDisplayLayer: integer read GetCombinedDisplayLayer
       write SetCombinedDisplayLayer;
     property SaveBfhBoundaryConditions;
   end;
@@ -4536,9 +4539,50 @@ const
   //      Bug fix: Fixed a bug that caused the multiplier and zone array names
   //        for the LPF package to change each time the model was exported.
   //      Bug fix: Fixed bug that could cause range check errors when coloring
-  //        the grid with the RCH, EVT, or ETS packages. 
+  //        the grid with the RCH, EVT, or ETS packages.
+  //    '2.9.0.1' Bug fix: Fixed bug in which a change in a vertex value of
+  //        an object failed to cause the data sets dependant on that value
+  //        to be updated.
+  //      Bug fix: It is no longer possible to create an object with no
+  //        vertices by starting creating an object and then deleting all the
+  //        vertices by pressing the ESC key.
+  //      Bug fix: It is no longer possible to generate an assertion failure by
+  //        attempting to import a results file by typing the name of a file
+  //        with an extension not recognized by ModelMuse.
+  //      Bug fix: The STORAGECOEFFICIENT option in the LPF package can now
+  //        be edited and stored properly.
+  //      Bug fix: Fixed a bug in which the selected column, row, or layer
+  //        was not always displayed properly by the ModelCube.
+  //      Bug fix: Attempting to import gridded data before defining the grid
+  //        now results in an error message instead of generating a bug report.
+  //      Bug fix: When editing Flow observations, some observations
+  //        were not saved.
+  //    '2.9.1.0' Bug fix: Entering an unreasonable value for the grid origin
+  //        when creating a new model no longer causes an access violation.
+  //      Bug fix: Sampling a DEM is now possible when the language setting on
+  //        the computer specify a comma as the decimal separator.
+  //      Bug fix: If a ModelMuse file can not be saved to the disk, a warning
+  //        message is displayed rather than generating a bug report.
+  //      Bug fix: If there are no valid stress periods defined, in the
+  //        MODFLOW Time dialog box, the dialog box does not save the stress
+  //        periods.
+  //      Bug fix: It is no longer possible to edit the cell in the table
+  //        of the start-up dialog box for MODFLOW by tabbing to the cell.
+  //      Bug fix: The variables in the LPF package are now initialized
+  //        properly in a new model.
+  //      Bug fix: Importing values from ModelMate now works properly when
+  //        a decimal separator other than a period is used.
+  //      Bug fix: When exporting an or updating ModelMate files where the
+  //        user has not previously specified a the ModelMate location,
+  //        the file is still correctly opened by ModelMate.
+  //      Bug fix: Fixed a bug that could cause access violations when
+  //        ModelMuse was closing.
+  //      Bug fix: Fixed but that would cause access vialotions when closing
+  //        the Object Properties dialog box.
+  //      Bug fix: Incorrect error messages are no longer generated when
+  //        coloring the grid with the Head observations.
 
-  ModelVersion = '2.9.0.0';
+  ModelVersion = '2.9.1.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -7720,6 +7764,33 @@ begin
   result := FChildModels;
 end;
 
+function TPhastModel.GetCombinedDisplayColumn: integer;
+begin
+  result := FCombinedDisplayColumn;
+  if (Grid <> nil) and not LgrUsed then
+  begin
+    result := Grid.DisplayColumn;
+  end;
+end;
+
+function TPhastModel.GetCombinedDisplayLayer: integer;
+begin
+  result := FCombinedDisplayLayer;
+  if (Grid <> nil) and not LgrUsed then
+  begin
+    result := Grid.DisplayLayer;
+  end;
+end;
+
+function TPhastModel.GetCombinedDisplayRow: integer;
+begin
+  result := FCombinedDisplayRow;
+  if (Grid <> nil) and not LgrUsed then
+  begin
+    result := Grid.DisplayRow;
+  end;
+end;
+
 function TPhastModel.GetCurrentScreenObject(VD: TViewDirection): TScreenObject;
 begin
   if Assigned(OnGetCurrentScreenObject) then
@@ -10587,38 +10658,45 @@ var
   ObservationList: TStringList;
   IniFName: string;
   IniFile: TMemIniFile;
+  OldDecSeparator: Char;
 begin
-  if Project.UcProject.ModelName <> '' then
-  begin
-    ModflowOptions.ProjectName := Project.UcProject.ModelName;
-  end;
-
-  ParameterList := TStringList.Create;
+  OldDecSeparator := DecimalSeparator;
   try
-    HandleModelMateParameters(mmoImport, ParameterList, Project);
-  finally
-    ParameterList.Free;
-  end;
+    DecimalSeparator := '.';
+    if Project.UcProject.ModelName <> '' then
+    begin
+      ModflowOptions.ProjectName := Project.UcProject.ModelName;
+    end;
 
-  ObservationList := TStringList.Create;
-  try
-    HandleModelMateObservations(mmoImport, ObservationList, Project);
-  finally
-    ObservationList.Free;
-  end;
+    ParameterList := TStringList.Create;
+    try
+      HandleModelMateParameters(mmoImport, ParameterList, Project);
+    finally
+      ParameterList.Free;
+    end;
 
-  IniFName := IniFileName(frmGoPhast.Handle, 'ModelMate.exe');
-  IniFile:= TMemInifile.Create(IniFName);
-  try
-    GlobalProgramLocations.ReadFromIniFile(IniFile);
-  finally
-    IniFile.Free;
-  end;
+    ObservationList := TStringList.Create;
+    try
+      HandleModelMateObservations(mmoImport, ObservationList, Project);
+    finally
+      ObservationList.Free;
+    end;
 
-  if FileExists(GlobalProgramLocations.Modflow2005Location) then
-  begin
-    ProgramLocations.ModflowLocation := ExpandFileName(
-      GlobalProgramLocations.Modflow2005Location);
+    IniFName := IniFileName(frmGoPhast.Handle, 'ModelMate.exe');
+    IniFile:= TMemInifile.Create(IniFName);
+    try
+      GlobalProgramLocations.ReadFromIniFile(IniFile);
+    finally
+      IniFile.Free;
+    end;
+
+    if FileExists(GlobalProgramLocations.Modflow2005Location) then
+    begin
+      ProgramLocations.ModflowLocation := ExpandFileName(
+        GlobalProgramLocations.Modflow2005Location);
+    end;
+  finally
+    DecimalSeparator := OldDecSeparator;
   end;
 end;
 
@@ -17351,7 +17429,8 @@ end;
 function TCustomModel.KyUsed(Sender: TObject): boolean;
 begin
   result := (ModelSelection = msPhast)
-    or ModflowPackages.LpfPackage.IsSelected;
+    or ModflowPackages.LpfPackage.IsSelected
+    or ModflowPackages.UpwPackage.IsSelected
 end;
 
 function TCustomModel.KzUsed(Sender: TObject): boolean;
@@ -17375,7 +17454,8 @@ begin
           result := False;
           Exit;
         end;
-        if ModflowPackages.LpfPackage.IsSelected then
+        if ModflowPackages.LpfPackage.IsSelected
+          or ModflowPackages.UpwPackage.IsSelected then
         begin
           VK_Used := False;
           VaniUsed := False;
@@ -17444,7 +17524,8 @@ begin
     msModflow, msModflowLGR:
       begin
         if ModflowPackages.LpfPackage.IsSelected
-          or ModflowPackages.BcfPackage.IsSelected then
+          or ModflowPackages.BcfPackage.IsSelected
+          or ModflowPackages.UpwPackage.IsSelected then
         begin
           result := ModflowStressPeriods.TransientModel;
         end
@@ -17575,7 +17656,9 @@ var
   UnitIndex: Integer;
   LayerGroup: TLayerGroup;
 begin
-  result := (ModflowPackages.LpfPackage.IsSelected and
+  result := ((ModflowPackages.LpfPackage.IsSelected
+    or ModflowPackages.UpwPackage.IsSelected)
+    and
     (ModflowSteadyParameters.CountParameters([ptLPF_VKCB]) = 0))
     or ModflowPackages.BcfPackage.IsSelected;
   if result then
@@ -17613,7 +17696,8 @@ end;
 function TCustomModel.HorizontalAnisotropyUsed(Sender: TObject): boolean;
 begin
   result := (ModelSelection in [msModflow, msModflowLGR])
-    and ModflowPackages.LpfPackage.IsSelected;
+    and (ModflowPackages.LpfPackage.IsSelected
+    or ModflowPackages.UpwPackage.IsSelected);
 end;
 
 function TCustomModel.SpecificYieldUsed(Sender: TObject): boolean;
@@ -17621,7 +17705,9 @@ var
   UnitIndex: Integer;
   LayerGroup: TLayerGroup;
 begin
-  result := (ModflowPackages.LpfPackage.IsSelected and
+  result := ((ModflowPackages.LpfPackage.IsSelected
+    or ModflowPackages.UpwPackage.IsSelected)
+    and
     (ModflowSteadyParameters.CountParameters([ptLPF_SY]) = 0))
     or ModflowPackages.BcfPackage.IsSelected;
   if result then
@@ -17670,7 +17756,8 @@ end;
 
 function TCustomModel.WetDryUsed(Sender: TObject): boolean;
 begin
-  result := ModflowWettingOptions.WettingActive;
+  result := ModflowWettingOptions.WettingActive
+    and not ModflowPackages.UpwPackage.IsSelected;
 end;
 
 function TCustomModel.ModpathUsed(Sender: TObject): boolean;
@@ -18140,7 +18227,7 @@ begin
   MfHobHeads.CreateDataSets;
 
   List := TModflowBoundListOfTimeLists.Create;
-  HobWriter := TModflowHobWriter.Create(Self);
+  HobWriter := TModflowHobWriter.Create(Self, etDisplay);
   try
     List.Add(MfHobHeads);
     HobWriter.UpdateDisplay(List, [0], ObservationPurpose);
@@ -18284,7 +18371,7 @@ begin
   frmProgressMM.ShouldContinue := True;
   if FHfbWriter = nil then
   begin
-    FHfbWriter := TModflowHfb_Writer.Create(Self);
+    FHfbWriter := TModflowHfb_Writer.Create(Self, etDisplay);
   end;
   (FHfbWriter as TModflowHfb_Writer).UpdateDisplay;
   frmProgressMM.Hide;
@@ -18512,7 +18599,7 @@ var
   ChildIndex: Integer;
   LgrWriter: TLgrWriter;
 begin
-  LgrWriter := TLgrWriter.Create(Self);
+  LgrWriter := TLgrWriter.Create(Self, etExport);
   try
     LgrWriter.WriteFile(FileName);
   finally
@@ -18679,7 +18766,7 @@ begin
     try
       SetCurrentNameFileWriter(LocalNameWriter);
 //      ListFileName := LocalNameWriter.ListFileName;
-      DisWriter := TModflowDiscretizationWriter.Create(self);
+      DisWriter := TModflowDiscretizationWriter.Create(self, etExport);
       try
         DisWriter.WriteFile(FileName);
       finally
@@ -18693,7 +18780,7 @@ begin
       end;
       frmProgressMM.StepIt;
 
-      BasicWriter := TModflowBasicWriter.Create(self);
+      BasicWriter := TModflowBasicWriter.Create(self, etExport);
       try
         BasicWriter.WriteFile(FileName);
       finally
@@ -18707,7 +18794,7 @@ begin
       end;
       frmProgressMM.StepIt;
 
-      OCWriter := TOutputControlWriter.Create(self);
+      OCWriter := TOutputControlWriter.Create(self, etExport);
       try
         OCWriter.WriteFile(FileName);
       finally
@@ -18720,7 +18807,7 @@ begin
       end;
       frmProgressMM.StepIt;
 
-      PcgWriter := TPcgWriter.Create(self);
+      PcgWriter := TPcgWriter.Create(self, etExport);
       try
         PcgWriter.WriteFile(FileName);
       finally
@@ -18736,7 +18823,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      GmgWriter := TGmgWriter.Create(self);
+      GmgWriter := TGmgWriter.Create(self, etExport);
       try
         GmgWriter.WriteFile(FileName);
       finally
@@ -18752,7 +18839,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      SipWriter := TSipWriter.Create(self);
+      SipWriter := TSipWriter.Create(self, etExport);
       try
         SipWriter.WriteFile(FileName);
       finally
@@ -18768,7 +18855,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      De4Writer := TDe4Writer.Create(self);
+      De4Writer := TDe4Writer.Create(self, etExport);
       try
         De4Writer.WriteFile(FileName);
       finally
@@ -18784,7 +18871,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      LPF_Writer := TModflowLPF_Writer.Create(self);
+      LPF_Writer := TModflowLPF_Writer.Create(self, etExport);
       try
         LPF_Writer.WriteFile(FileName);
       finally
@@ -18801,7 +18888,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      BCF_Writer := TModflowBCF_Writer.Create(self);
+      BCF_Writer := TModflowBCF_Writer.Create(self, etExport);
       try
         BCF_Writer.WriteFile(FileName);
       finally
@@ -18818,7 +18905,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      HUF_Writer := TModflowHUF_Writer.Create(self);
+      HUF_Writer := TModflowHUF_Writer.Create(self, etExport);
       try
         HUF_Writer.WriteFile(FileName);
       finally
@@ -18835,7 +18922,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      KDEP_Writer := TModflowKDEP_Writer.Create(self);
+      KDEP_Writer := TModflowKDEP_Writer.Create(self, etExport);
       try
         KDEP_Writer.WriteFile(FileName);
       finally
@@ -18853,7 +18940,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      LVDA_Writer := TModflowLVDA_Writer.Create(self);
+      LVDA_Writer := TModflowLVDA_Writer.Create(self, etExport);
       try
         LVDA_Writer.WriteFile(FileName);
       finally
@@ -18871,7 +18958,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      ChdWriter := TModflowCHD_Writer.Create(self);
+      ChdWriter := TModflowCHD_Writer.Create(self, etExport);
       try
         ChdWriter.WriteFile(FileName);
         ChdWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
@@ -18889,7 +18976,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      GhbWriter := TModflowGHB_Writer.Create(self);
+      GhbWriter := TModflowGHB_Writer.Create(self, etExport);
       try
         GhbWriter.WriteFile(FileName);
         GhbWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
@@ -18907,7 +18994,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      WellWriter := TModflowWEL_Writer.Create(self);
+      WellWriter := TModflowWEL_Writer.Create(self, etExport);
       try
         WellWriter.WriteFile(FileName);
       finally
@@ -18924,7 +19011,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      RivWriter := TModflowRIV_Writer.Create(self);
+      RivWriter := TModflowRIV_Writer.Create(self, etExport);
       try
         RivWriter.WriteFile(FileName);
         RivWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
@@ -18942,7 +19029,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      DrnWriter := TModflowDRN_Writer.Create(self);
+      DrnWriter := TModflowDRN_Writer.Create(self, etExport);
       try
         DrnWriter.WriteFile(FileName);
         DrnWriter.WriteFluxObservationFile(FileName, ObservationPurpose);
@@ -18960,7 +19047,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      DrtWriter := TModflowDRT_Writer.Create(self);
+      DrtWriter := TModflowDRT_Writer.Create(self, etExport);
       try
         DrtWriter.WriteFile(FileName);
       finally
@@ -18977,7 +19064,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      RchWriter := TModflowRCH_Writer.Create(self);
+      RchWriter := TModflowRCH_Writer.Create(self, etExport);
       try
         RchWriter.WriteFile(FileName);
       finally
@@ -18994,7 +19081,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      EvtWriter := TModflowEVT_Writer.Create(self);
+      EvtWriter := TModflowEVT_Writer.Create(self, etExport);
       try
         EvtWriter.WriteFile(FileName);
       finally
@@ -19011,7 +19098,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      EtsWriter := TModflowETS_Writer.Create(self);
+      EtsWriter := TModflowETS_Writer.Create(self, etExport);
       try
         EtsWriter.WriteFile(FileName);
       finally
@@ -19028,7 +19115,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      ResWriter := TModflowRES_Writer.Create(self);
+      ResWriter := TModflowRES_Writer.Create(self, etExport);
       try
         ResWriter.WriteFile(FileName);
       finally
@@ -19045,7 +19132,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      Mnw2Writer := TModflowMNW2_Writer.Create(self);
+      Mnw2Writer := TModflowMNW2_Writer.Create(self, etExport);
       try
         Mnw2Writer.WriteFile(FileName);
         Mnw2Writer.WriteMnwiFile(FileName, GageUnitNumber);
@@ -19063,7 +19150,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      LakWriter := TModflowLAK_Writer.Create(self);
+      LakWriter := TModflowLAK_Writer.Create(self, etExport);
       try
         LakWriter.WriteFile(FileName, GageUnitNumber, Gages);
       finally
@@ -19083,7 +19170,7 @@ begin
       // SfrWriter requires that LakWriter be completed first
       // so that TScreenObject.ModflowLakBoundary.TrueLakeID
       // is set properly.
-      SfrWriter := TModflowSFR_Writer.Create(self);
+      SfrWriter := TModflowSFR_Writer.Create(self, etExport);
       try
         SfrWriter.WriteFile(FileName, GageUnitNumber, Gages);
         FDataArrayManager.CacheDataArrays;
@@ -19097,7 +19184,7 @@ begin
           frmProgressMM.StepIt;
         end;
 
-        HydModWriter := TModflowHydmodWriter.Create(self);
+        HydModWriter := TModflowHydmodWriter.Create(self, etExport);
         try
           HydModWriter.WriteFile(FileName, SfrWriter);
         finally
@@ -19117,7 +19204,7 @@ begin
 
         // GagWriter requires that LakWriter and SfrWriter be completed
         // first so that the data in Gages is set.
-        GagWriter := TModflowGAG_Writer.Create(self);
+        GagWriter := TModflowGAG_Writer.Create(self, etExport);
         try
           GagWriter.WriteFile(FileName, Gages, SfrWriter, GageUnitNumber);
         finally
@@ -19140,7 +19227,7 @@ begin
       end;
 
 
-      HfbWriter := TModflowHfb_Writer.Create(Self);
+      HfbWriter := TModflowHfb_Writer.Create(Self, etExport);
       try
         HfbWriter.WriteFile(FileName);
       finally
@@ -19157,7 +19244,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      UzfWriter := TModflowUzfWriter.Create(Self);
+      UzfWriter := TModflowUzfWriter.Create(Self, etExport);
       try
         UzfWriter.WriteFile(FileName, GageUnitNumber);
       finally
@@ -19174,7 +19261,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      SubWriter := TModflowSUB_Writer.Create(Self);
+      SubWriter := TModflowSUB_Writer.Create(Self, etExport);
       try
         SubWriter.WriteFile(FileName);
       finally
@@ -19191,7 +19278,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      SwtWriter := TModflowSWT_Writer.Create(Self);
+      SwtWriter := TModflowSWT_Writer.Create(Self, etExport);
       try
         SwtWriter.WriteFile(FileName);
       finally
@@ -19211,7 +19298,7 @@ begin
       // until after all the zones have been identified through the
       // export of TModflowLPF_Writer and any other packages that use
       // zone arrays.
-      ZoneWriter := TModflowZoneWriter.Create(self);
+      ZoneWriter := TModflowZoneWriter.Create(self, etExport);
       try
         ZUsed := ZoneWriter.WriteFile(FileName);
       finally
@@ -19232,7 +19319,7 @@ begin
       // until after all the multiplier arrays have been identified through the
       // export of TModflowLPF_Writer and any other packages that use
       // multiplier arrays.
-      MultiplierWriter := TModflowMultiplierWriter.Create(self);
+      MultiplierWriter := TModflowMultiplierWriter.Create(self, etExport);
       try
         MultipUsed := MultiplierWriter.WriteFile(FileName);
       finally
@@ -19249,7 +19336,7 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      HobWriter := TModflowHobWriter.Create(Self);
+      HobWriter := TModflowHobWriter.Create(Self, etExport);
       try
         HobWriter.WriteFile(FileName, ObservationPurpose);
       finally
@@ -19348,13 +19435,13 @@ begin
         NameFileWriter.Free;
       end;
 
-      MainFileWriter := TModpathMainFileWriter.Create(Self);
+      MainFileWriter := TModpathMainFileWriter.Create(Self, etExport);
       try
         MainFileWriter.WriteFile(FileName);
       finally
         MainFileWriter.Free;
       end;
-      StartLocations := TModpathStartingLocationsWriter.Create(Self);
+      StartLocations := TModpathStartingLocationsWriter.Create(Self, etExport);
       try
         StartLocations.WriteFile(FileName);
       finally
@@ -19362,14 +19449,14 @@ begin
       end;
       if ModflowPackages.ModPath.ShouldCreateTimeFile then
       begin
-        TimeFileWriter := TModpathTimeFileWriter.Create(Self);
+        TimeFileWriter := TModpathTimeFileWriter.Create(Self, etExport);
         try
           TimeFileWriter.WriteFile(FileName);
         finally
           TimeFileWriter.Free;
         end;
       end;
-      Responses := TModpathResponseFileWriter.Create(Self);
+      Responses := TModpathResponseFileWriter.Create(Self, etExport);
       try
         Responses.WriteFile(FileName, NewBudgetFile);
         LargeBudgetFileResponse := Responses.FLargeBudgetFileResponse;
@@ -19543,7 +19630,7 @@ begin
       frmProgressMM.pbProgress.Max := NumberOfSteps;
       frmProgressMM.pbProgress.Position := 0;
 
-      ZoneFileWriter := TZoneBudgetZoneFileWriter.Create(self);
+      ZoneFileWriter := TZoneBudgetZoneFileWriter.Create(self, etExport);
       try
         ZoneFileWriter.WriteFile(FileName);
       finally
@@ -19557,7 +19644,7 @@ begin
       end;
       frmProgressMM.StepIt;
 
-      ResponseFileWriter := TZoneBudgetResponseFileWriter.Create(self);
+      ResponseFileWriter := TZoneBudgetResponseFileWriter.Create(self, etExport);
       try
         ResponseFileWriter.WriteFile(FileName);
       finally
@@ -19616,7 +19703,8 @@ var
 begin
   ParameterFormula := '';
   ParameterUsed := (ModelSelection in [msModflow, msModflowLGR])
-    and ModflowPackages.LpfPackage.IsSelected;
+    and (ModflowPackages.LpfPackage.IsSelected
+    or ModflowPackages.UpwPackage.IsSelected);
   if ParameterUsed then
   begin
     ParameterUsed := False;

@@ -1,5 +1,7 @@
 unit frmSelectResultToImportUnit;
 
+ { TODO : Make it easy for the user to select all the results data sets of a particular type or all the results data sets for a particular time step. }
+
 interface
 
 uses
@@ -140,8 +142,8 @@ type
     FFormulaAssigners: TFormulaAssignerList;
     FModifiedParentDataSets: TList;
     function DefaultFileName(AModel: TCustomModel): string;
-    procedure OpenResultFile(AFileName: string;out Precision: TModflowPrecision;
-      out HufFormat: boolean);
+    function OpenResultFile(AFileName: string;out Precision: TModflowPrecision;
+      out HufFormat: boolean): boolean;
     procedure ReadArray(var AnArray: TModflowDoubleArray;
       var EndReached: Boolean; var KPER, KSTP, ILAY: Integer;
       var TOTIM: TModflowDouble;
@@ -1805,7 +1807,11 @@ begin
     FFileStream := nil;
     FFileVariable := nil;
     try
-      OpenResultFile(AFileName, Precision, HufFormat);
+      if not OpenResultFile(AFileName, Precision, HufFormat) then
+      begin
+        result := False;
+        Exit;
+      end;
     except on EPrecisionReadError do
       begin
         result := False;
@@ -2330,11 +2336,12 @@ begin
   Description := TitleCase(Description);
 end;
 
-procedure TfrmSelectResultToImport.OpenResultFile(AFileName: string;
-  out Precision: TModflowPrecision; out HufFormat: boolean);
+function TfrmSelectResultToImport.OpenResultFile(AFileName: string;
+  out Precision: TModflowPrecision; out HufFormat: boolean): boolean;
 var
   Extension: string;
 begin
+  result := True;
   Precision := mpSingle;
   Extension := ExtractFileExt(AFileName);
   if (SameText(Extension, StrBdn))
@@ -2447,10 +2454,15 @@ begin
   begin
     FResultFormat := mfSubBinary;
   end
-
   else
   begin
-    Assert(False);
+    result := False;
+    Beep;
+    MessageDlg('The file type must be one of the file types recognized '
+      + 'by ModelMuse. The recognized file types are displayed in the '
+      + '"files of type" combo box in the "Open File" dialog box.',
+      mtError, [mbOK], 0);
+    Exit;
   end;
 
   HufFormat:= false;

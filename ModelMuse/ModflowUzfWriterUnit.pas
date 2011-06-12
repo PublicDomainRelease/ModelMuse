@@ -35,7 +35,7 @@ type
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
   public
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     // @name destroys the current instance of @classname.
     Destructor Destroy; override;
     procedure WriteFile(const AFileName: string; var GageStart: integer);
@@ -60,7 +60,7 @@ resourcestring
 
 { TModflowUzfWriter }
 
-constructor TModflowUzfWriter.Create(Model: TCustomModel);
+constructor TModflowUzfWriter.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FEtDemand := TObjectList.Create;

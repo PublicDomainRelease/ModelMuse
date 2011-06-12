@@ -35,7 +35,7 @@ uses
   framePackageHobUnit, framePackageLpfUnit, frameModpathSelectionUnit,
   framePackageHufUnit, HufDefinition, framePackageMnw2Unit, framePackageSubUnit,
   frameZoneBudgetUnit, framePackageSwtUnit, framePkgHydmodUnit,
-  framePackageRCHUnit;
+  framePackageRCHUnit, framePackageUpwUnit;
 
 type
 
@@ -91,7 +91,7 @@ type
     rbwLpfParamCountController: TRbwController;
     frameLpfParameterDefinition: TframeArrayParameterDefinition;
     tvLpfParameterTypes: TTreeView;
-    JvNetscapeSplitter2: TJvNetscapeSplitter;
+    splitLprParameter: TJvNetscapeSplitter;
     frameChdParameterDefinition: TframeListParameterDefinition;
     frameDrnParameterDefinition: TframeListParameterDefinition;
     frameDrtParameterDefinition: TframeListParameterDefinition;
@@ -168,6 +168,9 @@ type
     pnlModel: TPanel;
     comboModel: TComboBox;
     lblModel: TLabel;
+    jvspUPW: TJvStandardPage;
+    framePkgUPW: TframePackageUpw;
+    JvNetscapeSplitter6: TJvNetscapeSplitter;
     procedure tvPackagesChange(Sender: TObject; Node: TTreeNode);
     procedure btnOKClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
@@ -199,6 +202,9 @@ type
     procedure framePkgUZFrcSelectionControllerEnabledChange(Sender: TObject);
     procedure framePkgBCFrcSelectionControllerEnabledChange(Sender: TObject);
     procedure comboModelChange(Sender: TObject);
+    procedure framePkgLPFrcSelectionControllerEnabledChange(Sender: TObject);
+    procedure framePkgUPWrcSelectionControllerEnabledChange(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     IsLoaded: boolean;
     CurrentParameterType: TParameterType;
@@ -249,6 +255,7 @@ type
       write SetCurrentPackages;
     procedure StorePackageDataInFrames(Packages: TModflowPackages);
     procedure StoreFrameDataInPackages(Packages: TModflowPackages);
+    procedure EnableLpfParameterControls;
     { Private declarations }
   public
     procedure GetData;
@@ -307,6 +314,9 @@ uses Contnrs, JvListComb, frmGoPhastUnit, ScreenObjectUnit,
   ModflowConstantHeadBoundaryUnit, frmGridColorUnit, frmShowHideObjectsUnit,
   frameSfrParamInstancesUnit, LayerStructureUnit, frmErrorsAndWarningsUnit, 
   frmManageFluxObservationsUnit, ModflowSubsidenceDefUnit;
+
+resourcestring
+  StrLPFParameters = 'LPF or NWT Parameters';
 
 
 {$R *.dfm}
@@ -447,7 +457,7 @@ var
   SpecificStorageUsed: boolean;
   SpecificYieldUsed: boolean;
 begin
-  if not PackageUsed(StrLPF_Identifier) then Exit;
+  if not PackageUsed(StrLPF_Identifier) and not PackageUsed(StrUPW_Identifier) then Exit;
 
   VKCB_Defined := False;
   VK_Defined := False;
@@ -493,7 +503,7 @@ begin
     end;
   end;
 
-  frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel, 'LPF Parameters');
+  frmErrorsAndWarnings.RemoveWarningGroup(frmGoPhast.PhastModel, StrLPFParameters);
   SpecificStorageUsed := False;
   SpecificYieldUsed := False;
   if frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel then
@@ -517,8 +527,8 @@ begin
   if VKCB_Defined and not Quasi3dUsed then
   begin
     ShowErrors := True;
-    frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
-      'One or more VKCB parameters are defined in the LPF package '
+    frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
+      'One or more VKCB parameters are defined in the LPF or NWT package '
       + 'but they won''t be used because'
       + ' all the layers are simulated.');
   end;
@@ -528,15 +538,15 @@ begin
     ShowErrors := True;
     if frmGoPhast.PhastModel.ModflowLayerCount = 1 then
     begin
-      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
-        'One or more VK parameters are defined in the LPF package '
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
+        'One or more VK parameters are defined in the LPF or NWT package '
         + 'but they won''t be used because'
         + ' there is only one layer in the model.');
     end
     else
     begin
-      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
-        'One or more VK parameters are defined in the LPF package '
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
+        'One or more VK parameters are defined in the LPF or NWT package '
         + 'but they won''t be used because'
         + ' vertical anisotropy is used for all the layers. '
         + 'Check the MODFLOW Layers dialog box if you want to use '
@@ -549,15 +559,15 @@ begin
     ShowErrors := True;
     if frmGoPhast.PhastModel.ModflowLayerCount = 1 then
     begin
-      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
-        'One or more VANI parameters are defined in the LPF package '
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
+        'One or more VANI parameters are defined in the LPF or NWT package '
         + 'but they won''t be used because'
         + ' there is only one layer in the model.');
     end
     else
     begin
-      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
-        'One or more VANI parameters are defined in the LPF package '
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
+        'One or more VANI parameters are defined in the LPF or NWT package '
         + 'but they won''t be used because'
         + ' vertical hydraulic hydraulic conductivity is used for all the layers. '
         + 'Check the MODFLOW Layers dialog box if you want to use '
@@ -568,8 +578,8 @@ begin
   if SS_Defined and not SpecificStorageUsed then
   begin
     ShowErrors := True;
-    frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
-      'One or more SS parameters are defined in the LPF package '
+    frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
+      'One or more SS parameters are defined in the LPF or NWT package '
       + 'but they won''t be used because'
       + ' there are no transient stress periods in the model.');
   end;
@@ -579,15 +589,15 @@ begin
     ShowErrors := True;
     if not frmGoPhast.PhastModel.ModflowStressPeriods.TransientModel then
     begin
-      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
-        'One or more SY parameters are defined in the LPF package '
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
+        'One or more SY parameters are defined in the LPF or NWT package '
         + 'but they won''t be used because'
         + ' there are no transient stress periods in the model.');
     end
     else
     begin
-      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, 'LPF Parameters',
-        'One or more SY parameters are defined in the LPF package '
+      frmErrorsAndWarnings.AddWarning(frmGoPhast.PhastModel, StrLPFParameters,
+        'One or more SY parameters are defined in the LPF or NWT package '
         + 'but they won''t be used because'
         + ' all of the layers are confined.');
     end;
@@ -782,6 +792,13 @@ begin
   ActivateHufReferenceChoice;
 end;
 
+procedure TfrmModflowPackages.framePkgLPFrcSelectionControllerEnabledChange(
+  Sender: TObject);
+begin
+  inherited;
+  EnableLpfParameterControls;
+end;
+
 procedure TfrmModflowPackages.framePkgLPFSelectedChange(Sender: TObject);
 begin
   framePkgSFR.LpfUsed := framePkgLPF.Selected;
@@ -895,6 +912,13 @@ procedure TfrmModflowPackages.framePkgSFRrgSfr2ISFROPTClick(Sender: TObject);
 begin
   inherited;
   EnableSfrParameters;
+end;
+
+procedure TfrmModflowPackages.framePkgUPWrcSelectionControllerEnabledChange(
+  Sender: TObject);
+begin
+  inherited;
+  EnableLpfParameterControls;
 end;
 
 procedure TfrmModflowPackages.framePkgUZFrcSelectionControllerEnabledChange(
@@ -1038,6 +1062,12 @@ procedure TfrmModflowPackages.FormResize(Sender: TObject);
 begin
   inherited;
   AdjustDroppedWidth(self);
+end;
+
+procedure TfrmModflowPackages.FormShow(Sender: TObject);
+begin
+  inherited;
+  EnableLpfParameterControls;
 end;
 
 procedure TfrmModflowPackages.frameModpathrcSelectionControllerEnabledChange(
@@ -1506,6 +1536,25 @@ begin
   end;
 end;
 
+procedure TfrmModflowPackages.EnableLpfParameterControls;
+begin
+  if framePkgLPF.rcSelectionController.Enabled
+    and (jvplPackages.ActivePage = jvspLPF) then
+  begin
+    frameLpfParameterDefinition.Enabled := True;
+  end
+  else if framePkgUpw.rcSelectionController.Enabled
+    and (jvplPackages.ActivePage = jvspUPW) then
+  begin
+    frameLpfParameterDefinition.Enabled := True;
+  end
+  else
+  begin
+    frameLpfParameterDefinition.Enabled := False;
+  end;
+  tvLpfParameterTypes.Enabled := frameLpfParameterDefinition.Enabled;
+end;
+
 procedure TfrmModflowPackages.StoreFrameDataInPackages(
   Packages: TModflowPackages);
 var
@@ -1713,6 +1762,13 @@ end;
 procedure TfrmModflowPackages.jvplPackagesChange(Sender: TObject);
 begin
   inherited;
+  if (jvplPackages.ActivePage = jvspLPF) or (jvplPackages.ActivePage = jvspUPW) then
+  begin
+    tvLpfParameterTypes.Parent := jvplPackages.ActivePage;
+    splitLprParameter.Parent := jvplPackages.ActivePage;
+    frameLpfParameterDefinition.Parent := jvplPackages.ActivePage;
+    EnableLpfParameterControls;
+  end;
   if jvplPackages.ActivePage = jvspCHD then
   begin
     CurrentParameterType := ptCHD;
@@ -1734,7 +1790,7 @@ begin
     if tvLpfParameterTypes.Selected = nil then
     begin
       CurrentParameterType := ptUndefined;
-      Assert(False);
+//      Assert(False);
     end
     else
     begin
@@ -2146,7 +2202,8 @@ procedure TfrmModflowPackages.AddPackagesToList(Packages: TModflowPackages);
 begin
   FPackageList.Clear;
 
-  // add to list in alphabetical order.
+  // add to list in in the order in which they should appear within
+  // their group.
   Packages.BcfPackage.Frame := framePkgBCF;
   FPackageList.Add(Packages.BcfPackage);
 
@@ -2176,6 +2233,9 @@ begin
 
   Packages.HufPackage.Frame := framePkgHuf;
   FPackageList.Add(Packages.HufPackage);
+
+//  Packages.UpwPackage.Frame := framePkgUPW;
+//  FPackageList.Add(Packages.UpwPackage);
 
   Packages.PcgPackage.Frame := framePCG;
   FPackageList.Add(Packages.PcgPackage);

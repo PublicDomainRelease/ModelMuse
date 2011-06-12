@@ -30,7 +30,7 @@ type
     class function Extension: string; override;
   public
     procedure WriteFile(const AFileName: string);
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
   end;
 
 implementation
@@ -162,7 +162,7 @@ begin
   DataArrayManager.CacheDataArrays;
 end;
 
-constructor TModflowHUF_Writer.Create(Model: TCustomModel);
+constructor TModflowHUF_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FHufPackage := Package as THufPackageSelection;

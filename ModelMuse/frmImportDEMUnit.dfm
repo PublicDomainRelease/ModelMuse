@@ -2,6 +2,7 @@ inherited frmImportDEM: TfrmImportDEM
   Height = 414
   HelpKeyword = 'Sample_Digital_Elevation_Model'
   Caption = 'Sample Digital Elevation Model'
+  ExplicitTop = -8
   ExplicitHeight = 414
   PixelsPerInch = 96
   TextHeight = 18
@@ -34,8 +35,10 @@ inherited frmImportDEM: TfrmImportDEM
     ExplicitTop = 326
   end
   inherited btnOK: TBitBtn
+    Left = 367
     Top = 338
     OnClick = btnOKClick
+    ExplicitLeft = 367
     ExplicitTop = 338
   end
   inherited btnCancel: TBitBtn

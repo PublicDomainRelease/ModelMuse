@@ -68,7 +68,7 @@ type
     class function Extension: string; override;
     procedure Evaluate; 
   public
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     destructor Destroy; override;
     procedure WriteFile(const AFileName: string);
     procedure WriteMnwiFile(const AFileName: string;
@@ -84,7 +84,7 @@ uses
 
 { TModflowMNW2_Writer }
 
-constructor TModflowMNW2_Writer.Create(Model: TCustomModel);
+constructor TModflowMNW2_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FValues := TObjectList.Create;

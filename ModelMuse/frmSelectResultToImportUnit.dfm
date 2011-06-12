@@ -54,7 +54,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akRight, akBottom]
-    ItemHeight = 0
+    ItemHeight = 18
     TabOrder = 3
   end
   object btnSelectAll: TButton
@@ -127,6 +127,7 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
       RowCount = 2
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
       TabOrder = 0
+      ExtendedAutoDistributeText = False
       AutoMultiEdit = True
       AutoDistributeText = False
       AutoIncreaseColCount = False

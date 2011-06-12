@@ -25,7 +25,7 @@ type
     class function Extension: string; override;
   public
     procedure WriteFile(const AFileName: string);
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
   end;
 
 const
@@ -840,7 +840,7 @@ begin
   end;
 end;
 
-constructor TModflowLPF_Writer.Create(Model: TCustomModel);
+constructor TModflowLPF_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 var
   Index: TParameterType;
 begin

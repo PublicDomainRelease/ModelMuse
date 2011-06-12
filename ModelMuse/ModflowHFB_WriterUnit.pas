@@ -70,7 +70,7 @@ type
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
   public
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     Destructor Destroy; override;
     procedure WriteFile(const AFileName: string);
     procedure UpdateDisplay;
@@ -85,7 +85,7 @@ uses Math, RbwParser, ModflowUnitNumbers, ModflowHfbUnit, OrderedCollectionUnit,
 
 { TModflowHfb_Writer }
 
-constructor TModflowHfb_Writer.Create(Model: TCustomModel);
+constructor TModflowHfb_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FParameterScreenObjectList:= TStringList.Create;

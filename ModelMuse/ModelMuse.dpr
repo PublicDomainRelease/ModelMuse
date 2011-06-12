@@ -1054,7 +1054,9 @@ uses
   AsciiRasterReaderUnit in 'AsciiRasterReaderUnit.pas',
   frmImportAsciiRasterUnit in 'frmImportAsciiRasterUnit.pas' {frmImportAsciiRaster},
   framePackageRCHUnit in 'framePackageRCHUnit.pas' {framePackageRCH: TFrame},
-  ModflowLgr_WriterUnit in 'ModflowLgr_WriterUnit.pas';
+  ModflowLgr_WriterUnit in 'ModflowLgr_WriterUnit.pas',
+  framePackageUpwUnit in 'framePackageUpwUnit.pas' {framePackageUpw: TFrame},
+  framePackageNwtUnit in 'framePackageNwtUnit.pas' {framePackageNwt: TFrame};
 
 {$R *.res}
 

@@ -51,6 +51,8 @@ type
       }
   TErrorType = (etError, etWarning);
 
+  TEvaluationType = (etExport, etDisplay);
+
   { @name is an abstract base class used as an ancestor for classes that
     write MODFLOW input files.
   }
@@ -71,6 +73,7 @@ type
     // second since the last time FExportTime has been updated.
 //    procedure UpdateExportTime;
   protected
+    FEvaluationType: TEvaluationType;
     // @name generates a comment line for a MODFLOW input file indentifying
     // the file type
     function File_Comment(const FileID: string): string;
@@ -147,7 +150,7 @@ type
       CheckValue: double; ErrorType: TErrorType);
     // @name creates and instance of @classname.
     // @param(Model is the @link(TCustomModel) to be exported.)
-    Constructor Create(AModel: TCustomModel); virtual;
+    Constructor Create(AModel: TCustomModel; EvaluationType: TEvaluationType); virtual;
     // @name writes an end of line to the output file.
     procedure NewLine;
     { @name writes one layer of DataArray to the output file.
@@ -318,7 +321,7 @@ type
 
   public
     // @name creates and instance of @classname.
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     // @name destroys the current instance of @classname.
     Destructor Destroy; override;
   end;
@@ -415,7 +418,7 @@ type
     procedure ClearTimeLists(AModel: TBaseModel);
   public
     // @name creates and instance of @classname.
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     Destructor Destroy; override;
     // After @link(Evaluate) is called,
     // @name contains a series of parameter names.  Associated with each
@@ -609,7 +612,7 @@ type
       DS5, D7PNameIname, D7PName: string); override;
     function ParameterCount: integer; override;
   public
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     // @name destroys the current instance of @classname.
     Destructor Destroy; override;
   end;
@@ -637,7 +640,7 @@ type
     procedure InitilizeNameFile(Const FileName: string;
       out OutputListFileName: string);
   public
-    Constructor Create(AModel: TCustomModel; const FileName: string); reintroduce;
+    Constructor Create(AModel: TCustomModel; const FileName: string; EvaluationType: TEvaluationType); reintroduce;
     Destructor Destroy; override;
     class function Extension: string; override;
     // Name saves the name file to a file.
@@ -1007,9 +1010,10 @@ end;
 //  end;
 //end;
 
-constructor TCustomModflowWriter.Create(AModel: TCustomModel);
+constructor TCustomModflowWriter.Create(AModel: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited Create;
+  FEvaluationType := EvaluationType;
   FModel := AModel;
 //  FExportTime := Now;
 end;
@@ -1455,9 +1459,10 @@ begin
   NameFile.Clear;
 end;
 
-constructor TNameFileWriter.Create(AModel: TCustomModel; const FileName: string);
+constructor TNameFileWriter.Create(AModel: TCustomModel; const FileName: string;
+  EvaluationType: TEvaluationType);
 begin
-  inherited Create(AModel);
+  inherited Create(AModel, EvaluationType);
   FNameFile := TStringList.Create;
   SetCurrentNameFileWriter(self);
   InitilizeNameFile(FileName, FListFileName);
@@ -1629,7 +1634,7 @@ begin
 
 end;
 
-constructor TCustomTransientWriter.Create(Model: TCustomModel);
+constructor TCustomTransientWriter.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FValues := TObjectList.Create;
@@ -2760,7 +2765,7 @@ begin
   FUsedInstanceNames.Clear;
 end;
 
-constructor TCustomTransientArrayWriter.Create(Model: TCustomModel);
+constructor TCustomTransientArrayWriter.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FLayers := TObjectList.Create;
@@ -3188,7 +3193,7 @@ end;
 { TCustomParameterTransientWriter }
 
 
-constructor TCustomParameterTransientWriter.Create(Model: TCustomModel);
+constructor TCustomParameterTransientWriter.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FParamValues := TStringList.Create;

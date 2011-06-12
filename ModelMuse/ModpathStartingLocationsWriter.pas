@@ -33,7 +33,7 @@ type
     procedure WriteLines;
   public
     class function Extension: string; override;
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     Destructor Destroy; override;
     procedure WriteFile(const AFileName: string);
   end;
@@ -51,7 +51,7 @@ resourcestring
 
 { TModpathStartingLocationsWriter }
 
-constructor TModpathStartingLocationsWriter.Create(Model: TCustomModel);
+constructor TModpathStartingLocationsWriter.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FParticleLines := TObjectList.Create;

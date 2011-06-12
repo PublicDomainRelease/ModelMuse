@@ -26,7 +26,7 @@ type
     function Package: TModflowPackageSelection; override;
     class function Extension: string; override;
   public
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     destructor Destroy; override;
     procedure WriteFile(const AFileName: string;
       var StartUnitNumber: integer; Lines: TStrings);
@@ -39,7 +39,7 @@ uses ModflowUnitNumbers, ScreenObjectUnit, frmErrorsAndWarningsUnit,
 
 { TModflowLAK_Writer }
 
-constructor TModflowLAK_Writer.Create(Model: TCustomModel);
+constructor TModflowLAK_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FLakeList := TList.Create;

@@ -231,7 +231,12 @@ end;
 
 procedure TfrmManageFluxObservations.SetSelectedGroupAndObservation(TreeView: TTreeView);
 begin
-  btnDeleteObservation.Enabled := (TreeView.Selected <> nil) and (TreeView.Selected.Data <> FChobObservations) and (TreeView.Selected.Data <> FDrobObservations) and (TreeView.Selected.Data <> FGbobObservations) and (TreeView.Selected.Data <> FRvobObservations);
+  btnDeleteObservation.Enabled :=
+    (TreeView.Selected <> nil)
+    and (TreeView.Selected.Data <> FChobObservations)
+    and (TreeView.Selected.Data <> FDrobObservations)
+    and (TreeView.Selected.Data <> FGbobObservations)
+    and (TreeView.Selected.Data <> FRvobObservations);
   rdgFluxObsTimesExit(nil);
   if (TreeView.Selected = nil) then
   begin
@@ -817,6 +822,7 @@ begin
       end;
     finally
       FSettingObservation := False;
+      seNumObsTimesChange(nil);
     end;
   end;
 end;

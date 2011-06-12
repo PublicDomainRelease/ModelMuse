@@ -718,7 +718,10 @@ end;
 
 destructor TObservationFactor.Destroy;
 begin
-  frmGoPhast.PhastModel.FormulaManager.Remove(FFactor, nil, nil, self);
+  if frmGoPhast.PhastModel <> nil then
+  begin
+    frmGoPhast.PhastModel.FormulaManager.Remove(FFactor, nil, nil, self);
+  end;
   inherited;
 end;
 

@@ -2830,221 +2830,226 @@ var
   ListOfScreenObjects: TList;
 begin
   inherited;
-  ShowError := False;
-    // Warn the user about potential problems.
-    // and apply the changes to the @link(TScreenObject) or @link(TScreenObject)s.
-  if (cbEnclosedCells.State = cbUnchecked)
-    and (cbIntersectedCells.State = cbUnchecked)
-    and (cbInterpolation.State = cbUnchecked)
-    and not rdeGridCellSize.Enabled then
-  begin
-    ShowError := True;
-  end;
-  if not ShowError then
-  begin
+  frmGoPhast.BeginSuppressDrawing;
+  try
+    ShowError := False;
+      // Warn the user about potential problems.
+      // and apply the changes to the @link(TScreenObject) or @link(TScreenObject)s.
     if (cbEnclosedCells.State = cbUnchecked)
       and (cbIntersectedCells.State = cbUnchecked)
-      and (cbInterpolation.State = cbUnchecked) then
+      and (cbInterpolation.State = cbUnchecked)
+      and not rdeGridCellSize.Enabled then
     begin
-      ShowError := DataSetsSpecified;
+      ShowError := True;
     end;
-  end;
-  if ShowError then
-  begin
-    pageMain.ActivePageIndex := 0;
-    if cbEnclosedCells.Enabled then
+    if not ShowError then
     begin
-      cbEnclosedCells.SetFocus;
-    end
-    else
-    begin
-      cbIntersectedCells.SetFocus;
+      if (cbEnclosedCells.State = cbUnchecked)
+        and (cbIntersectedCells.State = cbUnchecked)
+        and (cbInterpolation.State = cbUnchecked) then
+      begin
+        ShowError := DataSetsSpecified;
+      end;
     end;
-
-    if MessageDlg('The object or objects you are editing will not '
-      + 'affect the values of any data set because neither enclosed nor '
-      + 'intersected elements or nodes will have their values set by the '
-      + 'object or objects and element and node values will not be set by '
-      + 'interpolation.  '
-      + sLineBreak + sLineBreak
-      + 'Is this really what you want?', mtWarning,
-      [mbYes, mbNo], 0, mbNo) = mrNo then
+    if ShowError then
     begin
-      Exit;
-    end;
-  end;
-
-  if cbInterpolation.Checked and not cbIntersectedCells.Checked
-    and not cbEnclosedCells.Checked then
-  begin
-    for RowIndex := 0 to FDataEdits.Count -1 do
-    begin
-      Edit := FDataEdits[RowIndex];
-      // determine if the cell can be selected.
-      CanSelect := True;
-      // prevent the grid from validating the formula in a grid cell while
-      // the grid cell is being drawn.
-
-      ListOfScreenObjects := TList.Create;
-      try
-        if FScreenObject <> nil then
-        begin
-          ListOfScreenObjects.Add(FScreenObject)
-        end;
-        if FScreenObject <> nil then
-        begin
-          CheckIfDataSetCanBeEdited(CanSelect, Edit, ListOfScreenObjects);
-        end
-        else
-        begin
-          CheckIfDataSetCanBeEdited(CanSelect, Edit, FScreenObjectList);
-        end;
-      finally
-        ListOfScreenObjects.Free;
+      pageMain.ActivePageIndex := 0;
+      if cbEnclosedCells.Enabled then
+      begin
+        cbEnclosedCells.SetFocus;
+      end
+      else
+      begin
+        cbIntersectedCells.SetFocus;
       end;
 
-      if CanSelect and (Edit.Used <> cbUnchecked)  then
+      if MessageDlg('The object or objects you are editing will not '
+        + 'affect the values of any data set because neither enclosed nor '
+        + 'intersected elements or nodes will have their values set by the '
+        + 'object or objects and element and node values will not be set by '
+        + 'interpolation.  '
+        + sLineBreak + sLineBreak
+        + 'Is this really what you want?', mtWarning,
+        [mbYes, mbNo], 0, mbNo) = mrNo then
       begin
-        DataSet := Edit.DataArray;
-        if DataSet.TwoDInterpolator = nil then
-        begin
-          Beep;
-          if MessageDlg('You are attempting to specify the value of a data '
-            + 'set by interpolation but at least one of the data sets, '
-            +  DataSet.Name
-            + ', does not have an interpolator assigned.'
-            + sLineBreak + sLineBreak
-            + 'Is this really what you want?', mtWarning,
-            [mbYes, mbNo], 0, mbNo) = mrNo then
+        Exit;
+      end;
+    end;
+
+    if cbInterpolation.Checked and not cbIntersectedCells.Checked
+      and not cbEnclosedCells.Checked then
+    begin
+      for RowIndex := 0 to FDataEdits.Count -1 do
+      begin
+        Edit := FDataEdits[RowIndex];
+        // determine if the cell can be selected.
+        CanSelect := True;
+        // prevent the grid from validating the formula in a grid cell while
+        // the grid cell is being drawn.
+
+        ListOfScreenObjects := TList.Create;
+        try
+          if FScreenObject <> nil then
           begin
-            Exit;
+            ListOfScreenObjects.Add(FScreenObject)
+          end;
+          if FScreenObject <> nil then
+          begin
+            CheckIfDataSetCanBeEdited(CanSelect, Edit, ListOfScreenObjects);
           end
           else
           begin
-            break;
+            CheckIfDataSetCanBeEdited(CanSelect, Edit, FScreenObjectList);
           end;
+        finally
+          ListOfScreenObjects.Free;
         end;
-      end;
-    end;
-  end;
 
-
-  if rgEvaluatedAt.ItemIndex = 1 then
-  begin
-    DataGrid := nil;
-    if rgBoundaryType.ItemIndex >= 0 then
-    begin
-      case rgBoundaryType.ItemIndex of
-        Ord(btNone):
-          begin
-            DataGrid := nil;
-          end;
-        Ord(btSpecifiedHead):
-          begin
-            DataGrid := dgSpecifiedHead;
-            SetLength(Columns, 2);
-            Columns[0] := Ord(ibcBoundaryValue);
-            Columns[1] := Ord(ibcSolution);
-          end;
-        Ord(btFlux):
-          begin
-            DataGrid := dgBoundaryFlux;
-            SetLength(Columns, 2);
-            Columns[0] := Ord(ibcBoundaryValue);
-            Columns[1] := Ord(ibcSolution);
-          end;
-        Ord(btLeaky):
-          begin
-            DataGrid := dgBoundaryLeaky;
-            SetLength(Columns, 2);
-            Columns[0] := Ord(ibcBoundaryValue);
-            Columns[1] := Ord(ibcSolution);
-          end;
-        Ord(btRiver):
-          begin
-            DataGrid := dgBoundaryRiver;
-            SetLength(Columns, 2);
-            Columns[0] := Ord(nicBoundaryValue);
-            Columns[1] := Ord(nicSolution);
-          end;
-        Ord(btWell):
-          begin
-            DataGrid := dgWell;
-            SetLength(Columns, 2);
-            Columns[0] := Ord(nicBoundaryValue);
-            Columns[1] := Ord(nicSolution);
-          end;
-      else
-        Assert(False);
-      end;
-    end;
-    if DataGrid <> nil then
-    begin
-      Col := 0;
-      Row := 0;
-      try
-        if (DataGrid = dgSpecifiedHead) or
-          (DataGrid = dgBoundaryFlux) or (DataGrid = dgBoundaryLeaky) then
+        if CanSelect and (Edit.Used <> cbUnchecked)  then
         begin
-          Orientation := dso3D;
-        end
-        else if (DataGrid = dgBoundaryRiver) or (DataGrid = dgWell) then
-        begin
-          Orientation := dsoTop;
-        end
-        else
-        begin
-          Assert(False);
-          Orientation := dso3D;
-        end;
-        // All the PHAST boundary conditions are evaluated at nodes.
-        EvaluatedAt := eaNodes;
-        for RowIndex := 1 to DataGrid.RowCount - 1 do
-        begin
-          Row := RowIndex;
-          for ColIndex := 0 to Length(Columns) - 1 do
+          DataSet := Edit.DataArray;
+          if DataSet.TwoDInterpolator = nil then
           begin
-            Col := Columns[ColIndex];
-            NewValue := DataGrid.Cells[Col, RowIndex];
-            if NewValue <> '' then
+            Beep;
+            if MessageDlg('You are attempting to specify the value of a data '
+              + 'set by interpolation but at least one of the data sets, '
+              +  DataSet.Name
+              + ', does not have an interpolator assigned.'
+              + sLineBreak + sLineBreak
+              + 'Is this really what you want?', mtWarning,
+              [mbYes, mbNo], 0, mbNo) = mrNo then
             begin
-              CreateBoundaryFormula(DataGrid, Col, RowIndex, NewValue,
-                Orientation, EvaluatedAt);
+              Exit;
+            end
+            else
+            begin
+              break;
             end;
           end;
         end;
-      except on E: Exception do
-        begin
-          Beep;
-          MessageDlg('Error in ' + rgBoundaryType.Items[rgBoundaryType.ItemIndex]
-            + ' Row: ' + IntToStr(Row + 1) + ' Column: ' + IntToStr(Col)
-            + '. ' + E.Message, mtError,
-            [mbOK], 0);
-          Exit;
+      end;
+    end;
+
+
+    if rgEvaluatedAt.ItemIndex = 1 then
+    begin
+      DataGrid := nil;
+      if rgBoundaryType.ItemIndex >= 0 then
+      begin
+        case rgBoundaryType.ItemIndex of
+          Ord(btNone):
+            begin
+              DataGrid := nil;
+            end;
+          Ord(btSpecifiedHead):
+            begin
+              DataGrid := dgSpecifiedHead;
+              SetLength(Columns, 2);
+              Columns[0] := Ord(ibcBoundaryValue);
+              Columns[1] := Ord(ibcSolution);
+            end;
+          Ord(btFlux):
+            begin
+              DataGrid := dgBoundaryFlux;
+              SetLength(Columns, 2);
+              Columns[0] := Ord(ibcBoundaryValue);
+              Columns[1] := Ord(ibcSolution);
+            end;
+          Ord(btLeaky):
+            begin
+              DataGrid := dgBoundaryLeaky;
+              SetLength(Columns, 2);
+              Columns[0] := Ord(ibcBoundaryValue);
+              Columns[1] := Ord(ibcSolution);
+            end;
+          Ord(btRiver):
+            begin
+              DataGrid := dgBoundaryRiver;
+              SetLength(Columns, 2);
+              Columns[0] := Ord(nicBoundaryValue);
+              Columns[1] := Ord(nicSolution);
+            end;
+          Ord(btWell):
+            begin
+              DataGrid := dgWell;
+              SetLength(Columns, 2);
+              Columns[0] := Ord(nicBoundaryValue);
+              Columns[1] := Ord(nicSolution);
+            end;
+        else
+          Assert(False);
+        end;
+      end;
+      if DataGrid <> nil then
+      begin
+        Col := 0;
+        Row := 0;
+        try
+          if (DataGrid = dgSpecifiedHead) or
+            (DataGrid = dgBoundaryFlux) or (DataGrid = dgBoundaryLeaky) then
+          begin
+            Orientation := dso3D;
+          end
+          else if (DataGrid = dgBoundaryRiver) or (DataGrid = dgWell) then
+          begin
+            Orientation := dsoTop;
+          end
+          else
+          begin
+            Assert(False);
+            Orientation := dso3D;
+          end;
+          // All the PHAST boundary conditions are evaluated at nodes.
+          EvaluatedAt := eaNodes;
+          for RowIndex := 1 to DataGrid.RowCount - 1 do
+          begin
+            Row := RowIndex;
+            for ColIndex := 0 to Length(Columns) - 1 do
+            begin
+              Col := Columns[ColIndex];
+              NewValue := DataGrid.Cells[Col, RowIndex];
+              if NewValue <> '' then
+              begin
+                CreateBoundaryFormula(DataGrid, Col, RowIndex, NewValue,
+                  Orientation, EvaluatedAt);
+              end;
+            end;
+          end;
+        except on E: Exception do
+          begin
+            Beep;
+            MessageDlg('Error in ' + rgBoundaryType.Items[rgBoundaryType.ItemIndex]
+              + ' Row: ' + IntToStr(Row + 1) + ' Column: ' + IntToStr(Col)
+              + '. ' + E.Message, mtError,
+              [mbOK], 0);
+            Exit;
+          end;
         end;
       end;
     end;
-  end;
 
-  SetSelectedName;
-  // apply the changes to the screen object or screen objects.
-  Screen.Cursor := crHourGlass;
-  try
-    Enabled := False;
-    if FScreenObject <> nil then
-    begin
-      SetData;
-    end
-    else
-    begin
-      Assert(FScreenObjectList <> nil);
-      SetMultipleScreenObjectData;
+    SetSelectedName;
+    // apply the changes to the screen object or screen objects.
+    Screen.Cursor := crHourGlass;
+    try
+      Enabled := False;
+      if FScreenObject <> nil then
+      begin
+        SetData;
+      end
+      else
+      begin
+        Assert(FScreenObjectList <> nil);
+        SetMultipleScreenObjectData;
+      end;
+    finally
+      Application.ProcessMessages;
+      ModalResult := mrOK;
+      Enabled := True;
+      Screen.Cursor := crDefault;
     end;
   finally
-    Application.ProcessMessages;
-    ModalResult := mrOK;
-    Enabled := True;
-    Screen.Cursor := crDefault;
+    frmGoPhast.EndSupressDrawing;
   end;
 end;
 

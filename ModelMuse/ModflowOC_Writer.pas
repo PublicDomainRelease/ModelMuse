@@ -15,7 +15,7 @@ type
   protected
     class function Extension: string; override;
   public
-    Constructor Create(AModel: TCustomModel); override;
+    Constructor Create(AModel: TCustomModel; EvaluationType: TEvaluationType); override;
     procedure WriteFile(const AFileName: string);
   end;
 
@@ -26,9 +26,9 @@ uses ModflowUnitNumbers, ModflowTimeUnit, frmErrorsAndWarningsUnit,
 
 { TOutputControlWriter }
 
-constructor TOutputControlWriter.Create(AModel: TCustomModel);
+constructor TOutputControlWriter.Create(AModel: TCustomModel; EvaluationType: TEvaluationType);
 begin
-  inherited Create(AModel);
+  inherited Create(AModel, EvaluationType);
   FOutputControl := Model.ModflowOutputControl;
 end;
 

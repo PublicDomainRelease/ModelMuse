@@ -95,7 +95,7 @@ type
     class function Extension: string; override;
   public
     procedure WriteFile(const AFileName: string);
-    Constructor Create(Model: TCustomModel); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
     Destructor Destroy; override;
   end;
 
@@ -133,7 +133,7 @@ end;
 
 { TModflowSUB_Writer }
 
-constructor TModflowSUB_Writer.Create(Model: TCustomModel);
+constructor TModflowSUB_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FLN := TIntegerList.Create;

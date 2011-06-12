@@ -467,6 +467,7 @@ Consider creating descendants that each only handle one view of the model. }
     procedure SetDefaultElevationFormulas;
     function ShouldClosePolygon(X, Y: integer): boolean; virtual;
   public
+    procedure RemoveScreenObject;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     // @name responds to Double-Click events to set @link(FDoubleClicked)
@@ -3345,8 +3346,7 @@ begin
           frmScreenObjectProperties.GetData(CurrentScreenObject);
           if frmScreenObjectProperties.ShowModal <> mrOK then
           begin
-            frmGoPhast.PhastModel.RemoveScreenObject(CurrentScreenObject);
-            FreeAndNil(FCurrentUndo);
+            RemoveScreenObject;
           end
           else
           begin
@@ -3390,6 +3390,12 @@ begin
     ClearPoints
   end;
   FViewDirection := ViewDirection;
+end;
+
+procedure TCustomCreateScreenObjectTool.RemoveScreenObject;
+begin
+  frmGoPhast.PhastModel.RemoveScreenObject(CurrentScreenObject);
+  FreeAndNil(FCurrentUndo);
 end;
 
 procedure TCustomCreateScreenObjectTool.MouseUp(Sender: TObject;

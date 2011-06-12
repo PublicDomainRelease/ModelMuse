@@ -19,7 +19,7 @@ type
   protected
     class function Extension: string; override;
   public
-    Constructor Create(AModel: TCustomModel); override;
+    Constructor Create(AModel: TCustomModel; EvaluationType: TEvaluationType); override;
     procedure WriteFile(const AFileName: string);
   end;
 
@@ -79,7 +79,7 @@ begin
 
 end;
 
-constructor TModflowBasicWriter.Create(AModel: TCustomModel);
+constructor TModflowBasicWriter.Create(AModel: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   XSECTION := Model.ModflowGrid.RowCount = 1;

@@ -51,7 +51,7 @@ type
     function UsesHufParam(UsedParam: THufUsedParameter;
       var ArrayName: string; var DataArray: TDataArray): boolean; override;
   public
-    Constructor Create(AModel: TCustomModel); override;
+    Constructor Create(AModel: TCustomModel; EvaluationType: TEvaluationType); override;
   end;
 
   TModflowMultiplierWriter = class(TCustomMultZoneWriter)
@@ -73,7 +73,7 @@ type
     function UsesHufParam(UsedParam: THufUsedParameter;
       var ArrayName: string; var DataArray: TDataArray): boolean; override;
   public
-    Constructor Create(AModel: TCustomModel); override;
+    Constructor Create(AModel: TCustomModel; EvaluationType: TEvaluationType); override;
   end;
 
 implementation
@@ -329,7 +329,7 @@ begin
   result := UsedZoneArrayNames.IndexOf(ArrayName) >= 0
 end;
 
-constructor TModflowZoneWriter.Create(AModel: TCustomModel);
+constructor TModflowZoneWriter.Create(AModel: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FFileUnit := Model.UnitNumbers.UnitNumber(StrZONE);
@@ -463,7 +463,7 @@ begin
   result := UsedMultiplierArrayNames.IndexOf(ArrayName) >= 0
 end;
 
-constructor TModflowMultiplierWriter.Create(AModel: TCustomModel);
+constructor TModflowMultiplierWriter.Create(AModel: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
   FFileUnit := Model.UnitNumbers.UnitNumber(StrMULT);

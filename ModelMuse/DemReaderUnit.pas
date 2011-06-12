@@ -200,11 +200,14 @@ end;
 procedure TDemReader.ReadFile(const FileName: string; ReadCentralMeridian : boolean);
 var
   Index: Integer;
+  OldDecSep: Char;
 begin
+  OldDecSep := DecimalSeparator;
   FCancel := False;
   AssignFile(DemFile, FileName);
 
   try
+    DecimalSeparator := '.';
     Reset(DemFile, SizeOf(Char));
     ReadRecordA(ReadCentralMeridian);
     for Index := 1 to ColumnCount do
@@ -218,19 +221,37 @@ begin
     ReadRecordC;
 
   finally
+    DecimalSeparator := OldDecSep;
     CloseFile(DemFile);
   end;
 end;
 
 procedure TDemReader.ReadHeader(const FileName: string);
+var
+  OldDecSep: Char;
+  CanCloseFile: boolean;
 begin
+  CanCloseFile := True;
   FCancel := False;
+  OldDecSep := DecimalSeparator;
   AssignFile(DemFile, FileName);
   try
-    Reset(DemFile, SizeOf(Char));
+    DecimalSeparator := '.';
+    try
+      Reset(DemFile, SizeOf(Char));
+    except on EInOutError do
+      begin
+        CanCloseFile := False;
+        raise;
+      end;
+    end;
     ReadRecordA(True);
   finally
-    CloseFile(DemFile);
+    DecimalSeparator := OldDecSep;
+    if CanCloseFile then
+    begin
+      CloseFile(DemFile);
+    end;
   end;
 end;
 

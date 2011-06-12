@@ -2,7 +2,7 @@ inherited frmGoPhast: TfrmGoPhast
   Left = 91
   Top = 50
   Width = 745
-  Height = 559
+  Height = 640
   HelpType = htKeyword
   HelpKeyword = 'Main_Window'
   VertScrollBar.Range = 157
@@ -18,12 +18,12 @@ inherited frmGoPhast: TfrmGoPhast
   OnMouseMove = pnlLowerRightMouseMove
   OnResize = FormResize
   ExplicitWidth = 745
-  ExplicitHeight = 559
+  ExplicitHeight = 640
   PixelsPerInch = 96
   TextHeight = 18
   object splitHoriz: TJvNetscapeSplitter
     Left = 0
-    Top = 334
+    Top = 415
     Width = 737
     Height = 10
     Cursor = crVSplit
@@ -41,7 +41,7 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 0
     Top = 68
     Width = 737
-    Height = 266
+    Height = 347
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
@@ -49,7 +49,7 @@ inherited frmGoPhast: TfrmGoPhast
     object splitVertTop: TJvNetscapeSplitter
       Left = 498
       Top = 0
-      Height = 266
+      Height = 347
       Hint = 'Click and drag to resize the windows.'
       Align = alRight
       MinSize = 1
@@ -65,16 +65,16 @@ inherited frmGoPhast: TfrmGoPhast
       Left = 0
       Top = 0
       Width = 498
-      Height = 266
+      Height = 347
       HorzScrollBar.Range = 36
       VertScrollBar.Range = 40
       Align = alClient
       TabOrder = 0
       TabStop = True
       ExplicitWidth = 498
-      ExplicitHeight = 266
+      ExplicitHeight = 347
       inherited rulVertical: TRbwRuler
-        Height = 212
+        Height = 293
         ExplicitTop = 39
         ExplicitHeight = 173
       end
@@ -88,14 +88,14 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited ZoomBox: TQRbwZoomBox2
         Width = 449
-        Height = 212
+        Height = 293
         Image32.Top = 0
         Image32.Width = 449
-        Image32.Height = 212
+        Image32.Height = 293
         Image32.ExplicitWidth = 449
-        Image32.ExplicitHeight = 212
+        Image32.ExplicitHeight = 293
         ExplicitWidth = 449
-        ExplicitHeight = 212
+        ExplicitHeight = 293
       end
       inherited OrderMenu: TPopupMenu
         Left = 80
@@ -106,7 +106,7 @@ inherited frmGoPhast: TfrmGoPhast
       Left = 508
       Top = 0
       Width = 229
-      Height = 266
+      Height = 347
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alRight
@@ -114,10 +114,10 @@ inherited frmGoPhast: TfrmGoPhast
       TabStop = True
       ExplicitLeft = 508
       ExplicitWidth = 229
-      ExplicitHeight = 266
+      ExplicitHeight = 347
       inherited rulVertical: TRbwRuler
         Left = 180
-        Height = 212
+        Height = 293
         Align = alRight
         RulerPosition = rpRight
         ExplicitLeft = 194
@@ -151,17 +151,17 @@ inherited frmGoPhast: TfrmGoPhast
       inherited ZoomBox: TQRbwZoomBox2
         Left = 0
         Width = 180
-        Height = 212
+        Height = 293
         ExaggerationDirection = edHorizontal
         HorizontalDirection = hdLeft
         Image32.Top = 0
         Image32.Width = 180
-        Image32.Height = 212
+        Image32.Height = 293
         Image32.ExplicitWidth = 180
-        Image32.ExplicitHeight = 212
+        Image32.ExplicitHeight = 293
         ExplicitLeft = 0
         ExplicitWidth = 180
-        ExplicitHeight = 212
+        ExplicitHeight = 293
       end
       inherited OrderMenu: TPopupMenu
         Left = 48
@@ -171,7 +171,7 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 344
+    Top = 425
     Width = 737
     Height = 133
     Align = alBottom
@@ -270,7 +270,7 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object sbMain: TStatusBar
     Left = 0
-    Top = 477
+    Top = 558
     Width = 737
     Height = 28
     Hint = 'Drag with the mouse to resize status bar panels'
@@ -323,19 +323,13 @@ inherited frmGoPhast: TfrmGoPhast
       object tbUndo: TToolButton
         Left = 0
         Top = 0
-        Caption = '&Undo'
-        Enabled = False
-        ImageIndex = 3
-        OnClick = tbUndoClick
+        Action = acUndo
         OnMouseMove = pnlLowerRightMouseMove
       end
       object tbRedo: TToolButton
         Left = 23
         Top = 0
-        Caption = 'Redo'
-        Enabled = False
-        ImageIndex = 4
-        OnClick = tbRedoClick
+        Action = acRedo
         OnMouseMove = pnlLowerRightMouseMove
       end
       object tbCut: TToolButton
@@ -808,7 +802,7 @@ inherited frmGoPhast: TfrmGoPhast
         Height = 26
         Hint = 'Number of elevations in new object'
         Style = csDropDownList
-        ItemHeight = 18
+        ItemHeight = 0
         ItemIndex = 2
         TabOrder = 0
         Text = '2'
@@ -1098,16 +1092,10 @@ inherited frmGoPhast: TfrmGoPhast
       Caption = '&Edit'
       HelpContext = 1630
       object miUndo: TMenuItem
-        Caption = '&Undo'
-        HelpContext = 1630
-        ImageIndex = 3
-        ShortCut = 16474
+        Action = acUndo
       end
       object miRedo: TMenuItem
-        Caption = '&Redo'
-        HelpContext = 1630
-        ImageIndex = 4
-        ShortCut = 24666
+        Action = acRedo
       end
       object miCut: TMenuItem
         Action = acCut
@@ -2559,6 +2547,24 @@ inherited frmGoPhast: TfrmGoPhast
       Hint = 'Run MODFLOW-LGR'
       ImageIndex = 72
       OnExecute = acRunModflowLgrExecute
+    end
+    object acUndo: TAction
+      Category = 'Edit'
+      Caption = '&Undo'
+      Enabled = False
+      HelpContext = 1630
+      ImageIndex = 3
+      ShortCut = 16474
+      OnExecute = tbUndoClick
+    end
+    object acRedo: TAction
+      Category = 'Edit'
+      Caption = '&Redo'
+      Enabled = False
+      HelpContext = 1630
+      ImageIndex = 4
+      ShortCut = 16473
+      OnExecute = tbRedoClick
     end
   end
   object ilDisabledImageList: TImageList
