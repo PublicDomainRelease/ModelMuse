@@ -1,17 +1,16 @@
-object frameScreenObjectSFR: TframeScreenObjectSFR
-  Left = 0
-  Top = 0
+inherited frameScreenObjectSFR: TframeScreenObjectSFR
   Width = 561
   Height = 506
-  TabOrder = 0
   TabStop = True
   OnResize = FrameResize
+  ExplicitWidth = 561
+  ExplicitHeight = 506
   object pcSFR: TPageControl
     Left = 0
     Top = 0
     Width = 561
     Height = 506
-    ActivePage = tabNetwork
+    ActivePage = tabTime
     Align = alClient
     TabOrder = 0
     object tabBasic: TTabSheet
@@ -35,7 +34,6 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
         Top = 32
         Width = 56
         Height = 24
-        ItemHeight = 13
         TabOrder = 0
         Text = '1'
         OnChange = rdeSegmentNumberChange
@@ -495,6 +493,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
         OnMouseUp = rdgParametersMouseUp
         OnSelectCell = rdgParametersSelectCell
         OnSetEditText = rdgParametersSetEditText
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
@@ -661,8 +660,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Anchors = [akTop, akRight]
           Cancel = True
           Caption = '&Insert'
-          TabOrder = 1
-          OnClick = btnInserParametersClick
+          DoubleBuffered = True
           Glyph.Data = {
             F6000000424DF600000000000000760000002800000010000000100000000100
             0400000000008000000000000000000000001000000000000000000000000000
@@ -672,6 +670,9 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
             FF0FFFFF0FFFFFFFFF0FFFFF00000000000FF0FF0CCCCCCCCC0F000F0CCCCCCC
             CC0FF0FF0CCCCCCCCC0FFFFF00000000000FFFFF0FFFFFFFFF0FFFFF0FFFFFFF
             FF0FFFFF0FFFFFFFFF0FFFFF00000000000FFFFFFFFFFFFFFFFF}
+          ParentDoubleBuffered = False
+          TabOrder = 1
+          OnClick = btnInserParametersClick
         end
         object btnDeleteParameters: TBitBtn
           Left = 459
@@ -681,9 +682,8 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Anchors = [akTop, akRight]
           Cancel = True
           Caption = '&Delete'
+          DoubleBuffered = True
           Enabled = False
-          TabOrder = 2
-          OnClick = btnDeleteParametersClick
           Glyph.Data = {
             36030000424D3603000000000000360000002800000010000000100000000100
             18000000000000030000120B0000120B00000000000000000000FFFFFFFFFFFF
@@ -711,6 +711,9 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
             000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+          ParentDoubleBuffered = False
+          TabOrder = 2
+          OnClick = btnDeleteParametersClick
         end
       end
     end
@@ -740,7 +743,6 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Height = 22
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 13
           TabOrder = 0
           OnChange = rdeNetworkChange
           Max = 1.000000000000000000
@@ -799,6 +801,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
         OnMouseUp = rdgNetworkMouseUp
         OnSelectCell = rdgNetworkSelectCell
         OnSetEditText = rdgNetworkSetEditText
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
@@ -950,6 +953,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
         OnMouseUp = dgFlowTimesMouseUp
         OnSelectCell = dgFlowTimesSelectCell
         OnSetEditText = dgFlowTimesSetEditText
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
@@ -1111,7 +1115,6 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Height = 22
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 13
           TabOrder = 0
           OnChange = rdeFlowFormulaChange
           Max = 1.000000000000000000
@@ -1154,6 +1157,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           OnMouseUp = dgUpMouseUp
           OnSelectCell = dgUpSelectCell
           OnSetEditText = dgUpSetEditText
+          ExtendedAutoDistributeText = False
           AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False
@@ -1338,7 +1342,6 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
             Height = 22
             Color = clBtnFace
             Enabled = False
-            ItemHeight = 13
             TabOrder = 0
             OnChange = rdeUpstreamFormulaChange
             Max = 1.000000000000000000
@@ -1368,6 +1371,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           OnMouseUp = dgDownMouseUp
           OnSelectCell = dgUpSelectCell
           OnSetEditText = dgDownSetEditText
+          ExtendedAutoDistributeText = False
           AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False
@@ -1552,7 +1556,6 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
             Height = 22
             Color = clBtnFace
             Enabled = False
-            ItemHeight = 13
             TabOrder = 0
             OnChange = rdeDownstreamFormulaChange
             Max = 1.000000000000000000
@@ -1605,6 +1608,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           OnMouseUp = dgSfrRoughMouseUp
           OnSelectCell = dgSfrRoughSelectCell
           OnSetEditText = dgSfrRoughSetEditText
+          ExtendedAutoDistributeText = False
           AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False
@@ -1724,7 +1728,6 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
             Height = 22
             Color = clBtnFace
             Enabled = False
-            ItemHeight = 13
             TabOrder = 0
             OnChange = rdeChannelFormulaChange
             Max = 1.000000000000000000
@@ -1781,6 +1784,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
         OnMouseUp = dgSfrEquationMouseUp
         OnSelectCell = dgSfrEquationSelectCell
         OnSetEditText = dgSfrEquationSetEditText
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
@@ -1942,7 +1946,6 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           Height = 22
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 13
           TabOrder = 0
           OnChange = rdeEquationFormulaChange
           Max = 1.000000000000000000
@@ -1992,6 +1995,7 @@ object frameScreenObjectSFR: TframeScreenObjectSFR
           TabOrder = 0
           OnSelectCell = dgTableTimeSelectCell
           OnSetEditText = dgTableTimeSetEditText
+          ExtendedAutoDistributeText = False
           AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False

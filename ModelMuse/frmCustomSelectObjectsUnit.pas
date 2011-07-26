@@ -16,8 +16,8 @@ type
   // Extend it to whatever your application needs.
   PMyRec = ^TMyRec;
   TMyRec = record
-    Caption: WideString;
-    Classification: WideString;
+    Caption: String;
+    Classification: String;
     ScreenObjects: TList;
     GroupState: TVisibleGroupState;
     IsDataSetNode: boolean;
@@ -47,7 +47,7 @@ type
     // usually the name of a @link(TScreenObject) along with some additional
     // information.
     procedure vstObjectsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     // @name is used to enable or disable the activity of
     // @link(TfrmShowHideObjects.vstObjectsChecked) based on whether the check box that is
     // being checked is or is not the own the user originally changed.
@@ -330,7 +330,7 @@ begin
           begin
             Data.Caption := StrSetGridElementSize;
           end;
-        msModflow, msModflowLGR:
+        msModflow, msModflowLGR, msModflowNWT:
           begin
             Data.Caption := StrSetGridCellSize;
           end;
@@ -528,7 +528,7 @@ begin
 end;
 
 procedure TfrmCustomSelectObjects.vstObjectsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
 var
   Data: PMyRec;
   AScreenObject: TScreenObject;
@@ -544,8 +544,9 @@ begin
     CellText := '';
     Exit;
   end;
-  // A handler for the OnGetText event is always needed as it provides the tree with the string data to display.
-  // Note that we are always using WideString.
+  // A handler for the OnGetText event is always needed
+  // as it provides the tree with the string data to display.
+  // Note that we are now using string instead of WideString.
   Data := Sender.GetNodeData(Node);
   if Assigned(Data) then
   begin

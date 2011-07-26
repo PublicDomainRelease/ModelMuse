@@ -3,7 +3,7 @@ unit frmManageFluxObservationsUnit;
 interface
 
 uses
-  Windows, SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, ExtCtrls,
+  Types, Windows, SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, ExtCtrls,
   JvListBox, JvCtrls, JvComponent, JvExStdCtrls, JvExComCtrls, ComCtrls,
   JvComCtrls, frmCustomGoPhastUnit, Buttons, Mask, JvExMask, JvSpin, Grids,
   RbwDataGrid4, JvEdit, JvExExtCtrls, JvNetscapeSplitter, UndoItems,

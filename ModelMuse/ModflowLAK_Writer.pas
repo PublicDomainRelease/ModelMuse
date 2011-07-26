@@ -37,6 +37,11 @@ implementation
 uses ModflowUnitNumbers, ScreenObjectUnit, frmErrorsAndWarningsUnit,
   ModflowLakUnit, DataSetUnit, frmProgressUnit, Forms;
 
+resourcestring
+  DupNameErrorMessage = 'The following Lakes have the same Lake ID.';
+  InvalidCenterLake = 'The follow lakes have invalid center lake numbers.';
+  StrSAndS = '%s and %s';
+
 { TModflowLAK_Writer }
 
 constructor TModflowLAK_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
@@ -63,9 +68,6 @@ begin
 end;
 
 procedure TModflowLAK_Writer.Evaluate;
-const
-  DupNameErrorMessage = 'The following Lakes have the same Lake ID.';
-  InvalidCenterLake = 'The follow lakes have invalid center lake numbers.';
 var
   ScreenObjectIndex: Integer;
   ScreenObject, OtherObject: TScreenObject;
@@ -97,8 +99,8 @@ begin
         if FLakeList[ScreenObject.ModflowLakBoundary.LakeID] <> nil then
         begin
           OtherObject := FLakeList[ScreenObject.ModflowLakBoundary.LakeID];
-          frmErrorsAndWarnings.AddError(Model, DupNameErrorMessage, OtherObject.Name
-            + ' and ' + ScreenObject.Name);
+          frmErrorsAndWarnings.AddError(Model, DupNameErrorMessage,
+            Format(StrSAndS, [OtherObject.Name, ScreenObject.Name]));
         end;
         FLakeList[ScreenObject.ModflowLakBoundary.LakeID]
           := ScreenObject;

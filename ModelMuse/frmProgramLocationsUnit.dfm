@@ -2,19 +2,20 @@ inherited frmProgramLocations: TfrmProgramLocations
   HelpType = htKeyword
   HelpKeyword = 'MODFLOW_Program_Locations_Dialog_Box'
   Caption = 'MODFLOW Program Locations'
-  ClientHeight = 451
+  ClientHeight = 486
   ClientWidth = 623
   ExplicitWidth = 631
-  ExplicitHeight = 485
+  ExplicitHeight = 520
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 410
+    Top = 445
     Width = 623
     Height = 41
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 410
     DesignSize = (
       623
       41)
@@ -52,12 +53,13 @@ inherited frmProgramLocations: TfrmProgramLocations
     Left = 0
     Top = 0
     Width = 623
-    Height = 410
+    Height = 445
     Align = alClient
     TabOrder = 1
+    ExplicitHeight = 410
     DesignSize = (
       623
-      410)
+      445)
     object lblModflow: TLabel
       Left = 16
       Top = 17
@@ -77,14 +79,14 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object lblTextEditor: TLabel
       Left = 16
-      Top = 289
+      Top = 337
       Width = 73
       Height = 18
       Caption = 'Text editor'
     end
     object htlblModPath: TJvHTLabel
       Left = 105
-      Top = 127
+      Top = 175
       Width = 430
       Height = 19
       Caption = 
@@ -93,22 +95,22 @@ inherited frmProgramLocations: TfrmProgramLocations
         'l</a>'
     end
     object lblModpath: TLabel
-      Left = 20
-      Top = 127
+      Left = 16
+      Top = 177
       Width = 79
       Height = 18
       Caption = 'MODPATH'
     end
     object lblModelMonitor: TLabel
       Left = 16
-      Top = 340
+      Top = 388
       Width = 95
       Height = 18
       Caption = 'ModelMonitor'
     end
     object htlblZoneBudger: TJvHTLabel
       Left = 135
-      Top = 182
+      Top = 230
       Width = 448
       Height = 19
       Caption = 
@@ -118,14 +120,14 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object lblZoneBudget: TLabel
       Left = 16
-      Top = 182
+      Top = 230
       Width = 109
       Height = 18
       Caption = 'ZONEBUDGET'
     end
     object lblModelMate: TLabel
       Left = 16
-      Top = 237
+      Top = 285
       Width = 78
       Height = 18
       Caption = 'ModelMate'
@@ -149,12 +151,29 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object JvHTLabel2: TJvHTLabel
       Left = 100
-      Top = 237
+      Top = 285
       Width = 332
       Height = 19
       Caption = 
         '<a href="http://water.usgs.gov/nrp/gwsoftware/zonebud3/zonebudge' +
         't3.html">http://water.usgs.gov/nrp/gwsoftware/ModelMate</a>'
+    end
+    object lblModflowNWT: TLabel
+      Left = 16
+      Top = 120
+      Width = 123
+      Height = 18
+      Caption = 'MODFLOW-NWT'
+    end
+    object htlblModflowNWT: TJvHTLabel
+      Left = 142
+      Top = 120
+      Width = 464
+      Height = 19
+      Caption = 
+        '<a href="http://water.usgs.gov/nrp/gwsoftware/modflow_nwt/Modflo' +
+        'wNwt.html">http://water.usgs.gov/nrp/gwsoftware/modflow_nwt/Modf' +
+        'lowNwt.html</a>'
     end
     object fedModflow: TJvFilenameEdit
       Left = 16
@@ -170,7 +189,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object fedTextEditor: TJvFilenameEdit
       Left = 16
-      Top = 309
+      Top = 357
       Width = 588
       Height = 26
       Filter = 
@@ -182,7 +201,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object fedModpath: TJvFilenameEdit
       Left = 16
-      Top = 150
+      Top = 198
       Width = 588
       Height = 26
       Filter = 
@@ -194,7 +213,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object fedModelMonitor: TJvFilenameEdit
       Left = 16
-      Top = 360
+      Top = 408
       Width = 588
       Height = 26
       Filter = 
@@ -206,7 +225,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object fedZonebudget: TJvFilenameEdit
       Left = 16
-      Top = 205
+      Top = 253
       Width = 588
       Height = 26
       Filter = 
@@ -218,7 +237,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object fedModelMate: TJvFilenameEdit
       Left = 16
-      Top = 257
+      Top = 305
       Width = 588
       Height = 26
       Filter = 'Executables (*.exe)|*.exe|All files (*.*)|*.*'
@@ -228,7 +247,7 @@ inherited frmProgramLocations: TfrmProgramLocations
     end
     object fedModflowLgr: TJvFilenameEdit
       Left = 16
-      Top = 95
+      Top = 88
       Width = 588
       Height = 26
       Filter = 
@@ -236,6 +255,18 @@ inherited frmProgramLocations: TfrmProgramLocations
         '.*)|*.*'
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 6
+      OnChange = fedModflowChange
+    end
+    object fedModflowNWT: TJvFilenameEdit
+      Left = 16
+      Top = 143
+      Width = 588
+      Height = 26
+      Filter = 
+        'Executables (*.exe)|*.exe|Batch Files (*.bat)|*.bat|All files (*' +
+        '.*)|*.*'
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 7
       OnChange = fedModflowChange
     end
   end

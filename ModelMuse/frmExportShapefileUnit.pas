@@ -286,7 +286,7 @@ begin
             RealList.AddUnique(TimeItem.EndingTime);
           end;
         end;
-      msModflow, msModflowLGR:
+      msModflow, msModflowLGR, msModflowNWT:
         begin
           for Index := 0 to
             frmGoPhast.PhastModel.ModflowStressPeriods.Count - 1 do
@@ -627,7 +627,7 @@ begin
           for EditDisplayIndex := 0 to Edits.Count - 1 do
           begin
             Edit := Edits[EditDisplayIndex];
-            ShapeDataBase.UpdFieldNum(Names[EditDisplayIndex],
+            ShapeDataBase.UpdFieldNum(AnsiString(Names[EditDisplayIndex]),
               Edge.RealValue[Edit.DataIndex]);
           end;
           ShapeDataBase.PostChanges;
@@ -917,7 +917,7 @@ end;
 procedure TfrmExportShapefile.GetFieldNames(Names, Fields: TStringList;
   LayerLimit: Integer; TimeLists, DataSets: TList);
 var
-  TimeRoot: string;
+  TimeRoot: AnsiString;
   DataSetIndex: Integer;
   TimeValue: Double;
   TimeList: TCustomTimeList;
@@ -925,15 +925,15 @@ var
   TimeCharacters: Integer;
   TimeIndex: Integer;
   RealList: TRealList;
-  FieldName: string;
+  FieldName: AnsiString;
   LayerIndex: Integer;
-  FieldFormat: string;
-  RootName: string;
+  FieldFormat: AnsiString;
+  RootName: AnsiString;
   DataArray: TDataArray;
   Index: Integer;
   LayerCharacters: Integer;
   SuffixInt: integer;
-  SuffixStr: string;
+  SuffixStr: AnsiString;
 begin
   ShapeType := GetShapeType;
   Fields.Add('COLUMN=N');
@@ -955,7 +955,7 @@ begin
     DataArray.Initialize;
     DataArray.CacheData;
     frmGoPhast.PhastModel.DataArrayManager.CacheDataArrays;
-    RootName := UpperCase(DataArray.Name);
+    RootName := AnsiString(UpperCase(DataArray.Name));
     case DataArray.Orientation of
       dsoTop:
         begin
@@ -965,15 +965,15 @@ begin
           end;
 
           SuffixInt := 1;
-          while Names.IndexOf(RootName) >= 0 do
+          while Names.IndexOf(string(RootName)) >= 0 do
           begin
-            SuffixStr := IntToStr(SuffixInt);
+            SuffixStr := AnsiString(IntToStr(SuffixInt));
             Inc(SuffixInt);
             RootName := Copy(RootName, 1, 10-Length(SuffixStr))
               + SuffixStr;
           end;
 
-          Names.AddObject(RootName, DataArray);
+          Names.AddObject(string(RootName), DataArray);
           case DataArray.DataType of
             rdtDouble:
               FieldFormat := 'N18,10';
@@ -988,7 +988,7 @@ begin
           end;
           FieldName := RootName;
           FieldName := FixShapeFileFieldName(FieldName);
-          Fields.AddObject(FieldName + '=' + FieldFormat, DataArray);
+          Fields.AddObject(string(FieldName + '=' + FieldFormat), DataArray);
         end;
       dsoFront, dsoSide, dso3D:
         begin
@@ -999,15 +999,15 @@ begin
               SetLength(RootName, 9 - LayerCharacters);
             end;
             SuffixInt := 1;
-            while Names.IndexOf(RootName) >= 0 do
+            while Names.IndexOf(string(RootName)) >= 0 do
             begin
-              SuffixStr := IntToStr(SuffixInt);
+              SuffixStr := AnsiString(IntToStr(SuffixInt));
               Inc(SuffixInt);
-              RootName := Copy(RootName, 1, 9 - LayerCharacters-Length(SuffixStr))
+              RootName := AnsiString(Copy(string(RootName), 1, 9 - LayerCharacters-Length(SuffixStr)))
                 + SuffixStr;
             end;
           end;
-          Names.AddObject(RootName, DataArray);
+          Names.AddObject(string(RootName), DataArray);
           case DataArray.DataType of
             rdtDouble:
               FieldFormat := 'N18,10';
@@ -1022,15 +1022,15 @@ begin
           begin
             FieldName := RootName;
             FieldName := FixShapeFileFieldName(FieldName);
-            Fields.AddObject(FieldName + '=' + FieldFormat, DataArray);
+            Fields.AddObject(String(FieldName + '=' + FieldFormat), DataArray);
           end
           else
           begin
             for LayerIndex := 1 to LayerLimit do
             begin
-              FieldName := RootName + 'L' + IntToStr(LayerIndex);
+              FieldName := RootName + 'L' + AnsiString(IntToStr(LayerIndex));
               FieldName := FixShapeFileFieldName(FieldName);
-              Fields.AddObject(FieldName + '=' + FieldFormat, DataArray);
+              Fields.AddObject(String(FieldName + '=' + FieldFormat), DataArray);
             end;
           end;
         end;
@@ -1063,14 +1063,14 @@ begin
           DataSetIndex := TimeList.FirstTimeGreaterThan(TimeValue) - 1;
           DataArray := TimeList.Items[DataSetIndex];
           DataSets.Add(DataArray);
-          RootName := UpperCase(TimeList.Name);
-          RootName := StringReplace(RootName, ' ', '_', [rfReplaceAll]); 
+          RootName := AnsiString(UpperCase(TimeList.Name));
+          RootName := AnsiString(StringReplace(string(RootName), ' ', '_', [rfReplaceAll]));
           if Length(RootName) > 8 - LayerCharacters - TimeCharacters then
           begin
             SetLength(RootName, 8 - LayerCharacters - TimeCharacters);
           end;
-          TimeRoot := RootName + 'T' + IntToStr(TimeIndex + 1);
-          Names.AddObject(TimeRoot, DataArray);
+          TimeRoot := RootName + 'T' + AnsiString(IntToStr(TimeIndex + 1));
+          Names.AddObject(string(TimeRoot), DataArray);
           case DataArray.DataType of
             rdtDouble:
               FieldFormat := 'N18,10';
@@ -1085,15 +1085,15 @@ begin
           begin
             FieldName := TimeRoot;
             FieldName := FixShapeFileFieldName(FieldName);
-            Fields.AddObject(FieldName + '=' + FieldFormat, DataArray);
+            Fields.AddObject(string(FieldName + '=' + FieldFormat), DataArray);
           end
           else
           begin
             for LayerIndex := 1 to LayerLimit do
             begin
-              FieldName := TimeRoot + 'L' + IntToStr(LayerIndex);
+              FieldName := TimeRoot + 'L' + AnsiString(IntToStr(LayerIndex));
               FieldName := FixShapeFileFieldName(FieldName);
-              Fields.AddObject(FieldName + '=' + FieldFormat, DataArray);
+              Fields.AddObject(string(FieldName + '=' + FieldFormat), DataArray);
             end;
           end;
         end;
@@ -1125,14 +1125,14 @@ procedure TfrmExportShapefile.Assign3DDataSetValuesToDataBase(DataSets: TList;
   RowIndex, LayerIndex: integer; ShapeDataBase: TXBase);
 var
   DataArray: TDataArray;
-  RootName: string;
+  RootName: AnsiString;
   Col: Integer;
   Row: Integer;
   Layer: Integer;
-  FieldName: string;
+  FieldName: AnsiString;
 begin
   DataArray := DataSets[DataSetIndex];
-  RootName := Names[DataSetIndex];
+  RootName := AnsiString(Names[DataSetIndex]);
   Col := ColIndex;
   Row := RowIndex;
   Layer := LayerIndex;
@@ -1171,7 +1171,7 @@ begin
       rdtString:
         begin
           ShapeDataBase.UpdFieldStr(FieldName,
-            DataArray.StringData[Layer, Row, Col]);
+            AnsiString(DataArray.StringData[Layer, Row, Col]));
         end;
       else Assert(False);
     end;
@@ -1302,15 +1302,15 @@ procedure TfrmExportShapefile.Assign2DDataSetValuesToDataBase(DataSets: TList;
   RowIndex: integer; ShapeDataBase: TXBase);
 var
   DataArray: TDataArray;
-  RootName: string;
+  RootName: AnsiString;
   LayerIndex: Integer;
   Col: Integer;
   Row: Integer;
   Layer: Integer;
-  FieldName: string;
+  FieldName: AnsiString;
 begin
   DataArray := DataSets[DataSetIndex];
-  RootName := Names[DataSetIndex];
+  RootName := AnsiString(Names[DataSetIndex]);
   if DataArray.Orientation = dsoTop then
   begin
     LayerLimit := 1;
@@ -1333,7 +1333,7 @@ begin
     end
     else
     begin
-      FieldName := RootName + 'L' + IntToStr(Layer+1);
+      FieldName := RootName + 'L' + AnsiString(IntToStr(Layer+1));
     end;
     FieldName := FixShapeFileFieldName(FieldName);
     if DataArray.IsValue[Layer, Row, Col] then
@@ -1363,7 +1363,7 @@ begin
         rdtString:
           begin
             ShapeDataBase.UpdFieldStr(FieldName,
-              DataArray.StringData[Layer, Row, Col]);
+              AnsiString(DataArray.StringData[Layer, Row, Col]));
           end;
         else Assert(False);
       end;
@@ -1505,7 +1505,7 @@ begin
         lblElements.Caption := '&Element Shapefile name';
         lblNodes.Caption := '&Node Shapefile name';
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         lblElements.Caption := '&Cell Shapefile name';
         lblNodes.Caption := '&Cell-Corner Shapefile name';

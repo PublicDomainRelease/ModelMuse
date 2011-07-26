@@ -950,7 +950,7 @@ procedure TMfWelTimeListLink.CreateTimeLists;
 begin
   inherited;
   FPumpingRateData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FPumpingRateData.NonParamDescription := 'Pumping rate';
+  FPumpingRateData.NonParamDescription := StrPumpingRate;
   FPumpingRateData.ParamDescription := ' pumping rate multiplier';
   if Model <> nil then
   begin

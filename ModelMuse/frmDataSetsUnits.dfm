@@ -37,9 +37,12 @@ inherited frmDataSets: TfrmDataSets
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 551
@@ -47,9 +50,12 @@ inherited frmDataSets: TfrmDataSets
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 4
       OnClick = btnCancelClick
-      Kind = bkCancel
     end
     object btnAdd: TButton
       Left = 8
@@ -75,9 +81,12 @@ inherited frmDataSets: TfrmDataSets
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
   end
   object sbStatusBar: TStatusBar
@@ -96,7 +105,7 @@ inherited frmDataSets: TfrmDataSets
     Height = 405
     Align = alClient
     HideSelection = False
-    Indent = 19
+    Indent = 21
     MultiSelect = True
     MultiSelectStyle = [msControlSelect, msShiftSelect]
     ReadOnly = True
@@ -108,7 +117,7 @@ inherited frmDataSets: TfrmDataSets
     Top = 0
     Width = 320
     Height = 405
-    ActivePage = tabComment
+    ActivePage = tabBasic
     Align = alRight
     TabOrder = 3
     object tabBasic: TTabSheet
@@ -312,7 +321,6 @@ inherited frmDataSets: TfrmDataSets
         Width = 128
         Height = 30
         Cursor = crIBeam
-        ItemHeight = 0
         TabOrder = 6
         Text = '1'
         OnChange = rdeAnisotropyChange
@@ -335,7 +343,6 @@ inherited frmDataSets: TfrmDataSets
         Top = 271
         Width = 275
         Height = 89
-        AutoSize = False
         Anchors = [akLeft, akTop, akRight, akBottom]
         TabOrder = 8
         OnExit = reDefaultFormulaExit
@@ -344,10 +351,6 @@ inherited frmDataSets: TfrmDataSets
     object tabPHAST: TTabSheet
       Caption = 'PHAST-Interpolation'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       inline framePhastInterpolation: TframePhastInterpolation
         Left = -2
         Top = 3
@@ -430,7 +433,6 @@ inherited frmDataSets: TfrmDataSets
           Left = 12
           Top = 153
           Height = 30
-          ItemHeight = 19
           OnChange = framePhastInterpolationrdeDistance1Change
           ExplicitLeft = 12
           ExplicitTop = 153
@@ -440,7 +442,6 @@ inherited frmDataSets: TfrmDataSets
           Left = 12
           Top = 211
           Height = 30
-          ItemHeight = 19
           OnChange = framePhastInterpolationrdeDistance2Change
           ExplicitLeft = 12
           ExplicitTop = 211
@@ -450,7 +451,6 @@ inherited frmDataSets: TfrmDataSets
           Left = 184
           Top = 153
           Height = 30
-          ItemHeight = 19
           OnChange = framePhastInterpolationrdeValue1Change
           ExplicitLeft = 184
           ExplicitTop = 153
@@ -460,7 +460,6 @@ inherited frmDataSets: TfrmDataSets
           Left = 184
           Top = 214
           Height = 30
-          ItemHeight = 19
           OnChange = framePhastInterpolationrdeValue2Change
           ExplicitLeft = 184
           ExplicitTop = 214
@@ -524,7 +523,6 @@ inherited frmDataSets: TfrmDataSets
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitHeight = 73
         object Comment: TLabel
           AlignWithMargins = True
           Left = 3
@@ -537,11 +535,10 @@ inherited frmDataSets: TfrmDataSets
         object reComment: TJvRichEdit
           AlignWithMargins = True
           Left = 3
-          Top = 25
+          Top = 28
           Width = 306
-          Height = 151
+          Height = 148
           Align = alClient
-          AutoSize = False
           TabOrder = 0
           WordWrap = False
           OnExit = reCommentExit
@@ -567,17 +564,14 @@ inherited frmDataSets: TfrmDataSets
         object memoAssociatedDataSets: TMemo
           AlignWithMargins = True
           Left = 3
-          Top = 25
+          Top = 28
           Width = 306
-          Height = 159
+          Height = 156
           Align = alClient
           ReadOnly = True
           ScrollBars = ssVertical
           TabOrder = 0
           WordWrap = False
-          ExplicitTop = 22
-          ExplicitWidth = 312
-          ExplicitHeight = 165
         end
       end
     end

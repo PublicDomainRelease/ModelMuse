@@ -12,12 +12,12 @@ inherited frmVerticalExaggeration: TfrmVerticalExaggeration
   ExplicitWidth = 437
   ExplicitHeight = 123
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object lblVerticalExaggeration: TLabel
     Left = 8
     Top = 11
-    Width = 137
-    Height = 17
+    Width = 152
+    Height = 18
     Caption = 'Vertical exaggeration:'
   end
   object rdeVerticalExaggeration: TRbwDataEntry
@@ -27,7 +27,6 @@ inherited frmVerticalExaggeration: TfrmVerticalExaggeration
     Height = 28
     Cursor = crIBeam
     Color = clWhite
-    ItemHeight = 17
     TabOrder = 1
     Text = '1'
     OnExit = rdeVerticalExaggerationExit
@@ -41,8 +40,11 @@ inherited frmVerticalExaggeration: TfrmVerticalExaggeration
     Top = 48
     Width = 97
     Height = 33
-    TabOrder = 0
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 0
   end
   object btnOK: TBitBtn
     Left = 215
@@ -51,8 +53,7 @@ inherited frmVerticalExaggeration: TfrmVerticalExaggeration
     Height = 33
     Caption = 'OK'
     Default = True
-    TabOrder = 3
-    OnClick = btnOKClick
+    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       04000000000068010000120B0000120B00001000000010000000000000000000
@@ -71,6 +72,9 @@ inherited frmVerticalExaggeration: TfrmVerticalExaggeration
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 3
+    OnClick = btnOKClick
   end
   object btnHelp: TBitBtn
     Left = 111
@@ -78,9 +82,12 @@ inherited frmVerticalExaggeration: TfrmVerticalExaggeration
     Width = 97
     Height = 33
     HelpType = htKeyword
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 2
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
   object btnDefault: TButton
     Left = 8

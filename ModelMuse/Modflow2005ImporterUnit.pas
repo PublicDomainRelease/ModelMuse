@@ -45,7 +45,11 @@ uses ModflowGridUnit, AbstractGridUnit, ScreenObjectUnit, GoPhastTypes,
   HufDefinition, FluxObservationUnit, ModflowMnw2Unit, ModflowSubsidenceDefUnit,
   ModflowHydmodUnit, ContourExport, ModelMuseUtilities;
 
-resourcestring
+var
+  DummyInteger: integer;
+  DummyDouble: Double;
+
+const
   StrHydCondAlongRows = 'HYD. COND. ALONG ROWS';
   StrHorizAnisotropy = 'HORIZ. ANI. (COL./ROW)';
   StrVerticalHydCond = 'VERTICAL HYD. COND.';
@@ -763,7 +767,6 @@ Type
     function GetCluster(Index: integer): TClusterObject;
   protected
     function ArrayMemberClass: TArrayMemberClass; override;
-  published
   public
     Name: string;
     property Clusters[Index: integer]: TClusterObject read GetCluster; default;
@@ -1823,7 +1826,6 @@ Type
     function GetReach(Index: integer): TSfrLocationObject;
   protected
     function ArrayMemberClass: TArrayMemberClass; override;
-  published
   public
     property Reaches[Index: integer]: TSfrLocationObject read GetReach; default;
   end;
@@ -2823,7 +2825,6 @@ Type
     function GetLocations(Index: integer): THydModLocation;
   protected
     function ArrayMemberClass: TArrayMemberClass; override;
-  published
   public
     property Locations[Index: integer]: THydModLocation read GetLocations; default;
   end;
@@ -3146,13 +3147,13 @@ begin
   result := ArrayName;
   if (Length(result) > 0) then
   begin
-    if not (result[1] in ['A'..'Z', 'a'..'z', '_']) then
+    if not CharInSet(result[1], ['A'..'Z', 'a'..'z', '_']) then
     begin
       result := '_' + result;
     end;
     for Index := 2 to Length(result) do
     begin
-      if not (result[Index] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
+      if not CharInSet(result[Index], ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
       begin
         result[Index] := '_';
       end;
@@ -4412,14 +4413,14 @@ end;
 procedure TBasImporter.ReadDataSet1;
 var
   IPRTIM: Integer;
-  IFREFM: Integer;
+//  IFREFM: Integer;
   ICHFLG: Integer;
   IXSEC: Integer;
 begin
   Read(FImporter.FFile, IXSEC);
   Read(FImporter.FFile, ICHFLG);
   // IFREFM is not used but you need to read it to get to IPRTIM.
-  Read(FImporter.FFile, IFREFM);
+  Read(FImporter.FFile, DummyInteger); // IFREFM
   Read(FImporter.FFile, IPRTIM);
 
   FChtoch := (ICHFLG <> 0);
@@ -5476,10 +5477,13 @@ var
 begin
   ScreenObject := nil;
   if (FVerticalK <> nil) or (FVerticalKConst <> nil)
-    or (FQuasiVerticalK <> nil) or (FQuasiVerticalKConst <> nil) then
+    or (FQuasiVerticalK <> nil) or (FQuasiVerticalKConst <> nil)
+    or (FHorizontalToVerticalAnisotropy <> nil) or (FHorizontalToVerticalAnisotropyConst <> nil) then
   begin
     CheckVariableRealArrays(FVerticalKConst, FVerticalK);
     CheckVariableRealArrays(FQuasiVerticalKConst, FQuasiVerticalK);
+    CheckVariableRealArrays(FHorizontalToVerticalAnisotropyConst, FHorizontalToVerticalAnisotropy);
+
     CheckRealConstArray(ConstantValueK, IsConstantK, FVerticalKConst);
     if FQuasiVerticalKConst = nil then
     begin
@@ -7995,7 +7999,7 @@ begin
             and (Cell.Row = ObsCell.ROW)
             and (Cell.Column = ObsCell.COLUMN) then
           begin
-            Found := True;
+//            Found := True;
             StartPosition := CellIndex + 1;
             Cell.FObservationGroups.Add(ObsGroup);
             Cell.FObservationCells.Add(ObsCell);
@@ -8600,12 +8604,12 @@ begin
 end;
 
 procedure TListImporter.ReadDataSet1;
-var
-  MXL: integer;
+//var
+//  MXL: integer;
 begin
 
   Read(FImporter.FFile, NP);
-  Read(FImporter.FFile, MXL);
+  Read(FImporter.FFile, DummyInteger); // MXL
   Readln(FImporter.FFile);
   FProgressHandler(FilePos(FImporter.FFile));
   FParameters.ArrayLength := NP;
@@ -11243,7 +11247,7 @@ end;
 
 procedure TRchImporter.ReadData(const ALabel: string);
 var
-  IRCHCB: integer;
+//  IRCHCB: integer;
   INRECH: integer;
   INIRCH: integer;
   ALine: string;
@@ -11260,7 +11264,7 @@ begin
     if ALabel = 'NRCHOP,IRCHCB:' then
     begin
       Read(FImporter.FFile, NRCHOP);
-      Read(FImporter.FFile, IRCHCB);
+      Read(FImporter.FFile, DummyInteger); // IRCHCB
       ReadLn(FImporter.FFile);
       FProgressHandler(FilePos(FImporter.FFile));
     end
@@ -12176,7 +12180,7 @@ end;
 procedure TEvtImporter.ReadData(const ALabel: string);
 var
   Handled: Boolean;
-  IEVTCB: integer;
+//  IEVTCB: integer;
   INSURF: integer;
   INEVTR: integer;
   INEXDP: integer;
@@ -12194,7 +12198,7 @@ begin
     if ALabel = 'NEVTOP,IEVTCB:' then
     begin
       Read(FImporter.FFile, NEVTOP);
-      Read(FImporter.FFile, IEVTCB);
+      Read(FImporter.FFile, DummyInteger); // IEVTCB
       ReadLn(FImporter.FFile);
       FProgressHandler(FilePos(FImporter.FFile));
     end
@@ -12476,26 +12480,26 @@ begin
 end;
 
 procedure TSfrImporter.ReadDataSet5WithoutParameters;
-var
-  IPTFLG: Integer;
-  IRDFLG: Integer;
+//var
+//  IPTFLG: Integer;
+//  IRDFLG: Integer;
 begin
   Read(FImporter.FFile, ITMP);
-  Read(FImporter.FFile, IRDFLG);
-  Read(FImporter.FFile, IPTFLG);
+  Read(FImporter.FFile, DummyInteger); // IRDFLG
+  Read(FImporter.FFile, DummyInteger); // IPTFLG
   NP := 0;
   Inc(FCurrentStressPeriod);
   InitializeCurrentStressPeriod;
 end;
 
 procedure TSfrImporter.ReadDataSet5WithParameters;
-var
-  IRDFLG: Integer;
-  IPTFLG: Integer;
+//var
+//  IRDFLG: Integer;
+//  IPTFLG: Integer;
 begin
   Read(FImporter.FFile, ITMP);
-  Read(FImporter.FFile, IRDFLG);
-  Read(FImporter.FFile, IPTFLG);
+  Read(FImporter.FFile, DummyInteger); // IRDFLG
+  Read(FImporter.FFile, DummyInteger); // IPTFLG
   Read(FImporter.FFile, NP);
   Inc(FCurrentStressPeriod);
   InitializeCurrentStressPeriod;
@@ -13188,13 +13192,13 @@ begin
 end;
 
 procedure TSfrImporter.ReadFirstDataSet5WithParameters;
-var
-  IRDFLG: Integer;
-  IPTFLG: Integer;
+//var
+//  IRDFLG: Integer;
+//  IPTFLG: Integer;
 begin
   Read(FImporter.FFile, ITMP);
-  Read(FImporter.FFile, IRDFLG);
-  Read(FImporter.FFile, IPTFLG);
+  Read(FImporter.FFile, DummyInteger); // IRDFLG
+  Read(FImporter.FFile, DummyInteger); // IPTFLG
   Read(FImporter.FFile, NP);
   Inc(FCurrentStressPeriod);
   InitializeStressPeriods;
@@ -13204,13 +13208,13 @@ begin
 end;
 
 procedure TSfrImporter.ReadFirstDataSet5WithoutParameters;
-var
-  IPTFLG: Integer;
-  IRDFLG: Integer;
+//var
+//  IPTFLG: Integer;
+//  IRDFLG: Integer;
 begin
   Read(FImporter.FFile, ITMP);
-  Read(FImporter.FFile, IRDFLG);
-  Read(FImporter.FFile, IPTFLG);
+  Read(FImporter.FFile, DummyInteger); // IRDFLG
+  Read(FImporter.FFile, DummyInteger); // IPTFLG
   NP := 0;
   Inc(FCurrentStressPeriod);
   InitializeStressPeriods;
@@ -14324,14 +14328,14 @@ end;
 procedure THobImporter.ReadDataSet1;
 var
   NH: integer;
-  MOBS: integer;
-  MAXM: integer;
-  IUHOBSV: integer;
+//  MOBS: integer;
+//  MAXM: integer;
+//  IUHOBSV: integer;
 begin
   Read(FImporter.FFile, NH);
-  Read(FImporter.FFile, MOBS);
-  Read(FImporter.FFile, MAXM);
-  Read(FImporter.FFile, IUHOBSV);
+  Read(FImporter.FFile, DummyInteger); // MOBS
+  Read(FImporter.FFile, DummyInteger); // MAXM
+  Read(FImporter.FFile, DummyInteger); // IUHOBSV
   Read(FImporter.FFile, HOBDRY);
   ReadLn(FImporter.FFile);
   FProgressHandler(FilePos(FImporter.FFile));
@@ -14580,7 +14584,7 @@ end;
 procedure THfbImporter.ReadData(const ALabel: string);
 var
   NPHFB: integer;
-  MXFBP: integer;
+//  MXFBP: integer;
   SingleStressPeriod: THfbStressPeriod;
   Barrier: THfbLocation;
   ParameterName: string;
@@ -14589,7 +14593,7 @@ begin
   if ALabel = 'NPHFB,MXFBP,NHFBNP:' then
   begin
     Read(FImporter.FFile, NPHFB);
-    Read(FImporter.FFile, MXFBP);
+    Read(FImporter.FFile, DummyInteger); // MXFBP
     Read(FImporter.FFile, NHFBNP);
     ReadLn(FImporter.FFile);
     FProgressHandler(FilePos(FImporter.FFile));
@@ -15044,14 +15048,14 @@ end;
 
 procedure TLakImporter.ReadDataSet1;
 var
-  ILKCB: Integer;
+//  ILKCB: Integer;
   NLAY: Integer;
   NROW: Integer;
   NCOL: Integer;
   Index: Integer;
 begin
   Read(FImporter.FFile, NLAKES);
-  Read(FImporter.FFile, ILKCB);
+  Read(FImporter.FFile, DummyInteger); // ILKCB
   ReadLn(FImporter.FFile);
   FProgressHandler(FilePos(FImporter.FFile));
   SetLength(Stages, NLAKES);
@@ -15133,14 +15137,14 @@ end;
 
 procedure TLakImporter.ReadLakeSolutes;
 var
-  CLAKE: Double;
+//  CLAKE: Double;
   Index: Integer;
   LM: Integer;
 begin
   Read(FImporter.FFile, LM);
   for Index := 0 to LM - 1 do
   begin
-    Read(FImporter.FFile, CLAKE);
+    Read(FImporter.FFile, DummyDouble); // CLAKE
   end;
   ReadLn(FImporter.FFile);
   FProgressHandler(FilePos(FImporter.FFile));
@@ -15148,14 +15152,14 @@ end;
 
 procedure TLakImporter.ReadDataSet4;
 var
-  ITMP: Integer;
+//  ITMP: Integer;
   ITMP1: Integer;
-  LWRT: Integer;
+//  LWRT: Integer;
   StressPeriodValues: TLakeValueArray;
 begin
-  Read(FImporter.FFile, ITMP);
+  Read(FImporter.FFile, DummyInteger); // ITMP
   Read(FImporter.FFile, ITMP1);
-  Read(FImporter.FFile, LWRT);
+  Read(FImporter.FFile, DummyInteger); // LWRT
   ReadLn(FImporter.FFile);
   FProgressHandler(FilePos(FImporter.FFile));
   Inc(FCurrentStressPeriod);
@@ -15353,25 +15357,25 @@ begin
 end;
 
 procedure TLakImporter.ReadDataSet9bWithAugmentation;
-var
-  CAUG: Double;
-  CRNF: Double;
-  CPPT: Double;
+//var
+//  CAUG: Double;
+//  CRNF: Double;
+//  CPPT: Double;
 begin
-  Read(FImporter.FFile, CPPT);
-  Read(FImporter.FFile, CRNF);
-  Read(FImporter.FFile, CAUG);
+  Read(FImporter.FFile, DummyDouble); // CPPT
+  Read(FImporter.FFile, DummyDouble); // CRNF
+  Read(FImporter.FFile, DummyDouble); // CAUG
   ReadLn(FImporter.FFile);
   FProgressHandler(FilePos(FImporter.FFile));
 end;
 
 procedure TLakImporter.ReadDataSet9bNoAugmentation;
-var
-  CRNF: Double;
-  CPPT: Double;
+//var
+//  CRNF: Double;
+//  CPPT: Double;
 begin
-  Read(FImporter.FFile, CPPT);
-  Read(FImporter.FFile, CRNF);
+  Read(FImporter.FFile, DummyDouble); // CPPT
+  Read(FImporter.FFile, DummyDouble); // CRNF
   ReadLn(FImporter.FFile);
   FProgressHandler(FilePos(FImporter.FFile));
 end;
@@ -15563,15 +15567,15 @@ begin
 end;
 
 procedure TDrtImporter.ReadDataSet1DRT;
-var
-  IDRTCB: Integer;
-  MXADRT: Integer;
-  MXL: Integer;
+//var
+//  IDRTCB: Integer;
+//  MXADRT: Integer;
+//  MXL: Integer;
 begin
-  Read(FImporter.FFile, MXADRT);
-  Read(FImporter.FFile, IDRTCB);
+  Read(FImporter.FFile, DummyInteger); // MXADRT
+  Read(FImporter.FFile, DummyInteger); // IDRTCB
   Read(FImporter.FFile, NP);
-  Read(FImporter.FFile, MXL);
+  Read(FImporter.FFile, DummyInteger); // MXL
   Readln(FImporter.FFile);
   FProgressHandler(FilePos(FImporter.FFile));
   FParameters.ArrayLength := NP;
@@ -16805,8 +16809,8 @@ begin
     if ALabel = 'NETSOP,IETSCB,NPETS,NETSEG:' then
     begin
       Read(FImporter.FFile, NETSOP);
-      Read(FImporter.FFile, IETSCB);
-      Read(FImporter.FFile, NPETS);
+      Read(FImporter.FFile, DummyInteger); // IETSCB
+      Read(FImporter.FFile, DummyInteger); // NPETS
       Read(FImporter.FFile, NETSEG);
       ReadLn(FImporter.FFile);
       FProgressHandler(FilePos(FImporter.FFile));
@@ -17231,8 +17235,8 @@ var
   ID: string;
   Value: double;
   IntValue: integer;
-  Layer: integer;
-  IRESCB: integer;
+//  Layer: integer;
+//  IRESCB: integer;
   Index: Integer;
   FResStressPeriod: TResStressPeriod;
 begin
@@ -17240,7 +17244,7 @@ begin
   if ALabel = 'NRES,IRESCB,NRESOP,IRESPT,NPTS:' then
   begin
     Read(FImporter.FFile, NRES);
-    Read(FImporter.FFile, IRESCB);
+    Read(FImporter.FFile, DummyInteger); // IRESCB
     Read(FImporter.FFile, NRESOP);
     Read(FImporter.FFile, IRESPT);
     Read(FImporter.FFile, NPTS);
@@ -17264,7 +17268,7 @@ begin
   else if ALabel = StrConstant2DRealArrayForLayer then
   begin
     ReadLn(FImporter.FFile, ID);
-    ReadLn(FImporter.FFile, Layer);
+    ReadLn(FImporter.FFile, DummyInteger); // Layer
     Readln(FImporter.FFile, Value);
     ID := Trim(ID);
     if ID = 'RESERVOIR LAND SURF ELEV' then
@@ -17294,7 +17298,7 @@ begin
   else if ALabel = StrVariable2DRealArrayForLayer then
   begin
     ReadLn(FImporter.FFile, ID);
-    ReadLn(FImporter.FFile, Layer);
+    ReadLn(FImporter.FFile, DummyInteger); // Layer
     ID := Trim(ID);
     if ID = 'RESERVOIR LAND SURF ELEV' then
     begin
@@ -17322,7 +17326,7 @@ begin
   else if ALabel = StrConstant2DIntegerArrayForLayer then
   begin
     ReadLn(FImporter.FFile, ID);
-    ReadLn(FImporter.FFile, Layer);
+    ReadLn(FImporter.FFile, DummyInteger); // Layer
 //    Dec(Layer);
     ReadLn(FImporter.FFile, IntValue);
     ID := Trim(ID);
@@ -17347,7 +17351,7 @@ begin
   else if ALabel = StrVariable2DIntegerArrayForLayer then
   begin
     ReadLn(FImporter.FFile, ID);
-    ReadLn(FImporter.FFile, Layer);
+    ReadLn(FImporter.FFile, DummyInteger); // Layer
     ID := Trim(ID);
     if ID = 'RESERVOIR LOCATION' then
     begin
@@ -17701,7 +17705,7 @@ begin
     NewItemsNeeded := not FReuseInfiltration[StressPeriodIndex];
     if FUzfPackage.SimulateET then
     begin
-      NewItemsNeeded
+      NewItemsNeeded := NewItemsNeeded
         or not FReuseET[StressPeriodIndex]
         or not FReuseExtictionDepth[StressPeriodIndex]
         or not FReuseExtictionWaterContent[StressPeriodIndex];
@@ -18046,8 +18050,8 @@ begin
     Read(FImporter.FFile, IUZFOPT);
     Read(FImporter.FFile, IRUNFLG);
     Read(FImporter.FFile, IETFLG);
-    Read(FImporter.FFile, IUZFCB1);
-    Read(FImporter.FFile, IUZFCB2);
+    Read(FImporter.FFile, DummyInteger); // IUZFCB1
+    Read(FImporter.FFile, DummyInteger); // IUZFCB2
     Read(FImporter.FFile, NTRAIL2);
     Read(FImporter.FFile, NSETS2);
     Read(FImporter.FFile, NUZGAG);
@@ -18061,8 +18065,8 @@ begin
     Read(FImporter.FFile, IUZFOPT);
     Read(FImporter.FFile, IRUNFLG);
     Read(FImporter.FFile, IETFLG);
-    Read(FImporter.FFile, IUZFCB1);
-    Read(FImporter.FFile, IUZFCB2);
+    Read(FImporter.FFile, DummyInteger); // IUZFCB1
+    Read(FImporter.FFile, DummyInteger); // IUZFCB2
     Read(FImporter.FFile, NUZGAG);
     Readln(FImporter.FFile);
     FProgressHandler(FilePos(FImporter.FFile));
@@ -18505,7 +18509,7 @@ end;
 procedure TGageImporter.ReadData(const ALabel: string);
 var
   NUMGAGE: integer;
-  UNIT_Number: integer;
+//  UNIT_Number: integer;
   LAKE: integer;
   Gage: TGage;
 begin
@@ -18524,7 +18528,7 @@ begin
     Gage.GageType := gtStream;
     Read(FImporter.FFile, Gage.GAGESEG);
     Read(FImporter.FFile, Gage.GAGERCH);
-    Read(FImporter.FFile, UNIT_Number);
+    Read(FImporter.FFile, DummyInteger); // UNIT_Number
     Read(FImporter.FFile, Gage.OUTTYPE);
     Readln(FImporter.FFile);
     FProgressHandler(FilePos(FImporter.FFile));
@@ -18536,7 +18540,7 @@ begin
     Gage.GageType := gtLake;
     Read(FImporter.FFile, LAKE);
     Gage.LakeNumber := Abs(LAKE);
-    Read(FImporter.FFile, UNIT_Number);
+    Read(FImporter.FFile, DummyInteger); // UNIT_Number
     Read(FImporter.FFile, Gage.OUTTYPE);
     Readln(FImporter.FFile);
     FProgressHandler(FilePos(FImporter.FFile));
@@ -19393,11 +19397,11 @@ begin
 end;
 
 procedure THufImporter.ReadDataSet1;
-var
-  IHUFCB: integer;
+//var
+//  IHUFCB: integer;
 begin
   FIsSelected := True;
-  Read(FImporter.FFile, IHUFCB);
+  Read(FImporter.FFile, DummyInteger); // IHUFCB
   Read(FImporter.FFile, HDRY);
   Read(FImporter.FFile, NHUF);
   Read(FImporter.FFile, NPHUF);
@@ -20044,11 +20048,11 @@ begin
 end;
 
 procedure TCustomFlowObservationImporter.ReadDataSet1;
-var
-  NQC: integer;
-  NQT: integer;
+//var
+//  NQC: integer;
+//  NQT: integer;
 begin
-  Readln(FImporter.FFile, NQ, NQC, NQT, IUOBSV);
+  Readln(FImporter.FFile, NQ, DummyInteger, DummyInteger, IUOBSV); // NQC, NQT
   FProgressHandler(FilePos(FImporter.FFile));
   FObservations.ArrayLength := NQ;
   FCurrentGroupIndex := -1;
@@ -21121,9 +21125,9 @@ end;
 procedure TMnw2Importer.ReadDataSet1;
 var
   MNWMAX: integer;
-  IWL2CB: Integer;
+//  IWL2CB: Integer;
 begin
-  Readln(FImporter.FFile, MNWMAX, IWL2CB, MNWPRNT);
+  Readln(FImporter.FFile, MNWMAX, DummyInteger, MNWPRNT); // IWL2CB
   FProgressHandler(FilePos(FImporter.FFile));
   FWells.ArrayLength := MNWMAX;
   FCurrentWell := -1;
@@ -21966,11 +21970,11 @@ begin
 end;
 
 procedure TBcfImporter.ReadDataSet1;
-var
-  IBCFCB: Integer;
+//var
+//  IBCFCB: Integer;
 begin
   FIsSelected := True;
-  Read(FImporter.FFile, IBCFCB);
+  Read(FImporter.FFile, DummyInteger); // IBCFCB
   Read(FImporter.FFile, HDRY);
   Read(FImporter.FFile, IWDFLG);
   Read(FImporter.FFile, WETFCT);
@@ -22115,8 +22119,8 @@ end;
 procedure TMnwiImporter.ReadData(const ALabel: string);
 var
   MNWOBS: integer;
-  UNIT_Number: double;
-  CONCflag: double;
+//  UNIT_Number: double;
+//  CONCflag: double;
 begin
   inherited;
   if ALabel = 'Wel1flag,QSUMflag,BYNDflag:' then
@@ -22139,10 +22143,10 @@ begin
     Inc(FCurrentWell);
     Readln(FImporter.FFile, FMnwiArray[FCurrentWell].WellID);
     FMnwiArray[FCurrentWell].WellID := Trim(FMnwiArray[FCurrentWell].WellID);
-    Read(FImporter.FFile, UNIT_Number);
+    Read(FImporter.FFile, DummyInteger); // UNIT_Number
     Read(FImporter.FFile, FMnwiArray[FCurrentWell].QNDflag);
     Read(FImporter.FFile, FMnwiArray[FCurrentWell].QBHflag);
-    Read(FImporter.FFile, CONCflag);
+    Read(FImporter.FFile, DummyDouble); // CONCflag
     Readln(FImporter.FFile);
     FProgressHandler(FilePos(FImporter.FFile));
   end
@@ -22151,7 +22155,7 @@ begin
     Inc(FCurrentWell);
     Readln(FImporter.FFile, FMnwiArray[FCurrentWell].WellID);
     FMnwiArray[FCurrentWell].WellID := Trim(FMnwiArray[FCurrentWell].WellID);
-    Read(FImporter.FFile, UNIT_Number);
+    Read(FImporter.FFile, DummyInteger); // UNIT_Number
     Read(FImporter.FFile, FMnwiArray[FCurrentWell].QNDflag);
     Read(FImporter.FFile, FMnwiArray[FCurrentWell].QBHflag);
     Readln(FImporter.FFile);
@@ -22739,35 +22743,35 @@ begin
 end;
 
 procedure TSubImporter.ReadDataSet15;
-var
-  Iun6: Integer;
-  Iun5: Integer;
-  Iun4: Integer;
-  Iun3: Integer;
-  Iun2: Integer;
-  Iun1: Integer;
+//var
+//  Iun6: Integer;
+//  Iun5: Integer;
+//  Iun4: Integer;
+//  Iun3: Integer;
+//  Iun2: Integer;
+//  Iun1: Integer;
 begin
   Read(FImporter.FFile, Ifm1);
-  Read(FImporter.FFile, Iun1);
+  Read(FImporter.FFile, DummyInteger); // Iun1
   Read(FImporter.FFile, Ifm2);
-  Read(FImporter.FFile, Iun2);
+  Read(FImporter.FFile, DummyInteger); // Iun2
   Read(FImporter.FFile, Ifm3);
-  Read(FImporter.FFile, Iun3);
+  Read(FImporter.FFile, DummyInteger); // Iun3
   Read(FImporter.FFile, Ifm4);
-  Read(FImporter.FFile, Iun4);
+  Read(FImporter.FFile, DummyInteger); // Iun4
   Read(FImporter.FFile, Ifm5);
-  Read(FImporter.FFile, Iun5);
+  Read(FImporter.FFile, DummyInteger); // Iun5
   Read(FImporter.FFile, Ifm6);
-  Read(FImporter.FFile, Iun6);
+  Read(FImporter.FFile, DummyInteger); // Iun6
 end;
 
 procedure TSubImporter.ReadVariableIntArrayForLayer;
 var
-  Layer: Integer;
+//  Layer: Integer;
   ID: string;
 begin
   ReadLn(FImporter.FFile, ID);
-  ReadLn(FImporter.FFile, Layer);
+  ReadLn(FImporter.FFile, DummyInteger); // Layer
 //  Dec(Layer);
   ID := Trim(ID);
   Assert(ID = 'MATERIAL ZONE INDICES');
@@ -22784,11 +22788,11 @@ procedure TSubImporter.ReadConstIntArrayForLayer;
 var
   IntegerConstant: Integer;
   ID: string;
-  Layer: integer;
+//  Layer: integer;
 begin
   ReadLn(FImporter.FFile, ID);
   Assert(Trim(ID) = 'MATERIAL ZONE INDICES');
-  ReadLn(FImporter.FFile, Layer);
+  ReadLn(FImporter.FFile, DummyInteger); // Layer
 //  Dec(Layer);
   ReadLn(FImporter.FFile, IntegerConstant);
   FConstNZ[FDelayIndex].IsConstant := True;
@@ -22816,14 +22820,14 @@ procedure TSubImporter.ReadVariableRealArrayForLayer;
 var
   ThreeDArray: T3DDoubleArray;
   Index: Integer;
-  Layer: Integer;
+//  Layer: Integer;
   ID: string;
   ConstArray: TRealConstantRecordArray;
 begin
   Index := -1;
   ReadLn(FImporter.FFile, ID);
   ID := Trim(ID);
-  ReadLn(FImporter.FFile, Layer);
+  ReadLn(FImporter.FFile, DummyInteger); // Layer
 //  Dec(Layer);
   if ID = StrNUMBEROFBEDSINSY then
   begin
@@ -22935,13 +22939,13 @@ var
   ConstArray: TRealConstantRecordArray;
   Index: Integer;
   ID: string;
-  Layer: Integer;
+//  Layer: Integer;
   Value: Double;
 begin
   Index := -1;
   ReadLn(FImporter.FFile, ID);
   ID := Trim(ID);
-  ReadLn(FImporter.FFile, Layer);
+  ReadLn(FImporter.FFile, DummyInteger); // Layer
   Readln(FImporter.FFile, Value);
 //  Dec(Layer);
   if ID = StrNUMBEROFBEDSINSY then
@@ -23031,13 +23035,13 @@ end;
 
 procedure TSubImporter.ReadDataSet1;
 var
-  ISUBCB: Integer;
+//  ISUBCB: Integer;
   ISUBOC: Integer;
   NNDB: Integer;
   NDB: Integer;
   NMZ: Integer;
 begin
-  Read(FImporter.FFile, ISUBCB);
+  Read(FImporter.FFile, DummyInteger); // ISUBCB
   Read(FImporter.FFile, ISUBOC);
   Read(FImporter.FFile, NNDB);
   Read(FImporter.FFile, NDB);
@@ -23990,10 +23994,10 @@ begin
 end;
 
 procedure TSwtImporter.ReadDataSet1;
-var
-  ISWTCB: Integer;
+//var
+//  ISWTCB: Integer;
 begin
-  Read(FImporter.FFile, ISWTCB);
+  Read(FImporter.FFile, DummyInteger); // ISWTCB
   Read(FImporter.FFile, ISWTOC);
   Read(FImporter.FFile, NSYSTM);
   Read(FImporter.FFile, ITHK);
@@ -24114,11 +24118,11 @@ end;
 procedure THydmodImporter.ReadDataSet1;
 var
   NHYDM: Integer;
-  IHYDMUN: Integer;
+//  IHYDMUN: Integer;
 begin
   Read(FImporter.FFile, NHYDM);
   FLocations.ArrayLength := NHYDM;
-  Read(FImporter.FFile, IHYDMUN);
+  Read(FImporter.FFile, DummyInteger); // IHYDMUN
   Read(FImporter.FFile, HYDNOH);
   Readln(FImporter.FFile);
   FProgressHandler(FilePos(FImporter.FFile));

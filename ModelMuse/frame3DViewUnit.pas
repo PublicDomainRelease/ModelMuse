@@ -9,7 +9,7 @@ unit frame3DViewUnit;
 interface
 
 uses
-  SysUtils, Types, Classes, Variants, Graphics, Controls, Forms,
+  Windows, SysUtils, Types, Classes, Variants, Graphics, Controls, Forms,
   Dialogs, GLWidget, arcball;
 
 type
@@ -199,6 +199,7 @@ procedure Tframe3DView.glWidModelViewMouseMove(Sender: TObject;
 var
   Factor: double;
 begin
+
   if not glWidModelView.Started then
     Exit;
   if FZooming then
@@ -299,10 +300,16 @@ begin
   // White background
   glClearColor(1.0, 1.0, 1.0, 0.0);
 
+//  Exit;
+
   //  glShadeModel(GL_FLAT);
   glShadeModel(GL_SMOOTH);
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
   glLightfv(GL_LIGHT0, GL_POSITION, @light_position);
+
+//  Beep;
+
+//  Exit;
 
   if not frmGoPhast.CanDraw then
   begin
@@ -320,6 +327,8 @@ begin
   begin
     Exit;
   end;
+
+//   Exit;
 
   //  glEnable(GL_CULL_FACE);
 
@@ -341,6 +350,8 @@ begin
         + CellElevation[ColumnCount div 2,RowCount div 2, LayerCount]) / 2;
     end;
   end;
+
+//  Exit;
 
   // The descriptions below are written as if they apply to the model
   // when they actually affect the coordinate system.  Because they
@@ -369,6 +380,8 @@ begin
   glPushMatrix;
 
   glEnable(GL_DEPTH_TEST);
+
+//  Exit;
 
   frmGoPhast.PhastModel.Grid.Draw3D;
 
@@ -402,7 +415,7 @@ begin
     Beep;
   glPopMatrix;
 
-  glFlush;
+//  glFlush;
 
   errorCode := glGetError;
 

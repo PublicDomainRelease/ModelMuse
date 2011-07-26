@@ -168,7 +168,7 @@ end;
 
 function TSparsePointerArray.ForAll(ApplyFunction: Pointer): Integer;
 var
-  itemP: PChar; { Pointer to item in section }
+  itemP: PByte; { Pointer to item in section }
   item: Pointer;
   i, callerBP: Cardinal;
   j, index: Integer;
@@ -217,7 +217,7 @@ end;
 
 function TSparsePointerArray.GetAt(Index: Integer): Pointer;
 var
-  byteP: PChar;
+  byteP: PByte;
   secIndex: Cardinal;
 begin
   { Index into Section Directory using high order part of
@@ -252,7 +252,7 @@ function TSparsePointerArray.MakeAt(Index: Integer): PPointer;
 var
   dirP: PSecDir;
   p: Pointer;
-  byteP: PChar;
+  byteP: PByte;
   secIndex: Word;
 begin
   if (Index shr secShift >= High(Word)) then

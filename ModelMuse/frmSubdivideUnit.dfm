@@ -85,6 +85,7 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
+      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 0
       OnChange = seCol1Changed
@@ -96,6 +97,7 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
+      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 1
       OnChange = seCol2Changed
@@ -157,7 +159,6 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
-      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 0
       OnChange = seRow1Changed
@@ -169,7 +170,6 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
-      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 1
       OnChange = seRow2Changed
@@ -231,6 +231,7 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
+      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 0
       OnChange = seLayer1Changed
@@ -242,6 +243,7 @@ inherited frmSubdivide: TfrmSubdivide
       Height = 29
       ButtonKind = bkClassic
       MinValue = 1.000000000000000000
+      Value = 1.000000000000000000
       Color = clWhite
       TabOrder = 1
       OnChange = seLayer2Changed

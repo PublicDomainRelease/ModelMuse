@@ -46,9 +46,12 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       Width = 87
       Height = 27
       Anchors = [akRight, akBottom]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object CancelBtn: TBitBtn
       Left = 592
@@ -56,8 +59,11 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       Width = 87
       Height = 27
       Anchors = [akRight, akBottom]
-      TabOrder = 1
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 1
     end
     object OkBtn: TBitBtn
       Left = 497
@@ -65,9 +71,12 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       Width = 87
       Height = 27
       Anchors = [akRight, akBottom]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = OkBtnClick
-      Kind = bkOK
     end
     object btnDeleteObservation: TButton
       Left = 88
@@ -110,6 +119,10 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObservationsTimes: TTabSheet
         Caption = 'Observations times and values'
         OnResize = tabObservationsTimesResize
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         DesignSize = (
           544
           252)
@@ -326,7 +339,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
           Top = 3
           Width = 61
           Height = 22
-          ItemHeight = 18
           TabOrder = 4
           Text = '0'
           OnChange = rdeMultiValueEditChange
@@ -379,6 +391,10 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObjects: TTabSheet
         Caption = 'Objects'
         ImageIndex = 1
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         DesignSize = (
           544
           252)
@@ -570,7 +586,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
         Width = 145
         Height = 26
         Style = csDropDownList
-        ItemHeight = 18
         ItemIndex = 0
         TabOrder = 1
         Text = 'Observation'
@@ -589,7 +604,7 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
     Height = 350
     Align = alLeft
     HideSelection = False
-    Indent = 19
+    Indent = 20
     ReadOnly = True
     TabOrder = 2
     OnChange = tvFluxObservationsChange

@@ -271,24 +271,6 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
           Caption = 'Listing file format (IDDNFM)'
           ExplicitWidth = 193
         end
-        inherited comboP: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboREdit: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboFrequency: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboPrintStyle: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboPrintFormat: TJvImageComboBox
-          ItemIndex = -1
-        end
-        inherited comboSaveType: TJvImageComboBox
-          ItemIndex = -1
-        end
         inherited rcExternalFormat: TRbwController
           ControlList = <
             item

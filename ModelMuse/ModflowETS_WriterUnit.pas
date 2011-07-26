@@ -79,13 +79,24 @@ uses ModflowUnitNumbers, ModflowTransientListParameterUnit,
 
 { TModflowETS_Writer }
 
-const
+resourcestring
   ErrorRoot = 'One or more %s parameters have been eliminated '
     + 'because there are no cells associated with them.';
   EtsSurfaceError = 'The ET Surface is undefined in the ETS package.';
   EtsSurfaceErrorMessage = 'No objects define the ET Surface in the ETS package.';
   EtsDepthError = 'The ET Depth is undefined in the ETS package.';
   EtsDepthErrorMessage = 'No objects define the ET Depth in the ETS package.';
+  StrInTheETSRate = 'In the ETS package, rate fraction of each succeeding' +
+  ' segment should be less than the rate fraction of the previous segment.  ' +
+  'At the following locations, this does not occur.';
+  StrSegment0dRow = 'Segment: %0:d; Row: %1:d; Column: %2:d';
+  StrInTheETSDepth = 'In the ETS package, depth fraction of each succeeding ' +
+  'segment should be greater than the depth fraction of the previous segment' +
+  '.  At the following locations, this does not occur.';
+  StrNoEvapotranspiratio = 'No evapotranspiration segments defined';
+  StrTheEvapotranspirati = 'The Evapotranspiration Segments package is activ' +
+  'e but no evapotranspiration segments have been defined for any stress per' +
+  'iod.';
 
 function TModflowETS_Writer.CellType: TValueCellType;
 begin
@@ -194,6 +205,10 @@ const
 begin
   frmErrorsAndWarnings.RemoveErrorGroup(Model, EtsSurfaceError);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, EtsDepthError);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInTheETSRate);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInTheETSDepth);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoEvapotranspiratio);
+
 
 
   if not Package.IsSelected then
@@ -399,7 +414,7 @@ var
   NewValue: Double;
   ColIndex: Integer;
   RowIndex: Integer;
-  ErrorRoot: string;
+//  ErrorRoot: string;
 begin
   if FPriorRateFractionArray <> nil then
   begin
@@ -407,6 +422,7 @@ begin
 //      + 'segment should be less than the rate fraction of the previous '
 //      + 'segment.  At the following locations in segment '
 //      + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
+//    ErrorRoot := Format(StrInTheETSPackage, [SegmentIndex]);
 //    frmErrorsAndWarnings.RemoveErrorGroup(ErrorRoot);
     Assert(NewArray.UpToDate);
     for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
@@ -417,9 +433,13 @@ begin
         PriorValue := FPriorRateFractionArray.RealData[0, RowIndex, ColIndex];
         if NewValue > PriorValue then
         begin
-          Error := '(' + IntToStr(RowIndex + 1) + ', '
-            + IntToStr(ColIndex + 1) + ')';
-          frmErrorsAndWarnings.AddError(Model, ErrorRoot, Error);
+          Error := Format(StrSegment0dRow,
+            [SegmentIndex, RowIndex + 1, ColIndex + 1]);
+//
+//          '('+ IntToStr(SegmentIndex)+ ', '
+//            + IntToStr(RowIndex + 1) + ', '
+//            + IntToStr(ColIndex + 1) + ')';
+          frmErrorsAndWarnings.AddError(Model, StrInTheETSRate, Error);
         end;
       end;
     end;
@@ -434,14 +454,11 @@ var
   NewValue: Double;
   PriorValue: Double;
   Error: string;
-  ErrorRoot: string;
+//  ErrorRoot: string;
 begin
   if FPriorDepthFractionArray <> nil then
   begin
-//    ErrorRoot := 'In the ETS package, depth fraction of each succeeding '
-//    + 'segment should be greater than the depth fraction of the previous '
-//    + 'segment.  At the following locations in segment '
-//    + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
+//    ErrorRoot := StrInTheETSDepth;
 //    frmErrorsAndWarnings.RemoveErrorGroup(ErrorRoot);
     Assert(NewArray.UpToDate);
     for RowIndex := 0 to Model.ModflowGrid.RowCount - 1 do
@@ -452,9 +469,11 @@ begin
         PriorValue := FPriorDepthFractionArray.RealData[0, RowIndex, ColIndex];
         if NewValue < PriorValue then
         begin
-          Error := '(' + IntToStr(RowIndex + 1) + ', '
-            + IntToStr(ColIndex + 1) + ')';
-          frmErrorsAndWarnings.AddError(Model, ErrorRoot, Error);
+          Error := Format(StrSegment0dRow,
+            [SegmentIndex, RowIndex + 1, ColIndex + 1]);
+//          Error := '(' + IntToStr(RowIndex + 1) + ', '
+//            + IntToStr(ColIndex + 1) + ')';
+          frmErrorsAndWarnings.AddError(Model, StrInTheETSDepth, Error);
         end;
       end;
     end;
@@ -665,33 +684,16 @@ var
   DepthSurfaceCellList, PriorListDepthSurfaceCellList: TValueCellList;
   Comment: string;
   SegmentIndex: integer;
-  ErrorString: string;
+//  ErrorString: string;
 begin
   inherited;
-  for SegmentIndex := 2 to NETSEG - 1 do
-  begin
-    ErrorString := 'In the ETS package, depth fraction of each succeeding '
-    + 'segment should be greater than the depth fraction of the previous '
-    + 'segment.  At the following locations in segment '
-    + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
-    frmErrorsAndWarnings.RemoveErrorGroup(Model, ErrorString);
-
-    ErrorString := 'In the ETS package, rate fraction of each succeeding '
-      + 'segment should be less than the rate fraction of the previous '
-      + 'segment.  At the following locations in segment '
-      + IntToStr(SegmentIndex) + ' this does not occur. (Row, Col)';
-    frmErrorsAndWarnings.RemoveErrorGroup(Model, ErrorString);
-  end;
-
   ParameterValues := TList.Create;
   try
     Comment := 'Data Set 9: IETS';
     if Values.Count = 0 then
     begin
-      frmErrorsAndWarnings.AddError(Model, 'No evapotranspiration segments defined',
-        'The Evapotranspiration Segments package is active but '
-        + 'no evapotranspiration segments have been defined '
-        + 'for any stress period.');
+      frmErrorsAndWarnings.AddError(Model, StrNoEvapotranspiratio,
+        StrTheEvapotranspirati);
     end;
     for TimeIndex := 0 to Values.Count - 1 do
     begin

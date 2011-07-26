@@ -95,11 +95,27 @@ implementation
 uses
   frmGoPhastUnit, ColorSchemes, ModelMuseUtilities, ModflowGridUnit;
 
+resourcestring
+  StrYouMustDefineThe = 'You must define the grid before attempting to impor' +
+  't MODPATH results.';
+
 {$R *.dfm}
 
 procedure TfrmModpathDisplay.btnOKClick(Sender: TObject);
+var
+  Grid: TModflowGrid;
 begin
   inherited;
+
+  Grid := frmGoPhast.ModflowGrid;
+  if (Grid.ColumnCount <= 0)
+    or (Grid.RowCount <= 0)
+    or (Grid.LayerCount <= 0) then
+  begin
+    Beep;
+    MessageDlg(StrYouMustDefineThe, mtError, [mbOK], 0);
+    Exit;
+  end;
   SetData;
 end;
 

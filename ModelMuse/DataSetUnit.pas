@@ -102,7 +102,6 @@ type
     // @link(UseLimit) is @false.
     property DefaultBooleanLimitValue: boolean read FDefaultBooleanLimitValue
       write FDefaultBooleanLimitValue;
-  private
     // If there is a change in @link(UseLimit),
     // @link(BooleanLimitValue), @link(IntegerLimitValue),
     // @link(RealLimitValue), or @link(StringLimitValue),
@@ -404,6 +403,7 @@ type
     FReadDataFromFile: Boolean;
     FUpdatingProgress: Boolean;
     FUseLgrEdgeCells: boolean;
+    FUnicodeSaved: Boolean;
     // See @link(TwoDInterpolatorClass).
     function GetTwoDInterpolatorClass: string;
     // @name is called if an invalid formula has been specified.
@@ -465,6 +465,7 @@ type
     procedure UpdateSubscriptions(NewUseList: TStringList; OldUseList: TStringList);
     procedure ReadCompressedData(Stream: TStream);
     procedure WriteCompressedData(Stream: TStream);
+    procedure SetUnicodeSaved(const Value: Boolean);
   protected
     // See @link(DimensionsChanged).
     FDimensionsChanged: boolean;
@@ -593,6 +594,7 @@ type
     procedure UpdateNotifiers; virtual;
     function IsSparseArray: boolean; virtual;
   public
+    property UnicodeSaved: Boolean read FUnicodeSaved write SetUnicodeSaved;
     procedure UpdateWithoutNotification(NewOrientation: TDataSetOrientation;
       NewEvaluatedAt: TEvaluatedAt; NewDataType: TRbwDataType;
       var NeedToInvalidate: boolean);
@@ -1746,9 +1748,9 @@ const
     + 'has been replaced by the maximum single-precision real number in an unamed data set.';
   ErrorMessageInterpNamed = 'An invalid value assigned by an interpolator '
     + 'has been replaced by the maximum single-precision  real number in Data Set: %s.';
-  ErrorMessageFormulaUnNamed = 'An invalid value assigned by an formula '
+  ErrorMessageFormulaUnNamed = 'An invalid value assigned by a formula '
     + 'has been replaced by the maximum single-precision  real number in an unamed data set.';
-  ErrorMessageFormulaNamed = 'An invalid value assigned by an formula '
+  ErrorMessageFormulaNamed = 'An invalid value assigned by a formula '
     + 'has been replaced by the maximum single-precision  real number in Data Set: %s.';
   ErrorString ='Layer: %d; Row: %d; Column: %d.';
 var
@@ -2876,6 +2878,21 @@ begin
   end;
 end;
 
+procedure TDataArray.SetUnicodeSaved(const Value: Boolean);
+begin
+  if FUnicodeSaved <> Value then
+  begin
+    FUnicodeSaved := Value;
+    if FDataCached then
+    begin
+      Invalidate;
+//      Clear;
+//      FCleared := True;
+//      Invalidate;
+    end;
+  end;
+end;
+
 procedure TDataArray.SetUnits(const Value: string);
 begin
   if FUnits <> Value then
@@ -3082,11 +3099,23 @@ begin
 end;
 
 constructor TDataArray.Create(AnOwner: TComponent);
+var
+  LocalPhastModel : TPhastModel;
+  LocalChildModel: TChildModel;
 begin
   FUseLgrEdgeCells := True;
   Assert(AnOwner <> nil);
-//  Assert(AnOwner is TCustomModel);
   FModel := AnOwner as TCustomModel;
+  if FModel is TPhastModel then
+  begin
+    LocalPhastModel := TPhastModel(FModel);
+  end
+  else
+  begin
+    LocalChildModel := FModel as TChildModel;
+    LocalPhastModel := LocalChildModel.ParentModel as TPhastModel;
+  end;
+  FUnicodeSaved := not LocalPhastModel.FileVersionEqualOrEarlier('2.9.1.2');
   inherited Create(nil);
   FFormulaObject := TCustomModel(AnOwner).FormulaManager.Add;
   FFormulaObject.AddSubscriptionEvents(GlobalDataArrayRemoveSubscription,
@@ -3915,6 +3944,7 @@ end;
 procedure TDataArray.ReadData(DecompressionStream: TDecompressionStream);
 var
   AnnotationIndex: Integer;
+  AnsiStringValue: Ansistring;
   StringValue: string;
   ValueLength: Integer;
   BooleanValue: Boolean;
@@ -3923,6 +3953,7 @@ var
   ColIndex: Integer;
   RowIndex: Integer;
   LayerIndex: Integer;
+  AnsiAnnText: AnsiString;
   AnnText: string;
   AnnSize: Integer;
   Index: Integer;
@@ -3941,13 +3972,35 @@ begin
   Annotations := TStringList.Create;
   try
     DecompressionStream.Read(Count, SizeOf(Count));
+    if Count < 0 then
+    begin
+      // ModelMuse now saves a -1 at the beginning of the data
+      // to indicate that the current version is saving Unicode data.
+      // Previously, Count was the first thing saved and it would always
+      // be greater than or equal to zero.
+      FUnicodeSaved := True;
+      DecompressionStream.Read(Count, SizeOf(Count));
+    end
+    else
+    begin
+      FUnicodeSaved := False;
+    end;
     Annotations.Capacity := Count;
     for Index := 0 to Count - 1 do
     begin
       DecompressionStream.Read(AnnSize, SizeOf(AnnSize));
-      SetString(AnnText, nil, AnnSize);
-      DecompressionStream.Read(Pointer(AnnText)^, AnnSize * SizeOf(Char));
-      Annotations.Add(AnnText);
+      if FUnicodeSaved then
+      begin
+        SetString(AnnText, nil, AnnSize);
+        DecompressionStream.Read(Pointer(AnnText)^, AnnSize * SizeOf(Char));
+        Annotations.Add(AnnText);
+      end
+      else
+      begin
+        SetString(AnsiAnnText, nil, AnnSize);
+        DecompressionStream.Read(Pointer(AnsiAnnText)^, AnnSize * SizeOf(AnsiChar));
+        Annotations.Add(string(AnsiAnnText));
+      end;
     end;
     DecompressionStream.Read(Count, SizeOf(Count));
     SetLength(AnnotationIndexArray, Count);
@@ -3983,9 +4036,18 @@ begin
             for Index := 0 to Count - 1 do
             begin
               DecompressionStream.Read(ValueLength, SizeOf(ValueLength));
-              SetString(StringValue, nil, ValueLength);
-              DecompressionStream.Read(Pointer(StringValue)^, ValueLength * SizeOf(Char));
-              StringValues.Add(StringValue);
+              if FUnicodeSaved then
+              begin
+                SetString(StringValue, nil, ValueLength);
+                DecompressionStream.Read(Pointer(StringValue)^, ValueLength * SizeOf(Char));
+                StringValues.Add(StringValue);
+              end
+              else
+              begin
+                SetString(AnsiStringValue, nil, ValueLength);
+                DecompressionStream.Read(Pointer(AnsiStringValue)^, ValueLength * SizeOf(AnsiChar));
+                StringValues.Add(string(AnsiStringValue));
+              end;
             end;
           end;
         else Assert(False);
@@ -4153,6 +4215,7 @@ var
   IntegerValues: array of integer;
   BoooleanValues: array of Boolean;
   StringValues: TStringList;
+  UnicodeKey: integer;
 begin
   Count := 0;
   StringValues := nil;
@@ -4225,6 +4288,8 @@ begin
       end;
     end;
     AnnCount := LocalAnnotatations.Count;
+    UnicodeKey := -1;
+    Stream.Write(UnicodeKey, SizeOf(UnicodeKey));
     Stream.Write(AnnCount, SizeOf(AnnCount));
     for Index := 0 to LocalAnnotatations.Count - 1 do
     begin
@@ -4258,6 +4323,7 @@ begin
         else Assert(False);
       end;
     end;
+    FUnicodeSaved := True;
   finally
     LocalAnnotatations.Free;
     StringValues.Free;

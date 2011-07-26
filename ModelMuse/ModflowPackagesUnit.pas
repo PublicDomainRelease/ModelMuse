@@ -80,6 +80,7 @@ type
     procedure Assign(Source: TPersistent); override;
     constructor Create(Model: TBaseModel);
     Destructor Destroy; override;
+    property Model: TBaseModel read FModel;
     procedure Reset;
     // @name is used to set the progress bar limits when exporting
     // the MODFLOW input files.
@@ -141,9 +142,9 @@ type
     property HydmodPackage: THydPackageSelection
       read FHydmodPackage write SetHydmodPackage;
     property UpwPackage: TUpwPackageSelection
-      read FUpwPackage write SetUpwPackage stored False;
+      read FUpwPackage write SetUpwPackage;
     property NwtPackage: TNwtPackageSelection
-      read FNwtPackage write SetNwtPackage stored False;
+      read FNwtPackage write SetNwtPackage;
     // Assign, Create, Destroy, SelectedPackageCount
     // and Reset must be updated each time a new package is added.
   end;

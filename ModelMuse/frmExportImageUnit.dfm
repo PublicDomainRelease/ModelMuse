@@ -19,9 +19,8 @@ inherited frmExportImage: TfrmExportImage
     Maximized = False
     Minimized = False
     ButtonCursor = crDefault
-    ExplicitLeft = 224
-    ExplicitTop = 208
-    ExplicitHeight = 100
+    ExplicitLeft = 300
+    ExplicitTop = -6
   end
   object pnlControls: TPanel
     Left = 0
@@ -31,268 +30,38 @@ inherited frmExportImage: TfrmExportImage
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 0
-    object ocSettings: TrmOutlookControl
+    object CatPanelGroup: TCategoryPanelGroup
       Left = 0
       Top = 0
       Width = 249
       Height = 448
-      Align = alClient
-      ActivePage = opAnimation
-      object opView: TrmOutlookPage
-        Left = 2
-        Top = 2
-        Width = 245
-        Height = 18
-        Color = clBtnFace
-        Caption = 'View'
-        Data = 0
-        ParentColor = False
-        CloseButton = False
-        ImageIndex = -1
-        object lblImageHeight: TLabel
-          Left = 3
-          Top = 79
-          Width = 191
-          Height = 18
-          Caption = 'Model image height (pixels)'
-          Visible = False
-        end
-        object lblImageWidth: TLabel
-          Left = 3
-          Top = 143
-          Width = 185
-          Height = 18
-          Caption = 'Model image width (pixels)'
-          Visible = False
-        end
-        object lblSelectedView: TLabel
-          Left = 3
-          Top = 15
-          Width = 97
-          Height = 18
-          Caption = 'Selected view'
-          Visible = False
-        end
-        object comboView: TComboBox
-          Left = 3
-          Top = 36
-          Width = 195
-          Height = 26
-          Style = csDropDownList
-          ItemHeight = 18
-          ItemIndex = 0
-          TabOrder = 0
-          Text = 'Top'
-          Visible = False
-          OnChange = comboViewChange
-          Items.Strings = (
-            'Top'
-            'Front'
-            'Side')
-        end
-        object seImageHeight: TJvSpinEdit
-          Left = 3
-          Top = 100
-          Width = 121
-          Height = 26
-          CheckMinValue = True
-          ButtonKind = bkClassic
-          Increment = 100.000000000000000000
-          TabOrder = 1
-          Visible = False
-          OnChange = seImageHeightChange
-        end
-        object seImageWidth: TJvSpinEdit
-          Left = 3
-          Top = 164
-          Width = 121
-          Height = 26
-          CheckMinValue = True
-          ButtonKind = bkClassic
-          Increment = 100.000000000000000000
-          TabOrder = 2
-          Visible = False
-          OnChange = seImageWidthChange
-        end
-        object cbShowColoredGridLines: TCheckBox
-          Left = 3
-          Top = 211
-          Width = 195
-          Height = 17
-          Caption = 'Show colored grid lines'
-          TabOrder = 3
-          Visible = False
-          OnClick = cbShowColoredGridLinesClick
-        end
-        object cbColorLegend: TCheckBox
-          Left = 3
-          Top = 234
-          Width = 190
-          Height = 17
-          Caption = 'Show color legend'
-          Checked = True
-          State = cbChecked
-          TabOrder = 4
-          Visible = False
-          OnClick = cbColorLegendClick
-        end
-        object cbContourLegend: TCheckBox
-          Left = 3
-          Top = 257
-          Width = 190
-          Height = 17
-          Caption = 'Show contour legend'
-          Checked = True
-          State = cbChecked
-          TabOrder = 5
-          Visible = False
-          OnClick = cbContourLegendClick
-        end
-        object cbHorizontalScale: TCheckBox
-          Left = 3
-          Top = 280
-          Width = 190
-          Height = 17
-          Caption = 'Horizontal scale'
-          Checked = True
-          State = cbChecked
-          TabOrder = 6
-          Visible = False
-          OnClick = cbHorizontalScaleClick
-        end
-        object cbVerticalScale: TCheckBox
-          Left = 3
-          Top = 303
-          Width = 190
-          Height = 17
-          Caption = 'Vertical scale'
-          Checked = True
-          State = cbChecked
-          TabOrder = 7
-          Visible = False
-          OnClick = cbVerticalScaleClick
-        end
-      end
-      object opText: TrmOutlookPage
-        Left = 2
-        Top = 20
-        Width = 245
-        Height = 18
-        Color = clBtnFace
-        Caption = 'Text'
-        Data = 0
-        ParentColor = False
-        CloseButton = False
-        ImageIndex = -1
-        object lblTitle: TLabel
-          Left = 3
-          Top = 8
-          Width = 29
-          Height = 18
-          Caption = 'Title'
-          Visible = False
-        end
-        object sbSelect: TSpeedButton
-          Left = 32
-          Top = 188
-          Width = 23
-          Height = 22
-          Hint = 'Select text'
-          GroupIndex = 1
-          Glyph.Data = {
-            76010000424D7601000000000000760000002800000020000000100000000100
-            04000000000000010000120B0000120B00001000000000000000000000000000
-            800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
-            FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333333333
-            333333333333333FFF3333333333333707333333333333F777F3333333333370
-            9033333333F33F7737F33333373337090733333337F3F7737733333330037090
-            73333333377F7737733333333090090733333333373773773333333309999073
-            333333337F333773333333330999903333333333733337F33333333099999903
-            33333337F3333F7FF33333309999900733333337333FF7773333330999900333
-            3333337F3FF7733333333309900333333333337FF77333333333309003333333
-            333337F773333333333330033333333333333773333333333333333333333333
-            3333333333333333333333333333333333333333333333333333}
-          NumGlyphs = 2
-          Visible = False
-        end
-        object sbText: TSpeedButton
-          Left = 3
-          Top = 188
-          Width = 23
-          Height = 22
-          Hint = 'Edit text'
-          GroupIndex = 1
-          Down = True
-          Glyph.Data = {
-            4E010000424D4E01000000000000760000002800000012000000120000000100
-            040000000000D800000000000000000000001000000000000000000000000000
-            8000008000000080800080000000800080008080000080808000C0C0C0000000
-            FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00FFFFFFFFFFFF
-            FFFFFF000000FFFFFF000000FFFFFF000000FFFFFFF8008FFFFFFF000000FFFF
-            FFFF00FFFFFFFF000000FFFFFFFF00FFFFFFFF000000FFFFFFFF00FFFFFFFF00
-            0000FFFFFFFF00FFFFFFFF000000FFFFFFFF00FFFFFFFF000000FFFFFFFF00FF
-            FFFFFF000000FFFFFFFF00FFFFFFFF000000FFFFFFFF00FFFFFFFF000000FFFF
-            FFFF00FFFFFFFF000000FFFFFFFF00FFFFFFFF000000FF7FFFFF00FFFFF7FF00
-            0000FF08FFFF00FFFF80FF000000FF07FFFF00FFFF70FF000000FF0000000000
-            0000FF000000FFFFFFFFFFFFFFFFFF000000}
-          Visible = False
-        end
-        object memoTitle: TMemo
-          Left = 3
-          Top = 29
-          Width = 238
-          Height = 89
-          ScrollBars = ssBoth
-          TabOrder = 0
-          Visible = False
-          WordWrap = False
-          OnChange = memoTitleChange
-        end
-        object btnFont: TButton
-          Left = 77
-          Top = 188
-          Width = 75
-          Height = 25
-          Caption = 'Text font'
-          TabOrder = 2
-          Visible = False
-          OnClick = btnFontClick
-        end
-        object btnTitleFont: TButton
-          Left = 3
-          Top = 128
-          Width = 75
-          Height = 25
-          Caption = 'Title font'
-          TabOrder = 1
-          Visible = False
-          OnClick = btnTitleFontClick
-        end
-      end
-      object opAnimation: TrmOutlookPage
-        Left = 2
-        Top = 38
-        Width = 245
-        Height = 408
-        Color = clBtnFace
+      VertScrollBar.Tracking = True
+      HeaderFont.Charset = DEFAULT_CHARSET
+      HeaderFont.Color = clWindowText
+      HeaderFont.Height = -11
+      HeaderFont.Name = 'Tahoma'
+      HeaderFont.Style = []
+      TabOrder = 0
+      object cpAnimation: TCategoryPanel
+        Top = 416
+        Height = 30
         Caption = 'Animation'
-        Data = 0
-        ParentColor = False
-        CloseButton = False
-        ImageIndex = -1
-        object Panel2: TPanel
-          Left = 0
+        Collapsed = True
+        TabOrder = 0
+        OnExpand = cpAnimationExpand
+        ExpandedHeight = 386
+        object pnlAnimation: TPanel
+          Left = 5
           Top = 0
-          Width = 245
-          Height = 390
-          Align = alClient
+          Width = 240
+          Height = 0
+          Align = alRight
           BevelOuter = bvNone
-          Caption = 'Panel2'
           TabOrder = 0
           object JvNetscapeSplitter1: TJvNetscapeSplitter
             Left = 0
-            Top = 165
-            Width = 245
+            Top = -225
+            Width = 240
             Height = 10
             Cursor = crVSplit
             Align = alBottom
@@ -306,8 +75,8 @@ inherited frmExportImage: TfrmExportImage
           end
           object Panel1: TPanel
             Left = 0
-            Top = 306
-            Width = 245
+            Top = -84
+            Width = 240
             Height = 84
             Align = alBottom
             TabOrder = 0
@@ -348,8 +117,7 @@ inherited frmExportImage: TfrmExportImage
               Width = 75
               Height = 25
               Caption = 'Save'
-              TabOrder = 2
-              OnClick = btnSaveMultipleImagesClick
+              DoubleBuffered = True
               Glyph.Data = {
                 76010000424D7601000000000000760000002800000020000000100000000100
                 04000000000000010000120B0000120B00001000000000000000000000000000
@@ -364,12 +132,15 @@ inherited frmExportImage: TfrmExportImage
                 33303FFFFFF7FFFFFFF700000000000000007777777777777777030303030303
                 03037F7F7F7F7F7F7F7F00000000000000007777777777777777}
               NumGlyphs = 2
+              ParentDoubleBuffered = False
+              TabOrder = 2
+              OnClick = btnSaveMultipleImagesClick
             end
           end
           object rdgDataSets: TRbwDataGrid4
             Left = 0
-            Top = 175
-            Width = 245
+            Top = -215
+            Width = 240
             Height = 131
             Align = alBottom
             ColCount = 2
@@ -377,6 +148,7 @@ inherited frmExportImage: TfrmExportImage
             RowCount = 2
             Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goRowMoving, goEditing, goAlwaysShowEditor]
             TabOrder = 1
+            ExtendedAutoDistributeText = False
             AutoMultiEdit = True
             AutoDistributeText = True
             AutoIncreaseColCount = False
@@ -435,8 +207,8 @@ inherited frmExportImage: TfrmExportImage
           object vstDataSets: TVirtualStringTree
             Left = 0
             Top = 0
-            Width = 245
-            Height = 165
+            Width = 240
+            Height = 135
             Align = alClient
             Header.AutoSizeIndex = 0
             Header.DefaultHeight = 17
@@ -455,6 +227,228 @@ inherited frmExportImage: TfrmExportImage
             OnGetNodeDataSize = vstDataSetsGetNodeDataSize
             OnInitNode = vstDataSetsInitNode
             Columns = <>
+          end
+        end
+      end
+      object cpText: TCategoryPanel
+        Top = 386
+        Height = 30
+        Caption = 'Text'
+        Collapsed = True
+        TabOrder = 1
+        OnExpand = cpTextExpand
+        ExpandedHeight = 386
+        object pnlText: TPanel
+          Left = 0
+          Top = 0
+          Width = 245
+          Height = 0
+          Align = alClient
+          TabOrder = 0
+          object lblTitle: TLabel
+            Left = 11
+            Top = 2
+            Width = 29
+            Height = 18
+            Caption = 'Title'
+          end
+          object sbText: TSpeedButton
+            Left = 11
+            Top = 182
+            Width = 23
+            Height = 22
+            Hint = 'Edit text'
+            GroupIndex = 1
+            Down = True
+            Glyph.Data = {
+              4E010000424D4E01000000000000760000002800000012000000120000000100
+              040000000000D800000000000000000000001000000000000000000000000000
+              8000008000000080800080000000800080008080000080808000C0C0C0000000
+              FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00FFFFFFFFFFFF
+              FFFFFF000000FFFFFF000000FFFFFF000000FFFFFFF8008FFFFFFF000000FFFF
+              FFFF00FFFFFFFF000000FFFFFFFF00FFFFFFFF000000FFFFFFFF00FFFFFFFF00
+              0000FFFFFFFF00FFFFFFFF000000FFFFFFFF00FFFFFFFF000000FFFFFFFF00FF
+              FFFFFF000000FFFFFFFF00FFFFFFFF000000FFFFFFFF00FFFFFFFF000000FFFF
+              FFFF00FFFFFFFF000000FFFFFFFF00FFFFFFFF000000FF7FFFFF00FFFFF7FF00
+              0000FF08FFFF00FFFF80FF000000FF07FFFF00FFFF70FF000000FF0000000000
+              0000FF000000FFFFFFFFFFFFFFFFFF000000}
+          end
+          object sbSelect: TSpeedButton
+            Left = 40
+            Top = 182
+            Width = 23
+            Height = 22
+            Hint = 'Select text'
+            GroupIndex = 1
+            Glyph.Data = {
+              76010000424D7601000000000000760000002800000020000000100000000100
+              04000000000000010000120B0000120B00001000000000000000000000000000
+              800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+              FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333333333
+              333333333333333FFF3333333333333707333333333333F777F3333333333370
+              9033333333F33F7737F33333373337090733333337F3F7737733333330037090
+              73333333377F7737733333333090090733333333373773773333333309999073
+              333333337F333773333333330999903333333333733337F33333333099999903
+              33333337F3333F7FF33333309999900733333337333FF7773333330999900333
+              3333337F3FF7733333333309900333333333337FF77333333333309003333333
+              333337F773333333333330033333333333333773333333333333333333333333
+              3333333333333333333333333333333333333333333333333333}
+            NumGlyphs = 2
+          end
+          object memoTitle: TMemo
+            Left = 11
+            Top = 26
+            Width = 222
+            Height = 89
+            ScrollBars = ssBoth
+            TabOrder = 0
+            WordWrap = False
+            OnChange = memoTitleChange
+          end
+          object btnTitleFont: TButton
+            Left = 11
+            Top = 122
+            Width = 75
+            Height = 25
+            Caption = 'Title font'
+            TabOrder = 1
+            OnClick = btnTitleFontClick
+          end
+          object btnFont: TButton
+            Left = 85
+            Top = 182
+            Width = 75
+            Height = 25
+            Caption = 'Text font'
+            TabOrder = 2
+            OnClick = btnFontClick
+          end
+        end
+      end
+      object cpView: TCategoryPanel
+        Top = 0
+        Height = 386
+        Caption = 'View'
+        TabOrder = 2
+        OnExpand = cpViewExpand
+        object Panel3: TPanel
+          Left = 0
+          Top = 0
+          Width = 245
+          Height = 360
+          Align = alClient
+          Caption = 'pnlText'
+          TabOrder = 0
+          object lblSelectedView: TLabel
+            Left = 3
+            Top = 15
+            Width = 97
+            Height = 18
+            Caption = 'Selected view'
+          end
+          object lblImageHeight: TLabel
+            Left = 3
+            Top = 79
+            Width = 191
+            Height = 18
+            Caption = 'Model image height (pixels)'
+          end
+          object lblImageWidth: TLabel
+            Left = 3
+            Top = 143
+            Width = 185
+            Height = 18
+            Caption = 'Model image width (pixels)'
+          end
+          object comboView: TComboBox
+            Left = 3
+            Top = 36
+            Width = 195
+            Height = 26
+            Style = csDropDownList
+            ItemIndex = 0
+            TabOrder = 0
+            Text = 'Top'
+            OnChange = comboViewChange
+            Items.Strings = (
+              'Top'
+              'Front'
+              'Side')
+          end
+          object seImageHeight: TJvSpinEdit
+            Left = 3
+            Top = 100
+            Width = 121
+            Height = 26
+            CheckMinValue = True
+            ButtonKind = bkClassic
+            Increment = 100.000000000000000000
+            TabOrder = 1
+            OnChange = seImageHeightChange
+          end
+          object seImageWidth: TJvSpinEdit
+            Left = 3
+            Top = 164
+            Width = 121
+            Height = 26
+            CheckMinValue = True
+            ButtonKind = bkClassic
+            Increment = 100.000000000000000000
+            TabOrder = 2
+            OnChange = seImageWidthChange
+          end
+          object cbShowColoredGridLines: TCheckBox
+            Left = 3
+            Top = 211
+            Width = 195
+            Height = 17
+            Caption = 'Show colored grid lines'
+            TabOrder = 3
+            OnClick = cbShowColoredGridLinesClick
+          end
+          object cbColorLegend: TCheckBox
+            Left = 3
+            Top = 234
+            Width = 190
+            Height = 17
+            Caption = 'Show color legend'
+            Checked = True
+            State = cbChecked
+            TabOrder = 4
+            OnClick = cbColorLegendClick
+          end
+          object cbContourLegend: TCheckBox
+            Left = 3
+            Top = 257
+            Width = 190
+            Height = 17
+            Caption = 'Show contour legend'
+            Checked = True
+            State = cbChecked
+            TabOrder = 5
+            OnClick = cbContourLegendClick
+          end
+          object cbHorizontalScale: TCheckBox
+            Left = 3
+            Top = 280
+            Width = 190
+            Height = 17
+            Caption = 'Horizontal scale'
+            Checked = True
+            State = cbChecked
+            TabOrder = 6
+            OnClick = cbHorizontalScaleClick
+          end
+          object cbVerticalScale: TCheckBox
+            Left = 3
+            Top = 303
+            Width = 190
+            Height = 17
+            Caption = 'Vertical scale'
+            Checked = True
+            State = cbChecked
+            TabOrder = 7
+            OnClick = cbVerticalScaleClick
           end
         end
       end
@@ -483,9 +477,12 @@ inherited frmExportImage: TfrmExportImage
       Width = 87
       Height = 26
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 5
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnClose: TBitBtn
       Left = 629
@@ -493,9 +490,12 @@ inherited frmExportImage: TfrmExportImage
       Width = 87
       Height = 26
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkClose
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 6
       OnClick = btnCloseClick
-      Kind = bkClose
     end
     object btnSaveSettings: TButton
       Left = 223
@@ -513,7 +513,6 @@ inherited frmExportImage: TfrmExportImage
       Width = 195
       Height = 26
       AutoComplete = False
-      ItemHeight = 18
       TabOrder = 0
       Text = '(none)'
       OnChange = comboSavedSettingsChange
@@ -527,8 +526,7 @@ inherited frmExportImage: TfrmExportImage
       Height = 58
       Anchors = [akTop, akRight]
       Caption = 'Refresh'
-      TabOrder = 3
-      OnClick = btnRefreshClick
+      DoubleBuffered = True
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -543,6 +541,9 @@ inherited frmExportImage: TfrmExportImage
         99933773FF777F3F777F339993707399999333773F373F77777F333999999999
         3393333777333777337333333999993333333333377777333333}
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 3
+      OnClick = btnRefreshClick
     end
     object btnManageSettings: TButton
       Left = 316
@@ -561,8 +562,7 @@ inherited frmExportImage: TfrmExportImage
       Height = 26
       Anchors = [akTop, akRight]
       Caption = 'Save image'
-      TabOrder = 4
-      OnClick = btnSaveImageClick
+      DoubleBuffered = True
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -577,6 +577,9 @@ inherited frmExportImage: TfrmExportImage
         99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
         93337FFFF7737777733300000033333333337777773333333333}
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 4
+      OnClick = btnSaveImageClick
       HotTrackFont.Charset = ANSI_CHARSET
       HotTrackFont.Color = clWindowText
       HotTrackFont.Height = -16
@@ -591,8 +594,7 @@ inherited frmExportImage: TfrmExportImage
       Height = 26
       Anchors = [akTop, akRight]
       Caption = 'Copy image'
-      TabOrder = 7
-      OnClick = JvBitBtn1Click
+      DoubleBuffered = True
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -607,6 +609,9 @@ inherited frmExportImage: TfrmExportImage
         99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
         93337FFFF7737777733300000033333333337777773333333333}
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 7
+      OnClick = JvBitBtn1Click
       HotTrackFont.Charset = ANSI_CHARSET
       HotTrackFont.Color = clWindowText
       HotTrackFont.Height = -16
@@ -623,8 +628,8 @@ inherited frmExportImage: TfrmExportImage
     Align = alClient
     TabOrder = 2
     object imagePreview: TImage
-      Left = 0
-      Top = 0
+      Left = 4
+      Top = -1
       Width = 105
       Height = 105
       OnDblClick = imagePreviewDblClick

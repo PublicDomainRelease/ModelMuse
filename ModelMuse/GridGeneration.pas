@@ -64,7 +64,7 @@ type
     LowerLimit: real;
     UpperLimit: real;
     procedure SetDesiredCellSize(const Value: real);
-  published
+  public
     property DesiredCellSize: real read FDesiredCellSize write
       SetDesiredCellSize;
   end;

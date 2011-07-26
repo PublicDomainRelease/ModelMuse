@@ -2,7 +2,7 @@ unit ModpathParticleUnit;
 
 interface
 
-uses Classes, SysUtils, GLScene, GLObjects, GoPhastTypes;
+uses Classes, SysUtils, GLScene, GLObjects, GoPhastTypes, GLColor;
 
 type
   TParticles = class(TPhastCollection)

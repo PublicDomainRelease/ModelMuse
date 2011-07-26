@@ -1051,7 +1051,7 @@ begin
   inherited;
   FBoundaryHeadData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FConductanceData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FBoundaryHeadData.NonParamDescription := 'Boundary head';
+  FBoundaryHeadData.NonParamDescription := StrBoundaryHead;
   FBoundaryHeadData.ParamDescription := ' boundary head';
   FConductanceData.NonParamDescription := 'Conductance';
   FConductanceData.ParamDescription := ' conductance multiplier';

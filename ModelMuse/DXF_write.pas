@@ -31,7 +31,7 @@ type
     max_extents    : Point3D;
     DXF_Layers     : TDXF_LayerList;
     // Constructors and destructors
-    Constructor create(aname:string; data_list:TDXF_LayerList);
+    Constructor create(aname:String; data_list:TDXF_LayerList);
     Destructor  Destroy; override;
     procedure   write_file;
     // Header section
@@ -58,7 +58,7 @@ const
 { --------------------------------------------------------------------------- }
 { -------------------             DXFWriter           ----------------------- }
 { --------------------------------------------------------------------------- }
-Constructor DXF_Writer.Create(aname:string; data_list:TDXF_LayerList);
+Constructor DXF_Writer.Create(aname:String; data_list:TDXF_LayerList);
 begin
   Inherited Create;
   AssignFile(IO_Chan,aName);
@@ -153,7 +153,7 @@ begin
   if layer<>nil then begin
     for lp2:=0 to layer.num_lists-1 do begin
       eList := Entity_List(layer.entity_lists[lp2]);
-      if eList.name=Block_.ClassName then begin
+      if string(eList.name)=Block_.ClassName then begin
         for lp3:=0 to eList.entities.Count-1 do begin
           DXF_Entity(eList.entities[lp3]).write_to_DXF(IO_chan,layer.name);
         end;
@@ -175,7 +175,7 @@ begin
     layer := DXF_Layer(DXF_Layers[lp1]);
     for lp2:=0 to layer.num_lists-1 do begin
       eList := Entity_List(layer.entity_lists[lp2]);
-      if eList.name<>Block_.ClassName then begin
+      if string(eList.name)<>Block_.ClassName then begin
         for lp3:=0 to eList.entities.Count-1 do begin
           DXF_Entity(eList.entities[lp3]).write_to_DXF(IO_chan,layer.name);
         end;

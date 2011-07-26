@@ -119,6 +119,7 @@ begin
   rdeGmgDup.Text := FloatToStr(SourcePkg.DUP.Value);
   rdeGmgChglimit.Text := FloatToStr(SourcePkg.CHGLIMIT.Value);
   rdeGmgRelax.Text := FloatToStr(SourcePkg.RELAX.Value);
+  rdeGmgMxiter.Text := IntToStr(SourcePkg.MXITER);
   comboGmgIadampChange(nil);
   comboGmgIscChange(nil);
 end;
@@ -148,7 +149,7 @@ begin
   SourcePkg.DUP.Value := StrToFloat(rdeGmgDup.Text);
   SourcePkg.CHGLIMIT.Value := StrToFloat(rdeGmgChglimit.Text);
   SourcePkg.RELAX.Value := StrToFloat(rdeGmgRelax.Text);
-
+  SourcePkg.MXITER := StrToInt(rdeGmgMxiter.Text);
 end;
 
 procedure TframeGMG.SetSelected(const Value: boolean);

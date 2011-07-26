@@ -95,7 +95,7 @@
       <config-value name="deffont">font-family:'MS Sans Serif'; font-size:8pt; color:#000000;</config-value>
       <config-value name="contents"></config-value>
       <config-value name="topicprefix"></config-value>
-      <config-value name="autohelpstart">3625</config-value>
+      <config-value name="autohelpstart">3634</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">1</config-value>
       <config-value name="searchpath">.\;.\Used Images\;.\ScreenShots\;.\ModflowGuide\</config-value>
@@ -525,6 +525,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <variable id="SPECHEADDESC" type="text" translate="true">In specified head boundaries, the head remains constant. Fluid is simulated as moving in or out of the groundwater at a rate sufficient to maintain the specified head.</variable>
     </variables>
     <helpcontext-numbers>
+      <helpcontext-number href="_GMRES_Variables_Tab_Newton_So" value="3630"/>
       <helpcontext-number href="_Legend_Tab" value="3571"/>
       <helpcontext-number href="3D_Lighting_Controls_Dialog_Box" value="2350"/>
       <helpcontext-number href="Abs" value="670"/>
@@ -534,6 +535,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Acknowledgments" value="3260"/>
       <helpcontext-number href="ActiveOnLayer" value="360"/>
       <helpcontext-number href="Add_or_remove_flux_observation" value="3507"/>
+      <helpcontext-number href="Additional_Options_Tab_Newton_" value="3629"/>
       <helpcontext-number href="Additive_Parameters" value="3310"/>
       <helpcontext-number href="Appendix_1_ModelMonitor" value="3487"/>
       <helpcontext-number href="ArcCos" value="1310"/>
@@ -546,6 +548,9 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Assigning_Values_to_Data_Sets_in_MODFLOW" value="3478"/>
       <helpcontext-number href="Assigning_Values_to_Data_Sets_in_PHAST" value="3477"/>
       <helpcontext-number href="Basic_Concepts" value="20"/>
+      <helpcontext-number href="Basic_Options_Tab_Newton_Solver" value="3628"/>
+      <helpcontext-number href="Basic_Options_Tab_Newton_Solver#LINMETH" value="3633"/>
+      <helpcontext-number href="Basic_Options_Tab_Newton_Solver#Options" value="3632"/>
       <helpcontext-number href="Basic_Tab" value="2060"/>
       <helpcontext-number href="Basic_Tab#NSEG" value="3504"/>
       <helpcontext-number href="Basics_Tab" value="2410"/>
@@ -574,6 +579,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="CHD_Object_Pane" value="1950"/>
       <helpcontext-number href="CHD_Time_Variant_Specified_Head" value="2620"/>
       <helpcontext-number href="Chemistry_Options_Dialog_Box" value="2840"/>
+      <helpcontext-number href="Chi_MD_Variables_Tab_Newton_So" value="3631"/>
       <helpcontext-number href="Child_Model_Dialog_Box" value="3598"/>
       <helpcontext-number href="Child_Model_Dialog_Box#IOUTLGR" value="3604"/>
       <helpcontext-number href="CHOB_Specified_Head_Flow_Observations" value="3464"/>
@@ -724,6 +730,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Handling_Discretization_in_SUB" value="3562"/>
       <helpcontext-number href="Head_and_Drawdown_Panes" value="2520"/>
       <helpcontext-number href="Head_Dependant_Flux" value="2660"/>
+      <helpcontext-number href="Head_Observation_Results" value="3634"/>
       <helpcontext-number href="Help" value="2910"/>
       <helpcontext-number href="HFB_Horizontal_Flow_Barrier_Package" value="3382"/>
       <helpcontext-number href="HFB_Horizontal_Flow_Barrier_Pane" value="3383"/>
@@ -855,6 +862,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Network_Tab#OUTSEG" value="3373"/>
       <helpcontext-number href="No_Delay_Beds_Tab" value="3560"/>
       <helpcontext-number href="Number_and_Operator_Buttons" value="1830"/>
+      <helpcontext-number href="NWT_Newton_Solver_Package_Pane" value="3627"/>
       <helpcontext-number href="Object" value="980"/>
       <helpcontext-number href="Object_Properties_Dialog_Box" value="1900"/>
       <helpcontext-number href="Object2" value="1890"/>
@@ -1065,6 +1073,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Trunc" value="940"/>
       <helpcontext-number href="Unsaturated_Tab" value="2160"/>
       <helpcontext-number href="UpperCase" value="1290"/>
+      <helpcontext-number href="UPW_Upstream_Weighting_Package_Pane" value="3626"/>
       <helpcontext-number href="Using_Formulas_to_Define_Aquif" value="3200"/>
       <helpcontext-number href="Using_Objects_to_Specify_the_G" value="230"/>
       <helpcontext-number href="UZF_Object_Pane" value="2170"/>

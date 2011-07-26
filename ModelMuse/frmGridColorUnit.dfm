@@ -6,6 +6,7 @@ inherited frmGridColor: TfrmGridColor
   HorzScrollBar.Range = 557
   VertScrollBar.Range = 225
   Caption = 'Color Grid'
+  ExplicitTop = -68
   DesignSize = (
     606
     489)
@@ -32,19 +33,32 @@ inherited frmGridColor: TfrmGridColor
     OnChangingEx = udTimeChangingEx
   end
   inherited pcChoices: TPageControl
+    ActivePage = tabFilters
     TabOrder = 2
     inherited tabSelection: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 29
+      ExplicitWidth = 598
+      ExplicitHeight = 407
       inherited virttreecomboDataSets1: TRbwStringTreeCombo
         Tree.OnGetNodeDataSize = virttreecomboDataSetsDropDownTreeGetNodeDataSize
         Anchors = [akLeft, akTop, akRight]
       end
     end
     inherited tabFilters: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 29
+      ExplicitWidth = 598
+      ExplicitHeight = 407
       inherited lblLowerLimit: TLabel
         Anchors = [akLeft, akTop, akBottom]
       end
     end
     inherited tabLegend: TTabSheet
+      ExplicitLeft = 4
+      ExplicitTop = 29
+      ExplicitWidth = 598
+      ExplicitHeight = 407
       inherited imLegend: TImage
         AlignWithMargins = True
         Left = 221
@@ -69,7 +83,6 @@ inherited frmGridColor: TfrmGridColor
     Width = 85
     Height = 26
     Anchors = [akTop, akRight]
-    ItemHeight = 18
     TabOrder = 0
     Text = '0'
     OnChange = comboTime3DChange

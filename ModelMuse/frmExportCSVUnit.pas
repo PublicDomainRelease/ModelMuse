@@ -22,7 +22,7 @@ type
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure vstDataSetsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure vstDataSetsGetNodeDataSize(Sender: TBaseVirtualTree;
       var NodeDataSize: Integer);
     procedure rgOrientationClick(Sender: TObject);
@@ -37,7 +37,7 @@ type
     procedure SetData;
     function SelectDataArrays(DataArray: TDataArray): boolean;
     procedure GetOrientationAndEvalAt(var EvaluatedAt: TEvaluatedAt; var Orientation: TDataSetOrientation);
-    procedure WriteString(const Value: AnsiString);
+    procedure WriteString(const Value: String);
     procedure NewLine;
     { Private declarations }
   public
@@ -279,104 +279,112 @@ begin
     if sdSaveCSV.Execute then
     begin
       GetOrientationAndEvalAt(EvaluatedAt, Orientation);
-      FFileStream := TFileStream.Create(sdSaveCSV.FileName, fmCreate or fmShareDenyWrite);
       try
-        case Orientation of
-          dsoTop:
-            begin
-              WriteString('"X", "Y", "Column", "Row"');
-            end;
-          dso3D: 
-            begin
-              WriteString('"X", "Y", "Z", "Column", "Row", "Layer"');
-            end;
-          else Assert(False)
-        end;
-        for Index := 0 to DataArrayList.Count - 1 do
-        begin
-          ADataArray := DataArrayList[Index];
-          WriteString(', "' + ADataArray.Name + '"');
-          ADataArray.Initialize;
-        end;
-        NewLine;
+        FFileStream := TFileStream.Create(sdSaveCSV.FileName, fmCreate or fmShareDenyWrite);
+        try
+          case Orientation of
+            dsoTop:
+              begin
+                WriteString('"X", "Y", "Column", "Row"');
+              end;
+            dso3D:
+              begin
+                WriteString('"X", "Y", "Z", "Column", "Row", "Layer"');
+              end;
+            else Assert(False)
+          end;
+          for Index := 0 to DataArrayList.Count - 1 do
+          begin
+            ADataArray := DataArrayList[Index];
+            WriteString(', "' + ADataArray.Name + '"');
+            ADataArray.Initialize;
+          end;
+          NewLine;
 
-        case EvaluatedAt of
-          eaBlocks:
-            begin
-              case Orientation of
-                dsoTop:
-                  begin
-                    LayerIndex := 0;
-                    for RowIndex := 0 to Grid.RowCount - 1 do
+          case EvaluatedAt of
+            eaBlocks:
+              begin
+                case Orientation of
+                  dsoTop:
                     begin
-                      for ColumnIndex := 0 to Grid.ColumnCount - 1 do
-                      begin
-                        Location := Grid.
-                          RotatedThreeDElementCenter(
-                          ColumnIndex, RowIndex, 0);
-                        WriteALine;
-                      end;
-                    end;
-                  end;
-                dso3D:
-                  begin
-                    for LayerIndex := 0 to Grid.LayerCount - 1 do
-                    begin
+                      LayerIndex := 0;
                       for RowIndex := 0 to Grid.RowCount - 1 do
                       begin
                         for ColumnIndex := 0 to Grid.ColumnCount - 1 do
                         begin
                           Location := Grid.
                             RotatedThreeDElementCenter(
-                            ColumnIndex, RowIndex, LayerIndex);
+                            ColumnIndex, RowIndex, 0);
                           WriteALine;
                         end;
                       end;
                     end;
-                  end;
-                else Assert(False);
-              end;
-            end;
-          eaNodes:
-            begin
-              case Orientation of
-                dsoTop:
-                  begin
-                    LayerIndex := 0;
-                    for RowIndex := 0 to Grid.RowCount do
+                  dso3D:
                     begin
-                      for ColumnIndex := 0 to Grid.ColumnCount do
+                      for LayerIndex := 0 to Grid.LayerCount - 1 do
                       begin
-                        Location := Grid.
-                          RotatedThreeDElementCorner(
-                          ColumnIndex, RowIndex, 0);
-                        WriteALine;
+                        for RowIndex := 0 to Grid.RowCount - 1 do
+                        begin
+                          for ColumnIndex := 0 to Grid.ColumnCount - 1 do
+                          begin
+                            Location := Grid.
+                              RotatedThreeDElementCenter(
+                              ColumnIndex, RowIndex, LayerIndex);
+                            WriteALine;
+                          end;
+                        end;
                       end;
                     end;
-                  end;
-                dso3D:
-                  begin
-                    for LayerIndex := 0 to Grid.LayerCount do
+                  else Assert(False);
+                end;
+              end;
+            eaNodes:
+              begin
+                case Orientation of
+                  dsoTop:
                     begin
+                      LayerIndex := 0;
                       for RowIndex := 0 to Grid.RowCount do
                       begin
                         for ColumnIndex := 0 to Grid.ColumnCount do
                         begin
                           Location := Grid.
                             RotatedThreeDElementCorner(
-                            ColumnIndex, RowIndex, LayerIndex);
+                            ColumnIndex, RowIndex, 0);
                           WriteALine;
                         end;
                       end;
                     end;
-                  end;
-                else Assert(False);
+                  dso3D:
+                    begin
+                      for LayerIndex := 0 to Grid.LayerCount do
+                      begin
+                        for RowIndex := 0 to Grid.RowCount do
+                        begin
+                          for ColumnIndex := 0 to Grid.ColumnCount do
+                          begin
+                            Location := Grid.
+                              RotatedThreeDElementCorner(
+                              ColumnIndex, RowIndex, LayerIndex);
+                            WriteALine;
+                          end;
+                        end;
+                      end;
+                    end;
+                  else Assert(False);
+                end;
               end;
-            end;
-          else Assert(False);
+            else Assert(False);
+          end;
+        finally
+          FFileStream.Free;
         end;
-      finally
-        FFileStream.Free;
+      except on E: EFCreateError do
+        begin
+          Beep;
+          MessageDlg(E.message, mtError, [mbOK], 0);
+          Exit;
+        end;
       end;
     end;
     if DataArrayList.Count > 0 then
@@ -444,17 +452,17 @@ end;
 
 procedure TfrmExportCSV.vstDataSetsGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: WideString);
+  var CellText: string);
 begin
   inherited;
   GetNodeCaption(Node, CellText, Sender);
 end;
 
-procedure TfrmExportCSV.WriteString(const Value: AnsiString);
+procedure TfrmExportCSV.WriteString(const Value: String);
 begin
   if Length(Value) > 0 then
   begin
-    FFileStream.Write(Value[1], Length(Value)*SizeOf(AnsiChar));
+    FFileStream.Write(Value[1], Length(Value)*SizeOf(Char));
   end;
 end;
 

@@ -16,9 +16,12 @@ inherited frmGridValue: TfrmGridValue
     Width = 89
     Height = 33
     Anchors = [akRight, akBottom]
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 0
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
   object btnClose: TBitBtn
     Left = 307
@@ -26,8 +29,11 @@ inherited frmGridValue: TfrmGridValue
     Width = 89
     Height = 33
     Anchors = [akRight, akBottom]
-    TabOrder = 1
+    DoubleBuffered = True
     Kind = bkClose
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 1
   end
   object pcDataDisplay: TPageControl
     Left = 0
@@ -40,6 +46,10 @@ inherited frmGridValue: TfrmGridValue
     TabOrder = 2
     object tabCurrentData: TTabSheet
       Caption = 'Current Data'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         398
         434)
@@ -194,7 +204,6 @@ inherited frmGridValue: TfrmGridValue
         Width = 145
         Height = 26
         Style = csDropDownList
-        ItemHeight = 18
         TabOrder = 3
         OnChange = comboModelChange
       end
@@ -202,6 +211,10 @@ inherited frmGridValue: TfrmGridValue
     object tabAllDataSets: TTabSheet
       Caption = 'All Data Sets'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         398
         434)
@@ -303,6 +316,10 @@ inherited frmGridValue: TfrmGridValue
     object tabPathline: TTabSheet
       Caption = 'Pathline'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object rdgPathline: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -314,6 +331,7 @@ inherited frmGridValue: TfrmGridValue
         RowCount = 12
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
         TabOrder = 0
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False

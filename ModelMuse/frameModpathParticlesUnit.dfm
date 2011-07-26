@@ -124,6 +124,7 @@ object frameModpathParticles: TframeModpathParticles
       Height = 138
       Camera = GLCamera
       FieldOfView = 104.002532958984400000
+      TabOrder = 2
     end
     object plParticlePlacement: TJvPageList
       Left = 143
@@ -429,6 +430,7 @@ object frameModpathParticles: TframeModpathParticles
           RowCount = 2
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
           TabOrder = 0
+          ExtendedAutoDistributeText = False
           AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False
@@ -663,6 +665,7 @@ object frameModpathParticles: TframeModpathParticles
       RowCount = 2
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
       TabOrder = 5
+      ExtendedAutoDistributeText = False
       AutoMultiEdit = True
       AutoDistributeText = True
       AutoIncreaseColCount = False
@@ -751,7 +754,6 @@ object frameModpathParticles: TframeModpathParticles
         Up.Coordinates = {00000000000080BF2EBDBB3300000000}
         Height = 1.000000000000000000
         Width = 1.000000000000000000
-        NoZWrite = False
       end
       object LeftPlane: TGLPlane
         Material.FrontProperties.Diffuse.Color = {8FC2753FCDCC4C3FD7A3303F0000803F}
@@ -760,7 +762,6 @@ object frameModpathParticles: TframeModpathParticles
         TurnAngle = 90.000000000000000000
         Height = 1.000000000000000000
         Width = 1.000000000000000000
-        NoZWrite = False
       end
       object BackPlane: TGLPlane
         Material.FrontProperties.Diffuse.Color = {EBE0E03EE4DB5B3FE4DB5B3F0000803F}
@@ -770,7 +771,6 @@ object frameModpathParticles: TframeModpathParticles
         Up.Coordinates = {000000002EBD3BB3000080BF00000000}
         Height = 1.000000000000000000
         Width = 1.000000000000000000
-        NoZWrite = False
       end
       object GLCylinder1: TGLCylinder
         Position.Coordinates = {0000003F00000000000000BF0000803F}

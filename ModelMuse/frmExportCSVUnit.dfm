@@ -14,10 +14,6 @@ inherited frmExportCSV: TfrmExportCSV
     Height = 343
     Align = alClient
     TabOrder = 0
-    ExplicitLeft = 40
-    ExplicitTop = 8
-    ExplicitWidth = 441
-    ExplicitHeight = 265
     DesignSize = (
       432
       343)
@@ -40,7 +36,6 @@ inherited frmExportCSV: TfrmExportCSV
       OnChecked = vstDataSetsChecked
       OnGetText = vstDataSetsGetText
       OnGetNodeDataSize = vstDataSetsGetNodeDataSize
-      ExplicitHeight = 257
       Columns = <>
     end
     object rgOrientation: TRadioGroup
@@ -56,7 +51,6 @@ inherited frmExportCSV: TfrmExportCSV
         '3D')
       TabOrder = 1
       OnClick = rgOrientationClick
-      ExplicitTop = 271
     end
     object rgEvaluatedAt: TRadioGroup
       Left = 127
@@ -71,7 +65,6 @@ inherited frmExportCSV: TfrmExportCSV
         'Nodes')
       TabOrder = 2
       OnClick = rgEvaluatedAtClick
-      ExplicitTop = 271
     end
     object btnHelp: TBitBtn
       Left = 320
@@ -79,10 +72,12 @@ inherited frmExportCSV: TfrmExportCSV
       Width = 104
       Height = 27
       Anchors = [akRight, akBottom]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 3
       OnClick = btnHelpClick
-      Kind = bkHelp
-      ExplicitTop = 271
     end
     object btnSave: TBitBtn
       Left = 320
@@ -91,8 +86,7 @@ inherited frmExportCSV: TfrmExportCSV
       Height = 27
       Anchors = [akRight, akBottom]
       Caption = 'Save Data'
-      TabOrder = 4
-      OnClick = btnSaveClick
+      DoubleBuffered = True
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -107,7 +101,9 @@ inherited frmExportCSV: TfrmExportCSV
         99337F3FF7F3733777F30F08F0F0337999337F7737F73F7777330FFFF0039999
         93337FFFF7737777733300000033333333337777773333333333}
       NumGlyphs = 2
-      ExplicitTop = 309
+      ParentDoubleBuffered = False
+      TabOrder = 4
+      OnClick = btnSaveClick
     end
   end
   object pnlModel: TPanel
@@ -117,9 +113,6 @@ inherited frmExportCSV: TfrmExportCSV
     Height = 64
     Align = alTop
     TabOrder = 1
-    ExplicitLeft = 1
-    ExplicitTop = 1
-    ExplicitWidth = 326
     DesignSize = (
       432
       64)
@@ -137,7 +130,6 @@ inherited frmExportCSV: TfrmExportCSV
       Height = 26
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 0
       TabOrder = 0
     end
   end

@@ -1,8 +1,8 @@
 inherited frmImportPoints: TfrmImportPoints
   Left = 500
   Top = 221
-  Width = 365
-  Height = 563
+  Width = 581
+  Height = 527
   HelpType = htKeyword
   HelpKeyword = 'Import_Points_Dialog_Box'
   VertScrollBar.Range = 49
@@ -10,75 +10,103 @@ inherited frmImportPoints: TfrmImportPoints
   Caption = 'Import Points'
   KeyPreview = True
   OnKeyUp = FormKeyUp
-  ExplicitWidth = 365
-  ExplicitHeight = 563
+  ExplicitWidth = 581
+  ExplicitHeight = 527
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 480
-    Width = 357
+    Top = 444
+    Width = 573
     Height = 49
     Align = alBottom
     ParentColor = True
     TabOrder = 0
     DesignSize = (
-      357
+      573
       49)
     object btnCancel: TBitBtn
-      Left = 266
+      Left = 482
       Top = 6
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 0
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 0
     end
     object btnOK: TBitBtn
-      Left = 178
+      Left = 394
       Top = 6
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnHelp: TBitBtn
-      Left = 90
+      Left = 306
       Top = 6
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
   end
   object pcImportPoints: TPageControl
     Left = 0
     Top = 0
-    Width = 357
-    Height = 480
+    Width = 573
+    Height = 444
     ActivePage = tabData
     Align = alClient
     TabOrder = 1
     object tabControls: TTabSheet
       Caption = 'Controls'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlRadioGroups: TPanel
-        Left = 0
-        Top = 167
+        Left = 216
+        Top = 0
         Width = 349
-        Height = 280
-        Align = alBottom
+        Height = 411
+        Align = alRight
         ParentColor = True
         TabOrder = 0
         object lblRoot: TLabel
           Left = 208
-          Top = 212
+          Top = 231
           Width = 76
           Height = 18
           Caption = 'Root name'
+        end
+        object lblBoundaryChoice: TLabel
+          Left = 9
+          Top = 306
+          Width = 62
+          Height = 18
+          Margins.Left = 6
+          Caption = 'Features'
+        end
+        object lblParameter: TLabel
+          Left = 208
+          Top = 365
+          Width = 74
+          Height = 18
+          Caption = 'Parameter'
         end
         object rgEvaluatedAt: TRadioGroup
           Left = 8
@@ -108,29 +136,32 @@ inherited frmImportPoints: TfrmImportPoints
           OnClick = rgViewDirectionClick
         end
         object cbIntersectedCells: TCheckBox
-          Left = 6
-          Top = 141
+          Left = 9
+          Top = 164
           Width = 339
           Height = 31
+          Margins.Left = 6
           Caption = 'Set values of intersected elements'
           TabOrder = 2
           OnClick = cbIntersectedCellsClick
         end
         object cbInterpolation: TCheckBox
-          Left = 6
-          Top = 173
+          Left = 9
+          Top = 191
           Width = 339
           Height = 31
+          Margins.Left = 6
           Caption = 'Set values of elements by interpolation'
           TabOrder = 3
           OnClick = cbIntersectedCellsClick
         end
         object edRoot: TEdit
-          Left = 8
-          Top = 208
+          Left = 9
+          Top = 228
           Width = 193
           Height = 26
           Cursor = crIBeam
+          Margins.Left = 6
           TabOrder = 4
           Text = 'Imported_Points'
         end
@@ -150,48 +181,97 @@ inherited frmImportPoints: TfrmImportPoints
           OnClick = rgElevationCountClick
         end
         object cbImportAsSingleObject: TCheckBox
-          Left = 6
-          Top = 239
+          Left = 9
+          Top = 260
           Width = 338
           Height = 17
+          Margins.Left = 6
           Caption = 'Import as a single object with multiple sections'
           Checked = True
           State = cbChecked
           TabOrder = 6
         end
         object cbVisible: TCheckBox
-          Left = 6
-          Top = 261
+          Left = 9
+          Top = 283
           Width = 243
           Height = 17
+          Margins.Left = 6
           Caption = 'Make objects visible'
           Checked = True
           State = cbChecked
           TabOrder = 7
         end
+        object comboBoundaryChoice: TComboBox
+          Left = 9
+          Top = 330
+          Width = 328
+          Height = 26
+          Margins.Left = 6
+          Style = csDropDownList
+          Enabled = False
+          ItemIndex = 0
+          TabOrder = 8
+          Text = 'none'
+          OnChange = comboBoundaryChoiceChange
+          Items.Strings = (
+            'none')
+        end
+        object comboParameter: TComboBox
+          Left = 9
+          Top = 362
+          Width = 193
+          Height = 26
+          Margins.Left = 6
+          Style = csDropDownList
+          Enabled = False
+          ItemIndex = 0
+          TabOrder = 9
+          Text = 'none'
+          Items.Strings = (
+            'none')
+        end
+        object cbLayer: TCheckBox
+          Left = 9
+          Top = 145
+          Width = 259
+          Height = 17
+          Margins.Left = 6
+          Caption = 'Specify layer instead of elevation'
+          TabOrder = 10
+          OnClick = cbLayerClick
+        end
       end
-      object pnlLabelDataSets: TPanel
+      object pnlData: TPanel
         Left = 0
         Top = 0
-        Width = 349
-        Height = 25
-        Align = alTop
-        BevelOuter = bvNone
-        Caption = 'Data sets'
-        ParentColor = True
-        TabOrder = 1
-      end
-      object jvclbDataSets: TJvxCheckListBox
-        Left = 0
-        Top = 25
-        Width = 349
-        Height = 142
+        Width = 216
+        Height = 411
         Align = alClient
-        Color = clRed
-        ItemHeight = 18
-        TabOrder = 2
-        OnClickCheck = jvclbDataSetsClickCheck
-        InternalVersion = 202
+        Caption = 'pnlData'
+        TabOrder = 1
+        object jvclbDataSets: TJvxCheckListBox
+          Left = 1
+          Top = 26
+          Width = 214
+          Height = 384
+          Align = alClient
+          Color = clRed
+          ItemHeight = 18
+          TabOrder = 0
+          OnClickCheck = jvclbDataSetsClickCheck
+          InternalVersion = 202
+        end
+        object pnlLabelDataSets: TPanel
+          Left = 1
+          Top = 1
+          Width = 214
+          Height = 25
+          Align = alTop
+          Caption = 'Data sets'
+          ParentColor = True
+          TabOrder = 1
+        end
       end
     end
     object tabData: TTabSheet
@@ -199,8 +279,8 @@ inherited frmImportPoints: TfrmImportPoints
       ImageIndex = 1
       object pnlDataTabControls: TPanel
         Left = 0
-        Top = 401
-        Width = 349
+        Top = 365
+        Width = 565
         Height = 46
         Align = alBottom
         ParentColor = True
@@ -218,8 +298,7 @@ inherited frmImportPoints: TfrmImportPoints
           Width = 113
           Height = 33
           Caption = 'Open file'
-          TabOrder = 0
-          OnClick = btnOpenFileClick
+          DoubleBuffered = True
           Glyph.Data = {
             76010000424D7601000000000000760000002800000020000000100000000100
             04000000000000010000120B0000120B00001000000010000000000000000000
@@ -234,6 +313,9 @@ inherited frmImportPoints: TfrmImportPoints
             B3333337FFFF77377FF333B000000333BB33337777777F3377FF3BB3333BB333
             3BB33773333773333773B333333B3333333B7333333733333337}
           NumGlyphs = 2
+          ParentDoubleBuffered = False
+          TabOrder = 0
+          OnClick = btnOpenFileClick
         end
         object seRows: TJvSpinEdit
           Left = 0
@@ -251,8 +333,8 @@ inherited frmImportPoints: TfrmImportPoints
       object dgData: TRbwDataGrid4
         Left = 0
         Top = 0
-        Width = 349
-        Height = 401
+        Width = 565
+        Height = 365
         Align = alClient
         ColCount = 2
         FixedColor = 14803425
@@ -260,6 +342,7 @@ inherited frmImportPoints: TfrmImportPoints
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColMoving, goEditing, goTabs, goAlwaysShowEditor]
         TabOrder = 0
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False

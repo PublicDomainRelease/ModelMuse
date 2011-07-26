@@ -396,7 +396,7 @@ var
     // read each character and see if it starts a new item.
     for CharIndex := 1 to Length(ALine) do
     begin
-      if ALine[CharIndex] in [' ', #9, ','] then
+      if CharInSet(ALine[CharIndex], [' ', #9, ',']) then
       begin
         // character is a separator
         if FoundStart then
@@ -417,7 +417,7 @@ var
       end;
     end;
     // If required, add the last item.
-    if not (ALine[Length(ALine)] in [' ', #9, ',']) then
+    if not CharInSet(ALine[Length(ALine)], [' ', #9, ',']) then
     begin
       if FoundStart then
       begin

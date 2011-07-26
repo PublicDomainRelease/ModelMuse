@@ -910,9 +910,9 @@ var
 begin
   FStartData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
   FEndData := TModflowTimeList.Create(Model, Boundary.ScreenObject);
-  FStartData.NonParamDescription := 'Starting head';
+  FStartData.NonParamDescription := StrStartingHead;
   FStartData.ParamDescription := ' starting head multiplier';
-  FEndData.NonParamDescription := 'Ending head';
+  FEndData.NonParamDescription := StrEndingHead;
   FEndData.ParamDescription := ' ending head multiplier';
   if Model <> nil then
   begin

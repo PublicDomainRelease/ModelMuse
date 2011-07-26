@@ -522,8 +522,11 @@ inherited frmFormula: TfrmFormula
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
     object btnOK: TBitBtn
       Left = 580
@@ -533,8 +536,7 @@ inherited frmFormula: TfrmFormula
       Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
-      TabOrder = 1
-      OnClick = btnOKClick
+      DoubleBuffered = True
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         04000000000068010000120B0000120B00001000000010000000000000000000
@@ -553,6 +555,9 @@ inherited frmFormula: TfrmFormula
         333A333333333333333338330000333333333333333333333333333333333333
         0000}
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 1
+      OnClick = btnOKClick
     end
     object btnHelp: TBitBtn
       Left = 484
@@ -560,9 +565,12 @@ inherited frmFormula: TfrmFormula
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnFunctionHelp: TBitBtn
       Left = 314
@@ -573,9 +581,8 @@ inherited frmFormula: TfrmFormula
       HelpKeyword = 'Function_Help_Button'
       Anchors = [akTop, akRight]
       Caption = '&Function help'
+      DoubleBuffered = True
       Enabled = False
-      TabOrder = 3
-      OnClick = btnFunctionHelpClick
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         04000000000068010000120B0000120B00001000000010000000000000000000
@@ -594,6 +601,9 @@ inherited frmFormula: TfrmFormula
         E333333333388FFFFF8333330000333333333333333333333333388888333333
         0000}
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 3
+      OnClick = btnFunctionHelpClick
     end
   end
   object pnlRight: TPanel
@@ -617,14 +627,12 @@ inherited frmFormula: TfrmFormula
         AlignWithMargins = True
         Left = 4
         Top = 4
-        Width = 227
-        Height = 36
+        Width = 193
+        Height = 16
         Align = alClient
         Alignment = taCenter
         Caption = 'Double-click to insert into formula'
         WordWrap = True
-        ExplicitWidth = 193
-        ExplicitHeight = 16
       end
     end
     object tvItems: TTreeView

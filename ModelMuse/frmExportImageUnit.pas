@@ -4,66 +4,68 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, frmCustomGoPhastUnit, StdCtrls, rmOutlook, ExtCtrls, Buttons, Grids,
+  Dialogs, frmCustomGoPhastUnit, StdCtrls, {rmOutlook,} ExtCtrls, Buttons, Grids,
   Mask, JvExMask, JvSpin, JvExStdCtrls, JvCombobox, VirtualTrees,
-  DataSetUnit, RbwDataGrid4, RbwDataGrid, Contnrs, DrawTextUnit,
+  DataSetUnit, RbwDataGrid4, Contnrs, DrawTextUnit,
   InPlaceEditUnit, Types, LegendUnit, GR32, RbwRuler, ExtDlgs, ComCtrls,
   DisplaySettingsUnit, JvExExtCtrls, JvNetscapeSplitter, Menus,
   JvToolEdit, JvExButtons, JvBitBtn;
 
 type
   TfrmExportImage = class(TfrmCustomGoPhast)
-    ocSettings: TrmOutlookControl;
     pnlControls: TPanel;
     pnlBottom: TPanel;
     btnHelp: TBitBtn;
     btnClose: TBitBtn;
     btnSaveSettings: TButton;
-    opText: TrmOutlookPage;
-    memoTitle: TMemo;
-    lblTitle: TLabel;
     lblSavedSettings: TLabel;
     comboSavedSettings: TComboBox;
-    opView: TrmOutlookPage;
-    comboView: TComboBox;
-    seImageHeight: TJvSpinEdit;
-    lblImageHeight: TLabel;
-    lblImageWidth: TLabel;
-    seImageWidth: TJvSpinEdit;
-    btnFont: TButton;
     fdTextFont: TFontDialog;
-    sbSelect: TSpeedButton;
-    sbText: TSpeedButton;
-    btnTitleFont: TButton;
-    cbShowColoredGridLines: TCheckBox;
-    cbColorLegend: TCheckBox;
-    cbContourLegend: TCheckBox;
     spdSaveImage: TSavePictureDialog;
-    cbHorizontalScale: TCheckBox;
-    cbVerticalScale: TCheckBox;
     pdPrintImage: TPrintDialog;
     scrollBoxPreview: TScrollBox;
     imagePreview: TImage;
     timerDrawImageDelay: TTimer;
     btnRefresh: TBitBtn;
     btnManageSettings: TButton;
-    lblSelectedView: TLabel;
-    opAnimation: TrmOutlookPage;
-    vstDataSets: TVirtualStringTree;
-    rdgDataSets: TRbwDataGrid4;
     pmChangeStates: TPopupMenu;
     miCheckSelected: TMenuItem;
     UncheckSelected1: TMenuItem;
     JvNetscapeSplitter2: TJvNetscapeSplitter;
-    Panel2: TPanel;
+    btnSaveImage1: TJvBitBtn;
+    JvBitBtn1: TJvBitBtn;
+    CatPanelGroup: TCategoryPanelGroup;
+    cpView: TCategoryPanel;
+    cpText: TCategoryPanel;
+    cpAnimation: TCategoryPanel;
+    Panel3: TPanel;
+    lblSelectedView: TLabel;
+    lblImageHeight: TLabel;
+    lblImageWidth: TLabel;
+    comboView: TComboBox;
+    seImageHeight: TJvSpinEdit;
+    seImageWidth: TJvSpinEdit;
+    cbShowColoredGridLines: TCheckBox;
+    cbColorLegend: TCheckBox;
+    cbContourLegend: TCheckBox;
+    cbHorizontalScale: TCheckBox;
+    cbVerticalScale: TCheckBox;
+    pnlText: TPanel;
+    lblTitle: TLabel;
+    sbText: TSpeedButton;
+    sbSelect: TSpeedButton;
+    memoTitle: TMemo;
+    btnTitleFont: TButton;
+    btnFont: TButton;
+    pnlAnimation: TPanel;
+    JvNetscapeSplitter1: TJvNetscapeSplitter;
     Panel1: TPanel;
     rgDisplayChoice: TRadioGroup;
     btnPreview: TButton;
     btnStop: TButton;
     btnSaveMultipleImages: TBitBtn;
-    JvNetscapeSplitter1: TJvNetscapeSplitter;
-    btnSaveImage1: TJvBitBtn;
-    JvBitBtn1: TJvBitBtn;
+    rdgDataSets: TRbwDataGrid4;
+    vstDataSets: TVirtualStringTree;
     procedure FormCreate(Sender: TObject); override;
     procedure seImageHeightChange(Sender: TObject);
     procedure seImageWidthChange(Sender: TObject);
@@ -94,9 +96,6 @@ type
     procedure spdSaveImageTypeChange(Sender: TObject);
     procedure vstDataSetsGetNodeDataSize(Sender: TBaseVirtualTree;
       var NodeDataSize: Integer);
-    procedure vstDataSetsGetText(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: WideString);
     procedure vstDataSetsInitNode(Sender: TBaseVirtualTree; ParentNode,
       Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstDataSetsChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -107,6 +106,11 @@ type
     procedure btnSaveMultipleImagesClick(Sender: TObject);
     procedure btnCloseClick(Sender: TObject);
     procedure JvBitBtn1Click(Sender: TObject);
+    procedure vstDataSetsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+    procedure cpAnimationExpand(Sender: TObject);
+    procedure cpViewExpand(Sender: TObject);
+    procedure cpTextExpand(Sender: TObject);
   private
     FShouldDraw: Boolean;
     FTextItems: TList;
@@ -177,6 +181,7 @@ type
     procedure SaveImage(FilterIndex: Integer; FileName: string);
     procedure SetStateOfMultipleNodes(BaseNode: PVirtualNode;
       NewState: TCheckState);
+    procedure CollapseOtherPanels(Sender: TObject);
     { Private declarations }
   public
     { Public declarations }
@@ -187,12 +192,12 @@ var frmExportImage: TfrmExportImage = nil;
 implementation
 
 uses
-  EdgeDisplayUnit, Math, JclAnsiStrings, GoPhastTypes, frmGoPhastUnit,
+  EdgeDisplayUnit, Math, JclStrings, GoPhastTypes, frmGoPhastUnit,
   AbstractGridUnit, BigCanvasMethods, ScreenObjectUnit,
   CompressedImageUnit, frameViewUnit, PhastModelUnit, frmGoToUnit,
   frmContourDataUnit, frmGridColorUnit, UndoItems, frmManageSettingsUnit,
   UndoItemsScreenObjects, ClassificationUnit, frmProgressUnit,
-  frmErrorsAndWarningsUnit, Clipbrd;
+  frmErrorsAndWarningsUnit, Clipbrd, RbwParser;
 
 const
   StrSP = '%SP';
@@ -275,6 +280,14 @@ begin
     begin
       CurrentTime := Now;
       DataArray := DataSetList[Index];
+      if (rgDisplayChoice.ItemIndex = 1) and (DataArray.DataType <> rdtDouble) then
+      begin
+        Beep;
+        MessageDlg(DataArray.Name +
+        ' has the wrong type of data. Only data sets with real numbers '
+        + 'can be contoured.', mtError, [mbOK], 0);
+        Exit;
+      end;
       frmProgressMM.Caption := 'Displaying ' + DataArray.Name;
       Application.ProcessMessages;
       case rgDisplayChoice.ItemIndex of
@@ -626,6 +639,24 @@ begin
   FQuerySaveSettings := True;
 end;
 
+procedure TfrmExportImage.cpAnimationExpand(Sender: TObject);
+begin
+  inherited;
+  CollapseOtherPanels(Sender);
+end;
+
+procedure TfrmExportImage.cpTextExpand(Sender: TObject);
+begin
+  inherited;
+  CollapseOtherPanels(Sender);
+end;
+
+procedure TfrmExportImage.cpViewExpand(Sender: TObject);
+begin
+  inherited;
+  CollapseOtherPanels(Sender);
+end;
+
 function TfrmExportImage.CreateInplaceEditForExistingItem(X,
   Y: Integer): Boolean;
 var
@@ -869,6 +900,12 @@ begin
       vdSide: Orientation := dsoSide;
       else Assert(False);
     end;
+
+    if ViewDirection = vdTop then
+    begin
+      LocalModel.DrawHeadObservations(FModelImage, frmGoPhast.frameTopView.ZoomBox);
+    end;
+
     LocalModel.Pathlines.Draw(Orientation, FModelImage);
     LocalModel.EndPoints.Draw(Orientation, FModelImage);
     LocalModel.TimeSeries.Draw(Orientation, FModelImage);
@@ -2123,7 +2160,7 @@ end;
 
 procedure TfrmExportImage.vstDataSetsGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: WideString);
+  var CellText: string);
 begin
   inherited;
   GetNodeCaption(Node, CellText, Sender);
@@ -2388,7 +2425,12 @@ begin
   rdgDataSets.Cells[1,0] := 'Data Sets';
   FDataSetDummyObjects := TObjectList.Create;
   FCanDraw := False;
-  ocSettings.ActivePage := opView;
+
+  cpView.Collapsed := False;
+  cpText.Collapsed := True;
+  cpAnimation.Collapsed := True;
+
+//  ocSettings.ActivePage := opView;
 
   FTextItems:= TObjectList.Create;
 
@@ -2661,6 +2703,52 @@ begin
   finally
     rdgDataSets.EndUpdate;
   end;
+end;
+
+procedure TfrmExportImage.CollapseOtherPanels(Sender: TObject);
+var
+  CatPanel: TCategoryPanel;
+  Index: Integer;
+  APanel: TCategoryPanel;
+begin
+  APanel := nil;
+  for Index:=0 to CatPanelGroup.Panels.Count -1 do
+  begin
+    CatPanel := CatPanelGroup.Panels[Index];
+    if CatPanel = Sender then
+    begin
+      APanel := CatPanel;
+    end
+    else
+    begin
+      CatPanel.Collapsed := True;
+    end;
+  end;
+
+  if CatPanelGroup.VertScrollBar.Visible and (APanel <> nil) then
+  begin
+    CatPanelGroup.ScrollInView(APanel);
+    CatPanelGroup.VertScrollBar.Visible := False;
+  end;
+
+
+//  List := TList.Create;
+//  try
+//    List.Add(cpView);
+//    List.Add(cpText);
+//    List.Add(cpAnimation);
+//    for Index := 0 to List.Count - 1 do
+//    begin
+//      CatPanel := List[Index];
+//      if CatPanel <> Sender then
+//      begin
+//        CatPanel.Collapsed := True;
+//      end;
+//    end;
+//  finally
+//    List.Free;
+//  end;
+//  CatPanelGroup.Invalidate;
 end;
 
 procedure TfrmExportImage.spdSaveImageTypeChange(Sender: TObject);

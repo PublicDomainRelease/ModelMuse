@@ -18,6 +18,7 @@ unit InteractiveTools;
 interface
 
 uses
+  Windows,
   GR32_Layers, // TPositionedLayer is declared in GR32_Layers.
   GR32, // TBitmap32, and TFloatRect are declared in GR32.
   Types, SysUtils, Classes, Controls, Forms, Graphics, FastGEO, GoPhastTypes,
@@ -1959,7 +1960,7 @@ begin
       begin
         result := 'Click on grid line and drag to move it.';
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         case ViewDirection of
           vdTop: result := 'Click on grid line and drag to move it.';
@@ -2307,7 +2308,7 @@ begin
       begin
         result := 'Click on grid boundary to delete it';
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         case ViewDirection of
           vdTop: result := 'Click on grid boundary to delete it';
@@ -2958,7 +2959,7 @@ begin
         DrawBigPolygon32(BitMap, SelectColor32,
           SelectColor32, 0, Polygon, P, MultiplePolygons, True);
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         FrontPoints := frmGoPhast.PhastModel.SelectedModel.ModflowGrid.FrontCellPoints(
           frmGoPhast.PhastModel.SelectedModel.ModflowGrid.SelectedRow);
@@ -3090,7 +3091,7 @@ begin
         DrawBigPolygon32(BitMap, SelectColor32,
           SelectColor32, 0, Polygon, P, MultiplePolygons, True);
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
 //        Assert(frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR]);
 

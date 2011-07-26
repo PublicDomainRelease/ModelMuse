@@ -182,7 +182,7 @@ type
     procedure UpdateCombo;
     procedure GetShouldIgnore(ValuesToIgnore: TOneDRealArray;
       Temp: TModflowFloat; var ShouldIgnore: Boolean);
-    function SubsidenceDescription(DESC: string; ILAY: integer): string;
+    function SubsidenceDescription(DESC: String; ILAY: integer): string;
     // In the label for data sets, TOTIM will be measured from the end of
     // the first stress period if there are more than one stress period and
     // the first stress period is a steady-state stress period.
@@ -228,7 +228,7 @@ uses Math, frmGoPhastUnit, RbwParser,
   GIS_Functions, ValueArrayStorageUnit, ModelMuseUtilities, 
   frmUpdateDataSetsUnit, UndoItemsScreenObjects, frmGridColorUnit,
   InterpolationUnit, frmContourDataUnit, HufDefinition, ModflowTimeUnit,
-  frmGridValueUnit, shlobj, activex;
+  frmGridValueUnit, shlobj, activex, AnsiStrings;
 
 resourcestring
   StrHead = 'Head';
@@ -497,7 +497,7 @@ end;
 
 function TfrmSelectResultToImport.DefaultFileName(AModel: TCustomModel): string;
 begin
-  Assert(frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR]);
+  Assert(frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT]);
   result := AModel.DefaultModflowOutputFileName;
   if not FileExists(result) then
   begin
@@ -1561,10 +1561,10 @@ begin
 
 end;
 
-function TfrmSelectResultToImport.SubsidenceDescription(DESC: string;
+function TfrmSelectResultToImport.SubsidenceDescription(DESC: String;
   ILAY: integer): string;
 begin
-  result := Trim(DESC);
+  result := string(Trim(DESC));
   if SameText(result, 'SUBSIDENCE') then
   begin
     Exit;
@@ -1742,7 +1742,7 @@ var
   Precision: TModflowPrecision;
   HufFormat: boolean;
   LayerIndex: Integer;
-  Description: string;
+  Description: String;
   AFileStream: TFileStream;
   function WriteLabel(Description: string): string;
   var
@@ -1769,7 +1769,7 @@ var
       result := result + '; Total Time: ' + FloatToStr(TOTIM);
     end;
   end;
-  procedure RecordItem(Description: string);
+  procedure RecordItem(Description: String);
   begin
     Item := WriteLabel(Description);
     if clData.Items.IndexOf(Item) < 0 then
@@ -1835,7 +1835,7 @@ begin
                   PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
               else Assert(False);
             end;
-            RecordItem(DESC);
+            RecordItem(string(DESC));
             if AModel.ModflowGrid.RowCount = 1 then
             begin
               if (AModel.ModflowLayerCount <> NROW)
@@ -1870,7 +1870,7 @@ begin
           begin
             ReadModflowAsciiRealArray(FFileVariable, KSTP, KPER,
               PERTIM, TOTIM, DESC2, NCOL, NROW, ILAY, AnArray, False);
-            RecordItem(DESC2);
+            RecordItem(string(DESC2));
             if AModel.ModflowGrid.RowCount = 1 then
             begin
               if (AModel.ModflowLayerCount <> NROW)
@@ -1914,7 +1914,7 @@ begin
                   False);
               else Assert(False);
             end;
-            RecordItem(DESC);
+            RecordItem(string(DESC));
             if (AModel.ModflowGrid.RowCount <> NROW)
               or (AModel.ModflowGrid.ColumnCount <> NCOL)
               or (AModel.ModflowLayerCount <> Abs(NLAY)) then
@@ -1934,7 +1934,7 @@ begin
           begin
             ReadModflowAsciiRealArray(FFileVariable, KSTP, KPER,
               PERTIM, TOTIM, DESC2, NCOL, NROW, ILAY, AnArray, False);
-            RecordItem(DESC2);
+            RecordItem(string(DESC2));
             if (AModel.ModflowGrid.RowCount <> NROW)
               or (AModel.ModflowGrid.ColumnCount <> NCOL) then
             begin
@@ -1960,7 +1960,7 @@ begin
                   PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
               else Assert(False);
             end;
-            RecordItem(DESC);
+            RecordItem(string(DESC));
             if (AModel.ModflowGrid.RowCount <> NROW)
               or (AModel.ModflowGrid.ColumnCount <> NCOL) then
             begin
@@ -1991,7 +1991,7 @@ begin
             for LayerIndex := 0 to Abs(NLAY) - 1 do
             begin
               ILAY := LayerIndex+1;
-              RecordItem(DESC);
+              RecordItem(string(DESC));
             end;
             if (AModel.ModflowGrid.RowCount <> NROW)
               or (AModel.ModflowGrid.ColumnCount <> NCOL)
@@ -2021,8 +2021,8 @@ begin
                   False);
               else Assert(False);
             end;
-            Description := SubsidenceDescription(DESC, ILAY);
-            RecordItem(Description);
+            Description := SubsidenceDescription(string(DESC), ILAY);
+            RecordItem(string(Description));
             if (AModel.ModflowGrid.RowCount <> NROW)
               or (AModel.ModflowGrid.ColumnCount <> NCOL) then
             begin
@@ -2264,7 +2264,7 @@ begin
           NCOL, NROW, NLAY, A3DArray, HufFormat, ShouldReadArray);
       else Assert(False);
     end;
-    Description := Trim(DESC);
+    Description := string(Trim(DESC));
   end
   else
   begin
@@ -2310,7 +2310,7 @@ begin
                 ShouldReadArray);
             else Assert(False);
           end;
-          Description := Trim(DESC);
+          Description := string(Trim(DESC));
         end
         else
         begin
@@ -2323,7 +2323,7 @@ begin
         begin
           ReadModflowAsciiRealArray(FFileVariable, KSTP, KPER, PERTIM, TOTIM,
             DESC2, NCOL, NROW, ILAY, AnArray, ShouldReadArray);
-          Description := Trim(DESC2);
+          Description := string(Trim(DESC2));
         end
         else
         begin

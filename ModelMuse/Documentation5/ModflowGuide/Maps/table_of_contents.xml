@@ -67,8 +67,8 @@
           <caption translate="true">LVDA - Model-Layer Variable-Direction Horizontal Anisotropy Capability</caption>
         </topicref>
       </topicref>
-      <topicref type="topic" id="40677692932030" build="ALLMODELS,MODFLOW-NWT" modified="2011-05-16T11:13:26.993Z" icon="0" href="UPW_Upstream_Weighting_Package">
-        <caption translate="true">UPW Upstream Weighting Package</caption>
+      <topicref type="topic" id="40677692932030" build="ALLMODELS,MODFLOW-NWT" modified="2011-06-20T18:46:43.531Z" icon="0" href="UPW_Upstream_Weighting_Package">
+        <caption translate="true">UPW - Upstream Weighting Package</caption>
       </topicref>
       <topicref type="topic" id="39071895193833" build="ALL" modified="2007-02-28T16:28:39.068Z" icon="0" href="HFB6">
         <caption translate="true">HFB6 - Horizontal Flow Barrier Package</caption>
@@ -172,8 +172,8 @@
       <topicref type="topic" id="390944347715895" build="ALLMODELS,MODFLOW-2000" modified="2011-01-07T22:37:55.937Z" icon="0" href="SOR">
         <caption translate="true">SOR - Slice-Successive Overrelaxation Package</caption>
       </topicref>
-      <topicref type="topic" id="406795583817707" build="ALLMODELS,MODFLOW-NWT" modified="2011-05-16T11:22:53.432Z" icon="0" href="NWT_Newton_Solver">
-        <caption translate="true">NWT Newton Solver</caption>
+      <topicref type="topic" id="406795583817707" build="ALLMODELS,MODFLOW-NWT" modified="2011-06-20T18:47:00.218Z" icon="0" href="NWT_Newton_Solver">
+        <caption translate="true">NWT - Newton Solver</caption>
         <topicref type="topic" id="406804337556924" build="ALLMODELS,MODFLOW-NWT" modified="2011-05-17T13:08:44.751Z" icon="0" href="Suggested_input_values_for_the">
           <caption translate="true">Suggested input values for the NWT input file</caption>
         </topicref>

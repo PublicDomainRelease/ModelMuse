@@ -82,7 +82,7 @@ type
 
 implementation
 
-uses StrUtils, Wininet, Forms;
+uses StrUtils, Wininet, Forms, IOUtils;
 
 {$IFDEF LINUX}
 
@@ -133,19 +133,27 @@ end;
 
 function GetTempFile(const Extension: string): string;
 var
-  Buffer: array[0..MAX_PATH] of char;
+//  Buffer: PChar;
+//  Buffer: array[0..MAX_PATH] of char;
   aFile: string;
 begin
-  GetTempPath(SizeOf(Buffer) - 1, Buffer);
-  GetTempFileName(Buffer, 'TMP', 0, Buffer);
-  SetString(aFile, Buffer, StrLen(Buffer));
+  aFile := TPath.GetTempFileName;
+
+//  GetMem(Buffer, SizeOf(Char) * (MAX_PATH+1));
+//  GetTempPath(SizeOf(Buffer) - 1, Buffer);
+//  GetTempFileName(Buffer, 'TMP', 0, Buffer);
+////  SetString(aFile, Buffer, StrLen(Buffer));
+////  StrPCopy
+//  aFile := Buffer;
   Result := ChangeFileExt(aFile, Extension);
+//  FreeMem(Buffer);
 end;
 
 function DefaultBrowserPath: string;
 var
   temp: string;
-  f: System.Text;
+//  f: System.Text;
+  AStringList: TStringList;
 begin
   result := '';
   try
@@ -154,19 +162,29 @@ begin
     temp := GetTempFile('.htm');
     // Create the file
     // Datei erstellen
-    AssignFile(f, temp);
+    AStringList := TStringList.Create;
     try
-      rewrite(f);
+      AStringList.SaveToFile(temp);
     finally
-      closefile(f);
+      AStringList.Free;
     end;
+//    AssignFile(f, temp);
+//    try
+//      rewrite(f);
+//    finally
+//      closefile(f);
+//    end;
     // Show the path to the browser
     // Pfad + Programmname zum Browser anzeigen.
     result := GetAppName(temp);
     // Finally delete the temporary file
     // Temporaäre Datei wieder löschen
   finally
-    Erase(f);
+    if FileExists(temp) then
+    begin
+      DeleteFile(temp);
+//      Erase(f);
+    end;
   end;
 end;
 

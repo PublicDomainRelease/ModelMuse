@@ -86,7 +86,6 @@ type
     property IsDirty[Index: integer]: boolean read GetIsDirty write SetIsDirty;
   private
     function GetCount: integer;
-  published
   public
     procedure StoreStreams;
     Constructor Create(Const ArchiveName: string);

@@ -10,6 +10,12 @@ unit RbwParser;
 
 interface
 
+{$ifdef CONDITIONALEXPRESSIONS}
+  {$if CompilerVersion>=20}
+    {$DEFINE Delphi_2009_UP}
+  {$ifend}
+{$endif}
+
 uses
 {$IFDEF MSWINDOWS}
   // Indcluding Windows, allows AnsiCompareStr to be inlined with Delphi 2005.
@@ -77,6 +83,7 @@ type
 
   // @name is a pointer to a @link(TFunctionRecord).
   PFunctionRecord = ^TFunctionRecord;
+{$WARNINGS OFF}
   {
 
     @abstract(A @Name is used to define a function that can be used in a
@@ -238,7 +245,7 @@ type
       visible in a GUI interface.
     }
     Hidden: boolean;
-    { @name represents alternative valid spellings for the same function. 
+    { @name represents alternative valid spellings for the same function.
     }
     Synonyms: array of string;
     {
@@ -268,6 +275,7 @@ type
       }
       rdtString: (SFunctionAddr: TRbwStringFunction);
   end;
+{$WARNINGS ON}
 
   // @name is a pointer to a boolean.
   PBoolean = ^Boolean;
@@ -1204,6 +1212,7 @@ type
       write SetVariables;
     // @name initializes @link(VariablesForFunction) and @link(StringVariableIndicies)
     procedure FillVariables;
+    procedure SetResultFromFunction;
   protected
      {
       @Name is set to false if a @Link(TExpression) is equivalent to a
@@ -1525,7 +1534,7 @@ type
   TOperatorDefinition = class(TObject)
   private
     // See @link(OperatorName).
-    FOperatorName: Ansistring;
+    FOperatorName: AnsiString;
     // See @link(Precedence).
     FPrecedence: TPrecedence;
     // See @link(ArgumentCount).
@@ -1536,7 +1545,7 @@ type
     FSignOperator: boolean;
   public
     // @name is the name of the operator.
-    property OperatorName: Ansistring read FOperatorName write FOperatorName;
+    property OperatorName: AnsiString read FOperatorName write FOperatorName;
     // @name indicates how many arguments the operator has.
     property ArgumentCount: TArgumentCount read FArgumentCount write FArgumentCount;
     // See @link(TPrecedence)
@@ -1653,7 +1662,7 @@ type
     procedure AddOperator(OpDef: TOperatorDefinition);
     // @name will remove the @link(TOperatorDefinition) whose
     // @link(TOperatorDefinition.OperatorName) is OperatorName.
-    procedure RemoveOperator(OperatorName: string);
+    procedure RemoveOperator(OperatorName: AnsiString);
     {
       See: @Link(TSpecialImplementorList).
     }
@@ -1855,6 +1864,8 @@ type
     that will be used.)
   }
   TSelectExpression = class(TExpression)
+  private
+    function GetSelectIndex(AVariable: TConstant): integer;
   public
     {
       @Name calls Evaluate for its first argument and based on
@@ -1966,6 +1977,61 @@ begin
   RegisterComponents('RBW', [TRbwParser]);
 end;
 
+{$WARNINGS OFF}
+function InternalStrToFloat(const AString: string): Extended;
+var
+  OldDecimalSeparator: Char;
+begin
+  {$IFDEF Delphi_2009_UP}
+  OldDecimalSeparator := FormatSettings.DecimalSeparator;
+  {$ELSE}
+  OldDecimalSeparator := DecimalSeparator;
+  {$ENDIF}
+  try
+    {$IFDEF Delphi_2009_UP}
+    FormatSettings.DecimalSeparator := '.';
+    {$ELSE}
+    DecimalSeparator := '.';
+    {$ENDIF}
+    result := StrToFloat(AString);
+  finally
+    {$IFDEF Delphi_2009_UP}
+    FormatSettings.DecimalSeparator := OldDecimalSeparator;
+    {$ELSE}
+    DecimalSeparator := OldDecimalSeparator;
+    {$ENDIF}
+  end;
+end;
+{$WARNINGS ON}
+
+{$WARNINGS OFF}
+function InternalFloatToStr(Value: Extended): string;
+var
+  OldDecimalSeparator: Char;
+begin
+  {$IFDEF Delphi_2009_UP}
+  OldDecimalSeparator := FormatSettings.DecimalSeparator;
+  {$ELSE}
+  OldDecimalSeparator := DecimalSeparator;
+  {$ENDIF}
+  try
+    {$IFDEF Delphi_2009_UP}
+    FormatSettings.DecimalSeparator := '.';
+    {$ELSE}
+    DecimalSeparator := '.';
+    {$ENDIF}
+    result := FloatToStr(Value);
+  finally
+    {$IFDEF Delphi_2009_UP}
+    FormatSettings.DecimalSeparator := OldDecimalSeparator;
+    {$ELSE}
+    DecimalSeparator := OldDecimalSeparator;
+    {$ENDIF}
+  end;
+end;
+{$WARNINGS ON}
+
+{$WARNINGS OFF}
 function GenerateVariableName(const root: string): string;
 var
   Index: integer;
@@ -1978,16 +2044,25 @@ begin
   end;
   for Index := 1 to Length(result) do
   begin
+    {$IFDEF Delphi_2009_UP}
+    if not CharInSet(result[Index], ValidCharacters) then
+    {$ELSE}
     if not (result[Index] in ValidCharacters) then
+    {$ENDIF}
     begin
       result[Index] := '_'
     end;
   end;
+  {$IFDEF Delphi_2009_UP}
+  if not CharInSet(result[1], ValidFirstCharacters) then
+  {$ELSE}
   if not (result[1] in ValidFirstCharacters) then
+  {$ENDIF}
   begin
     result := '_' + result;
   end;
 end;
+{$WARNINGS ON}
 
 procedure ValidateVariableName(const VariableName: string);
 var
@@ -1997,7 +2072,11 @@ begin
   begin
     raise ERbwParserError.Create('Error: Variables must be named.');
   end;
+  {$IFDEF Delphi_2009_UP}
+  if not CharInSet(VariableName[1], ValidFirstCharacters) then
+  {$ELSE}
   if not (VariableName[1] in ValidFirstCharacters) then
+  {$ENDIF}
   begin
     raise ERbwParserError.Create('Error: "'
       + VariableName + '" is illegal. '
@@ -2006,7 +2085,11 @@ begin
   end;
   for Index := 2 to Length(VariableName) do
   begin
+    {$IFDEF Delphi_2009_UP}
+    if not CharInSet(VariableName[Index], ValidCharacters) then
+    {$ELSE}
     if not (VariableName[Index] in ValidCharacters) then
+    {$ENDIF}
     begin
       raise ERbwParserError.Create('Error: "'
         + VariableName + '" is illegal.  Variable names may only include '
@@ -2085,6 +2168,9 @@ type
   end;
 
   TPartialEvaluationOperator = class(TOperator)
+  private
+    function GetResult: Boolean;
+    procedure SetResultFromVariable(AVariable: TConstant);
   protected
     //function MakeLinkedList(Prior: TExpression): TExpression; override;
   end;
@@ -2100,6 +2186,8 @@ type
   end;
 
   TMultiInterpolateExpression = class(TSelectExpression)
+  private
+    procedure SetResultFromNumber(ANumber: Double);
   public
     procedure Evaluate; override;
   end;
@@ -2115,9 +2203,9 @@ type
   end;
 
 const
-  Digits: set of Char = ['0'..'9'];
-  Parenthesis: set of Char = ['(', ')'];
-  WhiteSpace: set of Char = [' ', #9, #10, #13];
+  Digits: set of AnsiChar = ['0'..'9'];
+  Parenthesis: set of AnsiChar = ['(', ')'];
+  WhiteSpace: set of AnsiChar = [' ', #9, #10, #13];
 
 var
   OperatorList: TObjectList;
@@ -2309,7 +2397,11 @@ begin
   Assert(Length(Token) >= 1);
   // Val('x1', Value, Code) will convert to a numeric value.
   // Use this test to prevent that problem.
+  {$IFDEF Delphi_2009_UP}
+  result := CharInSet(Token[1], ['+', '-', '0', '1','2','3','4','5','6','7','8','9']);
+  {$ELSE}
   result := Token[1] in ['+', '-', '0', '1','2','3','4','5','6','7','8','9'];
+  {$ENDIF}
   if result then
   begin
     Val(Token, Value, Code);
@@ -2322,7 +2414,11 @@ var
   Code: integer;
 begin
   Assert(Length(Token) >= 1);
+  {$IFDEF Delphi_2009_UP}
+  result := CharInSet(Token[1], ['+', '-', '0'..'9', '.']);
+  {$ELSE}
   result := Token[1] in ['+', '-', '0'..'9', '.'];
+  {$ENDIF}
   if result then
   begin
     Val(Token, Value, Code);
@@ -2504,7 +2600,7 @@ var
   Skip: integer;
   Level: integer;
   Tokens: TTokenStringList;
-  OldDecimalSeparator: Char;
+//  OldDecimalSeparator: Char;
 begin
   AString := (Trim(AString));
   if AString = '' then
@@ -2612,7 +2708,11 @@ begin
               Continue;
             end;
             // test if this character is white space.
+            {$IFDEF Delphi_2009_UP}
+            if CharInSet(ALine[Index], WhiteSpace) then
+            {$ELSE}
             if ALine[Index] in WhiteSpace then
+            {$ENDIF}
             begin
               // if this character is white space, but the previous character wasn't
               // white space, the last character must be the end of a token.
@@ -2631,7 +2731,11 @@ begin
             end;
             // The current character is not white space.
             // Add parentheses to the tokens.
+            {$IFDEF Delphi_2009_UP}
+            if CharInSet(ALine[Index], Parenthesis) then
+            {$ELSE}
             if ALine[Index] in Parenthesis then
+            {$ENDIF}
             begin
               Tokens.Add(copy(ALine, LastPosition + 1, Index - LastPosition -
                 1));
@@ -2648,10 +2752,17 @@ begin
               TestString := Copy(ALine, Index, Length(Operator));
               if Operator = TestString then
               begin
+                {$IFDEF Delphi_2009_UP}
+                if ((Index = 1) or CharInSet(ALine[Index - 1], [' ', ')', ',']))
+                  and ((Index + Length(Operator) > Length(ALine))
+                  or CharInSet(ALine[Index + Length(Operator)], [' ', '(', ',']))
+                  or not CharInSet(Operator[1], ['A'..'Z', 'a'..'z']) then
+                {$ELSE}
                 if ((Index = 1) or (ALine[Index - 1] in [' ', ')', ',']))
                   and ((Index + Length(Operator) > Length(ALine))
                   or (ALine[Index + Length(Operator)] in [' ', '(', ',']))
                   or not (Operator[1] in ['A'..'Z', 'a'..'z']) then
+                {$ENDIF}
                 begin
                   Tokens.Add(copy(ALine, LastPosition + 1, Index - LastPosition
                     - 1));
@@ -2674,19 +2785,38 @@ begin
               TestString := Copy(ALine, Index, Length(Operator));
               if Operator = TestString then
               begin
+                {$IFDEF Delphi_2009_UP}
+                if (Index > 1)
+                  and ((Operator = '-') or (Operator = '+'))
+                  and CharInSet(ALine[Index - 1], ['e', 'E']) then
+                {$ELSE}
                 if (Index > 1)
                   and ((Operator = '-') or (Operator = '+'))
                   and (ALine[Index - 1] in ['e', 'E']) then
+                {$ENDIF}
                 begin
                   try
-                    OldDecimalSeparator := DecimalSeparator;
-                    try
-                      DecimalSeparator := '.';
-                      StrToFloat(Copy(ALine, LastPosition + 1, Index -
+                    InternalStrToFloat(Copy(ALine, LastPosition + 1, Index -
                         LastPosition));
-                    finally
-                      DecimalSeparator := OldDecimalSeparator;
-                    end;
+//                    {$IFDEF Delphi_2009_UP}
+//                    OldDecimalSeparator := FormatSettings.DecimalSeparator;
+//                    {$ELSE}
+//                    OldDecimalSeparator := DecimalSeparator;
+//                    {$ENDIF}
+//                    try
+//                      {$IFDEF Delphi_2009_UP}
+//                      FormatSettings.DecimalSeparator := '.';
+//                      {$ELSE}
+//                      DecimalSeparator := '.';
+//                      {$ENDIF}
+//                      StrToFloat();
+//                    finally
+//                      {$IFDEF Delphi_2009_UP}
+//                      FormatSettings.DecimalSeparator := OldDecimalSeparator;
+//                      {$ELSE}
+//                      DecimalSeparator := OldDecimalSeparator;
+//                      {$ENDIF}
+//                    end;
                     break;
                   except on EConvertError do
                     begin
@@ -2710,19 +2840,39 @@ begin
             TestString := Copy(ALine, Index, Length(Operator));
             if Operator = TestString then
             begin
+              {$IFDEF Delphi_2009_UP}
+              if (Index > 1)
+                and ((Operator = '-') or (Operator = '+'))
+                and CharInSet(ALine[Index - 1], ['e', 'E']) then
+              {$ELSE}
               if (Index > 1)
                 and ((Operator = '-') or (Operator = '+'))
                 and (ALine[Index - 1] in ['e', 'E']) then
+              {$ENDIF}
               begin
                 try
-                  OldDecimalSeparator := DecimalSeparator;
-                  try
-                    DecimalSeparator := '.';
-                    StrToFloat(Copy(ALine, LastPosition + 1, Index -
+                  InternalStrToFloat(Copy(ALine, LastPosition + 1, Index -
                       LastPosition));
-                  finally
-                    DecimalSeparator := OldDecimalSeparator;
-                  end;
+//                  {$IFDEF Delphi_2009_UP}
+//                  OldDecimalSeparator := FormatSettings.DecimalSeparator;
+//                  {$ELSE}
+//                  OldDecimalSeparator := DecimalSeparator;
+//                  {$ENDIF}
+//                  try
+//                    {$IFDEF Delphi_2009_UP}
+//                    FormatSettings.DecimalSeparator := '.';
+//                    {$ELSE}
+//                    DecimalSeparator := '.';
+//                    {$ENDIF}
+//                    StrToFloat(Copy(ALine, LastPosition + 1, Index -
+//                      LastPosition));
+//                  finally
+//                    {$IFDEF Delphi_2009_UP}
+//                    FormatSettings.DecimalSeparator := OldDecimalSeparator;
+//                    {$ELSE}
+//                    DecimalSeparator := OldDecimalSeparator;
+//                    {$ENDIF}
+//                  end;
                   break;
                 except on EConvertError do
                   begin
@@ -3027,15 +3177,19 @@ begin
   inherited Create(VariableName, rdtDouble);
 end;
 
+{$WARNINGS OFF}
 function TRealVariable.GetValue: double;
 begin
   result := PDouble(FResult)^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 procedure TRealVariable.SetValue(const Value: double);
 begin
   PDouble(FResult)^ := Value;
 end;
+{$WARNINGS ON}
 
 { TIntegerVariable }
 
@@ -3044,15 +3198,19 @@ begin
   inherited Create(VariableName, rdtInteger);
 end;
 
+{$WARNINGS OFF}
 function TIntegerVariable.GetValue: Integer;
 begin
   result := PInteger(FResult)^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 procedure TIntegerVariable.SetValue(const Value: Integer);
 begin
   PInteger(FResult)^ := Value;
 end;
+{$WARNINGS ON}
 
 { TBooleanVariable }
 
@@ -3061,15 +3219,19 @@ begin
   inherited Create(VariableName, rdtBoolean);
 end;
 
+{$WARNINGS OFF}
 function TBooleanVariable.GetValue: Boolean;
 begin
   result := PBoolean(FResult)^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 procedure TBooleanVariable.SetValue(const Value: Boolean);
 begin
   PBoolean(FResult)^ := Value;
 end;
+{$WARNINGS ON}
 
 { TStringVariable }
 
@@ -3101,6 +3263,7 @@ begin
   ResultString := Value;
 end;
 
+{$WARNINGS OFF}
 constructor TConstant.Create(const DataType: TRbwDataType);
 begin
   inherited Create;
@@ -3126,13 +3289,17 @@ begin
     Assert(False);
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 constructor TConstant.Create(const Value: Boolean);
 begin
   Create(rdtBoolean);
   PBoolean(FResult)^ := Value;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function TConstant.BooleanResult: boolean;
 begin
   if ResultType <> rdtBoolean then
@@ -3143,18 +3310,23 @@ begin
   end;
   result := PBoolean(FResult)^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 constructor TConstant.Create(const Value: double);
 begin
   Create(rdtDouble);
   PDouble(FResult)^ := Value;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 constructor TConstant.Create(const Value: integer);
 begin
   Create(rdtInteger);
   PInteger(FResult)^ := Value;
 end;
+{$WARNINGS ON}
 
 destructor TConstant.Destroy;
 begin
@@ -3165,6 +3337,7 @@ begin
   inherited;
 end;
 
+{$WARNINGS OFF}
 function TConstant.DoubleResult: double;
 begin
   if not (ResultType in [rdtDouble, rdtInteger]) then
@@ -3181,9 +3354,10 @@ begin
   begin
     result := PDouble(FResult)^;
   end;
-
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function TConstant.IntegerResult: Integer;
 begin
   if ResultType <> rdtInteger then
@@ -3194,6 +3368,7 @@ begin
   end;
   result := PInteger(FResult)^;
 end;
+{$WARNINGS ON}
 
 procedure TConstant.MakeDiagram(List: TStringList; Level: integer);
 var
@@ -3226,20 +3401,20 @@ begin
 end;
 
 function TConstant.ValueToString: string;
-var
-  OldDecimalSeparator: Char;
+//var
+//  OldDecimalSeparator: Char;
 begin
   result := '';
   case ResultType of
     rdtDouble:
       begin
-        OldDecimalSeparator := DecimalSeparator;
-        try
-          DecimalSeparator := '.';
-          result := FloatToStr(DoubleResult);
-        finally
-          DecimalSeparator := OldDecimalSeparator;
-        end;
+//        OldDecimalSeparator := DecimalSeparator;
+//        try
+//          DecimalSeparator := '.';
+          result := InternalFloatToStr(DoubleResult);
+//        finally
+//          DecimalSeparator := OldDecimalSeparator;
+//        end;
         if (Pos('.', result) <= 0) and (Pos('e', result) <= 0) and (Pos('E',
           result) <= 0) then
         begin
@@ -3271,14 +3446,17 @@ begin
   end;
 end;
 
+{$WARNINGS OFF}
 procedure TConstant.SetResultString(const Value: string);
 begin
   FResultString := Value;
   FResult := @FResultString
 end;
+{$WARNINGS ON}
 
 { TIntegerStack }
 
+{$WARNINGS OFF}
 procedure TIntegerStack.Clear;
 var
   Index: integer;
@@ -3289,6 +3467,7 @@ begin
   end;
   FList.Clear;
 end;
+{$WARNINGS ON}
 
 function TIntegerStack.Count: integer;
 begin
@@ -3314,11 +3493,14 @@ begin
   result := FList.Capacity;
 end;
 
+{$WARNINGS OFF}
 function TIntegerStack.Peek: Integer;
 begin
   result := PInteger(FList[FList.Count - 1])^
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function TIntegerStack.Pop: integer;
 var
   LastPointer: PInteger;
@@ -3332,7 +3514,9 @@ begin
   FreeMem(LastPointer);
   FList.Count := FList.Count - 1;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 procedure TIntegerStack.Push(const AnInteger: integer);
 var
   LastPointer: PInteger;
@@ -3341,6 +3525,7 @@ begin
   LastPointer^ := AnInteger;
   FList.Add(LastPointer);
 end;
+{$WARNINGS ON}
 
 procedure TIntegerStack.SetCapacity(const Value: integer);
 begin
@@ -3374,6 +3559,32 @@ begin
     result := inherited Add(Token);
   end;
 end;
+
+{$WARNINGS OFF}
+procedure SetResultFromConstant(Constant: TConstant; Result: TExpression);
+begin
+  case Constant.FResultType of
+    rdtDouble:
+      begin
+        PDouble(result.FResult)^ := PDouble(Constant.FResult)^;
+      end;
+    rdtInteger:
+      begin
+        PInteger(result.FResult)^ := PInteger(Constant.FResult)^;
+      end;
+    rdtBoolean:
+      begin
+        PBoolean(result.FResult)^ := PBoolean(Constant.FResult)^;
+      end;
+    rdtString:
+      begin
+        result.ResultString := Constant.ResultString;
+      end;
+  else
+    Assert(False);
+  end;
+end;
+{$WARNINGS ON}
 
 function TTokenStringList.Compile(const Functions: TFunctionStringList;
   const Variables: TStringList;
@@ -3461,7 +3672,11 @@ begin
       begin
         Objects[Index] := TConstant.Create(ADouble);
       end
+      {$IFDEF Delphi_2009_UP}
+      else if (Length(Token) = 1) and CharInSet(Token[1], Parenthesis) then
+      {$ELSE}
       else if (Length(Token) = 1) and (Token[1] in Parenthesis) then
+      {$ENDIF}
       begin
         Continue;
       end
@@ -3670,26 +3885,7 @@ begin
           result.FillVariables;
           if Constant <> nil then
           begin
-            case Constant.FResultType of
-              rdtDouble:
-                begin
-                  PDouble(result.FResult)^ := PDouble(Constant.FResult)^
-                end;
-              rdtInteger:
-                begin
-                  PInteger(result.FResult)^ := PInteger(Constant.FResult)^
-                end;
-              rdtBoolean:
-                begin
-                  PBoolean(result.FResult)^ := PBoolean(Constant.FResult)^
-                end;
-              rdtString:
-                begin
-                  result.ResultString := Constant.ResultString;
-                end;
-            else
-              Assert(False);
-            end;
+            SetResultFromConstant(Constant, Result);
             result.FunctionAddr := nil;
             result.ShouldEvaluate := False;
             result.FUserName := Constant.Decompile;
@@ -3705,26 +3901,27 @@ begin
         begin
           result := TExpression.Create('Dummy',
             ResultConstant.ResultType, SpecialImplementorList);
-          case result.ResultType of
-            rdtDouble:
-              begin
-                PDouble(result.FResult)^ := PDouble(ResultConstant.FResult)^;
-              end;
-            rdtInteger:
-              begin
-                PInteger(result.FResult)^ := PInteger(ResultConstant.FResult)^;
-              end;
-            rdtBoolean:
-              begin
-                PBoolean(result.FResult)^ := PBoolean(ResultConstant.FResult)^;
-              end;
-            rdtString:
-              begin
-                result.ResultString := ResultConstant.ResultString;
-              end;
-          else
-            Assert(False);
-          end;
+          SetResultFromConstant(ResultConstant, result);
+//          case result.ResultType of
+//            rdtDouble:
+//              begin
+//                PDouble(result.FResult)^ := PDouble(ResultConstant.FResult)^;
+//              end;
+//            rdtInteger:
+//              begin
+//                PInteger(result.FResult)^ := PInteger(ResultConstant.FResult)^;
+//              end;
+//            rdtBoolean:
+//              begin
+//                PBoolean(result.FResult)^ := PBoolean(ResultConstant.FResult)^;
+//              end;
+//            rdtString:
+//              begin
+//                result.ResultString := ResultConstant.ResultString;
+//              end;
+//          else
+//            Assert(False);
+//          end;
           result.FUserName := ResultConstant.Decompile;
           ResultConstant.Free;
         end;
@@ -4043,15 +4240,15 @@ begin
   if (Objects[Index] <> nil) or (Index + 1 >= Count) then
   begin
     raise ErbwParserError.Create('Error in parsing "'
-      + OperatorDefinition.OperatorName + '" operator.');
+      + string(OperatorDefinition.OperatorName) + '" operator.');
   end;
 
-  if not OperatorDefinition.SignOperator or IsSign(Index, OperatorDefinition.OperatorName) then
+  if not OperatorDefinition.SignOperator or IsSign(Index, string(OperatorDefinition.OperatorName)) then
   begin
     if (Objects[Index + 1] = nil) then
     begin
       raise ErbwParserError.Create('Error in parsing "'
-        + OperatorDefinition.OperatorName + '" operator '
+        + string(OperatorDefinition.OperatorName) + '" operator '
         + 'because '
         + Strings[Index + 1]
         + ' is undefined.');
@@ -4060,7 +4257,7 @@ begin
       AnArgument := Objects[Index + 1] as TConstant;
     except on EInvalidCast do
       raise ErbwParserError.Create('Error in parsing "'
-        + OperatorDefinition.OperatorName + '" operator '  
+        + string(OperatorDefinition.OperatorName) + '" operator '
         + 'because of an error in'
         + Strings[Index + 1]
         + '.');
@@ -4068,7 +4265,7 @@ begin
     if (OperatorDefinition.ArgumentDefinitions.Count < 1) then
     begin
       raise ErbwParserError.Create('the "'
-        + OperatorDefinition.OperatorName
+        + string(OperatorDefinition.OperatorName)
         + '" operator must have at least one argument.');
     end;
     UsedDef := nil;
@@ -4084,8 +4281,8 @@ begin
     if (UsedDef = nil) then
     begin
       raise ErbwParserError.Create('Error in parsing "'
-        + OperatorDefinition.OperatorName + '" operator;'
-        + ' It is not possible to apply the "' + OperatorDefinition.OperatorName
+        + string(OperatorDefinition.OperatorName) + '" operator;'
+        + ' It is not possible to apply the "' + string(OperatorDefinition.OperatorName)
         + '" operator to ' + DataTypeToString(AnArgument.ResultType) + '.');
     end;
     Assert((AnArgument <> nil)
@@ -4210,7 +4407,7 @@ begin
   if (Objects[Index] <> nil) or (Index + 1 >= Count) or (Index - 1 < 0) then
   begin
     raise ErbwParserError.Create('Error in parsing "'
-      + OperatorDefinition.OperatorName + '" operator.  '
+      + string(OperatorDefinition.OperatorName) + '" operator.  '
       + 'Check to make sure that all the variables in the formula have '
       + 'been defined.');
   end;
@@ -4221,7 +4418,7 @@ begin
     if ((PriorArgument = nil) and (SubsequentArgument = nil)) then
     begin
       raise ErbwParserError.Create('Error in parsing "'
-        + OperatorDefinition.OperatorName + '" operator '
+        + string(OperatorDefinition.OperatorName) + '" operator '
         + 'because '
         + Strings[Index - 1]
         + ' and '
@@ -4233,7 +4430,7 @@ begin
     else if (PriorArgument = nil) then
     begin
       raise ErbwParserError.Create('Error in parsing "'
-        + OperatorDefinition.OperatorName + '" operator '
+        + string(OperatorDefinition.OperatorName) + '" operator '
         + 'because '
         + Strings[Index - 1]
         + ' is undefined.  '
@@ -4243,7 +4440,7 @@ begin
     else
     begin
       raise ErbwParserError.Create('Error in parsing "'
-        + OperatorDefinition.OperatorName + '" operator '
+        + string(OperatorDefinition.OperatorName) + '" operator '
         + 'because '
         + Strings[Index + 1]
         + ' is undefined.  '
@@ -4266,9 +4463,9 @@ begin
   if UsedDef = nil then
   begin
     raise ErbwParserError.Create('Error in parsing "'
-      + OperatorDefinition.OperatorName + '" operator;'
+      + string(OperatorDefinition.OperatorName) + '" operator;'
       + ' It is not possible to apply the "'
-      + OperatorDefinition.OperatorName + '" operator to '
+      + string(OperatorDefinition.OperatorName) + '" operator to '
       + DataTypeToString(PriorArgument.ResultType) + ' and '
       + DataTypeToString(SubsequentArgument.ResultType) + '.');
   end;
@@ -4301,7 +4498,11 @@ procedure TRbwParser.AddOperator(OpDef: TOperatorDefinition);
 begin
   Assert(OpDef <> nil);
   Assert(OpDef.ArgumentDefinitions.Count > 0);
+  {$IFDEF Delphi_2009_UP}
+  OpDef.OperatorName := AnsiString(AnsiUpperCase(string(OpDef.OperatorName)));
+  {$ELSE}
   OpDef.OperatorName := UpperCase(OpDef.OperatorName);
+  {$ENDIF}
   FOpereratorDefinitions.Add(OpDef);
   if Length(OpDef.OperatorName) = 1 then
   begin
@@ -4311,22 +4512,26 @@ begin
     end
     else
     begin
-      Operators.Add(OpDef.OperatorName)
+      Operators.Add(string(OpDef.OperatorName));
     end;
   end
   else
   begin
-    WordOperators.Add(OpDef.OperatorName)
+    WordOperators.Add(string(OpDef.OperatorName));
   end;
 end;
 
-procedure TRbwParser.RemoveOperator(OperatorName: string);
+procedure TRbwParser.RemoveOperator(OperatorName: AnsiString);
 var
   Index: Integer;
   OpDef: TOperatorDefinition;
   Position: Integer;
 begin
+  {$IFDEF Delphi_2009_UP}
+  OperatorName := AnsiString(AnsiUpperCase(string(OperatorName)));
+  {$ELSE}
   OperatorName := UpperCase(OperatorName);
+  {$ENDIF}
   for Index := 0 to FOpereratorDefinitions.Count - 1 do
   begin
     OpDef := FOpereratorDefinitions[Index];
@@ -4342,7 +4547,7 @@ begin
         end
         else
         begin
-          Position := Operators.IndexOf(OpDef.OperatorName);
+          Position := Operators.IndexOf(string(OpDef.OperatorName));
           if Position >= 0 then
           begin
             Operators.Delete(Position);
@@ -4351,7 +4556,7 @@ begin
       end
       else
       begin
-          Position := WordOperators.IndexOf(OpDef.OperatorName);
+          Position := WordOperators.IndexOf(string(OpDef.OperatorName));
           if Position >= 0 then
           begin
             WordOperators.Delete(Position);
@@ -5278,7 +5483,7 @@ begin
         OpDef := FOpereratorDefinitions[DefIndex];
         if OpDef.Precedence = PrecedenceIndex then
         begin
-          if Token = OpDef.OperatorName then
+          if Token = string(OpDef.OperatorName) then
           begin
             case OpDef.ArgumentCount of
               acOne:
@@ -5432,30 +5637,7 @@ begin
       AVariable := Data[I].Datum;
       VariablesForFunction[I] := AVariable.FResult;
     end;
-    case ResultType of
-      rdtDouble:
-        begin
-          PDouble(FResult)^ := TRbwRealFunction(FunctionAddr)
-            (VariablesForFunction);
-        end;
-      rdtInteger:
-        begin
-          PInteger(FResult)^ := TRbwIntegerFunction(FunctionAddr)
-            (VariablesForFunction);
-        end;
-      rdtBoolean:
-        begin
-          PBoolean(FResult)^ := TRbwBooleanFunction(FunctionAddr)
-            (VariablesForFunction);
-        end;
-      rdtString:
-        begin
-          ResultString := TRbwStringFunction(FunctionAddr)
-            (VariablesForFunction);
-        end;
-    else
-      Assert(False);
-    end;
+    SetResultFromFunction;
   end;
 end;
 
@@ -5610,86 +5792,119 @@ begin
   ShouldEvaluate := Assigned(FunctionAddr);
 end;
 
+{$WARNINGS OFF}
 function _Not(Values: array of pointer): Boolean;
 begin
   result := not PBoolean(Values[0])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Xor(Values: array of pointer): Boolean;
 begin
   result := PBoolean(Values[0])^ xor PBoolean(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _TimesI(Values: array of pointer): Integer;
 begin
   result := PInteger(Values[0])^ * PInteger(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _TimesR(Values: array of pointer): double;
 begin
   result := PDouble(Values[0])^ * PDouble(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _DivideR(Values: array of pointer): double;
 begin
   result := PDouble(Values[0])^ / PDouble(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _DivideI(Values: array of pointer): double;
 begin
   result := PInteger(Values[0])^ / PInteger(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Div(Values: array of pointer): Integer;
 begin
   result := PInteger(Values[0])^ div PInteger(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Mod(Values: array of pointer): Integer;
 begin
   result := PInteger(Values[0])^ mod PInteger(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _And(Values: array of pointer): boolean;
 begin
   result := PBoolean(Values[0])^ and PBoolean(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Or(Values: array of pointer): boolean;
 begin
   result := PBoolean(Values[0])^ or PBoolean(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _PlusSignI(Values: array of pointer): integer;
 begin
   result := PInteger(Values[0])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _PlusSignR(Values: array of pointer): double;
 begin
   result := PDouble(Values[0])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _MinusSignI(Values: array of pointer): integer;
 begin
   result := -PInteger(Values[0])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _MinusSignR(Values: array of pointer): double;
 begin
   result := -PDouble(Values[0])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _PlusI(Values: array of pointer): integer;
 begin
   result := PInteger(Values[0])^ + PInteger(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _PlusR(Values: array of pointer): double;
 begin
   result := PDouble(Values[0])^ + PDouble(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _PlusS(Values: array of pointer): string;
 var
   String1, String2: string;
@@ -5698,27 +5913,37 @@ begin
   String2 := PString(Values[1])^;
   result := String1 + String2;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _MinusI(Values: array of pointer): integer;
 begin
   result := PInteger(Values[0])^ - PInteger(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _MinusR(Values: array of pointer): double;
 begin
   result := PDouble(Values[0])^ - PDouble(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _EqualR(Values: array of pointer): boolean;
 begin
   result := PDouble(Values[0])^ = PDouble(Values[1])^;
 end;
+{$WARNINGS OFF}
 
+{$WARNINGS OFF}
 function _EqualI(Values: array of pointer): boolean;
 begin
   result := PInteger(Values[0])^ = PInteger(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _EqualS(Values: array of pointer): boolean;
 var
   String1, String2: String;
@@ -5727,27 +5952,37 @@ begin
   String2 := PString(Values[1])^;
   result := String1 = String2;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _EqualB(Values: array of pointer): boolean;
 begin
   result := PBoolean(Values[0])^ = PBoolean(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _NotEqualB(Values: array of pointer): boolean;
 begin
   result := PBoolean(Values[0])^ <> PBoolean(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _NotEqualI(Values: array of pointer): boolean;
 begin
   result := PInteger(Values[0])^ <> PInteger(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _NotEqualR(Values: array of pointer): boolean;
 begin
   result := PDouble(Values[0])^ <> PDouble(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _NotEqualS(Values: array of pointer): boolean;
 var
   String1, String2: string;
@@ -5756,22 +5991,30 @@ begin
   String2 := PString(Values[1])^;
   result := String1 <> String2;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _LessThanB(Values: array of pointer): boolean;
 begin
   result := PBoolean(Values[0])^ < PBoolean(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _LessThanI(Values: array of pointer): boolean;
 begin
   result := PInteger(Values[0])^ < PInteger(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _LessThanR(Values: array of pointer): boolean;
 begin
   result := PDouble(Values[0])^ < PDouble(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _LessThanS(Values: array of pointer): boolean;
 var
   String1, String2: String;
@@ -5780,22 +6023,30 @@ begin
   String2 := PString(Values[1])^;
   result := AnsiCompareStr(String1, String2) < 0;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _GreaterThanB(Values: array of pointer): boolean;
 begin
   result := PBoolean(Values[0])^ > PBoolean(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _GreaterThanI(Values: array of pointer): boolean;
 begin
   result := PInteger(Values[0])^ > PInteger(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _GreaterThanR(Values: array of pointer): boolean;
 begin
   result := PDouble(Values[0])^ > PDouble(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _GreaterThanS(Values: array of pointer): boolean;
 var
   String1, String2: String;
@@ -5804,22 +6055,30 @@ begin
   String2 := PString(Values[1])^;
   result := AnsiCompareStr(String1, String2) > 0;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _LessThanOrEqualsB(Values: array of pointer): boolean;
 begin
   result := PBoolean(Values[0])^ <= PBoolean(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _LessThanOrEqualsI(Values: array of pointer): boolean;
 begin
   result := PInteger(Values[0])^ <= PInteger(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _LessThanOrEqualsR(Values: array of pointer): boolean;
 begin
   result := PDouble(Values[0])^ <= PDouble(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _LessThanOrEqualsS(Values: array of pointer): boolean;
 var
   String1, String2: string;
@@ -5828,22 +6087,30 @@ begin
   String2 := PString(Values[1])^;
   result := AnsiCompareStr(String1, String2) <= 0;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _GreaterThanOrEqualsB(Values: array of pointer): boolean;
 begin
   result := PBoolean(Values[0])^ >= PBoolean(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _GreaterThanOrEqualsI(Values: array of pointer): boolean;
 begin
   result := PInteger(Values[0])^ >= PInteger(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _GreaterThanOrEqualsR(Values: array of pointer): boolean;
 begin
   result := PDouble(Values[0])^ >= PDouble(Values[1])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _GreaterThanOrEqualsS(Values: array of pointer): boolean;
 var
   String1, String2: String;
@@ -5852,78 +6119,108 @@ begin
   String2 := PString(Values[1])^;
   result := AnsiCompareStr(String1, String2) >= 0;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _IntToDouble(Values: array of pointer): double;
 begin
   result := PInteger(Values[0])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _AbsR(Values: array of pointer): double;
 begin
   result := Abs(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _AbsI(Values: array of pointer): integer;
 begin
   result := Abs(PInteger(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Arccos(Values: array of pointer): double;
 begin
   result := ArcCos(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Arccosh(Values: array of pointer): double;
 begin
   result := ArcCosh(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Arcsin(Values: array of pointer): double;
 begin
   result := ArcSin(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Arcsinh(Values: array of pointer): double;
 begin
   result := ArcSinh(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Arctan2(Values: array of pointer): double;
 begin
   result := ArcTan2(PDouble(Values[0])^, PDouble(Values[1])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Arctanh(Values: array of pointer): double;
 begin
   result := ArcTanh(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Cos(Values: array of pointer): double;
 begin
   result := Cos(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Cosh(Values: array of pointer): double;
 begin
   result := Cosh(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Copy(Values: array of pointer): string;
 begin
   result := Copy(PString(Values[0])^, PInteger(Values[1])^,
     PInteger(Values[2])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _DegToRad(Values: array of pointer): double;
 begin
   result := DegToRad(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Exp(Values: array of pointer): double;
 begin
   result := Exp(PDouble(Values[0])^)
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Factorial(Values: array of pointer): integer;
 var
   StartValue: integer;
@@ -5948,7 +6245,9 @@ begin
     end;
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _FactorialR(Values: array of pointer): double;
 var
   StartValue: integer;
@@ -5973,30 +6272,38 @@ begin
     end;
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Frac(Values: array of pointer): double;
 begin
   result := Frac(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _FloatToStr(Values: array of pointer): string;
-var
-  OldDecimalSeparator: Char;
+//var
+//  OldDecimalSeparator: Char;
 begin
-  OldDecimalSeparator := DecimalSeparator;
-  try
-    DecimalSeparator := '.';
-    result := FloatToStr(PDouble(Values[0])^);
-  finally
-    DecimalSeparator := OldDecimalSeparator;
-  end;
+//  OldDecimalSeparator := DecimalSeparator;
+//  try
+//    DecimalSeparator := '.';
+    result := InternalFloatToStr(PDouble(Values[0])^);
+//  finally
+//    DecimalSeparator := OldDecimalSeparator;
+//  end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _CaseBoolean(Values: array of pointer): boolean;
 begin
   result := PBoolean(Values[PInteger(Values[0])^])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _PositionInList(Values: array of pointer): integer;
 var
   TestItem: string;
@@ -6013,22 +6320,30 @@ begin
     end;
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _CaseInteger(Values: array of pointer): integer;
 begin
   result := PInteger(Values[PInteger(Values[0])^])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _CaseDouble(Values: array of pointer): double;
 begin
   result := PDouble(Values[PInteger(Values[0])^])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _CaseString(Values: array of pointer): string;
 begin
   result := PString(Values[PInteger(Values[0])^])^;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _IfBoolean(Values: array of pointer): boolean;
 begin
   if PBoolean(Values[0])^ then
@@ -6040,7 +6355,9 @@ begin
     result := PBoolean(Values[2])^;
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _IfInteger(Values: array of pointer): integer;
 begin
   if PBoolean(Values[0])^ then
@@ -6052,7 +6369,9 @@ begin
     result := PInteger(Values[2])^;
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _IfDouble(Values: array of pointer): double;
 begin
   if PBoolean(Values[0])^ then
@@ -6064,7 +6383,9 @@ begin
     result := PDouble(Values[2])^;
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _IfString(Values: array of pointer): string;
 begin
   if PBoolean(Values[0])^ then
@@ -6076,42 +6397,58 @@ begin
     result := PString(Values[2])^;
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _IntPower(Values: array of pointer): double;
 begin
   result := IntPower(PDouble(Values[0])^, PInteger(Values[1])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _IntToStr(Values: array of pointer): string;
 begin
   result := IntToStr(PInteger(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Length(Values: array of pointer): integer;
 begin
   result := Length(PString(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _ln(Values: array of pointer): double;
 begin
   result := ln(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _log10(Values: array of pointer): double;
 begin
   result := log10(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _logN(Values: array of pointer): double;
 begin
   result := logN(PDouble(Values[0])^, PDouble(Values[1])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _LowerCase(Values: array of pointer): string;
 begin
   result := LowerCase(PString(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _MaxI(Values: array of pointer): integer;
 var
   Index: integer;
@@ -6122,7 +6459,9 @@ begin
     result := Max(result, PInteger(Values[Index])^);
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _MaxR(Values: array of pointer): double;
 var
   Index: integer;
@@ -6133,7 +6472,9 @@ begin
     result := Max(result, PDouble(Values[Index])^);
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _MinI(Values: array of pointer): integer;
 var
   Index: integer;
@@ -6144,7 +6485,9 @@ begin
     result := Min(result, PInteger(Values[Index])^);
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _MinR(Values: array of pointer): double;
 var
   Index: integer;
@@ -6155,84 +6498,116 @@ begin
     result := Min(result, PDouble(Values[Index])^);
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _MultiInterpolate(Values: array of pointer): double;
 begin
   result := 0;
   Assert(False);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Odd(Values: array of pointer): boolean;
 begin
   result := Odd(PInteger(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Pos(Values: array of pointer): integer;
 begin
   result := Pos(PString(Values[0])^, PString(Values[1])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _PosEx(Values: array of pointer): integer;
 begin
   result := PosEx(PString(Values[0])^, PString(Values[1])^,
     PInteger(Values[2])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Power(Values: array of pointer): double;
 begin
   result := Power(PDouble(Values[0])^, PDouble(Values[1])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Pi(Values: array of pointer): double;
 begin
   result := Pi;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _RadToDeg(Values: array of pointer): double;
 begin
   result := RadToDeg(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Round(Values: array of pointer): integer;
 begin
   result := Round(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Sin(Values: array of pointer): double;
 begin
   result := Sin(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Sinh(Values: array of pointer): double;
 begin
   result := Sinh(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _SqrR(Values: array of pointer): double;
 begin
   result := sqr(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _SqrI(Values: array of pointer): integer;
 begin
   result := sqr(PInteger(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Sqrt(Values: array of pointer): double;
 begin
   result := sqrt(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _StrToInt(Values: array of pointer): integer;
 begin
   result := StrToInt(PString(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _StrToIntDef(Values: array of pointer): integer;
 begin
   result := StrToIntDef(PString(Values[0])^, PInteger(Values[1])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _StrToFloat(Values: array of pointer): double;
 var
   AString: string;
@@ -6246,7 +6621,9 @@ begin
       ' can not be converted to a real number.');
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _StrToFloatDef(Values: array of pointer): double;
 var
   AString: string;
@@ -6259,32 +6636,44 @@ begin
     result := PDouble(Values[1])^;
   end;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Tan(Values: array of pointer): double;
 begin
   result := tan(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Tanh(Values: array of pointer): double;
 begin
   result := tanh(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Trim(Values: array of pointer): string;
 begin
   result := Trim(PString(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Trunc(Values: array of pointer): integer;
 begin
   result := trunc(PDouble(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _UpperCase(Values: array of pointer): string;
 begin
   result := UpperCase(PString(Values[0])^);
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Interpolate(Values: array of pointer): double;
 var
   Position: double;
@@ -6301,7 +6690,9 @@ begin
   result := (Position - Distance1) / (Distance2 - Distance1)
     * (Value2 - Value1) + Value1;
 end;
+{$WARNINGS ON}
 
+{$WARNINGS OFF}
 function _Distance(Values: array of pointer): double;
 var
   X1: double;
@@ -6315,6 +6706,7 @@ begin
   Y2 := PDouble(Values[3])^;
   result := Sqrt(Sqr(X1 - X2) + Sqr(Y1 - Y2));
 end;
+{$WARNINGS ON}
 
 class function TExpression.New(
   const FunctionClass: TFunctionClass;
@@ -6431,6 +6823,24 @@ begin
 
 end;
 
+{$IFDEF Delphi_2009_UP}
+function ConcatenateStrings(const List: TStrings): string;
+var
+  AStringBuilder: TStringBuilder;
+  index: Integer;
+begin
+  AStringBuilder := TStringBuilder.Create;
+  try
+    for index := 0 to List.Count - 1 do
+    begin
+      AStringBuilder.Append(List[index])
+    end;
+    result := AStringBuilder.ToString;
+  finally
+    AStringBuilder.Free;
+  end;
+end;
+{$ELSE}
 function ConcatenateStrings(const List: TStrings): string;
 var
   I, L, Size, Count: Integer;
@@ -6465,6 +6875,7 @@ begin
 //    Inc(P, 2);
   end;
 end;
+{$ENDIF}
 
 function TExpression.UsesFunction(FunctionName: string): boolean;
 var
@@ -6496,6 +6907,32 @@ begin
     end;
   end;
 end;
+
+{$WARNINGS OFF}
+procedure TExpression.SetResultFromFunction;
+begin
+  case ResultType of
+    rdtDouble:
+      begin
+        PDouble(FResult)^ := TRbwRealFunction(FunctionAddr)(VariablesForFunction);
+      end;
+    rdtInteger:
+      begin
+        PInteger(FResult)^ := TRbwIntegerFunction(FunctionAddr)(VariablesForFunction);
+      end;
+    rdtBoolean:
+      begin
+        PBoolean(FResult)^ := TRbwBooleanFunction(FunctionAddr)(VariablesForFunction);
+      end;
+    rdtString:
+      begin
+        ResultString := TRbwStringFunction(FunctionAddr)(VariablesForFunction);
+      end;
+  else
+    Assert(False);
+  end;
+end;
+{$WARNINGS ON}
 
 function TExpression.Decompile: string;
 var
@@ -7674,13 +8111,27 @@ begin
         begin
           TExpression(AVariable).Evaluate;
         end;
-        PBoolean(FResult)^ := PBoolean(AVariable.FResult)^;
-        if not PBoolean(FResult)^ then
+        SetResultFromVariable(AVariable);
+        if not GetResult then
           Exit;
       end;
     end;
   end;
 end;
+
+{$WARNINGS OFF}
+function TPartialEvaluationOperator.GetResult: Boolean;
+begin
+  result := PBoolean(FResult)^
+end;
+{$WARNINGS ON}
+
+{$WARNINGS OFF}
+procedure TPartialEvaluationOperator.SetResultFromVariable(AVariable: TConstant);
+begin
+  PBoolean(FResult)^ := PBoolean(AVariable.FResult)^;
+end;
+{$WARNINGS ON}
 
 { TOrExpression }
 
@@ -7708,8 +8159,9 @@ begin
         begin
           TExpression(AVariable).Evaluate;
         end;
-        PBoolean(FResult)^ := PBoolean(AVariable.FResult)^;
-        if PBoolean(FResult)^ then
+        SetResultFromVariable(AVariable);
+//        PBoolean(FResult)^ := PBoolean(AVariable.FResult)^;
+        if GetResult then
           Exit;
       end;
     end;
@@ -7717,6 +8169,20 @@ begin
 end;
 
 { TSelectExpression }
+
+{$WARNINGS OFF}
+function TSelectExpression.GetSelectIndex(AVariable: TConstant): integer;
+begin
+  if Data[0].DataType = rdtInteger then
+  begin
+    result := PInteger(AVariable.FResult)^;
+  end
+  else
+  begin
+    result := 2 - Ord(pBoolean(AVariable.FResult)^);
+  end;
+end;
+{$WARNINGS ON}
 
 procedure TSelectExpression.Evaluate;
 var
@@ -7737,14 +8203,15 @@ begin
           begin
             TExpression(AVariable).Evaluate;
           end;
-          if Data[0].DataType = rdtInteger then
-          begin
-            SelectIndex := PInteger(AVariable.FResult)^;
-          end
-          else
-          begin
-            SelectIndex := 2 - Ord(pBoolean(AVariable.FResult)^);
-          end;
+          SelectIndex := GetSelectIndex(AVariable);
+//          if Data[0].DataType = rdtInteger then
+//          begin
+//            SelectIndex := PInteger(AVariable.FResult)^;
+//          end
+//          else
+//          begin
+//            SelectIndex := 2 - Ord(pBoolean(AVariable.FResult)^);
+//          end;
         end;
     else
       Assert(False);
@@ -7779,26 +8246,27 @@ begin
       begin
         TExpression(AVariable).Evaluate;
       end;
-      case ResultType of
-        rdtDouble:
-          begin
-            PDouble(FResult)^ := PDouble(AVariable.FResult)^;
-          end;
-        rdtInteger:
-          begin
-            PInteger(FResult)^ := PInteger(AVariable.FResult)^;
-          end;
-        rdtBoolean:
-          begin
-            PBoolean(FResult)^ := PBoolean(AVariable.FResult)^;
-          end;
-        rdtString:
-          begin
-            ResultString := AVariable.ResultString;
-          end;
-      else
-        Assert(False);
-      end;
+      SetResultFromConstant(AVariable, self);
+//      case ResultType of
+//        rdtDouble:
+//          begin
+//            PDouble(FResult)^ := PDouble(AVariable.FResult)^;
+//          end;
+//        rdtInteger:
+//          begin
+//            PInteger(FResult)^ := PInteger(AVariable.FResult)^;
+//          end;
+//        rdtBoolean:
+//          begin
+//            PBoolean(FResult)^ := PBoolean(AVariable.FResult)^;
+//          end;
+//        rdtString:
+//          begin
+//            ResultString := AVariable.ResultString;
+//          end;
+//      else
+//        Assert(False);
+//      end;
     end;
   end;
 end;
@@ -8595,26 +9063,27 @@ var
 begin
   resultVariable := Variables[0];
   assert(resultVariable.ResultType = ResultType);
-  case ResultType of
-    rdtDouble:
-      begin
-        PDouble(FResult)^ := PDouble(resultVariable.FResult)^;
-      end;
-    rdtInteger:
-      begin
-        PInteger(FResult)^ := PInteger(resultVariable.FResult)^;
-      end;
-    rdtBoolean:
-      begin
-        PBoolean(FResult)^ := PBoolean(resultVariable.FResult)^;
-      end;
-    rdtString:
-      begin
-        ResultString := resultVariable.ResultString;
-      end;
-  else
-    Assert(False);
-  end;
+  SetResultFromConstant(resultVariable, self);
+//  case ResultType of
+//    rdtDouble:
+//      begin
+//        PDouble(FResult)^ := PDouble(resultVariable.FResult)^;
+//      end;
+//    rdtInteger:
+//      begin
+//        PInteger(FResult)^ := PInteger(resultVariable.FResult)^;
+//      end;
+//    rdtBoolean:
+//      begin
+//        PBoolean(FResult)^ := PBoolean(resultVariable.FResult)^;
+//      end;
+//    rdtString:
+//      begin
+//        ResultString := resultVariable.ResultString;
+//      end;
+//  else
+//    Assert(False);
+//  end;
 
 end;
 
@@ -8659,7 +9128,7 @@ begin
       begin
         TExpression(AVariable).Evaluate;
       end;
-      PDouble(FResult)^ := AVariable.DoubleResult;
+      SetResultFromNumber(AVariable.DoubleResult);
       Exit;
     end;
 
@@ -8693,7 +9162,8 @@ begin
 
         if (DistanceIndex = 0) or (Distance = PriorDistance) then
         begin
-          PDouble(FResult)^ := Value;
+          SetResultFromNumber(Value);
+//          PDouble(FResult)^ := Value;
         end
         else
         begin
@@ -8706,8 +9176,10 @@ begin
           end;
           PriorValue := AVariable.DoubleResult;
 
-          PDouble(FResult)^ := (Position - PriorDistance)
-            / (Distance - PriorDistance) * (Value - PriorValue) + PriorValue;
+          SetResultFromNumber((Position - PriorDistance)
+            / (Distance - PriorDistance) * (Value - PriorValue) + PriorValue);
+//          PDouble(FResult)^ := (Position - PriorDistance)
+//            / (Distance - PriorDistance) * (Value - PriorValue) + PriorValue;
         end;
         Exit;
       end
@@ -8719,7 +9191,8 @@ begin
         begin
           TExpression(AVariable).Evaluate;
         end;
-        PDouble(FResult)^ := AVariable.DoubleResult;
+        SetResultFromNumber(AVariable.DoubleResult);
+//        PDouble(FResult)^ := AVariable.DoubleResult;
         Exit;
       end
       else
@@ -8733,7 +9206,8 @@ begin
           begin
             TExpression(AVariable).Evaluate;
           end;
-          PDouble(FResult)^ := AVariable.DoubleResult;
+          SetResultFromNumber(AVariable.DoubleResult);
+//          PDouble(FResult)^ := AVariable.DoubleResult;
           Exit;
         end;
         PriorDistance := Distance;
@@ -8741,6 +9215,13 @@ begin
     end;
   end;
 end;
+
+{$WARNINGS OFF}
+procedure TMultiInterpolateExpression.SetResultFromNumber(ANumber: Double);
+begin
+  PDouble(FResult)^ := ANumber;
+end;
+{$WARNINGS ON}
 
 { TSpecialImplementorList }
 

@@ -38,8 +38,11 @@ inherited frmDataSetValues: TfrmDataSetValues
       Width = 75
       Height = 25
       Anchors = [akTop, akRight]
-      TabOrder = 0
+      DoubleBuffered = True
       Kind = bkClose
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 0
     end
     object btnHelp: TBitBtn
       Left = 467
@@ -47,9 +50,12 @@ inherited frmDataSetValues: TfrmDataSetValues
       Width = 75
       Height = 25
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnCopy: TButton
       Left = 467
@@ -69,7 +75,6 @@ inherited frmDataSetValues: TfrmDataSetValues
       Height = 26
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 18
       TabOrder = 3
       OnChange = comboModelChange
     end
@@ -154,9 +159,9 @@ inherited frmDataSetValues: TfrmDataSetValues
     end
     object lbLayers: TJvListBox
       Left = 1
-      Top = 22
+      Top = 25
       Width = 95
-      Height = 176
+      Height = 173
       Align = alClient
       ItemHeight = 18
       Background.FillMode = bfmTile

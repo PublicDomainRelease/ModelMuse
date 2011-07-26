@@ -100,9 +100,9 @@ procedure deallocate_matrix(var m:pMatrix);
 ///////////////////////////////////////////////////////////////////////////////
 // String
 ///////////////////////////////////////////////////////////////////////////////
-function float_out(f:double)     : string;
-function Point3DToStr(p:Point3D) : string;
-function BoolToStr(b:boolean)    : string;
+function float_out(f:double)     : AnsiString;
+function Point3DToStr(p:Point3D) : AnsiString;
+function BoolToStr(b:boolean)    : AnsiString;
 
 implementation
 
@@ -395,20 +395,20 @@ end;
 ///////////////////////////////////////////////////////////////////////////////
 // String
 ///////////////////////////////////////////////////////////////////////////////
-function float_out(f:double) : string;
+function float_out(f:double) : AnsiString;
 begin
-  result := FloatToStrF(f,ffFixed,7,3);
+  result := AnsiString(FloatToStrF(f,ffFixed,7,3));
   //result := FloatToStr(f);
 end;
 
-function Point3DToStr(p:Point3D) : string;
+function Point3DToStr(p:Point3D) : AnsiString;
 begin
-  result := '(' + FloatToStrF(p.x,ffFixed,7,2) + ', ' +
-                  FloatToStrF(p.y,ffFixed,7,2) + ', ' +
-                  FloatToStrF(p.z,ffFixed,7,2) + ')';
+  result := '(' + AnsiString(FloatToStrF(p.x,ffFixed,7,2)) + ', ' +
+                  AnsiString(FloatToStrF(p.y,ffFixed,7,2)) + ', ' +
+                  AnsiString(FloatToStrF(p.z,ffFixed,7,2)) + ')';
 end;
 
-function BoolToStr(b:boolean) : string;
+function BoolToStr(b:boolean) : AnsiString;
 begin
   if b then result := 'TRUE'
   else result := 'FALSE';

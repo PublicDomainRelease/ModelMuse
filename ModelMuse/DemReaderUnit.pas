@@ -114,12 +114,12 @@ begin
   begin
     AString[DPos] := 'E';
   end;
-  if DecimalSeparator <> '.' then
+  if FormatSettings.DecimalSeparator <> '.' then
   begin
-    DPos := Pos(DecimalSeparator, AString);
+    DPos := Pos(FormatSettings.DecimalSeparator, AString);
     if DPos > 0 then
     begin
-      AString[DPos] := DecimalSeparator;
+      AString[DPos] := FormatSettings.DecimalSeparator;
     end;
   end;
   Sub := Copy(AString, 2, Length(AString));
@@ -179,7 +179,7 @@ begin
         Exit;
       end;
     end;
-    if AChar in [#10, #13] then
+    if CharInSet(AChar, [#10, #13]) then
     begin
       if I = 1 then
       begin
@@ -202,12 +202,12 @@ var
   Index: Integer;
   OldDecSep: Char;
 begin
-  OldDecSep := DecimalSeparator;
+  OldDecSep := FormatSettings.DecimalSeparator;
   FCancel := False;
   AssignFile(DemFile, FileName);
 
   try
-    DecimalSeparator := '.';
+    FormatSettings.DecimalSeparator := '.';
     Reset(DemFile, SizeOf(Char));
     ReadRecordA(ReadCentralMeridian);
     for Index := 1 to ColumnCount do
@@ -221,7 +221,7 @@ begin
     ReadRecordC;
 
   finally
-    DecimalSeparator := OldDecSep;
+    FormatSettings.DecimalSeparator := OldDecSep;
     CloseFile(DemFile);
   end;
 end;
@@ -233,10 +233,10 @@ var
 begin
   CanCloseFile := True;
   FCancel := False;
-  OldDecSep := DecimalSeparator;
+  OldDecSep := FormatSettings.DecimalSeparator;
   AssignFile(DemFile, FileName);
   try
-    DecimalSeparator := '.';
+    FormatSettings.DecimalSeparator := '.';
     try
       Reset(DemFile, SizeOf(Char));
     except on EInOutError do
@@ -247,7 +247,7 @@ begin
     end;
     ReadRecordA(True);
   finally
-    DecimalSeparator := OldDecSep;
+    FormatSettings.DecimalSeparator := OldDecSep;
     if CanCloseFile then
     begin
       CloseFile(DemFile);

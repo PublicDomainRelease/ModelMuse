@@ -53,31 +53,53 @@ type
   THobBoundary = class;
   TObservationTimeList = class;
 
+  TObsTimesModelLink = class(TObject)
+  private
+    FObsTimes: TObservationTimeList;
+    FModel: TBaseModel;
+  public
+    Constructor Create(AModel: TBaseModel);
+    Destructor Destroy; override;
+  end;
+
+  TObsTimesModelLinkList = class(TObject)
+  private
+    FList: TList;
+    function GetLink(AModel: TBaseModel): TObsTimesModelLink;
+  public
+    property Links[AModel: TBaseModel]: TObsTimesModelLink read GetLink;
+    Constructor Create;
+    Destructor Destroy; override;
+  end;
+
   // @name represents MODFLOW Head observations
   // for a series of times.
   THobCollection = class(TEnhancedOrderedCollection)
   private
     FBoundary: THobBoundary;
     FObservationHeads: TObservationTimeList;
+    FObsTimesModelLinkList: TObsTimesModelLinkList;
     FObservationRowOffset: double;
     FObservationColumnOffset: double;
     FScreenObject: TObject;
     function GetHobItems(Index: integer): THobItem;
+    function GetObservationHeads(AModel: TBaseModel): TObservationTimeList;
   protected
     procedure InvalidateModel; override;
-    property ScreenObject: TObject read FScreenObject;
   public
+    property ScreenObject: TObject read FScreenObject;
     // @name creates an instance of @classname
     constructor Create(Boundary: THobBoundary; Model: TBaseModel;
       ScreenObject: TObject);
-    procedure EvaluateHeadObservations;
+    procedure EvaluateHeadObservations(AModel: TBaseModel);
     // @name destroys the current instance of @classname.
     // Do not call @name; call Free instead.
     destructor Destroy; override;
     property HobItems[Index: integer]: THobItem read GetHobItems;
     property ObservationRowOffset: double read FObservationRowOffset;
     property ObservationColumnOffset: double read FObservationColumnOffset;
-    property ObservationHeads: TObservationTimeList read FObservationHeads;
+    property ObservationHeads[AModel: TBaseModel]: TObservationTimeList
+      read GetObservationHeads;
     function CountObservationTimes(StartTime, EndTime: double): integer;
   end;
 
@@ -175,11 +197,13 @@ type
     // @name checks that the Purpose parameter matches @link(Purpose)
     // and, if so, calls @link(THobCollection.EvaluateHeadObservations
     // Values.EvaluateHeadObservations)
-    procedure EvaluateHeadObservations(Purpose: TObservationPurpose);
+    procedure EvaluateHeadObservations(Purpose: TObservationPurpose;
+      AModel: TBaseModel);
     function Used: boolean; override;
     procedure Clear; virtual;
     property CellLists[Index: integer]: TObsCellList read GetCellList;
     property CellListCount: integer read GetCellListCount;
+    function GetItemObsName(Item: THobItem): string;
   published
     property ObservationName: string read FObservationName write SetObservationName;
     // @name stores the MODFLOW boundaries that are NOT
@@ -218,7 +242,7 @@ type
     // locations and values are stored in @link(TRealSparseDataSet)s
     // accessed through @link(TCustomTimeList.Items Items).
     procedure Initialize(ObservationValues: THobCollection;
-      ScreenObject: TObject; UseLgrEdgeCells: boolean); reintroduce;
+      ScreenObject: TObject; UseLgrEdgeCells: boolean; AModel: TBaseModel); reintroduce;
     // If assigned, @name is called with @link(UpToDate) is set to False.
     property OnInvalidate: TNotifyEvent read FOnInvalidate write FOnInvalidate;
     property CellLists[Index: integer]: TObsCellList read GetCellList; default;
@@ -228,10 +252,16 @@ resourcestring
   StrHeadObservationsError = 'Head observations can only be defined using ' +
     'objects with a single vertex.  The following objects need to be fixed.';
 
+const
+  StrHobout = '.hob_out';
+
 implementation
 
 uses RbwParser, ScreenObjectUnit, PhastModelUnit, ModflowGridUnit, FastGEO,
   SubscriptionUnit, RealListUnit, frmErrorsAndWarningsUnit;
+
+resourcestring
+  StrErrorObject0s = 'Error; Object = %0:s Duplicate Times = %1:s';
 
 { THob_Cell }
 
@@ -381,11 +411,12 @@ begin
   inherited;
 end;
 
-procedure THobBoundary.EvaluateHeadObservations(Purpose: TObservationPurpose);
+procedure THobBoundary.EvaluateHeadObservations(Purpose: TObservationPurpose;
+  AModel: TBaseModel);
 begin
   if self.Purpose = Purpose then
   begin
-    Values.EvaluateHeadObservations;
+    Values.EvaluateHeadObservations(AModel);
   end;
 end;
 
@@ -399,6 +430,28 @@ begin
   result := Values.FObservationHeads.FCellList.Count;
 end;
 
+
+function THobBoundary.GetItemObsName(Item: THobItem): string;
+begin
+  Assert(Item.Collection = Values);
+  if Values.Count = 1 then
+  begin
+    result := ObservationName;
+  end
+  else
+  begin
+    result := ObservationName + '_' + IntToStr(Item.Index + 1);
+    if Length(result) > 12 then
+    begin
+      result := ObservationName + IntToStr(Item.Index + 1);
+    end;
+    if Length(result) > 12 then
+    begin
+      // The GUI is designed to prevent this from ever being required.
+      SetLength(result, 12);
+    end;
+  end;
+end;
 
 procedure THobBoundary.SetLayerFractions(const Value: TMultiHeadCollection);
 begin
@@ -573,26 +626,29 @@ begin
   FBoundary := Boundary;
   Assert((ScreenObject = nil) or (ScreenObject is TScreenObject));
   FScreenObject := ScreenObject;
-  FObservationHeads:= TObservationTimeList.Create(Model);
+  FObsTimesModelLinkList := TObsTimesModelLinkList.Create;
 
-  if Model <> nil then
-  begin
-    FObservationHeads.OnInvalidate :=
-      (Model as TPhastModel).InvalidateMfHobHeads;
-  end;
+//  FObservationHeads:= TObservationTimeList.Create(Model);
+
+//  if Model <> nil then
+//  begin
+//    FObservationHeads.OnInvalidate :=
+//      (Model as TPhastModel).InvalidateMfHobHeads;
+//  end;
 
 end;
 
 destructor THobCollection.Destroy;
 begin
-  FObservationHeads.Free;
+  FObsTimesModelLinkList.Free;
+//  FObservationHeads.Free;
   inherited;
 end;
 
-procedure THobCollection.EvaluateHeadObservations;
+procedure THobCollection.EvaluateHeadObservations(AModel: TBaseModel);
 var
   LocalScreenObject: TScreenObject;
-  LocalModel: TPhastModel;
+  LocalModel: TCustomModel;
   Grid: TModflowGrid;
   ObservationPoint: TPoint2D;
   Row: Integer;
@@ -602,7 +658,7 @@ var
   CellList: TObsCellList;
   Cell : THob_Cell;
 begin
-  FObservationHeads.Initialize(self, ScreenObject, True);
+  ObservationHeads[AModel].Initialize(self, ScreenObject, True, AModel);
 
   if FObservationHeads.FCellList.Count > 0 then
   begin
@@ -613,7 +669,7 @@ begin
       LocalScreenObject := ScreenObject as TScreenObject;
       Assert(LocalScreenObject.ViewDirection = vdTop);
       Assert(Model <> nil);
-      LocalModel := Model as TPhastModel;
+      LocalModel := AModel as TCustomModel;
       Grid := LocalModel.ModflowGrid;
       Assert(Grid <> nil);
 
@@ -649,6 +705,13 @@ end;
 function THobCollection.GetHobItems(Index: integer): THobItem;
 begin
   result := Items[Index] as THobItem;
+end;
+
+function THobCollection.GetObservationHeads(
+  AModel: TBaseModel): TObservationTimeList;
+begin
+  FObservationHeads := FObsTimesModelLinkList.Links[AModel].FObsTimes;
+  result := FObservationHeads;
 end;
 
 procedure THobCollection.InvalidateModel;
@@ -691,7 +754,7 @@ begin
 end;
 
 procedure TObservationTimeList.Initialize(ObservationValues: THobCollection;
-  ScreenObject: TObject; UseLgrEdgeCells: boolean);
+  ScreenObject: TObject; UseLgrEdgeCells: boolean; AModel: TBaseModel);
 const
   ErrorRoot = 'Error: Duplicate head observation times';
   EarlyTimeWarning = 'Head observation times earlier than the beginning of the first stress period will be ignored.';
@@ -723,7 +786,7 @@ begin
 
   LocalScreenObject := ScreenObject as TScreenObject;
   Assert(LocalScreenObject <> nil);
-  LocalModel := Model as TCustomModel;
+  LocalModel := AModel as TCustomModel;
   EarliestAllowedTime := LocalModel.ModflowFullStressPeriods[0].StartTime;
   LatestAllowedTime := LocalModel.ModflowFullStressPeriods[
     LocalModel.ModflowFullStressPeriods.Count-1].EndTime;
@@ -800,8 +863,10 @@ begin
     end;
     if DuplicateTimes <> '' then
     begin
-      DuplicateTimes := 'Error; Object = ' + LocalScreenObject.Name +
-        ' Duplicate Times = ' +  DuplicateTimes;
+      DuplicateTimes := Format(StrErrorObject0s,
+        [LocalScreenObject.Name, DuplicateTimes]);
+//      DuplicateTimes := 'Error; Object = ' + LocalScreenObject.Name +
+//        ' Duplicate Times = ' +  DuplicateTimes;
       frmErrorsAndWarnings.AddError(Model, ErrorRoot, DuplicateTimes);
     end;
     if EarlyTimes <> '' then
@@ -948,6 +1013,57 @@ begin
   Time := ReadCompReal(Decomp);
 //  HeadAnnotation := ReadCompString(Decomp, Annotations);
   HeadAnnotation := Annotations[ReadCompInt(Decomp)];
+end;
+
+{ TFObsTimesModelLink }
+
+constructor TObsTimesModelLink.Create(AModel: TBaseModel);
+begin
+  FModel := AModel;
+  FObsTimes := TObservationTimeList.Create(FModel);
+end;
+
+destructor TObsTimesModelLink.Destroy;
+begin
+  FObsTimes.Free;
+  inherited;
+end;
+
+{ TObsTimesModelLinkList }
+
+constructor TObsTimesModelLinkList.Create;
+begin
+  FList := TObjectList.Create;
+end;
+
+destructor TObsTimesModelLinkList.Destroy;
+begin
+  FList.Free;
+  inherited;
+end;
+
+function TObsTimesModelLinkList.GetLink(
+  AModel: TBaseModel): TObsTimesModelLink;
+var
+  ModelIndex: Integer;
+  Item: TObsTimesModelLink;
+begin
+  for ModelIndex := 0 to FList.Count - 1 do
+  begin
+    Item := FList[ModelIndex];
+    if Item.FModel = AModel then
+    begin
+      result := Item;
+      Exit;
+    end;
+  end;
+  result := TObsTimesModelLink.Create(AModel);
+  FList.Add(result);
+  if AModel <> nil then
+  begin
+    result.FObsTimes.OnInvalidate :=
+      (AModel as TCustomModel).InvalidateMfHobHeads;
+  end;
 end;
 
 end.

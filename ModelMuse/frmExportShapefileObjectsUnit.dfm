@@ -35,8 +35,8 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
       Left = 421
       Top = 46
       Caption = '&OK'
-      OnClick = btnCloseClick
       Kind = bkOK
+      OnClick = btnCloseClick
       ExplicitLeft = 421
       ExplicitTop = 46
     end
@@ -53,15 +53,17 @@ inherited frmExportShapefileObjects: TfrmExportShapefileObjects
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
     object rdeMissingData: TRbwDataEntry
       Left = 326
       Top = 13
       Width = 105
       Height = 27
-      ItemHeight = 0
       TabOrder = 3
       Text = '-99900000'
       DataType = dtInteger

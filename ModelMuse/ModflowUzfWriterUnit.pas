@@ -57,6 +57,11 @@ resourcestring
   ' defined in the following stress periods.';
   StrTheETExtinctionWa = 'The ET extinction water content in the UZF package' +
   ' was not defined in the following stress periods.';
+  StrNoBoundaryConditio = 'No boundary conditions assigned to the %s because' +
+  ' the object does not set the values of either enclosed or intersected cel' +
+  'ls.';
+  StrNoTransientDataI = 'No transient data (infiltration and/or evapotranspi' +
+  'ration) has been defined.';
 
 { TModflowUzfWriter }
 
@@ -83,10 +88,12 @@ var
   Boundary: TUzfBoundary;
   NoAssignmentErrorRoot: string;
 begin
-  NoAssignmentErrorRoot := 'No boundary conditions assigned to the '
-    + Package.PackageIdentifier
-    + ' because the object does not '
-    + 'set the values of either enclosed or intersected cells.';
+  NoAssignmentErrorRoot := Format(StrNoBoundaryConditio,
+    [Package.PackageIdentifier]);
+//  NoAssignmentErrorRoot := 'No boundary conditions assigned to the '
+//    + Package.PackageIdentifier
+//    + ' because the object does not '
+//    + 'set the values of either enclosed or intersected cells.';
   frmProgressMM.AddMessage('Evaluating UZF Package data.');
   CountGages;
 
@@ -339,7 +346,8 @@ begin
       Assert(False);
   end;
   IUZFOPT := Model.ModflowPackages.UzfPackage.VerticalKSource;
-  if not Model.ModflowPackages.LpfPackage.IsSelected then
+  if not (Model.ModflowPackages.LpfPackage.IsSelected
+    or Model.ModflowPackages.UpwPackage.IsSelected) then
   begin
     IUZFOPT := 1;
   end;
@@ -650,8 +658,7 @@ begin
   if Values.Count = 0 then
   begin
     frmErrorsAndWarnings.AddError(Model, StrUnspecifiedUZFData,
-      'No transient data (infiltration and/or evapotranspiration) '
-      + 'has been defined.');
+      StrNoTransientDataI);
   end;
   for TimeIndex := 0 to Values.Count - 1 do
   begin

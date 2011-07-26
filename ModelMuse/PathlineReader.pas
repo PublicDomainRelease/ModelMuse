@@ -695,33 +695,33 @@ uses
   ModelMuseUtilities, PhastModelUnit, XBase1, frmExportShapefileUnit, 
   ShapefileUnit, AbstractGridUnit;
 
-resourcestring
-  StrSTARTLAY = 'START_LAY';
-  StrSTARTROW = 'START_ROW';
-  StrSTARTCOL = 'START_COL';
-  StrSTARTTIME = 'START_TIME';
-  StrENDLAY = 'END_LAY';
-  StrENDROW = 'END_ROW';
-  StrENDCOL = 'END_COL';
-  StrENDTIME = 'END_TIME';
-  StrSTARTTS = 'START_TS';
-  StrSTARTZONE = 'START_ZONE';
-  StrENDTS = 'END_TS';
-  StrENDZONE = 'END_ZONE';
-  StrENDX = 'END_X';
-  StrENDY = 'END_Y';
-  StrENDZ = 'END_Z';
-  StrTRACKTIME = 'TRACK_TIME';
-  StrTERMCODE = 'TERM_CODE';
-  StrRELEASET = 'RELEASE_T';
-  StrSTARTX = 'START_X';
-  StrSTARTY = 'START_Y';
-  StrSTARTZ = 'START_Z';
-  StrLAYER = 'LAYER';
-  StrROW = 'ROW';
-  StrCOLUMN = 'COLUMN';
-  StrTIMESTEP = 'TIME_STEP';
-  StrPARTICLE = 'PARTICLE';
+const
+  StrSTARTLAY: AnsiString = 'START_LAY';
+  StrSTARTROW: AnsiString = 'START_ROW';
+  StrSTARTCOL: AnsiString = 'START_COL';
+  StrSTARTTIME: AnsiString = 'START_TIME';
+  StrENDLAY: AnsiString = 'END_LAY';
+  StrENDROW: AnsiString = 'END_ROW';
+  StrENDCOL: AnsiString = 'END_COL';
+  StrENDTIME: AnsiString = 'END_TIME';
+  StrSTARTTS: AnsiString = 'START_TS';
+  StrSTARTZONE: AnsiString = 'START_ZONE';
+  StrENDTS: AnsiString = 'END_TS';
+  StrENDZONE: AnsiString = 'END_ZONE';
+  StrENDX: AnsiString = 'END_X';
+  StrENDY: AnsiString = 'END_Y';
+  StrENDZ: AnsiString = 'END_Z';
+  StrTRACKTIME: AnsiString = 'TRACK_TIME';
+  StrTERMCODE: AnsiString = 'TERM_CODE';
+  StrRELEASET: AnsiString = 'RELEASE_T';
+  StrSTARTX: AnsiString = 'START_X';
+  StrSTARTY: AnsiString = 'START_Y';
+  StrSTARTZ: AnsiString = 'START_Z';
+  StrLAYER: AnsiString = 'LAYER';
+  StrROW: AnsiString = 'ROW';
+  StrCOLUMN: AnsiString = 'COLUMN';
+  StrTIMESTEP: AnsiString = 'TIME_STEP';
+  StrPARTICLE: AnsiString = 'PARTICLE';
 
 procedure ConvertIndicies(NCol, NRow: Integer;
   var I, K, J: Integer);
@@ -1676,14 +1676,14 @@ begin
   try
     Fields := TStringList.Create;
     try
-      Fields.Add(StrSTARTLAY + '=N');
-      Fields.Add(StrSTARTROW + '=N');
-      Fields.Add(StrSTARTCOL + '=N');
-      Fields.Add(StrSTARTTIME + '=N18,10');
-      Fields.Add(StrENDLAY + '=N');
-      Fields.Add(StrENDROW + '=N');
-      Fields.Add(StrENDCOL + '=N');
-      Fields.Add(StrENDTIME + '=N18,10');
+      Fields.Add(string(StrSTARTLAY) + '=N');
+      Fields.Add(string(StrSTARTROW) + '=N');
+      Fields.Add(string(StrSTARTCOL) + '=N');
+      Fields.Add(string(StrSTARTTIME) + '=N18,10');
+      Fields.Add(string(StrENDLAY) + '=N');
+      Fields.Add(string(StrENDROW) + '=N');
+      Fields.Add(string(StrENDCOL) + '=N');
+      Fields.Add(string(StrENDTIME) + '=N18,10');
       InitializeDataBase(FileName, ShapeDataBase, Fields);
     finally
       Fields.Free;
@@ -1985,26 +1985,26 @@ begin
   try
     Fields := TStringList.Create;
     try
-      Fields.Add(StrSTARTLAY + '=N');
-      Fields.Add(StrSTARTROW + '=N');
-      Fields.Add(StrSTARTCOL + '=N');
+      Fields.Add(string(StrSTARTLAY) + '=N');
+      Fields.Add(string(StrSTARTROW) + '=N');
+      Fields.Add(string(StrSTARTCOL) + '=N');
 
-      Fields.Add(StrENDLAY + '=N');
-      Fields.Add(StrENDROW + '=N');
-      Fields.Add(StrENDCOL + '=N');
+      Fields.Add(string(StrENDLAY) + '=N');
+      Fields.Add(string(StrENDROW) + '=N');
+      Fields.Add(string(StrENDCOL) + '=N');
 
-      Fields.Add(StrSTARTTS + '=N');
-      Fields.Add(StrSTARTZONE + '=N');
-      Fields.Add(StrENDTS + '=N');
-      Fields.Add(StrENDZONE + '=N');
+      Fields.Add(string(StrSTARTTS) + '=N');
+      Fields.Add(string(StrSTARTZONE) + '=N');
+      Fields.Add(string(StrENDTS) + '=N');
+      Fields.Add(string(StrENDZONE) + '=N');
 
-      Fields.Add(StrSTARTX + '=N18,10');
-      Fields.Add(StrSTARTY + '=N18,10');
-      Fields.Add(StrSTARTZ + '=N18,10');
+      Fields.Add(string(StrSTARTX) + '=N18,10');
+      Fields.Add(string(StrSTARTY) + '=N18,10');
+      Fields.Add(string(StrSTARTZ) + '=N18,10');
 
-      Fields.Add(StrTRACKTIME + '=N18,10');
-      Fields.Add(StrTERMCODE + '=N');
-      Fields.Add(StrRELEASET + '=N18,10');
+      Fields.Add(string(StrTRACKTIME) + '=N18,10');
+      Fields.Add(string(StrTERMCODE) + '=N');
+      Fields.Add(string(StrRELEASET) + '=N18,10');
       InitializeDataBase(FileName, ShapeDataBase, Fields);
     finally
       Fields.Free;
@@ -2085,26 +2085,26 @@ begin
   try
     Fields := TStringList.Create;
     try
-      Fields.Add(StrSTARTLAY + '=N');
-      Fields.Add(StrSTARTROW + '=N');
-      Fields.Add(StrSTARTCOL + '=N');
+      Fields.Add(string(StrSTARTLAY) + '=N');
+      Fields.Add(string(StrSTARTROW) + '=N');
+      Fields.Add(string(StrSTARTCOL) + '=N');
 
-      Fields.Add(StrENDLAY + '=N');
-      Fields.Add(StrENDROW + '=N');
-      Fields.Add(StrENDCOL + '=N');
+      Fields.Add(string(StrENDLAY) + '=N');
+      Fields.Add(string(StrENDROW) + '=N');
+      Fields.Add(string(StrENDCOL) + '=N');
 
-      Fields.Add(StrSTARTTS + '=N');
-      Fields.Add(StrSTARTZONE + '=N');
-      Fields.Add(StrENDTS + '=N');
-      Fields.Add(StrENDZONE + '=N');
+      Fields.Add(string(StrSTARTTS) + '=N');
+      Fields.Add(string(StrSTARTZONE) + '=N');
+      Fields.Add(string(StrENDTS) + '=N');
+      Fields.Add(string(StrENDZONE) + '=N');
 
-      Fields.Add(StrENDX + '=N18,10');
-      Fields.Add(StrENDY + '=N18,10');
-      Fields.Add(StrENDZ + '=N18,10');
+      Fields.Add(string(StrENDX) + '=N18,10');
+      Fields.Add(string(StrENDY) + '=N18,10');
+      Fields.Add(string(StrENDZ) + '=N18,10');
 
-      Fields.Add(StrTRACKTIME + '=N18,10');
-      Fields.Add(StrTERMCODE + '=N');
-      Fields.Add(StrRELEASET + '=N18,10');
+      Fields.Add(string(StrTRACKTIME) + '=N18,10');
+      Fields.Add(string(StrTERMCODE) + '=N');
+      Fields.Add(string(StrRELEASET) + '=N18,10');
 
       InitializeDataBase(FileName, ShapeDataBase, Fields);
     finally
@@ -3507,7 +3507,7 @@ begin
   try
     Fields := TStringList.Create;
     try
-      Fields.Add(StrTRACKTIME + '=N18,10');
+      Fields.Add(string(StrTRACKTIME) + '=N18,10');
       InitializeDataBase(FileName, ShapeDataBase, Fields);
     finally
       Fields.Free;

@@ -34,19 +34,19 @@ const
 
 type
   { Maps a character set to another character set. Handy for Uppercase, lowercase, ... }
-  TCharMap = array [Char] of Char;
+  TCharMap = array [AnsiChar] of AnsiChar;
 
-{ Calculates the CRC32 of a given string.
+{ Calculates the CRC32 of a given AnsiString.
   Implemented in assembler for speed.
   It produces the same output as Winzip. }
-function CRC32(const Str: string): Longword; assembler; register; overload;
+function CRC32(const Str: AnsiString): Longword; assembler; register; overload;
 
 { Calculates the CRC32 of a given blob of untyped data.
   Implemented in assembler for speed.
   It produces the same output as Winzip. }
 function CRC32(const Data; Length: Integer): Longword; assembler; register; overload;
 
-{ Calculates the CRC32 of a given string where each character is substituted by the given map
+{ Calculates the CRC32 of a given AnsiString where each character is substituted by the given map
   Implemented in assembler for speed. }
 function CRC32Mapped(const Data; Length: Integer; const Map: TCharMap): Longword; assembler; register;
 
@@ -58,7 +58,7 @@ function CRC32Mapped(const Data; Length: Integer; const Map: TCharMap): Longword
   Implemented in assembler for speed. }
 function CRC32Inc(const Data; Length: Integer; CRC: Longword): Longword; assembler; register;
 
-{ Maps each character of the Src string to the Dest string using the given Map.
+{ Maps each character of the Src AnsiString to the Dest AnsiString using the given Map.
   Implemented in assembler for speed. }
 procedure MapStr(const Src; var Dest; Length: Integer; const Map: TCharMap); assembler; register;
 
@@ -152,7 +152,7 @@ uses
 
 {
 // This function is used to produce the guts of the following table.
-function GenCrcTable(Poly: Longword = $EDB88320): string;
+function GenCrcTable(Poly: Longword = $EDB88320): AnsiString;
 var i,j,k: Longword;
 begin
   Result := '';
@@ -199,11 +199,11 @@ const Crc32Table: array [0..255] of Longword = (
   $BDBDF21C, $CABAC28A, $53B39330, $24B4A3A6, $BAD03605, $CDD70693, $54DE5729, $23D967BF,
   $B3667A2E, $C4614AB8, $5D681B02, $2A6F2B94, $B40BBE37, $C30C8EA1, $5A05DF1B, $2D02EF8D);
 
-function CRC32(const Str: string): Longword; assembler; register; overload;
+function CRC32(const Str: AnsiString): Longword; assembler; register; overload;
 asm
   test   eax,eax
   jz     @ExitQuick
-  mov    edx,[eax-4]   // string length
+  mov    edx,[eax-4]   // AnsiString length
   cmp    edx,0
   push   ebx
   mov    ecx,eax

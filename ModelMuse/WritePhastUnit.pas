@@ -20,7 +20,8 @@ uses Windows, Dialogs, SysUtils, frmGoPhastUnit, PhastModelUnit, PrintFrequency,
   SpecifiedHeadZone, SpecifiedFluxFrontZone, SpecifiedFluxSideZone,
   SpecifiedFluxTopZone, CustomBoundaryZone, CustomLeakyZone, FrontLeakyZone,
   SideLeakyZone, TopLeakyZone, WriteRiverUnit, ScreenObjectUnit,
-  WriteWellUnit, DataSetUnit, PhastDataSets, frmPhastLocationUnit, TempFiles;
+  WriteWellUnit, DataSetUnit, PhastDataSets, frmPhastLocationUnit, TempFiles,
+  ModelMuseUtilities;
 
 procedure WriteTime(const Stream: TStringStream; const Time: double);
 begin
@@ -1944,12 +1945,12 @@ begin
   SetCurrentDir(ADir);
 
   PriorUpToDate := frmGoPhast.PhastModel.UpToDate;
-  OldDecSep := DecimalSeparator;
+  OldDecSep := FormatSettings.DecimalSeparator;
   try
     try
       frmGoPhast.PhastModel.ModelInputFiles.Clear;
       frmGoPhast.PhastModel.AddModelInputFile(FileName);
-      DecimalSeparator := '.';
+      FormatSettings.DecimalSeparator := '.';
       Input := TStringStream.Create('');
       SpecifiedHeadZones := nil;
       TopFluxZones := nil;
@@ -2042,7 +2043,7 @@ begin
       end;
     end;
   finally
-    DecimalSeparator := OldDecSep;
+    FormatSettings.DecimalSeparator := OldDecSep;
     frmGoPhast.PhastModel.RestoreColoredDataSets;
     frmGoPhast.PhastModel.UpToDate := PriorUpToDate;
   end;
@@ -2085,7 +2086,8 @@ begin
   begin
     SetCurrentDir(FileDir);
     try
-      WinExec(PChar('"' + BatchName + '"'), SW_SHOW);
+      RunAProgram('"' + BatchName + '"');
+//      WinExec(PAnsiChar(AnsiString('"' + BatchName + '"')), SW_SHOW);
     finally
       SetCurrentDir(ADir);
     end;

@@ -7,7 +7,7 @@ uses
   Dialogs, ExtCtrls, StdCtrls, RbwEdit, ArgusDataEntry, JvExStdCtrls,
   JvCombobox, JvListComb, ComCtrls, Mask, JvExMask, JvSpin, Grids, RbwDataGrid4,
   ModflowMnw2Unit, UndoItemsScreenObjects, JvToolEdit, JvExComCtrls, JvComCtrls,
-  frameLocationMethodUnit;
+  frameLocationMethodUnit, frameScreenObjectUnit;
 
 type
   // This type is used in this unit and in frmImportShapefileUnit.
@@ -19,7 +19,7 @@ type
   TVerticalScreenColumns = (vsZTop, vsZBot, vsRw, vsRSkin, vsKSkin, vsB, vsC, vsP, vsCWC);
 
 
-  TframeScreenObjectMNW2 = class(TFrame)
+  TframeScreenObjectMNW2 = class(TframeScreenObject)
     pnlCaption: TPanel;
     pcMnw2: TPageControl;
     tabBasic: TTabSheet;
@@ -1290,6 +1290,7 @@ begin
   begin
     rdgTimeTable.Invalidate;
   end;
+  UpdateNextTimeCell(rdgTimeTable, ACol, ARow);
 end;
 
 procedure TframeScreenObjectMNW2.rdgVerticalScreensColSize(Sender: TObject;

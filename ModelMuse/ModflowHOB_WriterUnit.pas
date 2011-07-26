@@ -4,7 +4,7 @@ interface
 
 uses SysUtils, Math, Classes, Contnrs , PhastModelUnit, CustomModflowWriterUnit,
   ModflowPackageSelectionUnit, ModflowHobUnit, ModflowBoundaryDisplayUnit,
-  GoPhastTypes;
+  GoPhastTypes, RealListUnit;
 
 type
   TLayerSort = class(TObject)
@@ -24,6 +24,7 @@ type
     FStartTime: Double;
     FEndTime: Double;
     IREFSP: Integer;
+    FStartingTimes: TRealList;
     procedure Evaluate(Purpose: TObservationPurpose);
     procedure WriteDataSet1;
     procedure WriteDataSet2;
@@ -55,6 +56,17 @@ resourcestring
   InvalidStartObsTime = 'Observation time before beginning of simulation';
   HeadOffGrid = 'One or more head observation are not located on the grid and will be ignored';
   NoHeads = 'No head observations';
+  StrObjectSTimeG = 'Object: %s; Time: %g';
+  StrNoValidHeadObserv = 'No valid head observations were defined. Check tha' +
+  't "Model|Observation Type" is set to the correct value and that the obser' +
+  'vation type for each observation is set correctly.';
+  StrNoValidHeadPred = 'No valid head observations were defined for the curr' +
+  'ent stress period. Check that "Model|Observation Type" is set to the corr' +
+  'ect value and that the observation type for each observation is set corre' +
+  'ctly.';
+  StrNoValidHeadObs = 'No valid head observations were defined.';
+  StrNoValidHeadObservForCurrent = 'No valid head observations were defined ' +
+  'for the current stress period.';
 
 { TModflowHobWriter }
 
@@ -110,7 +122,7 @@ begin
     begin
       if Observations.Purpose = Purpose then
       begin
-        Observations.EvaluateHeadObservations(Purpose);
+        Observations.EvaluateHeadObservations(Purpose, Model);
         FObservations.Add(Observations);
 
         if Observations.CellListCount = 0 then
@@ -147,15 +159,19 @@ begin
             Item := Observations.Values.HobItems[ObsIndex];
             if (Item.Time > FEndTime) and (FEvaluationType = etExport) then
             begin
-              ErrorMessage := 'Object: ' + ScreenObject.Name
-                + '; Time: ' + FloatToStr(Item.Time);
+              ErrorMessage := Format(StrObjectSTimeG,
+                [ScreenObject.Name, Item.Time]);
+//              ErrorMessage := 'Object: ' + ScreenObject.Name
+//                + '; Time: ' + FloatToStr(Item.Time);
               frmErrorsAndWarnings.AddError(Model,
                 InvalidEndObsTime, ErrorMessage);
             end;
             if (Item.Time < FStartTime) and (FEvaluationType = etExport) then
             begin
-              ErrorMessage := 'Object: ' + ScreenObject.Name
-                + '; Time: ' + FloatToStr(Item.Time);
+              ErrorMessage := Format(StrObjectSTimeG,
+                [ScreenObject.Name, Item.Time]);
+//              ErrorMessage := 'Object: ' + ScreenObject.Name
+//                + '; Time: ' + FloatToStr(Item.Time);
               frmErrorsAndWarnings.AddError(Model,
                 InvalidStartObsTime, ErrorMessage);
             end;
@@ -174,19 +190,11 @@ begin
     begin
       if (FEvaluationType = etExport) then
       begin
-        frmErrorsAndWarnings.AddError(Model, NoHeads,
-          'No valid head observations were defined. '
-          + 'Check that "Model|Observation Type" is set to the '
-          + 'correct value and that the observation type for '
-          + 'each observation is set correctly.');
+        frmErrorsAndWarnings.AddError(Model, NoHeads, StrNoValidHeadObserv);
       end
       else
       begin
-        frmErrorsAndWarnings.AddWarning(Model, NoHeads,
-          'No valid head observations were defined for the current stress period. '
-          + 'Check that "Model|Observation Type" is set to the '
-          + 'correct value and that the observation type for '
-          + 'each observation is set correctly.');
+        frmErrorsAndWarnings.AddWarning(Model, NoHeads, StrNoValidHeadPred);
       end;
     end
     else
@@ -194,12 +202,12 @@ begin
       if (FEvaluationType = etExport) then
       begin
         frmErrorsAndWarnings.AddError(Model, NoHeads,
-          'No valid head observations were defined.');
+          StrNoValidHeadObs);
       end
       else
       begin
         frmErrorsAndWarnings.AddWarning(Model, NoHeads,
-          'No valid head observations were defined for the current stress period.');
+          StrNoValidHeadObservForCurrent);
       end;
     end;
   end;
@@ -250,9 +258,9 @@ begin
     for ObsIndex := 0 to FObservations.Count - 1 do
     begin
       Obs := FObservations[ObsIndex];
-      for ItemIndex := 0 to Obs.Values.ObservationHeads.Count - 1 do
+      for ItemIndex := 0 to Obs.Values.ObservationHeads[Model].Count - 1 do
       begin
-        CellList := Obs.Values.ObservationHeads[ItemIndex];
+        CellList := Obs.Values.ObservationHeads[Model][ItemIndex];
         if CellList.Count > 0 then
         begin
           Cell := CellList[0];
@@ -359,6 +367,7 @@ var
   NameOfFile: string;
   OutFileName: string;
   Index: Integer;
+  TimeIndex: Integer;
 begin
   if not Package.IsSelected then
   begin
@@ -376,7 +385,7 @@ begin
   WriteToNameFile(StrHOB, Model.UnitNumbers.UnitNumber(StrHOB), NameOfFile, foInput);
   if IUHOBSV <> 0 then
   begin
-    OutFileName := ChangeFileExt(NameOfFile, '.hob_out');
+    OutFileName := ChangeFileExt(NameOfFile, StrHobout);
     WriteToNameFile(StrDATA, IUHOBSV, OutFileName, foOutput);
   end;
   OpenFile(NameOfFile);
@@ -399,14 +408,26 @@ begin
 
     frmProgressMM.AddMessage('  Writing Data Sets 3 to 6.');
     WriteDataSet2;
-    for Index := 0 to FObservations.Count - 1 do
-    begin
-      Application.ProcessMessages;
-      if not frmProgressMM.ShouldContinue then
+
+    FStartingTimes := TRealList.Create;
+    try
+      for TimeIndex := 0 to Model.ModflowFullStressPeriods.Count - 1 do
       begin
-        Exit;
+        FStartingTimes.Add(Model.ModflowFullStressPeriods[TimeIndex].StartTime);
       end;
-      WriteDataSet3to6(Index);
+      FStartingTimes.Sort;
+
+      for Index := 0 to FObservations.Count - 1 do
+      begin
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        WriteDataSet3to6(Index);
+      end;
+    finally
+      FStartingTimes.Free;
     end;
   finally
     CloseFile;
@@ -414,8 +435,8 @@ begin
 end;
 
 procedure TModflowHobWriter.WriteDataSet6(Observations: THobBoundary);
-const
-  IREFSP = 1;
+//const
+//  IREFSP = 1;
 var
   HOBS: Double;
   TOFFSET: Double;
@@ -423,6 +444,8 @@ var
   OBSNAM: string;
   ObsIndex: Integer;
   Comment: string;
+  ReferenceStressPeriodIndex: Integer;
+  IREFSP: integer;
 begin
   if Observations.Values.Count > 1 then
   begin
@@ -441,8 +464,17 @@ begin
       Item := Observations.Values.HobItems[ObsIndex];
       if (FStartTime <= Item.Time) and (Item.Time <= FEndTime) then
       begin
-        TOFFSET := Item.Time - FStartTime;
+        ReferenceStressPeriodIndex := FStartingTimes.IndexOfClosest(Item.Time);
+        if (FStartingTimes[ReferenceStressPeriodIndex] > Item.Time) then
+        begin
+          Dec(ReferenceStressPeriodIndex);
+        end;
+        Assert(ReferenceStressPeriodIndex >= 0);
+
+
+        TOFFSET := Item.Time - FStartingTimes[ReferenceStressPeriodIndex];
         HOBS := Item.Head;
+        IREFSP := ReferenceStressPeriodIndex+1;
         WriteString(OBSNAM);
         WriteInteger(IREFSP);
         WriteFloat(TOFFSET);
@@ -687,12 +719,20 @@ var
   Item: THobItem;
   ObservationTimeCount: Integer;
   ScreenObject: TScreenObject;
+  ReferenceStressPeriodIndex: Integer;
 begin
   if CellList.Count = 0 then
   begin
     Exit;
   end;
   Cell := CellList[0];
+  ReferenceStressPeriodIndex := FStartingTimes.IndexOfClosest(Cell.Time);
+  if (FStartingTimes[ReferenceStressPeriodIndex] > Cell.Time) then
+  begin
+    Dec(ReferenceStressPeriodIndex);
+  end;
+  Assert(ReferenceStressPeriodIndex >= 0);
+
   OBSNAM := Observations.ObservationName;
   if OBSNAM = '' then
   begin
@@ -721,13 +761,13 @@ begin
     CountObservationTimes(FStartTime, FEndTime);
   if ObservationTimeCount = 1 then
   begin
-    IREFSP := 1;
+    IREFSP := ReferenceStressPeriodIndex+1;
   end
   else
   begin
     IREFSP := -ObservationTimeCount;
   end;
-  TOFFSET := Cell.Time - FStartTime;
+  TOFFSET := Cell.Time - FStartingTimes[ReferenceStressPeriodIndex];
   ROFF := Observations.Values.ObservationRowOffset;
   COFF := Observations.Values.ObservationColumnOffset;
   HOBS := Cell.Head;

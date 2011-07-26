@@ -165,6 +165,7 @@ object frameIface: TframeIface
       Height = 146
       Camera = GLCamera1
       FieldOfView = 111.183052062988300000
+      TabOrder = 8
     end
   end
   object glsIface: TGLScene
@@ -185,7 +186,6 @@ object frameIface: TframeIface
         TurnAngle = 180.000000000000000000
         Height = 1.000000000000000000
         Width = 1.000000000000000000
-        NoZWrite = False
       end
       object GLCube1: TGLCube
         Position.Coordinates = {00000000000000000000C0BF0000803F}
@@ -211,7 +211,6 @@ object frameIface: TframeIface
         Visible = False
         Height = 1.000000000000000000
         Width = 1.000000000000000000
-        NoZWrite = False
       end
       object TopFace: TGLPlane
         Direction.Coordinates = {000000000000803F0000000000000000}
@@ -221,7 +220,6 @@ object frameIface: TframeIface
         Visible = False
         Height = 1.000000000000000000
         Width = 1.000000000000000000
-        NoZWrite = False
       end
       object BottomFace: TGLPlane
         Direction.Coordinates = {004474990000803F2EBD3BB400000000}
@@ -230,7 +228,6 @@ object frameIface: TframeIface
         Up.Coordinates = {00004A1D2EBD3BB4000080BF00000000}
         Height = 1.000000000000000000
         Width = 1.000000000000000000
-        NoZWrite = False
       end
       object RightFace: TGLPlane
         VisibilityCulling = vcNone
@@ -240,7 +237,6 @@ object frameIface: TframeIface
         Visible = False
         Height = 1.000000000000000000
         Width = 1.000000000000000000
-        NoZWrite = False
       end
       object BackFace: TGLPlane
         Material.BackProperties.Diffuse.Color = {F8FEFE3E0000803F000000000000803F}
@@ -250,7 +246,6 @@ object frameIface: TframeIface
         TurnAngle = 90.000000000000000000
         Height = 1.000000000000000000
         Width = 1.000000000000000000
-        NoZWrite = False
       end
       object CentralSphere: TGLSphere
         Material.BackProperties.Diffuse.Color = {000000000000803FF8FEFE3E0000803F}

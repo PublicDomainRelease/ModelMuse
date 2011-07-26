@@ -10594,19 +10594,33 @@ begin
     // There must be at least one dot to separate major and minor version number.
     Separator := Pos('.', Buffer);
     // At least one number must be before and one after the dot.
+    {$IFDEF Delphi_2009_UP}
+    if (Separator > 1) and (Separator < Length(Buffer))
+      and CharInSet(Buffer[Separator - 1], ['0'..'9'])
+      and CharInSet(Buffer[Separator + 1], ['0'..'9']) then
+    {$ELSE}
     if (Separator > 1) and (Separator < Length(Buffer)) and (Buffer[Separator - 1] in ['0'..'9']) and
       (Buffer[Separator + 1] in ['0'..'9']) then
+    {$ENDIF}
     begin
       // OK, it's a valid version string. Now remove unnecessary parts.
       Dec(Separator);
       // Find last non-numeric character before version number.
+      {$IFDEF Delphi_2009_UP}
+      while (Separator > 0) and CharInSet(Buffer[Separator], ['0'..'9']) do
+      {$ELSE}
       while (Separator > 0) and (Buffer[Separator] in ['0'..'9']) do
+      {$ENDIF}
         Dec(Separator);
       // Delete leading characters which do not belong to the version string.
       Delete(Buffer, 1, Separator);
       Separator := Pos('.', Buffer) + 1;
       // Find first non-numeric character after version number
+      {$IFDEF Delphi_2009_UP}
+      while (Separator <= Length(Buffer)) and CharInSet(Buffer[Separator], ['0'..'9']) do
+      {$ELSE}
       while (Separator <= Length(Buffer)) and (Buffer[Separator] in ['0'..'9']) do
+      {$ENDIF}
         Inc(Separator);
       // delete trailing characters not belonging to the version string
       Delete(Buffer, Separator, 255);
@@ -10647,8 +10661,13 @@ var
      Result := ExtPos > 0;
      // Now check that it isn't only a substring of another extension.
      if Result then
+       {$IFDEF Delphi_2009_UP}
+       Result := ((ExtPos + Length(Extension) - 1) = Length(Buffer)) or
+         not CharInSet(Buffer[ExtPos + Length(Extension)], ['_', 'A'..'Z', 'a'..'z']);
+       {$ELSE}
        Result := ((ExtPos + Length(Extension) - 1) = Length(Buffer)) or
          not (Buffer[ExtPos + Length(Extension)] in ['_', 'A'..'Z', 'a'..'z']);
+       {$ENDIF}
    end;
 
   //--------------- end local function ----------------------------------------

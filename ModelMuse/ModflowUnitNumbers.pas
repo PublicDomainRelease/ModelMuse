@@ -90,9 +90,11 @@ const
   BAS_InitialHeads          = 'BAS_InitialHeads';
   BFH_Heads                 = 'BFH_Heads';
   BFH_Fluxes                = 'BFH_Fluxes';
+  StrNWT                    = 'NWT';
+  StrUPW                    = 'UPW';
 
-  Solvers: array[0..3] of string = (StrPCG, StrGMG, StrSIP, StrDE4);
-  FlowPackages: array[0..2] of string = (StrLPF, StrHUF2, StrBCF);
+  Solvers: array[0..4] of string = (StrPCG, StrGMG, StrSIP, StrDE4, StrNWT);
+  FlowPackages: array[0..3] of string = (StrLPF, StrHUF2, StrBCF, StrUPW);
 
 
 type
@@ -267,6 +269,8 @@ const
 
   BFH_Head = 131;
   BFH_Flux = 132;
+  NWT_Unit = 133;
+  UPW_Unit = 134;
 
 
 
@@ -327,6 +331,7 @@ begin
   AddItem(StrMULT, MultUnit);
   AddItem(StrCHD, CHD_Unit);
   AddItem(StrPCG, PCG_Unit);
+  AddItem(StrNWT, NWT_Unit);
   AddItem(StrGHB, GHB_Unit);
   AddItem(StrWEL, WEL_Unit);
   AddItem(StrRIV, RIV_Unit);
@@ -406,6 +411,9 @@ begin
 
   AddItem(BFH_Heads,  BFH_Head);
   AddItem(BFH_Fluxes, BFH_Flux);
+
+  AddItem(StrUPW ,UPW_Unit);
+
 
 
 end;

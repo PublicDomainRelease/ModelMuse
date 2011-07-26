@@ -25,6 +25,13 @@ uses
   PhastModelUnit, OrderedCollectionUnit, ModflowParameterUnit, frmProgressUnit, 
   GoPhastTypes, frmErrorsAndWarningsUnit, ModflowUnitNumbers, Forms;
 
+resourcestring
+  StrParameter0NonSim = 'Parameter %0:s is not applied to any cells.  Check ' +
+  'that %1:s is set to "True" in at least one non-simulated unit.';
+  StrParameter0Simulated = 'Parameter %0:s is not applied to any cells.  Che' +
+  'ck that %1:s is set to "True" in at least one simulated unit.';
+  StrParameterZonesNot = 'Parameter zones not defined.';
+
 { TModflowLVDA_Writer }
 
 class function TModflowLVDA_Writer.Extension: string;
@@ -105,18 +112,29 @@ begin
         IdentifyZoneClusters(NCLU, Clusters, UniformLayers, LayerCount, Param);
         if NCLU = 0 then
         begin
-          Error := 'Parameter ' + Param.ParameterName
-            + ' is not applied to any cells.  Check that '
-            + Param.ZoneName + ' is set to "True" in at least one ';
+//          Error := 'Parameter ' + Param.ParameterName
+//            + ' is not applied to any cells.  Check that '
+//            + Param.ZoneName + ' is set to "True" in at least one ';
           if Param.ParameterType = ptLPF_VKCB then
           begin
-            Error := Error + 'non-simulated unit.';
+            Error := Format(StrParameter0NonSim,
+              [Param.ParameterName, Param.ZoneName]);
+//              + ' is not applied to any cells.  Check that '
+//              + Param.ZoneName + ' is set to "True" in at least one ';
+//            Error := Error + 'non-simulated unit.';
+//            Error := Error + 'non-simulated unit.';
           end
           else
           begin
-            Error := Error + 'simulated unit.';
+            Error := Format(StrParameter0Simulated,
+              [Param.ParameterName, Param.ZoneName]);
+//            Error := 'Parameter ' + Param.ParameterName
+//              + ' is not applied to any cells.  Check that '
+//              + Param.ZoneName + ' is set to "True" in at least one ';
+//            Error := Error + 'non-simulated unit.';
+//            Error := Error + 'non-simulated unit.';
           end;
-          frmErrorsAndWarnings.AddError(Model, 'Parameter zones not defined.',
+          frmErrorsAndWarnings.AddError(Model, StrParameterZonesNot,
             Error);
         end;
       end;

@@ -120,13 +120,16 @@ begin
   result := 'ET'
 end;
 
-const
+resourcestring
   ErrorRoot = 'One or more %s parameters have been eliminated '
     + 'because there are no cells associated with them.';
   EtSurfaceError = 'The ET Surface is undefined in the EVT package.';
   EtSurfaceErrorMessage = 'No objects define the ET Surface in the EVT package.';
   EtDepthError = 'The ET Depth is undefined in the EVT package.';
   EtDepthErrorMessage = 'No objects define the ET Depth in the EVT package.';
+  StrNoEvapotranspiratio = 'No evapotranspiration defined';
+  StrTheEvapotranspirati = 'The Evapotranspiration package is active but no ' +
+  'evapotranspiration has been defined for any stress period.';
 
 procedure TModflowEVT_Writer.UpdateDisplay(
   TimeLists: TModflowBoundListOfTimeLists);
@@ -482,9 +485,8 @@ begin
     Comment := 'Data Set 10: IEVT';
     if Values.Count = 0 then
     begin
-      frmErrorsAndWarnings.AddError(Model, 'No evapotranspiration defined',
-        'The Evapotranspiration package is active but '
-        + 'no evapotranspiration has been defined for any stress period.');
+      frmErrorsAndWarnings.AddError(Model, StrNoEvapotranspiratio,
+        StrTheEvapotranspirati);
     end;
     for TimeIndex := 0 to Values.Count - 1 do
     begin

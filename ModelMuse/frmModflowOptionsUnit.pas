@@ -154,7 +154,7 @@ var
 implementation
 
 uses frmGoPhastUnit, frmErrorsAndWarningsUnit, 
-  LayerStructureUnit, TimeUnit;
+  LayerStructureUnit, TimeUnit, GoPhastTypes;
 
 {$R *.dfm}
 
@@ -232,6 +232,16 @@ begin
     NewHeight := Height - pnlModel.Height;
     pnlModel.Visible := False;
     Height := NewHeight;
+  end;
+
+  if (frmGoPhast.PhastModel.ModelSelection = msModflowNWT)
+    and frmGoPhast.PhastModel.ModflowPackages.UpwPackage.IsSelected then
+  begin
+    tabWetting.TabVisible := False;
+  end
+  else
+  begin
+    tabWetting.TabVisible := True;
   end;
 end;
 

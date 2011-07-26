@@ -9,8 +9,8 @@ uses SysUtils, Classes;
 type
   TModflowFloat = single;
   TModflowDouble = double;
-  TModflowDesc = Array[0..15] of Char;
-  TModflowDesc2 = Array[0..17] of Char;
+  TModflowDesc = Array[0..15] of AnsiChar;
+  TModflowDesc2 = Array[0..17] of AnsiChar;
   TModflowSingleArray = array of array of TModflowFloat;
   TModflowDoubleArray = array of array of TModflowDouble;
   T3DTModflowArray = array of TModflowDoubleArray;
@@ -92,12 +92,15 @@ implementation
 resourcestring
   StrUnableToReadFile = 'Unable to read file.';
 
+var
+  Dummy: TModflowDouble;
+
 function CheckArrayPrecision(AFile: TFileStream): TModflowPrecision;
 var
   KSTP, KPER: Integer;
   PERTIM, TOTIM: TModflowFloat;
   DESC: TModflowDesc;
-  Description : string;
+  Description : AnsiString;
   PERTIM_Double: TModflowDouble;
   TOTIM_Double: TModflowDouble;
   function ValidDescription: boolean;
@@ -172,9 +175,9 @@ end;
 
 function CheckBudgetPrecision(AFile: TFileStream; out HufFormat: boolean): TModflowPrecision;
 var
-  Description: string;
-  FirstDescription: string;
-  SecondDescription: string;
+  Description: AnsiString;
+  FirstDescription: AnsiString;
+  SecondDescription: AnsiString;
   procedure ReadDescription(var KPER: Integer; var KSTP: Integer);
   var
     DESC: TModflowDesc;
@@ -1217,7 +1220,6 @@ procedure ReadModflowAsciiRealArray(F: TFileVariable; var KSTP, KPER: Integer;
 var
   ColIndex: Integer;
   RowIndex: Integer;
-  Dummy: TModflowDouble;
 begin
   Read(F.AFile, KSTP);
   Read(F.AFile, KPER);

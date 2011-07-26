@@ -90,7 +90,7 @@ var
   CentralMeridian: double;
   X: Double;
   Y: Double;
-  OldDecSep: Char;
+//  OldDecSep: Char;
 begin
   CentralMeridian := 0.0;
   for DemIndex := 0 to OpenDialogFile.Files.Count - 1 do
@@ -100,12 +100,12 @@ begin
       DemReader.ReadHeader(OpenDialogFile.Files[DemIndex]);
       if DemIndex = 0 then
       begin
-        OldDecSep := DecimalSeparator;
-        try
+//        OldDecSep := FormatSettings.DecimalSeparator;
+//        try
           CentralMeridian := DemReader.CentralMeridianRadians;
-        finally
-          DecimalSeparator := OldDecSep;
-        end;
+//        finally
+//          FormatSettings.DecimalSeparator := OldDecSep;
+//        end;
       end;
       memoCorners.Lines.Add(OpenDialogFile.Files[DemIndex]);
       for CornerIndex := 0 to 3 do
@@ -217,7 +217,7 @@ begin
             end;
         end;
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         NodeElemString := 'cell';
         CenterString := 'cell center'

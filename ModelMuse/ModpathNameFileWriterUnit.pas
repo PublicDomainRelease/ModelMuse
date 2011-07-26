@@ -7,7 +7,7 @@ uses SysUtils, Classes, PhastModelUnit;
 Type
   TModpathNameFileWriter = class(TObject)
   public
-    procedure WriteFile(const FileName: string; Model: TCustomModel);
+    procedure WriteFile(const FileName: string; Model: TCustomModel; EmbeddedExport: boolean);
   end;
 
 
@@ -20,11 +20,11 @@ uses ModpathMainFileWriterUnit, ModflowDiscretizationWriterUnit,
 { TModpathNameFileWriter }
 
 procedure TModpathNameFileWriter.WriteFile(const FileName: string;
-  Model: TCustomModel);
+  Model: TCustomModel; EmbeddedExport: boolean);
 const
   CbfFileExistsError = 'The following MODFLOW input or output files are '
     + 'required by MODPATH to run but they are not in the directory in which '
-    + 'MODPATH is being run: "';
+    + 'MODPATH is being run: "%s".';
 var
   NameFile: TStringList;
   AFileName: string;
@@ -33,11 +33,16 @@ var
   var
     FullFileName: string;
   begin
+    if EmbeddedExport then
+    begin
+      Exit;
+    end;
+
     FullFileName := ExpandFileName(AFileName);
     if not FileExists(FullFileName) then
     begin
-      frmErrorsAndWarnings.AddError(Model,
-        CbfFileExistsError + ExtractFilePath(FileName) + '".',
+      frmErrorsAndWarnings.AddError(Model, Format(CbfFileExistsError,
+        [ExtractFilePath(FileName)]),
         AFileName);
     end;
   end;

@@ -15,7 +15,6 @@ inherited frmChildModels: TfrmChildModels
     Height = 400
     Align = alLeft
     TabOrder = 0
-    ExplicitHeight = 414
     object tvChildModels: TTreeView
       Left = 1
       Top = 1
@@ -23,11 +22,10 @@ inherited frmChildModels: TfrmChildModels
       Height = 357
       Align = alClient
       HideSelection = False
-      Indent = 19
+      Indent = 20
       TabOrder = 0
       OnChange = tvChildModelsChange
       OnChanging = tvChildModelsChanging
-      ExplicitHeight = 371
     end
     object Panel3: TPanel
       Left = 1
@@ -36,7 +34,6 @@ inherited frmChildModels: TfrmChildModels
       Height = 41
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 372
       object btnAdd: TSpeedButton
         Left = 23
         Top = 6
@@ -108,10 +105,8 @@ inherited frmChildModels: TfrmChildModels
     ActivePage = tabBasic
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 414
     object tabBasic: TTabSheet
       Caption = 'Basic'
-      ExplicitHeight = 381
       DesignSize = (
         350
         367)
@@ -158,7 +153,6 @@ inherited frmChildModels: TfrmChildModels
         Height = 26
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
-        ItemHeight = 18
         TabOrder = 1
         OnChange = comboBottomUnitChange
         OnExit = comboBottomUnitExit
@@ -206,6 +200,9 @@ inherited frmChildModels: TfrmChildModels
     object tabDiscretization: TTabSheet
       Caption = 'Discretization'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 381
       object rdgDiscretization: TRbwDataGrid4
         Left = 0
@@ -319,7 +316,6 @@ inherited frmChildModels: TfrmChildModels
           Height = 22
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 18
           TabOrder = 0
           Text = '1'
           OnChange = rdeDiscretizationChange
@@ -334,6 +330,9 @@ inherited frmChildModels: TfrmChildModels
     object tabSolution: TTabSheet
       Caption = 'Solution'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 381
       DesignSize = (
         350
@@ -405,7 +404,6 @@ inherited frmChildModels: TfrmChildModels
         Top = 242
         Width = 122
         Height = 22
-        ItemHeight = 18
         TabOrder = 2
         Text = '0'
         OnChange = rdeRelaxHeadsChange
@@ -420,7 +418,6 @@ inherited frmChildModels: TfrmChildModels
         Top = 291
         Width = 122
         Height = 22
-        ItemHeight = 18
         TabOrder = 3
         Text = '0'
         OnChange = rdeRelaxFluxChange
@@ -435,7 +432,6 @@ inherited frmChildModels: TfrmChildModels
         Top = 340
         Width = 122
         Height = 22
-        ItemHeight = 18
         TabOrder = 4
         Text = '0'
         OnChange = rdeHeadClosureChange
@@ -449,7 +445,6 @@ inherited frmChildModels: TfrmChildModels
         Top = 389
         Width = 122
         Height = 22
-        ItemHeight = 18
         TabOrder = 5
         Text = '0'
         OnChange = rdeFluxClosureChange
@@ -480,7 +475,6 @@ inherited frmChildModels: TfrmChildModels
     Height = 91
     Align = alBottom
     TabOrder = 2
-    ExplicitTop = 392
     DesignSize = (
       471
       91)
@@ -490,9 +484,12 @@ inherited frmChildModels: TfrmChildModels
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnOK: TBitBtn
       Left = 234
@@ -500,9 +497,12 @@ inherited frmChildModels: TfrmChildModels
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 348
@@ -510,8 +510,11 @@ inherited frmChildModels: TfrmChildModels
       Width = 108
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
     object cbSaveBFH: TCheckBox
       Left = 1

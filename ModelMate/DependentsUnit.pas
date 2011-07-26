@@ -821,7 +821,7 @@ begin
       AllAtts[I].Initialize(DepAttributeTypes[I], aDepCat);
     end;
   Name := aName;
-  if aGroupName <> '' then AllAtts[DepAttPos(datGroupName)].Text := aGroupName;
+  if aGroupName <> '' then AllAtts[DepAttPos(datGroupName)].Text := ConvertString(aGroupName);
   DepCat := aDepCat;
 end;
 
@@ -841,11 +841,11 @@ begin
           AllAtts.Items[I].Text := Text;
           if (daType = datObsName) or (daType = datPredName) then
             begin
-              self.Name := Text;
+              self.Name := ConvertString20(Text);
             end;
           if (daType = datGroupName) and (Name = '') then
             begin
-              Name := Text;
+              Name := ConvertString20(Text);
             end;
         end;
     end;
@@ -963,7 +963,7 @@ begin
   if Count = 0 then
     begin
       Add;
-      Items[0].Initialize(Def,Def,DepCat);
+      Items[0].Initialize(ConvertString20(Def),ConvertString12(Def),DepCat);
       AttPos := DepAttPos(datUseFlag);
       Items[0].AllAtts.Items[AttPos].Text := 'Yes';
       AttPos := DepAttPos(datNonDetect);

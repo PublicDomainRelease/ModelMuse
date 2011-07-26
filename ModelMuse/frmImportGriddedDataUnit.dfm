@@ -192,7 +192,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             135
             32)
           object sbAddRow: TSpeedButton
-            Left = 10
+            Left = 11
             Top = 5
             Width = 23
             Height = 22
@@ -210,11 +210,10 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             ParentShowHint = False
             ShowHint = True
             OnClick = sbAddRowClick
-            ExplicitLeft = 11
             ExplicitTop = 6
           end
           object sbInsertRow: TSpeedButton
-            Left = 54
+            Left = 56
             Top = 5
             Width = 23
             Height = 22
@@ -232,10 +231,11 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             ParentShowHint = False
             ShowHint = True
             OnClick = sbInsertRowClick
+            ExplicitLeft = 54
             ExplicitTop = 6
           end
           object sbDeleteRow: TSpeedButton
-            Left = 100
+            Left = 101
             Top = 5
             Width = 23
             Height = 22
@@ -310,6 +310,7 @@ inherited frmImportGriddedData: TfrmImportGriddedData
         Height = 50
         AutoSize = False
         Caption = 'Rows'
+        Transparent = True
         Angle = 90
         HotTrackFont.Charset = DEFAULT_CHARSET
         HotTrackFont.Color = clWindowText
@@ -371,7 +372,6 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Width = 73
       Height = 26
       Style = csDropDownList
-      ItemHeight = 18
       ItemIndex = 1
       TabOrder = 0
       Text = 'Array'
@@ -512,9 +512,12 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnOK: TBitBtn
       Left = 241
@@ -524,10 +527,8 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
+      DoubleBuffered = True
       Enabled = False
-      ModalResult = 1
-      TabOrder = 1
-      OnClick = btnOKClick
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         04000000000068010000120B0000120B00001000000010000000000000000000
@@ -545,7 +546,11 @@ inherited frmImportGriddedData: TfrmImportGriddedData
         3338F38F000033333333333333A223333333333333338F830000333333333333
         333A333333333333333338330000333333333333333333333333333333333333
         0000}
+      ModalResult = 1
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 1
+      OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
       Left = 336
@@ -553,8 +558,11 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
   end
 end

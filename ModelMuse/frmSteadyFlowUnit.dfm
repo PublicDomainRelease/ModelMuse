@@ -12,52 +12,52 @@ inherited frmSteadyFlow: TfrmSteadyFlow
   ExplicitWidth = 619
   ExplicitHeight = 289
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object lblHeadTolerance: TLabel
     Left = 296
     Top = 12
-    Width = 97
-    Height = 17
+    Width = 106
+    Height = 18
     Caption = 'Head tolerance'
     Enabled = False
   end
   object lblFlowBalanceTolerance: TLabel
     Left = 296
     Top = 44
-    Width = 145
-    Height = 17
+    Width = 160
+    Height = 18
     Caption = 'Flow balance tolerance'
     Enabled = False
   end
   object lblMinTimeStep: TLabel
     Left = 296
     Top = 108
-    Width = 116
-    Height = 17
+    Width = 131
+    Height = 18
     Caption = 'Minimum time step'
     Enabled = False
   end
   object lblMaxTimeStep: TLabel
     Left = 296
     Top = 140
-    Width = 119
-    Height = 17
+    Width = 135
+    Height = 18
     Caption = 'Maximum time step'
     Enabled = False
   end
   object lblHeadChangeLimit: TLabel
     Left = 296
     Top = 172
-    Width = 126
-    Height = 17
+    Width = 137
+    Height = 18
     Caption = 'Head change target'
     Enabled = False
   end
   object lblIterations: TLabel
     Left = 296
     Top = 76
-    Width = 58
-    Height = 17
+    Width = 63
+    Height = 18
     Caption = 'Iterations'
     Enabled = False
   end
@@ -78,7 +78,6 @@ inherited frmSteadyFlow: TfrmSteadyFlow
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 17
     TabOrder = 1
     Text = '10e-5'
     DataType = dtReal
@@ -94,7 +93,6 @@ inherited frmSteadyFlow: TfrmSteadyFlow
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 17
     TabOrder = 2
     Text = '0.001'
     DataType = dtReal
@@ -110,7 +108,6 @@ inherited frmSteadyFlow: TfrmSteadyFlow
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 17
     TabOrder = 8
     Text = '1'
     DataType = dtReal
@@ -127,7 +124,6 @@ inherited frmSteadyFlow: TfrmSteadyFlow
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 17
     TabOrder = 12
     Text = '1000'
     DataType = dtReal
@@ -144,7 +140,6 @@ inherited frmSteadyFlow: TfrmSteadyFlow
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 17
     TabOrder = 3
     Text = '1'
     DataType = dtReal
@@ -159,8 +154,7 @@ inherited frmSteadyFlow: TfrmSteadyFlow
     Height = 33
     Caption = 'OK'
     Default = True
-    TabOrder = 6
-    OnClick = btnOKClick
+    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       04000000000068010000120B0000120B00001000000010000000000000000000
@@ -179,14 +173,20 @@ inherited frmSteadyFlow: TfrmSteadyFlow
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 6
+    OnClick = btnOKClick
   end
   object btnCancel: TBitBtn
     Left = 512
     Top = 212
     Width = 91
     Height = 33
-    TabOrder = 7
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 7
   end
   object cbDefaultMinTimeStep: TCheckBox
     Left = 8
@@ -230,9 +230,12 @@ inherited frmSteadyFlow: TfrmSteadyFlow
     Width = 89
     Height = 33
     HelpType = htKeyword
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 11
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
   object rdeIterations: TRbwDataEntry
     Left = 504
@@ -242,7 +245,6 @@ inherited frmSteadyFlow: TfrmSteadyFlow
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 17
     TabOrder = 4
     Text = '100'
     DataType = dtInteger

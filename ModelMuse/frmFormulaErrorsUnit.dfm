@@ -31,8 +31,11 @@ inherited frmFormulaErrors: TfrmFormulaErrors
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkClose
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
     object btnCopy: TButton
       Left = 8
@@ -52,9 +55,12 @@ inherited frmFormulaErrors: TfrmFormulaErrors
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnClear: TButton
       Left = 182
@@ -89,13 +95,11 @@ inherited frmFormulaErrors: TfrmFormulaErrors
     object Label1: TLabel
       Left = 1
       Top = 1
-      Width = 546
-      Height = 63
+      Width = 459
+      Height = 19
       Align = alClient
       Caption = 'The following formulas were invalid. They may have been reset.'
       WordWrap = True
-      ExplicitWidth = 459
-      ExplicitHeight = 19
     end
   end
   object sgErrors: TRbwDataGrid4
@@ -110,6 +114,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
     RowCount = 2
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
     TabOrder = 2
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False

@@ -12,12 +12,12 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
   ExplicitWidth = 307
   ExplicitHeight = 304
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object lblChemistrDimensions: TLabel
     Left = 8
     Top = 8
-    Width = 141
-    Height = 17
+    Width = 158
+    Height = 18
     Caption = 'Chemistry dimensions '
   end
   object clbChemistryDimensions: TCheckListBox
@@ -26,7 +26,7 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
     Width = 283
     Height = 81
     Anchors = [akLeft, akTop, akRight]
-    ItemHeight = 17
+    ItemHeight = 18
     Items.Strings = (
       'X'
       'Y'
@@ -53,8 +53,7 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
     Height = 33
     Caption = 'OK'
     Default = True
-    TabOrder = 4
-    OnClick = btnOKClick
+    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       04000000000068010000120B0000120B00001000000010000000000000000000
@@ -73,22 +72,31 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 4
+    OnClick = btnOKClick
   end
   object btnCancel: TBitBtn
     Left = 200
     Top = 232
     Width = 89
     Height = 33
-    TabOrder = 3
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 3
   end
   object btnHelp: TBitBtn
     Left = 8
     Top = 231
     Width = 89
     Height = 33
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 2
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
 end

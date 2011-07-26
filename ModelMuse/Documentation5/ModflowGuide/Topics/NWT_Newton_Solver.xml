@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
 <topic template="Default" lasteditedby="rbwinst-pr" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
-  <title translate="true">NWT Newton Solver</title>
+  <title translate="true">NWT - Newton Solver</title>
   <keywords>
     <keyword translate="true">BACKFLAG</keyword>
     <keyword translate="true">BACKREDUCE</keyword>
@@ -37,7 +37,7 @@
   </keywords>
   <body>
     <header>
-      <para styleclass="Heading1"><text styleclass="Heading1" translate="true">NWT Newton Solver</text></para>
+      <para styleclass="Heading1"><text styleclass="Heading1" translate="true">NWT - Newton Solver</text></para>
     </header>
     <para styleclass="Normal"><table rowcount="6" colcount="2" style="width:auto; cell-padding:2px; cell-spacing:2px; page-break-inside:auto; border-width:1px; border-spacing:2px; cell-border-width:1px; border-color:#000000; border-style:raised-color; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
@@ -86,7 +86,7 @@
           <para styleclass="Table Header"><text styleclass="Table Header" translate="true">Other Notes</text></para>
         </td>
         <td>
-          <list id="5" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+          <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
             <li styleclass="Normal"><text styleclass="Normal" translate="true">All numeric variables are free format if the option “FREE” is specified in the Basic Package input file; otherwise, all variables have 10-character fields. Values in brackets are specified only for some input options. If the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="NWT_Newton_Solver" anchor="OPTIONS" styleclass="Normal" translate="true">OPTIONS</link><text styleclass="Normal" translate="true"> keyword is specified as “</text><text styleclass="Keywords" translate="true">SIMPLE</text><text styleclass="Normal" translate="true">,” “</text><text styleclass="Keywords" translate="true">MODERATE</text><text styleclass="Normal" translate="true">,” or “</text><text styleclass="Keywords" translate="true">COMPLEX</text><text styleclass="Normal" translate="true">,” then all solver input variables following </text><link displaytype="text" defaultstyle="true" type="topiclink" href="NWT_Newton_Solver" anchor="OPTIONS" styleclass="Normal" translate="true">OPTIONS</link><text styleclass="Normal" translate="true"> in item 1 are not required to be specified and are set to default values. If </text><link displaytype="text" defaultstyle="true" type="topiclink" href="NWT_Newton_Solver" anchor="OPTIONS" styleclass="Normal" translate="true">OPTIONS</link><text styleclass="Normal" translate="true"> is specified as “</text><text styleclass="Keywords" translate="true">SPECIFIED</text><text styleclass="Normal" translate="true">,” then all input variables are required; however, residual-control variables are only required if &#160;</text><link displaytype="text" defaultstyle="true" type="topiclink" href="NWT_Newton_Solver" anchor="BACKFLAG" styleclass="Normal" translate="true">BACKFLAG</link><text styleclass="Normal" translate="true"> is set to one. The residual-control option can only be used if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="NWT_Newton_Solver" anchor="OPTIONS" styleclass="Normal" translate="true">OPTIONS</link><text styleclass="Normal" translate="true"> is specified as “</text><text styleclass="Keywords" translate="true">SPECIFIED</text><text styleclass="Normal" translate="true">.” It is recommended that users refer to </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Suggested_input_values_for_the" styleclass="Normal" translate="true">table 2</link><text styleclass="Normal" translate="true"> and the discussion on “Example Input for the NWT Input File” for guidance on values that might be identified for each input variable.</text></li>
             <li styleclass="Normal"><text styleclass="Normal" translate="true">The optional variable </text><link displaytype="text" defaultstyle="true" type="topiclink" href="WEL" anchor="PHIRAMP" styleclass="Normal" translate="true">PHIRAMP</link><text styleclass="Normal" translate="true"> in the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="WEL" styleclass="Normal" translate="true">Well</link><text styleclass="Normal" translate="true"> package can be specified in MODFLOW-NWT.</text></li>
           </list>
@@ -119,7 +119,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 1.</text></para>
+          <para styleclass="Heading2_atoc_"><anchor id="DataSet1" styleclass="Heading2_atoc_"></anchor><text styleclass="Heading2_atoc_" translate="true">Data Set 1.</text></para>
         </td>
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">HEADTOL FLUXTOL MAXITEROUT THICKFACT LINMETH IPRNWT IBOTAV OPTIONS [DBDTHETA] [DBDKAPPA] [DBDGAMMA] [MOMFACT] [BACKFLAG] [MAXBACKITER] [BACKTOL] [BACKREDUCE]</text></para>
@@ -163,7 +163,11 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><anchor id="LINMETH" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">LINMETH is a flag that determines which matrix solver will be used. A value of 1 indicates GMRES will be used and a value of 2 indicates χMD will be used (integer).</text></para>
+                      <para styleclass="Normal"><anchor id="LINMETH" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">LINMETH is a flag that determines which matrix solver will be used (integer). </text></para>
+                      <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">A value of 1 indicates GMRES will be used </text></li>
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">A value of 2 indicates χMD will be used.</text></li>
+                      </list>
                     </td>
                   </tr>
                 </table></para>
@@ -188,16 +192,16 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><anchor id="OPTIONS" styleclass="Normal"></anchor><text styleclass="Normal" translate="true">OPTIONS are keywords that activate options:</text></para>
-                      <list id="6" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
-                        <li styleclass="Normal"><text styleclass="Normal" translate="true">SPECIFIED indicates that the optional solver input values listed for items 1 and 2 will be specified in the NWT input file by the user.</text></li>
-                        <li styleclass="Normal"><text styleclass="Normal" translate="true">SIMPLE indicates that default solver input values will be defined that work well for nearly linear models. This would be used for models that do not include nonlinear stress packages, and models that are either confined or consist of a single unconfined layer that is thick enough to contain the water table within a single layer. (See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Suggested_input_values_for_the" styleclass="Normal" translate="true">table 2</link><text styleclass="Normal" translate="true"> for the solver input values that will be used for this option.)</text></li>
-                        <li styleclass="Normal"><text styleclass="Normal" translate="true">MODERATE indicates that default solver input values will be defined that work well for moderately nonlinear models. This would be used for models that include nonlinear stress packages, and models that consist of one or more unconfined layers. The “MODERATE” option should be used when the “SIMPLE” option does not result in successful convergence. (See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Suggested_input_values_for_the" styleclass="Normal" translate="true">table 2</link><text styleclass="Normal" translate="true"> for the solver input values that will be used for this option.)</text></li>
-                        <li styleclass="Normal"><text styleclass="Normal" translate="true">COMPLEX indicates that default solver input values will be defined that work well for highly nonlinear models. This would be used for models that include nonlinear stress packages, and models that consist of one or more unconfined layers representing complex geology and sw/gw interaction. The “COMPLEX” option should be used when the “MODERATE” option does not result in successful convergence. (See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Suggested_input_values_for_the" styleclass="Normal" translate="true">table 2</link><text styleclass="Normal" translate="true"> for the solver input values that will be used for this option.)</text></li>
+                      <list id="10" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                        <li styleclass="Normal"><text styleclass="Keywords" translate="true">SPECIFIED</text><text styleclass="Normal" translate="true"> indicates that the optional solver input values listed for items 1 and 2 will be specified in the NWT input file by the user.</text></li>
+                        <li styleclass="Normal"><text styleclass="Keywords" translate="true">SIMPLE</text><text styleclass="Normal" translate="true"> indicates that default solver input values will be defined that work well for nearly linear models. This would be used for models that do not include nonlinear stress packages, and models that are either confined or consist of a single unconfined layer that is thick enough to contain the water table within a single layer. (See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Suggested_input_values_for_the" styleclass="Normal" translate="true">table 2</link><text styleclass="Normal" translate="true"> for the solver input values that will be used for this option.)</text></li>
+                        <li styleclass="Normal"><text styleclass="Keywords" translate="true">MODERATE</text><text styleclass="Normal" translate="true"> indicates that default solver input values will be defined that work well for moderately nonlinear models. This would be used for models that include nonlinear stress packages, and models that consist of one or more unconfined layers. The “</text><text styleclass="Keywords" translate="true">MODERATE</text><text styleclass="Normal" translate="true">” option should be used when the “</text><text styleclass="Keywords" translate="true">SIMPLE</text><text styleclass="Normal" translate="true">” option does not result in successful convergence. (See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Suggested_input_values_for_the" styleclass="Normal" translate="true">table 2</link><text styleclass="Normal" translate="true"> for the solver input values that will be used for this option.)</text></li>
+                        <li styleclass="Normal"><text styleclass="Keywords" translate="true">COMPLEX</text><text styleclass="Normal" translate="true"> indicates that default solver input values will be defined that work well for highly nonlinear models. This would be used for models that include nonlinear stress packages, and models that consist of one or more unconfined layers representing complex geology and sw/gw interaction. The “</text><text styleclass="Keywords" translate="true">COMPLEX</text><text styleclass="Normal" translate="true">” option should be used when the “</text><text styleclass="Keywords" translate="true">MODERATE</text><text styleclass="Normal" translate="true">” option does not result in successful convergence. (See </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Suggested_input_values_for_the" styleclass="Normal" translate="true">table 2</link><text styleclass="Normal" translate="true"> for the solver input values that will be used for this option.)</text></li>
                       </list>
                     </td>
                   </tr>
                 </table></para>
-                <para styleclass="Normal"><text styleclass="Normal" style="font-weight:bold;" translate="true">Read the following values if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="NWT_Newton_Solver" anchor="OPTIONS" styleclass="Normal" style="font-weight:bold;" translate="true">OPTIONS</link><text styleclass="Normal" style="font-weight:bold;" translate="true"> = “SPECIFIED.”</text></para>
+                <para styleclass="Normal"><anchor id="DataSet1A" styleclass="Normal" style="font-weight:bold;"></anchor><text styleclass="Normal" style="font-weight:bold;" translate="true">Read the following values if </text><link displaytype="text" defaultstyle="true" type="topiclink" href="NWT_Newton_Solver" anchor="OPTIONS" styleclass="Normal" style="font-weight:bold;" translate="true">OPTIONS</link><text styleclass="Normal" style="font-weight:bold;" translate="true"> = “SPECIFIED.”</text></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><image src="hmtoggle_plus0.gif" scale="100.00%" styleclass="Normal"></image><tab /><toggle type="dropdown" print-expanded="true" help-expanded="false" defaultstyle="true" translate="true" src-collapsed="hmtoggle_plus0.gif" src-expanded="hmtoggle_plus1.gif" styleclass="Normal"><caption translate="true"><![CDATA[DBDTHETA]]></caption></toggle></para>
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
@@ -274,7 +278,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 2a.</text></para>
+          <para styleclass="Heading2_atoc_"><anchor id="DataSet2a" styleclass="Heading2_atoc_"></anchor><text styleclass="Heading2_atoc_" translate="true">Data Set 2a.</text></para>
         </td>
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">[MAXITINNER] [ILUMETHOD][LEVFILL][STOPTOL][MSDR]</text></para>
@@ -295,7 +299,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">ILUMETHOD is the index for selection of the method for incomplete factorization (ILU) used as a preconditioner. See Kipp and others (2008) for further details (integer). </text></para>
-                      <list id="7" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="11" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">ILUMETHOD=1—ILU with drop tolerance and fill limit. Fill-in terms less than drop tolerance times the diagonal are discarded. The number of fill-in terms in each row of L and U is limited to the fill limit. The fill-limit largest elements are kept in the L and U factors.</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">ILUMETHOD=2 — ILU(k), Order k incomplete LU factorization. Fill-in terms of higher order than k in the factorization are discarded.</text></li>
                       </list>
@@ -314,7 +318,7 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">STOPTOL is the tolerance for convergence of the linear solver. This is the residual of the linear equations scaled by the norm of the root mean squared error. Usually 10</text><text styleclass=" " style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">-8</text><text styleclass="Normal" translate="true"> to 10</text><text styleclass=" " style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">-12</text><text styleclass="Normal" translate="true"> works well. See Kipp and others (2008) for further details (integer).</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">STOPTOL is the tolerance for convergence of the linear solver. This is the residual of the linear equations scaled by the norm of the root mean squared error. Usually 10</text><text style="font-family:&apos;Times New Roman&apos;; font-size:8pt; vertical-align:super; color:#000000;" translate="true">-8</text><text styleclass="Normal" translate="true"> to 10</text><text style="font-family:&apos;Times New Roman&apos;; font-size:8pt; vertical-align:super; color:#000000;" translate="true">-12</text><text styleclass="Normal" translate="true"> works well. See Kipp and others (2008) for further details (integer).</text></para>
                     </td>
                   </tr>
                 </table></para>
@@ -338,7 +342,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td>
-          <para styleclass="Heading2_atoc_"><text styleclass="Heading2_atoc_" translate="true">Data Set 2b.</text></para>
+          <para styleclass="Heading2_atoc_"><anchor id="DataSet2b" styleclass="Heading2_atoc_"></anchor><text styleclass="Heading2_atoc_" translate="true">Data Set 2b.</text></para>
         </td>
         <td>
           <para styleclass="Normal"><text styleclass="Normal" translate="true">[IACL][NORDER][LEVEL][NORTH][IREDSYS][RRCTOLS][IDROPTOL][EPSRN] [HCLOSEXMD][MXITERXMD]</text></para>
@@ -351,7 +355,7 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">IACL is a flag for the acceleration method: </text></para>
-                      <list id="8" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <list id="12" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">0 = conjugate gradient; </text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1 = ORTHOMIN; </text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">2 = Bi-CGSTAB </text></li>
@@ -364,8 +368,9 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">NORDER is a flag for the scheme of ordering the unknowns: 0= original ordering; </text></para>
-                      <list id="9" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">NORDER is a flag for the scheme of ordering the unknowns: </text></para>
+                      <list id="13" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">0= original ordering;</text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">1= RCM ordering; </text></li>
                         <li styleclass="Normal"><text styleclass="Normal" translate="true">2= Minimum Degree ordering </text></li>
                       </list>
@@ -393,7 +398,11 @@
                 <para styleclass="Normal" style="text-indent:-18px; margin-left:18px;"><table styleclass="Default" rowcount="1" colcount="1">
                   <tr style="vertical-align:top">
                     <td>
-                      <para styleclass="Normal"><text styleclass="Normal" translate="true">IREDSYS is a flag for reduced system preconditioning: =1 apply reduced system preconditioning; = 0 do not apply reduced system preconditioning (integer).</text></para>
+                      <para styleclass="Normal"><text styleclass="Normal" translate="true">IREDSYS is a flag for reduced system preconditioning (integer): </text></para>
+                      <list id="14" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">0=do not apply reduced system preconditioning </text></li>
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">1 =apply reduced system preconditioning; </text></li>
+                      </list>
                     </td>
                   </tr>
                 </table></para>
@@ -410,6 +419,10 @@
                   <tr style="vertical-align:top">
                     <td>
                       <para styleclass="Normal"><text styleclass="Normal" translate="true">IDROPTOL is a flag for using drop tolerance in the preconditioning (integer).</text></para>
+                      <list id="15" type="ul" listtype="bullet" formatstring="&#183;" format-charset="SYMBOL_CHARSET" levelreset="true" legalstyle="false" startfrom="1" styleclass="Normal" style="font-family:Symbol; font-size:12pt; color:#000000;">
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">0 = don&apos;t use drop tolerance</text></li>
+                        <li styleclass="Normal"><text styleclass="Normal" translate="true">1 = use drop tolerance &#160;</text></li>
+                      </list>
                     </td>
                   </tr>
                 </table></para>

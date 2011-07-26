@@ -3,7 +3,7 @@ May 22, 2006: introduced CustomizeControls.
 }
 
 {@abstract(The purpose of @name is to declare @link(TfrmCustomGoPhast),
-  the ancestor of all TForms in GoPhast.)}
+  the ancestor of all TForms in ModelMuse.)}
 unit frmCustomGoPhastUnit;
 
 interface
@@ -11,10 +11,10 @@ interface
 uses
   EdgeDisplayUnit, CommDlg, RbwDataGrid4, Spin, Windows, Forms, SysUtils, Types,
   Classes, Graphics, Controls, Dialogs, StdCtrls, Grids, HtmlHelpViewer,
-  ImageDLLLoader, ICOLoader, JPEGLoader, PNGLoader, HIPSLoader, BMPLoader,
-  PCXLoader, WMFLoader, LinarBitmap, FileUtils, ehshelprouter, JvSpin,
+  {ImageDLLLoader, ICOLoader, JPEGLoader, PNGLoader, HIPSLoader, BMPLoader,
+  PCXLoader, WMFLoader, LinarBitmap, FileUtils,} {ehshelprouter,} JvSpin,
   VirtualTrees, DataSetUnit, ClassificationUnit, GLWin32Viewer,
-  RbwStringTreeCombo;
+  RbwStringTreeCombo, Mask, JvExMask;
 
 type
   // @name is used in @link(TfrmCustomGoPhast.AdjustFormPosition)
@@ -133,7 +133,7 @@ procedure FillDataSetLists(HufDataArrays: TClassificationList;
 //procedure UpdateTreeComboText(SelectedNode: PVirtualNode;
 //  TreeCombo: TTntExDropDownVirtualStringTree);
 
-procedure GetNodeCaption(Node: PVirtualNode; var CellText: WideString;
+procedure GetNodeCaption(Node: PVirtualNode; var CellText: string;
   Sender: TBaseVirtualTree);
 
 //procedure SelectOnlyLeaves(Node: PVirtualNode;
@@ -149,7 +149,7 @@ procedure FillComboWithModelNames(Combo: TComboBox);
 var
   GlobalFont: TFont = nil;
   GlobalColor: TColor = clBtnFace;
-  HelpRouter: THelpRouter;
+//  HelpRouter: THelpRouter;
 
 
 implementation
@@ -232,14 +232,15 @@ begin
       HelpControl := HelpControl.Parent;
     end;
   end;
-  result := HelpRouter.HelpJump('', KeyWord);
+  result := Application.HelpJump(KeyWord);
+//  result := HelpRouter.HelpJump('', KeyWord);
 end;
 
 function TfrmCustomGoPhast.FormHelp(Command: Word; Data: Integer;
   var CallHelp: Boolean): Boolean;
 begin
   if (Command in [HELP_CONTEXT, HELP_INDEX, HELP_FORCEFILE,
-    HH_DISPLAY_SEARCH, 15])
+    HH_DISPLAY_SEARCH {, 15}])
     {or (Command = HELP_COMMAND)} then
   begin
     // 15 = help contents.
@@ -248,8 +249,9 @@ begin
   end
   else
   begin
-    result := CallHelpRouter;
-    CallHelp := False;
+    result := True;
+//    result := CallHelpRouter;
+//    CallHelp := False;
   end;
 end;
 
@@ -361,7 +363,7 @@ begin
       end;
     end;
     EdgeEdits.Clear;
-    if (frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR])
+    if (frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT])
       and frmGoPhast.PhastModel.HfbIsSelected then
     begin
       List := TStringList.Create;
@@ -616,7 +618,7 @@ end;
 procedure TfrmCustomGoPhast.UpdateTreeComboText(SelectedNode: PVirtualNode;
   TreeCombo: TRbwStringTreeCombo);
 var
-  CellText: WideString;
+  CellText: string;
 begin
   if TreeCombo.Tree.SelectedCount = 0 then
   begin
@@ -1111,7 +1113,7 @@ begin
 end;
 
 procedure GetNodeCaption(Node: PVirtualNode;
-  var CellText: WideString; Sender: TBaseVirtualTree);
+  var CellText: string; Sender: TBaseVirtualTree);
 var
   ClassificationNodeData: PClassificationNodeData;
 begin
@@ -1174,7 +1176,7 @@ procedure SelectOnlyLeaves(Node: PVirtualNode;
   TreeCombo: TRbwStringTreeCombo; Sender: TBaseVirtualTree;
   var SelectedNode: PVirtualNode); overload;
 var
-  CellText: WideString;
+  CellText: string;
 begin
   if Sender.Selected[Node] and Sender.HasChildren[Node] then
   begin
@@ -1225,12 +1227,12 @@ begin
 end;
 
 
-initialization
-  HelpRouter := THelpRouter.Create(Application);
-  HelpRouter.HelpType := htHTMLhelp;
-  HelpRouter.ValidateID := False;
+//initialization
+//  HelpRouter := THelpRouter.Create(Application);
+//  HelpRouter.HelpType := htHTMLhelp;
+//  HelpRouter.ValidateID := False;
 
-finalization
+//finalization
 
 end.
 

@@ -1722,7 +1722,7 @@ end;
 constructor TCustomUndoChangeGridDimensions.Create;
 begin
   inherited;
-  if frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR] then
+  if frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
   begin
     FLayerCount := frmGoPhast.PhastModel.ModflowGrid.LayerCount;
   end;
@@ -1731,7 +1731,7 @@ end;
 procedure TCustomUndoChangeGridDimensions.DoCommand;
 begin
   UpdateDataSets;
-  if frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR] then
+  if frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
   begin
     if frmGoPhast.PhastModel.ModflowGrid.LayerCount < 0 then
     begin
@@ -1743,7 +1743,7 @@ end;
 procedure TCustomUndoChangeGridDimensions.Undo;
 begin
   UpdateDataSets;
-  if frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR] then
+  if frmGoPhast.PhastModel.ModelSelection in [msModflow, msModflowLGR, msModflowNWT] then
   begin
       frmGoPhast.PhastModel.ModflowGrid.LayerCount := FLayerCount;
   end;

@@ -221,7 +221,7 @@ type
     { ID of this Item. Can be read/changed via the @link(ID) property }
     FID: Integer;
     { Name of this Item. Can be read/changed via the @link(Name) property }
-    FName: string;
+    FName: AnsiString;
     { Hash value of the @link(ID) property. Is calculated via the @link(HashID) virtual function }
     FIDHash: Longword;
     { Hash value of the @link(Name) property.
@@ -230,12 +230,12 @@ type
     { Accessor for the @link(ID) property; Will notify the owning list of the change. }
     procedure SetID(const Value: Integer);
     { Accessor for the @link(Name) property; Will notify the owning list of the change. }
-    procedure SetName(const Value: string);
+    procedure SetName(const Value: AnsiString);
   public
     { ID of this item. This ID should be unique within the containing list. }
     property ID: Integer read FID write SetID;
     { Name of this item. This Name should be unique within the containing list. }
-    property Name: string read FName write SetName;
+    property Name: AnsiString read FName write SetName;
   end;
 
   { A list of @link(TNameIDItem) descendants. It allows for walking all items in the list via
@@ -259,7 +259,7 @@ type
     { Internal function for @link(ByID) property }
     function GetByID(ID: Integer): TNameIDItem;
     { Internal function for @link(ByName) property }
-    function GetByName(const Name: string): TNameIDItem;
+    function GetByName(const Name: AnsiString): TNameIDItem;
     { Internal procedure for the @link(MinimumHashTableSize) property }
     procedure SetMinimumSize(const Value: Integer);
   protected
@@ -268,7 +268,7 @@ type
     function HashID(ID: Integer): Longword; virtual;
     { virtual function to calculate the hash value from the @link(Name).
       It defaults to the CRC of the Name string and is hence case sensitive. }
-    function HashName(const Name: string): Longword; virtual;
+    function HashName(const Name: AnsiString): Longword; virtual;
   public
     { Create a list for @link(TNameIDItem) items. Within one list these items have a unique ID
       and a unique Name. Naturally also descendants of @link(TNameIDItem) can be used. }
@@ -284,7 +284,7 @@ type
     { Find an itme by it's ID. }
     property ByID[ID: Integer]: TNameIDItem read GetByID;
     { Find an item by it's Name. }
-    property ByName[const Name: string]: TNameIDItem read GetByName;
+    property ByName[const Name: AnsiString]: TNameIDItem read GetByName;
     { The minimun hash table size can be set in order to minimize the number of hash table resizes
       while the number of items in the list varies greatly. The size supplied here should be a
       power of two and at least 16 (the initial value). If the value given here is at least two
@@ -302,15 +302,15 @@ type
     { Single linked list next reference for use within the Name hash table }
     FNameNext: TNameItem;
     { Name of this Item. Can be read/changed via the @link(Name) property }
-    FName: string;
+    FName: AnsiString;
     { Hash value of the @link(Name) property.
       Is calculated via the @link(HashName) virtual function }
     FNameHash: Longword;
     { Accessor for the @link(Name) property; Will notify the owning list of the change }
-    procedure SetName(const Value: string);
+    procedure SetName(const Value: AnsiString);
   public
     { Name of this item. This Name should be unique within the containing list }
-    property Name: string read FName write SetName;
+    property Name: AnsiString read FName write SetName;
   end;
 
   { A list of @link(TNameItem) descendants. It allows for walking all items in the list via
@@ -330,13 +330,13 @@ type
     { Internal function for resizing the hash tables }
     procedure Resize(NewLength: Integer);
     { Internal function for @link(ByName) property }
-    function GetByName(const Name: string): TNameItem;
+    function GetByName(const Name: AnsiString): TNameItem;
     { Internal procedure for the @link(MinimumHashTableSize) property }
     procedure SetMinimumSize(const Value: Integer);
   protected
     { virtual function to calculate the hash value from the @link(Name).
       It defaults to the CRC of the Name string and is hence case sensitive. }
-    function HashName(const Name: string): Longword; virtual;
+    function HashName(const Name: AnsiString): Longword; virtual;
   public
     { Create a list for @link(TNameItem) items. Within one list these items have a unique ID
       and a unique Name. Naturally also descendants of @link(TNameItem) can be used. }
@@ -350,7 +350,7 @@ type
     { Remove an item from this list. If the item is not in this list, raise an exception }
     procedure Remove(Item: TNameItem); 
     { Find an item by it's Name. }
-    property ByName[const Name: string]: TNameItem read GetByName;
+    property ByName[const Name: AnsiString]: TNameItem read GetByName;
     { The minimun hash table size can be set in order to minimize the number of hash table resizes
       while the number of items in the list varies greatly. The size supplied here should be a
       power of two and at least 16 (the initial value). If the value given here is at least two
@@ -968,7 +968,7 @@ begin
   end else FID := Value;
 end;
 
-procedure TNameIDItem.SetName(const Value: string);
+procedure TNameIDItem.SetName(const Value: AnsiString);
 var
   List: TNameIDList;
 begin
@@ -1157,7 +1157,7 @@ begin
   P := Item.FIDHash and FAndMask;
   Iter := FIDArray[P];
   if Iter = Item then FIDArray[P] := Item.FIDNext else begin
-    Prev := nil;
+//    Prev := nil;
     repeat
       Assert(Assigned(Iter));
       Prev := Iter;
@@ -1169,7 +1169,7 @@ begin
   P := Item.FNameHash and FAndMask;
   Iter := FNameArray[P];
   if Iter = Item then FNameArray[P] := Item.FNameNext else begin
-    Prev := nil;
+//    Prev := nil;
     repeat
       Assert(Assigned(Iter));
       Prev := Iter;
@@ -1197,7 +1197,7 @@ begin
   if loRaiseExceptionIfNotFound in FOptions then RaiseItemNotFound;
 end;
 
-function TNameIDList.GetByName(const Name: string): TNameIDItem;
+function TNameIDList.GetByName(const Name: AnsiString): TNameIDItem;
   procedure RaiseItemNotFound;
   begin
     raise EListException.Create(strItemNotFound);
@@ -1218,7 +1218,7 @@ begin
   Result := Longword(ID) xor (Longword(ID) shr 4) xor (Longword(ID) shr 8);
 end;
 
-function TNameIDList.HashName(const Name: string): Longword;
+function TNameIDList.HashName(const Name: AnsiString): Longword;
 begin
   Result := UnitCRC.CRC32(Name);
 end;
@@ -1246,7 +1246,7 @@ end;
 
 { TNameItem }
 
-procedure TNameItem.SetName(const Value: string);
+procedure TNameItem.SetName(const Value: AnsiString);
 var
   List: TNameList;
 begin
@@ -1405,7 +1405,7 @@ begin
   P := Item.FNameHash and FAndMask;
   Iter := FNameArray[P];
   if Iter = Item then FNameArray[P] := Item.FNameNext else begin
-    Prev := nil;
+//    Prev := nil;
     repeat
       Assert(Assigned(Iter));
       Prev := Iter;
@@ -1420,7 +1420,7 @@ begin
   Item.FList := nil;
 end;
 
-function TNameList.GetByName(const Name: string): TNameItem;
+function TNameList.GetByName(const Name: AnsiString): TNameItem;
   procedure RaiseItemNotFound;
   begin
     raise EListException.Create(strItemNotFound);
@@ -1436,7 +1436,7 @@ begin
   if loRaiseExceptionIfNotFound in FOptions then RaiseItemNotFound;
 end;
 
-function TNameList.HashName(const Name: string): Longword;
+function TNameList.HashName(const Name: AnsiString): Longword;
 begin
   Result := UnitCRC.CRC32(Name);
 end;
@@ -1623,7 +1623,7 @@ begin
   P := Item.FIDHash and FAndMask;
   Iter := FIDArray[P];
   if Iter = Item then FIDArray[P] := Item.FIDNext else begin
-    Prev := nil;
+//    Prev := nil;
     repeat
       Assert(Assigned(Iter));
       Prev := Iter;

@@ -148,7 +148,42 @@ begin
     ErrorValues.Add('INVALID INPUT IN BFH FILE:');
     ErrorValues.Add('ISCHILD AND BTEXT ARE NOT COMPATIBLE');
     ErrorValues.Add('MNW1 and MNW2 cannot both be active in the same grid');
+    ErrorValues.Add('MNW1 and MNW2 cannot both be active in the same simulation');
+    ErrorValues.Add('Failure to converge');
 
+    // MODFLOW-NWT
+    ErrorValues.Add('THIS WILL CAUSE PROBLEMS IN COMPUTING LAKE STAGE USING THE NEWTON METHOD.');
+    ErrorValues.Add('***ERROR: MNW PACKAGE DOES NOT SUPPORT HEAD-DEPENDENT');
+    ErrorValues.Add('THICKNESS OPTION OF SELECTED FLOW PACKAGE');
+    ErrorValues.Add('(MNW DOES FULLY SUPPORT BCF, LPF, AND HUF PACKAGES)');
+    ErrorValues.Add('NSTRM IS NEGATIVE AND THIS METHOD FOR SPECIFYING INFORMATION BY REACH HAS BEEN REPLACED BY THE KEYWORD OPTION "REACHINPUT"--PROGRAM STOPPING');
+    ErrorValues.Add('Streambed has lower altitude than GW cell bottom. Model stopping');
+    ErrorValues.Add('TOO MANY WAVES IN UNSAT CELL');
+    ErrorValues.Add('PROGRAM TERMINATED IN UZFLOW-1');
+    ErrorValues.Add('***Erroneous value for Input value "Options."***');
+    ErrorValues.Add('Check input. Model Stopping.');
+    ErrorValues.Add('***Incorrect value for Linear solution method specified. Check input.***');
+    ErrorValues.Add('**Active cell surrounded by inactive cells**');
+    ErrorValues.Add('**Resetting cell to inactive**');
+    ErrorValues.Add('Error in Preconditioning:');
+    ErrorValues.Add('Linear solver failed to converge:');
+    ErrorValues.Add('Error in gmres: ');
+    ErrorValues.Add('***Incorrect value for variable Nonmeth was specified. Check input.***');
+    ErrorValues.Add('error in data structure!!');
+    ErrorValues.Add('too many iterations!!');
+    ErrorValues.Add('error in xmdsfacl');
+    ErrorValues.Add('no diagonal in L\U:  row number');
+    ErrorValues.Add('error in min. degree ordering');
+    ErrorValues.Add('error in subroutine xmdRedBlack');
+    ErrorValues.Add('need more space in integer temp. array');
+    ErrorValues.Add('error in red-black ordering');
+    ErrorValues.Add('error in xmdnfctr (xmbnfac)');
+    ErrorValues.Add('error in xmdprpc (xmdordng)');
+    ErrorValues.Add('error in xmdprpc (xmdrowrg)');
+    ErrorValues.Add('error in xmdprecl (xmdsfacl)');
+    ErrorValues.Add('error in xmdprecd (xmdsfacd)');
+    ErrorValues.Add('error in xmdcheck');
+    ErrorValues.Add('***ERROR: MNW2 PACKAGE DOES NOT SUPPORT');
 
     WarningValues.Add('**WARNING**');
     WarningValues.Add('*** WARNING ***');
@@ -177,6 +212,15 @@ begin
     WarningValues.Add('CHECK THAT MASS BALANCE ERROR NOT EXCESSIVE');
     WarningValues.Add('MXLGRITER EXCEEDED FOR GRID NUMBER');
     WarningValues.Add('CHECK BUDGET OF PARENT GRID TO ASSESS QUALITY OF THE LGR SOLUTION');
+
+    // MODFLOW-NWT
+    WarningValues.Add('*** WARNING *** NEGATIVE LAKE OUTFLOW NOT ALLOWED;');
+    WarningValues.Add('NEGATIVE PUMPING RATES WILL BE REDUCED IF HEAD ');
+    WarningValues.Add('FALLS WITHIN THE INTERVAL PSIRAMP TIMES THE CELL');
+    WarningValues.Add('THICKNESS. THE VALUE SPECIFIED FOR PHISRAMP IS');
+    WarningValues.Add('TO AVOID PUMPING WATER FROM A DRY CELL');
+    WarningValues.Add('THE PUMPING RATE WAS REDUCED FOR CELL');
+    WarningValues.Add('warning in xmdcheck');
 end;
 
 initialization

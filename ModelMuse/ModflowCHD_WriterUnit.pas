@@ -50,6 +50,8 @@ uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
 
 resourcestring
   StrErrorInCHDPackage = 'Error in CHD package';
+  StrTheCHDPackageIsA = 'The CHD package is active but no CHD boundaries are' +
+  ' assigned';
 
 { TModflowCHD_Writer }
 
@@ -70,7 +72,7 @@ begin
   if (ParamCellCount = 0) and (MXACTC = 0) then
   begin
     frmErrorsAndWarnings.AddError(Model, StrErrorInCHDPackage,
-      'The CHD package is active but no CHD boundaries are assigned');
+      StrTheCHDPackageIsA);
   end;
 
 end;

@@ -59,14 +59,14 @@ type
       Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure virttreecomboDataSetsDropDownTreeGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: WideString);
+      var CellText: string);
     procedure comboModelChange(Sender: TObject);
     procedure virttreecomboDataSetsChange(Sender: TObject);
     procedure virttreecomboDataSets1TreeGetNodeDataSize(
       Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure virttreecomboDataSets1TreeGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: WideString);
+      var CellText: string);
     procedure virttreecomboDataSets1TreeInitNode(Sender: TBaseVirtualTree;
       ParentNode, Node: PVirtualNode;
       var InitialStates: TVirtualNodeInitStates);
@@ -186,7 +186,7 @@ begin
   FDataSetDummyObjects := TObjectList.Create;
 
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow:
+    msPhast, msModflow, msModflowNWT:
       begin
         comboModel.Items.AddObject('Parent model', frmGoPhast.PhastModel)
       end;
@@ -399,7 +399,7 @@ end;
 
 procedure TfrmGridValue.virttreecomboDataSets1TreeGetText(
   Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-  TextType: TVSTTextType; var CellText: WideString);
+  TextType: TVSTTextType; var CellText: string);
 begin
   inherited;
   GetNodeCaption(Node, CellText, Sender);
@@ -409,7 +409,7 @@ procedure TfrmGridValue.virttreecomboDataSets1TreeInitNode(
   Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
   var InitialStates: TVirtualNodeInitStates);
 var
-  CellText: WideString;
+  CellText: string;
 begin
   inherited;
   GetNodeCaption(Node, CellText, Sender);
@@ -424,7 +424,7 @@ end;
 
 procedure TfrmGridValue.virttreecomboDataSetsDropDownTreeGetText(
   Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-  TextType: TVSTTextType; var CellText: WideString);
+  TextType: TVSTTextType; var CellText: string);
 begin
   inherited;
   GetNodeCaption(Node, CellText, Sender);

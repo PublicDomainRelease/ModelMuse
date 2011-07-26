@@ -47,6 +47,9 @@ type
     JvHTLabel1: TJvHTLabel;
     fedModflowLgr: TJvFilenameEdit;
     JvHTLabel2: TJvHTLabel;
+    lblModflowNWT: TLabel;
+    htlblModflowNWT: TJvHTLabel;
+    fedModflowNWT: TJvFilenameEdit;
     procedure fedModflowChange(Sender: TObject);
     procedure FormCreate(Sender: TObject); override;
     procedure btnOKClick(Sender: TObject);
@@ -99,6 +102,7 @@ begin
   fedZonebudget.FileName := Locations.ZoneBudgetLocation;
   fedModelMate.FileName := Locations.ModelMateLocation;
   fedModflowLgr.FileName := Locations.ModflowLgrLocation;
+  fedModflowNwt.FileName := Locations.ModflowNwtLocation;
 end;
 
 procedure TfrmProgramLocations.SetData;
@@ -115,6 +119,7 @@ begin
     Locations.ZoneBudgetLocation := fedZonebudget.FileName;
     Locations.ModelMateLocation := fedModelMate.FileName;
     Locations.ModflowLgrLocation := fedModflowLgr.FileName;
+    Locations.ModflowNwtLocation := fedModflowNwt.FileName;
     Undo := TUndoChangeProgramLocations.Create(Locations);
     frmGoPhast.UndoStack.Submit(Undo);
   finally
@@ -129,6 +134,7 @@ var
   ModpathOK: Boolean;
   ZoneBudgetOK: Boolean;
   FileEditorOK: Boolean;
+  ModflowNwtOK: Boolean;
   function CheckControl(Edit: TJvFilenameEdit): boolean;
   begin
     if Edit = fedTextEditor then
@@ -156,12 +162,14 @@ begin
     or (frmGoPhast.PhastModel.ModelSelection  <> msModflow);
   ModflowLgrOK := CheckControl(fedModflowLgr)
     or (frmGoPhast.PhastModel.ModelSelection  <> msModflowLGR);
+  ModflowNwtOK := CheckControl(fedModflowNWT)
+    or (frmGoPhast.PhastModel.ModelSelection  <> msModflowNWT);
   ModpathOK := CheckControl(fedModpath)
     or not frmGoPhast.PhastModel.ModPathIsSelected;
   ZoneBudgetOK := CheckControl(fedZonebudget)
     or not frmGoPhast.PhastModel.ZoneBudgetIsSelected;
   FileEditorOK := CheckControl(fedTextEditor);
-  btnOK.Enabled := ModflowOK and ModflowLgrOK and ModpathOK
+  btnOK.Enabled := ModflowOK and ModflowLgrOK and ModflowNwtOK and ModpathOK
     and ZoneBudgetOK and FileEditorOK;
 end;
 

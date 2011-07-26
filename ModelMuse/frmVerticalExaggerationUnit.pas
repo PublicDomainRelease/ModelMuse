@@ -5,7 +5,7 @@ unit frmVerticalExaggerationUnit;
 interface
 
 uses
-  SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
+  Windows, SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, Buttons, frmCustomGoPhastUnit, ArgusDataEntry;
 
 type

@@ -941,9 +941,9 @@ begin
   I := 0;
   while (I < NKeyItems) and (KeyItem = '') do
     begin
-      if KeyItems[I].BLabel = BLupper then
+      if KeyItems[I].BLabel = string40(AnsiString(BLupper)) then
         begin
-          KeyItem := KeyItems[I].KItem;
+          KeyItem := string(KeyItems[I].KItem);
           Index := I;
         end;
       I := I+1;

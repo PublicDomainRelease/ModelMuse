@@ -24,10 +24,6 @@ inherited frameGMG: TframeGMG
     TabOrder = 1
     object tabControlAndPrint: TTabSheet
       Caption = 'Control and Print'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 299
       DesignSize = (
         617
         230)
@@ -86,7 +82,6 @@ inherited frameGMG: TframeGMG
         HelpContext = 910
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 0
         Text = '20'
         DataType = dtReal
@@ -107,7 +102,6 @@ inherited frameGMG: TframeGMG
         HelpContext = 910
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 1
         Text = '20'
         DataType = dtInteger
@@ -128,7 +122,6 @@ inherited frameGMG: TframeGMG
         HelpContext = 910
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 2
         Text = '20'
         DataType = dtReal
@@ -149,7 +142,6 @@ inherited frameGMG: TframeGMG
         HelpContext = 910
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 3
         Text = '20'
         DataType = dtReal
@@ -241,10 +233,6 @@ inherited frameGMG: TframeGMG
     object tabDampRelax: TTabSheet
       Caption = 'Damping and Relax'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 299
       DesignSize = (
         617
         230)
@@ -310,7 +298,6 @@ inherited frameGMG: TframeGMG
         HelpContext = 910
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 0
         Text = '1'
         DataType = dtReal
@@ -332,7 +319,6 @@ inherited frameGMG: TframeGMG
         HelpContext = 910
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 1
         Text = '20'
         DataType = dtReal
@@ -353,7 +339,6 @@ inherited frameGMG: TframeGMG
         HelpContext = 910
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 2
         Text = '20'
         DataType = dtReal
@@ -374,7 +359,6 @@ inherited frameGMG: TframeGMG
         HelpContext = 910
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 3
         Text = '1'
         DataType = dtReal
@@ -474,7 +458,6 @@ inherited frameGMG: TframeGMG
         HelpContext = 910
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 6
         Text = '1'
         DataType = dtReal

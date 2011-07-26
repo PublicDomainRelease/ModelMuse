@@ -7,7 +7,7 @@ unit frmPhastGridOptionsUnit;
 interface
 
 uses
-  SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
+  Windows, SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, frmCustomGoPhastUnit, CheckLst, ExtCtrls, Buttons, PhastModelUnit,
   UndoItems;
 

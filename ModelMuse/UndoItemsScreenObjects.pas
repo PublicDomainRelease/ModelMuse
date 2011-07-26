@@ -2007,13 +2007,26 @@ procedure TUndoShowHideScreenObject.ToggleVisibility;
 var
   Index: integer;
   AScreenObject: TScreenObject;
+  ShouldUpdateSelectRectangle: boolean;
 begin
+  ShouldUpdateSelectRectangle := False;
   for Index := 0 to FScreenObjectsToChange.Count - 1 do
   begin
     AScreenObject := FScreenObjectsToChange[Index];
+    if AScreenObject.Selected then
+    begin
+      ShouldUpdateSelectRectangle := True;
+    end;
     AScreenObject.Visible := not AScreenObject.Visible;
   end;
   FShouldUpdateShowHideObjectsDisplay := True;
+  if ShouldUpdateSelectRectangle then
+  begin
+    frmGoPhast.frameTopView.UpdateSelectRectangle;
+    frmGoPhast.frameFrontView.UpdateSelectRectangle;
+    frmGoPhast.frameSideView.UpdateSelectRectangle;
+  end;
+//  UpdateSelectionRectangle;
 //  UpdateDisplay;
 end;
 

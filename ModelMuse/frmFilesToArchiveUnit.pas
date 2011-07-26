@@ -104,6 +104,7 @@ var
   TempOnChange : TNotifyEvent;
 begin
   inherited;
+  reFilesToSave.DoubleBuffered := False;
   FFilesToArchive := TStringList.Create;
   TempOnChange := reFilesToSave.OnChange;
   reFilesToSave.OnChange := nil;

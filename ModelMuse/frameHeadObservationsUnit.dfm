@@ -63,7 +63,6 @@ object frameHeadObservations: TframeHeadObservations
       Width = 145
       Height = 21
       Style = csDropDownList
-      ItemHeight = 13
       ItemIndex = 0
       TabOrder = 2
       Text = 'Observation'
@@ -84,10 +83,6 @@ object frameHeadObservations: TframeHeadObservations
     TabOrder = 2
     object tabTimes: TTabSheet
       Caption = 'Observation times'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Panel5: TPanel
         Left = 0
         Top = 0
@@ -100,7 +95,6 @@ object frameHeadObservations: TframeHeadObservations
           Top = 5
           Width = 61
           Height = 22
-          ItemHeight = 13
           TabOrder = 0
           Text = '0'
           OnChange = rdeMultiValueEditChange
@@ -206,6 +200,7 @@ object frameHeadObservations: TframeHeadObservations
         OnExit = rdgHeadsExit
         OnSelectCell = rdgHeadsSelectCell
         OnSetEditText = rdgHeadsSetEditText
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
@@ -398,7 +393,6 @@ object frameHeadObservations: TframeHeadObservations
           Top = 7
           Width = 61
           Height = 22
-          ItemHeight = 13
           TabOrder = 0
           Text = '0'
           OnChange = rdeMultiLayerEditChange
@@ -421,6 +415,7 @@ object frameHeadObservations: TframeHeadObservations
         OnExit = rdgLayersExit
         OnSelectCell = rdgLayersSelectCell
         OnSetEditText = rdgLayersSetEditText
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False

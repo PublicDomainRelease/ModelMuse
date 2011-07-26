@@ -136,7 +136,7 @@ begin
   rdgPrintFrequency.Cells[1, Ord(pfrFlowRate)] := '*.O.bcf';
   rdgPrintFrequency.Cells[0, Ord(pfrComponents)] := 'Components';
   rdgPrintFrequency.Cells[1, Ord(pfrComponents)] := '*.O.comps';
-  rdgPrintFrequency.Cells[0, Ord(pfrConductance)] := 'Conductance';
+  rdgPrintFrequency.Cells[0, Ord(pfrConductance)] := StrConductance;
   rdgPrintFrequency.Cells[1, Ord(pfrConductance)] := '*.O.kd';
   rdgPrintFrequency.Cells[0, Ord(pfrFlowBalance)] := 'Flow balance';
   rdgPrintFrequency.Cells[1, Ord(pfrFlowBalance)] := '*.O.bal';

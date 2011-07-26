@@ -31,6 +31,12 @@ attempt to fix reported problems and help whenever possible.
 
 unit RbwDataGrid4;
 
+{$ifdef CONDITIONALEXPRESSIONS}
+  {$if CompilerVersion>=20}
+    {$DEFINE Delphi_2009_UP}
+  {$ifend}
+{$endif}
+
 interface
 
 uses
@@ -77,6 +83,7 @@ type
     property Used: boolean read GetUsed write SetUsed;
   end;
 
+  {$TYPEINFO ON}
   // @name implements @link(ISpecialFormatter).
   TSpecialFormatter = Class(TInterfacedObject, ISpecialFormatter)
   private
@@ -106,6 +113,7 @@ type
     // @seealso(ISpecialFormatter.Used ISpecialFormatter.Used).
     property Used: boolean read GetUsed write SetUsed;
   End;
+  {$TYPEINFO OFF}
 
   {@name is the type of @link(TCustomRBWDataGrid.OnStateChange
   TCustomRBWDataGrid.OnStateChange).
@@ -929,6 +937,9 @@ implementation
 
 uses
   Math;
+
+var
+  DummyIntValue : integer;
 
 procedure Register;
 begin
@@ -3179,6 +3190,10 @@ begin
   end;
   fMouseIsDown := True;
   MouseToCell(X, Y, ACol, ARow);
+  if (ACol < FixedCols) or (ARow < FixedRows) then
+  begin
+    HideEditor;
+  end;
   CanSelect := inherited SelectCell(ACol, ARow);
   dgRow := ARow;
   dgColumn := ACol;
@@ -3880,6 +3895,8 @@ begin
         end;
       finally
         FDistributingText := False;
+        HideEditor;
+        Invalidate;
       end;
     end;
 
@@ -3970,7 +3987,6 @@ end;
 procedure TCustomRBWDataGrid.SetEditText(ACol, ARow: Longint; const Value: string);
 var
   ColumnOrRow : TCustomRowOrColumn;
-  IntValue : integer;
   NewValue : string;
   ConversionOK : boolean;
   AFloat : extended;
@@ -4034,7 +4050,7 @@ begin
           NewValue := Value;
           if Value <> '' then
           begin
-            Val(Value, IntValue, E);
+            Val(Value, DummyIntValue, E);
             if E <> 0 then
             begin
               NewValue := Copy(Value,1,E-1);
@@ -4344,12 +4360,20 @@ function TCustomRBWDataGrid.LocalizeString(ANumberString : string): string;
 var
   DecimalPosition : integer;
 begin
+  {$IFDEF Delphi_2009_UP}
+  if (FormatSettings.DecimalSeparator = '.') then
+  {$ELSE}
   if (DecimalSeparator = '.') then
+  {$ENDIF}
   begin
     DecimalPosition := Pos(',', ANumberString);
     if DecimalPosition > 0 then
     begin
+      {$IFDEF Delphi_2009_UP}
+      ANumberString[DecimalPosition] := FormatSettings.DecimalSeparator;
+      {$ELSE}
       ANumberString[DecimalPosition] := DecimalSeparator;
+      {$ENDIF}
     end;
   end
   else
@@ -4357,7 +4381,11 @@ begin
     DecimalPosition := Pos('.', ANumberString);
     if DecimalPosition > 0 then
     begin
+      {$IFDEF Delphi_2009_UP}
+      ANumberString[DecimalPosition] := FormatSettings.DecimalSeparator;
+      {$ELSE}
       ANumberString[DecimalPosition] := DecimalSeparator;
+      {$ENDIF}
     end;
   end;
   result := ANumberString;
@@ -4749,14 +4777,18 @@ var
   TextSize: TSize;
   TempDrawing: boolean;
 begin
+  LocalGrid := (Grid as TCustomRbwDataGrid);
+  {$IFDEF Delphi_2009_UP}
+  LocalGrid.DrawCellBackground(LocalGrid.CellRect(LocalGrid.Col, LocalGrid.Row),
+    LocalGrid.Color, [], LocalGrid.Col, LocalGrid.Row);
+  {$ENDIF}
+
   if EditStyle <> esEllipsis then
   begin
     inherited;
   end
   else
   begin
-    LocalGrid := (Grid as TCustomRbwDataGrid);
-
     TempDrawing := LocalGrid.Drawing;
     try
       LocalGrid.FDrawing := True;

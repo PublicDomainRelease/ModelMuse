@@ -381,7 +381,7 @@ begin
             FrontCell := frmGoPhast.PhastGrid.FrontContainingCell(APoint, eaBlocks);
             SetGridSpinEditValue(seLayer,FrontCell.Lay+1);
           end;
-        msModflow, msModflowLGR:
+        msModflow, msModflowLGR, msModflowNWT:
           begin
             Layer := frmGoPhast.ModflowGrid.NearestLayerPosition(seCol.AsInteger-1,
               frmGoPhast.ModflowGrid.SelectedRow, APoint.Y);
@@ -628,7 +628,7 @@ begin
   case frmGoPhast.ModelSelection of
     msUndefined: Assert(False);
     msPhast: tabCell.Caption := 'Element';
-    msModflow, msModflowLGR: tabCell.Caption := 'Block';
+    msModflow, msModflowLGR, msModflowNWT: tabCell.Caption := 'Block';
     else Assert(False);
   end;
 end;

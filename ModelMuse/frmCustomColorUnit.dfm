@@ -88,7 +88,6 @@ inherited frmCustomColor: TfrmCustomColor
         Style = csDropDownList
         Anchors = [akLeft, akRight, akBottom]
         DropDownCount = 12
-        ItemHeight = 18
         ItemIndex = 0
         TabOrder = 2
         Text = 'Rainbow'
@@ -283,13 +282,11 @@ inherited frmCustomColor: TfrmCustomColor
         ExplicitTop = 24
         inherited rdeLimit: TRbwDataEntry
           Height = 28
-          ItemHeight = 18
           ExplicitHeight = 28
         end
         inherited comboBoolLimit: TComboBox
           Left = 89
           Height = 26
-          ItemHeight = 18
           ExplicitLeft = 89
           ExplicitHeight = 26
         end
@@ -307,12 +304,10 @@ inherited frmCustomColor: TfrmCustomColor
         ExplicitTop = 24
         inherited rdeLimit: TRbwDataEntry
           Height = 28
-          ItemHeight = 18
           ExplicitHeight = 28
         end
         inherited comboBoolLimit: TComboBox
           Height = 26
-          ItemHeight = 18
           ExplicitHeight = 26
         end
       end
@@ -335,6 +330,7 @@ inherited frmCustomColor: TfrmCustomColor
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
         TabOrder = 3
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
@@ -383,7 +379,6 @@ inherited frmCustomColor: TfrmCustomColor
         Top = 112
         Width = 145
         Height = 22
-        ItemHeight = 18
         TabOrder = 5
         Text = '0'
         DataType = dtReal
@@ -396,6 +391,10 @@ inherited frmCustomColor: TfrmCustomColor
       Caption = 'Legend'
       ImageIndex = 2
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object imLegend: TImage
         Left = 218
         Top = 0
@@ -439,7 +438,6 @@ inherited frmCustomColor: TfrmCustomColor
           Width = 145
           Height = 26
           Style = csDropDownList
-          ItemHeight = 18
           ItemIndex = 0
           TabOrder = 0
           Text = 'Automatic'
@@ -475,6 +473,7 @@ inherited frmCustomColor: TfrmCustomColor
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
           TabOrder = 2
           OnSetEditText = rdgLegendSetEditText
+          ExtendedAutoDistributeText = False
           AutoMultiEdit = True
           AutoDistributeText = True
           AutoIncreaseColCount = False
@@ -523,17 +522,23 @@ inherited frmCustomColor: TfrmCustomColor
       Top = 6
       Width = 101
       Height = 33
-      TabOrder = 0
+      DoubleBuffered = True
       Kind = bkClose
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 0
     end
     object btnHelp: TBitBtn
       Left = 287
       Top = 6
       Width = 101
       Height = 33
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnOK: TBitBtn
       Left = 394
@@ -542,7 +547,7 @@ inherited frmCustomColor: TfrmCustomColor
       Height = 33
       Caption = 'Apply'
       Default = True
-      TabOrder = 2
+      DoubleBuffered = True
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         0400000000006801000000000000000000001000000000000000000000000000
@@ -561,6 +566,8 @@ inherited frmCustomColor: TfrmCustomColor
         333A333333333333333338330000333333333333333333333333333333333333
         0000}
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
   end
   object timerLegend: TTimer

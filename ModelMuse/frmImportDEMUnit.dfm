@@ -2,7 +2,6 @@ inherited frmImportDEM: TfrmImportDEM
   Height = 414
   HelpKeyword = 'Sample_Digital_Elevation_Model'
   Caption = 'Sample Digital Elevation Model'
-  ExplicitTop = -8
   ExplicitHeight = 414
   PixelsPerInch = 96
   TextHeight = 18
@@ -66,12 +65,13 @@ inherited frmImportDEM: TfrmImportDEM
   object memoCorners: TMemo [13]
     Left = 319
     Top = 85
-    Width = 240
+    Width = 224
     Height = 247
     Anchors = [akLeft, akTop, akRight]
     ScrollBars = ssBoth
     TabOrder = 10
     WordWrap = False
+    ExplicitWidth = 240
   end
   object cbIgnore: TCheckBox [14]
     Left = 8
@@ -89,7 +89,6 @@ inherited frmImportDEM: TfrmImportDEM
     Height = 22
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 18
     TabOrder = 12
     Text = '-32767'
     DataType = dtInteger

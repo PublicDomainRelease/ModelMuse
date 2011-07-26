@@ -56,7 +56,7 @@ type
       Node: PVirtualNode);
     procedure combotreeDataSetsDropDownTreeGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: WideString);
+      var CellText: String);
     procedure combotreeDataSetsClosedUp(Sender: TObject);
     procedure combotreeDataSetsDropDownTreeEnter(Sender: TObject);
     procedure combotreeDataSets1TreeInitNode(Sender: TBaseVirtualTree;
@@ -126,7 +126,7 @@ type
     procedure RetrieveSelectedObject(var AnObject: TObject);
     property SelectedVirtNode: PVirtualNode read FSelectedVirtNode;
     procedure SetSelectedNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure GetNodeCaption(Node: PVirtualNode; var CellText: WideString; Sender: TBaseVirtualTree);
+    procedure GetNodeCaption(Node: PVirtualNode; var CellText: string; Sender: TBaseVirtualTree);
     { Private declarations }
   public
     { Public declarations }
@@ -416,7 +416,7 @@ begin
               ColumnsForward := True;
               RowsForward := False;
             end;
-          msModflow, msModflowLGR:
+          msModflow, msModflowLGR, msModflowNWT:
             begin
               ColumnsForward := True;
               RowsForward := True;
@@ -464,7 +464,7 @@ begin
               ColumnsForward := True;
               RowsForward := False;
             end;
-          msModflow, msModflowLGR:
+          msModflow, msModflowLGR, msModflowNWT:
             begin
               ColumnsForward := True;
               RowsForward := True;
@@ -512,7 +512,7 @@ begin
               ColumnsForward := True;
               RowsForward := False;
             end;
-          msModflow, msModflowLGR:
+          msModflow, msModflowLGR, msModflowNWT:
             begin
               ColumnsForward := False;
               RowsForward := True;
@@ -598,7 +598,7 @@ begin
                 ColumnsForward := True;
                 RowsForward := False;
               end;
-            msModflow, msModflowLGR:
+            msModflow, msModflowLGR, msModflowNWT:
               begin
                 ColumnsForward := True;
                 RowsForward := True;
@@ -1062,7 +1062,7 @@ begin
 end;
 
 procedure TfrmImportGriddedData.GetNodeCaption(Node: PVirtualNode;
-  var CellText: WideString; Sender: TBaseVirtualTree);
+  var CellText: String; Sender: TBaseVirtualTree);
 var
   ClassificationNodeData: PClassificationNodeData;
 begin
@@ -1129,7 +1129,7 @@ begin
                 Row := Grid.ColCount - RowIndex;
                 Layer := 1;
               end;
-            msModflow, msModflowLGR:
+            msModflow, msModflowLGR, msModflowNWT:
               begin
                 Column := ColIndex;
                 Row := RowIndex;
@@ -1152,7 +1152,7 @@ begin
                 Row := 1;
                 Layer := Grid.RowCount - RowIndex;
               end;
-            msModflow, msModflowLGR:
+            msModflow, msModflowLGR, msModflowNWT:
               begin
                 Column := ColIndex;
                 Row := 1;
@@ -1175,7 +1175,7 @@ begin
                 Row := ColIndex;
                 Layer := Grid.RowCount - RowIndex;
               end;
-            msModflow, msModflowLGR:
+            msModflow, msModflowLGR, msModflowNWT:
               begin
                 Column := 1;
                 Row := Grid.ColCount - ColIndex;
@@ -1198,7 +1198,7 @@ begin
                 Row := Grid.ColCount - RowIndex;
                 Layer := GridIndex + 1;
               end;
-            msModflow, msModflowLGR:
+            msModflow, msModflowLGR, msModflowNWT:
               begin
                 Column := ColIndex;
                 Row := RowIndex;
@@ -1430,7 +1430,7 @@ end;
 procedure TfrmImportGriddedData.SetSelectedNode(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 var
-  CellText: WideString;
+  CellText: String;
 begin
   if Sender.Selected[Node] and Sender.HasChildren[Node] then
   begin
@@ -1680,7 +1680,7 @@ procedure TfrmImportGriddedData.combotreeDataSets1TreeInitNode(
   Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
   var InitialStates: TVirtualNodeInitStates);
 var
-  CellText: WideString;
+  CellText: String;
 begin
   inherited;
   GetNodeCaption(Node, CellText, Sender);
@@ -1720,7 +1720,7 @@ end;
 
 procedure TfrmImportGriddedData.combotreeDataSetsDropDownTreeGetText(
   Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-  TextType: TVSTTextType; var CellText: WideString);
+  TextType: TVSTTextType; var CellText: String);
 begin
   inherited;
   GetNodeCaption(Node, CellText, Sender);

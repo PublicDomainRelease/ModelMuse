@@ -7,8 +7,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   StdCtrls, Dialogs, Grids, Math, RbwDataGrid4, JvExControls, JvComponent,
   JvxCheckListBox, ExtCtrls, Buttons, Mask, JvExMask, JvSpin, ArgusDataEntry,
-  ModflowBoundaryUnit;
-                                              
+  ModflowBoundaryUnit, frameScreenObjectUnit;
+
 type
   // See @link(TframeScreenObjectParam.UnselectableColumnsIfParametersUsed).
   TColumn = 0..255;
@@ -46,9 +46,9 @@ type
       @link(btnDelete).)
     @member(btnInsertClick @name inserts a new row beneath the selected row in
       @link(dgModflowBoundary).  @name is the OnClick eventhandler for
-      @link(btnInsert).)     
+      @link(btnInsert).)
   }
-  TframeScreenObjectNoParam = class(TFrame)
+  TframeScreenObjectNoParam = class(TframeScreenObject)
     dgModflowBoundary: TRbwDataGrid4;
     pnlBottom: TPanel;
     seNumberOfTimes: TJvSpinEdit;
@@ -78,19 +78,15 @@ type
     procedure dgModflowBoundaryBeforeDrawCell(Sender: TObject; ACol,
       ARow: Integer);
   private
-    // See @link(FrameLoaded).
     FSelectedText: string;
-    FFrameLoaded: boolean;
     FDeleting: Boolean;
     FDeletedCells: array of array of boolean;
-    // See @link(FrameLoaded).
-    procedure SetFrameLoaded(const Value: boolean);
     procedure LayoutMultiRowEditControls;
     function GetDeletedCells(ACol, ARow: integer): boolean;
     procedure SetDeletedCells(ACol, ARow: integer; const Value: boolean);
     { Private declarations }
   public
-    ConductanceColumn: integer;
+    ConductanceColumn: Integer;
     procedure ClearDeletedCells;
     property DeletedCells[ACol, ARow: integer]: boolean read GetDeletedCells write SetDeletedCells;
     function ConductanceCaption(DirectCaption: string): string; virtual;
@@ -98,10 +94,6 @@ type
       Boundary: TModflowBoundary);
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    // @name is used in @link(TframeScreenObjectParam.clbParametersStateChange
-    // TframeScreenObjectParam.clbParametersStateChange) to prevent grayed
-    // check boxes from being converted to normal ones incorrectly.
-    property FrameLoaded: boolean read FFrameLoaded write SetFrameLoaded;
     // @name loads the starting times of all the MODFLOW stress periods into
     // the @link(TCustomRowOrColumn.PickList) of the
     // @link(TCustomRowOrColumn column) of @link(dgModflowBoundary)
@@ -315,6 +307,8 @@ begin
   begin
     DeletedCells[ACol, ARow] := Value = '';
   end;
+
+  UpdateNextTimeCell(dgModflowBoundary, ACol, ARow);
 end;
 
 procedure TframeScreenObjectNoParam.FrameResize(Sender: TObject);
@@ -356,7 +350,7 @@ begin
   if [csLoading, csReading] * ComponentState <> [] then
   begin
     Exit
-  end;  
+  end;
   LayoutControls(dgModflowBoundary, rdeFormula, lblFormula,
     Max(2,dgModflowBoundary.LeftCol));
 end;
@@ -462,11 +456,6 @@ begin
     end;
   end;
   FDeletedCells[ACol, ARow] := Value;
-end;
-
-procedure TframeScreenObjectNoParam.SetFrameLoaded(const Value: boolean);
-begin
-  FFrameLoaded := Value;
 end;
 
 end.

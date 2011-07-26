@@ -44,6 +44,9 @@ uses
 
 {$R *.dfm}
 
+var
+  FilterIndex : integer = 0;
+
 function ConvertPoint(const SurferPoint: TSurferPoint): TPoint2D;
 begin
   result.X := SurferPoint.X;
@@ -76,6 +79,7 @@ end;
 function TfrmImportSurferGrdFile.GetData: boolean;
 begin
   UpdateEvalAt;
+  OpenDialogFile.FilterIndex := FilterIndex;
   result := OpenDialogFile.Execute;
   if result then
   begin
@@ -133,6 +137,7 @@ begin
     GetDataSets;
     comboDataSets.ItemIndex := 0;
     comboInterpolators.ItemIndex := 1;
+    FilterIndex := OpenDialogFile.FilterIndex;
   end;
 end;
 

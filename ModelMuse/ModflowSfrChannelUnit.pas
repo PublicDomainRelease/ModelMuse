@@ -93,7 +93,7 @@ type
       StartTime: double): TSfrChannelRecord;
   end;
 
-const
+resourcestring
   ChannelRoughnessError = 'SFR Channel roughness is less than or equal to zero.';
   BankRoughnessError = 'SFR Bank roughness is less than or equal to zero.';
   IDError = 'Object: %s; Time: %g.';
@@ -702,8 +702,9 @@ begin
     end;
   end;
   ScreenObjectName := (ScreenObject as TScreenObject).Name;
-  ErrorMessage := 'Object = ' + ScreenObjectName
-    + '; Time = ' + FloatToStr(StartTime);
+  ErrorMessage := Format(IDError, [ScreenObjectName, StartTime]);
+//  ErrorMessage := 'Object = ' + ScreenObjectName
+//    + '; Time = ' + FloatToStr(StartTime);
   frmErrorsAndWarnings.AddError(AModel, StrIncompleteSFRData, ErrorMessage);
 
 end;

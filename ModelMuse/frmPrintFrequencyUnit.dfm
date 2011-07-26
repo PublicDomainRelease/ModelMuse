@@ -55,9 +55,12 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 5
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 521
@@ -65,8 +68,11 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 6
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 6
     end
     object cbSaveFinalHeads: TCheckBox
       Left = 8
@@ -82,9 +88,12 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 4
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
   end
   object rdgPrintFrequency: TRbwDataGrid4
@@ -101,6 +110,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
     OnMouseUp = rdgPrintFrequencyMouseUp
     OnSelectCell = rdgPrintFrequencySelectCell
     OnSetEditText = rdgPrintFrequencySetEditText
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = True
@@ -254,7 +264,6 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 18
       TabOrder = 0
       Text = '0'
       OnChange = rdeTimeChange

@@ -88,7 +88,7 @@ implementation
 
 uses Contnrs, DataSetUnit, ScreenObjectUnit, ModflowTimeUnit, PhastModelUnit,
   ModflowSfrUnit, frmFormulaErrorsUnit, frmErrorsAndWarningsUnit, GoPhastTypes, 
-  frmGoPhastUnit;
+  frmGoPhastUnit, ModflowSfrChannelUnit;
 
 const
   FlowPosition = 0;
@@ -519,8 +519,9 @@ begin
   if not FoundResult then
   begin
     ScreenObjectName := (ScreenObject as TScreenObject).Name;
-    ErrorMessage := 'Object = ' + ScreenObjectName
-      + '; Time = ' + FloatToStr(StartTime);
+    ErrorMessage := Format(IDError, [ScreenObjectName, StartTime]);
+//    ErrorMessage := 'Object = ' + ScreenObjectName
+//      + '; Time = ' + FloatToStr(StartTime);
     frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
       StrIncompleteSFRData, ErrorMessage);
   end;

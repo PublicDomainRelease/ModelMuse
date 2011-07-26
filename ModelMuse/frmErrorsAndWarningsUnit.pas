@@ -60,7 +60,7 @@ type
     // @name determines the text to display in each cell.
     procedure vstWarningsAndErrorsGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: WideString);
+      var CellText: String);
     // @name initializes all the nodes so they can be multi-line.
     procedure vstWarningsAndErrorsInitNode(Sender: TBaseVirtualTree; ParentNode,
       Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
@@ -148,6 +148,10 @@ function frmErrorsAndWarnings: TfrmErrorsAndWarnings;
 implementation
 
 uses Math, frmProgressUnit, Clipbrd, contnrs;
+
+resourcestring
+  StrErrors = 'Errors';
+  StrWarnings = 'Warnings';
 {$R *.dfm}
 
 var
@@ -489,24 +493,24 @@ end;
 
 procedure TfrmErrorsAndWarnings.vstWarningsAndErrorsGetText(
   Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-  TextType: TVSTTextType; var CellText: WideString);
+  TextType: TVSTTextType; var CellText: String);
 var
   Data: PErrorWarningRec;
   ParentNode: PVirtualNode;
 begin
   inherited;
   // A handler for the OnGetText event is always needed as it provides the tree with the string data to display.
-  // Note that we are always using WideString.
+  // Note that we are now using string instead of WideString.
   Data := Sender.GetNodeData(Node);
   if Assigned(Data) then
   begin
     if Node = FErrorNode then
     begin
-      CellText := 'Errors';
+      CellText := StrErrors;
     end
     else if Node = FWarningNode then
     begin
-      CellText := 'Warnings';
+      CellText := StrWarnings;
     end
     else
     begin
@@ -532,7 +536,7 @@ procedure TfrmErrorsAndWarnings.vstWarningsAndErrorsMeasureItem(
   Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
   var NodeHeight: Integer);
 var
-  CellCaption: WideString;
+  CellCaption: String;
   Flags: UINT;
   Rect: TRect;
   TextString: string;

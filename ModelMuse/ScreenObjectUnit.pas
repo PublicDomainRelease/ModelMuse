@@ -273,6 +273,7 @@ type
   // with an individual cell or element in the grid.)
   TCellElementSegmentList = class(TObjectList)
   private
+    FGettingSegments: Boolean;
     FHigher3DElevations: T3DSparseRealArray;
     // @name indicates whether or not @link(FHigher3DElevations) are
     // up-to-date.  If they aren't, they will be recalculated when needed.
@@ -3991,6 +3992,10 @@ SectionStarts.}
     constructor Create(ScreenObject: TScreenObject); override;
   end;
 
+  TModflowNWTDelegate = class(TModflowDelegate)
+    constructor Create(ScreenObject: TScreenObject); override;
+  end;
+
   TResetProcedure = procedure(Compiler: TRbwParser) of object;
 
   {@abstract(@name is and abstract base class.  Its descendants,
@@ -4347,10 +4352,10 @@ const
   DiamondSize = 5;
   MaxPointsInSubPolygon = 4;
   MaxReal = 3.4E38;
-  ErrorMessageFormulaUnNamed = 'An invalid value assigned by an formula for '
+  ErrorMessageFormulaUnNamed = 'An invalid value assigned by a formula for '
     + 'an unamed data set in Object "%s" '
     + 'has been replaced by the maximum  single-precision real number.';
-  ErrorMessageFormulaNamed = 'An invalid value assigned by an formula for '
+  ErrorMessageFormulaNamed = 'An invalid value assigned by a formula for '
     + 'Data Set "&s" in Object "%s" '
     + 'has been replaced by the maximum  single-precision real number.';
   ErrorString ='Layer: %d; Row: %d; Column: %d .';
@@ -4419,7 +4424,7 @@ var
   Number1, Number2: string;
   procedure ProcessName(var AName, ANumber: string);
   const
-    Digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    Digits = ['0'..'9'];
   var
     Index: integer;
     LastDigit: integer;
@@ -4427,7 +4432,7 @@ var
     LastDigit := Length(AName) + 1;
     for Index := Length(AName) downto 1 do
     begin
-      if (AName[Index] in Digits) then
+      if CharInSet(AName[Index], Digits) then
       begin
         LastDigit := Index;
       end
@@ -6697,7 +6702,7 @@ begin
         begin
           Draw1ElevPhast(Direction, Bitmap32, DrawAsSelected);
         end;
-      msModflow, msModflowLGR:
+      msModflow, msModflowLGR, msModflowNWT:
         begin
           Draw1ElevModflow(Direction, Bitmap32, DrawAsSelected,
             (Model as TPhastModel).SelectedModel);
@@ -10379,7 +10384,7 @@ begin
         begin
           Draw2ElevPhast(Direction, Bitmap32);
         end;
-      msModflow, msModflowLGR:
+      msModflow, msModflowLGR, msModflowNWT:
         begin
           Draw2ElevModflow(Direction, Bitmap32, (Model as TPhastModel).SelectedModel);
         end;
@@ -12533,6 +12538,8 @@ var
   VariableList1, DataSetList1: TList;
   VariableList2, DataSetList2: TList;
   Procedure AddSomeSegments;
+  var
+    Eps: double;
   begin
     BlockBottom := 0;
     BlockTop := 0;
@@ -12576,7 +12583,7 @@ var
               else Assert(False);
             end;
           end;
-        msModflow, msModflowLGR:
+        msModflow, msModflowLGR, msModflowNWT:
           begin
             Assert(EvaluatedAt = eaBlocks);
             BlockTop := LocalModel.ModflowGrid.
@@ -12642,9 +12649,10 @@ var
         end;
       ecTwo:
         begin
-          if ((BlockTop > Elevation2)
+          Eps := Max(Abs(BlockTop), Abs(BlockBottom))/10E12;
+          if ((BlockTop > Elevation2+Eps)
             or ((BlockTop = Elevation2) and (ASegment.Layer = 0)))
-            and (BlockBottom < Elevation1) then
+            and (BlockBottom < Elevation1-Eps) then
           begin
 //            FSegments.Add(ASegment);
           end
@@ -14820,28 +14828,37 @@ begin
   FSegments := FSegModelAssoc.AssociatedSegmentList[AModel];
   if not FSegments.UpToDate then
   begin
-    FCachedCells.Invalidate;
-    case ViewDirection of
-      vdTop:
-        begin
-          RotatePoints(TCustomModel(AModel).Grid, RotatedPoints,
-            TempMinX, TempMinY, TempMaxX, TempMaxY);
-          UpdateTopSegments(
-            TCustomModel(AModel).Grid,
-            EvaluatedAt, True, RotatedPoints, AModel);
-        end;
-      vdFront:
-        begin
-          UpdateFrontSegments(
-            TCustomModel(AModel).Grid,
-            EvaluatedAt);
-        end;
-      vdSide:
-        begin
-          UpdateSideSegments(
-            TCustomModel(AModel).Grid,
-            EvaluatedAt);
-        end;
+    if FSegments.FGettingSegments then
+    begin
+      raise EScreenObjectError.Create(Format('Error in object %s.', [Name]));
+    end;
+    FSegments.FGettingSegments := True;
+    try
+      FCachedCells.Invalidate;
+      case ViewDirection of
+        vdTop:
+          begin
+            RotatePoints(TCustomModel(AModel).Grid, RotatedPoints,
+              TempMinX, TempMinY, TempMaxX, TempMaxY);
+            UpdateTopSegments(
+              TCustomModel(AModel).Grid,
+              EvaluatedAt, True, RotatedPoints, AModel);
+          end;
+        vdFront:
+          begin
+            UpdateFrontSegments(
+              TCustomModel(AModel).Grid,
+              EvaluatedAt);
+          end;
+        vdSide:
+          begin
+            UpdateSideSegments(
+              TCustomModel(AModel).Grid,
+              EvaluatedAt);
+          end;
+      end;
+    finally
+      FSegments.FGettingSegments := False;
     end;
   end
   else if FSegments.FCached and FSegments.FCleared then
@@ -17401,14 +17418,14 @@ begin
     AChar := result[Index];
     if Index = 1 then
     begin
-      if not (AChar in ['_', 'a'..'z', 'A'..'Z']) then
+      if not CharInSet(AChar, ['_', 'a'..'z', 'A'..'Z']) then
       begin
         result[Index] := '_';
       end;
     end
     else
     begin
-      if not (AChar in ['_', 'a'..'z', 'A'..'Z', '0'..'9']) then
+      if not CharInSet(AChar, ['_', 'a'..'z', 'A'..'Z', '0'..'9']) then
       begin
         result[Index] := '_';
       end;
@@ -17428,6 +17445,8 @@ var
   LocalModel: TPhastModel;
   LocalChild: TChildModel;
 begin
+  if (frmGoPhast.PhastModel <> nil)
+    and (csDestroying in frmGoPhast.PhastModel.ComponentState) then Exit;
   inherited;
   if Value then
   begin
@@ -18838,6 +18857,10 @@ begin
         msModflowLGR:
           begin
             Item.DelegateClass := TModflowLGRDelegate.ClassName;
+          end;
+        msModflowNWT:
+          begin
+            Item.DelegateClass := TModflowNWTDelegate.ClassName;
           end;
         else
           begin
@@ -34235,11 +34258,20 @@ begin
   FSeg := Source.FSeg;
 end;
 
+{ TModflowNWTDelegate }
+
+constructor TModflowNWTDelegate.Create(ScreenObject: TScreenObject);
+begin
+  inherited;
+  FModelSelection := msModflowNWT;
+end;
+
 initialization
   RegisterClass(TScreenObject);
   RegisterClass(TPhastDelegate);
   RegisterClass(TModflowDelegate);
   RegisterClass(TModflowLGRDelegate);
+  RegisterClass(TModflowNWTDelegate);
   RegisterClass(TMultiValueScreenObject);
   RegisterClass(TScreenObjectClipboard);
 

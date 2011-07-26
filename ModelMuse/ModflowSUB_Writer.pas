@@ -109,6 +109,14 @@ uses
 
 resourcestring
   StrSubsidenceNotSuppo = 'Subsidence not supported with MODFLOW-LGR';
+  StrRestartFileNamesI = 'Restart File names identical for SUB package';
+  StrTheRestartFileSav = 'The restart file saved by the Subsidence package' +
+  ' has the same name as the restart file read by Subsidence package to ' +
+  'define the starting head and starting preconsolidation head.  You need ' +
+  'to change the name of the file read by the Subsidence package in the ' +
+  '"Model|Packages and Programs" dialog box.';
+  StrModelMuseDoesNotC = 'ModelMuse does not currently support the use of th' +
+  'e Subsidence package in MODFLOW-LGR.';
 
 function TMaterialZone.ID: Integer;
 begin
@@ -479,13 +487,8 @@ begin
       FSubPackage.ReadDelayRestartFileName);
     if SaveRestartFileName = ReadRestartFileName then
     begin
-      frmErrorsAndWarnings.AddError(Model, 
-        'Restart File names identical for SUB package',
-        'The restart file saved by the Subsidence package has the same name '
-        + 'as the restart file read by Subsidence package to define the '
-        + 'starting head and starting preconsolidation head.  '
-        + 'You need to change the name of the file read by the Subsidence '
-        + 'package in the "Model|Packages and Programs" dialog box.');
+      frmErrorsAndWarnings.AddError(Model, StrRestartFileNamesI,
+        StrTheRestartFileSav);
     end;
     WriteToNameFile(StrDATABINARY, IDREST,
       ReadRestartFileName, foInput, True);
@@ -903,10 +906,8 @@ begin
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrSubsidenceNotSuppo);
   if Model is TChildModel then
   begin
-    frmErrorsAndWarnings.AddError(Model,
-      StrSubsidenceNotSuppo,
-      'ModelMuse does not currently support the use of the '
-      + 'Subsidence package in MODFLOW-LGR.');
+    frmErrorsAndWarnings.AddError(Model, StrSubsidenceNotSuppo,
+      StrModelMuseDoesNotC);
   end;
 
   FNameOfFile := FileName(AFileName);

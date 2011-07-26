@@ -74,6 +74,7 @@ inherited frmImportSurferGrdFile: TfrmImportSurferGrdFile
     RowCount = 3
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
     TabOrder = 9
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False

@@ -1,16 +1,13 @@
-object frameScreenObjectMNW2: TframeScreenObjectMNW2
-  Left = 0
-  Top = 0
+inherited frameScreenObjectMNW2: TframeScreenObjectMNW2
   Width = 609
   Height = 448
   Font.Charset = ANSI_CHARSET
-  Font.Color = clWindowText
   Font.Height = -16
   Font.Name = 'Arial'
-  Font.Style = []
   ParentFont = False
-  TabOrder = 0
   TabStop = True
+  ExplicitWidth = 609
+  ExplicitHeight = 448
   object pnlCaption: TPanel
     Left = 0
     Top = 0
@@ -26,7 +23,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
     Top = 22
     Width = 609
     Height = 426
-    ActivePage = tabBasic
+    ActivePage = tabPumpingRate
     Align = alClient
     TabOrder = 1
     object tabBasic: TTabSheet
@@ -247,7 +244,6 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Height = 22
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 18
         TabOrder = 8
         Text = '0'
         OnChange = edWellIdChange
@@ -606,7 +602,6 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Top = 7
         Width = 172
         Height = 22
-        ItemHeight = 18
         TabOrder = 0
         Text = '0'
         OnChange = edWellIdChange
@@ -619,7 +614,6 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Top = 35
         Width = 172
         Height = 22
-        ItemHeight = 18
         TabOrder = 1
         Text = '0'
         OnChange = edWellIdChange
@@ -632,7 +626,6 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Top = 63
         Width = 172
         Height = 22
-        ItemHeight = 18
         TabOrder = 2
         Text = '0'
         OnChange = edWellIdChange
@@ -645,7 +638,6 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         Top = 91
         Width = 172
         Height = 22
-        ItemHeight = 18
         TabOrder = 3
         Text = '0'
         OnChange = edWellIdChange
@@ -664,6 +656,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
         TabOrder = 4
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
@@ -767,6 +760,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         OnMouseUp = rdgTimeTableMouseUp
         OnSelectCell = rdgTimeTableSelectCell
         OnSetEditText = rdgTimeTableSetEditText
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = True
         AutoIncreaseColCount = False
@@ -1037,7 +1031,6 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
           Height = 25
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 18
           TabOrder = 0
           OnChange = rdeFormulaChange
           Max = 1.000000000000000000
@@ -1125,6 +1118,7 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
         TabOrder = 1
         OnMouseUp = rdgVerticalScreensMouseUp
         OnSelectCell = rdgVerticalScreensSelectCell
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
@@ -1363,7 +1357,6 @@ object frameScreenObjectMNW2: TframeScreenObjectMNW2
           Height = 25
           Color = clBtnFace
           Enabled = False
-          ItemHeight = 18
           TabOrder = 0
           OnChange = rdeWellScreenFormulaChange
           Max = 1.000000000000000000

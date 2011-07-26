@@ -23,7 +23,7 @@ uses Windows,
   frameHeadObservationsUnit, frameHfbScreenObjectUnit, Mask, JvExMask, JvSpin,
   ValueArrayStorageUnit, frameIfaceUnit, frameModpathParticlesUnit,
   frameFluxObsUnit, ModflowPackageSelectionUnit, frameScreenObjectMNW2Unit,
-  frameScreenObjectHydmodUnit, CheckLst;
+  frameScreenObjectHydmodUnit, CheckLst, frameScreenObjectUnit;
 
   { TODO : Consider making this a property sheet like the Object Inspector that
   could stay open at all times.  Boundary conditions and vertices might be
@@ -1688,7 +1688,7 @@ type
     procedure GetChildModels(const ScreenObjectList: TList);
 
     // @name is set to @true when the @classname has stored values of the
-    // @link(TScreenObject)s being editted.
+    // @link(TScreenObject)s being edited.
     property IsLoaded: boolean read FIsLoaded write SetIsLoaded;
 
     // @name is set to @true if more than one @link(TScreenObject)s are
@@ -2497,8 +2497,11 @@ begin
   edLowZ.Text := '0';
 
   rdeGridCellSize.Text := '1';
-  rgBoundaryType.Controls[Ord(btRiver)].Enabled := True;
-  rgBoundaryType.Controls[Ord(btWell)].Enabled := True;
+
+  rgBoundaryType.Buttons[Ord(btRiver)].Enabled := True;
+  rgBoundaryType.Buttons[Ord(btWell)].Enabled := True;
+//  rgBoundaryType.Controls[Ord(btRiver)].Enabled := True;
+//  rgBoundaryType.Controls[Ord(btWell)].Enabled := True;
 
   CompilerList := TList.Create;
   try
@@ -2576,6 +2579,10 @@ var
   ValueItem: TValueArrayItem;
   TreeViewFilled: boolean;
 begin
+  // This will cause TCustomRadioGroup.UpdateButtons to be called.
+  rgBoundaryType.WordWrap := not rgBoundaryType.WordWrap;
+  rgBoundaryType.WordWrap := not rgBoundaryType.WordWrap;
+
   FillChildModelList;
   FCurrentEdit := nil;
 
@@ -2619,17 +2626,21 @@ begin
   FViewDirection := FScreenObject.ViewDirection;
   if FViewDirection <> vdTop then
   begin
-    rgBoundaryType.Controls[Ord(btRiver)].Enabled := False;
-    rgBoundaryType.Controls[Ord(btWell)].Enabled := False;
+    rgBoundaryType.Buttons[Ord(btRiver)].Enabled := False;
+    rgBoundaryType.Buttons[Ord(btWell)].Enabled := False;
+//    rgBoundaryType.Controls[Ord(btRiver)].Enabled := False;
+//    rgBoundaryType.Controls[Ord(btWell)].Enabled := False;
   end;
 
   if AScreenObject.Count > 1 then
   begin
-    rgBoundaryType.Controls[Ord(btWell)].Enabled := False;
+    rgBoundaryType.Buttons[Ord(btWell)].Enabled := False;
+//    rgBoundaryType.Controls[Ord(btWell)].Enabled := False;
   end;
   if AScreenObject.Closed or (AScreenObject.Count <= 1) then
   begin
-    rgBoundaryType.Controls[Ord(btRiver)].Enabled := False;
+    rgBoundaryType.Buttons[Ord(btRiver)].Enabled := False;
+//    rgBoundaryType.Controls[Ord(btRiver)].Enabled := False;
   end;
 
   rgEvaluatedAt.ItemIndex := Ord(AScreenObject.EvaluatedAt);
@@ -3197,9 +3208,9 @@ begin
   for Index := 0 to ComponentCount - 1 do
   begin
     Component := Components[Index];
-    if Component is TframeScreenObjectNoParam then
+    if Component is TframeScreenObject then
     begin
-      TframeScreenObjectNoParam(Component).FrameLoaded := Value;
+      TframeScreenObject(Component).FrameLoaded := Value;
     end;
   end;
 end;
@@ -3482,6 +3493,7 @@ end;
 procedure TfrmScreenObjectProperties.FormCreate(Sender: TObject);
 begin
   inherited;
+  reDataSetFormula.DoubleBuffered := False;
   frameMnw2.OnChange := Mnw2Changed;
 
   frameDrnParam.ConductanceColumn := 1;
@@ -7564,7 +7576,7 @@ end;
 procedure TfrmScreenObjectProperties.InitializePhastWellGrid;
 begin
   dgWell.Cells[Ord(nicTime), 0] := 'Time';
-  dgWell.Cells[Ord(nicBoundaryValue), 0] := 'Pumping rate';
+  dgWell.Cells[Ord(nicBoundaryValue), 0] := StrPumpingRate;
   dgWell.Cells[Ord(nicSolution), 0] := 'Solution';
   dgWell.Cells[Ord(nicTime), 1] := '0';
   dgWell.Row := 1;
@@ -9652,7 +9664,7 @@ begin
   tabDataSets.TabVisible := CanSetData and
     (frmGoPhast.PhastModel.DataArrayManager.DataSetCount > 0);
   tabModflowBoundaryConditions.TabVisible := CanSetData and
-    (frmGoPhast.ModelSelection in [msModflow, msModflowLGR]);
+    (frmGoPhast.ModelSelection in [msModflow, msModflowLGR, msModflowNWT]);
 end;
 
 procedure TfrmScreenObjectProperties.AssignNewDataSetFormula(
@@ -12642,7 +12654,7 @@ begin
         cbSetGridCellSize.Caption := 'Use to set grid element size';
         lblGridCellSize.Caption := 'Grid element size';
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         cbSetGridCellSize.Caption := 'Use to set grid cell size';
         lblGridCellSize.Caption := 'Grid cell size';

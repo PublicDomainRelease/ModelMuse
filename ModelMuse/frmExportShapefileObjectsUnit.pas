@@ -11,7 +11,7 @@ uses
 type
   TFieldDefinition = record
     DataArray: TDataArray;
-    FieldName: string;
+    FieldName: AnsiString;
     FieldType: AnsiChar;  // C = character, F = floating point, L = Logic, N = Number
   end;
 
@@ -38,7 +38,7 @@ type
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
     procedure vstDataSetsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
     procedure FormResize(Sender: TObject);
     procedure Splitter1Moved(Sender: TObject);
     procedure vstDataSetsChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -701,42 +701,42 @@ end;
 procedure TfrmExportShapefileObjects.AssignFieldName(FieldNames: TStringList;
   DataArrayIndex: Integer);
 var
-  FieldName: string;
-  Root: string;
+  FieldName: AnsiString;
+  Root: AnsiString;
   SuffixValue: Integer;
-  Suffix: string;
+  Suffix: AnsiString;
 const
   MaximumFieldNameLength = 10;
 begin
-  FieldName := UpperCase(FFieldDefinitions[DataArrayIndex].DataArray.Name);
+  FieldName := AnsiString(UpperCase(FFieldDefinitions[DataArrayIndex].DataArray.Name));
   if Length(FieldName) > MaximumFieldNameLength then
   begin
     SetLength(FieldName, MaximumFieldNameLength);
   end;
   FieldName := FixShapeFileFieldName(FieldName);
-  if FieldNames.IndexOf(FieldName) >= 0 then
+  if FieldNames.IndexOf(string(FieldName)) >= 0 then
   begin
     Root := FieldName;
     SuffixValue := 0;
     repeat
       Inc(SuffixValue);
-      Suffix := IntToStr(SuffixValue);
+      Suffix := AnsiString(IntToStr(SuffixValue));
       if Length(Root) + Length(Suffix) > MaximumFieldNameLength then
       begin
         SetLength(Root, MaximumFieldNameLength - Length(Suffix));
       end;
       FieldName := Root + Suffix;
       FieldName := FixShapeFileFieldName(FieldName);
-    until (FieldNames.IndexOf(FieldName) < 0);
+    until (FieldNames.IndexOf(string(FieldName)) < 0);
   end;
   FFieldDefinitions[DataArrayIndex].FieldName := FieldName;
-  FieldNames.Add(FieldName);
+  FieldNames.Add(string(FieldName));
 end;
 
 procedure TfrmExportShapefileObjects.FillFieldDefinitions(
   FieldDefinitions: TStringList);
 var
-  FieldDefinition: string;
+  FieldDefinition: AnsiString;
   FieldIndex: Integer;
 begin
   for FieldIndex := 0 to FSelectedDataSets.Count - 1 do
@@ -762,7 +762,7 @@ begin
     else
       Assert(False);
     end;
-    FieldDefinitions.Add(FieldDefinition);
+    FieldDefinitions.Add(string(FieldDefinition));
   end;
 end;
 
@@ -999,7 +999,7 @@ procedure TfrmExportShapefileObjects.AssignFieldValues(
 var
   IntValue: Integer;
   FloatValue: Double;
-  Formula: string;
+  Formula: AnsiString;
   APosition: Integer;
   DataArray: TDataArray;
   FieldIndex: Integer;
@@ -1017,13 +1017,13 @@ begin
         APosition := AScreenObject.IndexOfDataSet(DataArray);
         FloatValue := FMissingValue;
         IntValue := FMissingValue;
-        Formula := FMissingValueString;
+        Formula := AnsiString(FMissingValueString);
         if APosition < 0 then
         begin
           case DataArray.DataType of
             rdtString:
               begin
-                Formula := FMissingValueString;
+                Formula := AnsiString(FMissingValueString);
               end;
             rdtDouble:
               begin
@@ -1043,8 +1043,8 @@ begin
         end
         else
         begin
-          Formula := AScreenObject.DataSetFormulas[APosition];
-          ImportedValues := GetImportedValuesFromFormula(DataArray, AScreenObject, Formula);
+          Formula := AnsiString(AScreenObject.DataSetFormulas[APosition]);
+          ImportedValues := GetImportedValuesFromFormula(DataArray, AScreenObject, string(Formula));
           if (ImportedValues <> nil)
             and (ImportedValues.Count = AScreenObject.SectionCount) then
           begin
@@ -1052,12 +1052,12 @@ begin
               rdtDouble:
                 begin
                   FloatValue := ImportedValues.RealValues[SectionIndex];
-                  Formula := FortranFloatToStr(FloatValue);
+                  Formula := AnsiString(FortranFloatToStr(FloatValue));
                 end;
               rdtInteger:
                 begin
                   IntValue := ImportedValues.IntValues[SectionIndex];
-                  Formula := IntToStr(IntValue);
+                  Formula := AnsiString(IntToStr(IntValue));
                 end;
               rdtBoolean:
                 begin
@@ -1074,12 +1074,12 @@ begin
                 end;
               rdtString:
                 begin
-                  Formula := ImportedValues.StringValues[SectionIndex];
+                  Formula := AnsiString(ImportedValues.StringValues[SectionIndex]);
                   if Length(Formula) >= 2 then
                   begin
                     if (Formula[1] = '"')
                       and (Formula[Length(Formula)] = '"')
-                      and (PosEx('"', Formula, 2) = Length(Formula)) then
+                      and (PosEx('"', String(Formula), 2) = Length(Formula)) then
                     begin
                       Formula := Copy(Formula, 2, Length(Formula) - 2);
                     end;
@@ -1094,21 +1094,21 @@ begin
                 begin
                   if FFieldDefinitions[FieldIndex].FieldType = 'F' then
                   begin
-                    FloatValue := StrToFloat(Formula);
+                    FloatValue := StrToFloat(String(Formula));
                   end;
                 end;
               rdtInteger:
                 begin
                   if FFieldDefinitions[FieldIndex].FieldType = 'N' then
                   begin
-                    IntValue := StrToInt(Formula);
+                    IntValue := StrToInt(String(Formula));
                   end;
                 end;
               rdtBoolean:
                 begin
                   if FFieldDefinitions[FieldIndex].FieldType = 'N' then
                   begin
-                    if SameText(Formula, 'True') then
+                    if SameText(String(Formula), 'True') then
                     begin
                       IntValue := 1;
                     end
@@ -1124,7 +1124,7 @@ begin
                   begin
                     if (Formula[1] = '"')
                       and (Formula[Length(Formula)] = '"')
-                      and (PosEx('"', Formula, 2) = Length(Formula)) then
+                      and (PosEx('"', String(Formula), 2) = Length(Formula)) then
                     begin
                       Formula := Copy(Formula, 2, Length(Formula) - 2);
                     end;
@@ -1186,7 +1186,7 @@ begin
         case DataArray.DataType of
           rdtString:
             begin
-              Formula := FMissingValueString;
+              Formula := AnsiString(FMissingValueString);
             end;
           rdtDouble:
             begin
@@ -1206,7 +1206,7 @@ begin
       end
       else
       begin
-        Formula := AScreenObject.DataSetFormulas[APosition];
+        Formula := AnsiString(AScreenObject.DataSetFormulas[APosition]);
         case DataArray.DataType of
           rdtString:
             begin
@@ -1214,7 +1214,7 @@ begin
               begin
                 if (Formula[1] = '"')
                   and (Formula[Length(Formula)] = '"')
-                  and (PosEx('"', Formula, 2) = Length(Formula)) then
+                  and (PosEx('"', string(Formula), 2) = Length(Formula)) then
                 begin
                   Formula := Copy(Formula, 2, Length(Formula) - 2);
                 end;
@@ -1224,14 +1224,14 @@ begin
             begin
               if FFieldDefinitions[FieldIndex].FieldType = 'F' then
               begin
-                FloatValue := StrToFloat(Formula);
+                FloatValue := StrToFloat(string(Formula));
               end;
             end;
           rdtBoolean:
             begin
               if FFieldDefinitions[FieldIndex].FieldType = 'N' then
               begin
-                if SameText(Formula, 'True') then
+                if SameText(string(Formula), 'True') then
                 begin
                   IntValue := 1;
                 end
@@ -1245,7 +1245,7 @@ begin
             begin
               if FFieldDefinitions[FieldIndex].FieldType = 'N' then
               begin
-                IntValue := StrToInt(Formula);
+                IntValue := StrToInt(string(Formula));
               end;
             end;
         else
@@ -1490,7 +1490,7 @@ end;
 
 procedure TfrmExportShapefileObjects.vstDataSetsGetText(
   Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-  TextType: TVSTTextType; var CellText: WideString);
+  TextType: TVSTTextType; var CellText: String);
 var
   Data: PClassificationNodeData;
 begin
@@ -1502,7 +1502,7 @@ begin
   end;
   // A handler for the OnGetText event is always needed
   // as it provides the tree with the string data to display.
-  // Note that we are always using WideString.
+  // Note that we are now  using string instead of WideString.
   Data := Sender.GetNodeData(Node);
   if Assigned(Data) then
   begin

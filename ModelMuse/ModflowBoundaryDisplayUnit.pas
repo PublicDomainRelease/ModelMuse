@@ -70,7 +70,6 @@ type
     FList: TList;
     function GetCount: integer;
     function GetItem(Index: integer): TModflowBoundaryDisplayTimeList;
-  published
   public
     procedure Add(Item: TModflowBoundaryDisplayTimeList);
     property Count: integer read GetCount;

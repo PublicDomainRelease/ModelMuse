@@ -28,7 +28,7 @@ type
       Node: PVirtualNode);
     procedure treecomboDataSetsDropDownTreeGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: WideString);
+      var CellText: string);
     procedure treecomboDataSetsChange(Sender: TObject);
     procedure treecomboDataSetsDropDownTreeGetNodeDataSize(
       Sender: TBaseVirtualTree; var NodeDataSize: Integer);
@@ -103,7 +103,7 @@ var
   ChildModel: TChildModel;
 begin
   case frmGoPhast.ModelSelection of
-    msPhast, msModflow:
+    msPhast, msModflow, msModflowNWT:
       begin
         comboModel.Items.AddObject('Parent model', frmGoPhast.PhastModel)
       end;
@@ -145,7 +145,7 @@ procedure TfrmDataSetValues.treecomboDataSets1TreeInitNode(
   Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
   var InitialStates: TVirtualNodeInitStates);
 var
-  CellText: WideString;
+  CellText: string;
 begin
   inherited;
   GetNodeCaption(Node, CellText, Sender);
@@ -391,7 +391,7 @@ end;
 
 procedure TfrmDataSetValues.treecomboDataSetsDropDownTreeGetText(
   Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-  TextType: TVSTTextType; var CellText: WideString);
+  TextType: TVSTTextType; var CellText: string);
 begin
   inherited;
   GetNodeCaption(Node, CellText, Sender);

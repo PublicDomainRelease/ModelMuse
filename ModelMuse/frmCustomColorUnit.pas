@@ -84,7 +84,7 @@ type
     procedure FormDestroy(Sender: TObject); override;
     procedure virttreecomboDataSetsDropDownTreeGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: WideString);
+      var CellText: string);
     procedure virttreecomboDataSetsDropDownTreeChange(Sender: TBaseVirtualTree;
       Node: PVirtualNode);
     procedure virttreecomboDataSetsChange(Sender: TObject);
@@ -380,7 +380,7 @@ procedure TfrmCustomColor.virttreecomboDataSets1TreeInitNode(
   Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
   var InitialStates: TVirtualNodeInitStates);
 var
-  CellText: WideString;
+  CellText: string;
 begin
   inherited;
   GetNodeCaption(Node, CellText, Sender);
@@ -418,7 +418,7 @@ end;
 
 procedure TfrmCustomColor.virttreecomboDataSetsDropDownTreeGetText(
   Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-  TextType: TVSTTextType; var CellText: WideString);
+  TextType: TVSTTextType; var CellText: string);
 begin
   inherited;
   GetNodeCaption(Node, CellText, Sender);
@@ -427,6 +427,7 @@ end;
 procedure TfrmCustomColor.FormCreate(Sender: TObject);
 begin
   inherited;
+  reComment.DoubleBuffered := False;
 //  FLegend := TLegend.Create(nil);
 //  FLegend.ValueAssignmentMethod := vamAutomatic;
 

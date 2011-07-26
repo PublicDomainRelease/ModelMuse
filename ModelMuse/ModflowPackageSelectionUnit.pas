@@ -226,7 +226,7 @@ Type
     procedure InitializeVariables;
   published
     property HDryPrintOption: THDryPrintOption read FHDryPrintOption
-      write SetHDryPrintOption default hpoPrintHdry;
+      write SetHDryPrintOption stored True;
   end;
 
   THufReferenceChoice = (hrcModelTop, hrcReferenceLayer);
@@ -418,7 +418,7 @@ Type
   end;
 
   TNewtonSolverMethod = (nsmGmres, nsmChiMD);
-  TNewtonOption = (noSpecified, noSimple, noModerate, noComplex);
+  TNewtonOption = (noSimple, noModerate, noComplex, noSpecified);
   TNewtonIluMethod = (nimDropTol, nimKOrder);
   TNewtonAccelMethod = (namCongGrad, namOthoMin, namBiCgstab);
   TNewtonOrderingMethod = (nomRCM, nomMinimumOrdering);
@@ -512,7 +512,6 @@ Type
     // @name is LINMETH.
     property SolverMethod: TNewtonSolverMethod read FSolverMethod write SetSolverMethod stored True;
     // @name is IPRNWT.
-    // Zero or two (?).
     property PrintFlag: integer read FPrintFlag write SetPrintFlag stored True;
     // @name is IBOTAV.
     // Zero or one.
@@ -536,35 +535,50 @@ Type
     // @name is MAXITINNER.
     property MaxIterInner: integer read FMaxIterInner write SetMaxIterInner stored True;
     // @name is ILUMETHOD.
-    property IluMethod: TNewtonIluMethod read FIluMethod write SetIluMethod stored True;
+    property IluMethod: TNewtonIluMethod read FIluMethod
+      write SetIluMethod stored True;
     // @name is LEVFILL is the fill limit for ILUMETHOD = 1
     property FillLimit: integer read FFillLimit write SetFillLimit stored True;
     // @name is LEVFILL is the level of fill for ILUMETHOD = 2
     property FillLevel: integer read FFillLevel write SetFillLevel stored True;
     // @name is STOPTOL.
-    property StopTolerance: TRealStorage read FStopTolerance write SetStopTolerance;
+    property StopTolerance: TRealStorage read FStopTolerance
+      write SetStopTolerance;
     // @name is MSDR.
-    property MaxGmresRestarts: integer read FMaxGmresRestarts write SetMaxGmresRestarts stored True;
+    property MaxGmresRestarts: integer read FMaxGmresRestarts
+      write SetMaxGmresRestarts stored True;
     // @name is IACL.
-    property AccelMethod: TNewtonAccelMethod read FAccelMethod write SetAccelMethod stored True;
+    property AccelMethod: TNewtonAccelMethod read FAccelMethod
+      write SetAccelMethod stored True;
     // @name is NORDER.
-    property OrderingMethod: TNewtonOrderingMethod read FOrderingMethod write SetOrderingMethod stored True;
+    property OrderingMethod: TNewtonOrderingMethod read FOrderingMethod
+      write SetOrderingMethod stored True;
     // @name is LEVEL.
     property Level: integer read FLevel write SetLevel stored True;
     // @name is NORTH.
-    property NumberOfOrthogonalizations: integer read FNumberOfOrthogonalizations write SetNumberOfOrthogonalizations stored True;
+    property NumberOfOrthogonalizations: integer
+      read FNumberOfOrthogonalizations write SetNumberOfOrthogonalizations
+      stored True;
     // @name is IREDSYS
-    property ApplyReducedPrecondition: TNewtonApplyReducedPrecondition read FApplyReducedPrecondition write SetApplyReducedPrecondition stored True;
+    property ApplyReducedPrecondition: TNewtonApplyReducedPrecondition
+      read FApplyReducedPrecondition write SetApplyReducedPrecondition
+      stored True;
     // @name is RRCTOLS.
-    property ResidReducConv: TRealStorage read FResidReducConv write SetResidReducConv;
+    property ResidReducConv: TRealStorage read FResidReducConv
+      write SetResidReducConv;
     // @name is IDROPTOL.
-    property UseDropTolerance: TNewtonUseDropTolerance read FUseDropTolerance write SetUseDropTolerance stored True;
+    // IDROPTOL <> 0 means to use the drop tolerance.
+    property UseDropTolerance: TNewtonUseDropTolerance read FUseDropTolerance
+      write SetUseDropTolerance stored True;
     // @name is EPSRN.
-    property DropTolerancePreconditioning: TRealStorage read FDropTolerancePreconditioning write SetDropTolerancePreconditioning;
+    property DropTolerancePreconditioning: TRealStorage
+      read FDropTolerancePreconditioning write SetDropTolerancePreconditioning;
     // @name is HCLOSEXMD.
-    property InnerHeadClosureCriterion: TRealStorage read FInnerHeadClosureCriterion write SetInnerHeadClosureCriterion;
+    property InnerHeadClosureCriterion: TRealStorage
+      read FInnerHeadClosureCriterion write SetInnerHeadClosureCriterion;
     // @name is MXITERXMD.
-    property MaxInnerIterations: integer read FMaxInnerIterations write SetMaxInnerIterations stored True;
+    property MaxInnerIterations: integer read FMaxInnerIterations
+      write SetMaxInnerIterations stored True;
   end;
 
   TLayerOption = (loTop, loSpecified, loTopActive);
@@ -1936,6 +1950,17 @@ uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
   ModflowSfrUnsatSegment, ModflowMNW2_WriterUnit, ModflowMnw2Unit,
   LayerStructureUnit, ModflowSubsidenceDefUnit, frmGridValueUnit, 
   frmGoPhastUnit, CustomModflowWriterUnit;
+
+resourcestring
+  StrLengthUnitsForMod = 'Length units for model are undefined';
+  SfrError = 'SFR Error';
+  StrTimeUnitsForModel = 'Time units for model are undefined';
+  StrInTheSubsidencePa = 'In the Subsidence package, one or more starting ti' +
+  'me is after the ending time';
+  StrInTheSubsidenceAn = 'In the Subsidence and Aquifer-System Compaction Pa' +
+  'ckage for Water-Table Aquifers, one or more starting time is after the en' +
+  'ding time';
+  StrStartingTime0g = 'StartingTime: %:0g; EndingTime: %1:g';
 
 
 { TModflowPackageSelection }
@@ -4481,20 +4506,16 @@ begin
 end;
 
 function TSfrPackageSelection.StreamConstant: double;
-const
-  SfrError = 'SFR Error';
 var
   ModflowOptions: TModflowOptions;
-  ErrorMessage: string;
+//  ErrorMessage: string;
 begin
   result := 1;
   ModflowOptions := (FModel as TCustomModel).ModflowOptions;
   case ModflowOptions.LengthUnit of
     0: // undefined
       begin
-        ErrorMessage :=
-          'Length units for model are undefined';
-        frmErrorsAndWarnings.AddError(FModel, SfrError, ErrorMessage);
+        frmErrorsAndWarnings.AddError(FModel, SfrError, StrLengthUnitsForMod);
       end;
     1: // feet
       begin
@@ -4517,9 +4538,9 @@ begin
   case ModflowOptions.TimeUnit of
     0: // Undefined
       begin
-        ErrorMessage :=
-          'Time units for model are undefined';
-        frmErrorsAndWarnings.AddError(FModel, SfrError, ErrorMessage);
+//        ErrorMessage :=
+//          StrTimeUnitsForModel;
+        frmErrorsAndWarnings.AddError(FModel, SfrError, StrTimeUnitsForModel);
       end;
     1: // Seconds
       begin
@@ -6129,7 +6150,7 @@ end;
 procedure TDrnPackage.GetMfDrnElevationUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-  UpdateDisplayUseList(NewUseList, ptDRN, 0, 'Drain Elevation');
+  UpdateDisplayUseList(NewUseList, ptDRN, 0, StrDrainElevation);
 end;
 
 procedure TDrnPackage.InitializeDrnDisplay(Sender: TObject);
@@ -6308,7 +6329,7 @@ end;
 procedure TRivPackage.GetMfRivStageUseList(Sender: TObject;
   NewUseList: TStringList);
 begin
-  UpdateDisplayUseList(NewUseList, ptRIV, 0, 'River Stage');
+  UpdateDisplayUseList(NewUseList, ptRIV, 0, StrRiverStage);
 end;
 
 procedure TRivPackage.InitializeRivDisplay(Sender: TObject);
@@ -6861,21 +6882,19 @@ begin
 end;
 
 procedure TSubPrintCollection.ReportErrors;
-const
-  ErrorRoot = 'In the Subsidence package, one or more starting time '
-    + 'is after the ending time';
 var
   Index: Integer;
   PrintChoice: TSubPrintItem;
+//  ErrorRoot: string;
 begin
+//  ErrorRoot = StrInTheSubsidencePa;
   for Index := 0 to Count -1 do
   begin
     PrintChoice := Items[Index];
     if PrintChoice.StartTime > PrintChoice.EndTime then
     begin
-      frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, ErrorRoot,
-        'StartingTime: ' + FloatToStr(PrintChoice.StartTime)
-        + '; EndingTime: ' + FloatToStr(PrintChoice.EndTime));
+      frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInTheSubsidencePa,
+        Format(StrStartingTime0g, [PrintChoice.StartTime, PrintChoice.EndTime]));
     end;
   end;
 end;
@@ -7655,22 +7674,23 @@ begin
 end;
 
 procedure TSwtPrintCollection.ReportErrors;
-const
-  ErrorRoot = 'In the Subsidence and Aquifer-System Compaction Package '
-  + 'for Water-Table Aquifers, one or more starting time '
-    + 'is after the ending time';
 var
   Index: Integer;
   PrintChoice: TSwtPrintItem;
+//  ErrorRoot: string;
 begin
+//  ErrorRoot = StrInTheSubsidenceAn;
   for Index := 0 to Count -1 do
   begin
     PrintChoice := Items[Index];
     if PrintChoice.StartTime > PrintChoice.EndTime then
     begin
-      frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, ErrorRoot,
-        'StartingTime: ' + FloatToStr(PrintChoice.StartTime)
-        + '; EndingTime: ' + FloatToStr(PrintChoice.EndTime));
+//      frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInTheSubsidenceAn,
+//        'StartingTime: ' + FloatToStr(PrintChoice.StartTime)
+//        + '; EndingTime: ' + FloatToStr(PrintChoice.EndTime));
+      frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel, StrInTheSubsidenceAn,
+        Format(StrStartingTime0g,
+          [PrintChoice.StartTime, PrintChoice.EndTime]));
     end;
   end;
 end;
@@ -8137,10 +8157,10 @@ begin
   FluxTolerance.Value := 0.006;
   MaxOuterIterations := 100;
   ThicknessFactor.Value := 0.00001;
-  SolverMethod := nsmGmres;
-  PrintFlag := 0;
+  SolverMethod := nsmChiMD;
+  PrintFlag := 1;
   CorrectForCellBottom := 0;
-  Option := noModerate;
+  Option := noSimple;
   DBDTheta.Value := 0.7;
   DBDKappa.Value := 0.0001;
   DBDGamma.Value := 0;
@@ -8148,11 +8168,11 @@ begin
   BackFlag := 0;
   MaxBackIterations := 50;
   BackTol.Value := 1.5;
-  BackReduce.Value := 0.5;
+  BackReduce.Value := 0.9;
   MaxIterInner := 50;
   IluMethod := nimKOrder;
   FillLimit := 7;
-  FillLevel := 2;
+  FillLevel := 1;
   StopTolerance.Value := 1e-10;
   MaxGmresRestarts := 10;
   AccelMethod := namBiCgstab;

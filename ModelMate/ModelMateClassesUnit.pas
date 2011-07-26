@@ -486,7 +486,7 @@ begin
         if StrToBoolean(ParamSet.Items[J].AllAtts.Items[IAT].Text) then
           begin
             JRow := JRow + 1;
-            S := ParamSet.Items[J].Name;
+            S := ConvertString(ParamSet.Items[J].Name);
             bdDerivedParameters.KeyValMatrix[0].SetVal(JRow,S);
             // Get equation for this derived parameter
             if not FoundError then
@@ -494,7 +494,7 @@ begin
                 S := ParamSet.Items[J].DerivEqn;
                 if (S = '') then
                   begin
-                    PName := ParamSet.Items[J].Name;
+                    PName := ConvertString(ParamSet.Items[J].Name);
                     Messg := 'Error: ' +  'Equation for parameter "' + PName + '" is blank';
                     ShowMessage(Messg);
                     FoundError := True;
@@ -712,7 +712,7 @@ begin
       bdObservationData.KeyValMatrix[0].Name := Keyword;
       for J := 0 to NR - 1 do
         begin
-          S := ObsSet.Items[J].Name;
+          S := ConvertString(ObsSet.Items[J].Name);
           bdObservationData.KeyValMatrix[0].SetNameVal(J,Keyword,S);
         end;
       // For each keyword with ControlMethod=ocmByObservation, store values for
@@ -739,7 +739,7 @@ begin
                           if (S = '') then
                             begin
                               Cap := ObsSet.Items[J].AllAtts.Items[I].Caption;
-                              OName := ObsSet.Items[J].Name;
+                              OName := ConvertString(ObsSet.Items[J].Name);
                               Messg := 'Error: ' + Cap + ' for observation "' + OName + '" is blank';
                               ShowMessage(Messg);
                               FoundError := True;
@@ -802,7 +802,7 @@ begin
   NR := 0;
   for N := 0 to ObsGpSet.Count - 1 do
     begin
-      GName := ObsGpSet.Items[N].Name;
+      GName := ConvertString(ObsGpSet.Items[N].Name);
       NMembers := ObsSet.NumDepByGroup(GName);
       if NMembers >0 then
         NR := NR + 1;
@@ -816,11 +816,11 @@ begin
       J := 0;
       for N := 0 to ObsGpSet.Count - 1 do
         begin
-          GName := ObsGpSet.Items[N].Name;
+          GName := ConvertString(ObsGpSet.Items[N].Name);
           NMembers := ObsSet.NumDepByGroup(GName);
           if NMembers > 0 then
             begin
-              S := ObsGpSet.Items[N].Name;
+              S := ConvertString(ObsGpSet.Items[N].Name);
               bdObservationGroups.KeyValMatrix[0].SetNameVal(J,Keyword,S);
               J := J + 1;
             end;
@@ -844,7 +844,7 @@ begin
                   J := 0;
                   for N := 0 to ObsGpSet.Count - 1 do
                     begin
-                      GName := ObsGpSet.Items[N].Name;
+                      GName := ConvertString(ObsGpSet.Items[N].Name);
                       NMembers := ObsSet.NumDepByGroup(GName);
                       if NMembers > 0 then
                         begin
@@ -925,7 +925,7 @@ begin
         if not StrToBoolean(ParamSet.Items[J].AllAtts.Items[PapDeriv].Text) then
           begin
             JRow := JRow + 1;
-            S := ParamSet.Items[J].Name;
+            S := ConvertString(ParamSet.Items[J].Name);
             bdParameterData.KeyValMatrix[0].SetVal(JRow,S);
           end;
       // For each keyword with ControlMethod=cmByParameter, store values for
@@ -954,7 +954,7 @@ begin
                           if (S = '') then
                             begin
                               Cap := ParamSet.Items[J].AllAtts.Items[I].Caption;
-                              PName := ParamSet.Items[J].Name;
+                              PName := ConvertString(ParamSet.Items[J].Name);
                               Messg := 'Error: ' + Cap + ' for parameter "' + PName + '" is blank';
                               ShowMessage(Messg);
                               FoundError := True;
@@ -1010,7 +1010,7 @@ begin
   NR := 0;
   for N := 0 to ParGpSet.Count - 1 do
     begin
-      GName := ParGpSet.Items[N].Name;
+      GName := ConvertString(ParGpSet.Items[N].Name);
       NMembers := ParamSet.NumParsByGroup(GName);
       if NMembers >0 then
         NR := NR + 1;
@@ -1035,11 +1035,11 @@ begin
       J := 0;
       for N := 0 to ParGpSet.Count - 1 do
         begin
-          GName := ParGpSet.Items[N].Name;
+          GName := ConvertString(ParGpSet.Items[N].Name);
           NMembers := ParamSet.NumParsByGroup(GName);
           if NMembers >0 then
             begin
-              S := ParGpSet.Items[N].Name;
+              S := ConvertString(ParGpSet.Items[N].Name);
               bdParameterGroups.KeyValMatrix[0].SetNameVal(J,Keyword,S);
               J := J + 1;
             end;
@@ -1060,7 +1060,7 @@ begin
                 J := 0;
                 for N := 0 to ParGpSet.Count - 1 do
                   begin
-                    GName := ParGpSet.Items[N].Name;
+                    GName := ConvertString(ParGpSet.Items[N].Name);
                     NMembers := ParamSet.NumParsByGroup(GName);
                     if NMembers >0 then
                       begin
@@ -1137,7 +1137,7 @@ begin
       bdPredictionData.KeyValMatrix[0].Name := Keyword;
       for J := 0 to NR - 1 do
         begin
-          S := PredSet.Items[J].Name;
+          S := ConvertString(PredSet.Items[J].Name);
           bdPredictionData.KeyValMatrix[0].SetNameVal(J,Keyword,S);
         end;
       // For each keyword with ControlMethod=dcmByDependent, store values for
@@ -1164,7 +1164,7 @@ begin
                           if (S = '') then
                             begin
                               Cap := PredSet.Items[J].AllAtts.Items[I].Caption;
-                              PrName := PredSet.Items[J].Name;
+                              PrName := ConvertString(PredSet.Items[J].Name);
                               Messg := 'Error: ' + Cap + ' for prediction "' + PrName + '" is blank';
                               ShowMessage(Messg);
                               FoundError := True;
@@ -1227,7 +1227,7 @@ begin
   NR := 0;
   for N := 0 to PredGpSet.Count - 1 do
     begin
-      GName := PredGpSet.Items[N].Name;
+      GName := ConvertString(PredGpSet.Items[N].Name);
       NMembers := PredSet.NumDepByGroup(GName);
       if NMembers >0 then
         NR := NR + 1;
@@ -1241,11 +1241,11 @@ begin
       J := 0;
       for N := 0 to PredGpSet.Count - 1 do
         begin
-          GName := PredGpSet.Items[N].Name;
+          GName := ConvertString(PredGpSet.Items[N].Name);
           NMembers := PredSet.NumDepByGroup(GName);
           if NMembers >0 then
             begin
-              S := PredGpSet.Items[N].Name;
+              S := ConvertString(PredGpSet.Items[N].Name);
               bdPredictionGroups.KeyValMatrix[0].SetNameVal(J,Keyword,S);
               J := J + 1;
             end;
@@ -1269,7 +1269,7 @@ begin
                   J := 0;
                   for N := 0 to PredGpSet.Count - 1 do
                     begin
-                      GName := PredGpSet.Items[N].Name;
+                      GName := ConvertString(PredGpSet.Items[N].Name);
                       NMembers := PredSet.NumDepByGroup(GName);
                       if NMembers >0 then
                         begin
@@ -1347,7 +1347,7 @@ begin
       bdPriorInfo.KeyValMatrix[0].Name := Keyword;
       for J := 0 to NR - 1 do
         begin
-          S := PriSet.Items[J].Name;
+          S := ConvertString(PriSet.Items[J].Name);
           bdPriorInfo.KeyValMatrix[0].SetNameVal(J,Keyword,S);
         end;
       // For each keyword with ControlMethod=cmByItem, store values for
@@ -1374,7 +1374,7 @@ begin
                           if (S = '') then
                             begin
                               Cap := PriSet.Items[J].AllAtts.Items[I].Caption;
-                              PriName := PriSet.Items[J].Name;
+                              PriName := ConvertString(PriSet.Items[J].Name);
                               Messg := 'Error: ' + Cap + ' for prior item "' + PriName + '" is blank';
                               ShowMessage(Messg);
                               FoundError := True;
@@ -1439,7 +1439,7 @@ begin
   NR := 0;
   for N := 0 to PriGpSet.Count - 1 do
     begin
-      GName := PriGpSet.Items[N].Name;
+      GName := ConvertString(PriGpSet.Items[N].Name);
       NMembers := PriSet.NumPriByGroup(GName);
       if NMembers > 0 then
         NR := NR + 1;
@@ -1454,11 +1454,11 @@ begin
       for N := 0 to PriGpSet.Count - 1 do
         begin
           // Include only groups which have members.
-          GName := PriGpSet.Items[N].Name;
+          GName := ConvertString(PriGpSet.Items[N].Name);
           NMembers := PriSet.NumPriByGroup(GName);
           if NMembers > 0 then
             begin
-              S := PriGpSet.Items[N].Name;
+              S := ConvertString(PriGpSet.Items[N].Name);
               bdPriorInfoGroups.KeyValMatrix[0].SetNameVal(J,Keyword,S);
               J := J + 1;
             end;
@@ -1483,7 +1483,7 @@ begin
                   for N := 0 to PriGpSet.Count - 1 do
                     begin
                       // Include only groups which have members.
-                      GName := PriGpSet.Items[N].Name;
+                      GName := ConvertString(PriGpSet.Items[N].Name);
                       NMembers := PriSet.NumPriByGroup(GName);
                       if NMembers > 0 then
                         begin
@@ -1634,7 +1634,7 @@ begin
   fMIFilesPred := TModelIOPairs.Create;
   fMOFilesPred := TModelIOPairs.Create;
   fUcProject := TUcProject.Create(self);
-  UcProject.OutputPrefix := ProjName;
+  UcProject.OutputPrefix := ConvertString(ProjName);
   fUseObsGps := True;
   fUsePredGps := True;
   fUseParGps := True;
@@ -1653,19 +1653,19 @@ begin
   if ObsSet.Count > 0 then
     begin
       K := DepAttPos(datGroupName);
-      GpNew := ObsSet.Items[0].AllAtts[K].Text;
+      GpNew := ConvertString12(ObsSet.Items[0].AllAtts[K].Text);
       fObsGpSet.Add;
       Index := fObsGpSet.Count - 1;
       fObsGpSet.Items[Index].CreateAndName(fObsGpSet, GpNew, GpNew, dcObs);
       for I := 1 to ObsSet.Count - 1 do
         begin
-          GpNew := ObsSet.Items[I].AllAtts[DepAttPos(datGroupName)].Text;
+          GpNew := ConvertString12(ObsSet.Items[I].AllAtts[DepAttPos(datGroupName)].Text);
           // Check to see if GpNew has already been stored in ObsGpSet
           J := 0;
           Stored := False;
           while (J < ObsGpSet.Count) and not Stored do
             begin
-              Stored := SameText(GpNew, ObsGpSet.Items[J].AllAtts[K].Text);
+              Stored := SameText(ConvertString(GpNew), ObsGpSet.Items[J].AllAtts[K].Text);
               J := J + 1;
             end;
           if not Stored then
@@ -1696,19 +1696,19 @@ begin
   if PredSet.Count > 0 then
     begin
       K := DepAttPos(datGroupName);
-      GpNew := PredSet.Items[0].AllAtts[K].Text;
+      GpNew := ConvertString12(PredSet.Items[0].AllAtts[K].Text);
       fPredGpSet.Add;
       Index := fPredGpSet.Count - 1;
       fPredGpSet.Items[Index].CreateAndName(fPredGpSet, GpNew, GpNew, dcPred);
       for I := 1 to PredSet.Count - 1 do
         begin
-          GpNew := PredSet.Items[I].AllAtts[DepAttPos(datGroupName)].Text;
+          GpNew := ConvertString12(PredSet.Items[I].AllAtts[DepAttPos(datGroupName)].Text);
           // Check to see if GpNew has already been stored in PredGpSet
           J := 0;
           Stored := False;
           while (J < PredGpSet.Count) and not Stored do
             begin
-              Stored := SameText(GpNew, PredGpSet.Items[J].AllAtts[K].Text);
+              Stored := SameText(ConvertString(GpNew), PredGpSet.Items[J].AllAtts[K].Text);
               J := J + 1;
             end;
           if not Stored then
@@ -2057,7 +2057,7 @@ begin
 //      end;
       OutPrefix := UcProject.OutputPrefix;
       OutPrefixPred := UcProject.OutputPrefixPred;
-      BatchBase := 'RunUcode_' + ProjName;
+      BatchBase := 'RunUcode_' + ConvertString(ProjName);
       if ModelUseLocal = muPred then
         begin
           // Add in response to Mary's request of 2/26/2011
@@ -2135,7 +2135,7 @@ begin
               J := 0;
               while J < ParGpSet.Count do
                 begin
-                  if ParGpSet.Items[J].Name = GName then
+                  if ParGpSet.Items[J].Name = ConvertString12(GName) then
                     begin
                       if ParGpSet.Items[J].AllAtts.Items[IATadj].Text = 'Yes' then
                         begin
@@ -2574,14 +2574,14 @@ begin
         begin
           if Item.GetAttributeByType(patParamName) <> '' then
             begin
-              self.SetAttributeByType(patParamName,self.Name);
+              self.SetAttributeByType(patParamName,ConvertString(self.Name));
             end;
         end
       else
         begin
           if self.GetAttributeByType(patParamName) = '' then
             begin
-              self.SetAttributeByType(patParamName,self.Name);
+              self.SetAttributeByType(patParamName,ConvertString(self.Name));
             end;
         end;
     end
@@ -2642,8 +2642,8 @@ begin
       AllAtts[I].Initialize(AttributeTypes[I]);
     end;
   Name := aName;
-  AllAtts[ParAttPos(patParamName)].Text := aName;
-  if aGroupName <> '' then AllAtts[ParAttPos(patGroupName)].Text := aGroupName;
+  AllAtts[ParAttPos(patParamName)].Text := ConvertString(aName);
+  if aGroupName <> '' then AllAtts[ParAttPos(patGroupName)].Text := ConvertString(aGroupName);
   fDerivEqn := '';
 end;
 
@@ -2694,11 +2694,11 @@ begin
           AllAtts.Items[I].Text := Text;
           if paType = patParamName then
             begin
-              self.Name := Text;
+              self.Name := ConvertString12(Text);
             end;
           if (paType = patGroupName) and (Name = '') then
             begin
-              Name := Text;
+              Name := ConvertString12(Text);
             end;
         end;
     end;

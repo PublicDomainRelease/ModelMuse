@@ -180,7 +180,7 @@ type
 
   // @name is used to indicate what type of model is active.
   // The type of model should never be set to msUndefined.
-  TModelSelection = (msUndefined, msPhast, msModflow, msModflowLGR);
+  TModelSelection = (msUndefined, msPhast, msModflow, msModflowLGR, msModflowNWT);
 
   //  @name is used to indicate how the spacing of layers within a unit
   // is specified.
@@ -384,6 +384,14 @@ const
   StrObjectLength = 'ObjectLength';
   StrStartingTime = 'Starting time';
   StrEndingTime = 'Ending time';
+  StrPumpingRate = 'Pumping rate';
+  StrConductance = 'Conductance';
+  StrRiverStage = 'River stage';
+  StrRiverBottom = 'River bottom';
+  StrBoundaryHead = 'Boundary head';
+  StrDrainElevation = 'Drain elevation';
+  StrStartingHead = 'Starting head';
+  StrEndingHead = 'Ending head';
 
   StrVariance = 'Variance (0)';
   StrStdDev = 'Standard dev. (1)';
@@ -595,7 +603,7 @@ begin
             Assert(False);
         end;
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         case Eval of
           eaBlocks:
@@ -654,14 +662,14 @@ begin
     AChar := result[Index];
     if Index = 1 then
     begin
-      if not (AChar in ['_', 'a'..'z', 'A'..'Z']) then
+      if not CharInSet(AChar, ['_', 'a'..'z', 'A'..'Z']) then
       begin
         result[Index] := '_';
       end;
     end
     else
     begin
-      if not (AChar in ['_', 'a'..'z', 'A'..'Z', '0'..'9']) then
+      if not CharInSet(AChar, ['_', 'a'..'z', 'A'..'Z', '0'..'9']) then
       begin
         result[Index] := '_';
       end;

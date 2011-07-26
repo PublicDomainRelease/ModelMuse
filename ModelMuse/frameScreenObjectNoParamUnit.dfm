@@ -1,11 +1,8 @@
-object frameScreenObjectNoParam: TframeScreenObjectNoParam
-  Left = 0
-  Top = 0
-  Width = 320
+inherited frameScreenObjectNoParam: TframeScreenObjectNoParam
   Height = 316
-  TabOrder = 0
   TabStop = True
   OnResize = FrameResize
+  ExplicitHeight = 316
   object pnlBottom: TPanel
     Left = 0
     Top = 270
@@ -42,8 +39,7 @@ object frameScreenObjectNoParam: TframeScreenObjectNoParam
       Anchors = [akTop, akRight]
       Cancel = True
       Caption = '&Delete'
-      TabOrder = 1
-      OnClick = btnDeleteClick
+      DoubleBuffered = True
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
         18000000000000030000120B0000120B00000000000000000000FFFFFFFFFFFF
@@ -71,6 +67,9 @@ object frameScreenObjectNoParam: TframeScreenObjectNoParam
         000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+      ParentDoubleBuffered = False
+      TabOrder = 1
+      OnClick = btnDeleteClick
     end
     object btnInsert: TBitBtn
       Left = 148
@@ -80,8 +79,7 @@ object frameScreenObjectNoParam: TframeScreenObjectNoParam
       Anchors = [akTop, akRight]
       Cancel = True
       Caption = '&Insert'
-      TabOrder = 2
-      OnClick = btnInsertClick
+      DoubleBuffered = True
       Glyph.Data = {
         F6000000424DF600000000000000760000002800000010000000100000000100
         0400000000008000000000000000000000001000000000000000000000000000
@@ -91,6 +89,9 @@ object frameScreenObjectNoParam: TframeScreenObjectNoParam
         FF0FFFFF0FFFFFFFFF0FFFFF00000000000FF0FF0CCCCCCCCC0F000F0CCCCCCC
         CC0FF0FF0CCCCCCCCC0FFFFF00000000000FFFFF0FFFFFFFFF0FFFFF0FFFFFFF
         FF0FFFFF0FFFFFFFFF0FFFFF00000000000FFFFFFFFFFFFFFFFF}
+      ParentDoubleBuffered = False
+      TabOrder = 2
+      OnClick = btnInsertClick
     end
   end
   object pnlTop: TPanel
@@ -142,7 +143,6 @@ object frameScreenObjectNoParam: TframeScreenObjectNoParam
         Height = 22
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 13
         TabOrder = 0
         OnChange = rdeFormulaChange
         Max = 1.000000000000000000

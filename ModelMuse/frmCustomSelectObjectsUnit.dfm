@@ -23,8 +23,11 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 1
+      DoubleBuffered = True
       Kind = bkClose
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 1
     end
     object btnHelp: TBitBtn
       Left = 237
@@ -32,8 +35,11 @@ inherited frmCustomSelectObjects: TfrmCustomSelectObjects
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 0
+      DoubleBuffered = True
       Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 0
     end
   end
   object vstObjects: TVirtualStringTree

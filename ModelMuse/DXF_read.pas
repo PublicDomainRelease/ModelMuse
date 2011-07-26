@@ -36,7 +36,8 @@ uses
 
 const
   message_delay_ms = 1500;
-  EOL = #13#10;
+  EOL: AnsiString = #13#10;
+  StrEOL: string = #13#10;
 
 // Thanks to Ian L. Kaplan, whose code contained these ID's
 // I've changed a few names here and there
@@ -91,7 +92,7 @@ Const
   MaxSizeOfBuf = 4096;
 
 type
-  tCharArray = array [0..MaxSizeOfBuf-1] of char;
+  tCharArray = array [0..MaxSizeOfBuf-1] of AnsiChar;
 
   abstract_entity = class;
 
@@ -105,7 +106,7 @@ type
     EC,fCode    : integer;
     pBuf        : ^tCharArray;
     Line_num    : longint;
-    fLine       : string;
+    fLine       : AnsiString;
     FProgress    : TProgressBar;
     // useful bits to make parsing easier...
     file_pos   : integer;
@@ -115,19 +116,19 @@ type
     FOnStoppedThinking: TNotifyEvent;
     TempInsertList: TList;
     ReadingBlocks: boolean;
-    procedure   go_back_to_last(code:integer; str:string);
+    procedure   go_back_to_last(code:integer; str:AnsiString);
     procedure   mark_position;
     procedure   goto_marked_position;
     //
 //    procedure   go_back_to_start;
     function    NextGroupCode: integer;
-    function    ValStr: string;
+    function    ValStr: AnsiString;
     function    ValDbl: double;
     function    ValInt: integer;
-    function    code_and_string(var group:integer; var s:string) : boolean;
+    function    code_and_string(var group:integer; var s:AnsiString) : boolean;
     function    code_and_double(var group:integer; var d:double) : boolean;
     function    read_2Dpoint(var p1:Point3D)                     : boolean;
-    function    skip_upto_section(name:string)                   : boolean;
+    function    skip_upto_section(name:AnsiString)                   : boolean;
                 // lowest level read function
     function    read_entity_data(ent:abstract_entity)            : boolean;
     function    read_generic(var layer:integer)                  : abstract_entity;
@@ -137,8 +138,8 @@ type
     function    read_insert(var entity:DXF_Entity; var layer:integer)   : boolean;
     function    read_polyline(var entity:DXF_Entity; var layer:integer) : boolean;
                 // this calls the others above
-    function    read_entity(s,endstr:string; var entity:DXF_Entity; var layer:integer) : boolean;
-    procedure Thinking(message: string);
+    function    read_entity(s,endstr:AnsiString; var entity:DXF_Entity; var layer:integer) : boolean;
+    procedure Thinking(message: String);
     procedure Stopped_Thinking;
     procedure SetProgress(const Value: TProgressBar);
   public
@@ -150,7 +151,7 @@ type
     colour_BYLAYER : boolean;
     skipped        : TStrings;
     // Constructors and destructors
-    Constructor Create (const aName: shortstring);
+    Constructor Create (const aName: string);
     Destructor  Destroy;                           override;
     // Header section
     function    move_to_header_section : boolean;
@@ -167,7 +168,7 @@ type
     function    read_tables : boolean;
     function    read_layer_information : boolean;
     function    read_vport_information : boolean;
-    function    layer_num(layername:string) : integer;
+    function    layer_num(layername:AnsiString) : integer;
     // Entities section
     function    move_to_entity_section : boolean;
     function    read_entities          : boolean;
@@ -199,8 +200,8 @@ type
     colour                                  : integer;
     flag_70,flag_71,flag_72,flag_73,flag_74 : integer;
     attflag                                 : integer;
-    namestr,tagstr,promptstr                : string;
-    layer                                   : string;
+    namestr,tagstr,promptstr                : AnsiString;
+    layer                                   : AnsiString;
     elev                                    : double;
     OCS_Z                                   : Point3D;
     procedure clear;
@@ -211,7 +212,7 @@ type
 type
   DXF_read_exception = class(Exception)
     line_number : integer;
-    constructor create(err_msg:string; line:integer);
+    constructor create(err_msg:String; line:integer);
   end;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -231,7 +232,7 @@ end;
 ///////////////////////////////////////////////////////////////////////////////
 // DXFReader implementation
 ///////////////////////////////////////////////////////////////////////////////
-Constructor DXF_Reader.Create (const aName: shortstring);
+Constructor DXF_Reader.Create (const aName: string);
 begin
   Inherited Create;
   TempInsertList:= TList.Create;
@@ -272,7 +273,7 @@ begin
   ii         := 0;
 end; }
 
-procedure DXF_Reader.go_back_to_last(code:integer; str:string);
+procedure DXF_Reader.go_back_to_last(code:integer; str:AnsiString);
 begin
   fCode    := code;
   fLine    := str;
@@ -309,7 +310,7 @@ var
   // in TEXT entities and other text strings.
   function GotLine: boolean;
   const CR=#13; LF=#10;
-  var c: char;
+  var c: AnsiChar;
 //    ReachedLineEnd: Boolean;
 //  label retry;
   begin
@@ -319,7 +320,7 @@ var
 //    repeat
 //    begin
       byte(Local_fLine[0]):=0;
-      c := Char(0);
+      c := AnsiChar(0);
       While (ii<num_in_buf) or GotMore do begin
         c:=pBuf^[ii]; inc(ii);
         If (c<>CR) and (c<>LF) and (length(Local_fLine)<255) then
@@ -374,30 +375,30 @@ begin {NextGroupCode}
         exit;
       end;
     until fLine<>'';
-    Val(fLine,fCode,ec);
+    Val(string(fLine),fCode,ec);
     If ec<>0 then fCode:=-2
     else if not GotLine then fCode:=-2;
     Result:=fCode;
   end;
 end {NextGroupCode};
 
-function DXF_Reader.ValStr: string;
+function DXF_Reader.ValStr: AnsiString;
 begin Result:=fLine end;
 
 function DXF_Reader.ValDbl: double;
 begin
-  Val(fLine,Result,ec);
+  Val(string(fLine),Result,ec);
   If ec<>0 then raise DXF_read_exception.Create('Invalid Floating point conversion',line_num);
 end;
 
 function DXF_Reader.ValInt: integer;
 begin
-  Val(fLine,Result,ec);
+  Val(string(fLine),Result,ec);
   If ec<>0 then raise DXF_read_exception.Create('Invalid Integer conversion',line_num);
 end;
 
-function DXF_Reader.code_and_string(var group:integer; var s:string) : boolean;
-//var astr : string;
+function DXF_Reader.code_and_string(var group:integer; var s:AnsiString) : boolean;
+//var astr : AnsiString;
 begin
   result := true;
   group  := NextGroupCode;
@@ -426,9 +427,9 @@ begin
   result := code_and_double(Groupcode,p1.y);  { y next              }
 end;
 
-function DXF_Reader.skip_upto_section(name:string) : boolean;
+function DXF_Reader.skip_upto_section(name:AnsiString) : boolean;
 var Group   : integer;
-    s       : string;
+    s       : AnsiString;
 begin
   result := false;
   repeat
@@ -440,8 +441,8 @@ begin
           if (s=name) then result := true
 //          else exit;
         end
-        else if skipped<>nil then Skipped.Add(s);
-      end else if skipped<>nil then Skipped.Add(s);
+        else if skipped<>nil then Skipped.Add(string(s));
+      end else if skipped<>nil then Skipped.Add(string(s));
     end;
   until (result);
 end;
@@ -455,7 +456,7 @@ end;
 
 function DXF_Reader.read_header : boolean;
 var Group : integer;
-    s     : string;
+    s     : AnsiString;
 begin
   result := false;
   repeat
@@ -492,7 +493,7 @@ end;
 
 function DXF_Reader.read_blocks : boolean;
 var Group : integer;
-    s     : string;
+    s     : AnsiString;
     Index: integer;
     Insert: Insert_;
 begin
@@ -524,7 +525,7 @@ end;
 
 function DXF_Reader.read_block : boolean;
 var Groupcode  : integer;
-    s          : string;
+    s          : AnsiString;
     ent        : abstract_entity;
     block      : Block_;
     layer      : integer;
@@ -578,7 +579,7 @@ end;
 
 function DXF_Reader.read_tables : boolean;
 var Group : integer;
-    s     : string;
+    s     : AnsiString;
 begin
   result := false;
   repeat
@@ -588,7 +589,7 @@ begin
       if (Group=DXF_name) then begin
         if (s='LAYER') then read_layer_information
         else if (s='VPORT') then read_vport_information
-        else if skipped<>nil then Skipped.Add(s);
+        else if skipped<>nil then Skipped.Add(string(s));
       end;
     end;
     result := (Group=0) and (s='ENDSEC');
@@ -597,7 +598,7 @@ end;
 
 function DXF_Reader.read_layer_information : boolean;
 var Group,Lay_num : integer;
-    s             : string;
+    s             : AnsiString;
 begin
   lay_num := -1;
   result  := false;
@@ -609,7 +610,7 @@ begin
         if (Group=DXF_name) then lay_num := DXF_Layers.Add(DXF_Layer.create(s));
       end
       else if (s='ENDTAB') then result := true
-      else if skipped<>nil then Skipped.Add(s);
+      else if skipped<>nil then Skipped.Add(string(s));
     end
     else if (Group=DXF_colornum) and (lay_num<>-1) then
       DXF_Layer(DXF_Layers[lay_num]).Colour := ValInt;
@@ -619,7 +620,7 @@ end;
 // This no longer does anything !
 function DXF_Reader.read_vport_information : boolean;
 var Group : integer;
-    s     : string;
+    s     : AnsiString;
 begin
   result := false;
   repeat
@@ -631,7 +632,7 @@ begin
         if not code_and_string(Group,s) then break;
         if (Group=DXF_name) then
         begin
-          if (UpperCase(s)='*ACTIVE') then
+          if (UpperCase(string(s))='*ACTIVE') then
           begin
             repeat
               if not code_and_string(Group,s) then break;
@@ -642,16 +643,16 @@ begin
               result := (Group=0) and (s='ENDTAB');
             until (result)
           end
-          else if skipped<>nil then Skipped.Add(s);
+          else if skipped<>nil then Skipped.Add(string(s));
         end;
         until result;
       end
-      else if skipped<>nil then Skipped.Add(s);
+      else if skipped<>nil then Skipped.Add(string(s));
     end
   until (result);
 end;
 
-function DXF_Reader.layer_num(layername:string) : integer;
+function DXF_Reader.layer_num(layername:AnsiString) : integer;
 var lp1 : integer;
 begin
   result := -1;
@@ -672,7 +673,7 @@ end;
 
 function DXF_Reader.read_entities : boolean;
 var Groupcode,layer : integer;
-    s               : string;
+    s               : AnsiString;
     entity          : DXF_Entity;
 begin
   result := false;
@@ -753,7 +754,7 @@ end;
 
 function DXF_Reader.read_generic(var layer:integer) : abstract_entity;
 var ent : abstract_entity;
-//    s   : string;
+//    s   : AnsiString;
 begin
   result := nil;
   ent    := abstract_entity.create; // set everything to zero EVERY time
@@ -849,8 +850,9 @@ begin
         except
           entity.Free;
           entity := nil;
-          raise DXF_read_exception.Create('Cannot reference an undefined BLOCK'+EOL+EOL+
-          '(File may not have been saved with BLOCKs)'+EOL,line_num);
+
+          raise DXF_read_exception.Create('Cannot reference an undefined BLOCK'+StrEOL+StrEOL+
+          '(File may not have been saved with BLOCKs)'+ StrEOL,line_num);
         end;
       end;
     end;
@@ -977,7 +979,7 @@ vertex_overflow:
     IntToStr(max_vertices_per_polyline)+' vertices',line_num);
 end;
 
-function DXF_Reader.read_entity(s,endstr:string; var entity:DXF_Entity; var layer:integer) : boolean;
+function DXF_Reader.read_entity(s,endstr:AnsiString; var entity:DXF_Entity; var layer:integer) : boolean;
 begin
   entity := nil; result := false;
   if (s='POINT') then begin if not general_purpose_read(Point_,entity,layer) then
@@ -1003,7 +1005,7 @@ begin
   else if (s='ATTRIB') then begin if not general_purpose_read(Attrib_,entity,layer) then
     raise DXF_read_exception.Create('Error reading ATTRIB entity',line_num); end
   else if (s=endstr) then result := true
-  else if skipped<>nil then Skipped.Add(s);
+  else if skipped<>nil then Skipped.Add(string(s));
 end;
 ///////////////////////////////////////////////////////////////////////////////
 // Main routines to use
@@ -1087,14 +1089,14 @@ end;
 ///////////////////////////////////////////////////////////////////////////////
 // DXF File exception
 ///////////////////////////////////////////////////////////////////////////////
-constructor DXF_read_exception.create(err_msg:string; line:integer);
+constructor DXF_read_exception.create(err_msg:String; line:integer);
 begin
   if line>-1 then
     message := err_msg + #13#10 + 'Error occurred at or near line number ' + IntToStr(line)
   else message := err_msg;
 end;
 
-procedure DXF_Reader.Thinking(message: string);
+procedure DXF_Reader.Thinking(message: String);
 begin
   if Assigned(FOnThinking) then
   begin

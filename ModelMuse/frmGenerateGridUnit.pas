@@ -7,7 +7,7 @@ unit frmGenerateGridUnit;
 interface
 
 uses
-  SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
+  Windows, SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, frmCustomGoPhastUnit, Buttons, ArgusDataEntry;
 
 type
@@ -104,7 +104,7 @@ begin
       begin
         cbSmoothGrid.Checked := False;
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         Count := 0;
         for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do

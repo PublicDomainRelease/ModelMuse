@@ -97,6 +97,12 @@ type
     { Public declarations }
   end;
 
+resourcestring
+  StrTime = 'Time';
+  StrObservedHead = 'Observed  Head';
+  StrStatistic = 'Statistic';
+  StrStatFlag = 'StatFlag';
+
 implementation
 
 uses
@@ -363,10 +369,10 @@ begin
     comboMultiStatFlag.Items[Index].Text := Column.PickList[Index];
   end;
 
-  rdgHeads.Cells[Ord(hocTime),0] := 'Time';
-  rdgHeads.Cells[Ord(hocHead),0] := 'Observed  Head';
-  rdgHeads.Cells[Ord(hocStatistic),0] := 'Statistic';
-  rdgHeads.Cells[Ord(hocStatFlag),0] := 'StatFlag';
+  rdgHeads.Cells[Ord(hocTime),0] := StrTime;
+  rdgHeads.Cells[Ord(hocHead),0] := StrObservedHead;
+  rdgHeads.Cells[Ord(hocStatistic),0] := StrStatistic;
+  rdgHeads.Cells[Ord(hocStatFlag),0] := StrStatFlag;
   rdgHeads.Cells[Ord(hocComment),0] := 'Comment';
 
   rdgLayers.Cells[Ord(hlLayer),0] := 'Layer';

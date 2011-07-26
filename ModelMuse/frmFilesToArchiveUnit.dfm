@@ -4,7 +4,7 @@ inherited frmFilesToArchive: TfrmFilesToArchive
   Caption = ' Files To Archive'
   ClientWidth = 512
   ExplicitWidth = 520
-  ExplicitHeight = 274
+  ExplicitHeight = 268
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
@@ -14,7 +14,6 @@ inherited frmFilesToArchive: TfrmFilesToArchive
     Height = 73
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 167
     DesignSize = (
       512
       73)
@@ -22,6 +21,7 @@ inherited frmFilesToArchive: TfrmFilesToArchive
       Left = 8
       Top = 6
       Width = 297
+      Height = 18
       Caption = '<link>USGS model archiving policy<\link>'
       Text.Strings = (
         '<link>USGS model archiving policy<\link>')
@@ -33,8 +33,11 @@ inherited frmFilesToArchive: TfrmFilesToArchive
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 0
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 0
     end
     object btnOK: TBitBtn
       Left = 325
@@ -42,9 +45,12 @@ inherited frmFilesToArchive: TfrmFilesToArchive
       Width = 83
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnHelp: TBitBtn
       Left = 238
@@ -52,9 +58,12 @@ inherited frmFilesToArchive: TfrmFilesToArchive
       Width = 81
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnArchive: TButton
       Left = 8
@@ -81,7 +90,6 @@ inherited frmFilesToArchive: TfrmFilesToArchive
     Width = 512
     Height = 161
     Align = alClient
-    AutoSize = False
     TabOrder = 1
     OnChange = reFilesToSaveChange
   end

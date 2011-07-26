@@ -179,7 +179,7 @@ type
     // @name writes Value to the output with a leading blank space.
     procedure WriteInteger(Const Value: integer);
     // @name writes Value to the output with NO leading blank space.
-    procedure WriteString(const Value: AnsiString);
+    procedure WriteString(const Value: String);
     // @name writes the IFACE parameter in MODFLOW.
     procedure WriteIface(const Value: TIface);
     // @name writes the header for the U2DINT array reader in MODFLOW.
@@ -652,15 +652,15 @@ type
 // name writes a batch-file used to run MODFLOW.
 function WriteModflowBatchFile(ProgramLocations: TProgramLocations;
   FileName: string; ListFiles: TStringList; OpenListFile: boolean;
-  Before, After: TStrings): string;
+  Before, After: TStrings; ExportModpath, ExportZoneBudget: boolean): string;
 
 // name writes a batch-file used to run MODPATH.
 function WriteModPathBatchFile(ProgramLocations: TProgramLocations;
   FileName: string; ListFile: string; OpenListFile: boolean;
-  const LargeBudgetFileResponse: string): string;
+  const LargeBudgetFileResponse: string; EmbeddedExport: boolean): string;
 
 function WriteZoneBudgetBatchFile(Model: TCustomModel;
-  FileName: string; OpenListFile: boolean): string;
+  FileName: string; OpenListFile, EmbeddedExport: boolean): string;
 
 procedure ResetMaxUnitNumber;
 function GetMaxUnitNumber: integer;
@@ -679,11 +679,16 @@ implementation
 
 uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmGoPhastUnit,
   frmProgressUnit, GlobalVariablesUnit, frmFormulaErrorsUnit, GIS_Functions,
-  ZoneBudgetWriterUnit, ModelMuseUtilities, SparseDataSets, SparseArrayUnit;
+  ZoneBudgetWriterUnit, ModelMuseUtilities, SparseDataSets, SparseArrayUnit,
+  RealListUnit;
 
 resourcestring
   StrTheFollowingParame = 'The following %s parameters are being skipped ' +
   'because they have no cells associated with them.';
+  StrNoBoundaryConditio = 'No boundary conditions assigned to the %s because' +
+  ' the object does not set the values of either enclosed or intersected cel' +
+  'ls.';
+  StrEvaluatingSData = 'Evaluating %s data.';
 
 var
 //  NameFile: TStringList;
@@ -747,7 +752,7 @@ end;
 
 function WriteModflowBatchFile(ProgramLocations: TProgramLocations;
   FileName: string; ListFiles: TStringList; OpenListFile: boolean;
-  Before, After: TStrings): string;
+  Before, After: TStrings; ExportModpath, ExportZoneBudget: boolean): string;
 var
   BatchFile: TStringList;
   AFileName: string;
@@ -771,6 +776,10 @@ begin
         begin
           ModflowLocation := ProgramLocations.ModflowLgrLocation;
         end;
+      msModflowNWT:
+        begin
+          ModflowLocation := ProgramLocations.ModflowNwtLocation;
+        end;
       else Assert(False);
     end;
 
@@ -789,12 +798,22 @@ begin
         AFileName :=  QuoteFileName(ExpandFileName(ModflowLocation));
         BatchFile.Add(AFileName + ' ' + ExtractFileName(FileName) + ' /wait');
       end;
+      if ExportModpath then
+      begin
+        BatchFile.Add('call RunModpath.bat');
+      end;
+      if ExportZoneBudget then
+      begin
+        BatchFile.Add('call RunZoneBudget.Bat');
+      end;
+
       BatchFile.AddStrings(After);
       for ListFileIndex := 0 to ListFiles.Count - 1 do
       begin
         AddOpenListFileLine(ListFiles[ListFileIndex], OpenListFile,
           BatchFile, ProgramLocations);
       end;
+
 
       BatchFile.Add('pause');
       BatchFile.SaveToFile(result);
@@ -808,7 +827,7 @@ end;
 
 function WriteModPathBatchFile(ProgramLocations: TProgramLocations;
   FileName: string; ListFile: string; OpenListFile: boolean;
-  const LargeBudgetFileResponse: string): string;
+  const LargeBudgetFileResponse: string; EmbeddedExport: boolean): string;
 var
   BatchFile: TStringList;
   AFileName: string;
@@ -860,7 +879,10 @@ begin
   try
     BatchFile.Add('call mp.bat /wait');
     AddOpenListFileLine(ListFile, OpenListFile, BatchFile, ProgramLocations);
-    BatchFile.Add('pause');
+    if not EmbeddedExport then
+    begin
+      BatchFile.Add('pause');
+    end;
     BatchFile.SaveToFile(result);
   finally
     BatchFile.Free;
@@ -868,7 +890,7 @@ begin
 end;
 
 function WriteZoneBudgetBatchFile(Model: TCustomModel;
-  FileName: string; OpenListFile: boolean): string;
+  FileName: string; OpenListFile, EmbeddedExport: boolean): string;
 var
   BatchFile: TStringList;
   AFileName: string;
@@ -926,7 +948,10 @@ begin
   try
     BatchFile.Add('call ZB.bat /wait');
     AddOpenListFileLine(ListFile, OpenListFile, BatchFile, ProgramLocations);
-    BatchFile.Add('pause');
+    if not EmbeddedExport then
+    begin
+      BatchFile.Add('pause');
+    end;
     BatchFile.SaveToFile(result);
   finally
     BatchFile.Free;
@@ -980,9 +1005,11 @@ begin
       end;
       if not OkValue then
       begin
-        Error := 'Layer: ' + IntToStr(LayerIndex+1)
-          + '; Row: ' + IntToStr(RowIndex+1)
-          + '; Column: ' + IntToStr(ColIndex+1);
+//        Error := 'Layer: ' + IntToStr(LayerIndex+1)
+//          + '; Row: ' + IntToStr(RowIndex+1)
+//          + '; Column: ' + IntToStr(ColIndex+1);
+        Error := Format('Layer: %d; Row: %d; Column: %d',
+          [LayerIndex+1, RowIndex+1,ColIndex+1]);
         case ErrorType of
           etError: frmErrorsAndWarnings.AddError(Model, ErrorOrWarningMessage, Error);
           etWarning: frmErrorsAndWarnings.
@@ -1082,13 +1109,13 @@ end;
 class function TCustomModflowWriter.FortranDecimal(
   NumberString: string): string;
 begin
-  if DecimalSeparator = '.' then
+  if FormatSettings.DecimalSeparator = '.' then
   begin
     result := NumberString;
   end
   else
   begin
-    result := StringReplace(NumberString, DecimalSeparator, '.',
+    result := StringReplace(NumberString, FormatSettings.DecimalSeparator, '.',
       [rfReplaceAll]);
   end;
 end;
@@ -1354,11 +1381,14 @@ begin
   WriteString(ValueAsString);
 end;
 
-procedure TCustomModflowWriter.WriteString(const Value: AnsiString);
+procedure TCustomModflowWriter.WriteString(const Value: String);
+var
+  StringToWrite: AnsiString;
 begin
-  if Length(Value) > 0 then
+  StringToWrite := AnsiString(Value);
+  if Length(StringToWrite) > 0 then
   begin
-    FFileStream.Write(Value[1], Length(Value)*SizeOf(AnsiChar));
+    FFileStream.Write(StringToWrite[1], Length(StringToWrite)*SizeOf(AnsiChar));
 //    UpdateExportTime;
   end;
 end;
@@ -1655,12 +1685,14 @@ var
   Boundary: TModflowBoundary;
   NoAssignmentErrorRoot: string;
 begin
-  NoAssignmentErrorRoot := 'No boundary conditions assigned to the '
-    + Package.PackageIdentifier
-    + ' because the object does not '
-    + 'set the values of either enclosed or intersected cells.';
-  frmProgressMM.AddMessage('Evaluating '
-    + Package.PackageIdentifier + ' data.');
+  NoAssignmentErrorRoot := Format(StrNoBoundaryConditio, [Package.PackageIdentifier]);
+//  NoAssignmentErrorRoot := 'No boundary conditions assigned to the '
+//    + Package.PackageIdentifier
+//    + ' because the object does not '
+//    + 'set the values of either enclosed or intersected cells.';
+  frmProgressMM.AddMessage(Format(StrEvaluatingSData, [Package.PackageIdentifier]));
+//  frmProgressMM.AddMessage('Evaluating '
+//    + Package.PackageIdentifier + ' data.');
   for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
   begin
     if not frmProgressMM.ShouldContinue then
@@ -3230,12 +3262,12 @@ begin
     and (Length(AName) <= 20);
   if result then
   begin
-    result := AName[1] in Letters;
+    result := CharInSet(AName[1], Letters);
     if result then
     begin
       for Index := 2 to Length(AName) do
       begin
-        result := AName[Index] in ValidCharacters;
+        result := CharInSet(AName[Index], ValidCharacters);
         if not result then
         begin
           break;
@@ -3547,6 +3579,8 @@ var
   Comment: string;
   EarlyTimes: string;
   LateTimes: string;
+  StartingTimes: TRealList;
+  ReferenceStressPeriodIndex: Integer;
   function GetFluxType: string;
   begin
     case ObservationGroup.FluxObsType of
@@ -3557,66 +3591,88 @@ var
     end;
   end;
 begin
-  EarlyTimes := '';
-  LateTimes := '';
-  StartTime := Model.ModflowStressPeriods[0].StartTime;
-  EndTime := Model.ModflowFullStressPeriods[
-    Model.ModflowFullStressPeriods.Count-1].EndTime;
-  MaxObsTimeLength := Length(IntToStr(ObservationGroup.ObservationTimes.Count));
-  for TimeIndex := 0 to ObservationGroup.ObservationTimes.Count - 1 do
-  begin
-    ObsTime := ObservationGroup.ObservationTimes[TimeIndex];
+  StartingTimes := TRealList.Create;
+  try
+    for TimeIndex := 0 to Model.ModflowFullStressPeriods.Count - 1 do
+    begin
+      StartingTimes.Add(Model.ModflowFullStressPeriods[TimeIndex].StartTime);
+    end;
+    StartingTimes.Sort;
+    EarlyTimes := '';
+    LateTimes := '';
+    StartTime := Model.ModflowStressPeriods[0].StartTime;
+    EndTime := Model.ModflowFullStressPeriods[
+      Model.ModflowFullStressPeriods.Count-1].EndTime;
+    MaxObsTimeLength := Length(IntToStr(ObservationGroup.ObservationTimes.Count));
+    for TimeIndex := 0 to ObservationGroup.ObservationTimes.Count - 1 do
+    begin
+      ObsTime := ObservationGroup.ObservationTimes[TimeIndex];
 
-    if ObsTime.Time < StartTime then
-    begin
-      EarlyTimes := EarlyTimes + ' ' + FloatToStr(ObsTime.Time);
-      Continue;
-    end;
+      if ObsTime.Time < StartTime then
+      begin
+        EarlyTimes := EarlyTimes + ' ' + FloatToStr(ObsTime.Time);
+        Continue;
+      end;
 
-    if ObsTime.Time > EndTime then
-    begin
-      LateTimes := LateTimes + ' ' + FloatToStr(ObsTime.Time);
-      Continue;
-    end;
+      if ObsTime.Time > EndTime then
+      begin
+        LateTimes := LateTimes + ' ' + FloatToStr(ObsTime.Time);
+        Continue;
+      end;
 
-    TimeString := IntToStr(TimeIndex + 1);
-    while Length(TimeString) < MaxObsTimeLength do
-    begin
-      TimeString := '0' + TimeString;
+      TimeString := IntToStr(TimeIndex + 1);
+      while Length(TimeString) < MaxObsTimeLength do
+      begin
+        TimeString := '0' + TimeString;
+      end;
+      OBSNAM := ObservationGroup.ObservationName + '_' + TimeString;
+      if not UcodeObsNameOK(OBSNAM) then
+      begin
+        frmErrorsAndWarnings.AddWarning(Model, ObsNameWarningString, OBSNAM);
+      end;
+      ReferenceStressPeriodIndex := StartingTimes.IndexOfClosest(ObsTime.Time);
+      if (StartingTimes[ReferenceStressPeriodIndex] > ObsTime.Time) then
+      begin
+        Dec(ReferenceStressPeriodIndex);
+      end;
+      Assert(ReferenceStressPeriodIndex >= 0);
+//      TOFFSET := ObsTime.Time - StartTime;
+      TOFFSET := ObsTime.Time - StartingTimes[ReferenceStressPeriodIndex];
+      FLWOBS := ObsTime.ObservedValue;
+      if ObsTime.Comment = '' then
+      begin
+        Comment := '';
+      end
+      else
+      begin
+        Comment :=  ' Comment = ' + ObsTime.Comment;
+      end;
+      DataSet4.Add(OBSNAM + ' ' + IntToStr(ReferenceStressPeriodIndex+1)
+        +  ' ' + FreeFormattedReal(TOFFSET)
+        + FreeFormattedReal(FLWOBS)
+        + ' # Data Set 4: OBSNAM IREFSP TOFFSET FLWOBS'
+        + Comment);
+//      DataSet4.Add(OBSNAM + ' 1 ' + FreeFormattedReal(TOFFSET)
+//        + FreeFormattedReal(FLWOBS)
+//        + ' # Data Set 4: OBSNAM IREFSP TOFFSET FLWOBS'
+//        + Comment);
     end;
-    OBSNAM := ObservationGroup.ObservationName + '_' + TimeString;
-    if not UcodeObsNameOK(OBSNAM) then
+    if EarlyTimes <> '' then
     begin
-      frmErrorsAndWarnings.AddWarning(Model, ObsNameWarningString, OBSNAM);
+      EarlyTimes := 'Error; Flow Observaton = ' + ObservationGroup.ObservationName +
+        ' Early Times = ' +  EarlyTimes;
+      frmErrorsAndWarnings.AddWarning(Model,
+        GetFluxType + EarlyTimeWarning, EarlyTimes);
     end;
-    TOFFSET := ObsTime.Time - StartTime;
-    FLWOBS := ObsTime.ObservedValue;
-    if ObsTime.Comment = '' then
+    if LateTimes <> '' then
     begin
-      Comment := '';
-    end
-    else
-    begin
-      Comment :=  ' Comment = ' + ObsTime.Comment;
+      LateTimes := 'Error; Flow Observaton = ' + ObservationGroup.ObservationName +
+        ' Late Times = ' +  LateTimes;
+      frmErrorsAndWarnings.AddWarning(Model,
+        GetFluxType + LateTimeWarning, LateTimes);
     end;
-    DataSet4.Add(OBSNAM + ' 1 ' + FreeFormattedReal(TOFFSET)
-      + FreeFormattedReal(FLWOBS)
-      + ' # Data Set 4: OBSNAM IREFSP TOFFSET FLWOBS'
-      + Comment);
-  end;
-  if EarlyTimes <> '' then
-  begin
-    EarlyTimes := 'Error; Flow Observaton = ' + ObservationGroup.ObservationName +
-      ' Early Times = ' +  EarlyTimes;
-    frmErrorsAndWarnings.AddWarning(Model,
-      GetFluxType + EarlyTimeWarning, EarlyTimes);
-  end;
-  if LateTimes <> '' then
-  begin
-    LateTimes := 'Error; Flow Observaton = ' + ObservationGroup.ObservationName +
-      ' Late Times = ' +  LateTimes;
-    frmErrorsAndWarnings.AddWarning(Model,
-      GetFluxType + LateTimeWarning, LateTimes);
+  finally
+    StartingTimes.Free;
   end;
 end;
 
@@ -3741,10 +3797,12 @@ begin
   try
     if Values.Count = 0 then
     begin
-      ErrorRoot := 'The ' + PackageAbbreviation
-        + ' input file can not be created.';
-      DetailedMessage := 'In the boundary package related to the '
-        + PackageAbbreviation + ' package, no boundaries were defined.';
+//      ErrorRoot := 'The ' + PackageAbbreviation
+//        + ' input file can not be created.';
+//      DetailedMessage := 'In the boundary package related to the '
+//        + PackageAbbreviation + ' package, no boundaries were defined.';
+      ErrorRoot := Format('The %s input file can not be created.', [PackageAbbreviation]);
+      DetailedMessage := Format('In the boundary package related to the %s package, no boundaries were defined.', [PackageAbbreviation]);
       frmErrorsAndWarnings.AddError(Model, ErrorRoot, DetailedMessage);
       Exit;
     end;

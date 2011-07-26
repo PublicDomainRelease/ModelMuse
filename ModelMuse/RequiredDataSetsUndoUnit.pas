@@ -60,6 +60,10 @@ type
   private
     FOldModelSelection: TModelSelection;
     FNewModelSelection: TModelSelection;
+    FUpwSelected: boolean;
+    FLpfSelected: boolean;
+    FNwtSelected: boolean;
+    FPcgSelected: boolean;
   protected
     function Description: string; override;
   public
@@ -71,7 +75,8 @@ type
 implementation
 
 uses DataSetUnit, RbwParser, frmGoPhastUnit, frmGridColorUnit, 
-  frmContourDataUnit, frmGridValueUnit, contnrs, ScreenObjectUnit;
+  frmContourDataUnit, frmGridValueUnit, contnrs, ScreenObjectUnit, 
+  ModflowPackagesUnit;
 
 constructor TCustomCreateRequiredDataSetsUndo.Create;
 begin
@@ -208,10 +213,17 @@ end;
 { TUndoModelSelectionChange }
 
 constructor TUndoModelSelectionChange.Create(NewModelSelection: TModelSelection);
+var
+  Packages: TModflowPackages;
 begin
   inherited Create;
   FOldModelSelection := frmGoPhast.ModelSelection;
   FNewModelSelection := NewModelSelection;
+  Packages := frmGoPhast.PhastModel.ModflowPackages;
+  FUpwSelected := Packages.UpwPackage.IsSelected;
+  FLpfSelected := Packages.LpfPackage.IsSelected;
+  FNwtSelected := Packages.NwtPackage.IsSelected;
+  FPcgSelected := Packages.PcgPackage.IsSelected;
 end;
 
 function TUndoModelSelectionChange.Description: string;
@@ -227,9 +239,16 @@ begin
 end;
 
 procedure TUndoModelSelectionChange.Undo;
+var
+  Packages: TModflowPackages;
 begin
   inherited;
   frmGoPhast.ModelSelection := FOldModelSelection;
+  Packages := frmGoPhast.PhastModel.ModflowPackages;
+  Packages.UpwPackage.IsSelected := FUpwSelected;
+  Packages.LpfPackage.IsSelected := FLpfSelected;
+  Packages.NwtPackage.IsSelected := FNwtSelected;
+  Packages.PcgPackage.IsSelected := FPcgSelected;
   UpdatedRequiredDataSets;
 end;
 

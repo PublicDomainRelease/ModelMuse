@@ -91,8 +91,6 @@ type
         fGWChartLocation: string;
         fResidAnalysisLocation: string;
         fResidAnalysisAdvLocation: string;
-        function RemoveQuotes(const Value: string): string;
-        procedure SetModflow2005Location(const Value: string);
       public
         constructor Create;
         procedure Assign(Source: TPersistent); override;
@@ -127,6 +125,15 @@ var
   function GT_DepAttKeyword(DAT: TDepAttType): string;
   function GT_PriAttKeyword(PriAt: TPriAttType): string;
   procedure InitializeGlobalTypesUnit;
+  function ConvertString(const AString: string12): string; overload; inline;
+  function ConvertString(const AString: string20): string; overload; inline;
+  function ConvertString(const AString: string40): string; overload; inline;
+  function ConvertString(const AString: string255): string; overload; inline;
+
+  function ConvertString12(const AString: string): string12; inline;
+  function ConvertString20(const AString: string): string20; inline;
+  function ConvertString40(const AString: string): string40; inline;
+  function ConvertString255(const AString: string): string255; inline;
 
 implementation
 
@@ -144,6 +151,48 @@ resourcestring
   StrResidAnalysisDefaultPath = 'C:\WRDAPP\ucode_2005_1.021\bin\residual_analysis.exe';
   StrResidAnalysisAdv = 'ResidAnalysisAdv';
   StrResidAnalysisAdvDefaultPath = 'C:\WRDAPP\ucode_2005_1.021\bin\residual_analysis_adv.exe';
+
+function ConvertString(const AString: string12): string; overload; inline;
+begin
+  result := string(AString);
+end;
+
+function ConvertString(const AString: string20): string; overload; inline;
+begin
+  result := string(AString);
+end;
+
+function ConvertString(const AString: string40): string; overload; inline;
+begin
+  result := string(AString);
+end;
+
+function ConvertString(const AString: string255): string; overload; inline;
+begin
+  result := string(AString);
+end;
+
+function ConvertString12(const AString: string): string12; inline;
+begin
+  result := string12(AnsiString(AString));
+end;
+
+function ConvertString20(const AString: string): string20; inline;
+begin
+  result := string20(AnsiString(AString));
+end;
+
+function ConvertString40(const AString: string): string40; inline;
+begin
+  result := string40(AnsiString(AString));
+end;
+
+function ConvertString255(const AString: string): string255; inline;
+begin
+  result := string255(AnsiString(AString));
+end;
+
+
 
 function GT_ParAttKeyword(PAT: TParamAttType): string;
 begin
@@ -242,9 +291,6 @@ begin
 end;
 
 procedure TProgramLocations.ReadFromIniFile(IniFile: TMemInifile);
-//var
-//  ADirectory: string;
-//  DefaultLocation: string;
 begin
   Modflow2000Location := IniFile.ReadString(StrProgramLocations, StrMODFLOW2000,
     StrModflow2000DefaultPath);
@@ -258,40 +304,6 @@ begin
     StrResidAnalysisDefaultPath);
   ResidAnalysisAdvLocation := IniFile.ReadString(StrProgramLocations, StrResidAnalysisAdv,
     StrResidAnalysisAdvDefaultPath);
-//  ADirectory := GetCurrentDir;
-//  try
-//    SetCurrentDir(ExtractFileDir(ParamStr(0)));
-//    DefaultLocation :=
-//      ExpandFileName(StrModelMonitorDefaultPath);
-//    ModelMonitorLocation := IniFile.ReadString(StrProgramLocations,
-//      StrModelMonitor, DefaultLocation);
-//  finally
-//    SetCurrentDir(ADirectory);
-//  end;
-end;
-
-function TProgramLocations.RemoveQuotes(const Value: string): string;
-begin
-  result := Trim(Value);
-  if Length(result) > 0 then
-  begin
-    if result[1] = '"' then
-    begin
-      result := Copy(result, 2, MAXINT);
-    end;
-    if Length(result) > 0 then
-    begin
-      if result[Length(result)] = '"' then
-      begin
-        result := Copy(result, 1, Length(result) - 1);
-      end;
-    end;
-  end;
-end;
-
-procedure TProgramLocations.SetModflow2005Location(const Value: string);
-begin
-//
 end;
 
 procedure TProgramLocations.WriteToIniFile(IniFile: TMemInifile);

@@ -35,7 +35,7 @@ uses
   framePackageHobUnit, framePackageLpfUnit, frameModpathSelectionUnit,
   framePackageHufUnit, HufDefinition, framePackageMnw2Unit, framePackageSubUnit,
   frameZoneBudgetUnit, framePackageSwtUnit, framePkgHydmodUnit,
-  framePackageRCHUnit, framePackageUpwUnit;
+  framePackageRCHUnit, framePackageUpwUnit, framePackageNwtUnit;
 
 type
 
@@ -62,7 +62,6 @@ type
   TFrameNodeLink = class(TObject)
     Frame: TframePackage;
     Node: TTreeNode;
-//    Package: TModflowPackageSelection;
   end;
 
   TfrmModflowPackages = class(TfrmCustomGoPhast)
@@ -171,6 +170,8 @@ type
     jvspUPW: TJvStandardPage;
     framePkgUPW: TframePackageUpw;
     JvNetscapeSplitter6: TJvNetscapeSplitter;
+    jvspNWT: TJvStandardPage;
+    framePkgNwt: TframePackageNwt;
     procedure tvPackagesChange(Sender: TObject; Node: TTreeNode);
     procedure btnOKClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject); override;
@@ -205,6 +206,8 @@ type
     procedure framePkgLPFrcSelectionControllerEnabledChange(Sender: TObject);
     procedure framePkgUPWrcSelectionControllerEnabledChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure framePkgNwtpcNWTChange(Sender: TObject);
+    procedure framePkgNwtrcSelectionControllerEnabledChange(Sender: TObject);
   private
     IsLoaded: boolean;
     CurrentParameterType: TParameterType;
@@ -251,6 +254,8 @@ type
     procedure EnableUzfVerticalKSource;
     procedure StorePackages;
     procedure SetCurrentPackages(const Value: TModflowPackages);
+    procedure NwtSelectedChange(Sender: TObject);
+    procedure UpwSelectedChange(Sender: TObject);
     property CurrentPackages: TModflowPackages read FCurrentPackages
       write SetCurrentPackages;
     procedure StorePackageDataInFrames(Packages: TModflowPackages);
@@ -804,6 +809,19 @@ begin
   framePkgSFR.LpfUsed := framePkgLPF.Selected;
 end;
 
+procedure TfrmModflowPackages.framePkgNwtpcNWTChange(Sender: TObject);
+begin
+  inherited;
+  HelpKeyword := framePkgNwt.pcNWT.ActivePage.HelpKeyword;
+end;
+
+procedure TfrmModflowPackages.framePkgNwtrcSelectionControllerEnabledChange(
+  Sender: TObject);
+begin
+  inherited;
+  framePkgNwt.rcSelectionControllerEnabledChange(Sender);
+end;
+
 procedure TfrmModflowPackages.ChdSelectedChange(Sender: TObject);
 begin
   framePkgCHOB.CanSelect := framePkgCHD.Selected;
@@ -838,6 +856,47 @@ begin
   begin
     framePkgRVOB.Selected := False;
   end;
+end;
+
+procedure TfrmModflowPackages.NwtSelectedChange(Sender: TObject);
+begin
+  if framePkgNwt.Selected then
+  begin
+    framePkgUpw.Selected := True;
+    framePkgLPF.Selected := False;
+    framePkgBCF.Selected := False;
+    framePkgHuf.Selected := False;
+  end
+  else if framePkgUpw.Selected then
+  begin
+    framePkgUpw.Selected := False;
+    if not framePkgLPF.Selected and not framePkgBCF.Selected and not framePkgHuf.Selected then
+    begin
+      framePkgLpf.Selected := True;
+    end;
+  end;
+end;
+
+procedure TfrmModflowPackages.UpwSelectedChange(Sender: TObject);
+begin
+  if framePkgUpw.Selected then
+  begin
+    framePkgNwt.Selected := True;
+    framePcg.Selected := False;
+    framePkgSIP.Selected := False;
+    framePkgGMG.Selected := False;
+    framePkgDE4.Selected := False;
+  end
+  else if framePkgNwt.Selected then
+  begin
+    framePkgNwt.Selected := False;
+    if not framePcg.Selected and not framePkgSIP.Selected
+      and not framePkgGMG.Selected and not framePkgDE4.Selected then
+    begin
+      framePcg.Selected := True;
+    end;
+  end;
+       
 end;
 
 procedure TfrmModflowPackages.framePkgRCHrcSelectionControllerEnabledChange(
@@ -1044,6 +1103,7 @@ begin
   inherited;
   FFrameNodeLinks := TObjectList.Create;
   framePkgGMG.pcGMG.ActivePageIndex := 0;
+
 end;
 
 procedure TfrmModflowPackages.FormDestroy(Sender: TObject);
@@ -1500,6 +1560,8 @@ begin
     framePkgDRN.OnSelectedChange :=  DrnSelectedChange;
     framePkgGHB.OnSelectedChange :=  GhbSelectedChange;
     framePkgRIV.OnSelectedChange :=  RivSelectedChange;
+    framePkgNwt.OnSelectedChange :=  NwtSelectedChange;
+    framePkgUpw.OnSelectedChange :=  UpwSelectedChange;
     framePkgCHOB.CanSelect := False;
     framePkgDROB.CanSelect := False;
     framePkgGBOB.CanSelect := False;
@@ -1518,6 +1580,10 @@ begin
     else if frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected then
     begin
       jvplPackages.ActivePage := jvspBCF;
+    end
+    else if frmGoPhast.PhastModel.ModflowPackages.UpwPackage.IsSelected then
+    begin
+      jvplPackages.ActivePage := jvspUPW;
     end
     else
     begin
@@ -1840,6 +1906,10 @@ begin
   else if jvplPackages.ActivePage = jvspHFB then
   begin
     CurrentParameterType := ptHFB;
+  end
+  else if jvplPackages.ActivePage = jvspNWT then
+  begin
+    CurrentParameterType := ptUndefined;
   end;
 
   HelpKeyword := jvplPackages.ActivePage.HelpKeyword;
@@ -1973,6 +2043,8 @@ begin
             := FCurrentPackages.BcfPackage.IsSelected;
           OtherPackages.Packages.HufPackage.IsSelected
             := FCurrentPackages.HufPackage.IsSelected;
+          OtherPackages.Packages.UpwPackage.IsSelected
+            := FCurrentPackages.UpwPackage.IsSelected;
         end;
       end;
     end;
@@ -2234,8 +2306,11 @@ begin
   Packages.HufPackage.Frame := framePkgHuf;
   FPackageList.Add(Packages.HufPackage);
 
-//  Packages.UpwPackage.Frame := framePkgUPW;
-//  FPackageList.Add(Packages.UpwPackage);
+  if frmGoPhast.ModelSelection = msModflowNWT then
+  begin
+    Packages.UpwPackage.Frame := framePkgUPW;
+    FPackageList.Add(Packages.UpwPackage);
+  end;
 
   Packages.PcgPackage.Frame := framePCG;
   FPackageList.Add(Packages.PcgPackage);
@@ -2272,6 +2347,12 @@ begin
 
   Packages.De4Package.Frame := framePkgDE4;
   FPackageList.Add(Packages.De4Package);
+
+  if frmGoPhast.ModelSelection = msModflowNWT then
+  begin
+    Packages.NwtPackage.Frame := framePkgNwt;
+    FPackageList.Add(Packages.NwtPackage);
+  end;
 
   Packages.SubPackage.Frame := framePkgSub;
   FPackageList.Add(Packages.SubPackage);

@@ -5,12 +5,19 @@ unit frmImportPointsUnits;
 interface
 
 uses
-  SysUtils, Types, Classes, Variants, Graphics, Controls, Forms,
+  Windows, SysUtils, Types, Classes, Variants, Graphics, Controls, Forms,
   Dialogs, StdCtrls, frmCustomGoPhastUnit, ExtCtrls, CheckLst, Grids,
   RbwDataGrid4, Buttons, ComCtrls, frmImportShapefileUnit, Spin, JvExControls,
-  JvxCheckListBox, Mask, JvExMask, JvSpin;  
+  JvxCheckListBox, Mask, JvExMask, JvSpin, DataSetUnit, ScreenObjectUnit;
 
 type
+  TChdColumns = (ccStartTime, ccEndTime, ccStartHead, ccEndHead);
+  TDrnColumns = (dcStartTime, dcEndTime, dcElevation, dcConductance);
+  TGhbColumns = (gcStartTime, gcEndTime, gcBoundaryHead, gcConductance);
+  TRivColumns = (rcStartTime, rcEndTime, rcStage, rcConductance, rcBottom);
+  TWelColumns = (wcStartTime, wcEndTime, wcPumpingRate);
+  THobColumns = (hcName, hcTime, hcHead, hcStatistic, hcStatFlag);
+
   {@abstract(@name is the command used to import
     points or reverse the import.)}
   TUndoImportPoints = class(TUndoImportShapefile)
@@ -59,8 +66,6 @@ type
     // @name is the panel at the bottom of @link(tabData) that holds
     // @link(seRows) and @link(btnOpenFile).
     pnlDataTabControls: TPanel;
-    // The caption of @name is used to label @link(jvclbDataSets).
-    pnlLabelDataSets: TPanel;
     // @name is the panel that holds @link(rgEvaluatedAt)
     // and @link(rgViewDirection).
     pnlRadioGroups: TPanel;
@@ -86,15 +91,17 @@ type
     // @name holds @link(dgData) and @link(pnlDataTabControls).
     tabData: TTabSheet;
     dgData: TRbwDataGrid4;
-    { Specifies the data sets to be used and the coordinate directions.
-    @unOrderedList(
-    @Item(OnClickCheck = @link(jvclbDataSetsClickCheck).)
-    )
-    }
-    jvclbDataSets: TJvxCheckListBox;
     cbImportAsSingleObject: TCheckBox;
     cbVisible: TCheckBox;
     seRows: TJvSpinEdit;
+    pnlData: TPanel;
+    jvclbDataSets: TJvxCheckListBox;
+    pnlLabelDataSets: TPanel;
+    lblBoundaryChoice: TLabel;
+    comboBoundaryChoice: TComboBox;
+    lblParameter: TLabel;
+    comboParameter: TComboBox;
+    cbLayer: TCheckBox;
     // @name makes sure that at least one of the following checkboxes is
     // checked: @link(cbIntersectedCells), and
     // @link(cbInterpolation).  If not, their fonts are changed to emphasize
@@ -125,6 +132,8 @@ type
     procedure dgDataDistributeTextProgress(Sender: TObject; Position,
       Max: Integer);
     procedure dgDataEndUpdate(Sender: TObject);
+    procedure comboBoundaryChoiceChange(Sender: TObject);
+    procedure cbLayerClick(Sender: TObject);
   private
     // @name is the column that specifies the X coordinate.
     XCol: integer;
@@ -146,6 +155,10 @@ type
     Z2Col: integer;
     FImportFileName: string;
     StartTime: TDateTime;
+    FRequiredCols: Integer;
+    FMultiValueList: TList;
+    FObsCount: Integer;
+    FObsRoot: string;
     // @name updates the contents of @link(jvclbDataSets).
     procedure UpdateDataSets;
     // @name updates the column captions for the columns that specify
@@ -157,6 +170,18 @@ type
       and @link(cbInterpolation) based on @link(rgEvaluatedAt).ItemIndex.}
     procedure SetCheckBoxCaptions;
     procedure EnableOkButton;
+    procedure UpdateChdColumns;
+    procedure UpdateDrnColumns;
+    procedure UpdateGhbColumns;
+    procedure UpdateRivColumns;
+    procedure UpdateWelColumns;
+    procedure UpdateHobColumns;
+    procedure SetBoundaryColumnFormats;
+    procedure ImportDataArrayValues(var InvalidRow: Boolean;
+      RowIndex: Integer;
+      PointCount: Integer; var AScreenObject: TScreenObject);
+    procedure ImportModflowBoundary(var InvalidRow: Boolean;
+      AScreenObject: TScreenObject; RowIndex: Integer);
     { Private declarations }
   public
     { Public declarations }
@@ -164,9 +189,14 @@ type
 
 implementation
 
-uses Clipbrd, Contnrs, GoPhastTypes, frmGoPhastUnit, DataSetUnit, RbwParser,
-  frmProgressUnit, UndoItems, ScreenObjectUnit, FastGEO, GIS_Functions,
-  ValueArrayStorageUnit, PhastModelUnit;
+uses Clipbrd, Contnrs, GoPhastTypes, frmGoPhastUnit, RbwParser,
+  frmProgressUnit, UndoItems, FastGEO, GIS_Functions,
+  ValueArrayStorageUnit, PhastModelUnit, ModflowPackagesUnit,
+  ModflowPackageSelectionUnit, ModflowTransientListParameterUnit,
+  OrderedCollectionUnit, RealListUnit, ModflowBoundaryUnit,
+  ModflowConstantHeadBoundaryUnit, ModflowGhbUnit, ModflowWellUnit,
+  ModflowRivUnit, ModelMuseUtilities, ModflowDrnUnit, AbstractGridUnit,
+  frameHeadObservationsUnit, IntListUnit, framePackageHobUnit, ModflowHobUnit;
 
 {$R *.dfm}
 
@@ -174,12 +204,17 @@ resourcestring
   rsX = 'X';
   rsY = 'Y';
   rsZ = 'Z';
-  rsX1 = 'X1';
-  rsY1 = 'Y1';
-  rsZ1 = 'Z1';
-  rsX2 = 'X2';
-  rsY2 = 'Y2';
-  rsZ2 = 'Z2';
+  rsX1 = 'Higher X';
+  rsY1 = 'Higher Y';
+  rsZ1 = 'Higher Z';
+  rsX2 = 'Lower X';
+  rsY2 = 'Lower Y';
+  rsZ2 = 'Lower Z';
+  StrMODFLOWBoundaryCon1 = 'MODFLOW boundary conditions can not be imported a' +
+  's a single object in this dialog box.';
+  StrMODFLOWBoundaryCon2 = 'MODFLOW boundary conditions can not be set by int' +
+  'erpolation.';
+  StrObservationName = 'Observation Name';
 
 procedure TfrmImportPoints.seRowsChange(Sender: TObject);
 begin
@@ -188,6 +223,8 @@ begin
 end;
 
 procedure TfrmImportPoints.FormCreate(Sender: TObject);
+var
+  Packages: TModflowPackages;
 begin
   inherited;
   rgEvaluatedAt.Items[Ord(eaBlocks)] := EvalAtToString(eaBlocks,
@@ -200,12 +237,114 @@ begin
     rgEvaluatedAt.ItemIndex := 0;
   end;
 
+  if (frmGoPhast.PhastModel.ModelSelection
+    in [msModflow, msModflowLGR, msModflowNWT]) then
+  begin
+    Packages := frmGoPhast.PhastModel.ModflowPackages;
+    if Packages.ChdBoundary.IsSelected then
+    begin
+      comboBoundaryChoice.Items.AddObject(Packages.ChdBoundary.PackageIdentifier,
+        Packages.ChdBoundary);
+    end;
+    if Packages.DrnPackage.IsSelected then
+    begin
+      comboBoundaryChoice.Items.AddObject(Packages.DrnPackage.PackageIdentifier,
+        Packages.DrnPackage);
+    end;
+    if Packages.GhbBoundary.IsSelected then
+    begin
+      comboBoundaryChoice.Items.AddObject(Packages.GhbBoundary.PackageIdentifier,
+        Packages.GhbBoundary);
+    end;
+    if Packages.RivPackage.IsSelected then
+    begin
+      comboBoundaryChoice.Items.AddObject(Packages.RivPackage.PackageIdentifier,
+        Packages.RivPackage);
+    end;
+    if Packages.WelPackage.IsSelected then
+    begin
+      comboBoundaryChoice.Items.AddObject(Packages.WelPackage.PackageIdentifier,
+        Packages.WelPackage);
+    end;
+    if Packages.HobPackage.IsSelected then
+    begin
+      comboBoundaryChoice.Items.AddObject(Packages.HobPackage.PackageIdentifier,
+        Packages.HobPackage);
+    end;
+  end;
+
   FImportFileName := '';
   cbIntersectedCellsClick(nil);
   SetCheckBoxCaptions;
   pcImportPoints.ActivePageIndex := 0;
   UpdateDimensionColumns;
   UpdateDataSets;
+end;
+
+procedure TfrmImportPoints.UpdateChdColumns;
+const
+  RequiredColumns = 4;
+var
+  FirstColumn: Integer;
+  ColIndex: TChdColumns;
+  ACol: Integer;
+begin
+  FirstColumn := rgElevationCount.ItemIndex + 2;
+  dgData.ColCount := FirstColumn + RequiredColumns;
+  SetBoundaryColumnFormats;
+  for ColIndex := Low(TChdColumns) to High(TChdColumns) do
+  begin
+    ACol := FirstColumn + Ord(ColIndex);
+    Assert(ACol < dgData.ColCount);
+    case ColIndex of
+      ccStartTime: dgData.Cells[ACol, 0] := StrStartingTime;
+      ccEndTime: dgData.Cells[ACol, 0] := StrEndingTime;
+      ccStartHead: dgData.Cells[ACol, 0] := StrStartingHead;
+      ccEndHead: dgData.Cells[ACol, 0] := StrEndingHead;
+      else Assert(False);
+    end;
+  end;
+end;
+
+procedure TfrmImportPoints.UpdateHobColumns;
+const
+  RequiredColumns = Ord(High(THobColumns)) + 1;
+var
+  FirstColumn: Integer;
+  ColIndex: THobColumns;
+  ACol: Integer;
+  AColumn: TRbwColumn4;
+  ColumnIndex: Integer;
+begin
+  FirstColumn := rgElevationCount.ItemIndex + 2;
+  dgData.ColCount := FirstColumn + RequiredColumns;
+  SetBoundaryColumnFormats;
+
+  ColumnIndex := FirstColumn+ Ord(hcName);
+  AColumn := dgData.Columns[ColumnIndex];
+  AColumn.Format := rcf4String;
+  AColumn.MaxLength := 12;
+
+  ColumnIndex := FirstColumn+ Ord(hcStatFlag);
+  AColumn := dgData.Columns[ColumnIndex];
+  AColumn.Format := rcf4Integer;
+  AColumn.Min := Ord(Low(TStatFlag));
+  AColumn.Max := Ord(High(TStatFlag));
+  AColumn.CheckMin := True;
+  AColumn.CheckMax := True;
+
+  for ColIndex := Low(THobColumns) to High(THobColumns) do
+  begin
+    ACol := FirstColumn + Ord(ColIndex);
+    Assert(ACol < dgData.ColCount);
+    case ColIndex of
+      hcName: dgData.Cells[ACol, 0] := StrObservationName;
+      hcTime: dgData.Cells[ACol, 0] := StrTime;
+      hcHead: dgData.Cells[ACol, 0] := StrObservedHead;
+      hcStatistic: dgData.Cells[ACol, 0] := StrStatistic;
+      hcStatFlag: dgData.Cells[ACol, 0] := StrStatFlag;
+    end;
+  end;
 end;
 
 procedure TfrmImportPoints.UpdateDataSets;
@@ -294,11 +433,39 @@ begin
     btnOK.Enabled := False;
     for RowIndex := 1 to dgData.RowCount - 1 do
     begin
-      if (dgData.Cells[0,RowIndex] <> '')
-        and (dgData.Cells[1,RowIndex] <> '') then
-      begin
-        btnOK.Enabled := True;
-        break;
+      case rgElevationCount.ItemIndex of
+        0:
+          begin
+            if (dgData.Cells[0,RowIndex] <> '')
+              and (dgData.Cells[1,RowIndex] <> '') then
+            begin
+              btnOK.Enabled := True;
+              break;
+            end;
+          end;
+        1:
+          begin
+            if (dgData.Cells[0,RowIndex] <> '')
+              and (dgData.Cells[1,RowIndex] <> '')
+              and (dgData.Cells[2,RowIndex] <> '')
+              then
+            begin
+              btnOK.Enabled := True;
+              break;
+            end;
+          end;
+        2:
+          begin
+            if (dgData.Cells[0,RowIndex] <> '')
+              and (dgData.Cells[1,RowIndex] <> '')
+              and (dgData.Cells[2,RowIndex] <> '')
+              and (dgData.Cells[3,RowIndex] <> '')
+              then
+            begin
+              btnOK.Enabled := True;
+              break;
+            end;
+          end;
       end;
     end;
   end
@@ -384,7 +551,7 @@ begin
   finally
     Captions.Free;
   end;
-  if ItemChecked then
+  if ItemChecked or (comboBoundaryChoice.ItemIndex > 0) then
   begin
     jvclbDataSets.Color := clWindow;
   end
@@ -404,6 +571,12 @@ begin
     else Assert(False);
   end;
 
+  cbLayer.Enabled := rgViewDirection.ItemIndex = 0;
+  if not cbLayer.Enabled then
+  begin
+    cbLayer.Checked := False;
+  end;
+  cbLayerClick(nil);
 
   UpdateDimensionColumns;
   UpdateDataSets;
@@ -485,6 +658,492 @@ begin
     and (rgElevationCount.ItemIndex = 2), Z1Col);
   UpdateColumn(rsZ2, (rgViewDirection.ItemIndex = 0)
     and (rgElevationCount.ItemIndex = 2), Z2Col);
+
+  if cbLayer.Checked then
+  begin
+    dgData.Cells[ZCol, 0] := 'Layer';
+    dgData.Columns[ZCol].Format := rcf4Integer;
+  end;
+end;
+
+procedure TfrmImportPoints.UpdateDrnColumns;
+const
+  RequiredColumns = 4;
+var
+  FirstColumn: Integer;
+  ColIndex: TDrnColumns;
+  ACol: Integer;
+begin
+  FirstColumn := rgElevationCount.ItemIndex + 2;
+  dgData.ColCount := FirstColumn + RequiredColumns;
+  SetBoundaryColumnFormats;
+  for ColIndex := Low(TDrnColumns) to High(TDrnColumns) do
+  begin
+    ACol := FirstColumn + Ord(ColIndex);
+    Assert(ACol < dgData.ColCount);
+    case ColIndex of
+      dcStartTime: dgData.Cells[ACol, 0] := StrStartingTime;
+      dcEndTime: dgData.Cells[ACol, 0] := StrEndingTime;
+      dcElevation: dgData.Cells[ACol, 0] := StrDrainElevation;
+      dcConductance: dgData.Cells[ACol, 0] := StrConductance;
+    end;
+  end;
+end;
+
+procedure TfrmImportPoints.UpdateGhbColumns;
+const
+  RequiredColumns = 4;
+var
+  FirstColumn: Integer;
+  ColIndex: TGhbColumns;
+  ACol: Integer;
+begin
+  FirstColumn := rgElevationCount.ItemIndex + 2;
+  dgData.ColCount := FirstColumn + RequiredColumns;
+  SetBoundaryColumnFormats;
+  for ColIndex := Low(TGhbColumns) to High(TGhbColumns) do
+  begin
+    ACol := FirstColumn + Ord(ColIndex);
+    Assert(ACol < dgData.ColCount);
+    case ColIndex of
+      gcStartTime: dgData.Cells[ACol, 0] := StrStartingTime;
+      gcEndTime: dgData.Cells[ACol, 0] := StrEndingTime;
+      gcBoundaryHead: dgData.Cells[ACol, 0] := StrBoundaryHead;
+      gcConductance: dgData.Cells[ACol, 0] := StrConductance;
+    end;
+  end;
+end;
+
+procedure TfrmImportPoints.UpdateRivColumns;
+const
+  RequiredColumns = 5;
+var
+  FirstColumn: Integer;
+  ColIndex: TRivColumns;
+  ACol: Integer;
+begin
+  FirstColumn := rgElevationCount.ItemIndex + 2;
+  dgData.ColCount := FirstColumn + RequiredColumns;
+  SetBoundaryColumnFormats;
+  for ColIndex := Low(TRivColumns) to High(TRivColumns) do
+  begin
+    ACol := FirstColumn + Ord(ColIndex);
+    Assert(ACol < dgData.ColCount);
+    case ColIndex of
+      rcStartTime: dgData.Cells[ACol, 0] := StrStartingTime;
+      rcEndTime: dgData.Cells[ACol, 0] := StrEndingTime;
+      rcStage: dgData.Cells[ACol, 0] := StrRiverStage;
+      rcConductance: dgData.Cells[ACol, 0] := StrConductance;
+      rcBottom: dgData.Cells[ACol, 0] := StrRiverBottom;
+    end;
+  end;
+end;
+
+procedure TfrmImportPoints.UpdateWelColumns;
+const
+  RequiredColumns = 3;
+var
+  FirstColumn: Integer;
+  ColIndex: TWelColumns;
+  ACol: Integer;
+begin
+  FirstColumn := rgElevationCount.ItemIndex + 2;
+  dgData.ColCount := FirstColumn + RequiredColumns;
+  SetBoundaryColumnFormats;
+  for ColIndex := Low(TWelColumns) to High(TWelColumns) do
+  begin
+    ACol := FirstColumn + Ord(ColIndex);
+    Assert(ACol < dgData.ColCount);
+    case ColIndex of
+      wcStartTime: dgData.Cells[ACol, 0] := StrStartingTime;
+      wcEndTime: dgData.Cells[ACol, 0] := StrEndingTime;
+      wcPumpingRate: dgData.Cells[ACol, 0] := StrPumpingRate;
+    end;
+  end;
+end;
+
+procedure TfrmImportPoints.SetBoundaryColumnFormats;
+var
+  ColumnIndex: Integer;
+  FirstColumn: Integer;
+  AColumn: TRbwColumn4;
+begin
+  FirstColumn := rgElevationCount.ItemIndex + 2;
+  for ColumnIndex := FirstColumn to dgData.ColCount - 1 do
+  begin
+    AColumn := dgData.Columns[ColumnIndex];
+    AColumn.Format := rcf4Real;
+    AColumn.AutoAdjustRowHeights := True;
+    AColumn.AutoAdjustColWidths := True;
+    AColumn.WordWrapCaptions := True;
+  end;
+end;
+
+procedure TfrmImportPoints.ImportDataArrayValues(var InvalidRow: Boolean;
+  RowIndex: Integer;
+  PointCount: Integer; var AScreenObject: TScreenObject);
+var
+  Position: Integer;
+  AFormula: string;
+  ARealValue: Double;
+  DataSetValues: TValueArrayStorage;
+  AnIntValue: Integer;
+  ColIndex: Integer;
+  DataArray: TDataArray;
+begin
+  InvalidRow := False;
+  try
+    DataSetValues := nil;
+    for ColIndex := FRequiredCols to dgData.ColCount - 1 do
+    begin
+      DataArray := dgData.Objects[ColIndex, 0] as TDataArray;
+      Position := AScreenObject.AddDataSet(DataArray);
+      Assert(Position >= 0);
+      if cbImportAsSingleObject.Checked then
+      begin
+        DataSetValues := FMultiValueList[ColIndex - FRequiredCols];
+      end;
+      case DataArray.DataType of
+        rdtDouble:
+          begin
+            ARealValue := StrToFloat(dgData.Cells[ColIndex, RowIndex]);
+            if cbImportAsSingleObject.Checked then
+            begin
+              DataSetValues.RealValues[PointCount - 1] := ARealValue;
+            end
+            else
+            begin
+              AScreenObject.DataSetFormulas[Position] := dgData.Cells[ColIndex, RowIndex];
+            end;
+          end;
+        rdtInteger:
+          begin
+            AnIntValue := StrToInt(dgData.Cells[ColIndex, RowIndex]);
+            if cbImportAsSingleObject.Checked then
+            begin
+              DataSetValues.IntValues[PointCount - 1] := AnIntValue;
+            end
+            else
+            begin
+              AScreenObject.DataSetFormulas[Position] := dgData.Cells[ColIndex, RowIndex];
+            end;
+          end;
+        rdtBoolean:
+          begin
+            if cbImportAsSingleObject.Checked then
+            begin
+              if dgData.Checked[ColIndex, RowIndex] then
+              begin
+                DataSetValues.BooleanValues[PointCount - 1] := True;
+              end
+              else
+              begin
+                DataSetValues.BooleanValues[PointCount - 1] := False;
+              end;
+            end
+            else
+            begin
+              if dgData.Checked[ColIndex, RowIndex] then
+              begin
+                AScreenObject.DataSetFormulas[Position] := 'True';
+              end
+              else
+              begin
+                AScreenObject.DataSetFormulas[Position] := 'False';
+              end;
+            end;
+          end;
+        rdtString:
+          begin
+            AFormula := dgData.Cells[ColIndex, RowIndex];
+            if cbImportAsSingleObject.Checked then
+            begin
+              if Length(AFormula) > 0 then
+              begin
+                if AFormula[1] = '"' then
+                begin
+                  AFormula := Copy(AFormula, 2, MAXINT);
+                end;
+              end;
+              if Length(AFormula) > 0 then
+              begin
+                if AFormula[Length(AFormula)] = '"' then
+                begin
+                  AFormula := Copy(AFormula, 1, Length(AFormula) - 1);
+                end;
+              end;
+              DataSetValues.StringValues[PointCount - 1] := AFormula;
+            end
+            else
+            begin
+              if Length(AFormula) > 0 then
+              begin
+                if AFormula[1] <> '"' then
+                begin
+                  AFormula := '"' + AFormula;
+                end;
+                if AFormula[Length(AFormula)] <> '"' then
+                begin
+                  AFormula := AFormula + '"';
+                end;
+              end
+              else
+              begin
+                AFormula := '""';
+              end;
+              AScreenObject.DataSetFormulas[Position] := AFormula;
+            end;
+          end;
+      else
+        Assert(False);
+      end;
+    end;
+  except
+    on EConvertError do
+    begin
+      FreeAndNil(AScreenObject);
+      if cbImportAsSingleObject.Checked then
+      begin
+        Beep;
+        MessageDlg('Invalid data in row ' + IntToStr(RowIndex) + '.', mtError, [mbOK], 0);
+        InvalidRow := True;
+      end
+      else
+      begin
+        InvalidRow := True;
+      end;
+      Exit;
+    end;
+  end;
+end;
+
+procedure TfrmImportPoints.ImportModflowBoundary(var InvalidRow: Boolean;
+  AScreenObject: TScreenObject; RowIndex: Integer);
+var
+  Packages: TModflowPackages;
+  RivItem: TRivItem;
+  DrnItem: TDrnItem;
+  Values: TRealList;
+  AnItem: TModflowParamItem;
+  Package: TModflowPackageSelection;
+  ChdItem: TChdItem;
+  ABoundary: TModflowParamBoundary;
+  BoundaryItem: TCustomModflowBoundaryItem;
+  GhbItem: TGhbItem;
+  WelItem: TWellItem;
+  AParam: TModflowTransientListParameter;
+  ColIndex: Integer;
+  IntValues: TIntegerList;
+  HobItem: THobItem;
+  IntValue: Integer;
+  HobBoundary: THobBoundary;
+  NewObsName: string;
+  ObsCount: Integer;
+  NewItemName: string;
+  LocalObsRoot: string;
+begin
+  InvalidRow := False;
+  Values := TRealList.Create;
+  IntValues := TIntegerList.Create;
+  try
+    Package := comboBoundaryChoice.Items.Objects[comboBoundaryChoice.ItemIndex] as TModflowPackageSelection;
+    Packages := frmGoPhast.PhastModel.ModflowPackages;
+    for ColIndex := FRequiredCols to dgData.ColCount - 1 do
+    begin
+      if (Package = Packages.HobPackage) and (ColIndex = dgData.ColCount - 1) then
+      begin
+        try
+          IntValues.Add(StrToInt(dgData.Cells[ColIndex, RowIndex]));
+        except
+          on E: EConvertError do
+          begin
+            InvalidRow := True;
+            Exit;
+          end;
+        end;
+      end
+      else
+      if (Package = Packages.HobPackage) and (ColIndex = FRequiredCols) then
+      begin
+        // skip the name column.
+        Values.Add(0);
+      end
+      else
+      begin
+        try
+          Values.Add(StrToFloat(dgData.Cells[ColIndex, RowIndex]));
+        except
+          on E: EConvertError do
+          begin
+            InvalidRow := True;
+            Exit;
+          end;
+        end;
+      end;
+    end;
+    ABoundary := nil;
+    HobBoundary := nil;
+    if Package = Packages.ChdBoundary then
+    begin
+      AScreenObject.CreateChdBoundary;
+      ABoundary := AScreenObject.ModflowBoundaries.ModflowChdBoundary;
+    end
+    else if Package = Packages.GhbBoundary then
+    begin
+      AScreenObject.CreateGhbBoundary;
+      ABoundary := AScreenObject.ModflowBoundaries.ModflowGhbBoundary;
+    end
+    else if Package = Packages.WelPackage then
+    begin
+      AScreenObject.CreateWelBoundary;
+      ABoundary := AScreenObject.ModflowBoundaries.ModflowWellBoundary;
+    end
+    else if Package = Packages.RivPackage then
+    begin
+      AScreenObject.CreateRivBoundary;
+      ABoundary := AScreenObject.ModflowBoundaries.ModflowRivBoundary;
+    end
+    else if Package = Packages.DrnPackage then
+    begin
+      AScreenObject.CreateDrnBoundary;
+      ABoundary := AScreenObject.ModflowBoundaries.ModflowDrnBoundary;
+    end
+    else if Package = Packages.HobPackage then
+    begin
+      AScreenObject.CreateHeadObservations;
+      HobBoundary := AScreenObject.ModflowBoundaries.ModflowHeadObservations;
+      ObsCount := HobBoundary.Values.Count;
+      if ObsCount = 0 then
+      begin
+        Inc(FObsCount);
+      end;
+      LocalObsRoot := HobBoundary.ObservationName;
+      if LocalObsRoot = '' then
+      begin
+        LocalObsRoot := Trim(dgData.Cells[FRequiredCols + Ord(hcName), RowIndex]);
+      end;
+      if LocalObsRoot = '' then
+      begin
+        NewObsName := FObsRoot + IntToStr(FObsCount) + '_';
+        NewItemName := NewObsName + IntToStr(ObsCount+1);
+        while (Length(NewItemName) > 12) and (FObsRoot <> '') do
+        begin
+          FObsRoot := Copy(FObsRoot, 1, Length(FObsRoot) -1);
+          NewObsName := FObsRoot + IntToStr(FObsCount) + '_';
+          NewItemName := NewObsName + IntToStr(ObsCount+1);
+        end;
+      end
+      else
+      begin
+        NewItemName := LocalObsRoot + IntToStr(ObsCount+1);
+        while (Length(NewItemName) > 12) and (LocalObsRoot <> '') do
+        begin
+          LocalObsRoot := Copy(LocalObsRoot, 1, Length(LocalObsRoot) -1);
+          NewObsName := LocalObsRoot + IntToStr(FObsCount) + '_';
+          NewItemName := NewObsName + IntToStr(ObsCount+1);
+        end;
+        NewObsName := LocalObsRoot;
+      end;
+      HobBoundary.ObservationName := NewObsName;
+      AScreenObject.Name := TScreenObject.ValidName(NewObsName);
+    end
+    else
+    begin
+      Assert(False);
+    end;
+    if ABoundary is TSpecificModflowBoundary then
+    begin
+      TSpecificModflowBoundary(ABoundary).FormulaInterpretation := fiDirect;
+    end;
+
+    BoundaryItem := nil;
+    HobItem := nil;
+    AParam := comboParameter.Items.Objects[comboParameter.ItemIndex] as TModflowTransientListParameter;
+    if AParam = nil then
+    begin
+      if ABoundary <> nil then
+      begin
+        BoundaryItem := ABoundary.Values.Add as TCustomModflowBoundaryItem;
+      end;
+      if HobBoundary <> nil then
+      begin
+        HobItem := HobBoundary.Values.Add as THobItem;
+      end;
+    end
+    else
+    begin
+      AnItem := ABoundary.Parameters.GetParamByName(AParam.ParameterName);
+      if AnItem = nil then
+      begin
+        AnItem := ABoundary.Parameters.Add;
+        AnItem.Param.Param := AParam;
+      end;
+      BoundaryItem := AnItem.Param.Add as TCustomModflowBoundaryItem;
+    end;
+    if Package = Packages.ChdBoundary then
+    begin
+      ChdItem := BoundaryItem as TChdItem;
+      ChdItem.StartTime := Values[Ord(ccStartTime)];
+      ChdItem.EndTime := Values[Ord(ccEndTime)];
+      ChdItem.StartHead := FortranFloatToStr(Values[Ord(ccStartHead)]);
+      ChdItem.EndHead := FortranFloatToStr(Values[Ord(ccEndHead)]);
+    end
+    else if Package = Packages.GhbBoundary then
+    begin
+      GhbItem := BoundaryItem as TGhbItem;
+      GhbItem.StartTime := Values[Ord(gcStartTime)];
+      GhbItem.EndTime := Values[Ord(gcEndTime)];
+      GhbItem.BoundaryHead := FortranFloatToStr(Values[Ord(gcBoundaryHead)]);
+      GhbItem.Conductance := FortranFloatToStr(Values[Ord(gcConductance)]);
+    end
+    else if Package = Packages.WelPackage then
+    begin
+      WelItem := BoundaryItem as TWellItem;
+      WelItem.StartTime := Values[Ord(wcStartTime)];
+      WelItem.EndTime := Values[Ord(wcEndTime)];
+      WelItem.PumpingRate := FortranFloatToStr(Values[Ord(wcPumpingRate)]);
+    end
+    else if Package = Packages.RivPackage then
+    begin
+      RivItem := BoundaryItem as TRivItem;
+      RivItem.StartTime := Values[Ord(rcStartTime)];
+      RivItem.EndTime := Values[Ord(rcEndTime)];
+      RivItem.RiverStage := FortranFloatToStr(Values[Ord(rcStage)]);
+      RivItem.Conductance := FortranFloatToStr(Values[Ord(rcConductance)]);
+      RivItem.RiverBottom := FortranFloatToStr(Values[Ord(rcBottom)]);
+    end
+    else if Package = Packages.DrnPackage then
+    begin
+      DrnItem := BoundaryItem as TDrnItem;
+      DrnItem.StartTime := Values[Ord(dcStartTime)];
+      DrnItem.EndTime := Values[Ord(dcEndTime)];
+      DrnItem.Elevation := FortranFloatToStr(Values[Ord(dcElevation)]);
+      DrnItem.Conductance := FortranFloatToStr(Values[Ord(dcConductance)]);
+    end
+    else if Package = Packages.HobPackage then
+    begin
+      HobItem.Time := Values[Ord(hcTime)];
+      HobItem.Head := Values[Ord(hcHead)];
+      HobItem.Statistic := Values[Ord(hcStatistic)];
+      IntValue := IntValues[0];
+      if IntValue < Ord(Low(TStatFlag)) then
+      begin
+        IntValue := Ord(Low(TStatFlag))
+      end;
+      if IntValue > Ord(High(TStatFlag)) then
+      begin
+        IntValue := Ord(High(TStatFlag))
+      end;
+      HobItem.StatFlag := TStatFlag(IntValue);
+    end
+    else
+    begin
+      Assert(False);
+    end;
+  finally
+    Values.Free;
+    IntValues.Free;
+  end;
 end;
 
 procedure TfrmImportPoints.dgDataColMoving(Sender: TObject; const Origin,
@@ -536,6 +1195,16 @@ end;
 procedure TfrmImportPoints.rgElevationCountClick(Sender: TObject);
 begin
   inherited;
+  if rgElevationCount.ItemIndex = 0 then
+  begin
+    comboBoundaryChoice.ItemIndex := 0;
+    comboBoundaryChoiceChange(nil);
+  end;
+  comboBoundaryChoice.Enabled := (frmGoPhast.PhastModel.ModelSelection
+    in [msModflow, msModflowLGR, msModflowNWT])
+    and (rgElevationCount.ItemIndex > 0)
+    and (comboBoundaryChoice.Items.Count > 1);
+
   UpdateDimensionColumns;
   UpdateDataSets;
 end;
@@ -562,25 +1231,35 @@ var
   AYCol: integer;
   AZ1Col: integer;
   AZ2Col: integer;
-  RequiredCols: integer;
   ColIndex: integer;
-  AFormula: string;
   ExistingObjectCount: integer;
   LastValue: string;
   ElevValues1: TValueArrayStorage;
   ElevValues2: TValueArrayStorage;
   Item: TValueArrayItem;
-  MultiValueList: TList;
-  DataSetValues: TValueArrayStorage;
-  ARealValue: double;
-  AnIntValue: integer;
+  NewPoint: Boolean;
+  FirstPoint: Boolean;
+  PointCount: Integer;
+  InvalidRow: Boolean;
+  BV: TCustomMF_ListBoundColl;
+  NewScreenObject: Boolean;
+  ValueListIndex: Integer;
+  VList: TValueArrayStorage;
+  Elevation1: Extended;
+  Elevation2: Extended;
+  Grid: TCustomGrid;
+  Layer: Integer;
+  ACell: T2DTopCell;
+  DummyInvalidIndex: Boolean;
 begin
-  RequiredCols := rgElevationCount.ItemIndex + 2;
-  Root := edRoot.Text + '_';
+  FObsCount := 0;
+  FRequiredCols := rgElevationCount.ItemIndex + 2;
+  Root := StringReplace(edRoot.Text, ' ', '_', [rfReplaceAll]) + '_';
   if Trim(Root) = '' then
   begin
     Root := ObjectPrefix;
   end;
+  FObsRoot := Copy(Root, 1, 12);
   ExistingObjectCount :=
     frmGoPhast.PhastModel.NumberOfLargestScreenObjectsStartingWith(Root);
   AnXCol := -1;
@@ -664,7 +1343,7 @@ begin
     Assert(False);
   end;
 
-  MultiValueList := TList.Create;
+  FMultiValueList := TList.Create;
   ScreenObjectList := TList.Create;
   frmGoPhast.PhastModel.BeginScreenObjectUpdate;
   ElevValues1 := TValueArrayStorage.Create;
@@ -687,25 +1366,47 @@ begin
       frmProgressMM.pbProgress.Position := 0;
       frmProgressMM.PopupParent := frmGoPhast;
       frmProgressMM.Show;
+      FirstPoint := True;
+      PointCount := 0;
       for RowIndex := 1 to dgData.RowCount - 1 do
       begin
-        try
-          begin
-            APoint.X := StrToFloat(dgData.Cells[AnXCol, RowIndex]);
-            APoint.Y := StrToFloat(dgData.Cells[AYCol, RowIndex]);
-            if AZ1Col >= 0 then
-            begin
-              StrToFloat(dgData.Cells[AZ1Col, RowIndex]);
-            end;
-            if AZ2Col >= 0 then
-            begin
-              StrToFloat(dgData.Cells[AZ2Col, RowIndex]);
-            end;
-          end;
-        except on EConvertError do
-          Continue;
+        NewPoint := (dgData.Cells[AnXCol, RowIndex] <> '')
+          and (dgData.Cells[AYCol, RowIndex] <> '');
+        if NewPoint and (AZ1Col >= 0) then
+        begin
+          NewPoint := dgData.Cells[AZ1Col, RowIndex] <> '';
         end;
-        if not cbImportAsSingleObject.Checked or (RowIndex = 1) then
+        if NewPoint and (AZ2Col >= 0) then
+        begin
+          NewPoint := dgData.Cells[AZ2Col, RowIndex] <> '';
+        end;
+        if NewPoint then
+        begin
+          try
+            begin
+              APoint.X := StrToFloat(dgData.Cells[AnXCol, RowIndex]);
+              APoint.Y := StrToFloat(dgData.Cells[AYCol, RowIndex]);
+              if AZ1Col >= 0 then
+              begin
+                if cbLayer.Checked then
+                begin
+                  StrToInt(dgData.Cells[AZ1Col, RowIndex]);
+                end
+                else
+                begin
+                  StrToFloat(dgData.Cells[AZ1Col, RowIndex]);
+                end;
+              end;
+              if AZ2Col >= 0 then
+              begin
+                StrToFloat(dgData.Cells[AZ2Col, RowIndex]);
+              end;
+            end;
+          except on EConvertError do
+            NewPoint := False;
+          end;
+        end;
+        if NewPoint and ((not cbImportAsSingleObject.Checked) or FirstPoint) then
         begin
           AScreenObject :=
             TScreenObject.CreateWithViewDirection(frmGoPhast.PhastModel,
@@ -730,23 +1431,28 @@ begin
             AScreenObject.Capacity := 1;
           end;
           AScreenObject.Visible := cbVisible.Checked;
-          if cbImportAsSingleObject.Checked then
+          if cbImportAsSingleObject.Checked and FirstPoint then
           begin
-            for ColIndex := RequiredCols to dgData.ColCount -1 do
+            Assert(comboBoundaryChoice.ItemIndex <= 0);
+            for ColIndex := FRequiredCols to dgData.ColCount -1 do
             begin
               DataSet := dgData.Objects[ColIndex, 0] as TDataArray;
               Item := AScreenObject.ImportedValues.Add as TValueArrayItem;
               Item.Name := DataSet.Name;
               Item.Values.DataType := DataSet.DataType;
               Item.Values.Count := dgData.RowCount - 1;
-              MultiValueList.Add(Item.Values);
+              FMultiValueList.Add(Item.Values);
             end;
           end;
         end;
 
-        AScreenObject.AddPoint(APoint, cbImportAsSingleObject.Checked);
+        if NewPoint then
+        begin
+          AScreenObject.AddPoint(APoint, cbImportAsSingleObject.Checked);
+        end;
 
-        if not cbImportAsSingleObject.Checked or (RowIndex = 1) then
+        NewScreenObject := NewPoint and ((not cbImportAsSingleObject.Checked) or FirstPoint);
+        if NewScreenObject then
         begin
           AScreenObject.ElevationCount := TElevationCount(rgElevationCount.ItemIndex);
           if cbImportAsSingleObject.Checked then
@@ -776,173 +1482,112 @@ begin
             end;
           end;
         end;
-        case AScreenObject.ElevationCount of
-          ecZero:
-            begin
-              // do nothing
-            end;
-          ecOne:
-            begin
-              if cbImportAsSingleObject.Checked then
+        if NewPoint then
+        begin
+          case AScreenObject.ElevationCount of
+            ecZero:
               begin
-                ElevValues1.RealValues[RowIndex-1] := StrToFloat(dgData.Cells[AZ1Col, RowIndex]);
-              end
-              else
-              begin
-                AScreenObject.ElevationFormula := dgData.Cells[AZ1Col, RowIndex];
+                if cbImportAsSingleObject.Checked then
+                begin
+                  Inc(PointCount);
+                end;
+                // do nothing
               end;
-            end;
-          ecTwo:
-            begin
-              if cbImportAsSingleObject.Checked then
+            ecOne:
               begin
-                ElevValues1.RealValues[RowIndex-1] := StrToFloat(dgData.Cells[AZ1Col, RowIndex]);
-                ElevValues2.RealValues[RowIndex-1] := StrToFloat(dgData.Cells[AZ2Col, RowIndex]);
-              end
-              else
-              begin
-                AScreenObject.LowerElevationFormula := dgData.Cells[AZ1Col, RowIndex];
-                AScreenObject.HigherElevationFormula := dgData.Cells[AZ2Col, RowIndex];
+                if cbLayer.Checked then
+                begin
+                  Grid := frmGoPhast.Grid;
+                  Layer := StrToInt(dgData.Cells[AZ1Col, RowIndex])-1;
+                  ACell := Grid.TopContainingCell(APoint,
+                    TEvaluatedAt(rgEvaluatedAt.ItemIndex));
+                  case TEvaluatedAt(rgEvaluatedAt.ItemIndex) of
+                    eaBlocks:
+                      begin
+                        Elevation1 := GetLayerCenter(Layer, ACell.Row, ACell.Col);
+                      end;
+                    eaNodes:
+                      begin
+                        Elevation1 := GetLayerPosition(Layer,
+                          ACell.Row, ACell.Col, DummyInvalidIndex);
+                      end;
+                    else
+                      Assert(False);
+                  end;
+                end
+                else
+                begin
+                  Elevation1 := StrToFloat(dgData.Cells[AZ1Col, RowIndex]);
+                end;
+                if cbImportAsSingleObject.Checked then
+                begin
+                  ElevValues1.RealValues[PointCount] := Elevation1;
+                  Inc(PointCount);
+                end
+                else
+                begin
+                  AScreenObject.ElevationFormula :=
+                    FortranFloatToStr(Elevation1);
+                end;
               end;
-            end;
+            ecTwo:
+              begin
+                Elevation1 := StrToFloat(dgData.Cells[AZ1Col, RowIndex]);
+                Elevation2 := StrToFloat(dgData.Cells[AZ2Col, RowIndex]);
+                if cbImportAsSingleObject.Checked then
+                begin
+                  ElevValues1.RealValues[PointCount] := Elevation1;
+                  ElevValues2.RealValues[PointCount] := Elevation2;
+                  Inc(PointCount);
+                end
+                else
+                begin
+                  AScreenObject.HigherElevationFormula :=
+                    FortranFloatToStr(Elevation1);
+                  AScreenObject.LowerElevationFormula :=
+                    FortranFloatToStr(Elevation2);
+                end;
+              end;
+          else
+            Assert(False);
+          end;
+        end;
+
+        if comboBoundaryChoice.ItemIndex <= 0 then
+        begin
+          if NewPoint then
+          begin
+            ImportDataArrayValues(InvalidRow, RowIndex, PointCount, AScreenObject);
+          end;
+        end
         else
-          Assert(False);
+        begin
+          ImportModflowBoundary(InvalidRow, AScreenObject, RowIndex);
         end;
 
-        try
-          DataSetValues := nil;
-          for ColIndex := RequiredCols to dgData.ColCount -1 do
+        if InvalidRow then
+        begin
+          if cbImportAsSingleObject.Checked then
           begin
-            DataSet := dgData.Objects[ColIndex, 0] as TDataArray;
-            Position := AScreenObject.AddDataSet(DataSet);
-            Assert(Position >= 0);
-
-            if cbImportAsSingleObject.Checked then
-            begin
-              DataSetValues := MultiValueList[ColIndex-RequiredCols];
-            end;
-            case DataSet.DataType of
-              rdtDouble:
-                begin
-                  ARealValue := StrToFloat(dgData.Cells[ColIndex,RowIndex]);
-                  if cbImportAsSingleObject.Checked then
-                  begin
-                    DataSetValues.RealValues[RowIndex-1] := ARealValue;
-                  end
-                  else
-                  begin
-                    AScreenObject.DataSetFormulas[Position]
-                      := dgData.Cells[ColIndex,RowIndex];
-                  end;
-                end;
-              rdtInteger:
-                begin
-                  AnIntValue := StrToInt(dgData.Cells[ColIndex,RowIndex]);
-                  if cbImportAsSingleObject.Checked then
-                  begin
-                    DataSetValues.IntValues[RowIndex-1] := AnIntValue;
-                  end
-                  else
-                  begin
-                    AScreenObject.DataSetFormulas[Position]
-                      := dgData.Cells[ColIndex,RowIndex];
-                  end;
-                end;
-              rdtBoolean:
-                begin
-                  if cbImportAsSingleObject.Checked then
-                  begin
-                    if dgData.Checked[ColIndex,RowIndex] then
-                    begin
-                      DataSetValues.BooleanValues[RowIndex-1] := True;
-                    end
-                    else
-                    begin
-                      DataSetValues.BooleanValues[RowIndex-1] := False;
-                    end;
-                  end
-                  else
-                  begin
-                    if dgData.Checked[ColIndex,RowIndex] then
-                    begin
-                      AScreenObject.DataSetFormulas[Position]
-                        := 'True';
-                    end
-                    else
-                    begin
-                      AScreenObject.DataSetFormulas[Position]
-                        := 'False';
-                    end;
-                  end;
-                end;
-              rdtString:
-                begin
-                  AFormula := dgData.Cells[ColIndex,RowIndex];
-                  if cbImportAsSingleObject.Checked then
-                  begin
-                    if Length(AFormula) > 0 then
-                    begin
-                      if AFormula[1] = '"' then
-                      begin
-                        AFormula := Copy(AFormula, 2, MAXINT);
-                      end;
-                    end;
-                    if Length(AFormula) > 0 then
-                    begin
-                      if AFormula[Length(AFormula)] = '"' then
-                      begin
-                        AFormula := Copy(AFormula, 1, Length(AFormula)-1);
-                      end;
-                    end;
-                    DataSetValues.StringValues[RowIndex-1] := AFormula;
-                  end
-                  else
-                  begin
-                    if Length(AFormula) > 0 then
-                    begin
-                      if AFormula[1] <> '"' then
-                      begin
-                        AFormula := '"' + AFormula;
-                      end;
-                      if AFormula[Length(AFormula)] <> '"' then
-                      begin
-                        AFormula := AFormula + '"';
-                      end;
-                    end
-                    else
-                    begin
-                      AFormula := '""';
-                    end;
-                    AScreenObject.DataSetFormulas[Position]
-                      := AFormula;
-                  end;
-                end;
-            else
-              Assert(False);
-            end;
-          end;
-        except on EConvertError do
-          begin
-            FreeAndNil(AScreenObject);
             Undo.Free;
-            if cbImportAsSingleObject.Checked then
-            begin
-              Beep;
-              MessageDlg('Invalid data in row ' + IntToStr(RowIndex) + '.',
-                mtError, [mbOK], 0);
-              Exit;
-            end
-            else
-            begin
-              Continue;
-            end;
+            Exit;
+          end
+          else
+          begin
+            Continue;
           end;
         end;
 
-        if not cbImportAsSingleObject.Checked or (RowIndex = 1) then
+        if NewScreenObject then
         begin
           ScreenObjectList.Add(AScreenObject);
         end;
+
+        if NewPoint then
+        begin
+          FirstPoint := False;
+        end;
+
         if RowIndex mod 100 = 0 then
         begin
           frmProgressMM.BringToFront;
@@ -953,6 +1598,12 @@ begin
 
       if cbImportAsSingleObject.Checked and (AScreenObject <> nil) then
       begin
+        for ValueListIndex := 0 to FMultiValueList.Count - 1 do
+        begin
+          VList := FMultiValueList[ValueListIndex];
+          VList.Count := PointCount;
+        end;
+
         case AScreenObject.ElevationCount of
           ecZero:
             begin
@@ -960,17 +1611,20 @@ begin
             end;
           ecOne:
             begin
+              ElevValues1.Count := PointCount;
               AScreenObject.ImportedSectionElevations := ElevValues1;
             end;
           ecTwo:
             begin
-              AScreenObject.ImportedLowerSectionElevations := ElevValues1;
-              AScreenObject.ImportedHigherSectionElevations := ElevValues2;
+              ElevValues1.Count := PointCount;
+              ElevValues2.Count := PointCount;
+              AScreenObject.ImportedHigherSectionElevations := ElevValues1;
+              AScreenObject.ImportedLowerSectionElevations := ElevValues2;
             end;
         else
           Assert(False);
         end;
-        for ColIndex := RequiredCols to dgData.ColCount -1 do
+        for ColIndex := FRequiredCols to dgData.ColCount -1 do
         begin
           DataSet := dgData.Objects[ColIndex, 0] as TDataArray;
           Position := AScreenObject.AddDataSet(DataSet);
@@ -1023,7 +1677,7 @@ begin
     ScreenObjectList.Free;
     ElevValues1.Free;
     ElevValues2.Free;
-    MultiValueList.Free;
+    FMultiValueList.Free;
     frmGoPhast.PhastModel.EndScreenObjectUpdate;
   end;
 end;
@@ -1035,27 +1689,47 @@ var
   DataSet: TDataArray;
 begin
   inherited;
+  if (comboBoundaryChoice.ItemIndex > 0) and cbImportAsSingleObject.Checked then
+  begin
+    Beep;
+    MessageDlg(StrMODFLOWBoundaryCon1, mtError, [mbOK], 0);
+    ModalResult := mrNone;
+    Exit;
+  end;
+
   if cbInterpolation.Checked then
   begin
-
-    RequiredCols := rgElevationCount.ItemIndex + 2;
-    for ColIndex := RequiredCols to dgData.ColCount -1 do
+    if comboBoundaryChoice.ItemIndex > 0 then
     begin
-      DataSet := dgData.Objects[ColIndex, 0] as TDataArray;
-      if DataSet.TwoDInterpolator = nil then
+      if not cbIntersectedCells.Checked then
       begin
-        if (MessageDlg('You have choosen to set values of data sets '
-          + 'using interpolation but interpolation is not used '
-          + 'in one or more of the data sets for which you are '
-          + 'importing values.  Do you want to import the data anyway?',
-          mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
+        Beep;
+        MessageDlg(StrMODFLOWBoundaryCon2, mtError, [mbOK], 0);
+        ModalResult := mrNone;
+        Exit;
+      end;
+    end
+    else
+    begin
+      RequiredCols := rgElevationCount.ItemIndex + 2;
+      for ColIndex := RequiredCols to dgData.ColCount -1 do
+      begin
+        DataSet := dgData.Objects[ColIndex, 0] as TDataArray;
+        if DataSet.TwoDInterpolator = nil then
         begin
-          break;
-        end
-        else
-        begin
-          ModalResult := mrNone;
-          Exit;
+          if (MessageDlg('You have choosen to set values of data sets '
+            + 'using interpolation but interpolation is not used '
+            + 'in one or more of the data sets for which you are '
+            + 'importing values.  Do you want to import the data anyway?',
+            mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
+          begin
+            break;
+          end
+          else
+          begin
+            ModalResult := mrNone;
+            Exit;
+          end;
         end;
       end;
     end;
@@ -1140,6 +1814,125 @@ begin
   EmphasizeCheckBoxes([cbIntersectedCells, cbInterpolation]);
   EnableOkButton;
 
+end;
+
+procedure TfrmImportPoints.cbLayerClick(Sender: TObject);
+begin
+  inherited;
+  rgElevationCount.Enabled := not cbLayer.Checked;
+  if not rgElevationCount.Enabled  then
+  begin
+    rgElevationCount.ItemIndex := 1;
+    rgElevationCountClick(nil);
+  end;
+end;
+
+procedure TfrmImportPoints.comboBoundaryChoiceChange(Sender: TObject);
+var
+  ItemIndex: Integer;
+  Package: TModflowPackageSelection;
+  Packages: TModflowPackages;
+  ParameterIndex: Integer;
+  TransientParameters: TModflowTransientListParameters;
+  AParam: TModflowTransientListParameter;
+begin
+  inherited;
+  if comboBoundaryChoice.ItemIndex > 0 then
+  begin
+    dgData.Options := dgData.Options - [goColMoving];
+    cbImportAsSingleObject.Checked := False;
+    cbImportAsSingleObject.Enabled := False;
+    for ItemIndex := 0 to jvclbDataSets.Items.Count - 1 do
+    begin
+      jvclbDataSets.Checked[ItemIndex] := False;
+    end;
+    Package := comboBoundaryChoice.Items.Objects[
+      comboBoundaryChoice.ItemIndex] as TModflowPackageSelection;
+    Packages := frmGoPhast.PhastModel.ModflowPackages;
+    comboParameter.Enabled := True;
+    comboParameter.Items.Clear;
+    comboParameter.Items.Add('none');
+    comboParameter.ItemIndex := 0;
+    TransientParameters := frmGoPhast.PhastModel.ModflowTransientParameters;
+    for ParameterIndex := 0 to TransientParameters.Count - 1 do
+    begin
+      AParam := TransientParameters[ParameterIndex];
+      case AParam.ParameterType of
+        ptCHD:
+          begin
+            if Package = Packages.ChdBoundary then
+            begin
+              comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+            end;
+          end;
+        ptGHB:
+          begin
+            if Package = Packages.GhbBoundary then
+            begin
+              comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+            end;
+          end;
+        ptQ:
+          begin
+            if Package = Packages.WelPackage then
+            begin
+              comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+            end;
+          end;
+        ptRIV:
+          begin
+            if Package = Packages.RivPackage then
+            begin
+              comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+            end;
+          end;
+        ptDRN:
+          begin
+            if Package = Packages.DrnPackage then
+            begin
+              comboParameter.Items.AddObject(AParam.ParameterName, AParam);
+            end;
+          end;
+      end;
+    end;
+    if Package = Packages.ChdBoundary then
+    begin
+      UpdateChdColumns;
+    end
+    else if Package = Packages.GhbBoundary then
+    begin
+      UpdateGhbColumns;
+    end
+    else if Package = Packages.WelPackage then
+    begin
+      UpdateWelColumns;
+    end
+    else if Package = Packages.RivPackage then
+    begin
+      UpdateRivColumns;
+    end
+    else if Package = Packages.DrnPackage then
+    begin
+      UpdateDrnColumns;
+    end
+    else if Package = Packages.HobPackage then
+    begin
+      UpdateHobColumns;
+    end
+    else
+    begin
+      Assert(False);
+    end;
+  end
+  else
+  begin
+    dgData.Options := dgData.Options + [goColMoving];
+    comboParameter.ItemIndex := 0;
+    comboParameter.Enabled := False;
+    cbImportAsSingleObject.Enabled := True;
+  end;
+  jvclbDataSets.Enabled := comboBoundaryChoice.ItemIndex <= 0;
+  jvclbDataSetsClickCheck(nil);
 end;
 
 end.

@@ -10,7 +10,8 @@ interface
 {
   1.0.2.0 Fixed bug that caused ModelMonitor to work improperly when the
     decimal separator was not a period in the local language settings.
-  1.1.0.0 Added support for LGR.
+  1.1.0.0 Added support for MODFLOW-LGR.
+  1.2.0.0 Added support for MODFLOW-NWT. Converted to compiling with Delphi XE.
 }
 
 uses
@@ -18,7 +19,7 @@ uses
   Forms, Dialogs, StdCtrls, ExtCtrls, JvExExtCtrls, JvImage, ImgList,
   JvImageList, TeEngine, Series, TeeProcs, Chart, ComCtrls, Buttons,
   JvNavigationPane, JvSplitter, JvSyncSplitter, JvExtComponent,  JvToolEdit,
-  JvRichEdit, AppEvnts, RealListUnit, JvHtControls, rmOutlook, JvPageList,
+  JvRichEdit, AppEvnts, RealListUnit, JvHtControls, JvPageList,
   JvExControls, JvExStdCtrls, JvExMask, Mask, JvExComCtrls, JvComCtrls;
 
 type
@@ -243,7 +244,7 @@ end; { WinExecAndWait32 }
 procedure TfrmMonitor.AppEventsIdle(Sender: TObject;
   var Done: Boolean);
 var
-  ALine: string;
+  ALine: AnsiString;
   FileReaderIndex: Integer;
   ListHandler: TListFileHandler;
 begin
@@ -267,7 +268,7 @@ begin
       ALine := FMonitorTextReader.ReadLn;
       if (ALine <> '') or not FMonitorTextReader.EOF then
       begin
-        HandleMonitorFileLine(ALine);
+        HandleMonitorFileLine(string(ALine));
       end;
       Application.ProcessMessages;
       FStartTime := Now;
@@ -488,8 +489,8 @@ begin
   // The ItemHeight property seems to get lost all the time.
   treeNavigation.ItemHeight := 28;
 
-  DecimalSeparator := '.';
-  ThousandSeparator := ',';
+  FormatSettings.DecimalSeparator := '.';
+  FormatSettings.ThousandSeparator := ',';
 
   FListFilesNames := TStringList.Create;
   FListFileHandlers := TObjectList.Create;
@@ -885,7 +886,7 @@ procedure TfrmMonitor.timerReadOutputTimer(Sender: TObject);
 const
   TimeOutTime = 1/24/3600;
 var
-  ALine: string;
+  ALine: AnsiString;
   ATime: TDateTime;
   FileReaderIndex: Integer;
   ListHandler : TListFileHandler;
@@ -919,7 +920,7 @@ begin
         ALine := FMonitorTextReader.ReadLn;
         if (ALine <> '') or not FMonitorTextReader.EOF then
         begin
-          HandleMonitorFileLine(ALine);
+          HandleMonitorFileLine(string(ALine));
         end;
         Application.ProcessMessages;
         if Now - ATime > TimeOutTime then
@@ -1192,7 +1193,7 @@ end;
 
 procedure TListFileHandler.HandleListingFile;
 var
-  ALine: string;
+  ALine: AnsiString;
 begin
   while (FListingFile <> '')
     and not FFileStream.EOF do
@@ -1204,7 +1205,7 @@ begin
     ALine := FFileStream.ReadLn;
     if (ALine <> '') then
     begin
-      HandleListFileLine(ALine);
+      HandleListFileLine(string(ALine));
     end;
     Application.ProcessMessages;
     FStartTime := Now;
@@ -1319,7 +1320,7 @@ procedure TListFileHandler.ReadListingFileLines;
 const
   OneSecond = 1/24/3600;
 var
-  ALine: string;
+  ALine: AnsiString;
   StartTime : TDateTime;
 begin
   StartTime := Now;
@@ -1339,7 +1340,7 @@ begin
       ALine := FFileStream.ReadLn;
       if (ALine <> '') or not FFileStream.EOF then
       begin
-        HandleListFileLine(ALine);
+        HandleListFileLine(string(ALine));
       end;
       if PlotPercentDiscrepancy then
       begin

@@ -98,13 +98,13 @@ begin
     AName := Trim(AName);
     if Length(AName) > 0 then
     begin
-      if not (AName[1] in ValidFirstChar) then
+      if not CharInSet(AName[1], ValidFirstChar) then
       begin
         AName[1] := '_'
       end;
       for CharIndex := 1 to Length(AName) do
       begin
-        if not (AName[CharIndex] in ValidChar) then
+        if not CharInSet(AName[CharIndex], ValidChar) then
         begin
           AName[CharIndex] := '_'
         end;

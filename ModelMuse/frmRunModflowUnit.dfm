@@ -3,7 +3,7 @@ object frmRunModflow: TfrmRunModflow
   Top = 0
   BorderStyle = bsNone
   Caption = 'frmRunModflow'
-  ClientHeight = 31
+  ClientHeight = 79
   ClientWidth = 364
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -30,7 +30,34 @@ object frmRunModflow: TfrmRunModflow
     Width = 241
     Height = 21
     Style = csDropDownList
-    ItemHeight = 13
     TabOrder = 1
+  end
+  object cbModpath: TCheckBox
+    Left = 8
+    Top = 33
+    Width = 161
+    Height = 17
+    Caption = 'Export MODPATH input'
+    Checked = True
+    State = cbChecked
+    TabOrder = 2
+  end
+  object cbForceCBF: TCheckBox
+    Left = 167
+    Top = 33
+    Width = 189
+    Height = 17
+    Caption = 'Create new composite budget file'
+    TabOrder = 3
+  end
+  object cbExportZoneBudget: TCheckBox
+    Left = 8
+    Top = 56
+    Width = 161
+    Height = 17
+    Caption = 'Export ZONEBUDGET input'
+    Checked = True
+    State = cbChecked
+    TabOrder = 4
   end
 end

@@ -64,7 +64,7 @@ inherited frmExportShapefile: TfrmExportShapefile
     Width = 255
     Height = 174
     Anchors = [akLeft, akTop, akRight]
-    Indent = 19
+    Indent = 20
     ReadOnly = True
     StateImages = ilCheckImages
     TabOrder = 0
@@ -83,6 +83,7 @@ inherited frmExportShapefile: TfrmExportShapefile
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
     TabOrder = 1
     OnSetEditText = rdgTimeSetEditText
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
@@ -221,8 +222,11 @@ inherited frmExportShapefile: TfrmExportShapefile
     Width = 82
     Height = 34
     Anchors = [akTop, akRight]
-    TabOrder = 9
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 9
   end
   object btnOK: TBitBtn
     Left = 278
@@ -230,9 +234,12 @@ inherited frmExportShapefile: TfrmExportShapefile
     Width = 82
     Height = 34
     Anchors = [akTop, akRight]
+    DoubleBuffered = True
+    Kind = bkOK
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 8
     OnClick = btnOKClick
-    Kind = bkOK
   end
   object btnHelp: TBitBtn
     Left = 190
@@ -240,9 +247,12 @@ inherited frmExportShapefile: TfrmExportShapefile
     Width = 82
     Height = 34
     Anchors = [akTop, akRight]
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 7
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
   object rgExportObjectType: TRadioGroup
     Left = 8

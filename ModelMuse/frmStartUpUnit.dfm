@@ -32,8 +32,7 @@ inherited frmStartUp: TfrmStartUp
       Height = 33
       Anchors = [akTop, akRight]
       Caption = 'Next'
-      TabOrder = 1
-      OnClick = btnNextClick
+      DoubleBuffered = True
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000010000000000000000000
@@ -49,6 +48,9 @@ inherited frmStartUp: TfrmStartUp
         3333333333333333333333333333333333333333333333333333}
       Layout = blGlyphRight
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 1
+      OnClick = btnNextClick
     end
     object btnDontCreateGrid: TBitBtn
       Left = 476
@@ -57,10 +59,13 @@ inherited frmStartUp: TfrmStartUp
       Height = 33
       Anchors = [akTop, akRight]
       Caption = 'No grid'
+      DoubleBuffered = True
+      Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       Visible = False
       OnClick = btnDontCreateGridClick
-      Kind = bkCancel
     end
     object btnHelp: TBitBtn
       Left = 582
@@ -69,9 +74,12 @@ inherited frmStartUp: TfrmStartUp
       Height = 33
       HelpType = htKeyword
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
   end
   object pcStartup: TPageControl
@@ -170,7 +178,6 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
           TabOrder = 5
           Text = '5'
           DataType = dtReal
@@ -184,7 +191,6 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
           TabOrder = 4
           Text = '100'
           DataType = dtReal
@@ -198,7 +204,6 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
           TabOrder = 3
           Text = '100'
           DataType = dtReal
@@ -212,7 +217,6 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
           TabOrder = 2
           Text = '5'
           DataType = dtInteger
@@ -227,7 +231,6 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
           TabOrder = 1
           Text = '10'
           DataType = dtInteger
@@ -242,7 +245,6 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 0
           TabOrder = 0
           Text = '10'
           DataType = dtInteger
@@ -297,21 +299,8 @@ inherited frmStartUp: TfrmStartUp
             ExplicitWidth = 9
             ExplicitHeight = 18
           end
-          inherited rdeAngle: TRbwDataEntry
-            ItemHeight = 18
-          end
           inherited rdeExaggeration: TRbwDataEntry
-            ItemHeight = 18
             Text = ''
-          end
-          inherited rdeX: TRbwDataEntry
-            ItemHeight = 18
-          end
-          inherited rdeY: TRbwDataEntry
-            ItemHeight = 18
-          end
-          inherited rdeZ: TRbwDataEntry
-            ItemHeight = 18
           end
         end
       end
@@ -321,6 +310,10 @@ inherited frmStartUp: TfrmStartUp
       HelpKeyword = 'Initial_Grid_Dialog_Box'
       Caption = 'tabInitialModflowGrid'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object gbInitialGridModflow: TGroupBox
         Left = 0
         Top = 0
@@ -370,7 +363,6 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 18
           TabOrder = 4
           Text = '100'
           DataType = dtReal
@@ -384,7 +376,6 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 18
           TabOrder = 3
           Text = '100'
           DataType = dtReal
@@ -398,7 +389,6 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 18
           TabOrder = 2
           Text = '3'
           OnChange = rdeModflowLayerCountChange
@@ -414,7 +404,6 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 18
           TabOrder = 1
           Text = '10'
           DataType = dtInteger
@@ -429,7 +418,6 @@ inherited frmStartUp: TfrmStartUp
           Width = 73
           Height = 28
           Cursor = crIBeam
-          ItemHeight = 18
           TabOrder = 0
           Text = '10'
           DataType = dtInteger

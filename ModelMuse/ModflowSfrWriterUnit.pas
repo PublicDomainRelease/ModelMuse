@@ -92,11 +92,10 @@ uses ModflowUnitNumbers, OrderedCollectionUnit, frmErrorsAndWarningsUnit,
   ModflowBoundaryUnit, Dialogs;
 
 resourcestring
-  StrInvalidStartingTim = 'Invalid starting time or missing data for the '
+  StrInvalidStartingTimeStep1 = 'Invalid starting time or missing data for the '
     + 'first time step in the following objects';
   StrSFRLinkagesBetween = 'SFR linkages between grids is unsupported';
-
-const
+  StrInvalidStartingTime = 'Invalid starting time in the following objects';
   StrOneOrMoreSFRStre = 'One or more SFR stream segments have slopes that '
     + 'are zero or negative.';
   StrDownstreamOutOfOrder = 'In the SFR package, the following objects '
@@ -115,6 +114,8 @@ const
   StrLakeDiversionError = 'In the SFR package, the following objects '
     + 'define streams that divert flow from lakes even though the lake ' +
       'package is not in use.';
+  StrObjectSTime1 = 'Object: %s; Time: %1:g; Upstream elevation: %2:g; Downs' +
+  'tream elevation: %3:g';
 
 const
   StrSegmentNumber = 'Segment Number in ';
@@ -124,7 +125,7 @@ const
   StrDiversionSegmentNumber = 'Diversion Segment Number in ';
   StrIprior = 'IPRIOR in ';
 
-const
+resourcestring
   DupErrorCategory = 'Duplicate SFR segment numbers';
   CircularCategory = 'The following SFR segments circle back on themselves.';
   NoSegmentsWarning = 'One or more objects do not define segments '
@@ -171,7 +172,7 @@ var
   EndTime: Double;
 begin
 
-  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidStartingTim);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidStartingTimeStep1);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrIncompleteSFRData);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, DupErrorCategory);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, CircularCategory);
@@ -1069,7 +1070,7 @@ begin
               begin
                 ErrorObject := Boundary.ScreenObject as TScreenObject;
                 frmErrorsAndWarnings.AddError(Model,
-                  'Invalid starting time in the following objects', ErrorObject.Name);
+                  StrInvalidStartingTime, ErrorObject.Name);
                 Continue;
               end;
               UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
@@ -1113,7 +1114,7 @@ begin
               begin
                 ErrorObject := Boundary.ScreenObject as TScreenObject;
                 frmErrorsAndWarnings.AddError(Model,
-                  StrInvalidStartingTim, ErrorObject.Name);
+                  StrInvalidStartingTimeStep1, ErrorObject.Name);
                 Continue;
 //                  raise EInvalidTime.Create(Boundary.ScreenObject);
               end;
@@ -1155,7 +1156,7 @@ begin
             begin
               ErrorObject := Boundary.ScreenObject as TScreenObject;
               frmErrorsAndWarnings.AddError(Model,
-                StrInvalidStartingTim, ErrorObject.Name);
+                StrInvalidStartingTimeStep1, ErrorObject.Name);
               Continue;
 //                raise EInvalidTime.Create(Boundary.ScreenObject);
             end;
@@ -1183,7 +1184,7 @@ begin
             begin
               ErrorObject := Boundary.ScreenObject as TScreenObject;
               frmErrorsAndWarnings.AddError(Model,
-                StrInvalidStartingTim, ErrorObject.Name);
+                StrInvalidStartingTimeStep1, ErrorObject.Name);
               Continue;
 //                raise EInvalidTime.Create(Boundary.ScreenObject);
             end;
@@ -1213,7 +1214,7 @@ begin
               begin
                 ErrorObject := Boundary.ScreenObject as TScreenObject;
                 frmErrorsAndWarnings.AddError(Model,
-                  StrInvalidStartingTim, ErrorObject.Name);
+                  StrInvalidStartingTimeStep1, ErrorObject.Name);
                 Continue;
 //                  raise EInvalidTime.Create(Boundary.ScreenObject);
               end;
@@ -1241,7 +1242,7 @@ begin
               begin
                 ErrorObject := Boundary.ScreenObject as TScreenObject;
                 frmErrorsAndWarnings.AddError(Model,
-                  StrInvalidStartingTim, ErrorObject.Name);
+                  StrInvalidStartingTimeStep1, ErrorObject.Name);
                 Continue;
 //                  raise EInvalidTime.Create(Boundary.ScreenObject);
               end;
@@ -1272,7 +1273,7 @@ begin
               begin
                 ErrorObject := Boundary.ScreenObject as TScreenObject;
                 frmErrorsAndWarnings.AddError(Model,
-                  StrInvalidStartingTim, ErrorObject.Name);
+                  StrInvalidStartingTimeStep1, ErrorObject.Name);
                 Continue;
 //                  raise EInvalidTime.Create(Boundary.ScreenObject);
               end;
@@ -1300,7 +1301,7 @@ begin
               begin
                 ErrorObject := Boundary.ScreenObject as TScreenObject;
                 frmErrorsAndWarnings.AddError(Model,
-                  StrInvalidStartingTim, ErrorObject.Name);
+                  StrInvalidStartingTimeStep1, ErrorObject.Name);
                 Continue;
 //                  raise EInvalidTime.Create(Boundary.ScreenObject);
               end;
@@ -1329,7 +1330,7 @@ begin
             begin
               ErrorObject := Boundary.ScreenObject as TScreenObject;
               frmErrorsAndWarnings.AddError(Model,
-                StrInvalidStartingTim, ErrorObject.Name);
+                StrInvalidStartingTimeStep1, ErrorObject.Name);
               Continue;
 //                raise EInvalidTime.Create(Boundary.ScreenObject);
             end;
@@ -1357,7 +1358,7 @@ begin
             begin
               ErrorObject := Boundary.ScreenObject as TScreenObject;
               frmErrorsAndWarnings.AddError(Model,
-                StrInvalidStartingTim, ErrorObject.Name);
+                StrInvalidStartingTimeStep1, ErrorObject.Name);
               Continue;
 //                raise EInvalidTime.Create(Boundary.ScreenObject);
             end;
@@ -1656,7 +1657,7 @@ begin
       begin
         ErrorObject := Boundary.ScreenObject as TScreenObject;
         frmErrorsAndWarnings.AddError(Model,
-          StrInvalidStartingTim, ErrorObject.Name);
+          StrInvalidStartingTimeStep1, ErrorObject.Name);
         Continue;
 //        raise EInvalidTime.Create(Boundary.ScreenObject);
       end;
@@ -1666,7 +1667,7 @@ begin
       begin
         ErrorObject := Boundary.ScreenObject as TScreenObject;
         frmErrorsAndWarnings.AddError(Model,
-          StrInvalidStartingTim, ErrorObject.Name);
+          StrInvalidStartingTimeStep1, ErrorObject.Name);
         Continue;
 //        raise EInvalidTime.Create(Boundary.ScreenObject);
       end;
@@ -1686,12 +1687,15 @@ begin
           DownstreamElev := DownstreamValues.SrfSegmentArray[0].StreambedElevation;
           if UpstreamElev <= DownstreamElev then
           begin
-            frmErrorsAndWarnings.AddError(Model,
-              StrOneOrMoreSFRStre,
-              'Object: ' + Segment.FScreenObject.Name
-              + '; Time: ' + FloatToStr(StressPeriod.StartTime)
-              + '; Upstream elevation: ' + FloatToStr(UpstreamElev)
-              + '; Downstream elevation: ' + FloatToStr(DownstreamElev));
+            frmErrorsAndWarnings.AddError(Model,StrOneOrMoreSFRStre,
+              Format(StrObjectSTime1, [Segment.FScreenObject.Name,
+              StressPeriod.StartTime, UpstreamElev, DownstreamElev]));
+//            frmErrorsAndWarnings.AddError(Model,
+//              StrOneOrMoreSFRStre,
+//              'Object: ' + Segment.FScreenObject.Name
+//              + '; Time: ' + FloatToStr(StressPeriod.StartTime)
+//              + '; Upstream elevation: ' + FloatToStr(UpstreamElev)
+//              + '; Downstream elevation: ' + FloatToStr(DownstreamElev));
           end;
         end;
       end;
@@ -2942,7 +2946,7 @@ begin
   begin
     ErrorObject := SfrBoundary.ScreenObject as TScreenObject;
     frmErrorsAndWarnings.AddError(Model,
-      StrInvalidStartingTim, ErrorObject.Name);
+      StrInvalidStartingTimeStep1, ErrorObject.Name);
     Exit;
 //    raise EInvalidTime.Create(SfrBoundary.ScreenObject);
   end;
@@ -3005,7 +3009,7 @@ begin
   begin
     ErrorObject := SfrBoundary.ScreenObject as TScreenObject;
     frmErrorsAndWarnings.AddError(Model,
-      StrInvalidStartingTim, ErrorObject.Name);
+      StrInvalidStartingTimeStep1, ErrorObject.Name);
     Exit;
 //    raise EInvalidTime.Create(SfrBoundary.ScreenObject);
   end;

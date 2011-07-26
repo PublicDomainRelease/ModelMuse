@@ -230,29 +230,29 @@ begin
     dgCredit.Cells[2, Row] :=
       'http://www.colorado.edu/geography/gcraft/notes/coordsys/coordsys_f.html';
 
-    Inc(Row);
-    dgCredit.Cells[0, Row] := 'JasPerLib.dll';
-    dgCredit.Cells[1, Row] := 'Michael D. Adams';
-    dgCredit.Cells[2, Row] :=
-      'http://www.ece.uvic.ca/~mdadams/jasper/';
+//    Inc(Row);
+//    dgCredit.Cells[0, Row] := 'JasPerLib.dll';
+//    dgCredit.Cells[1, Row] := 'Michael D. Adams';
+//    dgCredit.Cells[2, Row] :=
+//      'http://www.ece.uvic.ca/~mdadams/jasper/';
 
-    Inc(Row);
-    dgCredit.Cells[0, Row] := 'jpeg.dcu';
-    dgCredit.Cells[1, Row] := 'Gabriel Corneanu';
-    dgCredit.Cells[2, Row] :=
-      'http://cc.embarcadero.com/Item/19723';
+//    Inc(Row);
+//    dgCredit.Cells[0, Row] := 'jpeg.dcu';
+//    dgCredit.Cells[1, Row] := 'Gabriel Corneanu';
+//    dgCredit.Cells[2, Row] :=
+//      'http://cc.embarcadero.com/Item/19723';
+//
+//    Inc(Row);
+//    dgCredit.Cells[0, Row] := 'TIFFRead.dll';
+//    dgCredit.Cells[1, Row] := 'Nick Chislin, Michael Vinther';
+//    dgCredit.Cells[2, Row] :=
+//      'mv@logicnet.dk http://www.logicnet.dk/lib/';
 
-    Inc(Row);
-    dgCredit.Cells[0, Row] := 'TIFFRead.dll';
-    dgCredit.Cells[1, Row] := 'Nick Chislin, Michael Vinther';
-    dgCredit.Cells[2, Row] :=
-      'mv@logicnet.dk http://www.logicnet.dk/lib/';
-
-    Inc(Row);
-    dgCredit.Cells[0, Row] := 'ImageFileLib';
-    dgCredit.Cells[1, Row] := 'Michael Vinther, Vit Kovalcik, Rune  Møller';
-    dgCredit.Cells[2, Row] :=
-      'mv@logicnet.dk http://www.logicnet.dk/lib/ https://sourceforge.net/projects/imagefilelib/';
+//    Inc(Row);
+//    dgCredit.Cells[0, Row] := 'ImageFileLib';
+//    dgCredit.Cells[1, Row] := 'Michael Vinther, Vit Kovalcik, Rune  Møller';
+//    dgCredit.Cells[2, Row] :=
+//      'mv@logicnet.dk http://www.logicnet.dk/lib/ https://sourceforge.net/projects/imagefilelib/';
 
     Inc(Row);
     dgCredit.Cells[0, Row] := 'FastGEO.pas';
@@ -317,10 +317,10 @@ begin
     dgCredit.Cells[1, Row] := '';
     dgCredit.Cells[2, Row] := 'http://www.delphipages.com/threads/thread.cfm?ID=109695&G=109693';
 
-    Inc(Row);
-    dgCredit.Cells[0, Row] := 'THelpRouter';
-    dgCredit.Cells[1, Row] := 'EC Software';
-    dgCredit.Cells[2, Row] := 'http://www.ec-software.com/downloads_delphi.html';
+//    Inc(Row);
+//    dgCredit.Cells[0, Row] := 'THelpRouter';
+//    dgCredit.Cells[1, Row] := 'EC Software';
+//    dgCredit.Cells[2, Row] := 'http://www.ec-software.com/downloads_delphi.html';
 
     Inc(Row);
     dgCredit.Cells[0, Row] := 'TAbZipper';
@@ -340,18 +340,18 @@ begin
   //    + 'http://www.info-zip.org/ '
   //    + 'http://www.geocities.com/rjpeters_au/zipmaster.html';
 
-    Inc(Row);
-    Assert(Row < dgCredit.RowCount);
-    dgCredit.Cells[0, Row] := 'FastCode.pas,and related files';
-    dgCredit.Cells[1, Row] := 'The Fastcode Project';
-    dgCredit.Cells[2, Row] := 'http://fastcode.sourceforge.net/';
+//    Inc(Row);
+//    Assert(Row < dgCredit.RowCount);
+//    dgCredit.Cells[0, Row] := 'FastCode.pas,and related files';
+//    dgCredit.Cells[1, Row] := 'The Fastcode Project';
+//    dgCredit.Cells[2, Row] := 'http://fastcode.sourceforge.net/';
 
-    Inc(Row);
-    Assert(Row < dgCredit.RowCount);
-    dgCredit.Cells[0, Row] := 'RtlVclOptimize.pas';
-    dgCredit.Cells[1, Row] := 'Andreas Hausladen';
-    dgCredit.Cells[2, Row] :=
-      'http://andy.jgknet.de/dspeedup/index.php?page=download#RtlVclOptimize';
+//    Inc(Row);
+//    Assert(Row < dgCredit.RowCount);
+//    dgCredit.Cells[0, Row] := 'RtlVclOptimize.pas';
+//    dgCredit.Cells[1, Row] := 'Andreas Hausladen';
+//    dgCredit.Cells[2, Row] :=
+//      'http://andy.jgknet.de/dspeedup/index.php?page=download#RtlVclOptimize';
 
     Inc(Row);
     Assert(Row < dgCredit.RowCount);
@@ -359,11 +359,11 @@ begin
     dgCredit.Cells[1, Row] := 'John O''Harrow';
     dgCredit.Cells[2, Row] := 'http://fastcode.sourceforge.net/';
 
-    Inc(Row);
-    Assert(Row < dgCredit.RowCount);
-    dgCredit.Cells[0, Row] := 'FastObj.pas, FastSys.pas, PatchLib.pas';
-    dgCredit.Cells[1, Row] := 'Gabriel Corneanu';
-    dgCredit.Cells[2, Row] := 'gabrielcorneanu@gmail.com';
+//    Inc(Row);
+//    Assert(Row < dgCredit.RowCount);
+//    dgCredit.Cells[0, Row] := 'FastObj.pas, FastSys.pas, PatchLib.pas';
+//    dgCredit.Cells[1, Row] := 'Gabriel Corneanu';
+//    dgCredit.Cells[2, Row] := 'gabrielcorneanu@gmail.com';
 
     Inc(Row);
     Assert(Row < dgCredit.RowCount);
@@ -426,11 +426,11 @@ begin
   //  dgCredit.Cells[1, Row] := 'Michael Vinther';
   //  dgCredit.Cells[2, Row] := 'mv@logicnet·dk';
 
-    Inc(Row);
-    Assert(Row < dgCredit.RowCount);
-    dgCredit.Cells[0, Row] := 'HashTrie.pas';
-    dgCredit.Cells[1, Row] := 'SoftComplete Development';
-    dgCredit.Cells[2, Row] := 'http://www.softcomplete.com/freeware.asp';
+//    Inc(Row);
+//    Assert(Row < dgCredit.RowCount);
+//    dgCredit.Cells[0, Row] := 'HashTrie.pas';
+//    dgCredit.Cells[1, Row] := 'SoftComplete Development';
+//    dgCredit.Cells[2, Row] := 'http://www.softcomplete.com/freeware.asp';
 
     Inc(Row);
     Assert(Row < dgCredit.RowCount);
@@ -438,11 +438,11 @@ begin
     dgCredit.Cells[1, Row] := 'ContinuIT BV';
     dgCredit.Cells[2, Row] := 'http://www.continuit.nl/index.php?LANGUAGE=EN&PAGE=FREEWARE';
 
-    Inc(Row);
-    Assert(Row < dgCredit.RowCount);
-    dgCredit.Cells[0, Row] := 'rmControls';
-    dgCredit.Cells[1, Row] := 'Ryan Mills';
-    dgCredit.Cells[2, Row] := 'http://www.mills-enterprise.ca/download/rmctl192.zip';
+//    Inc(Row);
+//    Assert(Row < dgCredit.RowCount);
+//    dgCredit.Cells[0, Row] := 'rmControls';
+//    dgCredit.Cells[1, Row] := 'Ryan Mills';
+//    dgCredit.Cells[2, Row] := 'http://www.mills-enterprise.ca/download/rmctl192.zip';
 
     Inc(Row);
     Assert(Row < dgCredit.RowCount);
@@ -454,7 +454,34 @@ begin
     Assert(Row < dgCredit.RowCount);
     dgCredit.Cells[0, Row] := 'ssButtonEd.pas';
     dgCredit.Cells[1, Row] := 'Simon Armstrong';
-    dgCredit.Cells[2, Row] := 'http://www.simes.clara.co.uk';
+    dgCredit.Cells[2, Row] := 'http://www.sadmansoftware.com/delphi/freeware/';
+
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'GraphicsEx.pas';
+    dgCredit.Cells[1, Row] := 'Mike Lischke';
+    dgCredit.Cells[2, Row] :=
+      'http://www.soft-gems.net/index.php?option=com_content&task=view&id=13&Itemid=33';
+
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'Pcx.pas';
+    dgCredit.Cells[1, Row] := 'Davie Reed';
+    dgCredit.Cells[2, Row] := 'http://www.efg2.com/Lab/Library/Delphi/Graphics/PCX.ZIP';
+
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'addbtn95.pas';
+    dgCredit.Cells[1, Row] := 'PA van Lonkhuyzen';
+    dgCredit.Cells[2, Row] := 'http://delphi.icm.edu.pl/ftp/d20free/addbtn95.zip';
+
+    Inc(Row);
+    Assert(Row < dgCredit.RowCount);
+    dgCredit.Cells[0, Row] := 'DataGrid.pas';
+    dgCredit.Cells[1, Row] := 'EC Software';
+    dgCredit.Cells[2, Row] := 'http://www.ec-software.com';
+
+    Assert(Row = dgCredit.RowCount-1);
   finally
     dgCredit.EndUpdate
   end;

@@ -563,14 +563,14 @@ begin
   result := Trim(Value);
   if Length(result) >= 1 then
   begin
-    if not (result[1] in ['_', 'A'..'Z', 'a'..'z', '_']) then
+    if not CharInSet(result[1], ['_', 'A'..'Z', 'a'..'z', '_']) then
     begin
       result[1] := '_';
     end;
   end;
   for Index := 2 to Length(result) - 1 do
   begin
-    if not (result[Index] in ['_', 'A'..'Z', 'a'..'z', '0'..'9', '_']) then
+    if not CharInSet(result[Index], ['_', 'A'..'Z', 'a'..'z', '0'..'9', '_']) then
     begin
       result[Index] := '_';
     end;

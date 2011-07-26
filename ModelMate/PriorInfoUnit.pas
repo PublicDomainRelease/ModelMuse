@@ -604,7 +604,7 @@ begin
       AllAtts[I].Initialize(PriAttributeTypes[I]);
     end;
   Name := aName;
-  if aGroupName <> '' then AllAtts[PriAttPos(piatGroupName)].Text := aGroupName;
+  if aGroupName <> '' then AllAtts[PriAttPos(piatGroupName)].Text := ConvertString(aGroupName);
 end;
 
 procedure TPri.SetAllAtts(const Value: TPriorAttributes);
@@ -623,11 +623,11 @@ begin
           AllAtts.Items[I].Text := Text;
           if (piaType = piatPriorName) then
             begin
-              self.Name := Text;
+              self.Name := ConvertString20(Text);
             end;
           if (piaType = piatGroupName) and (Name = '') then
             begin
-              Name := Text;
+              Name := ConvertString20(Text);
             end;
         end;
     end;

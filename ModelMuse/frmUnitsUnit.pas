@@ -12,7 +12,7 @@ unit frmUnitsUnit;
 interface
   { TODO : Provide an easy way to specify consistent units. }
 uses
-  SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
+  Windows, SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, frmCustomGoPhastUnit, Buttons, UndoItems, PhastModelUnit;
 
 type

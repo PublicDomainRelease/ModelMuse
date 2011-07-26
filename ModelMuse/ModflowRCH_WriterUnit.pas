@@ -39,6 +39,11 @@ uses RbwParser, ModflowUnitNumbers, ModflowTransientListParameterUnit,
   frmErrorsAndWarningsUnit, DataSetUnit, ModflowRchUnit, GoPhastTypes,
   frmProgressUnit, Forms, Windows;
 
+resourcestring
+  StrNoRechargeDefined = 'No recharge defined';
+  StrTheRechargePackage = 'The recharge package is active but no recharge ha' +
+  's been defined for any stress period.';
+
 const
   ErrorRoot = 'One or more %s parameters have been eliminated '
     + 'because there are no cells associated with them.';
@@ -384,9 +389,8 @@ begin
     Comment := '# Data Set 8: IRCH';
     if Values.Count = 0 then
     begin
-      frmErrorsAndWarnings.AddError(Model, 'No recharge defined',
-        'The recharge package is active but '
-        + 'no recharge has been defined for any stress period.');
+      frmErrorsAndWarnings.AddError(Model, StrNoRechargeDefined,
+        StrTheRechargePackage);
     end;
     for TimeIndex := 0 to Values.Count - 1 do
     begin

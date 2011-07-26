@@ -53,7 +53,11 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls;
 
-
+{$ifdef CONDITIONALEXPRESSIONS}
+  {$if CompilerVersion>=20}
+    {$DEFINE Delphi_2009_UP}
+  {$ifend}
+{$endif}
 
 type
 
@@ -302,7 +306,9 @@ procedure Register;
 
 implementation
 
-var MaxDouble : double;
+var
+  MaxDouble : double;
+  DummyInteger : integer;
 
 procedure Register;
 begin
@@ -325,7 +331,11 @@ var
   DecimalPosition : integer;
   DecimalChar : Char;
 begin
+  {$IFDEF Delphi_2009_UP}
+  DecimalChar := FormatSettings.DecimalSeparator;
+  {$ELSE}
   DecimalChar := DecimalSeparator;
+  {$ENDIF}
   if (DecimalChar = '.') then
   begin
     DecimalPosition := Pos(',', ANumberString);
@@ -355,7 +365,11 @@ var
   AString : string;
 begin
   AString := S;
+  {$IFDEF Delphi_2009_UP}
+  DecimalChar := FormatSettings.DecimalSeparator;
+  {$ELSE}
   DecimalChar := DecimalSeparator;
+  {$ENDIF}
   if not (DecimalChar = '.') then
   begin
     DecimalPosition := Pos('.', S);
@@ -392,7 +406,11 @@ begin
   Result := Text;
   If (FDataType = dtReal) or (FDataType = dtInteger) then
   begin
+    {$IFDEF Delphi_2009_UP}
+    DecimalChar := FormatSettings.DecimalSeparator;
+    {$ELSE}
     DecimalChar := DecimalSeparator;
+    {$ENDIF}
     if (DecimalChar <> '.')
     then
       begin
@@ -573,7 +591,6 @@ function TArgusDataEntry.ChangeTextToInteger : string;
       from the endt of Text until it does succeed. It converts '' to '0'}
 var
   E : integer;
-  AnInteger : integer;
 begin
   Result := Text;
   LocalizeString(Result);
@@ -581,7 +598,7 @@ begin
 
   repeat
     E:= 0;
-    Val(Result, AnInteger, E);
+    Val(Result, DummyInteger, E);
     if (E <> 0) and (Length(Result) > 0) then
     begin
       Result := Copy(Result,1,E-1);

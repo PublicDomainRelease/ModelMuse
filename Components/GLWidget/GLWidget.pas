@@ -8,6 +8,8 @@ unit GLWidget;
 // is a slightly modified version of the cross-platform OpenGL interface from
 // the JEDI-SDL project.
 
+// Modified June 28, 2011 to work with Delphi XE.
+
 interface
 
 // For TGLWidget to be a CLX control under Windows,
@@ -17,10 +19,20 @@ interface
 // the component at runtime.
 // (Check under "Project|Options|Directories/Conditionals|Conditional defines".)
 
+{Usage hint: Make sure that the parent control of a TGLWidget has
+ the ParentDoubleBuffered and ParentBackground properties set to False.}
+
 { $DEFINE CLX}
 
 {$IFDEF LINUX}
   {$DEFINE CLX}
+{$ENDIF}
+
+{$IFDEF CONDITIONALEXPRESSIONS}
+  // Delphi 2009 & C++ Builder 2009
+  {$if CompilerVersion>=20}
+    {$DEFINE Delphi_2009_UP}
+  {$ifend}
 {$ENDIF}
 
 uses
@@ -420,6 +432,9 @@ begin
   FRC := 0;
 {$ENDIF}
   ControlStyle := ControlStyle + [csOpaque];
+  {$IFDEF Delphi_2009_UP}
+  ParentBackground := False;
+  {$ENDIF}
 end;
 
 destructor TGLWidget.Destroy;
@@ -453,6 +468,7 @@ begin
   begin
     if Started then Exit;
     InitOpenGL;
+
 {$IFDEF CLX}
     try
       Canvas.Start;

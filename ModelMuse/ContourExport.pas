@@ -408,12 +408,12 @@ var
   Shape: TShapeObject;
   PPoint: TPoint2DPtr;
   Fields: TStringList;
-  FieldName: string;
+  FieldName: AnsiString;
   ShapeDataBase: TXBase;
-  FieldDescription: string;
+  FieldDescription: AnsiString;
   MinValue, MaxValue: double;
   DSValues: TStringList;
-  FieldFormat: string;
+  FieldFormat: AnsiString;
   Contours: TContours;
 begin
   ActiveDataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(rsActive);
@@ -433,7 +433,7 @@ begin
     try
       Fields := TStringList.Create;
       try
-        FieldName := UpperCase(Copy(DataArray.Name, 1, 10));
+        FieldName := AnsiString(UpperCase(Copy(DataArray.Name, 1, 10)));
         FieldName := FixShapeFileFieldName(FieldName);
         case DataArray.DataType of
           rdtDouble:
@@ -448,7 +448,7 @@ begin
             Assert(False);
         end;
         FieldDescription := FieldName + '=' + FieldFormat;
-        Fields.Add(FieldDescription);
+        Fields.Add(string(FieldDescription));
         InitializeDataBase(FileName, ShapeDataBase, Fields);
       finally
         Fields.Free;
@@ -532,7 +532,7 @@ begin
                           ShapeDataBase.UpdFieldInt(FieldName, 0);
                         end;
                       rdtString:
-                        ShapeDataBase.UpdFieldStr(FieldName, ValueList.StringValues[ValueIndex]);
+                        ShapeDataBase.UpdFieldStr(FieldName, AnsiString(ValueList.StringValues[ValueIndex]));
                       else
                         Assert(False);
                     end;

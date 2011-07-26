@@ -43,6 +43,9 @@ const
   HufSteadyAndTransientParameters = [ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI, ptHUF_SS, ptHUF_SY];
   HufSteadyParameters = [ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI];
 
+resourcestring
+  StrNoVKparameter = 'No VK parameter defined for the following hydrogeologic units';
+
 type
   THguSort = class(TObject)
     HGU: THydrogeologicUnit;
@@ -405,8 +408,6 @@ begin
 end;
 
 procedure TModflowHUF_Writer.WriteDataSet9;
-const
-  ErrorRoot = 'No VK parameter defined for the following hydrogeologic units';
 var
   UnitIndex: Integer;
   HGU: THydrogeologicUnit;
@@ -439,7 +440,7 @@ begin
       if (not HGU.UsesVkParam)
         and (Model.ModflowLayerCount > 1) then
       begin
-        frmErrorsAndWarnings.AddError(Model, ErrorRoot, HGU.HufName);
+        frmErrorsAndWarnings.AddError(Model, StrNoVKparameter, HGU.HufName);
       end;
     end;
     WriteString(HGUNAM);

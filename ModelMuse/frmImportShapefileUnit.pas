@@ -511,11 +511,14 @@ type
     procedure AssignAPhastBoundary(Boundary: TCustomInterpolatedBoundary);
     function GetRealFormulaFromText(const Text: string;
       DataSetsOK: boolean = True; FormulaOK: boolean = False): string;
-    function GetRealValueFromText(const FieldName: string): Extended;
+    function GetRealValueFromText(const FieldName: AnsiString): Extended; overload;
+    function GetRealValueFromText(const FieldName: String): Extended; overload;
     procedure AssignAPhastLeakyBoundary(AScreenObject: TScreenObject);
     procedure AssignAPhastRiverBoundary(AScreenObject: TScreenObject);
-    function GetStringValueFromText(const FieldName: string): string;
-    function GetBooleanValueFromText(FieldName: string): Boolean;
+    function GetStringValueFromText(const FieldName: String): string; overload;
+    function GetStringValueFromText(const FieldName: AnsiString): string; overload;
+    function GetBooleanValueFromText(FieldName: AnsiString): Boolean; overload;
+    function GetBooleanValueFromText(FieldName: String): Boolean; overload;
     procedure AssignAPhastWellBoundary(AScreenObject: TScreenObject);
     procedure EnableFeatureImport;
     procedure ImportModflowChdBoundary(AScreenObject: TScreenObject);
@@ -529,7 +532,8 @@ type
     procedure InitializeBoundaryControlsForDRN;
     procedure ImportModflowDrnPackage(AScreenObject: TScreenObject);
     procedure InitializeBoundaryControlsForRCH(Packages: TModflowPackages);
-    function GetIntegerValueFromText(const FieldName: string): integer;
+    function GetIntegerValueFromText(const FieldName: AnsiString): integer; overload;
+    function GetIntegerValueFromText(const FieldName: String): integer; overload;
     procedure ImportModflowRchPackage(AScreenObject: TScreenObject);
     procedure InitializeBoundaryControlsForEVT(Packages: TModflowPackages);
     procedure ImportModflowEvtPackage(AScreenObject: TScreenObject);
@@ -557,7 +561,8 @@ type
     procedure ImportModflowHfbPackage(AScreenObject: TScreenObject);
     procedure InitializeBoundaryControlsForUZF;
     procedure ImportModflowUzfPackage(AScreenObject: TScreenObject);
-    function GetIntegerFormulaFromText(const text: string; DataSetsOK: boolean = True): string;
+    function GetIntegerFormulaFromText(const text: AnsiString; DataSetsOK: boolean = True): string; overload;
+    function GetIntegerFormulaFromText(const text: String; DataSetsOK: boolean = True): string; overload;
     procedure CreateDataSetVariables(Parser: TRbwParser);
     function DataArrayOrientationOK(DataArray: TDataArray): boolean;
     procedure AddModflowPackageToImportChoices(APackage: TModflowPackageSelection);
@@ -697,11 +702,11 @@ begin
   result := AString;
   if Length(result) > 0 then
   begin
-    if not (result[1] in ['_', 'A'..'Z', 'a'..'z']) then
+    if not CharInSet(result[1], ['_', 'A'..'Z', 'a'..'z']) then
     result := '_' + result;
     for Index := 2 to Length(result) do
     begin
-      if not (result[Index] in ['_', 'A'..'Z', 'a'..'z', '0'..'9']) then
+      if not CharInSet(result[Index], ['_', 'A'..'Z', 'a'..'z', '0'..'9']) then
       begin
         result[Index] := '_';
       end;
@@ -764,6 +769,12 @@ begin
 end;
 
 
+
+function TfrmImportShapefile.GetBooleanValueFromText(
+  FieldName: String): Boolean;
+begin
+  result := GetBooleanValueFromText(AnsiString(FieldName));
+end;
 
 function TfrmImportShapefile.GetData: boolean;
 var
@@ -862,7 +873,7 @@ begin
               in [xbfChar, xbfNumber, xbfLogic] then
             begin
               ValidIndicies.Add(Index);
-              ValidFields.Add(xbShapeDataBase.GetFieldName(Index))
+              ValidFields.Add(string(xbShapeDataBase.GetFieldName(Index)))
             end;
           end;
           if (ValidFields.Count = 0) and (MessageDlg('None of the fields in '
@@ -1072,8 +1083,8 @@ procedure TfrmImportShapefile.GetTransientParameter(
   var Param: TModflowTransientListParameter; var ParameterName: string;
   ParameterColumn: Integer; Row: Integer);
 begin
-  ParameterName := GetStringValueFromText(
-    rdgBoundaryConditions.Cells[ParameterColumn, Row]);
+  ParameterName := GetStringValueFromText(AnsiString(
+    rdgBoundaryConditions.Cells[ParameterColumn, Row]));
   ParameterName := StringReplace(ParameterName, '"', '',
     [rfReplaceAll, rfIgnoreCase]);
   if ParameterName = '' then
@@ -1675,7 +1686,7 @@ var
   ICalc: Integer;
   InitializeGrid: boolean;
   ColIndex: Integer;
-  CellText: string;
+  CellText: AnsiString;
   CachedPosition: Integer;
   FieldStorage: TFieldNumStorage;
   SFR_Package: TSfrPackageSelection;
@@ -1705,8 +1716,8 @@ begin
       begin
         if InitializeGrid then
         begin
-          CellText := rdgBoundaryConditions.Cells[ColIndex, Index + 1];
-          CachedPosition := FFieldNumbers.Indexof(CellText);
+          CellText := AnsiString(rdgBoundaryConditions.Cells[ColIndex, Index + 1]);
+          CachedPosition := FFieldNumbers.Indexof(string(CellText));
           if CachedPosition >= 0 then
           begin
             FieldStorage := FFieldNumbers.Objects[CachedPosition] as TFieldNumStorage;
@@ -1716,12 +1727,12 @@ begin
             FieldNumber := xbShapeDataBase.GetFieldNumberFromName(CellText);
             FieldStorage := TFieldNumStorage.Create(xbShapeDataBase);
             FieldStorage.FieldNumber := FieldNumber;
-            FieldStorage.Formula := CellText;
-            FFieldNumbers.AddObject(CellText, FieldStorage);
+            FieldStorage.Formula := string(CellText);
+            FFieldNumbers.AddObject(string(CellText), FieldStorage);
             if FieldNumber = 0 then
             begin
-              FieldStorage.RealValue := StrToFloatDef(CellText, 0);
-              FieldStorage.IntValue := StrToIntDef(CellText, 0);
+              FieldStorage.RealValue := StrToFloatDef(string(CellText), 0);
+              FieldStorage.IntValue := StrToIntDef(string(CellText), 0);
             end;
           end;
           rdgBoundaryConditions.Objects[ColIndex, Index+1] := FieldStorage;
@@ -1756,7 +1767,7 @@ begin
         Item.StartTime := StartTime;
         Item.EndTime := EndTime;
 
-        FieldNumber := xbShapeDataBase.GetFieldNumberFromName(comboSfrReachLength.Text);
+        FieldNumber := xbShapeDataBase.GetFieldNumberFromName(AnsiString(comboSfrReachLength.Text));
         if FieldNumber = 0 then
         begin
           // not a field
@@ -2694,8 +2705,8 @@ begin
   end;
   rdgBoundaryConditions.Cells[0, 0] := StrStartingTime;
   rdgBoundaryConditions.Cells[1, 0] := StrEndingTime;
-  rdgBoundaryConditions.Cells[2, 0] := 'Starting head';
-  rdgBoundaryConditions.Cells[3, 0] := 'Ending head';
+  rdgBoundaryConditions.Cells[2, 0] := StrStartingHead;
+  rdgBoundaryConditions.Cells[3, 0] := StrEndingHead;
 end;
 
 procedure TfrmImportShapefile.InitializeBoundaryControlsForETS(
@@ -3205,7 +3216,7 @@ begin
   rdgBoundaryConditions.Cells[Ord(dtcEndingTime), 0] := StrEndingTime;
   rdgBoundaryConditions.Cells[Ord(dtcParameterName), 0] := StrParameterName;
   rdgBoundaryConditions.Cells[Ord(dtcElevation), 0] := 'Elevation';
-  rdgBoundaryConditions.Cells[Ord(dtcConductance), 0] := 'Conductance';
+  rdgBoundaryConditions.Cells[Ord(dtcConductance), 0] := StrConductance;
   rdgBoundaryConditions.Cells[Ord(dtcReturnFraction), 0] := 'Return fraction';
   
   while comboFormulaInterpDRT.Items.Count > 3 do
@@ -3253,8 +3264,8 @@ begin
   rdgBoundaryConditions.Cells[Ord(dcStartingTime), 0] := StrStartingTime;
   rdgBoundaryConditions.Cells[Ord(dcEndingTime), 0] := StrEndingTime;
   rdgBoundaryConditions.Cells[Ord(dcParameterName), 0] := StrParameterName;
-  rdgBoundaryConditions.Cells[Ord(dcElevation), 0] := 'Elevation';
-  rdgBoundaryConditions.Cells[Ord(dcConductance), 0] := 'Conductance';
+  rdgBoundaryConditions.Cells[Ord(dcElevation), 0] := StrDrainElevation;
+  rdgBoundaryConditions.Cells[Ord(dcConductance), 0] := StrConductance;
 
   while comboFormulaInterp.Items.Count > 3 do
   begin
@@ -3354,9 +3365,9 @@ begin
   rdgBoundaryConditions.Cells[Ord(rivcStartingTime), 0] := StrStartingTime;
   rdgBoundaryConditions.Cells[Ord(rivcEndingTime), 0] := StrEndingTime;
   rdgBoundaryConditions.Cells[Ord(rivcParameterName), 0] := StrParameterName;
-  rdgBoundaryConditions.Cells[Ord(rivcBottom), 0] := 'River bottom';
-  rdgBoundaryConditions.Cells[Ord(rivcStage), 0] := 'River stage';
-  rdgBoundaryConditions.Cells[Ord(rivcConductance), 0] := 'Conductance';
+  rdgBoundaryConditions.Cells[Ord(rivcBottom), 0] := StrRiverBottom;
+  rdgBoundaryConditions.Cells[Ord(rivcStage), 0] := StrRiverStage;
+  rdgBoundaryConditions.Cells[Ord(rivcConductance), 0] := StrConductance;
 end;
 
 procedure TfrmImportShapefile.ImportModflowWelBoundary(
@@ -3432,7 +3443,7 @@ begin
   rdgBoundaryConditions.Cells[Ord(welcStartingTime), 0] := StrStartingTime;
   rdgBoundaryConditions.Cells[Ord(welcEndingTime), 0] := StrEndingTime;
   rdgBoundaryConditions.Cells[Ord(welcParameterName), 0] := StrParameterName;
-  rdgBoundaryConditions.Cells[Ord(welcPumpingRate), 0] := 'Pumping rate';
+  rdgBoundaryConditions.Cells[Ord(welcPumpingRate), 0] := StrPumpingRate;
 
   while comboFormulaInterp.Items.Count > 3 do
   begin
@@ -3520,8 +3531,8 @@ begin
   rdgBoundaryConditions.Cells[Ord(ghbcStartingTime), 0] := StrStartingTime;
   rdgBoundaryConditions.Cells[Ord(ghbcEndingTime), 0] := StrEndingTime;
   rdgBoundaryConditions.Cells[Ord(ghbcParameterName), 0] := StrParameterName;
-  rdgBoundaryConditions.Cells[Ord(ghbcHead), 0] := 'Boundary head';
-  rdgBoundaryConditions.Cells[Ord(ghbcConductance), 0] := 'Conductance';
+  rdgBoundaryConditions.Cells[Ord(ghbcHead), 0] := StrBoundaryHead;
+  rdgBoundaryConditions.Cells[Ord(ghbcConductance), 0] := StrConductance;
 
   while comboFormulaInterp.Items.Count > 3 do
   begin
@@ -3558,8 +3569,8 @@ begin
   rdgBoundaryConditions.Cells[Ord(ccStartingTime), 0] := StrStartingTime;
   rdgBoundaryConditions.Cells[Ord(ccEndingTime), 0] := StrEndingTime;
   rdgBoundaryConditions.Cells[Ord(ccParameterName), 0] := StrParameterName;
-  rdgBoundaryConditions.Cells[Ord(ccStartingHead), 0] := 'Starting head';
-  rdgBoundaryConditions.Cells[Ord(ccEndingHead), 0] := 'Ending head';
+  rdgBoundaryConditions.Cells[Ord(ccStartingHead), 0] := StrStartingHead;
+  rdgBoundaryConditions.Cells[Ord(ccEndingHead), 0] := StrEndingHead;
 end;
 
 procedure TfrmImportShapefile.ImportModflowChdBoundary(
@@ -3628,7 +3639,7 @@ begin
         begin
           ShouldEnable := (rgEvaluatedAt.ItemIndex = 1);
         end;
-      msModflow, msModflowLGR:
+      msModflow, msModflowLGR, msModflowNWT:
         begin
           ShouldEnable := (rgEvaluatedAt.ItemIndex = 0);
         end;
@@ -3649,7 +3660,7 @@ var
   Index: Integer;
   WellElevationFormat: string;
   FieldNumber: Integer;
-  FieldName: string;
+  FieldName: AnsiString;
   BooleanVariable: Boolean;
   AValue: Extended;
   Description: string;
@@ -3663,7 +3674,7 @@ begin
   BooleanVariable := GetBooleanValueFromText(comboWellPumpAllocation.Text);
   AScreenObject.WellBoundary.AllocateByPressureAndMobility := BooleanVariable;
 
-  FieldName := comboWellIntervalStyle.Text;
+  FieldName := AnsiString(comboWellIntervalStyle.Text);
   FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
   if FieldNumber = 0 then
   begin
@@ -3704,7 +3715,7 @@ begin
 end;
 
 function TfrmImportShapefile.GetBooleanValueFromText(
-  FieldName: string): boolean;
+  FieldName: AnsiString): boolean;
 var
   Value: string;
   FieldNumber: Integer;
@@ -3713,9 +3724,9 @@ begin
   if FieldNumber = 0 then
   begin
     // not a field
-    FieldName := UpperCase(FieldName);
-    result := (Length(FieldName) > 0)
-      and ((FieldName[1] = 'T') or (FieldName[1] = 'Y'));
+    Value := UpperCase(String(FieldName));
+    result := (Length(Value) > 0)
+      and ((Value[1] = 'T') or (Value[1] = 'Y'));
   end
   else
   begin
@@ -3732,13 +3743,13 @@ begin
 end;
 
 function TfrmImportShapefile.GetStringValueFromText(
-  const FieldName: string): string;
+  const FieldName: AnsiString): string;
 var
   FieldNumber: Integer;
   CachedPosition: Integer;
   FieldStorage: TFieldNumStorage;
 begin
-  CachedPosition := FFieldNumbers.Indexof(FieldName);
+  CachedPosition := FFieldNumbers.Indexof(string(FieldName));
   if CachedPosition >= 0 then
   begin
     FieldStorage := FFieldNumbers.Objects[CachedPosition] as TFieldNumStorage;
@@ -3749,18 +3760,18 @@ begin
     FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
     FieldStorage := TFieldNumStorage.Create(xbShapeDataBase);
     FieldStorage.FieldNumber := FieldNumber;
-    FFieldNumbers.AddObject(FieldName, FieldStorage);
+    FFieldNumbers.AddObject(string(FieldName), FieldStorage);
   end;
 //  FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
   if FieldNumber = 0 then
   begin
-    if Trim(FieldName) = '' then
+    if Trim(string(FieldName)) = '' then
     begin
       result := '""';
     end
     else
     begin
-      result := Trim(FieldName);
+      result := Trim(string(FieldName));
       if result[1] <> '"' then
       begin
         result := '"' + result;
@@ -3844,7 +3855,7 @@ begin
   end
   else
   begin
-    FieldNumber := xbShapeDataBase.GetFieldNumberFromName(Text);
+    FieldNumber := xbShapeDataBase.GetFieldNumberFromName(AnsiString(Text));
     FieldStorage := TFieldNumStorage.Create(xbShapeDataBase);
     FieldStorage.FieldNumber := FieldNumber;
     FFieldNumbers.AddObject(Text, FieldStorage);
@@ -3910,13 +3921,19 @@ begin
 end;
 
 function TfrmImportShapefile.GetRealValueFromText(
-  const FieldName: string): Extended;
+  const FieldName: String): Extended;
+begin
+  result := GetRealValueFromText(AnsiString(FieldName));
+end;
+
+function TfrmImportShapefile.GetRealValueFromText(
+  const FieldName: AnsiString): Extended;
 var
   FieldNumber: Integer;
   CachedPosition: Integer;
   FieldStorage: TFieldNumStorage;
 begin
-  CachedPosition := FFieldNumbers.Indexof(FieldName);
+  CachedPosition := FFieldNumbers.Indexof(string(FieldName));
   if CachedPosition >= 0 then
   begin
     FieldStorage := FFieldNumbers.Objects[CachedPosition] as TFieldNumStorage;
@@ -3927,12 +3944,12 @@ begin
     FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
     FieldStorage := TFieldNumStorage.Create(xbShapeDataBase);
     FieldStorage.FieldNumber := FieldNumber;
-    FFieldNumbers.AddObject(FieldName, FieldStorage);
+    FFieldNumbers.AddObject(string(FieldName), FieldStorage);
   end;
   if FieldNumber = 0 then
   begin
     // not a field
-    if not TryStrToFloat(FieldName, result) then
+    if not TryStrToFloat(string(FieldName), result) then
     begin
       result := 0;
     end;
@@ -3943,8 +3960,14 @@ begin
   end;
 end;
 
+function TfrmImportShapefile.GetStringValueFromText(
+  const FieldName: String): string;
+begin
+  result := GetStringValueFromText(AnsiString(FieldName));
+end;
+
 function TfrmImportShapefile.GetIntegerFormulaFromText(
-  const Text: string; DataSetsOK: boolean = True): string;
+  const Text: AnsiString; DataSetsOK: boolean = True): string;
 var
   FieldNumber: Integer;
   DataArray: TDataArray;
@@ -3953,7 +3976,7 @@ var
   FieldStorage: TFieldNumStorage;
   Value: integer;
 begin
-  CachedPosition := FFieldNumbers.Indexof(Text);
+  CachedPosition := FFieldNumbers.Indexof(string(Text));
   if CachedPosition >= 0 then
   begin
     FieldStorage := FFieldNumbers.Objects[CachedPosition] as TFieldNumStorage;
@@ -3964,7 +3987,7 @@ begin
     FieldNumber := xbShapeDataBase.GetFieldNumberFromName(Text);
     FieldStorage := TFieldNumStorage.Create(xbShapeDataBase);
     FieldStorage.FieldNumber := FieldNumber;
-    FFieldNumbers.AddObject(Text, FieldStorage);
+    FFieldNumbers.AddObject(string(Text), FieldStorage);
   end;
 //  FieldNumber := xbShapeDataBase.GetFieldNumberFromName(Text);
   if FieldNumber <> 0 then
@@ -3986,30 +4009,30 @@ begin
       result := FieldStorage.Formula;
       Exit;
     end;
-    if TryStrToInt(Text, Value) then
+    if TryStrToInt(string(Text), Value) then
     begin
-      result := Text;
+      result := string(Text);
       FieldStorage.Formula := result;
       exit;
     end;
     if DataSetsOK then
     begin
-      DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(Text);
+      DataArray := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(string(Text));
       if (DataArray <> nil) and
         DataArrayOrientationOK(DataArray) and
         (DataArray.DataType = rdtInteger) then
       begin
-        result := Text;
+        result := string(Text);
         FieldStorage.Formula := result;
         Exit;
       end;
     end;
 
-    Variable := frmGoPhast.PhastModel.GlobalVariables.GetVariableByName(Text);
+    Variable := frmGoPhast.PhastModel.GlobalVariables.GetVariableByName(string(Text));
     if (Variable <> nil) and
       (Variable.Format = rdtInteger) then
     begin
-      result := Text;
+      result := string(Text);
       FieldStorage.Formula := result;
       Exit;
     end;
@@ -4020,14 +4043,26 @@ begin
 end;
 
 
+function TfrmImportShapefile.GetIntegerFormulaFromText(const text: String;
+  DataSetsOK: boolean): string;
+begin
+  result := GetIntegerFormulaFromText(AnsiString(text), DataSetsOK);
+end;
+
 function TfrmImportShapefile.GetIntegerValueFromText(
-  const FieldName: string): integer;
+  const FieldName: String): integer;
+begin
+  result := GetIntegerValueFromText(AnsiString(FieldName));
+end;
+
+function TfrmImportShapefile.GetIntegerValueFromText(
+  const FieldName: AnsiString): integer;
 var
   FieldNumber: Integer;
   CachedPosition: Integer;
   FieldStorage: TFieldNumStorage;
 begin
-  CachedPosition := FFieldNumbers.Indexof(FieldName);
+  CachedPosition := FFieldNumbers.Indexof(string(FieldName));
   if CachedPosition >= 0 then
   begin
     FieldStorage := FFieldNumbers.Objects[CachedPosition] as TFieldNumStorage;
@@ -4038,13 +4073,13 @@ begin
     FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
     FieldStorage := TFieldNumStorage.Create(xbShapeDataBase);
     FieldStorage.FieldNumber := FieldNumber;
-    FFieldNumbers.AddObject(FieldName, FieldStorage);
+    FFieldNumbers.AddObject(string(FieldName), FieldStorage);
   end;
 //  FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
   if FieldNumber = 0 then
   begin
     // not a field
-    if not TryStrToInt(FieldName, result) then
+    if not TryStrToInt(string(FieldName), result) then
     begin
       result := 0;
     end;
@@ -4063,7 +4098,7 @@ var
   RealItem: TRealPhastBoundaryCondition;
   AValue: Extended;
   FieldNumber: Integer;
-  FieldName: string;
+  FieldName: AnsiString;
   ATime: Extended;
   UseRow: Boolean;
   Index: Integer;
@@ -4075,12 +4110,12 @@ begin
     if UseRow then
     begin
       ATime := 0;
-      FieldName := rdgBoundaryConditions.Cells[0, Index + 1];
+      FieldName := AnsiString(rdgBoundaryConditions.Cells[0, Index + 1]);
       FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
       if FieldNumber = 0 then
       begin
         // not a field
-        if not TryStrToFloat(FieldName, ATime) then
+        if not TryStrToFloat(string(FieldName), ATime) then
         begin
           Continue;
         end;
@@ -4090,12 +4125,12 @@ begin
         ATime := xbShapeDataBase.GetFieldNum(FieldName);
       end;
       AValue := 0;
-      FieldName := rdgBoundaryConditions.Cells[1, Index + 1];
+      FieldName := AnsiString(rdgBoundaryConditions.Cells[1, Index + 1]);
       FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
       if FieldNumber = 0 then
       begin
         // not a field
-        if not TryStrToFloat(FieldName, AValue) then
+        if not TryStrToFloat(String(FieldName), AValue) then
         begin
           Continue;
         end;
@@ -4116,14 +4151,14 @@ begin
       RealItem.Time := ATime;
       RealItem.FormulaExpression := FortranFloatToStr(AValue);
       AnInt := 0;
-      FieldName := rdgBoundaryConditions.Cells[2, Index + 1];
+      FieldName := AnsiString(rdgBoundaryConditions.Cells[2, Index + 1]);
       if FieldName <> '' then
       begin
         FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
         if FieldNumber = 0 then
         begin
           // not a field
-          if not TryStrToInt(FieldName, AnInt) then
+          if not TryStrToInt(string(FieldName), AnInt) then
           begin
             Continue;
           end;
@@ -4153,9 +4188,9 @@ procedure TfrmImportShapefile.AssignAPhastSpecifiedHeadBoundary(
 var
   SolutionType: string;
   FieldNumber: Integer;
-  FieldName: string;
+  FieldName: AnsiString;
 begin
-  FieldName := comboSolutionType.Text;
+  FieldName := AnsiString(comboSolutionType.Text);
   FieldNumber := xbShapeDataBase.GetFieldNumberFromName(FieldName);
   if FieldNumber = 0 then
   begin
@@ -4217,7 +4252,7 @@ begin
             FloatToStr(Item.EndingTime));
         end;
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         Packages := Model.ModflowPackages;
         AddModflowPackageToImportChoices(Packages.ChdBoundary);
@@ -4552,8 +4587,8 @@ begin
         DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
         Assert(DataSet <> nil);
 //        DataSet := frmGoPhast.PhastModel.DataSets[Position];
-        FieldIndex := xbShapeDataBase.GetFieldNumberFromName(dgFields.
-          Cells[0, Index]);
+        FieldIndex := xbShapeDataBase.GetFieldNumberFromName(AnsiString(dgFields.
+          Cells[0, Index]));
         Assert(FieldIndex >= 1);
         case DataSet.DataType of
           rdtInteger:
@@ -4635,8 +4670,8 @@ begin
       NewDataSetName := GenerateNewName(dgFields.
         Cells[Ord(fgcAttributes), Index]);
 
-      FieldIndex := xbShapeDataBase.GetFieldNumberFromName(dgFields.
-        Cells[Ord(fgcAttributes), Index]);
+      FieldIndex := xbShapeDataBase.GetFieldNumberFromName(AnsiString(
+        dgFields.Cells[Ord(fgcAttributes), Index]));
       Assert(FieldIndex >= 1);
 
       NewDataType := rdtDouble;
@@ -5046,8 +5081,8 @@ begin
                             begin
                               RealVariable := Variables[DataSetIndex];
                               RealVariable.Value :=
-                                xbShapeDataBase.GetFieldNum(
-                                RealFieldNames[DataSetIndex]);
+                                xbShapeDataBase.GetFieldNum(AnsiString(
+                                RealFieldNames[DataSetIndex]));
                               if DataSet <> nil then
                               begin
                                 if CombinedObjects then
@@ -5066,8 +5101,8 @@ begin
                             begin
                               IntVariable := Variables[DataSetIndex];
                               IntVariable.Value :=
-                                xbShapeDataBase.GetFieldInt(
-                                RealFieldNames[DataSetIndex]);
+                                xbShapeDataBase.GetFieldInt(AnsiString(
+                                RealFieldNames[DataSetIndex]));
                               if DataSet <> nil then
                               begin
                                 if CombinedObjects then
@@ -5094,8 +5129,8 @@ begin
                             begin
                               BooleanVariable := Variables[DataSetIndex];
                               Value :=
-                                xbShapeDataBase.GetFieldStr(
-                                RealFieldNames[DataSetIndex]);
+                                xbShapeDataBase.GetFieldStr(AnsiString(
+                                RealFieldNames[DataSetIndex]));
                               if (Value = 'Y') or (Value = 'y')
                                 or (Value = 'T') or (Value = 't') then
                               begin
@@ -5135,8 +5170,8 @@ begin
                           rdtString:
                             begin
                               StringVariable := Variables[DataSetIndex];
-                              StringFormula := xbShapeDataBase.GetFieldStr(
-                                RealFieldNames[DataSetIndex]);
+                              StringFormula := xbShapeDataBase.GetFieldStr(AnsiString(
+                                RealFieldNames[DataSetIndex]));
                               StringFormula := StringReplace(StringFormula, '"', '''', [rfReplaceAll]);
                               StringVariable.Value := Trim(StringFormula);
                               if DataSet <> nil then
@@ -6352,7 +6387,7 @@ begin
             end;
         end;
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         Packages := Model.ModflowPackages;
         APackage := comboBoundaryChoice.Items.Objects[
@@ -6564,7 +6599,8 @@ begin
     if VariableName <> '' then
     begin
       case xbShapeDataBase.GetFieldType(xbShapeDataBase.
-        GetFieldNumberFromName(dgFields.Cells[Ord(fgcAttributes),RowIndex])) of
+        GetFieldNumberFromName(AnsiString(
+        dgFields.Cells[Ord(fgcAttributes),RowIndex]))) of
         xbfChar:
           begin
             Parser.CreateVariable(VariableName, StrAttributes, '', TValueStr);
@@ -6572,8 +6608,8 @@ begin
         xbfNumber:
           begin
             if xbShapeDataBase.GetFieldDecimals(xbShapeDataBase.
-              GetFieldNumberFromName(dgFields.
-              Cells[Ord(fgcAttributes),RowIndex])) = 0 then
+              GetFieldNumberFromName(AnsiString(
+              dgFields.Cells[Ord(fgcAttributes),RowIndex]))) = 0 then
             begin
               Parser.CreateVariable(VariableName, StrAttributes, 0, TValueInt);
             end
@@ -6744,7 +6780,7 @@ begin
             end;
           end;
         end;
-      msModflow, msModflowLGR:
+      msModflow, msModflowLGR, msModflowNWT:
         begin
           Model := frmGoPhast.PhastModel;
           Packages := Model.ModflowPackages;

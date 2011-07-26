@@ -1,0 +1,60 @@
+unit MainUnit;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, SsButtonEd, RbwStringTreeCombo, ExtCtrls;
+
+type
+  TfrmMain = class(TForm)
+    rgSelectionChoice: TRadioGroup;
+    RbwStringTreeCombo1: TRbwStringTreeCombo;
+    procedure FormCreate(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  frmMain: TfrmMain;
+
+implementation
+
+{$R *.dfm}
+type
+  TMyRecord = record
+    Caption: string;
+  end;
+
+procedure TfrmMain.FormCreate(Sender: TObject);
+var
+  Count: Integer;
+  ANode: PVirtualNode;
+  Index: Integer;
+begin
+  Count := 1;
+  ANode := RbwStringTreeCombo1.Tree.AddChild(nil, Pointer(Count));
+  for Index := 0 to 3 do
+  begin
+    Inc(Count);
+    RbwStringTreeCombo1.Tree.AddChild(ANode, Pointer(Count));
+  end;
+  Inc(Count);
+  ANode := RbwStringTreeCombo1.Tree.AddChild(nil, Pointer(Count));
+  for Index := 0 to 3 do
+  begin
+    Inc(Count);
+    RbwStringTreeCombo1.Tree.AddChild(ANode, Pointer(Count));
+  end;
+  Inc(Count);
+  ANode := RbwStringTreeCombo1.Tree.AddChild(nil, Pointer(Count));
+  for Index := 0 to 3 do
+  begin
+    Inc(Count);
+    RbwStringTreeCombo1.Tree.AddChild(ANode, Pointer(Count));
+  end;
+end;
+
+end.

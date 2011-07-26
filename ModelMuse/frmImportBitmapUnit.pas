@@ -7,12 +7,13 @@ unit frmImportBitmapUnit;
 interface
 
 uses
+  Windows,
   GR32_Layers, // TPositionedLayer is declared in GR32_Layers.
   GR32, // TBitmap32, and TFloatRect are declared in GR32.
   SysUtils, Types, Classes, Variants, Graphics, Controls, Forms,
   Dialogs, StdCtrls, frmCustomGoPhastUnit, Grids, RbwDataGrid4, 
-  ExtCtrls, Buttons, CompressedImageUnit, ZoomBox2, LinarBitmap, Mask, JvExMask,
-  JvSpin;   
+  ExtCtrls, Buttons, CompressedImageUnit, ZoomBox2, {LinarBitmap,} Mask, JvExMask,
+  JvSpin, pngimage;
 
 type
   {@abstract(@name is used to help import or edit bitmaps in GoPhast.)
@@ -155,7 +156,7 @@ var
 implementation
 
 uses frmPixelPointUnit, GoPhastTypes, frmGoPhastUnit, BigCanvasMethods, 
-  frmWorldFileTypeUnit, frmGoToUnit;
+  frmWorldFileTypeUnit, frmGoToUnit, jpeg, GraphicEx, Pcx;
 
 {$R *.dfm}
 
@@ -282,6 +283,9 @@ var
   MetaFile : TMetafile;
   WorldFileNames: TStringList;
   Index: Integer;
+  jpegImage: TJPEGImage;
+  png: TPngImage;
+  TiffImage: TTIFFGraphic;
   procedure ShowError;
   begin
     FreeAndNil(FBitMap);
@@ -323,22 +327,63 @@ there is no loss in resolution at higher magnifications. }
         MetaFile.Free;
       end;
     end
+    else if (CompareText(Extension, '.bmp') = 0) then
+    begin
+      FBitMap.LoadFromFile(FImageFileName);
+    end
+    else if (CompareText(Extension, '.jpg') = 0)
+      or (CompareText(Extension, '.jpeg') = 0) then
+    begin
+      jpegImage := TJPEGImage.Create;
+      try
+        jpegImage.LoadFromFile(FImageFileName);
+        FBitMap.Assign(jpegImage);
+      finally
+        jpegImage.Free
+      end;
+    end
+    else if (CompareText(Extension, '.png') = 0) then
+    begin
+      png := TPngImage.Create;
+      try
+        png.LoadFromFile(FImageFileName);
+        FBitMap.Assign(png);
+      finally
+        png.Free;
+      end;
+    end
+    else if (CompareText(Extension, '.pcx') = 0) then
+    begin
+      LoadFromFileX(FImageFileName, FBitMap);
+    end
+    else if (CompareText(Extension, '.tif') = 0)
+      or (CompareText(Extension, '.tiff') = 0) then
+    begin
+      TiffImage := TTIFFGraphic.Create;
+      try
+        TiffImage.LoadFromFile(FImageFileName);
+        FBitMap.Assign(TiffImage);
+      finally
+        TiffImage.Free;
+      end;
+    end
     else
     begin
-      with TLinearBitmap.Create do
-      try
-        try
-          LoadFromFile(FImageFileName);
-        except on E: Exception do
-          begin
-            ShowError;
-            Exit;
-          end;
-        end;
-        AssignTo(FBitMap);
-      finally
-        Free;
-      end;
+      Assert(False);
+//      with TLinearBitmap.Create do
+//      try
+//        try
+//          LoadFromFile(FImageFileName);
+//        except on E: Exception do
+//          begin
+//            ShowError;
+//            Exit;
+//          end;
+//        end;
+//        AssignTo(FBitMap);
+//      finally
+//        Free;
+//      end;
     end;
 
     ZoomBox.Image32.Bitmap.Assign(FBitMap);

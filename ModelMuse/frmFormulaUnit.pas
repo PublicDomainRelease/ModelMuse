@@ -8,7 +8,7 @@ uses
   Windows, SysUtils, Types, Classes, StrUtils, Graphics, Controls, Forms,
   Dialogs, StdCtrls, frmCustomGoPhastUnit, Buttons, ExtCtrls, ComCtrls,
   RbwParser, JvExExtCtrls, JvNetscapeSplitter, JvExStdCtrls, RichEdit,
-  JvRichEdit, ehshelprouter, ClassificationUnit, GoPhastTypes;
+  JvRichEdit, {ehshelprouter,} ClassificationUnit, GoPhastTypes;
 
 type
   TVariableEdit = class(TClassificationObject)
@@ -373,9 +373,11 @@ procedure AppendToRichEdit(const source: TStringList; destination : TRichEdit) ;
 procedure TfrmFormula.InsertText(const NewText: string);
 const
 {$IFDEF LINUX}
-  BreakChar = [#10];
+//  BreakChar = [#10];
+  LineBreak = #10;
 {$ELSE}
-  BreakChar = [#10,#13];
+//  BreakChar = [#10,#13];
+  LineBreak = #13#10;
 {$ENDIF}
 var
   Start, sLength: integer;
@@ -386,6 +388,10 @@ var
   NewStart: integer;
   FormulaText: string;
   SelLength: integer;
+  LineBreakCount: Integer;
+  PosStart: Integer;
+  LineBreakPos: Integer;
+  PriorStart: Integer;
 begin
   try
     SelLength := jreFormula.SelLength;
@@ -393,11 +399,27 @@ begin
     begin
       FormulaText := jreFormula.Lines.Text;
       Start := jreFormula.SelStart + 1;
+
+      LineBreakCount := 0;
+      PosStart := 1;
+      LineBreakPos :=PosEx(LineBreak, FormulaText, PosStart);
+      While (LineBreakPos < Start + LineBreakCount*2) do
+      begin
+        Inc(LineBreakCount);
+        PosStart := LineBreakPos+2;
+        LineBreakPos :=PosEx(LineBreak, FormulaText, PosStart);
+      end;
+
+      PriorStart := Start;
+      Start := Start + LineBreakCount*2;
+
       Delete(FormulaText, Start, SelLength);
       Insert(NewText, FormulaText, Start);
       jreFormula.Text := FormulaText;
       // eliminate line breaks.
       Formula := Formula;
+
+      Start := PriorStart;
 
       Position := Pos('(', NewText);
       if (Position >= 1) and (NewText <> '(') then
@@ -406,7 +428,7 @@ begin
         sLength := 0;
         for Index := Position + 1 to Length(NewText) do
         begin
-          if (NewText[Index] in [' ', ',', ')']) then
+          if CharInSet(NewText[Index], [' ', ',', ')']) then
           begin
             sLength := Index - Position - 1;
             TextToSelect := Copy(NewText, Position + 1, sLength);
@@ -681,7 +703,7 @@ procedure TfrmFormula.jreFormulaDblClick(Sender: TObject);
 type
   TBrace = (bNone, bStart, bStop);
 const
-  Separators: set of Char = [' ', ',', '(', ')', #10, #13, #9, '*', '/', '+',
+  Separators: TSysCharSet = [' ', ',', '(', ')', #10, #13, #9, '*', '/', '+',
   '-', '"'];
 var
   LineNumber: integer;
@@ -727,7 +749,7 @@ begin
             if Index <= Length(AString) then
             begin
               Stop := Index;
-              if AString[Index] in Separators then
+              if CharInSet(AString[Index], Separators) then
               begin
                 break;
               end;
@@ -744,7 +766,7 @@ begin
             if Index <= Length(AString) then
             begin
               Start := Index;
-              if AString[Index] in Separators then
+              if CharInSet(AString[Index], Separators) then
               begin
                 Start := Start + 1;
                 break;
@@ -832,7 +854,6 @@ begin
   jreFormula.Lines.Clear;
   jreFormula.Lines.Add(Value);
   jreFormula.SelectAll;
-//  DiagramFormula;
 end;
 
 procedure TfrmFormula.TimerSetSelection(Sender: TObject);
@@ -887,6 +908,7 @@ end;
 procedure TfrmFormula.FormCreate(Sender: TObject);
 begin
   inherited;
+  jreFormula.DoubleBuffered := False;
   DataSetGroupName := 'Data Sets';
 
   Constraints.MinWidth := Width;
@@ -1187,7 +1209,8 @@ end;
 
 procedure TfrmFormula.btnFunctionHelpClick(Sender: TObject);
 begin
-  HelpRouter.HelpJump('', FFunctionHelpString);
+  Application.HelpJump(FFunctionHelpString);
+//  HelpRouter.HelpJump('', FFunctionHelpString);
 //  Application.HelpJump('files\Functions.htm#'+ FFunctionHelpString);
   inherited;
 end;

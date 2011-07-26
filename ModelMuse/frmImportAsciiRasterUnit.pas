@@ -159,7 +159,7 @@ begin
             end;
         end;
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         NodeElemString := 'cell';
         CenterString := 'cell center'

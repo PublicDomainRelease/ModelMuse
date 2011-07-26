@@ -6,10 +6,10 @@ unit frmStartUpUnit;
 interface
 
 uses
-  SysUtils, Types, Classes, Variants, Graphics, Controls, Forms,
+  Windows, SysUtils, Types, Classes, Variants, Graphics, Controls, Forms,
   Dialogs, StdCtrls, frmCustomGoPhastUnit, ExtCtrls,
   ComCtrls, Buttons, ArgusDataEntry, RbwEdit, Grids, RbwDataGrid4,
-  frameInitialGridPositionUnit, ehshelprouter;  
+  frameInitialGridPositionUnit{, ehshelprouter};  
 type
   {@abstract(@name is used to specify the grid for a new model or open an
     existing model.)}
@@ -246,8 +246,14 @@ begin
   begin
     FileName := frmGoPhast.MostRecentlyUsed.FileNames[Index];
     rgChoice.Items.Add(ExtractFileName(FileName) + '    (' + FileName + ')');
+
+    // This will cause TCustomRadioGroup.UpdateButtons to be called.
+    rgChoice.WordWrap := not rgChoice.WordWrap;
+    rgChoice.WordWrap := not rgChoice.WordWrap;
+
 //    rgChoice.Items.Add(ExtractFileName(FileName));
-    Control := rgChoice.Controls[rgChoice.ControlCount-1];
+//    Control := rgChoice.Controls[rgChoice.ControlCount-1];
+    Control := rgChoice.Buttons[rgChoice.ControlCount-1];
     Control.Hint := FileName;
     Control.ShowHint := True;
   end;

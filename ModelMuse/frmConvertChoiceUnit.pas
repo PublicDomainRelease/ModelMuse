@@ -259,7 +259,11 @@ begin
   rgChoice.ItemIndex := DefaultChoice;
   if dcType in Lock then
   begin
-    rgChoice.Controls[0].Enabled := False;
+    // This will cause TCustomRadioGroup.UpdateButtons to be called.
+    rgChoice.WordWrap := not rgChoice.WordWrap;
+    rgChoice.WordWrap := not rgChoice.WordWrap;
+    rgChoice.Buttons[0].Enabled := False;
+//    rgChoice.Controls[0].Enabled := False;
   end;
 end;
 

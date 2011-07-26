@@ -170,6 +170,12 @@ uses GR32_Polygons, BigCanvasMethods, frmGoPhastUnit, SparseArrayUnit,
   ModflowDiscretizationWriterUnit, PhastModelUnit, frmErrorsAndWarningsUnit, 
   IsosurfaceUnit;
 
+resourcestring
+  StrColumns = 'columns';
+  StrRows = 'rows';
+  StrTheWidthOfOneOr = 'The width of one or more %s is zero.';
+  StrColumnDRow = 'Column = %d; Row = %d; Layer = %d';
+
 procedure ReadReal2DArray(const Reader: TReader;
   var Positions: TTwoDRealArray; const Count1, Count2: integer);
 var
@@ -756,6 +762,9 @@ var
 begin
   if frmGoPhast.PhastModel <> nil then
   begin
+    if (frmGoPhast.PhastModel <> nil)
+      and (csDestroying in frmGoPhast.PhastModel.ComponentState) then Exit;
+
     frmGoPhast.PhastModel.InvalidateSegments;
   end;
   FCellElevationsNeedUpdating:= True;
@@ -786,7 +795,7 @@ var
   Start: Integer;
   Stop: Integer;
 begin
-  ErrorString := 'The width of one or more ' + WarningRoot   + ' is zero.';
+  ErrorString := Format(StrTheWidthOfOneOr, [WarningRoot]);
   for Index := 0 to Length(AnArray) - 1 do
   begin
     if AnArray[Index] = 0 then
@@ -825,7 +834,7 @@ end;
 
 procedure TModflowGrid.CheckColumnWidths;
 begin
-  CheckSizeRatios(ColWidths, 'columns');
+  CheckSizeRatios(ColWidths, StrColumns);
 end;
 
 procedure TModflowGrid.CheckElevations;
@@ -853,10 +862,13 @@ begin
           Elevations[ColIndex, RowIndex, LayerIndex-1])
           and Active.BooleanData[LayerIndex-1, RowIndex, ColIndex] then
         begin
+//          frmErrorsAndWarnings.AddError(FModel,ErrorString,
+//            'Column = ' + IntToStr(ColIndex+1)
+//            + '; Row = ' + IntToStr(RowIndex+1)
+//            + '; Layer = ' + IntToStr(LayerIndex));
           frmErrorsAndWarnings.AddError(FModel,ErrorString,
-            'Column = ' + IntToStr(ColIndex+1)
-            + '; Row = ' + IntToStr(RowIndex+1)
-            + '; Layer = ' + IntToStr(LayerIndex));
+            Format(StrColumnDRow,
+              [ColIndex+1, RowIndex+1, LayerIndex]));
         end;
       end;
     end;
@@ -1399,7 +1411,7 @@ end;
 
 procedure TModflowGrid.CheckRowHeights;
 begin
-  CheckSizeRatios(RowWidths, 'rows');
+  CheckSizeRatios(RowWidths, StrRows);
 end;
 
 procedure TModflowGrid.GetMinAndMax(const AnArray: TOneDRealArray;

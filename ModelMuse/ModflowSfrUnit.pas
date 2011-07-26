@@ -127,7 +127,7 @@ type
       write SetGageLocation;
   end;
 
-const
+resourcestring
   StrIncompleteSFRData = 'Incomplete SFR data';
 
 implementation

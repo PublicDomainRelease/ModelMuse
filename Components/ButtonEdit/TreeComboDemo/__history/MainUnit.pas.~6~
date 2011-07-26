@@ -1,0 +1,98 @@
+unit MainUnit;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, SsButtonEd, RbwStringTreeCombo, ExtCtrls, VirtualTrees;
+
+type
+  TfrmMain = class(TForm)
+    rgSelectionChoice: TRadioGroup;
+    RbwStringTreeCombo1: TRbwStringTreeCombo;
+    procedure FormCreate(Sender: TObject);
+    procedure RbwStringTreeCombo1TreeGetNodeDataSize(Sender: TBaseVirtualTree;
+      var NodeDataSize: Integer);
+    procedure RbwStringTreeCombo1TreeInitNode(Sender: TBaseVirtualTree;
+      ParentNode, Node: PVirtualNode;
+      var InitialStates: TVirtualNodeInitStates);
+    procedure RbwStringTreeCombo1TreeGetText(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+      var CellText: WideString);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  frmMain: TfrmMain;
+
+implementation
+
+{$R *.dfm}
+type
+  TMyRecord = record
+    Caption: string;
+  end;
+  PRecord = ^TMyRecord;
+
+procedure TfrmMain.FormCreate(Sender: TObject);
+var
+  Count: Integer;
+  ANode: PVirtualNode;
+  Index: Integer;
+begin
+  Count := 1;
+  ANode := RbwStringTreeCombo1.Tree.AddChild(nil, Pointer(Count));
+  for Index := 0 to 3 do
+  begin
+    Inc(Count);
+    RbwStringTreeCombo1.Tree.AddChild(ANode, Pointer(Count));
+  end;
+  Inc(Count);
+  ANode := RbwStringTreeCombo1.Tree.AddChild(nil, Pointer(Count));
+  for Index := 0 to 3 do
+  begin
+    Inc(Count);
+    RbwStringTreeCombo1.Tree.AddChild(ANode, Pointer(Count));
+  end;
+  Inc(Count);
+  ANode := RbwStringTreeCombo1.Tree.AddChild(nil, Pointer(Count));
+  for Index := 0 to 3 do
+  begin
+    Inc(Count);
+    RbwStringTreeCombo1.Tree.AddChild(ANode, Pointer(Count));
+  end;
+end;
+
+procedure TfrmMain.RbwStringTreeCombo1TreeGetNodeDataSize(
+  Sender: TBaseVirtualTree; var NodeDataSize: Integer);
+begin
+  NodeDataSize := SizeOf(TMyRecord);
+end;
+
+procedure TfrmMain.RbwStringTreeCombo1TreeGetText(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+  var CellText: WideString);
+var
+  NodeData: PRecord;
+begin
+  NodeData := Sender.GetNodeData(Node);
+  CellText := NodeData.Caption;
+end;
+
+procedure TfrmMain.RbwStringTreeCombo1TreeInitNode(Sender: TBaseVirtualTree;
+  ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
+var
+  APointer: Pointer;
+  Count : integer;
+  NodeData: PRecord;
+begin
+  APointer := Sender.GetNodeData(Node);
+  Count := PInteger(APointer)^;
+  NodeData := APointer;
+  NodeData.Caption := 'This is Node # ' + IntToStr(Count);
+end;
+
+end.

@@ -360,13 +360,13 @@ end;
 
 function FortranDecimal(NumberString: string): string;
 begin
-  if DecimalSeparator = '.' then
+  if FormatSettings.DecimalSeparator = '.' then
     begin
       result := NumberString;
     end
   else
     begin
-      result := StringReplace(NumberString, DecimalSeparator, '.',
+      result := StringReplace(NumberString, FormatSettings.DecimalSeparator, '.',
         [rfReplaceAll]);
     end;
 end; // function FortranDecimal
@@ -508,24 +508,25 @@ function IsNumber(const Str: string): boolean;
 var
   X: double;
 begin
-  try
-    X := StrToFloat(Str);
-    result := True;
-  except
-    result := False;
-  end;
+  result := TryStrToFloat(Str, X);
+//  try
+//    X := StrToFloat(Str);
+//    result := True;
+//  except
+//    result := False;
+//  end;
 end;
 
 //###################################################################
 
 function J_Valid_Name(Name: string; MaxLen: integer): boolean;
 // Check Name argument for conformance with JUPITER naming convention
-type
-  setChar = set of Char;
+//type
+//  setChar = set of Char;
 var
   Ch: Char;
   I, LenName: integer;
-  Letters, Digits, Symbols, JChars: setChar;
+  Letters, Digits, Symbols, JChars: TSysCharSet;
 begin
   // Initialize character sets
   Letters := [ 'A' .. 'Z', 'a' .. 'z' ];
@@ -538,12 +539,12 @@ begin
   if (LenName > 0) and (LenName <= MaxLen) then
     begin
       Ch := Name[1];  //bad when LenName=0
-      if Ch in Letters then
+      if CharInSet(Ch, Letters) then
         begin
           for I := 2 to LenName do
             begin
               Ch := Name[I];
-              if not (Ch in JChars) then
+              if not CharInSet(Ch, JChars) then
                 result := False;
             end;
         end
@@ -596,7 +597,7 @@ end;
 
 function MyExtractRelativePath(const BaseName, DestName: string): string;
 var
-  Len: integer;
+//  Len: integer;
   BName, BaseNameLocal, Dot: string;
 begin
   Dot := '.';
@@ -607,7 +608,7 @@ begin
   else
     begin
       BaseNameLocal := Trim(Basename);
-      Len := length(BaseNameLocal);
+//      Len := length(BaseNameLocal);
       BName := IncludeTrailingPathDelimiter(BaseNameLocal);
       result := ExtractRelativePath(BName, DestName);
     end;

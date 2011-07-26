@@ -30,6 +30,7 @@ type
   private
     FZoneBudget: TZoneBudgetSelect;
     FNameOfFile: string;
+    FEmbeddedExport: Boolean;
     procedure WriteResponse1;
     procedure WriteResponse2;
     procedure WriteResponse3;
@@ -37,9 +38,13 @@ type
     procedure WriteResponse5;
   public
     class function Extension: string; override;
-    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
+    Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType;
+      EmbeddedExport: boolean); reintroduce;
     procedure WriteFile(const AFileName: string);
   end;
+
+const
+  StrZbzones = '.zb_zones';
 
 implementation
 
@@ -76,7 +81,7 @@ end;
 
 class function TZoneBudgetZoneFileWriter.Extension: string;
 begin
-  result := '.zb_zones';
+  result := StrZbzones;
 end;
 
 procedure TZoneBudgetZoneFileWriter.WriteDataSet1;
@@ -227,7 +232,8 @@ begin
   end;
 end;
 
-procedure TZoneBudgetZoneFileWriter.ReportInvalidZonesInCompositeZones(MissingZones: TIntegerList; NAMCOMP: string);
+procedure TZoneBudgetZoneFileWriter.ReportInvalidZonesInCompositeZones(
+  MissingZones: TIntegerList; NAMCOMP: string);
 var
   ErrorString: string;
   MissIndex: Integer;
@@ -298,9 +304,11 @@ end;
 
 { TZoneBudgetResponseFileWriter }
 
-constructor TZoneBudgetResponseFileWriter.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
+constructor TZoneBudgetResponseFileWriter.Create(Model: TCustomModel;
+  EvaluationType: TEvaluationType; EmbeddedExport: boolean);
 begin
-  inherited;
+  inherited Create(Model, EvaluationType);
+  FEmbeddedExport := EmbeddedExport;
   FZoneBudget := Model.ModflowPackages.ZoneBudget;
 end;
 
@@ -368,10 +376,10 @@ procedure TZoneBudgetResponseFileWriter.WriteResponse2;
 var
   AFileName: string;
 begin
-  // write the name of the budget file 
+  // write the name of the budget file
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrTheBudgetFileRequ);
   AFileName := ChangeFileExt(FNameOfFile, StrCbcExt);
-  if not FileExists(AFileName) then
+  if (not FEmbeddedExport) and (not FileExists(AFileName)) then
   begin
     frmErrorsAndWarnings.AddError(Model, StrTheBudgetFileRequ, AFileName);
   end;

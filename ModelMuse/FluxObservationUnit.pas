@@ -263,6 +263,14 @@ implementation
 uses
   PhastModelUnit, ScreenObjectUnit, ModflowBoundaryUnit, frmGoPhastUnit;
 
+resourcestring
+  StrInvalidObservation = 'Invalid observation time in the %s  observation "' +
+  '%s."';
+  Str0gIsNotUsedIn = '%0:g is not used in %1:s in the %2:s package';
+  StrInvalidObjectsIncl = 'Invalid objects included in the %0:s  observation' +
+  ' "%1:s."';
+  StrThe0sPackageIs = 'The %0:s  package is not used in %1:s.';
+
 { TObservationGroup }
 
 function TFluxObservationGroup.AddObject(ScreenObject: TObject): integer;
@@ -378,10 +386,14 @@ begin
         Time := ObservationTimes[TimeIndex].Time;
         if not TimeUsedInBoundary(Time, Boundary) then
         begin
-          ErrorRoot := 'Invalid observation time in the ' + PackageID
-            + ' observation "' + ObservationName + '."';
-          ErrorMessage := FloatToStr(Time) + ' is not used in '
-            + ScreenObject.Name + ' in the ' + BoundaryPackageID + ' package';
+          ErrorRoot := Format(StrInvalidObservation,
+            [PackageID, ObservationName]);
+//          ErrorRoot := 'Invalid observation time in the ' + PackageID
+//            + ' observation "' + ObservationName + '."';
+          ErrorMessage := Format(Str0gIsNotUsedIn,
+            [Time, ScreenObject.Name, BoundaryPackageID]);
+//          ErrorMessage := FloatToStr(Time) + ' is not used in '
+//            + ScreenObject.Name + ' in the ' + BoundaryPackageID + ' package';
           ErrorRoots.Add(ErrorRoot);
           ErrorMessages.Add(ErrorMessage);
         end;
@@ -389,10 +401,14 @@ begin
     end
     else
     begin
-      ErrorRoot := 'Invalid objects included in the ' + PackageID
-        + ' observation "' + ObservationName + '."';
-      ErrorMessage := 'The ' + BoundaryPackageID + ' package is not used in '
-        + ScreenObject.Name;
+      ErrorRoot := Format(StrInvalidObjectsIncl, [PackageID, ObservationName]);
+      ErrorMessage := Format(StrThe0sPackageIs,
+        [BoundaryPackageID, ScreenObject.Name]);
+
+//      ErrorRoot := 'Invalid objects included in the ' + PackageID
+//        + ' observation "' + ObservationName + '."';
+//      ErrorMessage := 'The ' + BoundaryPackageID + ' package is not used in '
+//        + ScreenObject.Name;
       ErrorRoots.Add(ErrorRoot);
       ErrorMessages.Add(ErrorMessage);
     end;

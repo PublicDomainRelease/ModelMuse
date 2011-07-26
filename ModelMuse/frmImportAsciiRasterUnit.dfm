@@ -7,12 +7,6 @@ inherited frmImportAsciiRaster: TfrmImportAsciiRaster
   ExplicitHeight = 279
   PixelsPerInch = 96
   TextHeight = 18
-  inherited lblDataSet: TLabel
-    Margins.Bottom = 0
-  end
-  inherited lblInterpolator: TLabel
-    Margins.Bottom = 0
-  end
   inherited comboDataSets: TComboBox
     Anchors = [akLeft, akTop, akRight]
   end

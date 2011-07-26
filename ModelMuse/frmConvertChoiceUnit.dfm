@@ -12,7 +12,7 @@ inherited frmConvertChoice: TfrmConvertChoice
   ExplicitWidth = 367
   ExplicitHeight = 257
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object rgChoice: TRadioGroup
     Left = 0
     Top = 113
@@ -39,16 +39,22 @@ inherited frmConvertChoice: TfrmConvertChoice
       Top = 4
       Width = 91
       Height = 33
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
     object btnOK: TBitBtn
       Left = 168
       Top = 4
       Width = 91
       Height = 33
-      TabOrder = 1
+      DoubleBuffered = True
       Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 1
     end
     object btnHelp: TBitBtn
       Left = 71
@@ -56,9 +62,12 @@ inherited frmConvertChoice: TfrmConvertChoice
       Width = 91
       Height = 33
       HelpType = htKeyword
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
   end
   object pnlTop: TPanel
@@ -72,50 +81,50 @@ inherited frmConvertChoice: TfrmConvertChoice
     object Label1: TLabel
       Left = 16
       Top = 8
-      Width = 258
-      Height = 17
+      Width = 275
+      Height = 18
       Caption = 'Error: The result data type of the formula'
     end
     object lblFormulaDataType: TLabel
       Left = 16
       Top = 56
-      Width = 39
-      Height = 17
+      Width = 42
+      Height = 18
       Caption = '(Real)'
     end
     object lblDataSetDataType: TLabel
       Left = 184
       Top = 80
-      Width = 58
-      Height = 17
+      Width = 61
+      Height = 18
       Caption = '(Integer).'
     end
     object Label3: TLabel
       Left = 16
       Top = 80
-      Width = 130
-      Height = 17
+      Width = 139
+      Height = 18
       Caption = 'type of the data set: '
     end
     object Label2: TLabel
       Left = 112
       Top = 56
-      Width = 190
-      Height = 17
+      Width = 209
+      Height = 18
       Caption = 'is not compatible with the data'
     end
     object Label4: TLabel
       Left = 16
       Top = 32
-      Width = 96
-      Height = 17
+      Width = 103
+      Height = 18
       Caption = 'for the data set'
     end
     object lblVariableName: TLabel
       Left = 144
       Top = 32
-      Width = 99
-      Height = 17
+      Width = 111
+      Height = 18
       Caption = '(VariableName)'
     end
   end

@@ -126,7 +126,7 @@ var
     for CharIndex := Length(AString) downto 1 do
     begin
       AChar := AString[CharIndex];
-      if not (AChar in NumDigits) then
+      if not CharInSet(AChar, NumDigits) then
       begin
         break;
       end;

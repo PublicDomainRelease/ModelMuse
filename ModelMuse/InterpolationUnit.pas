@@ -3,7 +3,7 @@ unit InterpolationUnit;
 
 interface
 
-uses PhastModelUnit, SysUtils, Classes, Controls, Dialogs, RbwParser, DataSetUnit,
+uses Windows, PhastModelUnit, SysUtils, Classes, Controls, Dialogs, RbwParser, DataSetUnit,
   frmGoPhastUnit, ScreenObjectUnit, FastGEO, GoPhastTypes, QuadTreeClass,
   SfrInterpolatorUnit, NatNeigh;
 
@@ -24,7 +24,7 @@ type
     FAnisotropy: real;
     // See @link(Anisotropy).
     procedure SetAnisotropy(const Value: real);
-    procedure GetLimits(var MinY: Real; var MaxY: Real; var MinX: Real; var MaxX: Real; const DataSet: TDataArray);
+    procedure GetLimits(var MinY, MaxY, MinX, MaxX: Real; const DataSet: TDataArray);
   protected
     // @name initializes the limits of @link(TRbwQuadTree QuadTree)
     // to the grid limits.
@@ -412,7 +412,7 @@ begin
               Cell := frmGoPhast.PhastGrid.GetCell(ClosestLocation,
                 AScreenObject.ViewDirection, DataSet.EvaluatedAt);
             end;
-          msModflow, msModflowLGR:
+          msModflow, msModflowLGR, msModflowNWT:
             begin
               TopCell := frmGoPhast.Grid.TopContainingCell(ClosestLocation,
                 DataSet.EvaluatedAt);
@@ -555,7 +555,8 @@ begin
     as TCustomAnisotropicInterpolator).Anisotropy);
 end;
 
-procedure TCustomAnisotropicInterpolator.GetLimits(var MinY: Real; var MaxY: Real; var MinX: Real; var MaxX: Real; const DataSet: TDataArray);
+procedure TCustomAnisotropicInterpolator.GetLimits(
+  var MinY, MaxY, MinX, MaxX: Real; const DataSet: TDataArray);
 var
   ScreenObject: TScreenObject;
   Index: Integer;
@@ -573,7 +574,8 @@ begin
         MinX := APoint.X;
         MaxY := APoint.Y * Anisotropy;
         MinY := APoint.Y * Anisotropy;
-        APoint := frmGoPhast.Grid.TwoDElementCorner(frmGoPhast.Grid.ColumnCount, 0);
+        APoint :=
+          frmGoPhast.Grid.TwoDElementCorner(frmGoPhast.Grid.ColumnCount, 0);
         if APoint.X > MaxX then
         begin
           MaxX := APoint.X;
@@ -590,7 +592,8 @@ begin
         begin
           MinY := APoint.Y * Anisotropy;
         end;
-        APoint := frmGoPhast.Grid.TwoDElementCorner(frmGoPhast.Grid.ColumnCount, frmGoPhast.Grid.RowCount);
+        APoint := frmGoPhast.Grid.TwoDElementCorner(frmGoPhast.Grid.ColumnCount,
+          frmGoPhast.Grid.RowCount);
         if APoint.X > MaxX then
         begin
           MaxX := APoint.X;

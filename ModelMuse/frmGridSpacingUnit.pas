@@ -156,7 +156,7 @@ type
     // @name splits up Value into multiple values and pastes the values
     // into ADataGrid.
     procedure PasteMultipleCells(const ADataGrid: TRbwDataGrid4;
-      const ARow: Integer; const Value: WideString);
+      const ARow: Integer; const Value: String);
     // @name sets the cursor to indicate whether or not the user is dragging
     // a row in one of the TRbwDataGrids.
     procedure SetCursor(const ACol, ARow: integer);
@@ -391,7 +391,7 @@ begin
       begin
         // do nothing
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         rdeSpacingRows.Text := '-100';
       end;
@@ -408,7 +408,7 @@ begin
 end;
 
 procedure TfrmGridSpacing.PasteMultipleCells(const ADataGrid: TRbwDataGrid4;
-  const ARow: Integer; const Value: WideString);
+  const ARow: Integer; const Value: String);
 var
   Lines: TStringList;
   Index: integer;

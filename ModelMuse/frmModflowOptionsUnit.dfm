@@ -17,7 +17,6 @@ inherited frmModflowOptions: TfrmModflowOptions
     Align = alClient
     TabOrder = 0
     OnChange = pcOptionsChange
-    ExplicitTop = 41
     object TabSheet1: TTabSheet
       HelpType = htKeyword
       HelpKeyword = 'Description_Tab'
@@ -182,7 +181,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         Top = 126
         Width = 145
         Height = 22
-        ItemHeight = 18
         TabOrder = 1
         Text = '-1e20'
         OnExit = rdeHNOFLOExit
@@ -196,7 +194,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         Width = 145
         Height = 26
         Style = csDropDownList
-        ItemHeight = 18
         TabOrder = 2
         Text = 'seconds (1)'
         OnChange = comboTimeUnitChange
@@ -215,7 +212,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         Width = 145
         Height = 26
         Style = csDropDownList
-        ItemHeight = 18
         TabOrder = 3
         Text = 'meters (2)'
         OnChange = comboLengthUnitChange
@@ -231,7 +227,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         Top = 177
         Width = 145
         Height = 22
-        ItemHeight = 18
         TabOrder = 4
         Text = '-2e20'
         OnExit = rdeHDRYExit
@@ -319,7 +314,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         HelpContext = 290
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 18
         TabOrder = 0
         Text = '0.5'
         OnChange = rdeWettingFactChange
@@ -396,9 +390,12 @@ inherited frmModflowOptions: TfrmModflowOptions
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnOK: TBitBtn
       Left = 346
@@ -408,9 +405,7 @@ inherited frmModflowOptions: TfrmModflowOptions
       Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
-      ModalResult = 1
-      TabOrder = 1
-      OnClick = btnOKClick
+      DoubleBuffered = True
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         04000000000068010000120B0000120B00001000000010000000000000000000
@@ -428,7 +423,11 @@ inherited frmModflowOptions: TfrmModflowOptions
         3338F38F000033333333333333A223333333333333338F830000333333333333
         333A333333333333333338330000333333333333333333333333333333333333
         0000}
+      ModalResult = 1
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 1
+      OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
       Left = 441
@@ -436,8 +435,11 @@ inherited frmModflowOptions: TfrmModflowOptions
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
   end
   object pnlModel: TPanel
@@ -447,7 +449,6 @@ inherited frmModflowOptions: TfrmModflowOptions
     Height = 41
     Align = alBottom
     TabOrder = 2
-    ExplicitTop = 0
     DesignSize = (
       543
       41)
@@ -466,7 +467,6 @@ inherited frmModflowOptions: TfrmModflowOptions
       Height = 26
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 18
       TabOrder = 0
       OnChange = comboModelChange
     end

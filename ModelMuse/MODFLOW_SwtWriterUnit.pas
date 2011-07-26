@@ -49,6 +49,11 @@ uses
   ModflowSubsidenceDefUnit, DataSetUnit, frmErrorsAndWarningsUnit, SysUtils,
   Forms;
 
+resourcestring
+  StrNoSWTLayersDefine = 'No SWT layers defined';
+  StrInTheSWTPackage = 'In the SWT package, no systems of interbeds have bee' +
+  'n defined in the MODFLOW Layer Groups dialog box.';
+
 { TModflowSWT_Writer }
 
 constructor TModflowSWT_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
@@ -646,9 +651,8 @@ var
 begin
   if FLNWT.Count = 0 then
   begin
-    frmErrorsAndWarnings.AddError(Model, 'No SWT layers defined',
-      'In the SWT package, no systems of interbeds have been defined '
-        + 'in the MODFLOW Layer Groups dialog box.');
+    frmErrorsAndWarnings.AddError(Model, StrNoSWTLayersDefine,
+      StrInTheSWTPackage);
     Exit;
   end;
   for Index := 0 to FLNWT.Count - 1 do

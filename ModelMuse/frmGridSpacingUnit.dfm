@@ -25,6 +25,10 @@ inherited frmGridSpacing: TfrmGridSpacing
     TabOrder = 0
     object tabColumns: TTabSheet
       Caption = 'Columns (X'#39')'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlColumns: TPanel
         Left = 0
         Top = 173
@@ -57,7 +61,6 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 18
           TabOrder = 1
           Text = '100'
           DataType = dtReal
@@ -92,6 +95,7 @@ inherited frmGridSpacing: TfrmGridSpacing
         OnMouseUp = dgMouseUp
         OnSelectCell = dgSelectCell
         OnSetEditText = dgSetEditText
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
@@ -154,6 +158,10 @@ inherited frmGridSpacing: TfrmGridSpacing
     object tabRows: TTabSheet
       Caption = 'Rows (Y'#39')'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlRows: TPanel
         Left = 0
         Top = 173
@@ -186,7 +194,6 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 18
           TabOrder = 1
           Text = '100'
           DataType = dtReal
@@ -221,6 +228,7 @@ inherited frmGridSpacing: TfrmGridSpacing
         OnMouseUp = dgMouseUp
         OnSelectCell = dgSelectCell
         OnSetEditText = dgSetEditText
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
@@ -284,6 +292,10 @@ inherited frmGridSpacing: TfrmGridSpacing
     object tabLayers: TTabSheet
       Caption = 'Layers (Z)'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object pnlLayers: TPanel
         Left = 0
         Top = 173
@@ -316,7 +328,6 @@ inherited frmGridSpacing: TfrmGridSpacing
           Height = 28
           Cursor = crIBeam
           Anchors = [akTop, akRight]
-          ItemHeight = 18
           TabOrder = 1
           Text = '10'
           DataType = dtReal
@@ -351,6 +362,7 @@ inherited frmGridSpacing: TfrmGridSpacing
         OnMouseUp = dgMouseUp
         OnSelectCell = dgSelectCell
         OnSetEditText = dgSetEditText
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
@@ -428,8 +440,11 @@ inherited frmGridSpacing: TfrmGridSpacing
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
     object btnOK: TBitBtn
       Left = 252
@@ -437,9 +452,12 @@ inherited frmGridSpacing: TfrmGridSpacing
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnHelp: TBitBtn
       Left = 156
@@ -447,9 +465,12 @@ inherited frmGridSpacing: TfrmGridSpacing
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
   end
   object pnlDescribe: TPanel
@@ -490,7 +511,6 @@ inherited frmGridSpacing: TfrmGridSpacing
       Height = 26
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 18
       TabOrder = 0
       OnChange = comboModelChange
     end

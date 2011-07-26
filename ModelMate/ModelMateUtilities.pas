@@ -96,7 +96,7 @@ begin
       begin
         for I := 0 to ParamGpsCurrent.Count - 1 do
           begin
-            if AnsiSameText(GroupName,ParamGpsCurrent.Items[I].Name) then
+            if AnsiSameText(GroupName,ConvertString(ParamGpsCurrent.Items[I].Name)) then
               result := False;
           end;
       end;
@@ -104,7 +104,7 @@ begin
       begin
         for I := 0  to ObsGpsCurrent.Count - 1 do
           begin
-            if AnsiSameText(GroupName,ObsGpsCurrent.Items[I].Name) then
+            if AnsiSameText(GroupName,ConvertString(ObsGpsCurrent.Items[I].Name)) then
               result := False;
           end;
       end;
@@ -112,7 +112,7 @@ begin
       begin
         for I := 0  to PredGpsCurrent.Count - 1 do
           begin
-            if AnsiSameText(GroupName,PredGpsCurrent.Items[I].Name) then
+            if AnsiSameText(GroupName,ConvertString(PredGpsCurrent.Items[I].Name)) then
               result := False;
           end;
       end;
@@ -120,7 +120,7 @@ begin
       begin
         for I := 0  to PriGpsCurrent.Count - 1 do
           begin
-            if AnsiSameText(GroupName,PriGpsCurrent.Items[I].Name) then
+            if AnsiSameText(GroupName,ConvertString(PriGpsCurrent.Items[I].Name)) then
               result := False;
           end;
       end;

@@ -99,6 +99,12 @@
 {* use of TXBase.                                                             *}
 {******************************************************************************}
 
+{$ifdef CONDITIONALEXPRESSIONS}
+  {$if CompilerVersion>=20}
+    {$DEFINE Delphi_2009_UP}
+  {$ifend}
+{$endif}
+
 
 Unit XBase1 ;
 
@@ -222,7 +228,7 @@ Type
   TXBase = Class(TComponent)
   Private
     { Private Declarations }
-    FFileName     : WString  ; (* Nom du fichier, avec son Path *)
+    FFileName     : String  ; (* Nom du fichier, avec son Path *)
     FCurrentRecord: Cardinal ; (* +CHAB./Longint/ NUMERO du RECORD courant *)
     NumFields     : Integer  ; (* NOMBRE de CHAMPS : 1..128 *)
     FActive       : Boolean  ; (* Fichier OUVERT ou NON Ouvert  *)
@@ -254,11 +260,11 @@ Type
     FFindType     : AnsiChar       ; // type de Champ
     FFindOpe      : AnsiChar       ; // Op้rateur = ou > ou <  ou G ou L
 // rbw end change
-    FFindValS     : WString    ; // Valeur เ comparer
+    FFindValS     : AnsiString    ; // Valeur เ comparer
     FFindValN     : Extended   ; // Valeur Num้rique
     (*----------------------------*)
-    Function  GetFileName     : WString ;
-    Procedure SetFileName(Name: WString);
+    Function  GetFileName     : String ;
+    Procedure SetFileName(Name: String);
     Procedure SetActive(Val: Boolean);
     Procedure FillHeaderInfo;
     Procedure ReadARecord;
@@ -286,12 +292,12 @@ Type
     Procedure GotoRecord(Recnum: Cardinal);
     Procedure RefreshRecord;
     // sont mieux ici en "public" <<V1.10>>
-    Function  GetFieldNumberFromName(Text: WString) : Integer ;
+    Function  GetFieldNumberFromName(Text: AnsiString) : Integer ;
     //    Procedure UpdateFieldData(FieldNo: integer; Text: WString);
     //
-    Function  GetFieldByName(FieldName: WString) : WString;
-    Function  GetFieldByNumber(FieldNum: Integer): WString;
-    Function  GetFieldName(FieldNo: Integer)     : WString;
+    Function  GetFieldByName(FieldName: AnsiString) : String;
+    Function  GetFieldByNumber(FieldNum: Integer): String;
+    Function  GetFieldName(FieldNo: Integer)     : AnsiString;
     Function  GetFieldType(FieldNo: Integer)     : TFieldType;
 // rbw begin change
 //    Function  GetFieldTypeChar(FieldNo: Integer) : Char ; // ajout CHABANT
@@ -299,19 +305,19 @@ Type
 // rbw end change
     Function  GetFieldSize(FieldNo: Integer)     : Integer;
     Function  GetFieldDecimals(FieldNo: Integer) : Integer; // ajout CHABANT
-    Procedure PutFieldByName(FieldName, Data: WString);
-    Procedure PutFieldByNumber(FieldNo : Integer; TEXT : WString);
+    Procedure PutFieldByName(FieldName, Data: AnsiString);
+    Procedure PutFieldByNumber(FieldNo : Integer; TEXT : AnsiString);
     Procedure PostChanges;
     Procedure AppendBlank;
     (*อออออออออ CHABANT ออออออออออ*)
-    Function  GetFieldStr(FieldName : WString ) : WString  ;
-    Function  GetFieldInt(FieldName : WString ) : Integer  ; overload;
+    Function  GetFieldStr(FieldName : AnsiString ) : String  ;
+    Function  GetFieldInt(FieldName : AnsiString ) : Integer  ; overload;
     Function  GetFieldInt(FieldNum : integer ) : Integer  ; overload;
-    Function  GetFieldNum(FieldName : WString ) : Extended ; overload; // Real 30/12/2002
+    Function  GetFieldNum(FieldName : AnsiString ) : Extended ; overload; // Real 30/12/2002
     Function  GetFieldNum(FieldNum : integer ) : Extended ; overload; // Real 30/12/2002
-    Function  GetFieldDat(FieldName : WString ) : WString  ;
-    Procedure UpdFieldStr(FieldName : WString ; Data: WString ) ;
-    Procedure UpdFieldInt(FieldName : WString ; Data: Integer ) ;
+    Function  GetFieldDat(FieldName : AnsiString ) : String  ;
+    Procedure UpdFieldStr(FieldName, Data: AnsiString ) ;
+    Procedure UpdFieldInt(FieldName : AnsiString ; Data: Integer ) ;
     Procedure UpdFieldDat(FieldName : WString ; Data: WString ) ;
     // 29/12/2002  rajout d'une Variante UpdFieldNum5D ( 5 dcimales ) <<V211A>>
     Procedure UpdFieldNum(  FieldName : WString ; Data: Extended ) ; // au lieu de "REAL"
@@ -333,32 +339,32 @@ Type
     Function DBFPack(BIDON : byte    ) : integer  ;
     Function DBFExtractStruct(var DBFFields : TStringList ;
                                 VFIX : boolean ) : boolean ;
-    Function DBFCopyStruct(DBFName : WString ) : boolean ;
-    Function DBFCopyFile(DBFName : WString ; CPTREC : integer ;
+    Function DBFCopyStruct(DBFName : String ) : boolean ;
+    Function DBFCopyFile(DBFName : String ; CPTREC : integer ;
                          CopyDELETED : boolean ) : boolean ;
-    Function DBFCreate(DBFName : WString ; DBFFields :TStringList) : boolean ;
+    Function DBFCreate(DBFName : String ; DBFFields :TStringList) : boolean ;
     (*ออออออออออออออออออออออออออออ*)
-    Function  PadLeft( Text: WString; CPT : Integer): WString ;
-    Function  PadRight(Text: WString; CPT : Integer): WString ;
-    Function  StandardDBFName(Text: WString): WString ;
+    Function  PadLeft( Text: AnsiString; CPT : Integer): AnsiString ;
+    Function  PadRight(Text: AnsiString; CPT : Integer): AnsiString ;
+    Function  StandardDBFName(Text: String): String ;
     procedure DBFSetDateAMJ(var ZAMJ3 : array of byte) ; // arg = zone de 3 bytes
     // *ออออออออออออออออออออออออออออ  <<V1.20>>
 // rbw begin change
 //    Function  DBFFormatDate( TEXT : WString ; COPT : Char ) : WString ;
-    Function  DBFFormatDate( TEXT : WString ; COPT : AnsiChar ) : WString ;
+    Function  DBFFormatDate( TEXT : AnsiString ; COPT : AnsiChar ) : AnsiString ;
 // rbw end change
-    Function  DBFFormatNumeric( TEXT : WString ; XLEN , XDEC : byte ) : WString ;
-    Function  SetFind(NameField , Ope , ValComp : WString ): Integer;
+    Function  DBFFormatNumeric( TEXT : AnsiString ; XLEN , XDEC : byte ) : AnsiString ;
+    Function  SetFind(NameField , Ope , ValComp : ansiString ): Integer;
 // rbw begin change
 //    Function  FindRecord(SearchType : String ): Integer;
     Function  FindRecord(SearchType : AnsiString ): Integer;
 //    Function  UpdFieldX(FieldName: WString ; TEXT : WString ; COPT : char ) : boolean ;
-    Function  UpdFieldX(FieldName: WString ; TEXT : WString ; COPT : AnsiChar ) : boolean ;
+    Function  UpdFieldX(FieldName: WString ; TEXT : AnsiString ; COPT : AnsiChar ) : boolean ;
 // rbw end change
 
 
   Published
-    Property FileName   : WString  Read GetFileName     Write SetFileName ;
+    Property FileName   : String  Read GetFileName     Write SetFileName ;
     Property Active     : Boolean  Read FActive         Write SetActive   ;
     Property AutoUpDate : Boolean  Read FAutoUpdate     Write FAutoUpdate ;
     Property DebugErr   : Boolean  Read FDebugErr       Write FDebugErr   ;
@@ -391,7 +397,7 @@ Const
   dB3Memo = $83;
   dB4Memo = $84;
   VIDE    = ''  ;
-  SPACE   = ' ' ;
+  SPACE: AnsiChar = ' ' ;
   SPACE32 = 32  ;
   POINT   = '.' ;
   ZERO    = '0' ;
@@ -428,7 +434,7 @@ End;
 (*:ออ Centralisation des Messages d'ERREURS  อออออออออออออออออออออออออออ *)
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
 Procedure TXBase.ErreurGlobale( XERR : byte ; XDIV : integer ) ;
-var  W1 , W2 : WString ; // message d'erreur
+var  W1 , W2 : String ; // message d'erreur
 begin
    W2 := IntToStr(XDIV) ;
    case XERR of
@@ -465,7 +471,7 @@ begin
      else W1 := 'UNKNOWN ERROR ??  # ' + W2
    end ;
    W1 := 'ERROR:' + IntToStr(XERR) + ' *'#013 +
-         W1 + #013' on File ' + FFileName ;
+         W1 + #013' on File ' + string(FFileName) ;
    if DebugErr then begin
         ShowMessage(W1)
    end else begin
@@ -481,9 +487,10 @@ end ;
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
 (* ajoute des ESPACES en d้but pour atteindre la longueur indiqu้e       *)
 (* J'optimise cette routine    ; et Ajustement เ la longueur EXACTE      *)
-Function TXBase.PadLeft(Text: WString; CPT: Integer): WString ;
+Function TXBase.PadLeft(Text: AnsiString; CPT: Integer): AnsiString ;
 var X1 : smallint ;
 Begin
+  Assert(Length(Text) <= 255);
   X1 := length(Text) ;
   if X1 = CPT then begin
       Result := TEXT ;
@@ -495,14 +502,16 @@ Begin
            Result := StringOfChar(SPACE , X1) + Text ;
       end ;
   end ;
+  Assert(Length(Result) <= 255);
 end;
 
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
-Function TXBase.PadRight(Text: WString; CPT : Integer): WString;
+Function TXBase.PadRight(Text: AnsiString; CPT : Integer): AnsiString;
 (* ajoute des ESPACES en Fin   pour atteindre la longueur indique       *)
 (* J'optimise cette routine    ; et Ajustement เ la longueur EXACTE      *)
 var X1 : smallint ;
 Begin
+  Assert(Length(Text) <= 255);
   X1 := length(Text) ;
   if X1 = CPT then
        Result := Text
@@ -514,6 +523,7 @@ Begin
            Result := Text + StringOfChar(SPACE , X1) ;
        end ;
   end ;
+  Assert(Length(Result) <= 255);
 end;
 
 
@@ -539,7 +549,7 @@ begin
 end ;
 
 //*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *
-Function TXBase.GetFileName: WString;
+Function TXBase.GetFileName: String;
 Begin
   Result := FFileName ;
 End;
@@ -547,7 +557,7 @@ End;
 
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
 // Standardise le NOM d'un fichier Dbase3  ( extension .DBF )
-Function  TXBase.StandardDBFName(Text: WString): WString ;
+Function  TXBase.StandardDBFName(Text: String): String ;
 begin
    Result := Trim( Text ) ;
    if length(Result) = 0 then
@@ -558,7 +568,7 @@ begin
 end ;
 
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
-Procedure TXBase.SetFileName(Name: WString);
+Procedure TXBase.SetFileName(Name: String);
 begin
   if FActive = true then begin
        ErreurGlobale(01 , 0) ;
@@ -571,7 +581,7 @@ End;
 (*:ออ             OUVERTURE du FICHIER DBF                            ออ *)
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
 Procedure TXBase.SetActive(VAL : Boolean);    (* OPEN ou CLOSE fichier *)
-var W_Name : WString ;
+var W_Name : String ;
     J1     : Smallint ;
 Begin
   W_Name  := FFileName ;
@@ -879,7 +889,7 @@ var
    C1 : AnsiChar ;
 // rbw end change
    M1 : extended ;
-   W1 : WString ;
+   W1 : AnsiString ;
    VOK , VFIN : boolean ;
 
 begin
@@ -916,18 +926,28 @@ begin
   repeat
      //...... TEST DU FILTRE .....
      VOK := false ;
-     W1  := GetFieldByNumber(FFindNum) ;
+     W1  := AnsiString(GetFieldByNumber(FFindNum)) ;
      case FFindType of  // type de Champ
          'N' : begin
                W1[length(W1) + 1] := #00 ;
-               if DecimalSeparator <> POINT then begin
-                  J2 := pos(POINT , W1) ;
+               {$IFDEF Delphi_2009_UP}
+               if FormatSettings.DecimalSeparator <> POINT then
+               {$ELSE}
+               if DecimalSeparator <> POINT then
+               {$ENDIF}
+               begin
+                  J2 := pos(POINT , string(W1)) ;
                   if J2 > 0 then
 // rbw begin change
 //                     W1[J2] := DecimalSeparator ;
                   begin
+                    {$IFDEF Delphi_2009_UP}
+                    Assert(FormatSettings.DecimalSeparator <= #$00FF);
+                    W1[J2] := AnsiChar(FormatSettings.DecimalSeparator);
+                    {$ELSE}
                     Assert(DecimalSeparator <= #$00FF);
                     W1[J2] := AnsiChar(DecimalSeparator);
+                    {$ENDIF}
                   end;
 // rbw end change
                end ;
@@ -979,12 +999,15 @@ begin
 end ;
 
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
-Function TXBase.SetFind(NameField , Ope , ValComp : WString ): Integer;
+Function TXBase.SetFind(NameField , Ope , ValComp : AnsiString ): Integer;
 var X1, X2 : smallint ;
     C1 : AnsiChar ;
     M1 : Extended ;
     V1 : Boolean ;
 begin
+    Assert(Length(NameField) <= 255);
+    Assert(Length(Ope) <= 255);
+    Assert(Length(ValComp) <= 255);
     Result := 0 ;
     FFindField    := NameField ;
     if length(Ope) = 0 then FFindOpe := '='
@@ -1002,8 +1025,8 @@ begin
            if Ope[2] = '='  then FFindOpe := 'E' ;
        end ;
     end ;
-    if pos(FFindOpe , '=#><LGE') = 0 then
-           FFindOpe := '=' ; 
+    if pos(string(FFindOpe) , '=#><LGE') = 0 then
+           FFindOpe := '=' ;
     FFindValS := ValComp ;
     X1 := GetFieldNumberFromName(NameField) ;
     FFindNum  := X1 ;
@@ -1031,12 +1054,17 @@ end ;
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
 function TXBase.GetFieldNum(FieldNum: integer): Extended;
 Var
-  TmpS: WString;
+  TmpS: String;
   SaveDecSep : Char ;
 Begin
+  {$IFDEF Delphi_2009_UP}
+  SaveDecSep := FormatSettings.DecimalSeparator ;
+  FormatSettings.DecimalSeparator := POINT ;  // '.' K_POINT
+  {$ELSE}
   SaveDecSep := DecimalSeparator ;
   DecimalSeparator := POINT ;  // '.' K_POINT
-  TmpS   := GetFieldByNumber( FieldNum ) ;
+  {$ENDIF}
+  TmpS   := string(GetFieldByNumber( FieldNum )) ;
   Result := 0 ;
   if length(TmpS) > 0 then  begin
       try
@@ -1045,20 +1073,25 @@ Begin
           on E: EConvertError do Result := 0 ;
       end ;
   end ;
+  {$IFDEF Delphi_2009_UP}
+  FormatSettings.DecimalSeparator := SaveDecSep ;
+  {$ELSE}
   DecimalSeparator := SaveDecSep ;
+  {$ENDIF}
 end;
 
-Function TXBase.GetFieldNumberFromName(Text: WString): Integer;
+Function TXBase.GetFieldNumberFromName(Text: AnsiString): Integer;
 Var
   VOK   : boolean ;
-  XFLD ,  XLEN1 , XLEN2 : smallint;
-  WTXT ,  CNOM  : WString ;
+  XFLD ,  {XLEN1 ,} XLEN2 : smallint;
+  WTXT ,  CNOM  : String ;
 Begin
+  Assert(Length(Text) <= 255);
   VOK  := false   ;
   //** les Champs DBASE3 ont un nom en MAJUSCULE de 10 car ,
   //**      padd้ avec des NULLS et non pas des SPACES
-  WTXT := Text ;
-  if WTXT[1] >= 'a' then  WTXT := UpperCase(Text) ;
+  WTXT := string(Text) ;
+  if WTXT[1] >= 'a' then  WTXT := UpperCase(string(Text)) ;
 
   // RBW, Aug. 19, 2004: According the the above comment, spaces are not
   // allowed in field names.  However, I have not been able to confirm
@@ -1081,7 +1114,7 @@ Begin
       // est deja  UpperCase( String( FieldStruct[ XFLD ].Fieldname ) )
 // rbw begn change
 //      CNOM := String( FieldStruct[ XFLD ].FieldName ) ;
-      CNOM := AnsiString( FieldStruct[ XFLD ].FieldName ) ;
+      CNOM := string(FieldStruct[ XFLD ].FieldName);
 // rbw begn change
          //**** ATTENTION , ceci retourne une chaine de 11 CAR
          //  Y compris le #00 final , ce qui est surprenant !!!!
@@ -1110,7 +1143,7 @@ Begin
 end;
 
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
-Function TXBase.GetFieldName(FieldNo: Integer): WString;
+Function TXBase.GetFieldName(FieldNo: Integer): AnsiString;
 var X1 : smallint ;
 Begin
   If (FieldNo >= 1) And (FieldNo <= NumFields) Then Begin
@@ -1121,7 +1154,7 @@ Begin
 // rbw begin change
            { deja en UpperCase }
       //... il faut ้liminer les $00 finaux ( Null char )  <<11/01/2003>>
-      X1 := pos( #00 , Result ) ;
+      X1 := pos( #00 , string(Result) ) ;
       if (X1 <= 0) or (X1 > 10) then X1 := 11 ;
       dec(X1) ;
       SetLength(Result , X1) ; 
@@ -1129,6 +1162,7 @@ Begin
       ErreurGlobale(06 , FieldNo ) ;
       Result := VIDE ;
   End;
+  Assert(Length(Result) <= 255);
 End;
 
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
@@ -1188,7 +1222,7 @@ End;
 
 function TXBase.GetFieldInt(FieldNum: integer): Integer;
 Var
-  TmpS: WString;
+  TmpS: String;
 Begin
   TmpS   := GetFieldByNumber( FieldNum ) ;
   if length(TmpS) > 0 then
@@ -1202,12 +1236,12 @@ end;
 Procedure TXBase.UpdateMemoData(FieldNo: integer; Text: AnsiString);
 Var
   TmpL  : Longint;
-  CMEMO : WString ;
+  CMEMO : AnsiString ;
   Block : AnsiString;
 
 Begin
   If (FieldNo >= 1) And (FieldNo <= NumFields) Then Begin
-    CMEMO := IntToStr(DBTHeader.NextBlock);
+    CMEMO := AnsiString(IntToStr(DBTHeader.NextBlock));
     // UpdateFieldData(FieldNo, CMEMO )
     PutFieldByNumber(FieldNo, CMEMO );    // le pointeur en 10 chiffres Ascii
     MemoFile.Seek( - 1, soFromEnd);
@@ -1248,7 +1282,7 @@ Begin
       If MemoFile.Read (Buff, 512) < 512 Then Begin
         Flag := True;
       End;
-      X1 := Pos(#26#26, Buff) - 1 ;
+      X1 := Pos(#26#26, string(Buff)) - 1 ;
       If X1 >= 0 Then Begin
         TmpS := TmpS + Copy(Buff, 1, X1 );
         Flag := True;
@@ -1271,15 +1305,15 @@ End;
 (*ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ*)
 (*:ออ Routines de Lecture des   CHAMPS       อออออออออออออออออออออออออออ *)
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
-Function TXBase.GetFieldByNumber(FieldNum: Integer): WString;
+Function TXBase.GetFieldByNumber(FieldNum: Integer): String;
 Var
-  TmpS : WString ;
+  TmpS : String ;
   Index : integer;   
 Begin
   TmpS := VIDE ;
   If (FieldNum >= 1) And (FieldNum <= NumFields) Then Begin
       with FieldStruct[FieldNum] do begin
-           TmpS := Copy(RecordBuffer, Address, FieldLength);
+           TmpS := Copy(string(RecordBuffer), Address, FieldLength);
       end ;
      Index := Pos(#0, TmpS);
      if Index > 0 then
@@ -1294,17 +1328,17 @@ Begin
 End;
 
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
-Function TXBase.GetFieldByName(FieldName: WString): WString;
+Function TXBase.GetFieldByName(FieldName: AnsiString): String;
 Var
   FieldNum: Integer ;
-  TmpS    : WString ;
+  TmpS    : String ;
   Index : integer;
 Begin
   TmpS := VIDE ;
   FieldNum := GetFieldNumberFromName(FieldName);
   If FieldNum > 0 Then Begin
      with FieldStruct[FieldNum] do begin
-          TmpS := Copy(RecordBuffer, Address, FieldLength);
+          TmpS := Copy(string(RecordBuffer), Address, FieldLength);
      end ;
      Index := Pos(#0, TmpS);
      if Index > 0 then
@@ -1316,18 +1350,19 @@ Begin
       ErreurGlobale(13 , 0 ) ;
   End;
   Result := TmpS;
+  Assert(Length(result) <= 255);
 End;
 
 (*:ออออออออออออออออออออออออออ +CHABANT+ ออออออออออออออออออออออออออออออออ *)
-Function TXBase.GetFieldStr(FieldName: WString): WString;
+Function TXBase.GetFieldStr(FieldName: AnsiString): String;
 Begin
   Result := GetFieldByName( FieldName ) ;
 end ;
 
 (*:ออออออออออออออออออออออออออ +CHABANT+ ออออออออออออออออออออออออออออออออ *)
-Function TXBase.GetFieldInt(FieldName: WString): Integer ;
+Function TXBase.GetFieldInt(FieldName: AnsiString): Integer ;
 Var
-  TmpS: WString;
+  TmpS: String;
 Begin
   TmpS   := GetFieldByName( FieldName ) ;
   if length(TmpS) > 0 then
@@ -1336,13 +1371,18 @@ Begin
 end ;
 
 (*:ออออออออออออออออออออออออออ +CHABANT+ ออออออออออออออออออออออออออออออออ *)
-Function TXBase.GetFieldNum(FieldName: WString): Extended ;
+Function TXBase.GetFieldNum(FieldName: AnsiString): Extended ;
 Var
-  TmpS: WString;
+  TmpS: String;
   SaveDecSep : Char ;
 Begin
+  {$IFDEF Delphi_2009_UP}
+  SaveDecSep := FormatSettings.DecimalSeparator ;
+  FormatSettings.DecimalSeparator := POINT ;  // '.' K_POINT
+  {$ELSE}
   SaveDecSep := DecimalSeparator ;
   DecimalSeparator := POINT ;  // '.' K_POINT
+  {$ENDIF}
   TmpS   := GetFieldByName( FieldName ) ;
   Result := 0 ;
   if length(TmpS) > 0 then  begin
@@ -1352,11 +1392,15 @@ Begin
           on E: EConvertError do Result := 0 ;
       end ;
   end ;
+  {$IFDEF Delphi_2009_UP}
+  FormatSettings.DecimalSeparator := SaveDecSep ;
+  {$ELSE}
   DecimalSeparator := SaveDecSep ;
+  {$ENDIF}
 end ;
 
 (*:ออออออออออออออออออออออออออ +CHABANT+ ออออออออออออออออออออออออออออออออ *)
-Function TXBase.GetFieldDat(FieldName: WString): WString;
+Function TXBase.GetFieldDat(FieldName: AnsiString): String;
 { utilise les variables generales de formatage
      ShortDateFormat
   et DateSeparator
@@ -1365,29 +1409,40 @@ Function TXBase.GetFieldDat(FieldName: WString): WString;
 // rbw begin change
 //var W_CSEP : Char ;
 //    W_CTYP : Char ;
-var W_CSEP : AnsiChar ;
-    W_CTYP : AnsiChar ;
+var W_CSEP : Char ;
+    W_CTYP : Char ;
 // rbw begin change
-    WD1    : String[12] ;
+    WD1    : String ;
 Begin
 // rbw begin change
 //    W_CSEP := DateSeparator ;
+    {$IFDEF Delphi_2009_UP}
+    Assert(FormatSettings.DateSeparator <= #$00FF);
+    W_CSEP := FormatSettings.DateSeparator;
+    {$ELSE}
     Assert(DateSeparator <= #$00FF);
-    W_CSEP := AnsiChar(DateSeparator);
+    W_CSEP := DateSeparator;
+    {$ENDIF}
 // rbw end change
        { '/' ou '-' ou '.'  }
 // rbw begin change
 //    W_CTYP := upcase( ShortDateFormat[1] ) ;
+    {$IFDEF Delphi_2009_UP}
+    Assert(FormatSettings.ShortDateFormat[1] <= #$00FF);
+    W_CTYP := upcase( (FormatSettings.ShortDateFormat[1]) ) ;
+    {$ELSE}
     Assert(ShortDateFormat[1] <= #$00FF);
     W_CTYP := upcase( AnsiChar(ShortDateFormat[1]) ) ;
+    {$ENDIF}
 // rbw end change
        { 'D' pour DAY   ==> FRANCE et EUROPE }
        { 'M' pour MONTH ==> USA              }
        { 'Y' pour YEAR  ==> ANSI , JAPON ?   }
     { valeurs par defaut }
-    if pos(W_CSEP , '/-.') = 0 then  W_CSEP := '/' ;
-    if pos(W_CTYP , 'DMY') = 0 then  W_CSEP := 'D' ;
+    if pos(string(W_CSEP) , '/-.') = 0 then  W_CSEP := '/' ;
+    if pos(string(W_CTYP) , 'DMY') = 0 then  W_CSEP := 'D' ;
     WD1 := GetFieldByName( FieldName ) ; { en Dbase, c'est AAAAMMJJ }
+    WD1 := Copy(WD1, 1, 12);
     case W_CTYP of
        'D' : Result := copy(WD1,7,2) + W_CSEP +
                        copy(WD1,5,2) + W_CSEP + copy(WD1,1,4) ;
@@ -1397,6 +1452,7 @@ Begin
                        copy(WD1,5,2) + W_CSEP + copy(WD1,7,2) ;
        else  Result := WD1 ;
     end ;
+    Assert(Length(Result) <= 255);
 end ;
 
 (*ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ*)
@@ -1404,7 +1460,7 @@ end ;
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
 
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
-Procedure TXBase.PutFieldByNumber(FieldNo : Integer; TEXT : WString);
+Procedure TXBase.PutFieldByNumber(FieldNo : Integer; TEXT : AnsiString);
 Var
   XLEN , XDEC : smallint ;
 // rbw begin change
@@ -1413,6 +1469,7 @@ Var
 // rbw end change
   AFLD : DWORD    ; { adresse du Champ dans le record }
 Begin
+  Assert(Length(TEXT) <= 255);
   If (FieldNo >= 1) And (FieldNo <= NumFields) Then Begin
       with FieldStruct[FieldNo]  do begin
            XLEN := FieldLength ;
@@ -1445,10 +1502,12 @@ Begin
 end;
 
 (*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *)
-Procedure TXBase.PutFieldByName(FieldName, Data: WString);
+Procedure TXBase.PutFieldByName(FieldName, Data: AnsiString);
 Var
   FieldNum: Integer;
 Begin
+  Assert(Length(FieldName) <= 255);
+  Assert(Length(Data) <= 255);
   FieldNum := GetFieldNumberFromName(FieldName);
   If FieldNum > 0 Then Begin
      PutFieldByNumber(FieldNum , Data ) ;
@@ -1467,7 +1526,7 @@ end;
 // dans un composant du genre TEDIT  ( Tedit1.Text )
 // rbw begin change
 //Function TXBase.UpdFieldX(FieldName: WString ; TEXT : WString ; COPT : char ) : boolean ;
-Function TXBase.UpdFieldX(FieldName: WString ; TEXT : WString ; COPT : AnsiChar ) : boolean ;
+Function TXBase.UpdFieldX(FieldName: WString ; TEXT : AnsiString ; COPT : AnsiChar ) : boolean ;
 // rbw end change
 Var
   AFLD   : DWORD   ; { adresse du Champ dans le record }
@@ -1482,6 +1541,7 @@ Var
 // rbw end change
   W_FIELD: TFieldStruct ;
 Begin
+  Assert(Length(TEXT) <= 255);
   XNUM := GetFieldNumberFromName(FieldName);
   If XNum = 0 Then Begin
      // ErreurGlobale(17 , 0 ) ;
@@ -1497,11 +1557,11 @@ Begin
   case CTYP of
        'C' : begin
              if (COPT >= 'A') and (TEXT[1] = SPACE) then
-			TEXT := trimleft(TEXT) ; // suppression des espaces de gauche
+			TEXT := AnsiString(trimleft(string(TEXT))) ; // suppression des espaces de gauche
              if COPT =  'U' then
-			TEXT := UpperCase(TEXT) ; // Mise en Majuscule
+			TEXT := AnsiString(UpperCase(string(TEXT))) ; // Mise en Majuscule
              if COPT =  'L' then
-			TEXT := LowerCase(TEXT) ; // Mise en Minuscule
+			TEXT := AnsiString(LowerCase(string(TEXT))) ; // Mise en Minuscule
              if length(TEXT) > XLEN  then
                   SetLength(TEXT , XLEN)         // troncature เ droite
              else begin
@@ -1517,7 +1577,7 @@ Begin
              end ;
        'L' : begin
              C1 := Upcase( TEXT[1] ) ;
-             if pos(C1 , 'NF0') >= 1 then
+             if pos(string(C1) , 'NF0') >= 1 then
                       C1 := 'F'
                 else  C1 := 'T' ;
                 // FALSE = Not , Non , False , 0
@@ -1537,58 +1597,80 @@ end ;
 
 
 (*:ออออออออออออออออออออออออออ +CHABANT+ ออออออออออออออออออออออออออออออออ *)
-Procedure TXBase.UpdFieldStr(FieldName, Data: WString);
+Procedure TXBase.UpdFieldStr(FieldName, Data : AnsiString);
 Begin
+  Data := Copy(Data, 1, 255);
      PutFieldByName(FieldName, Data );
 end ;
 
 (*:ออออออออออออออออออออออออออ +CHABANT+ ออออออออออออออออออออออออออออออออ *)
-Procedure TXBase.UpdFieldInt(FieldName : WString ; Data: Integer );
-Var TmpS : String[16] ;
+Procedure TXBase.UpdFieldInt(FieldName : AnsiString ; Data: Integer );
+Var TmpS : AnsiString ;
 Begin
-     TmpS := IntToStr( Data ) ;
+     TmpS := AnsiString(IntToStr( Data ) );
      PutFieldByName(FieldName, TmpS );
 end ;
 
 //:ออออออออออออออออออออออออออ +CHABANT+ ออออออออออออออออออออออออออออออออ
 // 29/12/2002  rajout d'une Variante UpdFieldNum5D ( 5 dcimales ) <<V211A>>
 Procedure TXBase.UpdFieldNum5D(FieldName : WString ; Data: Extended ) ;
-Var TmpS : String[23] ;
+Var TmpS : String ;
     SaveDecSep : char ;
 Begin
+  {$IFDEF Delphi_2009_UP}
+  SaveDecSep := FormatSettings.DecimalSeparator ;
+  FormatSettings.DecimalSeparator := POINT ;  //  '.' K_POINT
+  {$ELSE}
   SaveDecSep := DecimalSeparator ;
   DecimalSeparator := POINT ;  //  '.' K_POINT
+  {$ENDIF}
   // .... pour les champs a CINQ DECIMALES exactement ........ !!!!!
   try
       TmpS := FloatToStrF( Data , ffFixed , 18 , 5 ) ;
+
   except
       TmpS := '0.00000' ;
   end ;
-  PutFieldByName(FieldName, TmpS );
+  Assert(Length(TmpS) <= 23);
+  PutFieldByName(FieldName, AnsiString(TmpS) );
+  {$IFDEF Delphi_2009_UP}
+  FormatSettings.DecimalSeparator := SaveDecSep ;
+  {$ELSE}
   DecimalSeparator := SaveDecSep ;
+  {$ENDIF}
 end ;
 
 //:ออออออออออออออออออออออออออ +CHABANT+ ออออออออออออออออออออออออออออออออ
 // 29/12/2002  rajout d'une Variante UpdFieldNum2D ( 2 dcimales ) <<V1.10>>
 Procedure TXBase.UpdFieldNum2D(FieldName : WString ; Data: Extended ) ;
-Var TmpS : String[23] ;
+Var TmpS : String ;
     SaveDecSep : char ;
 Begin
+  {$IFDEF Delphi_2009_UP}
+  SaveDecSep := FormatSettings.DecimalSeparator ;
+  FormatSettings.DecimalSeparator := POINT ;  //  '.' K_POINT
+  {$ELSE}
   SaveDecSep := DecimalSeparator ;
   DecimalSeparator := POINT ;  //  '.' K_POINT
+  {$ENDIF}
   // .... pour les champs a DEUX DECIMALES exactement ........ !!!!!
   try
       TmpS := FloatToStrF( Data , ffFixed , 18 , 2 ) ;
   except
       TmpS := '0.00' ;
   end ;
-  PutFieldByName(FieldName, TmpS );
+  Assert(Length(TmpS) <= 23);
+  PutFieldByName(FieldName, AnsiString(TmpS) );
+  {$IFDEF Delphi_2009_UP}
+  FormatSettings.DecimalSeparator := SaveDecSep ;
+  {$ELSE}
   DecimalSeparator := SaveDecSep ;
+  {$ENDIF}
 end ;
 
 //:ออออออออออออออออออออออออออ +CHABANT+ ออออออออออออออออออออออออออออออออ
 Procedure TXBase.UpdFieldNum(FieldName : WString ; Data: Extended );
-Var TmpS       : String[23] ;
+Var TmpS       : String ;
     SaveDecSep : char     ;
     FieldNum   : Integer  ;
     XDEC       : SmallInt ;
@@ -1613,8 +1695,13 @@ Begin
 // RBW end change
    end;
    //...
+  {$IFDEF Delphi_2009_UP}
+   SaveDecSep := FormatSettings.DecimalSeparator ;
+   FormatSettings.DecimalSeparator := POINT ; // '.' K_POINT
+  {$ELSE}
    SaveDecSep := DecimalSeparator ;
    DecimalSeparator := POINT ; // '.' K_POINT
+  {$ENDIF}
    // maxi 18 positions
 // RBW begin change
 //   try
@@ -1631,6 +1718,7 @@ Begin
      end ;
      Dec(XDEC)
    until (Length(TmpS) <= LocalFieldSize);
+   Assert(Length(TmpS) <= 23);
 //   repeat
 //     try
 //         TmpS := FloatToStrF( Data , ffFixed , 17 , XDEC-1 ) ;
@@ -1641,14 +1729,18 @@ Begin
 //     Dec(XDEC)
 //   until (Length(TmpS) <= LocalFieldSize);
 // RBW end change
-   PutFieldByNumber(FieldNum , TmpS ) ; // <<V1.10>>
+   PutFieldByNumber(FieldNum , AnsiString(TmpS) ) ; // <<V1.10>>
+  {$IFDEF Delphi_2009_UP}
+   FormatSettings.DecimalSeparator := SaveDecSep ;
+  {$ELSE}
    DecimalSeparator := SaveDecSep ;
+  {$ENDIF}
 end ;
 
 //======================================================================
 //********************* V:1.20 *****************************************
 //** Fonction utilitaire de formatage d'un nombre en ascii
-Function  TXBase.DBFFormatNumeric( TEXT : WString ; XLEN , XDEC : byte ) : WString ;
+Function  TXBase.DBFFormatNumeric( TEXT : AnsiString ; XLEN , XDEC : byte ) : AnsiString ;
 var  Z1 , Z2 , Z3 : String[23] ;
 // rbw begin change
 //     S1 , C3 , DecSep  : char ;
@@ -1656,6 +1748,7 @@ var  Z1 , Z2 , Z3 : String[23] ;
 // rbw end change
      X1 , J1 : SmallInt ;
 begin
+  Assert(Length(TEXT) <= 255);
      //... controle des donn้es ...
      if XLEN < 01 then XLEN := 10 ;
      if XLEN > 23 then XLEN := 23 ;
@@ -1664,8 +1757,13 @@ begin
      //... recherche d'un s้parateur d้cimal ...
 // rbw begin change
 //     DecSep := DecimalSeparator ;
+     {$IFDEF Delphi_2009_UP}
+     Assert(FormatSettings.DecimalSeparator <= #$00FF);
+     DecSep := AnsiChar(FormatSettings.DecimalSeparator);
+     {$ELSE}
      Assert(DecimalSeparator <= #$00FF);
      DecSep := AnsiChar(DecimalSeparator);
+     {$ENDIF}
 // rbw end change
      X1 := pos(DecSep , TEXT ) ;
      if X1 = 0 then begin
@@ -1721,13 +1819,14 @@ begin
      //... signe NEGATIF ...
      if (XLEN >= 2) and ((XLEN - XDEC) >= 2) and (C3 = '-') then
            Z3[1] := '-' ;
+  Assert(Length(Result) <= 255);
 end ;
 
 //********************* V:1.20 *****************************************
 //** Fonction utilitaire de formatage d'une date en 'aaaammjj'
 // rbw begin change
 //Function  TXBase.DBFFormatDate( TEXT : WString ; COPT : Char ) : WString ;
-Function  TXBase.DBFFormatDate( TEXT : WString ; COPT : AnsiChar ) : WString ;
+Function  TXBase.DBFFormatDate( TEXT : AnsiString ; COPT : AnsiChar ) : AnsiString ;
 // rbw end change
 // rbw begin change
 //var W_CTYP , C1  : Char ;
@@ -1737,6 +1836,7 @@ var W_CTYP , C1  : AnsiChar ;
     WDAT, WD1, WM1, WA1 : String[15] ;
     V1 : boolean ;
 begin
+  Assert(Length(TEXT) <= 255);
     { ici , le s้parateur peut etre quelconque , TOUT caract่re
       qui n'est pas un CHIFFRE est consid้r้ comme ้tant un
       SEPARATEUR : cela peut etre les caracteres ordinaires tels
@@ -1744,14 +1844,19 @@ begin
       exemple  :  ;  ,  _  \  #  ~  !  *   etc .... }
 // rbw begin change
 //    W_CTYP := upcase( ShortDateFormat[1] ) ;
+    {$IFDEF Delphi_2009_UP}
+    Assert(FormatSettings.ShortDateFormat[1] <= #$00FF);
+    W_CTYP := upcase( AnsiChar(FormatSettings.ShortDateFormat[1]) ) ;
+    {$ELSE}
     Assert(ShortDateFormat[1] <= #$00FF);
     W_CTYP := upcase( AnsiChar(ShortDateFormat[1]) ) ;
+    {$ENDIF}
 // rbw end change
        { 'D' pour DAY   ==> FRANCE et EUROPE }
        { 'M' pour MONTH ==> USA              }
        { 'Y' pour YEAR  ==> ANSI , JAPON ?   }
     { valeurs par defaut }
-    if pos(W_CTYP , 'DMY') = 0 then  W_CTYP := 'D' ;
+    if pos(string(W_CTYP) , 'DMY') = 0 then  W_CTYP := 'D' ;
     (*-- Extraire les 3 zones de la date            --*)
     J0  := 1 ; J1 := 0 ; J2 := 0 ; J3 := 0 ;
     V1  := false ;
@@ -1809,6 +1914,7 @@ begin
         if WDAT[XS1] = SPACE  then  WDAT[XS1] := ZERO ;
     end ;
     Result := WDAT ;
+  Assert(Length(Result) <= 255);
 end ;
 //======================================================================
 
@@ -1978,7 +2084,7 @@ end ;
 //** ou aussi  "GO TOP ; COPY TO ... NEXT X record"
 //*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *
 // CPTREC = nombre de records เ conserver ; ZERO signifie TOUS
-Function TXBase.DBFCopyFile(DBFName : WString ; CPTREC : integer ;
+Function TXBase.DBFCopyFile(DBFName : String ; CPTREC : integer ;
                         CopyDELETED : boolean ) : boolean ;
 var
     XLUS , XCPY , XREC , XMAX : cardinal    ;
@@ -2105,7 +2211,7 @@ end ;
 //*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *
 //***  Equivalent de la commande "Copy Structure " de DBASE3             **
 //*:อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ *
-Function TXBase.DBFCopyStruct(DBFName : WString ) : boolean ;
+Function TXBase.DBFCopyStruct(DBFName : String ) : boolean ;
 var
     my_DBFFields : TStringList ;
     V1 : boolean ;
@@ -2134,7 +2240,7 @@ const
    SPACE10X = '          ' ;  // 10 espaces
 var
    J1 , X1 : smallint ;
-   W1 , W2 , W3 : WString ;
+   W1 , W2 , W3 : AnsiString ;
 begin
    Result := false ;
    //.... fichier NON ouvert
@@ -2151,7 +2257,7 @@ begin
        with FieldStruct[J1] do begin
             move(FieldName , W1[1] , KSIZNAM) ;
             SetLength(W1 , KSIZNAM) ;
-            X1 := pos( #00 , W1 ) ;
+            X1 := pos( #00 , string(W1) ) ;
             if X1 <= 1 then X1 := 10
                        else dec(X1) ;
             SetLength(W1 , X1) ;
@@ -2166,10 +2272,10 @@ begin
                  W1 := W1 + '=' + FieldType + W2 ;
             end else begin
                  W1 := W1 + '=' + FieldType +
-                       IntToStr(FieldLength) + VIRGULE +
-                       IntToStr(Decimals) ;
+                       AnsiString(IntToStr(FieldLength)) + VIRGULE +
+                       AnsiString(IntToStr(Decimals)) ;
             end ;
-            DBFFields.Add(W1) ;
+            DBFFields.Add(string(W1)) ;
        end ;
    end ;
 end ;
@@ -2185,13 +2291,15 @@ end ;
 //*                 TAUX_COT=N6,2
 //*      nota: ne pas mettre d'espaces entre les ้l้ments
 
-Function TXBase.DBFCreate(DBFName : WString ; DBFFields :TStringList) : boolean ;
+Function TXBase.DBFCreate(DBFName : String ; DBFFields :TStringList) : boolean ;
 const
      _KC255X07 = #255#255#255#255#255#255#255 ;
      _KC000X12 = #000#000#000#000#000#000#000#000#000#000#000#000 ;
 
-var  J1 , X1 , XFLD1 , XLEN1 , XDEC1 : smallint ;
-     W1 , W2_NAME , W2_VALUE , W2_LEN , W2_DEC : WString ;
+var  J1 , X1 , XFLD1 {, XLEN1 , XDEC1} : smallint ;
+     XLEN1, XDEC1: DWORD;
+     W1, W2_LEN, W2_DEC  : String ;
+     W2_NAME, W2_VALUE : AnsiString;
 // rbw begin change
 //     W2_TYPE : char ;
 //     S1      : array[0..7] of char ;  // AnsiString ;
@@ -2203,7 +2311,8 @@ var  J1 , X1 , XFLD1 , XLEN1 , XDEC1 : smallint ;
      my_Header       : THeader      ;
      my_FieldStruct  : TFieldStruct ;
      my_DBFile       : TFileStream  ;
-     my_FFileName    : WString      ;
+     my_FFileName    : String      ;
+  ALength: integer;
 begin
    Result := true ;
    W9_RECLEN := 0 ;
@@ -2232,26 +2341,26 @@ begin
        //.... analyse de la ligne ....
        X1 := pos('=' , W1) ;
        if X1 > 0 then begin
-           W2_NAME  := copy(W1,1,X1 - 1) ; // DBFFields.Names[J1]
-           W2_VALUE := copy(W1,X1+1,255) ; // DBFFields.Values[J1]
+           W2_NAME  := AnsiString(copy(W1,1,X1 - 1)) ; // DBFFields.Names[J1]
+           W2_VALUE := AnsiString(copy(W1,X1+1,255)) ; // DBFFields.Values[J1]
        end else begin
-           W2_NAME  := 'FIELD' + IntToStr(J1) ;
-           W2_VALUE := W1 ;
+           W2_NAME  := 'FIELD' + AnsiString(IntToStr(J1)) ;
+           W2_VALUE := AnsiString(W1) ;
        end ;
-       W2_NAME  := UpperCase( Trim( W2_NAME ) ) ;
+       W2_NAME  := AnsiString(UpperCase( Trim( string(W2_NAME) ) )) ;
        if length(W2_NAME) > 10 then
                  SetLength(W2_NAME , 10) ;
-       W2_VALUE := Trim(W2_VALUE)+SPACE  ;
+       W2_VALUE := AnsiString(Trim(string(W2_VALUE)))+SPACE  ;
        W2_TYPE  := upcase( W2_VALUE[1] ) ;
-       if pos( W2_TYPE , 'CNDLM' ) = 0 then
+       if pos( string(W2_TYPE) , 'CNDLM' ) = 0 then
                W2_TYPE := 'C'
-       else    W2_VALUE := copy(W2_VALUE, 2, 255) ;
-       X1 := pos(VIRGULE , W2_VALUE) ;
+       else    W2_VALUE := AnsiString(copy(string(W2_VALUE), 2, 255)) ;
+       X1 := pos(VIRGULE , string(W2_VALUE)) ;
        if X1 > 0 then begin
-           W2_LEN := trim(copy(W2_VALUE,1,X1 - 1)) ;
-           W2_DEC := trim(copy(W2_VALUE,X1+1,255)) ;
+           W2_LEN := trim(copy(string(W2_VALUE),1,X1 - 1)) ;
+           W2_DEC := trim(copy(string(W2_VALUE),X1+1,255)) ;
        end else begin
-           W2_LEN := trim(W2_VALUE) ;
+           W2_LEN := trim(string(W2_VALUE)) ;
            W2_DEC := ZERO ;
        end ;
        if W2_LEN = VIDE then W2_LEN := '10' ;
@@ -2260,7 +2369,7 @@ begin
        XDEC1 := StrToIntDef( W2_DEC , 0) ;
        if XLEN1 <   1 then XLEN1 :=   1 ;
        if XLEN1 > 255 then XLEN1 := 255 ;
-       if XDEC1 <   0 then XDEC1 :=   0 ;
+//       if XDEC1 <   0 then XDEC1 :=   0 ;
        case W2_TYPE of
             'C' : XDEC1 := 0 ;
             'D' : begin
@@ -2289,7 +2398,7 @@ begin
             WorkArea := 00 ; SetFields:= 00 ; IndexFlag:= 00 ;
             Reserved3:= _KC255X07 ;
             W2_NAME  := W2_NAME + _KC000X12 ;
-            move(W2_NAME[1] , FieldName[1] , KSIZNAM ) ;
+            move(W2_NAME[1] , FieldName[1] , KSIZNAM * SizeOf(AnsiChar)) ;
        end ;
        //..... ECRITURE du DESCRIPTIF de Champ ...
        try
@@ -2298,7 +2407,9 @@ begin
           Result := false ;
        end ;
        //.....
-       W9_RECLEN := W9_RECLEN + XLEN1 ;
+       ALength := XLEN1;
+       W9_RECLEN := W9_RECLEN + ALength ;
+//       W9_RECLEN := W9_RECLEN + XLEN1 ;
        W9_ADR    := W9_ADR    + XLEN1 ;  // pour le suivant
    end ;
    W9_HDRLEN := KSIZHDR + (XFLD1 * KSIZFLD) + 1 ;

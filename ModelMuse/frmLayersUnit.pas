@@ -1667,7 +1667,8 @@ begin
     end;
   end;
   cbComputeSaturatedThickness.Enabled := UnConfinedLayer
-    and frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected;
+    and (frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected
+    or frmGoPhast.PhastModel.ModflowPackages.UpwPackage.IsSelected);
 end;
 
 procedure TfrmLayers.EnableK_Methods;
@@ -1678,12 +1679,13 @@ begin
   if (FSelectedUnits.Count >= 1) then
   begin
     SimulatedLayer := comboAquiferType.ItemIndex > 0;
-    ShouldEnable := SimulatedLayer
-      and frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected;
-    comboVertKMethod.Enabled := ShouldEnable;
+//    ShouldEnable := SimulatedLayer
+//      and (frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected
+//      or frmGoPhast.PhastModel.ModflowPackages.UpwPackage.IsSelected);
     ShouldEnable := SimulatedLayer
       and (frmGoPhast.PhastModel.ModflowPackages.LpfPackage.IsSelected
-      or frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected);
+      or frmGoPhast.PhastModel.ModflowPackages.BcfPackage.IsSelected
+      or frmGoPhast.PhastModel.ModflowPackages.UpwPackage.IsSelected);
     comboInterblockMethod.Enabled := ShouldEnable;
   end
   else
@@ -1728,7 +1730,8 @@ begin
     Item.Text := 'Convertible';
     Item.ImageIndex := 1;
   end
-  else if Packages.LpfPackage.isSelected then
+  else if Packages.LpfPackage.isSelected
+    or Packages.UpwPackage.isSelected then
   begin
     Item := comboAquiferType.Items.Add;
     Item.Text := 'Convertible';

@@ -12,26 +12,32 @@ uses
   sysutils,
   classes;
 
+{$ifdef CONDITIONALEXPRESSIONS}
+  {$if CompilerVersion>=20}
+    {$DEFINE Delphi_2009_UP}
+  {$ifend}
+{$endif}
+
 type
   TrwXMLParser = class(TObject)
   private
     // the stream which holds the XML formated DFM / component stream
     fInputStream: TStream;
-    FElementName: string;
+    FElementName: AnsiString;
     FAttribs: TStringList;
-    FData: String;
+    FData: AnsiString;
     FEndFound: boolean;
     FValidRead: boolean;
-    FBuffer: PChar;
+    FBuffer: PAnsiChar;
     FStreamSize: integer;
     FShowProgress: boolean;
 
     // property setter for the Attribs
     procedure SetAttribs(const Value: TStringList);
     // property setter for the ElementName of the last read Element
-    procedure SetElementName(const Value: string);
+    procedure SetElementName(const Value: AnsiString);
     // property setter for the Data of the last read XML element
-    procedure SetData(const Value: String);
+    procedure SetData(const Value: AnsiString);
     // property setter for if a end is found in the last read
     procedure SetEndFound(const Value: boolean);
     // property setter for if the last read was valid
@@ -42,11 +48,11 @@ type
     procedure SetStreamSize(const Value: integer);
 
     // Reads a validName form the stream
-    function ReadNameStr: string;
+    function ReadNameStr: AnsiString;
     // Read a full Attribute from the stream
-    procedure ReadAttrStr(var AAttrib : string; var isLast: boolean);
-    function getNextChar: Char;
-    function CheckNextChar: Char;
+    procedure ReadAttrStr(var AAttrib : AnsiString; var isLast: boolean);
+    function getNextChar: AnsiChar;
+    function CheckNextChar: AnsiChar;
     procedure CharBack;
     procedure ReadData;
     procedure SetShowProgress(const Value: boolean);
@@ -64,7 +70,7 @@ type
     // This function returns true if we are at the end of the stream
     function EOS: boolean;
     // Returns the value of Attribute
-    function ValueOf(const aName: string): string;
+    function ValueOf(const aName: AnsiString): AnsiString;
     // Returns the Data as a Integer
     function IntegerData: Integer;
     // The Value can be a 64 bit integer
@@ -75,11 +81,11 @@ type
     // True if the last read was ended with a valid Element
     property ValidRead: boolean read FValidRead write SetValidRead;
     // The name of the last read Element
-    property ElementName: string read FElementName write SetElementName;
+    property ElementName: AnsiString read FElementName write SetElementName;
     // All attributes of the last read Element are saved in a stringlist
     property Attribs: TStringList read FAttribs write SetAttribs;
-    // The Data in the form of a string
-    property Data: String read FData write SetData;
+    // The Data in the form of a AnsiString
+    property Data: AnsiString read FData write SetData;
     // If the Element was closed then this property is true
     property EndFound: boolean read FEndFound write SetEndFound;
     // The actual size of the stream.
@@ -120,7 +126,7 @@ end;
 procedure TrwXMLParser.TrimSpaces;
 var
   I: integer;
-  C: Char;
+  C: AnsiChar;
 begin
   I := fInputStream.Read(C,1);
   while (I=1) and ((C =' ') or (C < #32)) do
@@ -129,10 +135,10 @@ begin
     fInputStream.Position := fInputStream.Position - 1;
 end;
 
-function TrwXMLParser.ReadNameStr: string;
+function TrwXMLParser.ReadNameStr: AnsiString;
 var
   I: integer;
-  C: Char;
+  C: AnsiChar;
 begin
   I := fInputStream.Read(C,1);
   if I=1 then // throw away the "<"
@@ -143,7 +149,11 @@ begin
     C := GetNextChar;
   end;
 
+  {$IFDEF Delphi_2009_UP}
+  while (I=1) and CharInSet(C, ['a'..'z','A'..'Z','_','0'..'9']) do
+  {$ELSE}
   while (I=1) and (C in ['a'..'z','A'..'Z','_','0'..'9']) do
+  {$ENDIF}
   begin
     result := result + C;
     I := fInputStream.Read(C,1);
@@ -152,10 +162,10 @@ begin
 end;
 
 
-function  TrwXMLParser.getNextChar : Char;
+function  TrwXMLParser.getNextChar : AnsiChar;
 var
   I: integer;
-  C: Char;
+  C: AnsiChar;
 begin
   I := fInputStream.Read(C,1);
   result := C;
@@ -163,10 +173,10 @@ begin
     raise Exception.Create('XML Stream read error');
 end;
 
-function  TrwXMLParser.CheckNextChar : Char;
+function  TrwXMLParser.CheckNextChar : AnsiChar;
 var
   I: integer;
-  C: Char;
+  C: AnsiChar;
 begin
   I := fInputStream.Read(C,1);
   CharBack;
@@ -180,9 +190,9 @@ begin
   fInputStream.Position := fInputStream.Position-1;
 end;
 
-procedure TrwXMLParser.ReadAttrStr(var aAttrib : string; var isLast: boolean);
+procedure TrwXMLParser.ReadAttrStr(var aAttrib : AnsiString; var isLast: boolean);
 var
-  C: Char;
+  C: AnsiChar;
 begin
   aAttrib := '';
   repeat // remove all spaces
@@ -231,7 +241,7 @@ end;
 
 procedure TrwXMLParser.ReadData;
 var
-  C: Char;
+  C: AnsiChar;
 begin
   Data := '';
   C := GetNextChar;
@@ -246,7 +256,7 @@ end;
 procedure TrwXMLParser.ReadNextElement;
 var
   isLast: boolean;
-  aAttrib: String;
+  aAttrib: AnsiString;
 begin
   ValidRead := false;
   ElementName := '';
@@ -260,7 +270,7 @@ begin
   begin
     ReadAttrStr(aAttrib, isLast);
     if aAttrib > '' then
-      Attribs.Add(aAttrib);
+      Attribs.Add(string(aAttrib));
   end;
   if not EndFound then
     ReadData;
@@ -271,12 +281,12 @@ begin
   FAttribs := Value;
 end;
 
-procedure TrwXMLParser.SetData(const Value: String);
+procedure TrwXMLParser.SetData(const Value: AnsiString);
 begin
   FData := Value;
 end;
 
-procedure TrwXMLParser.SetElementName(const Value: string);
+procedure TrwXMLParser.SetElementName(const Value: AnsiString);
 begin
   FElementName := Value;
 end;
@@ -296,24 +306,24 @@ begin
   FStreamSize := Value;
 end;
 
-function TrwXMLParser.ValueOf(const aName: string) : string;
+function TrwXMLParser.ValueOf(const aName: AnsiString) : AnsiString;
 begin
-  result := Trim(Attribs.Values[aName]);
+  result := AnsiString(Trim(Attribs.Values[string(aName)]));
 end;
 
 function TrwXMLParser.IntegerData: Integer;
 begin
-  result := StrToInt(Trim(Data));
+  result := StrToInt(Trim(string(Data)));
 end;
 
 function TrwXMLParser.Int64Data: Int64;
 begin
-  result := StrToInt64(Trim(Data));
+  result := StrToInt64(Trim(string(Data)));
 end;
 
 function TrwXMLParser.FloatData: Extended;
 begin
-  result := StrToFloat(Trim(Data));
+  result := StrToFloat(Trim(string(Data)));
 end;
 
 procedure TrwXMLParser.SetShowProgress(const Value: boolean);

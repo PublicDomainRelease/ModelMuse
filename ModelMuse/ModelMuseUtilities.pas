@@ -57,6 +57,7 @@ function FortranFloatToStr(Value: Extended): string;
 function FortranStrToFloat(AString: string): Extended;
 
 function TitleCase(AString: string): string;
+function AnsiTitleCase(AString: AnsiString): AnsiString;
 
 // @name converts Value to a string that includes the thousands separator
 // if appropriate.
@@ -66,11 +67,26 @@ procedure DSiTrimWorkingSet;
 
 function QuoteFileName(AName: string): string;
 
-function FixShapeFileFieldName(FieldName: string): string;
+function FixShapeFileFieldName(FieldName: AnsiString): AnsiString;
+
+procedure RunAProgram(const CommandLine: string);
 
 implementation
 
-uses ColorSchemes;
+uses ColorSchemes, JvCreateProcess, AnsiStrings;
+
+procedure RunAProgram(const CommandLine: string);
+var
+  Runner: TJvCreateProcess;
+begin
+  Runner := TJvCreateProcess.Create(nil);
+  try
+    Runner.CommandLine := CommandLine;
+    Runner.Run;
+  finally
+    Runner.Free;
+  end;
+end;
 
 procedure ExtractColorComponents(const AColor: TColor;
   out Red, Green, Blue: TGLubyte);
@@ -159,12 +175,12 @@ function FortranFloatToStr(Value: Extended): string;
 var
   OldDecimalSeparator: Char;
 begin
-  OldDecimalSeparator := DecimalSeparator;
+  OldDecimalSeparator := FormatSettings.DecimalSeparator;
   try
-    DecimalSeparator := '.';
+    FormatSettings.DecimalSeparator := '.';
     result := FloatToStr(Value);
   finally
-    DecimalSeparator := OldDecimalSeparator;
+    FormatSettings.DecimalSeparator := OldDecimalSeparator;
   end;
 end;
 
@@ -186,18 +202,36 @@ begin
   end;
 end;
 
+function AnsiTitleCase(AString: AnsiString): AnsiString;
+var
+  Index: integer;
+begin
+  result := AnsiLowerCase(AString);
+  if Length(result) > 0 then
+  begin
+    Result[1] := AnsiUpperCase(Result)[1];
+    for Index := 1 to Length(result) - 1 do
+    begin
+      if result[Index] = ' ' then
+      begin
+        result[Index+1] := AnsiUpperCase(result[Index+1])[1];
+      end;
+    end;
+  end;
+end;
+
 function FortranStrToFloat(AString: string): Extended;
 var
   OldDecimalSeparator: Char;
 begin
-  OldDecimalSeparator := DecimalSeparator;
+  OldDecimalSeparator := FormatSettings.DecimalSeparator;
   try
-    DecimalSeparator := '.';
+    FormatSettings.DecimalSeparator := '.';
     AString := StringReplace(AString, ',', '.', [rfReplaceAll, rfIgnoreCase]);
     AString := StringReplace(AString, 'd', 'e', [rfReplaceAll, rfIgnoreCase]);
     result := StrToFloat(AString);
   finally
-    DecimalSeparator := OldDecimalSeparator;
+    FormatSettings.DecimalSeparator := OldDecimalSeparator;
   end;
 end;
 
@@ -223,7 +257,7 @@ begin
     if Value > 0 then
     begin
       DigitString := Format('%.3d', [Digits]);
-      result := ThousandSeparator + DigitString + result;
+      result := FormatSettings.ThousandSeparator + DigitString + result;
     end
     else
     begin
@@ -263,7 +297,7 @@ begin
   end;
 end;
 
-function FixShapeFileFieldName(FieldName: string): string;
+function FixShapeFileFieldName(FieldName: AnsiString): AnsiString;
 begin
   While (Length(FieldName) > 0) and (FieldName[Length(FieldName)] = '_') do
   begin

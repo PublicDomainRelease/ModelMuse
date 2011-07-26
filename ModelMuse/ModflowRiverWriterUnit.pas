@@ -42,6 +42,11 @@ implementation
 uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
   ModflowTransientListParameterUnit, ModflowUnitNumbers, frmProgressUnit, Forms;
 
+resourcestring
+  StrInTheFollowingRiv = 'In the following river cells, the stage is below t' +
+  'he river botton.';
+  StrLayerDRowDC = 'Layer: %d, Row %d, Column %d';
+
 { TModflowRIV_Writer }
 
 function TModflowRIV_Writer.CellType: TValueCellType;
@@ -105,6 +110,11 @@ begin
     + VariableIdentifiers);
 //  WriteString(' ' + Riv_Cell.ConductanceAnnotation);
   NewLine;
+  if Riv_Cell.RiverStage <= Riv_Cell.RiverBottom then
+  begin
+    frmErrorsAndWarnings.AddError(Model, StrInTheFollowingRiv,
+      Format(StrLayerDRowDC, [Riv_Cell.Layer+1, Riv_Cell.Row+1, Riv_Cell.Column+1]));
+  end;
 end;
 
 procedure TModflowRIV_Writer.WriteDataSet1;
@@ -178,6 +188,7 @@ var
   ShouldWriteFile: Boolean;
   ShouldWriteObservationFile: Boolean;
 begin
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInTheFollowingRiv);
   if not Package.IsSelected then
   begin
     Exit

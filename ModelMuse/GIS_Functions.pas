@@ -141,9 +141,18 @@ const
   StrParentRow = 'ParentRow';
   StrParentColumn = 'ParentColumn';
 
+resourcestring
+  ObjectCurrentSegmentAngle = 'ObjectCurrentSegmentAngle';
+  ObjectDegrees = 'ObjectCurrentSegmentAngleDegrees';
+  ObjectDegreesLimited = 'ObjectCurrentSegmentAngleLimitedDegrees';
+
 function GetColumnWidth(Column: Integer): Double;
 function GetRowWidth(Row: Integer): Double;
 function GetLayerHeight(Col, Row, Lay: Integer): Double;
+
+function GetLayerPosition(const Lay, Row, Col: Integer; var InvalidIndex: boolean): Double;
+function GetLayerCenter(const Lay, Row, Col:  integer): double;
+
 
 implementation
 
@@ -151,6 +160,12 @@ uses frmGoPhastUnit, DataSetUnit, FastGEO, LayerStructureUnit, PhastModelUnit,
   ValueArrayStorageUnit, HufDefinition, OrderedCollectionUnit,
   ModflowPackageSelectionUnit, Math, ModflowGridUnit, ModflowParameterUnit,
   frmErrorsAndWarningsUnit;
+
+resourcestring
+  StrInSVANIParamete = 'In %s, VANI parameters are defined even though that ' +
+  'hydrogeologic unit used vertical hydraulic conductivity and vertical anis' +
+  'otropy. The VANI parameters will be ignored.';
+  StrLayerDRowDCo = 'Layer %d, Row %d, Column %d';
 
 var  
   SpecialImplementors: TList;
@@ -835,6 +850,10 @@ begin
         Assert(False);
     end;
 
+    if GlobalCurrentScreenObject.ViewDirection = vdTop then
+    begin
+      result := result - (GlobalCurrentModel as TCustomModel).Grid.GridAngle;
+    end;
   end;
 end;
 
@@ -1279,7 +1298,7 @@ begin
           else Assert(False);
         end;
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         Assert(GlobalEvaluatedAt = eaBlocks);
         result := frmGoPhast.PhastModel.ModflowGrid.
@@ -1350,7 +1369,7 @@ begin
           else Assert(False);
         end;
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         Assert(GlobalEvaluatedAt = eaBlocks);
         result := TCustomModel(GlobalCurrentModel).ModflowGrid.
@@ -1578,7 +1597,7 @@ begin
           end;
         end;
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         if (Lay < 0) or (Lay > TCustomModel(GlobalCurrentModel).ModflowGrid.LayerCount - 1)
           or (Row < 0) or (Row > TCustomModel(GlobalCurrentModel).ModflowGrid.RowCount - 1)
@@ -1629,7 +1648,7 @@ begin
           result := _ColumnWidth([Values[0]]) * _LayerHeight([Values[2]]);
         end;
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         if Values[2] = nil then
         begin
@@ -1695,7 +1714,7 @@ begin
           result := _RowWidth([Values[0]]) * _LayerHeight([Values[2]]);
         end;
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         if Values[2] = nil then
         begin
@@ -1799,6 +1818,8 @@ begin
 end;
 
 function GetLayerPosition(const Lay, Row, Col: Integer; var InvalidIndex: boolean): Double;
+var
+  LocalGrid: TModflowGrid;
 begin
   result := 0;
   InvalidIndex := False;
@@ -1815,18 +1836,19 @@ begin
           Result := frmGoPhast.PhastGrid.LayerElevation[Lay];
         end;
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
-        if (Lay < 0) or (Lay > TCustomModel(GlobalCurrentModel).ModflowGrid.LayerCount)
-         or (Row < 0) or (Row > TCustomModel(GlobalCurrentModel).ModflowGrid.RowCount-1)
-         or (Col < 0) or (Col > TCustomModel(GlobalCurrentModel).ModflowGrid.ColumnCount-1) then
+        LocalGrid := TCustomModel(GlobalCurrentModel).ModflowGrid;
+        if (Lay < 0) or (Lay > LocalGrid.LayerCount)
+         or (Row < 0) or (Row > LocalGrid.RowCount-1)
+         or (Col < 0) or (Col > LocalGrid.ColumnCount-1) then
         begin
           Result := 0;
           InvalidIndex := True;
         end
         else
         begin
-          Result := TCustomModel(GlobalCurrentModel).ModflowGrid.CellElevation[Col, Row, Lay];
+          Result := LocalGrid.CellElevation[Col, Row, Lay];
         end;
       end;
   else
@@ -1845,29 +1867,59 @@ begin
   Result := GetLayerPosition(Lay, Row, Col, DummyInvalidIndex);
 end;
 
+function GetLayerCenter(const Lay, Row, Col:  integer): double;
+var
+  BelowValue: Double;
+  AboveValue: Double;
+  InvalidIndex: boolean;
+begin
+  BelowValue := GetLayerPosition(Lay, Row, Col, InvalidIndex);
+  if InvalidIndex then
+  begin
+    result := 0;
+  end
+  else
+  begin
+    AboveValue := GetLayerPosition(Lay+1, Row, Col, InvalidIndex);
+    if InvalidIndex then
+    begin
+      result := 0;
+    end
+    else
+    begin
+      result := (BelowValue + AboveValue)/2;
+    end;
+  end;
+end;
+
 function _LayerCenter(Values: array of pointer): double;
 var
   Col: integer;
   Row: integer;
   Lay: integer;
-  InvalidIndex: boolean;
-  BelowValue: Double;
-  AboveValue: Double;
+//  InvalidIndex: boolean;
+//  BelowValue: Double;
+//  AboveValue: Double;
 begin
   ExtractColRowLayer(Lay, Row, Col, Values);
-  BelowValue := GetLayerPosition(Lay, Row, Col, InvalidIndex);
-  if InvalidIndex then
-  begin
-    result := 0;
-    Exit
-  end;
-  AboveValue := GetLayerPosition(Lay+1, Row, Col, InvalidIndex);
-  if InvalidIndex then
-  begin
-    result := 0;
-    Exit
-  end;
-  result := (BelowValue + AboveValue)/2;
+  result := GetLayerCenter(Lay, Row, Col);
+//  BelowValue := GetLayerPosition(Lay, Row, Col, InvalidIndex);
+//  if InvalidIndex then
+//  begin
+//    result := 0;
+//  end
+//  else
+//  begin
+//    AboveValue := GetLayerPosition(Lay+1, Row, Col, InvalidIndex);
+//    if InvalidIndex then
+//    begin
+//      result := 0;
+//    end
+//    else
+//    begin
+//      result := (BelowValue + AboveValue)/2;
+//    end;
+//  end;
 end;
 
 function _LayerCount(Values: array of pointer): integer;
@@ -3008,8 +3060,14 @@ begin
             end;
 
             case HufUnit.VK_Method of
-              vkVK: 
+              vkVK:
                 begin
+                  if Vani_Used then
+                  begin
+                    frmErrorsAndWarnings.AddWarning(GlobalCurrentModel,
+                      Format(StrInSVANIParamete, [HufUnit.HufName]),
+                      Format(StrLayerDRowDCo, [Layer + 1, Row+1, Column+1]));
+                  end;
                   // do nothing.
                 end;
               vkVANI:
@@ -3031,7 +3089,14 @@ begin
                 end;
               else Assert(False);
             end;
-            result := result + HufIntervalThickness/VK;
+//            if VK = 0 then
+//            begin
+//              // This is an error.
+//            end
+//            else
+//            begin
+              result := result + HufIntervalThickness/VK;
+//            end;
           end;
         end;
       end;
@@ -4174,22 +4239,22 @@ initialization
   CurrentSegmentAngleFunction.RFunctionAddr := _CurrentSegmentAngle;
   CurrentSegmentAngleFunction.OptionalArguments := 0;
   CurrentSegmentAngleFunction.CanConvertToConstant := False;
-  CurrentSegmentAngleFunction.Name := 'ObjectCurrentSegmentAngle';
-  CurrentSegmentAngleFunction.Prototype := 'Object|ObjectCurrentSegmentAngle';
+  CurrentSegmentAngleFunction.Name := ObjectCurrentSegmentAngle;
+  CurrentSegmentAngleFunction.Prototype := 'Object|'+ObjectCurrentSegmentAngle;
 
   CurrentSegmentAngleDegreesFunction.ResultType := rdtDouble;
   CurrentSegmentAngleDegreesFunction.RFunctionAddr := _CurrentSegmentAngleDegrees;
   CurrentSegmentAngleDegreesFunction.OptionalArguments := 0;
   CurrentSegmentAngleDegreesFunction.CanConvertToConstant := False;
-  CurrentSegmentAngleDegreesFunction.Name := 'ObjectCurrentSegmentAngleDegrees';
-  CurrentSegmentAngleDegreesFunction.Prototype := 'Object|ObjectCurrentSegmentAngleDegrees';
+  CurrentSegmentAngleDegreesFunction.Name :=ObjectDegrees;
+  CurrentSegmentAngleDegreesFunction.Prototype := 'Object|' + ObjectDegrees;
 
   CurrentSegmentAngleLimitedegreesFunction.ResultType := rdtDouble;
   CurrentSegmentAngleLimitedegreesFunction.RFunctionAddr := _CurrentSegmentAngleLimitedDegrees;
   CurrentSegmentAngleLimitedegreesFunction.OptionalArguments := 0;
   CurrentSegmentAngleLimitedegreesFunction.CanConvertToConstant := False;
-  CurrentSegmentAngleLimitedegreesFunction.Name := 'ObjectCurrentSegmentAngleLimitedDegrees';
-  CurrentSegmentAngleLimitedegreesFunction.Prototype := 'Object|ObjectCurrentSegmentAngleLimitedDegrees';
+  CurrentSegmentAngleLimitedegreesFunction.Name := ObjectDegreesLimited;
+  CurrentSegmentAngleLimitedegreesFunction.Prototype := 'Object|'+ObjectDegreesLimited;
 
   CurrentSegmentLengthFunction.ResultType := rdtDouble;
   CurrentSegmentLengthFunction.RFunctionAddr := _CurrentSegmentLength;

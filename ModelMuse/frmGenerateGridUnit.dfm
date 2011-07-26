@@ -39,7 +39,6 @@ inherited frmGenerateGrid: TfrmGenerateGrid
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 0
     TabOrder = 1
     Text = '0'
     DataType = dtReal
@@ -51,26 +50,35 @@ inherited frmGenerateGrid: TfrmGenerateGrid
     Top = 208
     Width = 91
     Height = 33
-    TabOrder = 4
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 4
   end
   object btnOK: TBitBtn
     Left = 142
     Top = 208
     Width = 91
     Height = 33
+    DoubleBuffered = True
+    Kind = bkOK
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 3
     OnClick = btnOKClick
-    Kind = bkOK
   end
   object btnHelp: TBitBtn
     Left = 46
     Top = 208
     Width = 91
     Height = 33
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 2
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
   object gbGridSmoothing: TGroupBox
     Left = 8
@@ -137,7 +145,6 @@ inherited frmGenerateGrid: TfrmGenerateGrid
       Cursor = crIBeam
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 0
       TabOrder = 4
       Text = '1.2'
       DataType = dtReal

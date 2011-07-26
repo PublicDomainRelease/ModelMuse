@@ -6,7 +6,7 @@ unit frmFormulaErrorsUnit;
 interface
 
 uses
-  SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
+  Windows, SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, frmCustomGoPhastUnit, Grids, ExtCtrls, Buttons, RbwDataGrid4;
 
 type

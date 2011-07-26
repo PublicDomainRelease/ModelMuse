@@ -119,7 +119,8 @@ var
 implementation
 
 uses
-  frmGoPhastUnit, LayerStructureUnit, ScreenObjectUnit;
+  frmGoPhastUnit, LayerStructureUnit, ScreenObjectUnit,
+  frmHeadObservationResultsUnit;
 
 {$R *.dfm}
 
@@ -672,10 +673,22 @@ end;
 { TUndoChildModelChange }
 
 procedure TUndoChildModelChange.ChangeChildModel(Source: TCollection);
+var
+  ModelIndex: Integer;
 begin
   frmGoPhast.CanDraw := False;
   try
     frmGoPhast.PhastModel.ChildModels.Assign(Source);
+    if frmHeadObservationResults <> nil then
+    begin
+      ModelIndex := frmHeadObservationResults.comboModels.ItemIndex;
+      frmHeadObservationResults.GetData;
+      if ModelIndex < frmHeadObservationResults.comboModels.Items.Count then
+      begin
+        frmHeadObservationResults.comboModels.ItemIndex := ModelIndex;
+        frmHeadObservationResults.comboModelsChange(nil);
+      end;
+    end;
   finally
     frmGoPhast.CanDraw := True;
   end;

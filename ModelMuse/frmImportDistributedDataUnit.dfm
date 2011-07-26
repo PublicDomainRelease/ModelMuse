@@ -75,7 +75,6 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 18
       TabOrder = 1
       Text = '0'
       DataType = dtReal
@@ -88,7 +87,6 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 18
       TabOrder = 0
       Text = '0'
       DataType = dtReal
@@ -101,7 +99,6 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 18
       TabOrder = 3
       Text = '0'
       DataType = dtReal
@@ -114,7 +111,6 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 18
       TabOrder = 2
       Text = '0'
       DataType = dtReal
@@ -127,7 +123,6 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 18
       TabOrder = 4
       Text = '0'
       DataType = dtReal
@@ -140,7 +135,6 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 28
       Cursor = crIBeam
-      ItemHeight = 18
       TabOrder = 5
       Text = '0'
       DataType = dtReal
@@ -153,7 +147,6 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 101
       Height = 26
       Style = csDropDownList
-      ItemHeight = 18
       ItemIndex = 0
       TabOrder = 6
       Text = 'Top'
@@ -183,10 +176,8 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
+      DoubleBuffered = True
       Enabled = False
-      ModalResult = 1
-      TabOrder = 1
-      OnClick = btnOKClick
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         04000000000068010000120B0000120B00001000000010000000000000000000
@@ -204,7 +195,11 @@ inherited frmImportDistributedData: TfrmImportDistributedData
         3338F38F000033333333333333A223333333333333338F830000333333333333
         333A333333333333333338330000333333333333333333333333333333333333
         0000}
+      ModalResult = 1
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 1
+      OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
       Left = 371
@@ -212,8 +207,11 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
     object btnHelp: TBitBtn
       Left = 179
@@ -221,9 +219,12 @@ inherited frmImportDistributedData: TfrmImportDistributedData
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
   end
   object dgDataSets: TRbwDataGrid4
@@ -237,6 +238,7 @@ inherited frmImportDistributedData: TfrmImportDistributedData
     FixedCols = 1
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs, goAlwaysShowEditor]
     TabOrder = 1
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False

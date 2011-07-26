@@ -10,14 +10,14 @@ uses
   Mask, JvExMask, JvSpin, frameFlowTableUnit, JvPageList, JvExControls,
   frameCrossSectionUnit, Buttons, ZoomBox2, JvExStdCtrls, JvCombobox,
   JvListComb, RbwParser, UndoItemsScreenObjects, ModflowSfrUnit, JvToolEdit,
-  GoPhastTypes, JvPageListTreeView;
+  GoPhastTypes, JvPageListTreeView, frameScreenObjectUnit;
 
 type
   TFrameClass = class of TFrame;
 
   TGetParserEvent = Function (Sender: TObject): TRbwParser of object;
 
-  TframeScreenObjectSFR = class(TFrame)
+  TframeScreenObjectSFR = class(TframeScreenObject)
     pcSFR: TPageControl;
     tabSegment: TTabSheet;
     tabTable: TTabSheet;
@@ -746,9 +746,20 @@ begin
       end;
     end;
   end;
+  UpdateNextTimeCell(rdgParameters, ACol, ARow);
   if (ACol in [Ord(spicStartTime), Ord(spicEndTime)]) and (ARow >= 1) then
   begin
     UpdatedTimesInSfrGrids(Value, ACol, ARow);
+    if ACol = Ord(spicStartTime) then
+    begin
+      UpdatedTimesInSfrGrids(rdgParameters.Cells[Ord(spicEndTime), ARow],
+        Ord(spicEndTime), ARow);
+    end
+    else if ARow +1 < rdgParameters.RowCount then
+    begin
+      UpdatedTimesInSfrGrids(rdgParameters.Cells[Ord(spicStartTime), ARow+1],
+        Ord(spicStartTime), ARow+1);
+    end;
   end;
   if (ACol = Ord(spicIcalc)) and (ARow > 1) then
   begin

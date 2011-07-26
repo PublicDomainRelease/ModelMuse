@@ -91,10 +91,10 @@ type
     function    count_lines        : integer;                           virtual;
     function    count_polys_open   : integer;                           virtual;
     function    count_polys_closed : integer;                           virtual;
-    function    proper_name        : string;                            virtual;
+    function    proper_name        : AnsiString;                            virtual;
     procedure   write_DXF_Point(var IO:textfile; n:integer; p:Point3D); virtual;
-    procedure   write_to_DXF(var IO:textfile; layer:string);            virtual;
-    function    details : string;                                       virtual; abstract;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);            virtual;
+    function    details : AnsiString;                                       virtual; abstract;
     procedure   max_min_extents(var emax,emin:Point3D);                 virtual; abstract;
     function    closest_vertex_square_distance_2D(p:Point3D) : double;  virtual; abstract;
     function    closest_vertex(p:Point3D) : Point3D;                    virtual; abstract;
@@ -129,16 +129,16 @@ type
   end;
 
   Block_ = class(DXF_Entity)
-    name       : string;
+    name       : AnsiString;
     basepoint  : Point3D;
     entities   : TDXFEntityList;
-    constructor create(bname:string; refpoint:Point3D);
+    constructor create(bname:AnsiString; refpoint:Point3D);
     destructor  Destroy; override;
     procedure   update_block_links(blist:Entity_List);                      override;
     procedure   Draw(acanvas:TCanvas; map_fn:coord_convert; OCS:pM); override;
     procedure   DrawVertices(acanvas:TCanvas; map_fn:coord_convert; OCS:pM); override;
-    function    details : string;                                       override;
-    procedure   write_to_DXF(var IO:textfile; layer:string);            override;
+    function    details : AnsiString;                                       override;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);            override;
     procedure   max_min_extents(var emax,emin:Point3D);                 override;
     function    closest_vertex_square_distance_2D(p:Point3D) : double;  override;
     function    closest_vertex(p:Point3D) : Point3D;                    override;
@@ -159,8 +159,8 @@ type
     procedure   DrawVertices(acanvas:TCanvas; map_fn:coord_convert; OCS:pM); override;
     procedure   translate(T:Point3D);                                  override;
     procedure   quantize_coords(epsilon:double; mask:byte);            override;
-    function    details : string;                                      override;
-    procedure   write_to_DXF(var IO:textfile; layer:string);           override;
+    function    details : AnsiString;                                      override;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);           override;
     procedure   max_min_extents(var emax,emin:Point3D);                override;
     function    closest_vertex_square_distance_2D(p:Point3D) : double; override;
     function    closest_vertex(p:Point3D) : Point3D;                   override;
@@ -177,14 +177,14 @@ type
 
   Text_ = class(Point_) // always OCS
     h         : double;
-    textstr   : string;
+    textstr   : AnsiString;
     align_pt  : Point3D; // alignment point
     hor_align : integer; // horizontal justification code
-    constructor create(OCSaxis,p,ap:Point3D; ss:string; height:double; col,ha:integer);
+    constructor create(OCSaxis,p,ap:Point3D; ss:AnsiString; height:double; col,ha:integer);
     procedure   Draw(acanvas:TCanvas; map_fn:coord_convert; OCS:pM); override;
-    procedure   calcText(acanvas:TCanvas; map_fn:coord_convert; OCS:pM; t:string);
-    function    details : string;                                override;
-    procedure   write_to_DXF(var IO:textfile; layer:string);     override;
+    procedure   calcText(acanvas:TCanvas; map_fn:coord_convert; OCS:pM; t:String);
+    function    details : AnsiString;                                override;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);     override;
     procedure   max_min_extents(var emax,emin:Point3D);          override;
     procedure   WriteCoordinates(Lines: TStrings;
                   map_fn:Tcoord_convert; OCS:pM);                        override;
@@ -196,12 +196,12 @@ type
 ///////////////////////////////////////////////////////////////////////////////
 
   Attrib_ = class(Text_) // always OCS
-    tagstr  : string;
+    tagstr  : AnsiString;
     visible : boolean;
-    constructor create(OCSaxis,p,ap:Point3D; ss,tag:string; flag70,flag72:integer; height:double; col:integer);
+    constructor create(OCSaxis,p,ap:Point3D; ss,tag:AnsiString; flag70,flag72:integer; height:double; col:integer);
     procedure   Draw(acanvas:TCanvas; map_fn:coord_convert; OCS:pM); override;
-    function    details : string;                                override;
-    procedure   write_to_DXF(var IO:textfile; layer:string);     override;
+    function    details : AnsiString;                                override;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);     override;
     procedure   WriteCoordinates(Lines: TStrings;
                   map_fn:Tcoord_convert; OCS:pM);                        override;
     procedure   GetCoordinates(var PrimitiveList: TPrimitiveList;
@@ -215,10 +215,10 @@ type
 ///////////////////////////////////////////////////////////////////////////////
 
   Attdef_ = class(Attrib_) // always OCS
-    promptstr : string;
-    constructor create(OCSaxis,p,ap:Point3D; ss,tag,prompt:string; flag70,flag72:integer; height:double; col:integer);
+    promptstr : AnsiString;
+    constructor create(OCSaxis,p,ap:Point3D; ss,tag,prompt:AnsiString; flag70,flag72:integer; height:double; col:integer);
     procedure   Draw(acanvas:TCanvas; map_fn:coord_convert; OCS:pM); override;
-    procedure   write_to_DXF(var IO:textfile; layer:string);     override;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);     override;
     procedure   WriteCoordinates(Lines: TStrings;
                   map_fn:Tcoord_convert; OCS:pM);                        override;
     procedure   GetCoordinates(var PrimitiveList: TPrimitiveList;
@@ -231,19 +231,19 @@ type
   Insert_ = class(Point_) // always OCS
     num_attribs   : integer;
     attribs       : array[0..max_attribs] of Attrib_;
-    blockname     : string;
+    blockname     : AnsiString;
     scale         : Point3D;
     rotation      : double;
     blockptr      : Block_;  // use carefully
     blocklist     : Entity_List; // to cross reference the blocks
-    constructor create(OCSaxis,p,s_f:Point3D; rot:double; col:integer; numatts:integer; atts:att_array; block:string);
+    constructor create(OCSaxis,p,s_f:Point3D; rot:double; col:integer; numatts:integer; atts:att_array; block:AnsiString);
     destructor  Destroy;                                     override;
     procedure   init_OCS_WCS_matrix(OCSaxis:Point3D);        override;
     procedure   update_block_links(blist:Entity_List);           override;
     function    block : Block_;
     procedure   Draw(acanvas:TCanvas; map_fn:coord_convert; OCS:pM); override;
-    function    details : string;                            override;
-    procedure   write_to_DXF(var IO:textfile; layer:string); override;
+    function    details : AnsiString;                            override;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString); override;
     procedure   max_min_extents(var emax,emin:Point3D);      override;
     procedure   WriteCoordinates(Lines: TStrings;
                   map_fn:Tcoord_convert; OCS:pM);                        override;
@@ -263,8 +263,8 @@ type
     procedure   quantize_coords(epsilon:double; mask:byte);            override;
     function    count_points   : integer;                              override;
     function    count_lines    : integer;                              override;
-    function    details : string;                                      override;
-    procedure   write_to_DXF(var IO:textfile; layer:string);           override;
+    function    details : AnsiString;                                      override;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);           override;
     procedure   max_min_extents(var emax,emin:Point3D);                override;
     function    closest_vertex_square_distance_2D(p:Point3D) : double; override;
     function    closest_vertex(p:Point3D) : Point3D;                   override;
@@ -283,8 +283,8 @@ type
     constructor create(OCSaxis,p_1:Point3D; radius_:double; col:integer);
     constructor create_from_polyline(ent1:DXF_Entity);
     procedure   Draw(acanvas:TCanvas; map_fn:coord_convert; OCS:pM); override;
-    function    details : string;                                override;
-    procedure   write_to_DXF(var IO:textfile; layer:string);     override;
+    function    details : AnsiString;                                override;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);     override;
     function    is_point_inside_object2D(p:Point3D) : boolean;   override;
     procedure   max_min_extents(var emax,emin:Point3D);          override;
     procedure   WriteCoordinates(Lines: TStrings;
@@ -300,8 +300,8 @@ type
     angle1,angle2 : double;
     constructor create(OCSaxis,p_1:Point3D; radius_,sa,ea:double; col:integer);
     procedure   Draw(acanvas:TCanvas; map_fn:coord_convert; OCS:pM); override;
-    function    details : string;                                override;
-    procedure   write_to_DXF(var IO:textfile; layer:string);     override;
+    function    details : AnsiString;                                override;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);     override;
     function    is_point_inside_object2D(p:Point3D) : boolean;   override;
     procedure   max_min_extents(var emax,emin:Point3D);          override;
     procedure   WriteCoordinates(Lines: TStrings;
@@ -328,8 +328,8 @@ type
     function    count_lines    : integer;                              override;
     function    count_polys_open   : integer;                          override;
     function    count_polys_closed : integer;                          override;
-    function    details : string;                                      override;
-    procedure   write_to_DXF(var IO:textfile; layer:string);           override;
+    function    details : AnsiString;                                      override;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);           override;
     procedure   max_min_extents(var emax,emin:Point3D);                override;
     function    closest_vertex_square_distance_2D(p:Point3D) : double; override;
     function    closest_vertex(p:Point3D) : Point3D;                   override;
@@ -356,8 +356,8 @@ type
 
   Face3D_ = class(Polyline_) // always WCS
     constructor create(p: Point3D; numpoints:integer; points:pointlist; col:integer; closed_:boolean);
-    function    proper_name : string; override; // save as 3DFACE not Face3D
-    procedure   write_to_DXF(var IO:textfile; layer:string);           override;
+    function    proper_name : AnsiString; override; // save as 3DFACE not Face3D
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);           override;
   end;
 ///////////////////////////////////////////////////////////////////////////////
 // Solid_ Definition
@@ -366,9 +366,9 @@ type
   Solid_ = class(Face3D_) // always OCS
     thickness : double;
     constructor create(p: Point3D; OCSaxis:Point3D; numpoints:integer; points:pointlist; col:integer; t:double);
-    function    proper_name : string;                                  override;
-    procedure   write_to_DXF(var IO:textfile; layer:string);           override;
-    function    details : string;                                      override;
+    function    proper_name : AnsiString;                                  override;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);           override;
+    function    details : AnsiString;                                      override;
   end;
 ///////////////////////////////////////////////////////////////////////////////
 // Polyline_ (polygon MxN grid mesh) Definition
@@ -378,9 +378,9 @@ type
     M,N           : integer;
     closeM,closeN : boolean;
     constructor create(p: Point3D; numpoints,Mc,Nc:integer; points:pointlist; closebits,col:integer);
-    function    proper_name : string;                                  override;
-    procedure   write_to_DXF(var IO:textfile; layer:string);           override;
-    function    details : string;                                      override;
+    function    proper_name : AnsiString;                                  override;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);           override;
+    function    details : AnsiString;                                      override;
     procedure   Draw(acanvas:TCanvas; map_fn:coord_convert; OCS:pM); override;
     procedure   WriteCoordinates(Lines: TStrings;
                   map_fn:Tcoord_convert; OCS:pM);                        override;
@@ -396,9 +396,9 @@ type
     facelist   : Tfacelist;
     constructor create(p: Point3D; numpoints,nfaces:integer; points:pointlist; faces:Tfacelist; col:integer);
     destructor  Destroy;                                               override;
-    function    proper_name : string;                                  override;
-    procedure   write_to_DXF(var IO:textfile; layer:string);           override;
-    function    details : string;                                      override;
+    function    proper_name : AnsiString;                                  override;
+    procedure   write_to_DXF(var IO:textfile; layer:AnsiString);           override;
+    function    details : AnsiString;                                      override;
     procedure   Draw(acanvas:TCanvas; map_fn:coord_convert; OCS:pM); override;
     procedure   WriteCoordinates(Lines: TStrings;
                   map_fn:Tcoord_convert; OCS:pM);                        override;
@@ -419,14 +419,14 @@ type
     function    add_at_end(entity:DXF_Entity) : boolean;
     function    insert(entity:DXF_Entity) : boolean;
   public
-    list_name      : string;
+    list_name      : AnsiString;
     parent_layer   : DXF_Layer;
     Kludge_layer   : DXF_Layer; // see selection.save...
     entities       : TDXFEntityList;
     sorted         : boolean;
-    constructor create(l_name:string);
+    constructor create(l_name:AnsiString);
     destructor  Destroy; override;
-    property    name : string read list_name write list_name;
+    property    name : AnsiString read list_name write list_name;
     function    add_entity_to_list(entity:DXF_Entity) : boolean;
     function    remove_entity(ent:DXF_Entity) : boolean;
     procedure   draw_primitives(acanvas:TCanvas; map_fn:coord_convert; OCS:pM);
@@ -466,22 +466,22 @@ type
   end;
 
   DXF_Layer  = class
-    layer_name   : string;
+    layer_name   : AnsiString;
     layer_colinx : integer;
     entity_names : TStringList;
     entity_lists : TDXF_EntityListList;
-    constructor create(l_name:string);
+    constructor create(l_name:AnsiString);
     destructor  Destroy; override;
-    procedure   delete(aname:string; releasemem:boolean);
+    procedure   delete(aname:AnsiString; releasemem:boolean);
     property    Colour : integer read layer_colinx write layer_colinx;
-    property    name : string read layer_name write layer_name;
+    property    name : AnsiString read layer_name write layer_name;
     function    add_entity_to_layer(entity:DXF_Entity) : boolean;
     // Add a pre filled list (save selected to file... see selected lists)
     procedure   add_entity_list(elist:Entity_List);
     // utilities
     function    num_lists : integer;
     procedure   max_min_extents(var emax,emin:Point3D);
-    function    create_or_find_list_type(aname:string) : Entity_List;
+    function    create_or_find_list_type(aname:AnsiString) : Entity_List;
   end;
 
   TDXF_LayerList = class(TObject)
@@ -513,28 +513,28 @@ type
     FOnThinking: TOnThinking;
     FProgress: TProgressBar;
   public
-    DXF_name     : string;
+    DXF_name     : String;
     layer_lists  : TDXF_LayerList;
     emax         : Point3D;
     emin         : Point3D;
     // Create an empty object
-    constructor create(aname:string);
+    constructor create(aname:String);
     // Create an object and load from file
-    procedure ReadFile(aname:string; skipped:Tstrings);
+    procedure ReadFile(aname:String; skipped:Tstrings);
     destructor  Destroy; override;
-    procedure   save_to_file(aname:string);
-    property    name : string read DXF_name write DXF_name;
+    procedure   save_to_file(aname:String);
+    property    name : String read DXF_name write DXF_name;
     function    num_layers : integer;
     // add an empty layer
-    function    new_layer(aname:string; DUPs_OK:boolean) : DXF_Layer;
+    function    new_layer(aname:AnsiString; DUPs_OK:boolean) : DXF_Layer;
     // add a pre-filled layer
     function    add_layer(layer:DXF_Layer) : boolean;
     // return the layer with a given name
-    function    layer(aname:string) : DXF_Layer;
+    function    layer(aname:AnsiString) : DXF_Layer;
     // add an entity to a named layer
-    function    add_entity_to_layer(entity:DXF_Entity; aname:string) : boolean;
+    function    add_entity_to_layer(entity:DXF_Entity; aname:AnsiString) : boolean;
     // return layer and create if necessary
-    function    create_or_find_layer(aname:string) : DXF_Layer;
+    function    create_or_find_layer(aname:AnsiString) : DXF_Layer;
     // Add a second DXF file to this one
     function    merge_files(DXF_:DXF_Object) : boolean;
     // Useful ones
@@ -557,7 +557,7 @@ type
     entity_lists : TDXF_EntityListList;
     constructor create;
     destructor  Destroy; override;
-    procedure   save_to_DXF_file(aname:string);
+    procedure   save_to_DXF_file(aname:String);
     function    find_closest_2D_point(p:Point3D; var ent:DXF_Entity) : Point3D;
     function    is_inside_object(p:Point3D; var ent:DXF_Entity) : Point3D;
   end;
@@ -661,11 +661,11 @@ begin result := 0; end;
 function DXF_Entity.count_polys_closed  : integer;
 begin result := 0; end;
 
-function DXF_Entity.proper_name : string;
-var temp : string;
+function DXF_Entity.proper_name : AnsiString;
+var temp : String;
 begin
   temp := UpperCase(ClassName);
-  result := Copy(temp,1,Length(temp)-1);
+  result := AnsiString(Copy(temp,1,Length(temp)-1));
 end;
 
 procedure DXF_Entity.write_DXF_Point(var IO:textfile; n:integer; p:Point3D);
@@ -675,7 +675,7 @@ begin
   writeln(IO, n+20 , EOL,float_out(p.z) );
 end;
 
-procedure DXF_Entity.write_to_DXF(var IO:textfile; layer:string);
+procedure DXF_Entity.write_to_DXF(var IO:textfile; layer:AnsiString);
 begin
   writeln(IO,0 ,EOL,proper_name);
   writeln(IO,8 ,EOL,layer);
@@ -697,7 +697,7 @@ end;
 ///////////////////////////////////////////////////////////////////////////////
 // Block_ class implementation
 ///////////////////////////////////////////////////////////////////////////////
-constructor Block_.create(bname:string; refpoint:Point3D);
+constructor Block_.create(bname:AnsiString; refpoint:Point3D);
 begin
   inherited Create(refpoint);
   entities   := TDXFEntityList.Create;
@@ -750,7 +750,7 @@ begin
     entities[lp1].drawvertices(acanvas,map_fn,OCS);
 end;
 
-function Block_.details : string;
+function Block_.details : AnsiString;
 var lp1 : integer;
 begin
   result := 'Name :'#9 + name + EOL +
@@ -758,7 +758,7 @@ begin
   for lp1:=0 to entities.count-1 do result := result + EOL + EOL + entities[lp1].details;
 end;
 
-procedure Block_.write_to_DXF(var IO:textfile; layer:string);
+procedure Block_.write_to_DXF(var IO:textfile; layer:AnsiString);
 var lp1 : integer;
 begin
   writeln(IO,0 ,EOL,proper_name);
@@ -819,15 +819,15 @@ begin
   if (mask and 4)=4 then p1.z := round(p1.z*epsilon)/epsilon;
 end;
 
-function Point_.details : string;
-var t : string;
+function Point_.details : AnsiString;
+var t : AnsiString;
 begin
   if OCS_WCS<>nil then t := 'OCS Axis ' + Point3DToStr(OCS_axis)
   else t := 'WCS';
-  result := ClassName + EOL + t + EOL + Point3DToStr(p1);
+  result := AnsiString(ClassName) + EOL + t + EOL + Point3DToStr(p1);
 end;
 
-procedure Point_.write_to_DXF(var IO:textfile; layer:string);
+procedure Point_.write_to_DXF(var IO:textfile; layer:AnsiString);
 begin
   inherited;
 //  write_DXF_Point(IO,10,p1);
@@ -859,7 +859,7 @@ end;
 ///////////////////////////////////////////////////////////////////////////////
 // Text
 ///////////////////////////////////////////////////////////////////////////////
-constructor Text_.create(OCSaxis,p,ap:Point3D; ss:string; height:double; col,ha:integer);
+constructor Text_.create(OCSaxis,p,ap:Point3D; ss:AnsiString; height:double; col,ha:integer);
 begin
   inherited create(OCSaxis,p,col);
   h := height;
@@ -869,7 +869,7 @@ begin
   hor_align := ha;
 end;
 
-procedure Text_.calcText(acanvas:TCanvas; map_fn:coord_convert; OCS:pM; t:string);
+procedure Text_.calcText(acanvas:TCanvas; map_fn:coord_convert; OCS:pM; t:String);
 var pa,dummy1,dummy2 : TPoint;
     Fheight          : integer;
 {$IFDEF CLX}
@@ -927,17 +927,17 @@ procedure Text_.Draw(acanvas:TCanvas; map_fn:coord_convert; OCS:pM);
 var t_matrix : pMatrix;
 begin
   t_matrix := update_transformations(OCS_WCS,OCS);
-  calcText(acanvas,map_fn,t_matrix,textstr);
+  calcText(acanvas,map_fn,t_matrix,string(textstr));
 end;
 
-function Text_.details : string;
+function Text_.details : AnsiString;
 begin
   result := inherited details + EOL +
             'Text '#9 + textstr + EOL +
             'TextHeight = ' + float_out(h);
 end;
 
-procedure Text_.write_to_DXF(var IO:textfile; layer:string);
+procedure Text_.write_to_DXF(var IO:textfile; layer:AnsiString);
 begin
   inherited;
   writeln(IO,40 ,EOL,float_out(h));
@@ -955,7 +955,7 @@ end;
 ///////////////////////////////////////////////////////////////////////////////
 // Attrib
 ///////////////////////////////////////////////////////////////////////////////
-constructor Attrib_.create(OCSaxis,p,ap:Point3D; ss,tag:string; flag70,flag72:integer; height:double; col:integer);
+constructor Attrib_.create(OCSaxis,p,ap:Point3D; ss,tag:AnsiString; flag70,flag72:integer; height:double; col:integer);
 begin
   inherited create(OCSaxis,p,ap,ss,height,col,flag72);
   tagstr := tag;
@@ -968,18 +968,18 @@ var t_matrix : pMatrix;
 begin
   t_matrix := update_transformations(OCS_WCS,OCS);
   if not visible then exit;
-  calcText(acanvas,map_fn,t_matrix,tagstr);
+  calcText(acanvas,map_fn,t_matrix,string(tagstr));
 end;
 
-function Attrib_.details : string;
-var t : string;
+function Attrib_.details : AnsiString;
+var t : AnsiString;
 begin
   if visible then t:='Visible' else t:='Invisible';
   result := inherited details + EOL +
             'Tag '#9 + TagStr + EOL + t;
 end;
 
-procedure Attrib_.write_to_DXF(var IO:textfile; layer:string);
+procedure Attrib_.write_to_DXF(var IO:textfile; layer:AnsiString);
 begin
   inherited;
   writeln(IO,2 ,EOL,tagstr);
@@ -989,7 +989,7 @@ end;
 ///////////////////////////////////////////////////////////////////////////////
 // Attdef
 ///////////////////////////////////////////////////////////////////////////////
-constructor Attdef_.create(OCSaxis,p,ap:Point3D; ss,tag,prompt:string; flag70,flag72:integer; height:double; col:integer);
+constructor Attdef_.create(OCSaxis,p,ap:Point3D; ss,tag,prompt:AnsiString; flag70,flag72:integer; height:double; col:integer);
 begin
   inherited create(OCSaxis,p,ap,ss,tag,flag70,flag72,height,col);
   promptstr := prompt;
@@ -1017,7 +1017,7 @@ begin
   // so no need to draw them as there will be an Attrib in its place
 end;
 
-procedure Attdef_.write_to_DXF(var IO:textfile; layer:string);
+procedure Attdef_.write_to_DXF(var IO:textfile; layer:AnsiString);
 begin
   inherited;
   writeln(IO,DXF_text_prompt ,EOL,promptstr);
@@ -1025,7 +1025,7 @@ end;
 ///////////////////////////////////////////////////////////////////////////////
 // Insert
 ///////////////////////////////////////////////////////////////////////////////
-constructor Insert_.create(OCSaxis,p,s_f:Point3D; rot:double; col:integer; numatts:integer; atts:att_array; block:string);
+constructor Insert_.create(OCSaxis,p,s_f:Point3D; rot:double; col:integer; numatts:integer; atts:att_array; block:AnsiString);
 var lp1 : integer;
 begin
   blockname   := block;
@@ -1088,7 +1088,7 @@ begin
     end;
   end // this bit every subsequent time
   else result := blockptr;
-  if result=nil then raise Exception.Create('Block reference '+blockname+' not found');
+  if result=nil then raise Exception.Create('Block reference '+ string(blockname) +' not found');
 end;
 
 procedure Insert_.Draw(acanvas:TCanvas; map_fn:coord_convert; OCS:pM);
@@ -1109,17 +1109,17 @@ begin
   if blockname<>'' then block.Draw(acanvas,map_fn,t_matrix);
 end;
 
-function Insert_.details : string;
+function Insert_.details : AnsiString;
 var lp1 : integer;
 begin
   result := inherited details + EOL +
             'Block '#9 + blockname + EOL +
             'Scaling'#9 + Point3DToStr(scale) + EOL +
             'Rotation'#9 + float_out(RadToDeg(rotation)) + EOL +
-            'Attribs '#9 + IntToStr(num_attribs);
+            'Attribs '#9 + AnsiString(IntToStr(num_attribs));
   for lp1:=0 to num_attribs-1 do begin
     result := result + EOL + EOL;
-    result := result + IntToStr(lp1+1) + ' : ' + attribs[lp1].details;
+    result := result + AnsiString(IntToStr(lp1+1)) + ' : ' + attribs[lp1].details;
   end;
   result := result  + EOL + EOL +
             '----BLOCK-----' + EOL +
@@ -1127,7 +1127,7 @@ begin
             '---ENDBLOCK---';
 end;
 
-procedure Insert_.write_to_DXF(var IO:textfile; layer:string);
+procedure Insert_.write_to_DXF(var IO:textfile; layer:AnsiString);
 var lp1 : integer;
 begin
   inherited;
@@ -1211,12 +1211,12 @@ begin result := 2; end;
 function Line_.count_lines : integer;
 begin result := 1; end;
 
-function Line_.details : string;
+function Line_.details : AnsiString;
 begin
   result := inherited details + EOL + Point3DToStr(p2);
 end;
 
-procedure Line_.write_to_DXF(var IO:textfile; layer:string);
+procedure Line_.write_to_DXF(var IO:textfile; layer:AnsiString);
 begin
   inherited;
   write_DXF_Point(IO,11,p2);
@@ -1292,13 +1292,13 @@ begin
   else acanvas.pixels[pa.x,pa.y] := acanvas.Pen.Color;
 end;
 
-function Circle_.details : string;
+function Circle_.details : AnsiString;
 begin
   result := inherited details + EOL +
             'Radius = ' + float_out(radius);
 end;
 
-procedure Circle_.write_to_DXF(var IO:textfile; layer:string);
+procedure Circle_.write_to_DXF(var IO:textfile; layer:AnsiString);
 begin
   inherited;
   writeln(IO,40,EOL,float_out(radius));
@@ -1341,14 +1341,14 @@ begin
   acanvas.pixels[pu.x,pu.y] := acanvas.Pen.Color;
 end;
 
-function Arc_.details : string;
+function Arc_.details : AnsiString;
 begin
   result := inherited details + EOL +
             'Angle 1 = ' + float_out(angle1) + EOL +
             'Angle 2 = ' + float_out(angle2);
 end;
 
-procedure Arc_.write_to_DXF(var IO:textfile; layer:string);
+procedure Arc_.write_to_DXF(var IO:textfile; layer:AnsiString);
 begin
   inherited;
   writeln(IO,50,EOL,float_out(RadToDeg(angle1)));
@@ -1469,19 +1469,19 @@ begin if not closed then result := 1 else result := 0;end;
 function CustomPolyline_.count_polys_closed : integer;
 begin if closed then result := 1 else result := 0;end;
 
-function CustomPolyline_.details : string;
+function CustomPolyline_.details : AnsiString;
 var lp1 : integer;
-    t   : string;
+    t   : AnsiString;
 begin
   if OCS_WCS<>nil then t := 'OCS Axis ' + Point3DToStr(OCS_axis)
   else t := 'WCS';
-  result := classname + EOL + t;
+  result := AnsiString(classname) + EOL + t;
   if closed then result := result + EOL + 'Closed'
   else result := result + EOL + 'Open';
   for lp1:=0 to numvertices-1 do result := result + EOL + Point3DToStr(polypoints[lp1]);
 end;
 
-procedure CustomPolyline_.write_to_DXF(var IO:textfile; layer:string);
+procedure CustomPolyline_.write_to_DXF(var IO:textfile; layer:AnsiString);
 var lp1 : integer;
 begin
   inherited;
@@ -1594,12 +1594,12 @@ begin
   inherited create(p, WCS_Z,numpoints,points,col,closed_);
 end;
 
-function Face3D_.proper_name : string;
+function Face3D_.proper_name : AnsiString;
 begin
   result := '3DFACE';
 end;
 
-procedure Face3D_.write_to_DXF(var IO:textfile; layer:string);
+procedure Face3D_.write_to_DXF(var IO:textfile; layer:AnsiString);
 var lp1 : integer;
 begin
   writeln(IO,0 ,EOL,proper_name);
@@ -1622,18 +1622,18 @@ begin
   init_OCS_WCS_matrix(OCSaxis);
 end;
 
-function Solid_.proper_name : string;
+function Solid_.proper_name : AnsiString;
 begin
   result := 'SOLID';
 end;
 
-procedure Solid_.write_to_DXF(var IO:textfile; layer:string);
+procedure Solid_.write_to_DXF(var IO:textfile; layer:AnsiString);
 begin
   inherited;
   writeln(IO,39,EOL,thickness);
 end;
 
-function Solid_.details : string;
+function Solid_.details : AnsiString;
 begin
   result := inherited details + EOL +
             'Thickness'#9 + float_out(thickness);
@@ -1650,12 +1650,12 @@ begin
   closeN := (closebits and 32)=32;
 end;
 
-function Polygon_mesh_.proper_name : string;
+function Polygon_mesh_.proper_name : AnsiString;
 begin
   result := 'POLYLINE';
 end;
 
-procedure Polygon_mesh_.write_to_DXF(var IO:textfile; layer:string);
+procedure Polygon_mesh_.write_to_DXF(var IO:textfile; layer:AnsiString);
 var lp1,flag : integer;
 begin
   writeln(IO,0 ,EOL,proper_name);
@@ -1676,15 +1676,15 @@ begin
   writeln(IO,0 ,EOL,'SEQEND');
 end;
 
-function Polygon_mesh_.details : string;
-var t : string;
+function Polygon_mesh_.details : AnsiString;
+var t : AnsiString;
 begin
   if OCS_WCS<>nil then t := 'OCS Axis ' + Point3DToStr(OCS_axis)
   else t := 'WCS';
   result := 'Polyline_ (polygon mesh)' + EOL + t + EOL +
-            'Vertices'#9 + IntToStr(numvertices) + EOL +
-            'M'#9 + IntToStr(M) + EOL +
-            'N'#9 + IntToStr(N) + EOL +
+            'Vertices'#9 + AnsiString(IntToStr(numvertices)) + EOL +
+            'M'#9 + AnsiString(IntToStr(M)) + EOL +
+            'N'#9 + AnsiString(IntToStr(N)) + EOL +
             'Closed M'#9 + BoolToStr(closeM) + EOL +
             'Closed N'#9 + BoolToStr(closeN);
 end;
@@ -1738,12 +1738,12 @@ begin
   inherited destroy;
 end;
 
-function Polyface_mesh_.proper_name : string;
+function Polyface_mesh_.proper_name : AnsiString;
 begin
   result := 'POLYLINE';
 end;
 
-procedure Polyface_mesh_.write_to_DXF(var IO:textfile; layer:string);
+procedure Polyface_mesh_.write_to_DXF(var IO:textfile; layer:AnsiString);
 var lp1,lp2 {,inx} : integer;
 begin
   writeln(IO,0 ,EOL,proper_name);
@@ -1766,14 +1766,14 @@ begin
   writeln(IO,0 ,EOL,'SEQEND');
 end;
 
-function Polyface_mesh_.details : string;
-var t : string;
+function Polyface_mesh_.details : AnsiString;
+var t : AnsiString;
 begin
   if OCS_WCS<>nil then t := 'OCS Axis ' + Point3DToStr(OCS_axis)
   else t := 'WCS';
   result := 'Polyline_ (polyface mesh)' + EOL + t + EOL +
-            'Vertices'#9 + IntToStr(numvertices) + EOL +
-            'Faces'#9 + IntToStr(numfaces);
+            'Vertices'#9 + AnsiString(IntToStr(numvertices)) + EOL +
+            'Faces'#9 + AnsiString(IntToStr(numfaces));
 end;
 
 procedure Polyface_mesh_.Draw(acanvas:TCanvas; map_fn:coord_convert; OCS:pM);
@@ -1795,7 +1795,7 @@ end;
 ///////////////////////////////////////////////////////////////////////////////
 // Entity_List class implementation
 ///////////////////////////////////////////////////////////////////////////////
-constructor Entity_List.create(l_name:string);
+constructor Entity_List.create(l_name:AnsiString);
 begin
   list_name      := l_name;
   entities       := TDXFEntityList.Create;
@@ -1949,7 +1949,7 @@ end;
 ///////////////////////////////////////////////////////////////////////////////
 // DXF_layer class implementation
 ///////////////////////////////////////////////////////////////////////////////
-constructor DXF_Layer.create(l_name:string);
+constructor DXF_Layer.create(l_name:AnsiString);
 begin
   layer_name   := l_name;
   entity_names := TStringList.Create;
@@ -1971,7 +1971,7 @@ begin
   inherited destroy;
 end;
 
-procedure DXF_Layer.delete(aname:string; releasemem:boolean);
+procedure DXF_Layer.delete(aname:AnsiString; releasemem:boolean);
 var lp1 : integer;
     el  : Entity_List;
 begin
@@ -1991,7 +1991,7 @@ var i  : integer;
 begin
   i := entity_names.IndexOf(entity.ClassName);
   if i=-1 then begin
-    el := Entity_List.create(entity.ClassName);
+    el := Entity_List.create(AnsiString(entity.ClassName));
     el.parent_layer := self;
     i  := entity_lists.Add(el);
     if i<>entity_names.Add(entity.ClassName) then
@@ -2007,11 +2007,11 @@ end;
 procedure DXF_Layer.add_entity_list(elist:Entity_List);
 var i : integer;
 begin
-  i := entity_names.IndexOf(elist.name);
+  i := entity_names.IndexOf(String(elist.name));
   if i<>-1 then raise Exception.create('Attempted to add two lists with same name');
   elist.parent_layer := self;
   i  := entity_lists.Add(elist);
-  if i<>entity_names.Add(elist.Name) then
+  if i<>entity_names.Add(String(elist.Name)) then
     raise Exception.Create('Entity list ID mismatch');
 end;
 
@@ -2026,15 +2026,15 @@ begin
   for lp1:=0 to num_lists-1 do entity_lists[lp1].max_min_extents(emax,emin);
 end;
 
-function DXF_Layer.create_or_find_list_type(aname:string) : Entity_List;
+function DXF_Layer.create_or_find_list_type(aname:AnsiString) : Entity_List;
 var inx : integer;
 begin
-  inx := entity_names.IndexOf(aname);
+  inx := entity_names.IndexOf(String(aname));
   if inx=-1 then begin
     result := Entity_List.create(aname);
     result.parent_layer := self;
     inx    := entity_lists.Add(result);
-    if inx<>entity_names.Add(aname) then
+    if inx<>entity_names.Add(String(aname)) then
       raise Exception.Create('Entity list ID mismatch');
   end
   else result := entity_lists[inx];
@@ -2042,7 +2042,7 @@ end;
 ///////////////////////////////////////////////////////////////////////////////
 // DXF_Object class implementation
 ///////////////////////////////////////////////////////////////////////////////
-constructor DXF_Object.create(aname:string);
+constructor DXF_Object.create(aname:String);
 begin
   layer_lists := TDXF_LayerList.create;
   if aname<>'' then DXF_name := aname
@@ -2052,7 +2052,7 @@ begin
   inc(DXF_Obj_in_existence);
 end;
 
-procedure DXF_Object.ReadFile(aname:string; skipped:Tstrings);
+procedure DXF_Object.ReadFile(aname:String; skipped:Tstrings);
 var reader : DXF_Reader;
 begin
   Reader:=DXF_Reader.Create(aname);
@@ -2083,7 +2083,7 @@ begin
   inherited destroy;
 end;
 
-procedure DXF_Object.save_to_file(aname:string);
+procedure DXF_Object.save_to_file(aname:String);
 var Writer : DXF_Writer;
 begin
   writer := DXF_writer.create(aname,layer_lists);
@@ -2096,7 +2096,7 @@ begin
   result := layer_lists.Count
 end;
 
-function DXF_Object.new_layer(aname:string; DUPs_OK:boolean) : DXF_Layer;
+function DXF_Object.new_layer(aname:AnsiString; DUPs_OK:boolean) : DXF_Layer;
 var lp1 : integer;
 begin
   for lp1:=0 to layer_lists.Count-1 do begin
@@ -2120,7 +2120,7 @@ begin
   result := True;
 end;
 
-function DXF_Object.layer(aname:string) : DXF_Layer;
+function DXF_Object.layer(aname:AnsiString) : DXF_Layer;
 var lp1 : integer;
 begin
   result := nil;
@@ -2132,7 +2132,7 @@ begin
 end;
 
 // Avoid using this if possible because we have to search for layer name every time
-function DXF_Object.add_entity_to_layer(entity:DXF_Entity; aname:string) : boolean;
+function DXF_Object.add_entity_to_layer(entity:DXF_Entity; aname:AnsiString) : boolean;
 var lp1 : integer;
 begin
   for lp1:=0 to layer_lists.Count-1 do
@@ -2144,7 +2144,7 @@ begin
   raise DXF_Exception.Create('Attempted to add to unnamed layer');
 end;
 
-function DXF_Object.create_or_find_layer(aname:string) : DXF_Layer;
+function DXF_Object.create_or_find_layer(aname:AnsiString) : DXF_Layer;
 var lp1  : integer;
 begin
   for lp1:=0 to layer_lists.Count-1 do
@@ -2213,13 +2213,13 @@ procedure DXF_Object.copy_to_strings(ts:TStrings);
 var lp1,lp2,pos : integer;
     layer       : DXF_Layer;
 begin
-  ts.Add(DXF_name);
+  ts.Add(string(DXF_name));
   for lp1:=0 to layer_lists.count-1 do begin
     layer := layer_lists[lp1];
-    pos := ts.Add('  '+layer.name);
+    pos := ts.Add('  '+string(layer.name));
     ts.Objects[pos] := layer;
     for lp2:=0 to layer.num_lists-1 do begin
-      pos := ts.Add('    '+ layer.entity_lists[lp2].name);
+      pos := ts.Add('    '+ string(layer.entity_lists[lp2].name));
       ts.Objects[pos] := layer.entity_lists[lp2];
     end;
   end;
@@ -2256,7 +2256,7 @@ begin
   inherited destroy;
 end;
 
-procedure selection_lists.save_to_DXF_file(aname:string);
+procedure selection_lists.save_to_DXF_file(aname:String);
 var lp1,lp2 : integer;
     DXF     : DXF_Object;
     layer   : DXF_layer;
@@ -2548,7 +2548,7 @@ begin
     t_matrix   := @TempMatrix;
   end;
   Lines.Add(ClassName);
-  Lines.Add(Name);
+  Lines.Add(string(Name));
   for lp1:=0 to entities.count-1 do
     entities[lp1].WriteCoordinates(Lines,map_fn,t_matrix);
 end;

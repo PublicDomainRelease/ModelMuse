@@ -171,7 +171,7 @@ procedure TframeScreenObjectHydmod.GetData(
 const
   CheckBoxStates: array[False..True] of TCheckBoxState = (cbUnchecked, cbChecked);
 var
-  Packages: TModflowPackages;
+//  Packages: TModflowPackages;
   LayerStructure: TLayerStructure;
   Index: Integer;
   LayerGroup: TLayerGroup;
@@ -200,7 +200,7 @@ var
   UniformSubPreconsolidationHead: Boolean;
 
 begin
-  Packages := frmGoPhast.PhastModel.ModflowPackages;
+//  Packages := frmGoPhast.PhastModel.ModflowPackages;
   clbSFR.Enabled := frmGoPhast.PhastModel.SfrIsSelected;
   clbSub.Enabled := frmGoPhast.PhastModel.SubIsSelected;
   comboLayerGroup.Enabled := frmGoPhast.PhastModel.SubIsSelected;
@@ -214,7 +214,12 @@ begin
     comboLayerGroup.Items.AddObject(LayerGroup.AquiferName, LayerGroup);
   end;
 
-  rgINTYP.Controls[Ord(amInterpolate)].Enabled := InterpolationAllowed(List);
+  // This will cause TCustomRadioGroup.UpdateButtons to be called.
+  rgINTYP.WordWrap := not rgINTYP.WordWrap;
+  rgINTYP.WordWrap := not rgINTYP.WordWrap;
+
+  rgINTYP.Buttons[Ord(amInterpolate)].Enabled := InterpolationAllowed(List);
+//  rgINTYP.Controls[Ord(amInterpolate)].Enabled := InterpolationAllowed(List);
 
   ListOfScreenObjects := TList.Create();
   try
@@ -765,7 +770,8 @@ begin
         end;
         if rgINTYP.ItemIndex >= 0 then
         begin
-          if rgINTYP.Enabled and rgINTYP.Controls[Ord(amInterpolate)].Enabled then
+          if rgINTYP.Enabled and rgINTYP.Buttons[Ord(amInterpolate)].Enabled then
+//          if rgINTYP.Enabled and rgINTYP.Controls[Ord(amInterpolate)].Enabled then
           begin
             ModflowHydmodData.AssignmentMethod :=
               TAssignmentMethod(rgINTYP.ItemIndex);

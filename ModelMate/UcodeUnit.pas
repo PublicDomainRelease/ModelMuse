@@ -563,7 +563,7 @@ begin
         KeyValMatrix[1].SetVal(0,self.TolSOSC);
         KeyValMatrix[2].SetVal(0,self.MaxIter);
         KeyValMatrix[3].SetVal(0,self.MaxChange);
-        KeyValMatrix[4].SetVal(0,self.MaxChangeRealm);
+        KeyValMatrix[4].SetVal(0,ConvertString(self.MaxChangeRealm));
         KeyValMatrix[5].SetVal(0,self.MqrtDirection);
         KeyValMatrix[6].SetVal(0,self.MqrtFactor);
         KeyValMatrix[7].SetVal(0,self.MqrtIncrement);
@@ -576,7 +576,7 @@ begin
         KeyValMatrix[14].SetVal(0,self.MinimumSensRatio);
         KeyValMatrix[15].SetVal(0,self.ReincludeSensRatio);
         KeyValMatrix[16].SetVal(0,self.TolParWtOS);
-        KeyValMatrix[17].SetVal(0,self.TrustRegion);
+        KeyValMatrix[17].SetVal(0,ConvertString(self.TrustRegion));
         KeyValMatrix[18].SetVal(0,self.MaxStep);
         KeyValMatrix[19].SetVal(0,self.ConsecMax);
       end;
@@ -651,10 +651,10 @@ begin
     bdUcodeControlData.Assign(Defaults);
     with bdUcodeControlData do
       begin
-        KeyValMatrix[0].SetVal(0,self.ModelName);
-        KeyValMatrix[1].SetVal(0,self.ModelLengthUnits);
-        KeyValMatrix[2].SetVal(0,self.ModelMassUnits);
-        KeyValMatrix[3].SetVal(0,self.ModelTimeUnits);
+        KeyValMatrix[0].SetVal(0,ConvertString(self.ModelName));
+        KeyValMatrix[1].SetVal(0,ConvertString(self.ModelLengthUnits));
+        KeyValMatrix[2].SetVal(0,ConvertString(self.ModelMassUnits));
+        KeyValMatrix[3].SetVal(0,ConvertString(self.ModelTimeUnits));
         // Sensitivities is a special case.
         case UcMode of
           umFwd: ;
@@ -669,17 +669,17 @@ begin
         KeyValMatrix[5].SetVal(0,self.Optimize);
         KeyValMatrix[6].SetVal(0,self.Linearity);
         KeyValMatrix[7].SetVal(0,self.Prediction);
-        KeyValMatrix[8].SetVal(0,self.LinearityAdv);
+        KeyValMatrix[8].SetVal(0,ConvertString(self.LinearityAdv));
         KeyValMatrix[9].SetVal(0,self.NonLinearIntervals);
-        KeyValMatrix[10].SetVal(0,self.SosSurface);
-        KeyValMatrix[11].SetVal(0,self.SosFile);
+        KeyValMatrix[10].SetVal(0,ConvertString(self.SosSurface));
+        KeyValMatrix[11].SetVal(0,ConvertString(self.SosFile));
         KeyValMatrix[12].SetVal(0,self.StdErrOne);
         KeyValMatrix[13].SetVal(0,self.WriteDerivedParams);
         KeyValMatrix[14].SetVal(0,self.WritePriorInfo);
         KeyValMatrix[15].SetVal(0,self.EigenValues);
-        KeyValMatrix[16].SetVal(0,self.StartRes);
-        KeyValMatrix[17].SetVal(0,self.IntermedRes);
-        KeyValMatrix[18].SetVal(0,self.FinalRes);
+        KeyValMatrix[16].SetVal(0,ConvertString(self.StartRes));
+        KeyValMatrix[17].SetVal(0,ConvertString(self.IntermedRes));
+        KeyValMatrix[18].SetVal(0,ConvertString(self.FinalRes));
         KeyValMatrix[19].SetVal(0,self.StartSens);
         KeyValMatrix[20].SetVal(0,self.IntermedSens);
         KeyValMatrix[21].SetVal(0,self.FinalSens);
@@ -729,10 +729,10 @@ begin
       OldRelPath := PathToMergedFile;
       PathToMergedFile := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
     end;
-  if FileExists(PathToFile) then
+  if FileExists(ConvertString(PathToFile)) then
     begin
-      OldRelPath := PathToFile;
-      PathToFile := ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath);
+      OldRelPath := ConvertString(PathToFile);
+      PathToFile := ConvertString255(ChangeRelPath(OrigProjDir, ProjectDirectory, OldRelPath));
     end;
   if ParallelRunners.Count > 0 then
     begin

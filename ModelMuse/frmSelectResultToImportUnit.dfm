@@ -23,9 +23,12 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Width = 91
     Height = 47
     Anchors = [akRight, akBottom]
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 0
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
   object btnOK: TBitBtn
     Left = 317
@@ -33,10 +36,13 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Width = 91
     Height = 47
     Anchors = [akRight, akBottom]
+    DoubleBuffered = True
     Enabled = False
+    Kind = bkOK
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 1
     OnClick = btnOKClick
-    Kind = bkOK
   end
   object btnCancel: TBitBtn
     Left = 414
@@ -44,8 +50,11 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Width = 91
     Height = 47
     Anchors = [akRight, akBottom]
-    TabOrder = 2
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 2
   end
   object comboColorGrid: TComboBox
     Left = 8
@@ -54,7 +63,6 @@ inherited frmSelectResultToImport: TfrmSelectResultToImport
     Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akRight, akBottom]
-    ItemHeight = 18
     TabOrder = 3
   end
   object btnSelectAll: TButton

@@ -13,7 +13,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
   OnClose = FormClose
   OnKeyUp = FormKeyUp
   OnResize = FormResize
-  ExplicitTop = -18
   ExplicitWidth = 794
   ExplicitHeight = 588
   PixelsPerInch = 96
@@ -23,7 +22,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
     Top = 0
     Width = 786
     Height = 513
-    ActivePage = tabLGR
+    ActivePage = tabProperties
     Align = alClient
     TabHeight = 28
     TabOrder = 0
@@ -231,7 +230,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Cursor = crIBeam
         Color = clBtnFace
         Enabled = False
-        ItemHeight = 19
         TabOrder = 3
         Text = '1'
         OnExit = rdeGridCellSizeExit
@@ -545,7 +543,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
           inherited rdeDistance1: TRbwDataEntry
             Top = 68
             Height = 30
-            ItemHeight = 19
             OnExit = framePhastInterpolationDatardeDistance1Exit
             ExplicitTop = 68
             ExplicitHeight = 30
@@ -553,7 +550,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
           inherited rdeDistance2: TRbwDataEntry
             Top = 104
             Height = 30
-            ItemHeight = 19
             OnExit = framePhastInterpolationDatardeDistance2Exit
             ExplicitTop = 104
             ExplicitHeight = 30
@@ -561,7 +557,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
           inherited rdeValue1: TRbwDataEntry
             Top = 64
             Height = 30
-            ItemHeight = 19
             OnExit = framePhastInterpolationDatardeValue1Exit
             ExplicitTop = 64
             ExplicitHeight = 30
@@ -569,7 +564,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
           inherited rdeValue2: TRbwDataEntry
             Top = 104
             Height = 30
-            ItemHeight = 19
             OnExit = framePhastInterpolationDatardeValue2Exit
             ExplicitTop = 104
             ExplicitHeight = 30
@@ -648,7 +642,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             Top = 32
             Width = 475
             Height = 139
-            AutoSize = False
             Anchors = [akLeft, akTop, akRight, akBottom]
             Enabled = False
             TabOrder = 0
@@ -725,7 +718,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
             Margins.Bottom = 6
             Align = alClient
             HideSelection = False
-            Indent = 19
+            Indent = 21
             ReadOnly = True
             StateImages = ilCheckImages
             TabOrder = 0
@@ -784,7 +777,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Width = 273
               Height = 27
               Style = csDropDownList
-              ItemHeight = 19
               ItemIndex = 0
               TabOrder = 0
               Text = 'Associated solution'
@@ -1713,7 +1705,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Width = 101
               Height = 30
               Cursor = crIBeam
-              ItemHeight = 19
               TabOrder = 1
               Text = '0'
               OnExit = edWellExit
@@ -1729,7 +1720,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Cursor = crIBeam
               Color = clBtnFace
               Enabled = False
-              ItemHeight = 19
               TabOrder = 2
               Text = '0'
               OnExit = edWellExit
@@ -1752,7 +1742,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Width = 105
               Height = 27
               Style = csDropDownList
-              ItemHeight = 19
               ItemIndex = 0
               TabOrder = 4
               Text = 'Elevation'
@@ -2131,7 +2120,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Left = 8
               Top = 109
               Height = 30
-              ItemHeight = 19
               OnExit = framePhastInterpolationBoundariesrdeDistance1Exit
               ExplicitLeft = 8
               ExplicitTop = 109
@@ -2141,7 +2129,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Left = 115
               Top = 109
               Height = 30
-              ItemHeight = 19
               OnExit = framePhastInterpolationBoundariesrdeDistance2Exit
               ExplicitLeft = 115
               ExplicitTop = 109
@@ -2151,7 +2138,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Left = 224
               Top = 109
               Height = 30
-              ItemHeight = 19
               OnExit = framePhastInterpolationBoundariesrdeValue1Exit
               ExplicitLeft = 224
               ExplicitTop = 109
@@ -2161,7 +2147,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Left = 336
               Top = 109
               Height = 30
-              ItemHeight = 19
               OnExit = framePhastInterpolationBoundariesrdeValue2Exit
               ExplicitLeft = 336
               ExplicitTop = 109
@@ -2241,19 +2226,20 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         Align = alLeft
         HideSelection = False
         StateImages = ilCheckImages
-        Indent = 19
+        Indent = 21
         TabOrder = 0
         OnChanging = jvtlModflowBoundaryNavigatorChanging
         OnCustomDrawItem = jvtlModflowBoundaryNavigatorCustomDrawItem
         OnMouseDown = jvtlModflowBoundaryNavigatorMouseDown
         Items.NodeData = {
-          01020000006B000000000000000000000001000000FFFFFFFF00000000000000
-          002943004800440020002800540069006D0065002D0056006100720069006100
-          6E00740020005300700065006300690066006900650064002D00480065006100
-          640020007000610063006B0061006700650029005F0000000000000000000000
-          01000000FFFFFFFF00000000000000002347004800420020002800470065006E
-          006500720061006C0020004800650061006400200042006F0075006E00640061
-          007200790020007000610063006B006100670065002900}
+          030200000070000000000000000000000001000000FFFFFFFFFFFFFFFF000000
+          0000000000012943004800440020002800540069006D0065002D005600610072
+          00690061006E00740020005300700065006300690066006900650064002D0048
+          0065006100640020007000610063006B00610067006500290064000000000000
+          000000000001000000FFFFFFFFFFFFFFFF000000000000000001234700480042
+          0020002800470065006E006500720061006C0020004800650061006400200042
+          006F0075006E00640061007200790020007000610063006B0061006700650029
+          00}
         Items.Links = {020000000000000000000000}
       end
       object jvplModflowBoundaries: TJvPageList
@@ -2348,9 +2334,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Height = 19
                   ExplicitWidth = 59
                   ExplicitHeight = 19
-                end
-                inherited rdeFormula: TRbwDataEntry
-                  ItemHeight = 19
                 end
               end
               inherited dgModflowBoundary: TRbwDataGrid4
@@ -2515,7 +2498,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited comboFormulaInterp: TComboBox
                 Left = 217
                 Height = 27
-                ItemHeight = 19
                 OnChange = frameGhbParamcomboFormulaInterpChange
                 ExplicitLeft = 217
                 ExplicitHeight = 27
@@ -2548,9 +2530,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Height = 19
                   ExplicitWidth = 59
                   ExplicitHeight = 19
-                end
-                inherited rdeFormula: TRbwDataEntry
-                  ItemHeight = 19
                 end
               end
               inherited dgModflowBoundary: TRbwDataGrid4
@@ -2716,7 +2695,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited comboFormulaInterp: TComboBox
                 Left = 217
                 Height = 27
-                ItemHeight = 19
                 OnChange = frameWellParamcomboFormulaInterpChange
                 ExplicitLeft = 217
                 ExplicitHeight = 27
@@ -2749,9 +2727,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Height = 19
                   ExplicitWidth = 59
                   ExplicitHeight = 19
-                end
-                inherited rdeFormula: TRbwDataEntry
-                  ItemHeight = 19
                 end
               end
               inherited dgModflowBoundary: TRbwDataGrid4
@@ -2893,7 +2868,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited comboFormulaInterp: TComboBox
                 Left = 212
                 Height = 27
-                ItemHeight = 19
                 OnChange = frameRivParamcomboFormulaInterpChange
                 ExplicitLeft = 212
                 ExplicitHeight = 27
@@ -2926,9 +2900,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Height = 19
                   ExplicitWidth = 59
                   ExplicitHeight = 19
-                end
-                inherited rdeFormula: TRbwDataEntry
-                  ItemHeight = 19
                 end
               end
               inherited dgModflowBoundary: TRbwDataGrid4
@@ -3118,7 +3089,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Left = 212
                 Top = 52
                 Height = 27
-                ItemHeight = 19
                 OnChange = frameDrnParamcomboFormulaInterpChange
                 ExplicitLeft = 212
                 ExplicitTop = 52
@@ -3152,9 +3122,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Height = 19
                   ExplicitWidth = 59
                   ExplicitHeight = 19
-                end
-                inherited rdeFormula: TRbwDataEntry
-                  ItemHeight = 19
                 end
               end
               inherited dgModflowBoundary: TRbwDataGrid4
@@ -3322,7 +3289,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 Left = 212
                 Top = 49
                 Height = 27
-                ItemHeight = 19
                 OnChange = frameDrtParamcomboFormulaInterpChange
                 ExplicitLeft = 212
                 ExplicitTop = 49
@@ -3356,9 +3322,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Height = 19
                   ExplicitWidth = 59
                   ExplicitHeight = 19
-                end
-                inherited rdeFormula: TRbwDataEntry
-                  ItemHeight = 19
                 end
               end
               inherited dgModflowBoundary: TRbwDataGrid4
@@ -3509,7 +3472,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               Width = 145
               Height = 27
               Style = csDropDownList
-              ItemHeight = 19
               TabOrder = 0
               OnChange = comboDrtLocationChoiceChange
               Items.Strings = (
@@ -3542,7 +3504,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Width = 208
                   Height = 27
                   Style = csDropDownList
-                  ItemHeight = 19
                   TabOrder = 0
                   OnChange = comboDrtReturnObjectChange
                   OnExit = rdeDrtLocationControlExit
@@ -3578,7 +3539,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 19
                   TabOrder = 0
                   Text = '0'
                   OnChange = comboDrtReturnObjectChange
@@ -3595,7 +3555,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 19
                   TabOrder = 1
                   Text = '0'
                   OnChange = comboDrtReturnObjectChange
@@ -3612,7 +3571,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 19
                   TabOrder = 2
                   Text = '0'
                   OnChange = comboDrtReturnObjectChange
@@ -3655,7 +3613,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 19
                   TabOrder = 0
                   Text = '1'
                   OnChange = comboDrtReturnObjectChange
@@ -3674,7 +3631,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 19
                   TabOrder = 1
                   Text = '1'
                   OnChange = comboDrtReturnObjectChange
@@ -3693,7 +3649,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Top = 32
                   Width = 54
                   Height = 27
-                  ItemHeight = 19
                   TabOrder = 2
                   Text = '1'
                   OnChange = comboDrtReturnObjectChange
@@ -3786,9 +3741,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Height = 19
                   ExplicitWidth = 59
                   ExplicitHeight = 19
-                end
-                inherited rdeFormula: TRbwDataEntry
-                  ItemHeight = 19
                 end
               end
               inherited dgModflowBoundary: TRbwDataGrid4
@@ -3980,9 +3932,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   ExplicitWidth = 59
                   ExplicitHeight = 19
                 end
-                inherited rdeFormula: TRbwDataEntry
-                  ItemHeight = 19
-                end
               end
               inherited dgModflowBoundary: TRbwDataGrid4
                 Width = 581
@@ -4147,9 +4096,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   ExplicitWidth = 59
                   ExplicitHeight = 19
                 end
-                inherited rdeFormula: TRbwDataEntry
-                  ItemHeight = 19
-                end
               end
               inherited dgModflowBoundary: TRbwDataGrid4
                 Width = 581
@@ -4298,9 +4244,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Height = 19
                   ExplicitWidth = 59
                   ExplicitHeight = 19
-                end
-                inherited rdeFormula: TRbwDataEntry
-                  ItemHeight = 19
                 end
               end
               inherited dgModflowBoundary: TRbwDataGrid4
@@ -4486,20 +4429,16 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               end
               inherited rdeInitialStage: TRbwDataEntry
                 Top = 73
-                ItemHeight = 19
                 OnChange = frameLakrdeInitialStageChange
                 ExplicitTop = 73
               end
               inherited rdeCenterLake: TRbwDataEntry
-                ItemHeight = 19
                 OnChange = frameLakrdeCenterLakeChange
               end
               inherited rdeSill: TRbwDataEntry
-                ItemHeight = 19
                 OnChange = frameLakrdeSillChange
               end
               inherited rdeLakeID: TRbwDataEntry
-                ItemHeight = 19
                 OnChange = frameLakrdeLakeIDChange
               end
               inherited gbGage: TGroupBox
@@ -4557,9 +4496,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Height = 19
                   ExplicitWidth = 59
                   ExplicitHeight = 19
-                end
-                inherited rdeFormula: TRbwDataEntry
-                  ItemHeight = 19
                 end
               end
               inherited dgModflowBoundary: TRbwDataGrid4
@@ -4788,9 +4724,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   ExplicitWidth = 186
                   ExplicitHeight = 19
                 end
-                inherited rdeSegmentNumber: TRbwDataEntry
-                  ItemHeight = 19
-                end
                 inherited gReachProperties: TGroupBox
                   Left = 2
                   Width = 567
@@ -4936,9 +4869,11 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited tabTime: TTabSheet
                 ExplicitLeft = 4
                 ExplicitTop = 30
-                ExplicitWidth = 553
-                ExplicitHeight = 472
+                ExplicitWidth = 575
+                ExplicitHeight = 441
                 inherited pnlParamTop: TPanel
+                  Width = 575
+                  ExplicitWidth = 575
                   inherited lblParameterChoices: TLabel
                     Width = 76
                     Height = 19
@@ -4963,7 +4898,8 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   end
                 end
                 inherited rdgParameters: TRbwDataGrid4
-                  Height = 374
+                  Width = 575
+                  Height = 343
                   Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
                   Columns = <
                     item
@@ -5082,11 +5018,14 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       WordWrapCells = False
                       AutoAdjustColWidths = True
                     end>
-                  ExplicitHeight = 374
+                  ExplicitWidth = 575
+                  ExplicitHeight = 343
                 end
                 inherited pnlParamBottom: TPanel
-                  Top = 431
-                  ExplicitTop = 431
+                  Top = 400
+                  Width = 575
+                  ExplicitTop = 400
+                  ExplicitWidth = 575
                   inherited lblParametersCount: TLabel
                     Width = 119
                     Height = 19
@@ -5104,19 +5043,14 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 HelpKeyword = 'Network_Tab'
                 ExplicitLeft = 4
                 ExplicitTop = 30
-                ExplicitWidth = 575
-                ExplicitHeight = 441
+                ExplicitWidth = 553
+                ExplicitHeight = 472
                 inherited pnlNetwork: TPanel
-                  Width = 575
-                  ExplicitWidth = 575
                   inherited lblSegment: TLabel
                     Width = 59
                     Height = 19
                     ExplicitWidth = 59
                     ExplicitHeight = 19
-                  end
-                  inherited rdeNetwork: TRbwDataEntry
-                    ItemHeight = 19
                   end
                   inherited comboMultiIprior: TJvImageComboBox
                     Height = 29
@@ -5125,11 +5059,9 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   end
                 end
                 inherited rdgNetwork: TRbwDataGrid4
-                  Width = 575
-                  Height = 384
+                  Height = 415
                   OnButtonClick = frameScreenObjectSFRrdgNetworkButtonClick
-                  ExplicitWidth = 575
-                  ExplicitHeight = 384
+                  ExplicitHeight = 415
                 end
               end
               inherited tabFlows: TTabSheet
@@ -5282,9 +5214,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     Height = 19
                     ExplicitWidth = 59
                     ExplicitHeight = 19
-                  end
-                  inherited rdeFlowFormula: TRbwDataEntry
-                    ItemHeight = 19
                   end
                 end
               end
@@ -5463,9 +5392,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ExplicitWidth = 59
                       ExplicitHeight = 19
                     end
-                    inherited rdeUpstreamFormula: TRbwDataEntry
-                      ItemHeight = 19
-                    end
                   end
                 end
                 inherited pnlSegmentDownstream: TPanel
@@ -5639,9 +5565,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       ExplicitWidth = 59
                       ExplicitHeight = 19
                     end
-                    inherited rdeDownstreamFormula: TRbwDataEntry
-                      ItemHeight = 19
-                    end
                   end
                 end
               end
@@ -5763,9 +5686,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                       Height = 19
                       ExplicitWidth = 59
                       ExplicitHeight = 19
-                    end
-                    inherited rdeChannelFormula: TRbwDataEntry
-                      ItemHeight = 19
                     end
                   end
                 end
@@ -5925,9 +5845,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                     Height = 19
                     ExplicitWidth = 59
                     ExplicitHeight = 19
-                  end
-                  inherited rdeEquationFormula: TRbwDataEntry
-                    ItemHeight = 19
                   end
                 end
               end
@@ -6122,9 +6039,7 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 end
               end
               inherited tabGage: TTabSheet
-                ExplicitLeft = 4
                 ExplicitTop = 30
-                ExplicitWidth = 553
                 ExplicitHeight = 472
                 inherited gbObservationTypes: TGroupBox
                   Width = 630
@@ -6220,9 +6135,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   Height = 19
                   ExplicitWidth = 59
                   ExplicitHeight = 19
-                end
-                inherited rdeFormula: TRbwDataEntry
-                  ItemHeight = 19
                 end
               end
               inherited dgModflowBoundary: TRbwDataGrid4
@@ -6460,7 +6372,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               end
               inherited comboTreatment: TComboBox
                 Height = 27
-                ItemHeight = 19
                 ExplicitHeight = 27
               end
             end
@@ -6477,9 +6388,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                 inherited Panel5: TPanel
                   Width = 575
                   ExplicitWidth = 575
-                  inherited rdeMultiValueEdit: TRbwDataEntry
-                    ItemHeight = 19
-                  end
                   inherited comboMultiStatFlag: TJvImageComboBox
                     Height = 29
                     ItemHeight = 23
@@ -6527,11 +6435,6 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
                   inherited seLayers: TJvSpinEdit
                     Height = 27
                     ExplicitHeight = 27
-                  end
-                end
-                inherited Panel6: TPanel
-                  inherited rdeMultiLayerEdit: TRbwDataEntry
-                    ItemHeight = 19
                   end
                 end
                 inherited rdgLayers: TRbwDataGrid4
@@ -7332,8 +7235,8 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited tabBasic: TTabSheet
                 ExplicitLeft = 4
                 ExplicitTop = 29
-                ExplicitWidth = 575
-                ExplicitHeight = 420
+                ExplicitWidth = 601
+                ExplicitHeight = 393
                 inherited edPartialPenetration: TJvComboEdit
                   OnButtonClick = frameScreenObjectSFRjceButtonClick
                 end
@@ -7399,10 +7302,24 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
               inherited tabPumpingRate: TTabSheet
                 ExplicitLeft = 4
                 ExplicitTop = 29
-                ExplicitWidth = 601
-                ExplicitHeight = 393
+                ExplicitWidth = 575
+                ExplicitHeight = 420
                 inherited rdgTimeTable: TRbwDataGrid4
+                  Width = 575
+                  Height = 314
                   OnButtonClick = frameResdgModflowBoundaryButtonClick
+                  ExplicitWidth = 575
+                  ExplicitHeight = 314
+                end
+                inherited Panel1: TPanel
+                  Top = 379
+                  Width = 575
+                  ExplicitTop = 379
+                  ExplicitWidth = 575
+                end
+                inherited Panel2: TPanel
+                  Width = 575
+                  ExplicitWidth = 575
                 end
               end
               inherited tabWellScreens: TTabSheet
@@ -7911,14 +7828,13 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       41)
     object btnOK: TBitBtn
       Left = 594
-      Top = 2
+      Top = 4
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
       Caption = 'OK'
       Default = True
-      TabOrder = 0
-      OnClick = btnOKClick
+      DoubleBuffered = True
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         04000000000068010000120B0000120B00001000000010000000000000000000
@@ -7937,6 +7853,9 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
         333A333333333333333338330000333333333333333333333333333333333333
         0000}
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 0
+      OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
       Left = 689
@@ -7944,19 +7863,25 @@ inherited frmScreenObjectProperties: TfrmScreenObjectProperties
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnCancelClick
-      Kind = bkCancel
     end
     object btnHelp: TBitBtn
-      Left = 497
+      Left = 499
       Top = 4
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnCopyVertices: TButton
       Left = 4

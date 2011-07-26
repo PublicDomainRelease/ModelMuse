@@ -11,7 +11,7 @@ unit frameViewUnit;
 interface
 
 uses
-  SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
+  Windows, SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs,
   ExtCtrls, RbwRuler, StdCtrls, SyncObjs,
   AbstractGridUnit,
   GR32_Layers, // TPositionedLayer is declared in GR32_Layers.
@@ -1215,6 +1215,11 @@ begin
       InvalidateScreenObjectCoordinates;
       DrawScreenObjects;
 
+      if ViewDirection = vdTop then
+      begin
+        frmGoPhast.PhastModel.DrawHeadObservations(FBitMap32, ZoomBox);
+      end;
+
       if (frmGoPhast.PhastModel.PathLines.Lines.Count = 0)
         and (frmGoPhast.PhastModel.Endpoints.Points.Count = 0)
         and (frmGoPhast.PhastModel.TimeSeries.Series.Count = 0) then
@@ -1968,6 +1973,13 @@ begin
         end;
       end;
     end;
+  end;
+  if First then
+  begin
+    FSelectTopLeft.X := -1;
+    FSelectTopLeft.Y := -1;
+    FSelectBottomRight.X := -1;
+    FSelectBottomRight.Y := -1;
   end;
 end;
 

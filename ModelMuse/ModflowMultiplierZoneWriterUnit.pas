@@ -114,11 +114,13 @@ begin
   case Param.ParameterType of
     ptLPF_HK, ptLPF_HANI, ptLPF_VK, ptLPF_VANI, ptLPF_VKCB:
       begin
-        result := Model.ModflowPackages.LpfPackage.IsSelected;
+        result := Model.ModflowPackages.LpfPackage.IsSelected
+          or Model.ModflowPackages.UpwPackage.IsSelected;
       end;
     ptLPF_SS, ptLPF_SY:
       begin
-        result := Model.ModflowPackages.LpfPackage.IsSelected
+        result := (Model.ModflowPackages.LpfPackage.IsSelected
+          or Model.ModflowPackages.UpwPackage.IsSelected)
           and Model.ModflowFullStressPeriods.TransientModel;
       end;
     ptHUF_LVDA:

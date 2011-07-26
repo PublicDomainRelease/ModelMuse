@@ -24,8 +24,11 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 0
+      DoubleBuffered = True
       Kind = bkClose
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 0
     end
     object btnHelp: TBitBtn
       Left = 279
@@ -33,9 +36,12 @@ inherited frmErrorsAndWarnings: TfrmErrorsAndWarnings
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnSave: TButton
       Left = 88

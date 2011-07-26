@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2011/03/10 15:18:53.573.pas,C:\Documents and Settings\rbwinst-pr\My Documents\Borland Studio Projects\Unit21.pas=D:\Colab\GWModelTools\Components\ButtonEdit\Demo\MainUnit.pas</Transaction>
+    <Transaction>2011/03/10 15:18:53.698.dfm,C:\Documents and Settings\rbwinst-pr\My Documents\Borland Studio Projects\Unit21.dfm=D:\Colab\GWModelTools\Components\ButtonEdit\Demo\MainUnit.dfm</Transaction>
+    <Transaction>2011/03/10 15:19:06.481.bdsproj,C:\Documents and Settings\rbwinst-pr\My Documents\Borland Studio Projects\Project17.bdsproj=D:\Colab\GWModelTools\Components\ButtonEdit\Demo\TreeComboDemo.bdsproj</Transaction>
+  </Transactions>
+</BorlandProject>

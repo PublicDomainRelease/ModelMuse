@@ -9,9 +9,11 @@
 unit rwXMLConv;
 interface
 uses
+  Windows,
   rwXMLParser,
   SysUtils,
-  Classes;
+  Classes,
+  AnsiStrings;
 
 {$IFNDEF ver140}
   {$DEFINE D7}
@@ -20,6 +22,11 @@ uses
     {$DEFINE D7}
   {$ENDIF}
 {$ENDIF}
+{$ifdef CONDITIONALEXPRESSIONS}
+  {$if CompilerVersion>=20}
+    {$DEFINE Delphi_2009_UP}
+  {$ifend}
+{$endif}
 
 procedure rwObjectBinaryToXML(Input, Output: TStream);
 procedure rwObjectXMLToBinary(Input, Output: TStream);
@@ -71,34 +78,34 @@ const
   scCollectionItemBeginValue = '<item value="%d"';
   scCollectionItemEnd     = '</item>';
 
-function StringToXML(const S: String) : String;
+function StringToXML(const S: AnsiString) : AnsiString;
 begin
-  Result := StringReplace(     S, '&',  '&amp;',   [rfReplaceAll]);
-  Result := StringReplace(Result, '<',  '&lt;',    [rfReplaceAll]);
-  Result := StringReplace(Result, '>',  '&gt;',    [rfReplaceAll]);
-  Result := StringReplace(Result, '''', '&apos;',  [rfReplaceAll]);
-  Result := StringReplace(Result, '"',  '&quot;',  [rfReplaceAll]);
-  Result := StringReplace(Result, CrLf,'&crlf;',   [rfReplaceAll]);
+  Result := AnsiStrings.StringReplace(     S, '&',  '&amp;',   [rfReplaceAll]);
+  Result := AnsiStrings.StringReplace(Result, '<',  '&lt;',    [rfReplaceAll]);
+  Result := AnsiStrings.StringReplace(Result, '>',  '&gt;',    [rfReplaceAll]);
+  Result := AnsiStrings.StringReplace(Result, '''', '&apos;',  [rfReplaceAll]);
+  Result := AnsiStrings.StringReplace(Result, '"',  '&quot;',  [rfReplaceAll]);
+  Result := AnsiStrings.StringReplace(Result, CrLf,'&crlf;',   [rfReplaceAll]);
 end;
 
-function XMLToString(const S: String) : String;
+function XMLToString(const S: AnsiString) : AnsiString;
 begin
-  Result := StringReplace(S     , '&crlf;',CrLf,  [rfReplaceAll]);
-  Result := StringReplace(Result, '&quot;', '"',  [rfReplaceAll]);
-  Result := StringReplace(Result, '&apos;', '''', [rfReplaceAll]);
-  Result := StringReplace(Result, '&gt;',   '>',  [rfReplaceAll]);
-  Result := StringReplace(Result, '&lt;',   '<',  [rfReplaceAll]);
-  Result := StringReplace(Result, '&amp;',  '&',  [rfReplaceAll]);
+  Result := AnsiStrings.StringReplace(S     , '&crlf;',CrLf,  [rfReplaceAll]);
+  Result := AnsiStrings.StringReplace(Result, '&quot;', '"',  [rfReplaceAll]);
+  Result := AnsiStrings.StringReplace(Result, '&apos;', '''', [rfReplaceAll]);
+  Result := AnsiStrings.StringReplace(Result, '&gt;',   '>',  [rfReplaceAll]);
+  Result := AnsiStrings.StringReplace(Result, '&lt;',   '<',  [rfReplaceAll]);
+  Result := AnsiStrings.StringReplace(Result, '&amp;',  '&',  [rfReplaceAll]);
 end;
 
-function StrToWideStr(aStr: string) : WideString;
+{function StrToWideStr(aStr: AnsiString) : WideString;
 var
-  C: Char;
+  C: AnsiChar;
   I, X: integer;
-  S: string;
+  S: AnsiString;
   procedure Error;
   begin
-    raise Exception.Create('Invalid XML String encoding');
+    raise Exception.Create('Invalid XML AnsiString encoding');
   end;
 
 begin
@@ -121,7 +128,7 @@ begin
       if (aStr[I] = ';') and (S > '') then
       begin
         case S[1] of
-          '#': // Numeric value of string
+          '#': // Numeric value of AnsiString
               begin
                 if copy(S,2,MaxInt) < '256' then
                   result := result + Chr(StrToInt(copy(S,2,MaxInt)))
@@ -144,11 +151,16 @@ begin
     else
       result := result + aStr[I];
   end;
+end;   }
+
+function StrToInt(AString: AnsiString): integer; overload;
+begin
+  result := StrToInt(String(AString));
 end;
 
-function WideToStr(W: WideString) : string;
+function WideToStr(W: WideString) : AnsiString;
 var
-  C: Char;
+  C: AnsiChar;
   I: integer;
 begin
   result := '';
@@ -156,10 +168,10 @@ begin
   begin
     if (Ord(W[i]) <= 255) then
     begin
-      C := Char(Ord(W[I]));
+      C := AnsiChar(Ord(W[I]));
       case C of
         #0..#31,#129..#255 :
-          result := result + '&#' + IntToStr(Ord(C))+ ';';
+          result := result + '&#' + AnsiString(IntToStr(Ord(C)))+ ';';
         '&':
           result := result + '&amp;';
         '<':
@@ -175,11 +187,11 @@ begin
       end;
     end
     else
-      result := result + '&#' + IntToStr(Ord(W[i]))+ ';';
+      result := result + '&#' + AnsiString(IntToStr(Ord(W[i])))+ ';';
   end;
 end;
 
-function StrToXMLStr(aStr: string) : string;
+function StrToXMLStr(aStr: AnsiString) : AnsiString; overload;
 var
   I: integer;
 begin
@@ -188,7 +200,7 @@ begin
   begin
     case aStr[I] of
       #0..#31,#129..#255 :
-        result := result + '&#' + IntToStr(Ord(aStr[I]))+ ';';
+        result := result + '&#' + AnsiString(IntToStr(Ord(aStr[I])))+ ';';
       '&':
         result := result + '&amp;';
       '<':
@@ -205,14 +217,20 @@ begin
   end;
 end;
 
-function XMLStrToStr(aStr: string) : string;
+function StrToXMLStr(aStr: string) : AnsiString; overload;
+begin
+  result := StrToXMLStr(AnsiString(aStr));
+end;
+
+
+function XMLStrToStr(aStr: AnsiString) : AnsiString;
 var
-  C: Char;
+  C: AnsiChar;
   I, X: integer;
-  S: string;
+  S: AnsiString;
   procedure Error;
   begin
-    raise Exception.Create('Invalid XML String encoding');
+    raise Exception.Create('Invalid XML AnsiString encoding');
   end;
 
 begin
@@ -235,8 +253,8 @@ begin
       if (aStr[I] = ';') and (S > '') then
       begin
         case S[1] of
-          '#': // Numeric value of string
-              result := result + Chr(StrToInt(copy(S,2,MaxInt)));
+          '#': // Numeric value of AnsiString
+              result := result + AnsiString(Chr(StrToInt(copy(string(S),2,MaxInt))));
           'Q': if S = 'QUOT' then result := result + '"' else Error;
           'A': if S = 'APOS' then result := result + '''' else
                if S = 'AMP'  then result := result + '&' else
@@ -267,14 +285,14 @@ var
 
   procedure WriteIndent;
   const
-    Blanks: array[0..1] of Char = '  ';
+    Blanks: array[0..1] of AnsiChar = '  ';
   var
     I: Integer;
   begin
     for I := 1 to NestingLevel do Writer.Write(Blanks, SizeOf(Blanks));
   end;
 
-  procedure WriteStr(const S: string);
+  procedure WriteStr(const S: AnsiString); overload;
   begin
     if Length(S) > 0 then
     begin
@@ -282,7 +300,12 @@ var
     end;
   end;
 
-  procedure WriteStrLn(const S: string);
+  procedure WriteStr(const S: String); overload;
+  begin
+    WriteStr(AnsiString(S));
+  end;
+
+  procedure WriteStrLn(const S: AnsiString);
   begin
     WriteStr(S + CrLf);
   end;
@@ -296,16 +319,16 @@ var
 
   procedure ConvertValue(Vt : TValueType); forward;
 
-  function ConvertHeader: string;
+  function ConvertHeader: AnsiString;
   var
-    ClassName, ObjectName, StyleName: string;
+    ClassName, ObjectName, StyleName: AnsiString;
     Flags: TFilerFlags;
     Position: Integer;
   begin
     Result := '';
     Reader.ReadPrefix(Flags, Position);
-    ClassName := Reader.ReadStr;
-    ObjectName := Reader.ReadStr;
+    ClassName := AnsiString(Reader.ReadStr);
+    ObjectName := AnsiString(Reader.ReadStr);
     WriteIndent;
     if ffInherited in Flags then
       StyleName := scInherited
@@ -328,8 +351,8 @@ var
     MultiLine: Boolean;
     I: Integer;
     Count: Longint;
-    Buffer: array[0..BytesPerLine - 1] of Char;
-    Text: array[0..BytesPerLine * 2 - 1] of Char;
+    Buffer: array[0..BytesPerLine - 1] of AnsiChar;
+    Text: array[0..BytesPerLine * 2 - 1] of AnsiChar;
   begin
     Reader.ReadValue;
     Inc(NestingLevel);
@@ -361,7 +384,7 @@ var
     LineLength = 64;
   var
     I: Integer;
-    S: string;
+    S: AnsiString;
     W: WideString;
     aVt : TValueType;
   begin
@@ -380,7 +403,7 @@ var
               begin
                 NewLine;
                 aVt := Reader.NextValue;
-                WriteStr(Format(scListItemBegin,[copy(GetEnumName(TypeInfo(TValueType),Integer(aVt)),3,MaxInt)]));
+                WriteStr(AnsiString(Format(scListItemBegin,[copy(GetEnumName(TypeInfo(TValueType),Integer(aVt)),3,MaxInt)])));
                 ConvertValue(aVt);
                 WriteStr(scListItemEnd);
               end;
@@ -396,15 +419,15 @@ var
           end;
         end;
       vaInt8, vaInt16, vaInt32:
-        WriteStr(IntToStr(Reader.ReadInteger));
+        WriteStr(AnsiString(IntToStr(Reader.ReadInteger)));
       vaExtended:
-        WriteStr(FloatToStr(Reader.ReadFloat));
+        WriteStr(AnsiString(FloatToStr(Reader.ReadFloat)));
       vaSingle:
-        WriteStr(FloatToStr(Reader.ReadSingle));
+        WriteStr(AnsiString(FloatToStr(Reader.ReadSingle)));
       vaCurrency:
-        WriteStr(FloatToStr(Reader.ReadCurrency * 10000));
+        WriteStr(AnsiString(FloatToStr(Reader.ReadCurrency * 10000)));
       vaDate:
-        WriteStr(FloatToStr(Reader.ReadDate));
+        WriteStr(AnsiString(FloatToStr(Reader.ReadDate)));
       vaWString:
         begin
           W := Reader.ReadWideString;
@@ -422,7 +445,7 @@ var
           I := 0;
           while True do
           begin
-            S := Reader.ReadStr;
+            S := AnsiString(Reader.ReadStr);
             if S = '' then Break;
             if I > 0 then WriteStr(', ');
             WriteStr(S);
@@ -443,7 +466,7 @@ var
               begin
                 WriteIndent;
                 if Reader.NextValue in [vaInt8, vaInt16, vaInt32] then
-                  WriteStr(format(scCollectionItemBeginValue, [Reader.ReadInteger]))
+                  WriteStr(AnsiString(format(scCollectionItemBeginValue, [Reader.ReadInteger])))
                 else
                   WriteStr(scCollectionItemBegin);
                 WriteStr(CrLf);
@@ -467,30 +490,30 @@ var
           end;
         end;
       vaInt64:
-        WriteStr(IntToStr(Reader.ReadInt64));
+        WriteStr(AnsiString(IntToStr(Reader.ReadInt64)));
     end;
   end;
 
   procedure ConvertProperty;
   var
-    PropName: string;
+    PropName: AnsiString;
     Vt: TValueType;
   begin
     WriteIndent;
-    PropName := Reader.ReadStr;
+    PropName := AnsiString(Reader.ReadStr);
     Vt       := Reader.NextValue;
-    WriteStr(Format(scPropertieBegin,[PropName,copy(GetEnumName(TypeInfo(TValueType),Integer(Vt)),3,MaxInt)]));
+    WriteStr(AnsiString(Format(scPropertieBegin,[PropName,copy(GetEnumName(TypeInfo(TValueType),Integer(Vt)),3,MaxInt)])));
     try
       ConvertValue(Vt);
     finally
-      WriteStr(Format(scPropertieEnd,[PropName]));
+      WriteStr(AnsiString(Format(scPropertieEnd,[PropName])));
     end;
     WriteStr(CrLf);
   end;
 
   procedure ConvertObject;
   var
-    StyleName: String;
+    StyleName: AnsiString;
   begin
     StyleName := ConvertHeader;
 
@@ -530,15 +553,20 @@ var
     end;
 
     WriteIndent;
-    WriteStr(Format(scHeaderEnd,[StyleName]));
+    WriteStr(AnsiString(Format(scHeaderEnd,[StyleName])));
     WriteStr(CrLf);
   end;
 
 begin
   NestingLevel := 0;
   Reader := TReader.Create(Input, 4096);
+  {$IFDEF Delphi_2009_UP}
+  SaveSeparator := FormatSettings.DecimalSeparator;
+  FormatSettings.DecimalSeparator := '.';
+  {$ELSE}
   SaveSeparator := DecimalSeparator;
   DecimalSeparator := '.';
+  {$ENDIF}
   try
     Writer := TWriter.Create(Output, 4096);
     try
@@ -548,7 +576,11 @@ begin
       Writer.Free;
     end;
   finally
+    {$IFDEF Delphi_2009_UP}
+    FormatSettings.DecimalSeparator := SaveSeparator;
+    {$ELSE}
     DecimalSeparator := SaveSeparator;
+    {$ENDIF}
     Reader.Free;
   end;
 end;
@@ -582,7 +614,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure AddDataStr(aStr: String);
+    procedure AddDataStr(aStr: AnsiString);
     procedure CopyTo(Stream: TStream);
   end;
 
@@ -604,12 +636,12 @@ begin
   Stream.CopyFrom(fBinStream,fBinStream.Size);
 end;
 
-procedure TBinaryBuffer.AddDataStr(aStr: String);
+procedure TBinaryBuffer.AddDataStr(aStr: AnsiString);
 var
   Count: Integer;
-  Buffer: array[0..255] of Char;
+  Buffer: array[0..255] of AnsiChar;
 begin
-  Count := HexToBin(PChar(aStr), Buffer, SizeOf(Buffer));
+  Count := HexToBin(PAnsiChar(aStr), Buffer, SizeOf(Buffer));
   if Count = 0 then raise Exception.Create('Invalid Binary values in XML');
   FBinStream.Write(Buffer, Count);
 end;
@@ -621,14 +653,14 @@ var
   Writer: TXMLWriter;
   ValueType: TValueType;
 
-  function ElementNameIs(aName: string): boolean;
+  function ElementNameIs(aName: AnsiString): boolean;
   begin
     result := AnsiCompareText(aName, Parser.ElementName) = 0;
   end;
 
   procedure ConvertHeader;
   var
-    ClassName, ObjectName, Order: string;
+    ClassName, ObjectName, Order: AnsiString;
     Flags: TFilerFlags;
     Position: Integer;
     isInherited, isInline: boolean;
@@ -678,15 +710,15 @@ var
     try
       Parser.ReadNextElement;
       if (not Parser.EndFound) and
-         ((AnsiCompareText(scBinaryItem, Parser.ElementName) = 0)) then
+         ((AnsiStrings.AnsiCompareText(scBinaryItem, Parser.ElementName) = 0)) then
       begin
         while (not Parser.EndFound) and
-              (AnsiCompareText(scBinaryItem, Parser.ElementName) = 0) do
+              (AnsiStrings.AnsiCompareText(scBinaryItem, Parser.ElementName) = 0) do
         begin
           Bin.AddDataStr(Trim(Parser.Data));
           Parser.ReadNextElement; // this must be the end of the ListItem
           if (not Parser.EndFound) or
-             (not (AnsiCompareText(scBinaryItem, Parser.ElementName) = 0)) then
+             (not (AnsiStrings.AnsiCompareText(scBinaryItem, Parser.ElementName) = 0)) then
             raise Exception.Create('No Binary End found');
           Parser.ReadNextElement; // this must be the next item or the end of the list
         end;
@@ -699,18 +731,18 @@ var
 
   procedure WriteSet;
   var
-    S, aVal: string;
+    S, aVal: AnsiString;
 
-    function NextStr(var aStr, aValue : string): boolean;
+    function NextStr(var aStr, aValue : AnsiString): boolean;
     var
       P: integer;
     begin
       aStr := Trim(aStr);
-      P := pos(',',aStr);
+      P := pos(',',string(aStr));
       if P > 0 then
       begin
-        aValue := copy(aStr,1,P-1);
-        aStr   := copy(aStr,P+1,MaxInt);
+        aValue := AnsiString(copy(string(aStr),1,P-1));
+        aStr   := AnsiString(copy(string(aStr),P+1,MaxInt));
         result := true;
       end
       else
@@ -730,7 +762,7 @@ var
   procedure ConvertValue;
   begin
     ValueType := TValueType(GetEnumValue(TypeInfo(TValueType),'va' +
-                            Parser.ValueOf(scValueType)));
+                            string(Parser.ValueOf(scValueType))));
 
     case ValueType of
       vaInt64:
@@ -766,14 +798,17 @@ var
         end;
       vaString, vaLString, vaUTF8String:
         begin
-          Writer.WriteString(XMLStrToStr(Parser.Data));
+          Writer.WriteString(string(XMLStrToStr(Parser.Data)));
         end;
       vaBinary:
         begin
           ConvertBinary;
         end;
       vaWString:
-        Raise Exception.Create('Not yet implemented');
+        begin
+          Writer.WriteString(string(XMLStrToStr(Parser.Data)));
+        end;
+//        Raise Exception.Create('Not yet implemented');
       else
         Raise Exception.Create('Unknown DataType');
     end;
@@ -784,26 +819,26 @@ var
   begin
     Parser.ReadNextElement; // this must the begin of the collection
     if (Parser.EndFound) or
-       (not (AnsiCompareText(scCollection, Parser.ElementName) = 0)) then
+       (not (AnsiStrings.AnsiCompareText(scCollection, Parser.ElementName) = 0)) then
       raise Exception.Create('No Collection found');
     Writer.WriteValue(vaCollection);
     Parser.ReadNextElement;
     if not Parser.EndFound then
     begin
       while (not Parser.EndFound) and
-            ((AnsiCompareText(scCollectionItem, Parser.ElementName) = 0)) do
+            ((AnsiStrings.AnsiCompareText(scCollectionItem, Parser.ElementName) = 0)) do
       begin
         Writer.WriteListBegin;
         try
           Parser.ReadNextElement;
           while (not Parser.EndFound) and
-                (AnsiCompareText(scPropertie, Parser.ElementName) = 0) do
+                (AnsiStrings.AnsiCompareText(scPropertie, Parser.ElementName) = 0) do
           begin
             ConvertProperty;
             Parser.ReadNextElement;
           end;
           if (not Parser.EndFound) or
-             (not (AnsiCompareText(scCollectionItem, Parser.ElementName) = 0)) then
+             (not (AnsiStrings.AnsiCompareText(scCollectionItem, Parser.ElementName) = 0)) then
             raise Exception.Create('No CollectionItem END found');
           Parser.ReadNextElement;
         finally
@@ -814,7 +849,7 @@ var
     Writer.WriteListEnd;
     // this must be the end of the collection
     if (not Parser.EndFound) or
-       (not (AnsiCompareText(scCollection, Parser.ElementName) = 0)) then
+       (not (AnsiStrings.AnsiCompareText(scCollection, Parser.ElementName) = 0)) then
       raise Exception.Create('No end of Collection found');
     Parser.EndFound := false;
   end;
@@ -824,22 +859,22 @@ var
   begin
     Parser.ReadNextElement;
     if (Parser.EndFound) or
-       (not (AnsiCompareText(scList, Parser.ElementName) = 0)) then
+       (not (AnsiStrings.AnsiCompareText(scList, Parser.ElementName) = 0)) then
       raise Exception.Create('No List found');
 
     Writer.WriteListBegin;
     Parser.ReadNextElement; // this must be the end of the propertie
 
     if (not Parser.EndFound) and
-       ((AnsiCompareText(scListItem, Parser.ElementName) = 0)) then
+       ((AnsiStrings.AnsiCompareText(scListItem, Parser.ElementName) = 0)) then
     begin
       while (not Parser.EndFound) and
-            (AnsiCompareText(scListItem, Parser.ElementName) = 0) do
+            (AnsiStrings.AnsiCompareText(scListItem, Parser.ElementName) = 0) do
       begin
         ConvertValue;
         Parser.ReadNextElement; // this must be the end of the ListItem
         if (not Parser.EndFound) or
-           (not (AnsiCompareText(scListItem, Parser.ElementName) = 0)) then
+           (not (AnsiStrings.AnsiCompareText(scListItem, Parser.ElementName) = 0)) then
           raise Exception.Create('No ListItem End found');
         Parser.ReadNextElement; // this must be the next item or the end of the list
       end;
@@ -847,7 +882,7 @@ var
 
     Writer.WriteListEnd;
     if (not Parser.EndFound) or
-       (not (AnsiCompareText(scList, Parser.ElementName) = 0)) then
+       (not (AnsiStrings.AnsiCompareText(scList, Parser.ElementName) = 0)) then
       raise Exception.Create('No end of List found');
     Parser.EndFound := false;
   end;
@@ -855,7 +890,7 @@ var
 
   procedure ConvertProperty;
   var
-    PropName: string;
+    PropName: AnsiString;
   begin
     PropName := Parser.ValueOf('Name');
     if PropName = '' then
@@ -864,7 +899,7 @@ var
     ConvertValue;
     Parser.ReadNextElement; // this must be the end of the propertie
     if (not (Parser.EndFound)) or
-       (not (AnsiCompareText(scPropertie, Parser.ElementName) = 0)) then
+       (not (AnsiStrings.AnsiCompareText(scPropertie, Parser.ElementName) = 0)) then
       raise Exception.Create('No propertie END found');
     Parser.EndFound := false;
   end;
@@ -877,7 +912,7 @@ var
       if ElementNameIs(scPropertie) then
         ConvertProperty;
     until (Parser.EndFound);
-    if not (AnsiCompareText(scProperties, Parser.ElementName) = 0) then
+    if not (AnsiStrings.AnsiCompareText(scProperties, Parser.ElementName) = 0) then
       raise Exception.Create('Invalid XML object stream');
     Parser.EndFound := false;
     Writer.WriteListEnd;
@@ -891,7 +926,7 @@ var
          ElementNameIs(scInherited) then
         ConvertObject;
     until (Parser.EndFound);
-    if not (AnsiCompareText(scComponents, Parser.ElementName) = 0) then
+    if not (AnsiStrings.AnsiCompareText(scComponents, Parser.ElementName) = 0) then
       raise Exception.Create('Invalid XML object stream');
     Parser.EndFound := false;
     Writer.WriteListEnd;
@@ -899,7 +934,7 @@ var
 
   procedure ConvertObject;
   var
-    ItemName: string;
+    ItemName: AnsiString;
   begin
     ConvertHeader;
     ItemName := Parser.ElementName;
@@ -914,7 +949,7 @@ var
           ConvertComponents;
         end;
       until (Parser.EndFound);
-      if not (AnsiCompareText(ItemName, Parser.ElementName) = 0) then
+      if not (AnsiStrings.AnsiCompareText(ItemName, Parser.ElementName) = 0) then
         raise Exception.Create('Invalid XML object stream');
       Parser.EndFound := false;
     end;
@@ -922,8 +957,13 @@ var
 
 begin
   Parser := TrwXMLParser.Create(Input);
+  {$IFDEF Delphi_2009_UP}
+  SaveSeparator := FormatSettings.DecimalSeparator;
+  FormatSettings.DecimalSeparator := '.';
+  {$ELSE}
   SaveSeparator := DecimalSeparator;
   DecimalSeparator := '.';
+  {$ENDIF}
   try
     Writer := TXMLWriter.Create(Output, 4096);
     try
@@ -935,7 +975,11 @@ begin
       Writer.Free;
     end;
   finally
+    {$IFDEF Delphi_2009_UP}
+    FormatSettings.DecimalSeparator := SaveSeparator;
+    {$ELSE}
     DecimalSeparator := SaveSeparator;
+    {$ENDIF}
     Parser.Free;
   end;
 end;

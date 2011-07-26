@@ -3122,8 +3122,11 @@ inherited frmAbout: TfrmAbout
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 0
+      DoubleBuffered = True
       Kind = bkClose
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 0
     end
     object btnGoToWeb: TBitBtn
       Left = 479
@@ -3132,8 +3135,7 @@ inherited frmAbout: TfrmAbout
       Height = 33
       Anchors = [akTop, akRight]
       Caption = 'Go to web site'
-      TabOrder = 1
-      OnClick = btnGoToWebClick
+      DoubleBuffered = True
       Glyph.Data = {
         56070000424D560700000000000036040000280000001F000000190000000100
         0800000000002003000000000000000000000001000000000000000000000000
@@ -3194,6 +3196,9 @@ inherited frmAbout: TfrmAbout
         0000000000000000000000000000000000000100080808080800080808080808
         00FBFBFBFBFB00FEFEFEFE00F9FDF9FDF9F90000080808080800080808080808
         0800000000000000000000000000000000000000080808080800}
+      ParentDoubleBuffered = False
+      TabOrder = 1
+      OnClick = btnGoToWebClick
     end
   end
   object dgCredit: TRbwDataGrid4
@@ -3204,9 +3209,10 @@ inherited frmAbout: TfrmAbout
     Align = alClient
     ColCount = 3
     FixedCols = 0
-    RowCount = 44
+    RowCount = 38
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing]
     TabOrder = 2
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = False
     AutoIncreaseColCount = False

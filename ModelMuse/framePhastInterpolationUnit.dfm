@@ -70,7 +70,6 @@ object framePhastInterpolation: TframePhastInterpolation
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 13
     TabOrder = 2
     Text = '0'
     DataType = dtReal
@@ -85,7 +84,6 @@ object framePhastInterpolation: TframePhastInterpolation
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 13
     TabOrder = 3
     Text = '1'
     DataType = dtReal
@@ -100,7 +98,6 @@ object framePhastInterpolation: TframePhastInterpolation
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 13
     TabOrder = 4
     Text = '0'
     DataType = dtReal
@@ -115,7 +112,6 @@ object framePhastInterpolation: TframePhastInterpolation
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 13
     TabOrder = 5
     Text = '1'
     DataType = dtReal

@@ -80,6 +80,17 @@
   {$endif DELPHI.NET_1}
 {$else}
   {$ifdef Win32}
+    {$ifdef CONDITIONALEXPRESSIONS}
+      {$if CompilerVersion>=20}
+        {$DEFINE Delphi_2009_UP}
+      {$ifend}
+      {$if CompilerVersion>15.0}
+        {$DEFINE COMPILER_7}
+        {$define DELPHI}
+        {$define DELPHI_7}
+      {$IFEND}
+    {$endif}
+
     {$ifdef VER180}        
       {$define COMPILER_7}
       {$define DELPHI}

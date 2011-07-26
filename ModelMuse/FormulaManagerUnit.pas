@@ -2,7 +2,8 @@ unit FormulaManagerUnit;
 
 interface
 
-uses SysUtils, Classes, Contnrs, HashTrie, RbwParser, IntListUnit, Dialogs;
+uses SysUtils, Classes, Contnrs, {HashTrie,} RbwParser, IntListUnit, Dialogs,
+  EZDSLHsh;
 
 type
   TChangeSubscription = procedure (Sender: TObject;
@@ -60,7 +61,8 @@ type
   private
     // @name is actually a TObjectList.
     FList: TList;
-    FSortedList: TStringHashTrie;
+//    FSortedList: TStringHashTrie;
+    FSortedList: THashTable;
     FEmptyFormula: TFormulaObject;
   public
     Constructor Create;
@@ -86,7 +88,7 @@ implementation
 uses
   frmGoPhastUnit, DataSetUnit, ScreenObjectUnit, ModflowBoundaryUnit, 
   ModflowEtsUnit, ModflowSfrTable, SubscriptionUnit, GIS_Functions,
-  PhastModelUnit;
+  PhastModelUnit, Math, ModflowHfbUnit;
 
 { TFormulaObject }
 
@@ -224,6 +226,10 @@ begin
                 begin
                   TableRowRestoreSubscription(self, Subject, UsedVariables[VariableIndex]);
                 end
+                else if RestoreEvent = Addr(RestoreHfbModflowBoundarySubscription) then
+                begin
+                  RestoreHfbModflowBoundarySubscription(self, Subject, UsedVariables[VariableIndex]);
+                end
                 else
                 begin
                   Assert(False);
@@ -359,6 +365,10 @@ begin
                     begin
                       TableRowRemoveSubscription(self, Subject, OldSubscriptions[VariableIndex]);
                     end
+                    else if PRemoveEvent = Addr(RemoveHfbModflowBoundarySubscription) then
+                    begin
+                      RemoveHfbModflowBoundarySubscription(self, Subject, OldSubscriptions[VariableIndex]);
+                    end
                     else
                     begin
                       Assert(False);
@@ -451,6 +461,10 @@ begin
               else if RestoreEvent = Addr(TableRowRestoreSubscription) then
               begin
                 TableRowRestoreSubscription(self, Subject, FNewSubscriptions[VariableIndex]);
+              end
+              else if RestoreEvent = Addr(RestoreHfbModflowBoundarySubscription) then
+              begin
+                RestoreHfbModflowBoundarySubscription(self, Subject, FNewSubscriptions[VariableIndex]);
               end
               else
               begin
@@ -581,6 +595,7 @@ procedure TFormulaManager.ChangeFormula(var FormulaObject: TFormulaObject;
   NewFormula: string; Parser: TRbwParser; OnRemoveSubscription,
   OnRestoreSubscription: TChangeSubscription; Subject: TObject);
 var
+  APointer: Pointer;
   AnObject: TObject;
   Listener: TObserver;
   Notifier: TObserver;
@@ -588,13 +603,15 @@ var
 begin
   Remove(FormulaObject, OnRemoveSubscription, OnRestoreSubscription, Subject);
 
-  AnObject := nil;
+  APointer := nil;
   if NewFormula = '' then
   begin
     FormulaObject := Add;
   end
-  else if FSortedList.Find(NewFormula, AnObject) then
+//  else if FSortedList.Find(NewFormula, AnObject) then
+  else if FSortedList.Search(NewFormula, APointer) then
   begin
+    AnObject := APointer;
     FormulaObject := AnObject as TFormulaObject;
     Inc(FormulaObject.FReferenceCount);
   end
@@ -603,9 +620,11 @@ begin
     FormulaObject := TFormulaObject.Create(nil);
     FormulaObject.Parser := Parser;
     FormulaObject.SetFormula(NewFormula);
-    if FSortedList.Find(FormulaObject.Formula, AnObject)
+//    if FSortedList.Find(FormulaObject.Formula, AnObject)
+    if FSortedList.Search(FormulaObject.Formula, APointer)
     then
     begin
+      AnObject := APointer;
       FormulaObject.Free;
       FormulaObject := AnObject as TFormulaObject;
       Inc(FormulaObject.FReferenceCount);
@@ -613,7 +632,8 @@ begin
     else
     begin
       FormulaObject.FPosition := FList.Add(FormulaObject);
-      FSortedList.Add(FormulaObject.Formula, FormulaObject);
+//      FSortedList.Add(FormulaObject.Formula, FormulaObject);
+      FSortedList.Insert(FormulaObject.Formula, FormulaObject);
     end;
   end;
 
@@ -719,15 +739,19 @@ procedure TFormulaManager.Clear;
 begin
   FList.Clear;
   FSortedList.Free;
-  FSortedList:= TStringHashTrie.Create;
-  FSortedList.CaseSensitive := True;
+//  FSortedList:= TStringHashTrie.Create;
+//  FSortedList.CaseSensitive := True;
+  FSortedList:= THashTable.Create(False);
+  FSortedList.IgnoreCase := False;
 end;
 
 constructor TFormulaManager.Create;
 begin
   FList := TObjectList.Create;
-  FSortedList:= TStringHashTrie.Create;
-  FSortedList.CaseSensitive := True;
+  FSortedList:= THashTable.Create(False);
+  FSortedList.IgnoreCase := False;
+//  FSortedList:= TStringHashTrie.Create;
+//  FSortedList.CaseSensitive := True;
 end;
 
 destructor TFormulaManager.Destroy;
@@ -864,8 +888,9 @@ end;
 procedure TFormulaManager.ResetFormulas;
 var
   Index: Integer;
-  FormulaObject: TFormulaObject;
+  FormulaObject : TFormulaObject;
   DataArrayManager: TDataArrayManager;
+  AnotherFormulaObject: pointer;
 begin
   for Index := 0 to FList.Count - 1 do
   begin
@@ -877,13 +902,20 @@ begin
   end;
 
   FSortedList.Free;
-  FSortedList := TStringHashTrie.Create;
+  FSortedList:= THashTable.Create(False);
+  FSortedList.IgnoreCase := True;
+  FSortedList.TableSize := Max(211, FList.Count*2-1);
+//  FSortedList := TStringHashTrie.Create;
   for Index := 0 to FList.Count - 1 do
   begin
     FormulaObject := FList[Index];
     if FormulaObject <> nil then
     begin
-      FSortedList.Add(FormulaObject.Formula, FormulaObject);
+      if not FSortedList.Search(FormulaObject.Formula, AnotherFormulaObject) then
+      begin
+        FSortedList.Insert(FormulaObject.Formula, FormulaObject);
+      end;
+//      FSortedList.Add(FormulaObject.Formula, FormulaObject);
     end;
   end;
 

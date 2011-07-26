@@ -82,6 +82,26 @@ uses
   ModflowUnitNumbers, frmProgressUnit, frmErrorsAndWarningsUnit, GoPhastTypes,
   ModflowTimeUnit, ModflowBoundaryUnit, frmFormulaErrorsUnit, Math, Forms;
 
+resourcestring
+  SignError = 'The deactivation pumping rate and reactivation pumping rate '
+    + 'should have the same sign as the pumping rate.';
+  RelativeSizeError = 'The reactivation pumping rate should be larger than '
+    + 'the deactivation pumping rate.';
+  SizeError = 'The reactivation pumping rate and '
+    + 'deactivation pumping rate should be smaller than the pumping rate.';
+  InvalidFractionError =
+    'The deactivation pumping rate and reactivation pumping rate '
+    + 'should both be between 0 and 1.';
+  StrObjectSStartin = 'Object = %s; Starting time = %g';
+  LossTypeError = 'In the MNW2 package, a LOSSTYPE of "NONE" is only '
+    + 'valid if the well has only one cell. Objects in which this is violated'
+    + ' are listed below.';
+  StrTheFollowingObject = 'The following objects define WELLIDs in the MNW2 ' +
+  'that are not unique.';
+  StrVerticalScreensAre = 'Vertical screens are not allowed in wells in whic' +
+  'h the LOSSTYPE is "NONE".';
+  StrObject0sWELLI = 'Object = %0:s; WELLID = %1:s';
+
 { TModflowMNW2_Writer }
 
 constructor TModflowMNW2_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
@@ -306,16 +326,6 @@ var
 //  ScreenObject: TScreenObject;
   Well: TMultinodeWell;
   Limit: integer;
-const
-  SignError = 'The deactivation pumping rate and reactivation pumping rate '
-    + 'should have the same sign as the pumping rate.';
-  RelativeSizeError = 'The reactivation pumping rate should be larger than '
-    + 'the deactivation pumping rate.';
-  SizeError = 'The reactivation pumping rate and '
-    + 'deactivation pumping rate should be smaller than the pumping rate.';
-  InvalidFractionError =
-    'The deactivation pumping rate and reactivation pumping rate '
-    + 'should both be between 0 and 1.';
 begin
   for WellIndex := 0 to FWells.Count - 1 do
   begin
@@ -351,15 +361,21 @@ begin
                   <> Sign(TimeItem.ReactivationPumpingRateValue)) then
                 begin
                   frmErrorsAndWarnings.AddError(Model, SignError,
-                    'Object = ' + Well.FScreenObject.Name
-                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
+                    Format(StrObjectSStartin,
+                    [Well.FScreenObject.Name, TimeItem.StartTime]));
+//                  frmErrorsAndWarnings.AddError(Model, SignError,
+//                    'Object = ' + Well.FScreenObject.Name
+//                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
                 end;
                 if Abs(TimeItem.InactivationPumpingRateValue) >=
                   Abs(TimeItem.ReactivationPumpingRateValue) then
                 begin
                   frmErrorsAndWarnings.AddError(Model, RelativeSizeError,
-                    'Object = ' + Well.FScreenObject.Name
-                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
+                    Format(StrObjectSStartin,
+                    [Well.FScreenObject.Name, TimeItem.StartTime]));
+//                  frmErrorsAndWarnings.AddError(Model, RelativeSizeError,
+//                    'Object = ' + Well.FScreenObject.Name
+//                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
                 end;
                 if (Abs(TimeItem.InactivationPumpingRateValue)
                   >= Abs(TimeItem.PumpingRateValue))
@@ -367,8 +383,11 @@ begin
                   >= Abs(TimeItem.PumpingRateValue)) then
                 begin
                   frmErrorsAndWarnings.AddError(Model, SizeError,
-                    'Object = ' + Well.FScreenObject.Name
-                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
+                    Format(StrObjectSStartin,
+                    [Well.FScreenObject.Name, TimeItem.StartTime]));
+//                  frmErrorsAndWarnings.AddError(Model, SizeError,
+//                    'Object = ' + Well.FScreenObject.Name
+//                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
                 end;
               end;
             end;
@@ -382,15 +401,21 @@ begin
                   or (TimeItem.ReactivationPumpingRateValue > 1) then
                 begin
                   frmErrorsAndWarnings.AddError(Model, InvalidFractionError,
-                    'Object = ' + Well.FScreenObject.Name
-                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
+                    Format(StrObjectSStartin,
+                    [Well.FScreenObject.Name, TimeItem.StartTime]));
+//                  frmErrorsAndWarnings.AddError(Model, InvalidFractionError,
+//                    'Object = ' + Well.FScreenObject.Name
+//                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
                 end;
                 if Abs(TimeItem.InactivationPumpingRateValue) >=
                   Abs(TimeItem.ReactivationPumpingRateValue) then
                 begin
                   frmErrorsAndWarnings.AddError(Model, RelativeSizeError,
-                    'Object = ' + Well.FScreenObject.Name
-                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
+                    Format(StrObjectSStartin,
+                    [Well.FScreenObject.Name, TimeItem.StartTime]));
+//                  frmErrorsAndWarnings.AddError(Model, RelativeSizeError,
+//                    'Object = ' + Well.FScreenObject.Name
+//                    + '; Starting time = ' + FloatToStr(TimeItem.StartTime));
                 end;
               end;
             end;
@@ -1285,9 +1310,6 @@ var
 const
   LossTypes: array[Low(TMnwLossType)..High(TMnwLossType)] of string =
     ('NONE ', 'THIEM ', 'SKIN ', 'GENERAL ', 'SPECIFYcwc ');
-  LossTypeError = 'In the MNW2 package, a LOSSTYPE of "NONE" is only '
-    + 'valid if the well has only one cell. Objects in which this is violated'
-    + ' are listed below.';
 begin
   if WellBoundary.LossType = mltNone then
   begin
@@ -1357,18 +1379,15 @@ procedure TModflowMNW2_Writer.WriteDataSet2A(WellBoundary: TMnw2Boundary;
   Well: TMultinodeWell);
 var
   WELLID: string;
-const
-  ErrorRoot = 'The following objects define WELLIDs '
-    + 'in the MNW2 that are not unique.';
-  ErrorRoot2 = 'Vertical screens are not allowed '
-    + 'in wells in which the LOSSTYPE is "NONE".';
 begin
   WELLID := WellBoundary.WellID;
   if FWellNames.IndexOf(WELLID) >= 0 then
   begin
-    frmErrorsAndWarnings.AddError(Model, ErrorRoot,
-      'Object = ' + Well.FScreenObject.Name
-      + '; ' + 'WELLID = ' + WELLID);
+    frmErrorsAndWarnings.AddError(Model, StrTheFollowingObject,
+      Format(StrObject0sWELLI, [Well.FScreenObject.Name, WELLID]));
+//    frmErrorsAndWarnings.AddError(Model, StrTheFollowingObject,
+//      'Object = ' + Well.FScreenObject.Name
+//      + '; ' + 'WELLID = ' + WELLID);
   end;
   FWellNames.Add(WELLID);
   if Pos(' ', WELLID) > 0 then
@@ -1383,9 +1402,8 @@ begin
     begin
       if WellBoundary.VerticalScreens.Count > 0 then
       begin
-        frmErrorsAndWarnings.AddError(Model, ErrorRoot2,
-          'Object = ' + Well.FScreenObject.Name
-          + '; ' + 'WELLID = ' + WELLID);
+        frmErrorsAndWarnings.AddError(Model, StrVerticalScreensAre,
+          Format(StrObject0sWELLI, [Well.FScreenObject.Name, WELLID]));
       end;
     end;
     if WellBoundary.VerticalScreens.Count > 0 then

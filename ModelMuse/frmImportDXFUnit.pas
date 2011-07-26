@@ -7,7 +7,7 @@ unit frmImportDXFUnit;
 interface
 
 uses
-  SysUtils, Types, Classes, Variants, Graphics, Controls, Forms,
+  Windows, SysUtils, Types, Classes, Variants, Graphics, Controls, Forms,
   Dialogs, StdCtrls, frmCustomGoPhastUnit, Buttons, ExtCtrls,
   Grids, IntListUnit, ScreenObjectUnit, DXF_Structs, DXF_read, DXF_Utils,
   frmImportShapefileUnit, frmCustomImportSimpleFileUnit;

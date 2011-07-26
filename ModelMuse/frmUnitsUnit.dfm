@@ -13,163 +13,163 @@ inherited frmUnits: TfrmUnits
   ExplicitWidth = 734
   ExplicitHeight = 666
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object lblTitle: TLabel
     Left = 8
     Top = 8
-    Width = 352
-    Height = 17
+    Width = 377
+    Height = 18
     Caption = 'Title (Only the first two lines will be printed in the output)'
   end
   object lblTimeUnits: TLabel
     Left = 8
     Top = 153
-    Width = 65
-    Height = 17
+    Width = 71
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Time units'
   end
   object lblHorizGridUnits: TLabel
     Left = 8
     Top = 184
-    Width = 126
-    Height = 17
+    Width = 136
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Horizontal grid units'
   end
   object lblVertGridUnits: TLabel
     Left = 8
     Top = 215
-    Width = 109
-    Height = 17
+    Width = 120
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Vertical grid units'
   end
   object lblHeadUnits: TLabel
     Left = 8
     Top = 246
-    Width = 68
-    Height = 17
+    Width = 74
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Head units'
   end
   object lblHydraulicCondLengthUnits: TLabel
     Left = 8
     Top = 277
-    Width = 171
-    Height = 17
+    Width = 184
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Hydraulic conductivity units'
   end
   object lblHydraulicCondTimeUnits: TLabel
     Left = 512
     Top = 277
-    Width = 21
-    Height = 17
+    Width = 23
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'per'
   end
   object lblSpecificStorageUnits: TLabel
     Left = 8
     Top = 308
-    Width = 135
-    Height = 17
+    Width = 150
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Specific storage units'
   end
   object lblDispersivityUnits: TLabel
     Left = 8
     Top = 339
-    Width = 106
-    Height = 17
+    Width = 117
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Dispersivity units'
   end
   object lblFluxLengthUnits: TLabel
     Left = 8
     Top = 370
-    Width = 59
-    Height = 17
+    Width = 64
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Flux units'
   end
   object lblFluxTimeUnits: TLabel
     Left = 511
     Top = 370
-    Width = 21
-    Height = 17
+    Width = 23
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'per'
   end
   object lblLeakyHydCondLengthUnits: TLabel
     Left = 8
     Top = 401
-    Width = 211
-    Height = 17
+    Width = 227
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Leaky hydraulic conductivity units'
   end
   object lblLeakyHydCondTimeUnits: TLabel
     Left = 512
     Top = 401
-    Width = 21
-    Height = 17
+    Width = 23
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'per'
   end
   object lblLeakyThicknessUnits: TLabel
     Left = 8
     Top = 432
-    Width = 135
-    Height = 17
+    Width = 147
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Leaky thickness units'
   end
   object lblWellDiameterUnits: TLabel
     Left = 8
     Top = 463
-    Width = 120
-    Height = 17
+    Width = 132
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Well diameter units'
   end
   object lblWellFlowVolumeUnits: TLabel
     Left = 8
     Top = 494
-    Width = 118
-    Height = 17
+    Width = 128
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'Well flow rate units'
   end
   object lblWellFlowTimeUnits: TLabel
     Left = 511
     Top = 494
-    Width = 21
-    Height = 17
+    Width = 23
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'per'
   end
   object lblRiverHydCondLengthUnits: TLabel
     Left = 8
     Top = 525
-    Width = 234
-    Height = 17
+    Width = 252
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'River bed hydraulic conductivity units'
   end
   object lblRiverHydCondTimeUnits: TLabel
     Left = 511
     Top = 525
-    Width = 21
-    Height = 17
+    Width = 23
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'per'
   end
   object lblRiverThicknessUnits: TLabel
     Left = 8
     Top = 556
-    Width = 158
-    Height = 17
+    Width = 172
+    Height = 18
     Anchors = [akLeft, akBottom]
     Caption = 'River bed thickness units'
   end
@@ -191,8 +191,7 @@ inherited frmUnits: TfrmUnits
     Anchors = [akLeft, akBottom]
     Caption = 'OK'
     Default = True
-    TabOrder = 0
-    OnClick = btnOKClick
+    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       04000000000068010000120B0000120B00001000000010000000000000000000
@@ -211,6 +210,9 @@ inherited frmUnits: TfrmUnits
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 0
+    OnClick = btnOKClick
   end
   object btnCancel: TBitBtn
     Left = 624
@@ -218,17 +220,19 @@ inherited frmUnits: TfrmUnits
     Width = 91
     Height = 33
     Anchors = [akLeft, akBottom]
-    TabOrder = 21
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 21
   end
   object comboTimeUnits: TComboBox
     Left = 328
     Top = 150
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 2
     Items.Strings = (
       'seconds'
@@ -241,10 +245,9 @@ inherited frmUnits: TfrmUnits
     Left = 328
     Top = 181
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 3
     Items.Strings = (
       'inches'
@@ -259,10 +262,9 @@ inherited frmUnits: TfrmUnits
     Left = 328
     Top = 212
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 4
     Items.Strings = (
       'inches'
@@ -277,10 +279,9 @@ inherited frmUnits: TfrmUnits
     Left = 328
     Top = 243
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 5
     Items.Strings = (
       'inches'
@@ -295,10 +296,9 @@ inherited frmUnits: TfrmUnits
     Left = 328
     Top = 274
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 6
     Items.Strings = (
       'inches'
@@ -313,10 +313,9 @@ inherited frmUnits: TfrmUnits
     Left = 541
     Top = 274
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 7
     Items.Strings = (
       'second'
@@ -329,10 +328,9 @@ inherited frmUnits: TfrmUnits
     Left = 328
     Top = 305
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 8
     Items.Strings = (
       '1/inches'
@@ -347,10 +345,9 @@ inherited frmUnits: TfrmUnits
     Left = 328
     Top = 336
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 9
     Items.Strings = (
       'inches'
@@ -365,10 +362,9 @@ inherited frmUnits: TfrmUnits
     Left = 328
     Top = 367
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 10
     Items.Strings = (
       'inches'
@@ -383,10 +379,9 @@ inherited frmUnits: TfrmUnits
     Left = 541
     Top = 367
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 11
     Items.Strings = (
       'second'
@@ -399,10 +394,9 @@ inherited frmUnits: TfrmUnits
     Left = 328
     Top = 398
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 12
     Items.Strings = (
       'inches'
@@ -417,10 +411,9 @@ inherited frmUnits: TfrmUnits
     Left = 541
     Top = 398
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 13
     Items.Strings = (
       'second'
@@ -433,10 +426,9 @@ inherited frmUnits: TfrmUnits
     Left = 328
     Top = 429
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 14
     Items.Strings = (
       'inches'
@@ -451,10 +443,9 @@ inherited frmUnits: TfrmUnits
     Left = 328
     Top = 460
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 15
     Items.Strings = (
       'inches'
@@ -469,10 +460,9 @@ inherited frmUnits: TfrmUnits
     Left = 328
     Top = 491
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 16
     Items.Strings = (
       'gallons'
@@ -489,10 +479,9 @@ inherited frmUnits: TfrmUnits
     Left = 541
     Top = 491
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 17
     Items.Strings = (
       'second'
@@ -505,10 +494,9 @@ inherited frmUnits: TfrmUnits
     Left = 328
     Top = 522
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 18
     Items.Strings = (
       'inches'
@@ -523,10 +511,9 @@ inherited frmUnits: TfrmUnits
     Left = 541
     Top = 522
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 19
     Items.Strings = (
       'second'
@@ -539,10 +526,9 @@ inherited frmUnits: TfrmUnits
     Left = 328
     Top = 553
     Width = 177
-    Height = 25
+    Height = 26
     Style = csDropDownList
     Anchors = [akLeft, akBottom]
-    ItemHeight = 17
     TabOrder = 20
     Items.Strings = (
       'inches'
@@ -560,8 +546,11 @@ inherited frmUnits: TfrmUnits
     Height = 33
     HelpType = htKeyword
     Anchors = [akLeft, akBottom]
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 22
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
 end

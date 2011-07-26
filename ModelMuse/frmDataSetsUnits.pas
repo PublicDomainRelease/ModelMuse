@@ -9,7 +9,7 @@ unit frmDataSetsUnits;
 interface
 
 uses
-  SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls,
+  Windows, SysUtils, Types, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls,
   frmCustomGoPhastUnit, Buttons, ExtCtrls, Grids, RbwDataGrid4, RbwParser,
   DataSetUnit, Contnrs, GoPhastTypes, framePhastInterpolationUnit, ComCtrls,
   UndoItems, PhastDataSets, ArgusDataEntry, JvExStdCtrls, JvCombobox,
@@ -457,6 +457,9 @@ begin
 
   Assert(frmDataSets = nil);
   frmDataSets := self;
+
+  reDefaultFormula.DoubleBuffered := False;
+  reComment.DoubleBuffered := False;
 end;
 
 
@@ -829,6 +832,7 @@ begin
               end;
               UpdateLinkages;
               reDefaultFormula.Text := FSelectedEdit.Formula;
+              reDefaultFormula.Invalidate;
             end;
           end;
         end;
@@ -885,7 +889,7 @@ begin
         comboOrientation.Items[1].Brush.Color := clWhite;
         comboOrientation.Items[2].Brush.Color := clWhite;
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         comboOrientation.Items[1].Brush.Color := clBtnFace;
         comboOrientation.Items[2].Brush.Color := clBtnFace;
@@ -1205,7 +1209,7 @@ begin
         SelectedEdit.Orientation :=
           TDataSetOrientation(comboOrientation.ItemIndex);
       end;
-    msModflow, msModflowLGR:
+    msModflow, msModflowLGR, msModflowNWT:
       begin
         case comboOrientation.ItemIndex of
           0,3:
@@ -1485,6 +1489,7 @@ begin
       if DataEdit = SelectedEdit then
       begin
         reDefaultFormula.Text := DataEdit.Formula;
+        reDefaultFormula.Invalidate;
       end;
       Used.Free;
       VariableList.Free;
@@ -2664,6 +2669,7 @@ begin
       end;
 
       reDefaultFormula.Text := FSelectedEdit.Formula;
+      reDefaultFormula.Invalidate;
       reDefaultFormula.Enabled := (FSelectedEdit.DataArray = nil)
         or not (dcFormula in FSelectedEdit.DataArray.Lock);
 

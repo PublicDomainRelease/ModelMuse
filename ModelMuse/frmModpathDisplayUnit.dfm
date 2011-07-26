@@ -24,9 +24,12 @@ inherited frmModpathDisplay: TfrmModpathDisplay
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnOK: TBitBtn
       Left = 281
@@ -34,9 +37,12 @@ inherited frmModpathDisplay: TfrmModpathDisplay
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 369
@@ -44,8 +50,11 @@ inherited frmModpathDisplay: TfrmModpathDisplay
       Width = 83
       Height = 27
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
   end
   object pcMain: TPageControl
@@ -53,7 +62,7 @@ inherited frmModpathDisplay: TfrmModpathDisplay
     Top = 0
     Width = 467
     Height = 327
-    ActivePage = tabOptions
+    ActivePage = tabBasic
     Align = alClient
     TabOrder = 1
     object tabBasic: TTabSheet
@@ -143,7 +152,6 @@ inherited frmModpathDisplay: TfrmModpathDisplay
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
         DropDownCount = 12
-        ItemHeight = 18
         ItemIndex = 0
         TabOrder = 3
         Text = 'Rainbow'
@@ -249,6 +257,7 @@ inherited frmModpathDisplay: TfrmModpathDisplay
         TabOrder = 2
         OnSelectCell = rdgLimitsSelectCell
         OnSetEditText = rdgLimitsSetEditText
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False

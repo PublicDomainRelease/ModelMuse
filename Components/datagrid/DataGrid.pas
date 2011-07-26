@@ -17,15 +17,18 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   Grids, StdCtrls, Menus, DBCtrls, DB
 // RBW begin change
-  {$IFDEF VER150}, Variants {$ENDIF}
-  {$IFDEF VER160}, Variants {$ENDIF}
-  {$IFDEF VER170}, Variants {$ENDIF}
-  {$IFDEF VER180}, Variants {$ENDIF}
-  {$IFDEF VER200}, Variants {$ENDIF}
+{$ifdef CONDITIONALEXPRESSIONS}
+  {$if CompilerVersion>=20}
+    {$DEFINE Delphi_2009_UP}
+  {$ifend}
+  {$if CompilerVersion>15.0}
+    {$DEFINE Delphi_7_UP}
+    {$define DELPHI}
+    {$define DELPHI_7}
+  {$IFEND}
+{$endif}
+{$IFDEF Delphi_7_UP}, Variants {$ENDIF}
 // RBW end change
-// ERB begin change
-  {$IFDEF VER220}, Variants {$ENDIF}
-// ERB end change
   ;
 
 type
@@ -231,10 +234,10 @@ type
     procedure DoEnter; override;
     procedure DoExit; override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
-    procedure DefaultHandler(var Msg); override;
     procedure TopLeftChanged; override;
     procedure Paint; override;
   public
+    procedure DefaultHandler(var Msg); override;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure AppendRow;
@@ -277,13 +280,13 @@ type
     procedure UpdateData(Sender: TObject);
     function  SetEditing: Boolean;
   protected
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure SizeChanged(OldColCount, OldRowCount: Longint); override;
     procedure RowCountMinChanged; override;
     function  CanEditModify: Boolean; override;
   public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     property  Field: TField read GetField;
   published
     property DataField: string read GetDataField write SetDataField;
@@ -1458,7 +1461,11 @@ var
   I: Integer;
 begin
   TDatagrid(Grid).KeyPress(Key);
+  {$IFDEF Delphi_2009_UP}
+  if CharInSet(Key, [#32..#255]) and not TDatagrid(Grid).CanEditAcceptKey(Key) then
+  {$ELSE}
   if (Key in [#32..#255]) and not TDatagrid(Grid).CanEditAcceptKey(Key) then
+  {$ENDIF}
   begin
     Key := #0;
     MessageBeep(0);
@@ -1650,14 +1657,11 @@ procedure TDataGridInplaceEdit.ValidateContent;
 var
    value: string;
    q, cr, lf: string;
-   ICR, ILF: integer;
-   ic,ir: integer;
+   ICR: integer;
 begin
   with TDataGrid(Grid) do
   begin
     value := cells[col, row];
-    ic := col;
-    ir := row;
   end;
   q := #39;  // #39 is ascii code for single quote.
   cr := #13; // #13 is ascii code for carriage return.
@@ -1675,7 +1679,6 @@ begin
                           value := cells[col, row];
                           // Deal with text pasted from clipboard.
                           ICR := Pos(cr,value);
-                          ILF := Pos(lf,value);
                           if ICR > 0 then
                             // Extract part preceding the carriage return.
                             begin

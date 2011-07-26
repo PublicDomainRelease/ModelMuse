@@ -174,8 +174,10 @@ begin
   lblDistance2.Enabled := ShouldEnable;
   lblValue1.Enabled := ShouldEnable;
   lblValue2.Enabled := ShouldEnable;
-  rgInterpolationDirection.Controls[3].Enabled := FMixtureAllowed
+  rgInterpolationDirection.Buttons[3].Enabled := FMixtureAllowed
     and Enabled and cbPhastInterpolation.Checked;
+//  rgInterpolationDirection.Controls[3].Enabled := FMixtureAllowed
+//    and Enabled and cbPhastInterpolation.Checked;
   rgInterpolationDirectionClick(nil);
 
   if rdeValue1.Enabled and Assigned(rdeValue1.OnChange) then
@@ -339,15 +341,24 @@ begin
   rdeValue2.Enabled := Value and cbPhastInterpolation.Checked;
   rgInterpolationDirection.Enabled := Value and cbPhastInterpolation.Checked;
   rgInterpolationDirectionClick(nil);
-  rgInterpolationDirection.Controls[3].Enabled := FMixtureAllowed
+
+  // This will cause TCustomRadioGroup.UpdateButtons to be called.
+  rgInterpolationDirection.WordWrap := not rgInterpolationDirection.WordWrap;
+  rgInterpolationDirection.WordWrap := not rgInterpolationDirection.WordWrap;
+
+  rgInterpolationDirection.Buttons[3].Enabled := FMixtureAllowed
     and Enabled and cbPhastInterpolation.Checked;
+//  rgInterpolationDirection.Controls[3].Enabled := FMixtureAllowed
+//    and Enabled and cbPhastInterpolation.Checked;
 end;
 
 procedure TframePhastInterpolation.SetMixtureAllowed(
   const AValue: boolean);
 begin
   FMixtureAllowed := AValue;
-  rgInterpolationDirection.Controls[3].Enabled := FMixtureAllowed
+//  rgInterpolationDirection.Controls[3].Enabled := FMixtureAllowed
+//    and Enabled and cbPhastInterpolation.Checked;
+  rgInterpolationDirection.Buttons[3].Enabled := FMixtureAllowed
     and Enabled and cbPhastInterpolation.Checked;
 end;
 

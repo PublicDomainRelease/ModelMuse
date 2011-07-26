@@ -31,6 +31,8 @@ uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmProgressUnit, Forms,
 resourcestring
   StrFileForTheInitial = 'File for the initial heads does not exist.';
   StrWrongExtension = 'File for the initial heads has wrong extension.';
+  StrTheFileSDoesNot = 'The file %s does not exist.';
+  StrTheFile1sMustH = 'The file %1:s must have an extension equal to "%2:s".';
 
 { TModflowBasicWriter }
 
@@ -247,9 +249,12 @@ begin
   begin
     if not FileExists(Model.ModflowOptions.InitialHeadFileName) then
     begin
-      frmErrorsAndWarnings.AddError(Model, StrFileForTheInitial, 'The file '
-        + Model.ModflowOptions.InitialHeadFileName
-        + ' does not exist.');
+//      frmErrorsAndWarnings.AddError(Model, StrFileForTheInitial, 'The file '
+//        + Model.ModflowOptions.InitialHeadFileName
+//        + ' does not exist.');
+      frmErrorsAndWarnings.AddError(Model, StrFileForTheInitial,
+        Format(StrTheFileSDoesNot,
+        [Model.ModflowOptions.InitialHeadFileName]));
       Exit;
     end;
     RelativeFileName := ExtractRelativePath(
@@ -263,9 +268,12 @@ begin
     end
     else
     begin
-      frmErrorsAndWarnings.AddError(Model, StrWrongExtension, 'The file '
-        + Model.ModflowOptions.InitialHeadFileName
-        + ' must have an extension equal to "' + StrBhd + '".');
+//      frmErrorsAndWarnings.AddError(Model, StrWrongExtension, 'The file '
+//        + Model.ModflowOptions.InitialHeadFileName
+//        + ' must have an extension equal to "' + StrBhd + '".');
+      frmErrorsAndWarnings.AddError(Model, StrWrongExtension,
+        Format(StrTheFile1sMustH,
+          [Model.ModflowOptions.InitialHeadFileName, StrBhd]));
       Exit;
     end;
 
