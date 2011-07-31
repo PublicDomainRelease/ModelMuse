@@ -1,9 +1,9 @@
 inherited frmNewVersion: TfrmNewVersion
   Caption = 'New Version'
-  ClientHeight = 102
+  ClientHeight = 171
   ClientWidth = 354
   ExplicitWidth = 362
-  ExplicitHeight = 136
+  ExplicitHeight = 205
   PixelsPerInch = 96
   TextHeight = 18
   object Image1: TImage
@@ -16,28 +16,44 @@ inherited frmNewVersion: TfrmNewVersion
     Left = 72
     Top = 8
     Width = 265
-    Height = 41
+    Height = 36
     Caption = 
       'A newer version of ModelMuse is now available on the ModelMuse w' +
       'eb site.'
     WordWrap = True
   end
+  object lblYourVersion: TLabel
+    Left = 16
+    Top = 64
+    Width = 100
+    Height = 18
+    Caption = 'lblYourVersion'
+  end
+  object lblVersionOnWeb: TLabel
+    Left = 16
+    Top = 96
+    Width = 122
+    Height = 18
+    Caption = 'lblVersionOnWeb'
+  end
   object btnClose: TBitBtn
-    Left = 180
-    Top = 61
+    Left = 172
+    Top = 130
     Width = 155
     Height = 33
-    TabOrder = 0
+    DoubleBuffered = True
     Kind = bkClose
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 0
   end
   object btnGoToWeb: TBitBtn
-    Left = 19
-    Top = 61
+    Left = 11
+    Top = 130
     Width = 155
     Height = 33
     Caption = 'Go to web site'
-    TabOrder = 1
-    OnClick = btnGoToWebClick
+    DoubleBuffered = True
     Glyph.Data = {
       56070000424D560700000000000036040000280000001F000000190000000100
       0800000000002003000000000000000000000001000000000000000000000000
@@ -98,5 +114,8 @@ inherited frmNewVersion: TfrmNewVersion
       0000000000000000000000000000000000000100080808080800080808080808
       00FBFBFBFBFB00FEFEFEFE00F9FDF9FDF9F90000080808080800080808080808
       0800000000000000000000000000000000000000080808080800}
+    ParentDoubleBuffered = False
+    TabOrder = 1
+    OnClick = btnGoToWebClick
   end
 end

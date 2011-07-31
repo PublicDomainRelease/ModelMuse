@@ -4666,8 +4666,14 @@ const
   //        version of ModelMuse.)
   //    '2.9.1.17' ----
   //    '2.10.0.0' No additional changes.
+  //    '2.10.0.1' Bug fix: Importing a feature that allows for a MODFLOW
+  //        parameter from a Shapefile no longer causes a range check error
+  //        if no parameter is being imported.
+  //    '2.10.1.0' Change: When a message about a new version is displayed,
+  //        the version numbers of the new version as well as the version
+  //        that is being used are both displayed.
 
-  ModelVersion = '2.10.0.0';
+  ModelVersion = '2.10.1.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];

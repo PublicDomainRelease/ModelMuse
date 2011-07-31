@@ -27,6 +27,7 @@ type
     FCurrentUrlHasBeenDisplayed: Boolean;
     FLastCheckInternetDate: TDateTime;
     FNewVideoCount: Integer;
+    FVersionOnWeb: string;
     procedure CheckWeb;
     procedure ReadIniFile;
     function CheckVersion(const ExternalVersionString: string): TVersionCompare;
@@ -52,6 +53,12 @@ implementation
 uses
   Math, RbwInternetUtilities, frmGoPhastUnit, IniFileUtilities, GoPhastTypes, 
   StdCtrls, frmNewVersionUnit;
+
+resourcestring
+  StrYourVersionS = 'Your version: %s';
+  StrNewVersionS = 'New version: %s';
+  StrClickHereForModel = 'Click here for ModelMuse Videos';
+  StrThereIsANewVideo = 'There is a new video on the ModelMuse web site.';
 
 
 const
@@ -112,7 +119,7 @@ end;
 
 procedure TCheckInternetThread.CheckWeb;
 var
-  VersionOnWeb: string;
+//  VersionOnWeb: string;
   VerCompar: TVersionCompare;
   Index: Integer;
 begin
@@ -127,8 +134,8 @@ begin
         begin
           if FUpdateText.Count > 0 then
           begin
-            VersionOnWeb := FUpdateText[0];
-            VerCompar := CheckVersion(VersionOnWeb);
+            FVersionOnWeb := FUpdateText[0];
+            VerCompar := CheckVersion(FVersionOnWeb);
             case VerCompar of
               vcUnknown, vcSame, vcExternalOlder: ; // do nothing
               vcExternalNewer:
@@ -232,20 +239,19 @@ var
 begin
   if FNewVideoCount = 1 then
   begin
-    AMessage := 'There is a new video on the ModelMuse web site.';
+    AMessage := StrThereIsANewVideo;
   end
   else
   begin
-    AMessage := 'There are ' + IntToStr(FNewVideoCount)
-      + ' new videos on the ModelMuse web site.';
+    AMessage := Format('There are  %d new videos on the ModelMuse web site.', [FNewVideoCount]);
   end;
   AForm := CreateMessageDialog(AMessage, mtInformation, [mbOK]);
   try
     Lbl := TJvHTLabel.Create(AForm);
     Lbl.Parent := AForm;
-    Lbl.Caption := '<u><a href="http://water.usgs.gov/nrp/gwsoftware/'
-      + 'ModelMuse/ModelMuseVideos.html">Click here for '
-      + 'ModelMuse Videos</a></u>';
+//    Lbl.Caption := '<u><a href="http://water.usgs.gov/nrp/gwsoftware/ModelMuse/ModelMuseVideos.html">'
+//      + StrClickHereForModel+'</a></u>';
+    Lbl.Caption := Format('<u><a href="http://water.usgs.gov/nrp/gwsoftware/ModelMuse/ModelMuseVideos.html">%s</a></u>', [StrClickHereForModel]);
     Lbl.Left := (AForm.ClientWidth - Lbl.Width) div 2;
     Lbl.Top := 40;
     AForm.ShowModal;
@@ -261,6 +267,8 @@ begin
   with TfrmNewVersion.Create(nil) do
   begin
     try
+      lblYourVersion.Caption := Format(StrYourVersionS, [FModelVersion]);
+      lblVersionOnWeb.Caption := Format(StrNewVersionS, [FVersionOnWeb]);
       ShowModal;
     finally
       Free;

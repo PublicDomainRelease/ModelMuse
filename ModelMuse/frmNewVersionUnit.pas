@@ -13,6 +13,8 @@ type
     Label1: TLabel;
     btnClose: TBitBtn;
     btnGoToWeb: TBitBtn;
+    lblYourVersion: TLabel;
+    lblVersionOnWeb: TLabel;
     procedure FormCreate(Sender: TObject); override;
     procedure btnGoToWebClick(Sender: TObject);
   private

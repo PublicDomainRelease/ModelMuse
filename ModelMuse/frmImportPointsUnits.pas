@@ -1045,6 +1045,10 @@ begin
         NewObsName := LocalObsRoot;
       end;
       HobBoundary.ObservationName := NewObsName;
+      if CharInSet(NewObsName[1], ['0'..'9']) then
+      begin
+        NewObsName := 'Obs_' + NewObsName;
+      end;
       AScreenObject.Name := TScreenObject.ValidName(NewObsName);
     end
     else

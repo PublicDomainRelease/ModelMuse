@@ -3749,6 +3749,11 @@ var
   CachedPosition: Integer;
   FieldStorage: TFieldNumStorage;
 begin
+  if FieldName = '' then
+  begin
+    result := '';
+    Exit;
+  end;
   CachedPosition := FFieldNumbers.Indexof(string(FieldName));
   if CachedPosition >= 0 then
   begin
