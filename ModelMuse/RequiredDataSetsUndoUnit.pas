@@ -44,6 +44,7 @@ type
     FNewSfrParamInstances: TSfrParamInstances;
     FOldSfrParamInstances: TSfrParamInstances;
     FOldModflowBoundaries: TList;
+    FScreenObjects: TList;
   protected
     function Description: string; override;
   public
@@ -266,9 +267,11 @@ var
 begin
   inherited Create;
   FOldModflowBoundaries := TObjectList.Create;
+  FScreenObjects := TList.Create;
   for ScreenObjectIndex := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
   begin
     ScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
+    FScreenObjects.Add(ScreenObject);
     OldBoundary := TModflowBoundaries.Create;
     OldBoundary.Assign(ScreenObject.ModflowBoundaries);
     FOldModflowBoundaries.Add(OldBoundary);
@@ -321,6 +324,7 @@ begin
   FNewSfrParamInstances.Free;
   FOldSfrParamInstances.Free;
   FOldModflowBoundaries.Free;
+  FScreenObjects.Free;
 //  FExistingScreenObjects.Free;
   inherited;
 end;
@@ -355,9 +359,9 @@ begin
   frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances :=
     FOldSfrParamInstances;
   UpdatedRequiredDataSets;
-  for ScreenObjectIndex := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+  for ScreenObjectIndex := 0 to FScreenObjects.Count - 1 do
   begin
-    ScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
+    ScreenObject := FScreenObjects[ScreenObjectIndex];
     OldBoundary := FOldModflowBoundaries[ScreenObjectIndex];
     ScreenObject.ModflowBoundaries.Assign(OldBoundary);
   end;

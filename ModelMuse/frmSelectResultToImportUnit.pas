@@ -232,6 +232,7 @@ uses Math, frmGoPhastUnit, RbwParser,
 
 resourcestring
   StrHead = 'Head';
+  StrTheFileCouldNotB = 'The file could not be read.';
 
 const
   StrModelResults = 'Model Results';
@@ -520,50 +521,59 @@ var
   AFileName: string;
   Extension: string;
 begin
-  odSelectFiles.FileName := DefaultFileName(frmGoPhast.PhastModel);
-  result := odSelectFiles.Execute;
-  if result then
-  begin
-    rdgModels.BeginUpdate;
-    try
-        if frmGoPhast.PhastModel.LgrUsed then
-        begin
-          rdgModels.RowCount := 2 + frmGoPhast.PhastModel.ChildModels.Count;
-        end
-        else
-        begin
-          rdgModels.RowCount := 2;
-          rdgModels.Visible := False;
-          splitData.Visible := False;
-        end;
-        AFileName := odSelectFiles.FileName;
-        AddModelRow(frmGoPhast.PhastModel, 1,  AFileName);
-        result := ReadDataHeadings(frmGoPhast.PhastModel, 1, AFileName);
-        if result and frmGoPhast.PhastModel.LgrUsed then
-        begin
-          Extension := ExtractFileExt(AFileName);
-          for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  try
+    odSelectFiles.FileName := DefaultFileName(frmGoPhast.PhastModel);
+    result := odSelectFiles.Execute;
+    if result then
+    begin
+      rdgModels.BeginUpdate;
+      try
+          if frmGoPhast.PhastModel.LgrUsed then
           begin
-            ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
-            AFileName := DefaultFileName(ChildModel);
-            AFileName := ChangeFileExt(AFileName, Extension);
-            AddModelRow(ChildModel, ChildIndex + 2,  AFileName);
-            if FileExists(AFileName) then
+            rdgModels.RowCount := 2 + frmGoPhast.PhastModel.ChildModels.Count;
+          end
+          else
+          begin
+            rdgModels.RowCount := 2;
+            rdgModels.Visible := False;
+            splitData.Visible := False;
+          end;
+          AFileName := odSelectFiles.FileName;
+          AddModelRow(frmGoPhast.PhastModel, 1,  AFileName);
+          result := ReadDataHeadings(frmGoPhast.PhastModel, 1, AFileName);
+          if result and frmGoPhast.PhastModel.LgrUsed then
+          begin
+            Extension := ExtractFileExt(AFileName);
+            for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
             begin
-              result := ReadDataHeadings(ChildModel, ChildIndex + 2,  AFileName);
-              if not result then
+              ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+              AFileName := DefaultFileName(ChildModel);
+              AFileName := ChangeFileExt(AFileName, Extension);
+              AddModelRow(ChildModel, ChildIndex + 2,  AFileName);
+              if FileExists(AFileName) then
               begin
-                Exit;
-              end;
-            end
-            else
-            begin
+                result := ReadDataHeadings(ChildModel, ChildIndex + 2,  AFileName);
+                if not result then
+                begin
+                  Exit;
+                end;
+              end
+              else
+              begin
 
+              end;
             end;
           end;
-        end;
-    finally
-      rdgModels.EndUpdate;
+      finally
+        rdgModels.EndUpdate;
+      end;
+    end;
+  except on E: EInOutError do
+    begin
+      result := False;
+      Beep;
+      MessageDlg(Format(StrTheFileCouldNotB + #13#10 + '"%s"',
+        [E.message]), mtError, [mbOK], 0);
     end;
   end;
 end;

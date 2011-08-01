@@ -150,6 +150,7 @@ begin
     ErrorValues.Add('MNW1 and MNW2 cannot both be active in the same grid');
     ErrorValues.Add('MNW1 and MNW2 cannot both be active in the same simulation');
     ErrorValues.Add('Failure to converge');
+    ErrorValues.Add(' NaN');
 
     // MODFLOW-NWT
     ErrorValues.Add('THIS WILL CAUSE PROBLEMS IN COMPUTING LAKE STAGE USING THE NEWTON METHOD.');

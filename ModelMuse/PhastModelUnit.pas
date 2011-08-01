@@ -4672,8 +4672,12 @@ const
   //    '2.10.1.0' Change: When a message about a new version is displayed,
   //        the version numbers of the new version as well as the version
   //        that is being used are both displayed.
+  //    '2.10.2.0' Bug fix: Undoing certain operations no longer results
+  //        in a range check error.
+  //      Enhancement: Attempting to import a formatted head file that
+  //        contains "NaN" no longer results in a bug report.
 
-  ModelVersion = '2.10.1.0';
+  ModelVersion = '2.10.2.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];

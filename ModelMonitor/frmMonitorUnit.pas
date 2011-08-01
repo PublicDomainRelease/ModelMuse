@@ -12,6 +12,7 @@ interface
     decimal separator was not a period in the local language settings.
   1.1.0.0 Added support for MODFLOW-LGR.
   1.2.0.0 Added support for MODFLOW-NWT. Converted to compiling with Delphi XE.
+  1.3.0.0 NaN is now flagged as an error.
 }
 
 uses
@@ -1406,8 +1407,8 @@ begin
     Assert(Position > 0);
     Num1 := Trim(Copy(TestLine, 1, Position - 1));
     Num2 := Trim(Copy(TestLine, Position + Length(StrPERCENTDISCREPANCY), MAXINT));
-    Cum := StrToFloat(Num1);
-    Rate := StrToFloat(Num2);
+    Cum := StrToFloatDef(Num1, 200);
+    Rate := StrToFloatDef(Num2, 200);
 
     FPercentRate.Add(Rate);
     FPercentCumulative.Add(Cum);
