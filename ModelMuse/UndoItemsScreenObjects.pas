@@ -187,7 +187,8 @@ type
     FObjectToSplit: TList;
     FOldScreenObjectSettings: TList;
   protected
-    function ShouldDivideScreenScreenObject(AScreenObject: TScreenObject): boolean; virtual; abstract;
+    function ShouldDivideScreenScreenObject(
+      AScreenObject: TScreenObject): boolean; virtual; abstract;
     procedure UnselectAllVertices(AScreenObject: TScreenObject);
   public
     constructor Create;
@@ -201,7 +202,8 @@ type
     // @name describes what this @classname does.  It is used in menu captions
     // and hints.
     function Description: string; override;
-    function ShouldDivideScreenScreenObject(AScreenObject: TScreenObject): boolean; override;
+    function ShouldDivideScreenScreenObject(
+      AScreenObject: TScreenObject): boolean; override;
   public
     constructor Create;
     procedure Redo; override;
@@ -212,7 +214,8 @@ type
     // @name describes what this @classname does.  It is used in menu captions
     // and hints.
     function Description: string; override;
-    function ShouldDivideScreenScreenObject(AScreenObject: TScreenObject): boolean; override;
+    function ShouldDivideScreenScreenObject(
+      AScreenObject: TScreenObject): boolean; override;
   public
     constructor Create;
     procedure Redo; override;
@@ -225,7 +228,8 @@ type
     // @name describes what this @classname does.  It is used in menu captions
     // and hints.
     function Description: string; override;
-    function ShouldDivideScreenScreenObject(AScreenObject: TScreenObject): boolean; override;
+    function ShouldDivideScreenScreenObject(
+      AScreenObject: TScreenObject): boolean; override;
   public
     constructor Create;
     procedure Redo; override;
@@ -1131,7 +1135,8 @@ begin
   SelectScreenObjectTool.ShouldDrawSelectionRectangle :=
     FOldSelectedScreenObjects.Count > 0;
 
-  Assert(frmGoPhast.PhastModel.ChildModels.Count = FOldChildModelScreenObjects.Count);
+  Assert(frmGoPhast.PhastModel.ChildModels.Count =
+    FOldChildModelScreenObjects.Count);
   for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
   begin
     ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
@@ -1489,8 +1494,8 @@ begin
                 and (PointIndex = AScreenObject.SectionStart[SectionIndex]) then
               begin
                 TempScreenObject.SectionStarts.Add;
-                TempScreenObject.SectionStarts.IntValues[TempScreenObject.SectionStarts.Count-1] := PointIndex;
-//                (TempScreenObject.Sections.Add as TIntegerItem).Value := PointIndex;
+                TempScreenObject.SectionStarts.IntValues[
+                  TempScreenObject.SectionStarts.Count-1] := PointIndex;
                 Inc(SectionIndex);
               end;
               TempScreenObject.AddPoint(Points[PointIndex], NewSection);
@@ -1935,7 +1940,8 @@ begin
   inherited;
 end;
 
-procedure TUndoRearrangeScreenObjects.SetOrder(const ScreenObjectList: TScreenObjectList;
+procedure TUndoRearrangeScreenObjects.SetOrder(
+  const ScreenObjectList: TScreenObjectList;
   const NameList: TStringList);
 var
   Index: integer;
@@ -1963,7 +1969,8 @@ begin
   SetOrder(FList, FNames);
 end;
 
-function TUndoShowHideScreenObject.AddScreenObjectToChange(const ScreenObject: TScreenObject): integer;
+function TUndoShowHideScreenObject.AddScreenObjectToChange(
+  const ScreenObject: TScreenObject): integer;
 begin
   result := FScreenObjectsToChange.IndexOf(ScreenObject);
   if result < 0 then
@@ -2375,7 +2382,8 @@ end;
 
 { TUndoDeleteVertices }
 
-constructor TUndoDeleteVertices.Create(const ListOfScreenObjects: TScreenObjectList);
+constructor TUndoDeleteVertices.Create(
+  const ListOfScreenObjects: TScreenObjectList);
 var
   Index: integer;
   AScreenObject: TScreenObject;
@@ -2563,7 +2571,8 @@ begin
             begin
               TempSectionIndex := TempScreenObject.SectionCount -1;
               TempVertextIndex := TempScreenObject.SectionStart[TempSectionIndex];
-              TempScreenObject.AddPoint(TempScreenObject.Points[TempVertextIndex], False);
+              TempScreenObject.AddPoint(
+                TempScreenObject.Points[TempVertextIndex], False);
               Inc(PointCount);
               if PointCount <> TempScreenObject.Count then
               begin
@@ -2992,7 +3001,8 @@ begin
                 OtherScreenObject.Count + ScreenObject.Count -1;
               for PointIndex := OtherScreenObject.Count -1 downto 0 do
               begin
-                TempScreenObject.AddPoint(OtherScreenObject.Points[PointIndex], False);
+                TempScreenObject.AddPoint(
+                  OtherScreenObject.Points[PointIndex], False);
               end;
               for PointIndex := 1 to ScreenObject.Count - 1 do
               begin
@@ -3004,7 +3014,8 @@ begin
               ScreenObject.MoveToPoints(TempPoints);
               Assert(FQuadTree.RemovePoint(X, Y, OtherScreenObject));
               AnotherPoint := OtherScreenObject.Points[OtherScreenObject.Count-1];
-              Assert(FQuadTree.RemovePoint(AnotherPoint.X, AnotherPoint.Y, OtherScreenObject));
+              Assert(FQuadTree.RemovePoint(
+                AnotherPoint.X, AnotherPoint.Y, OtherScreenObject));
               if not ScreenObject.Closed then
               begin
                 FQuadTree.AddPoint(AnotherPoint.X, AnotherPoint.Y, ScreenObject);
@@ -3038,7 +3049,8 @@ begin
               ScreenObject.MoveToPoints(TempPoints);
               Assert(FQuadTree.RemovePoint(X, Y, OtherScreenObject));
               AnotherPoint := OtherScreenObject.Points[0];
-              Assert(FQuadTree.RemovePoint(AnotherPoint.X, AnotherPoint.Y, OtherScreenObject));
+              Assert(FQuadTree.RemovePoint(
+                AnotherPoint.X, AnotherPoint.Y, OtherScreenObject));
               if not ScreenObject.Closed then
               begin
                 FQuadTree.AddPoint(AnotherPoint.X, AnotherPoint.Y, ScreenObject);
@@ -3087,7 +3099,8 @@ begin
               end;
               Assert(FQuadTree.RemovePoint(X, Y, OtherScreenObject));
               AnotherPoint := OtherScreenObject.Points[OtherScreenObject.Count-1];
-              Assert(FQuadTree.RemovePoint(AnotherPoint.X, AnotherPoint.Y, OtherScreenObject));
+              Assert(FQuadTree.RemovePoint(
+                AnotherPoint.X, AnotherPoint.Y, OtherScreenObject));
               if not ScreenObject.Closed then
               begin
                 FQuadTree.AddPoint(AnotherPoint.X, AnotherPoint.Y, ScreenObject);
@@ -3105,7 +3118,8 @@ begin
               end;
               Assert(FQuadTree.RemovePoint(X, Y, OtherScreenObject));
               AnotherPoint := OtherScreenObject.Points[0];
-              Assert(FQuadTree.RemovePoint(AnotherPoint.X, AnotherPoint.Y, OtherScreenObject));
+              Assert(FQuadTree.RemovePoint(
+                AnotherPoint.X, AnotherPoint.Y, OtherScreenObject));
               if not ScreenObject.Closed then
               begin
                 FQuadTree.AddPoint(AnotherPoint.X, AnotherPoint.Y, ScreenObject);
@@ -3215,7 +3229,8 @@ begin
   FScreenObjects.Capacity := frmGoPhast.PhastModel.ScreenObjectCount;
   for Index := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
   begin
-    AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index] as TScreenObject;
+    AScreenObject := frmGoPhast.PhastModel.ScreenObjects[Index]
+      as TScreenObject;
     if AScreenObject.Selected and not AScreenObject.Deleted then
     begin
       FScreenObjects.Add(AScreenObject)
@@ -3266,7 +3281,8 @@ begin
   inherited;
 end;
 
-procedure TCustomImportMultipleScreenObjects.StoreNewScreenObjects(const ListOfScreenObjects: TList);
+procedure TCustomImportMultipleScreenObjects.StoreNewScreenObjects(
+  const ListOfScreenObjects: TList);
 var
   Index: integer;
   AScreenObject: TScreenObject;
@@ -3288,7 +3304,8 @@ begin
   SetPostSelection;
 end;
 
-procedure TCustomImportMultipleScreenObjects.UpdateScreenObject(const AScreenObject: TScreenObject);
+procedure TCustomImportMultipleScreenObjects.UpdateScreenObject(
+  const AScreenObject: TScreenObject);
 begin
   if (AScreenObject.ElevationCount <> ecZero) then
   begin
@@ -3600,7 +3617,8 @@ begin
   for Index := 0 to FObjectToSplit.Count - 1 do
   begin
     AScreenObject := FObjectToSplit[Index];
-    for PointIndex := AScreenObject.Count - 1 downto AScreenObject.SectionEnd[0] + 1 do
+    for PointIndex := AScreenObject.Count - 1
+      downto AScreenObject.SectionEnd[0] + 1 do
     begin
       AScreenObject.DeletePoint(PointIndex);
     end;
@@ -3713,8 +3731,8 @@ begin
   inherited;
 end;
 
-function TUndoMakeSelectedVerticesNewScreenObject.ShouldDivideScreenScreenObject(
-  AScreenObject: TScreenObject): boolean;
+function TUndoMakeSelectedVerticesNewScreenObject.
+  ShouldDivideScreenScreenObject(AScreenObject: TScreenObject): boolean;
 begin
   result := (AScreenObject.SelectedVertexCount > 0)
     and (AScreenObject.SelectedVertexCount < AScreenObject.Count);
@@ -3820,7 +3838,8 @@ begin
   inherited;
 end;
 
-procedure TCustomUndoDivideScreenObject.UnselectAllVertices(AScreenObject: TScreenObject);
+procedure TCustomUndoDivideScreenObject.UnselectAllVertices(
+  AScreenObject: TScreenObject);
 begin
   AScreenObject.ClearSelectedVertices;
 end;

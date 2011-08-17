@@ -599,6 +599,7 @@ begin
         WriteInteger(NCLU);
         WriteString(' # Data set 10: PARNAM PARTYP Parval NCLU');
         NewLine;
+        Model.WritePValAndTemplate(PARNAM,PARVAL);
 
         HGUNAM := 'SYTP';
 

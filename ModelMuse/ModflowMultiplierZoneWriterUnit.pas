@@ -132,8 +132,12 @@ begin
         result := Model.ModflowPackages.HufPackage.IsSelected
           and Model.ModflowFullStressPeriods.TransientModel;
       end;
+    ptHFB:
+      begin
+        result := False;
+      end;
     ptUndefined, ptRCH, ptEVT, ptETS, ptCHD, ptGHB, ptQ,
-    ptRIV, ptDRN, ptDRT, ptSFR, ptHFB,
+    ptRIV, ptDRN, ptDRT, ptSFR,
     ptHUF_HK, ptHUF_HANI, ptHUF_VK, ptHUF_VANI, ptHUF_SS, ptHUF_SY,
     ptHUF_KDEP:
       begin

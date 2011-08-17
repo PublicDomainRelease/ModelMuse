@@ -156,7 +156,11 @@ var
 implementation
 
 uses frmPixelPointUnit, GoPhastTypes, frmGoPhastUnit, BigCanvasMethods, 
-  frmWorldFileTypeUnit, frmGoToUnit, jpeg, GraphicEx, Pcx;
+  frmWorldFileTypeUnit, frmGoToUnit, jpeg, GraphicEx, Pcx, ModelMuseUtilities;
+
+resourcestring
+  StrUnableToReadWorld = 'Unable to read world file. Check that the world fi' +
+  'le is properly formatted.';
 
 {$R *.dfm}
 
@@ -723,56 +727,63 @@ begin
   WorldFile := TStringList.Create;
   try
     WorldFile.LoadFromFile(FileName);
-    case FileType of
-      wftCAD:
-        begin
-          dgPoints.BeginUpdate;
-          try
-            for LineIndex := 0 to WorldFile.Count -1 do
-            begin
-              Line := WorldFile[LineIndex];
-              if Line <> '' then
+    try
+      case FileType of
+        wftCAD:
+          begin
+            dgPoints.BeginUpdate;
+            try
+              for LineIndex := 0 to WorldFile.Count -1 do
               begin
-                PixelX := Round(StrToFloat(ExtractWord(Line)));
-                PixelY := Round(StrToFloat(ExtractWord(Line)));
-                RealWorldX := StrToFloat(ExtractWord(Line));
-                RealWorldY := StrToFloat(ExtractWord(Line));
+                Line := WorldFile[LineIndex];
+                if Line <> '' then
+                begin
+                  PixelX := Round(FortranStrToFloat(ExtractWord(Line)));
+                  PixelY := Round(FortranStrToFloat(ExtractWord(Line)));
+                  RealWorldX := FortranStrToFloat(ExtractWord(Line));
+                  RealWorldY := FortranStrToFloat(ExtractWord(Line));
+                  AddPoint(PixelX, PixelY, RealWorldX, RealWorldY);
+                end;
+              end;
+            finally
+              dgPoints.EndUpdate;
+            end;
+          end;
+        sftRaster:
+          begin
+            Assert(WorldFile.Count >= 6);
+            A := FortranStrToFloat(Trim(WorldFile[0]));
+            D := FortranStrToFloat(Trim(WorldFile[1]));
+            B := FortranStrToFloat(Trim(WorldFile[2]));
+            E := FortranStrToFloat(Trim(WorldFile[3]));
+            C := FortranStrToFloat(Trim(WorldFile[4]));
+            F := FortranStrToFloat(Trim(WorldFile[5]));
+            PixelX := 0;
+            PixelY := 0;
+            RealWorldX := A*PixelX + B*PixelY + C;
+            RealWorldY := D*PixelX + E*PixelY + F;
+            dgPoints.BeginUpdate;
+            try
+              AddPoint(PixelX, PixelY, RealWorldX, RealWorldY);
+              if FBitMap <> nil then
+              begin
+                PixelX := FBitMap.Width-1;
+                PixelY := FBitMap.Height-1;
+                RealWorldX := A*PixelX + B*PixelY + C;
+                RealWorldY := D*PixelX + E*PixelY + F;
                 AddPoint(PixelX, PixelY, RealWorldX, RealWorldY);
               end;
+            finally
+              dgPoints.EndUpdate
             end;
-          finally
-            dgPoints.EndUpdate;
           end;
-        end;
-      sftRaster:
-        begin
-          Assert(WorldFile.Count >= 6);
-          A := StrToFloat(Trim(WorldFile[0]));
-          D := StrToFloat(Trim(WorldFile[1]));
-          B := StrToFloat(Trim(WorldFile[2]));
-          E := StrToFloat(Trim(WorldFile[3]));
-          C := StrToFloat(Trim(WorldFile[4]));
-          F := StrToFloat(Trim(WorldFile[5]));
-          PixelX := 0;
-          PixelY := 0;
-          RealWorldX := A*PixelX + B*PixelY + C;
-          RealWorldY := D*PixelX + E*PixelY + F;
-          dgPoints.BeginUpdate;
-          try
-            AddPoint(PixelX, PixelY, RealWorldX, RealWorldY);
-            if FBitMap <> nil then
-            begin
-              PixelX := FBitMap.Width-1;
-              PixelY := FBitMap.Height-1;
-              RealWorldX := A*PixelX + B*PixelY + C;
-              RealWorldY := D*PixelX + E*PixelY + F;
-              AddPoint(PixelX, PixelY, RealWorldX, RealWorldY);
-            end;
-          finally
-            dgPoints.EndUpdate
-          end;
-        end;
-      else Assert(False);
+        else Assert(False);
+      end;
+    except on EConvertError do
+      begin
+        Beep;
+        MessageDlg(StrUnableToReadWorld, mtError, [mbOK], 0);
+      end;
     end;
   finally
     WorldFile.Free;

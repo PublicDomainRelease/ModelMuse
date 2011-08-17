@@ -83,7 +83,7 @@ type
   public
     procedure CacheData;
     constructor Create;
-    property Items[Index: Integer]: TValueArrayItem read GetItem write SetItem;
+    property Items[Index: Integer]: TValueArrayItem read GetItem write SetItem; default;
     function ValuesByName(AName: string): TValueArrayStorage;
   end;
 
@@ -419,7 +419,8 @@ begin
       else Assert(False);
     end;
   end;
-  Count := Count -1;
+  Count := LocalCount -1;
+//  Count := Count -1;
 end;
 
 destructor TValueArrayStorage.Destroy;

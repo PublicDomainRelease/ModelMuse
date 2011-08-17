@@ -201,6 +201,7 @@ type
 
   TTimeListModelLinkList = class(TObject)
   private
+    // FList is actually a TObjectList.
     FList: TList;
     FBoundary: TCustomMF_BoundColl;
     FCachedResult: TTimeListsModelLink;
@@ -208,6 +209,7 @@ type
     Constructor Create(Boundary: TCustomMF_BoundColl);
     Destructor Destroy; override;
     function GetLink(AModel: TBaseModel): TTimeListsModelLink;
+    procedure RemoveLink(AModel: TBaseModel);
   end;
 
 
@@ -291,6 +293,7 @@ type
       Item: TCustomModflowBoundaryItem; ItemIndex: Integer); virtual;
     procedure ClearTimeLists(AModel: TBaseModel);
   public
+    procedure RemoveModelLink(AModel: TBaseModel);
     // @name frees all the @link(TCustomBoundaryStorage) owned by
     // @classname.
     procedure ClearBoundaries;
@@ -583,6 +586,7 @@ type
       virtual; abstract;
     procedure ClearBoundaries; virtual;
   public
+    procedure RemoveModelLink(AModel: TBaseModel); virtual;
     procedure ClearTimeLists(AModel: TBaseModel); virtual;
     procedure Assign(Source: TPersistent); override;
     // @name creates an instance of @classname.
@@ -640,6 +644,7 @@ type
     function ParameterType: TParameterType; virtual; abstract;
     procedure ClearBoundaries; override;
   public
+    procedure RemoveModelLink(AModel: TBaseModel); override;
     procedure ClearTimeLists(AModel: TBaseModel); override;
     // @name copies @link(Values) and @link(Parameters) from the Source
     // @classname to this @classname.
@@ -1713,6 +1718,11 @@ begin
   end;
 end;
 
+procedure TCustomMF_BoundColl.RemoveModelLink(AModel: TBaseModel);
+begin
+  TimeListLink.RemoveLink(AModel);
+end;
+
 procedure TCustomMF_BoundColl.SetBoundaryCapacity(Value: integer);
 begin
   FBoundaries.Capacity := Value;
@@ -2245,6 +2255,19 @@ begin
   inherited;
 end;
 
+procedure TModflowParamBoundary.RemoveModelLink(AModel: TBaseModel);
+var
+  Index: Integer;
+  ParamItem: TModflowParamItem;
+begin
+  inherited;
+  for Index := 0 to Parameters.Count - 1 do
+  begin
+    ParamItem := Parameters[Index];
+    ParamItem.Param.RemoveModelLink(AModel);
+  end;
+end;
+
 procedure TModflowParamBoundary.SetParameters(const Value: TModflowParameters);
 begin
   FParameters.Assign(Value);
@@ -2392,6 +2415,11 @@ end;
 function TModflowBoundary.NonParameterColumns: integer;
 begin
   result := 2 + Values.TimeListCount(frmGoPhast.PhastModel);
+end;
+
+procedure TModflowBoundary.RemoveModelLink(AModel: TBaseModel);
+begin
+  FValues.RemoveModelLink(AModel);
 end;
 
 procedure TSpecificModflowBoundary.SetFormulaInterpretation(
@@ -2819,7 +2847,7 @@ begin
   if (FCachedResult <> nil) and (FCachedResult.Model = AModel) then
   begin
     result := FCachedResult;
-    Exit;    
+    Exit;
   end;
   for Index := 0 to FList.Count - 1 do
   begin
@@ -2834,6 +2862,28 @@ begin
   result := FBoundary.GetTimeListLinkClass.Create(AModel, FBoundary);
   FList.Add(result);
   FCachedResult := result;
+end;
+
+procedure TTimeListModelLinkList.RemoveLink(AModel: TBaseModel);
+var
+  Index: Integer;
+  ALink: TTimeListsModelLink;
+  LinkToRemove: TTimeListsModelLink;
+begin
+  for Index := 0 to FList.Count - 1 do
+  begin
+    ALink := FList[Index];
+    if ALink.Model = AModel then
+    begin
+      LinkToRemove := ALink;
+      if FCachedResult = LinkToRemove then
+      begin
+        FCachedResult := nil
+      end;
+      FList.Delete(Index);
+      Break;
+    end;
+  end;
 end;
 
 end.

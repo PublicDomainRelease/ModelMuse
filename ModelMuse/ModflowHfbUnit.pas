@@ -138,9 +138,9 @@ begin
       TScreenObject(FScreenObject).TalksTo(FHfbObserver);
       FHfbObserver.UpToDate:= True;
     end;
+    FObserverList.Add(ThicknessObserver);
+    FObserverList.Add(HydraulicConductivityObserver);
   end;
-  FObserverList.Add(ThicknessObserver);
-  FObserverList.Add(HydraulicConductivityObserver);
 
   ThicknessFormula := '1';
   HydraulicConductivityFormula := '1e-8';

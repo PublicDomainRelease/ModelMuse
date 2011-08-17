@@ -1258,8 +1258,8 @@ var
 begin
   FObsCount := 0;
   FRequiredCols := rgElevationCount.ItemIndex + 2;
-  Root := StringReplace(edRoot.Text, ' ', '_', [rfReplaceAll]) + '_';
-  if Trim(Root) = '' then
+  Root := TScreenObject.ValidName(edRoot.Text) + '_';
+  if Trim(Root) = '_' then
   begin
     Root := ObjectPrefix;
   end;

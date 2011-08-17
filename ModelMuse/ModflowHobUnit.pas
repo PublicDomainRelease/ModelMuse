@@ -64,12 +64,14 @@ type
 
   TObsTimesModelLinkList = class(TObject)
   private
+    // @name is actually a TObjectList.
     FList: TList;
     function GetLink(AModel: TBaseModel): TObsTimesModelLink;
   public
     property Links[AModel: TBaseModel]: TObsTimesModelLink read GetLink;
     Constructor Create;
     Destructor Destroy; override;
+    procedure RemoveLink(AModel: TBaseModel);
   end;
 
   // @name represents MODFLOW Head observations
@@ -87,6 +89,7 @@ type
   protected
     procedure InvalidateModel; override;
   public
+    procedure RemoveModelLink(AModel: TBaseModel);
     property ScreenObject: TObject read FScreenObject;
     // @name creates an instance of @classname
     constructor Create(Boundary: THobBoundary; Model: TBaseModel;
@@ -204,6 +207,7 @@ type
     property CellLists[Index: integer]: TObsCellList read GetCellList;
     property CellListCount: integer read GetCellListCount;
     function GetItemObsName(Item: THobItem): string;
+    procedure RemoveModelLink(AModel: TBaseModel);
   published
     property ObservationName: string read FObservationName write SetObservationName;
     // @name stores the MODFLOW boundaries that are NOT
@@ -451,6 +455,11 @@ begin
       SetLength(result, 12);
     end;
   end;
+end;
+
+procedure THobBoundary.RemoveModelLink(AModel: TBaseModel);
+begin
+  Values.RemoveModelLink(AModel);
 end;
 
 procedure THobBoundary.SetLayerFractions(const Value: TMultiHeadCollection);
@@ -726,6 +735,11 @@ begin
   begin
     PhastModel.InvalidateMfHobHeads(self);
   end;
+end;
+
+procedure THobCollection.RemoveModelLink(AModel: TBaseModel);
+begin
+  FObsTimesModelLinkList.RemoveLink(AModel);
 end;
 
 { TObservationTimeList }
@@ -1063,6 +1077,22 @@ begin
   begin
     result.FObsTimes.OnInvalidate :=
       (AModel as TCustomModel).InvalidateMfHobHeads;
+  end;
+end;
+
+procedure TObsTimesModelLinkList.RemoveLink(AModel: TBaseModel);
+var
+  Index: Integer;
+  ALink: TObsTimesModelLink;
+begin
+  for Index := 0 to FList.Count - 1 do
+  begin
+    ALink := FList[Index];
+    if ALink.FModel = AModel then
+    begin
+      FList.Delete(Index);
+      Break;
+    end;
   end;
 end;
 

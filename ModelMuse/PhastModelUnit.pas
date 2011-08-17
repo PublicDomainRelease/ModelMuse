@@ -4676,8 +4676,25 @@ const
   //        in a range check error.
   //      Enhancement: Attempting to import a formatted head file that
   //        contains "NaN" no longer results in a bug report.
+  //    '2.10.2.1' Bug fix: SYTP parameters in the HUF package are now written
+  //        to the PVAL and UCODE template files.
+  //    '2.10.2.2' Bug fix: If the HFB package was selected, using the
+  //        MODFLOW Packages and Programs dialog box no longer causes access
+  //        violations.
+  //      Bug fix: When the HFB package was selected, exporting a model that
+  //        uses zone arrays no longer causes an Assertion failure.
+  //    ''2.10.2.3' Bug fix: Fixed a problem in which deleting vertices of an
+  //        object that included imported text data, more of the text data was
+  //        deleted than should have been deleted.
+  //      Bug fix: fixed bugs that could cause access violations when
+  //        ModelMuse was closed.
+  //      Bug fix: Reading World Files on computers where the decimal separator
+  //        is set to a value other than '.' now works correctly.
+  //      Bug fix: When importing points, it is no longer possible to
+  //        attempt to define an invalid object name.
+  //    '2.10.3.0' No further changes.
 
-  ModelVersion = '2.10.2.0';
+  ModelVersion = '2.10.3.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -6044,6 +6061,7 @@ var
 begin
   FSaveBfhBoundaryConditions := True;
 
+  AllObserversStopTalking;
   FLayerStructure.StopTalkingToAnyone;
   for Index := 0 to GlobalVariables.Count - 1 do
   begin
@@ -6066,11 +6084,6 @@ begin
   ClearViewedItems;
   FColorLegend.ValueSource := nil;
   FContourLegend.ValueSource := nil;
-  for ChildIndex := 0 to ChildModels.Count - 1 do
-  begin
-    ChildModels[ChildIndex].ChildModel.Clear;
-  end;
-  ChildModels.Clear;
 
   FCachedZoneArrayIndex := -1;
   FCachedMultiplierArrayIndex := -1;
@@ -6093,9 +6106,16 @@ begin
 
   ModelSelection := msUndefined;
 
-  AllObserversStopTalking;
-
+  // Clear screen objects before clearing child models because
+  // the screen objects access the child models while being destroyed.
   FScreenObjectList.Clear;
+
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModels[ChildIndex].ChildModel.Clear;
+  end;
+  ChildModels.Clear;
+
   FDataArrayManager.ClearAllDataSets;
   ClearParsers;
 
@@ -21222,6 +21242,7 @@ destructor TChildModel.Destroy;
 var
   ParamIndex: Integer;
   AParam: TModflowTransientListParameter;
+  ScreenObjectIndex: integer;
 begin
 
   AllObserversStopTalking;
@@ -21240,6 +21261,10 @@ begin
     FParentModel.HufKzNotifier.StopsTalkingTo(HufKzNotifier);
     FParentModel.HufSsNotifier.StopsTalkingTo(HufSsNotifier);
     FParentModel.HufSyNotifier.StopsTalkingTo(HufSyNotifier);
+    for ScreenObjectIndex := 0 to ScreenObjectCount - 1 do
+    begin
+      ScreenObjects[ScreenObjectIndex].RemoveModelLink(self);
+    end;
   end;
   FClearing := True;
   try

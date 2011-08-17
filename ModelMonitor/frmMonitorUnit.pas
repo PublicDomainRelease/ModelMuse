@@ -13,6 +13,8 @@ interface
   1.1.0.0 Added support for MODFLOW-LGR.
   1.2.0.0 Added support for MODFLOW-NWT. Converted to compiling with Delphi XE.
   1.3.0.0 NaN is now flagged as an error.
+  1.4.0.0 If the name file or the program does not exist, attempting to
+    start the program will be flagged as an error.
 }
 
 uses
@@ -336,6 +338,30 @@ begin
       or not FileExists(jvfeNameFile.FileName) then
     begin
       Beep;
+      if not FileExists(jvfeModelName.FileName) then
+      begin
+        if Trim(jvfeModelName.FileName) = '' then
+        begin
+          reMonitor.Lines.Add('No model has been specified');
+        end
+        else
+        begin
+          reMonitor.Lines.Add(jvfeModelName.FileName + ' does not exist.')
+        end;
+      end;
+      if not FileExists(jvfeNameFile.FileName) then
+      begin
+        if Trim(jvfeNameFile.FileName) = '' then
+        begin
+          reMonitor.Lines.Add('No name file has been specified');
+        end
+        else
+        begin
+          reMonitor.Lines.Add(jvfeNameFile.FileName + ' does not exist.')
+        end;
+      end;
+      SetPageStatus(tabMonitor, scError);
+      StatusChanged(nil, scError);
       Exit;
     end;
 

@@ -1360,6 +1360,7 @@ view. }
     FModflowMnw2Boundary: TMnw2Boundary;
     FModflowHydmodData: THydmodData;
   public
+    procedure RemoveModelLink(AModel: TBaseModel);
     procedure FreeUnusedBoundaries;
     Destructor Destroy; override;
     property ModflowChdBoundary: TChdBoundary read FModflowChdBoundary
@@ -3225,6 +3226,7 @@ having them take care of the subscriptions. }
     procedure CreateHydmodData;
     procedure CacheValueArrays;
     property ChildModel: TBaseModel read GetChildModel write SetChildModel;
+    procedure RemoveModelLink(AModel: TBaseModel);
   published
     // @name is deprecated.
     property ChildModelDiscretization: integer read FChildModelDiscretization
@@ -9245,6 +9247,14 @@ begin
     Assert(Observer <> nil);
     Observer.StopsTalkingTo(FBottomElevSubscription);
     Observer.StopsTalkingTo(self);
+  end;
+end;
+
+procedure TScreenObject.RemoveModelLink(AModel: TBaseModel);
+begin
+  if FModflowBoundaries <> nil then
+  begin
+    FModflowBoundaries.RemoveModelLink(AModel);
   end;
 end;
 
@@ -33016,6 +33026,82 @@ begin
   begin
     FreeAndNil(FModflowHydmodData);
   end;
+end;
+
+procedure TModflowBoundaries.RemoveModelLink(AModel: TBaseModel);
+begin
+  if FModflowChdBoundary <> nil then
+  begin
+    FModflowChdBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowEtsBoundary <> nil then
+  begin
+    FModflowEtsBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowEvtBoundary <> nil then
+  begin
+    FModflowEvtBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowDrnBoundary <> nil then
+  begin
+    FModflowDrnBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowDrtBoundary <> nil then
+  begin
+    FModflowDrtBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowGhbBoundary <> nil then
+  begin
+    FModflowGhbBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowLakBoundary <> nil then
+  begin
+    FModflowLakBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowRchBoundary <> nil then
+  begin
+    FModflowRchBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowResBoundary <> nil then
+  begin
+    FModflowResBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowRivBoundary <> nil then
+  begin
+    FModflowRivBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowSfrBoundary <> nil then
+  begin
+    FModflowSfrBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowWellBoundary <> nil then
+  begin
+    FModflowWellBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowUzfBoundary <> nil then
+  begin
+    FModflowUzfBoundary.RemoveModelLink(AModel);
+  end;
+  if FModflowHeadObservations <> nil then
+  begin
+    FModflowHeadObservations.RemoveModelLink(AModel);
+  end;
+//  if FModflowHfbBoundary <> nil then
+//  begin
+//    FModflowHfbBoundary.RemoveModelLink(AModel);
+//  end;
+//  if FModflowGage <> nil then
+//  begin
+//    FModflowGage.RemoveModelLink(AModel);
+//  end;
+  if FModflowMnw2Boundary <> nil then
+  begin
+    FModflowMnw2Boundary.RemoveModelLink(AModel);
+  end;
+//  if FModflowHydmodData <> nil then
+//  begin
+//    FModflowHydmodData.RemoveModelLink(AModel);
+//  end;
 end;
 
 { TSelectedCells }
