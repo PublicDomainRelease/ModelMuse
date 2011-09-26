@@ -105,12 +105,13 @@ var
   LayerGroup: TLayerGroup;
   LayerIndex: Integer;
   Discretization: TChildDiscretizationCollection;
+  FullChildNameFile: string;
 begin
   ChildModel := (Model as TPhastModel).ChildModels[ChildIndex].ChildModel;
 
   // data set 6
-  ChildNameFile := ChildModel.Child_NameFile_Name(FParentNameFile);
-  ChildNameFile := ExtractFileName(ChildNameFile);
+  FullChildNameFile := ChildModel.Child_NameFile_Name(FParentNameFile);
+  ChildNameFile := ExtractFileName(FullChildNameFile);
   WriteString(ChildNameFile);
   WriteString(' # Data set 6 NAME FILE');
   NewLine;
@@ -129,7 +130,7 @@ begin
   // need to decide how IUCBHSV and IUCBFSV
   // will be handled.
   WriteBfhData(ChildModel, ' # Data set 8 ISHFLG IBFLG IUCBHSV IUCBFSV',
-    ChildNameFile);
+    FullChildNameFile);
 
   // data set 9
   MXLGRITER := 0;
@@ -322,7 +323,7 @@ begin
   WriteInteger(IUPBFSV);
   WriteString(AComment);
   NewLine;
-  NameFile := AModel.FixFileName(ExtractFileName(AFileName));
+  NameFile := AModel.FixFileName(AFileName);
   SetCurrentNameFileWriter(AModel.NameFileWriter as TNameFileWriter);
   HeadFile := ChangeFileExt(NameFile, '.bfh_head');
   WriteToNameFile(StrDATA, IUPBHSV, HeadFile, foOutput);

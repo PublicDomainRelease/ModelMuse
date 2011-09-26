@@ -44,7 +44,7 @@ uses ModflowTimeUnit, frmErrorsAndWarningsUnit,
 
 resourcestring
   StrInTheFollowingRiv = 'In the following river cells, the stage is below t' +
-  'he river botton.';
+  'he river bottom.';
   StrLayerDRowDC = 'Layer: %d, Row %d, Column %d';
 
 { TModflowRIV_Writer }

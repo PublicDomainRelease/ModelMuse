@@ -138,11 +138,11 @@ begin
     begin
 //      if PhastModel.ModflowPackages.EtsPackage.TimeVaryingLayers then
       begin
-        Boundary.GetEvapotranspirationLayerCells(FLayers);
+        Boundary.GetEvapotranspirationLayerCells(FLayers, Model);
       end;
-      Boundary.GetEvapotranspirationSurfaceDepthCells(FDepthSurface);
-      Boundary.EvapotranspirationLayers.ClearBoundaries;
-      Boundary.EtsSurfDepthCollection.ClearBoundaries;
+      Boundary.GetEvapotranspirationSurfaceDepthCells(FDepthSurface, Model);
+      Boundary.EvapotranspirationLayers.ClearBoundaries(Model);
+      Boundary.EtsSurfDepthCollection.ClearBoundaries(Model);
     end;
   end;
 end;

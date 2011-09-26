@@ -448,11 +448,11 @@ var
                   Exit;
                 end;
               end;
-            end
-            else
-            begin
-              result := False;
-              Exit;
+//            end
+//            else
+//            begin
+//              result := False;
+//              Exit;
             end;
           end;
         else

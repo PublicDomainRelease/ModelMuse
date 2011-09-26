@@ -21,7 +21,12 @@ uses Windows, Dialogs, SysUtils, frmGoPhastUnit, PhastModelUnit, PrintFrequency,
   SpecifiedFluxTopZone, CustomBoundaryZone, CustomLeakyZone, FrontLeakyZone,
   SideLeakyZone, TopLeakyZone, WriteRiverUnit, ScreenObjectUnit,
   WriteWellUnit, DataSetUnit, PhastDataSets, frmPhastLocationUnit, TempFiles,
-  ModelMuseUtilities;
+  ModelMuseUtilities, frmErrorsAndWarningsUnit;
+
+resourcestring
+  StrNoBoundaryConditio = 'No boundary conditions specified.';
+  StrYouMustSpecifyAt = 'You must specify at least one boundary condition in' +
+  ' your model.';
 
 procedure WriteTime(const Stream: TStringStream; const Time: double);
 begin
@@ -1052,24 +1057,43 @@ begin
     DataSet.Initialize;
     with frmGoPhast.PhastModel.PhastGrid do
     begin
-      Stream.WriteString(BlankSpaces + BlankSpaces + '-water_table by_node' +
+
+      // PHAST may no longer supports the water_table option.
+      Zone := TCustomPhastZone.Create;
+      try
+        Zone.FX1 := ColumnPosition[0];
+        Zone.FX2 := ColumnPosition[ColumnCount];
+        Zone.FY1 := RowPosition[0];
+        Zone.FY2 := RowPosition[RowCount];
+        Zone.FZ1 := LayerElevation[0];
+        Zone.FZ2 := LayerElevation[LayerCount];
+        Zone.WriteZone(Stream);
+      finally
+        Zone.Free;
+      end;
+
+      Stream.WriteString(BlankSpaces + BlankSpaces + '-head by_node' +
         EndOfLine);
       Stream.WriteString(BlankSpaces + BlankSpaces + '<' + EndOfLine);
+
       PointIndex := 0;
-      for RowIndex := 0 to RowCount do
+      for LayerIndex := 0 to LayerCount do
       begin
-        for ColIndex := 0 to ColumnCount do
+        for RowIndex := 0 to RowCount do
         begin
-          if PointIndex mod 10 = 0 then
+          for ColIndex := 0 to ColumnCount do
           begin
-            Stream.WriteString(BlankSpaces + BlankSpaces + BlankSpaces);
-          end;
-          Inc(PointIndex);
-          Stream.WriteString(FloatToStr(DataSet.RealData[0,
-            RowIndex, ColIndex]) + ' ');
-          if PointIndex mod 10 = 0 then
-          begin
-            Stream.WriteString(EndOfLine);
+            if PointIndex mod 10 = 0 then
+            begin
+              Stream.WriteString(BlankSpaces + BlankSpaces + BlankSpaces);
+            end;
+            Inc(PointIndex);
+            Stream.WriteString(FloatToStr(DataSet.RealData[0,
+              RowIndex, ColIndex]) + ' ');
+            if PointIndex mod 10 = 0 then
+            begin
+              Stream.WriteString(EndOfLine);
+            end;
           end;
         end;
       end;
@@ -1078,6 +1102,35 @@ begin
         Stream.WriteString(EndOfLine);
       end;
       Stream.WriteString(BlankSpaces + BlankSpaces + '>' + EndOfLine);
+
+    // This is how the water table used to be printed.
+
+//      Stream.WriteString(BlankSpaces + BlankSpaces + '-water_table by_node' +
+//        EndOfLine);
+//      Stream.WriteString(BlankSpaces + BlankSpaces + '<' + EndOfLine);
+//      PointIndex := 0;
+//      for RowIndex := 0 to RowCount do
+//      begin
+//        for ColIndex := 0 to ColumnCount do
+//        begin
+//          if PointIndex mod 10 = 0 then
+//          begin
+//            Stream.WriteString(BlankSpaces + BlankSpaces + BlankSpaces);
+//          end;
+//          Inc(PointIndex);
+//          Stream.WriteString(FloatToStr(DataSet.RealData[0,
+//            RowIndex, ColIndex]) + ' ');
+//          if PointIndex mod 10 = 0 then
+//          begin
+//            Stream.WriteString(EndOfLine);
+//          end;
+//        end;
+//      end;
+//      if PointIndex mod 10 <> 0 then
+//      begin
+//        Stream.WriteString(EndOfLine);
+//      end;
+//      Stream.WriteString(BlankSpaces + BlankSpaces + '>' + EndOfLine);
     end;
   end
   else
@@ -1931,167 +1984,194 @@ var
   PhastLocation: string;
   ADir: string;
 begin
-  PhastLocation := frmGoPhast.PhastModel.ProgramLocations.PhastLocation;
-  if not FileExists(PhastLocation) then
-  begin
-    frmGoPhast.miPHASTProgramLocationClick(nil);
+  try
     PhastLocation := frmGoPhast.PhastModel.ProgramLocations.PhastLocation;
     if not FileExists(PhastLocation) then
     begin
-      Exit;
+      frmGoPhast.miPHASTProgramLocationClick(nil);
+      PhastLocation := frmGoPhast.PhastModel.ProgramLocations.PhastLocation;
+      if not FileExists(PhastLocation) then
+      begin
+        Exit;
+      end;
     end;
-  end;
-  ADir := ExtractFileDir(FileName);
-  SetCurrentDir(ADir);
+    ADir := ExtractFileDir(FileName);
+    SetCurrentDir(ADir);
 
-  PriorUpToDate := frmGoPhast.PhastModel.UpToDate;
-  OldDecSep := FormatSettings.DecimalSeparator;
-  try
+    PriorUpToDate := frmGoPhast.PhastModel.UpToDate;
+    OldDecSep := FormatSettings.DecimalSeparator;
     try
-      frmGoPhast.PhastModel.ModelInputFiles.Clear;
-      frmGoPhast.PhastModel.AddModelInputFile(FileName);
-      FormatSettings.DecimalSeparator := '.';
-      Input := TStringStream.Create('');
-      SpecifiedHeadZones := nil;
-      TopFluxZones := nil;
-      FrontFluxZones := nil;
-      SideFluxZones := nil;
-      TopLeakyZones := nil;
-      FrontLeakyZones := nil;
-      SideLeakyZones := nil;
-      PrintChemistryZones := nil;
-      PrintChemistryXYZ_Zones := nil;
-      RiverWriter := nil;
-      WellWriter := nil;
       try
-        WriteTitle(Input);
-        WritePrintInitial(Input);
-        WriteSoluteTransport(Input);
-        WriteUnits(Input, TimeUnits);
-        WritePhastGrid(Input);
-        WriteMedia(Input);
-        WriteFreeSurface(Input);
-        WriteSteadyFlow(Input);
-        WriteSolutionMethod(Input);
-        WriteHeadIC(Input);
-        if frmGoPhast.PhastModel.SoluteTransport then
-        begin
-          WriteChemistryIC(Input);
-        end;
-        frmGoPhast.PhastModel.InitializeTimes;
-
-        SpecifiedHeadZones := TSpecifiedHeadZoneGroup.Create;
-        TopFluxZones := TSpecifiedFluxTopGroup.Create;
-        FrontFluxZones := TSpecifiedFluxFrontGroup.Create;
-        SideFluxZones := TSpecifiedFluxSideGroup.Create;
-        TopLeakyZones := TTopLeakyZoneGroup.Create;
-        FrontLeakyZones := TFrontLeakyZoneGroup.Create;
-        SideLeakyZones := TSideLeakyZoneGroup.Create;
-        RiverWriter := TRiverWriter.Create;
-        WellWriter := TWellWriter.Create;
-        if frmGoPhast.PhastModel.SoluteTransport then
-        begin
-          PrintChemistryZones := TPrintChemistryZoneGroup.Create;
-          PrintChemistryXYZ_Zones := TPrintChemistryXYZ_ZoneGroup.Create;
-        end;
+        frmGoPhast.PhastModel.ModelInputFiles.Clear;
+        frmGoPhast.PhastModel.AddModelInputFile(FileName);
+        FormatSettings.DecimalSeparator := '.';
+        Input := TStringStream.Create('');
+        SpecifiedHeadZones := nil;
+        TopFluxZones := nil;
+        FrontFluxZones := nil;
+        SideFluxZones := nil;
+        TopLeakyZones := nil;
+        FrontLeakyZones := nil;
+        SideLeakyZones := nil;
+        PrintChemistryZones := nil;
+        PrintChemistryXYZ_Zones := nil;
+        RiverWriter := nil;
+        WellWriter := nil;
         try
-          WritePrintFrequency(Input);
+          WriteTitle(Input);
+          WritePrintInitial(Input);
+          WriteSoluteTransport(Input);
+          WriteUnits(Input, TimeUnits);
+          WritePhastGrid(Input);
+          WriteMedia(Input);
+          WriteFreeSurface(Input);
+          WriteSteadyFlow(Input);
+          WriteSolutionMethod(Input);
+          WriteHeadIC(Input);
           if frmGoPhast.PhastModel.SoluteTransport then
           begin
-            WritePrintLocations(Input, PrintChemistryZones,
-              PrintChemistryXYZ_Zones);
+            WriteChemistryIC(Input);
           end;
-          WriteLeakyBoundary(Input, TopLeakyZones, FrontLeakyZones,
-            SideLeakyZones);
-          WriteSpecifiedFluxes(Input, TopFluxZones, FrontFluxZones,
-            SideFluxZones);
-          WriteSpecifiedValues(Input, SpecifiedHeadZones);
-          WriteRiver(Input, RiverWriter);
-          WriteWells(Input, WellWriter);
+          frmGoPhast.PhastModel.InitializeTimes;
 
-          WriteTimeControl(Input, TimeUnits);
-          WriteEnd(Input);
+          SpecifiedHeadZones := TSpecifiedHeadZoneGroup.Create;
+          TopFluxZones := TSpecifiedFluxTopGroup.Create;
+          FrontFluxZones := TSpecifiedFluxFrontGroup.Create;
+          SideFluxZones := TSpecifiedFluxSideGroup.Create;
+          TopLeakyZones := TTopLeakyZoneGroup.Create;
+          FrontLeakyZones := TFrontLeakyZoneGroup.Create;
+          SideLeakyZones := TSideLeakyZoneGroup.Create;
+          RiverWriter := TRiverWriter.Create;
+          WellWriter := TWellWriter.Create;
+          if frmGoPhast.PhastModel.SoluteTransport then
+          begin
+            PrintChemistryZones := TPrintChemistryZoneGroup.Create;
+            PrintChemistryXYZ_Zones := TPrintChemistryXYZ_ZoneGroup.Create;
+          end;
+          try
+            WritePrintFrequency(Input);
+            if frmGoPhast.PhastModel.SoluteTransport then
+            begin
+              WritePrintLocations(Input, PrintChemistryZones,
+                PrintChemistryXYZ_Zones);
+            end;
+
+            frmErrorsAndWarnings.RemoveErrorGroup(frmGoPhast.PhastModel,
+              StrNoBoundaryConditio);
+            if (TopLeakyZones.ZoneCount = 0)
+              and (FrontLeakyZones.ZoneCount = 0)
+              and (SideLeakyZones.ZoneCount = 0)
+              and (TopFluxZones.ZoneCount = 0)
+              and (FrontFluxZones.ZoneCount = 0)
+              and (SideFluxZones.ZoneCount = 0)
+              and (SpecifiedHeadZones.ZoneCount = 0)
+              and (RiverWriter.ScreenObjectList.Count = 0)
+              and (WellWriter.ScreenObjectList.Count = 0)
+              then
+            begin
+              frmErrorsAndWarnings.AddError(frmGoPhast.PhastModel,
+                StrNoBoundaryConditio,
+                StrYouMustSpecifyAt);
+            end;
+
+            WriteLeakyBoundary(Input, TopLeakyZones, FrontLeakyZones,
+              SideLeakyZones);
+            WriteSpecifiedFluxes(Input, TopFluxZones, FrontFluxZones,
+              SideFluxZones);
+            WriteSpecifiedValues(Input, SpecifiedHeadZones);
+            WriteRiver(Input, RiverWriter);
+            WriteWells(Input, WellWriter);
+
+            WriteTimeControl(Input, TimeUnits);
+            WriteEnd(Input);
+          finally
+            PrintChemistryZones.Free;
+            PrintChemistryXYZ_Zones.Free;
+          end;
+          InputFile := TFileStream.Create(FileName, fmCreate or fmShareDenyWrite,
+            ReadWritePermissions);
+          try
+            Input.Position := 0;
+            InputFile.CopyFrom(Input, Input.Size)
+          finally
+            InputFile.Free;
+          end;
         finally
-          PrintChemistryZones.Free;
-          PrintChemistryXYZ_Zones.Free;
+          Input.Free;
+          SpecifiedHeadZones.Free;
+          TopFluxZones.Free;
+          FrontFluxZones.Free;
+          SideFluxZones.Free;
+          TopLeakyZones.Free;
+          FrontLeakyZones.Free;
+          SideLeakyZones.Free;
+          RiverWriter.Free;
+          WellWriter.Free;
         end;
-        InputFile := TFileStream.Create(FileName, fmCreate or fmShareDenyWrite,
-          ReadWritePermissions);
-        try
-          Input.Position := 0;
-          InputFile.CopyFrom(Input, Input.Size)
-        finally
-          InputFile.Free;
+      except on E: EFCreateError do
+        begin
+          Beep;
+          MessageDlg(E.Message, mtError, [mbOK], 0);
+          Exit;
         end;
-      finally
-        Input.Free;
-        SpecifiedHeadZones.Free;
-        TopFluxZones.Free;
-        FrontFluxZones.Free;
-        SideFluxZones.Free;
-        TopLeakyZones.Free;
-        FrontLeakyZones.Free;
-        SideLeakyZones.Free;
-        RiverWriter.Free;
-        WellWriter.Free;
       end;
-    except on E: EFCreateError do
-      begin
-        Beep;
-        MessageDlg(E.Message, mtError, [mbOK], 0);
-        Exit;
-      end;
-    end;
-  finally
-    FormatSettings.DecimalSeparator := OldDecSep;
-    frmGoPhast.PhastModel.RestoreColoredDataSets;
-    frmGoPhast.PhastModel.UpToDate := PriorUpToDate;
-  end;
-  FileDir := IncludeTrailingPathDelimiter(ExtractFileDir(FileName));
-  BatchName :=  FileDir + 'RunPhast.bat';
-
-  FileRoot := ExtractFileName(FileName);
-  // strip off first extension.
-  FileRoot := ChangeFileExt(FileRoot, '');
-  // strip off second extension.
-  FileRoot := ChangeFileExt(FileRoot, '');
-  BatchFile := TStringList.Create;
-  try
-    BatchFile.AddStrings(frmGoPhast.PhastModel.BatchFileAdditionsBeforeModel);
-
-    if Pos(' ', PhastLocation) > 0 then
-    begin
-      PhastLocation := '"' + PhastLocation + '"';
-    end;
-    ADir := IncludeTrailingPathDelimiter(ADir);
-
-//    BatchFile.Add('call ' + PhastLocation + ' ' + ADir + FileRoot);
-    BatchFile.Add('call ' + PhastLocation + ' ' + FileRoot);
-    BatchFile.AddStrings(frmGoPhast.PhastModel.BatchFileAdditionsAfterModel);
-    BatchFile.Add('pause');
-    try
-      BatchFile.SaveToFile(BatchName);
-    except on E: EFCreateError do
-      begin
-        Beep;
-        MessageDlg(E.Message, mtError, [mbOK], 0);
-        Exit;
-      end;
-    end;
-  finally
-    BatchFile.Free;
-//    ReclaimMemory;
-  end;
-  if RunModel then
-  begin
-    SetCurrentDir(FileDir);
-    try
-      RunAProgram('"' + BatchName + '"');
-//      WinExec(PAnsiChar(AnsiString('"' + BatchName + '"')), SW_SHOW);
     finally
-      SetCurrentDir(ADir);
+      FormatSettings.DecimalSeparator := OldDecSep;
+      frmGoPhast.PhastModel.RestoreColoredDataSets;
+      frmGoPhast.PhastModel.UpToDate := PriorUpToDate;
+    end;
+    FileDir := IncludeTrailingPathDelimiter(ExtractFileDir(FileName));
+    BatchName :=  FileDir + 'RunPhast.bat';
+
+    FileRoot := ExtractFileName(FileName);
+    // strip off first extension.
+    FileRoot := ChangeFileExt(FileRoot, '');
+    // strip off second extension.
+    FileRoot := ChangeFileExt(FileRoot, '');
+    BatchFile := TStringList.Create;
+    try
+      BatchFile.AddStrings(frmGoPhast.PhastModel.BatchFileAdditionsBeforeModel);
+
+      if Pos(' ', PhastLocation) > 0 then
+      begin
+        PhastLocation := '"' + PhastLocation + '"';
+      end;
+      ADir := IncludeTrailingPathDelimiter(ADir);
+
+  //    BatchFile.Add('call ' + PhastLocation + ' ' + ADir + FileRoot);
+      BatchFile.Add('call ' + PhastLocation + ' ' + FileRoot);
+      BatchFile.AddStrings(frmGoPhast.PhastModel.BatchFileAdditionsAfterModel);
+      BatchFile.Add('pause');
+      try
+        BatchFile.SaveToFile(BatchName);
+      except on E: EFCreateError do
+        begin
+          Beep;
+          MessageDlg(E.Message, mtError, [mbOK], 0);
+          Exit;
+        end;
+      end;
+    finally
+      BatchFile.Free;
+  //    ReclaimMemory;
+    end;
+    if RunModel then
+    begin
+      SetCurrentDir(FileDir);
+      try
+        RunAProgram('"' + BatchName + '"');
+  //      WinExec(PAnsiChar(AnsiString('"' + BatchName + '"')), SW_SHOW);
+      finally
+        SetCurrentDir(ADir);
+      end;
+    end;
+  finally
+    if frmErrorsAndWarnings.HasMessages then
+    begin
+      frmErrorsAndWarnings.Show;
     end;
   end;
+
 end;
 
 end.

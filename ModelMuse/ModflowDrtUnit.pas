@@ -103,7 +103,7 @@ type
       Variables, DataSets: TList; AModel: TBaseModel); override;
     function AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
       override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
 
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
@@ -114,7 +114,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
   end;
 
   // Each @name stores a @link(TDrtCollection).
@@ -441,9 +441,9 @@ begin
   result := TDrtTimeListLink;
 end;
 
-procedure TDrtCollection.AddSpecificBoundary;
+procedure TDrtCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TDrtStorage.Create);
+  AddBoundary(TDrtStorage.Create(AModel));
 end;
 
 function TDrtCollection.AdjustedFormula(FormulaIndex,
@@ -587,9 +587,9 @@ begin
 end;
 
 procedure TDrtCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TDrtStorage).FDrtArray, BoundaryCount);
+  SetLength((Boundaries[ItemIndex, AModel] as TDrtStorage).FDrtArray, BoundaryCount);
   inherited;
 end;
 
@@ -886,9 +886,9 @@ begin
   EvaluateListBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    if ValueIndex < Values.BoundaryCount then
+    if ValueIndex < Values.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := Values.Boundaries[ValueIndex] as TDrtStorage;
+      BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TDrtStorage;
       AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;
@@ -908,9 +908,9 @@ begin
     end;
     for ValueIndex := 0 to Param.Param.Count - 1 do
     begin
-      if ValueIndex < Param.Param.BoundaryCount then
+      if ValueIndex < Param.Param.BoundaryCount[AModel] then
       begin
-        BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TDrtStorage;
+        BoundaryStorage := Param.Param.Boundaries[ValueIndex, AModel] as TDrtStorage;
         AssignCells(BoundaryStorage, Times, AModel);
       end;
     end;

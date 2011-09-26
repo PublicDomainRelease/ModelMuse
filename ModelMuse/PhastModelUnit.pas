@@ -291,6 +291,8 @@ const
   WettableLayers = [1,3];
 
 type
+  TEvaluationType = (etExport, etDisplay);
+
   // @name represents how PHAST results are printed - XY orientation or
   // XZ orientation.
   TpgPrintOrientation = (pgXY, pgXZ);
@@ -1544,7 +1546,14 @@ that affects the model output should also have a comment. }
     procedure SetHeadObsResults(const Value: THeadObsCollection);
     procedure CreateHeadObsResults;
     function GetHeadObsResults: THeadObsCollection;
+    procedure InternalExportModflowModel(const FileName: string; ExportAllLgr: boolean);
+    procedure ExportLakePackage(const FileName: string);
+    procedure ExportSfrPackage(const FileName: string);
+    procedure EvaluateSfrPackage;
+    procedure ExportUzfPackage(const FileName: string);
   var
+    LakWriter: TObject;
+    SfrWriter: TObject;
     FTransientMultiplierArrays: TList;
     FCachedMultiplierArrayIndex: Integer;
     FTransientZoneArrays: TList;
@@ -1570,6 +1579,8 @@ that affects the model output should also have a comment. }
     FThreeDTimeList: TCustomTimeList;
     FPValFile: TStringList;
     FTemplate: TStringList;
+    FGageUnitNumber: integer;
+    FGages: TStringList;
   strict private
     FHfbWriter: TObject;
     FMfHobHeads: THobDisplayTimeList;
@@ -1627,7 +1638,12 @@ that affects the model output should also have a comment. }
     procedure SetProgramLocations(const Value: TProgramLocations);virtual;abstract;
     procedure ClearViewedItems; virtual;
     procedure InternalClear; virtual;
+    procedure InitializeGages; virtual;
+    procedure InitializeSfrWriter(EvaluationType: TEvaluationType); virtual;
+    procedure FreeSfrWriter; virtual;
   public
+//    property GageUnitNumber: integer read FGageUnitNumber;
+    property Gages: TStringList read FGages;
     function StoreHeadObsResults: boolean;
     function TestModpathOK: Boolean;
     property ModflowLocation: string read GetModflowLocation write SetModflowLocation;
@@ -1822,7 +1838,6 @@ that affects the model output should also have a comment. }
     // @name exports the input files for MODFLOW and optionally runs MODFLOW.
     procedure ExportModflowModel(const FileName: string;
       RunModel, ExportModpath, NewBudgetFileForModpath, ExportZoneBudget: boolean);
-    procedure InternalExportModflowModel(const FileName: string);
     procedure ExportModpathModel(FileName: string;
       RunModel, NewBudgetFile: boolean; EmbeddedExport: boolean = False);
     procedure ExportZoneBudgetModel(FileName: string; RunModel, EmbeddedExport: boolean);
@@ -2569,6 +2584,9 @@ that affects the model output should also have a comment. }
     function GetDisplayName: string; override;
     function GetSaveBfhBoundaryConditions: boolean; override;
     procedure SetSaveBfhBoundaryConditions(const Value: boolean);  override;
+    procedure InitializeGages; override;
+    procedure InitializeSfrWriter(EvaluationType: TEvaluationType); override;
+    procedure FreeSfrWriter; override;
   public
     procedure DrawHeadObservations(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2); override;
@@ -3332,6 +3350,7 @@ that affects the model output should also have a comment. }
     function LayerGroupUsed(LayerGroup: TLayerGroup): boolean; override;
     function LayerFractions(LayerGroup: TLayerGroup): TDoubleDynArray; override;
     function LayerCount: integer;  override;
+    function FirstOverlappedLayer: integer;
     procedure UpdateDisplayUseList(NewUseList: TStringList;
       ParamType: TParameterType; DataIndex: integer; const DisplayName: string); override;
     procedure Assign(Source: TPersistent); override;
@@ -4686,15 +4705,55 @@ const
   //    ''2.10.2.3' Bug fix: Fixed a problem in which deleting vertices of an
   //        object that included imported text data, more of the text data was
   //        deleted than should have been deleted.
-  //      Bug fix: fixed bugs that could cause access violations when
+  //      Bug fix: Fixed bugs that could cause access violations when
   //        ModelMuse was closed.
   //      Bug fix: Reading World Files on computers where the decimal separator
   //        is set to a value other than '.' now works correctly.
   //      Bug fix: When importing points, it is no longer possible to
   //        attempt to define an invalid object name.
   //    '2.10.3.0' No further changes.
+  //    '2.10.3.1' Bug fix: Fixed bug that could cause a
+  //        "List index out of bounds" error when exporting Shapefiles.
+  //    '2.10.3.2' Bug fix: fixed bug that could ModelMuse to hang when
+  //        starting a new model.
+  //      Bug fix: When reading MODPATH pathline files, negative values of time
+  //        were not handled properly.
+  //      Bug fix: Attempting to export a model in which the reservoir package
+  //        is selected but no reservoirs have been defined now results in
+  //        an error message instead of a bug report.
+  //    '2.10.3.3' Enhancement: Error or warning messages are now issued when
+  //        a boundary condition package has been activated but no boundaries
+  //        for it have been defined.
+  //      Change: When closing a model, the prompt asking the user if they
+  //        wish to save the model now includes the file name if the file name
+  //        has been specified.
+  //      Enhancement: ModelMuse now warns the user if duplicate SFR
+  //        parameter instances are being used.
+  //      Bug fix: Fixed export of TBEGIN in MODPATH main file.
+  //      Enhancement: In LGR models, Streams in the SFR package are now linked
+  //        between grids.
+  //    '2.10.3.4' Bug fix: Fixed bug with selecting and drawing objects when
+  //        zoomed in a great deal.
+  //    '2.10.3.5' Bug fix: In LGR models, the selected column, row, and layer
+  //        are now read correctly when opening a ModelMuse file.
+  //      Bug fix: Fixed bug that could cause an access violation if the number
+  //        of columns or rows was set to zero.
+  //    '2.10.3.6' Bug fix: In PHAST models, switching an object between being
+  //        evaluated at nodes and elements no longer causes a bug report to
+  //        be generated.
+  //    '2.10.3.7' Change: The most recent version of PHAST no longer supports
+  //        specifying an initial water table. However, you can still use
+  //        the initial water table option in ModelMuse. ModelMuse will use
+  //        the data in the Initial_Water_Table data set to specify the
+  //        initial head in a vertical column of nodes.
+  //      Enhancement: The Grid Value dialog box can now display data about
+  //        the nearest visible MODPATH end point.
+  //      Bug fix: When attempting to import model results, trying to import
+  //        from a file that is being used by another program now results in an
+  //        error message to the user instead of a bug report.
+  //    '2.11.0.0' Enhancement: Added support for GOFAIL option in MODFLOW-NWT.
 
-  ModelVersion = '2.10.3.0';
+  ModelVersion = '2.11.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -8219,6 +8278,7 @@ var
   ScreenObjectIndex: Integer;
   ScreenObject: TScreenObject;
   SfrList: TIntegerList;
+  ID_Position: integer;
 begin
   if (ModelSelection in [msMODFLOW, msModflowLGR, msModflowNWT])
     and (ModflowPackages.LakPackage.IsSelected
@@ -8265,28 +8325,36 @@ begin
             LayerIndex,RowIndex,ColIndex];
           if DischargeId < 0 then
           begin
-            NewLakeID := -(LakeList.IndexOf(-DischargeId) + 1);
-            if DischargeId <> NewLakeID then
+            ID_Position := LakeList.IndexOf(-DischargeId);
+            if ID_Position >= 0 then
             begin
-              DischargeRoutingArray.IntegerData[LayerIndex,RowIndex,ColIndex]
-                := NewLakeID;
-              DischargeRoutingArray.Annotation[LayerIndex,RowIndex,ColIndex]
-                := DischargeRoutingArray.Annotation[
-                LayerIndex,RowIndex,ColIndex]
-                + ' and then renumbered';
+              NewLakeID := -(ID_Position + 1);
+              if DischargeId <> NewLakeID then
+              begin
+                DischargeRoutingArray.IntegerData[LayerIndex,RowIndex,ColIndex]
+                  := NewLakeID;
+                DischargeRoutingArray.Annotation[LayerIndex,RowIndex,ColIndex]
+                  := DischargeRoutingArray.Annotation[
+                  LayerIndex,RowIndex,ColIndex]
+                  + ' and then renumbered';
+              end;
             end;
           end
           else if DischargeId > 0 then
           begin
-            NewStreamID := (SfrList.IndexOf(DischargeId) + 1);
-            if DischargeId <> NewStreamID then
+            ID_Position := SfrList.IndexOf(DischargeId);
+            if ID_Position >= 0 then
             begin
-              DischargeRoutingArray.IntegerData[LayerIndex,RowIndex,ColIndex]
-                := NewStreamID;
-              DischargeRoutingArray.Annotation[LayerIndex,RowIndex,ColIndex]
-                := DischargeRoutingArray.Annotation[
-                LayerIndex,RowIndex,ColIndex]
-                + ' and then renumbered';
+              NewStreamID := (ID_Position + 1);
+              if DischargeId <> NewStreamID then
+              begin
+                DischargeRoutingArray.IntegerData[LayerIndex,RowIndex,ColIndex]
+                  := NewStreamID;
+                DischargeRoutingArray.Annotation[LayerIndex,RowIndex,ColIndex]
+                  := DischargeRoutingArray.Annotation[
+                  LayerIndex,RowIndex,ColIndex]
+                  + ' and then renumbered';
+              end;
             end;
           end;
         end;
@@ -9464,6 +9532,17 @@ begin
   end;
 end;
 
+procedure TPhastModel.InitializeGages;
+var
+  ChildIndex: integer;
+begin
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModels[ChildIndex].ChildModel.InitializeGages
+  end;
+end;
+
 procedure TPhastModel.InitializePhastBoundaries;
 var
   Index: integer;
@@ -9482,6 +9561,17 @@ begin
     begin
       ModelTimes.AddUnique(TimeList.Times[TimeIndex]);
     end;
+  end;
+end;
+
+procedure TPhastModel.InitializeSfrWriter(EvaluationType: TEvaluationType);
+var
+  ChildIndex: integer;
+begin
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModels[ChildIndex].ChildModel.InitializeSfrWriter(EvaluationType);
   end;
 end;
 
@@ -10231,6 +10321,17 @@ begin
     FDataArrayManager.InvalidateAllDataSets;
   end;
 
+end;
+
+procedure TPhastModel.FreeSfrWriter;
+var
+  ChildIndex: integer;
+begin
+  inherited;
+  for ChildIndex := 0 to ChildModels.Count - 1 do
+  begin
+    ChildModels[ChildIndex].ChildModel.FreeSfrWriter;
+  end;
 end;
 
 procedure TPhastModel.UpdateModelMateParameter(ParameterList: TStringList;
@@ -14843,6 +14944,7 @@ end;
 constructor TCustomModel.Create(AnOwner: TComponent);
 begin
   inherited;
+  FGages := TStringList.Create;
   FHfbDisplayer:= THfbDisplayer.Create(self);
   FHfbDisplayer.OnNeedToUpdate := UpdateHfb;
 
@@ -14963,6 +15065,7 @@ begin
   FTemplate.Free;
   FModflowOptions.Free;
   FHeadObsResults.Free;
+  FGages.Free;
   inherited;
 end;
 
@@ -15921,6 +16024,13 @@ begin
   FHufKzNotifier.Free;
   FHufKyNotifier.Free;
   FHufKxNotifier.Free;
+end;
+
+procedure TCustomModel.FreeSfrWriter;
+begin
+  FreeAndNil(SfrWriter);
+  FreeAndNil(LakWriter);
+
 end;
 
 procedure TCustomModel.FreeGridNotifiers;
@@ -18605,6 +18715,14 @@ begin
   end;
 end;
 
+procedure TCustomModel.InitializeSfrWriter(EvaluationType: TEvaluationType);
+begin
+  FreeAndNil(SfrWriter);
+  FreeAndNil(LakWriter);
+  SfrWriter := TModflowSFR_Writer.Create(self, EvaluationType);
+  LakWriter := TModflowLAK_Writer.Create(self, EvaluationType);
+end;
+
 procedure TCustomModel.ModelObserversStopTalkingTo(Observer: TObserver);
 begin
   FTopGridObserver.StopsTalkingTo(Observer);
@@ -18987,12 +19105,27 @@ begin
     LgrWriter.Free;
   end;
 
-  InternalExportModflowModel(FileName);
-  for ChildIndex := 0 to ChildModels.Count - 1 do
-  begin
-    ChildModel := ChildModels[ChildIndex].ChildModel;
-    ChildNameFile := ChildModel.Child_NameFile_Name(FileName);
-    ChildModel.InternalExportModflowModel(ChildNameFile);
+  InitializeGages;
+  InitializeSfrWriter(etExport);
+  try
+    FPValFile.Clear;
+    FTemplate.Clear;
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      ChildModel.FPValFile.Clear;
+      ChildModel.FTemplate.Clear;
+    end;
+
+    InternalExportModflowModel(FileName, True);
+    for ChildIndex := 0 to ChildModels.Count - 1 do
+    begin
+      ChildModel := ChildModels[ChildIndex].ChildModel;
+      ChildNameFile := ChildModel.Child_NameFile_Name(FileName);
+      ChildModel.InternalExportModflowModel(ChildNameFile, True);
+    end;
+  finally
+    FreeSfrWriter;
   end;
 end;
 
@@ -19028,7 +19161,16 @@ begin
         Exit;
       end;
 
-      InternalExportModflowModel(FileName);
+      InitializeGages;
+      InitializeSfrWriter(etExport);
+      try
+        FPValFile.Clear;
+        FTemplate.Clear;
+        InternalExportModflowModel(FileName, False);
+      finally
+        FreeSfrWriter;
+      end;
+
 
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
@@ -19089,7 +19231,79 @@ begin
   end;
 end;
 
-procedure TCustomModel.InternalExportModflowModel(const FileName: string);
+procedure TCustomModel.InitializeGages;
+begin
+  FGages.Clear;
+  FGageUnitNumber:= UnitNumbers.UnitNumber(StrUNIT);
+end;
+
+procedure TCustomModel.ExportLakePackage(const FileName: string);
+var
+  LocalNameWriter: TNameFileWriter;
+begin
+  LocalNameWriter := NameFileWriter as TNameFileWriter;
+  SetCurrentNameFileWriter(LocalNameWriter);
+  (LakWriter as TModflowLAK_Writer).WriteFile(FileName, FGageUnitNumber, Gages);
+  FDataArrayManager.CacheDataArrays;
+  Application.ProcessMessages;
+  if not frmProgressMM.ShouldContinue then
+  begin
+    Exit;
+  end;
+  if ModflowPackages.LakPackage.IsSelected then
+  begin
+    frmProgressMM.StepIt;
+  end;
+end;
+
+procedure TCustomModel.ExportUzfPackage(const FileName: string);
+var
+  UzfWriter: TModflowUzfWriter;
+begin
+  UzfWriter := TModflowUzfWriter.Create(Self, etExport);
+  try
+    UzfWriter.WriteFile(FileName, FGageUnitNumber);
+  finally
+    UzfWriter.Free;
+  end;
+  FDataArrayManager.CacheDataArrays;
+  Application.ProcessMessages;
+  if not frmProgressMM.ShouldContinue then
+  begin
+    Exit;
+  end;
+  if ModflowPackages.UzfPackage.IsSelected then
+  begin
+    frmProgressMM.StepIt;
+  end;
+end;
+
+
+procedure TCustomModel.EvaluateSfrPackage;
+begin
+  (SfrWriter as TModflowSFR_Writer).Evaluate;
+end;
+
+procedure TCustomModel.ExportSfrPackage(const FileName: string);
+var
+  LocalNameWriter: TNameFileWriter;
+begin
+  LocalNameWriter := NameFileWriter as TNameFileWriter;
+  SetCurrentNameFileWriter(LocalNameWriter);
+  (SfrWriter as TModflowSFR_Writer).WriteFile(FileName, FGageUnitNumber, Gages);
+  FDataArrayManager.CacheDataArrays;
+  Application.ProcessMessages;
+  if not frmProgressMM.ShouldContinue then
+  begin
+    Exit;
+  end;
+  if ModflowPackages.SfrPackage.IsSelected then
+  begin
+    frmProgressMM.StepIt;
+  end;
+end;
+
+procedure TCustomModel.InternalExportModflowModel(const FileName: string; ExportAllLgr: boolean);
 var
   LocalNameWriter: TNameFileWriter;
   DisWriter: TModflowDiscretizationWriter;
@@ -19110,23 +19324,17 @@ var
   EvtWriter: TModflowEVT_Writer;
   EtsWriter: TModflowETS_Writer;
   ResWriter: TModflowRES_Writer;
-  LakWriter: TModflowLAK_Writer;
-  SfrWriter: TModflowSFR_Writer;
   Mnw2Writer: TModflowMNW2_Writer;
   ZoneWriter: TModflowZoneWriter;
   MultiplierWriter: TModflowMultiplierWriter;
   BatchFileLocation: string;
-  UzfWriter: TModflowUzfWriter;
   GmgWriter: TGmgWriter;
   SipWriter: TSipWriter;
   De4Writer: TDe4Writer;
   OCWriter: TOutputControlWriter;
-  GageUnitNumber: integer;
-  Gages: TStringList;
   GagWriter: TModflowGAG_Writer;
   HobWriter: TModflowHobWriter;
   HfbWriter: TModflowHfb_Writer;
-//  ListFileName: string;
   NumberOfSteps: Integer;
   SubWriter: TModflowSUB_Writer;
   SwtWriter: TModflowSWT_Writer;
@@ -19136,6 +19344,12 @@ var
   ZUsed: Boolean;
   NwtWriter: TNwtWriter;
   UPW_Writer: TModflowUPW_Writer;
+  ChildIndex: integer;
+  LocalPhastModel : TPhastModel;
+  ChildModel: TChildModel;
+  ChildNameFile: string;
+  WriterList: TSfrWriterList;
+  ParentPhastModel: TPhastModel;
 begin
   Assert(Assigned(NameFileWriter));
   LocalNameWriter := NameFileWriter as TNameFileWriter;
@@ -19143,10 +19357,6 @@ begin
   try
     CheckWetting;
 
-    FPValFile.Clear;
-    FTemplate.Clear;
-
-    GageUnitNumber:= UnitNumbers.UnitNumber(StrUNIT);
     SetCurrentDir(ExtractFileDir(FileName));
     TransientMultiplierArrays.Clear;
     TransientZoneArrays.Clear;
@@ -19158,10 +19368,8 @@ begin
     UsedZoneArrayNames.Clear;
     UsedMultiplierArrayNames.Sorted := True;
     UsedZoneArrayNames.Sorted := True;
-    Gages := TStringList.Create;
     try
       SetCurrentNameFileWriter(LocalNameWriter);
-//      ListFileName := LocalNameWriter.ListFileName;
       DisWriter := TModflowDiscretizationWriter.Create(self, etExport);
       try
         DisWriter.WriteFile(FileName);
@@ -19564,7 +19772,7 @@ begin
       Mnw2Writer := TModflowMNW2_Writer.Create(self, etExport);
       try
         Mnw2Writer.WriteFile(FileName);
-        Mnw2Writer.WriteMnwiFile(FileName, GageUnitNumber);
+        Mnw2Writer.WriteMnwiFile(FileName, FGageUnitNumber);
       finally
         Mnw2Writer.Free;
       end;
@@ -19579,11 +19787,145 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      LakWriter := TModflowLAK_Writer.Create(self, etExport);
+      if Self is TPhastModel then
+      begin
+        LocalPhastModel := TPhastModel(Self);
+        ExportLakePackage(FileName);
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ExportAllLgr then
+        begin
+          for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+          begin
+            ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+            ChildNameFile := ChildModel.Child_NameFile_Name(FileName);
+            ChildModel.ExportLakePackage(ChildNameFile);
+            if not frmProgressMM.ShouldContinue then
+            begin
+              Exit;
+            end;
+          end;
+        end;
+      end
+      else
+      begin
+        if not ExportAllLgr then
+        begin
+          ExportLakePackage(FileName);
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+        end;
+      end;
+      SetCurrentNameFileWriter(LocalNameWriter);
+
+      // SfrWriter requires that LakWriter be completed first
+      // so that TScreenObject.ModflowLakBoundary.TrueLakeID
+      // is set properly.
+      if Self is TPhastModel then
+      begin
+        LocalPhastModel := TPhastModel(Self);
+        EvaluateSfrPackage;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+
+        if LocalPhastModel.LgrUsed then
+        begin
+          WriterList := TSfrWriterList.Create;
+          try
+            WriterList.Add(SfrWriter as TModflowSFR_Writer);
+            for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+            begin
+              ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+              WriterList.Add(ChildModel.SfrWriter as TModflowSFR_Writer);
+              ChildModel.EvaluateSfrPackage;
+              if not frmProgressMM.ShouldContinue then
+              begin
+                Exit;
+              end;
+            end;
+            (SfrWriter as TModflowSFR_Writer).AssociateLgrSubSegments(WriterList);
+          finally
+            WriterList.Free;
+          end;
+        end;
+
+        ExportSfrPackage(FileName);
+        ExportUzfPackage(FileName);
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        if ExportAllLgr then
+        begin
+          for ChildIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+          begin
+            ChildModel := LocalPhastModel.ChildModels[ChildIndex].ChildModel;
+            ChildNameFile := ChildModel.Child_NameFile_Name(FileName);
+            ChildModel.ExportSfrPackage(ChildNameFile);
+            if not frmProgressMM.ShouldContinue then
+            begin
+              Exit;
+            end;
+            ChildModel.ExportUzfPackage(ChildNameFile);
+            if not frmProgressMM.ShouldContinue then
+            begin
+              Exit;
+            end;
+          end;
+        end;
+      end
+      else
+      begin
+        if not ExportAllLgr then
+        begin
+          ParentPhastModel := (self as TChildModel).ParentModel as TPhastModel;
+          ParentPhastModel.EvaluateSfrPackage;
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+          WriterList := TSfrWriterList.Create;
+          try
+            WriterList.Add(ParentPhastModel.SfrWriter as TModflowSFR_Writer);
+            for ChildIndex := 0 to ParentPhastModel.ChildModels.Count - 1 do
+            begin
+              ChildModel := ParentPhastModel.ChildModels[ChildIndex].ChildModel;
+              WriterList.Add(ChildModel.SfrWriter as TModflowSFR_Writer);
+              ChildModel.EvaluateSfrPackage;
+              if not frmProgressMM.ShouldContinue then
+              begin
+                Exit;
+              end;
+            end;
+            (ParentPhastModel.SfrWriter as TModflowSFR_Writer).AssociateLgrSubSegments(WriterList);
+          finally
+            WriterList.Free;
+          end;
+          ExportSfrPackage(FileName);
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+          ExportUzfPackage(FileName);
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+        end;
+      end;
+      SetCurrentNameFileWriter(LocalNameWriter);
+
+      HydModWriter := TModflowHydmodWriter.Create(self, etExport);
       try
-        LakWriter.WriteFile(FileName, GageUnitNumber, Gages);
+        HydModWriter.WriteFile(FileName, (SfrWriter as TModflowSFR_Writer));
       finally
-        LakWriter.Free;
+        HydModWriter.Free;
       end;
       FDataArrayManager.CacheDataArrays;
       Application.ProcessMessages;
@@ -19591,70 +19933,31 @@ begin
       begin
         Exit;
       end;
-      if ModflowPackages.LakPackage.IsSelected then
+      if ModflowPackages.HydmodPackage.IsSelected then
       begin
         frmProgressMM.StepIt;
       end;
 
-      // SfrWriter requires that LakWriter be completed first
-      // so that TScreenObject.ModflowLakBoundary.TrueLakeID
-      // is set properly.
-      SfrWriter := TModflowSFR_Writer.Create(self, etExport);
+
+      // GagWriter requires that LakWriter and SfrWriter be completed
+      // first so that the data in Gages is set.
+      GagWriter := TModflowGAG_Writer.Create(self, etExport);
       try
-        SfrWriter.WriteFile(FileName, GageUnitNumber, Gages);
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.SfrPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-        HydModWriter := TModflowHydmodWriter.Create(self, etExport);
-        try
-          HydModWriter.WriteFile(FileName, SfrWriter);
-        finally
-          HydModWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.HydmodPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
-
-        // GagWriter requires that LakWriter and SfrWriter be completed
-        // first so that the data in Gages is set.
-        GagWriter := TModflowGAG_Writer.Create(self, etExport);
-        try
-          GagWriter.WriteFile(FileName, Gages, SfrWriter, GageUnitNumber);
-        finally
-          GagWriter.Free;
-        end;
-        FDataArrayManager.CacheDataArrays;
-        Application.ProcessMessages;
-        if not frmProgressMM.ShouldContinue then
-        begin
-          Exit;
-        end;
-        if ModflowPackages.SfrPackage.IsSelected
-          or ModflowPackages.LakPackage.IsSelected then
-        begin
-          frmProgressMM.StepIt;
-        end;
-
+        GagWriter.WriteFile(FileName, Gages, (SfrWriter as TModflowSFR_Writer), FGageUnitNumber);
       finally
-        SfrWriter.Free;
+        GagWriter.Free;
       end;
-
+      FDataArrayManager.CacheDataArrays;
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      if ModflowPackages.SfrPackage.IsSelected
+        or ModflowPackages.LakPackage.IsSelected then
+      begin
+        frmProgressMM.StepIt;
+      end;
 
       HfbWriter := TModflowHfb_Writer.Create(Self, etExport);
       try
@@ -19673,22 +19976,22 @@ begin
         frmProgressMM.StepIt;
       end;
 
-      UzfWriter := TModflowUzfWriter.Create(Self, etExport);
-      try
-        UzfWriter.WriteFile(FileName, GageUnitNumber);
-      finally
-        UzfWriter.Free;
-      end;
-      FDataArrayManager.CacheDataArrays;
-      Application.ProcessMessages;
-      if not frmProgressMM.ShouldContinue then
-      begin
-        Exit;
-      end;
-      if ModflowPackages.UzfPackage.IsSelected then
-      begin
-        frmProgressMM.StepIt;
-      end;
+//      UzfWriter := TModflowUzfWriter.Create(Self, etExport);
+//      try
+//        UzfWriter.WriteFile(FileName, FGageUnitNumber);
+//      finally
+//        UzfWriter.Free;
+//      end;
+//      FDataArrayManager.CacheDataArrays;
+//      Application.ProcessMessages;
+//      if not frmProgressMM.ShouldContinue then
+//      begin
+//        Exit;
+//      end;
+//      if ModflowPackages.UzfPackage.IsSelected then
+//      begin
+//        frmProgressMM.StepIt;
+//      end;
 
       SubWriter := TModflowSUB_Writer.Create(Self, etExport);
       try
@@ -19787,7 +20090,7 @@ begin
       LocalNameWriter.SaveNameFile(FileName);
     finally
       SetCurrentNameFileWriter(nil);
-      Gages.Free;
+//      Gages.Free;
     end;
 
 //    Application.ProcessMessages;
@@ -19939,32 +20242,54 @@ begin
         Exit;
       end;
 
-      IUPBHSV := UnitNumbers.UnitNumber(BFH_Heads);
-      IUPBFSV := UnitNumbers.UnitNumber(BFH_Fluxes);
-      NameFile := FixFileName(ExtractFileName(FileName));
-
+      InitializeGages;
       if self is TChildModel then
       begin
-        FileDir := ExtractFilePath(FileName);
-        NameFile := FileDir + TChildModel(self).Child_NameFile_Name(NameFile);
-      end;
-
-      HeadFile := ChangeFileExt(NameFile, '.bfh_head');
-      FlowFile := ChangeFileExt(NameFile, '.bfh_flux');
-      ANameFileWriter := NameFileWriter as TNameFileWriter;
-      SetCurrentNameFileWriter(ANameFileWriter);
-      if self is TChildModel then
-      begin
-        ANameFileWriter.WriteToNameFile('BFH', IUPBHSV, HeadFile, foInput);
-        ANameFileWriter.WriteToNameFile(StrDATA, IUPBFSV, FlowFile, foInput);
+        TChildModel(self).ParentModel.InitializeSfrWriter(etExport);
       end
       else
       begin
-        ANameFileWriter.WriteToNameFile(StrDATA, IUPBHSV, HeadFile, foInput);
-        ANameFileWriter.WriteToNameFile('BFH', IUPBFSV, FlowFile, foInput);
+        InitializeSfrWriter(etExport);
       end;
+      try
+        IUPBHSV := UnitNumbers.UnitNumber(BFH_Heads);
+        IUPBFSV := UnitNumbers.UnitNumber(BFH_Fluxes);
+        NameFile := FixFileName(ExtractFileName(FileName));
 
-      InternalExportModflowModel(NameFile);
+        if self is TChildModel then
+        begin
+          FileDir := ExtractFilePath(FileName);
+          NameFile := FileDir + TChildModel(self).Child_NameFile_Name(NameFile);
+        end;
+
+        HeadFile := ChangeFileExt(NameFile, '.bfh_head');
+        FlowFile := ChangeFileExt(NameFile, '.bfh_flux');
+        ANameFileWriter := NameFileWriter as TNameFileWriter;
+        SetCurrentNameFileWriter(ANameFileWriter);
+        if self is TChildModel then
+        begin
+          ANameFileWriter.WriteToNameFile('BFH', IUPBHSV, HeadFile, foInput);
+          ANameFileWriter.WriteToNameFile(StrDATA, IUPBFSV, FlowFile, foInput);
+        end
+        else
+        begin
+          ANameFileWriter.WriteToNameFile(StrDATA, IUPBHSV, HeadFile, foInput);
+          ANameFileWriter.WriteToNameFile('BFH', IUPBFSV, FlowFile, foInput);
+        end;
+
+        FPValFile.Clear;
+        FTemplate.Clear;
+        InternalExportModflowModel(NameFile, False);
+      finally
+        if self is TChildModel then
+        begin
+          TChildModel(self).ParentModel.FreeSfrWriter;
+        end
+        else
+        begin
+          FreeSfrWriter;
+        end;
+      end;
 
       Application.ProcessMessages;
       if not frmProgressMM.ShouldContinue then
@@ -21277,6 +21602,7 @@ begin
   FreeGridNotifiers;
   FModelName := '';
   FDiscretization.Free;
+
   inherited;
 end;
 
@@ -21296,6 +21622,74 @@ begin
     end;
   end;
   Assert(False);
+end;
+
+function TChildModel.FirstOverlappedLayer: integer;
+var
+  DisIndex: Integer;
+  EndLayer: Integer;
+  Group: TLayerGroup;
+  GroupIndex: Integer;
+  PriorItem: TChildDiscretization;
+  Item: TChildDiscretization;
+  NewItems: boolean;
+begin
+  result := 0;
+  NewItems := False;
+  for GroupIndex := 1 to LayerStructure.Count - 1 do
+  begin
+    Group := LayerStructure[GroupIndex];
+    if Group.Simulated then
+    begin
+      if Group = Discretization.BottomLayerGroup then
+      begin
+        EndLayer := Discretization.BottomLayerInUnit;
+      end
+      else
+      begin
+        EndLayer := Group.LayerCount - 1;
+      end;
+      for DisIndex := 0 to EndLayer do
+      begin
+        Item := Discretization.GetAnItemByGroupAndLayer(Group, DisIndex);
+        if Item = nil then
+        begin
+          Item := Discretization.Add as TChildDiscretization;
+          Item.LayerGroup := Group;
+          Item.ParentLayerNumber := DisIndex;
+          if DisIndex > 0 then
+          begin
+            PriorItem := Discretization.GetAnItemByGroupAndLayer(Group, DisIndex - 1);
+            Item.Discretization := PriorItem.Discretization;
+          end;
+          NewItems := True;
+        end;
+        if (Group = Discretization.BottomLayerGroup)
+          and (DisIndex = EndLayer)
+          and ((GroupIndex <> LayerStructure.Count - 1)
+          or (EndLayer <> Group.LayerCount - 1)) then
+        begin
+//          Inc(result, (Item.Discretization div 2)+1);
+        end
+        else
+        begin
+          Inc(result, Item.Discretization);
+        end;
+      end;
+      if Group = Discretization.BottomLayerGroup then
+      begin
+        break;
+      end
+    end
+    else
+    begin
+      Inc(result);
+    end;
+  end;
+  if NewItems then
+  begin
+    Discretization.SortAndDeleteExtraItems;
+  end;
 end;
 
 function TChildModel.GetChemistryOptions: TChemistryOptions;
@@ -21453,7 +21847,14 @@ end;
 
 function TChildModel.GetScreenObjectCount: integer;
 begin
-  result := ParentModel.GetScreenObjectCount;
+  if ParentModel = nil then
+  begin
+    result := 0;
+  end
+  else
+  begin
+    result := ParentModel.GetScreenObjectCount;
+  end;
 end;
 
 function TChildModel.GetScreenObjects(const Index: integer): TScreenObject;
@@ -22901,3 +23302,4 @@ initialization
   RegisterClass(TChildModel);
 
 end.
+

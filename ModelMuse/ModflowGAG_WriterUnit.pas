@@ -45,6 +45,8 @@ var
   DataArray7: TDataArray;
   GAGESEG: Integer;
   GAGERCH: Integer;
+  SubSegIndex: Integer;
+  SubSeg: TSubSegment;
   procedure WriteGage(OUTTYPE: integer);
   var
     UNIT_Number: Integer;
@@ -61,6 +63,55 @@ var
     OutputName := ChangeFileExt(FNameOfFile, '.sfrg');
     OutputName := OutputName + IntToStr(Gages.Count);
     WriteToNameFile(StrDATA, UNIT_Number, OutputName, foOutput);
+  end;
+  procedure WriteReach;
+  begin
+    if DataArray0.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
+      and DataArray1.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
+      and DataArray2.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
+      and DataArray3.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
+      then
+    begin
+      WriteGage(4);
+    end
+    else
+    begin
+      if DataArray0.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
+        then
+      begin
+        WriteGage(0);
+      end;
+      if DataArray1.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
+        then
+      begin
+        WriteGage(1);
+      end;
+      if DataArray2.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
+        then
+      begin
+        WriteGage(2);
+      end;
+      if DataArray3.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
+        then
+      begin
+        WriteGage(3);
+      end;
+    end;
+    if DataArray5.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
+      then
+    begin
+      WriteGage(5);
+    end;
+    if DataArray6.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
+      then
+    begin
+      WriteGage(6);
+    end;
+    if DataArray7.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
+      then
+    begin
+      WriteGage(7);
+    end;
   end;
 begin
   if (Model.ModflowPackages = nil)
@@ -116,55 +167,27 @@ begin
     begin
       Segment := FSfrWriter.Segments[Index];
       GAGESEG := Segment.NewSegmentNumber;
-      for ReachIndex := 0 to Segment.ReachCount - 1 do
+      if Segment.SubSegmentList.Count = 0 then
       begin
-        GAGERCH := ReachIndex + 1;
-        Reach := Segment.Reaches[ReachIndex];
-        if DataArray0.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
-          and DataArray1.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
-          and DataArray2.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
-          and DataArray3.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
-          then
+        for ReachIndex := 0 to Segment.ReachCount - 1 do
         begin
-          WriteGage(4);
-        end
-        else
-        begin
-          if DataArray0.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
-            then
-          begin
-            WriteGage(0);
-          end;
-          if DataArray1.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
-            then
-          begin
-            WriteGage(1);
-          end;
-          if DataArray2.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
-            then
-          begin
-            WriteGage(2);
-          end;
-          if DataArray3.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
-            then
-          begin
-            WriteGage(3);
-          end;
+          GAGERCH := ReachIndex + 1;
+          Reach := Segment.Reaches[ReachIndex];
+          WriteReach;
         end;
-        if DataArray5.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
-          then
+      end
+      else
+      begin
+        for SubSegIndex := 0 to Segment.SubSegmentList.Count - 1 do
         begin
-          WriteGage(5);
-        end;
-        if DataArray6.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
-          then
-        begin
-          WriteGage(6);
-        end;
-        if DataArray7.BooleanData[Reach.Layer, Reach.Row, Reach.Column]
-          then
-        begin
-          WriteGage(7);
+          SubSeg := Segment.SubSegmentList[SubSegIndex];
+          GAGESEG := SubSeg.SegmentNumber;
+          for ReachIndex := 0 to SubSeg.ReachCount - 1 do
+          begin
+            GAGERCH := ReachIndex + 1;
+            Reach := SubSeg.Reaches[ReachIndex];
+            WriteReach;
+          end;
         end;
       end;
     end;

@@ -402,7 +402,7 @@ type
     FHash: longint;
     FReadDataFromFile: Boolean;
     FUpdatingProgress: Boolean;
-    FUseLgrEdgeCells: boolean;
+    FUseLgrEdgeCells: TLgrCellTreatment;
     FUnicodeSaved: Boolean;
     // See @link(TwoDInterpolatorClass).
     function GetTwoDInterpolatorClass: string;
@@ -775,7 +775,7 @@ type
     function IdenticalDataArrayContents(ADataArray: TDataArray): boolean;
     procedure AssignProperties(Source: TDataArray); virtual;
     property Model: TBaseModel read FModel;
-    property UseLgrEdgeCells: boolean read FUseLgrEdgeCells write FUseLgrEdgeCells;
+    property UseLgrEdgeCells: TLgrCellTreatment read FUseLgrEdgeCells write FUseLgrEdgeCells;
   published
     // @name indicates the hierarchical position of this instance of
     // @classname when it is required by MODFLOW.
@@ -3103,7 +3103,7 @@ var
   LocalPhastModel : TPhastModel;
   LocalChildModel: TChildModel;
 begin
-  FUseLgrEdgeCells := True;
+  FUseLgrEdgeCells := lctUse;
   Assert(AnOwner <> nil);
   FModel := AnOwner as TCustomModel;
   if FModel is TPhastModel then

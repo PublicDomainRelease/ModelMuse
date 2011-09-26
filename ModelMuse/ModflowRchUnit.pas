@@ -155,7 +155,7 @@ type
   protected
     function PackageAssignmentMethod(AModel: TBaseModel): TUpdateMethod; virtual;
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
     procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
@@ -172,7 +172,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
   end;
 
   TRchLayerTimeListLink = class(TTimeListsModelLink)
@@ -190,7 +190,7 @@ type
     procedure InvalidateRechLayerData(Sender: TObject);
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
     procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
@@ -208,7 +208,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
   end;
 
 
@@ -318,7 +318,7 @@ type
     function NonParameterColumns: integer; override;
     property TimeVaryingRechargeLayers: boolean
       read GetTimeVaryingRechargeLayers;
-    procedure GetRechargeLayerCells(LayerTimeList: TList);
+    procedure GetRechargeLayerCells(LayerTimeList: TList; AModel: TBaseModel);
     procedure InvalidateDisplay; override;
     procedure Clear; override;
   published
@@ -428,9 +428,9 @@ end;
 
 { TRchCollection }
 
-procedure TRchCollection.AddSpecificBoundary;
+procedure TRchCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TRchStorage.Create);
+  AddBoundary(TRchStorage.Create(AModel));
 end;
 
 procedure TRchCollection.AssignCellValues(DataSets: TList; ItemIndex: Integer;
@@ -453,7 +453,7 @@ begin
   LocalModel := AModel as TCustomModel;
   BoundaryIndex := 0;
   RechargeRateArray := DataSets[RechPosition];
-  Boundary := Boundaries[ItemIndex] as TRchStorage;
+  Boundary := Boundaries[ItemIndex, AModel] as TRchStorage;
   RechargeRateArray.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
     LayerMax, RowMax, ColMax);
   if LayerMin >= 0 then
@@ -523,7 +523,7 @@ begin
   end;
   ALink := TimeListLink.GetLink(AModel) as TRchTimeListLink;
   RechargeRateData := ALink.FRechargeRateData;
-  RechargeRateData.Initialize(BoundaryValues, ScreenObject, True);
+  RechargeRateData.Initialize(BoundaryValues, ScreenObject, lctUse);
   Assert(RechargeRateData.Count = Count);
 
   if PackageAssignmentMethod(AModel) = umAdd then
@@ -553,11 +553,11 @@ begin
     end;
   end;
 
-  ClearBoundaries;
-  SetBoundaryCapacity(RechargeRateData.Count);
+  ClearBoundaries(AModel);
+  SetBoundaryCapacity(RechargeRateData.Count, AModel);
   for TimeIndex := 0 to RechargeRateData.Count - 1 do
   begin
-    AddBoundary(TRchStorage.Create);
+    AddBoundary(TRchStorage.Create(AModel));
   end;
   ListOfTimeLists.Add(RechargeRateData);
 end;
@@ -597,9 +597,9 @@ begin
 end;
 
 procedure TRchCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TRchStorage).FRchArray, BoundaryCount);
+  SetLength((Boundaries[ItemIndex, AModel] as TRchStorage).FRchArray, BoundaryCount);
   inherited;
 end;
 
@@ -862,7 +862,7 @@ begin
   end;
 end;
 
-procedure TRchBoundary.GetRechargeLayerCells(LayerTimeList: TList);
+procedure TRchBoundary.GetRechargeLayerCells(LayerTimeList: TList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TRchLayerStorage;
@@ -874,9 +874,9 @@ begin
   end;
   for ValueIndex := 0 to RechargeLayers.Count - 1 do
   begin
-    if ValueIndex < RechargeLayers.BoundaryCount then
+    if ValueIndex < RechargeLayers.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := RechargeLayers.Boundaries[ValueIndex]
+      BoundaryStorage := RechargeLayers.Boundaries[ValueIndex, AModel]
         as TRchLayerStorage;
       AssignRechargeLayerCells(BoundaryStorage, LayerTimeList);
     end;
@@ -901,9 +901,9 @@ begin
   begin
     for ValueIndex := 0 to Values.Count - 1 do
     begin
-      if ValueIndex < Values.BoundaryCount then
+      if ValueIndex < Values.BoundaryCount[AModel] then
       begin
-        BoundaryStorage := Values.Boundaries[ValueIndex] as TRchStorage;
+        BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TRchStorage;
         AssignCells(BoundaryStorage, ValueTimeList, AModel);
       end;
     end;
@@ -926,15 +926,15 @@ begin
       end;
       for ValueIndex := 0 to Param.Param.Count - 1 do
       begin
-        if ValueIndex < Param.Param.BoundaryCount then
+        if ValueIndex < Param.Param.BoundaryCount[AModel] then
         begin
-          BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TRchStorage;
+          BoundaryStorage := Param.Param.Boundaries[ValueIndex, AModel] as TRchStorage;
           AssignCells(BoundaryStorage, Times, AModel);
         end;
       end;
     end;
   end;
-  ClearBoundaries
+  ClearBoundaries(AModel);
 end;
 
 function TRchBoundary.GetTimeVaryingRechargeLayers: boolean;
@@ -1112,9 +1112,9 @@ end;
 
 { TRchLayerCollection }
 
-procedure TRchLayerCollection.AddSpecificBoundary;
+procedure TRchLayerCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TRchLayerStorage.Create);
+  AddBoundary(TRchLayerStorage.Create(AModel));
 end;
 
 procedure TRchLayerCollection.AssignCellValues(DataSets: TList;
@@ -1135,7 +1135,7 @@ var
 begin
   BoundaryIndex := 0;
   RechargeLayerArray := DataSets[LayerPosition];
-  Boundary := Boundaries[ItemIndex] as TRchLayerStorage;
+  Boundary := Boundaries[ItemIndex, AModel] as TRchLayerStorage;
   RechargeLayerArray.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
     LayerMax, RowMax, ColMax);
   if LayerMin >= 0 then
@@ -1197,13 +1197,13 @@ begin
   end;
   ALink := TimeListLink.GetLink(AModel) as TRchLayerTimeListLink;
   RechargeLayerData := ALink.FRechargeLayerData;
-  RechargeLayerData.Initialize(BoundaryValues, ScreenObject, True);
+  RechargeLayerData.Initialize(BoundaryValues, ScreenObject, lctUse);
   Assert(RechargeLayerData.Count = Count);
-  ClearBoundaries;
-  SetBoundaryCapacity(RechargeLayerData.Count);
+  ClearBoundaries(AModel);
+  SetBoundaryCapacity(RechargeLayerData.Count, AModel);
   for TimeIndex := 0 to RechargeLayerData.Count - 1 do
   begin
-    AddBoundary(TRchLayerStorage.Create);
+    AddBoundary(TRchLayerStorage.Create(AModel));
   end;
   ListOfTimeLists.Add(RechargeLayerData);
 end;
@@ -1235,9 +1235,9 @@ begin
 end;
 
 procedure TRchLayerCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TRchLayerStorage).FRchLayerArray,
+  SetLength((Boundaries[ItemIndex, AModel] as TRchLayerStorage).FRchLayerArray,
     BoundaryCount);
   inherited;
 end;

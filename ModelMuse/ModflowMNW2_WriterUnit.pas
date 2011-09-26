@@ -101,6 +101,9 @@ resourcestring
   StrVerticalScreensAre = 'Vertical screens are not allowed in wells in whic' +
   'h the LOSSTYPE is "NONE".';
   StrObject0sWELLI = 'Object = %0:s; WELLID = %1:s';
+  StrNoMultinodeWellsD = 'No Multinode wells defined.';
+  StrTheMNW2PackageIs = 'The MNW2 package is active but no multinode wells h' +
+  'ave been defined.';
 
 { TModflowMNW2_Writer }
 
@@ -168,6 +171,7 @@ var
   StressPeriod: TModflowStressPeriod;
 begin
   frmProgressMM.AddMessage('Evaluating MNW2 Package data.');
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoMultinodeWellsD);
   Dummy := TStringList.Create;
   try
     for ScreenObjectIndex := 0 to Model.ScreenObjectCount - 1 do
@@ -219,6 +223,10 @@ begin
     CheckWells;
   finally
     Dummy.Free;
+  end;
+  if FWells.Count = 0 then
+  begin
+    frmErrorsAndWarnings.AddError(Model, StrNoMultinodeWellsD, StrTheMNW2PackageIs);
   end;
 end;
 

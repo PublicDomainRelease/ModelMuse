@@ -1521,11 +1521,11 @@ begin
     begin
       MoveToTopCell(frmGoPhast.Grid, ColumnCount div 2, RowCount div 2);
     end;
-    if (ColumnCount > 0) and (LayerCount > 0) then
+    if (ColumnCount > 0) and (RowCount > 0) and (LayerCount > 0) then
     begin
       MoveToFrontCell(frmGoPhast.Grid, ColumnCount div 2, LayerCount div 2);
     end;
-    if (RowCount > 0) and (LayerCount > 0) then
+    if (ColumnCount > 0) and (RowCount > 0) and (LayerCount > 0) then
     begin
       MoveToSideCell(frmGoPhast.Grid, RowCount div 2, LayerCount div 2);
     end;

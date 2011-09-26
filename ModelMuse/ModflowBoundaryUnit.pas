@@ -23,6 +23,8 @@ type
   // boundary condition.  Descendants add an array of records that
   // defining where and with what values the boundary condition applies.
   TCustomBoundaryStorage = class(TObject)
+  private
+    FModel: TBaseModel;
   protected
     FCached: boolean;
     FCleared: Boolean;
@@ -36,6 +38,8 @@ type
     EndingTime: double;
     destructor Destroy; override;
     procedure CacheData;
+    constructor Create(AModel: TBaseModel);
+    property Model: TBaseModel read FModel;
   end;
 
   // @name defines a time and a formula used in
@@ -201,7 +205,7 @@ type
 
   TTimeListModelLinkList = class(TObject)
   private
-    // FList is actually a TObjectList.
+    // @name is actually a TObjectList.
     FList: TList;
     FBoundary: TCustomMF_BoundColl;
     FCachedResult: TTimeListsModelLink;
@@ -212,6 +216,28 @@ type
     procedure RemoveLink(AModel: TBaseModel);
   end;
 
+  TBoundaryModelLink = class(TObject)
+  strict private
+    // @name is actually a TObjectList.
+    FBoundaries: TList;
+    FModel: TBaseModel;
+  public
+    constructor Create(AModel: TBaseModel);
+    destructor Destroy; override;
+    property Boundaries: TList read FBoundaries;
+    property Model: TBaseModel read FModel;
+  end;
+
+  TBoundaryModelLinkList = class(TObject)
+  private
+    // @name is actually a TObjectList.
+    FList: TList;
+    FCachedResult: TBoundaryModelLink;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function GetLink(AModel: TBaseModel): TBoundaryModelLink;
+  end;
 
   // @name represents MODFLOW boundaries for a series of time intervals.
   // Descendants define one or more @link(TModflowTimeList)s  which must be
@@ -223,13 +249,12 @@ type
     // See @link(ParamName).
     FParamName: string;
     // @name stores instances of @link(TCustomBoundaryStorage).
-    // Although declared as TList, it is actually a TObjectList.
     // @Seealso(AddBoundary)
     // @Seealso(ClearBoundaries)
     // @Seealso(GetBoundaries)
     // @Seealso(Boundaries)
     // @Seealso(SetBoundaryCapacity)
-    FBoundaries: TList;
+    FBoundaries: TBoundaryModelLinkList;
     // @name provides access to a series of @link(TTimeListsModelLink)s.
     // Each of them stores a series of @link(TModflowTimeList)s
     // associated with a particular model.  They
@@ -242,7 +267,7 @@ type
     FTimeListLink: TTimeListModelLinkList;
 
     // See @link(Boundaries).
-    function GetBoundaries(const Index: integer): TCustomBoundaryStorage;
+    function GetBoundaries(const Index: integer; AModel: TBaseModel): TCustomBoundaryStorage;
     // See @link(ParamName).
     function GetParamName: string;
     // See @link(ParamName).
@@ -251,7 +276,7 @@ type
     function GetParam: TModflowTransientListParameter;
     // See @link(Param).
     procedure SetParam(const Value: TModflowTransientListParameter);
-    function GetBoundaryCount: integer;
+    function GetBoundaryCount(AModel: TBaseModel): integer;
   protected
     property TimeListLink: TTimeListModelLinkList read FTimeListLink;
     function GetTimeListLinkClass: TTimeListsModelLinkClass; virtual; abstract;
@@ -265,7 +290,7 @@ type
     // @classname
     // @Seealso(SetBoundaryCapacity)
     procedure AddBoundary(Value: TCustomBoundaryStorage);
-    procedure AddSpecificBoundary; virtual; abstract;
+    procedure AddSpecificBoundary(AModel: TBaseModel); virtual; abstract;
     // @name adds a @link(TModflowTimeList) to those that
     // can be accessed through @link(TimeLists).  The order in which
     // @link(TModflowTimeList)s are added must correspond to the
@@ -276,7 +301,7 @@ type
     // @name is the @link(TModflowBoundary) that owns @classname.
     // @name is used to set the capacity of @link(FBoundaries)
     // before calling @link(AddBoundary).
-    procedure SetBoundaryCapacity(Value: integer);
+    procedure SetBoundaryCapacity(Value: integer; AModel: TBaseModel);
     // @name sets the @link(TCustomBoundaryStorage.StartingTime
     // TCustomBoundaryStorage.StartingTime) and
     // @link(TCustomBoundaryStorage.StartingTime
@@ -290,21 +315,21 @@ type
     // that define where and with what values the boundary condition apply.
     // for the item in @link(Boundaries) at ItemIndex.
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); virtual;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); virtual;
     procedure ClearTimeLists(AModel: TBaseModel);
   public
     procedure RemoveModelLink(AModel: TBaseModel);
     // @name frees all the @link(TCustomBoundaryStorage) owned by
     // @classname.
-    procedure ClearBoundaries;
+    procedure ClearBoundaries(AModel: TBaseModel);
     // @name copies @link(ParamName) from Source and calls inherited Assign.
     procedure Assign(Source: TPersistent);override;
     // @name provides access to @link(TCustomBoundaryStorage) for different
     // time periods.  In descendants, these @link(TCustomBoundaryStorage)
     // define the locations, values, and times for the boundaries.
-    property Boundaries[const Index: integer]: TCustomBoundaryStorage
+    property Boundaries[const Index: integer; AModel: TBaseModel]: TCustomBoundaryStorage
       read GetBoundaries;
-    property BoundaryCount: integer read GetBoundaryCount;
+    property BoundaryCount[AModel: TBaseModel]: integer read GetBoundaryCount;
     // @name creates an instance of @classname.
     constructor Create(Boundary: TModflowBoundary;
       Model: TBaseModel; ScreenObject: TObject); override;
@@ -329,7 +354,7 @@ type
       read GetTimeList;
     // @name returns @true if Count > 0.
     function DataSetUsed(DataArray: TDataArray; AModel: TBaseModel): boolean; virtual;
-    function GetBoundaryByStartTime(StartTime: double): TCustomBoundaryStorage;
+    function GetBoundaryByStartTime(StartTime: double; AModel: TBaseModel): TCustomBoundaryStorage;
   published
     // @name is the name of the @link(TModflowTransientListParameter)
     // (if any) associated with this @classname.
@@ -430,7 +455,7 @@ type
     // locations and values are stored in @link(TRealSparseDataSet)s
     // accessed through @link(TCustomTimeList.Items Items).
     procedure Initialize(BoundaryValues: TBoundaryValueArray;
-      ScreenObject: TObject; UseLgrEdgeCells: boolean;
+      ScreenObject: TObject; UseLgrEdgeCells: TLgrCellTreatment;
       AssignmentLocation: TAssignmentLocation = alAll);
       reintroduce;
     // @name is a description of what this @classname represents when @name is
@@ -584,7 +609,7 @@ type
     // @name is used in @link(Create) to create @link(FValues).
     class function BoundaryCollectionClass: TMF_BoundCollClass;
       virtual; abstract;
-    procedure ClearBoundaries; virtual;
+    procedure ClearBoundaries(AModel: TBaseModel); virtual;
   public
     procedure RemoveModelLink(AModel: TBaseModel); virtual;
     procedure ClearTimeLists(AModel: TBaseModel); virtual;
@@ -642,7 +667,7 @@ type
     class function ModflowParamItemClass: TModflowParamItemClass;
       virtual; abstract;
     function ParameterType: TParameterType; virtual; abstract;
-    procedure ClearBoundaries; override;
+    procedure ClearBoundaries(AModel: TBaseModel); override;
   public
     procedure RemoveModelLink(AModel: TBaseModel); override;
     procedure ClearTimeLists(AModel: TBaseModel); override;
@@ -892,8 +917,11 @@ end;
 
 procedure TCustomMF_BoundColl.AddBoundary(
   Value: TCustomBoundaryStorage);
+var
+  Link: TBoundaryModelLink;
 begin
-  FBoundaries.Add(Value);
+  Link := FBoundaries.GetLink(Value.Model);
+  Link.Boundaries.Add(Value);
 end;
 
 procedure TCustomMF_BoundColl.AddTimeList(List: TModflowTimeList;
@@ -924,9 +952,12 @@ begin
   end;
 end;
 
-procedure TCustomMF_BoundColl.ClearBoundaries;
+procedure TCustomMF_BoundColl.ClearBoundaries(AModel: TBaseModel);
+var
+  Link: TBoundaryModelLink;
 begin
-  FBoundaries.Clear;
+  Link := FBoundaries.GetLink(AModel);
+  Link.Boundaries.Clear;
 end;
 
 procedure TCustomMF_BoundColl.ClearTimeLists(AModel: TBaseModel);
@@ -944,7 +975,7 @@ constructor TCustomMF_BoundColl.Create(Boundary: TModflowBoundary;
 begin
   inherited ;
   FTimeListLink:= TTimeListModelLinkList.Create(self);
-  FBoundaries:= TObjectList.Create;
+  FBoundaries:= TBoundaryModelLinkList.Create;
 end;
 
 function TCustomMF_BoundColl.DataSetUsed(DataArray: TDataArray; AModel: TBaseModel): boolean;
@@ -1237,7 +1268,7 @@ begin
       CellList.Delete(EliminateIndicies[Index]);
     end;
 
-    ClearBoundaries;
+    ClearBoundaries(AModel);
 
 
     TestIfObservationsPresent(EndOfLastStressPeriod, StartOfFirstStressPeriod,
@@ -1258,21 +1289,21 @@ begin
         begin
           if PriorTime < AnItem.StartTime then
           begin
-            AddSpecificBoundary;
+            AddSpecificBoundary(AModel);
             Inc(ItemCount);
           end;
           Inc(ItemCount);
-          AddSpecificBoundary;
+          AddSpecificBoundary(AModel);
           if AnItem.EndTime < EndOfLastStressPeriod then
           begin
             Inc(ItemCount);
-            AddSpecificBoundary;
+            AddSpecificBoundary(AModel);
           end;
         end
         else
         begin
           Inc(ItemCount);
-          AddSpecificBoundary;
+          AddSpecificBoundary(AModel);
         end;
         Continue;
       end;
@@ -1290,9 +1321,9 @@ begin
             Variables := TList.Create;
             DataSets := TList.Create;
             try
-              AddSpecificBoundary;
-              SetBoundaryStartAndEndTime(CellList.Count, ExtraItem, 0);
-              AssignCellLocation(Boundaries[ItemCount],  CellList);
+              AddSpecificBoundary(AModel);
+              SetBoundaryStartAndEndTime(CellList.Count, ExtraItem, 0, AModel);
+              AssignCellLocation(Boundaries[ItemCount, AModel],  CellList);
               for BoundaryFunctionIndex := 0 to AnItem.BoundaryFormulaCount - 1 do
               begin
                 Formula := '0';
@@ -1308,7 +1339,7 @@ begin
                 end;
                 UpdateCurrentScreenObject(AScreenObject);
 
-                AssignCellList(Expression, CellList, Boundaries[ItemCount],
+                AssignCellList(Expression, CellList, Boundaries[ItemCount, AModel],
                   BoundaryFunctionIndex, Variables, DataSets, LocalModel);
 
                 LocalModel.DataArrayManager.CacheDataArrays;
@@ -1325,9 +1356,9 @@ begin
         PriorTime := AnItem.EndTime;
       end;
 
-      AddSpecificBoundary;
-      SetBoundaryStartAndEndTime(CellList.Count, AnItem, ItemCount);
-      AssignCellLocation(Boundaries[ItemCount],  CellList);
+      AddSpecificBoundary(AModel);
+      SetBoundaryStartAndEndTime(CellList.Count, AnItem, ItemCount, AModel);
+      AssignCellLocation(Boundaries[ItemCount, AModel],  CellList);
       for BoundaryFunctionIndex := 0 to AnItem.BoundaryFormulaCount - 1 do
       begin
         Formula := AdjustedFormula(BoundaryFunctionIndex, ItemIndex);
@@ -1399,7 +1430,7 @@ begin
 
           UpdateCurrentScreenObject(AScreenObject);
 
-          AssignCellList(Expression, CellList, Boundaries[ItemCount],
+          AssignCellList(Expression, CellList, Boundaries[ItemCount, AModel],
             BoundaryFunctionIndex, Variables, DataSets, LocalModel);
         finally
           Variables.Free;
@@ -1431,9 +1462,9 @@ begin
               Variables := TList.Create;
               DataSets := TList.Create;
               try
-                AddSpecificBoundary;
-                SetBoundaryStartAndEndTime(CellList.Count, ExtraItem, ItemCount);
-                AssignCellLocation(Boundaries[ItemCount],  CellList);
+                AddSpecificBoundary(AModel);
+                SetBoundaryStartAndEndTime(CellList.Count, ExtraItem, ItemCount, AModel);
+                AssignCellLocation(Boundaries[ItemCount, AModel],  CellList);
                 for BoundaryFunctionIndex := 0 to AnItem.BoundaryFormulaCount - 1 do
                 begin
                   Formula := '0';
@@ -1449,7 +1480,7 @@ begin
                   end;
                   UpdateCurrentScreenObject(AScreenObject);
 
-                  AssignCellList(Expression, CellList, Boundaries[ItemCount],
+                  AssignCellList(Expression, CellList, Boundaries[ItemCount, AModel],
                     BoundaryFunctionIndex, Variables, DataSets, LocalModel);
                 end;
               finally
@@ -1530,21 +1561,26 @@ begin
 end;
 
 function TCustomMF_BoundColl.GetBoundaries(
-  const Index: integer): TCustomBoundaryStorage;
+  const Index: integer; AModel: TBaseModel): TCustomBoundaryStorage;
+var
+  Link: TBoundaryModelLink;
 begin
-  result := FBoundaries[Index];
+  Link := FBoundaries.GetLink(AModel);
+  result := Link.Boundaries[Index];
 end;
 
 function TCustomMF_BoundColl.GetBoundaryByStartTime(
-  StartTime: double): TCustomBoundaryStorage;
+  StartTime: double; AModel: TBaseModel): TCustomBoundaryStorage;
 var
   Index: Integer;
   Item: TCustomBoundaryStorage;
+  Link: TBoundaryModelLink;
 begin
+  Link := FBoundaries.GetLink(AModel);
   result := nil;
-  for Index := 0 to FBoundaries.Count - 1 do
+  for Index := 0 to Link.Boundaries.Count - 1 do
   begin
-    Item := FBoundaries[Index];
+    Item := Link.Boundaries[Index];
     if Item.StartingTime = StartTime then
     begin
       result := Item;
@@ -1596,7 +1632,7 @@ begin
     Assert(DataArray1.ColumnCount = DataArray2.ColumnCount);
   end;
   CountBoundaryCells(BoundaryCount, DataArray1, DataSets, AModel);
-  SetBoundaryStartAndEndTime(BoundaryCount, Item, ItemIndex);
+  SetBoundaryStartAndEndTime(BoundaryCount, Item, ItemIndex, AModel);
   AssignCellValues(DataSets, ItemIndex, AModel);
   for TimeIndex := 0 to ListOfTimeLists.Count - 1 do
   begin
@@ -1671,9 +1707,12 @@ begin
 //  DataArray1.CacheData;
 end;
 
-function TCustomMF_BoundColl.GetBoundaryCount: integer;
+function TCustomMF_BoundColl.GetBoundaryCount(AModel: TBaseModel): integer;
+var
+  Link: TBoundaryModelLink;
 begin
-  result := FBoundaries.Count;
+  Link := FBoundaries.GetLink(AModel);
+  result := Link.Boundaries.Count;
 end;
 
 function TCustomMF_BoundColl.GetParam: TModflowTransientListParameter;
@@ -1723,16 +1762,19 @@ begin
   TimeListLink.RemoveLink(AModel);
 end;
 
-procedure TCustomMF_BoundColl.SetBoundaryCapacity(Value: integer);
+procedure TCustomMF_BoundColl.SetBoundaryCapacity(Value: integer; AModel: TBaseModel);
+var
+  Link: TBoundaryModelLink;
 begin
-  FBoundaries.Capacity := Value;
+  Link := FBoundaries.GetLink(AModel);
+  Link.Boundaries.Capacity := Value;
 end;
 
 procedure TCustomMF_BoundColl.SetBoundaryStartAndEndTime(
-  BoundaryCount: Integer; Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  BoundaryCount: Integer; Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  Boundaries[ItemIndex].StartingTime := Item.StartTime;
-  Boundaries[ItemIndex].EndingTime := Item.EndTime;
+  Boundaries[ItemIndex, AModel].StartingTime := Item.StartTime;
+  Boundaries[ItemIndex, AModel].EndingTime := Item.EndTime;
 end;
 
 { TModflowTimeList }
@@ -1743,7 +1785,7 @@ begin
 end;
 
 procedure TModflowTimeList.Initialize(BoundaryValues: TBoundaryValueArray;
-  ScreenObject: TObject; UseLgrEdgeCells: boolean;
+  ScreenObject: TObject; UseLgrEdgeCells: TLgrCellTreatment;
   AssignmentLocation: TAssignmentLocation = alAll);
 var
   LocalScreenObject: TScreenObject;
@@ -2171,7 +2213,7 @@ begin
   Parameters.Clear;
 end;
 
-procedure TModflowParamBoundary.ClearBoundaries;
+procedure TModflowParamBoundary.ClearBoundaries(AModel: TBaseModel);
 var
   Index: Integer;
   ParamItem: TModflowParamItem;
@@ -2180,7 +2222,7 @@ begin
   for Index := 0 to Parameters.Count - 1 do
   begin
     ParamItem := Parameters[Index];
-    ParamItem.Param.ClearBoundaries;
+    ParamItem.Param.ClearBoundaries(AModel);
   end;
 end;
 
@@ -2323,9 +2365,9 @@ begin
   Values.Clear;
 end;
 
-procedure TModflowBoundary.ClearBoundaries;
+procedure TModflowBoundary.ClearBoundaries(AModel: TBaseModel);
 begin
-  FValues.ClearBoundaries;
+  FValues.ClearBoundaries(AModel);
 end;
 
 procedure TModflowBoundary.ClearTimeLists(AModel: TBaseModel);
@@ -2561,6 +2603,11 @@ begin
 end;
 
 { TCustomBoundaryStorage }
+
+constructor TCustomBoundaryStorage.Create(AModel: TBaseModel);
+begin
+  FModel := AModel;
+end;
 
 destructor TCustomBoundaryStorage.Destroy;
 begin
@@ -2884,6 +2931,58 @@ begin
       Break;
     end;
   end;
+end;
+
+{ TBoundaryModelLink }
+
+constructor TBoundaryModelLink.Create(AModel: TBaseModel);
+begin
+  FModel := AModel;
+  FBoundaries := TObjectList.Create;
+end;
+
+destructor TBoundaryModelLink.Destroy;
+begin
+  FBoundaries.Free;
+  inherited;
+end;
+
+{ TBoundaryModelLinkList }
+
+constructor TBoundaryModelLinkList.Create;
+begin
+  FList := TObjectList.Create;
+end;
+
+destructor TBoundaryModelLinkList.Destroy;
+begin
+  FList.Free;
+  inherited;
+end;
+
+function TBoundaryModelLinkList.GetLink(AModel: TBaseModel): TBoundaryModelLink;
+var
+  Index: Integer;
+  ALink: TBoundaryModelLink;
+begin
+  if (FCachedResult <> nil) and (FCachedResult.Model = AModel) then
+  begin
+    result := FCachedResult;
+    Exit;
+  end;
+  for Index := 0 to FList.Count - 1 do
+  begin
+    ALink := FList[Index];
+    if ALink.Model = AModel then
+    begin
+      result := ALink;
+      FCachedResult := result;
+      Exit;
+    end;
+  end;
+  result := TBoundaryModelLink.Create(AModel);
+  FList.Add(result);
+  FCachedResult := result;
 end;
 
 end.

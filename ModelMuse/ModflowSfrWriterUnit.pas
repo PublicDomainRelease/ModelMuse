@@ -5,31 +5,81 @@ interface
 uses Windows, Types, SysUtils, Classes, Contnrs, CustomModflowWriterUnit,
   ModflowPackageSelectionUnit, PhastModelUnit, ScreenObjectUnit,
   ModflowSfrParamIcalcUnit, ModflowSfrUnit, ModflowSfrSegment,
-  ModflowSfrUnsatSegment, ModflowBoundaryDisplayUnit, ModflowCellUnit;
+  ModflowSfrUnsatSegment, ModflowBoundaryDisplayUnit, ModflowCellUnit,
+  Generics.Collections, ModflowSfrReachUnit, GoPhastTypes;
 
 
 type
-//  EInvalidTime = class(Exception)
-//    Constructor Create(AnObject: TObject); overload;
-//  end;
+  TSegment = class;
+
+  TReachList = TList<TSfr_Cell>;
+
+  // @name is used for SFR segments in LGR models. Each segment has
+  TSubSegment = class(TObject)
+  private
+    FReachList: TReachList;
+    FSegment: TSegment;
+    FModel: TBaseModel;
+    // @name is the segment number for MODFLOW.
+    FSegmentNumber: integer;
+    // @name is the @classname of the other model that
+    // is at the same location as this @classname.
+    FAssociatedLgrSubSeg: TSubSegment;
+    FTotalLength: double;
+    FIndex: Integer;
+    FUpstreamValues: array of TSfrSegmentRecord;
+    FDownstreamValues: array of TSfrSegmentRecord;
+    FUpstreamUnsatValues: array of TSfrUnsatSegmentRecord;
+    FDownstreamUnsatValues: array of TSfrUnsatSegmentRecord;
+    FUsed: boolean;
+    FChildEdge: boolean;
+    function GetReach(Index: Integer): TSfr_Cell;
+  public
+    constructor Create(AModel: TBaseModel; ASegment: TSegment; StressPeriodCount: integer);
+    destructor Destroy; override;
+    function AddReach(AReach: TSfr_Cell): Integer;
+    function ReachCount: integer;
+    property Reaches[Index: Integer]: TSfr_Cell read GetReach;
+    procedure DeleteReach(Index: Integer);
+    property SegmentNumber: integer read FSegmentNumber;
+    property Used: boolean read FUsed;
+    property ChildEdge: boolean read FChildEdge;
+  end;
+
+  TSubSegmentList = TObjectList<TSubSegment>;
 
   TSegment = class(TObject)
   private
     FReaches: TValueCellList;
     FScreenObject: TScreenObject;
+    // @name is used when sorting segments.
     FHasTributaries: boolean;
+    // @name is the segment number exported to MODFLOW.
     FNewSegmentNumber: integer;
+    FSubSegmentList: TSubSegmentList;
     function GetReach(Index: integer): TValueCell;
     function GetReachCount: integer;
   public
+    constructor Create;
+    // @name is the segment number assigned by the user.
     function OriginalSegmentNumber: integer;
+    // @name is the segment number exported to MODFLOW.
     property NewSegmentNumber: integer read FNewSegmentNumber;
     Destructor Destroy; override;
     function OriginalDownStreamSegmentNumbers: TIntegerDynArray;
     function OriginalDiversionSegmentNumbers: TIntegerDynArray;
     property Reaches[Index: integer]: TValueCell read GetReach;
     property ReachCount: integer read GetReachCount;
+    function AddSubSegment(AModel: TBaseModel; StressPeriodCount: integer): TSubSegment;
+    property SubSegmentList: TSubSegmentList read FSubSegmentList;
+//    procedure DeleteReach(Index: Integer);
   end;
+
+  TStreamDirection = (sdDownstream, sdUpstream);
+
+  TModflowSFR_Writer = class;
+
+  TSfrWriterList = TList<TModflowSFR_Writer>;
 
   TModflowSFR_Writer = class(TCustomPackageWriter)
   private
@@ -39,41 +89,60 @@ type
     FLakes: TList;
     ISFROPT: integer;
     NSFRPAR: integer;
+    FLgrUsed: Boolean;
+    FIsChildModel: Boolean;
+    procedure CheckParamInstances;
     procedure WriteDataSet1;
     procedure WriteDataSet2;
     procedure WriteDataSets3and4;
     procedure WriteDataSet4b6a(StartTime: double;
       Segment: TSegment; ParamScreenObjectItem: TSfrParamIcalcItem;
-      SfrBoundary: TSfrBoundary; DataSet4B: boolean);
+      SfrBoundary: TSfrBoundary; DataSet4B: boolean; SubSegIndex: integer);
     procedure WriteDataSet4c6b(Parameter: Boolean;
       SfrBoundary: TSfrBoundary; ParamScreenObjectItem: TSfrParamIcalcItem;
-      StartTime: double; StressPeriodIndex: integer);
+      StartTime: double; StressPeriodIndex: integer; Segment: TSegment; SubSegIndex: integer);
     procedure WriteSegmentValues(StressPeriodIndex: Integer;
       Parameter: Boolean; UpOrDownStreamValues: TSfrSegmentStorage; upstream: Boolean;
       var CommentLine: string; var ValuesWriten: boolean;
-      ParamScreenObjectItem: TSfrParamIcalcItem);
+      ParamScreenObjectItem: TSfrParamIcalcItem; PSegValue: PSfrSegmentRecord);
     procedure WriteUnsatSegmentValues(upstream: Boolean;
       var CommentLine: string; var ValuesWriten: boolean;
-      UnsatUpstreamValues: TSfrUnsatSegmentStorage);
+      UnsatUpstreamValues: TSfrUnsatSegmentStorage;
+      PSegUnsatValue: PSfrUnsatSegmentRecord);
     procedure WriteDataSet4d6c(Parameter: Boolean; SfrBoundary: TSfrBoundary;
       ParamScreenObjectItem: TSfrParamIcalcItem;
-      StartTime: double; StressPeriodIndex: integer);
+      StartTime: double; StressPeriodIndex: integer; Segment: TSegment; SubSegIndex: integer);
     procedure WriteDataSet4e6d(Parameter: Boolean; SfrBoundary: TSfrBoundary;
-      ParamScreenObjectItem: TSfrParamIcalcItem; StressPeriod: integer);
+      ParamScreenObjectItem: TSfrParamIcalcItem; StressPeriod: integer; Segment: TSegment; SubSegIndex: integer);
     procedure WriteDataSet4f6e(Parameter: Boolean; SfrBoundary: TSfrBoundary;
-      ParamScreenObjectItem: TSfrParamIcalcItem; StartTime: double);
+      ParamScreenObjectItem: TSfrParamIcalcItem; StartTime: double; Segment: TSegment; SubSegIndex: integer);
     procedure WriteDataSets5to7;
-    function FindConvertedSegment(OriginalSegmentNumber: integer): integer;
+    function FindConvertedSegment(OriginalSegmentNumber: integer; Direction: TStreamDirection): integer;
     procedure WriteGages(var StartUnitNumber: integer; Lines: TStrings);
     function GetSegment(Index: integer): TSegment;
     function GetSegmentCount: integer;
     procedure TestBedElevations;
+    procedure CreateLgrSubSegments;
+    procedure RenumberLgrSubSegments;
+    procedure WriteSegment(Segment: TSegment;
+      StartTime: double; SubSegIndex: integer; Item: TSfrParamIcalcItem;
+      Boundary: TSfrBoundary; TimeIndex: integer;
+      IsParameter: boolean);
+    procedure LgrAdjustSegmentValues(
+      Segment: TSegment; StartTime: double; SubSegIndex: integer;
+      StressPeriod: integer);
+    procedure AdjustLgrParamValues;
+    procedure AdjustLgrNonParamValues;
+    procedure AdjustLgrValues;
+    procedure InternalUpdateDisplay(TimeLists: TModflowBoundListOfTimeLists);
+    procedure AdjustReachLengths;
   protected
     class function Extension: string; override;
     function Package: TModflowPackageSelection; override;
     procedure SortSegments;
-    procedure Evaluate;
   public
+    procedure Evaluate;
+    procedure AssociateLgrSubSegments(SfrWriterList: TSfrWriterList);
     property Segments[Index: integer]: TSegment read GetSegment;
     property SegmentCount: integer read GetSegmentCount;
     Constructor Create(Model: TCustomModel; EvaluationType: TEvaluationType); override;
@@ -86,15 +155,14 @@ type
 implementation
 
 uses ModflowUnitNumbers, OrderedCollectionUnit, frmErrorsAndWarningsUnit,
-  ModflowSfrReachUnit, ModflowTransientListParameterUnit, ModflowSfrTable,
+  ModflowTransientListParameterUnit, ModflowSfrTable,
   ModflowSfrFlows, ModflowSfrChannelUnit, ModflowSfrEquationUnit,
-  ModflowTimeUnit, frmProgressUnit, IntListUnit, GoPhastTypes, Forms, 
-  ModflowBoundaryUnit, Dialogs;
+  ModflowTimeUnit, frmProgressUnit, IntListUnit, Forms,
+  ModflowBoundaryUnit, Dialogs, Math;
 
 resourcestring
   StrInvalidStartingTimeStep1 = 'Invalid starting time or missing data for the '
     + 'first time step in the following objects';
-  StrSFRLinkagesBetween = 'SFR linkages between grids is unsupported';
   StrInvalidStartingTime = 'Invalid starting time in the following objects';
   StrOneOrMoreSFRStre = 'One or more SFR stream segments have slopes that '
     + 'are zero or negative.';
@@ -116,6 +184,11 @@ resourcestring
       'package is not in use.';
   StrObjectSTime1 = 'Object: %s; Time: %1:g; Upstream elevation: %2:g; Downs' +
   'tream elevation: %3:g';
+  StrNoStreamsDefined = 'No streams defined.';
+  StrTheSFRPackageHas = 'The SFR package has been activated but no streams h' +
+  'ave been defined.';
+  StrDupParamInstances = 'The following objects contained duplicate SFR ' +
+  'Parameter instances.';
 
 const
   StrSegmentNumber = 'Segment Number in ';
@@ -132,6 +205,9 @@ resourcestring
     + 'in the SFR package because they do not intersect the grid.';
   UnsatError = 'One or more objects do not define unsaturated flow properties '
     + 'in the SFR package.';
+  DupNumbersError = 'The SFR segments defined by %0:s and %1:s have '
+    + 'the same segment number: %2:d.';
+  CircularError = 'Object: %0:s; Segment Number: %1:d.';
 
 { TModflowSFR_Writer }
 
@@ -144,11 +220,729 @@ begin
   result := Segment1.OriginalSegmentNumber - Segment2.OriginalSegmentNumber;
 end;
 
+procedure TModflowSFR_Writer.AdjustReachLengths;
+var
+  Index: Integer;
+  Segment: TSegment;
+  SubSegIndex: Integer;
+  SubSeg: TSubSegment;
+  ReachIndex: Integer;
+  AReach: TSfr_Cell;
+  ParentSubSeg: TSubSegment;
+  LocalChildModel: TChildModel;
+  ParentCol: integer;
+  ParentRow: Integer;
+  ParentLayer: Integer;
+  ParentReachIndex: Integer;
+  ParentReachLengthTotal: double;
+  Factor: Extended;
+  MoreSubSegs: TList;
+  InnerSubSegIndex: Integer;
+  AnotherSubSeg: TSubSegment;
+  ParentCol1: Integer;
+  ParentRow1: Integer;
+  ParentLayer1: Integer;
+  ChildReachTotal: double;
+begin
+  if Model is TChildModel then
+  begin
+    LocalChildModel := TChildModel(Model);
+    MoreSubSegs := TList.Create;
+    try
+      for Index := 0 to SegmentCount - 1 do
+      begin
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        Segment := Segments[Index];
+        for SubSegIndex := 0 to Segment.SubSegmentList.Count - 1 do
+        begin
+          SubSeg := Segment.SubSegmentList[SubSegIndex];
+          if MoreSubSegs.IndexOf(SubSeg) >= 0 then
+          begin
+            Continue;
+          end;
+          if SubSeg.ChildEdge and (SubSeg.FTotalLength > 0) then
+          begin
+            MoreSubSegs.Clear;
+            MoreSubSegs.Add(SubSeg);
+            ParentSubSeg := SubSeg.FAssociatedLgrSubSeg;
+            if (ParentSubSeg <> nil) and (SubSeg.ReachCount > 0) and (ParentSubSeg.ReachCount > 0) then
+            begin
+              AReach := SubSeg.Reaches[0];
+              ParentCol := LocalChildModel.ChildColToParentCol(AReach.Column);
+              ParentRow := LocalChildModel.ChildRowToParentRow(AReach.Row);
+              ParentLayer := LocalChildModel.ChildLayerToParentLayer(AReach.Layer);
+
+              for InnerSubSegIndex := SubSegIndex + 1 to Segment.SubSegmentList.Count - 1 do
+              begin
+                AnotherSubSeg := Segment.SubSegmentList[InnerSubSegIndex];
+                if AnotherSubSeg.ReachCount > 0 then
+                begin
+                  AReach := AnotherSubSeg.Reaches[0];
+                  ParentCol1 := LocalChildModel.ChildColToParentCol(AReach.Column);
+                  ParentRow1 := LocalChildModel.ChildRowToParentRow(AReach.Row);
+                  ParentLayer1 := LocalChildModel.ChildLayerToParentLayer(AReach.Layer);
+                  if (ParentCol = ParentCol1)
+                    and (ParentRow = ParentRow1)
+                    and (ParentLayer = ParentLayer1) then
+                  begin
+                    MoreSubSegs.Add(AnotherSubSeg);
+                  end
+                  else
+                  begin
+                    Break;
+                  end;
+                end;
+              end;
+
+              ParentReachLengthTotal := 0;
+              for ParentReachIndex := 0 to ParentSubSeg.ReachCount - 1 do
+              begin
+                AReach := ParentSubSeg.Reaches[ParentReachIndex];
+                if (AReach.Column = ParentCol)
+                  and (AReach.Row = ParentRow)
+                  and (AReach.Layer = ParentLayer) then
+                begin
+                  ParentReachLengthTotal := ParentReachLengthTotal + AReach.ReachLength;
+                end;
+              end;
+
+              if ParentReachLengthTotal > 0 then
+              begin
+                ChildReachTotal := 0;
+                for InnerSubSegIndex := 0 to MoreSubSegs.Count - 1 do
+                begin
+                  AnotherSubSeg := MoreSubSegs[InnerSubSegIndex];
+                  ChildReachTotal := ChildReachTotal + AnotherSubSeg.FTotalLength;
+                end;
+
+                Factor := ParentReachLengthTotal/ChildReachTotal;
+                for InnerSubSegIndex := 0 to MoreSubSegs.Count - 1 do
+                begin
+                  AnotherSubSeg := MoreSubSegs[InnerSubSegIndex];
+                  AnotherSubSeg.FTotalLength := AnotherSubSeg.FTotalLength * Factor;
+                  for ReachIndex := 0 to AnotherSubSeg.ReachCount - 1 do
+                  begin
+                    AReach := AnotherSubSeg.Reaches[ReachIndex];
+                    AReach.Values.AdjustReachLength(Factor);
+                  end;
+                end;
+
+              end;
+            end;
+          end;
+        end;
+      end;
+    finally
+      MoreSubSegs.Free;
+    end;
+  end;
+
+end;
+
+procedure TModflowSFR_Writer.AdjustLgrValues;
+begin
+  AdjustReachLengths;
+  AdjustLgrNonParamValues;
+  AdjustLgrParamValues;
+end;
+
+procedure TModflowSFR_Writer.AssociateLgrSubSegments(
+  SfrWriterList: TSfrWriterList);
+var
+  SegmentIndex: Integer;
+  Segment: TSegment;
+  SubSegIndex: Integer;
+  SubSeg: TSubSegment;
+  ChildWriter: TModflowSFR_Writer;
+  ChildSeg: TSegment;
+  ChildSubSeg: TSubSegment;
+  ParentReach: TSfr_Cell;
+  FirstChildReach: TSfr_Cell;
+  LocalChildModel: TChildModel;
+  ChildSubSegIndex: Integer;
+  ParentCol: Integer;
+  ParentRow: Integer;
+  ParentLayer: Integer;
+  ParentReachIndex: Integer;
+  Number: Integer;
+  WriterIndex: Integer;
+  Writer: TModflowSFR_Writer;
+  InnerIndex: Integer;
+  AnotherChildSubSeg: TSubSegment;
+  function GetChildWriter(AModel: TBaseModel): TModflowSFR_Writer;
+  var
+    ChildIndex: Integer;
+    AWriter: TModflowSFR_Writer;
+  begin
+    result := nil;
+    for ChildIndex := 0 to SfrWriterList.Count - 1 do
+    begin
+      AWriter := SfrWriterList[ChildIndex];
+      if AWriter.Model = AModel then
+      begin
+        Result := AWriter;
+        Exit;
+      end;
+    end;
+  end;
+  function GetMatchingChildSeg(Segment: TSegment;
+    ChildWriter: TModflowSFR_Writer): TSegment;
+  var
+    ChildSegIndex: Integer;
+    ChildSeg: TSegment;
+  begin
+    Assert(ChildWriter <> nil);
+    Result := nil;
+    for ChildSegIndex := 0 to ChildWriter.SegmentCount - 1 do
+    begin
+      ChildSeg := ChildWriter.Segments[ChildSegIndex];
+      if Segment.FScreenObject = ChildSeg.FScreenObject then
+      begin
+        Result := ChildSeg;
+        Exit;
+      end;
+    end;
+  end;
+begin
+  if not Package.IsSelected then
+  begin
+    Exit
+  end;
+  if Model.PackageGeneratedExternally(StrSFR) then
+  begin
+    Exit;
+  end;
+  Assert((Model is TPhastModel) and TPhastModel(Model).LgrUsed);
+  for SegmentIndex := 0 to SegmentCount - 1 do
+  begin
+    Segment := Segments[SegmentIndex];
+    for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+    begin
+      SubSeg :=  Segment.FSubSegmentList[SubSegIndex];
+      if SubSeg.FModel <> Model then
+      begin
+        LocalChildModel := SubSeg.FModel as TChildModel;
+        ChildWriter := GetChildWriter(LocalChildModel);
+        ChildSeg := GetMatchingChildSeg(Segment, ChildWriter);
+        for ChildSubSegIndex := 0 to ChildSeg.FSubSegmentList.Count - 1 do
+        begin
+          ChildSubSeg := ChildSeg.FSubSegmentList[ChildSubSegIndex];
+          if ChildSubSeg.FAssociatedLgrSubSeg <> nil then
+          begin
+            Continue;
+          end;
+          FirstChildReach := ChildSubSeg.Reaches[0];
+
+          ParentCol := LocalChildModel.ChildColToParentCol(FirstChildReach.Column);
+          ParentRow := LocalChildModel.ChildRowToParentRow(FirstChildReach.Row);
+          ParentLayer := LocalChildModel.ChildLayerToParentLayer(FirstChildReach.Layer);
+          for ParentReachIndex := 0 to SubSeg.ReachCount - 1 do
+          begin
+            ParentReach := SubSeg.Reaches[ParentReachIndex];
+            if (ParentCol = ParentReach.Column)
+              and (ParentRow = ParentReach.Row)
+              and (ParentLayer = ParentReach.Layer)
+              then
+            begin
+              if SubSeg.FAssociatedLgrSubSeg = nil then
+              begin
+                SubSeg.FAssociatedLgrSubSeg := ChildSubSeg;
+              end;
+              ChildSubSeg.FAssociatedLgrSubSeg := SubSeg;
+              break;
+            end;
+          end;
+//          Assert(ChildSubSeg.FAssociatedLgrSubSeg <> nil);
+        end;
+        for ChildSubSegIndex := 0 to ChildSeg.FSubSegmentList.Count - 1 do
+        begin
+          ChildSubSeg := ChildSeg.FSubSegmentList[ChildSubSegIndex];
+          if ChildSubSeg.FAssociatedLgrSubSeg <> nil then
+          begin
+            Continue;
+          end;
+
+          for InnerIndex := ChildSubSegIndex -1 downto 0 do
+          begin
+            AnotherChildSubSeg := ChildSeg.FSubSegmentList[InnerIndex];
+            if AnotherChildSubSeg.FAssociatedLgrSubSeg <> nil then
+            begin
+              ChildSubSeg.FAssociatedLgrSubSeg := AnotherChildSubSeg.FAssociatedLgrSubSeg;
+              break;
+            end;
+          end;
+          if ChildSubSeg.FAssociatedLgrSubSeg <> nil then
+          begin
+            Continue;
+          end;
+          for InnerIndex := ChildSubSegIndex +1 to ChildSeg.FSubSegmentList.Count - 1 do
+          begin
+            AnotherChildSubSeg := ChildSeg.FSubSegmentList[InnerIndex];
+            if AnotherChildSubSeg.FAssociatedLgrSubSeg <> nil then
+            begin
+              ChildSubSeg.FAssociatedLgrSubSeg := AnotherChildSubSeg.FAssociatedLgrSubSeg;
+              break;
+            end;
+          end;
+          Assert(ChildSubSeg.FAssociatedLgrSubSeg <> nil);
+        end;
+
+      end;
+    end;
+  end;
+  for SegmentIndex := 0 to SegmentCount - 1 do
+  begin
+    Segment := Segments[SegmentIndex];
+    for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+    begin
+      SubSeg :=  Segment.FSubSegmentList[SubSegIndex];
+      if SubSeg.FModel <> Model then
+      begin
+        for ParentReachIndex := SubSeg.ReachCount - 1 downto 0 do
+        begin
+          ParentReach := SubSeg.Reaches[ParentReachIndex];
+          if ParentReach.Values.ReachLength = 0 then
+          begin
+            SubSeg.DeleteReach(ParentReachIndex);
+          end;
+        end;
+      end;
+    end;
+  end;
+  Number := 1;
+  for SegmentIndex := 0 to SegmentCount - 1 do
+  begin
+    Segment := Segments[SegmentIndex];
+    Segment.FNewSegmentNumber := Number;
+    if Segment.FSubSegmentList.Count = 0 then
+    begin
+      Inc(Number);
+    end
+    else
+    begin
+      for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+      begin
+        SubSeg := Segment.FSubSegmentList[SubSegIndex];
+        SubSeg.FSegmentNumber := Number;
+        if SubSeg.ReachCount > 0 then
+        begin
+          Inc(Number);
+        end;
+      end;
+    end;
+  end;
+  for WriterIndex := 0 to SfrWriterList.Count - 1 do
+  begin
+    Writer := SfrWriterList[WriterIndex];
+    Writer.AdjustLgrValues;
+  end;
+end;
+
+procedure TModflowSFR_Writer.AdjustLgrParamValues;
+var
+  LocalModel: TCustomModel;
+  ParamIndex: Integer;
+  ParamItem: TModflowTransientListParameter;
+  Instances: TList;
+  SfrPackage: TSfrPackageSelection;
+  Index: Integer;
+  InstanceItem: TSfrParamInstance;
+  Segment: TSegment;
+  ScreenObject: TScreenObject;
+  ScreenObjectParamIndex: Integer;
+  ParamScreenObjectItem: TSfrParamIcalcItem;
+  Segments : TList;
+  InstanceIndex: Integer;
+  SfrBoundary: TSfrBoundary;
+  SubSegIndex: Integer;
+//  MaxStressPeriodIndex: Integer;
+  StartTime: Double;
+  EndTime: Double;
+  StressPeriodIndex: Integer;
+begin
+  LocalModel := Model as TCustomModel;
+  SfrPackage := Package as TSfrPackageSelection;
+//  MaxStressPeriodIndex :=LocalModel.ModflowFullStressPeriods.Count -1;
+  StartTime := LocalModel.ModflowFullStressPeriods[0].StartTime;
+  EndTime := LocalModel.ModflowFullStressPeriods[LocalModel.ModflowFullStressPeriods.Count -1].EndTime;
+  for ParamIndex := 0 to LocalModel.ModflowTransientParameters.Count - 1 do
+  begin
+    ParamItem := LocalModel.ModflowTransientParameters.Items[ParamIndex];
+    if ParamItem.ParameterType = ptSFR then
+    begin
+      Instances := TList.Create;
+      Segments := TList.Create;
+      try
+        for Index := 0 to SfrPackage.ParameterInstances.Count - 1 do
+        begin
+          Application.ProcessMessages;
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+          InstanceItem := SfrPackage.ParameterInstances.Items[Index];
+          if InstanceItem.ParameterName = ParamItem.ParameterName then
+          begin
+            if (StartTime <= InstanceItem.StartTime) and (EndTime >= InstanceItem.EndTime) then
+            begin
+              Instances.Add(InstanceItem);
+            end;
+
+          end;
+        end;
+        for Index := 0 to FSegments.Count - 1 do
+        begin
+          Application.ProcessMessages;
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+          Segment := FSegments[Index];
+          ScreenObject := Segment.FScreenObject;
+          Assert(ScreenObject.ModflowSfrBoundary <> nil);
+          for ScreenObjectParamIndex := 0 to ScreenObject.ModflowSfrBoundary.ParamIcalc.Count - 1 do
+          begin
+            Application.ProcessMessages;
+            if not frmProgressMM.ShouldContinue then
+            begin
+              Exit;
+            end;
+            ParamScreenObjectItem := ScreenObject.ModflowSfrBoundary.ParamIcalc.Items[ScreenObjectParamIndex];
+            if ParamScreenObjectItem.Param = ParamItem.ParameterName then
+            begin
+              Segments.Add(Segment);
+              break;
+            end;
+          end;
+        end;
+        for Index := 0 to Segments.Count - 1 do
+        begin
+          Application.ProcessMessages;
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+          Segment := Segments[Index];
+          ScreenObject := Segment.FScreenObject;
+          Assert(ScreenObject.ModflowSfrBoundary <> nil);
+          SfrBoundary := ScreenObject.ModflowSfrBoundary;
+
+          StressPeriodIndex := -1;
+          for InstanceIndex := 0 to Instances.Count - 1 do
+          begin
+            Application.ProcessMessages;
+            if not frmProgressMM.ShouldContinue then
+            begin
+              Exit;
+            end;
+            InstanceItem := Instances[InstanceIndex];
+            for ScreenObjectParamIndex := 0 to SfrBoundary.ParamIcalc.Count - 1 do
+            begin
+              Application.ProcessMessages;
+              if not frmProgressMM.ShouldContinue then
+              begin
+                Exit;
+              end;
+              ParamScreenObjectItem := SfrBoundary.
+                ParamIcalc.Items[ScreenObjectParamIndex];
+              if (ParamScreenObjectItem.Param = ParamItem.ParameterName)
+                and (ParamScreenObjectItem.ParamInstance
+                = InstanceItem.ParameterInstance) then
+              begin
+                Inc(StressPeriodIndex);
+                if Segment.FSubSegmentList.Count = 0 then
+                begin
+                  SubSegIndex := -1;
+                  LgrAdjustSegmentValues(Segment, InstanceItem.StartTime,
+                    SubSegIndex, StressPeriodIndex);
+                end
+                else
+                begin
+                  for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+                  begin
+                    LgrAdjustSegmentValues(Segment, InstanceItem.StartTime,
+                      SubSegIndex, StressPeriodIndex);
+                  end;
+                end;
+              end;
+            end;
+          end;
+        end;
+      finally
+        Instances.Free;
+        Segments.Free;
+      end;
+    end;
+  end;
+end;
+
+procedure TModflowSFR_Writer.AdjustLgrNonParamValues;
+var
+  UsedSegments: TList;
+  TimeIndex: Integer;
+  StressPeriod: TModflowStressPeriod;
+  SegementIndex: Integer;
+  Segment: TSegment;
+  Item: TSfrParamIcalcItem;
+//  Boundary: TSfrBoundary;
+  SubSegIndex: Integer;
+begin
+  UsedSegments := TList.Create;
+  try
+
+    for TimeIndex := 0 to Model.ModflowFullStressPeriods.Count - 1 do
+    begin
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      // data set 5;
+      UsedSegments.Clear;
+
+      StressPeriod := Model.ModflowFullStressPeriods[TimeIndex];
+      for SegementIndex := 0 to FSegments.Count - 1 do
+      begin
+        Segment := FSegments[SegementIndex];
+        Assert(Segment.FScreenObject.ModflowSfrBoundary <> nil);
+//        SfrBoundary := Segment.FScreenObject.ModflowSfrBoundary;
+        Item := Segment.FScreenObject.ModflowSfrBoundary.ParamIcalc.
+          GetItemByStartTime(StressPeriod.StartTime);
+        if (Item = nil) or (Item.Param = '') then
+        begin
+          UsedSegments.Add(Segment);
+        end;
+      end;
+
+
+      for SegementIndex := 0 to UsedSegments.Count - 1 do
+      begin
+        // Data set 6a
+        Segment := UsedSegments[SegementIndex];
+        Assert(Segment.FScreenObject.ModflowSfrBoundary <> nil);
+        Item := Segment.FScreenObject.ModflowSfrBoundary.ParamIcalc.
+          GetItemByStartTime(StressPeriod.StartTime);
+        if Item <> nil then
+        begin
+
+//          Boundary := Segment.FScreenObject.ModflowSfrBoundary;
+          if Segment.FSubSegmentList.Count = 0 then
+          begin
+            SubSegIndex := -1;
+            LgrAdjustSegmentValues(Segment, StressPeriod.StartTime, SubSegIndex, TimeIndex);
+          end
+          else
+          begin
+            for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+            begin
+              LgrAdjustSegmentValues(Segment, StressPeriod.StartTime, SubSegIndex, TimeIndex);
+            end;
+          end;
+        end;
+      end;
+    end;
+  finally
+    UsedSegments.Free;
+  end;
+
+end;
+
+procedure TModflowSFR_Writer.CheckParamInstances;
+var
+  Index: Integer;
+  Segment: TSegment;
+  ScreenObject: TScreenObject;
+  ScreenObjectParamIndex: Integer;
+  ParamScreenObjectItem: TSfrParamIcalcItem;
+  ParameterNames: TStringList;
+  InstanceNames: TStringList;
+  InstancesList: TList;
+  Position: Integer;
+begin
+  ParameterNames := TStringList.Create;
+  InstancesList := TObjectList.Create;
+  try
+
+    for Index := 0 to FSegments.Count - 1 do
+    begin
+      Application.ProcessMessages;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+      InstancesList.Clear;
+      Segment := FSegments[Index];
+      ScreenObject := Segment.FScreenObject;
+      Assert(ScreenObject.ModflowSfrBoundary <> nil);
+      for ScreenObjectParamIndex := 0 to ScreenObject.ModflowSfrBoundary.ParamIcalc.Count - 1 do
+      begin
+        Application.ProcessMessages;
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+        ParamScreenObjectItem := ScreenObject.ModflowSfrBoundary.ParamIcalc.Items[ScreenObjectParamIndex];
+        if ParamScreenObjectItem.Param = '' then
+        begin
+          Continue;
+        end;
+        Position := ParameterNames.IndexOf(ParamScreenObjectItem.Param);
+        if Position < 0 then
+        begin
+          InstanceNames := TStringList.Create;
+          InstancesList.Add(InstanceNames);
+          ParameterNames.AddObject(ParamScreenObjectItem.Param, InstanceNames)
+        end
+        else
+        begin
+          InstanceNames := ParameterNames.Objects[Position] as TStringList;
+        end;
+        if InstanceNames.IndexOf(ParamScreenObjectItem.ParamInstance) < 0 then
+        begin
+          InstanceNames.Add(ParamScreenObjectItem.ParamInstance)
+        end
+        else
+        begin
+          frmErrorsAndWarnings.AddError(Model, StrDupParamInstances,
+            ScreenObject.Name);
+        end;
+      end;
+    end;
+  finally
+    ParameterNames.Free;
+    InstancesList.Free;
+  end;
+end;
+
 constructor TModflowSFR_Writer.Create(Model: TCustomModel; EvaluationType: TEvaluationType);
 begin
   inherited;
+  FLgrUsed := (not (Model is TPhastModel) or TPhastModel(Model).LgrUsed);
+  if FLgrUsed then
+  begin
+    FIsChildModel := Model is TChildModel;
+  end
+  else
+  begin
+    FIsChildModel := False;
+  end;
   FValues := TObjectList.Create;
   FSegments := TObjectList.Create;
+end;
+
+procedure TModflowSFR_Writer.CreateLgrSubSegments;
+var
+  LocalModel: TPhastModel;
+  SegmentIndex: Integer;
+  ASegment: TSegment;
+  ReachIndex: Integer;
+  AReach: TSfr_Cell;
+  CurrentModel : TCustomModel;
+  SubSeg: TSubSegment;
+  LocalChildModel: TChildModel;
+  OverlapWidth: Integer;
+  MaxOverlappedColumn: Integer;
+  MaxOverlappedRow: Integer;
+  MaxOverlappedLayer: Integer;
+  function ReachInModel(AReach: TSfr_Cell; ChildModel: TChildModel): Boolean;
+  begin
+    Result := (AReach.Column >= ChildModel.FirstCol)
+      and (AReach.Column <= ChildModel.LastCol)
+      and (AReach.Row >= ChildModel.FirstRow)
+      and (AReach.Row <= ChildModel.LastRow)
+      and ((LocalModel.Grid.LayerCount -1 = ChildModel.Discretization.BottomLayerIndex)
+      or (AReach.Layer < ChildModel.Discretization.BottomLayerIndex))
+  end;
+  function GetModel(AReach: TSfr_Cell): TCustomModel;
+  var
+    ChildIndex: Integer;
+    ChildModel: TChildModel;
+  begin
+    result := LocalModel;
+    for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+      if ReachInModel(AReach, ChildModel) then
+      begin
+        result := ChildModel;
+        Exit;
+      end;
+    end;
+  end;
+  function ReachInOverlap(AReach: TSfr_Cell): Boolean;
+  begin
+    result := (AReach.Column < OverlapWidth)
+      or (AReach.Row < OverlapWidth)
+      or (AReach.Column >= MaxOverlappedColumn)
+      or (AReach.Row >= MaxOverlappedRow)
+      or (AReach.Layer >= MaxOverlappedLayer)
+  end;
+begin
+  if Model is TPhastModel then
+  begin
+    LocalModel := TPhastModel(Model);
+    if LocalModel.LgrUsed then
+    begin
+      for SegmentIndex := 0 to SegmentCount - 1 do
+      begin
+        ASegment := Segments[SegmentIndex];
+        CurrentModel := nil;
+        SubSeg := nil;
+        for ReachIndex := 0 to ASegment.ReachCount - 1 do
+        begin
+          AReach := ASegment.Reaches[ReachIndex] as TSfr_Cell;
+          if (CurrentModel = nil) or (CurrentModel = LocalModel)
+            or not ReachInModel(AReach, (CurrentModel as TChildModel)) then
+          begin
+            CurrentModel := GetModel(AReach);
+          end;
+
+          if (SubSeg = nil) or (SubSeg.FModel <> CurrentModel) then
+          begin
+            SubSeg := ASegment.AddSubSegment(CurrentModel, LocalModel.ModflowFullStressPeriods.Count);
+          end;
+          SubSeg.AddReach(AReach);
+//          AReach.Active := True;
+        end;
+      end;
+    end;
+  end
+  else
+  begin
+    LocalChildModel := Model as TChildModel;
+    OverlapWidth := LocalChildModel.ChildCellsPerParentCell div 2 + 1;
+    MaxOverlappedColumn := LocalChildModel.Grid.ColumnCount - OverlapWidth;
+    MaxOverlappedRow := LocalChildModel.Grid.RowCount - OverlapWidth;
+    MaxOverlappedLayer := LocalChildModel.FirstOverlappedLayer;
+    for SegmentIndex := 0 to SegmentCount - 1 do
+    begin
+      ASegment := Segments[SegmentIndex];
+      SubSeg := nil;
+      for ReachIndex := 0 to ASegment.ReachCount - 1 do
+      begin
+        AReach := ASegment.Reaches[ReachIndex] as TSfr_Cell;
+        if ReachInOverlap(AReach) then
+        begin
+          SubSeg := ASegment.AddSubSegment(LocalChildModel, LocalChildModel.ModflowFullStressPeriods.Count);
+          SubSeg.AddReach(AReach);
+          SubSeg.FChildEdge := True;
+          SubSeg := nil;
+        end
+        else
+        begin
+          if SubSeg = nil then
+          begin
+            SubSeg := ASegment.AddSubSegment(LocalChildModel, LocalChildModel.ModflowFullStressPeriods.Count);
+          end;
+          SubSeg.AddReach(AReach);
+        end;
+      end;
+    end;
+  end;
 end;
 
 destructor TModflowSFR_Writer.Destroy;
@@ -171,7 +965,14 @@ var
   StartTime: Double;
   EndTime: Double;
 begin
-
+  if not Package.IsSelected then
+  begin
+    Exit
+  end;
+  if Model.PackageGeneratedExternally(StrSFR) then
+  begin
+    Exit;
+  end;
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrInvalidStartingTimeStep1);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrIncompleteSFRData);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, DupErrorCategory);
@@ -185,15 +986,8 @@ begin
   frmErrorsAndWarnings.RemoveWarningGroup(Model, StrDiversionOutOfOrder);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrLakeDownstreamError);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, StrLakeDiversionError);
-  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrSFRLinkagesBetween);
-
-  if Model is TChildModel then
-  begin
-    frmErrorsAndWarnings.AddWarning(Model, StrSFRLinkagesBetween,
-      'ModelMuse does not currently support linking streams between parent '
-      + 'and child grids. You will need to modify the SFR files manually if '
-      + 'want the streams to be linked.');
-  end;
+  frmErrorsAndWarnings.RemoveWarningGroup(Model, StrNoStreamsDefined);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrDupParamInstances);
 
   StartTime := Model.ModflowStressPeriods[0].StartTime;
   EndTime := Model.ModflowStressPeriods[
@@ -246,9 +1040,6 @@ begin
             NoSegmentsWarning, ScreenObject.Name);
           Segment.Free;
         end;
-      end
-      else
-      begin
       end;
     end;
   finally
@@ -261,6 +1052,16 @@ begin
     Segment.FNewSegmentNumber := Index + 1;
   end;
   TestBedElevations;
+  CheckParamInstances;
+
+  // LGR
+  CreateLgrSubSegments;
+  RenumberLgrSubSegments;
+
+  if FSegments.Count = 0 then
+  begin
+    frmErrorsAndWarnings.AddWarning(Model, StrNoStreamsDefined, StrTheSFRPackageHas);
+  end;
 end;
 
 class function TModflowSFR_Writer.Extension: string;
@@ -273,11 +1074,39 @@ begin
   result := Model.ModflowPackages.SfrPackage;
 end;
 
+procedure TModflowSFR_Writer.RenumberLgrSubSegments;
+var
+  Index: Integer;
+  Segment: TSegment;
+  Number: Integer;
+  SubSegIndex: Integer;
+  SubSeg: TSubSegment;
+begin
+  if (not (Model is TPhastModel)) or TPhastModel(Model).LgrUsed then
+  begin
+    Number := 1;
+    for Index := 0 to SegmentCount - 1 do
+    begin
+      Segment := Segments[Index];
+      Segment.FNewSegmentNumber := Number;
+      if Segment.FSubSegmentList.Count = 0 then
+      begin
+        Inc(Number);
+      end
+      else
+      begin
+        for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+        begin
+          SubSeg := Segment.FSubSegmentList[SubSegIndex];
+          SubSeg.FSegmentNumber := Number;
+          Inc(Number);
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure TModflowSFR_Writer.SortSegments;
-const
-  DupNumbersError = 'The SFR segments defined by %0:s and %1:s have '
-    + 'the same segment number: %2:d.';
-  CircularError = 'Object: %0:s; Segment Number: %1:d.';
 var
   SortedSegments: TList;
   Segment, Segment1, Segment2: TSegment;
@@ -299,9 +1128,9 @@ var
     Segment: TSegment;
   begin
     result := nil;
-    for Index := 0 to FSegments.Count - 1 do
+    for Index := 0 to SegmentCount - 1 do
     begin
-      Segment := FSegments[Index];
+      Segment := Segments[Index];
       if (Segment <> nil) and (Segment.OriginalSegmentNumber = Number) then
       begin
         result := Segment;
@@ -372,7 +1201,6 @@ begin
     end;
   end;
 
-//  UnsortedList := nil;
   // don't renumber the segments if they are already in
   // numerical order.
   if (Error = '') and (FSegments.Count > 0) then
@@ -383,7 +1211,8 @@ begin
       Segment2 := FSegments[FSegments.Count - 1];
       if Segment2.OriginalSegmentNumber = FSegments.Count then
       begin
-//        OrderOK := True;
+        // The segments are in numerical order.
+        // Check for errors and leave the order unchanged.
         DownStreamOutOfOrder := TList.Create;
         DiversionOutOfOrder := TList.Create;
         try
@@ -398,7 +1227,6 @@ begin
                 if (SegmentNumberArray[OutIndex] > FSegments.Count)
                 or (SegmentNumberArray[OutIndex] < Segment.OriginalSegmentNumber) then
                 begin
-//                  OrderOK := False;
                   if DownStreamOutOfOrder.IndexOf(Segment.FScreenObject) < 0 then
                   begin
                     DownStreamOutOfOrder.Add(Segment.FScreenObject)
@@ -414,7 +1242,6 @@ begin
                 if (SegmentNumberArray[OutIndex] > FSegments.Count)
                 or (SegmentNumberArray[OutIndex] > Segment.OriginalSegmentNumber) then
                 begin
-//                  OrderOK := False;
                   if DiversionOutOfOrder.IndexOf(Segment.FScreenObject) < 0 then
                   begin
                     DiversionOutOfOrder.Add(Segment.FScreenObject)
@@ -439,18 +1266,7 @@ begin
           DownStreamOutOfOrder.Free;
           DiversionOutOfOrder.Free;
         end;
-//        if OrderOK then
-//        begin
-          Exit;
-//          UnsortedList := TObjectList.Create;
-//          TObjectList(UnsortedList).OwnsObjects := True;
-//          UnsortedList.Capacity := FSegments.Count;
-//          for Index := 0 to FSegments.Count - 1 do
-//          begin
-//            UnsortedList.Add(FSegments[Index]);
-//          end;
-//        end;
-//        Exit;
+        Exit;
       end;
     end;
   end;
@@ -521,23 +1337,112 @@ begin
       frmErrorsAndWarnings.AddError(Model, CircularCategory, Error);
     end;
   end;
-//  if UnsortedList = nil then
-//  begin
-    (FSegments as TObjectList).OwnsObjects := True;
-    FSegments.Free;
+  (FSegments as TObjectList).OwnsObjects := True;
+  FSegments.Free;
 
-    FSegments := SortedSegments;
-//  end
-//  else
-//  begin
-//    (SortedSegments as TObjectList).OwnsObjects := False;
-//    SortedSegments.Free;
-//    FSegments.Free;
-//    FSegments := UnsortedList;
-//  end;
+  FSegments := SortedSegments;
 end;
 
 procedure TModflowSFR_Writer.UpdateDisplay(
+  TimeLists: TModflowBoundListOfTimeLists);
+var
+  LgrUsed: Boolean;
+  ChildIndex: Integer;
+  LocalModel: TPhastModel;
+  ChildModel: TChildModel;
+  DisplayLists: TModflowBoundListOfTimeLists;
+  ChildSfrWriter: TModflowSFR_Writer;
+  WriterList : TSfrWriterList;
+  ChildTimeLists: TList;
+  WriterObjectList: TList;
+begin
+  if not Package.IsSelected then
+  begin
+    UpdateNotUsedDisplay(TimeLists);
+    Exit;
+  end;
+
+  LgrUsed := (not (Model is TPhastModel)) or TPhastModel(Model).LgrUsed;
+  if LgrUsed then
+  begin
+      if Model is TPhastModel then
+      begin
+      Evaluate;
+      if not frmProgressMM.ShouldContinue then
+      begin
+        Exit;
+      end;
+
+      ChildTimeLists := TObjectList.Create;
+      WriterList := TSfrWriterList.Create;
+      WriterObjectList := TObjectList.Create;
+      try
+        WriterList.Add(self);
+        LocalModel := TPhastModel(Model);
+        for ChildIndex := 0 to LocalModel.ChildModels.Count - 1 do
+        begin
+          ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+
+          ChildSfrWriter := TModflowSFR_Writer.Create(ChildModel, etDisplay);
+          WriterObjectList.Add(ChildSfrWriter);
+          WriterList.Add(ChildSfrWriter);
+          DisplayLists := TModflowBoundListOfTimeLists.Create;
+          ChildTimeLists.Add(DisplayLists);
+          ChildModel.ModflowPackages.SfrPackage.GetDisplayLists(DisplayLists);
+          ChildSfrWriter.Evaluate;
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+        end;
+
+        AssociateLgrSubSegments(WriterList);
+        InternalUpdateDisplay(TimeLists);
+        if not frmProgressMM.ShouldContinue then
+        begin
+          Exit;
+        end;
+
+        Assert(WriterObjectList.Count = ChildTimeLists.Count);
+        for ChildIndex := 0 to ChildTimeLists.Count - 1 do
+        begin
+          DisplayLists := ChildTimeLists[ChildIndex];
+          ChildSfrWriter := WriterObjectList[ChildIndex];
+          ChildSfrWriter.InternalUpdateDisplay(DisplayLists);
+          if not frmProgressMM.ShouldContinue then
+          begin
+            Exit;
+          end;
+          ChildModel := LocalModel.ChildModels[ChildIndex].ChildModel;
+          ChildModel.ModflowPackages.SfrPackage.ComputeAverages(DisplayLists);
+        end;
+
+      finally
+        WriterList.Free;
+        ChildTimeLists.Free;
+        WriterObjectList.Free;
+      end;
+    end
+    else
+    begin
+      Exit;
+    end;
+  end
+  else
+  begin
+
+    Evaluate;
+    if not frmProgressMM.ShouldContinue then
+    begin
+      Exit;
+    end;
+
+    InternalUpdateDisplay(TimeLists);
+  end;
+end;
+
+
+procedure TModflowSFR_Writer.InternalUpdateDisplay(
   TimeLists: TModflowBoundListOfTimeLists);
 var
   SegmentNumberTimes: TModflowBoundaryDisplayTimeList;
@@ -612,6 +1517,8 @@ var
   Param: TModflowTransientListParameter;
   KAnnotation: string;
   ErrorObject: TScreenObject;
+  SubSegIndex: integer;
+  SubSeg: TSubSegment;
   function WidthValueUsed: boolean;
   begin
     result := True;
@@ -670,92 +1577,25 @@ var
         Assert(False);
     end;
   end;
-begin
-  if not Package.IsSelected then
+  procedure AssignReachValues;
+  var
+    TimeIndex: integer;
+    LastReach: Boolean;
   begin
-    UpdateNotUsedDisplay(TimeLists);
-    Exit;
-  end;
-
-  Evaluate;
-  if not frmProgressMM.ShouldContinue then
-  begin
-    Exit;
-  end;
-
-  SegmentNumberTimes := TimeLists[0];
-  ReachNumberTimes := TimeLists[1];
-  ICalcTimeList := TimeLists[2];
-  ReachLengthList := TimeLists[3];
-  StreamElevationList := TimeLists[4];
-  StreamSlopeList := TimeLists[5];
-  StreamThicknessList := TimeLists[6];
-  StreamKList := TimeLists[7];
-  SatWatContent := TimeLists[8];
-  InitWatContent := TimeLists[9];
-  BrooksCorey := TimeLists[10];
-  UnSatKz := TimeLists[11];
-  OutSeg := TimeLists[12];
-  DiversionSeg := TimeLists[13];
-  IpriorList := TimeLists[14];
-  FlowList := TimeLists[15];
-  RunOffList := TimeLists[16];
-  PrecipitationList := TimeLists[17];
-  EvapotranspirationList := TimeLists[18];
-  ChannelRoughnessList := TimeLists[19];
-  BankRoughnessList := TimeLists[20];
-  DepthCoefficientList := TimeLists[21];
-  DepthExponentList := TimeLists[22];
-  WidthCoefficientList := TimeLists[23];
-  WidthExponentList := TimeLists[24];
-  UpstreamHydraulicConductivityList := TimeLists[25];
-  DownstreamHydraulicConductivityList := TimeLists[26];
-  UpstreamWidthList := TimeLists[27];
-  DownstreamWidthList := TimeLists[28];
-  UpstreamThicknessList := TimeLists[29];
-  DownstreamThicknessList := TimeLists[30];
-  UpstreamElevationList := TimeLists[31];
-  DownstreamElevationList := TimeLists[32];
-  UpstreamDepthList := TimeLists[33];
-  DownstreamDepthList := TimeLists[34];
-  UpstreamUnSatWatContList := TimeLists[35];
-  DownstreamUnSatWatContList := TimeLists[36];
-  UpstreamUnSatInitWatContList := TimeLists[37];
-  DownstreamUnSatInitWatContList := TimeLists[38];
-  UpstreamBrooksCoreyList := TimeLists[39];
-  DownstreamBrooksCoreyList := TimeLists[40];
-  UpstreamUnSatKzList := TimeLists[41];
-  DownstreamUnSatKzList := TimeLists[42];
-
-  // check that all the time lists contain the same number of times
-  // as the first one.
-  for Index := 1 to TimeLists.Count - 1 do
-  begin
-    ADisplayList := TimeLists[Index];
-    Assert(SegmentNumberTimes.Count = ADisplayList.Count);
-  end;
-
-  for SegmentIndex := 0 to FSegments.Count - 1 do
-  begin
-    Segment := FSegments[SegmentIndex];
-    Boundary := Segment.FScreenObject.ModflowSfrBoundary;
-
-    SegmentComment := StrSegmentNumber + Segment.FScreenObject.Name;
-    ReachComment := StrReachNumber + Segment.FScreenObject.Name;
-    ICALC_Comment := SfrICalcNumber + Segment.FScreenObject.Name;
-    DownstreamComment := StrDownstreamSegmentNumber + Segment.FScreenObject.Name;
-    DiversionComment := StrDiversionSegmentNumber + Segment.FScreenObject.Name;
-    IpriorComment := StrIprior + Segment.FScreenObject.Name;
-
-    for ReachIndex := 0 to Segment.FReaches.Count - 1 do
-    begin
-      Reach := Segment.FReaches[ReachIndex] as TSfr_Cell;
       for TimeIndex := 0 to SegmentNumberTimes.Count - 1 do
       begin
         DataArray := SegmentNumberTimes[TimeIndex]
           as TModflowBoundaryDisplayDataArray;
-        DataArray.AddDataValue(SegmentComment, Segment.OriginalSegmentNumber,
-          Reach.Column, Reach.Row, Reach.Layer);
+        if SubSeg <> nil then
+        begin
+          DataArray.AddDataValue(SegmentComment, SubSeg.SegmentNumber,
+            Reach.Column, Reach.Row, Reach.Layer);
+        end
+        else
+        begin
+          DataArray.AddDataValue(SegmentComment, Segment.OriginalSegmentNumber,
+            Reach.Column, Reach.Row, Reach.Layer);
+        end;
       end;
       for TimeIndex := 0 to OutSeg.Count - 1 do
       begin
@@ -1048,6 +1888,14 @@ begin
             Reach.Column, Reach.Row, Reach.Layer);
         end;
       end;
+      if SubSeg = nil then
+      begin
+        LastReach := (ReachIndex = Segment.FReaches.Count - 1)
+      end
+      else
+      begin
+        LastReach := (ReachIndex = SubSeg.ReachCount - 1)
+      end;
       if (ISFROPT in [0,4,5])  then
       begin
         if (ReachIndex = 0) then
@@ -1064,7 +1912,7 @@ begin
                 Param := Model.ModflowTransientParameters.GetParamByName(Item.Param);
               end;
               UpstreamValues := Boundary.UpstreamSegmentValues.
-                GetBoundaryByStartTime(UpstreamHydraulicConductivityList.Times[TimeIndex])
+                GetBoundaryByStartTime(UpstreamHydraulicConductivityList.Times[TimeIndex], Model)
                 as TSfrSegmentStorage;
               if UpstreamValues = nil then
               begin
@@ -1073,7 +1921,18 @@ begin
                   StrInvalidStartingTime, ErrorObject.Name);
                 Continue;
               end;
-              UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+              if SubSeg = nil then
+              begin
+                UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+              end
+              else
+              begin
+                UpstreamRecord := SubSeg.FUpstreamValues[0];
+                UpstreamRecord.HydraulicConductivityAnnotation
+                  := 'Interpolated from ' +
+                  UpstreamValues.SrfSegmentArray[0].HydraulicConductivityAnnotation
+              end;
+//              UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
               DataArray := UpstreamHydraulicConductivityList[TimeIndex]
                 as TModflowBoundaryDisplayDataArray;
               if Param = nil then
@@ -1094,7 +1953,7 @@ begin
             end;
           end;
         end;
-        if (ReachIndex = Segment.FReaches.Count - 1) then
+        if LastReach then
         begin
           for TimeIndex := 0 to DownstreamHydraulicConductivityList.Count - 1 do
           begin
@@ -1108,7 +1967,7 @@ begin
                 Param := Model.ModflowTransientParameters.GetParamByName(Item.Param);
               end;
               DownstreamValues := Boundary.DownstreamSegmentValues.
-                GetBoundaryByStartTime(DownstreamHydraulicConductivityList.Times[TimeIndex])
+                GetBoundaryByStartTime(DownstreamHydraulicConductivityList.Times[TimeIndex], Model)
                 as TSfrSegmentStorage;
               if DownstreamValues = nil then
               begin
@@ -1116,9 +1975,18 @@ begin
                 frmErrorsAndWarnings.AddError(Model,
                   StrInvalidStartingTimeStep1, ErrorObject.Name);
                 Continue;
-//                  raise EInvalidTime.Create(Boundary.ScreenObject);
               end;
-              DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+              if SubSeg = nil then
+              begin
+                DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+              end
+              else
+              begin
+                DownstreamRecord := SubSeg.FDownstreamValues[0];
+                DownstreamRecord.HydraulicConductivityAnnotation
+                  := 'Interpolated from ' +
+                  DownstreamValues.SrfSegmentArray[0].HydraulicConductivityAnnotation
+              end;
               DataArray := DownstreamHydraulicConductivityList[TimeIndex]
                 as TModflowBoundaryDisplayDataArray;
               if Param = nil then
@@ -1150,7 +2018,7 @@ begin
           if (Item <> nil) and WidthValueUsed then
           begin
             UpstreamValues := Boundary.UpstreamSegmentValues.
-              GetBoundaryByStartTime(UpstreamWidthList.Times[TimeIndex])
+              GetBoundaryByStartTime(UpstreamWidthList.Times[TimeIndex], Model)
               as TSfrSegmentStorage;
             if UpstreamValues = nil then
             begin
@@ -1158,9 +2026,18 @@ begin
               frmErrorsAndWarnings.AddError(Model,
                 StrInvalidStartingTimeStep1, ErrorObject.Name);
               Continue;
-//                raise EInvalidTime.Create(Boundary.ScreenObject);
             end;
-            UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+            if SubSeg = nil then
+            begin
+              UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+            end
+            else
+            begin
+              UpstreamRecord := SubSeg.FUpstreamValues[0];
+              UpstreamRecord.StreamWidthAnnotation
+                := 'Interpolated from ' +
+                UpstreamValues.SrfSegmentArray[0].StreamWidthAnnotation
+            end;
             DataArray := UpstreamWidthList[TimeIndex]
               as TModflowBoundaryDisplayDataArray;
             DataArray.AddDataValue(UpstreamRecord.StreamWidthAnnotation,
@@ -1169,7 +2046,7 @@ begin
           end;
         end;
       end;
-      if (ReachIndex = Segment.FReaches.Count - 1) then
+      if LastReach then
       begin
         for TimeIndex := 0 to DownstreamWidthList.Count - 1 do
         begin
@@ -1178,7 +2055,7 @@ begin
           if (Item <> nil) and WidthValueUsed then
           begin
             DownstreamValues := Boundary.DownstreamSegmentValues.
-              GetBoundaryByStartTime(DownstreamWidthList.Times[TimeIndex])
+              GetBoundaryByStartTime(DownstreamWidthList.Times[TimeIndex], Model)
               as TSfrSegmentStorage;
             if DownstreamValues = nil then
             begin
@@ -1186,9 +2063,19 @@ begin
               frmErrorsAndWarnings.AddError(Model,
                 StrInvalidStartingTimeStep1, ErrorObject.Name);
               Continue;
-//                raise EInvalidTime.Create(Boundary.ScreenObject);
             end;
-            DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+            if SubSeg = nil then
+            begin
+              DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+            end
+            else
+            begin
+              DownstreamRecord := SubSeg.FDownstreamValues[0];
+              DownstreamRecord.StreamWidthAnnotation
+                := 'Interpolated from ' +
+                DownstreamValues.SrfSegmentArray[0].StreamWidthAnnotation
+            end;
+//            DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
             DataArray := DownstreamWidthList[TimeIndex]
               as TModflowBoundaryDisplayDataArray;
             DataArray.AddDataValue(DownstreamRecord.StreamWidthAnnotation,
@@ -1208,7 +2095,7 @@ begin
             if (Item <> nil) and ThicknessElevUsed then
             begin
               UpstreamValues := Boundary.UpstreamSegmentValues.
-                GetBoundaryByStartTime(UpstreamThicknessList.Times[TimeIndex])
+                GetBoundaryByStartTime(UpstreamThicknessList.Times[TimeIndex], Model)
                 as TSfrSegmentStorage;
               if UpstreamValues = nil then
               begin
@@ -1216,9 +2103,19 @@ begin
                 frmErrorsAndWarnings.AddError(Model,
                   StrInvalidStartingTimeStep1, ErrorObject.Name);
                 Continue;
-//                  raise EInvalidTime.Create(Boundary.ScreenObject);
               end;
-              UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+              if SubSeg = nil then
+              begin
+                UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+              end
+              else
+              begin
+                UpstreamRecord := SubSeg.FUpstreamValues[0];
+                UpstreamRecord.StreamBedThicknessAnnotation
+                  := 'Interpolated from ' +
+                  UpstreamValues.SrfSegmentArray[0].StreamBedThicknessAnnotation
+              end;
+//              UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
               DataArray := UpstreamThicknessList[TimeIndex]
                 as TModflowBoundaryDisplayDataArray;
               DataArray.AddDataValue(UpstreamRecord.StreamBedThicknessAnnotation,
@@ -1227,7 +2124,7 @@ begin
             end;
           end;
         end;
-        if (ReachIndex = Segment.FReaches.Count - 1) then
+        if LastReach then
         begin
           for TimeIndex := 0 to DownstreamThicknessList.Count - 1 do
           begin
@@ -1236,7 +2133,7 @@ begin
             if (Item <> nil) and ThicknessElevUsed then
             begin
               DownstreamValues := Boundary.DownstreamSegmentValues.
-                GetBoundaryByStartTime(DownstreamThicknessList.Times[TimeIndex])
+                GetBoundaryByStartTime(DownstreamThicknessList.Times[TimeIndex], Model)
                 as TSfrSegmentStorage;
               if DownstreamValues = nil then
               begin
@@ -1244,9 +2141,19 @@ begin
                 frmErrorsAndWarnings.AddError(Model,
                   StrInvalidStartingTimeStep1, ErrorObject.Name);
                 Continue;
-//                  raise EInvalidTime.Create(Boundary.ScreenObject);
               end;
-              DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+              if SubSeg = nil then
+              begin
+                DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+              end
+              else
+              begin
+                DownstreamRecord := SubSeg.FDownstreamValues[0];
+                DownstreamRecord.StreamBedThicknessAnnotation
+                  := 'Interpolated from ' +
+                  DownstreamValues.SrfSegmentArray[0].StreamBedThicknessAnnotation
+              end;
+//              DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
               DataArray := DownstreamThicknessList[TimeIndex]
                 as TModflowBoundaryDisplayDataArray;
               DataArray.AddDataValue(DownstreamRecord.StreamBedThicknessAnnotation,
@@ -1267,7 +2174,7 @@ begin
             if (Item <> nil) and ThicknessElevUsed then
             begin
               UpstreamValues := Boundary.UpstreamSegmentValues.
-                GetBoundaryByStartTime(UpstreamElevationList.Times[TimeIndex])
+                GetBoundaryByStartTime(UpstreamElevationList.Times[TimeIndex], Model)
                 as TSfrSegmentStorage;
               if UpstreamValues = nil then
               begin
@@ -1275,9 +2182,19 @@ begin
                 frmErrorsAndWarnings.AddError(Model,
                   StrInvalidStartingTimeStep1, ErrorObject.Name);
                 Continue;
-//                  raise EInvalidTime.Create(Boundary.ScreenObject);
               end;
-              UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+              if SubSeg = nil then
+              begin
+                UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+              end
+              else
+              begin
+                UpstreamRecord := SubSeg.FUpstreamValues[0];
+                UpstreamRecord.StreambedElevationAnnotation
+                  := 'Interpolated from ' +
+                  UpstreamValues.SrfSegmentArray[0].StreambedElevationAnnotation
+              end;
+//              UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
               DataArray := UpstreamElevationList[TimeIndex]
                 as TModflowBoundaryDisplayDataArray;
               DataArray.AddDataValue(UpstreamRecord.StreambedElevationAnnotation,
@@ -1286,7 +2203,7 @@ begin
             end;
           end;
         end;
-        if (ReachIndex = Segment.FReaches.Count - 1) then
+        if LastReach then
         begin
           for TimeIndex := 0 to DownstreamElevationList.Count - 1 do
           begin
@@ -1295,7 +2212,7 @@ begin
             if (Item <> nil) and ThicknessElevUsed then
             begin
               DownstreamValues := Boundary.DownstreamSegmentValues.
-                GetBoundaryByStartTime(DownstreamElevationList.Times[TimeIndex])
+                GetBoundaryByStartTime(DownstreamElevationList.Times[TimeIndex], Model)
                 as TSfrSegmentStorage;
               if DownstreamValues = nil then
               begin
@@ -1303,9 +2220,19 @@ begin
                 frmErrorsAndWarnings.AddError(Model,
                   StrInvalidStartingTimeStep1, ErrorObject.Name);
                 Continue;
-//                  raise EInvalidTime.Create(Boundary.ScreenObject);
               end;
-              DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+              if SubSeg = nil then
+              begin
+                DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+              end
+              else
+              begin
+                DownstreamRecord := SubSeg.FDownstreamValues[0];
+                DownstreamRecord.StreambedElevationAnnotation
+                  := 'Interpolated from ' +
+                  DownstreamValues.SrfSegmentArray[0].StreambedElevationAnnotation
+              end;
+//              DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
               DataArray := DownstreamElevationList[TimeIndex]
                 as TModflowBoundaryDisplayDataArray;
               DataArray.AddDataValue(DownstreamRecord.StreambedElevationAnnotation,
@@ -1324,7 +2251,7 @@ begin
           if (Item <> nil) and (Item.ICalc <= 0) then
           begin
             UpstreamValues := Boundary.UpstreamSegmentValues.
-              GetBoundaryByStartTime(UpstreamDepthList.Times[TimeIndex])
+              GetBoundaryByStartTime(UpstreamDepthList.Times[TimeIndex], Model)
               as TSfrSegmentStorage;
             if UpstreamValues = nil then
             begin
@@ -1332,9 +2259,19 @@ begin
               frmErrorsAndWarnings.AddError(Model,
                 StrInvalidStartingTimeStep1, ErrorObject.Name);
               Continue;
-//                raise EInvalidTime.Create(Boundary.ScreenObject);
             end;
-            UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+            if SubSeg = nil then
+            begin
+              UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+            end
+            else
+            begin
+              UpstreamRecord := SubSeg.FUpstreamValues[0];
+              UpstreamRecord.StreamDepthAnnotation
+                := 'Interpolated from ' +
+                UpstreamValues.SrfSegmentArray[0].StreamDepthAnnotation
+            end;
+//            UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
             DataArray := UpstreamDepthList[TimeIndex]
               as TModflowBoundaryDisplayDataArray;
             DataArray.AddDataValue(UpstreamRecord.StreamDepthAnnotation,
@@ -1343,7 +2280,7 @@ begin
           end;
         end;
       end;
-      if (ReachIndex = Segment.FReaches.Count - 1) then
+      if LastReach then
       begin
         for TimeIndex := 0 to DownstreamDepthList.Count - 1 do
         begin
@@ -1352,7 +2289,7 @@ begin
           if (Item <> nil) and (Item.ICalc <= 0) then
           begin
             DownstreamValues := Boundary.DownstreamSegmentValues.
-              GetBoundaryByStartTime(DownstreamDepthList.Times[TimeIndex])
+              GetBoundaryByStartTime(DownstreamDepthList.Times[TimeIndex], Model)
               as TSfrSegmentStorage;
             if DownstreamValues = nil then
             begin
@@ -1360,9 +2297,19 @@ begin
               frmErrorsAndWarnings.AddError(Model,
                 StrInvalidStartingTimeStep1, ErrorObject.Name);
               Continue;
-//                raise EInvalidTime.Create(Boundary.ScreenObject);
             end;
-            DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+            if SubSeg = nil then
+            begin
+              DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+            end
+            else
+            begin
+              DownstreamRecord := SubSeg.FDownstreamValues[0];
+              DownstreamRecord.StreamDepthAnnotation
+                := 'Interpolated from ' +
+                DownstreamValues.SrfSegmentArray[0].StreamDepthAnnotation
+            end;
+//            DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
             DataArray := DownstreamDepthList[TimeIndex]
               as TModflowBoundaryDisplayDataArray;
             DataArray.AddDataValue(DownstreamRecord.StreamDepthAnnotation,
@@ -1382,7 +2329,7 @@ begin
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
               if Boundary.UpstreamUnsatSegmentValues.
-                BoundaryCount = 0 then
+                BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
@@ -1390,8 +2337,18 @@ begin
               else
               begin
                 UpstreamUnsatValues := Boundary.UpstreamUnsatSegmentValues.
-                  Boundaries[0] as TSfrUnsatSegmentStorage;
-                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+                if SubSeg = nil then
+                begin
+                  UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+                end
+                else
+                begin
+                  UpstreamUnsatRecord := SubSeg.FUpstreamUnsatValues[0];
+                  UpstreamUnsatRecord.SaturatedWaterContentAnnotation
+                    := 'Interpolated from ' +
+                    UpstreamUnsatValues.SrfUnsatSegmentArray[0].SaturatedWaterContentAnnotation
+                end;
                 DataArray := UpstreamUnSatWatContList[TimeIndex]
                   as TModflowBoundaryDisplayDataArray;
                 DataArray.AddDataValue(UpstreamUnsatRecord.SaturatedWaterContentAnnotation,
@@ -1401,7 +2358,7 @@ begin
             end;
           end;
         end;
-        if (ReachIndex = Segment.FReaches.Count - 1) then
+        if LastReach then
         begin
           for TimeIndex := 0 to DownstreamUnSatWatContList.Count - 1 do
           begin
@@ -1410,7 +2367,7 @@ begin
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
               if Boundary.DownstreamUnsatSegmentValues.
-                BoundaryCount = 0 then
+                BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
@@ -1418,8 +2375,18 @@ begin
               else
               begin
                 DownstreamUnsatValues := Boundary.DownstreamUnsatSegmentValues.
-                  Boundaries[0] as TSfrUnsatSegmentStorage;
-                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+                if SubSeg = nil then
+                begin
+                  DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+                end
+                else
+                begin
+                  DownstreamUnsatRecord := SubSeg.FDownstreamUnsatValues[0];
+                  DownstreamUnsatRecord.SaturatedWaterContentAnnotation
+                    := 'Interpolated from ' +
+                    DownstreamUnsatValues.SrfUnsatSegmentArray[0].SaturatedWaterContentAnnotation
+                end;
                 DataArray := DownstreamUnSatWatContList[TimeIndex]
                   as TModflowBoundaryDisplayDataArray;
                 DataArray.AddDataValue(DownstreamUnsatRecord.SaturatedWaterContentAnnotation,
@@ -1441,7 +2408,7 @@ begin
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
               if Boundary.UpstreamUnsatSegmentValues.
-                BoundaryCount = 0 then
+                BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
@@ -1449,8 +2416,19 @@ begin
               else
               begin
                 UpstreamUnsatValues := Boundary.UpstreamUnsatSegmentValues.
-                  Boundaries[0] as TSfrUnsatSegmentStorage;
-                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+                if SubSeg = nil then
+                begin
+                  UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+                end
+                else
+                begin
+                  UpstreamUnsatRecord := SubSeg.FUpstreamUnsatValues[0];
+                  UpstreamUnsatRecord.InitialWaterContentAnnotation
+                    := 'Interpolated from ' +
+                    UpstreamUnsatValues.SrfUnsatSegmentArray[0].InitialWaterContentAnnotation
+                end;
+//                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := UpstreamUnSatInitWatContList[TimeIndex]
                   as TModflowBoundaryDisplayDataArray;
                 DataArray.AddDataValue(UpstreamUnsatRecord.InitialWaterContentAnnotation,
@@ -1460,7 +2438,7 @@ begin
             end;
           end;
         end;
-        if (ReachIndex = Segment.FReaches.Count - 1) then
+        if LastReach then
         begin
           for TimeIndex := 0 to DownstreamUnSatInitWatContList.Count - 1 do
           begin
@@ -1469,7 +2447,7 @@ begin
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
               if Boundary.DownstreamUnsatSegmentValues.
-                BoundaryCount = 0 then
+                BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
@@ -1477,8 +2455,19 @@ begin
               else
               begin
                 DownstreamUnsatValues := Boundary.DownstreamUnsatSegmentValues.
-                  Boundaries[0] as TSfrUnsatSegmentStorage;
-                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+                if SubSeg = nil then
+                begin
+                  DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+                end
+                else
+                begin
+                  DownstreamUnsatRecord := SubSeg.FDownstreamUnsatValues[0];
+                  DownstreamUnsatRecord.InitialWaterContentAnnotation
+                    := 'Interpolated from ' +
+                    DownstreamUnsatValues.SrfUnsatSegmentArray[0].InitialWaterContentAnnotation
+                end;
+//                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := DownstreamUnSatInitWatContList[TimeIndex]
                   as TModflowBoundaryDisplayDataArray;
                 DataArray.AddDataValue(DownstreamUnsatRecord.InitialWaterContentAnnotation,
@@ -1500,7 +2489,7 @@ begin
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
               if Boundary.UpstreamUnsatSegmentValues.
-                BoundaryCount = 0 then
+                BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
@@ -1508,8 +2497,19 @@ begin
               else
               begin
                 UpstreamUnsatValues := Boundary.UpstreamUnsatSegmentValues.
-                  Boundaries[0] as TSfrUnsatSegmentStorage;
-                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+                if SubSeg = nil then
+                begin
+                  UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+                end
+                else
+                begin
+                  UpstreamUnsatRecord := SubSeg.FUpstreamUnsatValues[0];
+                  UpstreamUnsatRecord.BrooksCoreyExponentAnnotation
+                    := 'Interpolated from ' +
+                    UpstreamUnsatValues.SrfUnsatSegmentArray[0].BrooksCoreyExponentAnnotation
+                end;
+//                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := UpstreamBrooksCoreyList[TimeIndex]
                   as TModflowBoundaryDisplayDataArray;
                 DataArray.AddDataValue(UpstreamUnsatRecord.BrooksCoreyExponentAnnotation,
@@ -1519,7 +2519,7 @@ begin
             end;
           end;
         end;
-        if (ReachIndex = Segment.FReaches.Count - 1) then
+        if LastReach then
         begin
           for TimeIndex := 0 to DownstreamBrooksCoreyList.Count - 1 do
           begin
@@ -1528,7 +2528,7 @@ begin
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
               if Boundary.DownstreamUnsatSegmentValues.
-                BoundaryCount = 0 then
+                BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
@@ -1536,8 +2536,19 @@ begin
               else
               begin
                 DownstreamUnsatValues := Boundary.DownstreamUnsatSegmentValues.
-                  Boundaries[0] as TSfrUnsatSegmentStorage;
-                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+                if SubSeg = nil then
+                begin
+                  DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+                end
+                else
+                begin
+                  DownstreamUnsatRecord := SubSeg.FDownstreamUnsatValues[0];
+                  DownstreamUnsatRecord.BrooksCoreyExponentAnnotation
+                    := 'Interpolated from ' +
+                    DownstreamUnsatValues.SrfUnsatSegmentArray[0].BrooksCoreyExponentAnnotation
+                end;
+//                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := DownstreamBrooksCoreyList[TimeIndex]
                   as TModflowBoundaryDisplayDataArray;
                 DataArray.AddDataValue(DownstreamUnsatRecord.BrooksCoreyExponentAnnotation,
@@ -1559,7 +2570,7 @@ begin
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
               if Boundary.UpstreamUnsatSegmentValues.
-                BoundaryCount = 0 then
+                BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
@@ -1567,8 +2578,19 @@ begin
               else
               begin
                 UpstreamUnsatValues := Boundary.UpstreamUnsatSegmentValues.
-                  Boundaries[0] as TSfrUnsatSegmentStorage;
-                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+                if SubSeg = nil then
+                begin
+                  UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+                end
+                else
+                begin
+                  UpstreamUnsatRecord := SubSeg.FUpstreamUnsatValues[0];
+                  UpstreamUnsatRecord.VerticalSaturatedKAnnotation
+                    := 'Interpolated from ' +
+                    UpstreamUnsatValues.SrfUnsatSegmentArray[0].VerticalSaturatedKAnnotation
+                end;
+//                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := UpstreamUnSatKzList[TimeIndex]
                   as TModflowBoundaryDisplayDataArray;
                 DataArray.AddDataValue(UpstreamUnsatRecord.VerticalSaturatedKAnnotation,
@@ -1578,7 +2600,7 @@ begin
             end;
           end;
         end;
-        if (ReachIndex = Segment.FReaches.Count - 1) then
+        if LastReach then
         begin
           for TimeIndex := 0 to DownstreamUnSatKzList.Count - 1 do
           begin
@@ -1587,7 +2609,7 @@ begin
             if (Item <> nil) and (Item.ICalc in [1,2]) then
             begin
               if Boundary.DownstreamUnsatSegmentValues.
-                BoundaryCount = 0 then
+                BoundaryCount[Model] = 0 then
               begin
                 frmErrorsAndWarnings.AddError(Model, UnsatError,
                   Segment.FScreenObject.Name);
@@ -1595,8 +2617,19 @@ begin
               else
               begin
                 DownstreamUnsatValues := Boundary.DownstreamUnsatSegmentValues.
-                  Boundaries[0] as TSfrUnsatSegmentStorage;
-                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+                if SubSeg = nil then
+                begin
+                  DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+                end
+                else
+                begin
+                  DownstreamUnsatRecord := SubSeg.FDownstreamUnsatValues[0];
+                  DownstreamUnsatRecord.VerticalSaturatedKAnnotation
+                    := 'Interpolated from ' +
+                    DownstreamUnsatValues.SrfUnsatSegmentArray[0].VerticalSaturatedKAnnotation
+                end;
+//                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
                 DataArray := DownstreamUnSatKzList[TimeIndex]
                   as TModflowBoundaryDisplayDataArray;
                 DataArray.AddDataValue(DownstreamUnsatRecord.VerticalSaturatedKAnnotation,
@@ -1607,7 +2640,955 @@ begin
           end;
         end;
       end;
+  end;
+begin
+  if not Package.IsSelected then
+  begin
+    UpdateNotUsedDisplay(TimeLists);
+    Exit;
+  end;
+
+
+  SegmentNumberTimes := TimeLists[0];
+  ReachNumberTimes := TimeLists[1];
+  ICalcTimeList := TimeLists[2];
+  ReachLengthList := TimeLists[3];
+  StreamElevationList := TimeLists[4];
+  StreamSlopeList := TimeLists[5];
+  StreamThicknessList := TimeLists[6];
+  StreamKList := TimeLists[7];
+  SatWatContent := TimeLists[8];
+  InitWatContent := TimeLists[9];
+  BrooksCorey := TimeLists[10];
+  UnSatKz := TimeLists[11];
+  OutSeg := TimeLists[12];
+  DiversionSeg := TimeLists[13];
+  IpriorList := TimeLists[14];
+  FlowList := TimeLists[15];
+  RunOffList := TimeLists[16];
+  PrecipitationList := TimeLists[17];
+  EvapotranspirationList := TimeLists[18];
+  ChannelRoughnessList := TimeLists[19];
+  BankRoughnessList := TimeLists[20];
+  DepthCoefficientList := TimeLists[21];
+  DepthExponentList := TimeLists[22];
+  WidthCoefficientList := TimeLists[23];
+  WidthExponentList := TimeLists[24];
+  UpstreamHydraulicConductivityList := TimeLists[25];
+  DownstreamHydraulicConductivityList := TimeLists[26];
+  UpstreamWidthList := TimeLists[27];
+  DownstreamWidthList := TimeLists[28];
+  UpstreamThicknessList := TimeLists[29];
+  DownstreamThicknessList := TimeLists[30];
+  UpstreamElevationList := TimeLists[31];
+  DownstreamElevationList := TimeLists[32];
+  UpstreamDepthList := TimeLists[33];
+  DownstreamDepthList := TimeLists[34];
+  UpstreamUnSatWatContList := TimeLists[35];
+  DownstreamUnSatWatContList := TimeLists[36];
+  UpstreamUnSatInitWatContList := TimeLists[37];
+  DownstreamUnSatInitWatContList := TimeLists[38];
+  UpstreamBrooksCoreyList := TimeLists[39];
+  DownstreamBrooksCoreyList := TimeLists[40];
+  UpstreamUnSatKzList := TimeLists[41];
+  DownstreamUnSatKzList := TimeLists[42];
+
+  // check that all the time lists contain the same number of times
+  // as the first one.
+  for Index := 1 to TimeLists.Count - 1 do
+  begin
+    ADisplayList := TimeLists[Index];
+    Assert(SegmentNumberTimes.Count = ADisplayList.Count);
+  end;
+
+  for SegmentIndex := 0 to FSegments.Count - 1 do
+  begin
+    Segment := FSegments[SegmentIndex];
+    Boundary := Segment.FScreenObject.ModflowSfrBoundary;
+
+    SegmentComment := StrSegmentNumber + Segment.FScreenObject.Name;
+    ReachComment := StrReachNumber + Segment.FScreenObject.Name;
+    ICALC_Comment := SfrICalcNumber + Segment.FScreenObject.Name;
+    DownstreamComment := StrDownstreamSegmentNumber + Segment.FScreenObject.Name;
+    DiversionComment := StrDiversionSegmentNumber + Segment.FScreenObject.Name;
+    IpriorComment := StrIprior + Segment.FScreenObject.Name;
+
+
+    if Segment.SubSegmentList.Count > 0 then
+    begin
+      for SubSegIndex := 0 to Segment.SubSegmentList.Count - 1 do
+      begin
+        SubSeg := Segment.SubSegmentList[SubSegIndex];
+        for ReachIndex := 0 to SubSeg.ReachCount - 1 do
+        begin
+          Reach := SubSeg.Reaches[ReachIndex];
+          AssignReachValues;
+        end;
+      end;
+    end
+    else
+    begin
+      SubSeg := nil;
+//      SubSegIndex := -1;
+      for ReachIndex := 0 to Segment.FReaches.Count - 1 do
+      begin
+        Reach := Segment.FReaches[ReachIndex] as TSfr_Cell;
+        AssignReachValues;
+      end;
     end;
+
+//    for ReachIndex := 0 to Segment.FReaches.Count - 1 do
+//    begin
+//      Reach := Segment.FReaches[ReachIndex] as TSfr_Cell;
+//      for TimeIndex := 0 to SegmentNumberTimes.Count - 1 do
+//      begin
+//        DataArray := SegmentNumberTimes[TimeIndex]
+//          as TModflowBoundaryDisplayDataArray;
+//        DataArray.AddDataValue(SegmentComment, Segment.OriginalSegmentNumber,
+//          Reach.Column, Reach.Row, Reach.Layer);
+//      end;
+//      for TimeIndex := 0 to OutSeg.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          OutSeg.Times[TimeIndex]);
+//        if Item <> nil then
+//        begin
+//          DataArray := OutSeg[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(DownstreamComment,
+//            Item.OutflowSegment,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      for TimeIndex := 0 to DiversionSeg.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          DiversionSeg.Times[TimeIndex]);
+//        if Item <> nil then
+//        begin
+//          DataArray := DiversionSeg[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(DiversionComment,
+//            Item.DiversionSegment,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      for TimeIndex := 0 to IpriorList.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          IpriorList.Times[TimeIndex]);
+//        if Item <> nil then
+//        begin
+//          if Item.DiversionSegment <> 0 then
+//          begin
+//            DataArray := IpriorList[TimeIndex]
+//              as TModflowBoundaryDisplayDataArray;
+//            DataArray.AddDataValue(IpriorComment,
+//              Item.IPRIOR,
+//              Reach.Column, Reach.Row, Reach.Layer);
+//          end;
+//        end;
+//      end;
+//      for TimeIndex := 0 to ReachNumberTimes.Count - 1 do
+//      begin
+//        DataArray := ReachNumberTimes[TimeIndex]
+//          as TModflowBoundaryDisplayDataArray;
+//        DataArray.AddDataValue(ReachComment, ReachIndex + 1,
+//          Reach.Column, Reach.Row, Reach.Layer);
+//      end;
+//      for TimeIndex := 0 to ICalcTimeList.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          ICalcTimeList.Times[TimeIndex]);
+//        if Item <> nil then
+//        begin
+//          DataArray := ICalcTimeList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(ICALC_Comment, Item.ICalc,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      for TimeIndex := 0 to ReachLengthList.Count - 1 do
+//      begin
+//        DataArray := ReachLengthList[TimeIndex]
+//          as TModflowBoundaryDisplayDataArray;
+//        DataArray.AddDataValue(Reach.ReachLengthAnnotation, Reach.ReachLength,
+//          Reach.Column, Reach.Row, Reach.Layer);
+//      end;
+//      if ISFROPT in [1,2,3] then
+//      begin
+//        for TimeIndex := 0 to StreamElevationList.Count - 1 do
+//        begin
+//          DataArray := StreamElevationList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(Reach.StreambedElevationAnnotation,
+//            Reach.StreambedElevation,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//        for TimeIndex := 0 to StreamSlopeList.Count - 1 do
+//        begin
+//          DataArray := StreamSlopeList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(Reach.StreamSlopeAnnotation,
+//            Reach.StreamSlope,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//        for TimeIndex := 0 to StreamThicknessList.Count - 1 do
+//        begin
+//          DataArray := StreamThicknessList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(Reach.StreamBedThicknessAnnotation,
+//            Reach.StreamBedThickness,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//        for TimeIndex := 0 to StreamKList.Count - 1 do
+//        begin
+//          DataArray := StreamKList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(Reach.HydraulicConductivityAnnotation,
+//            Reach.HydraulicConductivity,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      if ISFROPT in [2,3] then
+//      begin
+//        for TimeIndex := 0 to SatWatContent.Count - 1 do
+//        begin
+//          DataArray := SatWatContent[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(Reach.SaturatedWaterContentAnnotation,
+//            Reach.SaturatedWaterContent,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//        for TimeIndex := 0 to InitWatContent.Count - 1 do
+//        begin
+//          DataArray := InitWatContent[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(Reach.InitialWaterContentAnnotation,
+//            Reach.InitialWaterContent,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//        for TimeIndex := 0 to BrooksCorey.Count - 1 do
+//        begin
+//          DataArray := BrooksCorey[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(Reach.BrooksCoreyExponentAnnotation,
+//            Reach.BrooksCoreyExponent,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      if ISFROPT = 3 then
+//      begin
+//        for TimeIndex := 0 to UnSatKz.Count - 1 do
+//        begin
+//          DataArray := UnSatKz[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(Reach.VerticalKAnnotation,
+//            Reach.VerticalK,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      for TimeIndex := 0 to FlowList.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          FlowList.Times[TimeIndex]);
+//        if Item <> nil then
+//        begin
+//          FlowRecord := Boundary.SegmentFlows.
+//            GetFlowValuesFromTime(FlowList.Times[TimeIndex]);
+//          DataArray := FlowList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(FlowRecord.FlowAnnotation,
+//            FlowRecord.Flow,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      for TimeIndex := 0 to RunOffList.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          RunOffList.Times[TimeIndex]);
+//        if Item <> nil then
+//        begin
+//          FlowRecord := Boundary.SegmentFlows.
+//            GetFlowValuesFromTime(RunOffList.Times[TimeIndex]);
+//          DataArray := RunOffList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(FlowRecord.RunnoffAnnotation,
+//            FlowRecord.Runnoff,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      for TimeIndex := 0 to PrecipitationList.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          PrecipitationList.Times[TimeIndex]);
+//        if Item <> nil then
+//        begin
+//          FlowRecord := Boundary.SegmentFlows.
+//            GetFlowValuesFromTime(PrecipitationList.Times[TimeIndex]);
+//          DataArray := PrecipitationList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(FlowRecord.PrecipitationAnnotation,
+//            FlowRecord.Precipitation,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      for TimeIndex := 0 to EvapotranspirationList.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          EvapotranspirationList.Times[TimeIndex]);
+//        if Item <> nil then
+//        begin
+//          FlowRecord := Boundary.SegmentFlows.
+//            GetFlowValuesFromTime(EvapotranspirationList.Times[TimeIndex]);
+//          DataArray := EvapotranspirationList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(FlowRecord.EvapotranspirationAnnotation,
+//            FlowRecord.Evapotranspiration,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      for TimeIndex := 0 to ChannelRoughnessList.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          ChannelRoughnessList.Times[TimeIndex]);
+//        if (Item <> nil) and (Item.ICalc in [1,2]) then
+//        begin
+//          ChannelRecord := Boundary.ChannelValues.
+//            GetChannelTimeValuesFromTime(Model, ChannelRoughnessList.Times[TimeIndex]);
+//          DataArray := ChannelRoughnessList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(ChannelRecord.ChannelRoughnessAnnotation,
+//            ChannelRecord.ChannelRoughness,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      for TimeIndex := 0 to BankRoughnessList.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          BankRoughnessList.Times[TimeIndex]);
+//        if  (Item <> nil) and (Item.ICalc = 2) then
+//        begin
+//          ChannelRecord := Boundary.ChannelValues.
+//            GetChannelTimeValuesFromTime(Model, BankRoughnessList.Times[TimeIndex]);
+//          DataArray := BankRoughnessList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(ChannelRecord.BankRoughnessAnnotation,
+//            ChannelRecord.BankRoughness,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      for TimeIndex := 0 to DepthCoefficientList.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          DepthCoefficientList.Times[TimeIndex]);
+//        if  (Item <> nil) and (Item.ICalc = 3) then
+//        begin
+//          EquationRecord := Boundary.EquationValues.
+//            GetEquationTimeValuesFromTime(DepthCoefficientList.Times[TimeIndex]);
+//          DataArray := DepthCoefficientList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(EquationRecord.DepthCoefficientAnnotation,
+//            EquationRecord.DepthCoefficient,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      for TimeIndex := 0 to DepthExponentList.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          DepthExponentList.Times[TimeIndex]);
+//        if  (Item <> nil) and (Item.ICalc = 3) then
+//        begin
+//          EquationRecord := Boundary.EquationValues.
+//            GetEquationTimeValuesFromTime(DepthExponentList.Times[TimeIndex]);
+//          DataArray := DepthExponentList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(EquationRecord.DepthExponentAnnotation,
+//            EquationRecord.DepthExponent,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      for TimeIndex := 0 to WidthCoefficientList.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          WidthCoefficientList.Times[TimeIndex]);
+//        if  (Item <> nil) and (Item.ICalc = 3) then
+//        begin
+//          EquationRecord := Boundary.EquationValues.
+//            GetEquationTimeValuesFromTime(WidthCoefficientList.Times[TimeIndex]);
+//          DataArray := WidthCoefficientList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(EquationRecord.WidthCoefficientAnnotation,
+//            EquationRecord.WidthCoefficient,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      for TimeIndex := 0 to WidthExponentList.Count - 1 do
+//      begin
+//        Item := Boundary.ParamIcalc.GetItemByStartTime(
+//          WidthExponentList.Times[TimeIndex]);
+//        if  (Item <> nil) and (Item.ICalc = 3) then
+//        begin
+//          EquationRecord := Boundary.EquationValues.
+//            GetEquationTimeValuesFromTime(WidthExponentList.Times[TimeIndex]);
+//          DataArray := WidthExponentList[TimeIndex]
+//            as TModflowBoundaryDisplayDataArray;
+//          DataArray.AddDataValue(EquationRecord.WidthExponentAnnotation,
+//            EquationRecord.WidthExponent,
+//            Reach.Column, Reach.Row, Reach.Layer);
+//        end;
+//      end;
+//      if (ISFROPT in [0,4,5])  then
+//      begin
+//        if (ReachIndex = 0) then
+//        begin
+//          for TimeIndex := 0 to UpstreamHydraulicConductivityList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              DepthExponentList.Times[TimeIndex]);
+//            if (Item <> nil) then
+//            begin
+//              Param := nil;
+//              if Item.Param <> '' then
+//              begin
+//                Param := Model.ModflowTransientParameters.GetParamByName(Item.Param);
+//              end;
+//              UpstreamValues := Boundary.UpstreamSegmentValues.
+//                GetBoundaryByStartTime(UpstreamHydraulicConductivityList.Times[TimeIndex], Model)
+//                as TSfrSegmentStorage;
+//              if UpstreamValues = nil then
+//              begin
+//                ErrorObject := Boundary.ScreenObject as TScreenObject;
+//                frmErrorsAndWarnings.AddError(Model,
+//                  StrInvalidStartingTime, ErrorObject.Name);
+//                Continue;
+//              end;
+//              UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+//              DataArray := UpstreamHydraulicConductivityList[TimeIndex]
+//                as TModflowBoundaryDisplayDataArray;
+//              if Param = nil then
+//              begin
+//                DataArray.AddDataValue(UpstreamRecord.HydraulicConductivityAnnotation,
+//                  UpstreamRecord.HydraulicConductivity,
+//                  Reach.Column, Reach.Row, Reach.Layer);
+//              end
+//              else
+//              begin
+//                KAnnotation := UpstreamRecord.HydraulicConductivityAnnotation
+//                  + ' multiplied by Parameter: ' + Item.Param;
+//                DataArray.AddDataValue(
+//                  KAnnotation,
+//                  UpstreamRecord.HydraulicConductivity * Param.Value,
+//                  Reach.Column, Reach.Row, Reach.Layer);
+//              end;
+//            end;
+//          end;
+//        end;
+//        if (ReachIndex = Segment.FReaches.Count - 1) then
+//        begin
+//          for TimeIndex := 0 to DownstreamHydraulicConductivityList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              DepthExponentList.Times[TimeIndex]);
+//            if (Item <> nil) then
+//            begin
+//              Param := nil;
+//              if Item.Param <> '' then
+//              begin
+//                Param := Model.ModflowTransientParameters.GetParamByName(Item.Param);
+//              end;
+//              DownstreamValues := Boundary.DownstreamSegmentValues.
+//                GetBoundaryByStartTime(DownstreamHydraulicConductivityList.Times[TimeIndex], Model)
+//                as TSfrSegmentStorage;
+//              if DownstreamValues = nil then
+//              begin
+//                ErrorObject := Boundary.ScreenObject as TScreenObject;
+//                frmErrorsAndWarnings.AddError(Model,
+//                  StrInvalidStartingTimeStep1, ErrorObject.Name);
+//                Continue;
+//              end;
+//              DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+//              DataArray := DownstreamHydraulicConductivityList[TimeIndex]
+//                as TModflowBoundaryDisplayDataArray;
+//              if Param = nil then
+//              begin
+//                DataArray.AddDataValue(DownstreamRecord.HydraulicConductivityAnnotation,
+//                  DownstreamRecord.HydraulicConductivity,
+//                  Reach.Column, Reach.Row, Reach.Layer);
+//              end
+//              else
+//              begin
+//                KAnnotation := DownstreamRecord.HydraulicConductivityAnnotation
+//                  + ' multiplied by Parameter: ' + Item.Param;
+//                DataArray.AddDataValue(
+//                  KAnnotation,
+//                  DownstreamRecord.HydraulicConductivity * Param.Value,
+//                  Reach.Column, Reach.Row, Reach.Layer);
+//              end;
+//            end;
+//          end;
+//        end;
+//      end;
+//
+//      if (ReachIndex = 0) then
+//      begin
+//        for TimeIndex := 0 to UpstreamWidthList.Count - 1 do
+//        begin
+//          Item := Boundary.ParamIcalc.GetItemByStartTime(
+//            UpstreamWidthList.Times[TimeIndex]);
+//          if (Item <> nil) and WidthValueUsed then
+//          begin
+//            UpstreamValues := Boundary.UpstreamSegmentValues.
+//              GetBoundaryByStartTime(UpstreamWidthList.Times[TimeIndex], Model)
+//              as TSfrSegmentStorage;
+//            if UpstreamValues = nil then
+//            begin
+//              ErrorObject := Boundary.ScreenObject as TScreenObject;
+//              frmErrorsAndWarnings.AddError(Model,
+//                StrInvalidStartingTimeStep1, ErrorObject.Name);
+//              Continue;
+//            end;
+//            UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+//            DataArray := UpstreamWidthList[TimeIndex]
+//              as TModflowBoundaryDisplayDataArray;
+//            DataArray.AddDataValue(UpstreamRecord.StreamWidthAnnotation,
+//              UpstreamRecord.StreamWidth,
+//              Reach.Column, Reach.Row, Reach.Layer);
+//          end;
+//        end;
+//      end;
+//      if (ReachIndex = Segment.FReaches.Count - 1) then
+//      begin
+//        for TimeIndex := 0 to DownstreamWidthList.Count - 1 do
+//        begin
+//          Item := Boundary.ParamIcalc.GetItemByStartTime(
+//            DownstreamWidthList.Times[TimeIndex]);
+//          if (Item <> nil) and WidthValueUsed then
+//          begin
+//            DownstreamValues := Boundary.DownstreamSegmentValues.
+//              GetBoundaryByStartTime(DownstreamWidthList.Times[TimeIndex], Model)
+//              as TSfrSegmentStorage;
+//            if DownstreamValues = nil then
+//            begin
+//              ErrorObject := Boundary.ScreenObject as TScreenObject;
+//              frmErrorsAndWarnings.AddError(Model,
+//                StrInvalidStartingTimeStep1, ErrorObject.Name);
+//              Continue;
+//            end;
+//            DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+//            DataArray := DownstreamWidthList[TimeIndex]
+//              as TModflowBoundaryDisplayDataArray;
+//            DataArray.AddDataValue(DownstreamRecord.StreamWidthAnnotation,
+//              DownstreamRecord.StreamWidth,
+//              Reach.Column, Reach.Row, Reach.Layer);
+//          end;
+//        end;
+//      end;
+//      if ISFROPT in [0,4,5] then
+//      begin
+//        if (ReachIndex = 0) then
+//        begin
+//          for TimeIndex := 0 to UpstreamThicknessList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              UpstreamThicknessList.Times[TimeIndex]);
+//            if (Item <> nil) and ThicknessElevUsed then
+//            begin
+//              UpstreamValues := Boundary.UpstreamSegmentValues.
+//                GetBoundaryByStartTime(UpstreamThicknessList.Times[TimeIndex], Model)
+//                as TSfrSegmentStorage;
+//              if UpstreamValues = nil then
+//              begin
+//                ErrorObject := Boundary.ScreenObject as TScreenObject;
+//                frmErrorsAndWarnings.AddError(Model,
+//                  StrInvalidStartingTimeStep1, ErrorObject.Name);
+//                Continue;
+//              end;
+//              UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+//              DataArray := UpstreamThicknessList[TimeIndex]
+//                as TModflowBoundaryDisplayDataArray;
+//              DataArray.AddDataValue(UpstreamRecord.StreamBedThicknessAnnotation,
+//                UpstreamRecord.StreamBedThickness,
+//                Reach.Column, Reach.Row, Reach.Layer);
+//            end;
+//          end;
+//        end;
+//        if (ReachIndex = Segment.FReaches.Count - 1) then
+//        begin
+//          for TimeIndex := 0 to DownstreamThicknessList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              DownstreamThicknessList.Times[TimeIndex]);
+//            if (Item <> nil) and ThicknessElevUsed then
+//            begin
+//              DownstreamValues := Boundary.DownstreamSegmentValues.
+//                GetBoundaryByStartTime(DownstreamThicknessList.Times[TimeIndex], Model)
+//                as TSfrSegmentStorage;
+//              if DownstreamValues = nil then
+//              begin
+//                ErrorObject := Boundary.ScreenObject as TScreenObject;
+//                frmErrorsAndWarnings.AddError(Model,
+//                  StrInvalidStartingTimeStep1, ErrorObject.Name);
+//                Continue;
+//              end;
+//              DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+//              DataArray := DownstreamThicknessList[TimeIndex]
+//                as TModflowBoundaryDisplayDataArray;
+//              DataArray.AddDataValue(DownstreamRecord.StreamBedThicknessAnnotation,
+//                DownstreamRecord.StreamBedThickness,
+//                Reach.Column, Reach.Row, Reach.Layer);
+//            end;
+//          end;
+//        end;
+//      end;
+//      if ISFROPT in [0,4,5] then
+//      begin
+//        if (ReachIndex = 0) then
+//        begin
+//          for TimeIndex := 0 to UpstreamElevationList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              UpstreamElevationList.Times[TimeIndex]);
+//            if (Item <> nil) and ThicknessElevUsed then
+//            begin
+//              UpstreamValues := Boundary.UpstreamSegmentValues.
+//                GetBoundaryByStartTime(UpstreamElevationList.Times[TimeIndex], Model)
+//                as TSfrSegmentStorage;
+//              if UpstreamValues = nil then
+//              begin
+//                ErrorObject := Boundary.ScreenObject as TScreenObject;
+//                frmErrorsAndWarnings.AddError(Model,
+//                  StrInvalidStartingTimeStep1, ErrorObject.Name);
+//                Continue;
+//              end;
+//              UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+//              DataArray := UpstreamElevationList[TimeIndex]
+//                as TModflowBoundaryDisplayDataArray;
+//              DataArray.AddDataValue(UpstreamRecord.StreambedElevationAnnotation,
+//                UpstreamRecord.StreambedElevation,
+//                Reach.Column, Reach.Row, Reach.Layer);
+//            end;
+//          end;
+//        end;
+//        if (ReachIndex = Segment.FReaches.Count - 1) then
+//        begin
+//          for TimeIndex := 0 to DownstreamElevationList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              DownstreamElevationList.Times[TimeIndex]);
+//            if (Item <> nil) and ThicknessElevUsed then
+//            begin
+//              DownstreamValues := Boundary.DownstreamSegmentValues.
+//                GetBoundaryByStartTime(DownstreamElevationList.Times[TimeIndex], Model)
+//                as TSfrSegmentStorage;
+//              if DownstreamValues = nil then
+//              begin
+//                ErrorObject := Boundary.ScreenObject as TScreenObject;
+//                frmErrorsAndWarnings.AddError(Model,
+//                  StrInvalidStartingTimeStep1, ErrorObject.Name);
+//                Continue;
+//              end;
+//              DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+//              DataArray := DownstreamElevationList[TimeIndex]
+//                as TModflowBoundaryDisplayDataArray;
+//              DataArray.AddDataValue(DownstreamRecord.StreambedElevationAnnotation,
+//                DownstreamRecord.StreambedElevation,
+//                Reach.Column, Reach.Row, Reach.Layer);
+//            end;
+//          end;
+//        end;
+//      end;
+//      if (ReachIndex = 0) then
+//      begin
+//        for TimeIndex := 0 to UpstreamDepthList.Count - 1 do
+//        begin
+//          Item := Boundary.ParamIcalc.GetItemByStartTime(
+//            UpstreamDepthList.Times[TimeIndex]);
+//          if (Item <> nil) and (Item.ICalc <= 0) then
+//          begin
+//            UpstreamValues := Boundary.UpstreamSegmentValues.
+//              GetBoundaryByStartTime(UpstreamDepthList.Times[TimeIndex], Model)
+//              as TSfrSegmentStorage;
+//            if UpstreamValues = nil then
+//            begin
+//              ErrorObject := Boundary.ScreenObject as TScreenObject;
+//              frmErrorsAndWarnings.AddError(Model,
+//                StrInvalidStartingTimeStep1, ErrorObject.Name);
+//              Continue;
+//            end;
+//            UpstreamRecord := UpstreamValues.SrfSegmentArray[0];
+//            DataArray := UpstreamDepthList[TimeIndex]
+//              as TModflowBoundaryDisplayDataArray;
+//            DataArray.AddDataValue(UpstreamRecord.StreamDepthAnnotation,
+//              UpstreamRecord.StreamDepth,
+//              Reach.Column, Reach.Row, Reach.Layer);
+//          end;
+//        end;
+//      end;
+//      if (ReachIndex = Segment.FReaches.Count - 1) then
+//      begin
+//        for TimeIndex := 0 to DownstreamDepthList.Count - 1 do
+//        begin
+//          Item := Boundary.ParamIcalc.GetItemByStartTime(
+//            DownstreamDepthList.Times[TimeIndex]);
+//          if (Item <> nil) and (Item.ICalc <= 0) then
+//          begin
+//            DownstreamValues := Boundary.DownstreamSegmentValues.
+//              GetBoundaryByStartTime(DownstreamDepthList.Times[TimeIndex], Model)
+//              as TSfrSegmentStorage;
+//            if DownstreamValues = nil then
+//            begin
+//              ErrorObject := Boundary.ScreenObject as TScreenObject;
+//              frmErrorsAndWarnings.AddError(Model,
+//                StrInvalidStartingTimeStep1, ErrorObject.Name);
+//              Continue;
+//            end;
+//            DownstreamRecord := DownstreamValues.SrfSegmentArray[0];
+//            DataArray := DownstreamDepthList[TimeIndex]
+//              as TModflowBoundaryDisplayDataArray;
+//            DataArray.AddDataValue(DownstreamRecord.StreamDepthAnnotation,
+//              DownstreamRecord.StreamDepth,
+//              Reach.Column, Reach.Row, Reach.Layer);
+//          end;
+//        end;
+//      end;
+//      if ISFROPT in [4,5] then
+//      begin
+//        if (ReachIndex = 0) then
+//        begin
+//          for TimeIndex := 0 to UpstreamUnSatWatContList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              UpstreamUnSatWatContList.Times[TimeIndex]);
+//            if (Item <> nil) and (Item.ICalc in [1,2]) then
+//            begin
+//              if Boundary.UpstreamUnsatSegmentValues.
+//                BoundaryCount[Model] = 0 then
+//              begin
+//                frmErrorsAndWarnings.AddError(Model, UnsatError,
+//                  Segment.FScreenObject.Name);
+//              end
+//              else
+//              begin
+//                UpstreamUnsatValues := Boundary.UpstreamUnsatSegmentValues.
+//                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+//                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+//                DataArray := UpstreamUnSatWatContList[TimeIndex]
+//                  as TModflowBoundaryDisplayDataArray;
+//                DataArray.AddDataValue(UpstreamUnsatRecord.SaturatedWaterContentAnnotation,
+//                  UpstreamUnsatRecord.SaturatedWaterContent,
+//                  Reach.Column, Reach.Row, Reach.Layer);
+//              end;
+//            end;
+//          end;
+//        end;
+//        if (ReachIndex = Segment.FReaches.Count - 1) then
+//        begin
+//          for TimeIndex := 0 to DownstreamUnSatWatContList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              DownstreamUnSatWatContList.Times[TimeIndex]);
+//            if (Item <> nil) and (Item.ICalc in [1,2]) then
+//            begin
+//              if Boundary.DownstreamUnsatSegmentValues.
+//                BoundaryCount[Model] = 0 then
+//              begin
+//                frmErrorsAndWarnings.AddError(Model, UnsatError,
+//                  Segment.FScreenObject.Name);
+//              end
+//              else
+//              begin
+//                DownstreamUnsatValues := Boundary.DownstreamUnsatSegmentValues.
+//                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+//                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+//                DataArray := DownstreamUnSatWatContList[TimeIndex]
+//                  as TModflowBoundaryDisplayDataArray;
+//                DataArray.AddDataValue(DownstreamUnsatRecord.SaturatedWaterContentAnnotation,
+//                  DownstreamUnsatRecord.SaturatedWaterContent,
+//                  Reach.Column, Reach.Row, Reach.Layer);
+//              end;
+//            end;
+//          end;
+//        end;
+//      end;
+//      if ISFROPT in [4,5] then
+//      begin
+//        if (ReachIndex = 0) then
+//        begin
+//          for TimeIndex := 0 to UpstreamUnSatInitWatContList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              UpstreamUnSatInitWatContList.Times[TimeIndex]);
+//            if (Item <> nil) and (Item.ICalc in [1,2]) then
+//            begin
+//              if Boundary.UpstreamUnsatSegmentValues.
+//                BoundaryCount[Model] = 0 then
+//              begin
+//                frmErrorsAndWarnings.AddError(Model, UnsatError,
+//                  Segment.FScreenObject.Name);
+//              end
+//              else
+//              begin
+//                UpstreamUnsatValues := Boundary.UpstreamUnsatSegmentValues.
+//                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+//                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+//                DataArray := UpstreamUnSatInitWatContList[TimeIndex]
+//                  as TModflowBoundaryDisplayDataArray;
+//                DataArray.AddDataValue(UpstreamUnsatRecord.InitialWaterContentAnnotation,
+//                  UpstreamUnsatRecord.InitialWaterContent,
+//                  Reach.Column, Reach.Row, Reach.Layer);
+//              end;
+//            end;
+//          end;
+//        end;
+//        if (ReachIndex = Segment.FReaches.Count - 1) then
+//        begin
+//          for TimeIndex := 0 to DownstreamUnSatInitWatContList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              DownstreamUnSatInitWatContList.Times[TimeIndex]);
+//            if (Item <> nil) and (Item.ICalc in [1,2]) then
+//            begin
+//              if Boundary.DownstreamUnsatSegmentValues.
+//                BoundaryCount[Model] = 0 then
+//              begin
+//                frmErrorsAndWarnings.AddError(Model, UnsatError,
+//                  Segment.FScreenObject.Name);
+//              end
+//              else
+//              begin
+//                DownstreamUnsatValues := Boundary.DownstreamUnsatSegmentValues.
+//                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+//                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+//                DataArray := DownstreamUnSatInitWatContList[TimeIndex]
+//                  as TModflowBoundaryDisplayDataArray;
+//                DataArray.AddDataValue(DownstreamUnsatRecord.InitialWaterContentAnnotation,
+//                  DownstreamUnsatRecord.InitialWaterContent,
+//                  Reach.Column, Reach.Row, Reach.Layer);
+//              end;
+//            end;
+//          end;
+//        end;
+//      end;
+//      if ISFROPT in [4,5] then
+//      begin
+//        if (ReachIndex = 0) then
+//        begin
+//          for TimeIndex := 0 to UpstreamBrooksCoreyList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              UpstreamBrooksCoreyList.Times[TimeIndex]);
+//            if (Item <> nil) and (Item.ICalc in [1,2]) then
+//            begin
+//              if Boundary.UpstreamUnsatSegmentValues.
+//                BoundaryCount[Model] = 0 then
+//              begin
+//                frmErrorsAndWarnings.AddError(Model, UnsatError,
+//                  Segment.FScreenObject.Name);
+//              end
+//              else
+//              begin
+//                UpstreamUnsatValues := Boundary.UpstreamUnsatSegmentValues.
+//                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+//                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+//                DataArray := UpstreamBrooksCoreyList[TimeIndex]
+//                  as TModflowBoundaryDisplayDataArray;
+//                DataArray.AddDataValue(UpstreamUnsatRecord.BrooksCoreyExponentAnnotation,
+//                  UpstreamUnsatRecord.BrooksCoreyExponent,
+//                  Reach.Column, Reach.Row, Reach.Layer);
+//              end;
+//            end;
+//          end;
+//        end;
+//        if (ReachIndex = Segment.FReaches.Count - 1) then
+//        begin
+//          for TimeIndex := 0 to DownstreamBrooksCoreyList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              DownstreamBrooksCoreyList.Times[TimeIndex]);
+//            if (Item <> nil) and (Item.ICalc in [1,2]) then
+//            begin
+//              if Boundary.DownstreamUnsatSegmentValues.
+//                BoundaryCount[Model] = 0 then
+//              begin
+//                frmErrorsAndWarnings.AddError(Model, UnsatError,
+//                  Segment.FScreenObject.Name);
+//              end
+//              else
+//              begin
+//                DownstreamUnsatValues := Boundary.DownstreamUnsatSegmentValues.
+//                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+//                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+//                DataArray := DownstreamBrooksCoreyList[TimeIndex]
+//                  as TModflowBoundaryDisplayDataArray;
+//                DataArray.AddDataValue(DownstreamUnsatRecord.BrooksCoreyExponentAnnotation,
+//                  DownstreamUnsatRecord.BrooksCoreyExponent,
+//                  Reach.Column, Reach.Row, Reach.Layer);
+//              end;
+//            end;
+//          end;
+//        end;
+//      end;
+//      if ISFROPT = 5 then
+//      begin
+//        if (ReachIndex = 0) then
+//        begin
+//          for TimeIndex := 0 to UpstreamUnSatKzList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              UpstreamUnSatKzList.Times[TimeIndex]);
+//            if (Item <> nil) and (Item.ICalc in [1,2]) then
+//            begin
+//              if Boundary.UpstreamUnsatSegmentValues.
+//                BoundaryCount[Model] = 0 then
+//              begin
+//                frmErrorsAndWarnings.AddError(Model, UnsatError,
+//                  Segment.FScreenObject.Name);
+//              end
+//              else
+//              begin
+//                UpstreamUnsatValues := Boundary.UpstreamUnsatSegmentValues.
+//                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+//                UpstreamUnsatRecord := UpstreamUnsatValues.SrfUnsatSegmentArray[0];
+//                DataArray := UpstreamUnSatKzList[TimeIndex]
+//                  as TModflowBoundaryDisplayDataArray;
+//                DataArray.AddDataValue(UpstreamUnsatRecord.VerticalSaturatedKAnnotation,
+//                  UpstreamUnsatRecord.VerticalSaturatedK,
+//                  Reach.Column, Reach.Row, Reach.Layer);
+//              end;
+//            end;
+//          end;
+//        end;
+//        if (ReachIndex = Segment.FReaches.Count - 1) then
+//        begin
+//          for TimeIndex := 0 to DownstreamUnSatKzList.Count - 1 do
+//          begin
+//            Item := Boundary.ParamIcalc.GetItemByStartTime(
+//              DownstreamUnSatKzList.Times[TimeIndex]);
+//            if (Item <> nil) and (Item.ICalc in [1,2]) then
+//            begin
+//              if Boundary.DownstreamUnsatSegmentValues.
+//                BoundaryCount[Model] = 0 then
+//              begin
+//                frmErrorsAndWarnings.AddError(Model, UnsatError,
+//                  Segment.FScreenObject.Name);
+//              end
+//              else
+//              begin
+//                DownstreamUnsatValues := Boundary.DownstreamUnsatSegmentValues.
+//                  Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+//                DownstreamUnsatRecord := DownstreamUnsatValues.SrfUnsatSegmentArray[0];
+//                DataArray := DownstreamUnSatKzList[TimeIndex]
+//                  as TModflowBoundaryDisplayDataArray;
+//                DataArray.AddDataValue(DownstreamUnsatRecord.VerticalSaturatedKAnnotation,
+//                  DownstreamUnsatRecord.VerticalSaturatedK,
+//                  Reach.Column, Reach.Row, Reach.Layer);
+//              end;
+//            end;
+//          end;
+//        end;
+//      end;
+//    end;
   end;
 
   // Mark all the data arrays and time lists as up to date.
@@ -1652,27 +3633,23 @@ begin
       StressPeriod := Model.ModflowFullStressPeriods[TimeIndex];
       ParamIcalcItem := Boundary.ParamIcalc.GetItemByStartTime(StressPeriod.StartTime);
       UpstreamValues := Boundary.UpstreamSegmentValues.
-        GetBoundaryByStartTime(StressPeriod.StartTime) as TSfrSegmentStorage;
+        GetBoundaryByStartTime(StressPeriod.StartTime, Model) as TSfrSegmentStorage;
       if UpstreamValues = nil then
       begin
         ErrorObject := Boundary.ScreenObject as TScreenObject;
         frmErrorsAndWarnings.AddError(Model,
           StrInvalidStartingTimeStep1, ErrorObject.Name);
         Continue;
-//        raise EInvalidTime.Create(Boundary.ScreenObject);
       end;
       DownstreamValues := Boundary.DownstreamSegmentValues.
-        GetBoundaryByStartTime(StressPeriod.StartTime) as TSfrSegmentStorage;
+        GetBoundaryByStartTime(StressPeriod.StartTime, Model) as TSfrSegmentStorage;
       if DownstreamValues = nil then
       begin
         ErrorObject := Boundary.ScreenObject as TScreenObject;
         frmErrorsAndWarnings.AddError(Model,
           StrInvalidStartingTimeStep1, ErrorObject.Name);
         Continue;
-//        raise EInvalidTime.Create(Boundary.ScreenObject);
       end;
-//      Assert(UpstreamValues <> nil);
-//      Assert(DownstreamValues <> nil);
       if (UpstreamValues <> PriorUpstreamValues)
         or (DownstreamValues <> PriorDownstreamValues) then
       begin
@@ -1690,12 +3667,6 @@ begin
             frmErrorsAndWarnings.AddError(Model,StrOneOrMoreSFRStre,
               Format(StrObjectSTime1, [Segment.FScreenObject.Name,
               StressPeriod.StartTime, UpstreamElev, DownstreamElev]));
-//            frmErrorsAndWarnings.AddError(Model,
-//              StrOneOrMoreSFRStre,
-//              'Object: ' + Segment.FScreenObject.Name
-//              + '; Time: ' + FloatToStr(StressPeriod.StartTime)
-//              + '; Upstream elevation: ' + FloatToStr(UpstreamElev)
-//              + '; Downstream elevation: ' + FloatToStr(DownstreamElev));
           end;
         end;
       end;
@@ -1732,15 +3703,43 @@ var
   InstanceItem: TSfrParamInstance;
   ParamIndex: Integer;
   FlowFileName: string;
+//  LgrUsed: Boolean;
+  SubSegIndex: Integer;
+  SubSeg: TSubSegment;
+  ReachIndex: Integer;
+  AReach: TSfr_Cell;
+//  Used: Boolean;
 begin
   NSTRM := 0;
+  NSS := 0;
   for Index := 0 to FSegments.Count - 1 do
   begin
     Segment := FSegments[Index];
-    NSTRM := NSTRM + Segment.FReaches.Count;
+    if Segment.FSubSegmentList.Count > 0 then
+    begin
+      for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+      begin
+        SubSeg := Segment.FSubSegmentList[SubSegIndex];
+        if SubSeg.Used then
+        begin
+          for ReachIndex := 0 to SubSeg.ReachCount - 1 do
+          begin
+            AReach := SubSeg.Reaches[ReachIndex];
+            if AReach.ReachLength > 0 then
+            begin
+              Inc(NSTRM);
+            end;
+          end;
+          Inc(NSS)
+        end;
+      end;
+    end
+    else
+    begin
+      NSTRM := NSTRM + Segment.ReachCount;
+      Inc(NSS)
+    end;
   end;
-
-  NSS := FSegments.Count;
 
   LocalModel := Model as TCustomModel;
   NSFRPAR := LocalModel.ModflowTransientParameters.CountParam(ptSFR);
@@ -1768,15 +3767,13 @@ begin
         InstanceItem := SfrPackage.ParameterInstances.Items[ParamIndex];
         if ParameterNames.IndexOf(InstanceItem.ParameterName) >= 0 then
         begin
-          Inc(NPARSEG);
+          Inc(NPARSEG, Max(1, Segment.FSubSegmentList.Count));
         end;
       end;
     finally
       ParameterNames.Free;
     end;
   end;
-
-
 
   sfrCONST := SfrPackage.StreamConstant;
 
@@ -1848,7 +3845,8 @@ begin
     WriteInteger(ISUZN);
     WriteInteger(NSFRSETS);
   end;
-//  if NSTRM < 0 then
+
+  if NSTRM < 0 then
   begin
     WriteInteger(IRTFLG);
     if IRTFLG > 0 then
@@ -1857,6 +3855,10 @@ begin
       WriteFloat(WEIGHT);
       WriteFloat(FLWTOL);
     end;
+  end;
+  if FLgrUsed then
+  begin
+    WriteString(' AUXILIARY LGRGRID AUXILIARY LGRSEG');
   end;
 
   WriteString(' # Data Set 1: NSTRM NSS NSFRPAR NPARSEG CONST DLEAK ISTCB1  ISTCB2');
@@ -1868,13 +3870,17 @@ begin
   begin
     WriteString(' NSTRAIL ISUZN NSFRSETS');
   end;
-//  if NSTRM < 0 then
+  if NSTRM < 0 then
   begin
     WriteString(' IRTFLG');
     if IRTFLG > 0 then
     begin
       WriteString(' NUMTIM WEIGHT FLWTOL');
     end;
+  end;
+  if FLgrUsed then
+  begin
+    WriteString(' Variables for routing between grids');
   end;
   NewLine;
 end;
@@ -1889,72 +3895,98 @@ var
   ReachIndex: integer;
   LocalLayer: integer;
   ObjectName: string;
+  SubSegIndex: Integer;
+  SubSeg: TSubSegment;
+  procedure WriteReach(Reach: TSfr_Cell; SegmentNumber, ReachIndex: integer);
+  begin
+    CheckCell(Reach, 'SFR');
+    LocalLayer := Model.
+      DataSetLayerToModflowLayer(Reach.Layer);
+    WriteInteger(LocalLayer);
+    WriteInteger(Reach.Row+1);
+    WriteInteger(Reach.Column+1);
+    WriteInteger(SegmentNumber);
+    WriteInteger(ReachIndex+1);
+    WriteFloat(Reach.ReachLength);
+    if ISFROPT in [1,2,3] then
+    begin
+      WriteFloat(Reach.StreambedElevation);
+      WriteFloat(Reach.StreamSlope);
+      WriteFloat(Reach.StreamBedThickness);
+      WriteFloat(Reach.HydraulicConductivity);
+    end;
+    if ISFROPT in [2,3] then
+    begin
+      WriteFloat(Reach.SaturatedWaterContent);
+      WriteFloat(Reach.InitialWaterContent);
+      WriteFloat(Reach.BrooksCoreyExponent);
+    end;
+    if ISFROPT = 3 then
+    begin
+      WriteFloat(Reach.VerticalK);
+    end;
+    WriteString(' # Data Set 2: KRCH IRCH JRCH ISEG IREACH RCHLEN');
+    if ISFROPT in [1,2,3] then
+    begin
+      WriteString(' STRTOP SLOPE STRTHICK STRHC1');
+    end;
+    if ISFROPT in [2,3] then
+    begin
+      WriteString(' THTS THTI EPS');
+    end;
+    if ISFROPT = 3 then
+    begin
+      WriteString(' UHC');
+    end;
+    if ReachIndex = 0 then
+    begin
+      WriteString(' Defined by object: ' + ObjectName);
+    end;
+
+    NewLine;
+
+    if Reach.ReachLength <= 0 then
+    begin
+      frmErrorsAndWarnings.AddWarning(Model, WarningRoot,
+        'Object = ' + ObjectName + '; '
+        + 'Layer = ' + IntToStr(Reach.Layer+1) + '; '
+        + 'Row = ' + IntToStr(Reach.Row+1) + '; '
+        + 'Column = ' + IntToStr(Reach.Column+1));
+    end;
+  end;
 begin
   for Index := 0 to FSegments.Count - 1 do
   begin
     Segment := FSegments[Index];
     ObjectName := Segment.FScreenObject.Name;
-    Assert(Segment.NewSegmentNumber = Index + 1);
-    for ReachIndex := 0 to Segment.FReaches.Count - 1 do
+    if Segment.FSubSegmentList.Count = 0 then
     begin
-      Reach := Segment.FReaches[ReachIndex] as TSfr_Cell;
-      CheckCell(Reach, 'SFR');
-      LocalLayer := Model.
-        DataSetLayerToModflowLayer(Reach.Layer);
-      WriteInteger(LocalLayer);
-      WriteInteger(Reach.Row+1);
-      WriteInteger(Reach.Column+1);
-      WriteInteger(Segment.NewSegmentNumber);
-      WriteInteger(ReachIndex+1);
-      WriteFloat(Reach.ReachLength);
-      if ISFROPT in [1,2,3] then
+      for ReachIndex := 0 to Segment.FReaches.Count - 1 do
       begin
-        WriteFloat(Reach.StreambedElevation);
-        WriteFloat(Reach.StreamSlope);
-        WriteFloat(Reach.StreamBedThickness);
-        WriteFloat(Reach.HydraulicConductivity);
+        Reach := Segment.FReaches[ReachIndex] as TSfr_Cell;
+        WriteReach(Reach, Segment.NewSegmentNumber, ReachIndex);
       end;
-      if ISFROPT in [2,3] then
+    end
+    else
+    begin
+      for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
       begin
-        WriteFloat(Reach.SaturatedWaterContent);
-        WriteFloat(Reach.InitialWaterContent);
-        WriteFloat(Reach.BrooksCoreyExponent);
-      end;
-      if ISFROPT = 3 then
-      begin
-        WriteFloat(Reach.VerticalK);
-      end;
-      WriteString(' # Data Set 2: KRCH IRCH JRCH ISEG IREACH RCHLEN');
-      if ISFROPT in [1,2,3] then
-      begin
-        WriteString(' STRTOP SLOPE STRTHICK STRHC1');
-      end;
-      if ISFROPT in [2,3] then
-      begin
-        WriteString(' THTS THTI EPS');
-      end;
-      if ISFROPT = 3 then
-      begin
-        WriteString(' UHC');
-      end;
-      if ReachIndex = 0 then
-      begin
-        WriteString(' Defined by object: ' + ObjectName);
-      end;
-      
-      NewLine;
-
-      if Reach.ReachLength <= 0 then
-      begin
-        frmErrorsAndWarnings.AddWarning(Model, WarningRoot,
-          'Object = ' + ObjectName + '; '
-          + 'Layer = ' + IntToStr(Reach.Layer+1) + '; '
-          + 'Row = ' + IntToStr(Reach.Row+1) + '; '
-          + 'Column = ' + IntToStr(Reach.Column+1));
+        SubSeg := Segment.FSubSegmentList[SubSegIndex];
+        for ReachIndex := 0 to SubSeg.ReachCount - 1 do
+        begin
+          Reach := SubSeg.Reaches[ReachIndex];
+          WriteReach(Reach, SubSeg.FSegmentNumber, ReachIndex);
+        end;
       end;
     end;
   end;
 end;
+
+function Interpolate(Value1, Value2, Fraction: Double): double;
+begin
+  result := (Value2-Value1)*Fraction + Value1;
+end;
+
 
 procedure TModflowSFR_Writer.WriteDataSets3and4;
 var
@@ -1972,6 +4004,10 @@ var
   InstanceIndex: Integer;
   SfrBoundary: TSfrBoundary;
   Segment: TSegment;
+  SegIndex: Integer;
+  NLST: Integer;
+  SubSegIndex: Integer;
+  SubSeg: TSubSegment;
 begin
   SfrPackage := Package as TSfrPackageSelection;
   LocalModel := Model as TCustomModel;
@@ -1988,6 +4024,7 @@ begin
       Instances := TList.Create;
       Segments := TList.Create;
       try
+        // Get the segments and instances for the current parameter.
         for Index := 0 to SfrPackage.ParameterInstances.Count - 1 do
         begin
           Application.ProcessMessages;
@@ -2030,9 +4067,33 @@ begin
         // Data set 3
         frmProgressMM.AddMessage('    Writing parameter '
           + ParamItem.ParameterName);
+        // PARNAM, PARTYP
         WriteString(ParamItem.ParameterName + ' SFR');
+        // Parval
         WriteFloat(ParamItem.Value);
-        WriteInteger(Segments.Count);
+        // NLST
+        NLST := 0;
+        for SegIndex := 0 to Segments.Count - 1 do
+        begin
+          Segment := Segments[SegIndex];
+          if Segment.FSubSegmentList.Count = 0 then
+          begin
+            Inc(NLST);
+          end
+          else
+          begin
+            for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+            begin
+              SubSeg := Segment.FSubSegmentList[SubSegIndex];
+              if SubSeg.ReachCount > 0 then
+              begin
+                Inc(NLST);
+              end;
+            end;
+          end;
+        end;
+        WriteInteger(NLST);
+        // INSTANCES NUMINST
         if Instances.Count > 1 then
         begin
           WriteString(' INSTANCES');
@@ -2088,51 +4149,21 @@ begin
                 and (ParamScreenObjectItem.ParamInstance
                 = InstanceItem.ParameterInstance) then
               begin
-                // data set 4b
-                WriteDataSet4b6a(InstanceItem.StartTime, Segment,
-                  ParamScreenObjectItem, SfrBoundary, True);
-                Application.ProcessMessages;
-                if not frmProgressMM.ShouldContinue then
+                if Segment.FSubSegmentList.Count = 0 then
                 begin
-                  Exit;
+                  SubSegIndex := -1;
+                  WriteSegment(Segment, InstanceItem.StartTime,
+                    SubSegIndex, ParamScreenObjectItem, SfrBoundary, ScreenObjectParamIndex, True)
+                end
+                else
+                begin
+                  for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+                  begin
+                    WriteSegment(Segment, InstanceItem.StartTime,
+                      SubSegIndex, ParamScreenObjectItem, SfrBoundary, ScreenObjectParamIndex, True)
+                  end;
                 end;
 
-                // data set 4c
-                WriteDataSet4c6b(True, SfrBoundary,
-                  ParamScreenObjectItem, InstanceItem.StartTime, 0);
-                Application.ProcessMessages;
-                if not frmProgressMM.ShouldContinue then
-                begin
-                  Exit;
-                end;
-
-                // data set 4d
-                WriteDataSet4d6c(True, SfrBoundary,
-                  ParamScreenObjectItem, InstanceItem.StartTime, 0);
-                Application.ProcessMessages;
-                if not frmProgressMM.ShouldContinue then
-                begin
-                  Exit;
-                end;
-
-                // data set 4e
-                WriteDataSet4e6d(True, SfrBoundary, ParamScreenObjectItem, 1);
-                Application.ProcessMessages;
-                if not frmProgressMM.ShouldContinue then
-                begin
-                  Exit;
-                end;
-
-                // data set 4f
-                WriteDataSet4f6e(True, SfrBoundary, ParamScreenObjectItem,
-                  InstanceItem.StartTime);
-                Application.ProcessMessages;
-                if not frmProgressMM.ShouldContinue then
-                begin
-                  Exit;
-                end;
-
-                // data set 4g
               end;
             end;
           end;
@@ -2144,6 +4175,224 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TModflowSFR_Writer.LgrAdjustSegmentValues(
+  Segment: TSegment; StartTime: double; SubSegIndex: integer;
+  StressPeriod: integer);
+var
+  SfrBoundary: TSfrBoundary;
+  UpstreamValues: TSfrSegmentStorage;
+  DownstreamValues: TSfrSegmentStorage;
+  UnsatUpstreamValues: TSfrUnsatSegmentStorage;
+  UnsatDownstreamValues: TSfrUnsatSegmentStorage;
+  UpValues: TSfrSegmentRecord;
+  DownValues: TSfrSegmentRecord;
+  ASubSeg: TSubSegment;
+  ParentSeg: TSegment;
+  TotalParentSegLength: double;
+  ParentSubSegIndex: Integer;
+  ParentSubSeg: TSubSegment;
+  CumLength: double;
+  UpUnsatValues: TSfrUnsatSegmentRecord;
+  DownUnsatValues: TSfrUnsatSegmentRecord;
+  Fraction: Extended;
+  SubSeg: TSubSegment;
+  CumSegLength: double;
+  LocalIndex: Integer;
+  LocalSubSeg: TSubSegment;
+  procedure InterpolateSegmentValues(var SegValues: TSfrSegmentRecord);
+  begin
+    SegValues.StreambedElevation :=
+      Interpolate(UpValues.StreambedElevation,
+      DownValues.StreambedElevation, Fraction);
+    SegValues.StreamBedThickness :=
+      Interpolate(UpValues.StreamBedThickness,
+      DownValues.StreamBedThickness, Fraction);
+    SegValues.HydraulicConductivity :=
+      Interpolate(UpValues.HydraulicConductivity,
+      DownValues.HydraulicConductivity, Fraction);
+    SegValues.StreamWidth :=
+      Interpolate(UpValues.StreamWidth,
+      DownValues.StreamWidth, Fraction);
+    SegValues.StreamDepth :=
+      Interpolate(UpValues.StreamDepth,
+      DownValues.StreamDepth, Fraction);
+  end;
+  procedure InterpolateUnsatSegmentValues(var SegValues: TSfrUnsatSegmentRecord);
+  begin
+    SegValues.SaturatedWaterContent :=
+      Interpolate(UpUnsatValues.SaturatedWaterContent,
+      DownUnsatValues.SaturatedWaterContent, Fraction);
+    SegValues.InitialWaterContent :=
+      Interpolate(UpUnsatValues.InitialWaterContent,
+      DownUnsatValues.InitialWaterContent, Fraction);
+    SegValues.BrooksCoreyExponent :=
+      Interpolate(UpUnsatValues.BrooksCoreyExponent,
+      DownUnsatValues.BrooksCoreyExponent, Fraction);
+    SegValues.VerticalSaturatedK :=
+      Interpolate(UpUnsatValues.VerticalSaturatedK,
+      DownUnsatValues.VerticalSaturatedK, Fraction);
+  end;
+begin
+  if FLgrUsed then
+  begin
+    SfrBoundary := Segment.FScreenObject.ModflowSfrBoundary;
+    UpstreamValues := SfrBoundary.UpstreamSegmentValues.
+      GetBoundaryByStartTime(StartTime, Model)
+      as TSfrSegmentStorage;
+    DownstreamValues := SfrBoundary.DownstreamSegmentValues.
+      GetBoundaryByStartTime(StartTime, Model)
+      as TSfrSegmentStorage;
+//      UpstreamValues.SrfSegmentArray[0]
+
+    UnsatUpstreamValues := nil;
+    UnsatDownstreamValues := nil;
+    if (ISFROPT in [4,5]) {and (StressPeriodIndex = 0)} then
+    begin
+      if SfrBoundary.UpstreamUnsatSegmentValues.
+        BoundaryCount[Model] > 0 then
+      begin
+        UnsatUpstreamValues := SfrBoundary.UpstreamUnsatSegmentValues.
+          Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+      end;
+      if SfrBoundary.DownstreamUnsatSegmentValues.
+        BoundaryCount[Model] > 0 then
+      begin
+        UnsatDownstreamValues := SfrBoundary.DownstreamUnsatSegmentValues.
+          Boundaries[0, Model] as TSfrUnsatSegmentStorage;
+      end;
+    end;
+
+
+    if (UpstreamValues <> nil) and (DownstreamValues <> nil) then
+    begin
+      UpValues := UpstreamValues.SrfSegmentArray[0];
+      DownValues := DownstreamValues.SrfSegmentArray[0];
+      if FIsChildModel then
+      begin
+        ASubSeg := Segment.FSubSegmentList[0];
+        ParentSeg := ASubSeg.FAssociatedLgrSubSeg.FSegment
+      end
+      else
+      begin
+        ASubSeg := nil;
+        ParentSeg := Segment;
+      end;
+      TotalParentSegLength := 0;
+      for ParentSubSegIndex := 0 to ParentSeg.FSubSegmentList.Count - 1 do
+      begin
+        ParentSubSeg := ParentSeg.FSubSegmentList[ParentSubSegIndex];
+        TotalParentSegLength := TotalParentSegLength + ParentSubSeg.FTotalLength;
+      end;
+      CumLength := 0;
+      for ParentSubSegIndex := 0 to ParentSeg.FSubSegmentList.Count - 1 do
+      begin
+        ParentSubSeg := ParentSeg.FSubSegmentList[ParentSubSegIndex];
+        ParentSubSeg.FUpstreamValues[StressPeriod] := UpstreamValues.SrfSegmentArray[0];
+        ParentSubSeg.FDownstreamValues[StressPeriod] := DownstreamValues.SrfSegmentArray[0];
+        if (UnsatUpstreamValues <> nil) and (UnsatDownstreamValues <> nil) then
+        begin
+          ParentSubSeg.FUpstreamUnsatValues[StressPeriod] := UnsatUpstreamValues.SrfUnsatSegmentArray[0];
+          ParentSubSeg.FDownstreamUnsatValues[StressPeriod] := UnsatDownstreamValues.SrfUnsatSegmentArray[0];
+          UpUnsatValues := UnsatUpstreamValues.SrfUnsatSegmentArray[0];
+          DownUnsatValues := UnsatDownstreamValues.SrfUnsatSegmentArray[0];
+        end;
+        if TotalParentSegLength > 0 then
+        begin
+          if ParentSubSegIndex > 0 then
+          begin
+            Fraction := CumLength/TotalParentSegLength;
+            InterpolateSegmentValues(ParentSubSeg.FUpstreamValues[StressPeriod]);
+            if (UnsatUpstreamValues <> nil) and (UnsatDownstreamValues <> nil) then
+            begin
+              InterpolateUnsatSegmentValues(ParentSubSeg.FUpstreamUnsatValues[StressPeriod]);
+            end;
+          end;
+          CumLength := CumLength + ParentSubSeg.FTotalLength;
+          if ParentSubSegIndex < ParentSeg.FSubSegmentList.Count - 1 then
+          begin
+            Fraction := CumLength/TotalParentSegLength;
+            InterpolateSegmentValues(ParentSubSeg.FDownstreamValues[StressPeriod]);
+            if (UnsatUpstreamValues <> nil) and (UnsatDownstreamValues <> nil) then
+            begin
+              InterpolateUnsatSegmentValues(ParentSubSeg.FDownstreamUnsatValues[StressPeriod]);
+            end;
+          end;
+        end;
+      end;
+      if FIsChildModel then
+      begin
+        SubSeg := Segment.SubSegmentList[SubSegIndex];
+        ParentSubSeg := ASubSeg.FAssociatedLgrSubSeg;
+        UpValues := ParentSubSeg.FUpstreamValues[StressPeriod];
+        DownValues := ParentSubSeg.FDownstreamValues[StressPeriod];
+        if ISFROPT in [4,5] then
+        begin
+          UpUnsatValues := ParentSubSeg.FUpstreamUnsatValues[StressPeriod];
+          DownUnsatValues := ParentSubSeg.FDownstreamUnsatValues[StressPeriod];
+        end;
+
+          CumSegLength := 0;
+          for LocalIndex := 0 to Segment.SubSegmentList.Count - 1 do
+          begin
+            LocalSubSeg := Segment.SubSegmentList[LocalIndex];
+
+            if LocalSubSeg.FAssociatedLgrSubSeg = ASubSeg.FAssociatedLgrSubSeg then
+            begin
+              if LocalSubSeg = SubSeg then
+              begin
+                Fraction := CumSegLength/ParentSubSeg.FTotalLength;
+                InterpolateSegmentValues(LocalSubSeg.FUpstreamValues[StressPeriod]);
+                if ISFROPT in [4,5] then
+                begin
+                  InterpolateUnsatSegmentValues(LocalSubSeg.FUpstreamUnsatValues[StressPeriod])
+                end;
+              end;
+
+              CumSegLength := CumSegLength + LocalSubSeg.FTotalLength;
+              if LocalSubSeg = SubSeg then
+              begin
+                Fraction := CumSegLength/ParentSubSeg.FTotalLength;
+                InterpolateSegmentValues(LocalSubSeg.FDownstreamValues[StressPeriod]);
+                if ISFROPT in [4,5] then
+                begin
+                  InterpolateUnsatSegmentValues(LocalSubSeg.FDownstreamUnsatValues[StressPeriod])
+                end;
+                break;
+              end;
+            end;
+          end;
+      end;
+    end;
+  end
+end;
+
+procedure TModflowSFR_Writer.WriteSegment(Segment: TSegment; StartTime: double;
+  SubSegIndex: integer;
+  Item: TSfrParamIcalcItem; Boundary: TSfrBoundary; TimeIndex: integer;
+  IsParameter: boolean);
+begin
+//  LgrAdjustSegmentValues(Segment, StartTime, SubSegIndex, TimeIndex);
+
+  WriteDataSet4b6a(StartTime, Segment, Item,
+    Boundary, IsParameter, SubSegIndex);
+
+  // Data set 6b
+  WriteDataSet4c6b(IsParameter, Boundary, Item, StartTime,
+    TimeIndex, Segment, SubSegIndex);
+
+  // data set 6c
+  WriteDataSet4d6c(IsParameter, Boundary, Item,
+    StartTime, TimeIndex, Segment, SubSegIndex);
+
+  // data set 6d
+  WriteDataSet4e6d(IsParameter, Boundary, Item, TimeIndex+1, Segment, SubSegIndex);
+
+  // data set 6e
+  WriteDataSet4f6e(IsParameter, Boundary, Item, StartTime, Segment, SubSegIndex);
+
+  // data set 6f
 end;
 
 procedure TModflowSFR_Writer.WriteDataSets5to7;
@@ -2168,6 +4417,11 @@ var
   InstanceList: TList;
   InstanceIndex: Integer;
   ParamName: string;
+  SubSegIndex: Integer;
+  SfrBoundary: TSfrBoundary;
+  SegIndex: Integer;
+  ASegment: TSegment;
+  SubSeg: TSubSegment;
 begin
   UsedSegments := TList.Create;
   ParametersUsed := TStringList.Create;
@@ -2214,6 +4468,7 @@ begin
       begin
         Segment := FSegments[SegementIndex];
         Assert(Segment.FScreenObject.ModflowSfrBoundary <> nil);
+//        SfrBoundary := Segment.FScreenObject.ModflowSfrBoundary;
         Item := Segment.FScreenObject.ModflowSfrBoundary.ParamIcalc.
           GetItemByStartTime(StressPeriod.StartTime);
         if (Item = nil) or (Item.Param = '') then
@@ -2229,7 +4484,26 @@ begin
         end;
       end;
 
-      ITMP := UsedSegments.Count;
+      ITMP := 0;
+      for SegIndex := 0 to UsedSegments.Count - 1 do
+      begin
+        ASegment := UsedSegments[SegIndex];
+        if ASegment.FSubSegmentList.Count = 0 then
+        begin
+          Inc(ITMP);
+        end
+        else
+        begin
+          for SubSegIndex := 0 to ASegment.FSubSegmentList.Count - 1 do
+          begin
+            SubSeg := ASegment.FSubSegmentList[SubSegIndex];
+            if SubSeg.Used then
+            begin
+              Inc(ITMP);
+            end;
+          end;
+        end;
+      end;
 
       if Model.ModflowOutputControl.PrintInputCellLists then
       begin
@@ -2255,7 +4529,9 @@ begin
       begin
         Assert(NP = 0);
       end;
-      WriteString(' # Data Set 5, Stress period ' + IntToStr(TimeIndex+1) + ': ITMP IRDFLG IPTFLG');
+      WriteString(' # Data Set 5, Stress period '
+        + IntToStr(TimeIndex+1)
+        + ': ITMP IRDFLG IPTFLG');
       if NSFRPAR > 0 then
       begin
         WriteString(' NP');
@@ -2272,26 +4548,22 @@ begin
           GetItemByStartTime(StressPeriod.StartTime);
         if Item <> nil then
         begin
-          
+
           Boundary := Segment.FScreenObject.ModflowSfrBoundary;
-          WriteDataSet4b6a(StressPeriod.StartTime, Segment, Item,
-            Boundary, False);
-
-          // Data set 6b
-          WriteDataSet4c6b(false, Boundary, Item, StressPeriod.StartTime,
-            TimeIndex);
-
-          // data set 6c
-          WriteDataSet4d6c(false, Boundary, Item,
-            StressPeriod.StartTime, TimeIndex);
-
-          // data set 6d
-          WriteDataSet4e6d(false, Boundary, Item, TimeIndex+1);
-
-          // data set 6e
-          WriteDataSet4f6e(false, Boundary, Item, StressPeriod.StartTime);
-
-          // data set 6f
+          if Segment.FSubSegmentList.Count = 0 then
+          begin
+            SubSegIndex := -1;
+            WriteSegment(Segment, StressPeriod.StartTime,
+              SubSegIndex, Item, Boundary, TimeIndex, False);
+          end
+          else
+          begin
+            for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+            begin
+              WriteSegment(Segment, StressPeriod.StartTime,
+                SubSegIndex, Item, Boundary, TimeIndex, False);
+            end;
+          end;
         end;
       end;
 
@@ -2347,7 +4619,6 @@ end;
 procedure TModflowSFR_Writer.WriteFile(const AFileName: string;
   var StartUnitNumber: integer; Lines: TStrings);
 begin
-//  OutputDebugString('SAMPLING ON') ;
   if not Package.IsSelected then
   begin
     Exit
@@ -2358,7 +4629,7 @@ begin
   end;
   FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrSFR, Model.UnitNumbers.UnitNumber(StrSFR), FNameOfFile, foInput);
-  Evaluate;
+//  Evaluate;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
   begin
@@ -2420,6 +4691,8 @@ var
   UNIT_Number: integer;
   OUTTYPE: integer;
   ReachIndex: integer;
+  SubSeg: TSubSegment;
+  SubSegIndex: Integer;
   procedure WriteGage;
   var
     Line: string;
@@ -2459,22 +4732,46 @@ begin
               end;
             glLast:
               begin
-                GAGERCH := Segment.FReaches.Count;
+                if Segment.FSubSegmentList.Count = 0 then
+                begin
+                  GAGERCH := Segment.FReaches.Count;
+                end
+                else
+                begin
+                  SubSeg := Segment.FSubSegmentList[Segment.FSubSegmentList.Count-1];
+                  GAGESEG := SubSeg.FSegmentNumber;
+                  GAGERCH := SubSeg.ReachCount;
+                end;
                 WriteGage;
               end;
             glAll:
               begin
-                for ReachIndex := 1 to Segment.FReaches.Count  do
+                if Segment.FSubSegmentList.Count = 0 then
                 begin
-                  GAGERCH := ReachIndex;
-                  WriteGage;
+                  for ReachIndex := 1 to Segment.FReaches.Count  do
+                  begin
+                    GAGERCH := ReachIndex;
+                    WriteGage;
+                  end;
+                end
+                else
+                begin
+                  for SubSegIndex := 0 to Segment.FSubSegmentList.Count - 1 do
+                  begin
+                    SubSeg := Segment.FSubSegmentList[SubSegIndex];
+                    GAGESEG := SubSeg.FSegmentNumber;
+                    for ReachIndex := 1 to SubSeg.ReachCount  do
+                    begin
+                      GAGERCH := ReachIndex;
+                      WriteGage;
+                    end;
+                  end;
                 end;
               end;
             else
               Assert(False);
           end;
         end;
-        
       end;
     end;
   end;
@@ -2482,12 +4779,22 @@ end;
 
 procedure TModflowSFR_Writer.WriteDataSet4f6e(Parameter: Boolean;
   SfrBoundary: TSfrBoundary; ParamScreenObjectItem: TSfrParamIcalcItem;
-  StartTime: double);
+  StartTime: double; Segment: TSegment; SubSegIndex: integer);
 var
   TableRow: TSfrFlowTableItemRecord;
   FlowTableIndex: Integer;
   FlowTable: TSfrFlowTableRecord;
+  SubSeg: TSubSegment;
 begin
+  if SubSegIndex >= 0 then
+  begin
+    SubSeg := Segment.FSubSegmentList[SubSegIndex];
+    if not SubSeg.Used then
+    begin
+      Exit;
+    end;
+  end;
+
   if ParamScreenObjectItem.ICalc = 4 then
   begin
     FlowTable := SfrBoundary.TableCollection.
@@ -2539,11 +4846,21 @@ end;
 
 procedure TModflowSFR_Writer.WriteDataSet4e6d(Parameter: Boolean;
   SfrBoundary: TSfrBoundary; ParamScreenObjectItem: TSfrParamIcalcItem;
-  StressPeriod: integer);
+  StressPeriod: integer; Segment: TSegment; SubSegIndex: integer);
 var
   CrossSectionIndex: Integer;
   CrossSection: TSfrChannelRecord;
+  SubSeg: TSubSegment;
 begin
+  if SubSegIndex >= 0 then
+  begin
+    SubSeg := Segment.FSubSegmentList[SubSegIndex];
+    if not SubSeg.Used then
+    begin
+      Exit;
+    end;
+  end;
+
   if (ParamScreenObjectItem.ICalc = 2) and
     ((ISFROPT <= 1)  or (StressPeriod = 1) or Parameter) then
   begin
@@ -2581,13 +4898,21 @@ end;
 
 procedure TModflowSFR_Writer.WriteUnsatSegmentValues(upstream: Boolean;
   var CommentLine: string; var ValuesWriten: boolean;
-  UnsatUpstreamValues: TSfrUnsatSegmentStorage);
+  UnsatUpstreamValues: TSfrUnsatSegmentStorage;
+  PSegUnsatValue: PSfrUnsatSegmentRecord);
 var
   UnsatSegmentValues: TSfrUnsatSegmentRecord;
 begin
   ValuesWriten := True;
   Assert(Length(UnsatUpstreamValues.SrfUnsatSegmentArray) = 1);
-  UnsatSegmentValues := UnsatUpstreamValues.SrfUnsatSegmentArray[0];
+  if Assigned(PSegUnsatValue) then
+  begin
+    UnsatSegmentValues := PSegUnsatValue^;
+  end
+  else
+  begin
+    UnsatSegmentValues := UnsatUpstreamValues.SrfUnsatSegmentArray[0];
+  end;
   // THTS1, THTS2
   WriteFloat(UnsatSegmentValues.SaturatedWaterContent);
   if upstream then
@@ -2636,14 +4961,21 @@ end;
 procedure TModflowSFR_Writer.WriteSegmentValues(StressPeriodIndex: Integer;
   Parameter: Boolean; UpOrDownStreamValues: TSfrSegmentStorage; upstream: Boolean;
   var CommentLine: string; var ValuesWriten: boolean;
-  ParamScreenObjectItem: TSfrParamIcalcItem);
+  ParamScreenObjectItem: TSfrParamIcalcItem; PSegValue: PSfrSegmentRecord);
 var
   SegmentValues: TSfrSegmentRecord;
   WriteValue: Boolean;
 begin
   ValuesWriten := False;
   Assert(Length(UpOrDownStreamValues.SrfSegmentArray) >= 1);
-  SegmentValues := UpOrDownStreamValues.SrfSegmentArray[0];
+  if PSegValue = nil then
+  begin
+    SegmentValues := UpOrDownStreamValues.SrfSegmentArray[0];
+  end
+  else
+  begin
+    SegmentValues := PSegValue^;
+  end;
   // Hc1fact, Hc2fact, HCOND1, HCOND2
   if ISFROPT in [0, 4, 5] then
   begin
@@ -2740,11 +5072,13 @@ begin
   end;
 end;
 
-function TModflowSFR_Writer.FindConvertedSegment(OriginalSegmentNumber: integer): integer;
+function TModflowSFR_Writer.FindConvertedSegment(OriginalSegmentNumber: integer;
+  Direction: TStreamDirection): integer;
 var
   Index: Integer;
   Segment: TSegment;
   AScreenObject: TScreenObject;
+  SubSeg: TSubSegment;
 begin
   result := 0;
   if OriginalSegmentNumber = 0 then
@@ -2760,7 +5094,23 @@ begin
         Segment := FSegments[Index];
         if Segment.OriginalSegmentNumber = OriginalSegmentNumber then
         begin
-          result := Segment.NewSegmentNumber;
+          case Direction of
+            sdDownstream: result := Segment.NewSegmentNumber;
+            sdUpstream:
+              begin
+                if Segment.FSubSegmentList.Count = 0 then
+                begin
+                  result := Segment.NewSegmentNumber;
+                end
+                else
+                begin
+                  SubSeg := Segment.FSubSegmentList[
+                    Segment.FSubSegmentList.Count-1];
+                  Result := SubSeg.FSegmentNumber;
+                end;
+              end
+            else Assert(False);
+          end;
           Exit;
         end;
       end;
@@ -2813,7 +5163,7 @@ end;
 
 procedure TModflowSFR_Writer.WriteDataSet4b6a(StartTime: double;
   Segment: TSegment; ParamScreenObjectItem: TSfrParamIcalcItem;
-  SfrBoundary: TSfrBoundary; DataSet4B: boolean);
+  SfrBoundary: TSfrBoundary; DataSet4B: boolean; SubSegIndex: integer);
 var
   ICALC: Integer;
   FlowTable: TSfrFlowTableRecord;
@@ -2821,18 +5171,125 @@ var
   ChannelValues: TSfrChannelRecord;
   EqValues: TSfrEquationRecord;
   IUPSEG: Integer;
+  SubSeg: TSubSegment;
+  ParentSeg: TSegment;
+//  IsChildModel: Boolean;
+  FirstSegmentInParent: Boolean;
+  TotalParentSegLength: double;
+  ParentSubSegIndex: Integer;
+  ParentSubSeg: TSubSegment;
+  RUNOFF: Double;
+//  LgrUsed: Boolean;
+  PriorSubSeg: TSubSegment;
+  LocalPhastModel: TPhastModel;
+  ChildModelIndex: Integer;
+  LGRGRID: Integer;
+  LGRSEG: Integer;
+  OtherSubSegIndex: Integer;
+  NextSubSeg: TSubSegment;
+  ChildSeg: TSegment;
+  ChildSubSeg: TSubSegment;
 begin
+//  IsChildModel := Model is TChildModel;
+  SubSeg := nil;
+  if SubSegIndex >= 0 then
+  begin
+    SubSeg := Segment.FSubSegmentList[SubSegIndex];
+    if not SubSeg.Used then
+    begin
+      Exit;
+    end;
+  end;
+  if FIsChildModel then
+  begin
+    Assert(SubSeg <> nil);
+    Assert(SubSeg.FAssociatedLgrSubSeg <> nil);
+    ParentSeg := SubSeg.FAssociatedLgrSubSeg.FSegment;
+    Assert(ParentSeg <> nil);
+    FirstSegmentInParent :=
+      ParentSeg.FSubSegmentList[0] = SubSeg.FAssociatedLgrSubSeg;
+  end
+  else
+  begin
+    ParentSeg := Segment;
+    FirstSegmentInParent := False;
+  end;
+
   // data set 4b and 6a
   //  NSEG
-  WriteInteger(Segment.NewSegmentNumber);
+  if SubSegIndex >= 0 then
+  begin
+    Assert(SubSeg <> nil);
+    WriteInteger(SubSeg.FSegmentNumber);
+  end
+  else
+  begin
+    WriteInteger(Segment.NewSegmentNumber);
+  end;
+
   // ICALC
   ICALC := ParamScreenObjectItem.ICalc;
   WriteInteger(ICALC);
+
   // OUTSEG
-  WriteInteger(FindConvertedSegment(ParamScreenObjectItem.OutflowSegment));
+  if (SubSegIndex = Segment.FSubSegmentList.Count -1) then
+  begin
+    WriteInteger(FindConvertedSegment(ParamScreenObjectItem.OutflowSegment, sdDownstream));
+  end
+  else
+  begin
+    Assert(SubSeg <> nil);
+    if FIsChildModel then
+    begin
+      WriteInteger(SubSeg.FSegmentNumber+1);
+    end
+    else
+    begin
+      NextSubSeg := Segment.FSubSegmentList[SubSegIndex+1];
+      if NextSubSeg.Used then
+      begin
+        WriteInteger(SubSeg.FSegmentNumber+1);
+      end
+      else
+      begin
+        WriteInteger(FindConvertedSegment(ParamScreenObjectItem.OutflowSegment, sdDownstream));
+      end;
+    end;
+  end;
+
   // IUPSEG
-  IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment);
+  if SubSegIndex < 0 then
+  begin
+    IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment, sdUpstream);
+  end
+  else
+  begin
+    Assert(SubSeg <> nil);
+    if FIsChildModel then
+    begin
+      if FirstSegmentInParent then
+      begin
+        IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment, sdUpstream);
+      end
+      else
+      begin
+        IUPSEG := 0;
+      end;
+    end
+    else
+    begin
+      if SubSegIndex = 0 then
+      begin
+        IUPSEG := FindConvertedSegment(ParamScreenObjectItem.DiversionSegment, sdUpstream);
+      end
+      else
+      begin
+        IUPSEG := 0
+      end;
+    end;
+  end;
   WriteInteger(IUPSEG);
+
   if IUPSEG > 0 then
   begin
     // IPRIOR
@@ -2845,12 +5302,68 @@ begin
       StartTime);
     WriteInteger(Length(FlowTable.SfrFlowTableArray));
   end;
-  // FLOW
+
   SegmentFlow := SfrBoundary.SegmentFlows.GetFlowValuesFromTime(
     StartTime);
-  WriteFloat(SegmentFlow.Flow);
+
+  // FLOW
+  if SubSegIndex < 0 then
+  begin
+    WriteFloat(SegmentFlow.Flow);
+  end
+  else
+  begin
+    if FIsChildModel then
+    begin
+      if FirstSegmentInParent then
+      begin
+        WriteFloat(SegmentFlow.Flow);
+      end
+      else
+      begin
+        WriteFloat(0);
+      end;
+    end
+    else
+    begin
+      if SubSegIndex = 0 then
+      begin
+        WriteFloat(SegmentFlow.Flow);
+      end
+      else
+      begin
+        WriteFloat(0);
+      end;
+    end;
+  end;
+
   // RUNOFF
-  WriteFloat(SegmentFlow.Runnoff);
+  RUNOFF := SegmentFlow.Runnoff;
+  if SubSegIndex >= 0 then
+  begin
+    // Compute length of parent segment.
+    TotalParentSegLength := 0;
+    for ParentSubSegIndex := 0 to ParentSeg.FSubSegmentList.Count - 1 do
+    begin
+      ParentSubSeg := ParentSeg.FSubSegmentList[ParentSubSegIndex];
+      TotalParentSegLength := TotalParentSegLength + ParentSubSeg.FTotalLength;
+    end;
+
+    Assert(SubSeg <> nil);
+    if TotalParentSegLength > 0 then
+    begin
+      if FIsChildModel then
+      begin
+        RUNOFF := RUNOFF * SubSeg.FAssociatedLgrSubSeg.FTotalLength/TotalParentSegLength;
+      end
+      else
+      begin
+        RUNOFF := RUNOFF * SubSeg.FTotalLength/TotalParentSegLength;
+      end;
+    end;
+  end;
+  WriteFloat(RUNOFF);
+
   // ETSW
   WriteFloat(SegmentFlow.Evapotranspiration);
   // PPTSW
@@ -2881,6 +5394,69 @@ begin
     // BWDTH
     WriteFloat(EqValues.WidthExponent);
   end;
+
+  if FLgrUsed then
+  begin
+    Assert(SubSeg <> nil);
+    if FIsChildModel then
+    begin
+      if SubSeg.FAssociatedLgrSubSeg.FIndex = 0 then
+      begin
+        LGRGRID := 0;
+        LGRSEG := 0;
+      end
+      else
+      begin
+        LGRGRID := 1;
+        LGRSEG := SubSeg.FAssociatedLgrSubSeg.FSegmentNumber -1;
+        for OtherSubSegIndex := SubSegIndex-1 downto 0 do
+        begin
+          if SubSeg.FAssociatedLgrSubSeg.FSegmentNumber -1 = LGRSEG then
+          begin
+            LGRGRID := 0;
+            LGRSEG := 0;
+            break;
+          end;
+        end;
+      end;
+    end
+    else
+    begin
+      if SubSeg.FModel <> Model then
+      begin
+        LGRGRID := -1;
+        LGRSEG := 0;
+      end
+      else
+      begin
+        if SubSeg.FIndex > 0 then
+        begin
+          PriorSubSeg := Segment.FSubSegmentList[SubSeg.FIndex-1];
+          LocalPhastModel := TPhastModel(Model);
+          LGRGRID := 0;
+          for ChildModelIndex := 0 to LocalPhastModel.ChildModels.Count - 1 do
+          begin
+            if LocalPhastModel.ChildModels[ChildModelIndex].ChildModel = PriorSubSeg.FModel then
+            begin
+              LGRGRID := ChildModelIndex+2;
+              Break;
+            end;
+          end;
+          ChildSeg := PriorSubSeg.FAssociatedLgrSubSeg.FSegment;
+          ChildSubSeg := ChildSeg.SubSegmentList[ChildSeg.SubSegmentList.Count -1];
+          LGRSEG := ChildSubSeg.FSegmentNumber;
+        end
+        else
+        begin
+          LGRGRID := 0;
+          LGRSEG := 0;
+        end;
+      end;
+    end;
+    WriteInteger(LGRGRID);
+    WriteInteger(LGRSEG);
+  end;
+
   if DataSet4B then
   begin
     WriteString(' # Data Set 4b: ');
@@ -2912,12 +5488,16 @@ begin
   begin
     WriteString(' CDPTH FDPTH AWDTH BWDTH');
   end;
+  if FLgrUsed then
+  begin
+    WriteString(' LGRGRID LGRSEG');
+  end;
   NewLine;
 end;
 
 procedure TModflowSFR_Writer.WriteDataSet4c6b(Parameter: Boolean;
   SfrBoundary: TSfrBoundary; ParamScreenObjectItem: TSfrParamIcalcItem;
-  StartTime: double; StressPeriodIndex: integer);
+  StartTime: double; StressPeriodIndex: integer; Segment: TSegment; SubSegIndex: integer);
 var
   upstream: Boolean;
   CommentLine: string;
@@ -2925,6 +5505,9 @@ var
   UnsatUpstreamValues: TSfrUnsatSegmentStorage;
   ValuesWriten: boolean;
   ErrorObject: TScreenObject;
+  PSegValue: PSfrSegmentRecord;
+  SubSeg: TSubSegment;
+  PSegUnsatValue: PSfrUnsatSegmentRecord;
 begin
   upstream := True;
 
@@ -2940,7 +5523,7 @@ begin
   ValuesWriten := False;
 
   UpstreamValues := SfrBoundary.UpstreamSegmentValues.
-    GetBoundaryByStartTime(StartTime)
+    GetBoundaryByStartTime(StartTime, Model)
     as TSfrSegmentStorage;
   if UpstreamValues = nil then
   begin
@@ -2948,20 +5531,34 @@ begin
     frmErrorsAndWarnings.AddError(Model,
       StrInvalidStartingTimeStep1, ErrorObject.Name);
     Exit;
-//    raise EInvalidTime.Create(SfrBoundary.ScreenObject);
+  end;
+  if SubSegIndex < 0 then
+  begin
+    PSegValue := nil;
+    PSegUnsatValue := nil;
+  end
+  else
+  begin
+    SubSeg := Segment.FSubSegmentList[SubSegIndex];
+    if not SubSeg.Used then
+    begin
+      Exit;
+    end;
+    PSegValue := @(SubSeg.FUpstreamValues[StressPeriodIndex]);
+    PSegUnsatValue := @(SubSeg.FUpstreamUnsatValues[StressPeriodIndex]);
   end;
   WriteSegmentValues(StressPeriodIndex, Parameter, UpstreamValues,
-    upstream, CommentLine, ValuesWriten, ParamScreenObjectItem);
+    upstream, CommentLine, ValuesWriten, ParamScreenObjectItem, PSegValue);
 
   if (ISFROPT in [4,5]) and (StressPeriodIndex = 0) then
   begin
     if SfrBoundary.UpstreamUnsatSegmentValues.
-      BoundaryCount > 0 then
+      BoundaryCount[Model] > 0 then
     begin
       UnsatUpstreamValues := SfrBoundary.UpstreamUnsatSegmentValues.
-        Boundaries[0] as TSfrUnsatSegmentStorage;
+        Boundaries[0, Model] as TSfrUnsatSegmentStorage;
       WriteUnsatSegmentValues(upstream, CommentLine, ValuesWriten,
-        UnsatUpstreamValues);
+        UnsatUpstreamValues, PSegUnsatValue);
     end
     else
     begin
@@ -2980,7 +5577,7 @@ end;
 
 procedure TModflowSFR_Writer.WriteDataSet4d6c(Parameter: Boolean;
   SfrBoundary: TSfrBoundary; ParamScreenObjectItem: TSfrParamIcalcItem;
-  StartTime: double; StressPeriodIndex: integer);
+  StartTime: double; StressPeriodIndex: integer; Segment: TSegment; SubSegIndex: integer);
 var
   upstream: Boolean;
   CommentLine: string;
@@ -2988,6 +5585,9 @@ var
   UnsatDownstreamValues: TSfrUnsatSegmentStorage;
   ValuesWriten: boolean;
   ErrorObject: TScreenObject;
+  PSegValue: PSfrSegmentRecord;
+  SubSeg: TSubSegment;
+  PSegUnsatValue: PSfrUnsatSegmentRecord;
 begin
   upstream := False;
 
@@ -3003,7 +5603,7 @@ begin
   ValuesWriten:= False;
 
   DownstreamValues := SfrBoundary.DownstreamSegmentValues.
-    GetBoundaryByStartTime(StartTime)
+    GetBoundaryByStartTime(StartTime, Model)
     as TSfrSegmentStorage;
   if DownstreamValues = nil then
   begin
@@ -3011,20 +5611,34 @@ begin
     frmErrorsAndWarnings.AddError(Model,
       StrInvalidStartingTimeStep1, ErrorObject.Name);
     Exit;
-//    raise EInvalidTime.Create(SfrBoundary.ScreenObject);
+  end;
+  if SubSegIndex < 0 then
+  begin
+    PSegValue := nil;
+    PSegUnsatValue := nil;
+  end
+  else
+  begin
+    SubSeg := Segment.FSubSegmentList[SubSegIndex];
+    if not SubSeg.Used then
+    begin
+      Exit;
+    end;
+    PSegValue := @(SubSeg.FDownstreamValues[StressPeriodIndex]);
+    PSegUnsatValue := @(SubSeg.FDownstreamUnsatValues[StressPeriodIndex]);
   end;
   WriteSegmentValues(StressPeriodIndex, Parameter, DownstreamValues,
-    upstream, CommentLine, ValuesWriten, ParamScreenObjectItem);
+    upstream, CommentLine, ValuesWriten, ParamScreenObjectItem, PSegValue);
 
   if (ISFROPT in [4,5]) and (StressPeriodIndex = 0) then
   begin
     if SfrBoundary.DownstreamUnsatSegmentValues.
-      BoundaryCount > 0 then
+      BoundaryCount[Model] > 0 then
     begin
       UnsatDownstreamValues := SfrBoundary.DownstreamUnsatSegmentValues.
-        Boundaries[0] as TSfrUnsatSegmentStorage;
+        Boundaries[0, Model] as TSfrUnsatSegmentStorage;
       WriteUnsatSegmentValues(upstream, CommentLine, ValuesWriten,
-        UnsatDownstreamValues);
+        UnsatDownstreamValues, PSegUnsatValue);
     end
     else
     begin
@@ -3042,8 +5656,20 @@ begin
 end;
 { TSegment }
 
+function TSegment.AddSubSegment(AModel: TBaseModel; StressPeriodCount: integer): TSubSegment;
+begin
+  Result := TSubSegment.Create(AModel, self, StressPeriodCount);
+  Result.FIndex := FSubSegmentList.Add(Result);
+end;
+
+constructor TSegment.Create;
+begin
+  FSubSegmentList:= TSubSegmentList.Create;
+end;
+
 destructor TSegment.Destroy;
 begin
+  FSubSegmentList.Free;
   FReaches.Free;
 end;
 
@@ -3117,6 +5743,51 @@ function TSegment.OriginalSegmentNumber: integer;
 begin
   Assert(FScreenObject.ModflowSfrBoundary <> nil);
   result := FScreenObject.ModflowSfrBoundary.SegementNumber;
+end;
+
+{ TSubSegment }
+
+function TSubSegment.AddReach(AReach: TSfr_Cell): Integer;
+begin
+  Result := FReachList.Add(AReach);
+  FTotalLength := FTotalLength + AReach.LgrReachLength;
+  if AReach.ReachLength > 0 then
+  begin
+    FUsed := True;
+  end;
+end;
+
+constructor TSubSegment.Create(AModel: TBaseModel; ASegment: TSegment; StressPeriodCount: integer);
+begin
+  FSegment := ASegment;
+  FModel := AModel;
+  FReachList := TReachList.Create;
+  FUsed := False;
+  SetLength(FUpstreamValues, StressPeriodCount);
+  SetLength(FDownstreamValues, StressPeriodCount);
+  SetLength(FUpstreamUnsatValues, StressPeriodCount);
+  SetLength(FDownstreamUnsatValues, StressPeriodCount);
+end;
+
+procedure TSubSegment.DeleteReach(Index: Integer);
+begin
+  FReachList.Delete(Index);
+end;
+
+destructor TSubSegment.Destroy;
+begin
+  FReachList.Free;
+  inherited;
+end;
+
+function TSubSegment.GetReach(Index: Integer): TSfr_Cell;
+begin
+  Result := FReachList[Index];
+end;
+
+function TSubSegment.ReachCount: integer;
+begin
+  Result := FReachList.Count;
 end;
 
 end.

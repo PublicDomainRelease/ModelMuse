@@ -1906,21 +1906,17 @@ begin
       frmScreenObjectProperties.ClearExpressionsAndVariables;
     end;
     CancelCurrentScreenObject;
-    if frmShowHideObjects <> nil then
-    begin
-      frmShowHideObjects.Close;
-    end;
+
+    // Hiding instead of freeing these other forms can cause
+    // TfrmStartUp.ShowModal to fail.
+    FreeAndNil(frmShowHideObjects);
     FreeAndNil(frmGridColor);
     FreeAndNil(frmHeadObservationResults);
+    FreeAndNil(frmGridValue);
+    FreeFrmSelectedObjects;
+    FreeAndNil(frmGridColor);
+    FreeAndNil(frmContourData);
 
-    if frmGridValue <> nil then
-    begin
-      frmGridValue.Close;
-    end;
-    if frmSelectedObjects <> nil then
-    begin
-      frmSelectedObjects.Close;
-    end;
     MostRecentlyUsed.FileToIgnore := '';
     MostRecentlyUsed.Capacity := 4;
     {FileNewExecute creates a new model.}
@@ -4029,6 +4025,10 @@ var
   RealCenterPoint: TPoint2D;
   CenterPoint: TPoint;
 begin
+  if Grid = nil then
+  begin
+    Exit;
+  end;
   CenterPoint.x := frameTopView.ZoomBox.Width div 2;
   CenterPoint.Y := frameTopView.ZoomBox.Height div 2;
   RealCenterPoint.x := frameTopView.ZoomBox.X(CenterPoint.x);
@@ -6472,6 +6472,12 @@ begin
         PhastModel.FormulaManager.FixSubscriptions;
         PhastModel.UpdateChildGrids;
         PhastModel.UpdateDataSetConnections;
+
+        // Update the selected column, row, and layer for LGR models.
+        PhastModel.CombinedDisplayColumn := PhastModel.CombinedDisplayColumn;
+        PhastModel.CombinedDisplayRow := PhastModel.CombinedDisplayRow;
+        PhastModel.CombinedDisplayLayer := PhastModel.CombinedDisplayLayer;
+
         miObservations.Checked := PhastModel.ObservationPurpose = ofObserved;
         miPredictions.Checked := PhastModel.ObservationPurpose = ofPredicted;
 
@@ -7751,6 +7757,7 @@ end;
 function TfrmGoPhast.CheckModel: boolean;
 var
   ModalResult: integer;
+  FileName: TFileName;
 begin
   if PhastModel.UpToDate then
   begin
@@ -7758,8 +7765,13 @@ begin
   end
   else
   begin
+    FileName := sdSaveDialog.FileName;
+    if FileName = '' then
+    begin
+      FileName := 'your model';
+    end;
     ModalResult :=
-      MessageDlg('Do you want to save the changes you made to your model?',
+      MessageDlg(Format('Do you want to save the changes you made to %s?', [FileName]),
       mtConfirmation, [mbYes, mbNo, mbCancel], 0);
     if ModalResult = mrYes then
     begin
@@ -8191,13 +8203,13 @@ begin
       frmProgressMM.BringToFront;
     end;
   end;
-  if frmSelectedObjects <> nil then
-  begin
+//  if frmSelectedObjects <> nil then
+//  begin
     if frmSelectedObjects.Visible then
     begin
       frmSelectedObjects.BringToFront;
     end;
-  end;
+//  end;
   if frmColors <> nil then
   begin
     if frmColors.Visible then

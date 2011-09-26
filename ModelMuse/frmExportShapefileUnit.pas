@@ -569,7 +569,7 @@ begin
                 SetLength(Shape.FMArray, Shape.FNumPoints);
                 Element := LocalGrid.ElementCoordinates[
                   Edge.Col1, Edge.Row1, Edge.Layer];
-                StartingIndex := -1;
+//                StartingIndex := -1;
                 if Edge.Col1 = Edge.Col2 then
                 begin
                   if Edge.Row1 < Edge.Row2 then
@@ -583,7 +583,6 @@ begin
                 end
                 else
                 begin
-                  Assert(Edge.Row1 = Edge.Row2);
                   if Edge.Col1 < Edge.Col2 then
                   begin
                     StartingIndex := 2;
@@ -592,6 +591,7 @@ begin
                   begin
                     StartingIndex := 6;
                   end;
+                  Assert(Edge.Row1 = Edge.Row2);
                 end;
 
                 for PointIndex := 0 to 2 do
@@ -1057,6 +1057,10 @@ begin
       for TimeListIndex := 0 to TimeLists.Count - 1 do
       begin
         TimeList := TimeLists[TimeListIndex];
+        if TimeList.Count = 0 then
+        begin
+          Continue;
+        end;
         for TimeIndex := 0 to RealList.Count - 1 do
         begin
           TimeValue := RealList[TimeIndex];

@@ -51,8 +51,6 @@ type
       }
   TErrorType = (etError, etWarning);
 
-  TEvaluationType = (etExport, etDisplay);
-
   { @name is an abstract base class used as an ancestor for classes that
     write MODFLOW input files.
   }
@@ -689,6 +687,9 @@ resourcestring
   ' the object does not set the values of either enclosed or intersected cel' +
   'ls.';
   StrEvaluatingSData = 'Evaluating %s data.';
+  StrNoDefinedBoundarie = 'No defined boundaries in %s.';
+  StrTheSPackageHasB = 'The %s package has been activated but no boundaries ' +
+  'for it have been defined.';
 
 var
 //  NameFile: TStringList;
@@ -1684,7 +1685,10 @@ var
   List: TList;
   Boundary: TModflowBoundary;
   NoAssignmentErrorRoot: string;
+  NoDefinedErrorRoot: string;
 begin
+  NoDefinedErrorRoot := Format(StrNoDefinedBoundarie, [Package.PackageIdentifier]);
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, NoDefinedErrorRoot);
   NoAssignmentErrorRoot := Format(StrNoBoundaryConditio, [Package.PackageIdentifier]);
 //  NoAssignmentErrorRoot := 'No boundary conditions assigned to the '
 //    + Package.PackageIdentifier
@@ -1737,6 +1741,11 @@ begin
     begin
       List.Add(TValueCellList.Create(CellType))
     end;
+  end;
+  if (FParamValues.Count = 0) and (FValues.Count = 0) then
+  begin
+    frmErrorsAndWarnings.AddError(Model, NoDefinedErrorRoot,
+      Format(StrTheSPackageHasB, [Package.PackageIdentifier]));
   end;
 end;
 

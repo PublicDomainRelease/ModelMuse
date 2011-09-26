@@ -330,6 +330,9 @@ begin
 end;
 
 procedure TCustomUndoChangeParameters.DoCommand;
+var
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   inherited;
   frmGoPhast.PhastModel.ModflowSteadyParameters.ClearNewDataSets;
@@ -340,6 +343,11 @@ begin
   frmGoPhast.PhastModel.HufParameters := FNewHufModflowParameters;
   frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances :=
     FNewSfrParamInstances;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    ChildModel.ModflowPackages.SfrPackage.ParameterInstances := FNewSfrParamInstances;
+  end;
   UpdatedRequiredDataSets;
 end;
 
@@ -348,6 +356,8 @@ var
   ScreenObjectIndex: Integer;
   ScreenObject: TScreenObject;
   OldBoundary: TModflowBoundaries;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   inherited;
   frmGoPhast.PhastModel.ModflowSteadyParameters  := FOldSteadyParameters;
@@ -358,6 +368,11 @@ begin
   frmGoPhast.PhastModel.HufParameters := FOldHufModflowParameters;
   frmGoPhast.PhastModel.ModflowPackages.SfrPackage.ParameterInstances :=
     FOldSfrParamInstances;
+  for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+  begin
+    ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+    ChildModel.ModflowPackages.SfrPackage.ParameterInstances := FOldSfrParamInstances;
+  end;
   UpdatedRequiredDataSets;
   for ScreenObjectIndex := 0 to FScreenObjects.Count - 1 do
   begin

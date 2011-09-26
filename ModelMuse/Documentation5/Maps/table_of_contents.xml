@@ -777,8 +777,8 @@
         <topicref type="topic" id="393875091652728" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2007-11-01T16:29:27.140Z" icon="0" href="Properties_Tab">
           <caption translate="true">Properties Tab</caption>
         </topicref>
-        <topicref type="topic" id="406266656597295" build="ALL" modified="2011-03-24T12:25:16.828Z" icon="0" href="LGR_tab">
-          <caption translate="true">LGR tab</caption>
+        <topicref type="topic" id="406266656597295" build="ALL" modified="2011-09-06T16:30:07.734Z" icon="0" href="LGR_tab">
+          <caption translate="true">LGR Tab</caption>
         </topicref>
         <topicref type="topic" id="393878513976869" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2007-11-01T16:37:04.406Z" icon="0" href="Data_Sets_Tab">
           <caption translate="true">Data Sets Tab</caption>
@@ -991,6 +991,9 @@
     </topicref>
     <topicref type="topic" id="393881261936815" build="ALL" modified="2007-11-02T08:02:53.859Z" icon="0" href="Model">
       <caption translate="true">Model</caption>
+      <topicref type="topic" id="407926550309394" build="ALL" modified="2011-09-06T15:54:29.663Z" icon="0" href="About_MODFLOW-LGR">
+        <caption translate="true">About MODFLOW-LGR</caption>
+      </topicref>
       <topicref type="topic" id="393915385033727" build="ALL" modified="2008-06-19T16:37:09.204Z" icon="0">
         <caption translate="true">MODFLOW Dialog Boxes</caption>
         <topicref type="topic" id="393935341471164" build="ALL" modified="2008-10-24T20:23:06.875Z" icon="0" href="MODFLOW_Packages_Dialog_Box">

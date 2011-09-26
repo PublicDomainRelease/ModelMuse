@@ -210,6 +210,7 @@ begin
   begin
     Sfr := TSfrParamIcalcItem(AnotherItem);
     result := (Param = Sfr.Param)
+      and (ParamInstance = Sfr.ParamInstance)
       and (ICalc = Sfr.ICalc)
       and (OutflowSegment = Sfr.OutflowSegment)
       and (DiversionSegment = Sfr.DiversionSegment)

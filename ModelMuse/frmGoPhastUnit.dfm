@@ -23,7 +23,7 @@ inherited frmGoPhast: TfrmGoPhast
   TextHeight = 18
   object splitHoriz: TJvNetscapeSplitter
     Left = 0
-    Top = 390
+    Top = 410
     Width = 737
     Height = 10
     Cursor = crVSplit
@@ -41,7 +41,7 @@ inherited frmGoPhast: TfrmGoPhast
     Left = 0
     Top = 68
     Width = 737
-    Height = 322
+    Height = 342
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
@@ -49,7 +49,7 @@ inherited frmGoPhast: TfrmGoPhast
     object splitVertTop: TJvNetscapeSplitter
       Left = 498
       Top = 0
-      Height = 322
+      Height = 342
       Hint = 'Click and drag to resize the windows.'
       Align = alRight
       MinSize = 1
@@ -65,16 +65,16 @@ inherited frmGoPhast: TfrmGoPhast
       Left = 0
       Top = 0
       Width = 498
-      Height = 322
+      Height = 342
       HorzScrollBar.Range = 36
       VertScrollBar.Range = 40
       Align = alClient
       TabOrder = 0
       TabStop = True
       ExplicitWidth = 498
-      ExplicitHeight = 322
+      ExplicitHeight = 342
       inherited rulVertical: TRbwRuler
-        Height = 268
+        Height = 288
         ExplicitTop = 39
         ExplicitHeight = 173
       end
@@ -88,7 +88,7 @@ inherited frmGoPhast: TfrmGoPhast
       end
       inherited ZoomBox: TQRbwZoomBox2
         Width = 449
-        Height = 268
+        Height = 288
         Image32.Top = 0
         Image32.Width = 449
         Image32.Height = 268
@@ -106,7 +106,7 @@ inherited frmGoPhast: TfrmGoPhast
       Left = 508
       Top = 0
       Width = 229
-      Height = 322
+      Height = 342
       HorzScrollBar.Range = 35
       VertScrollBar.Range = 39
       Align = alRight
@@ -114,10 +114,10 @@ inherited frmGoPhast: TfrmGoPhast
       TabStop = True
       ExplicitLeft = 508
       ExplicitWidth = 229
-      ExplicitHeight = 322
+      ExplicitHeight = 342
       inherited rulVertical: TRbwRuler
         Left = 180
-        Height = 268
+        Height = 288
         Align = alRight
         RulerPosition = rpRight
         ExplicitLeft = 194
@@ -151,7 +151,7 @@ inherited frmGoPhast: TfrmGoPhast
       inherited ZoomBox: TQRbwZoomBox2
         Left = 0
         Width = 180
-        Height = 268
+        Height = 288
         ExaggerationDirection = edHorizontal
         HorizontalDirection = hdLeft
         Image32.Top = 0
@@ -171,7 +171,7 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 400
+    Top = 420
     Width = 737
     Height = 133
     Align = alBottom
@@ -276,7 +276,7 @@ inherited frmGoPhast: TfrmGoPhast
   end
   object sbMain: TStatusBar
     Left = 0
-    Top = 533
+    Top = 553
     Width = 737
     Height = 28
     Hint = 'Drag with the mouse to resize status bar panels'
@@ -300,6 +300,7 @@ inherited frmGoPhast: TfrmGoPhast
     OnMouseMove = sbMainMouseMove
     OnMouseUp = sbMainMouseUp
     OnDrawPanel = sbMainDrawPanel
+    ExplicitTop = 533
   end
   object cbControlBar: TControlBar
     Left = 0

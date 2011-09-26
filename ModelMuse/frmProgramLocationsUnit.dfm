@@ -15,7 +15,6 @@ inherited frmProgramLocations: TfrmProgramLocations
     Height = 41
     Align = alBottom
     TabOrder = 0
-    ExplicitTop = 410
     DesignSize = (
       623
       41)
@@ -25,9 +24,12 @@ inherited frmProgramLocations: TfrmProgramLocations
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnOK: TBitBtn
       Left = 447
@@ -35,9 +37,12 @@ inherited frmProgramLocations: TfrmProgramLocations
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 535
@@ -45,8 +50,11 @@ inherited frmProgramLocations: TfrmProgramLocations
       Width = 83
       Height = 27
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
   end
   object Panel1: TPanel
@@ -56,7 +64,6 @@ inherited frmProgramLocations: TfrmProgramLocations
     Height = 445
     Align = alClient
     TabOrder = 1
-    ExplicitHeight = 410
     DesignSize = (
       623
       445)
@@ -152,11 +159,11 @@ inherited frmProgramLocations: TfrmProgramLocations
     object JvHTLabel2: TJvHTLabel
       Left = 100
       Top = 285
-      Width = 332
+      Width = 290
       Height = 19
       Caption = 
-        '<a href="http://water.usgs.gov/nrp/gwsoftware/zonebud3/zonebudge' +
-        't3.html">http://water.usgs.gov/nrp/gwsoftware/ModelMate</a>'
+        '<a href="http://water.usgs.gov/software/ModelMate/">http://water' +
+        '.usgs.gov/software/ModelMate/</a>'
     end
     object lblModflowNWT: TLabel
       Left = 16

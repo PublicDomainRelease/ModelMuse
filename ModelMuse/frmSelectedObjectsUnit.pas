@@ -36,15 +36,32 @@ type
     { Public declarations }
   end;
 
-var
-  // @name is the instance of @link(TfrmSelectedObjects) used in GoPhast.
-  frmSelectedObjects: TfrmSelectedObjects;
+  function frmSelectedObjects: TfrmSelectedObjects;
+  procedure FreeFrmSelectedObjects;
 
 implementation
 
 uses frmGoPhastUnit, ScreenObjectUnit, ModelMuseUtilities;
 
 {$R *.dfm}
+
+var
+  // @name is the instance of @link(TfrmSelectedObjects) used in GoPhast.
+  FfrmSelectedObjects: TfrmSelectedObjects;
+
+function frmSelectedObjects: TfrmSelectedObjects;
+begin
+  if FfrmSelectedObjects = nil then
+  begin
+    FfrmSelectedObjects := TfrmSelectedObjects.Create(nil);
+  end;
+  result := FfrmSelectedObjects;
+end;
+
+procedure FreeFrmSelectedObjects;
+begin
+  FreeAndNil(FfrmSelectedObjects);
+end;
 
 { TfrmSelectedObjects }
 
@@ -76,6 +93,11 @@ begin
     AdjustFormPosition(dpLeft);
   end;
 end;
+
+initialization
+
+finalization
+  FfrmSelectedObjects.Free;
 
 end.
 

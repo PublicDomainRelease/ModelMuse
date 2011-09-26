@@ -232,13 +232,13 @@ type
       AModel: TBaseModel); override;
     procedure InitializeTimeLists(ListOfTimeLists: TList;
       AModel: TBaseModel); override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
 
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
     class function ItemClass: TMF_BoundItemClass; override;
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
     property PhastModel: TBaseModel read GetPhastModel;
   end;
 
@@ -940,9 +940,9 @@ end;
 
 { TMnw2Boundary }
 
-procedure TMnw2SpatialCollection.AddSpecificBoundary;
+procedure TMnw2SpatialCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TMnw2Storage.Create);
+  AddBoundary(TMnw2Storage.Create(AModel));
 end;
 
 procedure TMnw2SpatialCollection.AssignCellValues(DataSets: TList;
@@ -1030,7 +1030,7 @@ begin
   end;
 
   BoundaryIndex := -1;
-  BoundaryStorage := Boundaries[ItemIndex] as TMnw2Storage;
+  BoundaryStorage := Boundaries[ItemIndex, AModel] as TMnw2Storage;
 
   UsedCells := T3DSparseIntegerArray.Create(SPASmall);
   try
@@ -1332,7 +1332,7 @@ begin
   end;
   ALink := TimeListLink.GetLink(AModel) as TMnw2TimeListLink;
   WellRadiusData := ALink.FWellRadiusData;
-  WellRadiusData.Initialize(BoundaryValues, ScreenObject, False, alAll);
+  WellRadiusData.Initialize(BoundaryValues, ScreenObject, lctIgnore, alAll);
 
   ItemUsed := LossType  = mltSkin;
   for Index := 0 to Count - 1 do
@@ -1349,7 +1349,7 @@ begin
     end;
   end;
   SkinRadiusData := ALink.FSkinRadiusData;
-  SkinRadiusData.Initialize(BoundaryValues, ScreenObject, False, alAll);
+  SkinRadiusData.Initialize(BoundaryValues, ScreenObject, lctIgnore, alAll);
 
   ItemUsed := LossType  = mltSkin;
   for Index := 0 to Count - 1 do
@@ -1366,7 +1366,7 @@ begin
     end;
   end;
   SkinKData := ALink.FSkinKData;
-  SkinKData.Initialize(BoundaryValues, ScreenObject, False, alAll);
+  SkinKData.Initialize(BoundaryValues, ScreenObject, lctIgnore, alAll);
 
   ItemUsed := LossType  = mltEquation;
   for Index := 0 to Count - 1 do
@@ -1384,7 +1384,7 @@ begin
   end;
   BData := ALink.FBData;
   BData.Initialize(BoundaryValues, ScreenObject,
-    False, alAll);
+    lctIgnore, alAll);
 
   ItemUsed := LossType  = mltEquation;
   for Index := 0 to Count - 1 do
@@ -1402,7 +1402,7 @@ begin
   end;
   CData := ALink.FCData;
   CData.Initialize(BoundaryValues, ScreenObject,
-    False, alAll);
+    lctIgnore, alAll);
 
   ItemUsed := LossType  = mltEquation;
   for Index := 0 to Count - 1 do
@@ -1420,7 +1420,7 @@ begin
   end;
   PData := ALink.FPData;
   PData.Initialize(BoundaryValues, ScreenObject,
-    False, alAll);
+    lctIgnore, alAll);
 
   ItemUsed := LossType  = mtlSpecify;
   for Index := 0 to Count - 1 do
@@ -1438,7 +1438,7 @@ begin
   end;
   CellToWellConductanceData := ALink.FCellToWellConductanceData;
   CellToWellConductanceData.Initialize(BoundaryValues, ScreenObject,
-    False, alAll);
+    lctIgnore, alAll);
 
 
   ItemUsed := Boundary.PartialPenetrationCorrection;
@@ -1457,7 +1457,7 @@ begin
   end;
   PartialPenetrationData := ALink.FPartialPenetrationData;
   PartialPenetrationData.Initialize(BoundaryValues, ScreenObject,
-    False, alAll);
+    lctIgnore, alAll);
 
 
 
@@ -1469,11 +1469,11 @@ begin
   Assert(PData.Count = Count);
   Assert(CellToWellConductanceData.Count = Count);
   Assert(PartialPenetrationData.Count = Count);
-  ClearBoundaries;
-  SetBoundaryCapacity(WellRadiusData.Count);
+  ClearBoundaries(AModel);
+  SetBoundaryCapacity(WellRadiusData.Count, AModel);
   for TimeIndex := 0 to WellRadiusData.Count - 1 do
   begin
-    AddBoundary(TMnw2Storage.Create);
+    AddBoundary(TMnw2Storage.Create(AModel));
   end;
   ListOfTimeLists.Add(WellRadiusData);
   ListOfTimeLists.Add(SkinRadiusData);
@@ -1759,9 +1759,9 @@ begin
 end;
 
 procedure TMnw2SpatialCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TMnw2Storage).FMnw2Array, BoundaryCount);
+  SetLength((Boundaries[ItemIndex, AModel] as TMnw2Storage).FMnw2Array, BoundaryCount);
   inherited;
 end;
 
@@ -1970,9 +1970,9 @@ begin
 //  ValueCount := 0;
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    if ValueIndex < Values.BoundaryCount then
+    if ValueIndex < Values.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := Values.Boundaries[ValueIndex] as TMnw2Storage;
+      BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TMnw2Storage;
       AssignCells(BoundaryStorage, ValueTimeList, AModel);
 //      Inc(ValueCount);
     end;

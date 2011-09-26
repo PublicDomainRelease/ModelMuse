@@ -98,7 +98,7 @@ type
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
     function AdjustedFormula(FormulaIndex, ItemIndex: integer): string; override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
 
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
@@ -109,7 +109,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
     procedure InvalidateModel; override;
     procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
@@ -314,9 +314,9 @@ end;
 
 { TWellCollection }
 
-procedure TWellCollection.AddSpecificBoundary;
+procedure TWellCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TWellStorage.Create);
+  AddBoundary(TWellStorage.Create(AModel));
 end;
 
 procedure TWellCollection.AssignCellList(Expression: TExpression;
@@ -553,9 +553,9 @@ begin
 end;
 
 procedure TWellCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TWellStorage).FWellArray, BoundaryCount);
+  SetLength((Boundaries[ItemIndex, AModel] as TWellStorage).FWellArray, BoundaryCount);
   inherited;
 end;
 
@@ -758,9 +758,9 @@ begin
   EvaluateListBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    if ValueIndex < Values.BoundaryCount then
+    if ValueIndex < Values.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := Values.Boundaries[ValueIndex] as TWellStorage;
+      BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TWellStorage;
       AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;
@@ -780,9 +780,9 @@ begin
     end;
     for ValueIndex := 0 to Param.Param.Count - 1 do
     begin
-      if ValueIndex < Param.Param.BoundaryCount then
+      if ValueIndex < Param.Param.BoundaryCount[AModel] then
       begin
-        BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TWellStorage;
+        BoundaryStorage := Param.Param.Boundaries[ValueIndex, AModel] as TWellStorage;
         AssignCells(BoundaryStorage, Times, AModel);
       end;
     end;
@@ -804,9 +804,9 @@ begin
   EvaluateListBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    if ValueIndex < Values.BoundaryCount then
+    if ValueIndex < Values.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := Values.Boundaries[ValueIndex] as TWellStorage;
+      BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TWellStorage;
       AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;
@@ -826,9 +826,9 @@ begin
     end;
     for ValueIndex := 0 to Param.Param.Count - 1 do
     begin
-      if ValueIndex < Param.Param.BoundaryCount then
+      if ValueIndex < Param.Param.BoundaryCount[AModel] then
       begin
-        BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TWellStorage;
+        BoundaryStorage := Param.Param.Boundaries[ValueIndex, AModel] as TWellStorage;
         AssignCells(BoundaryStorage, Times, AModel);
       end;
     end;

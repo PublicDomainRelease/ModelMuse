@@ -40,16 +40,12 @@ inherited frmGridValue: TfrmGridValue
     Top = 0
     Width = 406
     Height = 467
-    ActivePage = tabCurrentData
+    ActivePage = tabEndPoint
     Align = alTop
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 2
     object tabCurrentData: TTabSheet
       Caption = 'Current Data'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         398
         434)
@@ -211,10 +207,6 @@ inherited frmGridValue: TfrmGridValue
     object tabAllDataSets: TTabSheet
       Caption = 'All Data Sets'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         398
         434)
@@ -316,10 +308,6 @@ inherited frmGridValue: TfrmGridValue
     object tabPathline: TTabSheet
       Caption = 'Pathline'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object rdgPathline: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -425,6 +413,140 @@ inherited frmGridValue: TfrmGridValue
             WordWrapCells = False
             AutoAdjustColWidths = True
           end>
+      end
+    end
+    object tabEndPoint: TTabSheet
+      Caption = 'End Point'
+      ImageIndex = 3
+      object rdgEndPoints: TRbwDataGrid4
+        Left = 0
+        Top = 0
+        Width = 398
+        Height = 328
+        Align = alClient
+        ColCount = 3
+        FixedCols = 1
+        RowCount = 12
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
+        TabOrder = 0
+        ExtendedAutoDistributeText = False
+        AutoMultiEdit = True
+        AutoDistributeText = False
+        AutoIncreaseColCount = False
+        AutoIncreaseRowCount = False
+        SelectedRowOrColumnColor = clAqua
+        UnselectableColor = clBtnFace
+        ColorRangeSelection = False
+        ColorSelectedRow = True
+        Columns = <
+          item
+            AutoAdjustRowHeights = False
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -11
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = False
+            ComboUsed = False
+            Format = rcf4String
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = False
+            WordWrapCells = False
+            AutoAdjustColWidths = True
+          end
+          item
+            AutoAdjustRowHeights = False
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -11
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = False
+            ComboUsed = False
+            Format = rcf4String
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = False
+            WordWrapCells = False
+            AutoAdjustColWidths = True
+          end
+          item
+            AutoAdjustRowHeights = False
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -11
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = False
+            ComboUsed = False
+            Format = rcf4String
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = False
+            WordWrapCells = False
+            AutoAdjustColWidths = True
+          end>
+      end
+      object pnlEndPoints: TPanel
+        Left = 0
+        Top = 328
+        Width = 398
+        Height = 106
+        Align = alBottom
+        TabOrder = 1
+        ExplicitTop = 332
+        object lbledtReleaseTime: TLabeledEdit
+          Left = 136
+          Top = 6
+          Width = 121
+          Height = 26
+          EditLabel.Width = 92
+          EditLabel.Height = 18
+          EditLabel.Caption = 'Release time'
+          LabelPosition = lpLeft
+          ReadOnly = True
+          TabOrder = 0
+        end
+        object lbledtTerminationCode: TLabeledEdit
+          Left = 136
+          Top = 38
+          Width = 121
+          Height = 26
+          EditLabel.Width = 121
+          EditLabel.Height = 18
+          EditLabel.Caption = 'Termination code'
+          LabelPosition = lpLeft
+          ReadOnly = True
+          TabOrder = 1
+        end
+        object lbledtTrackingTime: TLabeledEdit
+          Left = 136
+          Top = 70
+          Width = 121
+          Height = 26
+          EditLabel.Width = 94
+          EditLabel.Height = 18
+          EditLabel.Caption = 'Tracking time'
+          LabelPosition = lpLeft
+          ReadOnly = True
+          TabOrder = 2
+        end
       end
     end
   end

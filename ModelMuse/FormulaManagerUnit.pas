@@ -575,7 +575,13 @@ begin
     FParser := Value;
     if (FParser <> nil) and (FFormula <> '') then
     begin
+      try
       CompileFormula(FFormula);
+      except on ERbwParserError do
+        begin
+          // ignore.
+        end;
+      end;
     end;
   end;
 end;

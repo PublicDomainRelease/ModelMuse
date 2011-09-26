@@ -11,24 +11,25 @@ inherited frmSelectedObjects: TfrmSelectedObjects
   ExplicitWidth = 220
   ExplicitHeight = 274
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object lbSelected: TListBox
     Left = 0
     Top = 0
     Width = 212
-    Height = 194
+    Height = 188
     Align = alClient
     ItemHeight = 17
     TabOrder = 0
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 194
+    Top = 188
     Width = 212
     Height = 46
     Align = alBottom
     ParentColor = True
     TabOrder = 1
+    ExplicitTop = 194
     DesignSize = (
       212
       46)
@@ -38,8 +39,11 @@ inherited frmSelectedObjects: TfrmSelectedObjects
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 1
+      DoubleBuffered = True
       Kind = bkClose
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 1
     end
     object btnHelp: TBitBtn
       Left = 20
@@ -47,9 +51,12 @@ inherited frmSelectedObjects: TfrmSelectedObjects
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
   end
 end

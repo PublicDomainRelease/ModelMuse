@@ -411,15 +411,15 @@ begin
       AScreenObject.CopyPoints(InputPoints, 0,
         AScreenObject.SectionStart[SectionIndex], CopyCount);
       ConvexHull2(InputPoints, InputOrientation, OutputPoints);
-      PointPosition := 0;
+//      PointPosition := 0;
       if InputOrientation = Clockwise then
       begin
         PointPosition := 0;
       end
       else
       begin
-        Assert(InputOrientation = CounterClockwise);
         PointPosition := AScreenObject.SectionLength[SectionIndex] - 1;
+        Assert(InputOrientation = CounterClockwise);
       end;
 
       Shape.FNumPoints := AScreenObject.SectionLength[SectionIndex];
@@ -544,7 +544,7 @@ begin
           InputPoints[PointIndex].y := GpcPoint.y;
         end;
         ConvexHull2(InputPoints, InputDirection, OutputPoints);
-        PointDirection := pdIncrement;
+//        PointDirection := pdIncrement;
         if IntersectPolygon.Holes[SectionIndex] then
         begin
           if InputDirection = ClockWise then
@@ -553,8 +553,8 @@ begin
           end
           else
           begin
-            Assert(InputDirection = counterClockWise);
             PointDirection := pdIncrement;
+            Assert(InputDirection = counterClockWise);
           end;
         end
         else
@@ -565,8 +565,8 @@ begin
           end
           else
           begin
-            Assert(InputDirection = counterClockWise);
             PointDirection := pdDecrement;
+            Assert(InputDirection = counterClockWise);
           end;
         end;
         PointPosition := -1;

@@ -15,6 +15,21 @@
   <topicref type="topic" id="390944514596975" build="ALL" modified="2007-01-12T09:10:14.436Z" icon="0" href="Suggestions_on_Compiling">
     <caption translate="true">Suggestions on Compiling</caption>
   </topicref>
+  <topicref type="topic" id="407708224323018" build="INSIDE-MODFLOW" modified="2011-09-12T09:18:18.064Z" icon="0" href="Inside_MODFLOW">
+    <caption translate="true">Inside MODFLOW</caption>
+    <topicref type="topic" id="407715312074288" build="INSIDE-MODFLOW" modified="2011-09-12T09:18:31.348Z" icon="0" href="Basic_Package_Internal">
+      <caption translate="true">Basic Package</caption>
+    </topicref>
+    <topicref type="topic" id="40772599504275" build="INSIDE-MODFLOW" modified="2011-09-12T09:18:31.348Z" icon="0" href="Hydrogeologic_Unit_Flow_Package_Internal">
+      <caption translate="true">Hydrogeologic Unit Flow Package</caption>
+    </topicref>
+    <topicref type="topic" id="407725700265429" build="INSIDE-MODFLOW" modified="2011-09-12T09:18:31.348Z" icon="0" href="Layer_Property_Flow_Package_Internal">
+      <caption translate="true">Layer Property Flow Package</caption>
+    </topicref>
+    <topicref type="topic" id="407886727237904" build="INSIDE-MODFLOW" modified="2011-09-12T09:18:31.348Z" icon="0" href="Stream_Flow_Routing_Package_Internal">
+      <caption translate="true">Stream Flow Routing Package</caption>
+    </topicref>
+  </topicref>
   <topicref type="topic" id="390743713404158" build="ALL" modified="2006-12-24T08:32:43.923Z" icon="0" href="Miscellaneous">
     <caption translate="true">Miscellaneous</caption>
   </topicref>

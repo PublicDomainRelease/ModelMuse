@@ -6,12 +6,16 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ScreenObjectUnit,
   ComCtrls, DataSetUnit, VirtualTrees, FastGEO, GoPhastTypes, SsButtonEd,
-  RbwStringTreeCombo, Grids, RbwDataGrid4;
+  RbwStringTreeCombo, Grids, RbwDataGrid4, ExtCtrls;
 
 type
   TPathLineColumn = (plcLabel, plcFirst, plcLast, plcClosest);
   TPathlineRow = (plrLabel, plrX, plrY, plrZ, plrXPrime, plrYPrime, plrLocalZ,
     plrTime, plrColumn, plrRow, plrLayer, plrTimeStep);
+  TEndPointColumn = (epcLabel, epcStart, epcEnd);
+  TEndPointRow = (eprLabel, eprZone, eprColumn, eprRow, eprLayer, eprX, eprY,
+    eprZ, eprXPrime, eprYPrime, eprLocalZ, eprTimeStep);
+
 
   TfrmGridValue = class(TfrmCustomGoPhast)
     btnHelp: TBitBtn;
@@ -46,6 +50,12 @@ type
     virttreecomboDataSets: TRbwStringTreeCombo;
     tabPathline: TTabSheet;
     rdgPathline: TRbwDataGrid4;
+    tabEndPoint: TTabSheet;
+    rdgEndPoints: TRbwDataGrid4;
+    pnlEndPoints: TPanel;
+    lbledtReleaseTime: TLabeledEdit;
+    lbledtTerminationCode: TLabeledEdit;
+    lbledtTrackingTime: TLabeledEdit;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject); override;
     procedure edCellValueKeyUp(Sender: TObject; var Key: Word;
@@ -82,6 +92,9 @@ type
     FSelectedVirtNode: PVirtualNode;
     FViewDirection: TViewDirection;
     FPriorLocation: TPoint2D;
+    FPriorEndPointLocation: TPoint2D;
+    procedure DisplayEndPointData(const Location: TPoint2D);
+    procedure InitializeEndpointGrid;
     property SelectedVirtNode: PVirtualNode read FSelectedVirtNode;
     procedure UpdatedSelectedObject;
     procedure UpdateScreenObjectInfo(const Column, Row, Layer: Integer;
@@ -205,6 +218,7 @@ begin
   comboModel.ItemIndex := comboModel.Items.IndexOfObject(frmGoPhast.PhastModel.SelectedModel);
 
   InitializePathlineGrid;
+  InitializeEndpointGrid;
 end;
 
 procedure TfrmGridValue.FormDestroy(Sender: TObject);
@@ -381,6 +395,7 @@ begin
   UpdateScreenObjectInfo(Column, Row, Layer, Location, Model);
   UpdateSelectedData(Layer, Row, Column);
   DisplayPathlineData(Location);
+  DisplayEndPointData(Location);
 end;
 
 procedure TfrmGridValue.virttreecomboDataSetsChange(Sender: TObject);
@@ -749,6 +764,180 @@ begin
     FDataSetDummyObjects, nil, nil);
 end;
 
+procedure TfrmGridValue.DisplayEndPointData(const Location: TPoint2D);
+var
+  AnEndPoint: TEndPoint;
+  APointer: Pointer;
+  Y: TFloat;
+  X: TFloat;
+  EndPointQuadTree: TRbwQuadTree;
+  EndPoints: TEndPointReader;
+  DisplayPoint: Boolean;
+  ZoomBox: TQRbwZoomBox2;
+//  ColIndex: Integer;
+  RowIndex: Integer;
+  ALayer: Integer;
+  ColIndex: Integer;
+begin
+  if (FPriorEndPointLocation.x = Location.x)
+    and (FPriorEndPointLocation.y = Location.Y)then
+  begin
+    Exit;
+  end;
+  FPriorEndPointLocation := Location;
+  EndPoints := frmGoPhast.PhastModel.EndPoints;
+  EndPointQuadTree := nil;
+  if EndPoints.Visible then
+  begin
+    case FViewDirection of
+      vdTop:
+        EndPointQuadTree := EndPoints.TopQuadTree;
+      vdFront:
+        EndPointQuadTree := EndPoints.FrontQuadTree;
+      vdSide:
+        EndPointQuadTree := EndPoints.SideQuadTree;
+    else
+      Assert(False);
+    end;
+  end;
+  tabEndPoint.TabVisible := EndPoints.Visible and (EndPointQuadTree.Count > 0);
+  if tabEndPoint.TabVisible then
+  begin
+    X := Location.X;
+    Y := Location.Y;
+    EndPointQuadTree.FirstNearestPoint(X, Y, APointer);
+    AnEndPoint := APointer;
+    Assert(AnEndPoint <> nil);
+
+
+
+    DisplayPoint := False;
+
+    case EndPoints.DisplayLimits.WhereToPlot of
+      wtpStart:
+        begin
+          case FViewDirection of
+            vdTop:
+              begin
+                DisplayPoint := (Abs(FColumn+1 - AnEndPoint.StartColumn) <= 1)
+                  and (Abs(FRow+1 - AnEndPoint.StartRow) <= 1);
+              end;
+            vdFront:
+              begin
+                ALayer := frmGoPhast.PhastModel.
+                  ModflowLayerToDataSetLayer(AnEndPoint.StartLayer);
+                DisplayPoint := (Abs(FColumn+1 - AnEndPoint.StartColumn) <= 1)
+                  and (Abs(FLayer - ALayer) <= 1);
+              end;
+            vdSide:
+              begin
+                ALayer := frmGoPhast.PhastModel.
+                  ModflowLayerToDataSetLayer(AnEndPoint.StartLayer);
+                DisplayPoint := (Abs(FLayer - ALayer) <= 1)
+                  and (Abs(FRow+1 - AnEndPoint.StartRow) <= 1);
+              end;
+            else Assert(False);
+          end;
+        end;
+      wtpEnd:
+        begin
+          case FViewDirection of
+            vdTop:
+              begin
+                DisplayPoint := (Abs(FColumn+1 - AnEndPoint.EndColumn) <= 1)
+                  and (Abs(FRow+1 - AnEndPoint.EndRow) <= 1);
+              end;
+            vdFront:
+              begin
+                ALayer := frmGoPhast.PhastModel.
+                  ModflowLayerToDataSetLayer(AnEndPoint.EndLayer);
+                DisplayPoint := (Abs(FColumn+1 - AnEndPoint.EndColumn) <= 1)
+                  and (Abs(FLayer - ALayer) <= 1);
+              end;
+            vdSide:
+              begin
+                ALayer := frmGoPhast.PhastModel.
+                  ModflowLayerToDataSetLayer(AnEndPoint.EndLayer);
+                DisplayPoint := (Abs(FLayer - ALayer) <= 1)
+                  and (Abs(FRow+1 - AnEndPoint.endRow) <= 1);
+              end;
+            else Assert(False);
+          end;
+        end;
+      else
+        Assert(False);
+    end;
+
+
+    if not DisplayPoint then
+    begin
+      ZoomBox := nil;
+      case FViewDirection of
+        vdTop: ZoomBox := frmGoPhast.frameTopView.ZoomBox;
+        vdFront: ZoomBox := frmGoPhast.frameFrontView.ZoomBox;
+        vdSide: ZoomBox := frmGoPhast.framesideView.ZoomBox;
+        else Assert(False);
+      end;
+      DisplayPoint :=
+        (Abs(ZoomBox.XCoord(X) - ZoomBox.XCoord(Location.X)) <= SelectionWidth)
+        and (Abs(ZoomBox.YCoord(Y) - ZoomBox.YCoord(Location.Y)) <= SelectionWidth);
+    end;
+
+    if DisplayPoint then
+    begin
+      lbledtReleaseTime.Text := FloatToStr(AnEndPoint.ReleaseTime);
+      lbledtTerminationCode.Text := IntToStr(AnEndPoint.TerminationCode);
+      lbledtTrackingTime.Text := FloatToStr(AnEndPoint.TrackingTime);
+
+      rdgEndPoints.BeginUpdate;
+      try
+        begin
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprZone)] := IntToStr(AnEndPoint.StartZoneCode);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprColumn)] := IntToStr(AnEndPoint.StartColumn);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprRow)] := IntToStr(AnEndPoint.StartRow);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprLayer)] := IntToStr(AnEndPoint.StartLayer);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprX)] := FloatToStr(AnEndPoint.StartX);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprY)] := FloatToStr(AnEndPoint.StartY);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprZ)] := FloatToStr(AnEndPoint.StartZ);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprXPrime)] := FloatToStr(AnEndPoint.StartXPrime);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprYPrime)] := FloatToStr(AnEndPoint.StartYPrime);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprLocalZ)] := FloatToStr(AnEndPoint.StartLocalZ);
+          rdgEndPoints.Cells[Ord(epcStart), Ord(eprTimeStep)] := IntToStr(AnEndPoint.StartTimeStep);
+
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprZone)] := IntToStr(AnEndPoint.EndZoneCode);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprColumn)] := IntToStr(AnEndPoint.EndColumn);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprRow)] := IntToStr(AnEndPoint.EndRow);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprLayer)] := IntToStr(AnEndPoint.EndLayer);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprX)] := FloatToStr(AnEndPoint.EndX);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprY)] := FloatToStr(AnEndPoint.EndY);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprZ)] := FloatToStr(AnEndPoint.EndZ);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprXPrime)] := FloatToStr(AnEndPoint.EndXPrime);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprYPrime)] := FloatToStr(AnEndPoint.EndYPrime);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprLocalZ)] := FloatToStr(AnEndPoint.EndLocalZ);
+          rdgEndPoints.Cells[Ord(epcEnd), Ord(eprTimeStep)] := IntToStr(AnEndPoint.EndTimeStep);
+        end;
+      finally
+        rdgEndPoints.EndUpdate;
+      end;
+    end
+    else
+    begin
+      rdgEndPoints.BeginUpdate;
+      try
+        for ColIndex := 1 to rdgEndPoints.ColCount - 1 do
+        begin
+          for RowIndex := 1 to rdgEndPoints.RowCount - 1 do
+          begin
+            rdgEndPoints.Cells[ColIndex, RowIndex] := '';
+          end;
+        end;
+      finally
+        rdgEndPoints.EndUpdate;
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmGridValue.DisplayPathlineData(const Location: TPoint2D);
 var
   PathLinePoint: TPathLinePoint;
@@ -858,7 +1047,7 @@ begin
             rdgPathline.Cells[ColIndex, Ord(plrXPrime)] := FloatToStr(APathLinePoint.XPrime);
             rdgPathline.Cells[ColIndex, Ord(plrYPrime)] := FloatToStr(APathLinePoint.YPrime);
             rdgPathline.Cells[ColIndex, Ord(plrLocalZ)] := FloatToStr(APathLinePoint.LocalZ);
-            rdgPathline.Cells[ColIndex, Ord(plrTime)] := FloatToStr(APathLinePoint.Time);
+            rdgPathline.Cells[ColIndex, Ord(plrTime)] := FloatToStr(APathLinePoint.AbsoluteTime);
             rdgPathline.Cells[ColIndex, Ord(plrColumn)] := IntToStr(APathLinePoint.Column);
             rdgPathline.Cells[ColIndex, Ord(plrRow)] := IntToStr(APathLinePoint.Row);
             rdgPathline.Cells[ColIndex, Ord(plrLayer)] := IntToStr(APathLinePoint.Layer);
@@ -905,6 +1094,23 @@ begin
   rdgPathline.Cells[0, Ord(plrRow)] := 'Row';
   rdgPathline.Cells[0, Ord(plrLayer)] := 'Layer';
   rdgPathline.Cells[0, Ord(plrTimeStep)] := 'Time step';
+end;
+
+procedure TfrmGridValue.InitializeEndpointGrid;
+begin
+  rdgEndPoints.Cells[Ord(epcStart), 0] := 'Start';
+  rdgEndPoints.Cells[Ord(epcEnd), 0] := 'End';
+  rdgEndPoints.Cells[0, Ord(eprZone)] := 'Zone';
+  rdgEndPoints.Cells[0, Ord(eprX)] := 'X';
+  rdgEndPoints.Cells[0, Ord(eprY)] := 'Y';
+  rdgEndPoints.Cells[0, Ord(eprZ)] := 'Z';
+  rdgEndPoints.Cells[0, Ord(eprXPrime)] := 'X''';
+  rdgEndPoints.Cells[0, Ord(eprYPrime)] := 'Y''';
+  rdgEndPoints.Cells[0, Ord(eprLocalZ)] := 'Local Z';
+  rdgEndPoints.Cells[0, Ord(eprColumn)] := 'Column';
+  rdgEndPoints.Cells[0, Ord(eprRow)] := 'Row';
+  rdgEndPoints.Cells[0, Ord(eprLayer)] := 'Layer';
+  rdgEndPoints.Cells[0, Ord(eprTimeStep)] := 'Time step';
 end;
 
 procedure TfrmGridValue.UpdatedSelectedObject;

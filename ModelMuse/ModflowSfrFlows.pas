@@ -72,11 +72,6 @@ type
     // See @link(TCustomNonSpatialBoundColl.ItemClass
     // TCustomNonSpatialBoundColl.ItemClass)
     class function ItemClass: TMF_BoundItemClass; override;
-    // @name calls inherited @name and then sets the length of
-    // the @link(TRivStorage.RivArray) at ItemIndex in
-    // @link(TCustomMF_BoundColl.Boundaries) to BoundaryCount.
-    // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
-    // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
   public
     procedure EvaluateBoundaries;
     property FlowTimeValues[Index: integer]: TSfrSegmentFlowRecord

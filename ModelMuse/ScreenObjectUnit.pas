@@ -163,6 +163,8 @@ type
     procedure Clear;
   end;
 
+  TScreenObject = class;
+
   // @abstract(@name represents the 2D intersection of
   // one segment of a @link(TScreenObject)
   // with a cell or element in the grid.)
@@ -185,6 +187,7 @@ type
     FSectionIndex: integer;
     FSubSegments: TSegment2DArray;
     FLgrEdge: boolean;
+    FScreenObject: TScreenObject;
     procedure Store(Stream: TStream);
     procedure Restore(Stream: TDecompressionStream);
   public
@@ -238,6 +241,7 @@ type
     function SecondPointRealCoord(ViewDirection: TViewDirection): TPoint2D;
     property SectionIndex: integer read FSectionIndex write FSectionIndex;
     property LgrEdge: boolean read FLgrEdge write FLgrEdge;
+    constructor Create(ScreenObject: TScreenObject);
   end;
 
   TCellElementLeaf = class(TRangeTreeLeaf)
@@ -264,8 +268,6 @@ type
     procedure  Assign(P1, P2: TPoint2D); overload;
     procedure Reverse;
   end;
-
-  TScreenObject = class;
 
   // @abstract(@name is a list of the @link(TCellElementSegment)s of a
   // @link(TScreenObject). Each segment is the 2D
@@ -445,6 +447,7 @@ type
     FColumn: integer;
     FLgrEdge: Boolean;
   private
+    FScreenObject: TScreenObject;
     procedure Assign(Cell: TCellAssignment);
     function GetSection: integer;
     procedure Store(Stream: TStream);
@@ -553,13 +556,13 @@ type
     FScreenObject: TScreenObject;
     procedure AssignValuesToFrontDataSet(const Grid: TCustomGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-      UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
+      UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
     procedure AssignValuesToSideDataSet(const Grid: TCustomGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-      UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
+      UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
     procedure AssignValuesToTopDataSet(const Grid: TCustomGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-      UseLgrEdgeCells: boolean;
+      UseLgrEdgeCells: TLgrCellTreatment;
       AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
     procedure UpdateFrontSegments(const Grid: TCustomGrid;
       const EvaluatedAt: TEvaluatedAt);virtual; abstract;
@@ -600,7 +603,7 @@ type
       LayerIndex, RowIndex, ColIndex: integer;
       const Compiler: TRbwParser; const Annotation: string;
       var Expression: TExpression; const OtherData: TObject;
-      SectionIndex: integer); virtual;
+      SectionIndex: integer; ShouldZero: boolean); virtual;
     // @name returns an integer that indicates what
     // type of boundary condition,
     // if any, are specified by this @classname.
@@ -1667,6 +1670,8 @@ view. }
     FPriorObjectSectionIntersectLengthModel: TBaseModel;
     FPriorObjectIntersectLengthModel: TBaseModel;
     FUsedModels: TUsedWithModelCollection;
+    FFullObjectIntersectLength: Boolean;
+    FPriorFullObjectIntersectLength: Boolean;
     procedure CreateLastSubPolygon;
     procedure DestroyLastSubPolygon;
     function GetSubPolygonCount: integer;
@@ -2609,7 +2614,7 @@ view. }
     // See @link(AssignValuesToPhastDataSet).
     procedure AssignValuesToFrontPhastDataSet(const Grid: TCustomGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-      UseLgrEdgeCells: boolean);
+      UseLgrEdgeCells: TLgrCellTreatment);
     // @name initializes variables needed by the formula for the
     // @link(TDataArray) and then assigns values to the data set based
     // on that formula for intersected and enclosed cells or elements.
@@ -2618,7 +2623,7 @@ view. }
     // See @link(AssignValuesToPhastDataSet).
     procedure AssignValuesToSidePhastDataSet(const Grid: TCustomGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-      UseLgrEdgeCells: boolean);
+      UseLgrEdgeCells: TLgrCellTreatment);
     // @name initializes variables needed by the formula for the
     // @link(TDataArray) and then assigns values to the data set based
     // on that formula for intersected and enclosed cells or elements.
@@ -2803,6 +2808,8 @@ view. }
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
   public
+    property FullObjectIntersectLength: Boolean read FFullObjectIntersectLength
+      write FFullObjectIntersectLength;
     procedure UpdateUzfGage1and2;
     procedure UpdateUzfGage3;
     procedure CacheSegments;
@@ -2895,7 +2902,7 @@ view. }
     procedure Assign(Source: TPersistent); override;
     procedure AssignValuesToModflowDataSet(const Grid: TCustomGrid;
       const DataSet: TDataArray; const Formula: string; AModel: TBaseModel;
-      UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll);
+      UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
     // @name is a key method of @classname.  It is used
     // to assign values to a data set based on the function for that data
     // set. @name first checks whether it should set the values
@@ -2905,7 +2912,7 @@ view. }
     // or @Link(AssignValuesToSidePhastDataSet)
     // to do most of the work.
     procedure AssignValuesToPhastDataSet(const Grid: TCustomGrid;
-      const DataSet: TDataArray; AModel: TBaseModel; UseLgrEdgeCells: boolean); virtual;
+      const DataSet: TDataArray; AModel: TBaseModel; UseLgrEdgeCells: TLgrCellTreatment); virtual;
     // @name is the number of boundary @link(BoundaryDataSets) affected
     // by the @classname.
     function BoundaryDataSetCount: integer;
@@ -3824,16 +3831,16 @@ SectionStarts.}
       LayerIndex, RowIndex, ColIndex: integer;
       const Compiler: TRbwParser; const Annotation: string;
       var Expression: TExpression; const OtherData: TObject;
-      SectionIndex: integer); override;
+      SectionIndex: integer; ShouldZero: boolean); override;
     procedure AssignValuesToFrontDataSet(const Grid: TCustomGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-      UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll);override;
+      UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);override;
     procedure AssignValuesToSideDataSet(const Grid: TCustomGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-      UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll); override;
+      UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
     procedure AssignValuesToTopDataSet(const Grid: TCustomGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-      UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll); override;
+      UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
     function BoundaryType: integer; override;
     function DataSetUsed(const DataSet: TDataArray;
       var OtherData: TObject; AModel: TBaseModel): boolean; override;
@@ -3928,7 +3935,7 @@ SectionStarts.}
     function GetPerpendiularLimit(const Grid: TCustomGrid): integer;
     procedure AssignValuesToDataSet(const Grid: TCustomGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-      UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll);
+      UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
     procedure UpdateHorizontalRangeOfCellsToCheck(
       var FirstHorizontalIndex, LastHorizontalIndex: Integer;
       const HorizontalIndex, HorizontalLimit: Integer;
@@ -3975,13 +3982,13 @@ SectionStarts.}
     procedure AssignSelectedCells(const Grid: TCustomGrid; AModel: TBaseModel); override;
     procedure AssignValuesToFrontDataSet(const Grid: TCustomGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-      UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll);override;
+      UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);override;
     procedure AssignValuesToSideDataSet(const Grid: TCustomGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-      UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll); override;
+      UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
     procedure AssignValuesToTopDataSet(const Grid: TCustomGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-      UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll); override;
+      UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
     constructor Create(ScreenObject: TScreenObject); override;
     procedure UpdateFrontSegments(const Grid: TCustomGrid;
       const EvaluatedAt: TEvaluatedAt); override;
@@ -8788,6 +8795,7 @@ begin
     and (FPriorObjectIntersectLengthRow = Row)
     and (FPriorObjectIntersectLengthLayer = Layer)
     and (FPriorObjectIntersectLengthModel = AModel)
+    and (FPriorFullObjectIntersectLength = FullObjectIntersectLength)
     then
   begin
     result := FPriorObjectIntersectLengthResult;
@@ -8809,6 +8817,7 @@ begin
   FPriorObjectIntersectLengthRow := Row;
   FPriorObjectIntersectLengthLayer := Layer;
   FPriorObjectIntersectLengthModel := AModel;
+  FPriorFullObjectIntersectLength := FullObjectIntersectLength;
   FPriorObjectIntersectLengthResult := result;
 end;
 
@@ -9682,8 +9691,14 @@ begin
     begin
       OldFormula := '0';
     end;
-    Compiler.Compile(OldFormula);
-    OldUseList.Assign(Compiler.CurrentExpression.VariablesUsed);
+    try
+      Compiler.Compile(OldFormula);
+      OldUseList.Assign(Compiler.CurrentExpression.VariablesUsed);
+    except on E: ERbwParserError do
+      begin
+        // ignore
+      end;
+    end;
     if NewFormula = '' then
     begin
       NewFormula := '0';
@@ -9775,8 +9790,14 @@ begin
     begin
       OldFormula := '0';
     end;
-    Compiler.Compile(OldFormula);
-    OldUseList.Assign(Compiler.CurrentExpression.VariablesUsed);
+    try
+      Compiler.Compile(OldFormula);
+      OldUseList.Assign(Compiler.CurrentExpression.VariablesUsed);
+    except on E: ERbwParserError do
+      begin
+        // ignore
+      end;
+    end;
     if NewFormula = '' then
     begin
       NewFormula := '0';
@@ -9868,8 +9889,14 @@ begin
     begin
       OldFormula := '0';
     end;
-    Compiler.Compile(OldFormula);
-    OldUseList.Assign(Compiler.CurrentExpression.VariablesUsed);
+    try
+      Compiler.Compile(OldFormula);
+      OldUseList.Assign(Compiler.CurrentExpression.VariablesUsed);
+    except on ERbwParserError do
+      begin
+        // ignore
+      end;
+    end;
     if NewFormula = '' then
     begin
       NewFormula := '0';
@@ -11662,8 +11689,8 @@ begin
 
   for Index := 0 to Count - 1 do
   begin
-    if (Abs(XScreenCoordinate - CanvasCoordinates[Index].X) <= SelectEpsilon)
-      and (Abs(YScreenCoordinate - CanvasCoordinates[Index].Y) <= SelectEpsilon)
+    if (Abs(Int64(XScreenCoordinate) - Int64(CanvasCoordinates[Index].X)) <= SelectEpsilon)
+      and (Abs(Int64(YScreenCoordinate) - Int64(CanvasCoordinates[Index].Y)) <= SelectEpsilon)
       then
     begin
       result := True;
@@ -12825,7 +12852,7 @@ begin
           for ElevationIndex := FirstElevationIndex to LastElevationIndex do
           begin
             // point segment, top view, MODFLOW or PHAST
-            ASegment := TCellElementSegment.Create;
+            ASegment := TCellElementSegment.Create(Self);
             ASegment.X1 := APoint.X;
             ASegment.X2 := APoint.X;
             ASegment.Y1 := APoint.Y;
@@ -13016,7 +13043,7 @@ begin
                     LastElevationIndex do
                   begin
                     // line segments in elements, top view, MODFLOW or PHAST
-                    ASegment := TCellElementSegment.Create;
+                    ASegment := TCellElementSegment.Create(Self);
                     ASegment.X2 := Point2.X;
                     ASegment.X1 := Point1.X;
                     ASegment.Y2 := Point2.Y;
@@ -13071,7 +13098,7 @@ begin
                     LastElevationIndex do
                   begin
                     // line segment nodes, top view, PHAST
-                    ASegment := TCellElementSegment.Create;
+                    ASegment := TCellElementSegment.Create(Self);
                     ASegment.X2 := Point2.X;
                     ASegment.X1 := Point1.X;
                     ASegment.Y2 := Point2.Y;
@@ -13778,7 +13805,7 @@ end;
 
 procedure TScreenObject.AssignValuesToFrontPhastDataSet(
   const Grid: TCustomGrid; const DataSet: TDataArray; OtherData: TObject;
-  AModel: TBaseModel; UseLgrEdgeCells: boolean);
+  AModel: TBaseModel; UseLgrEdgeCells: TLgrCellTreatment);
 begin
   Delegate.AssignValuesToFrontDataSet(Grid, DataSet, OtherData, AModel,
     UseLgrEdgeCells);
@@ -13792,7 +13819,7 @@ end;
 
 procedure TScreenObject.AssignValuesToSidePhastDataSet(const Grid: TCustomGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-  UseLgrEdgeCells: boolean);
+  UseLgrEdgeCells: TLgrCellTreatment);
 begin
   Delegate.AssignValuesToSideDataSet(Grid, DataSet, OtherData, AModel,
     UseLgrEdgeCells);
@@ -14985,7 +15012,8 @@ end;
 function TScreenObject.SelectEdge(const X, Y: integer): integer;
 var
   Index: integer;
-  X1, X2, Y1, Y2, MinX, MaxX, MinY, MaxY: integer;
+  X1, X2, Y1, Y2: integer;
+  MinX, MaxX, MinY, MaxY: Int64;
   SectionIndex: integer;
   StartIndex: integer;
 begin
@@ -15012,10 +15040,10 @@ begin
     X2 := CanvasCoordinates[Index].X;
     Y1 := CanvasCoordinates[Index - 1].Y;
     Y2 := CanvasCoordinates[Index].Y;
-    MinX := Min(X1, X2) - SelectEpsilon;
-    MaxX := Max(X1, X2) + SelectEpsilon;
-    MinY := Min(Y1, Y2) - SelectEpsilon;
-    MaxY := Max(Y1, Y2) + SelectEpsilon;
+    MinX := Int64(Min(X1, X2)) - SelectEpsilon;
+    MaxX := Int64(Max(X1, X2)) + SelectEpsilon;
+    MinY := Int64(Min(Y1, Y2)) - SelectEpsilon;
+    MaxY := Int64(Max(Y1, Y2)) + SelectEpsilon;
 
     if IsValueInside(MinX, X, MaxX) and IsValueInside(MinY, Y, MaxY) then
     begin
@@ -18434,7 +18462,7 @@ begin
     Capacity := LocalCount;
     for Index := 0 to LocalCount - 1 do
     begin
-      Segment := TCellElementSegment.Create;
+      Segment := TCellElementSegment.Create(FScreenObject);
       Add(Segment);
       Segment.Restore(DeCompressor);
 //      DeCompressor.Read(Segment.FCol, SizeOf(Segment.FCol));
@@ -18482,6 +18510,12 @@ end;
 
 { TCellElementSegment }
 
+constructor TCellElementSegment.Create(ScreenObject: TScreenObject);
+begin
+  inherited Create;
+  FScreenObject := ScreenObject;
+end;
+
 function TCellElementSegment.FirstPointRealCoord(ViewDirection: TViewDirection): TPoint2D;
 begin
   result := FSegment[1];;
@@ -18496,7 +18530,9 @@ function TCellElementSegment.SegmentLength: double;
 var
   SubIndex: Integer;
 begin
-  if Length(FSubSegments) = 0 then
+  if (Length(FSubSegments) = 0)
+  or ((FScreenObject <> nil)
+    and (FScreenObject.FullObjectIntersectLength)) then
   begin
     result := Sqrt(Sqr(X1 - X2) + Sqr(Y1 - Y2));
   end
@@ -18530,7 +18566,7 @@ begin
   SetLength(FSubSegments, SubSegLength);
   if SubSegLength > 0 then
   begin
-    Stream.Read(FSubSegments[0], SizeOf(FSubSegments));
+    Stream.Read(FSubSegments[0], SubSegLength*SizeOf(TSegment2D));
   end;
 end;
 
@@ -18562,7 +18598,7 @@ begin
   WriteCompInt(Stream, SubSegLength);
   if SubSegLength > 0 then
   begin
-    Stream.Write(FSubSegments[0], SizeOf(FSubSegments));
+    Stream.Write(FSubSegments[0], SubSegLength*SizeOf(TSegment2D));
   end;
 end;
 
@@ -18889,9 +18925,12 @@ procedure TCustomScreenObjectDelegate.AssignCellValue(
   const UsedVariables: TStringList; const DataSet: TDataArray; LayerIndex,
   RowIndex, ColIndex: integer; const Compiler: TRbwParser;
   const Annotation: string; var Expression: TExpression;
-  const OtherData: TObject; SectionIndex: integer);
+  const OtherData: TObject; SectionIndex: integer; ShouldZero: boolean);
 var
   AValue: double;
+  IntValue: Integer;
+  BoolValue: Boolean;
+  StringValue: string;
 begin
   case DataSet.Orientation of
     dsoTop:
@@ -18921,7 +18960,14 @@ begin
   case DataSet.Datatype of
     rdtDouble:
       begin
-        AValue := Expression.DoubleResult;
+        if ShouldZero then
+        begin
+          AValue := 0;
+        end
+        else
+        begin
+          AValue := Expression.DoubleResult;
+        end;
         if IsInfinite(AValue) or IsNan(AValue) then
         begin
           if DataSet.Name = '' then
@@ -18947,18 +18993,42 @@ begin
       end;
     rdtInteger:
       begin
+        if ShouldZero then
+        begin
+          IntValue := 0;
+        end
+        else
+        begin
+          IntValue := Expression.IntegerResult;
+        end;
         DataSet.IntegerData[LayerIndex, RowIndex, ColIndex] :=
-          Expression.IntegerResult;
+          IntValue;
       end;
     rdtBoolean:
       begin
+        if ShouldZero then
+        begin
+          BoolValue := False;
+        end
+        else
+        begin
+          BoolValue := Expression.BooleanResult;
+        end;
         DataSet.BooleanData[LayerIndex, RowIndex, ColIndex] :=
-          Expression.BooleanResult;
+          BoolValue;
       end;
     rdtString:
       begin
+        if ShouldZero then
+        begin
+          StringValue := '';
+        end
+        else
+        begin
+          StringValue := Expression.StringResult;
+        end;
         DataSet.StringData[LayerIndex, RowIndex, ColIndex] :=
-          Expression.StringResult;
+          StringValue;
       end;
   else
     Assert(False);
@@ -19253,7 +19323,7 @@ procedure TPhastDelegate.AssignCellValue(const UsedVariables: TStringList;
   const DataSet: TDataArray; LayerIndex, RowIndex, ColIndex: integer;
   const Compiler: TRbwParser; const Annotation: string;
   var Expression: TExpression; const OtherData: TObject;
-  SectionIndex: integer);
+  SectionIndex: integer; ShouldZero: boolean);
 var
   InterpValue: TInterpValuesItem;
 begin
@@ -19631,7 +19701,7 @@ end;
 
 procedure TPhastDelegate.AssignValuesToFrontDataSet(const Grid: TCustomGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-  UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll);
+  UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
   DataSetFunction: string;
   Compiler: TRbwParser;
@@ -19670,7 +19740,7 @@ begin
           AssignCellValue(UsedVariables, DataSet, CellAssignment.Layer,
             CellAssignment.Row, CellAssignment.Column, Compiler,
             CellAssignment.Annotation, Expression, OtherData,
-            CellAssignment.Section);
+            CellAssignment.Section, False);
         end;
         (FModel as TPhastModel).DataArrayManager.CacheDataArrays;
       finally
@@ -19684,7 +19754,7 @@ end;
 
 procedure TPhastDelegate.AssignValuesToSideDataSet(const Grid: TCustomGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-  UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll);
+  UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
   DataSetFunction: string;
   Compiler: TRbwParser;
@@ -19722,7 +19792,7 @@ begin
           AssignCellValue(UsedVariables, DataSet, CellAssignment.Layer,
             CellAssignment.Row, CellAssignment.Column, Compiler,
             CellAssignment.Annotation, Expression, OtherData,
-            CellAssignment.Section);
+            CellAssignment.Section, False);
         end;
       finally
         UsedVariables.Free;
@@ -19736,7 +19806,7 @@ end;
 
 procedure TPhastDelegate.AssignValuesToTopDataSet(const Grid: TCustomGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-  UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll);
+  UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
   DataSetFunction: string;
   Compiler: TRbwParser;
@@ -19774,7 +19844,7 @@ begin
           AssignCellValue(UsedVariables, DataSet, CellAssignment.Layer,
             CellAssignment.Row, CellAssignment.Column, Compiler,
             CellAssignment.Annotation, Expression, OtherData,
-            CellAssignment.Section);
+            CellAssignment.Section, False);
         end;
       finally
         UsedVariables.Free;
@@ -21321,7 +21391,7 @@ begin
         for RowIndex := FirstRow to LastRow do
         begin
           // point segment front view, PHAST
-          ASegment := TCellElementSegment.Create;
+          ASegment := TCellElementSegment.Create(FScreenObject);
           FScreenObject.FSegments.Add(ASegment);
           ASegment.X1 := APoint.X;
           ASegment.X2 := APoint.X;
@@ -21511,7 +21581,7 @@ begin
                   do
                 begin
                   // line segment element, front view, PHAST
-                  ASegment := TCellElementSegment.Create;
+                  ASegment := TCellElementSegment.Create(FScreenObject);
                   FScreenObject.FSegments.Add(ASegment);
                   ASegment.X1 := Point1.X;
                   ASegment.X2 := Point2.X;
@@ -21566,7 +21636,7 @@ begin
                   do
                 begin
                   // line segment node, front view, PHAST
-                  ASegment := TCellElementSegment.Create;
+                  ASegment := TCellElementSegment.Create(FScreenObject);
                   FScreenObject.FSegments.Add(ASegment);
                   ASegment.X1 := Point1.X;
                   ASegment.X2 := Point2.X;
@@ -21727,7 +21797,7 @@ begin
         for ElevationIndex := FirstElevationIndex to LastElevationIndex do
         begin
           // point segment, side view, PHAST
-          ASegment := TCellElementSegment.Create;
+          ASegment := TCellElementSegment.Create(FScreenObject);
           FScreenObject.FSegments.Add(ASegment);
           ASegment.X1 := APoint.X;
           ASegment.X2 := APoint.X;
@@ -21916,7 +21986,7 @@ begin
                   LastElevationIndex do
                 begin
                   // line segment, elements, side view, PHAST
-                  ASegment := TCellElementSegment.Create;
+                  ASegment := TCellElementSegment.Create(FScreenObject);
                   FScreenObject.FSegments.Add(ASegment);
                   ASegment.X1 := Point1.X;
                   ASegment.X2 := Point2.X;
@@ -21972,7 +22042,7 @@ begin
                   LastElevationIndex do
                 begin
                   // line segment, nodes, side view, PHAST
-                  ASegment := TCellElementSegment.Create;
+                  ASegment := TCellElementSegment.Create(FScreenObject);
                   FScreenObject.FSegments.Add(ASegment);
                   ASegment.X2 := Point2.X;
                   ASegment.X1 := Point1.X;
@@ -22131,7 +22201,7 @@ end;
 
 procedure TModflowDelegate.AssignValuesToFrontDataSet(const Grid: TCustomGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-  UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll);
+  UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 begin
   AssignValuesToDataSet(Grid, DataSet, OtherData, AModel, UseLgrEdgeCells,
     AssignmentLocation);
@@ -22139,7 +22209,7 @@ end;
 
 procedure TModflowDelegate.AssignValuesToSideDataSet(const Grid: TCustomGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-  UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll);
+  UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 begin
   AssignValuesToDataSet(Grid, DataSet, OtherData, AModel, UseLgrEdgeCells,
     AssignmentLocation);
@@ -22147,7 +22217,7 @@ end;
 
 procedure TModflowDelegate.AssignValuesToTopDataSet(const Grid: TCustomGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-  UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll);
+  UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 begin
   AssignValuesToDataSet(Grid, DataSet, OtherData, AModel,
     UseLgrEdgeCells, AssignmentLocation);
@@ -22274,7 +22344,7 @@ end;
 
 procedure TModflowDelegate.AssignValuesToDataSet(const Grid: TCustomGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
-  UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll);
+  UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
   DataSetFunction: string;
   Compiler: TRbwParser;
@@ -22303,7 +22373,7 @@ begin
       Exit;
     end;
 
-  // DataSetUsed doesn't test for transient data sets. 
+  // DataSetUsed doesn't test for transient data sets.
 //  if DataSetUsed(DataSet, OtherData) then
 //  begin
     UsedVariables := TStringList.Create;
@@ -22347,9 +22417,7 @@ begin
             InitializeExpression(Compiler, DataSetFunction, Expression, DataSet,
               OtherData);
           end;
-
         end;
-
       end;
 
       InitializeVariables(UsedVariables, DataSet, Expression, Compiler);
@@ -22360,7 +22428,7 @@ begin
       for AssignmentIndex := 0 to CellList.Count - 1 do
       begin
         CellAssignment := CellList[AssignmentIndex];
-        if (not UseLgrEdgeCells) and CellAssignment.LgrEdge then
+        if (UseLgrEdgeCells = lctIgnore) and CellAssignment.LgrEdge then
         begin
           Continue;
         end;
@@ -22369,7 +22437,8 @@ begin
         AssignCellValue(UsedVariables, DataSet, CellAssignment.Layer,
           CellAssignment.Row, CellAssignment.Column, Compiler,
           CellAssignment.Annotation, Expression, OtherData,
-          CellAssignment.Section);
+          CellAssignment.Section,
+          ((UseLgrEdgeCells = lctZero) and CellAssignment.LgrEdge));
       end;
     finally
       (FModel as TPhastModel).DataArrayManager.CacheDataArrays;
@@ -22535,7 +22604,7 @@ procedure TModflowDelegate.CreateSegment(const Point1,Point2: TEdgePoint;
   SectionIndex: Integer; var ASegment: TCellElementSegment);
 begin
   // side or front view, MODFLOW
-  ASegment := TCellElementSegment.Create;
+  ASegment := TCellElementSegment.Create(FScreenObject);
   ASegment.X1 := Point1.X;
   ASegment.X2 := Point2.X;
   ASegment.Y1 := Point1.Y;
@@ -26443,7 +26512,7 @@ end;
 
 procedure TScreenObject.AssignValuesToModflowDataSet(const Grid: TCustomGrid;
   const DataSet: TDataArray; const Formula: string; AModel: TBaseModel;
-  UseLgrEdgeCells: boolean; AssignmentLocation: TAssignmentLocation = alAll);
+  UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
   Compiler: TRbwParser;
   DataSetFunction: string;
@@ -26505,7 +26574,7 @@ begin
 end;
 
 procedure TScreenObject.AssignValuesToPhastDataSet(const Grid: TCustomGrid;
-  const DataSet: TDataArray; AModel: TBaseModel; UseLgrEdgeCells: boolean);
+  const DataSet: TDataArray; AModel: TBaseModel; UseLgrEdgeCells: TLgrCellTreatment);
 var
   OtherData: TObject;
   InterpValue: TInterpValuesItem;
@@ -33210,11 +33279,13 @@ begin
   FAssignmentMethod := AnAssignmentMethod;
   if ASegment <> nil then
   begin
+    FScreenObject := ASegment.FScreenObject;
     FLgrEdge := ASegment.LgrEdge;
   end
   else
   begin
     FLgrEdge := False;
+    FScreenObject := nil;
   end;
 end;
 
@@ -33262,7 +33333,7 @@ begin
   if ReadSegment then
   begin
     FOwnedSegment.Free;
-    FOwnedSegment := TCellElementSegment.Create;
+    FOwnedSegment := TCellElementSegment.Create(FScreenObject);
     FOwnedSegment.Restore(Stream);
     FSegment := FOwnedSegment;
   end

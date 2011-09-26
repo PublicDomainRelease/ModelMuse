@@ -121,9 +121,9 @@ begin
       Boundary.GetCellValues(Values, nil, Model);
       if Model.ModflowPackages.UzfPackage.SimulateET then
       begin
-        Boundary.GetEvapotranspirationDemandCells(FEtDemand);
-        Boundary.GetExtinctionDepthCells(FEExtinctionDepths);
-        Boundary.GetWaterContentCells(FExtinctionWaterContent);
+        Boundary.GetEvapotranspirationDemandCells(FEtDemand, Model);
+        Boundary.GetExtinctionDepthCells(FEExtinctionDepths, Model);
+        Boundary.GetWaterContentCells(FExtinctionWaterContent, Model);
       end;
     end;
   end;

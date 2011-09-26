@@ -251,7 +251,7 @@ type
   private
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
     procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
@@ -269,7 +269,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
     procedure InvalidateEtRateData(Sender: TObject);
   end;
 
@@ -289,7 +289,7 @@ type
   private
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
     procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
@@ -307,7 +307,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
     procedure InvalidateEtLayer(Sender: TObject);
   end;
 
@@ -332,7 +332,7 @@ type
     procedure InvalidateDepthData(Sender: TObject);
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
     procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
@@ -350,7 +350,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
   end;
 
   // Each @name stores a @link(TEvtCollection).
@@ -496,8 +496,8 @@ type
     function NonParameterColumns: integer; override;
     property TimeVaryingEvapotranspirationLayers: boolean
       read GetTimeVaryingEvapotranspirationLayers;
-    procedure GetEvapotranspirationLayerCells(LayerTimeList: TList);
-    procedure GetEvapotranspirationSurfaceDepthCells(LayerTimeList: TList);
+    procedure GetEvapotranspirationLayerCells(LayerTimeList: TList; AModel: TBaseModel);
+    procedure GetEvapotranspirationSurfaceDepthCells(LayerTimeList: TList; AModel: TBaseModel);
     procedure Clear; override;
   published
     property EvapotranspirationLayers: TEvtLayerCollection
@@ -608,9 +608,9 @@ end;
 
 { TEvtCollection }
 
-procedure TEvtCollection.AddSpecificBoundary;
+procedure TEvtCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TEvtStorage.Create);
+  AddBoundary(TEvtStorage.Create(AModel));
 end;
 
 procedure TEvtCollection.AssignCellValues(DataSets: TList; ItemIndex: Integer;
@@ -633,7 +633,7 @@ begin
   LocalModel := AModel as TCustomModel;
   BoundaryIndex := 0;
   EvapotranspirationRateArray := DataSets[RatePosition];
-  Boundary := Boundaries[ItemIndex] as TEvtStorage;
+  Boundary := Boundaries[ItemIndex, AModel] as TEvtStorage;
   EvapotranspirationRateArray.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
     LayerMax, RowMax, ColMax);
   if LayerMin >= 0 then
@@ -696,13 +696,13 @@ begin
   end;
   ALink := TimeListLink.GetLink(AModel) as TEvtTimeListLink;
   FEvapotranspirationRateData := ALink.FEvapotranspirationRateData;
-  FEvapotranspirationRateData.Initialize(BoundaryValues, ScreenObject, True);
+  FEvapotranspirationRateData.Initialize(BoundaryValues, ScreenObject, lctUse);
   Assert(FEvapotranspirationRateData.Count = Count);
-  ClearBoundaries;
-  SetBoundaryCapacity(FEvapotranspirationRateData.Count);
+  ClearBoundaries(AModel);
+  SetBoundaryCapacity(FEvapotranspirationRateData.Count, AModel);
   for TimeIndex := 0 to FEvapotranspirationRateData.Count - 1 do
   begin
-    AddBoundary(TEvtStorage.Create);
+    AddBoundary(TEvtStorage.Create(AModel));
   end;
   ListOfTimeLists.Add(FEvapotranspirationRateData);
 end;
@@ -734,9 +734,9 @@ begin
 end;
 
 procedure TEvtCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TEvtStorage).FEvtArray, BoundaryCount);
+  SetLength((Boundaries[ItemIndex, AModel] as TEvtStorage).FEvtArray, BoundaryCount);
   inherited;
 end;
 
@@ -1048,7 +1048,7 @@ begin
   end;
 end;
 
-procedure TEvtBoundary.GetEvapotranspirationLayerCells(LayerTimeList: TList);
+procedure TEvtBoundary.GetEvapotranspirationLayerCells(LayerTimeList: TList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TEvtLayerStorage;
@@ -1060,25 +1060,25 @@ begin
   end;
   for ValueIndex := 0 to EvapotranspirationLayers.Count - 1 do
   begin
-    if ValueIndex < EvapotranspirationLayers.BoundaryCount then
+    if ValueIndex < EvapotranspirationLayers.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := EvapotranspirationLayers.Boundaries[ValueIndex] as TEvtLayerStorage;
+      BoundaryStorage := EvapotranspirationLayers.Boundaries[ValueIndex, AModel] as TEvtLayerStorage;
       AssignEvapotranspirationLayerCells(BoundaryStorage, LayerTimeList);
     end;
   end;
 end;
 
 procedure TEvtBoundary.GetEvapotranspirationSurfaceDepthCells(
-  LayerTimeList: TList);
+  LayerTimeList: TList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TEvtSurfDepthStorage;
 begin
   for ValueIndex := 0 to EvtSurfDepthCollection.Count - 1 do
   begin
-    if ValueIndex < EvtSurfDepthCollection.BoundaryCount then
+    if ValueIndex < EvtSurfDepthCollection.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := EvtSurfDepthCollection.Boundaries[ValueIndex] as TEvtSurfDepthStorage;
+      BoundaryStorage := EvtSurfDepthCollection.Boundaries[ValueIndex, AModel] as TEvtSurfDepthStorage;
       AssignSurfaceDepthCells(BoundaryStorage, LayerTimeList);
     end;
   end;
@@ -1102,9 +1102,9 @@ begin
   begin
     for ValueIndex := 0 to Values.Count - 1 do
     begin
-      if ValueIndex < Values.BoundaryCount then
+      if ValueIndex < Values.BoundaryCount[AModel] then
       begin
-        BoundaryStorage := Values.Boundaries[ValueIndex] as TEvtStorage;
+        BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TEvtStorage;
         AssignCells(BoundaryStorage, ValueTimeList, AModel);
       end;
     end;
@@ -1127,15 +1127,15 @@ begin
       end;
       for ValueIndex := 0 to Param.Param.Count - 1 do
       begin
-        if ValueIndex < Param.Param.BoundaryCount then
+        if ValueIndex < Param.Param.BoundaryCount[AModel] then
         begin
-          BoundaryStorage := Param.Param.Boundaries[ValueIndex] as TEvtStorage;
+          BoundaryStorage := Param.Param.Boundaries[ValueIndex, AModel] as TEvtStorage;
           AssignCells(BoundaryStorage, Times, AModel);
         end;
       end;
     end;
   end;
-  ClearBoundaries;
+  ClearBoundaries(AModel);
 end;
 
 
@@ -1324,9 +1324,9 @@ end;
 
 { TEvtLayerCollection }
 
-procedure TEvtLayerCollection.AddSpecificBoundary;
+procedure TEvtLayerCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TEvtLayerStorage.Create);
+  AddBoundary(TEvtLayerStorage.Create(AModel));
 end;
 
 procedure TEvtLayerCollection.AssignCellValues(DataSets: TList;
@@ -1349,7 +1349,7 @@ begin
   LocalModel := AModel as TCustomModel;
   BoundaryIndex := 0;
   EvapotranspirationLayerArray := DataSets[LayerPosition];
-  Boundary := Boundaries[ItemIndex] as TEvtLayerStorage;
+  Boundary := Boundaries[ItemIndex, AModel] as TEvtLayerStorage;
   EvapotranspirationLayerArray.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
     LayerMax, RowMax, ColMax);
   if LayerMin >= 0 then
@@ -1412,13 +1412,13 @@ begin
   end;
   ALink := TimeListLink.GetLink(AModel) as TEvtLayerTimeListLink;
   EvapotranspirationLayerData := ALink.FEvapotranspirationLayerData;
-  EvapotranspirationLayerData.Initialize(BoundaryValues, ScreenObject, True);
+  EvapotranspirationLayerData.Initialize(BoundaryValues, ScreenObject, lctUse);
   Assert(EvapotranspirationLayerData.Count = Count);
-  ClearBoundaries;
-  SetBoundaryCapacity(EvapotranspirationLayerData.Count);
+  ClearBoundaries(AModel);
+  SetBoundaryCapacity(EvapotranspirationLayerData.Count, AModel);
   for TimeIndex := 0 to EvapotranspirationLayerData.Count - 1 do
   begin
-    AddBoundary(TEvtLayerStorage.Create);
+    AddBoundary(TEvtLayerStorage.Create(AModel));
   end;
   ListOfTimeLists.Add(EvapotranspirationLayerData);
 end;
@@ -1450,9 +1450,9 @@ begin
 end;
 
 procedure TEvtLayerCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TEvtLayerStorage).FEvtLayerArray,
+  SetLength((Boundaries[ItemIndex, AModel] as TEvtLayerStorage).FEvtLayerArray,
     BoundaryCount);
   inherited;
 end;
@@ -1670,9 +1670,9 @@ end;
 
 { TEvtSurfDepthCollection }
 
-procedure TEvtSurfDepthCollection.AddSpecificBoundary;
+procedure TEvtSurfDepthCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TEvtSurfDepthStorage.Create);
+  AddBoundary(TEvtSurfDepthStorage.Create(AModel));
 end;
 
 procedure TEvtSurfDepthCollection.AssignCellValues(DataSets: TList;
@@ -1697,7 +1697,7 @@ begin
   BoundaryIndex := 0;
   EvapotranspirationSurfaceArray := DataSets[SurfacePosition];
   EvapotranspirationDepthArray := DataSets[DepthPosition];
-  Boundary := Boundaries[ItemIndex] as TEvtSurfDepthStorage;
+  Boundary := Boundaries[ItemIndex, AModel] as TEvtSurfDepthStorage;
   EvapotranspirationSurfaceArray.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
     LayerMax, RowMax, ColMax);
   if LayerMin >= 0 then
@@ -1769,7 +1769,7 @@ begin
   end;
   ALink := TimeListLink.GetLink(AModel) as TEvtSurfDepthListLink;
   EvapotranspirationSurfaceData := ALink.FEvapotranspirationSurfaceData;
-  EvapotranspirationSurfaceData.Initialize(BoundaryValues, ScreenObject, True);
+  EvapotranspirationSurfaceData.Initialize(BoundaryValues, ScreenObject, lctUse);
   Assert(EvapotranspirationSurfaceData.Count = Count);
 
   for Index := 0 to Count - 1 do
@@ -1779,14 +1779,14 @@ begin
     BoundaryValues[Index].Formula := Item.EvapotranspirationDepth;
   end;
   EvapotranspirationDepthData := ALink.FEvapotranspirationDepthData;
-  EvapotranspirationDepthData.Initialize(BoundaryValues, ScreenObject, True);
+  EvapotranspirationDepthData.Initialize(BoundaryValues, ScreenObject, lctUse);
   Assert(EvapotranspirationDepthData.Count = Count);
 
-  ClearBoundaries;
-  SetBoundaryCapacity(EvapotranspirationSurfaceData.Count);
+  ClearBoundaries(AModel);
+  SetBoundaryCapacity(EvapotranspirationSurfaceData.Count, AModel);
   for TimeIndex := 0 to EvapotranspirationSurfaceData.Count - 1 do
   begin
-    AddBoundary(TEvtSurfDepthStorage.Create);
+    AddBoundary(TEvtSurfDepthStorage.Create(AModel));
   end;
   ListOfTimeLists.Add(EvapotranspirationSurfaceData);
   ListOfTimeLists.Add(EvapotranspirationDepthData);
@@ -1840,9 +1840,9 @@ begin
 end;
 
 procedure TEvtSurfDepthCollection.SetBoundaryStartAndEndTime(
-  BoundaryCount: Integer; Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  BoundaryCount: Integer; Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TEvtSurfDepthStorage).FEvtSurfDepthArray,
+  SetLength((Boundaries[ItemIndex, AModel] as TEvtSurfDepthStorage).FEvtSurfDepthArray,
     BoundaryCount);
   inherited;
 

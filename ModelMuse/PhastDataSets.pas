@@ -1427,7 +1427,7 @@ begin
         if not AScreenObject.Deleted then
         begin
           AScreenObject.AssignValuesToPhastDataSet(
-            frmGoPhast.Grid, self, FModel, True);
+            frmGoPhast.Grid, self, FModel, lctUse);
         end;
       end;
 
@@ -2921,7 +2921,7 @@ begin
       if not AScreenObject.Deleted then
       begin
         AScreenObject.AssignValuesToPhastDataSet(
-          frmGoPhast.PhastGrid, self, FModel, True);
+          frmGoPhast.PhastGrid, self, FModel, lctUse);
       end;
     end;
   finally
@@ -3791,7 +3791,7 @@ begin
           end;
 
           AScreenObject.AssignValuesToPhastDataSet(
-            frmGoPhast.PhastGrid, DataSet, Model, True);
+            frmGoPhast.PhastGrid, DataSet, Model, lctUse);
         end;
       end;
     end;

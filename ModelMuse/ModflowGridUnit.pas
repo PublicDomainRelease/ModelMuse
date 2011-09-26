@@ -2940,6 +2940,7 @@ begin
         if (Value <> nil) and (ChildDataArray <> nil) then
         begin
           ChildDataArray.ContourLimits := Value.ContourLimits;
+          ChildDataArray.Contours := Value.Contours;
         end;
         ChildModel.Grid.FrontContourDataSet := ChildDataArray;
       end;
@@ -3184,6 +3185,7 @@ begin
         if (Value <> nil) and (ChildDataArray <> nil) then
         begin
           ChildDataArray.ContourLimits := Value.ContourLimits;
+          ChildDataArray.Contours := Value.Contours;
         end;
         ChildModel.Grid.SideContourDataSet := ChildDataArray;
       end;
@@ -3246,6 +3248,7 @@ begin
         if (Value <> nil) and (ChildDataArray <> nil) then
         begin
           ChildDataArray.ContourLimits := Value.ContourLimits;
+          ChildDataArray.Contours := Value.Contours;
         end;
         ChildModel.Grid.ThreeDContourDataSet := ChildDataArray;
       end;
@@ -3308,6 +3311,7 @@ begin
         if (Value <> nil) and (ChildDataArray <> nil) then
         begin
           ChildDataArray.ContourLimits := Value.ContourLimits;
+          ChildDataArray.Contours := Value.Contours;
         end;
         ChildModel.Grid.TopContourDataSet := ChildDataArray;
       end;

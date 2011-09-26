@@ -79,10 +79,10 @@ type
     procedure InvalidateStartData(Sender: TObject);
     procedure InvalidateEndData(Sender: TObject);
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
     // @name returns @link(TChdItem).
     class function ItemClass: TMF_BoundItemClass; override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
     procedure AssignCellLocation(BoundaryStorage: TCustomBoundaryStorage;
       ACellList: TObject); override;
     procedure AssignCellList(Expression: TExpression; ACellList: TObject;
@@ -350,9 +350,9 @@ begin
   result := TChdTimeListLink;
 end;
 
-procedure TChdCollection.AddSpecificBoundary;
+procedure TChdCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TChdStorage.Create);
+  AddBoundary(TChdStorage.Create(AModel));
 end;
 
 function TChdCollection.AdjustedFormula(FormulaIndex,
@@ -433,9 +433,9 @@ begin
 end;
 
 procedure TChdCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TChdStorage).FChdArray, BoundaryCount);
+  SetLength((Boundaries[ItemIndex, AModel] as TChdStorage).FChdArray, BoundaryCount);
   inherited;
 end;
 
@@ -625,9 +625,9 @@ begin
   EvaluateListBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    if ValueIndex < Values.BoundaryCount then
+    if ValueIndex < Values.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := Values.Boundaries[ValueIndex] as TChdStorage;
+      BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TChdStorage;
       AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;
@@ -647,9 +647,9 @@ begin
     end;
     for ValueIndex := 0 to Param.Param.Count - 1 do
     begin
-      if ValueIndex < Param.Param.BoundaryCount then
+      if ValueIndex < Param.Param.BoundaryCount[AModel] then
       begin
-        BoundaryStorage := Param.Param.Boundaries[ValueIndex];
+        BoundaryStorage := Param.Param.Boundaries[ValueIndex, AModel];
         AssignCells(BoundaryStorage, Times, AModel);
       end;
     end;

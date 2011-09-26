@@ -95,7 +95,7 @@
       <config-value name="deffont">font-family:'MS Sans Serif'; font-size:8pt; color:#000000;</config-value>
       <config-value name="contents"></config-value>
       <config-value name="topicprefix"></config-value>
-      <config-value name="autohelpstart">3634</config-value>
+      <config-value name="autohelpstart">3635</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">1</config-value>
       <config-value name="searchpath">.\;.\Used Images\;.\ScreenShots\;.\ModflowGuide\</config-value>
@@ -528,6 +528,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="_GMRES_Variables_Tab_Newton_So" value="3630"/>
       <helpcontext-number href="_Legend_Tab" value="3571"/>
       <helpcontext-number href="3D_Lighting_Controls_Dialog_Box" value="2350"/>
+      <helpcontext-number href="About_MODFLOW-LGR" value="3635"/>
       <helpcontext-number href="Abs" value="670"/>
       <helpcontext-number href="AbsI" value="680"/>
       <helpcontext-number href="AbsR" value="690"/>

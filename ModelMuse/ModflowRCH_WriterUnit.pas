@@ -76,8 +76,8 @@ begin
     Boundary := ScreenObject.ModflowRchBoundary;
     if Boundary <> nil then
     begin
-      Boundary.GetRechargeLayerCells(FLayers);
-      Boundary.RechargeLayers.ClearBoundaries;
+      Boundary.GetRechargeLayerCells(FLayers, Model);
+      Boundary.RechargeLayers.ClearBoundaries(Model);
     end;
   end;
 end;

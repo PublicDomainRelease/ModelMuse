@@ -459,8 +459,10 @@ Type
     FBackReduce: TRealStorage;
     FBackTol: TRealStorage;
     FBackFlag: integer;
+    FGoFail: Boolean;
     procedure SetRealProperty(Field, NewValue: TRealStorage);
     procedure SetIntegerProperty(var Field: integer; NewValue: integer);
+    procedure SetBooleanProperty(var Field: Boolean; NewValue: Boolean);
     procedure SetAccelMethod(const Value: TNewtonAccelMethod);
     procedure SetApplyReducedPrecondition(
       const Value: TNewtonApplyReducedPrecondition);
@@ -494,6 +496,7 @@ Type
     procedure SetStopTolerance(const Value: TRealStorage);
     procedure SetThicknessFactor(const Value: TRealStorage);
     procedure SetUseDropTolerance(const Value: TNewtonUseDropTolerance);
+    procedure SetGoFail(const Value: Boolean);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
@@ -579,6 +582,8 @@ Type
     // @name is MXITERXMD.
     property MaxInnerIterations: integer read FMaxInnerIterations
       write SetMaxInnerIterations stored True;
+    // @name is the GOFAIL OPTION in NWT.
+    property GoFail: Boolean read FGoFail write SetGoFail;
   end;
 
   TLayerOption = (loTop, loSpecified, loTopActive);
@@ -962,6 +967,8 @@ Type
   protected
     procedure SetIsSelected(const Value: boolean); override;
   public
+    procedure ComputeAverages(List: TModflowBoundListOfTimeLists);
+    procedure GetDisplayLists(List: TModflowBoundListOfTimeLists);
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
     destructor Destroy; override;
@@ -4092,74 +4099,31 @@ begin
   GetMfSfrEquationItemUseList(3, NewUseList);
 end;
 
+procedure TSfrPackageSelection.ComputeAverages(List: TModflowBoundListOfTimeLists);
+var
+  Index: Integer;
+  DisplayList: TModflowBoundaryDisplayTimeList;
+begin
+  for Index := 0 to List.Count - 1 do
+  begin
+    DisplayList := List[Index];
+    DisplayList.ComputeAverage;
+  end;
+end;
+
 procedure TSfrPackageSelection.InitializeSfrDisplay(Sender: TObject);
 var
   SfrWriter: TModflowSFR_Writer;
   List: TModflowBoundListOfTimeLists;
-  Index: Integer;
-  DisplayList: TModflowBoundaryDisplayTimeList;
 begin
   List := TModflowBoundListOfTimeLists.Create;
   SfrWriter := TModflowSFR_Writer.Create(FModel as TCustomModel, etDisplay);
   try
-    List.Add(MfSfrSegmentNumber);
-    List.Add(MfSfrReachNumber);
-    List.Add(MfSfrIcalc);
-    List.Add(MfSfrReachLength);
-    List.Add(MfSfrStreamTop);
-    List.Add(MfSfrStreamSlope);
-    List.Add(MfSfrStreamThickness);
-    List.Add(MfSfrStreamK);
-    List.Add(MfSfrSaturatedWaterContent);
-    List.Add(MfSfrInitialWaterContent);
-    List.Add(MfSfrBrooksCorey);
-    List.Add(MfSfrVerticalUnsatK);
-    List.Add(MfSfrOutSegment);
-    List.Add(MfSfrDiversionSegment);
-    List.Add(MfSfrIprior);
-    List.Add(MfSfrFlow);
-    List.Add(MfSfrRunoff);
-    List.Add(MfSfrPrecipitation);
-    List.Add(MfSfrEvapotranspiration);
-    List.Add(MfSfrChannelRoughness);
-    List.Add(MfSfrBankRoughness);
-    List.Add(MfSfrDepthCoefficient);
-    List.Add(MfSfrDepthExponent);
-    List.Add(MfSfrWidthCoefficient);
-    List.Add(MfSfrWidthExponent);
-    List.Add(MfSfrUpstreamHydraulicConductivity);
-    List.Add(MfSfrDownstreamHydraulicConductivity);
-    List.Add(MfSfrUpstreamWidth);
-    List.Add(MfSfrDownstreamWidth);
-    List.Add(MfSfrUpstreamThickness);
-    List.Add(MfSfrDownstreamThickness);
-    List.Add(MfSfrUpstreamElevation);
-    List.Add(MfSfrDownstreamElevation);
-    List.Add(MfSfrUpstreamDepth);
-    List.Add(MfSfrDownstreamDepth);
-    List.Add(MfSfrUpstreamUnsaturatedWaterContent);
-    List.Add(MfSfrDownstreamUnsaturatedWaterContent);
-    List.Add(MfSfrUpstreamUnsatInitialWaterContent);
-    List.Add(MfSfrDownstreamUnsatInitialWaterContent);
-    List.Add(MfSfrUpstreamBrooksCorey);
-    List.Add(MfSfrDownstreamBrooksCorey);
-    List.Add(MfSfrUpstreamUnsatKz);
-    List.Add(MfSfrDownstreamUnsatKz);
-
-    for Index := 0 to List.Count - 1 do
-    begin
-      DisplayList := List[Index];
-      DisplayList.CreateDataSets;
-    end;
+    GetDisplayLists(List);
 
     SfrWriter.UpdateDisplay(List);
 
-    for Index := 0 to List.Count - 1 do
-    begin
-      DisplayList := List[Index];
-      DisplayList.ComputeAverage;
-    end;
-
+    ComputeAverages(List);
   finally
     SfrWriter.Free;
     List.Free;
@@ -4209,6 +4173,61 @@ begin
     MfSfrVerticalUnsatK.Invalidate;
     MfSfrWidthCoefficient.Invalidate;
     MfSfrWidthExponent.Invalidate;
+  end;
+end;
+
+procedure TSfrPackageSelection.GetDisplayLists(List: TModflowBoundListOfTimeLists);
+var
+  Index: Integer;
+  DisplayList: TModflowBoundaryDisplayTimeList;
+begin
+  List.Add(MfSfrSegmentNumber);
+  List.Add(MfSfrReachNumber);
+  List.Add(MfSfrIcalc);
+  List.Add(MfSfrReachLength);
+  List.Add(MfSfrStreamTop);
+  List.Add(MfSfrStreamSlope);
+  List.Add(MfSfrStreamThickness);
+  List.Add(MfSfrStreamK);
+  List.Add(MfSfrSaturatedWaterContent);
+  List.Add(MfSfrInitialWaterContent);
+  List.Add(MfSfrBrooksCorey);
+  List.Add(MfSfrVerticalUnsatK);
+  List.Add(MfSfrOutSegment);
+  List.Add(MfSfrDiversionSegment);
+  List.Add(MfSfrIprior);
+  List.Add(MfSfrFlow);
+  List.Add(MfSfrRunoff);
+  List.Add(MfSfrPrecipitation);
+  List.Add(MfSfrEvapotranspiration);
+  List.Add(MfSfrChannelRoughness);
+  List.Add(MfSfrBankRoughness);
+  List.Add(MfSfrDepthCoefficient);
+  List.Add(MfSfrDepthExponent);
+  List.Add(MfSfrWidthCoefficient);
+  List.Add(MfSfrWidthExponent);
+  List.Add(MfSfrUpstreamHydraulicConductivity);
+  List.Add(MfSfrDownstreamHydraulicConductivity);
+  List.Add(MfSfrUpstreamWidth);
+  List.Add(MfSfrDownstreamWidth);
+  List.Add(MfSfrUpstreamThickness);
+  List.Add(MfSfrDownstreamThickness);
+  List.Add(MfSfrUpstreamElevation);
+  List.Add(MfSfrDownstreamElevation);
+  List.Add(MfSfrUpstreamDepth);
+  List.Add(MfSfrDownstreamDepth);
+  List.Add(MfSfrUpstreamUnsaturatedWaterContent);
+  List.Add(MfSfrDownstreamUnsaturatedWaterContent);
+  List.Add(MfSfrUpstreamUnsatInitialWaterContent);
+  List.Add(MfSfrDownstreamUnsatInitialWaterContent);
+  List.Add(MfSfrUpstreamBrooksCorey);
+  List.Add(MfSfrDownstreamBrooksCorey);
+  List.Add(MfSfrUpstreamUnsatKz);
+  List.Add(MfSfrDownstreamUnsatKz);
+  for Index := 0 to List.Count - 1 do
+  begin
+    DisplayList := List[Index];
+    DisplayList.CreateDataSets;
   end;
 end;
 
@@ -4608,7 +4627,7 @@ end;
 
 procedure TSfrParamInstance.SetParameterInstance(const Value: string);
 var
-  PhastModel: TPhastModel;
+  LocalModel: TCustomModel;
   ScreenObjectIndex: Integer;
   ScreenObject: TScreenObject;
   ParamIndex: Integer;
@@ -4617,12 +4636,12 @@ begin
   if FParameterInstance <> Value then
   begin
     InvalidateModel;
-    PhastModel := (Collection as TOrderedCollection).Model as TPhastModel;
-    if PhastModel <> nil then
+    LocalModel := (Collection as TOrderedCollection).Model as TCustomModel;
+    if LocalModel <> nil then
     begin
-      for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+      for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
       begin
-        ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+        ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
         if ScreenObject.ModflowSfrBoundary <> nil then
         begin
           for ParamIndex := 0 to ScreenObject.ModflowSfrBoundary.ParamIcalc.Count - 1 do
@@ -4643,7 +4662,7 @@ end;
 
 procedure TSfrParamInstance.SetParameterName(const Value: string);
 var
-  PhastModel: TPhastModel;
+  LocalModel: TCustomModel;
   ScreenObjectIndex: integer;
   ScreenObject: TScreenObject;
   ParamIndex: Integer;
@@ -4654,12 +4673,12 @@ begin
   if FParameterName <> NewName then
   begin
     InvalidateModel;
-    PhastModel := (Collection as TOrderedCollection).Model as TPhastModel;
-    if PhastModel <> nil then
+    LocalModel := (Collection as TOrderedCollection).Model as TCustomModel;
+    if LocalModel <> nil then
     begin
-      for ScreenObjectIndex := 0 to PhastModel.ScreenObjectCount - 1 do
+      for ScreenObjectIndex := 0 to LocalModel.ScreenObjectCount - 1 do
       begin
-        ScreenObject := PhastModel.ScreenObjects[ScreenObjectIndex];
+        ScreenObject := LocalModel.ScreenObjects[ScreenObjectIndex];
         if ScreenObject.ModflowSfrBoundary <> nil then
         begin
           for ParamIndex := 0 to ScreenObject.ModflowSfrBoundary.ParamIcalc.Count - 1 do
@@ -8107,6 +8126,7 @@ begin
     DropTolerancePreconditioning := SourceNwt.DropTolerancePreconditioning;
     InnerHeadClosureCriterion := SourceNwt.InnerHeadClosureCriterion;
     MaxInnerIterations := SourceNwt.MaxInnerIterations;
+    GoFail := SourceNwt.GoFail;
   end;
   inherited;
 end;
@@ -8221,6 +8241,16 @@ begin
   SetRealProperty(FBackTol , Value);
 end;
 
+procedure TNwtPackageSelection.SetBooleanProperty(var Field: Boolean;
+  NewValue: Boolean);
+begin
+  if Field <> NewValue then
+  begin
+    Field := NewValue;
+    InvalidateModel;
+  end;
+end;
+
 procedure TNwtPackageSelection.SetCorrectForCellBottom(const Value: integer);
 begin
   SetIntegerProperty(FCorrectForCellBottom , Value);
@@ -8260,6 +8290,11 @@ end;
 procedure TNwtPackageSelection.SetFluxTolerance(const Value: TRealStorage);
 begin
   SetRealProperty(FFluxTolerance , Value);
+end;
+
+procedure TNwtPackageSelection.SetGoFail(const Value: Boolean);
+begin
+  SetBooleanProperty(FGoFail, Value);
 end;
 
 procedure TNwtPackageSelection.SetHeadTolerance(const Value: TRealStorage);

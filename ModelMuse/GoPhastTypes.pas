@@ -116,6 +116,8 @@ type
   // element centers or at nodes.
   TEvaluatedAt = (eaBlocks, eaNodes);
 
+  TLgrCellTreatment = (lctUse, lctIgnore, lctZero);
+
   // @name represents the frequencies with which data can be printed
   // in PHAST.
   TFrequencyUnits = (fuDefault, fuSeconds, fuMinutes, fuHours, fuDays,

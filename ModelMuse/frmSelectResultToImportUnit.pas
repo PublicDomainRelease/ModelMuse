@@ -1793,74 +1793,185 @@ var
 begin
   result := True;
   try
-    if not FileExists(AFileName) then
-    begin
-      result := False;
-      Beep;
-      MessageDlg(AFileName + ' does not exist.', mtError, [mbOK], 0);
-      Exit;
-    end;
-
-    AFileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
     try
-      if AFileStream.Size = 0 then
+      if not FileExists(AFileName) then
       begin
         result := False;
         Beep;
-        MessageDlg(AFileName + ' is empty.', mtError, [mbOK], 0);
+        MessageDlg(AFileName + ' does not exist.', mtError, [mbOK], 0);
         Exit;
       end;
-    finally
-      AFileStream.Free;
-    end;
 
-    FFileStream := nil;
-    FFileVariable := nil;
-    try
-      if not OpenResultFile(AFileName, Precision, HufFormat) then
-      begin
-        result := False;
-        Exit;
-      end;
-    except on EPrecisionReadError do
-      begin
-        result := False;
-        Beep;
-        MessageDlg('Error reading ' + AFileName + '.', mtError, [mbOK], 0);
-        Exit;
-      end;
-    end;
-
-    case FResultFormat of
-      mrBinary:
+      AFileStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
+      try
+        if AFileStream.Size = 0 then
         begin
-          while FFileStream.Position < FFileStream.Size do
+          result := False;
+          Beep;
+          MessageDlg(AFileName + ' is empty.', mtError, [mbOK], 0);
+          Exit;
+        end;
+      finally
+        AFileStream.Free;
+      end;
+
+      FFileStream := nil;
+      FFileVariable := nil;
+      try
+        if not OpenResultFile(AFileName, Precision, HufFormat) then
+        begin
+          result := False;
+          Exit;
+        end;
+      except on EPrecisionReadError do
+        begin
+          result := False;
+          Beep;
+          MessageDlg('Error reading ' + AFileName + '.', mtError, [mbOK], 0);
+          Exit;
+        end;
+      end;
+
+      case FResultFormat of
+        mrBinary:
           begin
-            case Precision of
-              mpSingle:
-                ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
-                  PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
-              mpDouble:
-                ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
-                  PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
-              else Assert(False);
-            end;
-            RecordItem(string(DESC));
-            if AModel.ModflowGrid.RowCount = 1 then
+            while FFileStream.Position < FFileStream.Size do
             begin
-              if (AModel.ModflowLayerCount <> NROW)
+              case Precision of
+                mpSingle:
+                  ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
+                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+                mpDouble:
+                  ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
+                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+                else Assert(False);
+              end;
+              RecordItem(string(DESC));
+              if AModel.ModflowGrid.RowCount = 1 then
+              begin
+                if (AModel.ModflowLayerCount <> NROW)
+                  or (AModel.ModflowGrid.ColumnCount <> NCOL) then
+                begin
+                  Beep;
+                  MessageDlg('The number of layers or columns in the data set doesn''t'
+                    + ' match the number of layers or columns in the grid.',
+                    mtError, [mbOK], 0);
+                  result := False;
+                  break;
+                end;
+              end
+              else
+              begin
+                if (AModel.ModflowGrid.RowCount <> NROW)
+                  or (AModel.ModflowGrid.ColumnCount <> NCOL) then
+                begin
+                  Beep;
+                  MessageDlg('The number of rows or columns in the data set doesn''t'
+                    + ' match the number of rows or columns in the grid.',
+                    mtError, [mbOK], 0);
+                  result := False;
+                  break;
+                end;
+              end;
+            end;
+          end;
+        mrAscii:
+          begin
+            while not EOF(FFileVariable.AFile) do
+            begin
+              ReadModflowAsciiRealArray(FFileVariable, KSTP, KPER,
+                PERTIM, TOTIM, DESC2, NCOL, NROW, ILAY, AnArray, False);
+              RecordItem(string(DESC2));
+              if AModel.ModflowGrid.RowCount = 1 then
+              begin
+                if (AModel.ModflowLayerCount <> NROW)
+                  or (AModel.ModflowGrid.ColumnCount <> NCOL) then
+                begin
+                  Beep;
+                  MessageDlg('The number of layers or columns in the data set doesn''t'
+                    + ' match the number of layers or columns in the grid.',
+                    mtError, [mbOK], 0);
+                  result := False;
+                  break;
+                end;
+              end
+              else
+              begin
+                if (AModel.ModflowGrid.RowCount <> NROW)
+                  or (AModel.ModflowGrid.ColumnCount <> NCOL) then
+                begin
+                  Beep;
+                  MessageDlg('The number of rows or columns in the data set doesn''t'
+                    + ' match the number of rows or columns in the grid.',
+                    mtError, [mbOK], 0);
+                  result := False;
+                  break;
+                end;
+              end;
+            end;
+          end;
+        mrFlux:
+          begin
+            while FFileStream.Position < FFileStream.Size do
+            begin
+              case Precision of
+                mpSingle:
+                  ReadModflowSinglePrecFluxArray(FFileStream, KSTP, KPER,
+                    PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat,
+                    False);
+                mpDouble:
+                  ReadModflowDoublePrecFluxArray(FFileStream, KSTP, KPER,
+                    PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat,
+                    False);
+                else Assert(False);
+              end;
+              RecordItem(string(DESC));
+              if (AModel.ModflowGrid.RowCount <> NROW)
+                or (AModel.ModflowGrid.ColumnCount <> NCOL)
+                or (AModel.ModflowLayerCount <> Abs(NLAY)) then
+              begin
+                Beep;
+                MessageDlg('The number of rows, columns, or layers in the data set doesn''t'
+                  + ' match the number of rows, columns, or layers in the grid.',
+                  mtError, [mbOK], 0);
+                result := False;
+                break;
+              end;
+            end;
+          end;
+        mrHufAscii:
+          begin
+            while not EOF(FFileVariable.AFile) do
+            begin
+              ReadModflowAsciiRealArray(FFileVariable, KSTP, KPER,
+                PERTIM, TOTIM, DESC2, NCOL, NROW, ILAY, AnArray, False);
+              RecordItem(string(DESC2));
+              if (AModel.ModflowGrid.RowCount <> NROW)
                 or (AModel.ModflowGrid.ColumnCount <> NCOL) then
               begin
                 Beep;
-                MessageDlg('The number of layers or columns in the data set doesn''t'
-                  + ' match the number of layers or columns in the grid.',
+                MessageDlg('The number of rows or columns in the data set doesn''t'
+                  + ' match the number of rows or columns in the grid.',
                   mtError, [mbOK], 0);
                 result := False;
                 break;
               end;
             end
-            else
+          end;
+        mrHufBinary:
+          begin
+            while FFileStream.Position < FFileStream.Size do
             begin
+              case Precision of
+                mpSingle:
+                  ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
+                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+                mpDouble:
+                  ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
+                    PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
+                else Assert(False);
+              end;
+              RecordItem(string(DESC));
               if (AModel.ModflowGrid.RowCount <> NROW)
                 or (AModel.ModflowGrid.ColumnCount <> NCOL) then
               begin
@@ -1873,29 +1984,56 @@ begin
               end;
             end;
           end;
-        end;
-      mrAscii:
-        begin
-          while not EOF(FFileVariable.AFile) do
+        mrHufFlux:
           begin
-            ReadModflowAsciiRealArray(FFileVariable, KSTP, KPER,
-              PERTIM, TOTIM, DESC2, NCOL, NROW, ILAY, AnArray, False);
-            RecordItem(string(DESC2));
-            if AModel.ModflowGrid.RowCount = 1 then
+            while FFileStream.Position < FFileStream.Size do
             begin
-              if (AModel.ModflowLayerCount <> NROW)
-                or (AModel.ModflowGrid.ColumnCount <> NCOL) then
+              case Precision of
+                mpSingle:
+                  ReadModflowSinglePrecFluxArray(FFileStream, KSTP, KPER,
+                    PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat,
+                    False);
+                mpDouble:
+                  ReadModflowDoublePrecFluxArray(FFileStream, KSTP, KPER,
+                    PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat,
+                    False);
+                else Assert(False);
+              end;
+              for LayerIndex := 0 to Abs(NLAY) - 1 do
+              begin
+                ILAY := LayerIndex+1;
+                RecordItem(string(DESC));
+              end;
+              if (AModel.ModflowGrid.RowCount <> NROW)
+                or (AModel.ModflowGrid.ColumnCount <> NCOL)
+                or (AModel.HydrogeologicUnits.Count <> Abs(NLAY)) then
               begin
                 Beep;
-                MessageDlg('The number of layers or columns in the data set doesn''t'
-                  + ' match the number of layers or columns in the grid.',
+                MessageDlg('The number of rows, columns, or hydrogeologic units in the data set doesn''t'
+                  + ' match the number of rows, columns, or hydrogeologic units in the grid.',
                   mtError, [mbOK], 0);
                 result := False;
                 break;
               end;
-            end
-            else
+            end;
+          end;
+        mfSubBinary:
+          begin
+            while FFileStream.Position < FFileStream.Size do
             begin
+              case Precision of
+                mpSingle:
+                  ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP,
+                    KPER, PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray,
+                    False);
+                mpDouble:
+                  ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP,
+                    KPER, PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray,
+                    False);
+                else Assert(False);
+              end;
+              Description := SubsidenceDescription(string(DESC), ILAY);
+              RecordItem(string(Description));
               if (AModel.ModflowGrid.RowCount <> NROW)
                 or (AModel.ModflowGrid.ColumnCount <> NCOL) then
               begin
@@ -1906,146 +2044,17 @@ begin
                 result := False;
                 break;
               end;
-            end;
-          end;
-        end;
-      mrFlux:
-        begin
-          while FFileStream.Position < FFileStream.Size do
-          begin
-            case Precision of
-              mpSingle:
-                ReadModflowSinglePrecFluxArray(FFileStream, KSTP, KPER,
-                  PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat,
-                  False);
-              mpDouble:
-                ReadModflowDoublePrecFluxArray(FFileStream, KSTP, KPER,
-                  PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat,
-                  False);
-              else Assert(False);
-            end;
-            RecordItem(string(DESC));
-            if (AModel.ModflowGrid.RowCount <> NROW)
-              or (AModel.ModflowGrid.ColumnCount <> NCOL)
-              or (AModel.ModflowLayerCount <> Abs(NLAY)) then
-            begin
-              Beep;
-              MessageDlg('The number of rows, columns, or layers in the data set doesn''t'
-                + ' match the number of rows, columns, or layers in the grid.',
-                mtError, [mbOK], 0);
-              result := False;
-              break;
-            end;
-          end;
-        end;
-      mrHufAscii:
-        begin
-          while not EOF(FFileVariable.AFile) do
-          begin
-            ReadModflowAsciiRealArray(FFileVariable, KSTP, KPER,
-              PERTIM, TOTIM, DESC2, NCOL, NROW, ILAY, AnArray, False);
-            RecordItem(string(DESC2));
-            if (AModel.ModflowGrid.RowCount <> NROW)
-              or (AModel.ModflowGrid.ColumnCount <> NCOL) then
-            begin
-              Beep;
-              MessageDlg('The number of rows or columns in the data set doesn''t'
-                + ' match the number of rows or columns in the grid.',
-                mtError, [mbOK], 0);
-              result := False;
-              break;
             end;
           end
-        end;
-      mrHufBinary:
-        begin
-          while FFileStream.Position < FFileStream.Size do
-          begin
-            case Precision of
-              mpSingle:
-                ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
-                  PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
-              mpDouble:
-                ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP, KPER,
-                  PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray, False);
-              else Assert(False);
-            end;
-            RecordItem(string(DESC));
-            if (AModel.ModflowGrid.RowCount <> NROW)
-              or (AModel.ModflowGrid.ColumnCount <> NCOL) then
-            begin
-              Beep;
-              MessageDlg('The number of rows or columns in the data set doesn''t'
-                + ' match the number of rows or columns in the grid.',
-                mtError, [mbOK], 0);
-              result := False;
-              break;
-            end;
-          end;
-        end;
-      mrHufFlux:
-        begin
-          while FFileStream.Position < FFileStream.Size do
-          begin
-            case Precision of
-              mpSingle:
-                ReadModflowSinglePrecFluxArray(FFileStream, KSTP, KPER,
-                  PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat,
-                  False);
-              mpDouble:
-                ReadModflowDoublePrecFluxArray(FFileStream, KSTP, KPER,
-                  PERTIM, TOTIM, DESC, NCOL, NROW, NLAY, A3DArray, HufFormat,
-                  False);
-              else Assert(False);
-            end;
-            for LayerIndex := 0 to Abs(NLAY) - 1 do
-            begin
-              ILAY := LayerIndex+1;
-              RecordItem(string(DESC));
-            end;
-            if (AModel.ModflowGrid.RowCount <> NROW)
-              or (AModel.ModflowGrid.ColumnCount <> NCOL)
-              or (AModel.HydrogeologicUnits.Count <> Abs(NLAY)) then
-            begin
-              Beep;
-              MessageDlg('The number of rows, columns, or hydrogeologic units in the data set doesn''t'
-                + ' match the number of rows, columns, or hydrogeologic units in the grid.',
-                mtError, [mbOK], 0);
-              result := False;
-              break;
-            end;
-          end;
-        end;
-      mfSubBinary:
-        begin
-          while FFileStream.Position < FFileStream.Size do
-          begin
-            case Precision of
-              mpSingle:
-                ReadSinglePrecisionModflowBinaryRealArray(FFileStream, KSTP,
-                  KPER, PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray,
-                  False);
-              mpDouble:
-                ReadDoublePrecisionModflowBinaryRealArray(FFileStream, KSTP,
-                  KPER, PERTIM, TOTIM, DESC, NCOL, NROW, ILAY, AnArray,
-                  False);
-              else Assert(False);
-            end;
-            Description := SubsidenceDescription(string(DESC), ILAY);
-            RecordItem(string(Description));
-            if (AModel.ModflowGrid.RowCount <> NROW)
-              or (AModel.ModflowGrid.ColumnCount <> NCOL) then
-            begin
-              Beep;
-              MessageDlg('The number of rows or columns in the data set doesn''t'
-                + ' match the number of rows or columns in the grid.',
-                mtError, [mbOK], 0);
-              result := False;
-              break;
-            end;
-          end;
-        end
-      else Assert(False);
+        else Assert(False);
+      end;
+    except on E: EFOpenError do
+      begin
+        result := False;
+        Beep;
+        MessageDlg(E.message, mtError, [mbOK], 0);
+        Exit;
+      end;
     end;
   finally
     CloseFiles;

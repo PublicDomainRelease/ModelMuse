@@ -287,6 +287,8 @@ var
   DataSet: TDataArray;
   ContourColors: TColorParameters;
   DataArrayManager: TDataArrayManager;
+  ChildIndex: Integer;
+  ChildModel: TChildModel;
 begin
   Application.ProcessMessages;
   frmProgressMM.ShouldContinue := True;
@@ -317,6 +319,14 @@ begin
     frmGoPhast.Grid.SideContourDataSet := nil;
     frmGoPhast.Grid.ThreeDContourDataSet := nil;
     FLegend.ValueSource := nil;
+    for ChildIndex := 0 to frmGoPhast.PhastModel.ChildModels.Count - 1 do
+    begin
+      ChildModel := frmGoPhast.PhastModel.ChildModels[ChildIndex].ChildModel;
+      ChildModel.Grid.TopContourDataSet := nil;
+      ChildModel.Grid.FrontContourDataSet := nil;
+      ChildModel.Grid.SideContourDataSet := nil;
+      ChildModel.Grid.ThreeDContourDataSet := nil;
+    end;
   end
   else if (AnObject is TDataArray) then
   begin

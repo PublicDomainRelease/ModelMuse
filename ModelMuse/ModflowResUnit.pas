@@ -115,7 +115,7 @@ type
     procedure InvalidateEndHeadData(Sender: TObject);
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
     procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
@@ -133,7 +133,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
   end;
 
   TResBoundary = class(TModflowBoundary)
@@ -281,9 +281,9 @@ end;
 
 { TResCollection }
 
-procedure TResCollection.AddSpecificBoundary;
+procedure TResCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TResStorage.Create);
+  AddBoundary(TResStorage.Create(AModel));
 end;
 
 procedure TResCollection.AssignCellValues(DataSets: TList;
@@ -306,7 +306,7 @@ begin
   LocalModel := AModel as TCustomModel;
   BoundaryIndex := 0;
   ResIDArray := DataSets[0];
-  Boundary := Boundaries[ItemIndex] as TResStorage;
+  Boundary := Boundaries[ItemIndex, AModel] as TResStorage;
   ResIDArray.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
     LayerMax, RowMax, ColMax);
   if LayerMin >= 0 then
@@ -371,14 +371,14 @@ begin
   end;
   ALink := TimeListLink.GetLink(AModel) as TResTimeListLink;
   ResIDData := ALink.FResIDData;
-  ResIDData.Initialize(BoundaryValues, ScreenObject, False);
+  ResIDData.Initialize(BoundaryValues, ScreenObject, lctIgnore);
 
   Assert(ResIDData.Count = Count);
-  ClearBoundaries;
-  SetBoundaryCapacity(ResIDData.Count);
+  ClearBoundaries(AModel);
+  SetBoundaryCapacity(ResIDData.Count, AModel);
   for TimeIndex := 0 to ResIDData.Count - 1 do
   begin
-    AddBoundary(TResStorage.Create);
+    AddBoundary(TResStorage.Create(AModel));
   end;
   ListOfTimeLists.Add(ResIDData);
 end;
@@ -419,9 +419,9 @@ begin
 end;
 
 procedure TResCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TResStorage).FResArray, BoundaryCount);
+  SetLength((Boundaries[ItemIndex, AModel] as TResStorage).FResArray, BoundaryCount);
   inherited;
 end;
 
@@ -495,9 +495,9 @@ begin
   EvaluateArrayBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    if ValueIndex < Values.BoundaryCount then
+    if ValueIndex < Values.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := Values.Boundaries[ValueIndex] as TResStorage;
+      BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TResStorage;
       AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;

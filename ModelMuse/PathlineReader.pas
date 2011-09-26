@@ -107,12 +107,14 @@ type
     FXPrime: double;
     FYPrime: double;
     function CheckLimits(Limits: TPathLineDisplayLimits): boolean;
+    function GetAbsoluteTime: double;
   public
     procedure Assign(Source: TPersistent); override;
     function ShouldShow(Limits: TPathLineDisplayLimits;
       Orientation: TDataSetOrientation; CurrentColRowOrLayer: integer): boolean;
     function ShouldShowLine(Limits: TPathLineDisplayLimits): boolean;
     function ParentLine: TPathLine;
+    property AbsoluteTime: double read GetAbsoluteTime;
   published
     // Real world X coordinate
     property X: double read FX write FX;
@@ -448,6 +450,9 @@ type
     FMaxStartZone: integer;
     FDrawingEndPoints: Boolean;
     FRecordedEndPoints: Boolean;
+    FTopQuadTree: TRbwQuadTree;
+    FFrontQuadTree: TRbwQuadTree;
+    FSideQuadTree: TRbwQuadTree;
     class var
       FListInitialized: Boolean;
       FPathlineGLIndex: Cardinal;
@@ -476,6 +481,9 @@ type
     procedure Draw(Orientation: TDataSetOrientation; const BitMap: TBitmap32);
     procedure Draw3D;
     procedure Invalidate;
+    property TopQuadTree: TRbwQuadTree read FTopQuadTree;
+    property FrontQuadTree: TRbwQuadTree read FFrontQuadTree;
+    property SideQuadTree: TRbwQuadTree read FSideQuadTree;
   published
     property FileDate: TDateTime read FFileDate write SetFileDate;
     property FileName: string read FFileName write FFileName;
@@ -1243,7 +1251,7 @@ begin
       end;
     clcTime:
       begin
-        AValue := Abs(Point.Time);
+        AValue := Point.AbsoluteTime;
       end;
     clcXPrime:
       begin
@@ -1432,40 +1440,40 @@ begin
         LastPoint := Line.Points[Line.Points.Count-1];
         if not FirstTimeFound then
         begin
-          if FirstPoint.Time < LastPoint.Time then
+          if FirstPoint.AbsoluteTime < LastPoint.AbsoluteTime then
           begin
-            MinTime := FirstPoint.Time;
-            MaxTime := LastPoint.Time;
+            MinTime := FirstPoint.AbsoluteTime;
+            MaxTime := LastPoint.AbsoluteTime;
           end
           else
           begin
-            MinTime := LastPoint.Time;
-            MaxTime := FirstPoint.Time;
+            MinTime := LastPoint.AbsoluteTime;
+            MaxTime := FirstPoint.AbsoluteTime;
           end;
           FirstTimeFound := True;
         end
         else
         begin
-          if FirstPoint.Time < LastPoint.Time then
+          if FirstPoint.AbsoluteTime < LastPoint.AbsoluteTime then
           begin
-            if FirstPoint.Time < MinTime then
+            if FirstPoint.AbsoluteTime < MinTime then
             begin
-              MinTime := FirstPoint.Time
+              MinTime := FirstPoint.AbsoluteTime
             end;
-            if LastPoint.Time > MaxTime then
+            if LastPoint.AbsoluteTime > MaxTime then
             begin
-              MaxTime := LastPoint.Time;
+              MaxTime := LastPoint.AbsoluteTime;
             end;
           end
           else
           begin
-            if LastPoint.Time < MinTime then
+            if LastPoint.AbsoluteTime < MinTime then
             begin
-              MinTime := LastPoint.Time
+              MinTime := LastPoint.AbsoluteTime
             end;
-            if FirstPoint.Time > MaxTime then
+            if FirstPoint.AbsoluteTime > MaxTime then
             begin
-              MaxTime := FirstPoint.Time;
+              MaxTime := FirstPoint.AbsoluteTime;
             end;
           end;
         end;
@@ -1545,12 +1553,17 @@ begin
   end;
   if Limits.TimeLimits.UseLimit then
   begin
-    result := (Limits.TimeLimits.StartLimit <= Time)
-      and (Time <= Limits.TimeLimits.EndLimit);
+    result := (Limits.TimeLimits.StartLimit <= AbsoluteTime)
+      and (AbsoluteTime <= Limits.TimeLimits.EndLimit);
     if not result then Exit;
   end;
 end;
 
+
+function TPathLinePoint.GetAbsoluteTime: double;
+begin
+  result := Abs(Time);
+end;
 
 function TPathLinePoint.ParentLine: TPathLine;
 begin
@@ -1648,7 +1661,7 @@ begin
   result := Count > 0;
   if result then
   begin
-    Maxtime := Points[Count -1].Time;
+    Maxtime := Points[Count -1].AbsoluteTime;
   end;
 end;
 
@@ -2374,6 +2387,9 @@ begin
     MinEndZone := EndPointSource.MinEndZone;
     MaxEndZone := EndPointSource.MaxEndZone;
     Points := EndPointSource.Points;
+    TopQuadTree.Clear;
+    FrontQuadTree.Clear;
+    SideQuadTree.Clear;
   end;
   inherited;
 end;
@@ -2381,12 +2397,18 @@ end;
 constructor TEndPointReader.Create;
 begin
   inherited;
+  FTopQuadTree := TRbwQuadTree.Create(nil);
+  FFrontQuadTree := TRbwQuadTree.Create(nil);
+  FSideQuadTree := TRbwQuadTree.Create(nil);
   FPoints:= TEndPoints.Create;
 end;
 
 destructor TEndPointReader.Destroy;
 begin
   FPoints.Free;
+  FSideQuadTree.Free;
+  FFrontQuadTree.Free;
+  FTopQuadTree.Free;
   inherited;
 end;
 
@@ -2403,6 +2425,9 @@ var
   AColor: TColor;
   AColor32: TColor32;
   ARect: TRect;
+  QuadTree: TRbwQuadTree;
+  ShouldInitializeTree: Boolean;
+  Limits: TGridLimit;
 begin
   if not Visible then
   begin
@@ -2420,26 +2445,61 @@ begin
   end;
   ColRowOrLayer := -1;
   ZoomBox := nil;
+  QuadTree := nil;
   case Orientation of
     dsoTop:
       begin
         ZoomBox := frmGoPhast.frameTopView.ZoomBox;
         ColRowOrLayer := Grid.SelectedLayer+1;
+        QuadTree := TopQuadTree;
       end;
     dsoFront:
       begin
         ZoomBox := frmGoPhast.frameFrontView.ZoomBox;
         ColRowOrLayer := Grid.SelectedRow+1;
+        QuadTree := FrontQuadTree;
       end;
     dsoSide:
       begin
         ZoomBox := frmGoPhast.frameSideView.ZoomBox;
         ColRowOrLayer := Grid.SelectedColumn+1;
+        QuadTree := SideQuadTree;
       end;
     dso3D: Assert(False);
     else Assert(False);
   end;
   GetMinMaxValues(MaxValue, MinValue);
+
+
+  ShouldInitializeTree := QuadTree.Count = 0;
+  if ShouldInitializeTree then
+  begin
+    Limits := Grid.GridLimits(OrientationToViewDirection(Orientation));
+    case Orientation of
+      dsoTop:
+        begin
+          QuadTree.XMax := Limits.MaxX;
+          QuadTree.XMin := Limits.MinX;
+          QuadTree.YMax := Limits.MaxY;
+          QuadTree.YMin := Limits.MinY;
+        end;
+      dsoFront:
+        begin
+          QuadTree.XMax := Limits.MaxX;
+          QuadTree.XMin := Limits.MinX;
+          QuadTree.YMax := Limits.MaxZ;
+          QuadTree.YMin := Limits.MinZ;
+        end;
+      dsoSide:
+        begin
+          QuadTree.XMax := Limits.MaxY;
+          QuadTree.XMin := Limits.MinY;
+          QuadTree.YMax := Limits.MaxZ;
+          QuadTree.YMin := Limits.MinZ;
+        end
+      else Assert(False);
+    end;
+  end;
 
   for EndPointIndex := 0 to Points.Count - 1 do
   begin
@@ -2454,37 +2514,61 @@ begin
                 begin
                   ADisplayPoint.X := ZoomBox.XCoord(EndPoint.StartX);
                   ADisplayPoint.Y := ZoomBox.YCoord(EndPoint.StartY);
+                  if ShouldInitializeTree then
+                  begin
+                    QuadTree.AddPoint(EndPoint.StartX, EndPoint.StartY, EndPoint);
+                  end;
                 end;
               dsoFront:
                 begin
                   ADisplayPoint.X := ZoomBox.XCoord(EndPoint.StartX);
                   ADisplayPoint.Y := ZoomBox.YCoord(EndPoint.StartZ);
+                  if ShouldInitializeTree then
+                  begin
+                    QuadTree.AddPoint(EndPoint.StartX, EndPoint.StartZ, EndPoint);
+                  end;
                 end;
               dsoSide:
                 begin
                   ADisplayPoint.X := ZoomBox.XCoord(EndPoint.StartZ);
                   ADisplayPoint.Y := ZoomBox.YCoord(EndPoint.StartY);
+                  if ShouldInitializeTree then
+                  begin
+                    QuadTree.AddPoint(EndPoint.StartZ, EndPoint.StartY, EndPoint);
+                  end;
                 end;
               else Assert(False);
             end;
           end;
-        wtpEnd: 
+        wtpEnd:
           begin
             case Orientation of
               dsoTop:
                 begin
                   ADisplayPoint.X := ZoomBox.XCoord(EndPoint.EndX);
                   ADisplayPoint.Y := ZoomBox.YCoord(EndPoint.EndY);
+                  if ShouldInitializeTree then
+                  begin
+                    QuadTree.AddPoint(EndPoint.EndX, EndPoint.EndY, EndPoint);
+                  end;
                 end;
               dsoFront:
                 begin
                   ADisplayPoint.X := ZoomBox.XCoord(EndPoint.EndX);
                   ADisplayPoint.Y := ZoomBox.YCoord(EndPoint.EndZ);
+                  if ShouldInitializeTree then
+                  begin
+                    QuadTree.AddPoint(EndPoint.EndX, EndPoint.EndZ, EndPoint);
+                  end;
                 end;
               dsoSide:
                 begin
                   ADisplayPoint.X := ZoomBox.XCoord(EndPoint.EndZ);
                   ADisplayPoint.Y := ZoomBox.YCoord(EndPoint.EndY);
+                  if ShouldInitializeTree then
+                  begin
+                    QuadTree.AddPoint(EndPoint.EndZ, EndPoint.EndY, EndPoint);
+                  end;
                 end;
               else Assert(False);
             end;

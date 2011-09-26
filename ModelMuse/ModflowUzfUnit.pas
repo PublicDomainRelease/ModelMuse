@@ -168,7 +168,7 @@ type
     procedure InvalidateUzfExtinctDepthData(Sender: TObject);
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
     procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
@@ -185,7 +185,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
   end;
 
   TUzfWaterContentTimeListLink = class(TTimeListsModelLink)
@@ -206,7 +206,7 @@ type
     procedure InvalidateUzfWaterContentData(Sender: TObject);
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
     procedure AssignCellValues(DataSets: TList;ItemIndex: Integer;
@@ -223,7 +223,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
   end;
 
   TUzfInfiltrationRateTimeListLink = class(TRchTimeListLink)
@@ -352,9 +352,9 @@ type
     function Used: boolean; override;
     procedure EvaluateArrayBoundaries(AModel: TBaseModel); override;
     procedure InvalidateDisplay; override;
-    procedure GetEvapotranspirationDemandCells(LayerTimeList: TList);
-    procedure GetExtinctionDepthCells(LayerTimeList: TList);
-    procedure GetWaterContentCells(LayerTimeList: TList);
+    procedure GetEvapotranspirationDemandCells(LayerTimeList: TList; AModel: TBaseModel);
+    procedure GetExtinctionDepthCells(LayerTimeList: TList; AModel: TBaseModel);
+    procedure GetWaterContentCells(LayerTimeList: TList; AModel: TBaseModel);
     procedure UpdateTimes(Times: TRealList; StartTestTime, EndTestTime: double;
       var StartRangeExtended, EndRangeExtended: boolean); override;
   published
@@ -636,54 +636,54 @@ begin
   EvaluateArrayBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    if ValueIndex < Values.BoundaryCount then
+    if ValueIndex < Values.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := Values.Boundaries[ValueIndex] as TRchStorage;
+      BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TRchStorage;
       AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;
 end;
 
-procedure TUzfBoundary.GetEvapotranspirationDemandCells(LayerTimeList: TList);
+procedure TUzfBoundary.GetEvapotranspirationDemandCells(LayerTimeList: TList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TEvtStorage;
 begin
   for ValueIndex := 0 to EvapotranspirationDemand.Count - 1 do
   begin
-    if ValueIndex < EvapotranspirationDemand.BoundaryCount then
+    if ValueIndex < EvapotranspirationDemand.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := EvapotranspirationDemand.Boundaries[ValueIndex] as TEvtStorage;
+      BoundaryStorage := EvapotranspirationDemand.Boundaries[ValueIndex, AModel] as TEvtStorage;
       AssignEvapotranspirationDemandCells(BoundaryStorage, LayerTimeList);
     end;
   end;
 end;
 
-procedure TUzfBoundary.GetExtinctionDepthCells(LayerTimeList: TList);
+procedure TUzfBoundary.GetExtinctionDepthCells(LayerTimeList: TList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TUzfExtinctDepthStorage;
 begin
   for ValueIndex := 0 to ExtinctionDepth.Count - 1 do
   begin
-    if ValueIndex < ExtinctionDepth.BoundaryCount then
+    if ValueIndex < ExtinctionDepth.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := ExtinctionDepth.Boundaries[ValueIndex] as TUzfExtinctDepthStorage;
+      BoundaryStorage := ExtinctionDepth.Boundaries[ValueIndex, AModel] as TUzfExtinctDepthStorage;
       AssignExtinctionDepthCells(BoundaryStorage, LayerTimeList);
     end;
   end;
 end;
 
-procedure TUzfBoundary.GetWaterContentCells(LayerTimeList: TList);
+procedure TUzfBoundary.GetWaterContentCells(LayerTimeList: TList; AModel: TBaseModel);
 var
   ValueIndex: Integer;
   BoundaryStorage: TUzfWaterContentStorage;
 begin
   for ValueIndex := 0 to WaterContent.Count - 1 do
   begin
-    if ValueIndex < WaterContent.BoundaryCount then
+    if ValueIndex < WaterContent.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := WaterContent.Boundaries[ValueIndex] as TUzfWaterContentStorage;
+      BoundaryStorage := WaterContent.Boundaries[ValueIndex, AModel] as TUzfWaterContentStorage;
       AssignWaterContentCells(BoundaryStorage, LayerTimeList);
     end;
   end;
@@ -955,9 +955,9 @@ end;
 
 { TUzfExtinctionDepthCollection }
 
-procedure TUzfExtinctionDepthCollection.AddSpecificBoundary;
+procedure TUzfExtinctionDepthCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TUzfExtinctDepthStorage.Create);
+  AddBoundary(TUzfExtinctDepthStorage.Create(AModel));
 end;
 
 procedure TUzfExtinctionDepthCollection.AssignCellValues(DataSets: TList;
@@ -980,7 +980,7 @@ begin
   LocalModel := AModel as TCustomModel;
   BoundaryIndex := 0;
   ExtinctionDepthRateArray := DataSets[UzfExtinctDepthPosition];
-  Boundary := Boundaries[ItemIndex] as TUzfExtinctDepthStorage;
+  Boundary := Boundaries[ItemIndex, AModel] as TUzfExtinctDepthStorage;
   ExtinctionDepthRateArray.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
     LayerMax, RowMax, ColMax);
   if LayerMin >= 0 then
@@ -1043,13 +1043,13 @@ begin
   end;
   ALink := TimeListLink.GetLink(AModel) as TUzfExtinctionDepthTimeListLink;
   FExtinctionDepthData := ALink.FExtinctionDepthData;
-  FExtinctionDepthData.Initialize(BoundaryValues, ScreenObject, True);
+  FExtinctionDepthData.Initialize(BoundaryValues, ScreenObject, lctUse);
   Assert(FExtinctionDepthData.Count = Count);
-  ClearBoundaries;
-  SetBoundaryCapacity(FExtinctionDepthData.Count);
+  ClearBoundaries(AModel);
+  SetBoundaryCapacity(FExtinctionDepthData.Count, AModel);
   for TimeIndex := 0 to FExtinctionDepthData.Count - 1 do
   begin
-    AddBoundary(TUzfExtinctDepthStorage.Create);
+    AddBoundary(TUzfExtinctDepthStorage.Create(AModel));
   end;
   ListOfTimeLists.Add(FExtinctionDepthData);
 end;
@@ -1082,18 +1082,18 @@ begin
 end;
 
 procedure TUzfExtinctionDepthCollection.SetBoundaryStartAndEndTime(
-  BoundaryCount: Integer; Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  BoundaryCount: Integer; Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TUzfExtinctDepthStorage).
+  SetLength((Boundaries[ItemIndex, AModel] as TUzfExtinctDepthStorage).
     FExtinctDepthArray, BoundaryCount);
   inherited;
 end;
 
 { TUzfWaterContentCollection }
 
-procedure TUzfWaterContentCollection.AddSpecificBoundary;
+procedure TUzfWaterContentCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TUzfWaterContentStorage.Create);
+  AddBoundary(TUzfWaterContentStorage.Create(AModel));
 end;
 
 procedure TUzfWaterContentCollection.AssignCellValues(DataSets: TList;
@@ -1116,7 +1116,7 @@ begin
   LocalModel := AModel as TCustomModel;
   BoundaryIndex := 0;
   WaterContentArray := DataSets[UzfWaterContentPosition];
-  Boundary := Boundaries[ItemIndex] as TUzfWaterContentStorage;
+  Boundary := Boundaries[ItemIndex, AModel] as TUzfWaterContentStorage;
   WaterContentArray.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
     LayerMax, RowMax, ColMax);
   if LayerMin >= 0 then
@@ -1179,13 +1179,13 @@ begin
   end;
   ALink := TimeListLink.GetLink(AModel) as TUzfWaterContentTimeListLink;
   WaterContentData := ALink.FWaterContentData;
-  WaterContentData.Initialize(BoundaryValues, ScreenObject, True);
+  WaterContentData.Initialize(BoundaryValues, ScreenObject, lctUse);
   Assert(WaterContentData.Count = Count);
-  ClearBoundaries;
-  SetBoundaryCapacity(WaterContentData.Count);
+  ClearBoundaries(AModel);
+  SetBoundaryCapacity(WaterContentData.Count, AModel);
   for TimeIndex := 0 to WaterContentData.Count - 1 do
   begin
-    AddBoundary(TUzfWaterContentStorage.Create);
+    AddBoundary(TUzfWaterContentStorage.Create(AModel));
   end;
   ListOfTimeLists.Add(WaterContentData);
 end;
@@ -1218,9 +1218,9 @@ begin
 end;
 
 procedure TUzfWaterContentCollection.SetBoundaryStartAndEndTime(
-  BoundaryCount: Integer; Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  BoundaryCount: Integer; Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TUzfWaterContentStorage).
+  SetLength((Boundaries[ItemIndex, AModel] as TUzfWaterContentStorage).
     FWaterContentArray, BoundaryCount);
   inherited;
 end;

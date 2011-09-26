@@ -63,6 +63,7 @@
         <style-set media="screen" type="para">text-align:center; border:none;</style-set>
         <style-set media="screen" type="text">font-weight:bold;</style-set>
       </styleclass>
+      <styleclass name="Heading4_atocs_" parentclass="Normal" shortcut="0"/>
       <tablestyleclass name="Default">
         <style-set media="screen">width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;</style-set>
       </tablestyleclass>
@@ -95,10 +96,11 @@
         <config-value name="MODFLOW-2005">MODFLOW-2005</config-value>
         <config-value name="MODFLOW-CFP">MODFLOW-CFP</config-value>
         <config-value name="MODFLOW-LGR">MODFLOW-LGR</config-value>
+        <config-value name="MODFLOW-NWT">MODFLOW-NWT</config-value>
         <config-value name="USER1">User defined 1</config-value>
         <config-value name="USER2">User defined 2</config-value>
         <config-value name="USER3">User defined 3</config-value>
-        <config-value name="MODFLOW-NWT">MODFLOW-NWT</config-value>
+        <config-value name="INSIDE-MODFLOW">INSIDE-MODFLOW</config-value>
       </config-group>
       <config-value name="imageshortcuts_includebaggage">1</config-value>
       <config-value name="make0include">CHM,ALLMODELS,OPT_ATOC,OPT_BREADTRAIL,OPT_FB,OPT_POPUPS,OPT_PRINT,OPT_SORTABLE,OPT_SUBTITLE,OPT_TOGGLE,OPT_TOGTOC,OPT_URL</config-value>
@@ -437,6 +439,11 @@
       <file-mod href="NWT_Newton_Solver.xml" build="ALLMODELS,MODFLOW-NWT"/>
       <file-mod href="STR.xml" build="ALLMODELS,MODFLOW-2000,MODFLOW-2005,MODFLOW-CFP,MODFLOW-LGR"/>
       <file-mod href="Suggested_input_values_for_the.xml" build="ALLMODELS,MODFLOW-NWT"/>
+      <file-mod href="Inside_MODFLOW.xml" build="INSIDE-MODFLOW"/>
+      <file-mod href="Basic_Package_Internal.xml" build="INSIDE-MODFLOW"/>
+      <file-mod href="Hydrogeologic_Unit_Flow_Package_Internal.xml" build="INSIDE-MODFLOW"/>
+      <file-mod href="Layer_Property_Flow_Package_Internal.xml" build="INSIDE-MODFLOW"/>
+      <file-mod href="Stream_Flow_Routing_Package_Internal.xml" build="INSIDE-MODFLOW"/>
     </file>
     <file href="Topics/Invisible/*.xml" build="ALL" filetype="topic">
       <file-mod href="Daflow_linkage.xml" build="ALLMODELS,MODFLOW-2000"/>

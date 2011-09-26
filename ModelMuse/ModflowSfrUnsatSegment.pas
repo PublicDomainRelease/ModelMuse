@@ -23,6 +23,7 @@ type
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
     procedure RecordStrings(Strings: TStringList);
   end;
+  PSfrUnsatSegmentRecord = ^TSfrUnsatSegmentRecord;
 
   TSrfUnsatSegmentArray = array of TSfrUnsatSegmentRecord;
 
@@ -110,7 +111,7 @@ type
     procedure InvalidateVerticalSaturatedKData(Sender: TObject);
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
     procedure AssignCellValues(DataSets: TList;ItemIndex: Integer;
@@ -128,7 +129,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
   public
     property AssignmentLocation: TAssignmentLocation read FAssignmentLocation
       write FAssignmentLocation;
@@ -483,9 +484,9 @@ end;
 
 { TSfrUnsatSegmentCollection }
 
-procedure TSfrUnsatSegmentCollection.AddSpecificBoundary;
+procedure TSfrUnsatSegmentCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TSfrUnsatSegmentStorage.Create);
+  AddBoundary(TSfrUnsatSegmentStorage.Create(AModel));
 end;
 
 procedure TSfrUnsatSegmentCollection.AssignCellValues(DataSets: TList;
@@ -514,7 +515,7 @@ begin
   InitialWaterContentArray := DataSets[1];
   BrooksCoreyExponentArray := DataSets[2];
   VerticalSaturatedKArray := DataSets[3];
-  Boundary := Boundaries[ItemIndex] as TSfrUnsatSegmentStorage;
+  Boundary := Boundaries[ItemIndex, AModel] as TSfrUnsatSegmentStorage;
 
   SaturatedWaterContentArray.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
     LayerMax, RowMax, ColMax);
@@ -617,7 +618,7 @@ begin
   end;
   ALink := TimeListLink.GetLink(AModel) as TSfrUnsatSegmentTimeListLink;
   BrooksCoreyExponentData := ALink.FBrooksCoreyExponentData;
-  BrooksCoreyExponentData.Initialize(BoundaryValues, ScreenObject, False,
+  BrooksCoreyExponentData.Initialize(BoundaryValues, ScreenObject, lctZero,
     AssignmentLocation);
 
   for Index := 0 to Count - 1 do
@@ -637,7 +638,7 @@ begin
     end;
   end;
   InitialWaterContentData := ALink.FInitialWaterContentData;
-  InitialWaterContentData.Initialize(BoundaryValues, ScreenObject, False,
+  InitialWaterContentData.Initialize(BoundaryValues, ScreenObject, lctZero,
     AssignmentLocation);
 
   for Index := 0 to Count - 1 do
@@ -657,7 +658,7 @@ begin
     end;
   end;
   SaturatedWaterContentData := ALink.FSaturatedWaterContentData;
-  SaturatedWaterContentData.Initialize(BoundaryValues, ScreenObject, False,
+  SaturatedWaterContentData.Initialize(BoundaryValues, ScreenObject, lctZero,
     AssignmentLocation);
 
   for Index := 0 to Count - 1 do
@@ -677,18 +678,18 @@ begin
     end;
   end;
   VerticalSaturatedKData := ALink.FVerticalSaturatedKData;
-  VerticalSaturatedKData.Initialize(BoundaryValues, ScreenObject, False,
+  VerticalSaturatedKData.Initialize(BoundaryValues, ScreenObject, lctZero,
     AssignmentLocation);
 
   Assert(BrooksCoreyExponentData.Count = Count);
   Assert(InitialWaterContentData.Count = Count);
   Assert(SaturatedWaterContentData.Count = Count);
   Assert(VerticalSaturatedKData.Count = Count);
-  ClearBoundaries;
-  SetBoundaryCapacity(BrooksCoreyExponentData.Count);
+  ClearBoundaries(AModel);
+  SetBoundaryCapacity(BrooksCoreyExponentData.Count, AModel);
   for TimeIndex := 0 to BrooksCoreyExponentData.Count - 1 do
   begin
-    AddBoundary(TSfrUnsatSegmentStorage.Create);
+    AddBoundary(TSfrUnsatSegmentStorage.Create(AModel));
   end;
   ListOfTimeLists.Add(SaturatedWaterContentData);
   ListOfTimeLists.Add(InitialWaterContentData);
@@ -790,9 +791,9 @@ begin
 end;
 
 procedure TSfrUnsatSegmentCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TSfrUnsatSegmentStorage).
+  SetLength((Boundaries[ItemIndex, AModel] as TSfrUnsatSegmentStorage).
     FSrfUnsatSegmentArray, BoundaryCount);
   inherited;
 end;

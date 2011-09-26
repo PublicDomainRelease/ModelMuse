@@ -25,6 +25,7 @@ type
     procedure Restore(Decomp: TDecompressionStream; Annotations: TStringList);
     procedure RecordStrings(Strings: TStringList);
   end;
+  PSfrSegmentRecord = ^TSfrSegmentRecord;
 
   TSrfSegmentArray = array of TSfrSegmentRecord;
 
@@ -117,7 +118,7 @@ type
     procedure InvalidateStreamDepthData(Sender: TObject);
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
     procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
@@ -135,7 +136,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
   public
     property AssignmentLocation: TAssignmentLocation read FAssignmentLocation
       write FAssignmentLocation;
@@ -574,9 +575,9 @@ end;
 
 { TSfrSegmentCollection }
 
-procedure TSfrSegmentCollection.AddSpecificBoundary;
+procedure TSfrSegmentCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TSfrSegmentStorage.Create);
+  AddBoundary(TSfrSegmentStorage.Create(AModel));
 end;
 
 procedure TSfrSegmentCollection.AssignCellValues(DataSets: TList;
@@ -607,7 +608,7 @@ begin
   StreambedElevationArray := DataSets[StreambedElevationPosition];
   StreamWidthArray := DataSets[StreamWidthPosition];
   StreamDepthArray := DataSets[StreamDepthPosition];
-  Boundary := Boundaries[ItemIndex] as TSfrSegmentStorage;
+  Boundary := Boundaries[ItemIndex, AModel] as TSfrSegmentStorage;
 
   HydraulicConductivityArray.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
     LayerMax, RowMax, ColMax);
@@ -715,7 +716,7 @@ begin
   end;
   ALink := TimeListLink.GetLink(AModel) as TSfrSegmentTimeListLink;
   HydraulicConductivityData := ALink.FHydraulicConductivityData;
-  HydraulicConductivityData.Initialize(BoundaryValues, ScreenObject, True,
+  HydraulicConductivityData.Initialize(BoundaryValues, ScreenObject, lctUse,
     AssignmentLocation);
 
   for Index := 0 to Count - 1 do
@@ -750,7 +751,7 @@ begin
   end;
   StreamBedThicknessData := ALink.FStreamBedThicknessData;
   StreamBedThicknessData.Initialize(BoundaryValues, ScreenObject,
-    True, AssignmentLocation);
+    lctUse, AssignmentLocation);
 
   for Index := 0 to Count - 1 do
   begin
@@ -784,7 +785,7 @@ begin
   end;
   StreamBedElevationData := ALink.FStreamBedElevationData;
   StreamBedElevationData.Initialize(BoundaryValues, ScreenObject,
-    True, AssignmentLocation);
+    lctUse, AssignmentLocation);
 
   for Index := 0 to Count - 1 do
   begin
@@ -811,7 +812,7 @@ begin
   end;
   StreamWidthData := ALink.FStreamWidthData;
   StreamWidthData.Initialize(BoundaryValues, ScreenObject,
-    True, AssignmentLocation);
+    lctUse, AssignmentLocation);
 
   for Index := 0 to Count - 1 do
   begin
@@ -831,7 +832,7 @@ begin
   end;
   StreamDepthData := ALink.FStreamDepthData;
   StreamDepthData.Initialize(BoundaryValues, ScreenObject,
-    True, AssignmentLocation);
+    lctUse, AssignmentLocation);
 
 
   Assert(HydraulicConductivityData.Count = Count);
@@ -839,11 +840,11 @@ begin
   Assert(StreamBedElevationData.Count = Count);
   Assert(StreamWidthData.Count = Count);
   Assert(StreamDepthData.Count = Count);
-  ClearBoundaries;
-  SetBoundaryCapacity(HydraulicConductivityData.Count);
+  ClearBoundaries(AModel);
+  SetBoundaryCapacity(HydraulicConductivityData.Count, AModel);
   for TimeIndex := 0 to HydraulicConductivityData.Count - 1 do
   begin
-    AddBoundary(TSfrSegmentStorage.Create);
+    AddBoundary(TSfrSegmentStorage.Create(AModel));
   end;
   ListOfTimeLists.Add(HydraulicConductivityData);
   ListOfTimeLists.Add(StreamBedThicknessData);
@@ -966,9 +967,9 @@ begin
 end;
 
 procedure TSfrSegmentCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TSfrSegmentStorage).FSrfSegmentArray,
+  SetLength((Boundaries[ItemIndex, AModel] as TSfrSegmentStorage).FSrfSegmentArray,
     BoundaryCount);
   inherited;
 end;

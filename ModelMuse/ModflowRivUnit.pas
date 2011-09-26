@@ -117,7 +117,7 @@ type
       Variables, DataSets: TList; AModel: TBaseModel); override;
     function AdjustedFormula(FormulaIndex, ItemIndex: integer): string;
       override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
     procedure TestIfObservationsPresent(var EndOfLastStressPeriod: Double;
       var StartOfFirstStressPeriod: Double;
       var ObservationsPresent: Boolean); override;
@@ -131,7 +131,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
   end;
 
   // Each @name stores a @link(TRivCollection).
@@ -417,9 +417,9 @@ begin
     StartOfFirstStressPeriod, ObservationsPresent);
 end;
 
-procedure TRivCollection.AddSpecificBoundary;
+procedure TRivCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TRivStorage.Create);
+  AddBoundary(TRivStorage.Create(AModel));
 end;
 
 function TRivCollection.AdjustedFormula(FormulaIndex,
@@ -556,9 +556,9 @@ begin
 end;
 
 procedure TRivCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TRivStorage).FRivArray, BoundaryCount);
+  SetLength((Boundaries[ItemIndex, AModel] as TRivStorage).FRivArray, BoundaryCount);
   inherited;
 end;
 
@@ -865,18 +865,18 @@ begin
     begin
       if PriorTime < Item.StartTime then
       begin
-        if ValueCount < Values.BoundaryCount then
+        if ValueCount < Values.BoundaryCount[AModel] then
         begin
-          BoundaryStorage := Values.Boundaries[ValueCount] as TRivStorage;
+          BoundaryStorage := Values.Boundaries[ValueCount, AModel] as TRivStorage;
           AssignCells(BoundaryStorage, ValueTimeList, AModel);
           Inc(ValueCount);
         end;
       end;
       PriorTime := Item.EndTime;
     end;
-    if ValueCount < Values.BoundaryCount then
+    if ValueCount < Values.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := Values.Boundaries[ValueCount] as TRivStorage;
+      BoundaryStorage := Values.Boundaries[ValueCount, AModel] as TRivStorage;
       AssignCells(BoundaryStorage, ValueTimeList, AModel);
       Inc(ValueCount);
     end;
@@ -884,9 +884,9 @@ begin
     begin
       if Item.EndTime < EndOfLastStressPeriod then
       begin
-        if ValueCount < Values.BoundaryCount then
+        if ValueCount < Values.BoundaryCount[AModel] then
         begin
-          BoundaryStorage := Values.Boundaries[ValueCount] as TRivStorage;
+          BoundaryStorage := Values.Boundaries[ValueCount, AModel] as TRivStorage;
           AssignCells(BoundaryStorage, ValueTimeList, AModel);
           Inc(ValueCount);
         end;
@@ -916,18 +916,18 @@ begin
       begin
         if PriorTime < Item.StartTime then
         begin
-          if ValueCount < Param.Param.BoundaryCount then
+          if ValueCount < Param.Param.BoundaryCount[AModel] then
           begin
-            BoundaryStorage := Param.Param.Boundaries[ValueCount] as TRivStorage;
+            BoundaryStorage := Param.Param.Boundaries[ValueCount, AModel] as TRivStorage;
             AssignCells(BoundaryStorage, Times, AModel);
             Inc(ValueCount);
           end;
         end;
         PriorTime := Item.EndTime;
       end;
-      if ValueCount < Param.Param.BoundaryCount then
+      if ValueCount < Param.Param.BoundaryCount[AModel] then
       begin
-        BoundaryStorage := Param.Param.Boundaries[ValueCount] as TRivStorage;
+        BoundaryStorage := Param.Param.Boundaries[ValueCount, AModel] as TRivStorage;
         AssignCells(BoundaryStorage, Times, AModel);
         Inc(ValueCount);
       end;
@@ -935,9 +935,9 @@ begin
       begin
         if Item.EndTime < EndOfLastStressPeriod then
         begin
-          if ValueCount < Param.Param.BoundaryCount then
+          if ValueCount < Param.Param.BoundaryCount[AModel] then
           begin
-            BoundaryStorage := Param.Param.Boundaries[ValueCount] as TRivStorage;
+            BoundaryStorage := Param.Param.Boundaries[ValueCount, AModel] as TRivStorage;
             AssignCells(BoundaryStorage, Times, AModel);
             Inc(ValueCount);
           end;

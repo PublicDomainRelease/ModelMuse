@@ -21,9 +21,9 @@ uses
   Types, Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, StdCtrls, ExtCtrls, JvExExtCtrls, JvImage, ImgList,
   JvImageList, TeEngine, Series, TeeProcs, Chart, ComCtrls, Buttons,
-  JvNavigationPane, JvSplitter, JvSyncSplitter, JvExtComponent,  JvToolEdit,
-  JvRichEdit, AppEvnts, RealListUnit, JvHtControls, JvPageList,
-  JvExControls, JvExStdCtrls, JvExMask, Mask, JvExComCtrls, JvComCtrls;
+  JvToolEdit, AppEvnts, RealListUnit, JvHtControls, JvPageList,
+  JvExControls, JvExStdCtrls, JvExMask, Mask, JvExComCtrls,
+  JvComCtrls, JvRichEdit;
 
 type
   TStatusChange = (scOK, scWarning, scError, scNone);

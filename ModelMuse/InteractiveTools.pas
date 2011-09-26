@@ -30,9 +30,15 @@ const
   SelectedCellsColor = clSilver;
 
 var
-  SelectingObjectsWithLine: boolean = False;  
+  SelectingObjectsWithLine: boolean = False;
 
 type
+  TPoint64 = record
+    X: Int64;
+    Y: Int64;
+    class operator Implicit(APoint: TPoint): TPoint64;
+  end;
+
   {@abstract(@name defines the behavior when the user wants to zoom in
     on a particular area that has been outlined.)}
   TZoomTool = class(TCustomInteractiveTool)
@@ -5268,11 +5274,11 @@ begin
       and (AScreenObject.MinY >= FMinY);
   end;
 end;
-  
+
 procedure TSelectScreenObjectTool.DrawOnBitMap32(Sender: TObject;
   Buffer: TBitmap32);
 var
-  TL, BR: TPoint;
+  TL, BR: TPoint64;
   BitMap: TBitmap32;
 begin
   if (FSelectLine = nil) and FShouldDrawSelectionRectangle
@@ -5297,8 +5303,8 @@ begin
   
         BitMap := TBitmap32.Create;
         try
-          BitMap.Width := BR.X - TL.X + 1;
-          BitMap.Height := BR.Y - TL.Y + 1;
+          BitMap.Width := Min(BR.X - TL.X + 1, MAXINT);
+          BitMap.Height := Min(BR.Y - TL.Y + 1, MAXINT);
           BitMap.DrawMode := dmBlend;
           BitMap.SetStipple([0, 0, 0, 0, 0,
             clBlack32, clBlack32, clBlack32, clBlack32, clBlack32]);
@@ -6201,6 +6207,14 @@ begin
   FDoubleClicked := False;
 //  FX := X;
 //  FY := Y;
+end;
+
+{ TPoint64 }
+
+class operator TPoint64.Implicit(APoint: TPoint): TPoint64;
+begin
+  result.X := APoint.X;
+  result.Y := APoint.Y;
 end;
 
 initialization

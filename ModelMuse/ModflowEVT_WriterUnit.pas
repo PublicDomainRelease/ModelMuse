@@ -86,10 +86,10 @@ begin
     Boundary := ScreenObject.ModflowEvtBoundary;
     if Boundary <> nil then
     begin
-      Boundary.GetEvapotranspirationLayerCells(FLayers);
-      Boundary.GetEvapotranspirationSurfaceDepthCells(FDepthSurface);
-      Boundary.EvtSurfDepthCollection.ClearBoundaries;
-      Boundary.EvapotranspirationLayers.ClearBoundaries;
+      Boundary.GetEvapotranspirationLayerCells(FLayers, Model);
+      Boundary.GetEvapotranspirationSurfaceDepthCells(FDepthSurface, Model);
+      Boundary.EvtSurfDepthCollection.ClearBoundaries(Model);
+      Boundary.EvapotranspirationLayers.ClearBoundaries(Model);
     end;
   end;
 end;

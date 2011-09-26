@@ -56,11 +56,11 @@ procedure TModpathMainFileWriter.WriteDataSet6a;
 var
   TBEGIN: Double;
   FirstTime: Double;
-  ReferenceTime: Real;
+//  ReferenceTime: Real;
 begin
-  ReferenceTime := Model.ModflowPackages.ModPath.ReferenceTime;
+//  ReferenceTime := Model.ModflowPackages.ModPath.ReferenceTime;
   FirstTime := Model.ModflowFullStressPeriods.Items[0].StartTime;
-  TBEGIN := FirstTime - ReferenceTime;
+  TBEGIN := FirstTime { - ReferenceTime};
   WriteFloat(TBEGIN);
   WriteString(' # Data Set 6A: TBEGIN');
   NewLine;

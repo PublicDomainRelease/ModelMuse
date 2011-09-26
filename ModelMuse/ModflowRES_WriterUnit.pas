@@ -39,7 +39,13 @@ type
 implementation
 
 uses RbwParser, ModflowUnitNumbers, DataSetUnit, PhastModelUnit, ModflowResUnit,
-  ModflowTimeUnit, frmProgressUnit, frmFormulaErrorsUnit, Forms, GoPhastTypes;
+  ModflowTimeUnit, frmProgressUnit, frmFormulaErrorsUnit, Forms, GoPhastTypes,
+  frmErrorsAndWarningsUnit;
+
+resourcestring
+  StrNoReservoirsDefine = 'No reservoirs defined';
+  StrTheReservoirPackag = 'The Reservoir package is selected but no reservoi' +
+  'rs have been defined.';
 
 { TModflowRES_Writer }
 
@@ -54,6 +60,7 @@ var
   AScreenObject: TScreenObject;
 begin
   frmProgressMM.AddMessage('Evaluating RES Package data.');
+  frmErrorsAndWarnings.RemoveErrorGroup(Model, StrNoReservoirsDefine);
   NRES := 0;
   for Index := 0 to Model.ScreenObjectCount - 1 do
   begin
@@ -73,6 +80,10 @@ begin
       Inc(NRES);
       AScreenObject.ModflowResBoundary.ResId := NRES;
     end;
+  end;
+  if NRES = 0 then
+  begin
+    frmErrorsAndWarnings.AddError(Model, StrNoReservoirsDefine, StrTheReservoirPackag);
   end;
   inherited;
 end;
@@ -405,6 +416,10 @@ begin
   NameOfFile := FileName(AFileName);
   WriteToNameFile(StrRES, Model.UnitNumbers.UnitNumber(StrRES), NameOfFile, foInput);
   Evaluate;
+  if NRES = 0 then
+  begin
+    Exit;
+  end;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then
   begin

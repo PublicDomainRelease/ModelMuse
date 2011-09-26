@@ -168,7 +168,7 @@ type
     procedure InvalidateWithdrawalData(Sender: TObject);
   protected
     function GetTimeListLinkClass: TTimeListsModelLinkClass; override;
-    procedure AddSpecificBoundary; override;
+    procedure AddSpecificBoundary(AModel: TBaseModel); override;
     // See @link(TCustomMF_ArrayBoundColl.AssignCellValues
     // TCustomMF_ArrayBoundColl.AssignCellValues)
     procedure AssignCellValues(DataSets: TList; ItemIndex: Integer;
@@ -186,7 +186,7 @@ type
     // @SeeAlso(TCustomMF_BoundColl.SetBoundaryStartAndEndTime
     // TCustomMF_BoundColl.SetBoundaryStartAndEndTime)
     procedure SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-      Item: TCustomModflowBoundaryItem; ItemIndex: Integer); override;
+      Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel); override;
   end;
 
   TLakBoundary = class(TModflowBoundary)
@@ -780,9 +780,9 @@ end;
 
 { TLakCollection }
 
-procedure TLakCollection.AddSpecificBoundary;
+procedure TLakCollection.AddSpecificBoundary(AModel: TBaseModel);
 begin
-  AddBoundary(TLakStorage.Create);
+  AddBoundary(TLakStorage.Create(AModel));
 end;
 
 procedure TLakCollection.AssignCellValues(DataSets: TList;
@@ -815,7 +815,7 @@ begin
   EvaporationArray := DataSets[3];
   OverlandRunoffArray := DataSets[4];
   WithdrawalArray := DataSets[5];
-  Boundary := Boundaries[ItemIndex] as TLakStorage;
+  Boundary := Boundaries[ItemIndex, AModel] as TLakStorage;
   MinimumStageArray.GetMinMaxStoredLimits(LayerMin, RowMin, ColMin,
     LayerMax, RowMax, ColMax);
   if LayerMin >= 0 then
@@ -920,7 +920,7 @@ begin
   end;
   ALink := TimeListLink.GetLink(AModel) as TLakTimeListLink;
   MinimumStageData := ALink.FMinimumStageData;
-  MinimumStageData.Initialize(BoundaryValues, ScreenObject, False);
+  MinimumStageData.Initialize(BoundaryValues, ScreenObject, lctIgnore);
 
   for Index := 0 to Count - 1 do
   begin
@@ -929,7 +929,7 @@ begin
     BoundaryValues[Index].Formula := Item.MaximumStage;
   end;
   MaximumStageData := ALink.FMaximumStageData;
-  MaximumStageData.Initialize(BoundaryValues, ScreenObject, False);
+  MaximumStageData.Initialize(BoundaryValues, ScreenObject, lctIgnore);
 
   for Index := 0 to Count - 1 do
   begin
@@ -938,7 +938,7 @@ begin
     BoundaryValues[Index].Formula := Item.Precipitation;
   end;
   PrecipitationData := ALink.FPrecipitationData;
-  PrecipitationData.Initialize(BoundaryValues, ScreenObject, False);
+  PrecipitationData.Initialize(BoundaryValues, ScreenObject, lctIgnore);
 
   for Index := 0 to Count - 1 do
   begin
@@ -947,7 +947,7 @@ begin
     BoundaryValues[Index].Formula := Item.Evaporation;
   end;
   EvaporationData := ALink.FEvaporationData;
-  EvaporationData.Initialize(BoundaryValues, ScreenObject, False);
+  EvaporationData.Initialize(BoundaryValues, ScreenObject, lctIgnore);
 
   for Index := 0 to Count - 1 do
   begin
@@ -956,7 +956,7 @@ begin
     BoundaryValues[Index].Formula := Item.OverlandRunoff;
   end;
   OverlandRunoffData := ALink.FOverlandRunoffData;
-  OverlandRunoffData.Initialize(BoundaryValues, ScreenObject, False);
+  OverlandRunoffData.Initialize(BoundaryValues, ScreenObject, lctIgnore);
 
   for Index := 0 to Count - 1 do
   begin
@@ -965,7 +965,7 @@ begin
     BoundaryValues[Index].Formula := Item.Withdrawal;
   end;
   WithdrawalData := ALink.FWithdrawalData;
-  WithdrawalData.Initialize(BoundaryValues, ScreenObject, False);
+  WithdrawalData.Initialize(BoundaryValues, ScreenObject, lctIgnore);
 
   Assert(MinimumStageData.Count = Count);
   Assert(MaximumStageData.Count = Count);
@@ -974,11 +974,11 @@ begin
   Assert(OverlandRunoffData.Count = Count);
   Assert(WithdrawalData.Count = Count);
 
-  ClearBoundaries;
-  SetBoundaryCapacity(MinimumStageData.Count);
+  ClearBoundaries(AModel);
+  SetBoundaryCapacity(MinimumStageData.Count, AModel);
   for TimeIndex := 0 to MinimumStageData.Count - 1 do
   begin
-    AddBoundary(TLakStorage.Create);
+    AddBoundary(TLakStorage.Create(AModel));
   end;
 
   ListOfTimeLists.Add(MinimumStageData);
@@ -1121,9 +1121,9 @@ begin
 end;
 
 procedure TLakCollection.SetBoundaryStartAndEndTime(BoundaryCount: Integer;
-  Item: TCustomModflowBoundaryItem; ItemIndex: Integer);
+  Item: TCustomModflowBoundaryItem; ItemIndex: Integer; AModel: TBaseModel);
 begin
-  SetLength((Boundaries[ItemIndex] as TLakStorage).FLakArray, BoundaryCount);
+  SetLength((Boundaries[ItemIndex, AModel] as TLakStorage).FLakArray, BoundaryCount);
   inherited;
 end;
 
@@ -1242,9 +1242,9 @@ begin
   EvaluateArrayBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    if ValueIndex < Values.BoundaryCount then
+    if ValueIndex < Values.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := Values.Boundaries[ValueIndex] as TLakStorage;
+      BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TLakStorage;
       AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;

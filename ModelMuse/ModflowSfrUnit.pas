@@ -296,9 +296,9 @@ begin
   EvaluateArrayBoundaries(AModel);
   for ValueIndex := 0 to Values.Count - 1 do
   begin
-    if ValueIndex < Values.BoundaryCount then
+    if ValueIndex < Values.BoundaryCount[AModel] then
     begin
-      BoundaryStorage := Values.Boundaries[ValueIndex] as TSfrStorage;
+      BoundaryStorage := Values.Boundaries[ValueIndex, AModel] as TSfrStorage;
       AssignCells(BoundaryStorage, ValueTimeList, AModel);
     end;
   end;

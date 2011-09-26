@@ -218,7 +218,7 @@ inherited frmExportShapefile: TfrmExportShapefile
   end
   object btnCancel: TBitBtn
     Left = 366
-    Top = 500
+    Top = 499
     Width = 82
     Height = 34
     Anchors = [akTop, akRight]

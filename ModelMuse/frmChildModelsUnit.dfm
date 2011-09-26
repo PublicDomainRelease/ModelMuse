@@ -2,38 +2,41 @@ inherited frmChildModels: TfrmChildModels
   HelpType = htKeyword
   HelpKeyword = 'Child_Model_Dialog_Box'
   Caption = 'Child Models'
-  ClientHeight = 491
+  ClientHeight = 547
   ClientWidth = 471
   ExplicitWidth = 479
-  ExplicitHeight = 525
+  ExplicitHeight = 581
   PixelsPerInch = 96
   TextHeight = 18
   object Panel1: TPanel
     Left = 0
     Top = 0
     Width = 113
-    Height = 400
+    Height = 456
     Align = alLeft
     TabOrder = 0
+    ExplicitHeight = 400
     object tvChildModels: TTreeView
       Left = 1
       Top = 1
       Width = 111
-      Height = 357
+      Height = 413
       Align = alClient
       HideSelection = False
       Indent = 20
       TabOrder = 0
       OnChange = tvChildModelsChange
       OnChanging = tvChildModelsChanging
+      ExplicitHeight = 357
     end
     object Panel3: TPanel
       Left = 1
-      Top = 358
+      Top = 414
       Width = 111
       Height = 41
       Align = alBottom
       TabOrder = 1
+      ExplicitTop = 358
       object btnAdd: TSpeedButton
         Left = 23
         Top = 6
@@ -101,15 +104,17 @@ inherited frmChildModels: TfrmChildModels
     Left = 113
     Top = 0
     Width = 358
-    Height = 400
-    ActivePage = tabBasic
+    Height = 456
+    ActivePage = tabSolution
     Align = alClient
     TabOrder = 1
+    ExplicitHeight = 400
     object tabBasic: TTabSheet
       Caption = 'Basic'
+      ExplicitHeight = 367
       DesignSize = (
         350
-        367)
+        423)
       object lblBottomUnit: TLabel
         Left = 4
         Top = 64
@@ -330,13 +335,10 @@ inherited frmChildModels: TfrmChildModels
     object tabSolution: TTabSheet
       Caption = 'Solution'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 381
+      ExplicitHeight = 367
       DesignSize = (
         350
-        367)
+        423)
       object lblMaxIterations: TLabel
         Left = 3
         Top = 63
@@ -470,11 +472,12 @@ inherited frmChildModels: TfrmChildModels
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 400
+    Top = 456
     Width = 471
     Height = 91
     Align = alBottom
     TabOrder = 2
+    ExplicitTop = 400
     DesignSize = (
       471
       91)
