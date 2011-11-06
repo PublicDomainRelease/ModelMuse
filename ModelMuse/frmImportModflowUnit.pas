@@ -41,7 +41,7 @@ implementation
 {$R *.dfm}
 
 uses JclSysUtils, Modflow2005ImporterUnit, frmShowHideObjectsUnit,
-  frmGridColorUnit;
+  frmDisplayDataUnit;
 
 procedure TfrmImportModflow.btnOKClick(Sender: TObject);
 var
@@ -128,7 +128,7 @@ begin
     end;
     sbStatusBar.SimpleText := '';
     FreeAndNil(frmShowHideObjects);
-    FreeAndNil(frmGridColor);
+    FreeAndNil(frmDisplayData);
     ImportModflow2005(ListFileName, XOrigin, YOrigin, GridAngle,
       UpdateStatusBar, ShowProgress, mtParent);
 

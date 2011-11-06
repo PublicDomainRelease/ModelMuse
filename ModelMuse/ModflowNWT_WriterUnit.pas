@@ -69,9 +69,9 @@ begin
     noSpecified: OPTIONS := ' SPECIFIED';
     else Assert(False);
   end;
-  if NWT.GoFail then
+  if NWT.ContinueNWT then
   begin
-    OPTIONS := OPTIONS + ' GOFAIL';
+    OPTIONS := OPTIONS + ' CONTINUE';
   end;
   DBDTHETA := NWT.DBDTheta.Value;
   DBDKAPPA := NWT.DBDKappa.Value;

@@ -41,38 +41,47 @@ inherited frmRearrangeObjects: TfrmRearrangeObjects
       331
       99)
     object btnCancel: TBitBtn
-      Left = 232
+      Left = 221
       Top = 55
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
     object btnOK: TBitBtn
-      Left = 135
+      Left = 124
       Top = 55
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnHelp: TBitBtn
-      Left = 38
+      Left = 27
       Top = 55
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object rgShow: TRadioGroup
       Left = 8
       Top = 6
-      Width = 315
+      Width = 304
       Height = 43
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Show'

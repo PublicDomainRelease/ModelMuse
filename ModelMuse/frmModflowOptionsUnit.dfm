@@ -21,6 +21,10 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpType = htKeyword
       HelpKeyword = 'Description_Tab'
       Caption = 'Description'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         535
         291)
@@ -86,7 +90,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         ScrollBars = ssBoth
         TabOrder = 3
         WordWrap = False
-        OnExit = memoCommentsExit
       end
     end
     object TabSheet2: TTabSheet
@@ -94,6 +97,10 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Options_Tab'
       Caption = 'Options'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         535
         291)
@@ -148,7 +155,6 @@ inherited frmModflowOptions: TfrmModflowOptions
           Checked = True
           State = cbChecked
           TabOrder = 0
-          OnClick = cbPRINTTIMEClick
           LinkedControls = <>
           HotTrackFont.Charset = DEFAULT_CHARSET
           HotTrackFont.Color = clWindowText
@@ -166,7 +172,6 @@ inherited frmModflowOptions: TfrmModflowOptions
           Checked = True
           State = cbChecked
           TabOrder = 1
-          OnClick = cbCHTOCHClick
           LinkedControls = <>
           HotTrackFont.Charset = DEFAULT_CHARSET
           HotTrackFont.Color = clWindowText
@@ -243,7 +248,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         Checked = True
         State = cbChecked
         TabOrder = 5
-        OnClick = cbOpenInTextEditorClick
         LinkedControls = <>
         HotTrackFont.Charset = DEFAULT_CHARSET
         HotTrackFont.Color = clWindowText
@@ -260,7 +264,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         Filter = 'Binary head files (*.bhd)|*.bhd'
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 6
-        OnExit = feInitialHeadsExit
       end
     end
     object tabWetting: TTabSheet
@@ -268,6 +271,10 @@ inherited frmModflowOptions: TfrmModflowOptions
       HelpKeyword = 'Wetting_Tab'
       Caption = 'Wetting'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblWetFact: TLabel
         Left = 8
         Top = 35
@@ -316,7 +323,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         Enabled = False
         TabOrder = 0
         Text = '0.5'
-        OnChange = rdeWettingFactChange
         DataType = dtReal
         Max = 1.000000000000000000
         CheckMin = True
@@ -333,7 +339,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         Value = 1.000000000000000000
         Enabled = False
         TabOrder = 1
-        OnChange = seCheckDryChange
       end
       object comboWettingEquation: TJvImageComboBox
         Left = 8
@@ -350,7 +355,6 @@ inherited frmModflowOptions: TfrmModflowOptions
         ItemHeight = 22
         ItemIndex = 0
         TabOrder = 2
-        OnChange = comboWettingEquationChange
         Items = <
           item
             Brush.Style = bsClear

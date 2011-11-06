@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="7elictl0q9l76mk_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmRulerOptionsUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.tabTopY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.tabTopX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.tabSideZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.tabSideY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.tabFrontZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.tabFrontX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.pnlBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.pcMain" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.frameTopY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.frameTopX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.frameSideZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.frameSideY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.frameFrontZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.frameFrontX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRulerOptionsUnit.TfrmRulerOptions.btnCancel" />
+    </reference>
+  </view>
+</nodeSet>

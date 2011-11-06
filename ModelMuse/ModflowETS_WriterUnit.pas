@@ -16,6 +16,7 @@ Type
     FDepthSurface: TList;
     FPriorDepthFractionArray: TDataArray;
     FPriorRateFractionArray: TDataArray;
+    FEtsPackage: TEtsPackageSelection;
     procedure WriteDataSet1;
     procedure WriteDataSets2And3;
     procedure WriteDataSets4To11;
@@ -489,7 +490,8 @@ const
   VariableIdentifiers = 'Condfact';
 begin
   WriteParameterDefinitions(DS3, DS3Instances, DS4A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot, umAssign);
+    VariableIdentifiers, ErrorRoot, umAssign, FEtsPackage.MultiplierArrayNames,
+    FEtsPackage.ZoneArrayNames);
 end;
 
 procedure TModflowETS_Writer.WriteDataSet1;
@@ -522,8 +524,6 @@ begin
 end;
 
 procedure TModflowETS_Writer.WriteFile(const AFileName: string);
-var
-  NameOfFile: string;
 begin
   frmErrorsAndWarnings.RemoveErrorGroup(Model, EtsSurfaceError);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, EtsDepthError);
@@ -531,14 +531,17 @@ begin
   begin
     Exit
   end;
+  FEtsPackage := Package as TEtsPackageSelection;
   if Model.PackageGeneratedExternally(StrETS) then
   begin
     Exit;
   end;
+  FEtsPackage.MultiplierArrayNames.Clear;
+  FEtsPackage.ZoneArrayNames.Clear;
 //  frmProgress.AddMessage('Evaluating ETS Package data.');
-  NameOfFile := FileName(AFileName);
+  FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrETS, Model.UnitNumbers.UnitNumber(StrETS),
-    NameOfFile, foInput);
+    FNameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then

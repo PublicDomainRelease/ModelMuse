@@ -255,7 +255,7 @@ begin
       frmErrorsAndWarnings.AddError(Model, StrFileForTheInitial,
         Format(StrTheFileSDoesNot,
         [Model.ModflowOptions.InitialHeadFileName]));
-      Exit;
+//      Exit;
     end;
     RelativeFileName := ExtractRelativePath(
       IncludeTrailingPathDelimiter(ExtractFileDir(FNameOfFile)),

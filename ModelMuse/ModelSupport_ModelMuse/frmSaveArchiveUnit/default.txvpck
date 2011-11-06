@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="lons7zhsok4jxen_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSaveArchiveUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSaveArchiveUnit.frmSaveArchive" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmSaveArchiveUnit.frmSaveArchive" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSaveArchiveUnit.TfrmSaveArchive">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSaveArchiveUnit.TfrmSaveArchive.SetSaveEnabled(System.Boolean)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSaveArchiveUnit.TfrmSaveArchive.cbSaveArchive" />
+    </reference>
+  </view>
+</nodeSet>

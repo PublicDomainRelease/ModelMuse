@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="ucmkf3wipqr08zq_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameSfrParamInstancesUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameSfrParamInstancesUnit.TSfrInstanceColumn">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSfrParamInstancesUnit.TSfrInstanceColumn.sicInstanceName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSfrParamInstancesUnit.TSfrInstanceColumn.sicEndTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSfrParamInstancesUnit.TSfrInstanceColumn.sicStartTime" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.ErrorFound" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.rdgSfrParamInstancesEndUpdate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.rdgSfrParamInstancesSelectCell(System.Object,System.Int32,System.Int32,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.rdgSfrParamInstancesExit(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.btnDeleteFlowTableRowClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.btnInsertFlowTableRowClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.seInstanceCountChange(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.btnDeleteFlowTableRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.btnInsertFlowTableRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.lblInstanceCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.seInstanceCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.pnlLabel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.rdgSfrParamInstances" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.pnlSfrInstancesBottom" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSfrParamInstancesUnit.TframeSfrParamInstances.Create(Classes.TComponent)" />
+    </reference>
+  </view>
+</nodeSet>

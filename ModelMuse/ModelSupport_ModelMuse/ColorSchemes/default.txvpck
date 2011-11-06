@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="4wmmwahapljvnhg_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ColorSchemes.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.SteppedSequential(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.ModifiedSpectralScheme(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.FracToLightBlue_DarkBlue(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.FracToBlue_OrangeRed(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.FracToBlueOrange(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.FracToBlueGray(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.FracToBrownBlue(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.FracToBlueGreen(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.FracToBlueDarkOrange(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.FracToBlueRed(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.FracLookup(System.Real,ColorSchemes.TColorArray[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.FracToGreenMagenta(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.AdjustFractionAndColorFactor(System.Real,ref@System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.FracToSpectrum(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.AdjustColorFactor(ref@System.Real)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ColorSchemes.TColorComponents">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColorSchemes.TColorComponents.ccBlue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColorSchemes.TColorComponents.ccGreen" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColorSchemes.TColorComponents.ccRed" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ColorSchemes.TColorParameters">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.TColorParameters.SetColorExponent(System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.TColorParameters.SetColorCycles(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColorSchemes.TColorParameters.FOnChange" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColorSchemes.TColorParameters.FColorCycles" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColorSchemes.TColorParameters.FColorExponent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColorSchemes.TColorParameters.FColorScheme" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ColorSchemes.TColorParameters.OnChange[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ColorSchemes.TColorParameters.ColorExponent[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ColorSchemes.TColorParameters.ColorScheme[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ColorSchemes.TColorParameters.ColorCycles[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.TColorParameters.FracToColor(System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.TColorParameters.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.TColorParameters.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.TColorParameters.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColorSchemes.TColorParameters.SetColorScheme(System.Int32)" />
+    </reference>
+  </view>
+</nodeSet>

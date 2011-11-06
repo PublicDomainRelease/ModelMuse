@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="0cm1f7zipk027rm_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBasicWriterUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBasicWriterUnit.TModflowBasicWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBasicWriterUnit.TModflowBasicWriter.XSECTION" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBasicWriterUnit.TModflowBasicWriter.WriteFile(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBasicWriterUnit.TModflowBasicWriter.Create(PhastModelUnit.TPhastModel)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBasicWriterUnit.TModflowBasicWriter.Extension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBasicWriterUnit.TModflowBasicWriter.WriteDataSet(System.String,DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBasicWriterUnit.TModflowBasicWriter.WriteDataSet4()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBasicWriterUnit.TModflowBasicWriter.WriteDataSet3()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBasicWriterUnit.TModflowBasicWriter.WriteDataSet2()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBasicWriterUnit.TModflowBasicWriter.WriteDataSet1()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBasicWriterUnit.TModflowBasicWriter.WriteDataSet0()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBasicWriterUnit.TModflowBasicWriter.CheckStartingHeads()" />
+    </reference>
+  </view>
+</nodeSet>

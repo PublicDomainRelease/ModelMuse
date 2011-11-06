@@ -13,6 +13,7 @@ Type
     NPEVT: integer;
     NEVTOP: integer;
     FDepthSurface: TList;
+    FEvtPackage: TEvtPackageSelection;
     procedure WriteDataSet1;
     procedure WriteDataSet2;
     procedure WriteDataSets3And4;
@@ -306,7 +307,8 @@ const
   VariableIdentifiers = 'Condfact';
 begin
   WriteParameterDefinitions(DS3, DS3Instances, DS4A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot, umAssign);
+    VariableIdentifiers, ErrorRoot, umAssign,
+    FEvtPackage.MultiplierArrayNames, FEvtPackage.ZoneArrayNames);
 end;
 
 procedure TModflowEVT_Writer.WriteDataSet1;
@@ -347,8 +349,6 @@ begin
 end;
 
 procedure TModflowEVT_Writer.WriteFile(const AFileName: string);
-var
-  NameOfFile: string;
 begin
   frmErrorsAndWarnings.RemoveErrorGroup(Model, EtSurfaceError);
   frmErrorsAndWarnings.RemoveErrorGroup(Model, EtDepthError);
@@ -356,14 +356,17 @@ begin
   begin
     Exit
   end;
+  FEvtPackage := Package as TEvtPackageSelection;
   if Model.PackageGeneratedExternally(StrEVT) then
   begin
     Exit;
   end;
+  FEvtPackage.MultiplierArrayNames.Clear;
+  FEvtPackage.ZoneArrayNames.Clear;
 //  frmProgress.AddMessage('Evaluating EVT Package data.');
-  NameOfFile := FileName(AFileName);
+  FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrEVT, Model.UnitNumbers.UnitNumber(StrEVT),
-    NameOfFile, foInput);
+    FNameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then

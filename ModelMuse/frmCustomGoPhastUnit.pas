@@ -11,9 +11,7 @@ interface
 uses
   EdgeDisplayUnit, CommDlg, RbwDataGrid4, Spin, Windows, Forms, SysUtils, Types,
   Classes, Graphics, Controls, Dialogs, StdCtrls, Grids, HtmlHelpViewer,
-  {ImageDLLLoader, ICOLoader, JPEGLoader, PNGLoader, HIPSLoader, BMPLoader,
-  PCXLoader, WMFLoader, LinarBitmap, FileUtils,} {ehshelprouter,} JvSpin,
-  VirtualTrees, DataSetUnit, ClassificationUnit, GLWin32Viewer,
+  JvSpin, VirtualTrees, DataSetUnit, ClassificationUnit, GLWin32Viewer,
   RbwStringTreeCombo, Mask, JvExMask;
 
 type
@@ -64,26 +62,6 @@ type
     // @link(GlobalFont) and @link(GlobalColor) should be set in the
     // Applications OnCreate event handler.
     procedure SetAppearance;
-    procedure FillVirtStrTreeWithBoundaryConditions(
-      SelectedDataArray: TDataArray;
-      SelectedTimeList: TCustomTimeList;
-      SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
-      LocalBoundaryClassifications: TList; EdgeEdits: TList;
-      ATree: TVirtualStringTree);
-//    procedure FillTreeComboWithBoundaryConditions(SelectedDataArray: TDataArray;
-//      SelectedTimeList: TCustomTimeList;
-//      SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
-//      LocalBoundaryClassifications: TList; EdgeEdits: TList;
-//      VirtTreeCombo: TTntExDropDownVirtualStringTree);
-  // @name changes the color of all TSpinEdits on the form depending
-  // on whether or not the TSpinEdit is enabled or not.
-  //    procedure SetSpinColor;
-
-  //
-//    procedure UpdateTreeComboText(SelectedNode: PVirtualNode;
-//      TreeCombo: TTntExDropDownVirtualStringTree); overload;
-    procedure UpdateTreeComboText(SelectedNode: PVirtualNode;
-      TreeCombo: TRbwStringTreeCombo);
   public
     procedure MouseClick;
     procedure UpdateSubComponents(AComponent: TComponent);
@@ -129,33 +107,35 @@ procedure FillDataSetLists(HufDataArrays: TClassificationList;
   ClassificationObjects: TClassificationList;
   ClassificationObjectOwnerList: TList;
   DataSetAllowed: TDataSetAllowedEvent = nil);
-  
-//procedure UpdateTreeComboText(SelectedNode: PVirtualNode;
-//  TreeCombo: TTntExDropDownVirtualStringTree);
 
 procedure GetNodeCaption(Node: PVirtualNode; var CellText: string;
   Sender: TBaseVirtualTree);
 
-//procedure SelectOnlyLeaves(Node: PVirtualNode;
-//  TreeCombo: TTntExDropDownVirtualStringTree; Sender: TBaseVirtualTree;
-//  var SelectedNode: PVirtualNode); overload;
-
 procedure SelectOnlyLeaves(Node: PVirtualNode;
   TreeCombo: TRbwStringTreeCombo; Sender: TBaseVirtualTree;
-  var SelectedNode: PVirtualNode); 
+  var SelectedNode: PVirtualNode);
 
 procedure FillComboWithModelNames(Combo: TComboBox);
+
+procedure UpdateTreeComboText(SelectedNode: PVirtualNode;
+  TreeCombo: TRbwStringTreeCombo);
+
+procedure FillVirtStrTreeWithBoundaryConditions(
+  SelectedDataArray: TDataArray;
+  SelectedTimeList: TCustomTimeList;
+  SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
+  LocalBoundaryClassifications: TList; EdgeEdits: TList;
+  ATree: TVirtualStringTree);
 
 var
   GlobalFont: TFont = nil;
   GlobalColor: TColor = clBtnFace;
-//  HelpRouter: THelpRouter;
-
 
 implementation
 
 uses SubscriptionUnit, GoPhastTypes, ModflowPackagesUnit,
-  frmGridColorUnit, frmGoPhastUnit, PhastModelUnit, ModflowPackageSelectionUnit;
+  frmGoPhastUnit, PhastModelUnit, ModflowPackageSelectionUnit,
+  frameCustomColorUnit;
 
 {$R *.dfm}
 
@@ -303,7 +283,7 @@ begin
   end;
 end;
 
-procedure TfrmCustomGoPhast.FillVirtStrTreeWithBoundaryConditions(
+procedure FillVirtStrTreeWithBoundaryConditions(
   SelectedDataArray: TDataArray;
   SelectedTimeList: TCustomTimeList;
   SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
@@ -615,7 +595,7 @@ begin
   end;
 end;
 
-procedure TfrmCustomGoPhast.UpdateTreeComboText(SelectedNode: PVirtualNode;
+procedure UpdateTreeComboText(SelectedNode: PVirtualNode;
   TreeCombo: TRbwStringTreeCombo);
 var
   CellText: string;
@@ -1129,49 +1109,6 @@ begin
   end;
 end;
 
-//procedure TfrmCustomGoPhast.UpdateTreeComboText(SelectedNode: PVirtualNode;
-//  TreeCombo: TTntExDropDownVirtualStringTree);
-//var
-//  CellText: WideString;
-//begin
-//  if TreeCombo.Tree.SelectedCount = 0 then
-//  begin
-//    if TreeCombo.Text <> 'none' then
-//    begin
-//      TreeCombo.Text := 'none';
-//    end;
-//  end
-//  else
-//  begin
-//    GetNodeCaption(SelectedNode, CellText, TreeCombo.Tree);
-//    TreeCombo.Text := CellText;
-//  end;
-//end;
-
-//procedure SelectOnlyLeaves(Node: PVirtualNode;
-//  TreeCombo: TTntExDropDownVirtualStringTree;
-//  Sender: TBaseVirtualTree; var SelectedNode: PVirtualNode);
-//var
-//  CellText: WideString;
-//begin
-//  if Sender.Selected[Node] and Sender.HasChildren[Node] then
-//  begin
-//    Sender.Selected[Node] := False;
-//    Sender.FocusedNode := nil;
-//    TreeCombo.Text := '';
-//  end;
-//  if Sender.Selected[Node] then
-//  begin
-//    SelectedNode := Node;
-//    GetNodeCaption(Node, CellText, Sender);
-//    TreeCombo.Text := CellText;
-//  end
-//  else
-//  begin
-//    SelectedNode := nil;
-//  end;
-//end;
-
 procedure SelectOnlyLeaves(Node: PVirtualNode;
   TreeCombo: TRbwStringTreeCombo; Sender: TBaseVirtualTree;
   var SelectedNode: PVirtualNode); overload;
@@ -1195,18 +1132,6 @@ begin
     SelectedNode := nil;
   end;
 end;
-
-//procedure TfrmCustomGoPhast.FillTreeComboWithBoundaryConditions(
-//  SelectedDataArray: TDataArray;
-//  SelectedTimeList: TCustomTimeList;
-//  SelectedEdgeDisplay: TCustomModflowGridEdgeDisplay;
-//  LocalBoundaryClassifications: TList; EdgeEdits: TList;
-//  VirtTreeCombo: TTntExDropDownVirtualStringTree);
-//begin
-//  FillVirtStrTreeWithBoundaryConditions(SelectedDataArray, SelectedTimeList,
-//    SelectedEdgeDisplay, LocalBoundaryClassifications, EdgeEdits,
-//    VirtTreeCombo.Tree);
-//end;
 
 procedure FillComboWithModelNames(Combo: TComboBox);
 var

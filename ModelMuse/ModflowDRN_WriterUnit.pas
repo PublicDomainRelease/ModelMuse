@@ -30,7 +30,8 @@ type
       const DataSetIdentifier, VariableIdentifiers: string); override;
     procedure WriteParameterCells(CellList: TValueCellList; NLST: Integer;
       const VariableIdentifiers, DataSetIdentifier: string;
-      AssignmentMethod: TUpdateMethod); override;
+      AssignmentMethod: TUpdateMethod; MultiplierArrayNames: TTransientMultCollection;
+      ZoneArrayNames: TTransientZoneCollection); override;
     function ObsNameWarningString: string; override;
   public
     procedure WriteFile(const AFileName: string);
@@ -158,7 +159,7 @@ const
   VariableIdentifiers = 'Condfact IFACE';
 begin
   WriteParameterDefinitions(DS3, DS3Instances, DS4A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot, umAssign);
+    VariableIdentifiers, ErrorRoot, umAssign, nil, nil);
 end;
 
 procedure TModflowDRN_Writer.WriteDataSets5To7;
@@ -268,7 +269,8 @@ end;
 
 procedure TModflowDRN_Writer.WriteParameterCells(CellList: TValueCellList;
   NLST: Integer; const VariableIdentifiers, DataSetIdentifier: string;
-  AssignmentMethod: TUpdateMethod);
+  AssignmentMethod: TUpdateMethod; MultiplierArrayNames: TTransientMultCollection;
+      ZoneArrayNames: TTransientZoneCollection);
 var
   Cell: TDrn_Cell;
   CellIndex: Integer;

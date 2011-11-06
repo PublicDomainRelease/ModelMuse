@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="z6lt7b97qvwnelm_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TRealStorage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:GoPhastTypes.TRealStorage.Value[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.TRealStorage.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.TRealStorage.DefineProperties(Classes.TFiler)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.TRealStorage.WriteValue(Classes.TWriter)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.TRealStorage.ReadValue(Classes.TReader)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TRealStorage.FValue" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TGoPhastPersistent">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.TGoPhastPersistent.SetBooleanProperty(ref@System.Boolean,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.TGoPhastPersistent.InvalidateModel()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TGoPhastPersistent.FModel" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.TGoPhastPersistent.Create(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.TGoPhastPersistent.SetStringProperty(ref@System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.TGoPhastPersistent.SetIntegerProperty(ref@System.Int32,System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.ReadWritePermissions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.EndOfLine" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.StrEndingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.StrStartingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.StrObjectLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.StrObjectArea" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.StrObjectIntersectArea" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.StrObjectSectionIntersectLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.StrObjectIntersectLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.StrUpperLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.StrLowerLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.MRU_Section" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.rsByInterpolation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.rsSetValueOf" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.rsSetValueOfIntersected" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.rsSetValueOfEnclosed" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.rsNewDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.BlankSpaces" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.clTransparent32" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.RightCopy(System.String,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.ValidName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.EvalAtToString(GoPhastTypes.TEvaluatedAt,GoPhastTypes.TModelSelection,System.Boolean,System.Boolean)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.SelectEpsilon" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.StrModelTop" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.T3DRealPoint">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.T3DRealPoint.Z" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.T3DRealPoint.Y" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.T3DRealPoint.X" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TCursorGrid">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TCursorGrid.cgTop" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TCursorGrid.cgNone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TCursorGrid.cgSide" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TCursorGrid.cgFront" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TViewDirection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TViewDirection.vdSide" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TViewDirection.vdFront" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TViewDirection.vdTop" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TDataColumns">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TDataColumns.dcInterpolation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TDataColumns.dcFormula" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TDataColumns.dcUnits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TDataColumns.dcEvaluatedAt" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TDataColumns.dcOrientation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TDataColumns.dcType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TDataColumns.dcName" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TDataSetOrientation">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TDataSetOrientation.dso3D" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TDataSetOrientation.dsoSide" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TDataSetOrientation.dsoFront" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TDataSetOrientation.dsoTop" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TElevationCount">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TElevationCount.ecTwo" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TElevationCount.ecOne" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TElevationCount.ecZero" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TEvaluatedAt">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TEvaluatedAt.eaNodes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TEvaluatedAt.eaBlocks" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TFrequencyUnits">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TFrequencyUnits.fuEnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TFrequencyUnits.fuStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TFrequencyUnits.fuYears" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TFrequencyUnits.fuDays" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TFrequencyUnits.fuHours" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TFrequencyUnits.fuMinutes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TFrequencyUnits.fuSeconds" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TFrequencyUnits.fuDefault" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TTimeUnits">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TTimeUnits.tuYears" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TTimeUnits.tuDays" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TTimeUnits.tuHours" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TTimeUnits.tuMinutes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TTimeUnits.tuSeconds" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TLengthUnits">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TLengthUnits.luKilometers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TLengthUnits.luMeters" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TLengthUnits.luCentimeters" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TLengthUnits.luMillimeters" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TLengthUnits.luMiles" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TLengthUnits.luFeet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TLengthUnits.luInches" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TInverseLengthUnits">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TInverseLengthUnits.iluMillimeters" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TInverseLengthUnits.iluMiles" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TInverseLengthUnits.iluFeet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TInverseLengthUnits.iluInches" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TInverseLengthUnits.iluKilometers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TInverseLengthUnits.iluMeters" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TInverseLengthUnits.iluCentimeters" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TVolumeUnits">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TVolumeUnits.vuCentimeters3" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TVolumeUnits.vuMillimeters3" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TVolumeUnits.vuLiters" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TVolumeUnits.vuMiles3" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TVolumeUnits.vuFeet3" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TVolumeUnits.vuInches3" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TVolumeUnits.vuGallons" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TVolumeUnits.vuKilometers3" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TVolumeUnits.vuMeters3" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TPhastSolver">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPhastSolver.psIterative" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPhastSolver.psDirect" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TInterpolationDirection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TInterpolationDirection.pidX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TInterpolationDirection.pidMix" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TInterpolationDirection.pidZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TInterpolationDirection.pidY" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrDefault" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrBoundaryConditions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrXYZWells" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrXYZVelocities" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrXYZHeads" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrXYZComponents" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrXYZChem" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrWells" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrVelocities" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrRestart" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrProgress" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrHeads" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrHDFVelocity" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrHDFHeads" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrHDFChem" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrChemPrint" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrFlowBalance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrConductance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrComponents" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrFlowRate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPrintFrequencyRows.pfrName" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TBoundaryTypes">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TBoundaryTypes.btLeaky" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TBoundaryTypes.btFlux" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TBoundaryTypes.btSpecifiedHead" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TBoundaryTypes.btNone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TBoundaryTypes.btWell" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TBoundaryTypes.btRiver" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TModflowBoundaryType">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TModflowBoundaryType.mbtCHD" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TModflowBoundaryType.mbtNone" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TWellElevationFormat">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TWellElevationFormat.wefDepth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TWellElevationFormat.wefElevation" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TModelSelection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TModelSelection.msModflow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TModelSelection.msPhast" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TModelSelection.msUndefined" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TGrowthMethod">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TGrowthMethod.gmCustom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TGrowthMethod.gmEdge" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TGrowthMethod.gmMiddle" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TGrowthMethod.gmDown" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TGrowthMethod.gmUp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TGrowthMethod.gmUniform" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TAssignmentLocation">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TAssignmentLocation.alLastVertex" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TAssignmentLocation.alFirstVertex" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TAssignmentLocation.alAll" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TIface">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TIface.iLeft" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TIface.iInternal" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TIface.iHorizontal" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TIface.iIndeterminant" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TIface.iTop" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TIface.iBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TIface.iBack" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TIface.iFront" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TIface.iRight" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TStatFlag">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TStatFlag.stSquaredWeight" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TStatFlag.stWeight" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TStatFlag.stCoefVar" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TStatFlag.stStandardDev" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TStatFlag.stVariance" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TObservationPurpose">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TObservationPurpose.ofInacative" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TObservationPurpose.ofPredicted" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TObservationPurpose.ofObserved" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TPhastCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:GoPhastTypes.TPhastCollection.Model[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.TPhastCollection.InvalidateModel()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GoPhastTypes.TPhastCollection.FModel" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.TPhastCollection.Create(Classes.TCollectionItemClass,Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.TPhastCollection.Notify(Classes.TCollectionItem,Classes.TCollectionNotification)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GoPhastTypes.TPhastCollectionItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GoPhastTypes.TPhastCollectionItem.InvalidateModel()" />
+    </reference>
+  </view>
+</nodeSet>

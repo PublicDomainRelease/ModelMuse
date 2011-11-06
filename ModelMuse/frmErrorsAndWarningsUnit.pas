@@ -47,15 +47,12 @@ type
     sdSaveFileDlg: TSaveDialog;
     btnClear: TButton;
     btnCopy: TButton;
-    // @name creates @link(ErrorChildNodes),
-    // @link(Errors), @link(WarningChildNodes) and
-    // @link(Warnings).
+    // @name creates the lists that hold the errors and warnings.
     // It also initializes the size of the record associated with
     // nodes in @link(vstWarningsAndErrors).
     procedure FormCreate(Sender: TObject); override;
-    // @name destroys @link(ErrorChildNodes),
-    // @link(Errors), @link(WarningChildNodes) and
-    // @link(Warnings) and other data associated with the @classname..
+    // @name destroys the lists that hold the errors and warnings
+    // and other data associated with the @classname..
     procedure FormDestroy(Sender: TObject); override;
     // @name determines the text to display in each cell.
     procedure vstWarningsAndErrorsGetText(Sender: TBaseVirtualTree;
@@ -73,10 +70,10 @@ type
     procedure btnClearClick(Sender: TObject);
     procedure btnCopyClick(Sender: TObject);
   private
-    // @name is a list of the PVirtualNodes beneath @link(ErrorNode).
+    // @name is a list of the PVirtualNodes beneath @link(FErrorNode).
     FErrorChildNodes: TList;
     // @name is the node in @link(vstWarningsAndErrors) that has
-    // beneath it all the error messages. @link(Errors) is associated with
+    // beneath it all the error messages. @link(FErrorModels) is associated with
     // @name through the data record associated with @name.
     FErrorNode: PVirtualNode;
     // @name is a list of the error messages generated during export
@@ -85,10 +82,10 @@ type
     FErrorModels: TStringList;
     FErrorModelMessageList: TModelMessageList;
 
-    // @name is a list of the PVirtualNodes beneath @link(WarningNode).
+    // @name is a list of the PVirtualNodes beneath @link(FWarningNode).
     FWarningChildNodes: TList;
     // @name is the node in @link(vstWarningsAndErrors) that has
-    // beneath it all the warning messages. @link(Warnings) is associated with
+    // beneath it all the warning messages. @link(FWarningModels) is associated with
     // @name through the data record associated with @name.
     FWarningNode: PVirtualNode;
     // @name is a list of the warning messages generated during export
@@ -117,11 +114,9 @@ type
     procedure CheckDeleteRootNode(Model: TBaseModel; var Node: PVirtualNode;
       RootList: TStringList; ModelMessageList: TModelMessageList);
     procedure GetErrorsAndWarnings(ErrorsAndWarings: TStringList);
-    // @name frees everything in the Objects property of List.
-//    procedure ClearABaseStringList(List: TStringList);
 
     // @name creates a new root node (PVirtualNode) and associates List
-    // with it. @seealso(ErrorNode) @seealso(WarningNode)
+    // with it. @seealso(FErrorNode) @seealso(FWarningNode)
     procedure InitializeRootNode(var Node: PVirtualNode; List: TStringList);
     { Private declarations }
   public
@@ -431,8 +426,6 @@ begin
   FWarningNode := nil;
   FErrorModels.Clear;
   FWarningModels.Clear;
-//  ClearABaseStringList(FErrorModels);
-//  ClearABaseStringList(FWarningModels);
   FErrorChildNodes.Clear;
   FWarningChildNodes.Clear;
   FWarningModelMessageList.Clear;

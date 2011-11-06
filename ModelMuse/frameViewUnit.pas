@@ -35,16 +35,12 @@ type
     @link(TScreenObject)s. Much of the user interaction is delegated to
     descendants of @link(TCustomInteractiveTool).)}
   TframeView = class(TFrame)
-    // @name: TMenuItem;
     // See @link(BackOneClick).
     BackOne: TMenuItem;
-    // @name: TMenuItem;
     // See @link(ForwardOneClick).
     ForwardOne: TMenuItem;
-    // @name: TMenuItem;
-    // See @link(HideClick).
+    // See @link(miHideClick).
     miHide: TMenuItem;
-    // @name: TRbwModelCube;
     // @name allows the user to change the selected column, row, or layer
     // by clicking on the model cube.
     // See TCustomLayerRowColumnSelector.@link(
@@ -57,30 +53,23 @@ type
     // TCustomLayerRowColumnSelector.ChangeColRowLayer), and
     // @link(ColRowLayerSelector).
     ModelCube: TRbwModelCube;
-    // @name: TPopupMenu;
     // @name is a pop-up menu that holds the TMenuItems declared as part of
     // @classname.
     // See @link(ToFront), @link(ToBack), @link(ForwardOne), @link(BackOne),
-    // and @link(Hide).  Its OnPopup event is handled by @link(OrderMenuPopup).
+    // and @link(miHide).  Its OnPopup event is handled by @link(OrderMenuPopup).
     OrderMenu: TPopupMenu;
-    // @name: TPanel;
     // @name holds @link(ModelCube) and @link(rulHorizontal).
     Panel1: TPanel;
-    // @name: TRbwRuler;
     // @name is the horizontal ruler.
     // See @link(rulerDblClick) and @link(rulerMouseMove).
     rulHorizontal: TRbwRuler;
-    // @name: TRbwRuler;
     // @name is the vertical ruler.
     // See @link(rulerDblClick) and @link(rulerMouseMove).
     rulVertical: TRbwRuler;
-    // @name: TMenuItem;
     // See @link(ToBackClick).
     ToBack: TMenuItem;
-    // @name: TMenuItem;
     // See @link(ToFrontClick).
     ToFront: TMenuItem;
-    // @name: TQRbwZoomBox2;
     // @name is responsible for displaying one view of the model.
     // @seealso(ZoomBoxExit),
     // @seealso(ZoomBoxPan)
@@ -97,6 +86,8 @@ type
     miMergeObjects: TMenuItem;
     miEditSelectedObjects: TMenuItem;
     miInvertSelectedVertices: TMenuItem;
+    miLockSelectedObjects: TMenuItem;
+    miUnlockSelectedObjects: TMenuItem;
     // @name allows the user to move selected objects back one
     // in the list of objects so that they move behind one other object.
     procedure BackOneClick(Sender: TObject);
@@ -108,7 +99,7 @@ type
     // @name draws a black rectangle outlining the @link(ModelCube) component.
     procedure ModelCubePaint(Sender: TObject);
     // @name enables or disables @link(ToFront), @link(ToBack),
-    // @link(ForwardOne), @link(BackOne), and @link(Hide) depending on the
+    // @link(ForwardOne), @link(BackOne), and @link(miHide) depending on the
     // context.
     procedure OrderMenuPopup(Sender: TObject);
     // @name is OnDblClick event handler for @link(rulHorizontal), and
@@ -187,6 +178,8 @@ type
     procedure ModelCubeMouseEnter(Sender: TObject);
     procedure ModelCubeMouseLeave(Sender: TObject);
     procedure miInvertSelectedVerticesClick(Sender: TObject);
+    procedure miLockSelectedObjectsClick(Sender: TObject);
+    procedure miUnlockSelectedObjectsClick(Sender: TObject);
   private
     MouseStartX: integer;
     MouseStartY: integer;
@@ -1130,6 +1123,7 @@ begin
 
       FBitMap32.Height := ZoomBox.Image32.Height;
       FBitMap32.Width := ZoomBox.Image32.Width;
+      FBitMap32.Font := frmGoPhast.PhastModel.ContourFont;
 
       // If the colors of the grid cells are out of date,
       // recalculate them.
@@ -1218,6 +1212,7 @@ begin
       if ViewDirection = vdTop then
       begin
         frmGoPhast.PhastModel.DrawHeadObservations(FBitMap32, ZoomBox);
+        frmGoPhast.PhastModel.DrawSfrStreamLinkages(FBitMap32, ZoomBox);
       end;
 
       if (frmGoPhast.PhastModel.PathLines.Lines.Count = 0)
@@ -1805,6 +1800,11 @@ begin
   frmGoPhast.miInvertSelectedVerticesClick(Sender);
 end;
 
+procedure TframeView.miLockSelectedObjectsClick(Sender: TObject);
+begin
+  frmGoPhast.miLockSelectedObjectsClick(Sender);
+end;
+
 procedure TframeView.DrawPathLines;
 var
   Orientation: TDataSetOrientation;
@@ -2167,7 +2167,7 @@ var
   notSelectedFound: boolean;
 begin
     // @name enables or disables @link(ToFront), @link(ToBack),
-    // @link(ForwardOne), @link(BackOne), and @link(Hide) depending on the
+    // @link(ForwardOne), @link(BackOne), and @link(miHide) depending on the
     // context.
   ToBack.Enabled := False;
   BackOne.Enabled := False;
@@ -3588,6 +3588,11 @@ end;
 procedure TframeView.miSelectAllClick(Sender: TObject);
 begin
   SelectAll;
+end;
+
+procedure TframeView.miUnlockSelectedObjectsClick(Sender: TObject);
+begin
+  frmGoPhast.miUnlockSelectedObjectsClick(Sender);
 end;
 
 procedure TframeView.FinishScreenObjects;

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="21nc6dz9po0azdp_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmAboutUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.frmAbout" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmAboutUnit.frmAbout" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmAboutUnit.TfrmAbout">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmAboutUnit.TfrmAbout.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.JvHTLabel2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.reReference" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.miEnableModelMateInterface" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.menuModelMate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.JvHTLabel1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.dgCredit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.pnlTop" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.pnlBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.lblVersionCaption" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.lblVersion" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.lblGoPhast" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.lblFileVersion" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.lblDeveloperName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.ImageLogo" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmAboutUnit.TfrmAbout.btnClose" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmAboutUnit.TfrmAbout.miEnableModelMateInterfaceClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmAboutUnit.TfrmAbout.ImageLogoDblClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmAboutUnit.TfrmAbout.FormHide(System.Object)" />
+    </reference>
+  </view>
+</nodeSet>

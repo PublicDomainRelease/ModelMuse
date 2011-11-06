@@ -19,15 +19,12 @@ inherited frmImportGriddedData: TfrmImportGriddedData
     ActivePage = jvspGrid
     PropagateEnable = False
     Align = alClient
-    ExplicitTop = 113
-    ExplicitHeight = 238
     object jvspCellList: TJvStandardPage
       Left = 0
       Top = 0
       Width = 436
       Height = 254
       Caption = 'jvspCellList'
-      ExplicitHeight = 238
       object rdgList: TRbwDataGrid4
         Left = 0
         Top = 0
@@ -134,7 +131,6 @@ inherited frmImportGriddedData: TfrmImportGriddedData
             AutoAdjustColWidths = False
           end>
         OnEndUpdate = rdgListEndUpdate
-        ExplicitHeight = 197
       end
       object pnlListControls: TPanel
         Left = 0
@@ -143,7 +139,6 @@ inherited frmImportGriddedData: TfrmImportGriddedData
         Height = 41
         Align = alBottom
         TabOrder = 1
-        ExplicitTop = 197
         object lblNumberOfRows: TLabel
           Left = 79
           Top = 12
@@ -295,7 +290,6 @@ inherited frmImportGriddedData: TfrmImportGriddedData
       Width = 436
       Height = 254
       Caption = 'jvspGrid'
-      ExplicitHeight = 238
       object lblColumns: TLabel
         Left = 190
         Top = 16
@@ -331,7 +325,6 @@ inherited frmImportGriddedData: TfrmImportGriddedData
         Margins.Bottom = 0
         Align = alClient
         TabOrder = 0
-        ExplicitHeight = 198
       end
     end
   end
@@ -502,7 +495,6 @@ inherited frmImportGriddedData: TfrmImportGriddedData
     Height = 47
     Align = alBottom
     TabOrder = 2
-    ExplicitTop = 351
     DesignSize = (
       436
       47)

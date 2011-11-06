@@ -187,6 +187,59 @@ Type
     procedure InvalidateAllTimeLists; override;
   end;
 
+  TCustomTransientArrayItem = class(TCollectionItem)
+  private
+    FFileName: string;
+    FUniform: boolean;
+    FArrayName: string;
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property ArrayName: string read FArrayName write FArrayName;
+    property FileName: string read FFileName write FFileName;
+    property Uniform: boolean read FUniform write FUniform;
+  end;
+
+  TTransientMultItem = class(TCustomTransientArrayItem)
+  private
+    FUniformValue: double;
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property UniformValue: double read FUniformValue write FUniformValue;
+  end;
+
+  TTransientZoneItem = class(TCustomTransientArrayItem)
+  private
+    FUniformValue: integer;
+  public
+    procedure Assign(Source: TPersistent); override;
+  published
+    property UniformValue: integer read FUniformValue write FUniformValue;
+  end;
+
+  TTransientMultCollection = class(TCollection)
+  private
+    function GetItem(Index: integer): TTransientMultItem;
+    procedure SetItem(Index: integer; const Value: TTransientMultItem);
+  public
+    Constructor Create;
+    function Add: TTransientMultItem;
+    property Items[Index: integer]: TTransientMultItem
+      read GetItem write SetItem; default;
+  end;
+
+  TTransientZoneCollection = class(TCollection)
+  private
+    function GetItem(Index: integer): TTransientZoneItem;
+    procedure SetItem(Index: integer; const Value: TTransientZoneItem);
+  public
+    Constructor Create;
+    function Add: TTransientZoneItem;
+    property Items[Index: integer]: TTransientZoneItem
+      read GetItem write SetItem; default;
+  end;
+
   TLpfSelection = class(TModflowPackageSelection)
   private
     FUseSaturatedThickness: boolean;
@@ -194,6 +247,7 @@ Type
     FUseCvCorrection: boolean;
     FUseVerticalFlowCorrection: boolean;
     FUseStorageCoefficient: boolean;
+    FMultZoneArraysExported: boolean;
     procedure SetUseConstantCV(const Value: boolean);
     procedure SetUseCvCorrection(const Value: boolean);
     procedure SetUseSaturatedThickness(const Value: boolean);
@@ -203,6 +257,9 @@ Type
     procedure InitializeVariables;
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
+    property MultZoneArraysExported: boolean read FMultZoneArraysExported
+      write FMultZoneArraysExported;
   published
     property UseConstantCV: boolean read FUseConstantCV write SetUseConstantCV;
     property UseSaturatedThickness: boolean read FUseSaturatedThickness
@@ -211,7 +268,8 @@ Type
       write SetUseCvCorrection default True;
     property UseVerticalFlowCorrection: boolean read FUseVerticalFlowCorrection
       write SetUseVerticalFlowCorrection default True;
-    property UseStorageCoefficient: boolean read FUseStorageCoefficient write SetUseStorageCoefficient;
+    property UseStorageCoefficient: boolean read FUseStorageCoefficient
+      write SetUseStorageCoefficient;
   end;
 
   THDryPrintOption = (hpoDontPrintHdry, hpoPrintHdry);
@@ -223,6 +281,7 @@ Type
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
     procedure InitializeVariables;
   published
     property HDryPrintOption: THDryPrintOption read FHDryPrintOption
@@ -459,7 +518,7 @@ Type
     FBackReduce: TRealStorage;
     FBackTol: TRealStorage;
     FBackFlag: integer;
-    FGoFail: Boolean;
+    FContinueNWT: Boolean;
     procedure SetRealProperty(Field, NewValue: TRealStorage);
     procedure SetIntegerProperty(var Field: integer; NewValue: integer);
     procedure SetBooleanProperty(var Field: Boolean; NewValue: Boolean);
@@ -496,7 +555,7 @@ Type
     procedure SetStopTolerance(const Value: TRealStorage);
     procedure SetThicknessFactor(const Value: TRealStorage);
     procedure SetUseDropTolerance(const Value: TNewtonUseDropTolerance);
-    procedure SetGoFail(const Value: Boolean);
+    procedure SetContinueNWT(const Value: Boolean);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
@@ -582,8 +641,10 @@ Type
     // @name is MXITERXMD.
     property MaxInnerIterations: integer read FMaxInnerIterations
       write SetMaxInnerIterations stored True;
-    // @name is the GOFAIL OPTION in NWT.
-    property GoFail: Boolean read FGoFail write SetGoFail;
+    // @name is the GOFAIL OPTION in NWT now renamed CONTINUE.
+    property GoFail: Boolean read FContinueNWT write SetContinueNWT stored False;
+    // @name is the CONTINUE OPTION in NWT.
+    property ContinueNWT: Boolean read FContinueNWT write SetContinueNWT;
   end;
 
   TLayerOption = (loTop, loSpecified, loTopActive);
@@ -615,14 +676,23 @@ Type
     function GetTimeVaryingLayers: boolean;
     procedure SetTimeVaryingLayers(const Value: boolean);
   protected
+    FMultiplierArrayNames: TTransientMultCollection;
+    FZoneArrayNames: TTransientZoneCollection;
     procedure UpdateWithElevationFormula(Formula: string;
       ScreenObject: TScreenObject; NewUseList: TStringList);
+    procedure SetMultiplierArrayNames(const Value: TTransientMultCollection);
+    procedure SetZoneArrayNames(const Value: TTransientZoneCollection);
   public
     procedure Assign(Source: TPersistent); override;
     Constructor Create(Model: TBaseModel);
+    destructor Destroy; override;
   published
-    property TimeVaryingLayers: boolean
-      read GetTimeVaryingLayers write SetTimeVaryingLayers;
+    property TimeVaryingLayers: boolean read GetTimeVaryingLayers
+      write SetTimeVaryingLayers;
+    property MultiplierArrayNames: TTransientMultCollection read FMultiplierArrayNames
+      write SetMultiplierArrayNames;
+    property ZoneArrayNames: TTransientZoneCollection read FZoneArrayNames
+      write SetZoneArrayNames;
   end;
 
   TEvtPackageSelection = class(TCustomTransientLayerPackageSelection)
@@ -657,12 +727,10 @@ Type
   private
     FMfRchLayer: TModflowBoundaryDisplayTimeList;
     FMfRchRate: TModflowBoundaryDisplayTimeList;
-//    FAddCells: boolean;
     FAssignmentMethod: TUpdateMethod;
     procedure GetMfRchRateUseList(Sender: TObject; NewUseList: TStringList);
     procedure GetMfRchLayerUseList(Sender: TObject; NewUseList: TStringList);
     procedure InitializeRchDisplay(Sender: TObject);
-//    procedure SetAddCells(const Value: boolean);
     procedure SetAssignmentMethod(const Value: TUpdateMethod);
   public
     procedure Assign(Source: TPersistent); override;
@@ -1131,7 +1199,7 @@ Type
       read FMfUzfEtDemand;
     property MfUzfExtinctionDepth: TModflowBoundaryDisplayTimeList
       read FMfUzfExtinctionDepth;
-    property MfUzfWaterContent: TModflowBoundaryDisplayTimeList 
+    property MfUzfWaterContent: TModflowBoundaryDisplayTimeList
       read FMfUzfWaterContent;
     procedure InvalidateAllTimeLists; override;
   published
@@ -1946,17 +2014,17 @@ Type
 implementation
 
 uses Math, Contnrs , PhastModelUnit, ModflowOptionsUnit,
-  frmErrorsAndWarningsUnit, frmGridColorUnit, ModflowSfrParamIcalcUnit,
-  frmContourDataUnit, ModflowWellWriterUnit, ModflowGHB_WriterUnit,
+  frmErrorsAndWarningsUnit, ModflowSfrParamIcalcUnit,
+  ModflowWellWriterUnit, ModflowGHB_WriterUnit,
   ModflowDRN_WriterUnit, ModflowDRT_WriterUnit, ModflowRiverWriterUnit,
   ModflowCHD_WriterUnit, ModflowEVT_WriterUnit, ModflowEvtUnit, RbwParser,
   frmFormulaErrorsUnit, ModflowRCH_WriterUnit, ModflowRchUnit,
   ModflowETS_WriterUnit, ModflowEtsUnit, ModflowUzfWriterUnit, ModflowUzfUnit,
-  ModflowSfrWriterUnit, ModflowSfrUnit, ModflowSfrReachUnit, ModflowSfrFlows, 
-  ModflowSfrChannelUnit, ModflowSfrEquationUnit, ModflowSfrSegment, 
+  ModflowSfrWriterUnit, ModflowSfrUnit, ModflowSfrReachUnit, ModflowSfrFlows,
+  ModflowSfrChannelUnit, ModflowSfrEquationUnit, ModflowSfrSegment,
   ModflowSfrUnsatSegment, ModflowMNW2_WriterUnit, ModflowMnw2Unit,
-  LayerStructureUnit, ModflowSubsidenceDefUnit, frmGridValueUnit, 
-  frmGoPhastUnit, CustomModflowWriterUnit;
+  LayerStructureUnit, ModflowSubsidenceDefUnit, frmGridValueUnit,
+  frmGoPhastUnit, CustomModflowWriterUnit, frmDisplayDataUnit;
 
 resourcestring
   StrLengthUnitsForMod = 'Length units for model are undefined';
@@ -2040,14 +2108,14 @@ end;
 procedure TModflowPackageSelection.SetIsSelected(const Value: boolean);
 begin
   if FIsSelected <> Value then
-  begin            
+  begin
     InvalidateModel;
     FIsSelected := Value;
     if FModel <> nil then
     begin
       InvalidateAllTimeLists;
-      UpdateFrmGridColor;
-      UpdateFrmContourData;
+      UpdateFrmDisplayData;
+//      UpdateFrmContourData;
       UpdateFrmGridValue;
     end;
   end;
@@ -2296,7 +2364,16 @@ end;
 constructor TCustomTransientLayerPackageSelection.Create(Model: TBaseModel);
 begin
   inherited Create(Model);
+  FZoneArrayNames := TTransientZoneCollection.Create;
+  FMultiplierArrayNames := TTransientMultCollection.Create;
   FLayerOption := loTop;
+end;
+
+destructor TCustomTransientLayerPackageSelection.Destroy;
+begin
+  FMultiplierArrayNames.Free;
+  FZoneArrayNames.Free;
+  inherited;
 end;
 
 function TCustomTransientLayerPackageSelection.GetTimeVaryingLayers: boolean;
@@ -2492,7 +2569,6 @@ begin
     end;
   end;
 end;
-
 { TEtsPackageSelection }
 
 procedure TEtsPackageSelection.Assign(Source: TPersistent);
@@ -3289,16 +3365,16 @@ begin
     FMfSfrSaturatedWaterContent.OnTimeListUsed :=
       ModflowSfrUnsatSpatialVariationSelected;
     FMfSfrSaturatedWaterContent.OnInitialize := InitializeSfrDisplay;
-    FMfSfrSaturatedWaterContent.OnGetUseList :=  
+    FMfSfrSaturatedWaterContent.OnGetUseList :=
       GetMfSfrStreamSatWatContentUseList;
     FMfSfrSaturatedWaterContent.Name := StrModflowSfrSatWatCont;
     AddTimeList(FMfSfrSaturatedWaterContent);
 
     FMfSfrInitialWaterContent := TModflowBoundaryDisplayTimeList.Create(Model);
-    FMfSfrInitialWaterContent.OnTimeListUsed :=  
+    FMfSfrInitialWaterContent.OnTimeListUsed :=
       ModflowSfrUnsatSpatialVariationSelected;
     FMfSfrInitialWaterContent.OnInitialize := InitializeSfrDisplay;
-    FMfSfrInitialWaterContent.OnGetUseList :=  
+    FMfSfrInitialWaterContent.OnGetUseList :=
       GetMfSfrStreamInitialWatContentUseList;
     FMfSfrInitialWaterContent.Name := StrModflowSfrInitWatCont;
     AddTimeList(FMfSfrInitialWaterContent);
@@ -3409,9 +3485,9 @@ begin
     FMfSfrWidthExponent.Name := StrModflowSfrWidthExponent;
     AddTimeList(FMfSfrWidthExponent);
 
-    FMfSfrUpstreamHydraulicConductivity :=  
+    FMfSfrUpstreamHydraulicConductivity :=
       TModflowBoundaryDisplayTimeList.Create(Model);
-    FMfSfrUpstreamHydraulicConductivity.OnTimeListUsed :=  
+    FMfSfrUpstreamHydraulicConductivity.OnTimeListUsed :=
       ModflowSfrUpstreamDownstreamUsed;
     FMfSfrUpstreamHydraulicConductivity.OnInitialize := InitializeSfrDisplay;
     FMfSfrUpstreamHydraulicConductivity.OnGetUseList :=
@@ -3425,9 +3501,9 @@ begin
     FMfSfrDownstreamHydraulicConductivity.OnTimeListUsed :=
       ModflowSfrUpstreamDownstreamUsed;
     FMfSfrDownstreamHydraulicConductivity.OnInitialize := InitializeSfrDisplay;
-    FMfSfrDownstreamHydraulicConductivity.OnGetUseList :=  
+    FMfSfrDownstreamHydraulicConductivity.OnGetUseList :=
       GetMfSfrDownstreamHydraulicConductivityUseList;
-    FMfSfrDownstreamHydraulicConductivity.Name :=  
+    FMfSfrDownstreamHydraulicConductivity.Name :=
       StrModflowSfrDownstreamHydraulicConductivity;
     AddTimeList(FMfSfrDownstreamHydraulicConductivity);
 
@@ -3487,9 +3563,9 @@ begin
     FMfSfrDownstreamDepth.Name := StrModflowSfrDownstreamDepth;
     AddTimeList(FMfSfrDownstreamDepth);
 
-    FMfSfrUpstreamUnsaturatedWaterContent :=  
+    FMfSfrUpstreamUnsaturatedWaterContent :=
       TModflowBoundaryDisplayTimeList.Create(Model);
-    FMfSfrUpstreamUnsaturatedWaterContent.OnTimeListUsed :=  
+    FMfSfrUpstreamUnsaturatedWaterContent.OnTimeListUsed :=
       ModflowSfrUpstreamDownstreamUnsatUsed;
     FMfSfrUpstreamUnsaturatedWaterContent.OnInitialize := InitializeSfrDisplay;
     FMfSfrUpstreamUnsaturatedWaterContent.OnGetUseList :=
@@ -3503,15 +3579,15 @@ begin
     FMfSfrDownstreamUnsaturatedWaterContent.OnTimeListUsed :=
       ModflowSfrUpstreamDownstreamUnsatUsed;
     FMfSfrDownstreamUnsaturatedWaterContent.OnInitialize := InitializeSfrDisplay;
-    FMfSfrDownstreamUnsaturatedWaterContent.OnGetUseList :=  
+    FMfSfrDownstreamUnsaturatedWaterContent.OnGetUseList :=
       GetMfSfrDownstreamSatWatContentUseList;
-    FMfSfrDownstreamUnsaturatedWaterContent.Name :=  
+    FMfSfrDownstreamUnsaturatedWaterContent.Name :=
       StrModflowSfrDownstreamSaturatedWaterContent;
     AddTimeList(FMfSfrDownstreamUnsaturatedWaterContent);
 
-    FMfSfrUpstreamUnsatInitialWaterContent :=  
+    FMfSfrUpstreamUnsatInitialWaterContent :=
       TModflowBoundaryDisplayTimeList.Create(Model);
-    FMfSfrUpstreamUnsatInitialWaterContent.OnTimeListUsed :=  
+    FMfSfrUpstreamUnsatInitialWaterContent.OnTimeListUsed :=
       ModflowSfrUpstreamDownstreamUnsatUsed;
     FMfSfrUpstreamUnsatInitialWaterContent.OnInitialize := InitializeSfrDisplay;
     FMfSfrUpstreamUnsatInitialWaterContent.OnGetUseList :=
@@ -3533,7 +3609,7 @@ begin
     AddTimeList(FMfSfrDownstreamUnsatInitialWaterContent);
 
     FMfSfrUpstreamBrooksCorey := TModflowBoundaryDisplayTimeList.Create(Model);
-    FMfSfrUpstreamBrooksCorey.OnTimeListUsed :=  
+    FMfSfrUpstreamBrooksCorey.OnTimeListUsed :=
       ModflowSfrUpstreamDownstreamUnsatUsed;
     FMfSfrUpstreamBrooksCorey.OnInitialize := InitializeSfrDisplay;
     FMfSfrUpstreamBrooksCorey.OnGetUseList := GetMfSfrUpstreamBrooksCoreyUseList;
@@ -3541,7 +3617,7 @@ begin
     AddTimeList(FMfSfrUpstreamBrooksCorey);
 
     FMfSfrDownstreamBrooksCorey := TModflowBoundaryDisplayTimeList.Create(Model);
-    FMfSfrDownstreamBrooksCorey.OnTimeListUsed :=  
+    FMfSfrDownstreamBrooksCorey.OnTimeListUsed :=
       ModflowSfrUpstreamDownstreamUnsatUsed;
     FMfSfrDownstreamBrooksCorey.OnInitialize := InitializeSfrDisplay;
     FMfSfrDownstreamBrooksCorey.OnGetUseList :=
@@ -3551,7 +3627,7 @@ begin
     AddTimeList(FMfSfrDownstreamBrooksCorey);
 
     FMfSfrUpstreamUnsatKz := TModflowBoundaryDisplayTimeList.Create(Model);
-    FMfSfrUpstreamUnsatKz.OnTimeListUsed :=  
+    FMfSfrUpstreamUnsatKz.OnTimeListUsed :=
       ModflowSfrUpstreamDownstreamUnsatKzUsed;
     FMfSfrUpstreamUnsatKz.OnInitialize := InitializeSfrDisplay;
     FMfSfrUpstreamUnsatKz.OnGetUseList := GetMfSfrUpstreamUnsatKzUseList;
@@ -3559,7 +3635,7 @@ begin
     AddTimeList(FMfSfrUpstreamUnsatKz);
 
     FMfSfrDownstreamUnsatKz := TModflowBoundaryDisplayTimeList.Create(Model);
-    FMfSfrDownstreamUnsatKz.OnTimeListUsed :=  
+    FMfSfrDownstreamUnsatKz.OnTimeListUsed :=
       ModflowSfrUpstreamDownstreamUnsatKzUsed;
     FMfSfrDownstreamUnsatKz.OnInitialize := InitializeSfrDisplay;
     FMfSfrDownstreamUnsatKz.OnGetUseList := GetMfSfrDownstreamUnsatKzUseList;
@@ -5634,6 +5710,11 @@ constructor TLpfSelection.Create(Model: TBaseModel);
 begin
   inherited;
   InitializeVariables;
+end;
+
+destructor TLpfSelection.Destroy;
+begin
+  inherited;
 end;
 
 procedure TLpfSelection.InitializeVariables;
@@ -8070,6 +8151,11 @@ begin
   InitializeVariables;
 end;
 
+destructor TUpwPackageSelection.Destroy;
+begin
+  inherited;
+end;
+
 procedure TUpwPackageSelection.InitializeVariables;
 begin
   FHDryPrintOption := hpoPrintHdry;
@@ -8126,7 +8212,7 @@ begin
     DropTolerancePreconditioning := SourceNwt.DropTolerancePreconditioning;
     InnerHeadClosureCriterion := SourceNwt.InnerHeadClosureCriterion;
     MaxInnerIterations := SourceNwt.MaxInnerIterations;
-    GoFail := SourceNwt.GoFail;
+    ContinueNWT := SourceNwt.ContinueNWT;
   end;
   inherited;
 end;
@@ -8174,7 +8260,7 @@ begin
   // The recomended value is 500 with units of m and days
   // The default units in ModelMuse are m and seconds
   // 0.006 is approximately equal to 500/24/3600
-  FluxTolerance.Value := 0.006;
+  FluxTolerance.Value := 0.06;
   MaxOuterIterations := 100;
   ThicknessFactor.Value := 0.00001;
   SolverMethod := nsmChiMD;
@@ -8292,9 +8378,9 @@ begin
   SetRealProperty(FFluxTolerance , Value);
 end;
 
-procedure TNwtPackageSelection.SetGoFail(const Value: Boolean);
+procedure TNwtPackageSelection.SetContinueNWT(const Value: Boolean);
 begin
-  SetBooleanProperty(FGoFail, Value);
+  SetBooleanProperty(FContinueNWT, Value);
 end;
 
 procedure TNwtPackageSelection.SetHeadTolerance(const Value: TRealStorage);
@@ -8435,6 +8521,111 @@ begin
     FUseDropTolerance := Value;
     InvalidateModel;
   end;
+end;
+
+procedure TCustomTransientLayerPackageSelection.SetMultiplierArrayNames
+  (const Value: TTransientMultCollection);
+begin
+  FMultiplierArrayNames.Assign(Value);
+end;
+
+procedure TCustomTransientLayerPackageSelection.SetZoneArrayNames
+  (const Value: TTransientZoneCollection);
+begin
+  FZoneArrayNames.Assign(Value);
+end;
+
+{ TCustomTransientArrayItem }
+
+procedure TCustomTransientArrayItem.Assign(Source: TPersistent);
+var
+  TransSource: TCustomTransientArrayItem;
+begin
+  if Source is TCustomTransientArrayItem then
+  begin
+    TransSource := TCustomTransientArrayItem(Source);
+    ArrayName := TransSource.ArrayName;
+    FileName := TransSource.FileName;
+    Uniform := TransSource.Uniform;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+{ TTransientMultItem }
+
+procedure TTransientMultItem.Assign(Source: TPersistent);
+var
+  TransSource: TTransientMultItem;
+begin
+  if Source is TTransientMultItem then
+  begin
+    TransSource := TTransientMultItem(Source);
+    UniformValue := TransSource.UniformValue
+  end;
+  inherited;
+end;
+
+{ TTransientZoneItem }
+
+procedure TTransientZoneItem.Assign(Source: TPersistent);
+var
+  TransSource: TTransientZoneItem;
+begin
+  if Source is TTransientZoneItem then
+  begin
+    TransSource := TTransientZoneItem(Source);
+    UniformValue := TransSource.UniformValue
+  end;
+  inherited;
+end;
+
+{ TTransientMultCollection }
+
+function TTransientMultCollection.Add: TTransientMultItem;
+begin
+  result := inherited Add as TTransientMultItem;
+end;
+
+constructor TTransientMultCollection.Create;
+begin
+  inherited Create(TTransientMultItem);
+end;
+
+function TTransientMultCollection.GetItem(Index: integer): TTransientMultItem;
+begin
+  result := inherited Items[Index] as TTransientMultItem
+end;
+
+procedure TTransientMultCollection.SetItem(Index: integer;
+  const Value: TTransientMultItem);
+begin
+  inherited Items[Index] := Value;
+end;
+
+{ TTransientZoneCollection }
+
+function TTransientZoneCollection.Add: TTransientZoneItem;
+begin
+  result := inherited Add as TTransientZoneItem;
+end;
+
+constructor TTransientZoneCollection.Create;
+begin
+  inherited Create(TTransientZoneItem);
+end;
+
+function TTransientZoneCollection.GetItem(Index: integer): TTransientZoneItem;
+begin
+  result := inherited Items[Index] as TTransientZoneItem;
+end;
+
+procedure TTransientZoneCollection.SetItem(Index: integer;
+  const Value: TTransientZoneItem);
+begin
+  inherited Items[Index] := Value;
 end;
 
 end.

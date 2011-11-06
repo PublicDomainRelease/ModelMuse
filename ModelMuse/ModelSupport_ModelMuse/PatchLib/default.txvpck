@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="kmof5bmbon6x40n_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PatchLib.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.PageSize" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.PageStartAddrMask" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.CurrentProcess" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.RoundInt(System.Int32,System.Int32,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.ReadMem(System.Pointer,System.Pointer,System.UInt32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.WriteMem(System.Pointer,System.Pointer,System.UInt32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.GetVMTPointer(System.TClass,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.SetVMTPointer(System.TClass,System.Int32,System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.WriteJumpBuffer(System.Pointer,PatchLib.TPatchSimpleJump)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.ReadJumpBuffer(System.Pointer,ref@PatchLib.TPatchSimpleJump)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.SetJump(System.Pointer,System.Pointer,ref@PatchLib.TPatchSimpleJump)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.GetDirectedAddr(System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.IsWin9xDebugThunk(System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.GetActualAddress(System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.IsCPUIDSupported()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.GetCPUID(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.IsMMXSupported()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.SizePtr" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PatchLib.TPatchSimpleJump">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.TPatchSimpleJump.Jump" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.TPatchSimpleJump.Offset" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PatchLib.TRegisters">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.TRegisters.RegEAX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.TRegisters.RegEBX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.TRegisters.RegECX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.TRegisters.RegEDX" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PatchLib.THeapAllocator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.THeapAllocator.FFlags" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.THeapAllocator.Create(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.THeapAllocator.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.THeapAllocator.GetBlock(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PatchLib.THeapAllocator.FreeBlock(System.Pointer)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.THeapAllocator.FHeap" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PatchLib.TWin9xDebugThunk">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.TWin9xDebugThunk.PUSH" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.TWin9xDebugThunk.Addr" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.TWin9xDebugThunk.JMP" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PatchLib.TWin9xDebugThunk.Rel" />
+    </reference>
+  </view>
+</nodeSet>

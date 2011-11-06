@@ -1,16 +1,16 @@
 inherited frmSteadyFlow: TfrmSteadyFlow
   Left = 366
   Top = 676
-  Width = 619
-  Height = 289
+  Width = 628
+  Height = 296
   HelpType = htKeyword
   HelpKeyword = 'Steady_Flow_Dialog_Box'
   HorzScrollBar.Range = 605
   VertScrollBar.Range = 245
   ActiveControl = cbSteadyFlow
   Caption = 'PHAST Steady Flow'
-  ExplicitWidth = 619
-  ExplicitHeight = 289
+  ExplicitWidth = 628
+  ExplicitHeight = 296
   PixelsPerInch = 96
   TextHeight = 18
   object lblHeadTolerance: TLabel

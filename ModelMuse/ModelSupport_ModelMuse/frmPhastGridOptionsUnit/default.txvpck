@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="teooon8eog8l4ws_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmPhastGridOptionsUnit.TUndoGridOptions">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastGridOptionsUnit.TUndoGridOptions.FNewGridOptions" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastGridOptionsUnit.TUndoGridOptions.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastGridOptionsUnit.TUndoGridOptions.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastGridOptionsUnit.TUndoGridOptions.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastGridOptionsUnit.TUndoGridOptions.Undo()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastGridOptionsUnit.TUndoGridOptions.FOldGridOptions" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastGridOptionsUnit.TUndoGridOptions.Description()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmPhastGridOptionsUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmPhastGridOptionsUnit.TfrmPhastGridOptions">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastGridOptionsUnit.TfrmPhastGridOptions.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastGridOptionsUnit.TfrmPhastGridOptions.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastGridOptionsUnit.TfrmPhastGridOptions.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastGridOptionsUnit.TfrmPhastGridOptions.clbChemistryDimensions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastGridOptionsUnit.TfrmPhastGridOptions.lblChemistrDimensions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPhastGridOptionsUnit.TfrmPhastGridOptions.rgPrintOrientation" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastGridOptionsUnit.TfrmPhastGridOptions.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastGridOptionsUnit.TfrmPhastGridOptions.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastGridOptionsUnit.TfrmPhastGridOptions.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPhastGridOptionsUnit.TfrmPhastGridOptions.SetData()" />
+    </reference>
+  </view>
+</nodeSet>

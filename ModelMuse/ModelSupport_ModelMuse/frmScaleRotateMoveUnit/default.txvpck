@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="sen5foywo1570ym_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmScaleRotateMoveUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.EnableOkButton()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.EnableRotationCenterControls()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.ViewDirection[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.SetViewDirection(GoPhastTypes.TViewDirection)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.FViewDirection" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.rdeMoveYChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.rdeMoveXChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.rdeAngleChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.comboCenterOfRotationChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.EnableOk(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.cbLockAspectRatioClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.rdeXScaleChange(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.rdeYCenter" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.lblYCenter" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.rdeXCenter" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.lblXCenter" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.comboCenterOfRotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.gbCenter" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.rdeMoveY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.lblMoveY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.rdeMoveX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.lblMoveX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.rdeAngle" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.lblAngle" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.rdeYScale" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.lblYScale" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.cbLockAspectRatio" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.lblXScale" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.rdeXScale" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.gbMove" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.gbRotate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TfrmScaleRotateMove.gbScale" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmScaleRotateMoveUnit.TUndoScaleRotateMove">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TUndoScaleRotateMove.ShouldUse()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TUndoScaleRotateMove.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TUndoScaleRotateMove.Redo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TUndoScaleRotateMove.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TUndoScaleRotateMove.Description()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TUndoScaleRotateMove.Create(System.Double,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TUndoScaleRotateMove.NotifyGui()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmScaleRotateMoveUnit.TUndoScaleRotateMove.SetDescription(System.Double,System.Double,System.Double,System.Double,System.Double)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TUndoScaleRotateMove.FDescription" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TUndoScaleRotateMove.FNewPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmScaleRotateMoveUnit.TUndoScaleRotateMove.FOldPoints" />
+    </reference>
+  </view>
+</nodeSet>

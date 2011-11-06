@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="6sltcdtuphzz9gt_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:EdgeDisplayUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.FLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.FRow2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.FRow1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.FCol2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.FCol1" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.StartingLocation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.EndingLocation()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.RealAnnotation[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.RealValue[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.Select(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.Layer[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.Row2[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.Row1[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.Col2[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.Col1[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.EndPoint()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.StartPoint()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.GetRealValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeFeature.GetRealAnnotation(System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.MaxValue[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.MinValue[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.UpdateMinMax()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.UpdateData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.Invalidate()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.Edges[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.Count[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.OnNeedToUpdate[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.DataToPlot[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.RealValueTypeCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.RealDescription[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.RealAnnotation[System.Int32,System.Int32,System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.RealValue[System.Int32,System.Int32,System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.Select(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.Draw(System.Int32,GR32.TBitmap32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.Add(EdgeDisplayUnit.TCustomModflowGridEdgeFeature)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.Limits[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.GetValueRangeToDisplay(out@System.Double,out@System.Double,out@System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.UseEdge(DataSetUnit.TDataArray,EdgeDisplayUnit.TCustomModflowGridEdgeFeature)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.GetRealValueTypeCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.GetDescription(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.GetMinimumAndMaximumValues(out@System.Double,out@System.Double,out@System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.GetMinValue()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.GetMaxValue()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.GetEdge(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.GetCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.SetDataToPlot(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.SetLimits(System.Int32,DataSetUnit.TColoringLimits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.GetLimits(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.GetRealValue(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.GetRealAnnotation(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.FUpdatingMinMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.FMinValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.FMaxValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.FOnNeedToUpdate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.FDataToPlot" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.FLimits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:EdgeDisplayUnit.TCustomModflowGridEdgeDisplay.FList" />
+    </reference>
+  </view>
+</nodeSet>

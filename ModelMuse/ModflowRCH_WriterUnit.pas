@@ -11,6 +11,7 @@ Type
   private
     NPRCH: integer;
     NRCHOP: integer;
+    FRchPackage: TRchPackageSelection;
     procedure WriteDataSet1;
     procedure WriteDataSet2;
     procedure WriteDataSets3And4;
@@ -266,8 +267,8 @@ const
   VariableIdentifiers = 'Condfact';
 begin
   WriteParameterDefinitions(DS3, DS3Instances, DS4A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot,
-    Model.ModflowPackages.RchPackage.AssignmentMethod);
+    VariableIdentifiers, ErrorRoot, FRchPackage.AssignmentMethod,
+    FRchPackage.MultiplierArrayNames, FRchPackage.ZoneArrayNames);
 end;
 
 procedure TModflowRCH_Writer.WriteDataSets5To8;
@@ -283,22 +284,23 @@ begin
 end;
 
 procedure TModflowRCH_Writer.WriteFile(const AFileName: string);
-var
-  NameOfFile: string;
 begin
 //  OutputDebugString('SAMPLING ON');
   if not Package.IsSelected then
   begin
     Exit
   end;
+  FRchPackage := Package as TRchPackageSelection;
   if Model.PackageGeneratedExternally(StrRCH) then
   begin
     Exit;
   end;
+  FRchPackage.MultiplierArrayNames.Clear;
+  FRchPackage.ZoneArrayNames.Clear;
 //  frmProgress.AddMessage('Evaluating RCH Package data.');
-  NameOfFile := FileName(AFileName);
+  FNameOfFile := FileName(AFileName);
   WriteToNameFile(StrRCH, Model.UnitNumbers.UnitNumber(StrRCH),
-    NameOfFile, foInput);
+    FNameOfFile, foInput);
   Evaluate;
   Application.ProcessMessages;
   if not frmProgressMM.ShouldContinue then

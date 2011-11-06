@@ -357,7 +357,10 @@ var
   DataArrayManager: TDataArrayManager;
 begin
   jvclbDataSets.Items.Clear;
-  jvclbDataSets.Color := clRed;
+  if comboBoundaryChoice.ItemIndex <= 0 then
+  begin
+    jvclbDataSets.Color := clRed;
+  end;
   EvalAt := TEvaluatedAt(rgEvaluatedAt.ItemIndex);
   ViewDirection := TViewDirection(rgViewDirection.ItemIndex);
   DataArrayManager := frmGoPhast.PhastModel.DataArrayManager;
@@ -1201,7 +1204,7 @@ begin
   inherited;
   if rgElevationCount.ItemIndex = 0 then
   begin
-    comboBoundaryChoice.ItemIndex := 0;
+//    comboBoundaryChoice.ItemIndex := 0;
     comboBoundaryChoiceChange(nil);
   end;
   comboBoundaryChoice.Enabled := (frmGoPhast.PhastModel.ModelSelection
@@ -1211,6 +1214,10 @@ begin
 
   UpdateDimensionColumns;
   UpdateDataSets;
+  if comboBoundaryChoice.Enabled then
+  begin
+    comboBoundaryChoiceChange(nil);
+  end;
 end;
 
 { TUndoImportPoints }
@@ -1251,7 +1258,7 @@ var
   VList: TValueArrayStorage;
   Elevation1: Extended;
   Elevation2: Extended;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   Layer: Integer;
   ACell: T2DTopCell;
   DummyInvalidIndex: Boolean;
@@ -1606,6 +1613,7 @@ begin
         begin
           VList := FMultiValueList[ValueListIndex];
           VList.Count := PointCount;
+          VList.CacheData;
         end;
 
         case AScreenObject.ElevationCount of
@@ -1617,6 +1625,7 @@ begin
             begin
               ElevValues1.Count := PointCount;
               AScreenObject.ImportedSectionElevations := ElevValues1;
+              AScreenObject.ImportedSectionElevations.CacheData;
             end;
           ecTwo:
             begin
@@ -1624,6 +1633,8 @@ begin
               ElevValues2.Count := PointCount;
               AScreenObject.ImportedHigherSectionElevations := ElevValues1;
               AScreenObject.ImportedLowerSectionElevations := ElevValues2;
+              AScreenObject.ImportedHigherSectionElevations.CacheData;
+              AScreenObject.ImportedLowerSectionElevations.CacheData;
             end;
         else
           Assert(False);
@@ -1828,6 +1839,10 @@ begin
   begin
     rgElevationCount.ItemIndex := 1;
     rgElevationCountClick(nil);
+  end;
+  if comboBoundaryChoice.Enabled then
+  begin
+    comboBoundaryChoiceChange(nil);
   end;
 end;
 

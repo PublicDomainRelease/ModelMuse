@@ -1,5 +1,5 @@
 {@abstract(The main purpose of @name is to define @link(TfrmGridAngle) which
-  is used to change the @link(TCustomGrid.GridAngle).)}
+  is used to change the @link(TCustomModelGrid.GridAngle).)}
 unit frmGridAngleUnit;
 
 interface
@@ -9,7 +9,7 @@ uses
   StdCtrls, frmCustomGoPhastUnit, Buttons, ArgusDataEntry;
 
 type
-  // @abstract(@name is used to change the @link(TCustomGrid.GridAngle).)
+  // @abstract(@name is used to change the @link(TCustomModelGrid.GridAngle).)
   // See TfrmGoPhast.@link(TfrmGoPhast.acGridAngleExecute).
   TfrmGridAngle = class(TfrmCustomGoPhast)
     // @name: TBitBtn;
@@ -36,7 +36,7 @@ type
     procedure rdeGridAngleChange(Sender: TObject);
   private
     // @name retrieves the grid angle and converts it to degrees.
-    // See TCustomGrid.@link(TCustomGrid.GridAngle).
+    // See TCustomModelGrid.@link(TCustomModelGrid.GridAngle).
     procedure GetData;
     // @name changes the grid angle to the value specified by the user.
     procedure SetData;

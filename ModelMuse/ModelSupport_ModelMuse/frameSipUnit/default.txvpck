@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="ngosw1zcod105pf_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameSipUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.frameSIP" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frameSipUnit.frameSIP" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameSipUnit.TframeSIP">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.lblSipMxiter" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.rdeSipMxiter" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.lblSipNparm" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.rdeSipNparm" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.lblSipAccl" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.rdeSipAccl" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.lblSipHclose" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.rdeSipHclose" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.lblSipIpcalc" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.comboSipIpcalc" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.lblSipWseed" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.rdeSipWseed" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.lblSipIprsip" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameSipUnit.TframeSIP.rdeSipIprsip" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSipUnit.TframeSIP.comboSipIpcalcChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSipUnit.TframeSIP.SetSelected(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSipUnit.TframeSIP.GetData(ModflowPackageSelectionUnit.TModflowPackageSelection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameSipUnit.TframeSIP.SetData(ModflowPackageSelectionUnit.TModflowPackageSelection)" />
+    </reference>
+  </view>
+</nodeSet>

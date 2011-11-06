@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="7sk42uvcq8xoe3g_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PrintChemistryXYZ_Zone.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PrintChemistryXYZ_Zone.TPrintChemistryXYZ_DataSets">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PrintChemistryXYZ_Zone.TPrintChemistryXYZ_DataSets.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PrintChemistryXYZ_Zone.TPrintChemistryXYZ_DataSets.FPrint_ChemistryXYZ" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PrintChemistryXYZ_Zone.TPrintChemistryXYZ_Zone">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PrintChemistryXYZ_Zone.TPrintChemistryXYZ_Zone.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PrintChemistryXYZ_Zone.TPrintChemistryXYZ_Zone.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:PrintChemistryXYZ_Zone.TPrintChemistryXYZ_Zone.FPrint_ChemistryXYZ" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PrintChemistryXYZ_Zone.TPrintChemistryXYZ_Zone.AssignProperties(System.Int32,System.Int32,System.Int32,ZoneUnit.TCustomDataSets,System.Boolean,System.Boolean,System.Boolean)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:PrintChemistryXYZ_Zone.TPrintChemistryXYZ_ZoneGroup">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:PrintChemistryXYZ_Zone.TPrintChemistryXYZ_ZoneGroup.Zones[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PrintChemistryXYZ_Zone.TPrintChemistryXYZ_ZoneGroup.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:PrintChemistryXYZ_Zone.TPrintChemistryXYZ_ZoneGroup.GetZone(System.Int32)" />
+    </reference>
+  </view>
+</nodeSet>

@@ -1,16 +1,16 @@
 inherited frmPhastGridOptions: TfrmPhastGridOptions
   Left = 558
   Top = 536
-  Width = 307
-  Height = 304
+  Width = 316
+  Height = 309
   HelpType = htKeyword
   HelpKeyword = 'Grid_Options_Dialog_Box'
   HorzScrollBar.Range = 289
   VertScrollBar.Range = 265
   ActiveControl = clbChemistryDimensions
   Caption = 'PHAST Grid Options'
-  ExplicitWidth = 307
-  ExplicitHeight = 304
+  ExplicitWidth = 316
+  ExplicitHeight = 309
   PixelsPerInch = 96
   TextHeight = 18
   object lblChemistrDimensions: TLabel
@@ -23,7 +23,7 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
   object clbChemistryDimensions: TCheckListBox
     Left = 8
     Top = 32
-    Width = 283
+    Width = 292
     Height = 81
     Anchors = [akLeft, akTop, akRight]
     ItemHeight = 18
@@ -32,11 +32,12 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
       'Y'
       'Z')
     TabOrder = 0
+    ExplicitWidth = 283
   end
   object rgPrintOrientation: TRadioGroup
     Left = 8
     Top = 120
-    Width = 283
+    Width = 292
     Height = 105
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Print orientation'
@@ -45,6 +46,7 @@ inherited frmPhastGridOptions: TfrmPhastGridOptions
       'XY'
       'XZ')
     TabOrder = 1
+    ExplicitWidth = 283
   end
   object btnOK: TBitBtn
     Left = 104

@@ -2,7 +2,7 @@ unit FormulaManagerUnit;
 
 interface
 
-uses SysUtils, Classes, Contnrs, {HashTrie,} RbwParser, IntListUnit, Dialogs,
+uses SysUtils, Classes, Contnrs, RbwParser, IntListUnit, Dialogs,
   EZDSLHsh;
 
 type
@@ -61,7 +61,6 @@ type
   private
     // @name is actually a TObjectList.
     FList: TList;
-//    FSortedList: TStringHashTrie;
     FSortedList: THashTable;
     FEmptyFormula: TFormulaObject;
   public
@@ -745,8 +744,6 @@ procedure TFormulaManager.Clear;
 begin
   FList.Clear;
   FSortedList.Free;
-//  FSortedList:= TStringHashTrie.Create;
-//  FSortedList.CaseSensitive := True;
   FSortedList:= THashTable.Create(False);
   FSortedList.IgnoreCase := False;
 end;
@@ -756,8 +753,6 @@ begin
   FList := TObjectList.Create;
   FSortedList:= THashTable.Create(False);
   FSortedList.IgnoreCase := False;
-//  FSortedList:= TStringHashTrie.Create;
-//  FSortedList.CaseSensitive := True;
 end;
 
 destructor TFormulaManager.Destroy;
@@ -911,7 +906,6 @@ begin
   FSortedList:= THashTable.Create(False);
   FSortedList.IgnoreCase := True;
   FSortedList.TableSize := Max(211, FList.Count*2-1);
-//  FSortedList := TStringHashTrie.Create;
   for Index := 0 to FList.Count - 1 do
   begin
     FormulaObject := FList[Index];
@@ -921,7 +915,6 @@ begin
       begin
         FSortedList.Insert(FormulaObject.Formula, FormulaObject);
       end;
-//      FSortedList.Add(FormulaObject.Formula, FormulaObject);
     end;
   end;
 

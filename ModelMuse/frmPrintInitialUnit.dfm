@@ -1,18 +1,18 @@
 inherited frmPrintInitial: TfrmPrintInitial
   Left = 551
   Top = 363
-  Width = 614
-  Height = 376
+  Width = 623
+  Height = 382
   HelpType = htKeyword
   HelpKeyword = 'Print_Initial_Conditions_Dialog_Box'
   HorzScrollBar.Range = 594
   VertScrollBar.Range = 329
   ActiveControl = cbBoundaryConditions
   Caption = 'PHAST Print Initial Conditions'
-  ExplicitWidth = 614
-  ExplicitHeight = 376
+  ExplicitWidth = 623
+  ExplicitHeight = 382
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object cbBoundaryConditions: TCheckBox
     Left = 8
     Top = 8
@@ -170,25 +170,34 @@ inherited frmPrintInitial: TfrmPrintInitial
     Top = 296
     Width = 89
     Height = 33
+    DoubleBuffered = True
+    Kind = bkOK
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 19
     OnClick = btnOKClick
-    Kind = bkOK
   end
   object btnCancel: TBitBtn
     Left = 505
     Top = 296
     Width = 89
     Height = 33
-    TabOrder = 20
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 20
   end
   object btnHelp: TBitBtn
     Left = 313
     Top = 296
     Width = 89
     Height = 33
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 21
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
 end

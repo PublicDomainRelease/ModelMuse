@@ -36,9 +36,12 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnOK: TBitBtn
       Left = 373
@@ -46,9 +49,12 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       Width = 82
       Height = 27
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 461
@@ -56,8 +62,11 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
       Width = 83
       Height = 27
       Anchors = [akTop, akRight]
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
   end
   object pltrPageNavigator: TJvPageListTreeView
@@ -71,16 +80,16 @@ inherited frmModflowOutputControl: TfrmModflowOutputControl
     PageList = jvPages
     Align = alLeft
     HideSelection = False
-    Indent = 19
+    Indent = 20
     RowSelect = True
     TabOrder = 1
     Items.NodeData = {
-      0104000000270000000000000000000000FFFFFFFFFFFFFFFF00000000000000
-      0007470065006E006500720061006C00210000000000000000000000FFFFFFFF
-      FFFFFFFF01000000000000000448006500610064002900000000000000000000
-      00FFFFFFFFFFFFFFFF020000000000000008440072006100770064006F007700
-      6E00250000000000000000000000FFFFFFFFFFFFFFFF00000000000000000642
-      0075006400670065007400}
+      03040000002C0000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF000000
+      00000000000107470065006E006500720061006C002600000000000000000000
+      00FFFFFFFFFFFFFFFFFFFFFFFF0100000000000000010448006500610064002E
+      0000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF020000000000000001
+      08440072006100770064006F0077006E002A0000000000000000000000FFFFFF
+      FFFFFFFFFFFFFFFFFF00000000000000000106420075006400670065007400}
     Items.Links = {0400000000000000000000000000000000000000}
   end
   object jvPages: TJvPageList

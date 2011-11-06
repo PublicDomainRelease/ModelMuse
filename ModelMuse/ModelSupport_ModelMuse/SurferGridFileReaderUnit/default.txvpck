@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="m2n2suf6pdpk3if_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SurferGridFileReaderUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SurferGridFileReaderUnit.ReadSurfer7GrdFile(System.String,out@SurferGridFileReaderUnit.TSurfer7Grid)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SurferGridFileReaderUnit.ReadSurferAsciiFile(System.String,out@SurferGridFileReaderUnit.TSurfer6Grid)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SurferGridFileReaderUnit.ReadSurfer6GrdFile(System.String,out@SurferGridFileReaderUnit.TSurfer6Grid)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SurferGridFileReaderUnit.SurferFileType(System.String)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SurferGridFileReaderUnit.TSurferFileType">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TSurferFileType.sftAscii" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TSurferFileType.sft7" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TSurferFileType.sft6" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SurferGridFileReaderUnit.TGridData6Header">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGridData6Header.Zhi" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGridData6Header.Zlo" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGridData6Header.Yhi" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGridData6Header.Ylo" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGridData6Header.Xhi" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGridData6Header.Xlo" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGridData6Header.ny" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGridData6Header.nx" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGridData6Header.ID" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SurferGridFileReaderUnit.TSurferPoint">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TSurferPoint.Z" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TSurferPoint.Y" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TSurferPoint.X" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SurferGridFileReaderUnit.TSurfer6Grid">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TSurfer6Grid.Header" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TSurfer6Grid.Points" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:SurferGridFileReaderUnit.TSurfer6Grid.Header" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:SurferGridFileReaderUnit.TSurfer6Grid.Points" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SurferGridFileReaderUnit.EGrdReadError">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SurferGridFileReaderUnit.TSurfer7Header">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TSurfer7Header.Size" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TSurfer7Header.ID" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SurferGridFileReaderUnit.TGrid7Header">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGrid7Header.BlankValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGrid7Header.Rotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGrid7Header.zMax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGrid7Header.zMin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGrid7Header.ySize" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGrid7Header.xSize" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGrid7Header.yLL" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGrid7Header.xLL" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGrid7Header.nCol" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TGrid7Header.nRow" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SurferGridFileReaderUnit.TSurfer7Grid">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TSurfer7Grid.Header" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SurferGridFileReaderUnit.TSurfer7Grid.Points" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:SurferGridFileReaderUnit.TSurfer7Grid.Header" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:SurferGridFileReaderUnit.TSurfer7Grid.Points" />
+    </reference>
+  </view>
+</nodeSet>

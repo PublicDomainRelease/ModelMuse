@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="tdnk875yohx86cf_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrWriterUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.CompareSegments(System.Pointer,System.Pointer)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.CircularCategory" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.DupErrorCategory" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.StrIprior" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.StrDiversionSegmentNumber" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.StrDownstreamSegmentNumber" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.SfrICalcNumber" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.StrReachNumber" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.StrSegmentNumber" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrWriterUnit.TSegment">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrWriterUnit.TSegment.ReachCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrWriterUnit.TSegment.Reaches[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TSegment.OriginalDiversionSegmentNumbers()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TSegment.OriginalDownStreamSegmentNumbers()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TSegment.Destroy()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrWriterUnit.TSegment.NewSegmentNumber[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TSegment.OriginalSegmentNumber()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TSegment.GetReachCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TSegment.GetReach(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.TSegment.FNewSegmentNumber" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.TSegment.FHasTributaries" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.TSegment.FScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.TSegment.FReaches" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.WriteDataSet1()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.NSFRPAR" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.ISFROPT" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.FLakes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.FSegments" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.FValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.FNameOfFile" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.UpdateDisplay(ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.WriteFile(System.String,ref@System.Int32,Classes.TStrings)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.Create(PhastModelUnit.TPhastModel)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.SegmentCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.Segments[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.Evaluate()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.SortSegments()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.Package()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.Extension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.GetSegmentCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.GetSegment(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.WriteGages(ref@System.Int32,Classes.TStrings)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.FindConvertedSegment(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.WriteDataSets5to7()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.WriteDataSet4f6e(System.Boolean,ModflowSfrUnit.TSfrBoundary,ModflowSfrParamIcalcUnit.TSfrParamIcalcItem,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.WriteDataSet4e6d(System.Boolean,ModflowSfrUnit.TSfrBoundary,ModflowSfrParamIcalcUnit.TSfrParamIcalcItem,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.WriteDataSet4d6c(System.Boolean,ModflowSfrUnit.TSfrBoundary,ModflowSfrParamIcalcUnit.TSfrParamIcalcItem,System.Double,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.WriteUnsatSegmentValues(System.Boolean,ref@System.String,ref@System.Boolean,ModflowSfrUnsatSegment.TSfrUnsatSegmentStorage)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.WriteSegmentValues(System.Int32,System.Boolean,ModflowSfrSegment.TSfrSegmentStorage,System.Boolean,ref@System.String,ref@System.Boolean,ModflowSfrParamIcalcUnit.TSfrParamIcalcItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.WriteDataSet4c6b(System.Boolean,ModflowSfrUnit.TSfrBoundary,ModflowSfrParamIcalcUnit.TSfrParamIcalcItem,System.Double,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.WriteDataSet4b6a(System.Double,ModflowSfrWriterUnit.TSegment,ModflowSfrParamIcalcUnit.TSfrParamIcalcItem,ModflowSfrUnit.TSfrBoundary,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.WriteDataSets3and4()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrWriterUnit.TModflowSFR_Writer.WriteDataSet2()" />
+    </reference>
+  </view>
+</nodeSet>

@@ -125,7 +125,10 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
       object tabObservationsTimes: TTabSheet
         Caption = 'Observations times and values'
         OnResize = tabObservationsTimesResize
+        ExplicitLeft = 0
+        ExplicitTop = 0
         ExplicitWidth = 544
+        ExplicitHeight = 0
         DesignSize = (
           586
           252)
@@ -541,7 +544,6 @@ inherited frmManageFluxObservations: TfrmManageFluxObservations
           TabOrder = 6
           OnChange = edFactorFormulaChange
           OnExit = edFactorFormulaExit
-          ExplicitWidth = 379
         end
         object btnFactorFormula: TButton
           Left = 487

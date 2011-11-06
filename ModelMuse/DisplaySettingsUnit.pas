@@ -4,7 +4,8 @@ interface
 
 uses
   Types, Classes, Graphics, GoPhastTypes, LegendUnit, AbstractGridUnit,
-  PathlineReader, SysUtils, EdgeDisplayUnit, DataSetUnit;
+  PathlineReader, SysUtils, EdgeDisplayUnit, DataSetUnit,
+  Generics.Collections, Generics.Defaults;
 
 type
   TTextDisplay = class(TGoPhastPersistent)
@@ -111,6 +112,89 @@ type
     property Visible: boolean read FVisible write SetVisible;
   end;
 
+  TStreamsToPlot = (stpNone, stpAll, stpVisible, stpSelected);
+
+  TSfrStreamPlot = class(TObject)
+  private
+    FStreamObject: TObject;
+    procedure SetStreamObject(const Value: TObject);
+  public
+    Segment: Integer;
+    OutflowSegment: integer;
+    DiversionSegment: integer;
+    property StreamObject: TObject read FStreamObject write SetStreamObject;
+  end;
+
+  TLakePlot = class(TObject)
+  private
+    FLakeObject: TObject;
+    procedure SetLakeObject(const Value: TObject);
+  public
+    LakeId: Integer;
+    property LakeObject: TObject read FLakeObject write SetLakeObject;
+  end;
+
+  TSfrStreamPlotComparer = class(TComparer<TSfrStreamPlot>)
+    function Compare(const Left, Right: TSfrStreamPlot): Integer; override;
+  end;
+
+  TSfrStreamPlotList = class(TObjectList<TSfrStreamPlot>)
+  private
+    procedure Sort;
+  end;
+
+  TSfrLakePlotComparer = class(TComparer<TLakePlot>)
+    function Compare(const Left, Right: TLakePlot): Integer; override;
+  end;
+
+  TLakePlotList = class(TObjectList<TLakePlot>)
+  private
+    procedure Sort;
+  end;
+
+  TSfrStreamLinkPlot = class(TGoPhastPersistent)
+  private
+    FPlotStreamConnections: boolean;
+    FStreamsToPlot: TStreamsToPlot;
+    FPlotDiversions: boolean;
+    FStreamColor: TColor;
+    FDiversionColor: TColor;
+    FTimeToPlot: TDateTime;
+    FPlotUnconnected: Boolean;
+    FUnconnectedColor: TColor;
+    procedure SetDiversionColor(const Value: TColor);
+    procedure SetPlotDiversions(const Value: boolean);
+    procedure SetPlotStreamConnections(const Value: boolean);
+    procedure SetStreamColor(const Value: TColor);
+    procedure SetStreamsToPlot(const Value: TStreamsToPlot);
+    procedure SetTimeToPlot(const Value: TDateTime);
+    procedure SetPlotUnconnected(const Value: Boolean);
+    procedure SetUnconnectedColor(const Value: TColor);
+  public
+    procedure GetObjectsToPlot(StreamList: TSfrStreamPlotList;
+      LakeList: TLakePlotList);
+    Constructor Create(Model: TBaseModel);
+    procedure Assign(Source: TPersistent); override;
+  published
+    property PlotStreamConnections: boolean read FPlotStreamConnections
+      write SetPlotStreamConnections default True;
+    property PlotDiversions: boolean read FPlotDiversions
+      write SetPlotDiversions default True;
+    property PlotUnconnected: Boolean read FPlotUnconnected
+      write SetPlotUnconnected default True;
+    property StreamColor: TColor read FStreamColor
+      write SetStreamColor default clBlue;
+    property DiversionColor: TColor read FDiversionColor
+      write SetDiversionColor default clLime;
+    property UnconnectedColor: TColor read FUnconnectedColor
+      write SetUnconnectedColor default clRed;
+    property StreamsToPlot: TStreamsToPlot read FStreamsToPlot
+      write SetStreamsToPlot;
+    property TimeToPlot: TDateTime read FTimeToPlot write SetTimeToPlot;
+  end;
+
+
+
   {A @name stores all the information
    needed to restore the appearance of ModelMuse to a previous
    state including the name of the data set used to color or
@@ -139,6 +223,9 @@ type
     FImageHeight: integer;
     FImageWidth: integer;
     FVisibleObjects: TStringList;
+    FContourFont: TFont;
+    FLabelContours: boolean;
+    FSfrStreamLinkPlot: TSfrStreamLinkPlot;
     procedure SetAdditionalText(const Value: TTextCollection);
     procedure SetGridDisplayChoice(const Value: TGridLineDrawingChoice);
     procedure SetHorizontalRuler(const Value: TRulerSettings);
@@ -159,6 +246,8 @@ type
     procedure SetImageHeight(const Value: integer);
     procedure SetImageWidth(const Value: integer);
     procedure SetVisibleObjects(const Value: TStringList);
+    procedure SetContourFont(const Value: TFont);
+    procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot);
   public
     procedure Assign(Source: TPersistent); override;
     constructor Create(Collection: TCollection); override;
@@ -201,6 +290,9 @@ type
     property ImageHeight: integer read FImageHeight write SetImageHeight;
     property VisibleObjects: TStringList read FVisibleObjects
       write SetVisibleObjects;
+    property ContourFont: TFont read FContourFont write SetContourFont;
+    property LabelContours: boolean read FLabelContours write FLabelContours;
+    property SfrStreamLinkPlot: TSfrStreamLinkPlot read FSfrStreamLinkPlot write SetSfrStreamLinkPlot;
   end;
 
   { @name is a collection of @link(TDisplaySettingsItem)s.
@@ -219,7 +311,8 @@ type
 implementation
 
 uses
-  DrawTextUnit, RbwRuler;
+  DrawTextUnit, RbwRuler, ScreenObjectUnit, PhastModelUnit, ModflowSfrUnit,
+  ModflowSfrParamIcalcUnit, ModflowLakUnit;
 
 { TTextDisplay }
 
@@ -429,6 +522,9 @@ begin
     ImageWidth := SourceDisplay.ImageWidth;
     ImageHeight := SourceDisplay.ImageHeight;
     VisibleObjects := SourceDisplay.VisibleObjects;
+    ContourFont := SourceDisplay.ContourFont;
+    LabelContours := SourceDisplay.LabelContours;
+    SfrStreamLinkPlot := SourceDisplay.SfrStreamLinkPlot;
   end
   else
   begin
@@ -450,10 +546,14 @@ begin
   FHorizontalRuler := TRulerSettings.Create(Model);
   FVerticaRuler := TRulerSettings.Create(Model);
   FVisibleObjects := TStringList.Create;
+  FContourFont := TFont.Create;
+  FSfrStreamLinkPlot := TSfrStreamLinkPlot.Create(Model);
 end;
 
 destructor TDisplaySettingsItem.Destroy;
 begin
+  FSfrStreamLinkPlot.Free;
+  FContourFont.Free;
   FVisibleObjects.Free;
   FVerticaRuler.Free;
   FHorizontalRuler.Free;
@@ -509,6 +609,11 @@ begin
   FContourDisplaySettings.Assign(Value);
 end;
 
+procedure TDisplaySettingsItem.SetContourFont(const Value: TFont);
+begin
+  FContourFont.Assign(Value);
+end;
+
 procedure TDisplaySettingsItem.SetEdgeDisplaySettings(
   const Value: TEdgeDisplaySettings);
 begin
@@ -558,6 +663,12 @@ end;
 procedure TColorDisplaySettings.SetShadeInactiveArea(const Value: boolean);
 begin
   SetBooleanProperty(FShadeInactiveArea, Value);
+end;
+
+procedure TDisplaySettingsItem.SetSfrStreamLinkPlot(
+  const Value: TSfrStreamLinkPlot);
+begin
+  FSfrStreamLinkPlot.Assign(Value);
 end;
 
 procedure TDisplaySettingsItem.SetShowColoredGridLines(const Value: boolean);
@@ -757,6 +868,211 @@ end;
 procedure TRulerSettings.SetVisible(const Value: boolean);
 begin
   SetBooleanProperty(FVisible, Value);
+end;
+
+{ TSfrStreamPlotComparer }
+
+function TSfrStreamPlotComparer.Compare(const Left,
+  Right: TSfrStreamPlot): Integer;
+begin
+  result := Left.Segment - Right.Segment;
+end;
+
+{ TSfrStreamPlotList }
+
+procedure TSfrStreamPlotList.Sort;
+var
+  Comparer: IComparer<TSfrStreamPlot>;
+begin
+  Comparer:= TSfrStreamPlotComparer.Create;
+  inherited Sort(Comparer);
+end;
+
+{ TSfrLakePlotComparer }
+
+function TSfrLakePlotComparer.Compare(const Left, Right: TLakePlot): Integer;
+begin
+  result := Left.LakeId - Right.LakeId;
+end;
+
+{ TLakePlotList }
+
+procedure TLakePlotList.Sort;
+var
+  Comparer: IComparer<TLakePlot>;
+begin
+  Comparer:= TSfrLakePlotComparer.Create;
+  inherited Sort(Comparer);
+end;
+
+{ TStreamLinkPlot }
+
+procedure TSfrStreamLinkPlot.Assign(Source: TPersistent);
+var
+  SourceStreamLink: TSfrStreamLinkPlot;
+begin
+  if Source is TSfrStreamLinkPlot then
+  begin
+    SourceStreamLink := TSfrStreamLinkPlot(Source);
+    PlotStreamConnections := SourceStreamLink.PlotStreamConnections;
+    PlotDiversions := SourceStreamLink.PlotDiversions;
+    StreamColor := SourceStreamLink.StreamColor;
+    DiversionColor := SourceStreamLink.DiversionColor;
+    StreamsToPlot := SourceStreamLink.StreamsToPlot;
+    TimeToPlot := SourceStreamLink.TimeToPlot;
+    PlotUnconnected := SourceStreamLink.PlotUnconnected;
+    UnconnectedColor := SourceStreamLink.UnconnectedColor;
+  end
+  else
+  begin
+    inherited;
+  end;
+end;
+
+constructor TSfrStreamLinkPlot.Create(Model: TBaseModel);
+begin
+  inherited;
+  FStreamColor := clBlue;
+  FDiversionColor := clLime;
+  FUnconnectedColor := clRed;
+  FPlotStreamConnections := True;
+  FPlotDiversions := True;
+  FPlotUnconnected := True;
+end;
+
+procedure TSfrStreamLinkPlot.GetObjectsToPlot(StreamList: TSfrStreamPlotList;
+  LakeList: TLakePlotList);
+var
+  LocalModel: TPhastModel;
+  Index : integer;
+  ScreenObject: TScreenObject;
+  SfrBoundary: TSfrBoundary;
+  Item: TSfrParamIcalcItem;
+  StreamPlot: TSfrStreamPlot;
+  LakBoundary: TLakBoundary;
+  Lake: TLakePlot;
+begin
+  StreamList.Clear;
+  LakeList.Clear;
+  if StreamsToPlot <> stpNone then
+  begin
+    LocalModel := FModel as TPhastModel;
+    if not LocalModel.SfrIsSelected then
+    begin
+      Exit;
+    end;
+    for Index := 0 to LocalModel.ScreenObjectCount - 1 do
+    begin
+      ScreenObject := LocalModel.ScreenObjects[Index];
+      if ScreenObject.Deleted then
+      begin
+        Continue;
+      end;
+      case StreamsToPlot of
+        stpVisible:
+          begin
+            if not ScreenObject.Visible then
+            begin
+              Continue;
+            end;
+          end;
+        stpSelected:
+          begin
+            if not ScreenObject.Selected then
+            begin
+              Continue;
+            end;
+          end;
+      end;
+      SfrBoundary := ScreenObject.ModflowBoundaries.ModflowSfrBoundary;
+      if SfrBoundary <> nil then
+      begin
+        Item := SfrBoundary.ParamIcalc.GetItemByStartTime(TimeToPlot);
+        if Item <> nil then
+        begin
+          StreamPlot := TSfrStreamPlot.Create;
+          StreamPlot.StreamObject := ScreenObject;
+          StreamPlot.Segment := SfrBoundary.SegementNumber;
+          StreamPlot.OutflowSegment := Item.OutflowSegment;
+          StreamPlot.DiversionSegment := Item.DiversionSegment;
+          StreamList.Add(StreamPlot);
+        end;
+      end;
+      if LocalModel.LakIsSelected then
+      begin
+        LakBoundary := ScreenObject.ModflowBoundaries.ModflowLakBoundary;
+        if LakBoundary <> nil then
+        begin
+          Lake := TLakePlot.Create;
+          Lake.LakeObject := ScreenObject;
+          Lake.LakeId := LakBoundary.LakeID;
+          LakeList.Add(Lake);
+        end;
+      end;
+    end;
+    StreamList.Sort;
+    LakeList.Sort;
+  end;
+end;
+
+procedure TSfrStreamLinkPlot.SetDiversionColor(const Value: TColor);
+begin
+  SetColorProperty(FDiversionColor, Value);
+end;
+
+procedure TSfrStreamLinkPlot.SetPlotDiversions(const Value: boolean);
+begin
+  SetBooleanProperty(FPlotDiversions, Value);
+end;
+
+procedure TSfrStreamLinkPlot.SetPlotStreamConnections(const Value: boolean);
+begin
+  SetBooleanProperty(FPlotStreamConnections, Value);
+end;
+
+procedure TSfrStreamLinkPlot.SetPlotUnconnected(const Value: Boolean);
+begin
+  SetBooleanProperty(FPlotUnconnected, Value);
+end;
+
+procedure TSfrStreamLinkPlot.SetStreamColor(const Value: TColor);
+begin
+  SetColorProperty(FStreamColor, Value);
+end;
+
+procedure TSfrStreamLinkPlot.SetStreamsToPlot(const Value: TStreamsToPlot);
+begin
+  if FStreamsToPlot <> Value then
+  begin
+    FStreamsToPlot := Value;
+  end;
+end;
+
+procedure TSfrStreamLinkPlot.SetTimeToPlot(const Value: TDateTime);
+begin
+  SetDataTimeProperty(FTimeToPlot, Value);
+end;
+
+procedure TSfrStreamLinkPlot.SetUnconnectedColor(const Value: TColor);
+begin
+  SetColorProperty(FUnconnectedColor, Value);
+end;
+
+
+{ TLakePlot }
+
+procedure TLakePlot.SetLakeObject(const Value: TObject);
+begin
+  Assert(Value is TScreenObject);
+  FLakeObject := Value;
+end;
+
+{ TSfrStreamPlot }
+
+procedure TSfrStreamPlot.SetStreamObject(const Value: TObject);
+begin
+  Assert(Value is TScreenObject);
+  FStreamObject := Value;
 end;
 
 end.

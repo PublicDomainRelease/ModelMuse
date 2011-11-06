@@ -507,7 +507,7 @@ var
   RechargeRateData: TModflowTimeList;
   DataArrayIndex: Integer;
   DataArray: TTransientRealSparseDataSet;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   RowIndex: Integer;
   ColIndex: Integer;
   LayerIndex: Integer;

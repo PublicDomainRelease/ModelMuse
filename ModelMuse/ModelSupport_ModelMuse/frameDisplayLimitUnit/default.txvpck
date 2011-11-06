@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="eklx1rnwpj8yqor_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameDisplayLimitUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.Destroy()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.DataType[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.SetEnabled(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.SetLimit(DataSetUnit.TColoringLimit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.SetDataType(RbwParser.TRbwDataType)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.FAssigningLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.FLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.FDataType" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.comboBoolLimitChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.cbCheckClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.rdeLimitExit(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.comboBoolLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.rdeLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.cbCheck" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frameDisplayLimitUnit.TframeDisplayLimit.Limit[]" />
+    </reference>
+  </view>
+</nodeSet>

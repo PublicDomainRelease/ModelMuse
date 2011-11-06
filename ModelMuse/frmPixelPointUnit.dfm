@@ -1,30 +1,30 @@
 inherited frmPixelPoint: TfrmPixelPoint
   Left = 554
   Top = 516
-  Width = 305
-  Height = 160
+  Width = 314
+  Height = 168
   HelpType = htKeyword
   HelpKeyword = 'Import_Shapefile_Dialog_Box'
   HorzScrollBar.Range = 290
   VertScrollBar.Range = 117
   ActiveControl = rdeX
   Caption = 'Coordinates'
-  ExplicitWidth = 305
-  ExplicitHeight = 160
+  ExplicitWidth = 314
+  ExplicitHeight = 168
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object lblX: TLabel
     Left = 8
     Top = 8
-    Width = 9
-    Height = 17
+    Width = 11
+    Height = 18
     Caption = 'X'
   end
   object lblY: TLabel
     Left = 153
     Top = 8
     Width = 9
-    Height = 17
+    Height = 18
     Caption = 'Y'
   end
   object rdeX: TRbwDataEntry
@@ -33,7 +33,6 @@ inherited frmPixelPoint: TfrmPixelPoint
     Width = 137
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 0
     Text = '0'
     DataType = dtReal
@@ -46,7 +45,6 @@ inherited frmPixelPoint: TfrmPixelPoint
     Width = 137
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 3
     Text = '0'
     DataType = dtReal
@@ -60,9 +58,7 @@ inherited frmPixelPoint: TfrmPixelPoint
     Height = 33
     Caption = 'OK'
     Default = True
-    ModalResult = 1
-    TabOrder = 1
-    OnClick = btnOKClick
+    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       04000000000068010000120B0000120B00001000000010000000000000000000
@@ -80,23 +76,33 @@ inherited frmPixelPoint: TfrmPixelPoint
       3338F38F000033333333333333A223333333333333338F830000333333333333
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
+    ModalResult = 1
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 1
+    OnClick = btnOKClick
   end
   object btnCancel: TBitBtn
     Left = 199
     Top = 84
     Width = 91
     Height = 33
-    TabOrder = 2
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 2
   end
   object btnHelp: TBitBtn
     Left = 8
     Top = 84
     Width = 91
     Height = 33
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 4
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
 end

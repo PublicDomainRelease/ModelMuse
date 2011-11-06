@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="r6m4dy0ppzr0ppf_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthStorage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthStorage.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthStorage.GetExtinctDepthArray()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthStorage.FExtinctDepthArray" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthStorage.ExtinctDepthArray[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthStorage.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthStorage.Store(ZLib.TCompressionStream)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentStorage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentStorage.WaterContentArray[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentStorage.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentStorage.Store(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentStorage.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentStorage.GetWaterContentArray()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentStorage.FWaterContentArray" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.CreateFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.AssignObserverEvents(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.GetUzfExtinctDepth()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.SetUzfExtinctDepth(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.FUzfExtinctDepth" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.UzfExtinctDepth[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.BoundaryFormulaCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.SetBoundaryFormula(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.GetBoundaryFormula(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.RemoveFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctDepthItem.GetPropertyObserver(System.Object,Classes.TList)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.UzfWaterContent[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.BoundaryFormulaCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.SetBoundaryFormula(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.GetBoundaryFormula(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.RemoveFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.GetPropertyObserver(System.Object,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.CreateFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.AssignObserverEvents(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.GetUzfWaterContent()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.SetUzfWaterContent(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentItem.FUzfWaterContent" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCollection.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCollection.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCollection.SetBoundaryStartAndEndTime(System.Int32,ModflowBoundaryUnit.TCustomModflowBoundaryItem,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCollection.ItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCollection.InitializeTimeLists(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCollection.AssignCellValues(Classes.TList,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCollection.AddSpecificBoundary()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCollection.FExtinctionDepthData" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCollection.InvalidateUzfExtinctDepthData(System.Object)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCollection.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCollection.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCollection.SetBoundaryStartAndEndTime(System.Int32,ModflowBoundaryUnit.TCustomModflowBoundaryItem,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCollection.ItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCollection.InitializeTimeLists(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCollection.AssignCellValues(Classes.TList,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCollection.AddSpecificBoundary()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCollection.FWaterContentData" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCollection.InvalidateUzfWaterContentData(System.Object)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.TUzfInfiltrationRateCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfInfiltrationRateCollection.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.TUzfEvapotranspirationDemandCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfEvapotranspirationDemandCollection.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.GetColumn()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.GetExtinctionDepthAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.GetExtinctionDepth()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.FStressPeriod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.FValues" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.Values[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.StressPeriod[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.ExtinctionDepthAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.ExtinctionDepth[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.GetSection()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.GetIntegerAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.GetRealAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.GetRealValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.GetIntegerValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.GetRow()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.GetLayer()" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthCell.FValues" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.GetIntegerAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.GetRealAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.GetRealValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.GetIntegerValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.GetRow()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.GetLayer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.GetColumn()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.GetWaterContentAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.GetWaterContent()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.FStressPeriod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.FValues" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.Values[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.StressPeriod[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.WaterContentAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.WaterContent[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.GetSection()" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentCell.FValues" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.TUzfBoundary">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.EvaluateArrayBoundaries()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.Used()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.GetCellValues(Classes.TList,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.Create(System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.BoundaryCollectionClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.AssignCells(ModflowBoundaryUnit.TCustomBoundaryStorage,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.SetGageOption2(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.SetGageOption1(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.AssignWaterContentCells(ModflowUzfUnit.TUzfWaterContentStorage,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.AssignExtinctionDepthCells(ModflowUzfUnit.TUzfExtinctDepthStorage,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.AssignEvapotranspirationDemandCells(ModflowEvtUnit.TEvtStorage,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.SetWaterContent(ModflowUzfUnit.TUzfWaterContentCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.SetExtinctionDepth(ModflowUzfUnit.TUzfExtinctionDepthCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.SetEvapotranspirationDemand(ModflowUzfUnit.TUzfEvapotranspirationDemandCollection)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.FGageOption1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.FGageOption2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.FWaterContent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.FExtinctionDepth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.FEvapotranspirationDemand" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.WaterContent[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.ExtinctionDepth[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.EvapotranspirationDemand[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.GageOption2[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.GageOption1[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.UpdateTimes(RealListUnit.TRealList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.GetWaterContentCells(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.GetExtinctionDepthCells(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.GetEvapotranspirationDemandCells(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.InvalidateDisplay()" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.FWaterContent" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.FExtinctionDepth" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowUzfUnit.TUzfBoundary.FEvapotranspirationDemand" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.UzfWaterContentPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.UzfExtinctDepthPosition" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthRecord.Cell" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthRecord.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthRecord.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthRecord.ExtinctionDepthAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthRecord.EndingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthRecord.StartingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfExtinctionDepthRecord.ExtinctionDepth" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentRecord.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentRecord.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentRecord.MinimumWaterContentAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentRecord.EndingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentRecord.StartingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentRecord.MinimumWaterContent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowUzfUnit.TUzfWaterContentRecord.Cell" />
+    </reference>
+  </view>
+</nodeSet>

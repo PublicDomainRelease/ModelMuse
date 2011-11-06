@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="s6ovus0joarvc2t_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.GlobalRestoreModflowBoundarySubscription(System.Object,System.Object,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.GlobalRemoveModflowBoundarySubscription(System.Object,System.Object,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.SortBoundaryItems(System.Pointer,System.Pointer)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TFormulaInterpretation">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TFormulaInterpretation.fiTotal" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TFormulaInterpretation.fiDirect" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TFormulaInterpretation.fiSpecific" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TCustomBoundaryStorage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomBoundaryStorage.Store(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomBoundaryStorage.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomBoundaryStorage.Clear()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TCustomBoundaryStorage.FTempFileName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TCustomBoundaryStorage.FCleared" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomBoundaryStorage.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomBoundaryStorage.CacheData()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TCustomBoundaryStorage.FCached" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TCustomBoundaryStorage.EndingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TCustomBoundaryStorage.StartingTime" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomBoundaryStorage.RestoreData()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TBoundaryValue">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TBoundaryValue.Formula" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TBoundaryValue.Time" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.UpdateFormula(System.String,System.Int32,ref@FormulaManagerUnit.TFormulaObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.BoundaryFormulaCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.NonBlankFormulas()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.SetBoundaryFormula(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.GetBoundaryFormula(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.UpdateFormulaDependencies(System.String,ref@System.String,SubscriptionUnit.TObserver,RbwParser.TRbwParser)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.ResetItemObserver(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.RemoveFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.GetPropertyObserver(System.Object,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.CreateFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.AssignObserverEvents(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.FObserverList" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.GetScreenObject()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.SetStartTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.SetEndTime(System.Double)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.FStartTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.FEndTime" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.EndTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.StartTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.BoundaryFormula[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.ScreenObject[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.CreateFormulaObject(GoPhastTypes.TDataSetOrientation)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.RestoreSubscription(System.Object,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomModflowBoundaryItem.RemoveSubscription(System.Object,System.String)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TMF_BoundItemClass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TNoFormulaItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TNoFormulaItem.AssignObserverEvents(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TNoFormulaItem.CreateFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TNoFormulaItem.RemoveFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TNoFormulaItem.BoundaryFormulaCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TNoFormulaItem.SetBoundaryFormula(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TNoFormulaItem.GetBoundaryFormula(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TNoFormulaItem.GetPropertyObserver(System.Object,Classes.TList)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:ModflowBoundaryUnit.TNoFormulaItem:ModflowBoundaryUnit.TCustomModflowBoundaryItem" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TCustomNonSpatialBoundColl">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomNonSpatialBoundColl.Used()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomNonSpatialBoundColl.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomNonSpatialBoundColl.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TCustomNonSpatialBoundColl.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomNonSpatialBoundColl.ItemClass()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TCustomNonSpatialBoundColl.BoundaryGroup[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TCustomNonSpatialBoundColl.ScreenObject[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomNonSpatialBoundColl.GetItem(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomNonSpatialBoundColl.SetItem(System.Int32,ModflowBoundaryUnit.TCustomModflowBoundaryItem)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TCustomNonSpatialBoundColl.FBoundary" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TCustomNonSpatialBoundColl.FScreenObject" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowBoundaryUnit.TCustomNonSpatialBoundColl.FBoundary" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.AddSpecificBoundary()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.AddBoundary(ModflowBoundaryUnit.TCustomBoundaryStorage)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.GetTimeList(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.TestIfObservationsPresent(ref@System.Double,ref@System.Double,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.GetBoundaryCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.SetParam(ModflowTransientListParameterUnit.TModflowTransientListParameter)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.GetParam()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.SetParamName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.GetParamName()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.GetBoundaries(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.FTimeLists" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.FBoundaries" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.FParamName" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.ParamName[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.GetBoundaryByStartTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.DataSetUsed(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.TimeLists[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.TimeListCount()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.Param[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.IsSame(OrderedCollectionUnit.TOrderedCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.BoundaryCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.Boundaries[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.SetBoundaryStartAndEndTime(System.Int32,ModflowBoundaryUnit.TCustomModflowBoundaryItem,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.ClearBoundaries()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.SetBoundaryCapacity(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl.AddTimeList(ModflowBoundaryUnit.TModflowTimeList)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_BoundColl:ModflowBoundaryUnit.TCustomNonSpatialBoundColl" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TMF_BoundCollClass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ArrayBoundColl">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ArrayBoundColl.AssignCellsWithItem(ModflowBoundaryUnit.TCustomModflowBoundaryItem,System.Int32,Classes.TList,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ArrayBoundColl.EvaluateArrayBoundaries()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ArrayBoundColl.InitializeTimeLists(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ArrayBoundColl.CountBoundaryCells(ref@System.Int32,DataSetUnit.TDataArray,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ArrayBoundColl.AssignCellValues(Classes.TList,System.Int32)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ArrayBoundColl:ModflowBoundaryUnit.TCustomMF_BoundColl" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ListBoundColl">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ListBoundColl.EvaluateListBoundaries()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ListBoundColl.AdjustedFormula(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ListBoundColl.AssignCellList(RbwParser.TExpression,System.Object,ModflowBoundaryUnit.TCustomBoundaryStorage,System.Int32,Classes.TList,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ListBoundColl.AssignCellLocation(ModflowBoundaryUnit.TCustomBoundaryStorage,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ListBoundColl.UpdataRequiredData(Classes.TList,Classes.TList,System.Object)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:ModflowBoundaryUnit.TCustomMF_ListBoundColl:ModflowBoundaryUnit.TCustomMF_BoundColl" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TModflowTimeList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TModflowTimeList.FOnInvalidate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TModflowTimeList.FDataType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TModflowTimeList.FParamDescription" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TModflowTimeList.FNonParamDescription" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TModflowTimeList.OnInvalidate[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TModflowTimeList.DataType[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TModflowTimeList.VariableInterpretation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TModflowTimeList.ParamDescription[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TModflowTimeList.NonParamDescription[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowTimeList.Initialize(ModflowBoundaryUnit.TBoundaryValueArray,System.Object,GoPhastTypes.TAssignmentLocation)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowTimeList.SetUpToDate(System.Boolean)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TModflowTimeList.FVariableInterpretation" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TModflowParamItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TModflowParamItem.FParam" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TModflowParamItem.Param[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamItem.DataSetUsed(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamItem.Used()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamItem.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamItem.BoundaryClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamItem.SetParam(ModflowBoundaryUnit.TCustomMF_BoundColl)" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowBoundaryUnit.TModflowParamItem.FParam" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TModflowParamItemClass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.FScreenObject" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.DataSetUsed(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.Used()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.ScreenObject[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.IndexOfParam(ModflowTransientListParameterUnit.TModflowTransientListParameter)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.Insert(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.GetParamByName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.Create(ModflowBoundaryUnit.TModflowParamBoundary,ModflowBoundaryUnit.TModflowParamItemClass,System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.Add()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.EvaluateListBoundaries()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.EvaluateArrayBoundaries()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.SetItem(System.Int32,ModflowBoundaryUnit.TModflowParamItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.GetItem(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.FBoundary" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowBoundaryUnit.TModflowParameters.FBoundary" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TModflowParametersClass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TModflowScreenObjectProperty">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowScreenObjectProperty.Used()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.Values[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.DataSetUsed(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.InvalidateDisplay()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.Used()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.UpdateTimes(RealListUnit.TRealList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.NonParameterColumns()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.ScreenObject[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.PhastModel[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.GetCellValues(Classes.TList,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.EvaluateListBoundaries()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.EvaluateArrayBoundaries()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.Create(System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.BoundaryCollectionClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.AssignCells(ModflowBoundaryUnit.TCustomBoundaryStorage,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.AddBoundaryTimes(ModflowBoundaryUnit.TCustomNonSpatialBoundColl,RealListUnit.TRealList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.SetValues(ModflowBoundaryUnit.TCustomMF_BoundColl)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.FValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.FScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.FPhastModel" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary.FValues" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:ModflowBoundaryUnit.TModflowBoundary:ModflowBoundaryUnit.TModflowScreenObjectProperty" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.DeleteParam(OrderedCollectionUnit.TModflowParameter)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.Create(System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.ModflowParamItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.SetParameters(ModflowBoundaryUnit.TModflowParameters)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.FParameters" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.Parameters[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.DataSetUsed(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.UpdateTimes(RealListUnit.TRealList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.Used()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.EvaluateListBoundaries()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.EvaluateArrayBoundaries()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary:ModflowBoundaryUnit.TModflowBoundary" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowBoundaryUnit.TModflowParamBoundary.FParameters" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowBoundaryUnit.TSpecificModflowBoundary">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TSpecificModflowBoundary.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowBoundaryUnit.TSpecificModflowBoundary.FormulaInterpretation[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowBoundaryUnit.TSpecificModflowBoundary.SetFormulaInterpretation(ModflowBoundaryUnit.TFormulaInterpretation)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowBoundaryUnit.TSpecificModflowBoundary.FFormulaInterpretation" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:ModflowBoundaryUnit.TSpecificModflowBoundary:ModflowBoundaryUnit.TModflowParamBoundary" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowBoundaryUnit.TSpecificModflowBoundary.FFormulaInterpretation" />
+    </reference>
+  </view>
+</nodeSet>

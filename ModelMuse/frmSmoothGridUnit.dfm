@@ -1,23 +1,23 @@
 inherited frmSmoothGrid: TfrmSmoothGrid
   Left = 672
   Top = 476
-  Width = 324
-  Height = 153
+  Width = 331
+  Height = 160
   HelpType = htKeyword
   HelpKeyword = 'Smooth_Grid_Dialog_Box'
   HorzScrollBar.Range = 308
   VertScrollBar.Range = 105
   ActiveControl = cbColumns
   Caption = 'Smooth Grid'
-  ExplicitWidth = 324
-  ExplicitHeight = 153
+  ExplicitWidth = 331
+  ExplicitHeight = 160
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object lblCriterion: TLabel
     Left = 8
     Top = 44
-    Width = 151
-    Height = 17
+    Width = 166
+    Height = 18
     Caption = 'Grid smoothing criterion'
   end
   object cbColumns: TCheckBox
@@ -54,7 +54,6 @@ inherited frmSmoothGrid: TfrmSmoothGrid
     Height = 28
     Cursor = crIBeam
     Color = clWhite
-    ItemHeight = 0
     TabOrder = 4
     Text = '1.2'
     DataType = dtReal
@@ -68,26 +67,35 @@ inherited frmSmoothGrid: TfrmSmoothGrid
     Top = 72
     Width = 91
     Height = 33
-    TabOrder = 3
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 3
   end
   object btnOK: TBitBtn
     Left = 121
     Top = 72
     Width = 91
     Height = 33
+    DoubleBuffered = True
     Enabled = False
+    Kind = bkOK
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 6
     OnClick = btnOKClick
-    Kind = bkOK
   end
   object btnHelp: TBitBtn
     Left = 25
     Top = 72
     Width = 91
     Height = 33
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 5
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
 end

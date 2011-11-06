@@ -8,7 +8,7 @@
     </header>
     <para styleclass="Normal"><text styleclass="Normal" translate="true">The menu items under Data are listed in table 6. &#160;The items under this menu are used to edit general characteristics of the model. &#160;This section also includes descriptions of the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Formula_Diagram" styleclass="Normal" style="font-weight:bold;" translate="true">Formula Editor</link><text styleclass="Normal" translate="true"> and the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Data_Type_Problem_Dialog_Box" styleclass="Normal" style="font-weight:bold;" translate="true">Data Type Problem</link><text styleclass="Normal" translate="true"> dialog boxes. &#160;Both of these are accessed from the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Data_Sets_Dialog_Box" styleclass="Normal" style="font-weight:bold;" translate="true">Data Sets</link><text styleclass="Normal" translate="true"> dialog box.</text></para>
     <para styleclass="Table Caption"><text styleclass="Table Caption" translate="true">Table 6. Data Menu</text></para>
-    <para styleclass="Normal" style="text-align:center;"><table rowcount="14" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para styleclass="Normal" style="text-align:center;"><table rowcount="9" colcount="2" style="width:auto; cell-padding:4px; cell-spacing:0px; page-break-inside:auto; border-width:0px; border-spacing:0px; cell-border-width:0px; border-style:none; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="2" style="width:626px; height:3px;">
           <para styleclass="Normal"><line style="height:1px; color:#000000;" /></para>
@@ -45,50 +45,10 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="width:257px;">
-          <para styleclass="Table Header" style="text-align:left;"><image src="ColorGirdButton.bmp" scale="100.00%" styleclass="Image Caption"><title translate="true">Color Grid button</title></image><text styleclass="Table Header" translate="true"> Color Grid... &#160;</text></para>
+          <para styleclass="Table Header" style="text-align:left;"><image src="DataVisualizationButton.bmp" scale="100.00%" styleclass="Image Caption"></image><text styleclass="Table Header" translate="true"> Data Visualization</text></para>
         </td>
         <td style="width:369px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Color the grid with the values of a data set, boundary condition or observations. See the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Color_Grid_Dialog_Box" styleclass="Strong" translate="true">Color Grid</link><link displaytype="text" defaultstyle="true" type="topiclink" href="Color_Grid_Dialog_Box" styleclass="Table Cell" translate="true"> dialog box</link><text styleclass="Table Cell" translate="true">.</text></para>
-        </td>
-      </tr>
-      <tr style="vertical-align:top">
-        <td style="width:257px;">
-          <para styleclass="Table Header" style="text-align:left;"><image src="ContourData.png" scale="100.00%" styleclass="Image Caption"></image><text styleclass="Table Header" translate="true"> Contour Data...</text></para>
-        </td>
-        <td style="width:369px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Contour the values of a data set. &#160;See the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="Contour_Data_Dialog_Box" styleclass="Strong" translate="true">Contour Data</link><link displaytype="text" defaultstyle="true" type="topiclink" href="Contour_Data_Dialog_Box" styleclass="Table Cell" translate="true"> dialog box</link><text styleclass="Table Cell" translate="true">.</text></para>
-        </td>
-      </tr>
-      <tr style="vertical-align:top">
-        <td style="width:257px;">
-          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Configure Head Observation Results...</text></para>
-        </td>
-        <td style="width:369px;">
-          <para styleclass="Table Cell"></para>
-        </td>
-      </tr>
-      <tr style="vertical-align:top">
-        <td style="width:257px;">
-          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Configure Pathlines...</text></para>
-        </td>
-        <td style="width:369px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Select which pathlines to display and how to color them. &#160;See &#160;the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MODPATH_Display_Dialog_Box" styleclass="Strong" translate="true">MODPATH Pathline Display</link><text styleclass="Strong" translate="true">&#32;</text><text styleclass="Table Cell" translate="true">dialog box.</text></para>
-        </td>
-      </tr>
-      <tr style="vertical-align:top">
-        <td style="width:257px;">
-          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Configure Endpoints...</text></para>
-        </td>
-        <td style="width:369px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Select which endpoints to display and how to color them. &#160;See the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MODPATH_Endpoint_Display" styleclass="Strong" translate="true">MODPATH Endpoint Display</link><text styleclass="Strong" translate="true">&#32;</text><text styleclass="Table Cell" translate="true">dialog box.</text></para>
-        </td>
-      </tr>
-      <tr style="vertical-align:top">
-        <td style="width:257px;">
-          <para styleclass="Table Header" style="text-align:left;"><text styleclass="Table Header" translate="true">Configure Time Series...</text></para>
-        </td>
-        <td style="width:369px;">
-          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Select which time series points to display and how to color them. &#160;See the </text><link displaytype="text" defaultstyle="true" type="topiclink" href="MODPATH_Time_Series_Display" styleclass="Strong" translate="true">MODPATH Time Series Display</link><text styleclass="Strong" translate="true">&#32;</text><text styleclass="Table Cell" translate="true">dialog box.</text></para>
+          <para styleclass="Table Cell"><text styleclass="Table Cell" translate="true">Color the grid with the values of a data set, boundary condition or observations, contour the values of a data set or visualize data in other ways. &#160;See the </text><text styleclass="Strong" translate="true">Data Visualization</text><text styleclass="Table Cell" translate="true"> dialog box.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

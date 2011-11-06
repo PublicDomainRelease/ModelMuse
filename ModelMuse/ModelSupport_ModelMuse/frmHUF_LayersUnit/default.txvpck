@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="dbmx7t8kpswmkut_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmHUF_LayersUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.frmHUF_Layers" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmHUF_LayersUnit.frmHUF_Layers" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmHUF_LayersUnit.THufParamGridColumns">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.THufParamGridColumns.hpgcUseZone" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.THufParamGridColumns.hpgcType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.THufParamGridColumns.hpgcName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.THufParamGridColumns.hpgcUseMultiplier" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.AssignPrint(HufDefinition.THydrogeologicUnit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.AssignPrintFormat(HufDefinition.THydrogeologicUnit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.AssignUseZone(System.String,System.Int32,Classes.TList,HufDefinition.THufUsedParameter)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.AssignUseMultiplier(System.String,System.Int32,Classes.TList,HufDefinition.THufUsedParameter)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.GenerateNewName()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.AssignParameters(HufDefinition.THydrogeologicUnit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.AssignVK_Method(HufDefinition.THydrogeologicUnit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.AssignVerticalAnisotropy(HufDefinition.THydrogeologicUnit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.AssignHorizontalAnisotropy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.UpdateSelectedUnits()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.GetData()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.FSelectingUnits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.FHydrogeologicUnits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.FSelectedTreeNodes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.FSelectedUnits" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.pcMainChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.edHydrogeologicUnitNameExit(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.clbItemsToPrintClickCheck(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.comboPrintFormatChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.rdgParametersStateChange(System.Object,System.Int32,System.Int32,StdCtrls.TCheckBoxState)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.comboVK_MethodChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.sbDeleteUnitClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.tvHufLayersChange(System.Object,ComCtrls.TTreeNode)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.sbInsertUnitClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.sbAddUnitClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.rdeVerticalAnisotropyChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.edHydrogeologicUnitNameChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.rdeHorizontalAnisotropyChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.FormDestroy(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.rdgParametersSelectCell(System.Object,System.Int32,System.Int32,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.Panel4" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.lblPrintFormat" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.comboPrintFormat" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.clbItemsToPrint" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.rdgParameters" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.tabPrint" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.tabParameters" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.rdeVerticalAnisotropy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.lblVerticalAnisotropy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.comboVK_Method" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.lblVK_Method" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.rdeHorizontalAnisotropy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.lblHorizontalAnisotropy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.edHydrogeologicUnitName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.lblHydrogeologicUnitName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.Properties" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.pcMain" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.Splitter1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.tvHufLayers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.sbDeleteUnit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.sbInsertUnit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.sbAddUnit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.GridPanel1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TfrmHUF_Layers.Panel3" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmHUF_LayersUnit.TUndoHufLayers">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TUndoHufLayers.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TUndoHufLayers.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TUndoHufLayers.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TUndoHufLayers.Create(ref@HufDefinition.THydrogeologicUnits)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmHUF_LayersUnit.TUndoHufLayers.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TUndoHufLayers.FNewDataSets" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TUndoHufLayers.FOldHydrogeologicUnits" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmHUF_LayersUnit.TUndoHufLayers.FNewHydrogeologicUnits" />
+    </reference>
+  </view>
+</nodeSet>

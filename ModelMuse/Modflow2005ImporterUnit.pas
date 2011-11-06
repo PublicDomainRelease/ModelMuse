@@ -4169,6 +4169,7 @@ begin
       Inc(PointIndex);
     end;
   end;
+  ImportedValues.Values.CacheData;
 end;
 
 procedure TPackageImporter.AssignBooleanValuesToCellCenters(
@@ -4210,6 +4211,7 @@ begin
       Inc(PointIndex);
     end;
   end;
+  ImportedValues.Values.CacheData;
 end;
 
 procedure TPackageImporter.AssignConstant1DArray(AnArray: TOneDRealArray;
@@ -4956,6 +4958,7 @@ begin
       Inc(PointIndex);
     end;
   end;
+  ImportedValues.Values.CacheData;
 end;
 
 { TMultZoneImporter }
@@ -14462,7 +14465,7 @@ var
   ScreenObject: TScreenObject;
   Boundary: THfbBoundary;
   UndoCreateScreenObject: TCustomUndo;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   Layer: Integer;
   APoint: T3DRealPoint;
   Point1: TPoint2D;
@@ -17555,6 +17558,15 @@ begin
   FUzfPackage.IsSelected := True;
   FUzfPackage.Comments := FComments;
 
+  if NUZTOP < 1 then
+  begin
+    NUZTOP := 1;
+  end;
+  if NUZTOP > 3 then
+  begin
+    NUZTOP := 3;
+  end;
+  FUzfPackage.LayerOption := TLayerOption(NUZTOP-1);
   FUzfPackage.VerticalKSource := Abs(IUZFOPT);
   FUzfPackage.RouteDischargeToStreams := IRUNFLG <> 0;
   FUzfPackage.SimulateET := IETFLG <> 0;

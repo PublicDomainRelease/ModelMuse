@@ -130,7 +130,8 @@ var
   TanAngle: double;
   Z1, Z2: single;
 begin
-  if frmGoPhast.PhastModel.Grid.CanDraw3D then
+  if (frmGoPhast.PhastModel.Grid <> nil)
+    and frmGoPhast.PhastModel.Grid.CanDraw3D then
   begin
     Angle := ViewAngle / 2 / 180 * Pi;
     TanAngle := Tan(Angle);

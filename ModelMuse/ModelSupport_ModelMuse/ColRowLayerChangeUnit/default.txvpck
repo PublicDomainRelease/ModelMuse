@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="f0nt5h20phn3p7p_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ColRowLayerChangeUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColRowLayerChangeUnit.SelectionTimer" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ColRowLayerChangeUnit.TJumpType">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColRowLayerChangeUnit.TJumpType.jtToMouse" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColRowLayerChangeUnit.TJumpType.jtBig" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColRowLayerChangeUnit.TJumpType.jtSmall" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.New(Classes.TComponent,GoPhastTypes.TViewDirection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.ItemChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.EvaluatedAt()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.DisplayItem()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.Timer[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.GetViewDataSet()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.ChangeSelectedItem()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.GetTimer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.MouseUp(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.MouseMove(System.Object,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.MouseDown(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.ChangeColRowLayer(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.FModelCube" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.FJumpType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.FCubeY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.FCubeX" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector.FJumpType" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ColRowLayerChangeUnit.TRowSelector">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TRowSelector.ChangeRow()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TRowSelector.ItemChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TRowSelector.RowHasChanged()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TRowSelector.GetViewDataSet()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TRowSelector.DisplayRow()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TRowSelector.DisplayItem()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TRowSelector.ChangeSelectedItem()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:ColRowLayerChangeUnit.TRowSelector:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ColRowLayerChangeUnit.TLayerSelector">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TLayerSelector.DisplayItem()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TLayerSelector.GetViewDataSet()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TLayerSelector.ChangeSelectedItem()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TLayerSelector.LayerHasChanged()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TLayerSelector.DisplayLayer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TLayerSelector.ChangeLayer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TLayerSelector.ItemChange(System.Object)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:ColRowLayerChangeUnit.TLayerSelector:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ColRowLayerChangeUnit.TColumnSelector">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TColumnSelector.ChangeColumn()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TColumnSelector.ItemChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TColumnSelector.DisplayItem()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TColumnSelector.GetViewDataSet()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TColumnSelector.ChangeSelectedItem()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TColumnSelector.DisplayColumn()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ColRowLayerChangeUnit.TColumnSelector.ColumnHasChanged()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:ColRowLayerChangeUnit.TColumnSelector:ColRowLayerChangeUnit.TCustomLayerRowColumnSelector" />
+    </reference>
+  </view>
+</nodeSet>

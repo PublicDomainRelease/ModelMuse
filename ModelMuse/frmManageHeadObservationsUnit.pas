@@ -6,15 +6,15 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ExtCtrls, Grids,
   RbwDataGrid4, ComCtrls, ScreenObjectUnit, ModflowHobUnit, GoPhastTypes,
-  UndoItemsScreenObjects, ArgusDataEntry;
+  UndoItemsScreenObjects, ArgusDataEntry, Mask, JvExMask, JvToolEdit;
 
 type
   TFilterRow = (frLabel, frName, frObsPred, frITT, frObjName, frValue, frTime,
-    frStatistic, frStatFlag);
+    frStatistic, frStatFlag, frObsName);
   TFilterCol = (fcLabel, fcLow, fcHigh);
 
   TObservationCol = (ocObsGroupName, ocObsPred, ocITT, ocObjName, ocValue,
-    ocTime, ocStatistic, ocStatFlag);
+    ocTime, ocStatistic, ocStatFlag, ocObsName);
 
   TObsEdit = class(TObject)
     ScreenObject: TScreenObject;
@@ -30,6 +30,7 @@ type
     // @name is the position of @link(ObsItem) in
     // @link(TScreenObject.ModflowHeadObservations).
     TimeIndex: integer;
+    function ObsName: string;
     function ChangedValues: boolean;
   end;
 
@@ -80,6 +81,7 @@ type
     FObsEdits: TList;
     FDisplayingList: Boolean;
     FLoaded: Boolean;
+    FGettingData: Boolean;
     procedure DisplayFilteredList;
     procedure GetData;
     procedure SetData;
@@ -104,7 +106,7 @@ uses
   frmGoPhastUnit, PhastModelUnit, Contnrs, frmGoToUnit, Math;
 
 resourcestring
-  StrObservationName = 'Observation group name';
+  StrObservationGroupName = 'Observation group name';
   StrObsPred = 'Obs/Pred';
   StrValue = 'Observed head';
   StrITT = 'ITT';
@@ -112,6 +114,19 @@ resourcestring
   StrTime = 'Time';
   StrStatistic = 'Statistic';
   StrStatFlag = 'Stat Flag';
+  StrObservationName = 'Observation name';
+  StrLow = 'Low';
+  StrHigh = 'High';
+  StrHead = 'Head';
+  StrDrawdown = 'Drawdown';
+  StrSimulatedValue = 'Simulated value';
+  StrDifference = 'Difference';
+  StrNoneOfTheObservat = 'None of the observation names in the file matched ' +
+  'the observation names for this model.';
+  StrThereWasNotAPerf = 'There was not a perfect correspondance between the ' +
+  'observations in the file and the observations in this model. Do you want ' +
+  'to import those that do match?';
+  StrListingFile = 'Listing file';
 
 {$R *.dfm}
 
@@ -199,6 +214,15 @@ begin
   result := Ord(P1.StatFlag) - Ord(P2.StatFlag);
 end;
 
+function CompareObsName(Item1, Item2: Pointer): Integer;
+var
+  P1, P2: TObsEdit;
+begin
+  P1 := Item1;
+  P2 := Item2;
+  result := CompareText(P1.ObsName, P2.ObsName);
+end;
+
 function CompareObservations(Item1, Item2: Pointer): Integer;
 var
   Index: Integer;
@@ -217,6 +241,7 @@ begin
       ocTime: result := CompareTime(Item1, Item2);
       ocStatistic: result := CompareStatistic(Item1, Item2);
       ocStatFlag: result := CompareStatFlag(Item1, Item2);
+      ocObsName: result := CompareObsName(Item1, Item2);
       else Assert(False);
     end;
     if result <> 0 then
@@ -232,15 +257,30 @@ var
   ObsEdit: TObsEdit;
   XCoordinate: double;
   YCoordinate: double;
+  RowIndex: Integer;
+  ColIndex: Integer;
 begin
   inherited;
-  ObsEdit := rdgObservations.Objects[
-    0,rdgObservations.SelectedRow] as TObsEdit;
-
   Undo := TUndoChangeSelection.Create;
 
   frmGoPhast.ResetSelectedScreenObjects;
+
+  for RowIndex := 1 to rdgObservations.RowCount - 1 do
+  begin
+    for ColIndex := 0 to rdgObservations.ColCount - 1 do
+    begin
+      if rdgObservations.IsSelectedCell(ColIndex, RowIndex) then
+      begin
+        ObsEdit := rdgObservations.Objects[0,RowIndex] as TObsEdit;
+        ObsEdit.ScreenObject.Selected := True;
+        break;
+      end;
+    end;
+  end;
+  ObsEdit := rdgObservations.Objects[
+    0,rdgObservations.SelectedRow] as TObsEdit;
   ObsEdit.ScreenObject.Selected := True;
+
 
   Undo.SetPostSelection;
 
@@ -308,6 +348,7 @@ var
   AValue: double;
   ColIndex: Integer;
   ObjectIndex: Integer;
+  RowIndex: Integer;
 begin
   if FDisplayingList then
   begin
@@ -474,42 +515,67 @@ begin
         end;
       end;
 
+      if rdgRowFilter.Cells[Ord(fcLow), Ord(frObsName)] <> '' then
+      begin
+        if CompareText(ObsEdit.ObsName,
+          rdgRowFilter.Cells[Ord(fcLow), Ord(frObsName)]) < 0 then
+        begin
+          Continue;
+        end;
+      end;
+      if rdgRowFilter.Cells[Ord(fcHigh), Ord(frObsName)] <> '' then
+      begin
+        if CompareText(ObsEdit.ObsName,
+          rdgRowFilter.Cells[Ord(fcHigh), Ord(frObsName)]) > 0 then
+        begin
+          Continue;
+        end;
+      end;
+
       FilteredEditList.Add(ObsEdit);
     end;
 
-    if FilteredEditList.Count = 0 then
-    begin
-      rdgObservations.RowCount := 2;
-      for ColIndex := 0 to rdgObservations.ColCount - 1 do
+    rdgObservations.BeginUpdate;
+    try
+      if FilteredEditList.Count = 0 then
       begin
-        rdgObservations.Cells[ColIndex, 1] := '';
-      end;
-    end
-    else
-    begin
-      FilteredEditList.Sort(CompareObservations);
-      rdgObservations.RowCount := FilteredEditList.Count + 1;
-      for ObjectIndex := 0 to FilteredEditList.Count - 1 do
+        rdgObservations.RowCount := 2;
+        for ColIndex := 0 to rdgObservations.ColCount - 1 do
+        begin
+          rdgObservations.Cells[ColIndex, 1] := '';
+        end;
+      end
+      else
       begin
-        ObsEdit := FilteredEditList[ObjectIndex];
-        rdgObservations.Objects[0, ObjectIndex+1] := ObsEdit;
-        rdgObservations.Cells[Ord(ocObsGroupName), ObjectIndex+1] :=
-          ObsEdit.ObsGroupName;
-        rdgObservations.ItemIndex[Ord(ocObsPred), ObjectIndex+1] :=
-          Ord(ObsEdit.Purpose);
-        rdgObservations.Cells[Ord(ocValue), ObjectIndex+1] :=
-          FloatToStr(ObsEdit.Value);
-        rdgObservations.ItemIndex[Ord(ocITT), ObjectIndex+1] :=
-          Ord(ObsEdit.MultiObsMethod);
-        rdgObservations.Cells[Ord(ocObjName), ObjectIndex+1] :=
-          ObsEdit.ObjectName;
-        rdgObservations.Cells[Ord(ocTime), ObjectIndex+1] :=
-          FloatToStr(ObsEdit.Time);
-        rdgObservations.Cells[Ord(ocStatistic), ObjectIndex+1] :=
-          FloatToStr(ObsEdit.Statistic);
-        rdgObservations.ItemIndex[Ord(ocStatFlag), ObjectIndex+1] :=
-          Ord(ObsEdit.StatFlag);
+        FilteredEditList.Sort(CompareObservations);
+        rdgObservations.RowCount := FilteredEditList.Count + 1;
+        for ObjectIndex := 0 to FilteredEditList.Count - 1 do
+        begin
+          ObsEdit := FilteredEditList[ObjectIndex];
+          RowIndex := ObjectIndex+1;
+          rdgObservations.Objects[0, RowIndex] := ObsEdit;
+          rdgObservations.Cells[Ord(ocObsGroupName), RowIndex] :=
+            ObsEdit.ObsGroupName;
+          rdgObservations.ItemIndex[Ord(ocObsPred), RowIndex] :=
+            Ord(ObsEdit.Purpose);
+          rdgObservations.Cells[Ord(ocValue), RowIndex] :=
+            FloatToStr(ObsEdit.Value);
+          rdgObservations.ItemIndex[Ord(ocITT), RowIndex] :=
+            Ord(ObsEdit.MultiObsMethod);
+          rdgObservations.Cells[Ord(ocObjName), RowIndex] :=
+            ObsEdit.ObjectName;
+          rdgObservations.Cells[Ord(ocTime), RowIndex] :=
+            FloatToStr(ObsEdit.Time);
+          rdgObservations.Cells[Ord(ocStatistic), RowIndex] :=
+            FloatToStr(ObsEdit.Statistic);
+          rdgObservations.ItemIndex[Ord(ocStatFlag), RowIndex] :=
+            Ord(ObsEdit.StatFlag);
+          rdgObservations.Cells[Ord(ocObsName), RowIndex] :=
+            ObsEdit.ObsName;
+        end;
       end;
+    finally
+      rdgObservations.EndUpdate;
     end;
   finally
     FilteredEditList.Free;
@@ -534,10 +600,10 @@ begin
   inherited;
   pcMain.ActivePageIndex := 0;
 
-  rdgRowFilter.Cells[Ord(fcLow), Ord(frLabel)] := 'Low';
-  rdgRowFilter.Cells[Ord(fcHigh), Ord(frLabel)] := 'High';
+  rdgRowFilter.Cells[Ord(fcLow), Ord(frLabel)] := StrLow;
+  rdgRowFilter.Cells[Ord(fcHigh), Ord(frLabel)] := StrHigh;
 
-  rdgRowFilter.Cells[Ord(fcLabel), Ord(frName)] := StrObservationName;
+  rdgRowFilter.Cells[Ord(fcLabel), Ord(frName)] := StrObservationGroupName;
   rdgRowFilter.Cells[Ord(fcLabel), Ord(frObsPred)] := StrObsPred;
   rdgRowFilter.Cells[Ord(fcLabel), Ord(frITT)] := StrITT;
   rdgRowFilter.Cells[Ord(fcLabel), Ord(frObjName)] := StrObjectName;
@@ -547,8 +613,9 @@ begin
   rdgRowFilter.Cells[Ord(fcLabel), Ord(frStatFlag)] := StrStatFlag;
   rdgRowFilter.Rows[Ord(frStatFlag)].PickList :=
     rdgObservations.Columns[Ord(ocStatFlag)].PickList;
+  rdgRowFilter.Cells[Ord(fcLabel), Ord(frObsName)] := StrObservationName;
 
-  rdgObservations.Cells[Ord(ocObsGroupName), 0] := StrObservationName;
+  rdgObservations.Cells[Ord(ocObsGroupName), 0] := StrObservationGroupName;
   rdgObservations.Cells[Ord(ocObsPred), 0] := StrObsPred;
   rdgObservations.Cells[Ord(ocITT), 0] := StrITT;
   rdgObservations.Cells[Ord(ocObjName), 0] := StrObjectName;
@@ -556,6 +623,7 @@ begin
   rdgObservations.Cells[Ord(ocTime), 0] := StrTime;
   rdgObservations.Cells[Ord(ocStatistic), 0] := StrStatistic;
   rdgObservations.Cells[Ord(ocStatFlag), 0] := StrStatFlag;
+  rdgObservations.Cells[Ord(ocObsName), 0] := StrObservationName;
 
   comboObsPred.Items := rdgObservations.Columns[Ord(ocObsPred)].PickList;
   comboITT.Items := rdgObservations.Columns[Ord(ocITT)].PickList;
@@ -603,69 +671,62 @@ var
   ObsItem: THobItem;
   ObsEdit: TObsEdit;
 begin
-//  if frmGoPhast.ShowUcodeInterface then
-//  begin
+  FGettingData := True;
+  try
+
     rdeStatistic.Visible := True;
     comboStatFlag.Visible := True;
     rdgObservations.Columns[Ord(ocStatistic)].AutoAdjustColWidths := True;
     rdgObservations.Columns[Ord(ocStatFlag)].AutoAdjustColWidths := True;
+    rdgObservations.Columns[Ord(ocObsName)].AutoAdjustColWidths := True;
     rdgRowFilter.RowHeights[Ord(frStatistic)] := rdgRowFilter.DefaultRowHeight;
     rdgRowFilter.RowHeights[Ord(frStatFlag)] := rdgRowFilter.DefaultRowHeight;
-//  end
-//  else
-//  begin
-//    rdeStatistic.Visible := False;
-//    comboStatFlag.Visible := False;
-//    rdgObservations.Columns[Ord(ocStatistic)].AutoAdjustColWidths := False;
-//    rdgObservations.Columns[Ord(ocStatFlag)].AutoAdjustColWidths := False;
-//    rdgObservations.ColWidths[Ord(ocStatistic)] := 0;
-//    rdgObservations.ColWidths[Ord(ocStatFlag)] := 0;
-//    rdgRowFilter.RowHeights[Ord(frStatistic)] := 0;
-//    rdgRowFilter.RowHeights[Ord(frStatFlag)] := 0;
-//  end;
 
-  PhastModel := frmGoPhast.PhastModel;
-  for Index := 0 to PhastModel.ScreenObjectCount - 1 do
-  begin
-    ScreenObject := PhastModel.ScreenObjects[Index];
-    if ScreenObject.Deleted then
+    PhastModel := frmGoPhast.PhastModel;
+    for Index := 0 to PhastModel.ScreenObjectCount - 1 do
     begin
-      Continue;
-    end;
-    if ScreenObject.ModflowHeadObservations <> nil then
-    begin
-      for TimeIndex := 0 to ScreenObject.
-        ModflowHeadObservations.Values.Count - 1 do
+      ScreenObject := PhastModel.ScreenObjects[Index];
+      if ScreenObject.Deleted then
       begin
-        ObsItem := ScreenObject.
-          ModflowHeadObservations.Values.HobItems[TimeIndex];
-        ObsEdit := TObsEdit.Create;
-        FObsEdits.Add(ObsEdit);
-        ObsEdit.ScreenObject := ScreenObject;
-        ObsEdit.ObsItem := ObsItem;
-        ObsEdit.ObsGroupName :=
-          ScreenObject.ModflowHeadObservations.ObservationName;
-        ObsEdit.Purpose := ScreenObject.ModflowHeadObservations.Purpose;
-        ObsEdit.Value := ObsItem.Head;
-        ObsEdit.MultiObsMethod :=
-          ScreenObject.ModflowHeadObservations.MultiObsMethod;
-        ObsEdit.ObjectName := ScreenObject.Name;
-        ObsEdit.Time := ObsItem.Time;
-        ObsEdit.Statistic := ObsItem.Statistic;
-        ObsEdit.StatFlag := ObsItem.StatFlag;
-        ObsEdit.TimeIndex := TimeIndex;
+        Continue;
+      end;
+      if ScreenObject.ModflowHeadObservations <> nil then
+      begin
+        for TimeIndex := 0 to ScreenObject.
+          ModflowHeadObservations.Values.Count - 1 do
+        begin
+          ObsItem := ScreenObject.
+            ModflowHeadObservations.Values.HobItems[TimeIndex];
+          ObsEdit := TObsEdit.Create;
+          FObsEdits.Add(ObsEdit);
+          ObsEdit.ScreenObject := ScreenObject;
+          ObsEdit.ObsItem := ObsItem;
+          ObsEdit.ObsGroupName :=
+            ScreenObject.ModflowHeadObservations.ObservationName;
+          ObsEdit.Purpose := ScreenObject.ModflowHeadObservations.Purpose;
+          ObsEdit.Value := ObsItem.Head;
+          ObsEdit.MultiObsMethod :=
+            ScreenObject.ModflowHeadObservations.MultiObsMethod;
+          ObsEdit.ObjectName := ScreenObject.Name;
+          ObsEdit.Time := ObsItem.Time;
+          ObsEdit.Statistic := ObsItem.Statistic;
+          ObsEdit.StatFlag := ObsItem.StatFlag;
+          ObsEdit.TimeIndex := TimeIndex;
+        end;
       end;
     end;
-  end;
-  DisplayFilteredList;
-  FLoaded := True;
-  if FObsEdits.Count = 0 then
-  begin
-    Beep;
-    MessageDlg('The Manage Head Observations dialog box can not be displayed '
-      + 'until some head observations have been defined in one or more objects.',
-      mtWarning, [mbOK], 0);
-    ModalResult := mrCancel;
+    DisplayFilteredList;
+    FLoaded := True;
+    if FObsEdits.Count = 0 then
+    begin
+      Beep;
+      MessageDlg('The Manage Head Observations dialog box can not be displayed '
+        + 'until some head observations have been defined in one or more objects.',
+        mtWarning, [mbOK], 0);
+      ModalResult := mrCancel;
+    end;
+  finally
+    FGettingData := False;
   end;
 end;
 
@@ -680,11 +741,8 @@ begin
   LayoutControls(rdgObservations, comboITT, nil, Ord(ocITT));
   LayoutControls(rdgObservations, rdeValue, nil, Ord(ocValue));
   LayoutControls(rdgObservations, rdeTime, nil, Ord(ocTime));
-//  if frmGoPhast.ShowUcodeInterface then
-  begin
-    LayoutControls(rdgObservations, rdeStatistic, nil, Ord(ocStatistic));
-    LayoutControls(rdgObservations, comboStatFlag, nil, Ord(ocStatFlag));
-  end;
+  LayoutControls(rdgObservations, rdeStatistic, nil, Ord(ocStatistic));
+  LayoutControls(rdgObservations, comboStatFlag, nil, Ord(ocStatFlag));
 
 end;
 
@@ -747,19 +805,13 @@ begin
   EnableMultiEditControl(rdgObservations, comboITT, Ord(ocITT));
   EnableMultiEditControl(rdgObservations, rdeValue, Ord(ocValue));
   EnableMultiEditControl(rdgObservations, rdeTime, Ord(ocTime));
-//  if frmGoPhast.ShowUcodeInterface then
-  begin
-    EnableMultiEditControl(rdgObservations, rdeStatistic, Ord(ocStatistic));
-    EnableMultiEditControl(rdgObservations, comboStatFlag, Ord(ocStatFlag));
-  end;
+  EnableMultiEditControl(rdgObservations, rdeStatistic, Ord(ocStatistic));
+  EnableMultiEditControl(rdgObservations, comboStatFlag, Ord(ocStatFlag));
 
   UpdateColor(edObsGroupName);
   UpdateColor(comboObsPred);
   UpdateColor(comboITT);
-//  if frmGoPhast.ShowUcodeInterface then
-  begin
-    UpdateColor(comboStatFlag);
-  end;
+  UpdateColor(comboStatFlag);
 end;
 
 type TGridCrack = class(TRbwDataGrid4);
@@ -822,6 +874,7 @@ begin
         end;
     end;
   end;
+  CanSelect := ACol <> Ord(ocObsName);
 end;
 
 procedure TfrmManageHeadObservations.rdgObservationsSetEditText(Sender: TObject;
@@ -884,16 +937,13 @@ begin
                 AnotherObsEdit.Purpose := ObsEdit.Purpose;
                 rdgObservations.ItemIndex[Ord(ocObsPred), RowIndex] :=
                   Ord(ObsEdit.Purpose);
-//                if frmGoPhast.ShowUcodeInterface then
+                if (AnotherObsEdit.Purpose = ofPredicted)
+                  and not (AnotherObsEdit.StatFlag in
+                  [stVariance, stStandardDev]) then
                 begin
-                  if (AnotherObsEdit.Purpose = ofPredicted)
-                    and not (AnotherObsEdit.StatFlag in
-                    [stVariance, stStandardDev]) then
-                  begin
-                    AnotherObsEdit.StatFlag := stVariance;
-                    rdgObservations.ItemIndex[Ord(ocStatFlag), RowIndex] :=
-                      Ord(stVariance);
-                  end;
+                  AnotherObsEdit.StatFlag := stVariance;
+                  rdgObservations.ItemIndex[Ord(ocStatFlag), RowIndex] :=
+                    Ord(stVariance);
                 end;
               end;
             end;
@@ -989,7 +1039,8 @@ begin
           begin
             rdgObservations.ItemIndex[Ord(ocStatFlag), ARow] := Ord(AStatFlag);
           end;
-        end
+        end;
+      ocObsName: ; // do nothing
       else Assert(False);
     end;
   end;
@@ -1100,6 +1151,12 @@ begin
     or (ObsItem.Time <> Time)
     or (ObsItem.Statistic <> Statistic)
     or (ObsItem.StatFlag <> StatFlag)
+end;
+
+function TObsEdit.ObsName: string;
+begin
+  result := ScreenObject.ModflowBoundaries.ModflowHeadObservations.
+    GetItemObsName(ObsItem)
 end;
 
 { TUndoSetHeadObs }

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="0rotmnr9o8agwks_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowEtsUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.DepthPosition" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.StringValueRemoveSubscription(System.Object,System.Object,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.StringValueRestoreSubscription(System.Object,System.Object,System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.SurfacePosition" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.Cell" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.EvapotranspirationSurface" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.EvapotranspirationDepth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.DepthFractions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.EtFractions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.StartingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.DepthFractionAnnotations" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.EtFractionAnnotations" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.EvapotranspirationSurfaceAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.EvapotranspirationDepthAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.EndingTime" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthRecord.Assign(ModflowEtsUnit.TEtsSurfDepthRecord)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthStorage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthStorage.FEtsSurfDepthArray" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthStorage.GetEtsSurfDepthArray()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthStorage.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthStorage.Store(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthStorage.Clear()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthStorage.EtsSurfDepthArray[]" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowEtsUnit.TStringValueItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TStringValueItem.RestoreSubscription(System.Object,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TStringValueItem.UpdateFormula(System.String,ref@FormulaManagerUnit.TFormulaObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TStringValueItem.UpdateFormulaDependencies(System.String,ref@System.String,SubscriptionUnit.TObserver,RbwParser.TRbwParser)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TStringValueItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TStringValueItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TStringValueItem.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TStringValueItem.Destroy()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TStringValueItem.Value[]" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TStringValueItem.FValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TStringValueItem.Observer" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TStringValueItem.SetValue(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TStringValueItem.StringCollection()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TStringValueItem.GetValue()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TStringValueItem.RemoveSubscription(System.Object,System.String)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowEtsUnit.TStringCollectionPurpose">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TStringCollectionPurpose.scpDepthFractions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TStringCollectionPurpose.scpEtFractions" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowEtsUnit.TStringCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TStringCollection.FPurpose" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TStringCollection.FScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TStringCollection.FEtsSurfDepthCollection" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TStringCollection.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TStringCollection.Create(System.Object,System.Object,Classes.TCollection)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TStringCollection.Purpose[]" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowEtsUnit.TStringCollection.FPurpose" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.AssignObserverEvents(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.GetPropertyObserver(System.Object,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.GetBoundaryFormula(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.SetBoundaryFormula(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.BoundaryFormulaCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.EvapotranspirationSurface[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.EvapotranspirationDepth[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.EtFractions[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.DepthFractions[]" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.FEvapotranspirationSurface" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.FEvapotranspirationDepth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.FDepthFractions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.FEtFractions" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.SetEvapotranspirationSurface(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.SetEvapotranspirationDepth(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.SetDepthFractions(ModflowEtsUnit.TStringCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.SetEtFractions(ModflowEtsUnit.TStringCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.GetEvapotranspirationDepth()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.GetEvapotranspirationSurface()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.RemoveFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.CreateFormulaObjects()" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.FDepthFractions" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthItem.FEtFractions" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.FListOfDepthFractionLists" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.FEvapotranspirationSurfaceData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.FEvapotranspirationDepthData" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.InvalidateEtFractions(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.InvalidateDepthFractions(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.InvalidateEtSurface(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.InvalidateEtDepth(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.AddSpecificBoundary()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.GetTimeList(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.AssignCellValues(Classes.TList,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.InitializeTimeLists(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.ItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.SetBoundaryStartAndEndTime(System.Int32,ModflowBoundaryUnit.TCustomModflowBoundaryItem,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.TimeListCount()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.FTimeListCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepthCollection.FListOfEtFractionLists" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowEtsUnit.TEtsLayerCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsLayerCollection.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetEvapotranspirationDepth()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetDepthFractions(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetEtFractions(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetDepthFractionAnnotations(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetEtFractionAnnotations(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetEvapotranspirationDepthAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetEvapotranspirationSurfaceAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetColumn()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetLayer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetRow()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetIntegerValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetRealValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetRealAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetIntegerAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetSection()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.EvapotranspirationSurface[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.EvapotranspirationDepth[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.DepthFractions[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.EtFractions[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.EvapotranspirationSurfaceAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.EvapotranspirationDepthAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.DepthFractionAnnotations[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.EtFractionAnnotations[System.Int32]" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.Values" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.StressPeriod" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.GetEvapotranspirationSurface()" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowEtsUnit.TEtsSurfDepth_Cell.Values" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowEtsUnit.TEtsCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsCollection.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowEtsUnit.TEtsBoundary">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.FEvapotranspirationLayers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.FEvtSurfDepthCollection" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.FNonParameterColumns" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.SetEvapotranspirationLayers(ModflowEtsUnit.TEtsLayerCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.SetEvtSurfDepthCollection(ModflowEtsUnit.TEtsSurfDepthCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.GetTimeVaryingEvapotranspirationLayers()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.AssignEvapotranspirationLayerCells(ModflowEvtUnit.TEvtLayerStorage,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.AssignSurfaceDepthCells(ModflowEtsUnit.TEtsSurfDepthStorage,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.AssignCells(ModflowBoundaryUnit.TCustomBoundaryStorage,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.BoundaryCollectionClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.ModflowParamItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.Create(System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.GetCellValues(Classes.TList,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.Used()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.EvaluateArrayBoundaries()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.NonParameterColumns()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.TimeVaryingEvapotranspirationLayers[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.GetEvapotranspirationLayerCells(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.GetEvapotranspirationSurfaceDepthCells(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.InvalidateDisplay()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.Clear()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.EvapotranspirationLayers[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.EtsSurfDepthCollection[]" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.FEvapotranspirationLayers" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowEtsUnit.TEtsBoundary.FEvtSurfDepthCollection" />
+    </reference>
+  </view>
+</nodeSet>

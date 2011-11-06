@@ -8,7 +8,7 @@ uses
   Windows, SysUtils, Types, Classes, StrUtils, Graphics, Controls, Forms,
   Dialogs, StdCtrls, frmCustomGoPhastUnit, Buttons, ExtCtrls, ComCtrls,
   RbwParser, JvExExtCtrls, JvNetscapeSplitter, JvExStdCtrls, RichEdit,
-  JvRichEdit, {ehshelprouter,} ClassificationUnit, GoPhastTypes;
+  JvRichEdit, ClassificationUnit, GoPhastTypes;
 
 type
   TVariableEdit = class(TClassificationObject)

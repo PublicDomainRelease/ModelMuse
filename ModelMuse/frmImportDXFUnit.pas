@@ -149,7 +149,8 @@ begin
     NewDataSets := TList.Create;
     try
       MakeNewDataSet(NewDataSets, '_DXF_Z',
-        strDefaultClassification + '|Imported from DXF files');
+        strDefaultClassification + '|Imported from DXF files',
+        comboDataSets.ItemIndex = 0);
       EntityCount := 0;
       for LayerIndex := 0 to FDxfObject.layer_lists.Count - 1 do
       begin

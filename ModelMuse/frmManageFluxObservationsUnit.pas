@@ -133,7 +133,6 @@ located at http://jvcl.sourceforge.net
     FDrobNode: TTreeNode;
     FRvobNode: TTreeNode;
     FSettingTimeCount: Boolean;
-//    FHidingColumns: Boolean;
     procedure SetSelectedObservation(const Value: TFluxObservationGroup);
     procedure AssignObsNames;
     procedure DisplayFactor;
@@ -157,7 +156,6 @@ located at http://jvcl.sourceforge.net
     procedure EnableMultiEditControl(Grid: TRbwDataGrid4; AControl: TControl;
       const StartCol, EndCol: integer);
     procedure SetSelectedGroupAndObservation(TreeView: TTreeView);
-//    procedure HideUcodeColumns;
     procedure SetStatFlagLabels;
   public
     procedure SetButtons;
@@ -212,22 +210,6 @@ begin
   end;
   TRbwDataGrid4Crack(rdgFluxObsTimes).HideEditor;
 end;
-
-//procedure TfrmManageFluxObservations.HideUcodeColumns;
-//begin
-//  if FHidingColumns then Exit;
-//  FHidingColumns := True;
-//  try
-//    if not frmGoPhast.ShowUcodeInterface then
-//    begin
-//      rdgFluxObsTimes.ColWidths[Ord(fcStatistic)] := 0;
-//      rdgFluxObsTimes.ColWidths[Ord(fcStatFlag)] := 0;
-//    end;
-//    comboMultiStatFlag.Visible := frmGoPhast.ShowUcodeInterface;
-//  finally
-//    FHidingColumns := False;
-//  end;
-//end;
 
 procedure TfrmManageFluxObservations.SetSelectedGroupAndObservation(TreeView: TTreeView);
 begin
@@ -288,11 +270,6 @@ begin
   AColVisible := False;
   for Index := Ord(fcTime) to Ord(fcStatFlag) do
   begin
-//    if not frmGoPhast.ShowUcodeInterface
-//      and (TFluxColumns(Index) in [fcStatistic, fcStatFlag]) then
-//    begin
-//      break;
-//    end;
     if rdgFluxObsTimes.ColVisible[Index] then
     begin
       LayoutControls(rdgFluxObsTimes, rdeMultiValueEdit, nil, Index,
@@ -305,13 +282,10 @@ begin
   if not AColVisible then
   begin
     rdeMultiValueEdit.Visible := False;
-//    LayoutControls(rdgFluxObsTimes, rdeMultiValueEdit, nil, 0,
-//      rdgFluxObsTimes.Margins.Left);
   end;
   LayoutControls(rdgFluxObsTimes, comboMultiStatFlag, nil, Ord(fcStatFlag),
     rdgFluxObsTimes.Margins.Left);
   comboMultiStatFlag.Width := rdgFluxObsTimes.ColWidths[Ord(fcStatFlag)];
-//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.CheckErrors;
@@ -649,7 +623,6 @@ begin
   finally
     FSettingTimeCount := False;
   end;
-//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.SetData;
@@ -996,8 +969,6 @@ begin
   ANode.Data := ObservationGroup;
   tvFluxObservations.Selected := ANode;
   SetSelectedGroupAndObservation(tvFluxObservations);
-
-//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.btnDeleteClick(Sender: TObject);
@@ -1024,7 +995,6 @@ begin
     seNumObsTimes.AsInteger := seNumObsTimes.AsInteger -1;
     AssignObsNames;
   end;
-//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.btnDeleteObservationClick(Sender: TObject);
@@ -1051,7 +1021,6 @@ begin
   end;
   tvFluxObservations.Items.Delete(tvFluxObservations.Selected);
   SelectedObservation := nil;
-//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.btnFactorFormulaClick(Sender: TObject);
@@ -1284,7 +1253,6 @@ procedure TfrmManageFluxObservations.tvFluxObservationsChange(Sender: TObject;
 begin
   inherited;
   SetSelectedGroupAndObservation(tvFluxObservations);
-//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.UpdateObjectsInSelectedObservation;
@@ -1461,8 +1429,6 @@ begin
   CreateVariables;
 
   GetData;
-
-//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.FormDestroy(Sender: TObject);
@@ -1580,7 +1546,6 @@ procedure TfrmManageFluxObservations.ListClick(Sender: TObject);
 begin
   SetButtons;
   DisplayFactor;
-//  HideUcodeColumns;
 end;
 
 procedure TfrmManageFluxObservations.OkBtnClick(Sender: TObject);
@@ -1621,7 +1586,6 @@ begin
   if not FSettingTimeCount then
   begin
     seNumObsTimes.AsInteger := rdgFluxObsTimes.RowCount -1;
-//    HideUcodeColumns;
   end;
 end;
 

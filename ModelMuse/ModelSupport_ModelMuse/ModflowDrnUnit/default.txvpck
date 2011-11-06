@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="48oevoxioydm1il_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowDrnUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.ConductancePosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.ElevationPosition" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowDrnUnit.TDrnRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnRecord.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnRecord.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrnRecord.ElevationAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrnRecord.ConductanceAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrnRecord.EndingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrnRecord.StartingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrnRecord.Elevation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrnRecord.Conductance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrnRecord.Cell" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowDrnUnit.TDrnStorage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnStorage.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnStorage.GetDrnArray()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrnStorage.FDrnArray" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowDrnUnit.TDrnStorage.DrnArray[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnStorage.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnStorage.Store(ZLib.TCompressionStream)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowDrnUnit.TDrnItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowDrnUnit.TDrnItem.Conductance[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowDrnUnit.TDrnItem.Elevation[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.BoundaryFormulaCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.SetBoundaryFormula(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.GetBoundaryFormula(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.RemoveFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.GetPropertyObserver(System.Object,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.CreateFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.AssignObserverEvents(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrnItem.FConductance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrnItem.FElevation" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.GetElevation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.GetConductance()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.SetConductance(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnItem.SetElevation(System.String)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowDrnUnit.TDrnCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnCollection.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnCollection.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnCollection.SetBoundaryStartAndEndTime(System.Int32,ModflowBoundaryUnit.TCustomModflowBoundaryItem,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnCollection.ItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnCollection.TestIfObservationsPresent(ref@System.Double,ref@System.Double,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnCollection.AddSpecificBoundary()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnCollection.AdjustedFormula(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnCollection.AssignCellList(RbwParser.TExpression,System.Object,ModflowBoundaryUnit.TCustomBoundaryStorage,System.Int32,Classes.TList,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnCollection.AssignCellLocation(ModflowBoundaryUnit.TCustomBoundaryStorage,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnCollection.InvalidateConductanceData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnCollection.InvalidateElevationData(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrnCollection.FConductanceData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrnCollection.FElevationData" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowDrnUnit.TDrnParamItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnParamItem.BoundaryClass()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowDrnUnit.TDrn_Cell">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.GetSection()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.GetIntegerAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.GetRealAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.GetRealValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.GetIntegerValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.GetRow()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.GetLayer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.GetColumn()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.GetElevationAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.GetConductanceAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.GetConductance()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.GetElevation()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.StressPeriod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.Values" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.ElevationAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.ConductanceAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.Elevation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.Conductance[]" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowDrnUnit.TDrn_Cell.Values" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowDrnUnit.TDrnBoundary">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnBoundary.BoundaryCollectionClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnBoundary.AssignCells(ModflowBoundaryUnit.TCustomBoundaryStorage,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnBoundary.TestIfObservationsPresent(ref@System.Double,ref@System.Double,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnBoundary.InvalidateDisplay()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnBoundary.GetCellValues(Classes.TList,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowDrnUnit.TDrnBoundary.ModflowParamItemClass()" />
+    </reference>
+  </view>
+</nodeSet>

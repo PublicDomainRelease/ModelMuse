@@ -298,7 +298,7 @@ begin
   FStoredClassifications.Clear;
   combotreeDataSets.Tree.Clear;
 
-  { TODO : Nearly the same code is use in TfrmFormulaUnit, TFrmGridColor,
+  { TODO : Nearly the same code is use in TfrmFormulaUnit,
   TfrmScreenObjectProperties, and TfrmDataSets. Find a way to combine them. }
   SelectedDataArray := frmGoPhast.Grid.ThreeDDataSet;
   if SelectedDataArray = nil then
@@ -948,6 +948,7 @@ begin
   ViewDirection := OrientationToViewDirection(DataSet.Orientation);
   ScreenObject := TScreenObject.CreateWithViewDirection(frmGoPhast.PhastModel,
     ViewDirection, DummyUndo, False);
+  ScreenObject.Visible := False;
   ScreenObjectList[ObjectIndex] := ScreenObject;
   ScreenObject.EvaluatedAt := DataSet.EvaluatedAt;
   if DataSet.Orientation = dso3D then
@@ -1307,9 +1308,11 @@ begin
     ScreenObject.Capacity := ScreenObject.Count;
     Values := ScreenObject.ImportedValues.ValuesByName(DataSet.Name);
     Values.Count := ScreenObject.Count;
+    Values.CacheData;
     if DataSet.Orientation = dso3D then
     begin
       ScreenObject.ImportedSectionElevations.Count := ScreenObject.Count;
+      ScreenObject.ImportedSectionElevations.CacheData;
     end;
   end;
 end;
@@ -1472,37 +1475,42 @@ var
   RowIndex: Integer;
   ClearColumn: Boolean;
 begin
-  Grid.Align := alClient;
-  for ColIndex := 1 to Grid.ColCount - 1 do
-  begin
-    ClearColumn := Grid.Columns[ColIndex].Format <> ColumnFormat;
-    Grid.Columns[ColIndex].Format := ColumnFormat;
-    if ColumnsForward then
+  Grid.BeginUpdate;
+  try
+    Grid.Align := alClient;
+    for ColIndex := 1 to Grid.ColCount - 1 do
     begin
-      Grid.Cells[ColIndex, 0] := IntToStr(ColIndex);
-    end
-    else
-    begin
-      Grid.Cells[ColIndex, 0] := IntToStr(Grid.ColCount - ColIndex);
-    end;
-    if ClearColumn then
-    begin
-      for RowIndex := 1 to Grid.RowCount - 1 do
+      ClearColumn := Grid.Columns[ColIndex].Format <> ColumnFormat;
+      Grid.Columns[ColIndex].Format := ColumnFormat;
+      if ColumnsForward then
       begin
-        Grid.Cells[ColIndex, RowIndex] := '';
+        Grid.Cells[ColIndex, 0] := IntToStr(ColIndex);
+      end
+      else
+      begin
+        Grid.Cells[ColIndex, 0] := IntToStr(Grid.ColCount - ColIndex);
+      end;
+      if ClearColumn then
+      begin
+        for RowIndex := 1 to Grid.RowCount - 1 do
+        begin
+          Grid.Cells[ColIndex, RowIndex] := '';
+        end;
       end;
     end;
-  end;
-  for RowIndex := 1 to Grid.RowCount - 1 do
-  begin
-    if RowsForward then
+    for RowIndex := 1 to Grid.RowCount - 1 do
     begin
-      Grid.Cells[0, RowIndex] := IntToStr(RowIndex);
-    end
-    else
-    begin
-      Grid.Cells[0, RowIndex] := IntToStr(Grid.RowCount - RowIndex);
+      if RowsForward then
+      begin
+        Grid.Cells[0, RowIndex] := IntToStr(RowIndex);
+      end
+      else
+      begin
+        Grid.Cells[0, RowIndex] := IntToStr(Grid.RowCount - RowIndex);
+      end;
     end;
+  finally
+    Grid.EndUpdate;
   end;
 end;
 
@@ -1516,143 +1524,148 @@ begin
   MaxCol := -1;
   MaxRow := -1;
   MaxLayer := -1;
-  case DataSet.EvaluatedAt of
-    eaBlocks:
-      begin
-        MaxCol := DataSet.ColumnCount;
-        MaxRow := DataSet.RowCount;
-        MaxLayer := DataSet.LayerCount;
-      end;
-    eaNodes:
-      begin
-        MaxCol := DataSet.ColumnCount+1;
-        MaxRow := DataSet.RowCount+1;
-        MaxLayer := DataSet.LayerCount+1;
-      end;
-    else Assert(False);
-  end;
-  case DataSet.Orientation of
-    dsoTop:
-      begin
-        rdgList.ColCount := 4;
-        rdgList.Cells[0, 0] := 'N';
-        rdgList.Cells[1, 0] := 'Row';
-        rdgList.Cells[2, 0] := 'Column';
-        rdgList.Cells[3, 0] := DataSet.Name;
-
-        rdgList.Columns[1].Format := rcf4Integer;
-        rdgList.Columns[1].CheckMin := True;
-        rdgList.Columns[1].CheckMax := True;
-        rdgList.Columns[1].Min := 1;
-        rdgList.Columns[1].Max := MaxRow;
-
-        rdgList.Columns[2].Format := rcf4Integer;
-        rdgList.Columns[2].CheckMin := True;
-        rdgList.Columns[2].CheckMax := True;
-        rdgList.Columns[2].Min := 1;
-        rdgList.Columns[2].Max := MaxCol;
-
-        rdgList.Columns[3].Format := ConvertDataFormat(DataSet.DataType);
-      end;
-    dsoFront:
-      begin
-        rdgList.ColCount := 4;
-        rdgList.Cells[0, 0] := 'N';
-        rdgList.Cells[1, 0] := 'Layer';
-        rdgList.Cells[2, 0] := 'Column';
-        rdgList.Cells[3, 0] := DataSet.Name;
-
-        rdgList.Columns[1].Format := rcf4Integer;
-        rdgList.Columns[1].CheckMin := True;
-        rdgList.Columns[1].CheckMax := True;
-        rdgList.Columns[1].Min := 1;
-        rdgList.Columns[1].Max := MaxLayer;
-
-        rdgList.Columns[2].Format := rcf4Integer;
-        rdgList.Columns[2].CheckMin := True;
-        rdgList.Columns[2].CheckMax := True;
-        rdgList.Columns[2].Min := 1;
-        rdgList.Columns[2].Max := MaxCol;
-
-        rdgList.Columns[3].Format := ConvertDataFormat(DataSet.DataType);
-      end;
-    dsoSide:
-      begin
-        rdgList.ColCount := 4;
-        rdgList.Cells[0, 0] := 'N';
-        rdgList.Cells[1, 0] := 'Layer';
-        rdgList.Cells[2, 0] := 'Row';
-        rdgList.Cells[3, 0] := DataSet.Name;
-
-        rdgList.Columns[1].Format := rcf4Integer;
-        rdgList.Columns[1].CheckMin := True;
-        rdgList.Columns[1].CheckMax := True;
-        rdgList.Columns[1].Min := 1;
-        rdgList.Columns[1].Max := MaxLayer;
-
-        rdgList.Columns[2].Format := rcf4Integer;
-        rdgList.Columns[2].CheckMin := True;
-        rdgList.Columns[2].CheckMax := True;
-        rdgList.Columns[2].Min := 1;
-        rdgList.Columns[2].Max := MaxRow;
-
-        rdgList.Columns[3].Format := ConvertDataFormat(DataSet.DataType);
-      end;
-    dso3D:
-      begin
-        rdgList.ColCount := 5;
-        rdgList.Cells[0, 0] := 'N';
-        rdgList.Cells[1, 0] := 'Layer';
-        rdgList.Cells[2, 0] := 'Row';
-        rdgList.Cells[3, 0] := 'Column';
-        rdgList.Cells[4, 0] := DataSet.Name;
-
-        rdgList.Columns[1].Format := rcf4Integer;
-        rdgList.Columns[1].CheckMin := True;
-        rdgList.Columns[1].CheckMax := True;
-        rdgList.Columns[1].Min := 1;
-        rdgList.Columns[1].Max := MaxLayer;
-
-        rdgList.Columns[2].Format := rcf4Integer;
-        rdgList.Columns[2].CheckMin := True;
-        rdgList.Columns[2].CheckMax := True;
-        rdgList.Columns[2].Min := 1;
-        rdgList.Columns[2].Max := MaxRow;
-
-        ClearColumn := rdgList.Columns[3].Format <> rcf4Integer;
-        rdgList.Columns[3].Format := rcf4Integer;
-        if ClearColumn then
+  rdgList.BeginUpdate;
+  try
+    case DataSet.EvaluatedAt of
+      eaBlocks:
         begin
-          for RowIndex := 1 to rdgList.RowCount - 1 do
-          begin
-            rdgList.Cells[3, RowIndex] := '';
-          end;
+          MaxCol := DataSet.ColumnCount;
+          MaxRow := DataSet.RowCount;
+          MaxLayer := DataSet.LayerCount;
         end;
-        rdgList.Columns[3].CheckMin := True;
-        rdgList.Columns[3].CheckMax := True;
-        rdgList.Columns[3].Min := 1;
-        rdgList.Columns[3].Max := MaxCol;
-
-        ClearColumn := rdgList.Columns[4].Format <>
-          ConvertDataFormat(DataSet.DataType);
-        rdgList.Columns[4].Format := ConvertDataFormat(DataSet.DataType);
-        if ClearColumn then
+      eaNodes:
         begin
-          for RowIndex := 1 to rdgList.RowCount - 1 do
-          begin
-            rdgList.Cells[4, RowIndex] := '';
-          end;
+          MaxCol := DataSet.ColumnCount+1;
+          MaxRow := DataSet.RowCount+1;
+          MaxLayer := DataSet.LayerCount+1;
         end;
-      end;
-  else
-    begin
-      Assert(False);
+      else Assert(False);
     end;
-  end;
-  rdgList.Cells[0, 1] := '1';
-  for Index := 0 to rdgList.ColCount - 1 do
-  begin
-    rdgList.Columns[Index].AutoAdjustColWidths := True;
+    case DataSet.Orientation of
+      dsoTop:
+        begin
+          rdgList.ColCount := 4;
+          rdgList.Cells[0, 0] := 'N';
+          rdgList.Cells[1, 0] := 'Row';
+          rdgList.Cells[2, 0] := 'Column';
+          rdgList.Cells[3, 0] := DataSet.Name;
+
+          rdgList.Columns[1].Format := rcf4Integer;
+          rdgList.Columns[1].CheckMin := True;
+          rdgList.Columns[1].CheckMax := True;
+          rdgList.Columns[1].Min := 1;
+          rdgList.Columns[1].Max := MaxRow;
+
+          rdgList.Columns[2].Format := rcf4Integer;
+          rdgList.Columns[2].CheckMin := True;
+          rdgList.Columns[2].CheckMax := True;
+          rdgList.Columns[2].Min := 1;
+          rdgList.Columns[2].Max := MaxCol;
+
+          rdgList.Columns[3].Format := ConvertDataFormat(DataSet.DataType);
+        end;
+      dsoFront:
+        begin
+          rdgList.ColCount := 4;
+          rdgList.Cells[0, 0] := 'N';
+          rdgList.Cells[1, 0] := 'Layer';
+          rdgList.Cells[2, 0] := 'Column';
+          rdgList.Cells[3, 0] := DataSet.Name;
+
+          rdgList.Columns[1].Format := rcf4Integer;
+          rdgList.Columns[1].CheckMin := True;
+          rdgList.Columns[1].CheckMax := True;
+          rdgList.Columns[1].Min := 1;
+          rdgList.Columns[1].Max := MaxLayer;
+
+          rdgList.Columns[2].Format := rcf4Integer;
+          rdgList.Columns[2].CheckMin := True;
+          rdgList.Columns[2].CheckMax := True;
+          rdgList.Columns[2].Min := 1;
+          rdgList.Columns[2].Max := MaxCol;
+
+          rdgList.Columns[3].Format := ConvertDataFormat(DataSet.DataType);
+        end;
+      dsoSide:
+        begin
+          rdgList.ColCount := 4;
+          rdgList.Cells[0, 0] := 'N';
+          rdgList.Cells[1, 0] := 'Layer';
+          rdgList.Cells[2, 0] := 'Row';
+          rdgList.Cells[3, 0] := DataSet.Name;
+
+          rdgList.Columns[1].Format := rcf4Integer;
+          rdgList.Columns[1].CheckMin := True;
+          rdgList.Columns[1].CheckMax := True;
+          rdgList.Columns[1].Min := 1;
+          rdgList.Columns[1].Max := MaxLayer;
+
+          rdgList.Columns[2].Format := rcf4Integer;
+          rdgList.Columns[2].CheckMin := True;
+          rdgList.Columns[2].CheckMax := True;
+          rdgList.Columns[2].Min := 1;
+          rdgList.Columns[2].Max := MaxRow;
+
+          rdgList.Columns[3].Format := ConvertDataFormat(DataSet.DataType);
+        end;
+      dso3D:
+        begin
+          rdgList.ColCount := 5;
+          rdgList.Cells[0, 0] := 'N';
+          rdgList.Cells[1, 0] := 'Layer';
+          rdgList.Cells[2, 0] := 'Row';
+          rdgList.Cells[3, 0] := 'Column';
+          rdgList.Cells[4, 0] := DataSet.Name;
+
+          rdgList.Columns[1].Format := rcf4Integer;
+          rdgList.Columns[1].CheckMin := True;
+          rdgList.Columns[1].CheckMax := True;
+          rdgList.Columns[1].Min := 1;
+          rdgList.Columns[1].Max := MaxLayer;
+
+          rdgList.Columns[2].Format := rcf4Integer;
+          rdgList.Columns[2].CheckMin := True;
+          rdgList.Columns[2].CheckMax := True;
+          rdgList.Columns[2].Min := 1;
+          rdgList.Columns[2].Max := MaxRow;
+
+          ClearColumn := rdgList.Columns[3].Format <> rcf4Integer;
+          rdgList.Columns[3].Format := rcf4Integer;
+          if ClearColumn then
+          begin
+            for RowIndex := 1 to rdgList.RowCount - 1 do
+            begin
+              rdgList.Cells[3, RowIndex] := '';
+            end;
+          end;
+          rdgList.Columns[3].CheckMin := True;
+          rdgList.Columns[3].CheckMax := True;
+          rdgList.Columns[3].Min := 1;
+          rdgList.Columns[3].Max := MaxCol;
+
+          ClearColumn := rdgList.Columns[4].Format <>
+            ConvertDataFormat(DataSet.DataType);
+          rdgList.Columns[4].Format := ConvertDataFormat(DataSet.DataType);
+          if ClearColumn then
+          begin
+            for RowIndex := 1 to rdgList.RowCount - 1 do
+            begin
+              rdgList.Cells[4, RowIndex] := '';
+            end;
+          end;
+        end;
+    else
+      begin
+        Assert(False);
+      end;
+    end;
+    rdgList.Cells[0, 1] := '1';
+    for Index := 0 to rdgList.ColCount - 1 do
+    begin
+      rdgList.Columns[Index].AutoAdjustColWidths := True;
+    end;
+  finally
+    rdgList.EndUpdate;
   end;
 end;
 

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="h4o9t40jo0y9r3s_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:framePackageMnw2Unit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageMnw2Unit.framePackageMnw2" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:framePackageMnw2Unit.framePackageMnw2" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:framePackageMnw2Unit.TframePackageMnw2">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageMnw2Unit.TframePackageMnw2.SetData(ModflowPackageSelectionUnit.TModflowPackageSelection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageMnw2Unit.TframePackageMnw2.GetData(ModflowPackageSelectionUnit.TModflowPackageSelection)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageMnw2Unit.TframePackageMnw2.cbSummarizeByNode" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageMnw2Unit.TframePackageMnw2.cbSummarizeByWell" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageMnw2Unit.TframePackageMnw2.cbWellOutput" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageMnw2Unit.TframePackageMnw2.gbMnwiOptions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageMnw2Unit.TframePackageMnw2.comboPrintOption" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageMnw2Unit.TframePackageMnw2.lblPrintOption" />
+    </reference>
+  </view>
+</nodeSet>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="4fo6vc8doulozei_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmCustomImportSimpleFileUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.cbEnclosedCells" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.cbInterpolation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.cbIntersectedCells" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.comboDataSets" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.comboInterpolators" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.lblDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.lblInterpolator" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.OpenDialogFile" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.rgEvaluatedAt" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.cbEnclosedCellsClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.comboDataSetsChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.comboInterpolatorsChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.rgEvaluatedAtClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.UpdateEvalAt()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.GetDataSets()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.GetInterpolators()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.MakeNewDataSet(Classes.TList,System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmCustomImportSimpleFileUnit.TfrmCustomImportSimpleFile.SetCheckBoxCaptions()" />
+    </reference>
+  </view>
+</nodeSet>

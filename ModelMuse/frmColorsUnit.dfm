@@ -2,7 +2,7 @@ inherited frmColors: TfrmColors
   Left = 875
   Top = 432
   Width = 309
-  Height = 208
+  Height = 218
   HelpType = htKeyword
   HelpKeyword = '3D_Lighting_Controls_Dialog_Box'
   HorzScrollBar.Range = 289
@@ -12,63 +12,63 @@ inherited frmColors: TfrmColors
   FormStyle = fsStayOnTop
   OnHide = FormHide
   ExplicitWidth = 309
-  ExplicitHeight = 208
+  ExplicitHeight = 218
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object lblAmbient: TLabel
     Left = 152
     Top = 40
-    Width = 51
-    Height = 17
+    Width = 58
+    Height = 18
     Caption = 'Ambient'
   end
   object lblDiffuse: TLabel
     Left = 152
     Top = 72
-    Width = 44
-    Height = 17
+    Width = 49
+    Height = 18
     Caption = 'Diffuse'
   end
   object lblSpecular: TLabel
     Left = 152
     Top = 104
-    Width = 56
-    Height = 17
+    Width = 62
+    Height = 18
     Caption = 'Specular'
   end
   object lblLightPosition: TLabel
     Left = 8
     Top = 8
-    Width = 85
-    Height = 17
+    Width = 95
+    Height = 18
     Caption = 'Light Position'
   end
   object lblX: TLabel
     Left = 16
     Top = 32
-    Width = 9
-    Height = 17
+    Width = 11
+    Height = 18
     Caption = 'X'
   end
   object lblY: TLabel
     Left = 16
     Top = 72
     Width = 9
-    Height = 17
+    Height = 18
     Caption = 'Y'
   end
   object lblZ: TLabel
     Left = 16
     Top = 104
     Width = 9
-    Height = 17
+    Height = 18
     Caption = 'Z'
   end
   object lblLightIntensity: TLabel
     Left = 184
     Top = 8
-    Width = 87
-    Height = 17
+    Width = 93
+    Height = 18
     Caption = 'Light Intensity'
   end
   object rdeAmb: TRbwDataEntry
@@ -77,7 +77,6 @@ inherited frmColors: TfrmColors
     Width = 65
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 3
     Text = '0.3'
     OnChange = rdeValuesChange
@@ -93,7 +92,6 @@ inherited frmColors: TfrmColors
     Width = 65
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 4
     Text = '0.002'
     OnChange = rdeValuesChange
@@ -109,7 +107,6 @@ inherited frmColors: TfrmColors
     Width = 65
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 5
     Text = '0.015'
     OnChange = rdeValuesChange
@@ -125,7 +122,6 @@ inherited frmColors: TfrmColors
     Width = 65
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 0
     Text = '60'
     OnChange = rdeValuesChange
@@ -139,7 +135,6 @@ inherited frmColors: TfrmColors
     Width = 65
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 1
     Text = '60'
     OnChange = rdeValuesChange
@@ -153,7 +148,6 @@ inherited frmColors: TfrmColors
     Width = 65
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 2
     Text = '40'
     OnChange = rdeValuesChange
@@ -166,8 +160,11 @@ inherited frmColors: TfrmColors
     Top = 136
     Width = 89
     Height = 33
-    TabOrder = 8
+    DoubleBuffered = True
     Kind = bkClose
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 8
   end
   object btnApply: TButton
     Left = 104
@@ -183,8 +180,11 @@ inherited frmColors: TfrmColors
     Top = 136
     Width = 89
     Height = 33
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 6
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
 end

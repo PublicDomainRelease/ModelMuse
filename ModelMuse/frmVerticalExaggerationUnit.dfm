@@ -2,7 +2,7 @@ inherited frmVerticalExaggeration: TfrmVerticalExaggeration
   Left = 218
   Top = 249
   Width = 437
-  Height = 123
+  Height = 131
   HelpType = htKeyword
   HelpKeyword = 'Vertical_Exaggeration_Dialog_Box'
   HorzScrollBar.Range = 409
@@ -10,7 +10,7 @@ inherited frmVerticalExaggeration: TfrmVerticalExaggeration
   ActiveControl = rdeVerticalExaggeration
   Caption = 'Vertical Exaggeration'
   ExplicitWidth = 437
-  ExplicitHeight = 123
+  ExplicitHeight = 131
   PixelsPerInch = 96
   TextHeight = 18
   object lblVerticalExaggeration: TLabel

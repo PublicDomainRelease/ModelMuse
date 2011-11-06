@@ -83,9 +83,9 @@ type
     // selected column, row, or layer can be.
     function EvaluatedAt: TEvaluatedAt;
     // @name is used as an event handler for
-    // TCustomGrid.@link(TCustomGrid.OnSelectedColumnChange),
-    // TCustomGrid.@link(TCustomGrid.OnSelectedLayerChange),
-    // and TCustomGrid.@link(TCustomGrid.OnSelectedRowChange).
+    // TCustomModelGrid.@link(TCustomModelGrid.OnSelectedColumnChange),
+    // TCustomModelGrid.@link(TCustomModelGrid.OnSelectedLayerChange),
+    // and TCustomModelGrid.@link(TCustomModelGrid.OnSelectedRowChange).
     procedure ItemChange(Sender: TObject); virtual; abstract;
     // @name is a factory method that
     // creates a descendant of @classname depending on ViewDirection.
@@ -114,7 +114,7 @@ type
     // @name calls @link(DisplayRow).
     procedure DisplayItem; override;
     // @name is used as an event handler for
-    // TCustomGrid.@link(TCustomGrid.OnSelectedRowChange).
+    // TCustomModelGrid.@link(TCustomModelGrid.OnSelectedRowChange).
     procedure ItemChange(Sender: TObject); override;
   end;
 
@@ -138,7 +138,7 @@ type
     // @name calls @link(DisplayLayer).
     procedure DisplayItem; override;
     // @name is used as an event handler for
-    // TCustomGrid.@link(TCustomGrid.OnSelectedLayerChange).
+    // TCustomModelGrid.@link(TCustomModelGrid.OnSelectedLayerChange).
     procedure ItemChange(Sender: TObject); override;
   end;
 
@@ -168,7 +168,7 @@ type
     // @name calls @link(DisplayColumn).
     procedure DisplayItem; override;
     // @name is used as an event handler for
-    // TCustomGrid.@link(TCustomGrid.OnSelectedColumnChange).
+    // TCustomModelGrid.@link(TCustomModelGrid.OnSelectedColumnChange).
     procedure ItemChange(Sender: TObject); override;
   end;
 

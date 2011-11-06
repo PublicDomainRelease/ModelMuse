@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="hzk4lur0qnwwxer_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FastObj.TObjectAccelerator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TObjectAccelerator.FClassNewInstance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TObjectAccelerator.FClass" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.CleanDestroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.Create(System.TClass)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.FreeInstanceNoRecord(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.FreeInstanceOptimized(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.NewInstanceNoField()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.NewInstanceNoHeaderLargeSize()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.NewInstanceNoHeader()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.NewInstanceCopyLargeSizeNoFill()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.NewInstanceCopyLargeSizeWithFill()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.NewInstanceCopySmall()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.CleanupTemplate()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.InitRedirect_Free(FastObj.PRedirectCode_OneParam,System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectAccelerator.InitRedirect_New(FastObj.PRedirectCode_NoParam,System.Pointer)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TObjectAccelerator.FFinalizeCnt" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TObjectAccelerator.FFinalizeArray" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TObjectAccelerator.FTemplate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TObjectAccelerator.FHeaderDWords" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TObjectAccelerator.FInstanceSize" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TObjectAccelerator.FClassFreeInstance" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FastObj.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.AddrFinalizeArray" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.VmtOffsetFreeInstance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.VmtOffsetNewInstance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.NewInstanceList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.NeedRegisterModuleUnload" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.SizePtr" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.Allocator" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.InitAutoOptimize()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.ModuleUnload(System.UInt32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.TObjectNewInstanceTrap(System.TClass)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.OptimizeClass(System.TClass)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.CreateOptimizer(System.TClass)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.CleanupList()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FastObj.BuildFinalizeInfoArray(System.TClass,ref@FastObj.PFieldInfoArray,ref@System.UInt32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.cSmallInstanceSize" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.SafeClassList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.AddrTInterfacedObjectNewInstance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.AddrTObjectNewInstanceTrap" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.vTObjectNewInstanceJumpBackup" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.vTObjectNewInstanceFlag" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.vAcceleratorCS" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.vAccelerators" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.AddrTObjectFreeInstance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.AddrTObjectNewInstance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.AddrFreeMem" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FastObj.TRedirectCode_NoParam">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TRedirectCode_NoParam.jmpoffset" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TRedirectCode_NoParam.jmp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TRedirectCode_NoParam.selfobj" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TRedirectCode_NoParam.moveax" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TRedirectCode_NoParam.jmpref" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FastObj.TRedirectCode_OneParam">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TRedirectCode_OneParam.Redir" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TRedirectCode_OneParam.movedx_eax" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:FastObj.TRedirectCode_OneParam.Redir" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FastObj.TFieldInfo">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TFieldInfo.Offset_" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TFieldInfo.TypeInfo" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FastObj.TFieldTable">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TFieldTable.Fields" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TFieldTable.Count" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TFieldTable.Size" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FastObj.TFieldTable.X" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:FastObj.TFieldTable.Fields" />
+    </reference>
+  </view>
+</nodeSet>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="kvnhtfzoo7mmgds_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:rwXMLConv.TXMLWriter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:rwXMLConv.TXMLWriter.WritePrefix(Classes.TFilerFlags,System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:rwXMLConv.TBinaryBuffer">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:rwXMLConv.TBinaryBuffer.CopyTo(Classes.TStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:rwXMLConv.TBinaryBuffer.AddDataStr(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:rwXMLConv.TBinaryBuffer.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:rwXMLConv.TBinaryBuffer.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.TBinaryBuffer.FBinStream" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:rwXMLConv.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.CrLf" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scHeaderBegin" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:rwXMLConv.rwObjectXMLToBinary(Classes.TStream,Classes.TStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:rwXMLConv.rwObjectBinaryToXML(Classes.TStream,Classes.TStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:rwXMLConv.XMLStrToStr(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:rwXMLConv.StrToXMLStr(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:rwXMLConv.WideToStr(System.WideString)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:rwXMLConv.StrToWideStr(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:rwXMLConv.XMLToString(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:rwXMLConv.StringToXML(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scCollectionItemEnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scCollectionItemBeginValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scCollectionItemBegin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scCollectionItem" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scCollectionEnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scCollectionBegin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scCollection" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scListItemEnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scListItemBegin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scListItem" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scListEnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scListBegin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scBinaryEnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scBinaryItemEnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scBinaryItemBegin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scBinaryItem" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scInline" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scInherited" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scComponentsEnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scComponentsBegin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scComponents" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scPropertieEnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scPropertieBegin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scValueType" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scPropertie" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scPropertiesEnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scPropertiesBegin" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scProperties" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scHeaderEnd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:rwXMLConv.scHeaderBeginFlags" />
+    </reference>
+  </view>
+</nodeSet>

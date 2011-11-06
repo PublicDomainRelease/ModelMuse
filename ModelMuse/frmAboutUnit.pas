@@ -98,7 +98,6 @@ var
   Row: integer;
 begin
   inherited;
-//  miEnableModelMateInterface.Checked := frmGoPhast.ShowUcodeInterface;
   dgCredit.FixedColor := Color;
 
   lblVersion.Caption := frmGoPhast.PhastModel.Version;

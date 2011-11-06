@@ -10,7 +10,7 @@ uses Types, Classes, Graphics, Forms,
 
 type
   {@abstract(@name defines the grid used with PHAST.)}
-  TPhastGrid = class(TCustomGrid)
+  TPhastGrid = class(TCustomModelGrid)
   private
     // @name: @link(TOneDRealArray);
     // See @link(LayerElevations).
@@ -41,7 +41,7 @@ type
     procedure DrawSide(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2); override;
     // @name returns the elevations of the corners of cells in the grid.
-    // See @link(AbstractGridUnit.TCustomGrid.GetCellCornerElevations).
+    // See @link(AbstractGridUnit.TCustomModelGrid.GetCellCornerElevations).
     procedure GetCellCornerElevations(const EvalAt: TEvaluatedAt;
       out Elevations: TThreeDRealArray); override;
     // @name gets the elevation of a cell boundary.
@@ -61,9 +61,9 @@ type
     procedure SetCellThickness(const Column, Row, Layer: integer;
       const Value: real); override;
     // @name sets the number of layers in the grid.  There are
-    // @link(AbstractGridUnit.TCustomGrid.LayerCount) + 1 layer boundaries
+    // @link(AbstractGridUnit.TCustomModelGrid.LayerCount) + 1 layer boundaries
     // in the grid.
-    // See @link(AbstractGridUnit.TCustomGrid.LayerCount).
+    // See @link(AbstractGridUnit.TCustomModelGrid.LayerCount).
     procedure SetLayerCount(const Value: integer); override;
     // @name specifies whether the layers are numbered from top to
     // bottom or from bottom to top.

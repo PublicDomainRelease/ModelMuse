@@ -63,7 +63,6 @@ type
   protected
     function Description: string; override;
   public
-//    procedure UpdateNewStoredFormulas;
     Constructor Create(NewDataSets: TList;
       DataSetNames, OldComments: TStringList;
       DisplayDataSet: TDataArray; DisplayChoice: TDisplayChoice;
@@ -226,9 +225,9 @@ implementation
 
 uses Math, frmGoPhastUnit, RbwParser,
   GIS_Functions, ValueArrayStorageUnit, ModelMuseUtilities, 
-  frmUpdateDataSetsUnit, UndoItemsScreenObjects, frmGridColorUnit,
-  InterpolationUnit, frmContourDataUnit, HufDefinition, ModflowTimeUnit,
-  frmGridValueUnit, shlobj, activex, AnsiStrings;
+  frmUpdateDataSetsUnit, UndoItemsScreenObjects,
+  InterpolationUnit, HufDefinition, ModflowTimeUnit,
+  frmGridValueUnit, shlobj, activex, AnsiStrings, frmDisplayDataUnit;
 
 resourcestring
   StrHead = 'Head';
@@ -699,6 +698,7 @@ begin
     end;
   end;
   ImportedValues.Values.Count := PointIndex;
+  ImportedValues.CacheData;
   ParentLayerData := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerData.Name);
   if ParentLayerData = LayerData then
   begin
@@ -821,6 +821,7 @@ begin
     end;
   end;
   ImportedValues.Values.Count := PointIndex;
+  ImportedValues.CacheData;
   ParentLayerData := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(LayerData.Name);
   if ParentLayerData = LayerData then
   begin
@@ -2743,8 +2744,8 @@ begin
     frmGoPhast.PhastModel.EndDataSetUpdate;
   end;
 
-  UpdateFrmGridColor;
-  UpdateFrmContourData;
+  UpdateFrmDisplayData;
+//  UpdateFrmContourData;
   UpdateFrmGridValue;
 
 end;
@@ -2787,25 +2788,10 @@ begin
     AllowChildGridUpdates;
 
   end;
-  UpdateFrmGridColor;
-  UpdateFrmContourData;
+  UpdateFrmDisplayData;
+//  UpdateFrmContourData;
   UpdateFrmGridValue;
 end;
-
-//procedure TUndoImportModelResults.UpdateNewStoredFormulas;
-//var
-//  Index: Integer;
-//  AnUndo: TCustomUndo;
-//begin
-//  for Index := 0 to FContainedUndos.Count - 1 do
-//  begin
-//    AnUndo := FContainedUndos[Index];
-//    if AnUndo is TUndoChangeDataSets then
-//    begin
-//      TUndoChangeDataSets(AnUndo).UpdateNewStoredFormulas;
-//    end;
-//  end;
-//end;
 
 procedure TUndoImportModelResults.SetComments(Comments: TStringList);
 var

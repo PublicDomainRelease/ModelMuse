@@ -47,7 +47,7 @@ inherited frmExportImage: TfrmExportImage
         Height = 30
         Caption = 'Animation'
         Collapsed = True
-        TabOrder = 0
+        TabOrder = 2
         OnExpand = cpAnimationExpand
         ExpandedHeight = 386
         object pnlAnimation: TPanel
@@ -329,7 +329,7 @@ inherited frmExportImage: TfrmExportImage
         Top = 0
         Height = 386
         Caption = 'View'
-        TabOrder = 2
+        TabOrder = 0
         OnExpand = cpViewExpand
         object Panel3: TPanel
           Left = 0

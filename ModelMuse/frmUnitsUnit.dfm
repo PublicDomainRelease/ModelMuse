@@ -1,7 +1,7 @@
 inherited frmUnits: TfrmUnits
   Left = 399
   Top = 49
-  Width = 734
+  Width = 745
   Height = 666
   HelpType = htKeyword
   HelpKeyword = 'Title_and_Units_Dialog_Box'
@@ -9,8 +9,9 @@ inherited frmUnits: TfrmUnits
   VertScrollBar.Range = 28
   ActiveControl = memoTitle
   Caption = 'PHAST Title and Units'
-  ExplicitTop = -32
-  ExplicitWidth = 734
+  ExplicitLeft = 0
+  ExplicitTop = -210
+  ExplicitWidth = 745
   ExplicitHeight = 666
   PixelsPerInch = 96
   TextHeight = 18
@@ -176,12 +177,13 @@ inherited frmUnits: TfrmUnits
   object memoTitle: TMemo
     Left = 8
     Top = 40
-    Width = 715
+    Width = 726
     Height = 104
     Anchors = [akLeft, akTop, akRight]
     ScrollBars = ssBoth
     TabOrder = 1
     WordWrap = False
+    ExplicitWidth = 715
   end
   object btnOK: TBitBtn
     Left = 528

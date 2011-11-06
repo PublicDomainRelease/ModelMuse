@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="jbope01ao7y4jwj_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RealListUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.SortReals(System.Pointer,System.Pointer)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RealListUnit.TRealList">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.Last()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.Move(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.Sort()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:RealListUnit.TRealList.Sorted[]" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RealListUnit.TRealList.FList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RealListUnit.TRealList.FSorted" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.GetCapacity()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.GetCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.GetItem(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.SetCapacity(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.SetCount(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.SetItem(System.Int32,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.SetSorted(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.Add(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.AddUnique(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.Assign(RealListUnit.TRealList)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:RealListUnit.TRealList.Capacity[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.Clear()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:RealListUnit.TRealList.Count[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.Delete(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.Error(System.String,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.Exchange(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.First()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.IndexOf(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.IndexOfClosest(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RealListUnit.TRealList.Insert(System.Int32,System.Double)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:RealListUnit.TRealList.Items[System.Int32]" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RealListUnit.TRealClass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:RealListUnit.TRealClass.AReal" />
+    </reference>
+  </view>
+</nodeSet>

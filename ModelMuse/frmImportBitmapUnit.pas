@@ -395,10 +395,7 @@ there is no loss in resolution at higher magnifications. }
     ZoomBox.Width := FBitMap.Width;
     ZoomBox.Height := FBitMap.Height;
 
-    if edName.Text = '' then
-    begin
-      edName.Text := ExtractFileName(OpenDialogBitmap.FileName);
-    end;
+    edName.Text := ExtractFileName(OpenDialogBitmap.FileName);
     WorldFileNames := TStringList.Create;
     try
       WorldFileNames.Add(ChangeFileExt(OpenDialogBitmap.FileName, '.jgw'));

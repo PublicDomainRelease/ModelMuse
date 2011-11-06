@@ -1,58 +1,58 @@
 inherited frmSolutionMethod: TfrmSolutionMethod
   Left = 554
   Top = 516
-  Width = 328
-  Height = 410
+  Width = 345
+  Height = 417
   HelpType = htKeyword
   HelpKeyword = 'Solution_Method_Dialog_Box'
   HorzScrollBar.Range = 313
   VertScrollBar.Range = 293
   ActiveControl = rgSolver
   Caption = 'PHAST Solution Method'
-  ExplicitWidth = 328
-  ExplicitHeight = 410
+  ExplicitWidth = 345
+  ExplicitHeight = 417
   PixelsPerInch = 96
-  TextHeight = 17
+  TextHeight = 18
   object lblSpaceDifferencing: TLabel
     Left = 8
     Top = 99
-    Width = 118
-    Height = 17
+    Width = 131
+    Height = 18
     Caption = 'Space differencing'
   end
   object lblTimeDifferencing: TLabel
     Left = 8
     Top = 131
-    Width = 109
-    Height = 17
+    Width = 120
+    Height = 18
     Caption = 'Time differencing'
   end
   object lblTolerance: TLabel
     Left = 8
     Top = 163
-    Width = 64
-    Height = 17
+    Width = 69
+    Height = 18
     Caption = 'Tolerance'
   end
   object lblSaveDirections: TLabel
     Left = 8
     Top = 195
-    Width = 97
-    Height = 17
+    Width = 108
+    Height = 18
     Caption = 'Save directions'
   end
   object lblMaximumIterations: TLabel
     Left = 8
     Top = 227
-    Width = 120
-    Height = 17
+    Width = 135
+    Height = 18
     Caption = 'Maximum iterations'
   end
   object lblRebalanceFraction: TLabel
     Left = 8
     Top = 258
-    Width = 137
-    Height = 34
+    Width = 150
+    Height = 36
     Caption = 'Rebalance fraction'#13#10'(Parallel PHAST only)'
   end
   object rgSolver: TRadioGroup
@@ -75,7 +75,6 @@ inherited frmSolutionMethod: TfrmSolutionMethod
     Width = 101
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 2
     Text = '0'
     DataType = dtReal
@@ -90,7 +89,6 @@ inherited frmSolutionMethod: TfrmSolutionMethod
     Width = 101
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 5
     Text = '1'
     DataType = dtReal
@@ -117,9 +115,7 @@ inherited frmSolutionMethod: TfrmSolutionMethod
     Height = 33
     Caption = 'OK'
     Default = True
-    ModalResult = 1
-    TabOrder = 3
-    OnClick = btnOKClick
+    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       04000000000068010000120B0000120B00001000000010000000000000000000
@@ -137,15 +133,22 @@ inherited frmSolutionMethod: TfrmSolutionMethod
       3338F38F000033333333333333A223333333333333338F830000333333333333
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
+    ModalResult = 1
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 3
+    OnClick = btnOKClick
   end
   object btnCancel: TBitBtn
     Left = 220
     Top = 335
     Width = 91
     Height = 33
-    TabOrder = 4
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 4
   end
   object rdeTolerance: TRbwDataEntry
     Left = 208
@@ -153,7 +156,6 @@ inherited frmSolutionMethod: TfrmSolutionMethod
     Width = 101
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 6
     Text = '0'
     DataType = dtReal
@@ -167,7 +169,6 @@ inherited frmSolutionMethod: TfrmSolutionMethod
     Width = 101
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 7
     Text = '1'
     DataType = dtInteger
@@ -182,7 +183,6 @@ inherited frmSolutionMethod: TfrmSolutionMethod
     Width = 101
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 8
     Text = '1'
     DataType = dtInteger
@@ -196,14 +196,17 @@ inherited frmSolutionMethod: TfrmSolutionMethod
     Top = 335
     Width = 89
     Height = 33
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 9
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
   object cbRebalanceByCell: TCheckBox
     Left = 8
     Top = 295
-    Width = 304
+    Width = 321
     Height = 25
     Caption = 'Rebalance by cell (Parallel PHAST only)'
     TabOrder = 10
@@ -214,7 +217,6 @@ inherited frmSolutionMethod: TfrmSolutionMethod
     Width = 101
     Height = 28
     Cursor = crIBeam
-    ItemHeight = 17
     TabOrder = 11
     Text = '0'
     DataType = dtReal

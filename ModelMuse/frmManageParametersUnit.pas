@@ -596,7 +596,7 @@ begin
   FParamList.Sort(CompareParameters);
   rdgParameters.BeginUpdate;
   try
-    rdgParameters.RowCount := FParamList.Count + 1;
+    rdgParameters.RowCount := Max(FParamList.Count + 1, 2);
     seNumberOfParameters.AsInteger := FParamList.Count;
     for ParamIndex := 0 to FParamList.Count - 1 do
     begin
@@ -854,7 +854,7 @@ begin
   if seNumberOfParameters.AsInteger > rdgParameters.RowCount -1 then
   begin
     FirstNewRow := rdgParameters.RowCount;
-    rdgParameters.RowCount := seNumberOfParameters.AsInteger + 1;
+    rdgParameters.RowCount := Max(seNumberOfParameters.AsInteger + 1, 2);
     for RowIndex := FirstNewRow to rdgParameters.RowCount - 1 do
     begin
       for ColIndex := 0 to rdgParameters.ColCount - 1 do

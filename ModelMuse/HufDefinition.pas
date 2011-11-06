@@ -37,9 +37,11 @@ type
     function UniqueName(Candidate: string; Names: TStringList): string;
     procedure SendNotifications;
     procedure NotifyParamChange;
+    procedure UnlockDataSets;
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
   public
+    destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
     property Parameter: TModflowParameter read GetParameter write FParmeter;
     procedure GenerateMultiplierArrayName;
@@ -334,7 +336,7 @@ begin
     end
     else
     begin
-      DataArray := DataArrayManager.GetDataSetByName(FZoneName);
+      DataArray := DataArrayManager.GetDataSetByName(LayerName);
       if DataArray <> nil then
       begin
         DataArray.Lock := [];
@@ -356,6 +358,12 @@ function THufUsedParameter.Description: string;
 begin
   result := 'Hydrogeologic unit = ' + HufUnit.HufName
     + '; Parameter = ' + ParameterName;
+end;
+
+destructor THufUsedParameter.Destroy;
+begin
+  UnlockDataSets;
+  inherited;
 end;
 
 procedure THufUsedParameter.NotifyParamChange;
@@ -514,6 +522,30 @@ begin
       while Length(result) < 10 do
       begin
         result := result + ' ';
+      end;
+    end;
+  end;
+end;
+
+procedure THufUsedParameter.UnlockDataSets;
+var
+  Model: TCustomModel;
+  DataArray: TDataArray;
+begin
+  if (Collection as THufUsedParameters).Model <> nil then
+  begin
+    Model := (Collection as THufUsedParameters).Model as TCustomModel;
+    if not (csLoading in Model.ComponentState) then
+    begin
+      DataArray := Model.DataArrayManager.GetDataSetByName(FMultiplierName);
+      if DataArray <> nil then
+      begin
+        DataArray.Lock := DataArray.Lock - [dcName];
+      end;
+      DataArray := Model.DataArrayManager.GetDataSetByName(FZoneName);
+      if DataArray <> nil then
+      begin
+        DataArray.Lock := DataArray.Lock - [dcName];
       end;
     end;
   end;

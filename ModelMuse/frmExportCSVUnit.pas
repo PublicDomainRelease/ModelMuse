@@ -165,7 +165,7 @@ var
   EvaluatedAt: TEvaluatedAt;
   Orientation: TDataSetOrientation;
   Index: Integer;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   LayerIndex: Integer;
   RowIndex: Integer;
   ColumnIndex: Integer;

@@ -34,7 +34,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Top = 32
         Width = 56
         Height = 24
-        TabOrder = 0
+        TabOrder = 1
         Text = '1'
         OnChange = rdeSegmentNumberChange
         DataType = dtInteger
@@ -50,7 +50,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Height = 290
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Reach Properties'
-        TabOrder = 1
+        TabOrder = 2
         object lblStreamTop: TLabel
           Left = 227
           Top = 58
@@ -140,7 +140,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             F000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFF000}
-          TabOrder = 0
+          TabOrder = 1
           OnChange = rdeSegmentNumberChange
         end
         object jceSlope: TJvComboEdit
@@ -169,7 +169,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             F000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFF000}
-          TabOrder = 1
+          TabOrder = 2
           OnChange = rdeSegmentNumberChange
         end
         object jceStreambedThickness: TJvComboEdit
@@ -198,7 +198,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             F000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFF000}
-          TabOrder = 2
+          TabOrder = 3
           OnChange = rdeSegmentNumberChange
         end
         object jceStreambedK: TJvComboEdit
@@ -227,7 +227,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             F000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFF000}
-          TabOrder = 3
+          TabOrder = 4
           OnChange = rdeSegmentNumberChange
         end
         object jceSaturatedVolumetricWater: TJvComboEdit
@@ -256,7 +256,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             F000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFF000}
-          TabOrder = 4
+          TabOrder = 5
           OnChange = rdeSegmentNumberChange
         end
         object jceInitialVolumetricWater: TJvComboEdit
@@ -285,7 +285,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             F000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFF000}
-          TabOrder = 5
+          TabOrder = 6
           OnChange = rdeSegmentNumberChange
         end
         object jceBrooksCoreyExponent: TJvComboEdit
@@ -314,7 +314,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             F000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFF000}
-          TabOrder = 6
+          TabOrder = 7
           OnChange = rdeSegmentNumberChange
         end
         object jceMaxUnsaturatedKz: TJvComboEdit
@@ -343,7 +343,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             F000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFF000}
-          TabOrder = 7
+          TabOrder = 8
           OnChange = rdeSegmentNumberChange
         end
         object jvcReachLength: TJvComboEdit
@@ -372,7 +372,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
             F000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFF000}
-          TabOrder = 8
+          TabOrder = 0
           Text = 'ObjectIntersectLength'
           OnChange = rdeSegmentNumberChange
         end
@@ -385,7 +385,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Align = alTop
         BevelOuter = bvNone
         Caption = 'pnlCaption'
-        TabOrder = 2
+        TabOrder = 0
       end
     end
     object tabTime: TTabSheet
@@ -949,7 +949,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         FixedCols = 0
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
-        TabOrder = 0
+        TabOrder = 1
         OnMouseUp = dgFlowTimesMouseUp
         OnSelectCell = dgFlowTimesSelectCell
         OnSetEditText = dgFlowTimesSetEditText
@@ -1099,7 +1099,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Height = 57
         Align = alTop
         BevelOuter = bvNone
-        TabOrder = 1
+        TabOrder = 0
         object lblFlowFormula: TLabel
           Left = 136
           Top = 5
@@ -1153,7 +1153,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           FixedCols = 0
           RowCount = 2
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
-          TabOrder = 0
+          TabOrder = 1
           OnMouseUp = dgUpMouseUp
           OnSelectCell = dgUpSelectCell
           OnSetEditText = dgUpSetEditText
@@ -1326,7 +1326,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Alignment = taLeftJustify
           BevelOuter = bvNone
           Caption = ' Upstream'
-          TabOrder = 1
+          TabOrder = 0
           object lblUpstreamFormula: TLabel
             Left = 136
             Top = 5
@@ -1367,7 +1367,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           FixedCols = 0
           RowCount = 2
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
-          TabOrder = 0
+          TabOrder = 1
           OnMouseUp = dgDownMouseUp
           OnSelectCell = dgUpSelectCell
           OnSetEditText = dgDownSetEditText
@@ -1540,7 +1540,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Alignment = taLeftJustify
           BevelOuter = bvNone
           Caption = ' Downstream'
-          TabOrder = 1
+          TabOrder = 0
           object lblDownstreamFormula: TLabel
             Left = 136
             Top = 5
@@ -1593,7 +1593,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Height = 369
         Align = alClient
         Caption = 'shouldn'#39't see this'
-        TabOrder = 1
+        TabOrder = 0
         object dgSfrRough: TRbwDataGrid4
           Left = 1
           Top = 58
@@ -1604,7 +1604,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           FixedCols = 0
           RowCount = 2
           Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
-          TabOrder = 0
+          TabOrder = 1
           OnMouseUp = dgSfrRoughMouseUp
           OnSelectCell = dgSfrRoughSelectCell
           OnSetEditText = dgSfrRoughSetEditText
@@ -1712,7 +1712,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
           Height = 57
           Align = alTop
           BevelOuter = bvNone
-          TabOrder = 1
+          TabOrder = 0
           object lblChannelFormula: TLabel
             Left = 136
             Top = 5
@@ -1780,7 +1780,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         FixedCols = 0
         RowCount = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goTabs]
-        TabOrder = 0
+        TabOrder = 1
         OnMouseUp = dgSfrEquationMouseUp
         OnSelectCell = dgSfrEquationSelectCell
         OnSetEditText = dgSfrEquationSetEditText
@@ -1930,7 +1930,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Height = 57
         Align = alTop
         BevelOuter = bvNone
-        TabOrder = 1
+        TabOrder = 0
         object lblEquationFormula: TLabel
           Left = 136
           Top = 5
@@ -1981,7 +1981,7 @@ inherited frameScreenObjectSFR: TframeScreenObjectSFR
         Width = 208
         Height = 321
         Align = alClient
-        TabOrder = 1
+        TabOrder = 0
         object dgTableTime: TRbwDataGrid4
           Left = 1
           Top = 1

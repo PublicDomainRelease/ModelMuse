@@ -27,7 +27,8 @@ uses Windows, Types, GuiSettingsUnit, SysUtils, Classes, Contnrs, Controls,
   ModflowHfbDisplayUnit, EdgeDisplayUnit, ModflowUnitNumbers, HufDefinition,
   ModelMateClassesUnit, ModflowHobUnit, EZDSLHsh, FormulaManagerUnit,
   PathlineReader, LegendUnit, DisplaySettingsUnit, ModflowCellUnit,
-  ModflowGageUnit, ModflowHeadObsResults, GR32;
+  ModflowGageUnit, ModflowHeadObsResults, GR32, AxCtrls, Generics.Collections,
+  Generics.Defaults;
 
 const
   // @name is the name of the @link(TDataArray) that specifies whether an
@@ -1355,6 +1356,79 @@ that affects the model output should also have a comment. }
       read GetChildDataArrayManager;
   end;
 
+//  TStreamsToPlot = (stpNone, stpAll, stpVisible, stpSelected);
+//
+//  TSfrStreamPlot = class(TObject)
+//    StreamObject: TScreenObject;
+//    Segment: Integer;
+//    OutflowSegment: integer;
+//    DiversionSegment: integer;
+//  end;
+//
+//  TLakePlot = class(TObject)
+//    LakeObject: TScreenObject;
+//    LakeId: Integer;
+//  end;
+//
+//  TSfrStreamPlotComparer = class(TComparer<TSfrStreamPlot>)
+//    function Compare(const Left, Right: TSfrStreamPlot): Integer; override;
+//  end;
+//
+//  TSfrStreamPlotList = class(TObjectList<TSfrStreamPlot>)
+//  private
+//    procedure Sort;
+//  end;
+//
+//  TSfrLakePlotComparer = class(TComparer<TLakePlot>)
+//    function Compare(const Left, Right: TLakePlot): Integer; override;
+//  end;
+//
+//  TLakePlotList = class(TObjectList<TLakePlot>)
+//  private
+//    procedure Sort;
+//  end;
+//
+//  TSfrStreamLinkPlot = class(TGoPhastPersistent)
+//  private
+//    FPlotStreamConnections: boolean;
+//    FStreamsToPlot: TStreamsToPlot;
+//    FPlotDiversions: boolean;
+//    FStreamColor: TColor;
+//    FDiversionColor: TColor;
+//    FTimeToPlot: TDateTime;
+//    FPlotUnconnected: Boolean;
+//    FUnconnectedColor: TColor;
+//    procedure SetDiversionColor(const Value: TColor);
+//    procedure SetPlotDiversions(const Value: boolean);
+//    procedure SetPlotStreamConnections(const Value: boolean);
+//    procedure SetStreamColor(const Value: TColor);
+//    procedure SetStreamsToPlot(const Value: TStreamsToPlot);
+//    procedure SetTimeToPlot(const Value: TDateTime);
+//    procedure SetPlotUnconnected(const Value: Boolean);
+//    procedure SetUnconnectedColor(const Value: TColor);
+//  public
+//    procedure GetObjectsToPlot(StreamList: TSfrStreamPlotList;
+//      LakeList: TLakePlotList);
+//    Constructor Create(Model: TBaseModel);
+//    procedure Assign(Source: TPersistent); override;
+//  published
+//    property PlotStreamConnections: boolean read FPlotStreamConnections
+//      write SetPlotStreamConnections default True;
+//    property PlotDiversions: boolean read FPlotDiversions
+//      write SetPlotDiversions default True;
+//    property PlotUnconnected: Boolean read FPlotUnconnected
+//      write SetPlotUnconnected default True;
+//    property StreamColor: TColor read FStreamColor
+//      write SetStreamColor default clBlue;
+//    property DiversionColor: TColor read FDiversionColor
+//      write SetDiversionColor default clLime;
+//    property UnconnectedColor: TColor read FUnconnectedColor
+//      write SetUnconnectedColor default clRed;
+//    property StreamsToPlot: TStreamsToPlot read FStreamsToPlot
+//      write SetStreamsToPlot;
+//    property TimeToPlot: TDateTime read FTimeToPlot write SetTimeToPlot;
+//  end;
+
   TChildModelCollection = class;
 
   TCustomModel = class abstract (TBaseModel)
@@ -1490,7 +1564,7 @@ that affects the model output should also have a comment. }
     procedure GetDefaultOutputFileExtension(var Extension: string);
 
   private
-    FGrid: TCustomGrid;
+    FGrid: TCustomModelGrid;
     FModflowOptions: TModflowOptions;
     FNameFileWriter: TObject;
     FHeadObsResults: THeadObsCollection;
@@ -1614,7 +1688,6 @@ that affects the model output should also have a comment. }
     function GetLayerStructure: TLayerStructure;virtual;abstract;
     procedure SetLayerStructure(const Value: TLayerStructure);virtual;abstract;
     procedure SetModflowOptions(const Value: TModflowOptions);
-//    function GetModflowOptions: TModflowOptions;virtual;abstract;
     function GetModflowStressPeriods: TModflowStressPeriods;virtual;abstract;
     procedure SetModflowStressPeriods(const Value: TModflowStressPeriods);virtual;abstract;
     procedure SetSoluteTransport(const Value: boolean);virtual;abstract;
@@ -1641,8 +1714,11 @@ that affects the model output should also have a comment. }
     procedure InitializeGages; virtual;
     procedure InitializeSfrWriter(EvaluationType: TEvaluationType); virtual;
     procedure FreeSfrWriter; virtual;
+    procedure SetContourFont(const Value: TFont) ; virtual; abstract;
+    procedure SetShowContourLabels(const Value: boolean);  virtual; abstract;
+    function GetContourFont: TFont;  virtual; abstract;
+    function GetShowContourLabels: boolean; virtual; abstract;
   public
-//    property GageUnitNumber: integer read FGageUnitNumber;
     property Gages: TStringList read FGages;
     function StoreHeadObsResults: boolean;
     function TestModpathOK: Boolean;
@@ -1673,19 +1749,19 @@ that affects the model output should also have a comment. }
     // TDataArray.OnDataSetUsed) for @link(TDataArray)s related to the HUF
     // package.
     function HufDataArrayUsed(Sender: TObject): boolean;
-    // @name assigns frmGoPhast.Grid.@link(TCustomGrid.FrontDataSet)
+    // @name assigns frmGoPhast.Grid.@link(TCustomModelGrid.FrontDataSet)
     // to be the @link(TDataArray) in TimeList at Time.
     procedure UpdateFrontTimeDataSet(const TimeList: TCustomTimeList;
       const Time: double); virtual;
-    // @name assigns frmGoPhast.Grid.@link(TCustomGrid.SideDataSet)
+    // @name assigns frmGoPhast.Grid.@link(TCustomModelGrid.SideDataSet)
     // to be the @link(TDataArray) in TimeList at Time.
     procedure UpdateSideTimeDataSet(const TimeList: TCustomTimeList;
       const Time: double); virtual;
-    // @name assigns frmGoPhast.Grid.@link(TCustomGrid.TopDataSet)
+    // @name assigns frmGoPhast.Grid.@link(TCustomModelGrid.TopDataSet)
     // to be the @link(TDataArray) in TimeList at Time.
     procedure UpdateTopTimeDataSet(const TimeList: TCustomTimeList;
       const Time: double); virtual;
-    // @name assigns frmGoPhast.Grid.@link(TCustomGrid.ThreeDDataSet)
+    // @name assigns frmGoPhast.Grid.@link(TCustomModelGrid.ThreeDDataSet)
     // to be the @link(TDataArray) in TimeList at Time.
     procedure UpdateThreeDTimeDataSet(const TimeList: TCustomTimeList;
       const Time: double); virtual;
@@ -1713,7 +1789,7 @@ that affects the model output should also have a comment. }
     procedure AddModelInputFile(const FileName: string);
     procedure AddFileToArchive(const FileName: string);
 
-    property Grid: TCustomGrid read FGrid;
+    property Grid: TCustomModelGrid read FGrid;
 
     // @name is the TRbwParser for formulas for data sets on the front
     // view of the model evaluated at elements.
@@ -1849,7 +1925,7 @@ that affects the model output should also have a comment. }
     // If the data set used to color the grid is not transient, or the grid
     // is not colored, @name has no meaning.
     // See @link(FrontDisplayTime) and
-    // TCustomGrid.@link(TCustomGrid.FrontDataSet).
+    // TCustomModelGrid.@link(TCustomModelGrid.FrontDataSet).
     property FrontTimeList: TCustomTimeList read FFrontTimeList
       write SetFrontTimeList;
 
@@ -1858,7 +1934,7 @@ that affects the model output should also have a comment. }
     // If the data set used to color the grid is not transient, or the grid
     // is not colored, @name has no meaning.
     // See @link(SideDisplayTime) and
-    // TCustomGrid.@link(TCustomGrid.SideDataSet).
+    // TCustomModelGrid.@link(TCustomModelGrid.SideDataSet).
     property SideTimeList: TCustomTimeList read FSideTimeList
       write SetSideTimeList;
     // @name is the @link(TCustomTimeList)
@@ -1867,7 +1943,7 @@ that affects the model output should also have a comment. }
     // If the data set used to color the grid is not transient, or the grid
     // is not colored, @name has no meaning.
     // See @link(TopDisplayTime) and
-    // TCustomGrid.@link(TCustomGrid.TopDataSet).
+    // TCustomModelGrid.@link(TCustomModelGrid.TopDataSet).
     property TopTimeList: TCustomTimeList read FTopTimeList
       write SetTopTimeList;
     // @name is the time for the transient data set used to color the
@@ -1875,28 +1951,28 @@ that affects the model output should also have a comment. }
     // If the data set used to color the grid is not transient, or the grid
     // is not colored, @name has no meaning.
     // See @link(TopTimeList) and
-    // TCustomGrid.@link(TCustomGrid.TopDataSet).
+    // TCustomModelGrid.@link(TCustomModelGrid.TopDataSet).
     property TopDisplayTime: double read FTopDisplayTime;
     // @name is the time for the transient data set used to color the
     // front view of the grid.
     // If the data set used to color the grid is not transient, or the grid
     // is not colored, @name has no meaning.
     // See @link(FrontTimeList) and
-    // TCustomGrid.@link(TCustomGrid.FrontDataSet).
+    // TCustomModelGrid.@link(TCustomModelGrid.FrontDataSet).
     property FrontDisplayTime: double read FFrontDisplayTime;
     // @name is the time for the transient data set used to color the
     // side view of the grid.
     // If the data set used to color the grid is not transient, or the grid
     // is not colored, @name has no meaning.
     // See @link(SideTimeList) and
-    // TCustomGrid.@link(TCustomGrid.SideDataSet).
+    // TCustomModelGrid.@link(TCustomModelGrid.SideDataSet).
     property SideDisplayTime: double read FSideDisplayTime;
     // @name is the time for the transient data set used to color the
     // 3D view of the grid.
     // If the data set used to color the grid is not transient, or the grid
     // is not colored, @name has no meaning.
     // See @link(ThreeDTimeList) and
-    // TCustomGrid.@link(TCustomGrid.ThreeDDataSet).
+    // TCustomModelGrid.@link(TCustomModelGrid.ThreeDDataSet).
     property ThreeDDisplayTime: double read FThreeDDisplayTime;
     // @name is the @link(TCustomTimeList) for
     // the transient data set used to color
@@ -1904,7 +1980,7 @@ that affects the model output should also have a comment. }
     // If the data set used to color the grid is not transient, or the grid
     // is not colored, @name has no meaning.
     // See @link(ThreeDDisplayTime) and
-    // TCustomGrid.@link(TCustomGrid.ThreeDDataSet).
+    // TCustomModelGrid.@link(TCustomModelGrid.ThreeDDataSet).
     property ThreeDTimeList: TCustomTimeList read FThreeDTimeList
       write FThreeDTimeList;
     property ModflowSteadyParameters: TModflowSteadyParameters
@@ -2075,6 +2151,8 @@ that affects the model output should also have a comment. }
     procedure DrawHeadObservations(const BitMap: TBitmap32;
       const ZoomBox: TQrbwZoomBox2); virtual;
     procedure InvalidateMfHobHeads(Sender: TObject);
+    property ContourFont: TFont read GetContourFont write SetContourFont;
+    property ShowContourLabels: boolean read GetShowContourLabels write SetShowContourLabels default True;
   published
     // @name defines the grid used with PHAST.
     property PhastGrid: TPhastGrid read FPhastGrid write SetPhastGrid;
@@ -2093,13 +2171,17 @@ that affects the model output should also have a comment. }
     property ModflowPackages: TModflowPackages read FModflowPackages
       write SetModflowPackages;
     property HeadFluxObservations: TFluxObservationGroups
-      read FHeadFluxObservations write SetHeadFluxObservations stored StoreHeadFluxObservations;
+      read FHeadFluxObservations write SetHeadFluxObservations
+      stored StoreHeadFluxObservations;
     property DrainObservations: TFluxObservationGroups
-      read FDrainObservations write SetDrainObservations stored StoreDrainObservations;
+      read FDrainObservations write SetDrainObservations
+      stored StoreDrainObservations;
     property GhbObservations: TFluxObservationGroups
-      read FGhbObservations write SetGhbObservations stored StoreGhbObservations;
+      read FGhbObservations write SetGhbObservations
+      stored StoreGhbObservations;
     property RiverObservations: TFluxObservationGroups
-      read FRiverObservations write SetRiverObservations stored StoreRiverObservations;
+      read FRiverObservations write SetRiverObservations
+      stored StoreRiverObservations;
     property HydrogeologicUnits: THydrogeologicUnits read FHydrogeologicUnits
       write SetHydrogeologicUnits stored StoreHydrogeologicUnits;
     property FilesToArchive: TStrings read FFilesToArchive
@@ -2125,6 +2207,14 @@ that affects the model output should also have a comment. }
   TMappingArray = array of TMapping;
 
   TSaveDataSetValues = (sdsvNever, sdsvAlways);
+
+  TFontChangeNotifyier = class(TFontAdapter)
+  private
+    FModel: TCustomModel;
+  public
+    procedure Changed; override;
+    Constructor Create(AModel: TCustomModel; AFont: TFont);
+  end;
 
   {
   @abstract(@name is used to read model configuration data to and
@@ -2308,7 +2398,6 @@ that affects the model output should also have a comment. }
     FChildModels: TChildModelCollection;
     FImportingModel: boolean;
     FSelectedModel: TCustomModel;
-//    FCurrentModel: TCustomModel;
     FColumnMapping: TMappingArray;
     FRowMapping: TMappingArray;
     FLayerMapping: TMappingArray;
@@ -2319,50 +2408,17 @@ that affects the model output should also have a comment. }
     FChildGridUpdateCount: Integer;
     FDataSetUpdateCount: Integer;
     FSaveBfhBoundaryConditions: Boolean;
+    FContourFont: TFont;
+    FShowContourLabels: Boolean;
+    FSfrStreamLinkPlot: TSfrStreamLinkPlot;
     // See @link(Exaggeration).
     function GetExaggeration: double;
-    // See @link(FrontHeight).
-//    function GetFrontHeight: integer;
-    // See @link(FrontX).
-//    function GetFrontX: double;
-    // See @link(FrontY).
-//    function GetFrontY: double;
-    // See @link(Height).
-//    function GetHeight: integer;
-    // See @link(Left).
-//    function GetLeft: integer;
-    // See @link(MagnificationFront).
-//    function GetMagnificationFront: double;
-    // See @link(MagnificationSide).
-//    function GetMagnificationSide: double;
-    // See @link(MagnificationTop).
-//    function GetMagnificationTop: double;
     // See @link(OwnsScreenObjects).
     function GetOwnsScreenObjects: boolean;
     // See @link(ObjectList).
     function GetScreenObjectCollection: TScreenObjectCollection;
-    // See @link(SideWidth).
-//    function GetSideWidth: integer;
-    // See @link(SideX).
-//    function GetSideX: double;
-    // See @link(SideY).
-//    function GetSideY: double;
-    // See @link(Top).
-//    function GetTop: integer;
-    // See @link(TopViewHeight).
-//    function GetTopViewHeight: integer;
-    // See @link(TopViewWidth).
-//    function GetTopViewWidth: integer;
-    // See @link(TopX).
-//    function GetTopX: double;
-    // See @link(TopY).
-//    function GetTopY: double;
     // See @link(Version).
     function GetVersion: string;
-    // See @link(Width).
-//    function GetWidth: integer;
-    // See @link(WindowState).
-//    function GetWindowState: TWindowState;
     // @name initializes all the @link(TPhastTimeList)s in @link(TimeLists).
     procedure InitializePhastBoundaries;
     // @name adds all the TTimeItem.@link(TTimeItem.EndingTime)s
@@ -2526,13 +2582,12 @@ that affects the model output should also have a comment. }
     function GetCombinedDisplayLayer: integer;
     function GetCombinedDisplayRow: integer;
     function UpwIsSelected: Boolean;
-//    procedure UpdateCachedData;
+    procedure SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot);
   protected
     procedure SetFileName(const Value: string); override;
     function GetFormulaManager: TFormulaManager; override;
     function GetLayerStructure: TLayerStructure;override;
     procedure SetLayerStructure(const Value: TLayerStructure);override;
-//    function GetModflowOptions: TModflowOptions;override;
     function GetModflowStressPeriods: TModflowStressPeriods;override;
     function GetSoluteTransport: boolean;override;
     function GetFreeSurface: boolean;override;
@@ -2587,9 +2642,15 @@ that affects the model output should also have a comment. }
     procedure InitializeGages; override;
     procedure InitializeSfrWriter(EvaluationType: TEvaluationType); override;
     procedure FreeSfrWriter; override;
+    procedure SetContourFont(const Value: TFont) ; override;
+    procedure SetShowContourLabels(const Value: boolean);  override;
+    function GetContourFont: TFont;  override;
+    function GetShowContourLabels: boolean; override;
   public
     procedure DrawHeadObservations(const BitMap: TBitmap32;
       const ZoomBox: TQRbwZoomBox2); override;
+    procedure DrawSfrStreamLinkages(const BitMap: TBitmap32;
+      const ZoomBox: TQRbwZoomBox2);
     procedure UpdateMapping;
     function InitialWaterTableUsed(Sender: TObject): boolean; override;
     function ReservoirLayerUsed(Sender: TObject): boolean; override;
@@ -3162,6 +3223,10 @@ that affects the model output should also have a comment. }
     property CombinedDisplayLayer: integer read GetCombinedDisplayLayer
       write SetCombinedDisplayLayer;
     property SaveBfhBoundaryConditions;
+    property ContourFont;
+    property ShowContourLabels;
+    property SfrStreamLinkPlot: TSfrStreamLinkPlot read FSfrStreamLinkPlot
+      write SetSfrStreamLinkPlot;
   end;
 
   TChildDiscretization = class(TOrderedItem)
@@ -3293,7 +3358,6 @@ that affects the model output should also have a comment. }
     procedure SetHeadRelaxationFactor(const Value: double);
     procedure SetFluxClosureCriterion(const Value: double);
     procedure SetHeadClosureCriterion(const Value: double);
-//    procedure SetOneWayCoupling(const Value: boolean);
     function ConvertIntegerParentArray(ParentArray: TOneDIntegerArray): TOneDIntegerArray;
     function ConvertRealParentArray(ParentArray: TOneDRealArray): TOneDRealArray;
     procedure SetCouplingMethod(const Value: TCouplingMethod);
@@ -3345,6 +3409,10 @@ that affects the model output should also have a comment. }
     procedure WriteHeadClosureCriterion(Writer: TWriter);
     procedure WriteFluxClosureCriterion(Writer: TWriter);
     function GetDisplayName: string; override;
+    procedure SetContourFont(const Value: TFont) ; override;
+    procedure SetShowContourLabels(const Value: boolean);  override;
+    function GetContourFont: TFont;  override;
+    function GetShowContourLabels: boolean; override;
   public
     property CanUpdateGrid: Boolean read FCanUpdateGrid write SetCanUpdateGrid;
     function LayerGroupUsed(LayerGroup: TLayerGroup): boolean; override;
@@ -3402,8 +3470,6 @@ that affects the model output should also have a comment. }
       write SetChildCellsPerParentCell default 3;
     property StartingHeadSource: TStartingHeadSource read FStartingHeadSource
       write SetStartingHeadSource default shsSelf;
-//    property OneWayCoupling: boolean read FOneWayCoupling
-//      write SetOneWayCoupling stored False;
     property CouplingMethod: TCouplingMethod read FCouplingMethod
       write SetCouplingMethod stored True;
     property MaxIterations: integer read FMaxIterations
@@ -3444,7 +3510,6 @@ that affects the model output should also have a comment. }
     procedure SetHeadRelaxationFactor(const Value: double);
     procedure SetFluxClosureCriterion(const Value: double);
     procedure SetHeadClosureCriterion(const Value: double);
-//    procedure SetOneWayCoupling(const Value: boolean);
     procedure SetCouplingMethod(const Value: TCouplingMethod);
   protected
     function IsSame(AnotherItem: TOrderedItem): boolean; override;
@@ -4514,7 +4579,7 @@ const
   //      Bug fix: If you undo and then redo the creation of parameters,
   //        objects that use those parameters will no longer lose them.
   //      Change: It is now possible to select multiple cells in all tables.
-  //    '2.8.0.25' Enhancement: When importing shapefiles, the numbers of any
+  //    '2.8.0.25' Enhancement: When importing Shapefiles, the numbers of any
   //        shapes with multiple parts will be displayed.
   //    '2.8.0.26' ModelMonitor has been updated to work with LGR.
   //    '2.8.0.27' Enhancement: The export image dialog box now has a "Copy
@@ -4752,8 +4817,79 @@ const
   //        from a file that is being used by another program now results in an
   //        error message to the user instead of a bug report.
   //    '2.11.0.0' Enhancement: Added support for GOFAIL option in MODFLOW-NWT.
+  //    '2.11.0.1' Enhancement: When importing an existing MODFLOW model,
+  //        .mfn is now recognized as a valid extension for a MODFLOW name file.
+  //      Bug fix: Previously some erroneous error or warning messages were
+  //        generated for data set values in inactive cells.
+  //      Bug fix: When a background image was replaced with a new one, the
+  //        name of the image stored in ModelMuse is now updated.
+  //      Enhancement: It is now possible to import multiple ASCII raster files
+  //        at one time.
+  //    '2.11.0.2' Enhancement: Added a measurement function that allows the
+  //        user to measure distances easily.
+  //      Enhancement: Contours are now labeled.
+  //      Change: "GOFAIL" option in MODFLOW-NWT has been renamed "CONTINUE".
+  //    '2.11.0.3' Bug fix: In the Object Properties dialog box,
+  //        a "no parameter" checkbox has been added to the beginning of the
+  //        list of parameters for MODFLOW features that allow multiple
+  //        parameters to be used with a single object. The "no parameter"
+  //        check box can be unchecked to turn off the definition of a boundary
+  //        that does not use parameters.
+  //      Bug fix: When a data set defines the multiplier or zone array of a
+  //        MODFLOW parameter, it now is possible to delete the data set if
+  //        the associated parameter is deleted.
+  //      Enhancement: The positions of objects can now be locked so that they
+  //        can't be moved accidentally.
+  //      Change: The multiplier and zone arrays used by the RCH, EVT, and ETS
+  //        packages are now exported to separate files that are accessed
+  //        using the OPEN/CLOSE option. This allows the zone and multiplier
+  //        arrays in other packages to be changed without the need to
+  //        export the RCH, EVT, and ETS packages. The files are stored in
+  //        a subdirectory named "arrays."
+  //      Bug fix: When importing the UZF package from an existing MODFLOW
+  //        model, NUZTOP is now imported correctly.
+  //      Change: The following dialog boxes have been deleted and their
+  //        functionality has been moved to the new Data Visualization
+  //        dialog box: Color Grid, Contour Data, MODPATH Pathline Display,
+  //        MODPATH Endpoint Display, MODPATH Time Series Display, and
+  //        Head Observation Results.
+  //      Enhancement: In the Data Visualization dialog box, it is now possible
+  //        to display linkages between streams in the stream package.
+  //      Bug fix: When editing objects that define SFR streams, the controls
+  //        for editing multiple cells in tables are now positioned properly.
+  //      Bug fix: Fixed a bug that caused access violations when the system
+  //        color was changed.
+  //    '2.11.0.4' Bug fix. Exporting a grid data to a shape file for data sets
+  //        whose names are longer than 10 chanracters now works properly.
+  //    '2.11.0.5' Change: The zone and multiplier arrays files for
+  //        RCH, EVT, and ETS are stored in a subdirectory named "arrays."
+  //    '2.12.0.0' Change: In the NWT solver, the default value for flux
+  //        tolerance has been increased from 0.006 to 0.06
+  //      Bug fix: Deleting data sets and then opening another ModelMuse project
+  //        no longer results in an assertion failure.
+  //      Bug fix: Fixed a problem with invalid cast errors in PHAST models
+  //        when creating or editing objects.
+  //      Enhancement: In the Manage Head Observations dialog box, the user
+  //        can now select multiple rows and then click the "Highlight selected
+  //        objects" button to select all the objects that define objects
+  //        on the selected rows.
+  //      Enhancement: In the Head Observation Results pane of the
+  //        Data Visualization dialog box, the data can be sorted by clicking
+  //        on the column headers
+  //      Enhancement: In the Head Observation Results pane of the
+  //        Data Visualization dialog box, the objects that define the
+  //        observations in the selected row of the results table can be
+  //        selected by clicking the "Highlight selected objects" button.
+  //      Bug fix: Attempting to read an invalid ModelMate file now generates
+  //        a warning message instead of a bug report.
+  //      Bug fix: Attempting to open a ModelMuse file with a length of zero
+  //        now results in an error message to the user rather than a bug
+  //        report.
+  //      Bug fix: In the PHAST Print Frequency dialog box, it is no longer
+  //        possible to delete all the columns in the table.
 
-  ModelVersion = '2.11.0.0';
+
+  ModelVersion = '2.12.0.0';
   StrPvalExt = '.pval';
   StrJtf = '.jtf';
   StandardLock : TDataLock = [dcName, dcType, dcOrientation, dcEvaluatedAt];
@@ -4831,7 +4967,8 @@ uses StrUtils, Dialogs, OpenGL12x, Math, frmGoPhastUnit, UndoItems,
   ModflowSUB_Writer, ZoneBudgetWriterUnit, MODFLOW_SwtWriterUnit,
   ModflowHydmodWriterUnit, IniFileUtilities, TempFiles, AbExcept,
   ModflowLakUnit, ModflowLgr_WriterUnit, ModflowNWT_WriterUnit,
-  ModflowUPW_WriterUnit;
+  ModflowUPW_WriterUnit, frmCustomGoPhastUnit, ModflowSfrParamIcalcUnit,
+  BigCanvasMethods;
 
 resourcestring
   StrProgramLocations = 'Program Locations';
@@ -5297,6 +5434,7 @@ begin
     ModflowTransientParameters := SourceModel.ModflowTransientParameters;
     ModflowOutputControl := SourceModel.ModflowOutputControl;
     DataSetList := SourceModel.DataSetList;
+    SfrStreamLinkPlot := SourceModel.SfrStreamLinkPlot;
   end;
   inherited;
 
@@ -5363,6 +5501,8 @@ begin
 end;
 
 constructor TPhastModel.Create(AnOwner: TComponent);
+var
+  ChangeNotifier: IChangeNotifier;
 begin
   inherited;
   FSaveBfhBoundaryConditions := True;
@@ -5387,16 +5527,12 @@ begin
 
   FContourColors := TColorParameters.Create;
 
-
   FSelectedScreenObjectCount := 0;
   FClearing := False;
-
 
   FProgramLocations := TProgramLocations.Create;
 
   FCachedScreenObjectIndex := -1;
-
-
 
   FLayerStructure := TLayerStructure.Create(self);
   FBitmaps := TCompressedBitmapCollection.Create;
@@ -5481,6 +5617,12 @@ begin
 //  ModelSelection := msPhast;
   FDataArrayManager.CreateInitialDataSets;
 
+  FContourFont := TFont.Create;
+  ChangeNotifier := TFontChangeNotifyier.Create(self, FContourFont);
+  FContourFont.FontAdapter := ChangeNotifier;
+  FShowContourLabels := True;
+
+  FSfrStreamLinkPlot := TSfrStreamLinkPlot.Create(self);
 end;
 
 procedure TPhastModel.CreateArchive(const FileName: string; const ArchiveCommand: string = '');
@@ -5668,6 +5810,7 @@ begin
       FClearing := False;
     end;
 
+    FSfrStreamLinkPlot.Free;
     FChildModels.Free;
     FTimeSeries.Free;
     FEndPoints.Free;
@@ -5801,6 +5944,7 @@ begin
     FColorLegend.Free;
     FContourLegend.Free;
     FDisplaySettings.Free;
+    FContourFont.Free;
   finally
     FreeAndNil(frmFileProgress);
   end;
@@ -5875,6 +6019,11 @@ end;
 function TPhastModel.GetSelectedModel: TCustomModel;
 begin
   result := FSelectedModel
+end;
+
+function TPhastModel.GetShowContourLabels: boolean;
+begin
+  result := FShowContourLabels
 end;
 
 function TCustomModel.HufDataArrayUsed(Sender: TObject): boolean;
@@ -6213,6 +6362,10 @@ begin
   FreeAndNil(FPathline);
   FreeAndNil(FEndPoints);
   FreeAndNil(FTimeSeries);
+  if GlobalFont <> nil then
+  begin
+    ContourFont := GlobalFont;
+  end;
 
   Invalidate;
   inherited;
@@ -6585,11 +6738,6 @@ begin
   result := FModflowFullStressPeriods;
 end;
 
-//function TPhastModel.GetModflowOptions: TModflowOptions;
-//begin
-//  result := FModflowOptions;
-//end;
-
 function TPhastModel.GetModflowOutputControl: TModflowOutputControl;
 begin
   result := FModflowOutputControl;
@@ -6915,7 +7063,7 @@ end;
 procedure TPhastModel.SetNeedToRecalculateFrontCellColors(const Value: boolean);
 var
   ChildIndex: Integer;
-  ChildGrid: TCustomGrid;
+  ChildGrid: TCustomModelGrid;
   ChildModel: TChildModel;
 begin
   Grid.NeedToRecalculateFrontCellColors := Value;
@@ -6936,7 +7084,7 @@ end;
 procedure TPhastModel.SetNeedToRecalculateSideCellColors(const Value: boolean);
 var
   ChildIndex: Integer;
-  ChildGrid: TCustomGrid;
+  ChildGrid: TCustomModelGrid;
   ChildModel: TChildModel;
 begin
   Grid.NeedToRecalculateSideCellColors := Value;
@@ -6957,7 +7105,7 @@ end;
 procedure TPhastModel.SetNeedToRecalculateTopCellColors(const Value: boolean);
 var
   ChildIndex: Integer;
-  ChildGrid: TCustomGrid;
+  ChildGrid: TCustomModelGrid;
   ChildModel: TChildModel;
 begin
   Grid.NeedToRecalculateTopCellColors := Value;
@@ -7254,54 +7402,6 @@ function TPhastModel.GetVersion: string;
 begin
   result := ModelVersion;
 end;
-
-//procedure TPhastModel.UpdateCachedData;
-//  procedure UpdateDataArrays(ADataArrayManager: TDataArrayManager);
-////  var
-////    DataArrayIndex: Integer;
-////    DataArray: TDataArray;
-//  begin
-//    ADataArrayManager.InvalidateAllDataSets;
-////    for DataArrayIndex := 0 to ADataArrayManager.DataSetCount - 1 do
-////    begin
-////      DataArray := ADataArrayManager.DataSets[DataArrayIndex];
-////      DataArray.UnicodeSaved := False;
-////    end;
-////    for DataArrayIndex := 0 to ADataArrayManager.BoundaryDataSetCount - 1 do
-////    begin
-////      DataArray := ADataArrayManager.BoundaryDataSets[DataArrayIndex];
-////      DataArray.UnicodeSaved := False;
-////    end;
-//  end;
-//var
-//  ChildIndex: Integer;
-//  ChildModel: TChildModel;
-////  Index: Integer;
-//begin
-//  if FileVersionEqualOrEarlier('2.9.1.2') then
-//  begin
-//    UpdateDataArrays(DataArrayManager);
-//    for ChildIndex := 0 to ChildModels.Count - 1 do
-//    begin
-//      ChildModel := ChildModels[ChildIndex].ChildModel;
-//      if (ChildModel <> nil) and (ChildModel.DataArrayManager <> nil) then
-//      begin
-//        UpdateDataArrays(ChildModel.DataArrayManager);
-//      end;
-//    end;
-////    Grid.GridChanged;
-////    ModflowGrid.NotifyGridChanged(nil);
-////    for ChildIndex := 0 to ChildModels.Count - 1 do
-////    begin
-////      ChildModel := ChildModels[ChildIndex].ChildModel;
-////      if (ChildModel <> nil) and (ChildModel.Grid <> nil) then
-////      begin
-////        ChildModel.Grid.GridChanged;
-////        ChildModel.ModflowGrid.NotifyGridChanged(nil);
-////      end;
-////    end;
-//  end;
-//end;
 
 procedure TPhastModel.SetVersion(const Value: string);
 begin
@@ -8058,6 +8158,11 @@ begin
   begin
     result := Grid.DisplayRow;
   end;
+end;
+
+function TPhastModel.GetContourFont: TFont;
+begin
+  result := FContourFont
 end;
 
 function TPhastModel.GetCurrentScreenObject(VD: TViewDirection): TScreenObject;
@@ -10243,7 +10348,6 @@ var
   LakeIDArray: TDataArray;
   ModflowLakBoundary: TLakBoundary;
 begin
-//  UpdateCachedData;
   if (Grid.GridAngle <> 0)
     and FileVersionEqualOrEarlier('2.6.0.3')
     and (FormulaManager.FunctionUsed(StrVertexInterpolate)
@@ -10319,6 +10423,12 @@ begin
     // versions '2.6.0.3' and earlier if the grid was rotated.
     // NodeInterpolate is a synonym for VertexInterpolate.
     FDataArrayManager.InvalidateAllDataSets;
+  end;
+
+  if FileVersionEqualOrEarlier('2.11.0.5')
+    and not ModflowPackages.NwtPackage.IsSelected then
+  begin
+    ModflowPackages.NwtPackage.FluxTolerance.Value := 0.06;
   end;
 
 end;
@@ -11577,6 +11687,15 @@ begin
   FSelectedModel := Value;
 end;
 
+procedure TPhastModel.SetSfrStreamLinkPlot(const Value: TSfrStreamLinkPlot);
+begin
+  FSfrStreamLinkPlot.Assign(Value);
+end;
+
+procedure TPhastModel.SetShowContourLabels(const Value: boolean);
+begin
+  FShowContourLabels := Value;
+end;
 
 procedure TPhastModel.UpdateThreeDTimeDataSet(const TimeList: TCustomTimeList;
   const Time: double);
@@ -11727,6 +11846,177 @@ begin
   begin
     AScreenObject := ScreenObjects[Index];
     AScreenObject.Draw3D;
+  end;
+end;
+
+procedure TPhastModel.DrawSfrStreamLinkages(const BitMap: TBitmap32;
+  const ZoomBox: TQRbwZoomBox2);
+const
+  SquareSize = 6;
+var
+  StreamList: TSfrStreamPlotList;
+  LakeList: TLakePlotList;
+  StreamNumbers: TIntegerList;
+  LakeNumbers: TIntegerList;
+  Index: Integer;
+  StreamToPlot: TSfrStreamPlot;
+  LakeToPlot: TLakePlot;
+  StreamIndex: Integer;
+  OtherStream: TSfrStreamPlot;
+  LakeIndex: Integer;
+  UpstreamPoint: TPoint2D;
+  Points: array[0..1] of TPoint;
+  DownstreamPoint: TPoint2D;
+  StreamColor: TColor32;
+  DiversionColor: TColor32;
+  UnconnectedColor: TColor32;
+  DownstreamObject: TScreenObject;
+  UpstreamObject: TScreenObject;
+  StreamObject: TScreenObject;
+begin
+  inherited;
+  StreamList := TSfrStreamPlotList.Create;
+  LakeList := TLakePlotList.Create;
+  try
+    SfrStreamLinkPlot.GetObjectsToPlot(StreamList, LakeList);
+    if StreamList.Count > 0 then
+    begin
+      StreamColor := Color32(SfrStreamLinkPlot.StreamColor);
+      DiversionColor := Color32(SfrStreamLinkPlot.DiversionColor);
+      UnconnectedColor := Color32(SfrStreamLinkPlot.UnconnectedColor);
+
+      StreamNumbers := TIntegerList.Create;
+      LakeNumbers := TIntegerList.Create;
+      try
+        for Index := 0 to StreamList.Count - 1 do
+        begin
+          StreamToPlot := StreamList[Index];
+          StreamNumbers.Add(StreamToPlot.Segment);
+        end;
+        StreamNumbers.Sorted := True;
+        for Index := 0 to LakeList.Count - 1 do
+        begin
+          LakeToPlot := LakeList[Index];
+          LakeNumbers.Add(LakeToPlot.LakeId);
+        end;
+        LakeNumbers.Sorted := True;
+        for Index := 0 to StreamList.Count - 1 do
+        begin
+          StreamToPlot := StreamList[Index];
+          if SfrStreamLinkPlot.PlotUnconnected then
+          begin
+            if StreamToPlot.OutflowSegment = 0 then
+            begin
+              StreamObject := StreamToPlot.StreamObject as TScreenObject;
+              UpstreamPoint := StreamObject.Points[StreamObject.Count-1];
+              Points[0].X := ZoomBox.XCoord(UpstreamPoint.x);
+              Points[0].Y := ZoomBox.YCoord(UpstreamPoint.y);
+              DrawBigRectangle32(BitMap, UnconnectedColor, UnconnectedColor, 1,
+                Points[0].X - SquareSize, Points[0].Y - SquareSize,
+                Points[0].X + SquareSize, Points[0].Y + SquareSize);
+            end;
+          end;
+          if SfrStreamLinkPlot.PlotStreamConnections then
+          begin
+            DownstreamObject := nil;
+            if StreamToPlot.OutflowSegment > 0 then
+            begin
+              StreamIndex := StreamNumbers.IndexOf(StreamToPlot.OutflowSegment);
+              if StreamIndex >= 0 then
+              begin
+                OtherStream := StreamList[StreamIndex];
+                DownstreamObject := OtherStream.StreamObject as TScreenObject;
+                Assert(StreamToPlot.OutflowSegment = OtherStream.Segment)
+              end;
+            end
+            else if StreamToPlot.OutflowSegment < 0 then
+            begin
+              LakeIndex := LakeNumbers.IndexOf(-StreamToPlot.OutflowSegment);
+              if LakeIndex >= 0 then
+              begin
+                LakeToPlot := LakeList[LakeIndex];
+                DownstreamObject := LakeToPlot.LakeObject as TScreenObject;
+                Assert(-StreamToPlot.OutflowSegment = LakeToPlot.LakeId)
+              end;
+            end;
+            if DownstreamObject <> nil then
+            begin
+              StreamObject := StreamToPlot.StreamObject as TScreenObject;
+              UpstreamPoint := StreamObject.Points[StreamObject.Count-1];
+              Points[0].X := ZoomBox.XCoord(UpstreamPoint.x);
+              Points[0].Y := ZoomBox.YCoord(UpstreamPoint.y);
+
+              DownstreamPoint := DownstreamObject.Points[0];
+              Points[1].X := ZoomBox.XCoord(DownstreamPoint.x);
+              Points[1].Y := ZoomBox.YCoord(DownstreamPoint.y);
+
+              if (Points[0].X = Points[1].X) and (Points[0].Y = Points[1].Y) then
+              begin
+                DrawBigRectangle32(BitMap, StreamColor, StreamColor, 1,
+                  Points[0].X - SquareSize, Points[0].Y - SquareSize,
+                  Points[0].X + SquareSize, Points[0].Y + SquareSize);
+              end
+              else
+              begin
+                DrawBigPolyline32(BitMap, StreamColor, 2, Points, True);
+              end;
+            end;
+          end;
+          if SfrStreamLinkPlot.PlotDiversions then
+          begin
+            UpstreamObject := nil;
+            if StreamToPlot.DiversionSegment > 0 then
+            begin
+              StreamIndex := StreamNumbers.IndexOf(StreamToPlot.DiversionSegment);
+              if StreamIndex >= 0 then
+              begin
+                OtherStream := StreamList[StreamIndex];
+                UpstreamObject := OtherStream.StreamObject as TScreenObject;
+                Assert(StreamToPlot.DiversionSegment = OtherStream.Segment)
+              end;
+            end
+            else if StreamToPlot.DiversionSegment < 0 then
+            begin
+              LakeIndex := LakeNumbers.IndexOf(-StreamToPlot.DiversionSegment);
+              if LakeIndex >= 0 then
+              begin
+                LakeToPlot := LakeList[LakeIndex];
+                UpstreamObject := LakeToPlot.LakeObject as TScreenObject;
+                Assert(-StreamToPlot.DiversionSegment = LakeToPlot.LakeId)
+              end;
+            end;
+            if UpstreamObject <> nil then
+            begin
+              UpstreamPoint := UpstreamObject.Points[UpstreamObject.Count-1];
+              Points[0].X := ZoomBox.XCoord(UpstreamPoint.x);
+              Points[0].Y := ZoomBox.YCoord(UpstreamPoint.y);
+
+              StreamObject := StreamToPlot.StreamObject as TScreenObject;
+              DownstreamPoint := StreamObject.Points[0];
+              Points[1].X := ZoomBox.XCoord(DownstreamPoint.x);
+              Points[1].Y := ZoomBox.YCoord(DownstreamPoint.y);
+
+              if (Points[0].X = Points[1].X) and (Points[0].Y = Points[1].Y) then
+              begin
+                DrawBigRectangle32(BitMap, DiversionColor, DiversionColor, 1,
+                  Points[0].X - SquareSize, Points[0].Y - SquareSize,
+                  Points[0].X + SquareSize, Points[0].Y + SquareSize);
+              end
+              else
+              begin
+                DrawBigPolyline32(BitMap, DiversionColor, 2, Points, True);
+              end;
+            end;
+          end;
+        end;
+      finally
+        LakeNumbers.Free;
+        StreamNumbers.Free;
+      end;
+    end;
+  finally
+    LakeList.Free;
+    StreamList.Free;
   end;
 end;
 
@@ -13261,6 +13551,11 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TPhastModel.SetContourFont(const Value: TFont);
+begin
+  FContourFont.Assign(Value);
 end;
 
 procedure TPhastModel.SetUnits(const Value: TUnits);
@@ -17573,7 +17868,7 @@ var
   ChildDataArray: TDataArray;
   DeletedIndex: Integer;
   TestDataArray: TDataArray;
-  ChildGrid: TCustomGrid;
+  ChildGrid: TCustomModelGrid;
 begin
   for Index := 0 to AddedDataSetList.Count - 1 do
   begin
@@ -17790,7 +18085,7 @@ procedure TDataArrayManager.UpdateDataSetDimensions;
 var
   Index: integer;
   DataSet: TDataArray;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   Manager: TDataArrayManager;
 begin
   Grid := FCustomModel.Grid;
@@ -17881,6 +18176,7 @@ begin
     ModflowWettingOptions := SourceModel.ModflowWettingOptions;
     GlobalVariables := SourceModel.GlobalVariables;
     ModflowOptions := SourceModel.ModflowOptions;
+    HeadObsResults := SourceModel.HeadObsResults;
   end
   else
   begin
@@ -18339,55 +18635,57 @@ begin
   result := nil;
   CachedDataArray := nil;
   try
-  DataArray.ComputeHash;
-  // First check the most likely result.
-  if (CachedIndex > 0)
-    and (CachedIndex < DataArrays.Count) then
-  begin
-    CachedDataArray := DataArrays[CachedIndex];
-    if CachedDataArray.Hash = DataArray.Hash then
+    DataArray.ComputeHash;
+    // First check the most likely result.
+    if (CachedIndex > 0)
+      and (CachedIndex < DataArrays.Count) then
     begin
-      // If the Hash's are identical it is extremely likely
-      // but not certain that the data are identical too.
-      // Compare the two arrays to make absolutely sure they are
-      // the same.
-      if DataArray.IdenticalDataArrayContents(CachedDataArray) then
+      CachedDataArray := DataArrays[CachedIndex];
+      if CachedDataArray.Hash = DataArray.Hash then
       begin
-        result := CachedDataArray;
-        CachedDataArray := nil;
-        Exit;
+        // If the Hash's are identical it is extremely likely
+        // but not certain that the data are identical too.
+        // Compare the two arrays to make absolutely sure they are
+        // the same.
+        if DataArray.IdenticalDataArrayContents(CachedDataArray) then
+        begin
+          result := CachedDataArray;
+          CachedDataArray := nil;
+          Exit;
+        end;
       end;
     end;
-  end;
-  // No identical array was found so check all the arrays in the list.
-  for Index := 0 to DataArrays.Count - 1 do
-  begin
-    if Index = CachedIndex then
+    // No identical array was found so check all the arrays in the list.
+    // The most recent array is the one most likely to be identical.
+    for Index := DataArrays.Count - 1 downto 0 do
     begin
-      // This one has already been checked so skip it.
-      Continue;
-    end;
-    ADataArray := DataArrays[Index];
-    if ADataArray.Hash = DataArray.Hash then
-    begin
-      if DataArray.IdenticalDataArrayContents(ADataArray) then
+      if Index = CachedIndex then
       begin
-        result := ADataArray;
-        CachedIndex := Index;
-        Exit;
+        // This one has already been checked so skip it.
+        Continue;
       end;
-      // ADataArray had the same Hash as DataArray.
-      // The data had to be restored to to compare it's contents
-      // so Cache it again.
-      ADataArray.CacheData;
+      ADataArray := DataArrays[Index];
+      if ADataArray.Hash = DataArray.Hash then
+      begin
+        if DataArray.IdenticalDataArrayContents(ADataArray) then
+        begin
+          result := ADataArray;
+          CachedIndex := Index;
+          Exit;
+        end;
+        // ADataArray had the same Hash as DataArray.
+        // The data had to be restored to to compare it's contents
+        // so Cache it again.
+        ADataArray.CacheData;
+      end;
     end;
-  end;
 
   finally
     if (CachedDataArray <> nil) and (result <> nil) then
     begin
-      // A different DataArray was found so cache the data
-      // from the previous one.
+      // a different data array was found so CachedDataArray
+      // won't be checked first next time.
+      // Cache its data.
       CachedDataArray.CacheData;
     end;
   end;
@@ -21697,6 +21995,11 @@ begin
   result := ParentModel.GetChemistryOptions;
 end;
 
+function TChildModel.GetContourFont: TFont;
+begin
+  result := ParentModel.GetContourFont;
+end;
+
 function TChildModel.GetDisplayName: string;
 begin
   result := ModelName;
@@ -21867,6 +22170,11 @@ begin
   result := ParentModel.SelectedModel;
 end;
 
+function TChildModel.GetShowContourLabels: boolean;
+begin
+  result := ParentModel.GetShowContourLabels;
+end;
+
 function TChildModel.GetSoluteTransport: boolean;
 begin
   result := ParentModel.GetSoluteTransport
@@ -21976,6 +22284,11 @@ begin
     UpdateGrid;
     Invalidate;
   end;
+end;
+
+procedure TChildModel.SetContourFont(const Value: TFont);
+begin
+  ParentModel.ContourFont := Value;
 end;
 
 procedure TChildModel.SetCouplingMethod(const Value: TCouplingMethod);
@@ -22120,16 +22433,6 @@ begin
   ParentModel.SetObservationPurpose(Value);
 end;
 
-//procedure TChildModel.SetOneWayCoupling(const Value: boolean);
-//begin
-//  CouplingMethod := TCouplingMethod(Ord(Value));
-////  if FOneWayCoupling <> Value then
-////  begin
-////    FOneWayCoupling := Value;
-////    Invalidate;
-////  end;
-//end;
-
 procedure TChildModel.SetProgramLocations(const Value: TProgramLocations);
 begin
   ParentModel.SetProgramLocations(Value);
@@ -22143,6 +22446,11 @@ end;
 procedure TChildModel.SetSelectedModel(const Value: TCustomModel);
 begin
   ParentModel.SelectedModel := Value;
+end;
+
+procedure TChildModel.SetShowContourLabels(const Value: boolean);
+begin
+  ParentModel.ShowContourLabels := Value;
 end;
 
 procedure TChildModel.SetSoluteTransport(const Value: boolean);
@@ -23279,11 +23587,6 @@ begin
   FModelName := Value;
 end;
 
-//procedure TChildModelEdit.SetOneWayCoupling(const Value: boolean);
-//begin
-//  CouplingMethod := TCouplingMethod(Ord(Value));
-//end;
-
 procedure TChildModelEdit.SetStartingHeadSource(
   const Value: TStartingHeadSource);
 begin
@@ -23297,9 +23600,211 @@ begin
   inherited Create(TChildModelEdit, nil);
 end;
 
+{ TFontChangeNotifyier }
+
+procedure TFontChangeNotifyier.Changed;
+begin
+  FModel.Invalidate;
+end;
+
+constructor TFontChangeNotifyier.Create(AModel: TCustomModel; AFont: TFont);
+begin
+  inherited Create(AFont);
+  FModel := AModel;
+end;
+
+{ TStreamLinkPlot }
+
+//procedure TSfrStreamLinkPlot.Assign(Source: TPersistent);
+//var
+//  SourceStreamLink: TSfrStreamLinkPlot;
+//begin
+//  if Source is TSfrStreamLinkPlot then
+//  begin
+//    SourceStreamLink := TSfrStreamLinkPlot(Source);
+//    PlotStreamConnections := SourceStreamLink.PlotStreamConnections;
+//    PlotDiversions := SourceStreamLink.PlotDiversions;
+//    StreamColor := SourceStreamLink.StreamColor;
+//    DiversionColor := SourceStreamLink.DiversionColor;
+//    StreamsToPlot := SourceStreamLink.StreamsToPlot;
+//    TimeToPlot := SourceStreamLink.TimeToPlot;
+//    PlotUnconnected := SourceStreamLink.PlotUnconnected;
+//    UnconnectedColor := SourceStreamLink.UnconnectedColor;
+//  end
+//  else
+//  begin
+//    inherited;
+//  end;
+//end;
+//
+//constructor TSfrStreamLinkPlot.Create(Model: TBaseModel);
+//begin
+//  inherited;
+//  FStreamColor := clBlue;
+//  FDiversionColor := clLime;
+//  FUnconnectedColor := clRed;
+//  FPlotStreamConnections := True;
+//  FPlotDiversions := True;
+//  FPlotUnconnected := True;
+//end;
+//
+//procedure TSfrStreamLinkPlot.GetObjectsToPlot(StreamList: TSfrStreamPlotList;
+//  LakeList: TLakePlotList);
+//var
+//  LocalModel: TPhastModel;
+//  Index : integer;
+//  ScreenObject: TScreenObject;
+//  SfrBoundary: TSfrBoundary;
+//  Item: TSfrParamIcalcItem;
+//  StreamPlot: TSfrStreamPlot;
+//  LakBoundary: TLakBoundary;
+//  Lake: TLakePlot;
+//begin
+//  StreamList.Clear;
+//  LakeList.Clear;
+//  if StreamsToPlot <> stpNone then
+//  begin
+//    LocalModel := FModel as TPhastModel;
+//    if not LocalModel.SfrIsSelected then
+//    begin
+//      Exit;
+//    end;
+//    for Index := 0 to LocalModel.ScreenObjectCount - 1 do
+//    begin
+//      ScreenObject := LocalModel.ScreenObjects[Index];
+//      if ScreenObject.Deleted then
+//      begin
+//        Continue;
+//      end;
+//      case StreamsToPlot of
+//        stpVisible:
+//          begin
+//            if not ScreenObject.Visible then
+//            begin
+//              Continue;
+//            end;
+//          end;
+//        stpSelected:
+//          begin
+//            if not ScreenObject.Selected then
+//            begin
+//              Continue;
+//            end;
+//          end;
+//      end;
+//      SfrBoundary := ScreenObject.ModflowBoundaries.ModflowSfrBoundary;
+//      if SfrBoundary <> nil then
+//      begin
+//        Item := SfrBoundary.ParamIcalc.GetItemByStartTime(TimeToPlot);
+//        if Item <> nil then
+//        begin
+//          StreamPlot := TSfrStreamPlot.Create;
+//          StreamPlot.StreamObject := ScreenObject;
+//          StreamPlot.Segment := SfrBoundary.SegementNumber;
+//          StreamPlot.OutflowSegment := Item.OutflowSegment;
+//          StreamPlot.DiversionSegment := Item.DiversionSegment;
+//          StreamList.Add(StreamPlot);
+//        end;
+//      end;
+//      if LocalModel.LakIsSelected then
+//      begin
+//        LakBoundary := ScreenObject.ModflowBoundaries.ModflowLakBoundary;
+//        if LakBoundary <> nil then
+//        begin
+//          Lake := TLakePlot.Create;
+//          Lake.LakeObject := ScreenObject;
+//          Lake.LakeId := LakBoundary.LakeID;
+//          LakeList.Add(Lake);
+//        end;
+//      end;
+//    end;
+//    StreamList.Sort;
+//    LakeList.Sort;
+//  end;
+//end;
+//
+//procedure TSfrStreamLinkPlot.SetDiversionColor(const Value: TColor);
+//begin
+//  SetColorProperty(FDiversionColor, Value);
+//end;
+//
+//procedure TSfrStreamLinkPlot.SetPlotDiversions(const Value: boolean);
+//begin
+//  SetBooleanProperty(FPlotDiversions, Value);
+//end;
+//
+//procedure TSfrStreamLinkPlot.SetPlotStreamConnections(const Value: boolean);
+//begin
+//  SetBooleanProperty(FPlotStreamConnections, Value);
+//end;
+//
+//procedure TSfrStreamLinkPlot.SetPlotUnconnected(const Value: Boolean);
+//begin
+//  SetBooleanProperty(FPlotUnconnected, Value);
+//end;
+//
+//procedure TSfrStreamLinkPlot.SetStreamColor(const Value: TColor);
+//begin
+//  SetColorProperty(FStreamColor, Value);
+//end;
+//
+//procedure TSfrStreamLinkPlot.SetStreamsToPlot(const Value: TStreamsToPlot);
+//begin
+//  if FStreamsToPlot <> Value then
+//  begin
+//    FStreamsToPlot := Value;
+//  end;
+//end;
+//
+//procedure TSfrStreamLinkPlot.SetTimeToPlot(const Value: TDateTime);
+//begin
+//  SetDataTimeProperty(FTimeToPlot, Value);
+//end;
+//
+//procedure TSfrStreamLinkPlot.SetUnconnectedColor(const Value: TColor);
+//begin
+//  SetColorProperty(FUnconnectedColor, Value);
+//end;
+
+{ TStreamPlotList }
+
+//procedure TSfrStreamPlotList.Sort;
+//var
+//  Comparer: IComparer<TSfrStreamPlot>;
+//begin
+//  Comparer:= TSfrStreamPlotComparer.Create;
+//  inherited Sort(Comparer);
+//end;
+
+{ TLakePlotList }
+
+//procedure TLakePlotList.Sort;
+//var
+//  Comparer: IComparer<TLakePlot>;
+//begin
+//  Comparer:= TSfrLakePlotComparer.Create;
+//  inherited Sort(Comparer);
+//end;
+
+{ TSfrStreamPlotComparer }
+
+//function TSfrStreamPlotComparer.Compare(const Left,
+//  Right: TSfrStreamPlot): Integer;
+//begin
+//  result := Left.Segment - Right.Segment;
+//end;
+
+{ TSfrLakePlotComparer }
+
+//function TSfrLakePlotComparer.Compare(const Left, Right: TLakePlot): Integer;
+//begin
+//  result := Left.LakeId - Right.LakeId;
+//end;
+
 initialization
   RegisterClass(TPhastModel);
   RegisterClass(TChildModel);
 
 end.
+
 

@@ -3,32 +3,36 @@ unit ModflowMultiplierZoneWriterUnit;
 interface
 
 uses LayerStructureUnit, Classes, PhastModelUnit, SysUtils, HufDefinition,
-  CustomModflowWriterUnit, ModflowParameterUnit, DataSetUnit, GoPhastTypes;
+  CustomModflowWriterUnit, ModflowParameterUnit, DataSetUnit, GoPhastTypes,
+  ModflowPackageSelectionUnit;
 
 type
   TCustomMultZoneWriter = class(TCustomModflowWriter)
+  private
+    FNameOfFile: string;
   protected
     FFileUnit: integer;
     FFileType: string;
     procedure WriteDataSet0; virtual; abstract;
     procedure WriteDataSet1; virtual; abstract;
     function UseSteadyParameter(Param: TModflowSteadyParameter): boolean;
-      virtual; 
+      virtual;
     function GetDataArray(Param: TModflowSteadyParameter): TDataArray;
       virtual; abstract;
     function GetArrayName(Param: TModflowSteadyParameter;
       LayerIndex: integer; AModel: TBaseModel): string; virtual; abstract;
     function ArrayUsed(const ArrayName: string): boolean; virtual; abstract;
-    function ArrayType: string; virtual; abstract;
     function DataSet2Comment: string; virtual; abstract;
     procedure WriteDataSets2And3;
     function NumberOfArrays: integer; virtual; abstract;
     property FileType : string read FFileType;
     property FileUnit : integer read FFileUnit;
-    function TransientArrayList: TList; virtual; abstract;
     function UsesHufParam(UsedParam: THufUsedParameter;
       var ArrayName: string; var DataArray: TDataArray): boolean; virtual;
+    procedure WriteTransientPackageArrays(TransPackage: TCustomTransientLayerPackageSelection); virtual; abstract;
+    procedure WriteTransientArrays;
   public
+    class function ArrayType: string; virtual; abstract;
     function WriteFile(const AFileName: string): boolean;
   end;
 
@@ -43,19 +47,20 @@ type
     function GetArrayName(Param: TModflowSteadyParameter;
       LayerIndex: integer; AModel: TBaseModel): string; override;
     function ArrayUsed(const ArrayName: string): boolean; override;
-    function ArrayType: string; override;
     function DataSet2Comment: string; override;
     class function Extension: string; override;
     function NumberOfArrays: integer; override;
-    function TransientArrayList: TList; override;
     function UsesHufParam(UsedParam: THufUsedParameter;
       var ArrayName: string; var DataArray: TDataArray): boolean; override;
+    procedure WriteTransientPackageArrays(TransPackage: TCustomTransientLayerPackageSelection); override;
   public
+    class function ArrayType: string; override;
     Constructor Create(AModel: TCustomModel; EvaluationType: TEvaluationType); override;
   end;
 
   TModflowMultiplierWriter = class(TCustomMultZoneWriter)
   protected
+    procedure WriteTransientPackageArrays(TransPackage: TCustomTransientLayerPackageSelection); override;
     procedure WriteDataSet0; override;
     procedure WriteDataSet1; override;
     function UseSteadyParameter(Param: TModflowSteadyParameter): boolean;
@@ -65,21 +70,20 @@ type
     function GetArrayName(Param: TModflowSteadyParameter;
       LayerIndex: integer; AModel: TBaseModel): string; override;
     function ArrayUsed(const ArrayName: string): boolean; override;
-    function ArrayType: string; override;
     function DataSet2Comment: string; override;
     class function Extension: string; override;
     function NumberOfArrays: integer; override;
-    function TransientArrayList: TList; override;
     function UsesHufParam(UsedParam: THufUsedParameter;
       var ArrayName: string; var DataArray: TDataArray): boolean; override;
   public
+    class function ArrayType: string; override;
     Constructor Create(AModel: TCustomModel; EvaluationType: TEvaluationType); override;
   end;
 
 implementation
 
 uses frmErrorsAndWarningsUnit, OrderedCollectionUnit, ModflowUnitNumbers, 
-  frmProgressUnit, Forms;
+  frmProgressUnit, Forms, frmGoPhastUnit;
 
 { TCustomMultZoneWriter }
 
@@ -155,13 +159,15 @@ var
   DataArray: TDataArray;
   Param: TModflowSteadyParameter;
   ParamIndex: Integer;
-  TransientList: TList;
-  Index: Integer;
-  Limit: Integer;
+//  TransientList: TList;
+//  Index: Integer;
+//  Limit: Integer;
   HGU: THydrogeologicUnit;
   UnitIndex: Integer;
   UsedParam: THufUsedParameter;
   Description: string;
+//  TransientArrayWriter: TTransientArrayWriter;
+//  TransientArrayFileName: string;
 begin
   LayerCount := Model.ModflowLayerCount;
   for ParamIndex := 0 to Model.ModflowSteadyParameters.Count - 1 do
@@ -236,57 +242,57 @@ begin
     end;
   end;
 
-  TransientList := TransientArrayList;
-  for Index := 0 to TransientList.Count - 1 do
-  begin
-    Application.ProcessMessages;
-    if not frmProgressMM.ShouldContinue then
-    begin
-      Exit;
-    end;
-    DataArray := TransientList[Index];
-    if DataArray.LayerCount = 1 then
-    begin
-      Limit := 1;
-    end
-    else
-    begin
-      Limit := LayerCount;
-    end;
+  WriteTransientArrays;
 
-    for LayerIndex := 1 to Limit do
-    begin
-      ArrayName := DataArray.Name;
-      Assert(ArrayName <> '');
-      if DataArray.LayerCount > 1 then
-      begin
-        ArrayName := ArrayName + '_' + IntToStr(LayerIndex);
-      end;
-      While Length(ArrayName) < 10 do
-      begin
-        ArrayName := ArrayName + ' ';
-      end;
-      Assert(Length(ArrayName) = 10); 
-
-          // Data set 2;
-      WriteString(ArrayName);
-      WriteString(DataSet2Comment);
-      NewLine;
-
-      // Data set 3
-      ArrayIndex := Model.
-        ModflowLayerToDataSetLayer(LayerIndex);
-
-      WriteArray(DataArray, ArrayIndex, ArrayType + ' array ' + ArrayName);
-    end;
-    Model.DataArrayManager.CacheDataArrays;
-    DataArray.CacheData;
-  end;
+//  TransientList := TransientArrayList;
+//  for Index := 0 to TransientList.Count - 1 do
+//  begin
+//    Application.ProcessMessages;
+//    if not frmProgressMM.ShouldContinue then
+//    begin
+//      Exit;
+//    end;
+//    DataArray := TransientList[Index];
+//    if DataArray.LayerCount = 1 then
+//    begin
+//      Limit := 1;
+//    end
+//    else
+//    begin
+//      Limit := LayerCount;
+//    end;
+//
+//    for LayerIndex := 1 to Limit do
+//    begin
+//      ArrayName := DataArray.Name;
+//      Assert(ArrayName <> '');
+//      if DataArray.LayerCount > 1 then
+//      begin
+//        ArrayName := ArrayName + '_' + IntToStr(LayerIndex);
+//      end;
+//      While Length(ArrayName) < 10 do
+//      begin
+//        ArrayName := ArrayName + ' ';
+//      end;
+//      Assert(Length(ArrayName) = 10);
+//
+//          // Data set 2;
+//      WriteString(ArrayName);
+//      WriteString(DataSet2Comment);
+//      NewLine;
+//
+//      // Data set 3
+//      ArrayIndex := Model.
+//        ModflowLayerToDataSetLayer(LayerIndex);
+//
+//      WriteArray(DataArray, ArrayIndex, ArrayType + ' array ' + ArrayName);
+//    end;
+//    Model.DataArrayManager.CacheDataArrays;
+//    DataArray.CacheData;
+//  end;
 end;
 
 function TCustomMultZoneWriter.WriteFile(const AFileName: string): boolean;
-var
-  NameOfFile: string;
 begin
   result := NumberOfArrays > 0;
   if NumberOfArrays = 0 then Exit;
@@ -295,8 +301,8 @@ begin
     Exit;
   end;
 
-  NameOfFile := FileName(AFileName);
-  WriteToNameFile(FileType, FileUnit, NameOfFile, foInput);
+  FNameOfFile := FileName(AFileName);
+  WriteToNameFile(FileType, FileUnit, FNameOfFile, foInput);
   OpenFile(FileName(AFileName));
   try
     frmProgressMM.AddMessage('Writing ' + FileType + ' Package input.');
@@ -323,9 +329,16 @@ begin
   end;
 end;
 
+procedure TCustomMultZoneWriter.WriteTransientArrays;
+begin
+  WriteTransientPackageArrays(Model.ModflowPackages.RchPackage);
+  WriteTransientPackageArrays(Model.ModflowPackages.EvtPackage);
+  WriteTransientPackageArrays(Model.ModflowPackages.EtsPackage);
+end;
+
 { TModflowZoneWriter }
 
-function TModflowZoneWriter.ArrayType: string;
+class function TModflowZoneWriter.ArrayType: string;
 begin
   result := 'Zone';
 end;
@@ -340,6 +353,41 @@ begin
   inherited;
   FFileUnit := Model.UnitNumbers.UnitNumber(StrZONE);
   FFileType := 'ZONE';
+end;
+
+procedure TModflowZoneWriter.WriteTransientPackageArrays(TransPackage: TCustomTransientLayerPackageSelection);
+var
+  ArrayIndex: Integer;
+  Item: TTransientZoneItem;
+  ZONNAM: string;
+begin
+  if TransPackage.IsSelected then
+  begin
+    for ArrayIndex := 0 to TransPackage.ZoneArrayNames.Count - 1 do
+    begin
+      Item := TransPackage.ZoneArrayNames[ArrayIndex];
+      ZONNAM := Item.ArrayName;
+      while Length(ZONNAM) < 11 do
+      begin
+        ZONNAM := ZONNAM + ' ';
+      end;
+      WriteString(ZONNAM);
+      WriteString(DataSet2Comment);
+      NewLine;
+      if Item.Uniform then
+      begin
+        WriteConstantU2DINT(Item.ArrayName, Item.UniformValue);
+      end
+      else
+      begin
+        WriteString('OPEN/CLOSE ');
+        WriteString(StrArrays + PathDelim + ExtractFileName(Item.FileName) + ' 1 (FREE) ');
+        frmGoPhast.PhastModel.AddModelInputFile(Item.FileName);
+        WriteInteger(IPRN_Integer);
+        NewLine;
+      end;
+    end;
+  end;
 end;
 
 function TModflowZoneWriter.DataSet2Comment: string;
@@ -365,31 +413,42 @@ begin
 end;
 
 function TModflowZoneWriter.NumberOfArrays: integer;
-var
-  List: TList;
-  Index: Integer;
-  DataArray: TDataArray;
-begin
-  result := UsedZoneArrayNames.Count;
-  List := TransientArrayList;
-  for Index := 0 to List.Count - 1 do
+//var
+//  List: TList;
+//  Index: Integer;
+//  DataArray: TDataArray;
+  function CountZoneArrays(Package: TCustomTransientLayerPackageSelection): integer;
   begin
-    DataArray := List[Index];
-    if DataArray.LayerCount = 1 then
+    result := 0;
+    if Package.IsSelected then
     begin
-      Inc(result);
-    end
-    else
-    begin
-      Assert(False);
+      result := Package.ZoneArrayNames.Count;
     end;
   end;
+begin
+  result := UsedZoneArrayNames.Count;
+  result := result + CountZoneArrays(Model.ModflowPackages.RchPackage);
+  result := result + CountZoneArrays(Model.ModflowPackages.EvtPackage);
+  result := result + CountZoneArrays(Model.ModflowPackages.EtsPackage);
+//  List := TransientArrayList;
+//  for Index := 0 to List.Count - 1 do
+//  begin
+//    DataArray := List[Index];
+//    if DataArray.LayerCount = 1 then
+//    begin
+//      Inc(result);
+//    end
+//    else
+//    begin
+//      Assert(False);
+//    end;
+//  end;
 end;
 
-function TModflowZoneWriter.TransientArrayList: TList;
-begin
-  result := Model.TransientZoneArrays;
-end;
+//function TModflowZoneWriter.TransientArrayList: TList;
+//begin
+//  result := Model.TransientZoneArrays;
+//end;
 
 function TModflowZoneWriter.UsesHufParam(UsedParam: THufUsedParameter;
   var ArrayName: string; var DataArray: TDataArray): boolean;
@@ -459,7 +518,7 @@ end;
 
 { TModflowMultiplierWriter }
 
-function TModflowMultiplierWriter.ArrayType: string;
+class function TModflowMultiplierWriter.ArrayType: string;
 begin
   result := 'Multiplier';
 end;
@@ -499,31 +558,42 @@ begin
 end;
 
 function TModflowMultiplierWriter.NumberOfArrays: integer;
-var
-  List: TList;
-  Index: Integer;
-  DataArray: TDataArray;
-begin
-  result := UsedMultiplierArrayNames.Count;
-  List := TransientArrayList;
-  for Index := 0 to List.Count - 1 do
+//var
+//  List: TList;
+//  Index: Integer;
+//  DataArray: TDataArray;
+  function CountMultiplierArrays(Package: TCustomTransientLayerPackageSelection): integer;
   begin
-    DataArray := List[Index];
-    if DataArray.LayerCount = 1 then
+    result := 0;
+    if Package.IsSelected then
     begin
-      Inc(result);
-    end
-    else
-    begin
-      Assert(False);
+      result := Package.MultiplierArrayNames.Count;
     end;
   end;
+begin
+  result := UsedMultiplierArrayNames.Count;
+  result := result + CountMultiplierArrays(Model.ModflowPackages.RchPackage);
+  result := result + CountMultiplierArrays(Model.ModflowPackages.EvtPackage);
+  result := result + CountMultiplierArrays(Model.ModflowPackages.EtsPackage);
+//  List := TransientArrayList;
+//  for Index := 0 to List.Count - 1 do
+//  begin
+//    DataArray := List[Index];
+//    if DataArray.LayerCount = 1 then
+//    begin
+//      Inc(result);
+//    end
+//    else
+//    begin
+//      Assert(False);
+//    end;
+//  end;
 end;
 
-function TModflowMultiplierWriter.TransientArrayList: TList;
-begin
-  result := Model.TransientMultiplierArrays;
-end;
+//function TModflowMultiplierWriter.TransientArrayList: TList;
+//begin
+//  result := Model.TransientMultiplierArrays;
+//end;
 
 function TModflowMultiplierWriter.UsesHufParam(UsedParam: THufUsedParameter;
   var ArrayName: string; var DataArray: TDataArray): boolean;
@@ -589,6 +659,42 @@ begin
   WriteInteger(NumberOfArrays);
   WriteString(' # NML');
   NewLine;
+end;
+
+procedure TModflowMultiplierWriter.WriteTransientPackageArrays(
+  TransPackage: TCustomTransientLayerPackageSelection);
+var
+  ArrayIndex: Integer;
+  Item: TTransientMultItem;
+  MLTNAM: string;
+begin
+  if TransPackage.IsSelected then
+  begin
+    for ArrayIndex := 0 to TransPackage.MultiplierArrayNames.Count - 1 do
+    begin
+      Item := TransPackage.MultiplierArrayNames[ArrayIndex];
+      MLTNAM := Item.ArrayName;
+      while Length(MLTNAM) < 11 do
+      begin
+        MLTNAM := MLTNAM + ' ';
+      end;
+      WriteString(MLTNAM);
+      WriteString(DataSet2Comment);
+      NewLine;
+      if Item.Uniform then
+      begin
+        WriteConstantU2DREL(Item.ArrayName, Item.UniformValue);
+      end
+      else
+      begin
+        WriteString('OPEN/CLOSE ');
+        WriteString(StrArrays + PathDelim + ExtractFileName(Item.FileName) + ' 1.0 (FREE) ');
+        frmGoPhast.PhastModel.AddModelInputFile(Item.FileName);
+        WriteInteger(IPRN_Real);
+        NewLine;
+      end;
+    end;
+  end;
 end;
 
 end.

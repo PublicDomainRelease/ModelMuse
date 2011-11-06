@@ -3,19 +3,19 @@ inherited frmExportCSV: TfrmExportCSV
   HelpKeyword = 'Export_Data_as_CSV_Dialog_Box'
   Caption = 'Export Data as CSV'
   ClientHeight = 407
-  ExplicitWidth = 440
+  ExplicitWidth = 432
   ExplicitHeight = 441
   PixelsPerInch = 96
   TextHeight = 18
   object Panel1: TPanel
     Left = 0
     Top = 64
-    Width = 432
+    Width = 424
     Height = 343
     Align = alClient
     TabOrder = 0
     DesignSize = (
-      432
+      424
       343)
     object vstDataSets: TVirtualStringTree
       Left = 8
@@ -67,7 +67,7 @@ inherited frmExportCSV: TfrmExportCSV
       OnClick = rgEvaluatedAtClick
     end
     object btnHelp: TBitBtn
-      Left = 320
+      Left = 304
       Top = 270
       Width = 104
       Height = 27
@@ -80,7 +80,7 @@ inherited frmExportCSV: TfrmExportCSV
       OnClick = btnHelpClick
     end
     object btnSave: TBitBtn
-      Left = 320
+      Left = 304
       Top = 308
       Width = 104
       Height = 27
@@ -109,12 +109,12 @@ inherited frmExportCSV: TfrmExportCSV
   object pnlModel: TPanel
     Left = 0
     Top = 0
-    Width = 432
+    Width = 424
     Height = 64
     Align = alTop
     TabOrder = 1
     DesignSize = (
-      432
+      424
       64)
     object lblModel: TLabel
       Left = 8

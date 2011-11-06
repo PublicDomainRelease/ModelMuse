@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="2unwec9ro6fjbik_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrReachUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.VerticalKPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.BrooksCoreyExponentPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.InitialWaterContentPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.SaturatedWaterContentPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.StreamSlopePosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.StreambedElevationPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.StreamBedThicknessPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.HydraulicConductivityPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.ReachLengthPosition" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.VerticalKAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.BrooksCoreyExponentAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.InitialWaterContentAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.SaturatedWaterContentAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.StreamBedThicknessAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.StreambedElevationAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.HydraulicConductivityAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.StreamSlopeAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.ReachLengthAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.EndingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.StartingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.VerticalK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.BrooksCoreyExponent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.InitialWaterContent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.SaturatedWaterContent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.HydraulicConductivity" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.StreamBedThickness" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.StreambedElevation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.StreamSlope" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.ReachLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrRecord.Cell" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrReachUnit.TSfrStorage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrStorage.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrStorage.GetSfrArray()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrStorage.FSfrArray" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfrStorage.SfrArray[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrStorage.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrStorage.Store(ZLib.TCompressionStream)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrReachUnit.TSfrItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.VerticalK[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.BrooksCoreyExponent[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.InitialWaterContent[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.SaturatedWaterContent[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.StreamSlope[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.StreambedElevation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.StreamBedThickness[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.HydraulicConductivity[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.ReachLength[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.BoundaryFormulaCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.SetBoundaryFormula(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.GetBoundaryFormula(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.RemoveFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.GetPropertyObserver(System.Object,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.CreateFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.AssignObserverEvents(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.GetVerticalK()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.GetStreamSlope()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.GetStreamBedThickness()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.GetStreambedElevation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.GetSaturatedWaterContent()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.GetReachLength()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.GetInitialWaterContent()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.GetHydraulicConductivity()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.GetBrooksCoreyExponent()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.ScreenObject()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.SetReachLength(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.SetVerticalK(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.SetSaturatedWaterContent(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.SetInitialWaterContent(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.SetBrooksCoreyExponent(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.SetStreamSlope(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.SetStreamBedThickness(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.SetStreambedElevation(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.SetHydraulicConductivity(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.FReachLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.FSaturatedWaterContent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.FInitialWaterContent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.FVerticalK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.FBrooksCoreyExponent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.FStreamSlope" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.FHydraulicConductivity" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.FStreambedElevation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrItem.FStreamBedThickness" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.InvalidateInitialWaterContentData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.InvalidateSaturatedWaterContentData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.InvalidateStreamSlopeData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.InvalidateStreambedElevationData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.InvalidateBedThicknessData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.InvalidateHydraulicConductivityData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.InvalidateReachLengthData(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.FReachLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.FVerticalK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.FBrooksCoreyExponent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.FInitialWaterContent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.FSaturatedWaterContent" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.FStreamSlopeData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.FStreamBedElevationData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.FStreamBedThicknessData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.FHydraulicConductivityData" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.SetBoundaryStartAndEndTime(System.Int32,ModflowBoundaryUnit.TCustomModflowBoundaryItem,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.ItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.InitializeTimeLists(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.AssignCellValues(Classes.TList,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.CountBoundaryCells(ref@System.Int32,DataSetUnit.TDataArray,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.AddSpecificBoundary()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.InvalidateVerticalKData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfrCollection.InvalidateBrooksCoreyExponentData(System.Object)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.StreamBedThickness[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.StreambedElevation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.HydraulicConductivity[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.StressPeriod[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.Values[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetSection()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetIntegerAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetRealAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetRealValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetIntegerValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetRow()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetLayer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetColumn()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetReachLengthAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetReachLength()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetVerticalKAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetVerticalK()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetSaturatedWaterContentAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetSaturatedWaterContent()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetInitialWaterContentAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetInitialWaterContent()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetBrooksCoreyExponentAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetBrooksCoreyExponent()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetStreamSlopeAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetStreamSlope()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetStreamBedThicknessAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetStreambedElevationAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetHydraulicConductivityAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetStreambedElevation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetHydraulicConductivity()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.GetStreamBedThickness()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.FStressPeriod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.FValues" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.VerticalKAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.BrooksCoreyExponentAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.InitialWaterContentAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.SaturatedWaterContentAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.ReachLengthAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.ReachLength[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.VerticalK[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.BrooksCoreyExponent[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.InitialWaterContent[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.SaturatedWaterContent[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.StreamSlopeAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.StreamBedThicknessAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.StreambedElevationAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.HydraulicConductivityAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.StreamSlope[]" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowSfrReachUnit.TSfr_Cell.FValues" />
+    </reference>
+  </view>
+</nodeSet>

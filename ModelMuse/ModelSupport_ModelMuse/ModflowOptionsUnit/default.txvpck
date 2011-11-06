@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="ago9w52donrc04s_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowOptionsUnit.TWettingOptions">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.FModel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.FWettingFactor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.FWettingEquation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.FWettingActive" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.FWettingIterations" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.SetWettingActive(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.SetWettingEquation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.SetWettingFactor(System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.SetWettingIterations(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.WettingActive[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.WettingFactor[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.WettingIterations[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TWettingOptions.WettingEquation[]" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowOptionsUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.DefaultHNoFlow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.DefaultHDry" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowOptionsUnit.TModflowOptions">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.Modeler[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.PrintTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.ProjectName[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.ProjectDate[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.TimeUnit[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.OpenInTextEditor[]" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.FModel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.FLengthUnit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.FPrintTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.FProjectName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.FProjectDate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.FModeler" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.FComputeFluxesBetweenConstantHeadCells" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.FTimeUnit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.FDescription" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.FHNoFlow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.FHDry" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.FOpenInTextEditor" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.SetComputeFluxesBetweenConstantHeadCells(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.SetDescription(Classes.TStrings)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.SetHNoFlow(System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.SetLengthUnit(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.SetModeler(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.SetPrintTime(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.SetProjectDate(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.SetProjectName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.SetTimeUnit(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.SetHDry(System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.SetOpenInTextEditor(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.DefineProperties(Classes.TFiler)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.ReadHNoFlow(Classes.TReader)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.WriteHNoFlow(Classes.TWriter)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.Clear()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.ComputeFluxesBetweenConstantHeadCells[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.Description[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.HDry[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.HNoFlow[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowOptionsUnit.TModflowOptions.LengthUnit[]" />
+    </reference>
+  </view>
+</nodeSet>

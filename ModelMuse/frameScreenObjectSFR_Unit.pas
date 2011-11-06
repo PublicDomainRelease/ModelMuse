@@ -4150,6 +4150,13 @@ begin
     dgTableTime.EndUpdate;
   end;
   FTimesChanged := False;
+  LayoutMultiRowFlowEditControls;
+  LayoutMultiRowParamIcalcControls;
+  LayoutMultiRowNetworkControls;
+  LayoutMultiRowChannelEditControls;
+  LayoutMultiRowEquationEditControls;
+  LayoutMultiRowUpstreamEditControls;
+  LayoutMultiRowDownstreamEditControls;
 end;
 
 procedure TframeScreenObjectSFR.GetEndTimes(Grid: TRbwDataGrid4; Col: integer);

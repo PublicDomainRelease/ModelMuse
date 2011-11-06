@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="23ldvs69qxrvkve_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:TimeUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:TimeUnit.TTimeItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:TimeUnit.TTimeItem.EndingTime[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:TimeUnit.TTimeItem.TimeStepLength[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TimeUnit.TTimeItem.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TimeUnit.TTimeItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TimeUnit.TTimeItem.SetTimeStepLength(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TimeUnit.TTimeItem.SetEndingTime(System.Double)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TimeUnit.TTimeItem.FTimeStepLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TimeUnit.TTimeItem.FEndingTime" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:TimeUnit.TTimeCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:TimeUnit.TTimeCollection.StartTime[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TimeUnit.TTimeCollection.Initialize()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TimeUnit.TTimeCollection.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TimeUnit.TTimeCollection.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TimeUnit.TTimeCollection.TimeStepLength(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TimeUnit.TTimeCollection.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TimeUnit.TTimeCollection.SetStartTime(GoPhastTypes.TRealStorage)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TimeUnit.TTimeCollection.FStartTime" />
+    </reference>
+  </view>
+</nodeSet>

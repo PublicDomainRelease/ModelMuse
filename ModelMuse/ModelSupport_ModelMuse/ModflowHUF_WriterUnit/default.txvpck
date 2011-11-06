@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="enm6u6mgpar51tf_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHUF_WriterUnit.THguSort">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHUF_WriterUnit.THguSort.Bottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHUF_WriterUnit.THguSort.Top" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHUF_WriterUnit.THguSort.HGU" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHUF_WriterUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHUF_WriterUnit.HufSteadyAndTransientParameters" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.HguSorter(System.Pointer,System.Pointer)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHUF_WriterUnit.HufSteadyParameters" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.Create(PhastModelUnit.TPhastModel)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.WriteFile(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.Extension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.Package()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.CheckElevations()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.WriteDataSet12()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.WriteDataSets10and11()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.WriteDataSet9()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.WriteDataSet8(HufDefinition.THydrogeologicUnit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.WriteDataSet7(HufDefinition.THydrogeologicUnit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.WriteDataSet6(HufDefinition.THydrogeologicUnit)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.WriteDataSets6to8()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.WriteDataSet5()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.WriteDataSet4()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.WriteDataSet3()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.WriteDataSet2()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.WriteDataSet1()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.FTransient" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.FNameOfFile" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHUF_WriterUnit.TModflowHUF_Writer.FHufPackage" />
+    </reference>
+  </view>
+</nodeSet>

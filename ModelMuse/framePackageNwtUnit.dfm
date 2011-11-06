@@ -208,14 +208,14 @@ inherited framePackageNwt: TframePackageNwt
             Text = 'Specified'
           end>
       end
-      object cbGoFail: TCheckBox
+      object cbContinue: TCheckBox
         Left = 3
         Top = 236
         Width = 435
         Height = 17
         Caption = 
-          'Continue to execute model despite non-convergence (GOFAIL OPTION' +
-          ')'
+          'Continue to execute model despite non-convergence (CONTINUE OPTI' +
+          'ON)'
         TabOrder = 8
       end
     end

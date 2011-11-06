@@ -1,8 +1,8 @@
 { @abstract(The main purpose of @name is to define @link(TfrmSelectColRowLayer)
   which is used to set
-  frmGoPhast.Grid.@link(TCustomGrid.SelectedColumn),
-  frmGoPhast.Grid.@link(TCustomGrid.SelectedRow), and
-  frmGoPhast.Grid.@link(TCustomGrid.SelectedLayer).)}
+  frmGoPhast.Grid.@link(TCustomModelGrid.SelectedColumn),
+  frmGoPhast.Grid.@link(TCustomModelGrid.SelectedRow), and
+  frmGoPhast.Grid.@link(TCustomModelGrid.SelectedLayer).)}
 unit frmSelectColRowLayerUnit;  
 
 interface
@@ -14,9 +14,9 @@ uses
 
 type
   { @abstract(@name is used to set
-   frmGoPhast.Grid.@link(TCustomGrid.SelectedColumn),
-   frmGoPhast.Grid.@link(TCustomGrid.SelectedRow), and
-   frmGoPhast.Grid.@link(TCustomGrid.SelectedLayer).)}
+   frmGoPhast.Grid.@link(TCustomModelGrid.SelectedColumn),
+   frmGoPhast.Grid.@link(TCustomModelGrid.SelectedRow), and
+   frmGoPhast.Grid.@link(TCustomModelGrid.SelectedLayer).)}
   TfrmSelectColRowLayer = class(TfrmCustomGoPhast)
     // Clicking @name closes @classname without doing anything.
     btnCancel: TBitBtn;
@@ -45,9 +45,9 @@ type
     // @link(seLayer), and @link(seRow).
     procedure GetData;
     // @name sets
-    // frmGoPhast.Grid.@link(TCustomGrid.SelectedColumn),
-    // frmGoPhast.Grid.@link(TCustomGrid.SelectedRow), and
-    // frmGoPhast.Grid.@link(TCustomGrid.SelectedLayer).
+    // frmGoPhast.Grid.@link(TCustomModelGrid.SelectedColumn),
+    // frmGoPhast.Grid.@link(TCustomModelGrid.SelectedRow), and
+    // frmGoPhast.Grid.@link(TCustomModelGrid.SelectedLayer).
     procedure SetData; { Private declarations }
   public
     { Public declarations }

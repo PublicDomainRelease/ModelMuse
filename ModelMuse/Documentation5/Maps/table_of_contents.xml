@@ -616,18 +616,6 @@
       <topicref type="topic" id="395562430044737" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2008-04-18T08:22:34.250Z" icon="0" href="Select_Results_to_Import_Dialog_Box">
         <caption translate="true">Select Model Results to Import Dialog Box</caption>
       </topicref>
-      <topicref type="topic" id="407483930310218" build="ALL" modified="2011-07-24T08:46:35.875Z" icon="0" href="Head_Observation_Results">
-        <caption translate="true">Head Observation Results Dialog Box</caption>
-      </topicref>
-      <topicref type="topic" id="401416567252492" build="ALL" modified="2009-12-04T15:41:26.376Z" icon="0" href="MODPATH_Display_Dialog_Box">
-        <caption translate="true">MODPATH Pathline Display Dialog Box</caption>
-      </topicref>
-      <topicref type="topic" id="40150070605677" build="ALL" modified="2009-12-04T15:44:04.424Z" icon="0" href="MODPATH_Endpoint_Display">
-        <caption translate="true">MODPATH Endpoint Display Dialog Box</caption>
-      </topicref>
-      <topicref type="topic" id="401538019140038" build="ALL" modified="2009-12-06T22:27:18.609Z" icon="0" href="MODPATH_Time_Series_Display">
-        <caption translate="true">MODPATH Time Series Display Dialog Box</caption>
-      </topicref>
       <topicref type="topic" id="393784686662237" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2009-07-30T22:06:35.515Z" icon="0" href="Import_Shapefile_Dialog_Box">
         <caption translate="true">Import Shapefile Dialog Box</caption>
       </topicref>
@@ -748,20 +736,32 @@
       <topicref type="topic" id="393874932508025" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2007-11-01T12:03:27.023Z" icon="0" href="Data_Type_Problem_Dialog_Box">
         <caption translate="true">Data Type Problem Dialog Box</caption>
       </topicref>
-      <topicref type="topic" id="393876868789405" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2007-11-01T12:05:06.324Z" icon="0" href="Color_Grid_Dialog_Box">
-        <caption translate="true">Color Grid Dialog Box</caption>
-      </topicref>
-      <topicref type="topic" id="397666392955845" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2008-11-14T17:47:22.513Z" icon="0" href="Contour_Data_Dialog_Box">
-        <caption translate="true">Contour Data Dialog Box</caption>
-      </topicref>
-      <topicref type="topic" id="401492737895082" build="ALL" modified="2009-12-02T07:58:49.092Z" icon="0" href="MODPATH_Display_Dialog_Box">
-        <caption translate="true">MODPATH Display Dialog Box</caption>
-      </topicref>
-      <topicref type="topic" id="397667363988099" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2008-11-14T18:13:27.235Z" icon="0" href="Specify_Contours_Dialog_Box">
-        <caption translate="true">Specify Contours Dialog Box</caption>
-      </topicref>
-      <topicref type="topic" id="401477843848457" build="ALL" modified="2009-11-30T13:56:37.764Z" icon="0" href="MODPATH_Display_Dialog_Box">
-        <caption translate="true">Configure Pathlines</caption>
+      <topicref type="topic" id="40835152682245" build="ALL" modified="2011-10-17T11:05:50.536Z" icon="0" href="Data_Visualization_Dialog_Box">
+        <caption translate="true">Data Visualization Dialog Box</caption>
+        <topicref type="topic" id="393876868789405" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2011-10-17T11:21:52.284Z" icon="0" href="Color_Grid_Dialog_Box">
+          <caption translate="true">Color Grid Pane</caption>
+        </topicref>
+        <topicref type="topic" id="397666392955845" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2011-10-17T11:22:04.708Z" icon="0" href="Contour_Data_Dialog_Box">
+          <caption translate="true">Contour Data Pane</caption>
+          <topicref type="topic" id="397667363988099" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2008-11-14T18:13:27.235Z" icon="0" href="Specify_Contours_Dialog_Box">
+            <caption translate="true">Specify Contours Dialog Box</caption>
+          </topicref>
+        </topicref>
+        <topicref type="topic" id="401416567252492" build="ALL" modified="2011-10-17T11:22:14.913Z" icon="0" href="MODPATH_Display_Dialog_Box">
+          <caption translate="true">MODPATH Pathline Display Pane</caption>
+        </topicref>
+        <topicref type="topic" id="40150070605677" build="ALL" modified="2011-10-17T11:22:24.102Z" icon="0" href="MODPATH_Endpoint_Display">
+          <caption translate="true">MODPATH Endpoint Display Pane</caption>
+        </topicref>
+        <topicref type="topic" id="401538019140038" build="ALL" modified="2011-10-17T11:22:31.447Z" icon="0" href="MODPATH_Time_Series_Display">
+          <caption translate="true">MODPATH Time Series Display Pane</caption>
+        </topicref>
+        <topicref type="topic" id="407483930310218" build="ALL" modified="2011-10-17T11:22:47.090Z" icon="0" href="Head_Observation_Results">
+          <caption translate="true">Head Observation Results Pane</caption>
+        </topicref>
+        <topicref type="topic" id="408334743143205" build="ALL" modified="2011-10-17T11:35:15.350Z" icon="0" href="Stream_Links_Pane">
+          <caption translate="true">Stream Links Pane</caption>
+        </topicref>
       </topicref>
       <topicref type="topic" id="394056704891653" build="CHM,HLP,HXS,HTML,DEMO,USER2,USER3" modified="2007-11-19T14:44:26.964Z" icon="0" href="Grid_Value_Dialog_Box">
         <caption translate="true">Grid Value Dialog Box</caption>

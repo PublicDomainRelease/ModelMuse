@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="ydlictl0qekm4yt_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmProgressUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgressUnit.frmProgress" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgressUnit.HalfSecond" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgressUnit.frmFileProgress" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmProgressUnit.frmProgress" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmProgressUnit.frmFileProgress" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmProgressUnit.TfrmProgress">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgressUnit.TfrmProgress.btnAbortClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgressUnit.TfrmProgress.FormShow(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgressUnit.TfrmProgress.btnAbort" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgressUnit.TfrmProgress.pnlTop" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgressUnit.TfrmProgress.pbProgress" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgressUnit.TfrmProgress.memoMessages" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgressUnit.TfrmProgress.lblProgress" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgressUnit.TfrmProgress.AddMessage(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgressUnit.TfrmProgress.StepIt()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmProgressUnit.TfrmProgress.Prefix[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmProgressUnit.TfrmProgress.ProgressLabelCaption[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmProgressUnit.TfrmProgress.ShouldContinue[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgressUnit.TfrmProgress.GetShouldContinue()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgressUnit.TfrmProgress.GetProgressLabelCaption()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgressUnit.TfrmProgress.SetProgressLabelCaption(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgressUnit.TfrmProgress.SetPrefix(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgressUnit.TfrmProgress.FShouldContinue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgressUnit.TfrmProgress.LastMessageTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgressUnit.TfrmProgress.LastTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgressUnit.TfrmProgress.FPrefix" />
+    </reference>
+  </view>
+</nodeSet>

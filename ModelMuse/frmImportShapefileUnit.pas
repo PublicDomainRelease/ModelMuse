@@ -2054,19 +2054,17 @@ begin
       Item := AScreenObject.ModflowHeadObservations.Values.Add as THobItem;
       Item.Time := ATime;
       Item.Head := AValue;
-//      if frmGoPhast.ShowUcodeInterface then
+
+      AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[2, Index + 1]);
+      Item.Statistic := AValue;
+      AnIntValue := GetIntegerValueFromText(rdgBoundaryConditions.Cells[3, Index + 1]);
+      if (AnIntValue < 0) or (AnIntValue > Ord(High(TStatFlag))) then
       begin
-        AValue := GetRealValueFromText(rdgBoundaryConditions.Cells[2, Index + 1]);
-        Item.Statistic := AValue;
-        AnIntValue := GetIntegerValueFromText(rdgBoundaryConditions.Cells[3, Index + 1]);
-        if (AnIntValue < 0) or (AnIntValue > Ord(High(TStatFlag))) then
-        begin
-          Item.StatFlag := stVariance;
-        end
-        else
-        begin
-          Item.StatFlag := TStatFlag(AnIntValue);
-        end;
+        Item.StatFlag := stVariance;
+      end
+      else
+      begin
+        Item.StatFlag := TStatFlag(AnIntValue);
       end;
     end;
   end;
@@ -2505,14 +2503,7 @@ begin
   plBoundary.ActivePage := jvspModflowHOB;
   comboHeadObservationNames.Items := FStringFieldNames;
   rdgBoundaryConditions.Enabled := True;
-//  if frmGoPhast.ShowUcodeInterface then
-//  begin
-    rdgBoundaryConditions.ColCount := 4;
-//  end
-//  else
-//  begin
-//    rdgBoundaryConditions.ColCount := 2;
-//  end;
+
   AssignColFeatureProperties;
   rdgBoundaryConditions.Columns[0].ComboUsed := True;
   rdgBoundaryConditions.Columns[0].Format := rcf4String;
@@ -2520,22 +2511,18 @@ begin
   rdgBoundaryConditions.Columns[1].ComboUsed := True;
   rdgBoundaryConditions.Columns[1].Format := rcf4String;
   rdgBoundaryConditions.Columns[1].PickList := FRealFieldNames;
-//  if frmGoPhast.ShowUcodeInterface then
-//  begin
+
   rdgBoundaryConditions.Columns[2].ComboUsed := True;
   rdgBoundaryConditions.Columns[2].Format := rcf4String;
   rdgBoundaryConditions.Columns[2].PickList := FRealFieldNames;
   rdgBoundaryConditions.Columns[3].ComboUsed := True;
   rdgBoundaryConditions.Columns[3].Format := rcf4String;
   rdgBoundaryConditions.Columns[3].PickList := FIntegerFieldNames;
-//  end;
+
   rdgBoundaryConditions.Cells[0, 0] := 'Time';
   rdgBoundaryConditions.Cells[1, 0] := 'Observed head';
-//  if frmGoPhast.ShowUcodeInterface then
-  begin
-    rdgBoundaryConditions.Cells[2, 0] := 'Statistic';
-    rdgBoundaryConditions.Cells[3, 0] := 'Stat Flag';
-  end;
+  rdgBoundaryConditions.Cells[2, 0] := 'Statistic';
+  rdgBoundaryConditions.Cells[3, 0] := 'Stat Flag';
 end;
 
 procedure TfrmImportShapefile.ImportModflowResPackage(
@@ -5415,6 +5402,7 @@ begin
                     begin
                       ValueList.Count := FGeometryFile.Count
                         - DeleteCount + AddCount;
+                      ValueList.CacheData;
                     end;
                   end;
 

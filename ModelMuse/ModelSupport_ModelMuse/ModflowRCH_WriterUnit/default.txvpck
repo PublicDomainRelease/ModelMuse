@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="5blb4n12qf33oug_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowRCH_WriterUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRCH_WriterUnit.ErrorRoot" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.UpdateDisplay(ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.WriteFile(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.Evaluate()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.WriteStressPeriods(System.String,System.String,System.String,System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.ParameterType()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.Package()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.GetBoundary(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.Extension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.Prefix()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.CellType()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.WriteCells(ModflowCellUnit.TValueCellList,System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.WriteDataSets5To8()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.WriteDataSets3And4()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.WriteDataSet2()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.WriteDataSet1()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.NRCHOP" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowRCH_WriterUnit.TModflowRCH_Writer.NPRCH" />
+    </reference>
+  </view>
+</nodeSet>

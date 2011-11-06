@@ -25,7 +25,6 @@ object frameDisplayLimit: TframeDisplayLimit
     Cursor = crIBeam
     Color = clBtnFace
     Enabled = False
-    ItemHeight = 13
     TabOrder = 1
     Text = '0'
     OnExit = rdeLimitExit
@@ -40,7 +39,6 @@ object frameDisplayLimit: TframeDisplayLimit
     Height = 21
     Style = csDropDownList
     Enabled = False
-    ItemHeight = 13
     ItemIndex = 0
     TabOrder = 2
     Text = 'False'

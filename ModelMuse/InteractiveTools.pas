@@ -424,7 +424,7 @@ Consider creating descendants that each only handle one view of the model. }
     FShift: TShiftState;
     FViewDirection: TViewDirection;
     FVisibleVertices: TRbwQuadTree;
-    // @name contains @link(TScreenPointStorage)s.
+    // @name contains instances of TScreenPointStorage.
     // @name is created and filled in @link(StorePointsOfOtherObjects).
     FStoredPoints: TList;
     // Store the screen coordinates of visible objects.
@@ -567,6 +567,27 @@ Consider creating descendants that each only handle one view of the model. }
     // @name selects @link(TScreenObject)s with @link(FSelectLine).
     procedure MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer); override;
+  end;
+
+  TRulerTool = class(TCustomInteractiveTool)
+  private
+    FLine: TSimpleLine;
+    FDoubleClicked: Boolean;
+    FRect: TRect;
+    procedure ShowHint;
+  protected
+    procedure DrawOnBitMap32(Sender: TObject; Buffer: TBitmap32); override;
+    function GetHint: string; override;
+  public
+    procedure Activate; override;
+    procedure Deactivate; override;
+    Destructor Destroy; override;
+    procedure DoubleClick(Sender: TObject); override;
+    procedure MouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: Integer); override;
+    procedure MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer); override;
+    procedure DeleteLastSavedPoint;
   end;
 
   {@abstract(@name is used to create a point @link(TScreenObject).)}
@@ -939,49 +960,50 @@ Consider creating descendants that each only handle one view of the model. }
 
 {$REGION 'Global_Variables'}
   var
-    // @name is the instance of @link(TZoomTool) used in GoPhast.
+    // @name is the instance of @link(TZoomTool) used in ModelMuse.
     ZoomTool: TZoomTool;
-    // @name is the instance of @link(TZoomInTool) used in GoPhast.
+    // @name is the instance of @link(TZoomInTool) used in ModelMuse.
     ZoomInTool: TZoomInTool;
-    // @name is the instance of @link(TZoomOutTool) used in GoPhast.
+    // @name is the instance of @link(TZoomOutTool) used in ModelMuse.
     ZoomOutTool: TZoomOutTool;
-    // @name is the instance of @link(TPanTool) used in GoPhast.
+    // @name is the instance of @link(TPanTool) used in ModelMuse.
     PanTool: TPanTool;
-    // @name is the instance of @link(TAddGridBoundaryTool) used in GoPhast.
+    // @name is the instance of @link(TAddGridBoundaryTool) used in ModelMuse.
     AddGridBoundaryTool: TAddGridBoundaryTool;
-    // @name is the instance of @link(TMovingGridBoundaryTool) used in GoPhast.
+    // @name is the instance of @link(TMovingGridBoundaryTool) used in ModelMuse.
     MovingGridBoundaryTool: TMovingGridBoundaryTool;
-    // @name is the instance of @link(TDeleteGridBoundaryTool) used in GoPhast.
+    // @name is the instance of @link(TDeleteGridBoundaryTool) used in ModelMuse.
     DeleteGridBoundaryTool: TDeleteGridBoundaryTool;
-    // @name is the instance of @link(TRotateGridTool) used in GoPhast.
+    // @name is the instance of @link(TRotateGridTool) used in ModelMuse.
     RotateGridTool: TRotateGridTool;
-    // @name is the instance of @link(TLassoTool) used in GoPhast.
+    // @name is the instance of @link(TLassoTool) used in ModelMuse.
     LassoTool: TLassoTool;
     // @name is the instance of @link(TCreatePointScreenObjectTool)
-    // used in GoPhast.
+    // used in ModelMuse.
     CreatePointScreenObjectTool: TCreatePointScreenObjectTool;
     // @name is the instance of @link(TCreateLineScreenObjectTool)
-    // used in GoPhast.
+    // used in ModelMuse.
     CreateLineScreenObjectTool: TCreateLineScreenObjectTool;
     // @name is the instance of @link(TCreateStraightLineScreenObjectTool)
-    // used in GoPhast.
+    // used in ModelMuse.
     CreateStraightLineScreenObjectTool: TCreateStraightLineScreenObjectTool;
     // @name is the instance of @link(TCreateRectangleScreenObjectTool)
-    // used in GoPhast.
+    // used in ModelMuse.
     CreateRectangleScreenObjectTool: TCreateRectangleScreenObjectTool;
-    // @name is the instance of @link(TDeleteSegmentTool) used in GoPhast.
+    // @name is the instance of @link(TDeleteSegmentTool) used in ModelMuse.
     DeleteSegmentTool: TDeleteSegmentTool;
-    // @name is the instance of @link(TInsertPointTool) used in GoPhast.
+    // @name is the instance of @link(TInsertPointTool) used in ModelMuse.
     InsertPointTool: TInsertPointTool;
-    // @name is the instance of @link(TSelectPointTool) used in GoPhast.
+    // @name is the instance of @link(TSelectPointTool) used in ModelMuse.
     SelectPointTool: TSelectPointTool;
-    // @name is the instance of @link(TSelectScreenObjectTool) used in GoPhast.
+    // @name is the instance of @link(TSelectScreenObjectTool) used in ModelMuse.
     SelectScreenObjectTool: TSelectScreenObjectTool;
     ColRowLayerSelectorTool: TColRowLayerSelectorTool;
     AddLinePartTool: TAddLinePartTool;
     AddPolygonPartTool: TAddPolygonPartTool;
     AddPointPartTool: TAddPointPartTool;
     EditVertexValueTool: TEditVertexValueTool;
+    RulerTool: TRulerTool;
 
 {$ENDREGION}
 
@@ -6217,6 +6239,147 @@ begin
   result.Y := APoint.Y;
 end;
 
+{ TRulerTool }
+
+procedure TRulerTool.Activate;
+begin
+  inherited;
+  CreateLayers;
+end;
+
+procedure TRulerTool.Deactivate;
+begin
+  inherited;
+  FreeAndNil(FLine);
+  frmGoPhast.hntMeasure.CancelHint;
+end;
+
+procedure TRulerTool.DeleteLastSavedPoint;
+begin
+  if FLine <> nil then
+  begin
+    if FLine.Count > 2 then
+    begin
+      FLine.DeleteNextToLastPoint;
+      ShowHint;
+    end
+    else
+    begin
+      FreeAndNil(FLine);
+      frmGoPhast.hntMeasure.CancelHint;
+    end;
+    ZoomBox.Image32.Invalidate;
+  end;
+end;
+
+procedure TRulerTool.ShowHint;
+begin
+  FRect.TopLeft := FLine.ZoomBox.ClientToScreen(Point(0, 0));
+  FRect.BottomRight := FLine.ZoomBox.ClientToScreen(
+    Point(FLine.ZoomBox.Width, FLine.ZoomBox.Height));
+  frmGoPhast.hntMeasure.ActivateHint(FRect,
+    'Line length = ' + FloatToStr(FLine.LineLength));
+end;
+
+destructor TRulerTool.Destroy;
+begin
+  FLine.Free;
+  inherited;
+end;
+
+procedure TRulerTool.DoubleClick(Sender: TObject);
+var
+  TempZB: TQRbwZoomBox2;
+begin
+  inherited;
+  TempZB := nil;
+  if FLine <> nil then
+  begin
+    TempZB := FLine.ZoomBox;
+  end;
+  FreeAndNil(FLine);
+  if TempZB <> nil then
+  begin
+    TempZB.Image32.Invalidate;
+  end;
+  frmGoPhast.hntMeasure.CancelHint;
+  FDoubleClicked := True;
+end;
+
+procedure TRulerTool.DrawOnBitMap32(Sender: TObject; Buffer: TBitmap32);
+begin
+  inherited;
+  if frmGoPhast.CurrentTool <> self then Exit;
+  if (FLine <> nil) and (FLine.ZoomBox = ZoomBox) then
+  begin
+    Buffer.BeginUpdate;
+    try
+      FLine.Draw(Buffer);
+    finally
+      Buffer.EndUpdate
+    end;
+  end;
+end;
+
+function TRulerTool.GetHint: string;
+begin
+  result := 'Click to start measuring. Double-click to stop.'
+end;
+
+procedure TRulerTool.MouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+var
+  APoint: TPoint2D;
+begin
+  inherited;
+  if (FLine <> nil) and (FLine.ZoomBox = ZoomBox) then
+  begin
+    // set the correct cursor
+    Cursor := crArrow;
+    APoint.x := ZoomBox.X(X);
+    APoint.y := ZoomBox.Y(Y);
+    FLine.Points[FLine.Count-1] := APoint;
+    // If the cursor has moved far enough, add another point to the
+    // lasso.
+    ZoomBox.Image32.Invalidate;
+    ShowHint;
+  end;
+end;
+
+procedure TRulerTool.MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+var
+  APoint: TPoint2D;
+  TempZB: TQRbwZoomBox2;
+begin
+  inherited;
+  if FDoubleClicked then
+  begin
+    FDoubleClicked := False;
+  end
+  else
+  begin
+    APoint.x := ZoomBox.X(X);
+    APoint.y := ZoomBox.Y(Y);
+    if (FLine <> nil) and (FLine.ZoomBox <> ZoomBox) then
+    begin
+      TempZB := FLine.ZoomBox;
+      FreeAndNil(FLine);
+      TempZB.Image32.Invalidate;
+    end;
+    if FLine = nil then
+    begin
+      FLine := TSimpleLine.Create(ZoomBox);
+      FLine.AddPoint(APoint);
+    end;
+    if FLine.ZoomBox = ZoomBox then
+    begin
+      FLine.AddPoint(APoint);
+    end
+  end;
+  ZoomBox.Image32.Invalidate;
+end;
+
 initialization
   ZoomTool := TZoomTool.Create(nil);
   ZoomInTool := TZoomInTool.Create(nil);
@@ -6242,6 +6405,7 @@ initialization
   AddPolygonPartTool:= TAddPolygonPartTool.Create(nil);
   AddPointPartTool := TAddPointPartTool.Create(nil);
   EditVertexValueTool := TEditVertexValueTool.Create(nil);
+  RulerTool := TRulerTool.Create(nil);
 
 finalization
   ZoomTool.Free;
@@ -6267,5 +6431,6 @@ finalization
   AddPolygonPartTool.Free;
   AddPointPartTool.Free;
   EditVertexValueTool.Free;
+  RulerTool.Free;
 
 end.

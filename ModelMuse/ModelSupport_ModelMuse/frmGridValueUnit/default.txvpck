@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="w7mnduxopejbwli_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmGridValueUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.frmGridValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.StrLower" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.StrHigher" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.StrNotAssigned" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.StrLower3rdDimension" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.StrHigher3rdDimension" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.StrSelectedObject" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmGridValueUnit.frmGridValue" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmGridValueUnit.TfrmGridValue">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGridValueUnit.TfrmGridValue.UpdateValue(System.Int32,System.Int32,System.Int32,System.String,System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGridValueUnit.TfrmGridValue.UpdateScreenObjectInfo(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGridValueUnit.TfrmGridValue.UpdatedSelectedObject()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.FSelectedScreenObject" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGridValueUnit.TfrmGridValue.memoExplanationKeyUp(System.Object,ref@System.UInt16,Classes.TShiftState)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGridValueUnit.TfrmGridValue.edCellValueKeyUp(System.Object,ref@System.UInt16,Classes.TShiftState)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGridValueUnit.TfrmGridValue.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGridValueUnit.TfrmGridValue.FormClose(System.Object,ref@Forms.TCloseAction)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.lblLower3rdDimensionCoordinate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.lblHigher3rdDimensionCoordinate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.cbShowThirdDValues" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.lblSelectedObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.lblColumnWidth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.lblRowWidth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.lblLayerHeight" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.lblDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.btnClose" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.edCellValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.memoExplanation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.lblExplanation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.lblCellValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.lblColumn" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.lblRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridValueUnit.TfrmGridValue.lblLayer" />
+    </reference>
+  </view>
+</nodeSet>

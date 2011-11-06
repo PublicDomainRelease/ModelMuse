@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="lbo00sngo1eb0mq_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ContourUnit.T2DGridPoint">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.T2DGridPoint.P" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.T2DGridPoint.Value" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.T2DGridPoint.Active" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ContourUnit.TGridSquare">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TGridSquare.GridPoint" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ContourUnit.TExtractSegmentEvent">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ContourUnit.TContourCreator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TContourCreator.FBitMap" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TContourCreator.FColor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TContourCreator.FGrid" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TContourCreator.FLineThickness" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TContourCreator.FValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TContourCreator.FZoomBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TContourCreator.FOnExtractSegments" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TContourCreator.FEvaluatedAt" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ContourUnit.TContourCreator.ExtractSegments(ContourUnit.TGridSquare)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ContourUnit.TContourCreator.ConvertAndDrawSegments(System.Object,FastGEO.TLine2DArray)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TContourCreator.BitMap[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TContourCreator.EvaluatedAt[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TContourCreator.Color[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TContourCreator.Grid[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TContourCreator.LineThickness[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TContourCreator.Value[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TContourCreator.ZoomBox[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TContourCreator.OnExtractSegments[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ContourUnit.TContourCreator.DrawContour()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ContourUnit.TContourCreator.ExtractContour()" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ContourUnit.TContourCreator.FOnExtractSegments" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ContourUnit.TMultipleContourCreator">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TMultipleContourCreator.FDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TMultipleContourCreator.FBitMap" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TMultipleContourCreator.FViewDirection" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TMultipleContourCreator.FGrid" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TMultipleContourCreator.FZoomBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.TMultipleContourCreator.FActiveDataSet" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ContourUnit.TMultipleContourCreator.CreateContours(GoPhastTypes.TOneDRealArray,GoPhastTypes.TOneDRealArray,GR32.TArrayOfColor32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ContourUnit.TMultipleContourCreator.DrawContours(GoPhastTypes.TOneDRealArray,GoPhastTypes.TOneDRealArray,GR32.TArrayOfColor32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ContourUnit.TMultipleContourCreator.AssignGridValues(out@System.Double,out@System.Double,System.Int32,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ContourUnit.TMultipleContourCreator.EvaluateActive(ref@DataSetUnit.T3DBooleanDataSet)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ContourUnit.TMultipleContourCreator.EvaluateMinMax(out@System.Double,out@System.Double,Classes.TStringList,DataSetUnit.T3DBooleanDataSet,System.Int32)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TMultipleContourCreator.DataSet[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TMultipleContourCreator.ActiveDataSet[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TMultipleContourCreator.BitMap[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TMultipleContourCreator.ViewDirection[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TMultipleContourCreator.Grid[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ContourUnit.TMultipleContourCreator.ZoomBox[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ContourUnit.TMultipleContourCreator.DrawContours(System.Int32,ColorSchemes.TColorParameters)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ContourUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.DefaultLineThickness" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ContourUnit.DefaultMajorLineThickness" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ContourUnit.Interpolate(FastGEO.TPoint2D,FastGEO.TPoint2D,System.Extended,System.Extended,System.Extended)" />
+    </reference>
+  </view>
+</nodeSet>

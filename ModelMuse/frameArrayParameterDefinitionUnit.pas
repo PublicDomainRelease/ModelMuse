@@ -46,9 +46,6 @@ type
    @member(dgParametersHorizontalScroll @name calls
    @link(ArrangeMultiEditControls).)
 
-   @member(dgParametersMouseDown @name is used to allow multiple cells to be
-   selected.)
-
    @member(dgParametersMouseUp @name is used to enable or disable the control
    that are used to edit properties of multiple parameters at one time.)
   }

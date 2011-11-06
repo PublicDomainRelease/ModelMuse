@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="hmnnszuuo5ut0xn_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHfbUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHfbUnit.TAdjustmentMethod">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.TAdjustmentMethod.amNearlyParallel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.TAdjustmentMethod.amAllEdges" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.TAdjustmentMethod.amNone" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowHfbUnit.THfbBoundary">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHfbUnit.THfbBoundary.IsUsed[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHfbUnit.THfbBoundary.AdjustmentMethod[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHfbUnit.THfbBoundary.ThicknessFormula[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHfbUnit.THfbBoundary.HydraulicConductivityFormula[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHfbUnit.THfbBoundary.ParameterName[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.HandleChangedParameterValue()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHfbUnit.THfbBoundary.HfbObserver[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.Used()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.Create(System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.InvalidateModel()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHfbUnit.THfbBoundary.UsedObserver[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHfbUnit.THfbBoundary.AdjustmentMethodObserver[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHfbUnit.THfbBoundary.ParameterNameObserver[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHfbUnit.THfbBoundary.ThicknessObserver[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowHfbUnit.THfbBoundary.HydraulicConductivityObserver[]" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FModel" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.GetUsedObserver()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.CreateObserver(System.String,ref@SubscriptionUnit.TObserver)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.GetAdjustmentMethodObserver()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.HandleChangedValue(SubscriptionUnit.TObserver)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.GetParameterNameObserver()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.GetThicknessObserver()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.GetHydraulicConductivityObserver()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.HandleChangedFormula(System.String,ref@System.String,SubscriptionUnit.TObserver)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.SetUsed(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.SetThickness(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.SetParameterName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.SetHydraulicConductivity(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowHfbUnit.THfbBoundary.SetAdjustmentMethod(ModflowHfbUnit.TAdjustmentMethod)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FUsedObserver" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FAdjustmentMethodObserver" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FParameterNameObserver" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FThicknessObserver" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FHydraulicConductivityObserver" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FHfbObserver" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FUsed" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FParameterName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FHydraulicConductivity" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FThickness" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FAdjustmentMethod" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowHfbUnit.THfbBoundary.FAdjustmentMethod" />
+    </reference>
+  </view>
+</nodeSet>

@@ -26,7 +26,8 @@ type
     function ParameterType: TParameterType; override;
     procedure WriteParameterCells(CellList: TValueCellList; NLST: Integer;
       const VariableIdentifiers, DataSetIdentifier: string;
-      AssignmentMethod: TUpdateMethod); override;
+      AssignmentMethod: TUpdateMethod; MultiplierArrayNames: TTransientMultCollection;
+      ZoneArrayNames: TTransientZoneCollection); override;
     procedure WriteCell(Cell: TValueCell;
       const DataSetIdentifier, VariableIdentifiers: string); override;
   public
@@ -187,7 +188,7 @@ const
   VariableIdentifiers = 'Qfact IFACE';
 begin
   WriteParameterDefinitions(DS3, DS3Instances, DS4A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot, umAssign);
+    VariableIdentifiers, ErrorRoot, umAssign, nil, nil);
 end;
 
 procedure TModflowWEL_Writer.WriteDataSets5To7;
@@ -265,8 +266,10 @@ begin
   end;
 end;
 
-procedure TModflowWEL_Writer.WriteParameterCells(CellList: TValueCellList; NLST: Integer;
-  const VariableIdentifiers, DataSetIdentifier: string; AssignmentMethod: TUpdateMethod);
+procedure TModflowWEL_Writer.WriteParameterCells(CellList: TValueCellList;
+  NLST: Integer; const VariableIdentifiers, DataSetIdentifier: string;
+  AssignmentMethod: TUpdateMethod; MultiplierArrayNames: TTransientMultCollection;
+      ZoneArrayNames: TTransientZoneCollection);
 var
   Cell: TWell_Cell;
   CellIndex: Integer;

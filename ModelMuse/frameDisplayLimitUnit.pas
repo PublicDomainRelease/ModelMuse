@@ -2,7 +2,7 @@
   @link(TframeDisplayLimit) which is used to edit
    TDataArray.Limits.@link(DataSetUnit.TColoringLimits.LowerLimit)
    or @link(DataSetUnit.TColoringLimits.UpperLimit).)
-   See @link(frmGridColorUnit).}
+   See @link(frmDisplayDataUnit).}
 
 unit frameDisplayLimitUnit;
 
@@ -16,7 +16,7 @@ type
   {@abstract(@name is used to edit
    TDataArray.Limits.@link(DataSetUnit.TColoringLimits.LowerLimit)
    or @link(DataSetUnit.TColoringLimits.UpperLimit).)
-   See @link(frmGridColorUnit).}
+   See @link(frmDisplayDataUnit).}
   TframeDisplayLimit = class(TFrame)
     // @name is used to edit TColoringLimit.@link(TColoringLimit.UseLimit).
     cbCheck: TCheckBox;

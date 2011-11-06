@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="fukq3imcqmnsp0g_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameFlowTableUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameFlowTableUnit.TSfrTableColumns">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameFlowTableUnit.TSfrTableColumns.stcWidth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameFlowTableUnit.TSfrTableColumns.stcDepth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameFlowTableUnit.TSfrTableColumns.stcFlow" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameFlowTableUnit.TframeFlowTable">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameFlowTableUnit.TframeFlowTable.btnInsertFlowTableRowClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameFlowTableUnit.TframeFlowTable.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameFlowTableUnit.TframeFlowTable.EnableDelete()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frameFlowTableUnit.TframeFlowTable.TableCountChanged[]" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameFlowTableUnit.TframeFlowTable.FTableCountChanged" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameFlowTableUnit.TframeFlowTable.dgSfrTableSetEditText(System.Object,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameFlowTableUnit.TframeFlowTable.btnDeleteFlowTableRowClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameFlowTableUnit.TframeFlowTable.seTableCount" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameFlowTableUnit.TframeFlowTable.seTableCountChange(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameFlowTableUnit.TframeFlowTable.btnDeleteFlowTableRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameFlowTableUnit.TframeFlowTable.btnInsertFlowTableRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameFlowTableUnit.TframeFlowTable.dgSfrTable" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameFlowTableUnit.TframeFlowTable.lblNumberOfPoints" />
+    </reference>
+  </view>
+</nodeSet>

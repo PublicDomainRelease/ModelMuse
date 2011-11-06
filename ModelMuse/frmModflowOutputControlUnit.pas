@@ -7,7 +7,7 @@ uses
   Dialogs, frmCustomGoPhastUnit, StdCtrls, Buttons, ExtCtrls, JvPageList,
   JvExControls, JvComponent, ComCtrls, JvExComCtrls, JvPageListTreeView,
   JvExStdCtrls, JvCheckBox, JvExExtCtrls, JvRadioGroup, frameOutputControlUnit,
-  ArgusDataEntry, {ehshelprouter,} Mask, JvExMask, JvSpin, JvCombobox, JvListComb,
+  ArgusDataEntry, Mask, JvExMask, JvSpin, JvCombobox, JvListComb,
   JvNetscapeSplitter;
 
 type

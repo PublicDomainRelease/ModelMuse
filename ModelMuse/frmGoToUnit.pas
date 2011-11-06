@@ -125,7 +125,7 @@ type
     // @name moves the selected view or views to the selected
     // cell, object, or position.
     procedure SetData;
-    procedure SetGridSpinEditMax(Grid: TCustomGrid);
+    procedure SetGridSpinEditMax(Grid: TCustomModelGrid);
     { Private declarations }
   public
     { Public declarations }
@@ -153,13 +153,13 @@ procedure SetSidePosition(const YCoordinate, ZCoordinate: real);
 procedure SetSideCornerPosition(const YCoordinate, ZCoordinate: real);
 
 // @name moves the top view of the model to the cell at Column, Row.
-procedure MoveToTopCell(Grid: TCustomGrid; const Column, Row: integer);
+procedure MoveToTopCell(Grid: TCustomModelGrid; const Column, Row: integer);
 
 // @name moves the front view of the model to the cell at Column, Layer.
-procedure MoveToFrontCell(Grid: TCustomGrid; const Column, Layer: integer);
+procedure MoveToFrontCell(Grid: TCustomModelGrid; const Column, Layer: integer);
 
 // @name moves the side view of the model to the cell at Row, Layer.
-procedure MoveToSideCell(Grid: TCustomGrid; const Row, Layer: integer);
+procedure MoveToSideCell(Grid: TCustomModelGrid; const Row, Layer: integer);
 
 procedure MoveToImage(BitMapItem: TCompressedBitmapItem);
 
@@ -277,7 +277,7 @@ begin
   end;
 end;
 
-procedure MoveToTopCell(Grid: TCustomGrid; const Column, Row: integer);
+procedure MoveToTopCell(Grid: TCustomModelGrid; const Column, Row: integer);
 var
   XCoordinate, YCoordinate: double;
   TopPoint: TPoint2D;
@@ -288,7 +288,7 @@ begin
   SetTopPosition(XCoordinate, YCoordinate);
 end;
 
-procedure MoveToFrontCell(Grid: TCustomGrid; const Column, Layer: integer);
+procedure MoveToFrontCell(Grid: TCustomModelGrid; const Column, Layer: integer);
 var
   XCoordinate, ZCoordinate: double;
   FrontPoint: T3DRealPoint;
@@ -300,7 +300,7 @@ begin
   SetFrontPosition(XCoordinate, ZCoordinate);
 end;
 
-procedure MoveToSideCell(Grid: TCustomGrid; const Row, Layer: integer);
+procedure MoveToSideCell(Grid: TCustomModelGrid; const Row, Layer: integer);
 var
   YCoordinate, ZCoordinate: double;
   SidePoint: T3DRealPoint;
@@ -326,7 +326,7 @@ var
   AList: TList;
   Layer: integer;
   BitMapItem: TCompressedBitmapItem;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   procedure SetGridSpinEditValue(SE: TJvSpinEdit; NewValue: integer);
   begin
     if NewValue <= SE.MaxValue then
@@ -565,7 +565,7 @@ begin
   end;
 end;
 
-procedure TfrmGoTo.SetGridSpinEditMax(Grid: TCustomGrid);
+procedure TfrmGoTo.SetGridSpinEditMax(Grid: TCustomModelGrid);
 begin
   seCol.MaxValue := Grid.ColumnCount;
   seRow.MaxValue := Grid.RowCount;
@@ -576,7 +576,9 @@ end;
 procedure TfrmGoTo.FormCreate(Sender: TObject);
 begin
   inherited;
+  pcMain.ActivePage := tabCell;
   pcMain.ActivePageIndex := 0;
+
 
   FillComboWithModelNames(comboModel);
 

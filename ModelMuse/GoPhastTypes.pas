@@ -6,7 +6,7 @@ interface
 
 uses
   GR32, // defines TColor32.
-  SysUtils, Types, Classes, FastGEO;
+  SysUtils, Types, Classes, FastGEO, Graphics;
 
 type
   PReal = ^Real;
@@ -270,6 +270,8 @@ type
     procedure SetRealProperty(var AField: double; const NewValue: double);
     procedure SetStringProperty(var AField: string; const NewValue: string);
     procedure SetPointProperty(var AField: TPoint; const NewValue: TPoint);
+    procedure SetColorProperty(var AField: TColor; const NewValue: TColor);
+    procedure SetDataTimeProperty(var AField: TDateTime; const NewValue: TDateTime);
   public
     Constructor Create(Model: TBaseModel);
   end;
@@ -432,7 +434,7 @@ implementation
 
 
 {$IFNDEF Testing}
-uses frmGoPhastUnit, PhastModelUnit;
+uses PhastModelUnit;
 {$ENDIF}
 
 function StrToStatFlag(Const AStatFlagLabel: string): TStatFlag;
@@ -526,6 +528,26 @@ end;
 
 procedure TGoPhastPersistent.SetBooleanProperty(var AField: boolean;
   const NewValue: boolean);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
+end;
+
+procedure TGoPhastPersistent.SetColorProperty(var AField: TColor;
+  const NewValue: TColor);
+begin
+  if AField <> NewValue then
+  begin
+    AField := NewValue;
+    InvalidateModel;
+  end;
+end;
+
+procedure TGoPhastPersistent.SetDataTimeProperty(var AField: TDateTime;
+  const NewValue: TDateTime);
 begin
   if AField <> NewValue then
   begin

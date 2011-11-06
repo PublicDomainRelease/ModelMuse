@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="zrkk1yycq90zb8f_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:TripackTypes.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TripackTypes.NI" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TripackTypes.NJ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TripackTypes.LWK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TripackTypes.N6" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TripackTypes.NTMX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TripackTypes.NCMAX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TripackTypes.NMAX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TripackTypes.NROW" />
+    </reference>
+  </view>
+</nodeSet>

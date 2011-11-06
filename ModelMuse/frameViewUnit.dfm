@@ -198,5 +198,13 @@ object frameView: TframeView
       HelpContext = 1520
       OnClick = miInvertSelectedVerticesClick
     end
+    object miLockSelectedObjects: TMenuItem
+      Caption = 'Lock Selected Objects'
+      OnClick = miLockSelectedObjectsClick
+    end
+    object miUnlockSelectedObjects: TMenuItem
+      Caption = 'Unlock Selected Objects'
+      OnClick = miUnlockSelectedObjectsClick
+    end
   end
 end

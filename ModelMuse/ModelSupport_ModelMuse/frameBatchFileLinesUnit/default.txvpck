@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="e9l3h0n5q7psqql_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameBatchFileLinesUnit.TframeBatchFileLines">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameBatchFileLinesUnit.TframeBatchFileLines.lblLines" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameBatchFileLinesUnit.TframeBatchFileLines.memoLines" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameBatchFileLinesUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+  </view>
+</nodeSet>

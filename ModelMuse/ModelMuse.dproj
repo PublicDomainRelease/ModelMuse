@@ -42,7 +42,7 @@
 			<DCC_E>false</DCC_E>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
-			<DCC_Define>RELEASE;SUBSEG;$(DCC_Define)</DCC_Define>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
@@ -130,9 +130,6 @@
 			</DCCReference>
 			<DCCReference Include="frmGridAngleUnit.pas">
 				<Form>frmGridAngle</Form>
-			</DCCReference>
-			<DCCReference Include="frmGridColorUnit.pas">
-				<Form>frmGridColor</Form>
 			</DCCReference>
 			<DCCReference Include="frmGridSpacingUnit.pas">
 				<Form>frmGridSpacing</Form>
@@ -565,12 +562,6 @@
 				<Form>frameFluxObs</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
-			<DCCReference Include="frmCustomColorUnit.pas">
-				<Form>frmCustomColor</Form>
-			</DCCReference>
-			<DCCReference Include="frmContourDataUnit.pas">
-				<Form>frmContourData</Form>
-			</DCCReference>
 			<DCCReference Include="frmSpecifyContoursUnit.pas">
 				<Form>frmSpecifyContours</Form>
 			</DCCReference>
@@ -650,17 +641,8 @@
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="PathlineReader.pas"/>
-			<DCCReference Include="frmModpathDisplayUnit.pas">
-				<Form>frmModpathDisplay</Form>
-			</DCCReference>
 			<DCCReference Include="frmPhastLocationUnit.pas">
 				<Form>frmPhastLocation</Form>
-			</DCCReference>
-			<DCCReference Include="frmEndPointDisplayUnit.pas">
-				<Form>frmEndPointDisplay</Form>
-			</DCCReference>
-			<DCCReference Include="frmTimeSeriesDisplayUnit.pas">
-				<Form>frmTimeSeriesDisplay</Form>
 			</DCCReference>
 			<DCCReference Include="ModflowBCF_WriterUnit.pas"/>
 			<DCCReference Include="ModflowSubsidenceDefUnit.pas"/>
@@ -768,8 +750,40 @@
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="ModflowHeadObsResults.pas"/>
-			<DCCReference Include="frmHeadObservationResultsUnit.pas">
-				<Form>frmHeadObservationResults</Form>
+			<DCCReference Include="frameStreamLinkUnit.pas">
+				<Form>frameStreamLink</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frmDisplayDataUnit.pas">
+				<Form>frmDisplayData</Form>
+			</DCCReference>
+			<DCCReference Include="frameHeadObservationResultsUnit.pas">
+				<Form>frameHeadObservationResults</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameModpathDisplayUnit.pas">
+				<Form>frameModpathDisplay</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameModpathTimeSeriesDisplayUnit.pas">
+				<Form>frameModpathTimeSeriesDisplay</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameModpathEndpointDisplayUnit.pas">
+				<Form>frameModpathEndpointDisplay</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameCustomColorUnit.pas">
+				<Form>frameCustomColor</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameColorGridUnit.pas">
+				<Form>frameColorGrid</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frameContourDataUnit.pas">
+				<Form>frameContourData</Form>
+				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<None Include="ModelMuse.todo"/>
 			<None Include="ModelSupport_ModelMuse\default.txaPackage"/>
@@ -1465,7 +1479,7 @@
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">2</VersionInfo>
-						<VersionInfo Name="MinorVer">11</VersionInfo>
+						<VersionInfo Name="MinorVer">12</VersionInfo>
 						<VersionInfo Name="Release">0</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
@@ -1479,15 +1493,15 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">U. S. Geological Survey</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">2.11.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">2.12.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright">Public Domain software</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
 						<VersionInfoKeys Name="ProductName">ModelMuse</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">2.11.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">2.12.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
-						<VersionInfoKeys Name="Last Compile">2011-09-27 11:20</VersionInfoKeys>
+						<VersionInfoKeys Name="Last Compile">2011-11-07 14:04</VersionInfoKeys>
 					</VersionInfoKeys>
 					<Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\dcloffice2k150.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>

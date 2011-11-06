@@ -74,7 +74,7 @@ type
     lblHeadClosure: TLabel;
     seMaxIterChimd: TJvSpinEdit;
     lblMaxIterChimd: TLabel;
-    cbGoFail: TCheckBox;
+    cbContinue: TCheckBox;
     procedure comboOptionsChange(Sender: TObject);
     procedure comboSolverMethodChange(Sender: TObject);
     procedure comboIluMethodChange(Sender: TObject);
@@ -175,7 +175,7 @@ begin
   rdeDropTolerance.Text := FloatToStr(NwtPackage.DropTolerancePreconditioning.Value);
   rdeHeadClosure.Text := FloatToStr(NwtPackage.InnerHeadClosureCriterion.Value);
   seMaxIterChimd.AsInteger := NwtPackage.MaxInnerIterations;
-  cbGoFail.Checked := NwtPackage.GoFail;
+  cbContinue.Checked := NwtPackage.ContinueNWT;
 
   EnableTabs;
   EnableFillLevelControls;
@@ -228,7 +228,7 @@ begin
   NwtPackage.DropTolerancePreconditioning.Value := StrToFloat(rdeDropTolerance.Text);
   NwtPackage.InnerHeadClosureCriterion.Value := StrToFloat(rdeHeadClosure.Text);
   NwtPackage.MaxInnerIterations := seMaxIterChimd.AsInteger;
-  NwtPackage.GoFail := cbGoFail.Checked;
+  NwtPackage.ContinueNWT := cbContinue.Checked;
 end;
 
 end.

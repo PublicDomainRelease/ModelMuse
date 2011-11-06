@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="6klx1rnwp35uglr_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmGoToUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.MoveToTopCell(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.SetSidePosition(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.SetFrontPosition(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.SetTopPosition(System.Real,System.Real)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.MoveToImage(CompressedImageUnit.TCompressedBitmapItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.MoveToSideCell(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.MoveToFrontCell(System.Int32,System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmGoToUnit.TfrmGoTo">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.TfrmGoTo.FormShow(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.TfrmGoTo.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.TfrmGoTo.cbClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.TfrmGoTo.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.lvImages" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.tabImage" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.seLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.seRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.seCol" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.tabPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.tabObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.tabCell" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.rdeZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.rdeYPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.rdeY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.rdeXPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.rdeX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.pnlObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.pnlBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.pcMain" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.lvScreenObjects" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.lblZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.lblYPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.lblY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.lblXPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.lblX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.lblRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.lblLay" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.lblCol" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.cbTop" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.cbSide" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.cbSelectObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.cbFront" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGoToUnit.TfrmGoTo.btnCancel" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.TfrmGoTo.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.TfrmGoTo.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGoToUnit.TfrmGoTo.pcMainChange(System.Object)" />
+    </reference>
+  </view>
+</nodeSet>

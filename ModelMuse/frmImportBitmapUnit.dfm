@@ -9,6 +9,8 @@ inherited frmImportBitmap: TfrmImportBitmap
   VertScrollBar.Range = 98
   ActiveControl = btnSelectImage
   Caption = 'Import Image'
+  ExplicitLeft = -86
+  ExplicitTop = -33
   ExplicitWidth = 800
   ExplicitHeight = 594
   PixelsPerInch = 96
@@ -68,8 +70,8 @@ inherited frmImportBitmap: TfrmImportBitmap
       OnClick = rgViewDirectionClick
     end
     object btnOK: TBitBtn
-      Left = 603
-      Top = 88
+      Left = 579
+      Top = 87
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
@@ -101,8 +103,8 @@ inherited frmImportBitmap: TfrmImportBitmap
       OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
-      Left = 698
-      Top = 88
+      Left = 674
+      Top = 87
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
@@ -121,8 +123,8 @@ inherited frmImportBitmap: TfrmImportBitmap
       TabOrder = 4
     end
     object btnHelp: TBitBtn
-      Left = 506
-      Top = 88
+      Left = 482
+      Top = 87
       Width = 91
       Height = 33
       Anchors = [akTop, akRight]
@@ -172,13 +174,13 @@ inherited frmImportBitmap: TfrmImportBitmap
       BevelOuter = bvNone
       ColumnCollection = <
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end
         item
-          Value = 33.333333333333340000
+          Value = 33.333333333333330000
         end>
       ControlCollection = <
         item
@@ -205,7 +207,7 @@ inherited frmImportBitmap: TfrmImportBitmap
         135
         32)
       object sbAddRow: TSpeedButton
-        Left = 11
+        Left = 10
         Top = 5
         Width = 23
         Height = 22
@@ -223,10 +225,11 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentShowHint = False
         ShowHint = True
         OnClick = sbAddRowClick
+        ExplicitLeft = 11
         ExplicitTop = 6
       end
       object sbInsertRow: TSpeedButton
-        Left = 56
+        Left = 54
         Top = 5
         Width = 23
         Height = 22
@@ -244,10 +247,11 @@ inherited frmImportBitmap: TfrmImportBitmap
         ParentShowHint = False
         ShowHint = True
         OnClick = sbInsertRowClick
+        ExplicitLeft = 56
         ExplicitTop = 6
       end
       object sbDeleteRow: TSpeedButton
-        Left = 101
+        Left = 100
         Top = 5
         Width = 23
         Height = 22

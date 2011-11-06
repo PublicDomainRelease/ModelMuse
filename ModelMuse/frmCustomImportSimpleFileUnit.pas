@@ -18,6 +18,8 @@ type
   TImportMethod = (imLowest, imHighest, imAverage, imClosest);
   TImportProgress = procedure (Sender: TObject; FractionDone: double) of object;
 
+  EDifferentPointsError = class(Exception);
+
   {@abstract(@name is a base class used to import DXF and Surfer
     grid files into ModelMuse.)
     See @link(TfrmGoPhast.miImportDXFFileClick).}
@@ -82,14 +84,14 @@ type
     MinY: Real;
     MaxY: Real;
     procedure GetGridMinMax;
-    procedure HandleAPoint(APoint3D: TPoint3D; ImportMethod: TImportMethod; EvalAt: TEvaluatedAt; Grid: TCustomGrid);
+    procedure HandleAPoint(APoint3D: TPoint3D; ImportMethod: TImportMethod; EvalAt: TEvaluatedAt; Grid: TCustomModelGrid);
     // @name updates the contents of rgEvaluatedAt to the appropriate
     // values depending on what model (PHAST or MODFLOW) is selected.
     procedure UpdateEvalAt;
     // @name fills @link(comboDataSets) with the names of
     // @link(TDataArray)s that can be used by the imported
     // @link(TScreenObject)s.
-    procedure GetDataSets;
+    procedure GetDataSets; virtual;
     // @name fills @link(comboInterpolators) with a list of
     // @link(TCustom2DInterpolater)s.
     procedure GetInterpolators;
@@ -103,14 +105,16 @@ type
     // of the @link(TDataArray).
     // If @name does create a new @link(TDataArray), @link(comboDataSets).Text
     // is set to the name of the @link(TDataArray).
-    procedure MakeNewDataSet(NewDataSets: TList; Suffix, Classification: string);
+    procedure MakeNewDataSet(NewDataSets: TList; Suffix, Classification: string;
+      NewDataSetNeeded: Boolean; FileName: string = '');
     { Set the captions of @link(cbEnclosedCells), @link(cbIntersectedCells),
       and @link(cbInterpolation) based on @link(rgEvaluatedAt).ItemIndex
       depending on what model (PHAST or MODFLOW) is selected.}
     procedure SetCheckBoxCaptions; virtual;
     procedure InitializeArrays(ImportMethod: TImportMethod);
-    procedure AssignPointsAndValues(Grid: TCustomGrid;
-      AScreenObject: TScreenObject; Item: TValueArrayItem);
+    procedure AssignPointsAndValues(Grid: TCustomModelGrid;
+      AScreenObject: TScreenObject; Item: TValueArrayItem;
+      ComparePoints: Boolean = False);
     procedure ComputeAverage(ImportMethod: TImportMethod;
       ImportProgress: TImportProgress = nil);
     { Protected declarations }
@@ -118,10 +122,15 @@ type
     { Public declarations }
   end;
 
+function PointsEqual(Point1, Point2: TPoint2D): Boolean;
+
+resourcestring
+  StrPointsDontMatch = 'Points don''t match';
+
 implementation
 
-uses frmGoPhastUnit, DataSetUnit, 
-  RbwParser, UndoItems, frmProgressUnit, frmDataSetsUnits, ModelMuseUtilities, 
+uses frmGoPhastUnit, DataSetUnit,
+  RbwParser, UndoItems, frmProgressUnit, frmDataSetsUnits, ModelMuseUtilities,
   PhastModelUnit;
 
 {$R *.dfm}
@@ -135,7 +144,7 @@ begin
 end;
 
 procedure TfrmCustomImportSimpleFile.MakeNewDataSet(NewDataSets: TList;
-  Suffix, Classification: string);
+  Suffix, Classification: string; NewDataSetNeeded: Boolean; FileName: string = '');
 var
   NewDataSetName: string;
   DataSet: TDataArray;
@@ -144,9 +153,14 @@ var
 
 begin
   Assert(SizeOf(TObject) = SizeOf(TInterpolatorType));
-  if comboDataSets.ItemIndex = 0 then
+//  if comboDataSets.ItemIndex = 0 then
+  if NewDataSetNeeded then
   begin
-    NewDataSetName := ExtractFileName(OpenDialogFile.FileName);
+    if FileName = '' then
+    begin
+      FileName := OpenDialogFile.FileName;
+    end;
+    NewDataSetName := ExtractFileName(FileName);
     NewDataSetName := ChangeFileExt(NewDataSetName, '');
     NewDataSetName := GenerateNewName(NewDataSetName + Suffix);
 
@@ -202,7 +216,7 @@ begin
 end;
 
 procedure TfrmCustomImportSimpleFile.HandleAPoint(APoint3D: TPoint3D;
-  ImportMethod: TImportMethod; EvalAt: TEvaluatedAt; Grid: TCustomGrid);
+  ImportMethod: TImportMethod; EvalAt: TEvaluatedAt; Grid: TCustomModelGrid);
 var
   ADistance: TFloat;
   ARow: Integer;
@@ -281,7 +295,7 @@ procedure TfrmCustomImportSimpleFile.InitializeArrays(
 var
   RowIndex: Integer;
   ColIndex: Integer;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   EvalAt: TEvaluatedAt;
 begin
   Grid := frmGoPhast.PhastModel.Grid;
@@ -440,7 +454,7 @@ end;
 
 procedure TfrmCustomImportSimpleFile.GetGridMinMax;
 var
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   procedure EnsureMinMax(var MinValue, MaxValue: Real);
   var
     Temp: Real;
@@ -463,8 +477,13 @@ begin
 
 end;
 
-procedure TfrmCustomImportSimpleFile.AssignPointsAndValues(Grid: TCustomGrid;
-  AScreenObject: TScreenObject; Item: TValueArrayItem);
+function PointsEqual(Point1, Point2: TPoint2D): Boolean;
+begin
+  result := (Point1.x = Point2.x) and (Point1.y = Point2.y);
+end;
+
+procedure TfrmCustomImportSimpleFile.AssignPointsAndValues(Grid: TCustomModelGrid;
+  AScreenObject: TScreenObject; Item: TValueArrayItem; ComparePoints: Boolean = False);
 var
   ValueIndex: Integer;
   RowIndex: Integer;
@@ -481,13 +500,24 @@ begin
         GridPoint2D := CenterPoints[RowIndex, ColIndex];
         GridPoint2D :=
           Grid.RotateFromGridCoordinatesToRealWorldCoordinates(GridPoint2D);
-        AScreenObject.AddPoint(GridPoint2D, True);
+        if ComparePoints then
+        begin
+          if not PointsEqual(AScreenObject.Points[ValueIndex], GridPoint2D) then
+          begin
+            raise EDifferentPointsError.Create(StrPointsDontMatch);
+          end;
+        end
+        else
+        begin
+          AScreenObject.AddPoint(GridPoint2D, True);
+        end;
         Item.Values.RealValues[ValueIndex] := Values[RowIndex, ColIndex];
         Inc(ValueIndex);
       end;
     end;
   end;
   Item.Values.Count := ValueIndex;
+  Item.CacheData;
 end;
 
 procedure TfrmCustomImportSimpleFile.cbEnclosedCellsClick(Sender: TObject);
@@ -500,5 +530,6 @@ begin
 end;
 
 end.
+
 
 

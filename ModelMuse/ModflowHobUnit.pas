@@ -18,6 +18,15 @@ type
 
   TMultiObsMethod = (momAllHeads, momHeadAndDrawdown);
 
+  THeadObsResults = record
+    Imported: boolean;
+    Observed: double;
+    Simulated: double;
+    Difference: double;
+    class operator Equal(const Left, Right: THeadObsResults): Boolean;
+    class operator NotEqual(const Left, Right: THeadObsResults): Boolean;
+  end;
+
   { TODO : Mark observations as "observations", "predictions", or "omitted". }
   // @name represents a MODFLOW General Head boundary for one time interval.
   // @name is stored by @link(TGhbCollection).
@@ -1094,6 +1103,26 @@ begin
       Break;
     end;
   end;
+end;
+
+{ THeadObsResults }
+
+class operator THeadObsResults.Equal(const Left,
+  Right: THeadObsResults): Boolean;
+begin
+  result := (Left.Imported = Right.Imported)
+    and (Left.Observed = Right.Observed)
+    and (Left.Simulated = Right.Simulated)
+    and (Left.Difference = Right.Difference);
+end;
+
+class operator THeadObsResults.NotEqual(const Left,
+  Right: THeadObsResults): Boolean;
+begin
+  result := (Left.Imported <> Right.Imported)
+    or (Left.Observed <> Right.Observed)
+    or (Left.Simulated <> Right.Simulated)
+    or (Left.Difference <> Right.Difference);
 end;
 
 end.

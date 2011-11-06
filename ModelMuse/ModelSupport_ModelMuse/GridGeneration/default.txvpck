@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="xpl34bbwpl883aq_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GridGeneration.TZone">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:GridGeneration.TZone.DesiredCellSize[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GridGeneration.TZone.SetDesiredCellSize(System.Real)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GridGeneration.TZone.UpperLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GridGeneration.TZone.LowerLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GridGeneration.TZone.FDesiredCellSize" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GridGeneration.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GridGeneration.GenerateGrid(out@System.String,System.Boolean,System.Real,System.Boolean,System.Boolean,System.Boolean,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GridGeneration.MoveToGridCenter()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GridGeneration.CreateCells(Contnrs.TObjectList,RealListUnit.TRealList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GridGeneration.SortZoneList(Contnrs.TObjectList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GridGeneration.SortZonesBySize(System.Pointer,System.Pointer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GridGeneration.SortZones(System.Pointer,System.Pointer)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GridGeneration.StrToGenerateAGrid" />
+    </reference>
+  </view>
+</nodeSet>

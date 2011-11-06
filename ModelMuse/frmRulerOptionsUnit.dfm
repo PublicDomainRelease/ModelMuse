@@ -1,40 +1,41 @@
 inherited frmRulerOptions: TfrmRulerOptions
   Left = 582
   Top = 301
-  Width = 376
-  Height = 262
+  Width = 403
+  Height = 274
   HelpType = htKeyword
   HelpKeyword = 'Ruler_Format_Dialog_Box'
   VertScrollBar.Range = 54
   ActiveControl = pcMain
   Caption = 'Ruler Format'
-  ExplicitWidth = 376
-  ExplicitHeight = 262
+  ExplicitWidth = 403
+  ExplicitHeight = 274
   PixelsPerInch = 96
   TextHeight = 18
   object pcMain: TPageControl
     Left = 0
     Top = 0
-    Width = 368
-    Height = 182
+    Width = 395
+    Height = 194
     ActivePage = tabTopX
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 361
-    ExplicitHeight = 148
+    ExplicitWidth = 368
+    ExplicitHeight = 182
     object tabTopX: TTabSheet
       Caption = 'Top X'
-      ExplicitWidth = 376
-      ExplicitHeight = 164
+      ExplicitWidth = 360
+      ExplicitHeight = 149
       inline frameTopX: TframeRulerOptions
         Left = 0
         Top = 0
-        Width = 360
-        Height = 149
+        Width = 387
+        Height = 161
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitHeight = 131
+        ExplicitWidth = 360
+        ExplicitHeight = 149
         inherited lblPreview: TLabel
           Width = 9
           Height = 18
@@ -66,14 +67,13 @@ inherited frmRulerOptions: TfrmRulerOptions
           ExplicitHeight = 18
         end
         inherited lblSpacing: TLabel
-          Width = 241
+          Width = 197
           Height = 18
-          ExplicitWidth = 241
+          ExplicitWidth = 197
           ExplicitHeight = 18
         end
         inherited rdePreviewNumber: TRbwDataEntry
           Height = 28
-          ItemHeight = 18
           ExplicitHeight = 28
         end
         inherited sePrecision: TJvSpinEdit
@@ -85,25 +85,26 @@ inherited frmRulerOptions: TfrmRulerOptions
           ExplicitHeight = 26
         end
         inherited seSpacing: TJvSpinEdit
-          Height = 23
-          ExplicitHeight = 23
+          Height = 26
+          ExplicitHeight = 26
         end
       end
     end
     object tabTopY: TTabSheet
       Caption = 'Top Y'
       ImageIndex = 1
-      ExplicitWidth = 376
-      ExplicitHeight = 164
+      ExplicitWidth = 360
+      ExplicitHeight = 149
       inline frameTopY: TframeRulerOptions
         Left = 0
         Top = 0
-        Width = 360
-        Height = 149
+        Width = 387
+        Height = 161
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitHeight = 131
+        ExplicitWidth = 360
+        ExplicitHeight = 149
         inherited lblPreview: TLabel
           Width = 9
           Height = 18
@@ -135,14 +136,13 @@ inherited frmRulerOptions: TfrmRulerOptions
           ExplicitHeight = 18
         end
         inherited lblSpacing: TLabel
-          Width = 241
+          Width = 197
           Height = 18
-          ExplicitWidth = 241
+          ExplicitWidth = 197
           ExplicitHeight = 18
         end
         inherited rdePreviewNumber: TRbwDataEntry
           Height = 28
-          ItemHeight = 18
           ExplicitHeight = 28
         end
         inherited sePrecision: TJvSpinEdit
@@ -154,25 +154,26 @@ inherited frmRulerOptions: TfrmRulerOptions
           ExplicitHeight = 26
         end
         inherited seSpacing: TJvSpinEdit
-          Height = 23
-          ExplicitHeight = 23
+          Height = 26
+          ExplicitHeight = 26
         end
       end
     end
     object tabFrontX: TTabSheet
       Caption = 'Front X'#39
       ImageIndex = 2
-      ExplicitWidth = 376
-      ExplicitHeight = 164
+      ExplicitWidth = 360
+      ExplicitHeight = 149
       inline frameFrontX: TframeRulerOptions
         Left = 0
         Top = 0
-        Width = 360
-        Height = 149
+        Width = 387
+        Height = 161
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitHeight = 131
+        ExplicitWidth = 360
+        ExplicitHeight = 149
         inherited lblPreview: TLabel
           Width = 9
           Height = 18
@@ -204,14 +205,13 @@ inherited frmRulerOptions: TfrmRulerOptions
           ExplicitHeight = 18
         end
         inherited lblSpacing: TLabel
-          Width = 241
+          Width = 197
           Height = 18
-          ExplicitWidth = 241
+          ExplicitWidth = 197
           ExplicitHeight = 18
         end
         inherited rdePreviewNumber: TRbwDataEntry
           Height = 28
-          ItemHeight = 18
           ExplicitHeight = 28
         end
         inherited sePrecision: TJvSpinEdit
@@ -223,25 +223,26 @@ inherited frmRulerOptions: TfrmRulerOptions
           ExplicitHeight = 26
         end
         inherited seSpacing: TJvSpinEdit
-          Height = 23
-          ExplicitHeight = 23
+          Height = 26
+          ExplicitHeight = 26
         end
       end
     end
     object tabFrontZ: TTabSheet
       Caption = 'Front Z'
       ImageIndex = 3
-      ExplicitWidth = 376
-      ExplicitHeight = 164
+      ExplicitWidth = 360
+      ExplicitHeight = 149
       inline frameFrontZ: TframeRulerOptions
         Left = 0
         Top = 0
-        Width = 360
-        Height = 149
+        Width = 387
+        Height = 161
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitHeight = 131
+        ExplicitWidth = 360
+        ExplicitHeight = 149
         inherited lblPreview: TLabel
           Width = 9
           Height = 18
@@ -273,14 +274,13 @@ inherited frmRulerOptions: TfrmRulerOptions
           ExplicitHeight = 18
         end
         inherited lblSpacing: TLabel
-          Width = 241
+          Width = 197
           Height = 18
-          ExplicitWidth = 241
+          ExplicitWidth = 197
           ExplicitHeight = 18
         end
         inherited rdePreviewNumber: TRbwDataEntry
           Height = 28
-          ItemHeight = 18
           ExplicitHeight = 28
         end
         inherited sePrecision: TJvSpinEdit
@@ -292,25 +292,26 @@ inherited frmRulerOptions: TfrmRulerOptions
           ExplicitHeight = 26
         end
         inherited seSpacing: TJvSpinEdit
-          Height = 23
-          ExplicitHeight = 23
+          Height = 26
+          ExplicitHeight = 26
         end
       end
     end
     object tabSideY: TTabSheet
       Caption = 'Side Y'#39
       ImageIndex = 4
-      ExplicitWidth = 376
-      ExplicitHeight = 164
+      ExplicitWidth = 360
+      ExplicitHeight = 149
       inline frameSideY: TframeRulerOptions
         Left = 0
         Top = 0
-        Width = 360
-        Height = 149
+        Width = 387
+        Height = 161
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitHeight = 131
+        ExplicitWidth = 360
+        ExplicitHeight = 149
         inherited lblPreview: TLabel
           Width = 9
           Height = 18
@@ -342,14 +343,13 @@ inherited frmRulerOptions: TfrmRulerOptions
           ExplicitHeight = 18
         end
         inherited lblSpacing: TLabel
-          Width = 241
+          Width = 197
           Height = 18
-          ExplicitWidth = 241
+          ExplicitWidth = 197
           ExplicitHeight = 18
         end
         inherited rdePreviewNumber: TRbwDataEntry
           Height = 28
-          ItemHeight = 18
           ExplicitHeight = 28
         end
         inherited sePrecision: TJvSpinEdit
@@ -361,25 +361,26 @@ inherited frmRulerOptions: TfrmRulerOptions
           ExplicitHeight = 26
         end
         inherited seSpacing: TJvSpinEdit
-          Height = 23
-          ExplicitHeight = 23
+          Height = 26
+          ExplicitHeight = 26
         end
       end
     end
     object tabSideZ: TTabSheet
       Caption = 'Side Z'
       ImageIndex = 5
-      ExplicitWidth = 353
-      ExplicitHeight = 115
+      ExplicitWidth = 360
+      ExplicitHeight = 149
       inline frameSideZ: TframeRulerOptions
         Left = 0
         Top = 0
-        Width = 360
-        Height = 149
+        Width = 387
+        Height = 161
         Align = alClient
         TabOrder = 0
         TabStop = True
-        ExplicitHeight = 131
+        ExplicitWidth = 360
+        ExplicitHeight = 149
         inherited lblPreview: TLabel
           Width = 9
           Height = 18
@@ -411,14 +412,13 @@ inherited frmRulerOptions: TfrmRulerOptions
           ExplicitHeight = 18
         end
         inherited lblSpacing: TLabel
-          Width = 241
+          Width = 197
           Height = 18
-          ExplicitWidth = 241
+          ExplicitWidth = 197
           ExplicitHeight = 18
         end
         inherited rdePreviewNumber: TRbwDataEntry
           Height = 28
-          ItemHeight = 18
           ExplicitHeight = 28
         end
         inherited sePrecision: TJvSpinEdit
@@ -430,47 +430,56 @@ inherited frmRulerOptions: TfrmRulerOptions
           ExplicitHeight = 26
         end
         inherited seSpacing: TJvSpinEdit
-          Height = 23
-          ExplicitHeight = 23
+          Height = 26
+          ExplicitHeight = 26
         end
       end
     end
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 182
-    Width = 368
+    Top = 194
+    Width = 395
     Height = 46
     Align = alBottom
     ParentColor = True
     TabOrder = 1
-    ExplicitTop = 148
-    ExplicitWidth = 361
+    ExplicitTop = 182
+    ExplicitWidth = 368
     object btnCancel: TBitBtn
-      Left = 271
+      Left = 279
       Top = 6
       Width = 91
       Height = 33
-      TabOrder = 2
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 2
     end
     object btnOK: TBitBtn
-      Left = 174
+      Left = 182
       Top = 6
       Width = 91
       Height = 33
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnHelp: TBitBtn
-      Left = 77
+      Left = 85
       Top = 6
       Width = 91
       Height = 33
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
   end
 end

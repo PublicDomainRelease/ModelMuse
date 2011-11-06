@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="ngn8ggswo8em1xi_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSteadyFlowUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.cbDefaultMinTimeStepClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.cbDefaultMaxTimeStepClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.cbDefaultHeadChangeLimitClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.rdeMinTimeStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.rdeMaxTimeStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.rdeIterations" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.rdeHeadTolerance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.rdeHeadChangeLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.rdeFlowBalanceTolerance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.lblMinTimeStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.lblMaxTimeStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.lblIterations" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.lblHeadTolerance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.lblHeadChangeLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.lblFlowBalanceTolerance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.cbSteadyFlow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.cbDefaultMinTimeStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.cbDefaultMaxTimeStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.cbDefaultHeadChangeLimit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.btnCancel" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.ValidateData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TfrmSteadyFlow.cbSteadyFlowClick(System.Object)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSteadyFlowUnit.TUndoSteadyFlow">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TUndoSteadyFlow.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TUndoSteadyFlow.FNewSteadyFlowOptions" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TUndoSteadyFlow.Description()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TUndoSteadyFlow.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TUndoSteadyFlow.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSteadyFlowUnit.TUndoSteadyFlow.DoCommand()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSteadyFlowUnit.TUndoSteadyFlow.FOldSteadyFlowOptions" />
+    </reference>
+  </view>
+</nodeSet>

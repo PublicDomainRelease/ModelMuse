@@ -73,7 +73,6 @@ type
     FDeletingTime: Boolean;
     FDeletingLayer: Boolean;
     FChanged: Boolean;
-//    FHidingColumns: Boolean;
     FTimesCountChanged: Boolean;
     FLayerCountChanged: Boolean;
     procedure ClearGrid(Grid: TRbwDataGrid4);
@@ -89,7 +88,6 @@ type
     procedure LayoutMultiHeadEditControls;
     { Private declarations }
   public
-//    procedure HideUcodeColumns;
     procedure GetData(List: TScreenObjectEditCollection);
     procedure SetData(List: TScreenObjectEditCollection; SetAll: boolean;
       ClearAll: boolean);
@@ -348,7 +346,6 @@ begin
     rdgHeads.EndUpdate;
     rdgLayers.EndUpdate;
   end;
-//  HideUcodeColumns;
   FChanged := False;
   FTimesCountChanged := False;
   FLayerCountChanged := False;
@@ -383,7 +380,6 @@ begin
   lblTreatment.Top := comboTreatment.Top - lblTreatment.Height - 2;
 
   LayoutMultiHeadEditControls;
-//  HideUcodeColumns;
 end;
 
 procedure TframeHeadObservations.LayoutMultiHeadEditControls;
@@ -465,7 +461,6 @@ begin
   begin
     SpinEdit.AsInteger := Grid.RowCount - 1;
   end;
-//  HideUcodeColumns;
 end;
 
 procedure TframeHeadObservations.DeleteSelectedRow(rdgGrid: TRbwDataGrid4;
@@ -823,21 +818,6 @@ begin
   end;
 end;
 
-//procedure TframeHeadObservations.HideUcodeColumns;
-//begin
-//  if FHidingColumns then Exit;
-//  FHidingColumns := True;
-//  try
-//    if not frmGoPhast.ShowUcodeInterface then
-//    begin
-//      rdgHeads.ColWidths[Ord(hocStatistic)] := 0;
-//      rdgHeads.ColWidths[Ord(hocStatFlag)] := 0;
-//    end;
-//  finally
-//    FHidingColumns := False;
-//  end;
-//end;
-
 procedure TframeHeadObservations.seTimesChange(Sender: TObject);
 var
   CharNumber: integer;
@@ -877,7 +857,6 @@ begin
   finally
     FDeletingTime := False;
   end;
-//  HideUcodeColumns;
 end;
 
 end.

@@ -7,11 +7,38 @@ interface
 uses
   GR32_Layers, // TPositionedLayer is declared in GR32_Layers.
   GR32, // TBitmap32, and TFloatRect are declared in GR32.
-  Types, SysUtils, Math, Graphics, Classes, Contnrs, GoPhastTypes;
+  Types, SysUtils, Math, Graphics, Classes, Contnrs, GoPhastTypes, FastGEO,
+  ZoomBox2;
 
 type
   {@name defines how two line segments intersect with each other.}
   TIntersectResult = (irDoIntersect, irDontIntersect, irColinear);
+
+  TSimpleLine = class (TObject)
+  private
+    // See @link(Count).
+    FCount: integer;
+    // See @link(Points)
+    FPoints: TPolyLine2D;
+    FZoomBox: TQRbwZoomBox2;
+    // See @link(Points).
+    function GetPoint(const Index: integer): TPoint2D;
+    procedure SetPoint(const Index: integer; const Value: TPoint2D);
+  public
+    Constructor Create(AZoomBox: TQRbwZoomBox2);
+    // @name adds a new point to the end of @classname
+    procedure AddPoint(const APoint: TPoint2D);
+    // @name is the number of locations in @link(Points)
+    // that is used by this @classname.
+    property Count: integer read FCount write FCount;
+    // @name draws @classname on BitMap as a polygon.
+    procedure Draw(const BitMap: TBitmap32);
+    //property Points: TPointArray read FPoints write SetPoints;
+    property Points[const Index: integer]: TPoint2D read GetPoint write SetPoint;
+    function LineLength: double;
+    property ZoomBox: TQRbwZoomBox2 read FZoomBox;
+    procedure DeleteNextToLastPoint;
+  end;
 
   {@abstract(@link(TLine)  is used to select
   objects on the screen by drawing a "lasso" around them.
@@ -19,38 +46,32 @@ type
   }
   TLine = class(TObject)
   private
-    // @name: boolean;
     // @name indicates whether or not the length of @link(FPoints) can
-    // be changed. If FCanAdjustBounds is set to @False in @link(AssignPoints).
+    // be changed. FCanAdjustBounds is set to @False in @link(AssignPoints)
+    // and @link(CopyPoints). It is used to prevent sublines
+    // (@link(FFirstSubLine) and @link(FSecondSubLine)) from
+    // adding points.
     FCanAdjustBounds: boolean;
-    // @name: integer;
     // See @link(Count).
     FCount: integer;
-    // @name: TLine;
     // @name is used to handle the first
     // half of the points in its parent TLine.
     // Its last point is shared with @link(FSecondSubLine).
     FFirstSubLine: TLine;
-    // @name: TPoint;
     // The coordinates of @name are equal to the highest X and Y coordinates
     // of any of the TPoints in @link(Points) between Start and Start+Count-1.
     FMaxP: TPoint;
-    // @name: TPoint;
     // The coordinates of @name are equal to the lowest X and Y coordinates
     // of any of the TPoints in @link(Points) between Start and Start+Count-1.
     FMinP: TPoint;
-    // @name: TPointArray;
     // See @link(Points) and @link(AssignPoints).
     FPoints: TPointArray;
-    // @name: TLine;
     // @name is used to handle the second
     // half of the points in its parent TLine.
     // Its first point is shared with @link(FFirstSubLine).
     FSecondSubLine: TLine;
-    // @name: integer;
     // See @link(Start).
     FStart: integer;
-    // @name: boolean;
     // @name indicates whether @link(FMaxP) and @link(FMinP) are up-to-date.
     FUpdateBounds: boolean;
     // @name creates @link(FFirstSubLine) and @link(FSecondSubLine) and
@@ -571,6 +592,71 @@ end;
 procedure TLines.SetCapacity(const Value: integer);
 begin
   FLines.Capacity := Value;
+end;
+
+{ TSimpleLine }
+
+procedure TSimpleLine.AddPoint(const APoint: TPoint2D);
+begin
+  if Length(FPoints) <= Count then
+  begin
+    SetLength(FPoints, Count * 2 + 1);
+  end;
+  FPoints[Count] := APoint;
+  Inc(FCount);
+end;
+
+constructor TSimpleLine.Create(AZoomBox: TQRbwZoomBox2);
+begin
+  FZoomBox := AZoomBox;
+end;
+
+procedure TSimpleLine.DeleteNextToLastPoint;
+begin
+  if Count > 2 then
+  begin
+    FPoints[Count-2] := FPoints[Count-1];
+    Dec(FCount);
+  end;
+end;
+
+procedure TSimpleLine.Draw(const BitMap: TBitmap32);
+var
+  PointArray: TPointArray;
+  PointIndex: Integer;
+begin
+  if Count > 1 then
+  begin
+    SetLength(PointArray, Count);
+    for PointIndex := 0 to Count - 1 do
+    begin
+      PointArray[PointIndex].X := FZoomBox.XCoord(FPoints[PointIndex].x);
+      PointArray[PointIndex].Y := FZoomBox.YCoord(FPoints[PointIndex].y);
+    end;
+    DrawBigPolyline32(BitMap, clBlack32, 1,
+      PointArray, True, True, 0, Count);
+  end;
+end;
+
+function TSimpleLine.GetPoint(const Index: integer): TPoint2D;
+begin
+  result := FPoints[Index];
+end;
+
+function TSimpleLine.LineLength: double;
+var
+  PointIndex: Integer;
+begin
+  result := 0;
+  for PointIndex := 0 to Count - 2 do
+  begin
+    result := result + Distance(FPoints[PointIndex], FPoints[PointIndex+1]);
+  end;
+end;
+
+procedure TSimpleLine.SetPoint(const Index: integer; const Value: TPoint2D);
+begin
+  FPoints[Index] := Value;
 end;
 
 end.

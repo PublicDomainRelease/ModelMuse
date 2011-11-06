@@ -79,17 +79,14 @@ type
   private
     FCachedCount: integer;
     FCached: Boolean;
-//    FTempFileNames: TStringList;
     FCleared: Boolean;
     FValueCellType: TValueCellType;
-//    FCondensedCount: integer;
     FTempFileName: string;
     function GetCount: integer;
     procedure SetCount(const Value: integer);
     function GetItem(Index: integer): TValueCell;
     procedure SetItem(Index: integer; const Value: TValueCell);
     procedure Restore(Start: integer = 0);
-//    procedure Condense;
   public
     function Add(Item: TValueCell): integer;
     procedure Cache;
@@ -209,38 +206,6 @@ begin
   result := inherited Add(Item);
 end;
 
-//procedure TValueCellList.Condense;
-//var
-//  TempList: TList;
-//  Index: Integer;
-//begin
-//  if FCondensedCount >= MaxCondensed then
-//  begin
-//    FCondensedCount := 0;
-//  end;
-//  TempList := TList.Create;
-//  try
-//    TempList.Capacity := inherited Count;
-//    for Index := 0 to inherited Count - 1 do
-//    begin
-//      TempList.Add(inherited Items[Index])
-//    end;
-//    OwnsObjects := False;
-//    Clear;
-//    FCleared := True;
-//    OwnsObjects := True;
-//    FCached := True;
-//    Restore(FCondensedCount);
-//    for Index := 0 to TempList.Count - 1 do
-//    begin
-//      Add(TempList[Index]);
-//    end;
-//    Inc(FCondensedCount);
-//  finally
-//    TempList.Free;
-//  end;
-//end;
-
 function TValueCellList.AreIntegerValuesIdentical(AnotherList: TValueCellList;
   DataIndex: integer): boolean;
 var
@@ -303,14 +268,6 @@ begin
       begin
         FTempFileName := TempFileName;
       end;
-//      if FTempFileNames.Count  >= FCondensedCount + MaxCondensed then
-//      begin
-//        Condense;
-//        LocalCount := inherited Count;
-//      end;
-//      NewTempFileName := TempFileName;
-//      FTempFileNames.Add(NewTempFileName);
-//      TempFile := TTempFileStream.Create(NewTempFileName, fmOpenReadWrite);
       TempFile := TMemoryStream.Create;
       try
         Compressor := TCompressionStream.Create(clDefault, TempFile);
@@ -368,27 +325,16 @@ constructor TValueCellList.Create(ValueCellType: TValueCellType);
 begin
   inherited Create;
   FCached := False;
-//  FTempFileNames := TStringList.Create;
   FTempFileName := '';
   FValueCellType := ValueCellType;
 end;
 
 destructor TValueCellList.Destroy;
-//var
-//  Index: Integer;
 begin
   if FTempFileName <> '' then
   begin
     FreeMemory(FTempFileName);
   end;
-//  for Index := 0 to FTempFileNames.Count - 1 do
-//  begin
-//    if FileExists(FTempFileNames[Index]) then
-//    begin
-//      DeleteFile(FTempFileNames[Index]);
-//    end;
-//  end;
-//  FTempFileNames.Free;
   inherited;
 end;
 
@@ -430,50 +376,36 @@ begin
 
   Annotations := TStringList.Create;
   try
-//    Annotations.Sorted := True;
     if Capacity < FCachedCount then
     begin
       Capacity := FCachedCount;
     end;
 
-//    SumOfLocalCounts := 0;
-//    for Index := Start to FTempFileNames.Count -1 do
-    begin
-//      CacheFileName := FTempFileNames[Index];
-//      Assert(FileExists(CacheFileName));
-//      TempFile := TTempFileStream.Create(CacheFileName, fmOpenRead);
-      TempFile := TMemoryStream.Create;
-      ExtractAFile(FTempFileName, TempFile);
-      DecompressionStream := TDecompressionStream.Create(TempFile);
-      try
-        StringCount := ReadCompInt(DecompressionStream);
-        Annotations.Clear;
-        Annotations.Capacity := StringCount;
-        for StringIndex := 0 to StringCount - 1 do
-        begin
-          Annotations.Add(ReadCompStringSimple(DecompressionStream));
-        end;
-
-        LocalCount := ReadCompInt(DecompressionStream);
-//        SumOfLocalCounts := SumOfLocalCounts + LocalCount;
-        for CellIndex := 0 to LocalCount - 1 do
-        begin
-          ValueCell := FValueCellType.Create;
-          inherited Add(ValueCell);
-          ValueCell.Restore(DecompressionStream, Annotations);
-        end;
-      finally
-        DecompressionStream.Free;
-        TempFile.Free;
-//        DeleteFile(CacheFileName);
+    TempFile := TMemoryStream.Create;
+    ExtractAFile(FTempFileName, TempFile);
+    DecompressionStream := TDecompressionStream.Create(TempFile);
+    try
+      StringCount := ReadCompInt(DecompressionStream);
+      Annotations.Clear;
+      Annotations.Capacity := StringCount;
+      for StringIndex := 0 to StringCount - 1 do
+      begin
+        Annotations.Add(ReadCompStringSimple(DecompressionStream));
       end;
+
+      LocalCount := ReadCompInt(DecompressionStream);
+      for CellIndex := 0 to LocalCount - 1 do
+      begin
+        ValueCell := FValueCellType.Create;
+        inherited Add(ValueCell);
+        ValueCell.Restore(DecompressionStream, Annotations);
+      end;
+    finally
+      DecompressionStream.Free;
+      TempFile.Free;
     end;
+
     FCleared := False;
-//    While FTempFileNames.Count > Start do
-//    begin
-//      FTempFileNames.Delete(FTempFileNames.Count-1);
-//    end;
-//    FCachedCount := FCachedCount - SumOfLocalCounts;
   finally
     Annotations.Free;
   end;

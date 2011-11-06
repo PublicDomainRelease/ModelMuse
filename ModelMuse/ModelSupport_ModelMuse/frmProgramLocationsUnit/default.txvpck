@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="bxl3nb8tpc9bzsg_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmProgramLocationsUnit.TUndoChangeProgramLocations">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgramLocationsUnit.TUndoChangeProgramLocations.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgramLocationsUnit.TUndoChangeProgramLocations.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgramLocationsUnit.TUndoChangeProgramLocations.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgramLocationsUnit.TUndoChangeProgramLocations.Create(ref@PhastModelUnit.TProgramLocations)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgramLocationsUnit.TUndoChangeProgramLocations.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TUndoChangeProgramLocations.FNewLocations" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TUndoChangeProgramLocations.FOldLocations" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.pnlBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.fedModflow" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.HighlightControls()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.fedModflowChange(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.fedModelMonitor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.lblModelMonitor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.fedModpath" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.lblModpath" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.htlblModPath" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.lblTextEditor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.fedTextEditor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.htlblModflow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.lblModflow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.Panel1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmProgramLocationsUnit.TfrmProgramLocations.btnCancel" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmProgramLocationsUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+  </view>
+</nodeSet>

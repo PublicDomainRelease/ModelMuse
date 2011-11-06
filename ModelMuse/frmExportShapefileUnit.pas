@@ -40,7 +40,7 @@ type
     FEdgeEdits: TList;
     Value: Extended;
     ShapeFileName: string;
-    LocalGrid: TCustomGrid;
+    LocalGrid: TCustomModelGrid;
     LayerLimit: Integer;
     Fields: TStringList;
     Names: TStringList;
@@ -60,7 +60,7 @@ type
     procedure ExportElementShapes(DataSets, TimeLists: TList);
     procedure ExportHfbShapes(Edits: TList);
     procedure Assign2DShapeGeometry(Shape: TShapeObject; ColIndex,
-      RowIndex: Integer; LocalGrid: TCustomGrid; EvaluatedAt: TEvaluatedAt);
+      RowIndex: Integer; LocalGrid: TCustomModelGrid; EvaluatedAt: TEvaluatedAt);
     function GetShapeType: Integer;
     // A side effect of @name is to add the data sets in
     // the @link(TCustomTimeList)s in "TimeLists" to "DataSets".
@@ -75,7 +75,7 @@ type
     procedure Export2DNodeShapes(DataSets: TList);
     procedure Export3DNodeShapes(DataSets: TList);
     procedure Assign3DShapeGeometry(Shape: TShapeObject; ColIndex,
-      RowIndex, LayerIndex: Integer; LocalGrid: TCustomGrid; EvaluatedAt: TEvaluatedAt);
+      RowIndex, LayerIndex: Integer; LocalGrid: TCustomModelGrid; EvaluatedAt: TEvaluatedAt);
     procedure Assign3DID_Fields(ID, ColIndex, RowIndex, LayerIndex: Integer;
       ShapeDataBase: TXBase);
     procedure Assign3DDataSetValuesToDataBase(DataSets: TList;
@@ -97,8 +97,9 @@ var
 implementation
 
 uses Math, DataSetUnit, ClassificationUnit, PhastModelUnit, frmGoPhastUnit,
-  frmGridColorUnit, PhastDataSets, RealListUnit, ModflowTimeUnit,
-  TimeUnit, FastGEO, RbwParser, EdgeDisplayUnit, ModelMuseUtilities;
+  PhastDataSets, RealListUnit, ModflowTimeUnit,
+  TimeUnit, FastGEO, RbwParser, EdgeDisplayUnit, ModelMuseUtilities,
+  frameCustomColorUnit;
 
 {$R *.dfm}
 
@@ -649,7 +650,7 @@ begin
 end;
 
 procedure TfrmExportShapefile.Assign2DShapeGeometry(Shape: TShapeObject;
-  ColIndex: Integer; RowIndex: Integer;  LocalGrid: TCustomGrid; 
+  ColIndex: Integer; RowIndex: Integer;  LocalGrid: TCustomModelGrid;
   EvaluatedAt: TEvaluatedAt);
 var
   APoint: TPoint2D;
@@ -743,7 +744,7 @@ begin
 end;
 
 procedure TfrmExportShapefile.Assign3DShapeGeometry(Shape: TShapeObject;
-  ColIndex, RowIndex, LayerIndex: Integer;  LocalGrid: TCustomGrid;
+  ColIndex, RowIndex, LayerIndex: Integer;  LocalGrid: TCustomModelGrid;
   EvaluatedAt: TEvaluatedAt);
 var
   APoint: T3DRealPoint;
@@ -992,6 +993,10 @@ begin
         end;
       dsoFront, dsoSide, dso3D:
         begin
+          if Length(RootName) > 10 then
+          begin
+            SetLength(RootName, 10);
+          end;
           if LayerCharacters > 0 then
           begin
             if Length(RootName) > 9 - LayerCharacters then

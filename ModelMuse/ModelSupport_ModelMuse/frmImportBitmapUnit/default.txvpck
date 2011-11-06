@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="4fn5foywo8p570o_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmImportBitmapUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.frmImportBitmap" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmImportBitmapUnit.frmImportBitmap" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.btnCancel" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.GetData(CompressedImageUnit.TCompressedBitmapItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.AddPoint(System.Int32,System.Int32,System.Double,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.DrawPointsOnBitMap32(System.Object,GR32.TBitmap32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.NumberRows()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.LabelColumns()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.ImportWorldFile(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.EnableOKButton()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.FImageFileName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.FBitmapItem" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.FBitMap" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.dgPointsEndUpdate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.sbDeleteRowClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.sbInsertRowClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.sbAddRowClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.seNumRowsChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.dgPointsMouseDown(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.ZoomBoxImage32MouseUp(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32,GR32_Layers.TCustomLayer)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.rgViewDirectionClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.FormDestroy(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.dgPointsSetEditText(System.Object,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.dgPointsExit(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.btnSelectImageClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.btnImportWorldFileClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.ZoomBox" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.ScrollBox1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.sbDeleteRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.sbInsertRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.sbAddRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.GridPanel1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.lblNumRows" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.seNumRows" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.dgPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.Splitter1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.rgViewDirection" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.pnlBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.OpenDialogBitmap" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.odWorldFiled" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.lblName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.edName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.cbVisible" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.btnSelectImage" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TfrmImportBitmap.btnImportWorldFile" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmImportBitmapUnit.TPixelColumns">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TPixelColumns.pcRealWorldY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TPixelColumns.pcRealWorldX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TPixelColumns.pcPixelY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TPixelColumns.pcPixelX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TPixelColumns.pcNone" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmImportBitmapUnit.TWorldFileType">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TWorldFileType.sftRaster" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmImportBitmapUnit.TWorldFileType.wftCAD" />
+    </reference>
+  </view>
+</nodeSet>

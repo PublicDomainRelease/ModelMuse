@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="3cle5fv1q850rse_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModpathParticleUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModpathParticleUnit.TParticles">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticles.ClearSpheres()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticles.UpdateMaxParticleSize(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticles.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticles.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticles.FMaxParticleSize" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModpathParticleUnit.TParticleLocation">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleLocation.SetZ(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleLocation.SetY(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleLocation.SetX(System.Double)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleLocation.FY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleLocation.FX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleLocation.FZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleLocation.FSphere" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TParticleLocation.Z[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TParticleLocation.Y[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TParticleLocation.X[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TParticleLocation.Sphere[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleLocation.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleLocation.CreateSphere(GLScene.TGLBaseSceneObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleLocation.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleLocation.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleLocation.SetSphereLocation()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModpathParticleUnit.TParticleDistribution">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleDistribution.pdIndividual" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleDistribution.pdSphere" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleDistribution.pdCylinder" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleDistribution.pdGrid" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModpathParticleUnit.TParticleGroupOrientation">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleGroupOrientation.pgoNorthSouth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleGroupOrientation.pgoEastWest" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleGroupOrientation.pgoVertical" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModpathParticleUnit.TGridDistribution">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FLeftFace" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FTopFace" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FBackFace" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TGridDistribution.ZCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TGridDistribution.YCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TGridDistribution.XCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TGridDistribution.Internal[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TGridDistribution.TopFace[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TGridDistribution.BottomFace[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FrontFace[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TGridDistribution.BackFace[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TGridDistribution.RightFace[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TGridDistribution.LeftFace[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.Destroy()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TGridDistribution.Particles[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.Create(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.UpdateMaxParticleSize(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.CreateParticlesOnZFace(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.CreateParticlesOnYFace(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.CreateParticlesOnXFace(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.GetParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.SetZCount(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.SetYCount(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.SetXCount(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.SetTopFace(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.SetRightFace(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.SetLeftFace(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.SetInternal(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.SetFrontFace(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.SetBottomFace(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TGridDistribution.SetBackFace(System.Boolean)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FMaxParticleSize" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FParticles" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FYCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FXCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FBottomFace" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FInternal" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FZCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FFrontFace" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FRightFace" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModpathParticleUnit.TGridDistribution.FParticles" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.FMaxParticleSize" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.FDistributionChoice" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.FParticles" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.FOrientation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.FCircleParticleCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.FLayerCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.FRadius" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.Radius[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.LayerCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.CircleParticleCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.Orientation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.DistributionChoice[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.Destroy()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.Particles[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.Create(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.CreateNorthSouthSphereParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.CreateEastWestSphereParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.CreateVerticalSphereParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.CreateSphereParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.CreateNorthSouthCylinderParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.CreateEastWestCylinderParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.CreateVerticalCylinderParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.UpdateMaxParticleSize(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.CreateCylinderParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.GetParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.SetDistributionChoice(ModpathParticleUnit.TParticleDistribution)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.SetRadius(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.SetOrientation(ModpathParticleUnit.TParticleGroupOrientation)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.SetLayerCount(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.SetCircleParticleCount(System.Int32)" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.FDistributionChoice" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.FParticles" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModpathParticleUnit.TCylSphereDistribution.FOrientation" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModpathParticleUnit.TModpathTimeItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TModpathTimeItem.SetTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TModpathTimeItem.InvalidateModel()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TModpathTimeItem.FTime" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TModpathTimeItem.Time[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TModpathTimeItem.Assign(Classes.TPersistent)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModpathParticleUnit.TModpathTimes">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TModpathTimes.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TModpathTimes.Assign(Classes.TPersistent)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModpathParticleUnit.TParticleStorage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.GetMaxSphereSize()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.GetParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.SetSphereParticles(ModpathParticleUnit.TCylSphereDistribution)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.SetGridParticles(ModpathParticleUnit.TGridDistribution)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.SetCylinderParticles(ModpathParticleUnit.TCylSphereDistribution)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.SetCustomParticles(ModpathParticleUnit.TParticles)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.SetParticleDistribution(ModpathParticleUnit.TParticleDistribution)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleStorage.FReleaseTimes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleStorage.FUsed" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleStorage.FGridParticles" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleStorage.FSphereParticles" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleStorage.FCustomParticles" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleStorage.FCylinderParticles" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModpathParticleUnit.TParticleStorage.FParticleDistribution" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TParticleStorage.ReleaseTimes[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TParticleStorage.Used[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TParticleStorage.CustomParticles[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TParticleStorage.SphereParticles[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TParticleStorage.CylinderParticles[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TParticleStorage.GridParticles[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TParticleStorage.ParticleDistribution[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TParticleStorage.MaxSphereSize[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModpathParticleUnit.TParticleStorage.Particles[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.Create(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.ClearSpheres()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.SetReleaseTimes(ModpathParticleUnit.TModpathTimes)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.SetUsed(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.StoreCustomParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.StoreSphereParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.StoreCylinderParticles()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModpathParticleUnit.TParticleStorage.StoreGridParticles()" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModpathParticleUnit.TParticleStorage.FReleaseTimes" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModpathParticleUnit.TParticleStorage.FGridParticles" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModpathParticleUnit.TParticleStorage.FSphereParticles" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModpathParticleUnit.TParticleStorage.FCustomParticles" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModpathParticleUnit.TParticleStorage.FCylinderParticles" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModpathParticleUnit.TParticleStorage.FParticleDistribution" />
+    </reference>
+  </view>
+</nodeSet>

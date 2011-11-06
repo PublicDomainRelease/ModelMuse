@@ -332,7 +332,7 @@ procedure TfrmGridValue.UpdateValue(const Layer, Row, Column: integer;
   const DataSetName, CellValue: string; Explanation: string;
   const Location: TPoint2D; ViewDirection: TViewDirection);
 var
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   DataArray: TDataArray;
   EvaluatedAt: TEvaluatedAt;
   ColumnWidth: Double;
@@ -472,7 +472,7 @@ var
   procedure AssignHigherElevLabel(const ExtraText: string);
   var
     Indicies: array[0..2] of Integer;
-    Grid: TCustomGrid;
+    Grid: TCustomModelGrid;
     VarIndex: Integer;
     MaxCount: Integer;
     VarLabel: string;
@@ -554,7 +554,7 @@ var
   procedure AssignLowerElevLabel(const ExtraText: string);
   var
     Indicies: array[0..2] of Integer;
-    Grid: TCustomGrid;
+    Grid: TCustomModelGrid;
     VarIndex: Integer;
     MaxCount: Integer;
     VarLabel: string;

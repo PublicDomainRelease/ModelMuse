@@ -122,7 +122,7 @@ begin
   end;
 
   AddGrayColumn := False;
-  if clbParameters.State[Index] = cbGrayed then
+  if (Index > 0) and (clbParameters.State[Index] = cbGrayed) then
   begin
     AddGrayColumn := True;
     Param := clbParameters.Items.Objects[Index] as TModflowParameter;
@@ -159,39 +159,45 @@ begin
       end;
     end;
     Param := clbParameters.Items.Objects[Index] as TModflowParameter;
-    for NameIndex := 0 to ParameterColumnSuffix.Count - 1 do
+    if Param <> nil then
     begin
-      dgModflowBoundary.InsertColumn(NewColPosition + NameIndex);
-      dgModflowBoundary.Columns[NewColPosition + NameIndex].
-        AutoAdjustRowHeights := True;
-      dgModflowBoundary.Columns[NewColPosition + NameIndex].
-        WordWrapCaptions := True;
-      dgModflowBoundary.Columns[NewColPosition + NameIndex].
-        Format := rcf4String;
-      dgModflowBoundary.Columns[NewColPosition + NameIndex].
-        UseButton := True;
+      for NameIndex := 0 to ParameterColumnSuffix.Count - 1 do
+      begin
+        dgModflowBoundary.InsertColumn(NewColPosition + NameIndex);
+        dgModflowBoundary.Columns[NewColPosition + NameIndex].
+          AutoAdjustRowHeights := True;
+        dgModflowBoundary.Columns[NewColPosition + NameIndex].
+          WordWrapCaptions := True;
+        dgModflowBoundary.Columns[NewColPosition + NameIndex].
+          Format := rcf4String;
+        dgModflowBoundary.Columns[NewColPosition + NameIndex].
+          UseButton := True;
 
-//      dgModflowBoundary.Columns[NewColPosition + NameIndex].
-//        AutoAdjustColWidths := True;
-      dgModflowBoundary.Cells[NewColPosition + NameIndex,0] :=
-        Param.ParameterName +
-        ParamColumnCaption(NameIndex);
-      dgModflowBoundary.Columns[NewColPosition + NameIndex].
-        AutoAdjustColWidths := False;
+  //      dgModflowBoundary.Columns[NewColPosition + NameIndex].
+  //        AutoAdjustColWidths := True;
+        dgModflowBoundary.Cells[NewColPosition + NameIndex,0] :=
+          Param.ParameterName +
+          ParamColumnCaption(NameIndex);
+        dgModflowBoundary.Columns[NewColPosition + NameIndex].
+          AutoAdjustColWidths := False;
 
-      dgModflowBoundary.Objects[NewColPosition + NameIndex,0] := Param;
-      dgModflowBoundary.ColWidths[NewColPosition + NameIndex] :=
-        dgModflowBoundary.WidthNeededToFitText(NewColPosition + NameIndex,0);
+        dgModflowBoundary.Objects[NewColPosition + NameIndex,0] := Param;
+        dgModflowBoundary.ColWidths[NewColPosition + NameIndex] :=
+          dgModflowBoundary.WidthNeededToFitText(NewColPosition + NameIndex,0);
+      end;
     end;
   end
-  else if clbParameters.State[Index] = cbUnchecked then
+  else if (Index > 0) and (clbParameters.State[Index] = cbUnchecked) then
   begin
     Param := clbParameters.Items.Objects[Index] as TModflowParameter;
-    for ColIndex := dgModflowBoundary.ColCount - 1 downto 0 do
+    if Param <> nil then
     begin
-      if dgModflowBoundary.Objects[ColIndex,0] = Param then
+      for ColIndex := dgModflowBoundary.ColCount - 1 downto 0 do
       begin
-        dgModflowBoundary.DeleteColumn(ColIndex);
+        if dgModflowBoundary.Objects[ColIndex,0] = Param then
+        begin
+          dgModflowBoundary.DeleteColumn(ColIndex);
+        end;
       end;
     end;
   end;

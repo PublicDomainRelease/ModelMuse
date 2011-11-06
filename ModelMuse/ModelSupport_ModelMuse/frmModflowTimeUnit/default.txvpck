@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="enkarzjeq04g93r_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmModflowTimeUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.StrMaxFirstTimeStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.StrLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.StrStressPeriod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.MaxSteps" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.StrDrawdownReference" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.StrNumberOfSteps" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.StrSSTR" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.StrMultiplier" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.FormResize(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.dgTimeHorizontalScroll(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.FormDestroy(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.dgTimeBeforeDrawCell(System.Object,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.comboSteadyTransientChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.rdeMultiplierChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.rdeMaxFirstStepLengthChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.rdePeriodLengthChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.dgTimeColSize(System.Object,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.dgTimeMouseUp(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.dgTimeMouseDown(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.btnInsertClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.btnDeleteClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.seNumPeriodsChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.dgTimeSetEditText(System.Object,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.dgTimeSelectCell(System.Object,System.Int32,System.Int32,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.lblTimeUnit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.comboTimeUnit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.tabEdit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.PageControl1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.btnInsert" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.btnDelete" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.lblNumPeriods" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.seNumPeriods" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.pnlBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.lblSteadyTransient" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.lblMultiplier" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.lblMaxFirstTimeStepLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.lblPeriodLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.comboSteadyTransient" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.rdeMultiplier" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.rdeMaxFirstStepLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.rdePeriodLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.dgTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.pnlTop" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.UpdateNumberOfTimeSteps(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.SetDeleteButtonEnabled()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.GetTimePeriodValues(System.Int32,ref@System.Double,ref@System.Double,ref@System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.LayoutMultiRowEditControls()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.FillEmptyCells()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.GetData()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.FDeleting" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.FModflowStressPeriods" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TfrmModflowTime.dgTimeButtonClick(System.Object,System.Int32,System.Int32)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmModflowTimeUnit.TUndoModflowStressPeriods">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TUndoModflowStressPeriods.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TUndoModflowStressPeriods.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TUndoModflowStressPeriods.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TUndoModflowStressPeriods.Create(ref@ModflowTimeUnit.TModflowStressPeriods,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmModflowTimeUnit.TUndoModflowStressPeriods.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TUndoModflowStressPeriods.FOldTimeUnit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TUndoModflowStressPeriods.FNewTimeUnit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TUndoModflowStressPeriods.FOldStressPeriods" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TUndoModflowStressPeriods.FNewStressPeriods" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmModflowTimeUnit.TTimeColumn">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TTimeColumn.tcSteps" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TTimeColumn.tcDrawDownReference" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TTimeColumn.tcSteady" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TTimeColumn.tcMultiplier" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TTimeColumn.tcTimeFirstStep" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TTimeColumn.tcLength" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TTimeColumn.tcEndTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TTimeColumn.tcStartTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmModflowTimeUnit.TTimeColumn.tcStressPeriod" />
+    </reference>
+  </view>
+</nodeSet>

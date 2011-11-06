@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="edlfb1s0q0qd05l_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:TripackProcedures.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.TRPRNT(System.Int32,TripackTypes.TNcmaxIntArray,System.Int32,TripackTypes.TNmaxSingleArray,TripackTypes.TNmaxSingleArray,TripackTypes.TN6IntArray,TripackTypes.TN6IntArray,TripackTypes.TNmaxIntArray,System.Int32,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.TRPLOT(System.Int32,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,System.Int32,TripackTypes.TNcmaxIntArray,System.Int32,TripackTypes.TNmaxSingleArray,TripackTypes.TNmaxSingleArray,TripackTypes.TN6IntArray,TripackTypes.TN6IntArray,TripackTypes.TNmaxIntArray,System.Boolean,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.TRMESH(System.Int32,ref@TripackTypes.TNmaxSingleArray,ref@TripackTypes.TNmaxSingleArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TNmaxIntArray,ref@System.Int32,ref@TripackTypes.TLwkIntArray,ref@System.Int32[],ref@FastGEO.TFloat[],ref@System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.TRLPRT(System.Int32,TripackTypes.TNcmaxIntArray,System.Int32,TripackTypes.TNmaxSingleArray,TripackTypes.TNmaxSingleArray,System.Int32,System.Int32,TripackTypes.TNtmx_LwkIntArray,System.Int32,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.TRLIST(System.Int32,TripackTypes.TNcmaxIntArray,System.Int32,TripackTypes.TN6IntArray,TripackTypes.TN6IntArray,TripackTypes.TNmaxIntArray,System.Int32,ref@System.Int32,ref@TripackTypes.TNtmx_LwkIntArray,ref@TripackTypes.TNcmaxIntArray,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.TRFIND(System.Int32,FastGEO.TFloat,FastGEO.TFloat,System.Int32,TripackTypes.TNmaxSingleArray,TripackTypes.TNmaxSingleArray,TripackTypes.TN6IntArray,TripackTypes.TN6IntArray,TripackTypes.TNmaxIntArray,ref@System.Int32,ref@System.Int32,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TripackProcedures.IZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TripackProcedures.IY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TripackProcedures.IX" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.SWPTST(System.Int32,System.Int32,System.Int32,System.Int32,TripackTypes.TNmaxSingleArray,TripackTypes.TNmaxSingleArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.SWAP(System.Int32,System.Int32,System.Int32,System.Int32,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TNmaxIntArray,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.STORE(FastGEO.TFloat)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.OPTIM(TripackTypes.TNmaxSingleArray,TripackTypes.TNmaxSingleArray,System.Int32,System.Int32,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TNmaxIntArray,ref@System.Int32,ref@TripackTypes.TLwkIntArray,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.NBCNT(System.Int32,TripackTypes.TN6IntArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.NEARND(FastGEO.TFloat,FastGEO.TFloat,System.Int32,System.Int32,TripackTypes.TNmaxSingleArray,TripackTypes.TNmaxSingleArray,TripackTypes.TN6IntArray,TripackTypes.TN6IntArray,TripackTypes.TNmaxIntArray,ref@FastGEO.TFloat)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.LSTPTR(System.Int32,System.Int32,TripackTypes.TN6IntArray,TripackTypes.TN6IntArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.LEFT(FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.JRAND(System.Int32,ref@System.Int32,ref@System.Int32,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.INSERT(System.Int32,System.Int32,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TN6IntArray,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.INDXCC(System.Int32,TripackTypes.TNcmaxIntArray,System.Int32,TripackTypes.TN6IntArray,TripackTypes.TNmaxIntArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.INTSEC(FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.INTADD(System.Int32,System.Int32,System.Int32,System.Int32,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TNmaxIntArray,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.GETNP(System.Int32,TripackTypes.TNcmaxIntArray,System.Int32,TripackTypes.TNmaxSingleArray,TripackTypes.TNmaxSingleArray,TripackTypes.TN6IntArray,TripackTypes.TN6IntArray,TripackTypes.TNmaxIntArray,System.Int32,ref@TripackTypes.TLwkIntArray,ref@TripackTypes.TNmaxSingleArray,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.EDGE(System.Int32,System.Int32,TripackTypes.TNmaxSingleArray,TripackTypes.TNmaxSingleArray,ref@System.Int32,ref@TripackTypes.TLwkIntArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TNmaxIntArray,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.DELNOD(System.Int32,System.Int32,ref@TripackTypes.TNcmaxIntArray,ref@System.Int32,ref@TripackTypes.TNmaxSingleArray,ref@TripackTypes.TNmaxSingleArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TNmaxIntArray,ref@System.Int32,ref@System.Int32,ref@TripackTypes.TLwkIntArray,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.DELNB(System.Int32,System.Int32,System.Int32,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TNmaxIntArray,ref@System.Int32,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.DELARC(System.Int32,System.Int32,System.Int32,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TNmaxIntArray,ref@System.Int32,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.CRTRI(System.Int32,TripackTypes.TNcmaxIntArray,System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.CIRCUM(FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,FastGEO.TFloat,System.Boolean,ref@FastGEO.TFloat,ref@FastGEO.TFloat,ref@FastGEO.TFloat,ref@FastGEO.TFloat,ref@FastGEO.TFloat)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.BNODES(System.Int32,TripackTypes.TN6IntArray,TripackTypes.TN6IntArray,TripackTypes.TNmaxIntArray,ref@TripackTypes.TLwkIntArray,ref@System.Int32,ref@System.Int32,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.BDYADD(System.Int32,System.Int32,System.Int32,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TNmaxIntArray,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.AREAP(TripackTypes.TNmaxSingleArray,TripackTypes.TNmaxSingleArray,System.Int32,TripackTypes.TLwkIntArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.ADDNOD(System.Int32,FastGEO.TFloat,FastGEO.TFloat,System.Int32,System.Int32,ref@TripackTypes.TNcmaxIntArray,ref@System.Int32,ref@TripackTypes.TNmaxSingleArray,ref@TripackTypes.TNmaxSingleArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TNmaxIntArray,ref@System.Int32,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.ADDCST(System.Int32,TripackTypes.TNcmaxIntArray,System.Int32,TripackTypes.TNmaxSingleArray,TripackTypes.TNmaxSingleArray,ref@System.Int32,ref@TripackTypes.TLwkIntArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TN6IntArray,ref@TripackTypes.TNmaxIntArray,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.StoreSwtol(ref@FastGEO.TFloat)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:TripackProcedures.IWK_Index(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:TripackProcedures.SWTOL" />
+    </reference>
+  </view>
+</nodeSet>

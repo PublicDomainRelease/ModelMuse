@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="wxkgck4bqf4ub0f_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSelectImageUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSelectImageUnit.TfrmSelectImage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectImageUnit.TfrmSelectImage.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectImageUnit.TfrmSelectImage.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSelectImageUnit.TfrmSelectImage.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectImageUnit.TfrmSelectImage.lblSelect" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectImageUnit.TfrmSelectImage.comboBitmaps" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectImageUnit.TfrmSelectImage.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectImageUnit.TfrmSelectImage.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSelectImageUnit.TfrmSelectImage.btnCancel" />
+    </reference>
+  </view>
+</nodeSet>

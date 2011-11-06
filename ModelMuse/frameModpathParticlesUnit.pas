@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, GLScene, {GLMisc,} GLObjects, GLWin32Viewer, StdCtrls, GLGeomObjects,
+  Dialogs, GLScene, GLObjects, GLWin32Viewer, StdCtrls, GLGeomObjects,
   OctTreeClass, Grids, RbwDataGrid4, ExtCtrls, Mask, JvExMask, JvSpin,
   JvExStdCtrls, JvGroupBox, ComCtrls, Buttons, JvPageList, JvExControls,
   ModpathParticleUnit, ModflowPackageSelectionUnit, GLCoordinates,

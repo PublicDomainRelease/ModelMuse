@@ -200,7 +200,7 @@ type
 implementation
 
 uses Math, frmGoPhastUnit, AbstractGridUnit,
-  BigCanvasMethods, frmGridColorUnit, PhastModelUnit;
+  BigCanvasMethods, PhastModelUnit, frmDisplayDataUnit;
 
 { TCustomModflowGridEdgeDisplay }
 
@@ -471,9 +471,13 @@ begin
     GetMinimumAndMaximumValues(MinValue, MaxValue, MinPositive);
     FMinValue := FloatToStrF(MinValue, ffGeneral, 7, 0);
     FMaxValue := FloatToStrF(MaxValue, ffGeneral, 7, 0);
-    if frmGridColor <> nil then
+//    if frmGridColor <> nil then
+//    begin
+//      frmGridColor.UpdateLabelsAndLegend
+//    end;
+    if frmDisplayData <> nil then
     begin
-      frmGridColor.UpdateLabelsAndLegend
+      frmDisplayData.UpdateLabelsAndLegend;
     end;
   finally
     FUpdatingMinMax := False;

@@ -1,7 +1,7 @@
 inherited frmTimeControl: TfrmTimeControl
   Left = 728
   Top = 245
-  Width = 413
+  Width = 416
   Height = 292
   HelpType = htKeyword
   HelpKeyword = 'Time_Control_Dialog_Box'
@@ -9,20 +9,21 @@ inherited frmTimeControl: TfrmTimeControl
   Caption = 'PHAST Time Control'
   KeyPreview = True
   OnKeyDown = FormKeyDown
-  ExplicitWidth = 413
+  ExplicitWidth = 416
   ExplicitHeight = 292
   PixelsPerInch = 96
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
     Top = 152
-    Width = 405
+    Width = 408
     Height = 106
     Align = alBottom
     ParentColor = True
     TabOrder = 1
+    ExplicitWidth = 405
     DesignSize = (
-      405
+      408
       106)
     object lblNumberOfPeriods: TLabel
       Left = 95
@@ -51,41 +52,49 @@ inherited frmTimeControl: TfrmTimeControl
       OnChange = seTimeCountChange
     end
     object btnOK: TBitBtn
-      Left = 216
+      Left = 203
       Top = 64
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
-      Left = 312
+      Left = 299
       Top = 64
       Width = 89
       Height = 33
       Anchors = [akTop, akRight]
-      TabOrder = 3
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 3
     end
     object btnHelp: TBitBtn
-      Left = 120
+      Left = 107
       Top = 64
       Width = 89
       Height = 33
       HelpType = htKeyword
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object rdeStartTime: TRbwDataEntry
       Left = 5
       Top = 37
       Width = 84
       Height = 22
-      ItemHeight = 18
       TabOrder = 4
       Text = '0'
       DataType = dtReal
@@ -96,7 +105,7 @@ inherited frmTimeControl: TfrmTimeControl
   object dgTime: TRbwDataGrid4
     Left = 0
     Top = 33
-    Width = 405
+    Width = 408
     Height = 119
     Align = alClient
     ColCount = 3
@@ -114,6 +123,7 @@ inherited frmTimeControl: TfrmTimeControl
     TabOrder = 0
     OnMouseUp = dgTimeMouseUp
     OnSetEditText = dgTimeSetEditText
+    ExtendedAutoDistributeText = False
     AutoMultiEdit = True
     AutoDistributeText = True
     AutoIncreaseColCount = False
@@ -191,6 +201,7 @@ inherited frmTimeControl: TfrmTimeControl
         WordWrapCells = False
         AutoAdjustColWidths = False
       end>
+    ExplicitWidth = 405
     RowHeights = (
       24
       24)
@@ -198,11 +209,12 @@ inherited frmTimeControl: TfrmTimeControl
   object pnlTop: TPanel
     Left = 0
     Top = 0
-    Width = 405
+    Width = 408
     Height = 33
     Align = alTop
     ParentColor = True
     TabOrder = 2
+    ExplicitWidth = 405
     object rdeLength: TRbwDataEntry
       Left = 136
       Top = 6
@@ -210,7 +222,6 @@ inherited frmTimeControl: TfrmTimeControl
       Height = 22
       Color = clBtnFace
       Enabled = False
-      ItemHeight = 18
       TabOrder = 0
       Text = '0'
       OnChange = rdeLengthChange

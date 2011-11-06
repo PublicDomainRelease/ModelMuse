@@ -9,6 +9,9 @@
 			<Projects Include="..\ModelMonitor\ModelMonitor.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="..\ModelMonitor\ListFileAnalizer.dproj">
+				<Dependencies/>
+			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -35,14 +38,23 @@
 		<Target Name="ModelMonitor:Make">
 			<MSBuild Projects="..\ModelMonitor\ModelMonitor.dproj" Targets="Make"/>
 		</Target>
+		<Target Name="ListFileAnalizer">
+			<MSBuild Projects="..\ModelMonitor\ListFileAnalizer.dproj"/>
+		</Target>
+		<Target Name="ListFileAnalizer:Clean">
+			<MSBuild Projects="..\ModelMonitor\ListFileAnalizer.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="ListFileAnalizer:Make">
+			<MSBuild Projects="..\ModelMonitor\ListFileAnalizer.dproj" Targets="Make"/>
+		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="ModelMuse;ModelMonitor"/>
+			<CallTarget Targets="ModelMuse;ModelMonitor;ListFileAnalizer"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="ModelMuse:Clean;ModelMonitor:Clean"/>
+			<CallTarget Targets="ModelMuse:Clean;ModelMonitor:Clean;ListFileAnalizer:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="ModelMuse:Make;ModelMonitor:Make"/>
+			<CallTarget Targets="ModelMuse:Make;ModelMonitor:Make;ListFileAnalizer:Make"/>
 		</Target>
 		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')" Project="$(BDS)\Bin\CodeGear.Group.Targets"/>
 	</Project>

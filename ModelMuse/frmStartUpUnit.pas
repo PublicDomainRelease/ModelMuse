@@ -9,7 +9,7 @@ uses
   Windows, SysUtils, Types, Classes, Variants, Graphics, Controls, Forms,
   Dialogs, StdCtrls, frmCustomGoPhastUnit, ExtCtrls,
   ComCtrls, Buttons, ArgusDataEntry, RbwEdit, Grids, RbwDataGrid4,
-  frameInitialGridPositionUnit{, ehshelprouter};  
+  frameInitialGridPositionUnit;
 type
   {@abstract(@name is used to specify the grid for a new model or open an
     existing model.)}
@@ -47,7 +47,7 @@ type
     pnlBottom: TPanel;
     // @name: TRbwDataEntry;
     // @name is used to specify the default column width
-    // (@link(TCustomGrid.ColumnWidth)).
+    // (@link(TCustomModelGrid.ColumnWidth)).
     rdeColWidth: TRbwDataEntry;
     // @name: TRbwDataEntry;
     // @name is used to specify the default layer height
@@ -67,7 +67,7 @@ type
     rdeNRow: TRbwDataEntry;
     // @name: TRbwDataEntry;
     // @name is used to specify the default row width
-    // (@link(TCustomGrid.RowWidth)).
+    // (@link(TCustomModelGrid.RowWidth)).
     rdeRowWidth: TRbwDataEntry;
     // @name: TRadioGroup;
     // @name is used to choose to open an existing model or create a new one.

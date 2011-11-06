@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="6ompu2jgpklag7o_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:OrderedCollectionUnit.TLayerOwnerCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:OrderedCollectionUnit.TLayerOwnerCollection.NewDataSets[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TLayerOwnerCollection.RemoveNewDataSets()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TLayerOwnerCollection.ClearNewDataSets()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TLayerOwnerCollection.AddOwnedDataArray(DataSetUnit.TDataArray)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TLayerOwnerCollection.FNewDataSets" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:OrderedCollectionUnit.TLayerOwnerCollection:OrderedCollectionUnit.TEnhancedOrderedCollection" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:OrderedCollectionUnit.TModflowParameter">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.NotifyHufSS()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.NotifyHufKz()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.NotifyHufKy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.NotifyHufKx()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.SetValue(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.SetParameterType(OrderedCollectionUnit.TParameterType)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.FValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.FParameterType" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.Value[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.ParameterType[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.ParameterName[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.NotifyParamChange(OrderedCollectionUnit.TParameterType)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.SetParameterName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.CorrectParamName(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.FParameterName" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.NotifyHufSy()" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:OrderedCollectionUnit.TModflowParameter.FParameterType" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:OrderedCollectionUnit.TModflowParameter:OrderedCollectionUnit.TOrderedItem" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:OrderedCollectionUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.ParmeterTypeToStr(OrderedCollectionUnit.TParameterType)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:OrderedCollectionUnit.TParameterType">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptGHB" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptCHD" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptETS" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptEVT" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptRCH" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptLPF_VKCB" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptLPF_SY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptLPF_SS" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptLPF_VANI" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptLPF_VK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptLPF_HANI" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptLPF_HK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptUndefined" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptHUF_LVDA" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptHUF_KDEP" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptHUF_SYTP" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptHUF_SY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptHUF_SS" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptHUF_VANI" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptHUF_VK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptHUF_HANI" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptHUF_HK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptHFB" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptSFR" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptDRT" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptDRN" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptRIV" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TParameterType.ptQ" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:OrderedCollectionUnit.TOrderedItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TOrderedItem.SetStringProperty(ref@System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TOrderedItem.SetRealProperty(ref@System.Double,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TOrderedItem.SetIntegerProperty(ref@System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TOrderedItem.SetBooleanProperty(ref@System.Boolean,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TOrderedItem.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TOrderedItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:OrderedCollectionUnit.TOrderedItem.AlwaysAssignForeignId[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TOrderedItem.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TOrderedItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TOrderedItem.Model()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TOrderedItem.FInsertionNeeded" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TOrderedItem.FAlwaysAssignForeignId" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TOrderedItem.FForeignId" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:OrderedCollectionUnit.TOrderedCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TOrderedCollection.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TOrderedCollection.Create(Classes.TCollectionItemClass,System.Object)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:OrderedCollectionUnit.TOrderedCollection.Model[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TOrderedCollection.IsSame(OrderedCollectionUnit.TOrderedCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TOrderedCollection.InvalidateModel()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:OrderedCollectionUnit.TOrderedCollection.FModel" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:OrderedCollectionUnit.TEnhancedOrderedCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TEnhancedOrderedCollection.Remove(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:OrderedCollectionUnit.TEnhancedOrderedCollection.IndexOf(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:OrderedCollectionUnit.TEnhancedOrderedCollection:OrderedCollectionUnit.TOrderedCollection" />
+    </reference>
+  </view>
+</nodeSet>

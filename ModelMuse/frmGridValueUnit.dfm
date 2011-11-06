@@ -40,7 +40,7 @@ inherited frmGridValue: TfrmGridValue
     Top = 0
     Width = 406
     Height = 467
-    ActivePage = tabEndPoint
+    ActivePage = tabCurrentData
     Align = alTop
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 2
@@ -54,25 +54,24 @@ inherited frmGridValue: TfrmGridValue
         Top = 407
         Width = 224
         Height = 18
-        Anchors = [akLeft, akRight, akBottom]
+        Anchors = [akLeft, akBottom]
         Caption = 'Lower 3rd dimension coordinate'
         ExplicitTop = 310
       end
       object lblHigher3rdDimensionCoordinate: TLabel
-        Left = 8
+        Left = 3
         Top = 386
         Width = 227
         Height = 18
-        Anchors = [akLeft, akRight, akBottom]
+        Anchors = [akLeft, akBottom]
         Caption = 'Higher 3rd dimension coordinate'
-        ExplicitTop = 289
       end
       object lblSelectedObject: TLabel
         Left = 8
         Top = 294
         Width = 108
         Height = 18
-        Anchors = [akLeft, akRight, akBottom]
+        Anchors = [akLeft, akBottom]
         Caption = 'Selected object'
         ExplicitTop = 205
       end
@@ -144,7 +143,7 @@ inherited frmGridValue: TfrmGridValue
         Top = 339
         Width = 53
         Height = 18
-        Anchors = [akLeft, akRight, akBottom]
+        Anchors = [akLeft, akBottom]
         Caption = 'Section'
         ExplicitTop = 250
       end
@@ -153,7 +152,7 @@ inherited frmGridValue: TfrmGridValue
         Top = 318
         Width = 100
         Height = 18
-        Anchors = [akLeft, akRight, akBottom]
+        Anchors = [akLeft, akBottom]
         Caption = 'Nearest vertex'
         ExplicitTop = 229
       end
@@ -169,7 +168,7 @@ inherited frmGridValue: TfrmGridValue
         Top = 363
         Width = 390
         Height = 17
-        Anchors = [akLeft, akRight, akBottom]
+        Anchors = [akLeft, akBottom]
         Caption = 'Show selected object 3rd dimension coordinates'
         TabOrder = 0
       end
@@ -510,7 +509,6 @@ inherited frmGridValue: TfrmGridValue
         Height = 106
         Align = alBottom
         TabOrder = 1
-        ExplicitTop = 332
         object lbledtReleaseTime: TLabeledEdit
           Left = 136
           Top = 6

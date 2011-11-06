@@ -554,30 +554,30 @@ type
     // @name is the @link(TScreenObject) for which this
     // @classname will be used.
     FScreenObject: TScreenObject;
-    procedure AssignValuesToFrontDataSet(const Grid: TCustomGrid;
+    procedure AssignValuesToFrontDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
-    procedure AssignValuesToSideDataSet(const Grid: TCustomGrid;
+    procedure AssignValuesToSideDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
-    procedure AssignValuesToTopDataSet(const Grid: TCustomGrid;
+    procedure AssignValuesToTopDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment;
       AssignmentLocation: TAssignmentLocation = alAll); virtual; abstract;
-    procedure UpdateFrontSegments(const Grid: TCustomGrid;
+    procedure UpdateFrontSegments(const Grid: TCustomModelGrid;
       const EvaluatedAt: TEvaluatedAt);virtual; abstract;
-    procedure UpdateSideSegments(const Grid: TCustomGrid;
+    procedure UpdateSideSegments(const Grid: TCustomModelGrid;
       const EvaluatedAt: TEvaluatedAt); virtual;abstract;
     function GetCompiler(const Orientation: TDataSetOrientation): TRbwParser;
-    procedure GetFrontCellsToAssign(const Grid: TCustomGrid;
+    procedure GetFrontCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); virtual; abstract;
-    procedure GetSideCellsToAssign(const Grid: TCustomGrid;
+    procedure GetSideCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); virtual; abstract;
-    procedure GetTopCellsToAssign(const Grid: TCustomGrid;
+    procedure GetTopCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); virtual; abstract;
@@ -643,7 +643,7 @@ type
     // enclosed or intersected by the @classname.
     //
     // In commented-out code, First and Last and changed to
-    // frmGoPhast.PhastGrid.@link(TCustomGrid.LayerCount) for river
+    // frmGoPhast.PhastGrid.@link(TCustomModelGrid.LayerCount) for river
     // data sets.  It has been commented-out because it
     // messes up the display of the river
     // data on the status bar.
@@ -667,7 +667,7 @@ type
     // @name indicates the model for which this delegate will be used.
     property ModelSelection: TModelSelection read FModelSelection;
     property SelectedCells: TSelectedCells read FSelectedCells;
-    procedure AssignSelectedCells(const Grid: TCustomGrid; AModel: TBaseModel); virtual; abstract;
+    procedure AssignSelectedCells(const Grid: TCustomModelGrid; AModel: TBaseModel); virtual; abstract;
   end;
 
   TCustomScreenObjectDelegateClass = class of TCustomScreenObjectDelegate;
@@ -1672,6 +1672,7 @@ view. }
     FUsedModels: TUsedWithModelCollection;
     FFullObjectIntersectLength: Boolean;
     FPriorFullObjectIntersectLength: Boolean;
+    FPositionLocked: boolean;
     procedure CreateLastSubPolygon;
     procedure DestroyLastSubPolygon;
     function GetSubPolygonCount: integer;
@@ -1720,7 +1721,7 @@ view. }
     // @param(Count is the new number of points in TempPoints1.)
     // @param(Position is the @link(TEdgePosition) for the new point.)
     procedure AddPointFromColumn(const ColIndex: integer;
-      const Grid: TCustomGrid; const PreviousPoint, APoint: TEdgePoint;
+      const Grid: TCustomModelGrid; const PreviousPoint, APoint: TEdgePoint;
       var TempPoints1: TEdgePointArray; var Count: integer;
       const Position: TEdgePosition);
     // AddPointFromLayer creates a @link(TEdgePoint)
@@ -1740,7 +1741,7 @@ view. }
     // @param(Count is the new number of points in TempPoints1.)
     // @param(Position is the @link(TEdgePosition) for the new point.)
     procedure AddPointFromLayer(const LayerIndex: integer;
-      const Grid: TCustomGrid; const PreviousPoint, APoint: TEdgePoint;
+      const Grid: TCustomModelGrid; const PreviousPoint, APoint: TEdgePoint;
       var TempPoints1: TEdgePointArray; var Count: integer;
       const Position: TEdgePosition);
     // AddPointFromRow creates a @link(TEdgePoint) at the row boundary on Grid
@@ -1759,7 +1760,7 @@ view. }
     // @param(Count is the new number of points in TempPoints1.)
     // @param(Position is the @link(TEdgePosition) for the new point.)
     procedure AddPointFromRow(const RowIndex: integer;
-      const Grid: TCustomGrid; const PreviousPoint, APoint: TEdgePoint;
+      const Grid: TCustomModelGrid; const PreviousPoint, APoint: TEdgePoint;
       var TempPoints1: TEdgePointArray; var Count: integer;
       const Position: TEdgePosition);
     procedure Assign3DElevations(Formula: string;
@@ -1886,7 +1887,7 @@ view. }
     // will be extracted.)
     // @param(X is the X coordinate (in a coordinates system parallel
     // to the grid) of the location of interest.)
-    function GetACol(const Grid: TCustomGrid; const X: double): integer;
+    function GetACol(const Grid: TCustomModelGrid; const X: double): integer;
     { TODO : Compare and possibly combine GetAPhastLayer and GetLayer. }
     // If @Link(EvaluatedAt) = eaNodes, @name returns the
     // layer boundary that is closest to Z.
@@ -1900,7 +1901,7 @@ view. }
     // will be extracted.)
     // @param(Z is the Z coordinate (in a coordinates system parallel
     // to the grid) of the location of interest.)
-    function GetAPhastLayer(const Grid: TCustomGrid; const Z: double): integer;
+    function GetAPhastLayer(const Grid: TCustomModelGrid; const Z: double): integer;
     { TODO : Compare and possibly combine GetARow and GetRow. }
     // If @Link(EvaluatedAt) = eaNodes, @name returns the
     // row boundary that is closest to Y (
@@ -1915,7 +1916,7 @@ view. }
     // will be extracted.)
     // @param(Y is the Y coordinate (in a coordinates system parallel
     // to the grid) of the location of interest.)
-    function GetARow(const Grid: TCustomGrid; const Y: double): integer;
+    function GetARow(const Grid: TCustomModelGrid; const Y: double): integer;
     // @name is the Read function for the
     // @Link(BoundaryDataSetFormulas) property.
     function GetBoundaryDataSetFormulas(const Index: integer): string;
@@ -1930,7 +1931,7 @@ view. }
     // will be extracted.)
     // @param(X is the X coordinate (in a coordinates system parallel
     // to the grid) of the location of interest.)
-    function GetColumn(const Grid: TCustomGrid; const X: real): integer;
+    function GetColumn(const Grid: TCustomModelGrid; const X: real): integer;
 
     { @name sets FirstCol and LastCol to the range of columns intersected by
       the @classname.
@@ -1940,7 +1941,7 @@ view. }
       @param(FirstCol is the first column intersected by TempMinX to TempMaxX.)
       @param(LastCol is the last column intersected by TempMinX to TempMaxX.)
       }
-    procedure GetColumns(const Grid: TCustomGrid; TempMinX, TempMaxX:
+    procedure GetColumns(const Grid: TCustomModelGrid; TempMinX, TempMaxX:
       real; out FirstCol, LastCol: integer);
     // See @link(Count).
     function GetCount: integer;
@@ -1970,7 +1971,7 @@ view. }
     // will be extracted.)
     // @param(Z is the Z coordinate (in a coordinates system parallel
     // to the grid) of the location of interest.)
-    function GetLayer(const Grid: TCustomGrid; const Z: real): integer;
+    function GetLayer(const Grid: TCustomModelGrid; const Z: real): integer;
 
     { @name sets FirstLayer and LastLayer to the range of layers intersected by
       the @classname.
@@ -1981,7 +1982,7 @@ view. }
       @param(LastRow is the last layer intersected by TempMinZ to TempMaxZ.)
       @param(LastLayer specifies how to interpret the columns.)
       }
-    procedure GetLayers(const Grid: TCustomGrid; TempMinZ, TempMaxZ: real;
+    procedure GetLayers(const Grid: TCustomModelGrid; TempMinZ, TempMaxZ: real;
       out FirstLayer, LastLayer: integer);
     // See @link(LineColor).
     function GetLineColor: TColor;
@@ -2004,7 +2005,7 @@ view. }
     // will be extracted.)
     // @param(Y is the Y coordinate (in a coordinates system parallel
     // to the grid) of the location of interest.)
-    function GetRow(const Grid: TCustomGrid; const Y: real): integer;
+    function GetRow(const Grid: TCustomModelGrid; const Y: real): integer;
       
     { @name sets FirstRow and LastRow to the range of rows intersected by
       the @classname.
@@ -2015,7 +2016,7 @@ view. }
       @param(LastRow is the last row intersected by TempMinY to TempMaxY.)
       @param(EvaluatedAt specifies how to interpret the columns.)
       }
-    procedure GetRows(const Grid: TCustomGrid; TempMinY, TempMaxY: real;
+    procedure GetRows(const Grid: TCustomModelGrid; TempMinY, TempMaxY: real;
       out FirstRow, LastRow: integer);
     // See @link(SelectedVertexCount).
     function GetSelectedVertexCount: integer;
@@ -2127,15 +2128,15 @@ view. }
     procedure UpdateBox;
     //@name updates the contents of @link(Segments) when
     // @link(ViewDirection) = @link(TViewDirection vdFront).
-    procedure UpdateFrontSegments(const Grid: TCustomGrid;
+    procedure UpdateFrontSegments(const Grid: TCustomModelGrid;
       const EvaluatedAt: TEvaluatedAt);
     //@name updates the contents of @link(Segments) when
     // @link(ViewDirection) = @link(TViewDirection vdSide).
-    procedure UpdateSideSegments(const Grid: TCustomGrid;
+    procedure UpdateSideSegments(const Grid: TCustomModelGrid;
       const EvaluatedAt: TEvaluatedAt);
     //@name updates the contents of @link(Segments) when
     // @link(ViewDirection) = @link(TViewDirection vdTop).
-    procedure UpdateTopSegments(const Grid: TCustomGrid;
+    procedure UpdateTopSegments(const Grid: TCustomModelGrid;
       const EvaluatedAt: TEvaluatedAt; const PointsRotated: boolean;
       var RotatedPoints: TEdgePointArray; AModel: TBaseModel);
     // @name is used when accessing vertices to raise an exception if
@@ -2242,7 +2243,7 @@ view. }
     procedure GetInterpDistance(const InterpValue: TInterpValuesItem;
       var Distance: Double; const DataSet: TDataArray;
       const LayerIndex, RowIndex, ColIndex: Integer);
-    procedure AssignTopDataSetValues(const Grid: TCustomGrid;
+    procedure AssignTopDataSetValues(const Grid: TCustomModelGrid;
       Expression: TExpression; const DataSetFunction: string;
       Compiler: TRbwParser; UsedVariables: TStringList;
       OtherData: TObject; const DataSet: TDataArray; AModel: TBaseModel;
@@ -2370,6 +2371,7 @@ view. }
     // that are in the unshared part of the cell.
     procedure AddTopSubSegments(var ASegment: TCellElementSegment;
       AModel: TBaseModel);
+    procedure SetPositionLocked(const Value: boolean);
     property SubPolygonCount: integer read GetSubPolygonCount;
     property SubPolygons[Index: integer]: TSubPolygon read GetSubPolygon;
     procedure DeleteExtraSections;
@@ -2612,7 +2614,7 @@ view. }
     // @name is only used when @link(ViewDirection)
     // = @link(TViewDirection vdFront).
     // See @link(AssignValuesToPhastDataSet).
-    procedure AssignValuesToFrontPhastDataSet(const Grid: TCustomGrid;
+    procedure AssignValuesToFrontPhastDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment);
     // @name initializes variables needed by the formula for the
@@ -2621,7 +2623,7 @@ view. }
     // @name is only used when @link(ViewDirection)
     // = @link(TViewDirection vdSide).
     // See @link(AssignValuesToPhastDataSet).
-    procedure AssignValuesToSidePhastDataSet(const Grid: TCustomGrid;
+    procedure AssignValuesToSidePhastDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment);
     // @name initializes variables needed by the formula for the
@@ -2630,7 +2632,7 @@ view. }
     // @name is only used when @link(ViewDirection)
     // = @link(TViewDirection vdTop).
     // See @link(AssignValuesToPhastDataSet).
-    procedure AssignValuesToTopPhastDataSet(const Grid: TCustomGrid;
+    procedure AssignValuesToTopPhastDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel);
     // @name returns an integer that indicates what type of PHAST boundary
     // condition, if any, is specified by this @classname.
@@ -2732,7 +2734,7 @@ view. }
     // enclosed or intersected by the @classname.
     //
     // In commented-out code, First and Last and changed to
-    // frmGoPhast.PhastGrid.@link(TCustomGrid.LayerCount) for river
+    // frmGoPhast.PhastGrid.@link(TCustomModelGrid.LayerCount) for river
     // data sets.  It has been commented-out because it
     // messes up the display of the river
     // data on the status bar.
@@ -2745,7 +2747,7 @@ view. }
     // system. TempMinX, TempMinY, TempMaxX, TempMaxY are set to the minimum
     // and maximum X and Y coordinates of any of the points in the @classname
     //  in the Grid coordinate system.
-    procedure RotatePoints(const Grid: TCustomGrid;
+    procedure RotatePoints(const Grid: TCustomModelGrid;
       out RotatedPoints: TEdgePointArray;
       out TempMinX, TempMinY, TempMaxX, TempMaxY: double);
     // See @link(ElevationFormula).
@@ -2803,7 +2805,7 @@ view. }
     // could be in the @classname.  It is indexed by [Layer, Row, Column].
     property Lower3DElevations[AModel: TBaseModel]: T3DSparseRealArray read GetLower3DElevations;
     function IsLower3DElevationAssigned(Col, Row, Layer: integer; Model: TBaseModel): boolean;
-    procedure GetCellsToAssign(const Grid: TCustomGrid;
+    procedure GetCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
@@ -2822,7 +2824,7 @@ view. }
     property BottomElevSubscription: TObserver read GetBottomElevSubscription;
 
     function Delegate: TCustomScreenObjectDelegate;
-    procedure AssignNumericValueToDataSet(const Grid: TCustomGrid;
+    procedure AssignNumericValueToDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; Value: double; AModel: TBaseModel);
     procedure CreateChdBoundary;
     procedure CreateDrnBoundary;
@@ -2900,7 +2902,7 @@ view. }
     // In @name, if Source is a @classname, its properties are copied into
     // the current @classname.
     procedure Assign(Source: TPersistent); override;
-    procedure AssignValuesToModflowDataSet(const Grid: TCustomGrid;
+    procedure AssignValuesToModflowDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; const Formula: string; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
     // @name is a key method of @classname.  It is used
@@ -2911,7 +2913,7 @@ view. }
     // @Link(AssignValuesToFrontPhastDataSet),
     // or @Link(AssignValuesToSidePhastDataSet)
     // to do most of the work.
-    procedure AssignValuesToPhastDataSet(const Grid: TCustomGrid;
+    procedure AssignValuesToPhastDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; AModel: TBaseModel; UseLgrEdgeCells: TLgrCellTreatment); virtual;
     // @name is the number of boundary @link(BoundaryDataSets) affected
     // by the @classname.
@@ -3457,6 +3459,7 @@ SectionStarts.}
       write SetChildModelName;
     property UsedModels: TUsedWithModelCollection read FUsedModels
       write SetUsedModels stored  True;
+    property PositionLocked: boolean read FPositionLocked write SetPositionLocked;
   end;
 
   TScreenObjectList = class(TObject)
@@ -3832,13 +3835,13 @@ SectionStarts.}
       const Compiler: TRbwParser; const Annotation: string;
       var Expression: TExpression; const OtherData: TObject;
       SectionIndex: integer; ShouldZero: boolean); override;
-    procedure AssignValuesToFrontDataSet(const Grid: TCustomGrid;
+    procedure AssignValuesToFrontDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);override;
-    procedure AssignValuesToSideDataSet(const Grid: TCustomGrid;
+    procedure AssignValuesToSideDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
-    procedure AssignValuesToTopDataSet(const Grid: TCustomGrid;
+    procedure AssignValuesToTopDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
     function BoundaryType: integer; override;
@@ -3850,29 +3853,29 @@ SectionStarts.}
       const OtherData: TObject): string; override;
     procedure OtherIndex(const LayerOrRow, RowOrColumn: integer;
       out First, Last: integer; const DataSet: TDataArray); override;
-    procedure UpdateFrontSegments(const Grid: TCustomGrid;
+    procedure UpdateFrontSegments(const Grid: TCustomModelGrid;
       const EvaluatedAt: TEvaluatedAt);override;
-    procedure UpdateSideSegments(const Grid: TCustomGrid;
+    procedure UpdateSideSegments(const Grid: TCustomModelGrid;
       const EvaluatedAt: TEvaluatedAt);override;
   protected
-    procedure GetSideCellsToAssign(const Grid: TCustomGrid;
+    procedure GetSideCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
-    procedure GetFrontCellsToAssign(const Grid: TCustomGrid;
+    procedure GetFrontCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
-    procedure GetTopCellsToAssign(const Grid: TCustomGrid;
+    procedure GetTopCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
-    procedure GetCellsToAssign(const Grid: TCustomGrid;
+    procedure GetCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const EvaluatedAt: TEvaluatedAt; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
   public
-    procedure AssignSelectedCells(const Grid: TCustomGrid; AModel: TBaseModel); override;
+    procedure AssignSelectedCells(const Grid: TCustomModelGrid; AModel: TBaseModel); override;
     procedure InitializeExpression(out Compiler: TRbwParser;
       out DataSetFormula: string; out Expression: TExpression;
       const DataSet: TDataArray; const OtherData: TObject); override;
@@ -3892,7 +3895,7 @@ SectionStarts.}
     procedure AssignColAndRowIndicies(
       var ColIndex, RowIndex, LayerIndex : Integer;
   const HorizontalIndex1, HorizontalIndex2, PerpendicularIndex: Integer);
-    procedure AssignParallellLimits(const Grid: TCustomGrid;
+    procedure AssignParallellLimits(const Grid: TCustomModelGrid;
       out FirstParallelIndexA, LastParallelIndexA,
       FirstParallelIndexB, LastParallelIndexB: Integer);
     function FindLayer(const ColOrRow: integer; const Location: TEdgePoint;
@@ -3912,28 +3915,28 @@ SectionStarts.}
       const CellOutlines: T2DRealPointArray): TPoint2D;
     function InCell(const ColOrRow, Layer: integer; const TestPoint: TEdgePoint;
       const CellOutlines: T2DRealPointArray): boolean;
-    procedure GetHorizontalLimitsOfGrid(const Grid: TCustomGrid;
+    procedure GetHorizontalLimitsOfGrid(const Grid: TCustomModelGrid;
       out GridMinHorizontal, GridMaxHorizontal: real);
-    procedure GetVerticalLimitsOfGrid(const Grid: TCustomGrid;
+    procedure GetVerticalLimitsOfGrid(const Grid: TCustomModelGrid;
       out GridMinZ, GridMaxZ: Real);
-    function GetColOrRow(const Grid: TCustomGrid;
+    function GetColOrRow(const Grid: TCustomModelGrid;
       const APoint: TEdgePoint;
       const GridMinHorizontal, GridMaxHorizontal: Real): integer;
-    procedure GetHorizontalLimits(const Grid: TCustomGrid;
+    procedure GetHorizontalLimits(const Grid: TCustomModelGrid;
       var HorizontalLimit: Integer; var PerpendicularLimit: Integer);
     procedure GetRotatedPoints(var RotatedPoints: TEdgePointArray);
     function GetHorizontalIndexFromLocation(const X: Real;
-      const Grid: TCustomGrid): integer;
+      const Grid: TCustomModelGrid): integer;
     procedure CreateSegment(const Point1,Point2: TEdgePoint;
       const LayerIndex, PerpendicularIndex, HorizontalIndex,
       VertexIndex, SectionIndex: Integer; var ASegment: TCellElementSegment);
     // @name creates a set of segments for each cell intersected by
     // @link(FScreenObject) in front or side views.
     function IsPointInside(const CellLocation3D: T3DRealPoint;
-      Grid: TCustomGrid;
+      Grid: TCustomModelGrid;
       out SectionIndex: integer): boolean;
-    function GetPerpendiularLimit(const Grid: TCustomGrid): integer;
-    procedure AssignValuesToDataSet(const Grid: TCustomGrid;
+    function GetPerpendiularLimit(const Grid: TCustomModelGrid): integer;
+    procedure AssignValuesToDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
     procedure UpdateHorizontalRangeOfCellsToCheck(
@@ -3945,14 +3948,14 @@ SectionStarts.}
     // based on the cell specified by ColIndex, RowIndex, and LayerIndex.
     function AssignElevations(Const ColIndex, RowIndex,
       LayerIndex: integer; AModel: TBaseModel): boolean;
-    function ElevationOk(const Grid: TCustomGrid;
+    function ElevationOk(const Grid: TCustomModelGrid;
       const PerpendicularIndex: integer; const ColIndex: integer;
       const RowIndex: integer): boolean;
-    function GetCellOutlines(const Grid: TCustomGrid;
+    function GetCellOutlines(const Grid: TCustomModelGrid;
       const RowOrCol: integer): T2DRealPointArray;
-    procedure UpdateSegments(const Grid: TCustomGrid;
+    procedure UpdateSegments(const Grid: TCustomModelGrid;
       const EvaluatedAt: TEvaluatedAt);
-    procedure GetCellsToAssign(const Grid: TCustomGrid;
+    procedure GetCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const EvaluatedAt: TEvaluatedAt; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; Orientation: TDataSetOrientation;
@@ -3963,15 +3966,15 @@ SectionStarts.}
     function DataSetUsed(const DataSet: TDataArray;
       var OtherData: TObject; AModel: TBaseModel): boolean; override;
   protected
-    procedure GetFrontCellsToAssign(const Grid: TCustomGrid;
+    procedure GetFrontCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
-    procedure GetSideCellsToAssign(const Grid: TCustomGrid;
+    procedure GetSideCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
-    procedure GetTopCellsToAssign(const Grid: TCustomGrid;
+    procedure GetTopCellsToAssign(const Grid: TCustomModelGrid;
       const DataSetFunction: string; OtherData: TObject;
       const DataSet: TDataArray; CellList: TCellAssignmentList;
       AssignmentLocation: TAssignmentLocation; AModel: TBaseModel); override;
@@ -3979,20 +3982,20 @@ SectionStarts.}
     procedure InitializeExpression(out Compiler: TRbwParser;
       out DataSetFunction: string; out Expression: TExpression;
       const DataSet: TDataArray; const OtherData: TObject); override;
-    procedure AssignSelectedCells(const Grid: TCustomGrid; AModel: TBaseModel); override;
-    procedure AssignValuesToFrontDataSet(const Grid: TCustomGrid;
+    procedure AssignSelectedCells(const Grid: TCustomModelGrid; AModel: TBaseModel); override;
+    procedure AssignValuesToFrontDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);override;
-    procedure AssignValuesToSideDataSet(const Grid: TCustomGrid;
+    procedure AssignValuesToSideDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
-    procedure AssignValuesToTopDataSet(const Grid: TCustomGrid;
+    procedure AssignValuesToTopDataSet(const Grid: TCustomModelGrid;
       const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
       UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll); override;
     constructor Create(ScreenObject: TScreenObject); override;
-    procedure UpdateFrontSegments(const Grid: TCustomGrid;
+    procedure UpdateFrontSegments(const Grid: TCustomModelGrid;
       const EvaluatedAt: TEvaluatedAt); override;
-    procedure UpdateSideSegments(const Grid: TCustomGrid;
+    procedure UpdateSideSegments(const Grid: TCustomModelGrid;
       const EvaluatedAt: TEvaluatedAt);override;
     destructor Destroy; override;
   end;
@@ -5540,6 +5543,7 @@ begin
   ImportedLowerSectionElevations := AScreenObject.ImportedLowerSectionElevations;
 
   ImportedValues := AScreenObject.ImportedValues;
+  PositionLocked := AScreenObject.PositionLocked;
 //  LinkedChildModels := AScreenObject.LinkedChildModels;
 
   for Index := DataSetCount - 1 downto 0 do
@@ -5793,7 +5797,7 @@ var
   SegmentIndex: integer;
   ASegment: TCellElementSegment;
   RowIndex: Integer;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   SectionIndex: integer;
   TempImportedElevations : TValueArrayStorage;
   VariableList, DataSetList: TList;
@@ -5967,7 +5971,7 @@ var
   SegmentIndex: integer;
   ASegment: TCellElementSegment;
   RowIndex: Integer;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   SectionIndex: integer;
   TempMinY: double;
   TempMaxY: double;
@@ -7791,6 +7795,15 @@ begin
   end;
 end;
 
+procedure TScreenObject.SetPositionLocked(const Value: boolean);
+begin
+  if FPositionLocked <> Value then
+  begin
+    FPositionLocked := Value;
+    InvalidateModel;
+  end;
+end;
+
 procedure TScreenObject.SetViewDirection(const Value: TViewDirection);
 var
   OldViewDirection: TViewDirection;
@@ -8034,7 +8047,7 @@ procedure TScreenObject.GetGridCellOrElementLimits(const Col, Row, Layer:
   integer; out XMin, XMax, YMin, YMax: double; AModel: TBaseModel);
 var
   PhastGrid: TPhastGrid;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
 begin
   PhastGrid := (AModel as TCustomModel).PhastGrid;
   Grid := (AModel as TCustomModel).Grid;
@@ -8583,7 +8596,7 @@ var
   AVertex: Tgpc_vertex;
   IntersectionContours: TGpcPolygonClass;
   ContourIndex: Integer;
-  LocalGrid: TCustomGrid;
+  LocalGrid: TCustomModelGrid;
 begin
   if not Closed then
   begin
@@ -10550,7 +10563,7 @@ begin
   end;
 end;
 
-function TScreenObject.GetACol(const Grid: TCustomGrid; const X: double):
+function TScreenObject.GetACol(const Grid: TCustomModelGrid; const X: double):
   integer;
 begin
   result := Grid.NearestColumnPosition(X);
@@ -10594,7 +10607,7 @@ begin
 //  end;
 end;
 
-function TScreenObject.GetAPhastLayer(const Grid: TCustomGrid; const Z: double):
+function TScreenObject.GetAPhastLayer(const Grid: TCustomModelGrid; const Z: double):
   integer;
 begin
   result := (Grid as TPhastGrid).NearestLayerPosition(Z);
@@ -10638,7 +10651,7 @@ begin
 //  end;
 end;
 
-function TScreenObject.GetARow(const Grid: TCustomGrid; const Y: double):
+function TScreenObject.GetARow(const Grid: TCustomModelGrid; const Y: double):
   integer;
 begin
   result := Grid.NearestRowPosition(Y);
@@ -11137,7 +11150,7 @@ var
   SegmentIndex: integer;
   ASegment: TCellElementSegment;
   FirstColumn, LastColumn, ColIndex: integer;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   SectionIndex: Integer;
   TempImportedElevations : TValueArrayStorage;
   VariableList, DataSetList: TList;
@@ -11824,7 +11837,7 @@ end;
 //  FLinkedChildModels.Assign(Value);
 //end;
 
-procedure TScreenObject.RotatePoints(const Grid: TCustomGrid;
+procedure TScreenObject.RotatePoints(const Grid: TCustomModelGrid;
   out RotatedPoints: TEdgePointArray;
   out TempMinX, TempMinY, TempMaxX, TempMaxY: double);
 var
@@ -11875,7 +11888,7 @@ begin
   end;
 end;
 
-function TScreenObject.GetLayer(const Grid: TCustomGrid; const Z: real):
+function TScreenObject.GetLayer(const Grid: TCustomModelGrid; const Z: real):
   integer;
 begin
   Assert(EvaluatedAt = eaBlocks);
@@ -11896,7 +11909,7 @@ begin
   end;
 end;
 
-procedure TScreenObject.GetLayers(const Grid: TCustomGrid;
+procedure TScreenObject.GetLayers(const Grid: TCustomModelGrid;
   TempMinZ, TempMaxZ: real; out FirstLayer, LastLayer: integer);
 var
   TempI: integer;
@@ -11938,7 +11951,7 @@ begin
   result := FLeakyBoundary
 end;
 
-function TScreenObject.GetColumn(const Grid: TCustomGrid; const X: real):
+function TScreenObject.GetColumn(const Grid: TCustomModelGrid; const X: real):
   integer;
 begin
   Assert(EvaluatedAt = eaBlocks);
@@ -11959,7 +11972,7 @@ begin
   end;
 end;
 
-procedure TScreenObject.GetColumns(const Grid: TCustomGrid;
+procedure TScreenObject.GetColumns(const Grid: TCustomModelGrid;
   TempMinX, TempMaxX: real; out FirstCol, LastCol: integer);
 var
   TempI: integer;
@@ -12001,7 +12014,7 @@ begin
   result := (FModel as TPhastModel).GetCompiler(Orientation, EvaluatedAt);
 end;
 
-function TScreenObject.GetRow(const Grid: TCustomGrid; const Y: real): integer;
+function TScreenObject.GetRow(const Grid: TCustomModelGrid; const Y: real): integer;
 begin
   Assert(EvaluatedAt = eaBlocks);
   result := Grid.NearestRowPosition(Y);
@@ -12035,7 +12048,7 @@ begin
   end;
 end;
 
-procedure TScreenObject.GetRows(const Grid: TCustomGrid;
+procedure TScreenObject.GetRows(const Grid: TCustomModelGrid;
   TempMinY, TempMaxY: real; out FirstRow, LastRow: integer);
 var
   TempI: integer;
@@ -12539,7 +12552,7 @@ begin
   end;
 end;
 
-procedure TScreenObject.UpdateTopSegments(const Grid: TCustomGrid;
+procedure TScreenObject.UpdateTopSegments(const Grid: TCustomModelGrid;
   const EvaluatedAt: TEvaluatedAt; const PointsRotated: boolean;
   var RotatedPoints: TEdgePointArray; AModel: TBaseModel);
 var
@@ -13144,7 +13157,7 @@ begin
   end;
 end;
 
-procedure TScreenObject.AssignValuesToTopPhastDataSet(const Grid: TCustomGrid;
+procedure TScreenObject.AssignValuesToTopPhastDataSet(const Grid: TCustomModelGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel);
 var
   DataSetFunction: string;
@@ -13588,7 +13601,7 @@ begin
 end;
 
 procedure TScreenObject.AddPointFromColumn(const ColIndex: integer;
-  const Grid: TCustomGrid; const PreviousPoint, APoint: TEdgePoint;
+  const Grid: TCustomModelGrid; const PreviousPoint, APoint: TEdgePoint;
   var TempPoints1: TEdgePointArray; var Count: integer;
   const Position: TEdgePosition);
 var
@@ -13631,7 +13644,7 @@ begin
 end;
 
 procedure TScreenObject.AddPointFromRow(const RowIndex: integer;
-  const Grid: TCustomGrid; const PreviousPoint, APoint: TEdgePoint;
+  const Grid: TCustomModelGrid; const PreviousPoint, APoint: TEdgePoint;
   var TempPoints1: TEdgePointArray; var Count: integer;
   const Position: TEdgePosition);
 var
@@ -13730,7 +13743,7 @@ begin
 end;
 
 procedure TScreenObject.AddPointFromLayer(const LayerIndex: integer;
-  const Grid: TCustomGrid;
+  const Grid: TCustomModelGrid;
   const PreviousPoint, APoint: TEdgePoint;
   var TempPoints1: TEdgePointArray;
   var Count: integer; const Position: TEdgePosition);
@@ -13797,27 +13810,27 @@ begin
   end;
 end;
 
-procedure TScreenObject.UpdateFrontSegments(const Grid: TCustomGrid;
+procedure TScreenObject.UpdateFrontSegments(const Grid: TCustomModelGrid;
   const EvaluatedAt: TEvaluatedAt);
 begin
   Delegate.UpdateFrontSegments(Grid, EvaluatedAt);
 end;
 
 procedure TScreenObject.AssignValuesToFrontPhastDataSet(
-  const Grid: TCustomGrid; const DataSet: TDataArray; OtherData: TObject;
+  const Grid: TCustomModelGrid; const DataSet: TDataArray; OtherData: TObject;
   AModel: TBaseModel; UseLgrEdgeCells: TLgrCellTreatment);
 begin
   Delegate.AssignValuesToFrontDataSet(Grid, DataSet, OtherData, AModel,
     UseLgrEdgeCells);
 end;
 
-procedure TScreenObject.UpdateSideSegments(const Grid: TCustomGrid;
+procedure TScreenObject.UpdateSideSegments(const Grid: TCustomModelGrid;
   const EvaluatedAt: TEvaluatedAt);
 begin
   Delegate.UpdateSideSegments(Grid, EvaluatedAt);
 end;
 
-procedure TScreenObject.AssignValuesToSidePhastDataSet(const Grid: TCustomGrid;
+procedure TScreenObject.AssignValuesToSidePhastDataSet(const Grid: TCustomModelGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment);
 begin
@@ -17983,7 +17996,7 @@ var
   SectionList: TList;
   SegmentIndex: Integer;
   Leaf: TCellElementLeaf;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   Limits: TGridLimit;
   RotatedLocation: TPoint2D;
   FirstPoint, SecondPoint: TPoint2D;
@@ -19176,7 +19189,7 @@ end;
 procedure TCustomScreenObjectDelegate.OtherIndex(const LayerOrRow,
   RowOrColumn: integer; out First, Last: integer; const DataSet: TDataArray);
 var
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
 begin
   if (DataSet <> nil) and (DataSet.Orientation <> dso3D) then
   begin
@@ -19664,7 +19677,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.AssignSelectedCells(const Grid: TCustomGrid;
+procedure TPhastDelegate.AssignSelectedCells(const Grid: TCustomModelGrid;
   AModel: TBaseModel);
 var
   CellList: TCellAssignmentList;
@@ -19699,7 +19712,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.AssignValuesToFrontDataSet(const Grid: TCustomGrid;
+procedure TPhastDelegate.AssignValuesToFrontDataSet(const Grid: TCustomModelGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
@@ -19752,7 +19765,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.AssignValuesToSideDataSet(const Grid: TCustomGrid;
+procedure TPhastDelegate.AssignValuesToSideDataSet(const Grid: TCustomModelGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
@@ -19804,7 +19817,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.AssignValuesToTopDataSet(const Grid: TCustomGrid;
+procedure TPhastDelegate.AssignValuesToTopDataSet(const Grid: TCustomModelGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
@@ -19868,7 +19881,7 @@ begin
   FSelectedCells := TSelectedCells.Create;
 end;
 
-procedure TPhastDelegate.GetCellsToAssign(const Grid: TCustomGrid;
+procedure TPhastDelegate.GetCellsToAssign(const Grid: TCustomModelGrid;
   const DataSetFunction: string; OtherData: TObject;
   const EvaluatedAt: TEvaluatedAt; CellList: TCellAssignmentList;
   AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
@@ -19890,7 +19903,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.GetFrontCellsToAssign(const Grid: TCustomGrid;
+procedure TPhastDelegate.GetFrontCellsToAssign(const Grid: TCustomModelGrid;
   const DataSetFunction: string; OtherData: TObject;
   const DataSet: TDataArray; CellList: TCellAssignmentList;
   AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
@@ -20254,7 +20267,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.GetSideCellsToAssign(const Grid: TCustomGrid;
+procedure TPhastDelegate.GetSideCellsToAssign(const Grid: TCustomModelGrid;
   const DataSetFunction: string; OtherData: TObject; const DataSet: TDataArray;
   CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
   AModel: TBaseModel);
@@ -20623,7 +20636,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.GetTopCellsToAssign(const Grid: TCustomGrid;
+procedure TPhastDelegate.GetTopCellsToAssign(const Grid: TCustomModelGrid;
   const DataSetFunction: string; OtherData: TObject; const DataSet: TDataArray;
   CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
   AModel: TBaseModel);
@@ -21277,7 +21290,7 @@ begin
   end;
 end;
 
-procedure TPhastDelegate.UpdateFrontSegments(const Grid: TCustomGrid;
+procedure TPhastDelegate.UpdateFrontSegments(const Grid: TCustomModelGrid;
   const EvaluatedAt: TEvaluatedAt);
 var
   RotatedPoints: TEdgePointArray;
@@ -21677,7 +21690,7 @@ begin
   FScreenObject.FSegments.UpToDate := True;
 end;
 
-procedure TPhastDelegate.UpdateSideSegments(const Grid: TCustomGrid;
+procedure TPhastDelegate.UpdateSideSegments(const Grid: TCustomModelGrid;
   const EvaluatedAt: TEvaluatedAt);
 var
   RotatedPoints: TEdgePointArray;
@@ -22084,7 +22097,7 @@ end;
 
 { TModflowDelegate }
 
-function TModflowDelegate.ElevationOk(const Grid: TCustomGrid;
+function TModflowDelegate.ElevationOk(const Grid: TCustomModelGrid;
   const PerpendicularIndex: integer; const ColIndex: integer;
   const RowIndex: integer): boolean;
 var
@@ -22199,7 +22212,7 @@ begin
 //  result := not result;
 end;
 
-procedure TModflowDelegate.AssignValuesToFrontDataSet(const Grid: TCustomGrid;
+procedure TModflowDelegate.AssignValuesToFrontDataSet(const Grid: TCustomModelGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 begin
@@ -22207,7 +22220,7 @@ begin
     AssignmentLocation);
 end;
 
-procedure TModflowDelegate.AssignValuesToSideDataSet(const Grid: TCustomGrid;
+procedure TModflowDelegate.AssignValuesToSideDataSet(const Grid: TCustomModelGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 begin
@@ -22215,7 +22228,7 @@ begin
     AssignmentLocation);
 end;
 
-procedure TModflowDelegate.AssignValuesToTopDataSet(const Grid: TCustomGrid;
+procedure TModflowDelegate.AssignValuesToTopDataSet(const Grid: TCustomModelGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 begin
@@ -22225,7 +22238,7 @@ end;
 
 function TModflowDelegate.IsPointInside(
   const CellLocation3D: T3DRealPoint;
-  Grid: TCustomGrid; out SectionIndex: integer): boolean;
+  Grid: TCustomModelGrid; out SectionIndex: integer): boolean;
 var
   APoint: TPoint2D;
 begin
@@ -22249,7 +22262,7 @@ begin
 end;
 
 function TModflowDelegate.GetPerpendiularLimit(
-  const Grid: TCustomGrid): integer;
+  const Grid: TCustomModelGrid): integer;
 begin
   result := -1;
   case FScreenObject.ViewDirection of
@@ -22303,7 +22316,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.AssignSelectedCells(const Grid: TCustomGrid;
+procedure TModflowDelegate.AssignSelectedCells(const Grid: TCustomModelGrid;
   AModel: TBaseModel);
 var
   CellList: TCellAssignmentList;
@@ -22342,7 +22355,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.AssignValuesToDataSet(const Grid: TCustomGrid;
+procedure TModflowDelegate.AssignValuesToDataSet(const Grid: TCustomModelGrid;
   const DataSet: TDataArray; OtherData: TObject; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
@@ -22496,7 +22509,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.AssignParallellLimits(const Grid: TCustomGrid;
+procedure TModflowDelegate.AssignParallellLimits(const Grid: TCustomModelGrid;
   out FirstParallelIndexA, LastParallelIndexA,
   FirstParallelIndexB, LastParallelIndexB: Integer);
 var
@@ -22644,7 +22657,7 @@ begin
   inherited;
 end;
 
-procedure TModflowDelegate.GetCellsToAssign(const Grid: TCustomGrid;
+procedure TModflowDelegate.GetCellsToAssign(const Grid: TCustomModelGrid;
   const DataSetFunction: string; OtherData: TObject;
   const EvaluatedAt: TEvaluatedAt; CellList: TCellAssignmentList;
   AssignmentLocation: TAssignmentLocation; Orientation: TDataSetOrientation;
@@ -22928,7 +22941,7 @@ begin
 end;
 
 function TModflowDelegate.GetHorizontalIndexFromLocation(const X: Real;
-  const Grid: TCustomGrid): integer;
+  const Grid: TCustomModelGrid): integer;
 begin
   result := -1;
   case FScreenObject.ViewDirection of
@@ -22969,7 +22982,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.GetSideCellsToAssign(const Grid: TCustomGrid;
+procedure TModflowDelegate.GetSideCellsToAssign(const Grid: TCustomModelGrid;
   const DataSetFunction: string; OtherData: TObject; const DataSet: TDataArray;
   CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
   AModel: TBaseModel);
@@ -22992,7 +23005,7 @@ begin
     AssignmentLocation, Orientation, AModel);
 end;
 
-procedure TModflowDelegate.GetTopCellsToAssign(const Grid: TCustomGrid;
+procedure TModflowDelegate.GetTopCellsToAssign(const Grid: TCustomModelGrid;
   const DataSetFunction: string; OtherData: TObject; const DataSet: TDataArray;
   CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
   AModel: TBaseModel);
@@ -23016,7 +23029,7 @@ begin
     AssignmentLocation, Orientation, AModel);
 end;
 
-procedure TModflowDelegate.GetHorizontalLimits(const Grid: TCustomGrid;
+procedure TModflowDelegate.GetHorizontalLimits(const Grid: TCustomModelGrid;
   var HorizontalLimit: Integer; var PerpendicularLimit: Integer);
 begin
   case FScreenObject.ViewDirection of
@@ -23034,7 +23047,7 @@ begin
   end;
 end;
 
-function TModflowDelegate.GetColOrRow(const Grid: TCustomGrid;
+function TModflowDelegate.GetColOrRow(const Grid: TCustomModelGrid;
   const APoint: TEdgePoint;
   const GridMinHorizontal, GridMaxHorizontal: Real): integer;
 begin
@@ -23069,7 +23082,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.GetFrontCellsToAssign(const Grid: TCustomGrid;
+procedure TModflowDelegate.GetFrontCellsToAssign(const Grid: TCustomModelGrid;
   const DataSetFunction: string; OtherData: TObject; const DataSet: TDataArray;
   CellList: TCellAssignmentList; AssignmentLocation: TAssignmentLocation;
   AModel: TBaseModel);
@@ -23092,7 +23105,7 @@ begin
     AssignmentLocation, Orientation, AModel);
 end;
 
-procedure TModflowDelegate.GetVerticalLimitsOfGrid(const Grid: TCustomGrid;
+procedure TModflowDelegate.GetVerticalLimitsOfGrid(const Grid: TCustomModelGrid;
   out GridMinZ, GridMaxZ: Real);
 var
   Temp: real;
@@ -23115,7 +23128,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.GetHorizontalLimitsOfGrid(const Grid: TCustomGrid;
+procedure TModflowDelegate.GetHorizontalLimitsOfGrid(const Grid: TCustomModelGrid;
   out GridMinHorizontal, GridMaxHorizontal: real);
 var
   Temp: real;
@@ -23633,7 +23646,7 @@ begin
   end;
 end;
 
-function TModflowDelegate.GetCellOutlines(const Grid: TCustomGrid;
+function TModflowDelegate.GetCellOutlines(const Grid: TCustomModelGrid;
   const RowOrCol: integer): T2DRealPointArray;
 begin
   case FScreenObject.ViewDirection of
@@ -23644,7 +23657,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.UpdateFrontSegments(const Grid: TCustomGrid;
+procedure TModflowDelegate.UpdateFrontSegments(const Grid: TCustomModelGrid;
       const EvaluatedAt: TEvaluatedAt);
 begin
   UpdateSegments(Grid, EvaluatedAt);
@@ -24566,7 +24579,7 @@ begin
 
 end;
 
-procedure TModflowDelegate.UpdateSegments(const Grid: TCustomGrid;
+procedure TModflowDelegate.UpdateSegments(const Grid: TCustomModelGrid;
   const EvaluatedAt: TEvaluatedAt);
 var
   RotatedPoints: TEdgePointArray;
@@ -25477,7 +25490,7 @@ begin
   end;
 end;
 
-procedure TModflowDelegate.UpdateSideSegments(const Grid: TCustomGrid;
+procedure TModflowDelegate.UpdateSideSegments(const Grid: TCustomModelGrid;
   const EvaluatedAt: TEvaluatedAt);
 begin
   UpdateSegments(Grid, EvaluatedAt);
@@ -26484,7 +26497,7 @@ begin
   end;
 end;
 
-procedure TScreenObject.AssignNumericValueToDataSet(const Grid: TCustomGrid;
+procedure TScreenObject.AssignNumericValueToDataSet(const Grid: TCustomModelGrid;
   const DataSet: TDataArray; Value: double; AModel: TBaseModel);
 var
   CellList: TCellAssignmentList;
@@ -26510,7 +26523,7 @@ begin
   end;
 end;  
 
-procedure TScreenObject.AssignValuesToModflowDataSet(const Grid: TCustomGrid;
+procedure TScreenObject.AssignValuesToModflowDataSet(const Grid: TCustomModelGrid;
   const DataSet: TDataArray; const Formula: string; AModel: TBaseModel;
   UseLgrEdgeCells: TLgrCellTreatment; AssignmentLocation: TAssignmentLocation = alAll);
 var
@@ -26573,7 +26586,7 @@ begin
   end
 end;
 
-procedure TScreenObject.AssignValuesToPhastDataSet(const Grid: TCustomGrid;
+procedure TScreenObject.AssignValuesToPhastDataSet(const Grid: TCustomModelGrid;
   const DataSet: TDataArray; AModel: TBaseModel; UseLgrEdgeCells: TLgrCellTreatment);
 var
   OtherData: TObject;
@@ -27342,7 +27355,7 @@ begin
   end;
 end;
 
-procedure TScreenObject.GetCellsToAssign(const Grid: TCustomGrid;
+procedure TScreenObject.GetCellsToAssign(const Grid: TCustomModelGrid;
   const DataSetFunction: string; OtherData: TObject;
   const DataSet: TDataArray; CellList: TCellAssignmentList;
   AssignmentLocation: TAssignmentLocation; AModel: TBaseModel);
@@ -30643,7 +30656,7 @@ begin
   end;
 end;
 
-procedure TScreenObject.AssignTopDataSetValues(const Grid: TCustomGrid;
+procedure TScreenObject.AssignTopDataSetValues(const Grid: TCustomModelGrid;
   Expression: TExpression; const DataSetFunction: string; Compiler: TRbwParser;
   UsedVariables: TStringList; OtherData: TObject; const DataSet: TDataArray;
   AModel: TBaseModel; AssignmentLocation: TAssignmentLocation = alAll);

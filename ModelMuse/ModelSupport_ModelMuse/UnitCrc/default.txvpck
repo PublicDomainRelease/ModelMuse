@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="zioc4jsbowmc34o_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:UnitCrc.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UnitCrc.CRC32Mapped(const,System.Int32,UnitCrc.TCharMap)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UnitCrc.CRC32Inc(const,System.Int32,System.UInt32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UnitCrc.MapStr(const,ref@const,System.Int32,UnitCrc.TCharMap)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UnitCrc.CRCInit" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UnitCrc.NoCharMap" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UnitCrc.UpperCaseMap" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UnitCrc.LowerCaseMap" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UnitCrc.ChangeCaseMap" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:UnitCrc.Crc32Table" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UnitCrc.CRC32(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:UnitCrc.CRC32(const,System.Int32)" />
+    </reference>
+  </view>
+</nodeSet>

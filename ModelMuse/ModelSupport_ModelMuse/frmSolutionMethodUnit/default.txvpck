@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="42ndczv8pivevlj_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSolutionMethodUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.rgSolverClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.rdeRebalanceFraction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.lblRebalanceFraction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.cbRebalanceByCell" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.rgSolver" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.rdeTolerance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.rdeTimeDifferencing" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.rdeSpaceDifferencing" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.rdeSaveDirections" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.rdeMaximumIterations" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.lblTolerance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.lblTimeDifferencing" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.lblSpaceDifferencing" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.lblSaveDirections" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.lblMaximumIterations" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.cbCrossDispersion" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TfrmSolutionMethod.btnCancel" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmSolutionMethodUnit.TUndoSolutionOptions">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSolutionMethodUnit.TUndoSolutionOptions.Undo()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSolutionMethodUnit.TUndoSolutionOptions.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSolutionMethodUnit.TUndoSolutionOptions.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSolutionMethodUnit.TUndoSolutionOptions.Create()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TUndoSolutionOptions.FNewSolutionOptions" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmSolutionMethodUnit.TUndoSolutionOptions.Description()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmSolutionMethodUnit.TUndoSolutionOptions.FOldSolutionOptions" />
+    </reference>
+  </view>
+</nodeSet>

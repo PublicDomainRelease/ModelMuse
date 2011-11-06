@@ -170,7 +170,8 @@ begin
   try
     NewDataSets := TList.Create;
     try
-      MakeNewDataSet(NewDataSets, '_Grd_Z', 'Imported from Surfer Grid files');
+      MakeNewDataSet(NewDataSets, '_Grd_Z', 'Imported from Surfer Grid files',
+        comboDataSets.ItemIndex = 0);
       DataSetName := comboDataSets.Text;
       DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
       case FFileType of
@@ -247,6 +248,7 @@ begin
                 begin
                   Item.Values.RealValues[PointIndex] := FGrd6.Points[PointIndex].Z;
                 end;
+                Item.CacheData;
               end;
             sft7:
               begin
@@ -284,6 +286,7 @@ begin
                     Item.Values.RealValues[PointIndex] := FGrd7.Points[PointIndex].Z;
                   end;
                 end;
+                Item.CacheData;
               end;
             else Assert(False);
           end;

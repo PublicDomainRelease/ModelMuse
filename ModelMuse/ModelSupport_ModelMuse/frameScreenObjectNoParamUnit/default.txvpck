@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="q6l07fb7qmun09k_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.pnlCaption" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.pnlTop" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.btnInsert" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.btnDelete" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.lblNumTimes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.seNumberOfTimes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.pnlBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.dgModflowBoundary" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.GetEndTimes(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.GetStartTimes(System.Int32)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.FrameLoaded[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.InitializeNoParamFrame(ModflowBoundaryUnit.TModflowBoundary)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.ConductanceCaption(System.String)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.DeletedCells[System.Int32,System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.ClearDeletedCells()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.ConductanceColumn" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.SetDeletedCells(System.Int32,System.Int32,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.GetDeletedCells(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.LayoutMultiRowEditControls()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.SetFrameLoaded(System.Boolean)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.FDeletedCells" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.FDeleting" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.FFrameLoaded" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.FSelectedText" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.dgModflowBoundaryBeforeDrawCell(System.Object,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.dgModflowBoundarySetEditText(System.Object,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.FrameResize(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.dgModflowBoundaryColSize(System.Object,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.dgModflowBoundaryHorizontalScroll(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.rdeFormulaChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.dgModflowBoundaryMouseUp(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.dgModflowBoundaryMouseDown(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.btnInsertClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.btnDeleteClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.seNumberOfTimesChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.dgModflowBoundarySelectCell(System.Object,System.Int32,System.Int32,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.rdeFormula" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.lblFormula" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.pnlEditGrid" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frameScreenObjectNoParamUnit.TframeScreenObjectNoParam.pnlGrid" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frameScreenObjectNoParamUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+  </view>
+</nodeSet>

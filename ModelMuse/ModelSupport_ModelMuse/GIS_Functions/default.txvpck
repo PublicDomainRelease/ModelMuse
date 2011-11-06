@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="hsltcdtup4k0xqk_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GIS_Functions.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._HufKx(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.HufKHorizontal(System.Pointer[],System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.GetHufSy(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.HufUnitParam(HufDefinition.THydrogeologicUnit,System.Int32,System.Int32,OrderedCollectionUnit.TParameterType,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.GetLayerTopAndBottom(System.Double,System.Int32,System.Int32,System.Int32,ref@System.Double,ref@System.Double,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.HguTransmissivity(HufDefinition.THydrogeologicUnit,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.HguHorizontalAnisotrpy(HufDefinition.THydrogeologicUnit,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._BcfGetVcont(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.UpdateCellValue(ref@System.Double,HufDefinition.THufUsedParameter,PhastModelUnit.TPhastModel,System.Int32,System.Int32,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.GetDataSetValue(System.Int32,System.Int32,System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ImportedScreenObjectValuesT(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ImportedScreenObjectValuesB(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ImportedScreenObjectValuesI(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ImportedScreenObjectValuesR(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.GetImportedValues(ref@ValueArrayStorageUnit.TValueArrayStorage,System.Pointer[],ref@System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._SpecifiedHeadOnLayer(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ActiveOnLayer(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.EvaluateBooleanDataSetOnLayer(System.String,System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._NodeInterpolate(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ObjectName(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ObjectIntersectArea(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ObjectIntersectSectionLength(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ObjectIntersectLength(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ObjectArea(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ObjectLength(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ColumnCount(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._RowCount(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._LayerCount(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._LayerPosition(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.GetLayerPosition(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._RowPosition(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ColumnPosition(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._BlockVolume(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._BlockAreaSide(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._BlockAreaFront(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._BlockAreaTop(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._LayerHeight(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.GetLayerHeight(System.Int32,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.ExtractColRowLayer(ref@System.Int32,ref@System.Int32,ref@System.Int32,System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._SimulatedModflowLayer(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._RowWidth(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.GetRowWidth(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ColumnWidth(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.GetColumnWidth(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._Layer(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ElevationToLayer(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ElevationToModelLayer(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._Row(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._Column(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._YPrime(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._XPrime(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._Z(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._Y(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._X(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ObjectNodeCount(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._FractionOfObjectLength(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ListDataSetIntegerValue(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ListDataSetRealValue(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._CurrentSegmentLength(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._CurrentSectionIndex(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._CurrentZNodePosition(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._CurrentYNodePosition(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._CurrentXNodePosition(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._NodeDistances(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._ZNodePosition(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._YNodePosition(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._XNodePosition(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.UpdateCurrentScreenObject(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.UpdateCurrentSegment(ScreenObjectUnit.TCellElementSegment)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.UpdateCurrentSection(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.UpdateGlobalLocations(System.Int32,System.Int32,System.Int32,GoPhastTypes.TEvaluatedAt)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.NodeDistances(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.GetCellIndicies(ref@System.Int32,ref@System.Int32,ref@System.Int32,System.Pointer[],System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.AddGIS_Functions(RbwParser.TRbwParser,GoPhastTypes.TModelSelection)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.HufSYSpecialImplementor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.HufSY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.HufAverageSYSpecialImplementor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.HufAverageSY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.HufSSSpecialImplementor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.HufSS" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.HufKzSpecialImplementor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.HufKz" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.HufKySpecialImplementor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.HufKy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.HufKxSpecialImplementor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.HufKx" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.BcfVcontSpecialImplementor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.BcfVcont" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.SpecifiedHeadOnLayerSpecialImplementor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.SpecifiedHeadOnLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ActiveOnLayerSpecialImplementor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ActiveOnLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.NodeInterpolateSpecialImplementor" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.NodeInterpolate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ImportedValuesTFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ImportedValuesBFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ImportedValuesIFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ImportedValuesRFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ModflowLayerSimulatedFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ListIntegerValueFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ListRealValueFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.NodeCountFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.FractionOfObjectLengthFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.CurrentSectionIndexFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.CurrentSegmentLengthFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.CurrentNodeZFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.CurrentNodeYFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.CurrentNodeXFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.NodeDistanceFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.NodeZFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.NodeYFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.NodeXFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ObjectNameFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ObjectIntersectAreaFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ObjectSectionIntersectLengthFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ObjectIntersectLengthFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ObjectAreaFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ObjectLengthFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.LayerCountFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.RowCountFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ColumnCountFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.LayerPositionFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.RowPositionFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ColumnPositionFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.BlockVolumeFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.BlockAreaSideFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.BlockAreaFrontFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.BlockAreaTopFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.LayerHeightFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.RowWidthFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ColumnWidthFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.LayerFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.RowFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ElevationToModelLayerFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ElevationToLayerFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ColumnFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.YPrimeFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.XPrimeFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.ZFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.YFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.XFunction" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.GlobalSection" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.GlobalCurrentSegment" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.GlobalCurrentScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.GlobalLayer" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.GlobalRow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.GlobalColumn" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.GlobalYPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.GlobalXPrime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.GlobalZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.GlobalY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.GlobalX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.FNodeDistances" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.NodeDistancesSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.SpecialImplementors" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.StrLayerHeight" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.StrHufSy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.StrHufAverageSy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.StrHufSs" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.StrHufKz" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.StrHufKy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.StrHufKx" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.StrBcfVCONT" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.StrImportedElevations" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.StrImportedLowerEleva" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.StrImportedHigherElev" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.rsObjectImportedValuesT" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.rsObjectImportedValuesB" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.rsObjectImportedValuesI" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.rsObjectImportedValuesR" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.rsListIntegerValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.rsListRealValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:GIS_Functions.GlobalEvaluatedAt" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._HufAverageSY(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._HufSS(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.HufAveragParam(System.Pointer[],OrderedCollectionUnit.TParameterType)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._HufKZ(System.Pointer[])" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions._HufAverageKY(System.Pointer[])" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GIS_Functions.TActiveOnLayer">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.TActiveOnLayer.UsesVariable(RbwParser.TCustomVariable)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.TActiveOnLayer.GetVariablesUsed()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GIS_Functions.TSpecifiedHeadOnLayer">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.TSpecifiedHeadOnLayer.UsesVariable(RbwParser.TCustomVariable)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.TSpecifiedHeadOnLayer.GetVariablesUsed()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GIS_Functions.TBcfVcont">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.TBcfVcont.UsesVariable(RbwParser.TCustomVariable)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.TBcfVcont.GetVariablesUsed()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GIS_Functions.TCustomHufExpression">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.TCustomHufExpression.UsesVariable(RbwParser.TCustomVariable)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GIS_Functions.THufKx">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.THufKx.GetVariablesUsed()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:GIS_Functions.THufKx:GIS_Functions.TCustomHufExpression" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GIS_Functions.THufKy">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.THufKy.GetVariablesUsed()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:GIS_Functions.THufKy:GIS_Functions.THufKx" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GIS_Functions.THufKz">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.THufKz.GetVariablesUsed()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:GIS_Functions.THufKz:GIS_Functions.THufKx" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GIS_Functions.THufSS">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.THufSS.GetVariablesUsed()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:GIS_Functions.THufSS:GIS_Functions.TCustomHufExpression" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GIS_Functions.THufSY">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.THufSY.GetVariablesUsed()" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:GIS_Functions.THufSY:GIS_Functions.TCustomHufExpression" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:GIS_Functions.TNodeInterpolateExpression">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:GIS_Functions.TNodeInterpolateExpression.Evaluate()" />
+    </reference>
+  </view>
+</nodeSet>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="axm74ta0pl02hsg_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DemReaderUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DemReaderUnit.TCornerPoint">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TCornerPoint.FX" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DemReaderUnit.TCornerPoint.Y[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DemReaderUnit.TCornerPoint.X[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TCornerPoint.SetY(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TCornerPoint.SetX(System.Double)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TCornerPoint.FY" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DemReaderUnit.TElevationPoint">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DemReaderUnit.TElevationPoint.Value[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DemReaderUnit.TElevationPoint.Elevation[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TElevationPoint.SetValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TElevationPoint.SetElevation(System.Double)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TElevationPoint.FValue" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TElevationPoint.FElevation" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:DemReaderUnit.TElevationPoint:DemReaderUnit.TCornerPoint" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:DemReaderUnit.TDemReader">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DemReaderUnit.TDemReader.OnProgress[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DemReaderUnit.TDemReader.Points[System.Int32]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DemReaderUnit.TDemReader.PointCount[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.Cancel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.ReadHeader(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.ReadFile(System.String,System.Boolean)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DemReaderUnit.TDemReader.CentralMeridianRadians[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DemReaderUnit.TDemReader.CoordInSec[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:DemReaderUnit.TDemReader.Corners[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.GetCorner(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.GetPointCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.GetPoint(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.UTMCentralMeridianRadians(System.Double,System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.FortranStrToFloat(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.ReadRecordC()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.ReadRestOfRecord()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.ReadRecordB()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.ReadRecordA(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:DemReaderUnit.TDemReader.ReadCharacters(System.Int32,out@System.Boolean)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.FOnProgress" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.FCoordInSec" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.FCentralMeridianRadians" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.FPoints" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.FCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.ColumnCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.ResolutionZ" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.ResolutionY" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.ResolutionX" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.Angle" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.RangeList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.FCorners" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.CharCount" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:DemReaderUnit.TDemReader.DemFile" />
+    </reference>
+  </view>
+</nodeSet>

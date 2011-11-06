@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="sskn2qscqz8cxmp_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmUndoUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmUndoUnit.TUndoForm">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmUndoUnit.TUndoForm.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmUndoUnit.TUndoForm.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmUndoUnit.TUndoForm.UndoStack[]" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmUndoUnit.TUndoForm.FUndoStack" />
+    </reference>
+  </view>
+</nodeSet>

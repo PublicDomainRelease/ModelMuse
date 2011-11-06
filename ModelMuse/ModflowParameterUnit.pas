@@ -52,6 +52,7 @@ type
     procedure RemoveOldDataSetVariables;
     procedure UpdateHfbParameterNames(const Value: string);
     procedure UpdateFormulas(const OldName, NewName: string);
+    procedure UnlockDataSets;
   protected
     // Besides setting the name of the parameter, @name also updates the
     // names of the @link(TDataArray)s used to define multiplier and zone
@@ -180,6 +181,7 @@ end;
 
 destructor TModflowSteadyParameter.Destroy;
 begin
+  UnlockDataSets;
   FNamesToRemove.Free;
   FMultiplierArrayNames.Free;
   FZoneArrayNames.Free;
@@ -234,6 +236,30 @@ begin
     FillArrayNameList(FMultiplierArrayNames, '_M', 'MULT_', AModel);
   end;
   result := FMultiplierArrayNames[ModflowLayer-1];
+end;
+
+procedure TModflowSteadyParameter.UnlockDataSets;
+var
+  Model: TPhastModel;
+  DataArray: TDataArray;
+begin
+  if Collection.Model <> nil then
+  begin
+    Model := Collection.Model as TPhastModel;
+    if not (csLoading in Model.ComponentState) then
+    begin
+      DataArray := Model.DataArrayManager.GetDataSetByName(FMultiplierName);
+      if DataArray <> nil then
+      begin
+        DataArray.Lock := DataArray.Lock - [dcName];
+      end;
+      DataArray := Model.DataArrayManager.GetDataSetByName(FZoneName);
+      if DataArray <> nil then
+      begin
+        DataArray.Lock := DataArray.Lock - [dcName];
+      end;
+    end;
+  end;
 end;
 
 procedure TModflowSteadyParameter.SetMultiplierName(const Value: string);

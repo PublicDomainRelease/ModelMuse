@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="p0om8fmmoi1vt9s_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmVerticalExaggerationUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration.btnDefaultClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration.FormShow(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration.btnDefault" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration.rdeVerticalExaggeration" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration.lblVerticalExaggeration" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration.btnCancel" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmVerticalExaggerationUnit.TfrmVerticalExaggeration.rdeVerticalExaggerationExit(System.Object)" />
+    </reference>
+  </view>
+</nodeSet>

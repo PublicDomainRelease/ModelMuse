@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="o0mu30mqp9ycoag_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowMNW2_WriterUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowMNW2_WriterUnit.TMultinodeWell">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TMultinodeWell.IsScreenObjectVertical(ScreenObjectUnit.TScreenObject)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TMultinodeWell.Destroy()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowMNW2_WriterUnit.TMultinodeWell.CellCount[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowMNW2_WriterUnit.TMultinodeWell.Cells[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TMultinodeWell.GetVerticalWellElevations(out@System.Double,out@System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TMultinodeWell.ConstantWellLossParameters()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TMultinodeWell.VerticalWell()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TMultinodeWell.WellBoundary()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TMultinodeWell.GetCellCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TMultinodeWell.GetCell(System.Int32)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowMNW2_WriterUnit.TMultinodeWell.FScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowMNW2_WriterUnit.TMultinodeWell.FCells" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.FNameOfFile" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.UpdateDisplay(ModflowBoundaryDisplayUnit.TModflowBoundListOfTimeLists)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteMnwiFile(System.String,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteFile(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.Create(PhastModelUnit.TPhastModel)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.Evaluate()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.Extension()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.Package()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.CheckWells()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.EvaluateVerticalScreenFormula(ref@RbwParser.TExpression,System.String,ref@System.String,RbwParser.TRbwParser,ModflowMnw2Unit.TMnw2Boundary)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteMnwiDataSet3(ref@System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteMnwiDataSet2()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteMnwiDataSet1(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.EvaluateMnwi()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet4(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet4B(ModflowMnw2Unit.TMnw2Boundary,ModflowMnw2Unit.TMnw2TimeItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.GetQCut(ModflowMnw2Unit.TMnw2TimeItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet4A(ModflowMnw2Unit.TMnw2Boundary,ModflowMnw2Unit.TMnw2TimeItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet3(System.Double,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSets3and4()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet2H(ModflowMnw2Unit.TMnw2Boundary)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet2G(ModflowMnw2Unit.TMnw2Boundary)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet2F(ModflowMnw2Unit.TMnw2Boundary)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet2E(ModflowMNW2_WriterUnit.TMultinodeWell,ModflowMnw2Unit.TMnw2Boundary)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet2D(System.Boolean,ModflowMnw2Unit.TMnw2Boundary,ModflowMNW2_WriterUnit.TMultinodeWell)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet2C(System.Boolean,ModflowMnw2Unit.TMnw2Boundary,ModflowMNW2_WriterUnit.TMultinodeWell)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet2B(ModflowMnw2Unit.TMnw2Boundary,ModflowMNW2_WriterUnit.TMultinodeWell)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet2A(ModflowMnw2Unit.TMnw2Boundary,ModflowMNW2_WriterUnit.TMultinodeWell)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet2()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.WriteDataSet1()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.FMnwPackage" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.FMnwiWells" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.NNODES" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.FWellNames" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.FWells" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowMNW2_WriterUnit.TModflowMNW2_Writer.FValues" />
+    </reference>
+  </view>
+</nodeSet>

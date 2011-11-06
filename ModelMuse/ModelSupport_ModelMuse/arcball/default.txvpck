@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="lao6ed4aot0c0kq_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:arcball.TQuaternion">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TQuaternion.ImagPart" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TQuaternion.RealPart" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TQuaternion.Vector" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:arcball.Point3D">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.Point3D.x" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.Point3D.y" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.Point3D.z" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:arcball.TArcBall">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FRadius" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FqNow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FqDown" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FqDrag" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FvNow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FvDown" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FvFrom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FvTo" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FvrFrom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FvrTo" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FmNow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FmDown" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FDragging" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FAspectRatio" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.TArcBall.FInitialized" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.TArcBall.DrawArc(arcball.TVector4f,arcball.TVector4f)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.TArcBall.Init(System.Single,System.Single)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.TArcBall.PointRotateArcBall(ref@arcball.Point3D)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.TArcBall.BeginDrag(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.TArcBall.EndDrag(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.TArcBall.Update()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.TArcBall.MouseMove(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.TArcBall.Render()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.TArcBall.RestoreDefaultOrientation()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:arcball.TArcBall.Dragging[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:arcball.TArcBall.Matrix[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:arcball.TArcBall.AspectRatio[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:arcball.TArcBall.Radius[]" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:arcball.TArcBall.FqNow" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:arcball.TArcBall.FqDown" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:arcball.TArcBall.FqDrag" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:arcball.TArcBall.FvNow" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:arcball.TArcBall.FvDown" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:arcball.TArcBall.FvFrom" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:arcball.TArcBall.FvTo" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:arcball.TArcBall.FvrFrom" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:arcball.TArcBall.FvrTo" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:arcball.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.X" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.Y" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.Z" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.W" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:arcball.IdentityMatrix" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.QuaternionConjugate(arcball.TQuaternion)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.QuaternionOne(ref@arcball.TQuaternion)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.MouseOnSphere(arcball.TQuaternion)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.Qt_FromBallPoints(arcball.TQuaternion,ref@arcball.TQuaternion)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.V3_(System.Single,System.Single,System.Single)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.Qt_ToBallPoints(arcball.TQuaternion,ref@arcball.TQuaternion,ref@arcball.TQuaternion)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.Q_Mul(arcball.TQuaternion,arcball.TQuaternion)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.Qt_ToMatrix(arcball.TQuaternion)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.MatrixMultiply(arcball.TMatrix,arcball.TMatrix)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:arcball.V3_Bisect(arcball.TVector4f,arcball.TVector4f)" />
+    </reference>
+  </view>
+</nodeSet>

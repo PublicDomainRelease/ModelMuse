@@ -32,7 +32,6 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
     Width = 551
     Height = 26
     Style = csDropDownList
-    ItemHeight = 18
     TabOrder = 0
     OnChange = comboDataSetsChange
   end
@@ -42,7 +41,6 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
     Width = 257
     Height = 26
     Style = csDropDownList
-    ItemHeight = 18
     TabOrder = 1
     OnChange = comboInterpolatorsChange
   end
@@ -92,25 +90,34 @@ inherited frmCustomImportSimpleFile: TfrmCustomImportSimpleFile
     Top = 228
     Width = 91
     Height = 33
-    TabOrder = 4
+    DoubleBuffered = True
     Kind = bkOK
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 4
   end
   object btnCancel: TBitBtn
     Left = 464
     Top = 228
     Width = 91
     Height = 33
-    TabOrder = 6
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 6
   end
   object btnHelp: TBitBtn
     Left = 272
     Top = 228
     Width = 91
     Height = 33
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 8
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
   object OpenDialogFile: TOpenDialog
     Filter = 'DXF files (*.dxf)|*.dxf;*.DXF'

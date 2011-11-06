@@ -11,12 +11,12 @@ inherited frmFormulaErrors: TfrmFormulaErrors
   FormStyle = fsStayOnTop
   OnResize = FormResize
   ExplicitWidth = 556
-  ExplicitHeight = 268
+  ExplicitHeight = 260
   PixelsPerInch = 96
   TextHeight = 19
   object pnlBottom: TPanel
     Left = 0
-    Top = 189
+    Top = 181
     Width = 548
     Height = 45
     Align = alBottom
@@ -26,7 +26,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
       548
       45)
     object btnClose: TBitBtn
-      Left = 457
+      Left = 441
       Top = 6
       Width = 83
       Height = 33
@@ -50,7 +50,7 @@ inherited frmFormulaErrors: TfrmFormulaErrors
       OnClick = btnCopyClick
     end
     object btnHelp: TBitBtn
-      Left = 368
+      Left = 352
       Top = 6
       Width = 83
       Height = 33
@@ -95,18 +95,20 @@ inherited frmFormulaErrors: TfrmFormulaErrors
     object Label1: TLabel
       Left = 1
       Top = 1
-      Width = 459
-      Height = 19
+      Width = 546
+      Height = 63
       Align = alClient
       Caption = 'The following formulas were invalid. They may have been reset.'
       WordWrap = True
+      ExplicitWidth = 459
+      ExplicitHeight = 19
     end
   end
   object sgErrors: TRbwDataGrid4
     Left = 0
     Top = 65
     Width = 548
-    Height = 124
+    Height = 116
     Align = alClient
     ColCount = 4
     DefaultColWidth = 100

@@ -32,7 +32,7 @@ type
     // @name is filled in @link(ImportSegments).
     FPointLists: TList;
     FEpsilon: Real;
-    FModelGrid: TCustomGrid;
+    FModelGrid: TCustomModelGrid;
     // @name is the event handler for TContourCreator.OnExtractSegments
     procedure ImportSegments(Sender: TObject; const Segments: TLine2DArray);
     procedure InitializeQuadTree;
@@ -49,9 +49,9 @@ procedure GlobalImportSegments(Sender: TObject;
   QuadTree: TRbwQuadTree; PointLists: TList);
 
 procedure GlobalInitializeQuadTree(var QuadTree: TRbwQuadTree;
-  ModelGrid: TCustomGrid);
+  ModelGrid: TCustomModelGrid);
 
-procedure GlobalInitializeEpsilon(var Epsilon: Real; ModelGrid: TCustomGrid);
+procedure GlobalInitializeEpsilon(var Epsilon: Real; ModelGrid: TCustomModelGrid);
 
 implementation
 
@@ -270,7 +270,7 @@ begin
 end;
 
 procedure GlobalInitializeQuadTree(var QuadTree: TRbwQuadTree;
-  ModelGrid: TCustomGrid);
+  ModelGrid: TCustomModelGrid);
 var
   CornerPoint: TPoint2d;
   XMin, XMax, YMin, YMax: double;
@@ -598,7 +598,7 @@ begin
   GlobalInitializeQuadTree(FQuadTree, FModelGrid);
 end;
 
-procedure GlobalInitializeEpsilon(var Epsilon: Real; ModelGrid: TCustomGrid);
+procedure GlobalInitializeEpsilon(var Epsilon: Real; ModelGrid: TCustomModelGrid);
 var
   Index: Integer;
 begin

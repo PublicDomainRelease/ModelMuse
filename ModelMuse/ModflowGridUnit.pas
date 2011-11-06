@@ -9,7 +9,7 @@ uses
   GoPhastTypes, AbstractGridUnit, ZoomBox2, OpenGL12x, DataSetUnit;
 
 type
-  TModflowGrid = class(TCustomGrid)
+  TModflowGrid = class(TCustomModelGrid)
   private
     FLayerElevations: TThreeDRealArray;
     // @name contains the locations of the cell corners, cell centers

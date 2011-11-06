@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="cplj3fewphvnphi_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ReadModflowArrayUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ReadModflowArrayUnit.ReadModflowAsciiRealArray(ReadModflowArrayUnit.TFileVariable,ref@System.Int32,ref@System.Int32,ref@ReadModflowArrayUnit.TModflowDouble,ref@ReadModflowArrayUnit.TModflowDouble,ref@ReadModflowArrayUnit.TModflowDesc2,ref@System.Int32,ref@System.Int32,ref@System.Int32,ref@ReadModflowArrayUnit.TModflowDoubleArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ReadModflowArrayUnit.ReadModflowDoublePrecFluxArray(Classes.TFileStream,ref@System.Int32,ref@System.Int32,ref@ReadModflowArrayUnit.TModflowDouble,ref@ReadModflowArrayUnit.TModflowDouble,ref@ReadModflowArrayUnit.TModflowDesc,ref@System.Int32,ref@System.Int32,ref@System.Int32,ref@ReadModflowArrayUnit.T3DTModflowArray,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ReadModflowArrayUnit.ReadModflowSinglePrecFluxArray(Classes.TFileStream,ref@System.Int32,ref@System.Int32,ref@ReadModflowArrayUnit.TModflowDouble,ref@ReadModflowArrayUnit.TModflowDouble,ref@ReadModflowArrayUnit.TModflowDesc,ref@System.Int32,ref@System.Int32,ref@System.Int32,ref@ReadModflowArrayUnit.T3DTModflowArray,System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ReadModflowArrayUnit.ReadDoublePrecisionModflowBinaryRealArray(Classes.TFileStream,ref@System.Int32,ref@System.Int32,ref@ReadModflowArrayUnit.TModflowDouble,ref@ReadModflowArrayUnit.TModflowDouble,ref@ReadModflowArrayUnit.TModflowDesc,ref@System.Int32,ref@System.Int32,ref@System.Int32,ref@ReadModflowArrayUnit.TModflowDoubleArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ReadModflowArrayUnit.ReadSinglePrecisionModflowBinaryRealArray(Classes.TFileStream,ref@System.Int32,ref@System.Int32,ref@ReadModflowArrayUnit.TModflowDouble,ref@ReadModflowArrayUnit.TModflowDouble,ref@ReadModflowArrayUnit.TModflowDesc,ref@System.Int32,ref@System.Int32,ref@System.Int32,ref@ReadModflowArrayUnit.TModflowDoubleArray)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ReadModflowArrayUnit.CheckBudgetPrecision(Classes.TFileStream,out@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ReadModflowArrayUnit.CheckArrayPrecision(Classes.TFileStream)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ReadModflowArrayUnit.TModflowPrecision">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ReadModflowArrayUnit.TModflowPrecision.mpDouble" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ReadModflowArrayUnit.TModflowPrecision.mpSingle" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ReadModflowArrayUnit.TFileVariable">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ReadModflowArrayUnit.TFileVariable.AFile" />
+    </reference>
+  </view>
+</nodeSet>

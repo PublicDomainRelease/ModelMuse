@@ -151,7 +151,7 @@ end;
 
 function TfrmImportDEM.GetData: boolean;
 var
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
 begin
   Grid := frmGoPhast.PhastModel.Grid;
   result := (Grid <> nil) and (Grid.ColumnCount > 0)
@@ -233,7 +233,7 @@ end;
 
 procedure TfrmImportDEM.SetData;
 var
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   DemReader: TDemReader;
   FirstFile: string;
   CentralMeridian: Double;
@@ -326,7 +326,8 @@ begin
       try
         MakeNewDataSet(NewDataSets, '_DEM_Elevation',
           strDefaultClassification + '|Sampled from DEM files using '
-          + LowerCase(rgFilterMethod.Items[rgFilterMethod.ItemIndex]));
+          + LowerCase(rgFilterMethod.Items[rgFilterMethod.ItemIndex]),
+          comboDataSets.ItemIndex = 0);
         DataSetName := comboDataSets.Text;
         DataSet := frmGoPhast.PhastModel.DataArrayManager.GetDataSetByName(DataSetName);
         Assert(DataSet <> nil);

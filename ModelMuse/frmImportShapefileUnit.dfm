@@ -8,6 +8,7 @@ inherited frmImportShapeFile: TfrmImportShapeFile
   VertScrollBar.Range = 41
   ActiveControl = btnHelp
   Caption = 'Import Shapefile'
+  ExplicitLeft = -60
   ExplicitWidth = 797
   ExplicitHeight = 580
   PixelsPerInch = 96
@@ -31,8 +32,8 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       Caption = 'Number of shapes ='
     end
     object btnCancel: TBitBtn
-      Left = 672
-      Top = 4
+      Left = 656
+      Top = 2
       Width = 115
       Height = 33
       Anchors = [akTop, akRight]
@@ -43,8 +44,8 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       TabOrder = 2
     end
     object btnOK: TBitBtn
-      Left = 552
-      Top = 4
+      Left = 536
+      Top = 2
       Width = 115
       Height = 33
       Anchors = [akTop, akRight]
@@ -74,8 +75,8 @@ inherited frmImportShapeFile: TfrmImportShapeFile
       OnClick = btnOKClick
     end
     object btnHelp: TBitBtn
-      Left = 431
-      Top = 4
+      Left = 415
+      Top = 2
       Width = 115
       Height = 33
       Anchors = [akTop, akRight]

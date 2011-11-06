@@ -13,15 +13,15 @@ inherited frmPrintFrequency: TfrmPrintFrequency
   TextHeight = 18
   object pnlBottom: TPanel
     Left = 0
-    Top = 453
+    Top = 448
     Width = 618
-    Height = 73
+    Height = 78
     Align = alBottom
     ParentColor = True
-    TabOrder = 0
+    TabOrder = 2
     DesignSize = (
       618
-      73)
+      78)
     object btnInsert: TButton
       Left = 103
       Top = 6
@@ -50,7 +50,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       OnClick = btnDeleteClick
     end
     object btnOK: TBitBtn
-      Left = 424
+      Left = 408
       Top = 36
       Width = 91
       Height = 33
@@ -59,11 +59,11 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Kind = bkOK
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 5
+      TabOrder = 4
       OnClick = btnOKClick
     end
     object btnCancel: TBitBtn
-      Left = 521
+      Left = 505
       Top = 36
       Width = 91
       Height = 33
@@ -72,7 +72,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Kind = bkCancel
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 6
+      TabOrder = 5
     end
     object cbSaveFinalHeads: TCheckBox
       Left = 8
@@ -80,10 +80,10 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Width = 273
       Height = 30
       Caption = 'Save final heads in *.head.dat'
-      TabOrder = 3
+      TabOrder = 6
     end
     object btnHelp: TBitBtn
-      Left = 329
+      Left = 311
       Top = 36
       Width = 91
       Height = 33
@@ -92,7 +92,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Kind = bkHelp
       NumGlyphs = 2
       ParentDoubleBuffered = False
-      TabOrder = 4
+      TabOrder = 3
       OnClick = btnHelpClick
     end
   end
@@ -100,7 +100,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
     Left = 0
     Top = 41
     Width = 618
-    Height = 412
+    Height = 407
     Align = alClient
     ColCount = 4
     FixedCols = 2
@@ -256,7 +256,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
     Width = 618
     Height = 41
     Align = alTop
-    TabOrder = 2
+    TabOrder = 0
     object rdeTime: TRbwDataEntry
       Left = 136
       Top = 10
@@ -264,7 +264,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       Height = 22
       Color = clBtnFace
       Enabled = False
-      TabOrder = 0
+      TabOrder = 1
       Text = '0'
       OnChange = rdeTimeChange
       DataType = dtReal
@@ -286,7 +286,7 @@ inherited frmPrintFrequency: TfrmPrintFrequency
       ImageWidth = 0
       ItemHeight = 22
       ItemIndex = 0
-      TabOrder = 1
+      TabOrder = 0
       OnChange = comboUnitsChange
       Items = <
         item

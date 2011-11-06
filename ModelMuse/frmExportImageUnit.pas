@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, frmCustomGoPhastUnit, StdCtrls, {rmOutlook,} ExtCtrls, Buttons, Grids,
+  Dialogs, frmCustomGoPhastUnit, StdCtrls, ExtCtrls, Buttons, Grids,
   Mask, JvExMask, JvSpin, JvExStdCtrls, JvCombobox, VirtualTrees,
   DataSetUnit, RbwDataGrid4, Contnrs, DrawTextUnit,
   InPlaceEditUnit, Types, LegendUnit, GR32, RbwRuler, ExtDlgs, ComCtrls,
@@ -195,9 +195,9 @@ uses
   EdgeDisplayUnit, Math, JclStrings, GoPhastTypes, frmGoPhastUnit,
   AbstractGridUnit, BigCanvasMethods, ScreenObjectUnit,
   CompressedImageUnit, frameViewUnit, PhastModelUnit, frmGoToUnit,
-  frmContourDataUnit, frmGridColorUnit, UndoItems, frmManageSettingsUnit,
+  UndoItems, frmManageSettingsUnit,
   UndoItemsScreenObjects, ClassificationUnit, frmProgressUnit,
-  frmErrorsAndWarningsUnit, Clipbrd, RbwParser;
+  frmErrorsAndWarningsUnit, Clipbrd, RbwParser, frmDisplayDataUnit;
 
 const
   StrSP = '%SP';
@@ -360,8 +360,8 @@ begin
       end;
       frmGoPhast.Grid.GridChanged;
 
-      UpdateFrmGridColor;
-      UpdateFrmContourData;
+      UpdateFrmDisplayData;
+//      UpdateFrmContourData;
       Application.ProcessMessages;
       PriorDataArray := DataArray;
       if FShouldStop then
@@ -794,7 +794,7 @@ procedure TfrmExportImage.DrawColorLegend(ACanvas: TCanvas;
 var
   ViewDirection: TViewDirection;
   PhastModel: TPhastModel;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   ShowLegend: Boolean;
 begin
   ColorRect.Left := 0;
@@ -846,6 +846,7 @@ begin
   begin
     UpdateModelColors;
     FModelImage := TBitmap32.Create;
+    FModelImage.Font := frmGoPhast.PhastModel.ContourFont;
     ViewDirection := TViewDirection(comboView.ItemIndex);
     if ViewDirection = vdSide then
     begin
@@ -904,6 +905,8 @@ begin
     if ViewDirection = vdTop then
     begin
       LocalModel.DrawHeadObservations(FModelImage, frmGoPhast.frameTopView.ZoomBox);
+      LocalModel.DrawSfrStreamLinkages(FModelImage, frmGoPhast.frameTopView.ZoomBox);
+
     end;
 
     LocalModel.Pathlines.Draw(Orientation, FModelImage);
@@ -1072,7 +1075,7 @@ end;
 procedure TfrmExportImage.ExpandText(Sender: TObject; var TextToDraw: string);
 var
   PhastModel: TPhastModel;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   DataArray: TDataArray;
   CommentLines: TStringList;
   SearchPosition: Integer;
@@ -1411,7 +1414,7 @@ procedure TfrmExportImage.SaveContourSettings(
   ContourDisplaySettings: TContourDisplaySettings);
 var
   DataArray: TDataArray;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
 begin
   Grid := frmGoPhast.PhastModel.Grid;
   DataArray := nil;
@@ -1451,7 +1454,7 @@ var
   ATime: Double;
   TimeList: TCustomTimeList;
   DataArray: TDataArray;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   PhastModel: TPhastModel;
 begin
   PhastModel := frmGoPhast.PhastModel;
@@ -1631,6 +1634,8 @@ begin
   PhastModel.EndPoints.Assign(ASetting.ModpathEndPointSettings);
   PhastModel.PathLines.Assign(ASetting.ModpathPathLineSettings);
   PhastModel.TimeSeries.Assign(ASetting.ModpathTimeSeriesSettings);
+  PhastModel.ShowContourLabels := ASetting.LabelContours;
+  PhastModel.ContourFont := ASetting.ContourFont;
 
   ApplyContourDisplaySettings(ASetting.ContourDisplaySettings);
   ApplyColorDisplaySettings(ASetting.ColorDisplaySettings);
@@ -1644,6 +1649,8 @@ begin
   begin
     PhastModel.EdgeDisplay := nil;
   end;
+
+  PhastModel.SfrStreamLinkPlot := ASetting.SfrStreamLinkPlot;
 
   FTextItems.Clear;
   for Index := 0 to ASetting.AdditionalText.Count - 1 do
@@ -1766,6 +1773,9 @@ begin
       end;
     end;
     ASetting.VisibleObjects.Sorted := True;
+    ASetting.ContourFont := PhastModel.ContourFont;
+    ASetting.LabelContours := PhastModel.ShowContourLabels;
+    ASetting.SfrStreamLinkPlot := PhastModel.SfrStreamLinkPlot;
 
     Undo := TUndoEditDisplaySettings.Create(ModifiedDisplaySettings);
     frmGoPhast.UndoStack.Submit(Undo);
@@ -1838,7 +1848,7 @@ begin
     DataArray.UpdateMinMaxValues;
   end;
   cbContourLegend.Checked := ContourDisplaySettings.LegendVisible;
-  UpdateFrmContourData;
+  UpdateFrmDisplayData;
 end;
 
 procedure TfrmExportImage.ApplyColorDisplaySettings(
@@ -1977,7 +1987,7 @@ begin
     end;
   end;
   cbColorLegend.Checked := ColorDisplaySettings.LegendVisible;
-  UpdateFrmGridColor;
+  UpdateFrmDisplayData;
 end;
 
 procedure TfrmExportImage.UncheckSelected1Click(Sender: TObject);
@@ -2203,7 +2213,7 @@ procedure TfrmExportImage.DrawContourLegend(ACanvas: TCanvas;
 var
   ViewDirection: TViewDirection;
   PhastModel: TPhastModel;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   ShowLegend: Boolean;
 begin
   ContourRect.Left := 0;

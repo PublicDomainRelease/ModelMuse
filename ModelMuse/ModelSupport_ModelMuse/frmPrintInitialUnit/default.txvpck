@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="s0omdh7aozsvxpn_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmPrintInitialUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.btnCancel" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbBoundaryConditions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbComponents" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbConductance" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbEchoInput" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbFluidProperties" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbForceChemistryPrint" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbHDF_Chemistry" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbHDF_Heads" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbHDF_SteadyFlowVelocity" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbHeads" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbMediaProperties" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbSolutionMethod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbSteadyFlowVelocities" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbWells" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbXYZ_Chemistry" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbXYZ_Components" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbXYZ_Heads" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbXYZ_SteadyFlowVelocities" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.cbXYZ_Wells" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintInitialUnit.TfrmPrintInitial.SetData()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmPrintInitialUnit.TUndoPrintInitial">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TUndoPrintInitial.FNewPrintInitial" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintInitialUnit.TUndoPrintInitial.Create()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintInitialUnit.TUndoPrintInitial.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintInitialUnit.TUndoPrintInitial.DoCommand()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintInitialUnit.TUndoPrintInitial.Undo()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmPrintInitialUnit.TUndoPrintInitial.FOldPrintInitial" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmPrintInitialUnit.TUndoPrintInitial.Description()" />
+    </reference>
+  </view>
+</nodeSet>

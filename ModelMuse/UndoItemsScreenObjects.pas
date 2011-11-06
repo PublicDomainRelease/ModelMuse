@@ -572,6 +572,30 @@ type
     procedure Undo; override;
   end;
 
+  TCustomLockUnlockScreenObjects = class(TCustomUndo)
+  protected
+    FListOfScreenObjects: TList;
+    FOriginalLocks: array of boolean;
+  public
+    constructor Create(const AListOfScreenObjects: TList);
+    destructor Destroy; override;
+    procedure Undo; override;
+  end;
+
+  TUndoLockScreenObjects = class(TCustomLockUnlockScreenObjects)
+  protected
+    function Description: string; override;
+  public
+    procedure DoCommand; override;
+  end;
+
+  TUndoUnlockScreenObjects = class(TCustomLockUnlockScreenObjects)
+  protected
+    function Description: string; override;
+  public
+    procedure DoCommand; override;
+  end;
+
   // @abstract(@name is used to set or undo the setting of a
   // @link(TScreenObject).)
   TUndoSetScreenObjectProperties = class(TCustomUpdateScreenObjectDisplayUndo)
@@ -1439,6 +1463,10 @@ begin
   for ScreenObjectIndex := 0 to frmGoPhast.PhastModel.ScreenObjectCount - 1 do
   begin
     AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
+    if AScreenObject.PositionLocked then
+    begin
+      Continue;
+    end;
     AScreenObject.ResetSubscriptions;
     if not Undoing then
     begin
@@ -3848,6 +3876,83 @@ function TUndoSplitScreenObject.ShouldDivideScreenScreenObject(
   AScreenObject: TScreenObject): boolean;
 begin
   result := (AScreenObject.SelectedVertexCount > 0);
+end;
+
+{ TCustomLockUnlockScreenObjects }
+
+constructor TCustomLockUnlockScreenObjects.Create(
+  const AListOfScreenObjects: TList);
+var
+  Index: Integer;
+  AScreenObject: TScreenObject;
+begin
+  FListOfScreenObjects := TList.Create;
+  FListOfScreenObjects.Assign(AListOfScreenObjects);
+  SetLength(FOriginalLocks, FListOfScreenObjects.Count);
+  for Index := 0 to FListOfScreenObjects.Count - 1 do
+  begin
+    AScreenObject := FListOfScreenObjects[Index];
+    FOriginalLocks[Index] := AScreenObject.PositionLocked;
+  end;
+end;
+
+destructor TCustomLockUnlockScreenObjects.Destroy;
+begin
+  FListOfScreenObjects.Free;
+  inherited;
+end;
+
+procedure TCustomLockUnlockScreenObjects.Undo;
+var
+  Index: Integer;
+  AScreenObject: TScreenObject;
+begin
+  inherited;
+  for Index := 0 to FListOfScreenObjects.Count - 1 do
+  begin
+    AScreenObject := FListOfScreenObjects[Index];
+    AScreenObject.PositionLocked := FOriginalLocks[Index];
+  end;
+end;
+
+{ TUndoLockScreenObjects }
+
+function TUndoLockScreenObjects.Description: string;
+begin
+  result := 'lock selected objects';
+end;
+
+procedure TUndoLockScreenObjects.DoCommand;
+var
+  Index: Integer;
+  AScreenObject: TScreenObject;
+begin
+  inherited;
+  for Index := 0 to FListOfScreenObjects.Count - 1 do
+  begin
+    AScreenObject := FListOfScreenObjects[Index];
+    AScreenObject.PositionLocked := True
+  end;
+end;
+
+{ TUndoUnlockScreenObjects }
+
+function TUndoUnlockScreenObjects.Description: string;
+begin
+  result := 'unlock selected objects';
+end;
+
+procedure TUndoUnlockScreenObjects.DoCommand;
+var
+  Index: Integer;
+  AScreenObject: TScreenObject;
+begin
+  inherited;
+  for Index := 0 to FListOfScreenObjects.Count - 1 do
+  begin
+    AScreenObject := FListOfScreenObjects[Index];
+    AScreenObject.PositionLocked := False
+  end;
 end;
 
 end.

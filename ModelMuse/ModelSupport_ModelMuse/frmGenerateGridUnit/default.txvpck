@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="2lnkr71voh4tfet_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmGenerateGridUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.cbSpecifyGridAngleClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.cbSmoothGridClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.rdeGridAngle" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.rdeCriterion" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.lblGridAngle" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.lblCriterion" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.gbGridSmoothing" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.cbSpecifyGridAngle" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.cbSmoothGrid" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.cbRows" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.cbLayers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.cbColumns" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGenerateGridUnit.TfrmGenerateGrid.btnCancel" />
+    </reference>
+  </view>
+</nodeSet>

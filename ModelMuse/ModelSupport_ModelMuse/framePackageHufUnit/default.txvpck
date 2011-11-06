@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="54orme0kouicyjo_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:framePackageHufUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageHufUnit.framePackageHuf" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:framePackageHufUnit.framePackageHuf" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:framePackageHufUnit.TframePackageHuf">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageHufUnit.TframePackageHuf.SetData(ModflowPackageSelectionUnit.TModflowPackageSelection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:framePackageHufUnit.TframePackageHuf.GetData(ModflowPackageSelectionUnit.TModflowPackageSelection)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageHufUnit.TframePackageHuf.rgElevationSurfaceChoice" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageHufUnit.TframePackageHuf.cbSaveFlows" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:framePackageHufUnit.TframePackageHuf.cbSaveHeads" />
+    </reference>
+  </view>
+</nodeSet>

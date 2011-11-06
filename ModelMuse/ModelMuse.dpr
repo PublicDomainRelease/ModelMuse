@@ -67,7 +67,6 @@ uses
   frmFreeSurfaceUnit in 'frmFreeSurfaceUnit.pas' {frmFreeSurface},
   frmGenerateGridUnit in 'frmGenerateGridUnit.pas' {frmGenerateGrid},
   frmGridAngleUnit in 'frmGridAngleUnit.pas' {frmGridAngle},
-  frmGridColorUnit in 'frmGridColorUnit.pas' {frmGridColor},
   frmGridSpacingUnit in 'frmGridSpacingUnit.pas' {frmGridSpacing},
   frmHintDelayUnit in 'frmHintDelayUnit.pas' {frmHintDelay},
   frmImportBitmapUnit in 'frmImportBitmapUnit.pas' {frmImportBitmap},
@@ -293,8 +292,6 @@ uses
   FluxObservationUnit in 'FluxObservationUnit.pas',
   frmManageFluxObservationsUnit in 'frmManageFluxObservationsUnit.pas' {frmManageFluxObservations},
   frameFluxObsUnit in 'frameFluxObsUnit.pas' {frameFluxObs: TFrame},
-  frmCustomColorUnit in 'frmCustomColorUnit.pas' {frmCustomColor},
-  frmContourDataUnit in 'frmContourDataUnit.pas' {frmContourData},
   frmSpecifyContoursUnit in 'frmSpecifyContoursUnit.pas' {frmSpecifyContours},
   gpc in 'gpc.pas',
   GPC_Classes in 'GPC_Classes.pas',
@@ -337,10 +334,7 @@ uses
   ModflowMNW2_WriterUnit in 'ModflowMNW2_WriterUnit.pas',
   frameLocationMethodUnit in 'frameLocationMethodUnit.pas' {frameLocationMethod: TFrame},
   PathlineReader in 'PathlineReader.pas',
-  frmModpathDisplayUnit in 'frmModpathDisplayUnit.pas' {frmModpathDisplay},
   frmPhastLocationUnit in 'frmPhastLocationUnit.pas' {frmPhastLocation},
-  frmEndPointDisplayUnit in 'frmEndPointDisplayUnit.pas' {frmEndPointDisplay},
-  frmTimeSeriesDisplayUnit in 'frmTimeSeriesDisplayUnit.pas' {frmTimeSeriesDisplay},
   ModflowBCF_WriterUnit in 'ModflowBCF_WriterUnit.pas',
   ModflowSubsidenceDefUnit in 'ModflowSubsidenceDefUnit.pas',
   frameSubBedsUnit in 'frameSubBedsUnit.pas' {frameSubBeds: TFrame},
@@ -389,7 +383,15 @@ uses
   Pcx in 'Pcx.pas',
   frameScreenObjectUnit in 'frameScreenObjectUnit.pas' {frameScreenObject: TFrame},
   ModflowHeadObsResults in 'ModflowHeadObsResults.pas',
-  frmHeadObservationResultsUnit in 'frmHeadObservationResultsUnit.pas' {frmHeadObservationResults};
+  frameStreamLinkUnit in 'frameStreamLinkUnit.pas' {frameStreamLink: TFrame},
+  frmDisplayDataUnit in 'frmDisplayDataUnit.pas' {frmDisplayData},
+  frameHeadObservationResultsUnit in 'frameHeadObservationResultsUnit.pas' {frameHeadObservationResults: TFrame},
+  frameModpathDisplayUnit in 'frameModpathDisplayUnit.pas' {frameModpathDisplay: TFrame},
+  frameModpathTimeSeriesDisplayUnit in 'frameModpathTimeSeriesDisplayUnit.pas' {frameModpathTimeSeriesDisplay: TFrame},
+  frameModpathEndpointDisplayUnit in 'frameModpathEndpointDisplayUnit.pas' {frameModpathEndpointDisplay: TFrame},
+  frameCustomColorUnit in 'frameCustomColorUnit.pas' {frameCustomColor: TFrame},
+  frameColorGridUnit in 'frameColorGridUnit.pas' {frameColorGrid: TFrame},
+  frameContourDataUnit in 'frameContourDataUnit.pas' {frameContourData: TFrame};
 
 {$R *.res}
 
@@ -399,7 +401,7 @@ begin
   Application.CreateForm(TfrmGoPhast, frmGoPhast);
   Application.CreateForm(TfrmScreenObjectProperties, frmScreenObjectProperties);
   Application.CreateForm(TfrmProgressMM, frmProgressMM);
-//  Application.CreateForm(TfrmSelectedObjects, frmSelectedObjects);
+  //  Application.CreateForm(TfrmSelectedObjects, frmSelectedObjects);
   Application.CreateForm(TfrmColors, frmColors);
   Application.Run;
 end.

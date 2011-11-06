@@ -581,7 +581,6 @@ type
     function GetFormula: string;
     procedure SetFormula(const Value: string);
     procedure SetDataSet(const Value: TDataArray);
-//    procedure UpdateStoredFormula;
   public
     procedure AssignBasicProperties;
     // @name is the @link(TDataArray) whose values are being stored.
@@ -665,8 +664,6 @@ type
     // @name describes what @classname does.
     function Description: string; override;
   public
-//    procedure UpdateNewStoredFormulas;
-
     // @name creates and instance of @classname
     // @param(DeletedDataSets DeletedDataSets contains a series of
     // @link(TDataArray)s that have been deleted.)
@@ -726,8 +723,8 @@ type
 implementation
 
 uses SysUtils, Math, frmGoPhastUnit, InteractiveTools, frmSubdivideUnit,
-  frmGoToUnit, FastGEO, frmShowHideObjectsUnit, frmGridColorUnit, 
-  frmContourDataUnit, frmGridValueUnit, PhastModelUnit;
+  frmGoToUnit, FastGEO, frmShowHideObjectsUnit,
+  frmGridValueUnit, PhastModelUnit, frmDisplayDataUnit;
 
 { TUndoDeleteRow }
 
@@ -2020,8 +2017,8 @@ begin
   begin
     frmGoPhast.PhastModel.Grid.ThreeDDataSet := nil;
   end;
-  UpdateFrmGridColor;
-  UpdateFrmContourData;
+  UpdateFrmDisplayData;
+//  UpdateFrmContourData;
   UpdateFrmGridValue;
 //  frmGoPhast.PhastModel.DataArrayNameChangeWarning;
 end;
@@ -2068,8 +2065,8 @@ begin
   begin
     frmGoPhast.PhastModel.Grid.ThreeDDataSet := F3DDataSet;
   end;
-  UpdateFrmGridColor;
-  UpdateFrmContourData;
+  UpdateFrmDisplayData;
+//  UpdateFrmContourData;
   UpdateFrmGridValue;
 //  frmGoPhast.PhastModel.DataArrayNameChangeWarning;
 end;
@@ -2137,18 +2134,6 @@ begin
     frmGoPhast.PhastModel.FormulaManager.ResetFormulas;
   end;
 end;
-
-//procedure TUndoChangeDataSets.UpdateNewStoredFormulas;
-//var
-//  Index: Integer;
-//  DataStorage: TPhastDataSetStorage;
-//begin
-//  for Index := 0 to FNewDataSetProperties.Count - 1 do
-//  begin
-//    DataStorage := FNewDataSetProperties[Index];
-//    DataStorage.UpdateStoredFormula;
-//  end;
-//end;
 
 function TUndoChangeDataSets.DataSetsChanged: boolean;
 var
@@ -2425,11 +2410,6 @@ begin
     FTwoDInterpolator.Assign(Value);
   end;
 end;
-
-//procedure TPhastDataSetStorage.UpdateStoredFormula;
-//begin
-//  Formula := FDataSet.Formula;
-//end;
 
 { TUndoEditFluxObservations }
 

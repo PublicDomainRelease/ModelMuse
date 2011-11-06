@@ -1,14 +1,14 @@
 inherited frmSelectColRowLayer: TfrmSelectColRowLayer
-  Width = 335
-  Height = 183
+  Width = 341
+  Height = 191
   HelpType = htKeyword
   HelpKeyword = 'Select_Column_Row_and_Layer'
   HorzScrollBar.Range = 316
   VertScrollBar.Range = 137
   ActiveControl = seCol
   Caption = 'Select Column, Row, and Layer'
-  ExplicitWidth = 335
-  ExplicitHeight = 183
+  ExplicitWidth = 341
+  ExplicitHeight = 191
   PixelsPerInch = 96
   TextHeight = 18
   object lblCol: TLabel
@@ -61,25 +61,34 @@ inherited frmSelectColRowLayer: TfrmSelectColRowLayer
     Top = 108
     Width = 100
     Height = 33
+    DoubleBuffered = True
+    Kind = bkOK
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 1
     OnClick = btnOKClick
-    Kind = bkOK
   end
   object btnCancel: TBitBtn
     Left = 216
     Top = 108
     Width = 100
     Height = 33
-    TabOrder = 3
+    DoubleBuffered = True
     Kind = bkCancel
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
+    TabOrder = 3
   end
   object btnHelp: TBitBtn
     Left = 8
     Top = 108
     Width = 100
     Height = 33
+    DoubleBuffered = True
+    Kind = bkHelp
+    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 4
     OnClick = btnHelpClick
-    Kind = bkHelp
   end
 end

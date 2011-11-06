@@ -24,7 +24,8 @@ type
     function ParameterType: TParameterType; override;
     procedure WriteParameterCells(CellList: TValueCellList; NLST: Integer;
       const VariableIdentifiers, DataSetIdentifier: string;
-      AssignmentMethod: TUpdateMethod); override;
+      AssignmentMethod: TUpdateMethod; MultiplierArrayNames: TTransientMultCollection;
+      ZoneArrayNames: TTransientZoneCollection); override;
     procedure WriteCell(Cell: TValueCell;
       const DataSetIdentifier, VariableIdentifiers: string); override;
   public
@@ -141,7 +142,7 @@ const
   VariableIdentifiers = 'Condfact IFACE';
 begin
   WriteParameterDefinitions(DS2, DS2Instances, DS3A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot, umAssign);
+    VariableIdentifiers, ErrorRoot, umAssign, nil, nil);
 end;
 
 procedure TModflowDRT_Writer.WriteDataSets4To6;
@@ -213,7 +214,8 @@ end;
 
 procedure TModflowDRT_Writer.WriteParameterCells(CellList: TValueCellList;
   NLST: Integer; const VariableIdentifiers, DataSetIdentifier: string;
-  AssignmentMethod: TUpdateMethod);
+  AssignmentMethod: TUpdateMethod; MultiplierArrayNames: TTransientMultCollection;
+      ZoneArrayNames: TTransientZoneCollection);
 var
   Cell: TDrt_Cell;
   CellIndex: Integer;

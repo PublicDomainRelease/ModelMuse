@@ -75,9 +75,9 @@ type
 
 implementation
 
-uses DataSetUnit, RbwParser, frmGoPhastUnit, frmGridColorUnit, 
-  frmContourDataUnit, frmGridValueUnit, contnrs, ScreenObjectUnit, 
-  ModflowPackagesUnit;
+uses DataSetUnit, RbwParser, frmGoPhastUnit,
+  frmGridValueUnit, contnrs, ScreenObjectUnit,
+  ModflowPackagesUnit, frmDisplayDataUnit;
 
 constructor TCustomCreateRequiredDataSetsUndo.Create;
 begin
@@ -190,8 +190,8 @@ begin
     UpdateDataArray(Model, Index);
   end;
 
-  UpdateFrmGridColor;
-  UpdateFrmContourData;
+  UpdateFrmDisplayData;
+//  UpdateFrmContourData;
   UpdateFrmGridValue;
 end;
 

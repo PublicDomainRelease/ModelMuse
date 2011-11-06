@@ -25,7 +25,8 @@ type
     function ParameterType: TParameterType; override;
     procedure WriteParameterCells(CellList: TValueCellList; NLST: Integer;
       const VariableIdentifiers, DataSetIdentifier: string;
-      AssignmentMethod: TUpdateMethod); override;
+      AssignmentMethod: TUpdateMethod; MultiplierArrayNames: TTransientMultCollection;
+      ZoneArrayNames: TTransientZoneCollection); override;
     procedure WriteCell(Cell: TValueCell;
       const DataSetIdentifier, VariableIdentifiers: string); override;
     class function ObservationExtension: string; override;
@@ -167,7 +168,7 @@ const
   VariableIdentifiers = 'Condfact Rbot IFACE';
 begin
   WriteParameterDefinitions(DS3, DS3Instances, DS4A, DataSetIdentifier,
-    VariableIdentifiers, ErrorRoot, umAssign);
+    VariableIdentifiers, ErrorRoot, umAssign, nil, nil);
 end;
 
 procedure TModflowRIV_Writer.WriteDataSets5To7;
@@ -278,7 +279,8 @@ end;
 
 procedure TModflowRIV_Writer.WriteParameterCells(CellList: TValueCellList;
   NLST: Integer; const VariableIdentifiers, DataSetIdentifier: string;
-  AssignmentMethod: TUpdateMethod);
+  AssignmentMethod: TUpdateMethod; MultiplierArrayNames: TTransientMultCollection;
+      ZoneArrayNames: TTransientZoneCollection);
 var
   Cell: TRiv_Cell;
   CellIndex: Integer;

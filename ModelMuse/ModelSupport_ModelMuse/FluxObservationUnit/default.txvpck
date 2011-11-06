@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="ekn1ra4vokyvpfo_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FluxObservationUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FluxObservationUnit.TFluxKind">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxKind.fkGeneralHead" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxKind.fkDrain" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxKind.fkConstantHead" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxKind.fkRiver" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FluxObservationUnit.TFluxObservation">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TFluxObservation.Comment[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TFluxObservation.StatFlag[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TFluxObservation.Statistic[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TFluxObservation.ObservedValue[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TFluxObservation.Time[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservation.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservation.SetComment(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservation.SetStatistic(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservation.SetStatFlag(GoPhastTypes.TStatFlag)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservation.SetTime(System.Double)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservation.SetObservedValue(System.Double)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObservation.FComment" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObservation.FStatistic" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObservation.FStatFlag" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObservation.FTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObservation.FObservedValue" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FluxObservationUnit.TFluxObservations">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservations.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservations.SetItems(System.Int32,FluxObservationUnit.TFluxObservation)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservations.GetItems(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservations.Add()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TFluxObservations.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservations.Create(Classes.TComponent)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FluxObservationUnit.TObservationFactor">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TObservationFactor.Factor[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TObservationFactor.ObjectName[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TObservationFactor.ScreenObject[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactor.Loaded()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactor.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactor.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactor.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactor.GetFactor()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactor.GetObjectName()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactor.SetScreenObject(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactor.SetObjectName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactor.SetFactor(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TObservationFactor.FScreenObject" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TObservationFactor.FObjectName" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TObservationFactor.FFactor" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FluxObservationUnit.TObservationFactors">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactors.EliminatedDeletedScreenObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactors.Loaded()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TObservationFactors.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactors.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactors.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactors.SetItems(System.Int32,FluxObservationUnit.TObservationFactor)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactors.GetItems(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactors.Add()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TObservationFactors.IndexOfScreenObject(System.Object)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FluxObservationUnit.TFluxObsType">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObsType.fotRiver" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObsType.fotHead" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObsType.fotGHB" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObsType.fotDrain" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.Purpose[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.ObservationFactors[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.ObservationTimes[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.ObservationName[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.FluxObsType()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.CheckObservationTimes(Classes.TStringList,Classes.TStringList,FluxObservationUnit.TFluxKind)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.EliminatedDeletedScreenObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.Loaded()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.RemoveObject(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.AddObject(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.SetPurpose(GoPhastTypes.TObservationPurpose)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.SetObservationFactors(FluxObservationUnit.TObservationFactors)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.SetObservationTimes(FluxObservationUnit.TFluxObservations)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.SetObservationName(System.String)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.FPurpose" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.FObservationFactors" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.FObservationTimes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.FObservationName" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.FObservationFactors" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:FluxObservationUnit.TFluxObservationGroup.FObservationTimes" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups.FFluxObservationType" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups.FluxObservationType[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups.CheckObservationTimes(Classes.TStringList,Classes.TStringList,FluxObservationUnit.TFluxKind)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups.Loaded()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups.EliminatedDeletedScreenObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups.Remove(FluxObservationUnit.TFluxObservationGroup)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups.Add()" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups.Items[System.Int32]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups.SetItems(System.Int32,FluxObservationUnit.TFluxObservationGroup)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups.GetItems(System.Int32)" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:FluxObservationUnit.TFluxObservationGroups.FFluxObservationType" />
+    </reference>
+  </view>
+</nodeSet>

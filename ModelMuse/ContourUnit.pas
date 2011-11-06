@@ -7,7 +7,7 @@ unit ContourUnit;
 interface
 
 uses Classes, Graphics, FastGeo, GR32, ZoomBox2, GoPhastTypes, DataSetUnit,
-  ColorSchemes;
+  ColorSchemes, QuadTreeClass, Generics.Collections;
 
 const
   DefaultLineThickness = 2;
@@ -32,6 +32,14 @@ type
   TExtractSegmentEvent = procedure (Sender: TObject;
     const Segments: TLine2DArray) of Object;
 
+  TLabel = class(TObject)
+    X: integer;
+    Y: integer;
+    Value: string;
+  end;
+
+  TLabelObjectList = TObjectList<TLabel>;
+
   TContourCreator = class(TObject)
   private
     FBitMap: TBitmap32;
@@ -45,6 +53,8 @@ type
     // @link(ConvertAndDrawSegments).
     FOnExtractSegments: TExtractSegmentEvent;
     FEvaluatedAt: TEvaluatedAt;
+    FLabelLocations: TRbwQuadTree;
+    FLabels: TLabelObjectList;
     procedure ExtractSegments(const GridSquare: TGridSquare);
     procedure ConvertAndDrawSegments(Sender: TObject;
       const SegmentArray: TLine2DArray);
@@ -56,6 +66,8 @@ type
     property LineThickness: single read FLineThickness write FLineThickness;
     property Value: TFloat read FValue write FValue;
     property ZoomBox: TQRbwZoomBox2 read FZoomBox write FZoomBox;
+    property LabelLocations: TRbwQuadTree read FLabelLocations write FLabelLocations;
+    property Labels: TLabelObjectList read FLabels write FLabels;
     // While @link(ExtractContour) is being executed, @name is called
     // multiple times.  The contents of Segments will be one or more
     // segments in the contour being extracted.
@@ -102,6 +114,8 @@ type
   private
     FBitMap: TBitmap32;
     FZoomBox: TQRbwZoomBox2;
+    FLabelLocations: TRbwQuadTree;
+    FLabels: TLabelObjectList;
     // @name calls @link(TContourCreator.DrawContour) for each memeber of
     // ContourValues.
     procedure CreateAndDrawContours(const ContourValues,
@@ -130,6 +144,8 @@ type
       var ContourColors: TArrayOfColor32; ContourValues: TOneDRealArray;
       ColorParameters: TColorParameters);
   public
+    Constructor Create;
+    Destructor Destroy; override;
     property BitMap: TBitmap32 read FBitMap write FBitMap;
     property ZoomBox: TQRbwZoomBox2 read FZoomBox write FZoomBox;
     procedure DrawContours(SelectedColRowLayer: integer;
@@ -139,7 +155,8 @@ type
 
 implementation
 
-uses Math, RbwParser, BigCanvasMethods, frmContourDataUnit, PhastModelUnit;
+uses Math, RbwParser, BigCanvasMethods, PhastModelUnit,
+  SysUtils, Types, frmGoPhastUnit, frmDisplayDataUnit;
 
 function Interpolate(const C1, C2 : TPoint2D; Val1, Val2 : TFloat;
   ContourValue: TFloat) : TPoint2D;
@@ -164,9 +181,19 @@ type TPointArray4 = array[0..3] of TPoint2D;
 
 procedure TContourCreator.ConvertAndDrawSegments(Sender: TObject;
   const SegmentArray: TLine2DArray);
+const
+  LabelSpacing = 100;
 var
   SegmentI: array[0..3] of TPoint;
   Index: Integer;
+  CenterX: Integer;
+  CenterY: Integer;
+  PointX: double;
+  PointY: double;
+  Data: Pointer;
+//  ALabel: string;
+  ASize: tagSIZE;
+  LabelObject: TLabel;
 begin
   for Index := 0 to Length(SegmentArray) - 1 do
   begin
@@ -179,6 +206,42 @@ begin
   begin
     DrawBigPolyline32(Bitmap, Color, LineThickness,
       SegmentI, True, False, Index * 2, 2);
+    if LabelLocations <> nil then
+    begin
+      Assert(Labels <> nil);
+      CenterX := (SegmentI[Index * 2].X + SegmentI[Index * 2 + 1].X) div 2;
+      CenterY := (SegmentI[Index * 2].Y + SegmentI[Index * 2 + 1].Y) div 2;
+      if (CenterX > 0) and (CenterY > 0)
+        and (CenterX < LabelLocations.XMax) and (CenterY < LabelLocations.YMax) then
+      begin
+        PointX := CenterX;
+        PointY := CenterY;
+
+        if LabelLocations.Count > 0 then
+        begin
+          LabelLocations.FirstNearestPoint(PointX, PointY, Data);
+        end;
+        if (LabelLocations.Count = 0) or (Data <> nil) then
+        begin
+          if (LabelLocations.Count = 0)
+            or (Distance(CenterX, CenterY, PointX, PointY) > LabelSpacing) then
+          begin
+            LabelLocations.AddPoint(CenterX, CenterY, Pointer(1));
+
+            LabelObject := TLabel.Create;
+            LabelObject.Value := FloatToStr(Value);
+            ASize := Bitmap.TextExtent(LabelObject.Value);
+            LabelObject.X := CenterX - ASize.cx div 2;
+            LabelObject.Y := CenterY - ASize.cy div 2;
+            Labels.Add(LabelObject);
+
+//            ALabel := FloatToStr(Value);
+//            ASize := Bitmap.TextExtent(ALabel);
+//            Bitmap.Textout(CenterX - ASize.cx div 2, CenterY - ASize.cy div 2, FloatToStr(Value));
+          end;
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -708,6 +771,13 @@ begin
   end;
 end;
 
+destructor TMultipleContourCreator.Destroy;
+begin
+  FLabels.Free;
+  FLabelLocations.Free;
+  inherited;
+end;
+
 procedure TMultipleContourCreator.DrawContours(SelectedColRowLayer: integer;
   ColorParameters: TColorParameters; ViewDirection: TViewDirection);
 var
@@ -821,9 +891,13 @@ begin
       DSValues.Free;
     end;
   finally
-    if frmContourData <> nil then
+//    if frmContourData <> nil then
+//    begin
+//      frmContourData.UpdateContours;
+//    end;
+    if frmDisplayData <> nil then
     begin
-      frmContourData.UpdateContours;
+      frmDisplayData.frameContourData.UpdateContours;
     end;
 
   end;
@@ -1264,6 +1338,13 @@ begin
   end;
 end;
 
+constructor TMultipleContourCreator.Create;
+begin
+  inherited;
+  FLabelLocations := TRbwQuadTree.Create(nil);
+  FLabels := TLabelObjectList.Create;
+end;
+
 procedure TMultipleContourCreator.CreateAndDrawContours(
   const ContourValues, LineThicknesses: TOneDRealArray;
   const ContourColors: TArrayOfColor32);
@@ -1271,6 +1352,8 @@ var
   ContourIndex: Integer;
   ContourCreator: TContourCreator;
   AValue: Double;
+  LabelIndex: Integer;
+  ALabel: TLabel;
 begin
   Assert(Length(ContourValues) = Length(LineThicknesses));
   Assert(Length(ContourValues) = Length(ContourColors));
@@ -1280,13 +1363,34 @@ begin
     ContourCreator.Grid := Grid;
     ContourCreator.ZoomBox := ZoomBox;
     ContourCreator.EvaluatedAt := DataSet.EvaluatedAt;
+    FLabelLocations.Clear;
+    FLabels.Clear;
+    FLabelLocations.XMin := 0;
+    FLabelLocations.YMin := 0;
+    FLabelLocations.XMax := ZoomBox.Width;;
+    FLabelLocations.YMax := ZoomBox.Height;
     for ContourIndex := 0 to Length(ContourValues) - 1 do
     begin
       AValue := ContourValues[ContourIndex];
       ContourCreator.Value := AValue;
       ContourCreator.Color := ContourColors[ContourIndex];
       ContourCreator.LineThickness := LineThicknesses[ContourIndex];
+      if frmGoPhast.PhastModel.ShowContourLabels then
+      begin
+        ContourCreator.LabelLocations := FLabelLocations;
+        ContourCreator.Labels := FLabels;
+      end
+      else
+      begin
+        ContourCreator.LabelLocations := nil;
+        ContourCreator.Labels := nil;
+      end;
       ContourCreator.DrawContour;
+    end;
+    for LabelIndex := 0 to FLabels.Count - 1 do
+    begin
+      ALabel := FLabels[LabelIndex];
+      FBitMap.Textout(ALabel.X, ALabel.Y, ALabel.Value);
     end;
   finally
     ContourCreator.Free;

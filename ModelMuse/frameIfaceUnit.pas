@@ -9,7 +9,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, JvExStdCtrls, JvRadioButton, ExtCtrls, JvExExtCtrls,
-  JvImage, GLWin32Viewer, GLScene, GLGeomObjects, GLObjects, GLColor, //GLMisc,
+  JvImage, GLWin32Viewer, GLScene, GLGeomObjects, GLObjects, GLColor,
   GoPhastTypes, GLCoordinates, GLCrossPlatform, BaseClasses;
 
 type

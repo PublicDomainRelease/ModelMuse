@@ -40,8 +40,8 @@ unit RbwDataGrid4;
 interface
 
 uses
-  Windows, StdCtrls, Graphics, Classes, Grids, SysUtils, Messages, Types, Controls,
-    Forms, Clipbrd, Buttons;
+  Windows, StdCtrls, Graphics, Classes, Grids, SysUtils, Messages, Types,
+  Controls, Forms, Clipbrd, Buttons;
 
 const
   // @name represents the size of a check box.
@@ -330,10 +330,12 @@ type
     Property ButtonWidth: integer read FButtonWidth write SetButtonWidth;
     // In the cells that are captions of a column or row, @name specifies
     // the alignment of the text in those cells.
-    property CaptionAlignment: TAlignment read FCaptionAlignment write SetCaptionAlignment default taCenter;
+    property CaptionAlignment: TAlignment read FCaptionAlignment
+      write SetCaptionAlignment default taCenter;
     // In the cells that are NOT captions of a column or row, @name specifies
     // the alignment of the text in those cells.
-    property CellAlignment: TAlignment read FCellAlignment write SetCellAlignment default taLeftJustify;
+    property CellAlignment: TAlignment read FCellAlignment
+      write SetCellAlignment default taLeftJustify;
     // @name specifies whether the maximum value that can be entered in a cell
     // is @link(Max).
     // @name is only used if @link(Format) is rcf4Integer or rcf4Real.
@@ -395,7 +397,8 @@ type
     procedure Assign(Source: TPersistent); override;
     procedure SetGridRowOrColumnCount(const Value: integer); override;
   published
-    property AutoAdjustColWidths: boolean read FAutoAdjustColWidths write SetAutoAdjustColWidths;
+    property AutoAdjustColWidths: boolean read FAutoAdjustColWidths
+      write SetAutoAdjustColWidths;
   end;
 
   TRbwColumnClass4 = class of TRbwColumn4;
@@ -412,7 +415,8 @@ type
     constructor Create(Grid: TRbwDataGrid4; ColumnClass: TRbwColumnClass4);
     function  Add: TRbwColumn4;
     property Grid: TRbwDataGrid4 read FGrid;
-    property Items[Index: Integer]: TRbwColumn4 read GetItems write SetItems; default;
+    property Items[Index: Integer]: TRbwColumn4 read GetItems
+      write SetItems; default;
   end;
 
   {
@@ -506,7 +510,8 @@ type
     FDistributingText: Boolean;
     FAutoMultiEdit: boolean;
     FExtendedAutoDistributeText: boolean;
-    function CollectionItem(const ACol, ARow: Longint): TCustomRowOrColumn; virtual; abstract;
+    function CollectionItem(const ACol, ARow: Longint):
+      TCustomRowOrColumn; virtual; abstract;
     function GetCellVisible(ACol, ARow: Integer): boolean;
     function GetChecked(const ACol, ARow: integer): boolean;
     function GetCheckState(const ACol, ARow: integer): TCheckBoxState;
@@ -518,11 +523,13 @@ type
     function TextRect(const ACol, ARow: integer): TRect;
     procedure AdjustRowHeights(const ARow: integer);virtual; abstract;
     procedure ButtonClick(Sender: TObject);
-    procedure FillCaptionList(CellCaption: string; const CaptionList: TStringList; Width: integer);
+    procedure FillCaptionList(CellCaption: string;
+      const CaptionList: TStringList; Width: integer);
     procedure MoveCheckStateWithColumn(FromColIndex, ToColIndex: Integer);
     procedure MoveCheckStateWithRow(FromRowIndex, ToRowIndex: Integer);
     procedure SetChecked(const ACol, ARow: integer; const Value: boolean);
-    procedure SetCheckState(const ACol, ARow: integer; const Value: TCheckBoxState);
+    procedure SetCheckState(const ACol, ARow: integer;
+      const Value: TCheckBoxState);
     procedure SetColCount(const Value: Longint);
     procedure SetdgColumn(const Value: integer);
     procedure SetdgRow(const Value: integer);
@@ -567,7 +574,8 @@ type
       const MousePt: TPoint): Boolean; override;
     function CheckRowDrag(var Origin, Destination: Integer;
       const MousePt: TPoint): Boolean; override;
-    function ColorSelectedRowOrColumn(ACol, ARow: integer): boolean; virtual; abstract;
+    function ColorSelectedRowOrColumn(ACol, ARow: integer)
+      : boolean; virtual; abstract;
     function ColumnOrRow: integer; virtual; abstract;
     function CreateEditor: TInplaceEdit; override;
     function GetEditStyle(ACol, ARow: Longint): TEditStyle; override;
@@ -582,8 +590,10 @@ type
     procedure AdjustColWidths(const ACol: integer);virtual; abstract;
     procedure ColWidthsChanged;override;
     procedure DoExit;override;
-    procedure DrawCell(ACol, ARow: Longint; ARect: TRect; AState: TGridDrawState);override;
-    procedure DrawCheckBoxCell(ACol, ARow: Integer; ARect: TRect; AState: TGridDrawState);
+    procedure DrawCell(ACol, ARow: Longint; ARect: TRect;
+      AState: TGridDrawState);override;
+    procedure DrawCheckBoxCell(ACol, ARow: Integer; ARect: TRect;
+      AState: TGridDrawState);
     procedure DrawCaptionCell(ACol, ARow: Integer;
       ARect: TRect; AState: TGridDrawState); virtual;
     procedure DrawOrdinaryCell(ACol, ARow: Integer;
@@ -615,7 +625,8 @@ type
     procedure EndUpdate; virtual;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    function DistributeText(const ACol, ARow: integer; CellContents: string): boolean;
+    function DistributeText(const ACol, ARow: integer;
+      CellContents: string): boolean;
     property DistributingText: boolean read FDistributingText;
     // @name returns the @link(TCustomRowOrColumn) for a cell.
     // Use @name to insert a column at position ACol.
@@ -711,16 +722,13 @@ type
   { Private declarations }
   protected
     function ShouldAdujstColWidths(ACol: integer): boolean; override;
-    function CollectionItem(const ACol, ARow: Longint): TCustomRowOrColumn; override;
+    function CollectionItem(const ACol, ARow: Longint)
+      : TCustomRowOrColumn; override;
     function ColorSelectedRowOrColumn(ACol, ARow: integer): boolean; override;
     function ColumnOrRow: integer; override;
     function CreateColumns: TRbwDataGridColumns4; dynamic;
     function IsCaptionCell(ACol, ARow: integer): boolean; override;
     procedure AdjustColWidths(const ACol: integer);override;
-    // @name calls the inherited @name
-    // and then @link(OnColMoving).
-    // @name calls the inherited @name
-    // and then @link(OnRowMoving).
     procedure ColumnMoved(FromIndex, ToIndex: Longint); override;
     procedure Loaded; override;
     procedure RowMoved(FromIndex, ToIndex: Longint); override;
@@ -744,12 +752,13 @@ type
 
   { Public declarations }
   published
-    Property ColorSelectedRow : boolean read FColorSelectedColumnOrRow write SetColorSelectedColumnOrRow;
+    Property ColorSelectedRow : boolean read FColorSelectedColumnOrRow
+      write SetColorSelectedColumnOrRow;
     property Columns : TRbwDataGridColumns4 read FColumns write SetColumns;
     property OnEndUpdate: TNotifyEvent read FOnEndUpdate write FOnEndUpdate;
-
     // @name is only for backwards compatibility.
-    property WordWrapColTitles : boolean read FWordWrapColTitles write SetWordWrapColTitles Stored False;
+    property WordWrapColTitles : boolean read FWordWrapColTitles
+      write SetWordWrapColTitles Stored False;
     { Published declarations }
   end;
 
@@ -880,7 +889,8 @@ type
     // Use @name to insert a row at position ARow.
     procedure InsertRow(ARow: Integer); override;
   published
-    Property ColorSelectedColumn : boolean read FColorSelectedColumnOrRow write SetColorSelectedColumnOrRow;
+    Property ColorSelectedColumn : boolean read FColorSelectedColumnOrRow
+      write SetColorSelectedColumnOrRow;
     // @name is used to specify if the width of a column should be
     // automatically adjusted to fit its content.
     property Columns: TAutoAdjustColumns read FColumns write SetColumns;
@@ -905,7 +915,8 @@ type
     FTracking: Boolean;
     FOnGetButtonCaption: TGetButtonCaptionEvent;
     FOnGetButtonWidt: TGetButtonWidthEvent;
-    procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message wm_LButtonDblClk;
+    procedure WMLButtonDblClk(var Message: TWMLButtonDblClk);
+      message wm_LButtonDblClk;
     procedure WMSetCursor(var Message: TWMSetCursor); message WM_SetCursor;
     function GetPushButtonWidth: integer;
   protected
@@ -1895,7 +1906,8 @@ begin
       except on EConvertError do
         begin
           AGrid.Cells[ACol, ARow] := '0';
-          CheckACell(ACol, ARow, LocalCheckMax, LocalCheckMin, LocalMax, LocalMin);
+          CheckACell(ACol, ARow, LocalCheckMax, LocalCheckMin,
+            LocalMax, LocalMin);
         end;
       end;
       if LocalCheckMax and (RealValue > LocalMax) then
@@ -2267,7 +2279,8 @@ begin
   end;
 end;
 
-function TCustomRBWDataGrid.GetCellFormat(const ACol, ARow: Integer): TRbwColumnFormat4;
+function TCustomRBWDataGrid.GetCellFormat(const ACol, ARow: Integer)
+  : TRbwColumnFormat4;
 begin
   if UseSpecialFormat[ACol, ARow] then
   begin
@@ -3007,12 +3020,14 @@ begin
   FdgColumn := Value;
 end;
 
-procedure TCustomRBWDataGrid.GetButtonCaption(Sender: TObject; var ButtonCaption: string);
+procedure TCustomRBWDataGrid.GetButtonCaption(Sender: TObject;
+  var ButtonCaption: string);
 begin
   ButtonCaption := CollectionItem(Col, Row).ButtonCaption;
 end;
 
-procedure TCustomRBWDataGrid.GetButtonWidth(Sender: TObject; var ButtonWidth: Integer);
+procedure TCustomRBWDataGrid.GetButtonWidth(Sender: TObject;
+  var ButtonWidth: Integer);
 begin
   ButtonWidth := CollectionItem(Col, Row).ButtonWidth;
 end;
@@ -3092,7 +3107,8 @@ begin
   end;
 end;
 
-procedure TCustomRBWDataGrid.SetChecked(const ACol, ARow: integer; const Value: boolean);
+procedure TCustomRBWDataGrid.SetChecked(const ACol, ARow: integer;
+  const Value: boolean);
 begin
   if Value then
   begin
@@ -3167,7 +3183,8 @@ begin
     Invalidate;
 end;
 
-procedure TCustomRBWDataGrid.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TCustomRBWDataGrid.MouseDown(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
 var
   ACol, ARow : integer;
   ARect : TRect;
@@ -3383,7 +3400,8 @@ begin
   end;
 end;
 
-procedure TCustomRBWDataGrid.FillCaptionList(CellCaption: string; const CaptionList: TStringList; Width: integer);
+procedure TCustomRBWDataGrid.FillCaptionList(CellCaption: string;
+  const CaptionList: TStringList; Width: integer);
 var
   SpacePosition: integer;
   MaxWidth: integer;
@@ -3441,7 +3459,8 @@ begin
   end;
 end;
 
-procedure TCustomRBWDataGrid.DrawOrdinaryCell(ACol, ARow: Integer; ARect: TRect; AState: TGridDrawState);
+procedure TCustomRBWDataGrid.DrawOrdinaryCell(ACol, ARow: Integer;
+  ARect: TRect; AState: TGridDrawState);
 begin
   Canvas.FillRect(ARect);
 
@@ -3456,76 +3475,72 @@ begin
 
 end;
 
-procedure TCustomRBWDataGrid.DrawCheckBoxCell(ACol, ARow: Integer; ARect: TRect; AState: TGridDrawState);
+procedure TCustomRBWDataGrid.DrawCheckBoxCell(ACol, ARow: Integer;
+  ARect: TRect; AState: TGridDrawState);
 var
   OldStyle : TBrushStyle;
   Dest: TRect;
 begin
+  if not (gdFixed in AState) then
+  begin
+    Canvas.FillRect(ARect);
 
-  // draw checkbox;
-//  if not (gdFixed in AState) then
-//  begin
-    if not (gdFixed in AState) then
-    begin
-      Canvas.FillRect(ARect);
+    OldStyle := Canvas.Brush.Style;
+    try
+      Canvas.Brush.Style := bsSolid;
 
-      OldStyle := Canvas.Brush.Style;
-      try
-        Canvas.Brush.Style := bsSolid;
-
-        Dest.Left := ARect.Left + 2;
-        Dest.Top := ARect.Top + (ARect.Bottom - ARect.Top - CheckBoxSize) div 2;
-        Dest.Right := Dest.Left + CheckBoxSize;
-        Dest.Bottom := Dest.Top + CheckBoxSize;
-        if inherited SelectCell(ACol, ARow) then
+      Dest.Left := ARect.Left + 2;
+      Dest.Top := ARect.Top + (ARect.Bottom - ARect.Top - CheckBoxSize) div 2;
+      Dest.Right := Dest.Left + CheckBoxSize;
+      Dest.Bottom := Dest.Top + CheckBoxSize;
+      if inherited SelectCell(ACol, ARow) then
+      begin
+        if State[ACol, ARow] = cbChecked then
         begin
-          if State[ACol, ARow] = cbChecked then
-          begin
-            canvas.copyrect(Dest, FbmpChecked.canvas, Rect(0,0,
-              Succ(CheckBoxSize),Succ(CheckBoxSize)));
-          end
-          else if State[ACol, ARow] = cbUnChecked then
-          begin
-            canvas.copyrect(Dest, FbmpUnchecked.canvas,
-              Rect(0,0,CheckBoxSize,CheckBoxSize));
-          end
-          else
-          begin
-            canvas.copyrect(Dest, FBmpGrayed.canvas,
-              Rect(0,0,CheckBoxSize,CheckBoxSize));
-          end;
+          canvas.copyrect(Dest, FbmpChecked.canvas, Rect(0,0,
+            Succ(CheckBoxSize),Succ(CheckBoxSize)));
+        end
+        else if State[ACol, ARow] = cbUnChecked then
+        begin
+          canvas.copyrect(Dest, FbmpUnchecked.canvas,
+            Rect(0,0,CheckBoxSize,CheckBoxSize));
         end
         else
         begin
-          if State[ACol, ARow] = cbChecked then
-          begin
-            Canvas.Draw(ARect.Left + 2,
-              ARect.Top + (ARect.Bottom - ARect.Top - 13) div 2,
-              FBmpDisabledChecked);
-          end
-          else if State[ACol, ARow] = cbUnChecked then
-          begin
-            Canvas.Draw(ARect.Left + 2,
-              ARect.Top + (ARect.Bottom - ARect.Top - 13) div 2,
-              FBmpDisabledUnchecked);
-          end
-          else
-          begin
-            Canvas.Draw(ARect.Left + 2,
-              ARect.Top + (ARect.Bottom - ARect.Top - 13) div 2,
-              FBmpDisabledGrayed);
-          end;
+          canvas.copyrect(Dest, FBmpGrayed.canvas,
+            Rect(0,0,CheckBoxSize,CheckBoxSize));
         end;
-        Canvas.Font := Font;
-
-        ARect := TextRect(ACol, ARow);
-        DrawText(Canvas.Handle,PChar(Cells[ACol, ARow]),
-          Length(Cells[ACol, ARow]),ARect, GetCellFlags(ACol, ARow));
-      finally
-        Canvas.Brush.Style := OldStyle;
+      end
+      else
+      begin
+        if State[ACol, ARow] = cbChecked then
+        begin
+          Canvas.Draw(ARect.Left + 2,
+            ARect.Top + (ARect.Bottom - ARect.Top - 13) div 2,
+            FBmpDisabledChecked);
+        end
+        else if State[ACol, ARow] = cbUnChecked then
+        begin
+          Canvas.Draw(ARect.Left + 2,
+            ARect.Top + (ARect.Bottom - ARect.Top - 13) div 2,
+            FBmpDisabledUnchecked);
+        end
+        else
+        begin
+          Canvas.Draw(ARect.Left + 2,
+            ARect.Top + (ARect.Bottom - ARect.Top - 13) div 2,
+            FBmpDisabledGrayed);
+        end;
       end;
+      Canvas.Font := Font;
+
+      ARect := TextRect(ACol, ARow);
+      DrawText(Canvas.Handle,PChar(Cells[ACol, ARow]),
+        Length(Cells[ACol, ARow]),ARect, GetCellFlags(ACol, ARow));
+    finally
+      Canvas.Brush.Style := OldStyle;
     end;
-//  end;
+  end;
 end;
 
 procedure TCustomRBWDataGrid.DrawCaptionCell(ACol, ARow: Integer;
@@ -3539,6 +3554,8 @@ begin
   FontColor := Canvas.Font.Color;
   try
     Canvas.Font.Color := Font.Color;
+    Canvas.Brush.Style := bsSolid;
+    Canvas.Brush.Color := FixedColor;
 
     if Assigned(FOnBeforeDrawCell) then
     begin
@@ -3604,7 +3621,8 @@ begin
   end;
 end;
 
-procedure TCustomRBWDataGrid.DrawCell(ACol, ARow: Longint; ARect: TRect; AState: TGridDrawState);
+procedure TCustomRBWDataGrid.DrawCell(ACol, ARow: Longint;
+  ARect: TRect; AState: TGridDrawState);
 var
   BrushColor : TColor;
   FontColor : TColor;
@@ -3672,7 +3690,8 @@ begin
 
 end;
 
-procedure TCustomRBWDataGrid.SetCheckState(const ACol, ARow: integer; const Value: TCheckBoxState);
+procedure TCustomRBWDataGrid.SetCheckState(const ACol, ARow: integer;
+  const Value: TCheckBoxState);
 var
   Changed: boolean;
 begin
@@ -3698,7 +3717,8 @@ begin
   end;
 end;
 
-function TCustomRBWDataGrid.GetCheckState(const ACol, ARow: integer): TCheckBoxState;
+function TCustomRBWDataGrid.GetCheckState(
+  const ACol, ARow: integer): TCheckBoxState;
 begin
   if (GetCellFormat(ACol, ARow) = rcf4Boolean)
     and (ACol < ColCount)
@@ -3712,7 +3732,8 @@ begin
   end;
 end;
 
-function TCustomRBWDataGrid.DistributeText(const ACol, ARow: integer; CellContents: string): boolean;
+function TCustomRBWDataGrid.DistributeText(const ACol, ARow: integer;
+  CellContents: string): boolean;
 var
   AStringList: TStringList;
   LineIndex: integer;
@@ -3959,7 +3980,8 @@ begin
     if (dgColumn >=0) and (dgColumn < ColCount) then
     begin
       ColumnOrRow := CollectionItem(dgColumn,dgRow);
-      result := (ColumnOrRow <> nil) and (GetCellFormat(dgColumn,dgRow) <> rcf4Boolean);
+      result := (ColumnOrRow <> nil)
+        and (GetCellFormat(dgColumn,dgRow) <> rcf4Boolean);
     end;
   end;
 end;
@@ -3984,7 +4006,8 @@ begin
   end;
 end;
 
-procedure TCustomRBWDataGrid.SetEditText(ACol, ARow: Longint; const Value: string);
+procedure TCustomRBWDataGrid.SetEditText(ACol, ARow: Longint;
+  const Value: string);
 var
   ColumnOrRow : TCustomRowOrColumn;
   NewValue : string;
@@ -4033,11 +4056,13 @@ begin
           if not ColumnOrRow.LimitToList and (ColumnOrRow.MaxLength > 0)
             and (Length(Value) > ColumnOrRow.MaxLength) then
           begin
-            inherited SetEditText(ACol, ARow, Copy(Value, 1, ColumnOrRow.MaxLength));
+            inherited SetEditText(ACol, ARow,
+              Copy(Value, 1, ColumnOrRow.MaxLength));
             if not ColumnOrRow.ComboUsed and (Value <> NewValue) then
             begin
               (InplaceEditor as TRbwInplaceEdit4).UpdateContents;
-              (InplaceEditor as TRbwInplaceEdit4).SelStart := ColumnOrRow.MaxLength;
+              (InplaceEditor as TRbwInplaceEdit4).SelStart :=
+                ColumnOrRow.MaxLength;
             end;
           end
           else
@@ -4182,7 +4207,8 @@ begin
   Inc(FUpdateCount);
 end;
 
-function TCustomRBWDataGrid.RequiredCellHeight(const ACol, ARow: integer): integer;
+function TCustomRBWDataGrid.RequiredCellHeight(
+  const ACol, ARow: integer): integer;
 var
   CellList: TStringList;
   CellCaption: string;
@@ -4197,8 +4223,10 @@ begin
   if CollectionItem(ACol, ARow).AutoAdjustRowHeights then
   begin
 
-    if (IsCaptionCell(ACol, ARow) and CollectionItem(ACol, ARow).WordWrapCaptions)
-      or (not IsCaptionCell(ACol, ARow) and CollectionItem(ACol, ARow).WordWrapCells) then
+    if (IsCaptionCell(ACol, ARow)
+      and CollectionItem(ACol, ARow).WordWrapCaptions)
+      or (not IsCaptionCell(ACol, ARow)
+      and CollectionItem(ACol, ARow).WordWrapCells) then
     begin
       if IsCaptionCell(ACol, ARow)  then
       begin
@@ -4322,7 +4350,8 @@ begin
   end;
 end;
 
-procedure TCustomRBWDataGrid.MoveCheckStateWithRow(FromRowIndex, ToRowIndex: Integer);
+procedure TCustomRBWDataGrid.MoveCheckStateWithRow(
+  FromRowIndex, ToRowIndex: Integer);
 var
   ColIndex: Integer;
   Temp: TCheckBoxState;
@@ -4401,7 +4430,8 @@ begin
   result := StrToFloat(LocalizeString(S));
 end;
 
-function TCustomRBWDataGrid.WidthNeededToFitText(const ACol, ARow: Integer): integer;
+function TCustomRBWDataGrid.WidthNeededToFitText(
+  const ACol, ARow: Integer): integer;
 var
   Temp: Integer;
   CaptionIndex: Integer;
@@ -4445,7 +4475,8 @@ begin
   end;
 end;
 
-function TCustomRBWDataGrid.RequiredCellWidth(const ACol, ARow: integer): integer;
+function TCustomRBWDataGrid.RequiredCellWidth(
+  const ACol, ARow: integer): integer;
 var
   PickIndex: Integer;
   TestWidth: Integer;
@@ -4812,7 +4843,8 @@ begin
           NewRect := DrawButtonFace(ButtonBmp.Canvas,
             Rect(0,0, ButtonBmp.Width, ButtonBmp.Height), 1,
             bsAutoDetect, False, Pressed, False);
-          ButtonBmp.Canvas.Font := LocalGrid.CollectionItem(LocalGrid.Col, LocalGrid.Row).ButtonFont;
+          ButtonBmp.Canvas.Font := LocalGrid.CollectionItem(
+            LocalGrid.Col, LocalGrid.Row).ButtonFont;
           ButtonCaption := GetButtonCaption(LocalGrid.Col, LocalGrid.Row);
           TextSize := ButtonBmp.Canvas.TextExtent(ButtonCaption);
           ButtonBmp.Canvas.TextRect(NewRect,

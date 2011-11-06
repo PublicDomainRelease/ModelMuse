@@ -40,22 +40,20 @@ inherited frmProgressMM: TfrmProgressMM
     object pbProgress: TProgressBar
       Left = 8
       Top = 8
-      Width = 425
+      Width = 409
       Height = 18
       Anchors = [akLeft, akTop, akRight]
       Step = 1
       TabOrder = 0
     end
     object btnAbort: TBitBtn
-      Left = 358
-      Top = 32
+      Left = 342
+      Top = 30
       Width = 75
       Height = 25
       Anchors = [akTop, akRight]
       Caption = 'Abort'
-      TabOrder = 1
-      Visible = False
-      OnClick = btnAbortClick
+      DoubleBuffered = True
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         0400000000006801000000000000000000001000000000000000000000000000
@@ -74,6 +72,10 @@ inherited frmProgressMM: TfrmProgressMM
         3333333333333333333888330000333333333333333333333333333333333333
         0000}
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 1
+      Visible = False
+      OnClick = btnAbortClick
     end
   end
 end

@@ -83,6 +83,10 @@ object frameHeadObservations: TframeHeadObservations
     TabOrder = 2
     object tabTimes: TTabSheet
       Caption = 'Observation times'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Panel5: TPanel
         Left = 0
         Top = 0

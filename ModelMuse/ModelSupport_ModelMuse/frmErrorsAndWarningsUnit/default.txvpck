@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="hzna4aano99nivl_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmErrorsAndWarningsUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.frmErrorsAndWarnings()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.FfrmErrorsAndWarnings" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmErrorsAndWarningsUnit.FfrmErrorsAndWarnings" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.btnClearClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.btnSaveClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.Timer1Timer(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.FormResize(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.vstWarningsAndErrorsMeasureItem(VirtualTrees.TBaseVirtualTree,Graphics.TCanvas,VirtualTrees.PVirtualNode,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.vstWarningsAndErrorsInitNode(VirtualTrees.TBaseVirtualTree,VirtualTrees.PVirtualNode,VirtualTrees.PVirtualNode,ref@VirtualTrees.TVirtualNodeInitStates)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.vstWarningsAndErrorsGetText(VirtualTrees.TBaseVirtualTree,VirtualTrees.PVirtualNode,VirtualTrees.TColumnIndex,VirtualTrees.TVSTTextType,ref@System.WideString)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.FormDestroy(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.btnClear" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.sdSaveFileDlg" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.btnSave" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.Timer1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.vstWarningsAndErrors" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.btnClose" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.pnlBottom" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.ShowAfterDelay()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.RemoveErrorGroup(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.RemoveWarningGroup(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.AddWarning(System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.AddError(System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.HasMessages()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.CheckDeleteRootNode(ref@VirtualTrees.PVirtualNode)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.RemoveWarningOrErrorGroup(System.String,Classes.TStringList,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.InitializeRootNode(ref@VirtualTrees.PVirtualNode,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.ClearABaseStringList(Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.AddErrorOrWarning(Classes.TStringList,System.String,System.String,ref@VirtualTrees.PVirtualNode,Classes.TList)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.Warnings" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.WarningNode" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.WarningChildNodes" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.Errors" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.ErrorNode" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TfrmErrorsAndWarnings.ErrorChildNodes" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmErrorsAndWarningsUnit.TErrorWarningRec">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmErrorsAndWarningsUnit.TErrorWarningRec.List" />
+    </reference>
+  </view>
+</nodeSet>

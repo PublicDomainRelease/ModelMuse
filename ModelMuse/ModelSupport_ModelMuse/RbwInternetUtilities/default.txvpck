@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="t3n5tm06puh6evk_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RbwInternetUtilities.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RbwInternetUtilities.ReadInternetFile(System.String,Classes.TStringList,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RbwInternetUtilities.FindFiles(System.String,System.String,System.Boolean,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RbwInternetUtilities.FileNameToURL(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RbwInternetUtilities.CloseBrowser(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RbwInternetUtilities.LaunchURL(ref@System.String,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RbwInternetUtilities.DefaultBrowserPath()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RbwInternetUtilities.GetTempFile(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:RbwInternetUtilities.GetAppName(System.String)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:RbwInternetUtilities.EInternetConnectionError">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+  </view>
+</nodeSet>

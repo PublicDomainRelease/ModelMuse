@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="9anymhh1poa0n8g_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SubscriptionUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SubscriptionUnit.ckResetObserved" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SubscriptionUnit.ckCheckDependance" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:SubscriptionUnit.TObserver">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SubscriptionUnit.TObserver.FObserverList" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SubscriptionUnit.TObserver.FObserver" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SubscriptionUnit.TObserver.FObserved" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SubscriptionUnit.TObserver.OnUpToDateSet[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SubscriptionUnit.TObserver.OnNotify[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SubscriptionUnit.TObserver.Name[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SubscriptionUnit.TObserver.OnNameChange[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.IsListeningTo(SubscriptionUnit.TObserver)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SubscriptionUnit.TObserver.UpToDate[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.UpdateWithName(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.StopsTalkingTo(SubscriptionUnit.TObserver)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.TalksTo(SubscriptionUnit.TObserver)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.StopTalkingToAnyone()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.ObserverNotification(ObserverIntfU.TNotificationKind,System.Object,TChangeKind)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SubscriptionUnit.TObserver.ObserverList[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.IsRecursive()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.Create(Classes.TComponent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.SetUpToDate(System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.SetName(Classes.TComponentName)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SubscriptionUnit.TObserver.Observed[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SubscriptionUnit.TObserver.Subject[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:SubscriptionUnit.TObserver.Observer[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.GetObserverList()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.GetSubject()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:SubscriptionUnit.TObserver.GetName()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SubscriptionUnit.TObserver.FOnNameChange" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SubscriptionUnit.TObserver.FUpToDate" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SubscriptionUnit.TObserver.FSubscribers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SubscriptionUnit.TObserver.FOnUpToDateSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:SubscriptionUnit.TObserver.FOnNotify" />
+    </reference>
+  </view>
+</nodeSet>

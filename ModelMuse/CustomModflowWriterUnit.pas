@@ -60,16 +60,14 @@ type
     FFileStream: TFileStream;
     // See @link(Model).
     FModel: TCustomModel;
-    // @name is the time at which something was exported.
-//    FExportTime: Extended;
 
     // @name writes a header for DataArray using either
     // @link(WriteConstantU2DINT) or @link(WriteU2DRELHeader).
     procedure WriteHeader(const DataArray: TDataArray;
       const ArrayName: string);
-    // @name updates FExportTime if it has been at least 1/10
-    // second since the last time FExportTime has been updated.
-//    procedure UpdateExportTime;
+    function CheckArrayUniform(const LayerIndex: Integer;
+      const DataArray: TDataArray): boolean;
+    procedure WriteArrayValues(const LayerIndex: Integer; const DataArray: TDataArray);
   protected
     FEvaluationType: TEvaluationType;
     // @name generates a comment line for a MODFLOW input file indentifying
@@ -392,7 +390,9 @@ type
     //   @link(TCustomListWriter.WriteCell).)
     procedure WriteParameterCells(CellList: TValueCellList; NLST: Integer;
       const VariableIdentifiers, DataSetIdentifier: string;
-      AssignmentMethod: TUpdateMethod); virtual; abstract;
+      AssignmentMethod: TUpdateMethod;
+      MultiplierArrayNames: TTransientMultCollection;
+      ZoneArrayNames: TTransientZoneCollection); virtual; abstract;
     // @name writes the definitions of parameters including the lists of cells.
     // @param(DS3 DS3 identifies the data set containing
     //   PARNAM PARTYP Parval NLST  and those variable names.)
@@ -412,7 +412,9 @@ type
     //   with the package being exported.)
     procedure WriteParameterDefinitions(const DS3, DS3Instances, DS4A,
       DataSetIdentifier, VariableIdentifiers, ErrorRoot: string;
-      AssignmentMethod: TUpdateMethod); virtual; abstract;
+      AssignmentMethod: TUpdateMethod;
+      MultiplierArrayNames: TTransientMultCollection;
+      ZoneArrayNames: TTransientZoneCollection); virtual; abstract;
     procedure ClearTimeLists(AModel: TBaseModel);
   public
     // @name creates and instance of @classname.
@@ -470,7 +472,9 @@ type
     //   with the package being exported.)
     procedure WriteParameterDefinitions(const DS3, DS3Instances, DS4A,
       DataSetIdentifier, VariableIdentifiers, ErrorRoot: string;
-      AssignmentMethod: TUpdateMethod); override;
+      AssignmentMethod: TUpdateMethod;
+      MultiplierArrayNames: TTransientMultCollection;
+      ZoneArrayNames: TTransientZoneCollection); override;
     // @name writes the non-parameter cells and the names of the parameter
     // instance for each stress period.
     // @param(DataSetIdentifier DataSetIdentifier is passed to
@@ -495,6 +499,15 @@ type
     procedure UpdateDisplay(TimeLists: TModflowBoundListOfTimeLists;
       ParameterIndicies: TByteSet);
   end;
+
+  TTransientArrayWriter = class(TCustomModflowWriter)
+  protected
+    class function Extension: string; override;
+  public
+    function WriteFile(const AFileName, ArrayType: string;
+      ADataArray: TDataArray): string;
+  end;
+
 
   // @name is used for packages that have an associated flux observation
   // package. @name writes the input for both the boundary condition
@@ -568,6 +581,7 @@ type
     procedure UpdateLayerDataSet(List: TList;
       DisplayArray: TModflowBoundaryDisplayDataArray);
   protected
+    FNameOfFile: string;
     // @name stores information about which layer is used to assign
     // an array boundary condition for each stress period.
     // @name is actually a TObjectList.
@@ -590,10 +604,14 @@ type
     // DataSetIdentifier is not used in this version of @name.
     procedure WriteParameterCells(CellList: TValueCellList; NLST: integer;
       const VariableIdentifiers, DataSetIdentifier: string;
-      AssignmentMethod: TUpdateMethod); override;
+      AssignmentMethod: TUpdateMethod;
+      MultiplierArrayNames: TTransientMultCollection;
+      ZoneArrayNames: TTransientZoneCollection); override;
     procedure WriteParameterDefinitions(const DS3, DS3Instances, DS4A,
       DataSetIdentifier, VariableIdentifiers, ErrorRoot: string;
-      AssignmentMethod: TUpdateMethod); override;
+      AssignmentMethod: TUpdateMethod;
+      MultiplierArrayNames: TTransientMultCollection;
+      ZoneArrayNames: TTransientZoneCollection); override;
     // @name is used to write the layer on which the array boundary
     // condition is applied for each cell in Lists.
     procedure WriteLayerArray(Lists: TList; const Comment: string);
@@ -671,6 +689,7 @@ const
   StrNoValueAssigned = 'No value assigned';
   StrDATABINARY = 'DATA(BINARY)';
   StrDATA = 'DATA';
+  StrArrays = 'arrays';
 
 
 implementation
@@ -678,7 +697,7 @@ implementation
 uses frmErrorsAndWarningsUnit, ModflowUnitNumbers, frmGoPhastUnit,
   frmProgressUnit, GlobalVariablesUnit, frmFormulaErrorsUnit, GIS_Functions,
   ZoneBudgetWriterUnit, ModelMuseUtilities, SparseDataSets, SparseArrayUnit,
-  RealListUnit;
+  RealListUnit, ModflowMultiplierZoneWriterUnit;
 
 resourcestring
   StrTheFollowingParame = 'The following %s parameters are being skipped ' +
@@ -967,6 +986,111 @@ begin
   CurrentNameFileWriter.NameFile.Add('# ' + Comment);
 end;
 
+procedure TCustomModflowWriter.WriteArrayValues(const LayerIndex: Integer; const DataArray: TDataArray);
+var
+  ColIndex: Integer;
+  RowIndex: Integer;
+  NeedNewLine: Boolean;
+begin
+  for RowIndex := 0 to DataArray.RowCount - 1 do
+  begin
+    NeedNewLine := False;
+    for ColIndex := 0 to DataArray.ColumnCount - 1 do
+    begin
+      case DataArray.DataType of
+        rdtDouble:
+          begin
+            WriteFloat(DataArray.RealData[LayerIndex, RowIndex, ColIndex]);
+          end;
+        rdtInteger:
+          begin
+            WriteInteger(DataArray.IntegerData[LayerIndex, RowIndex, ColIndex]);
+          end;
+        rdtBoolean:
+          begin
+            if DataArray.BooleanData[LayerIndex, RowIndex, ColIndex] then
+            begin
+              WriteInteger(1);
+            end
+            else
+            begin
+              WriteInteger(0);
+            end;
+          end;
+      else
+        Assert(False);
+      end;
+      NeedNewLine := ((ColIndex + 1) mod 10) <> 0;
+      if not NeedNewLine then
+      begin
+        NewLine;
+      end;
+    end;
+    if NeedNewLine then
+    begin
+      NewLine;
+    end;
+  end;
+end;
+
+function TCustomModflowWriter.CheckArrayUniform(const LayerIndex: Integer;
+  const DataArray: TDataArray): boolean;
+var
+  ColIndex: Integer;
+  RowIndex: Integer;
+  IntValue: Integer;
+  BoolValue: Boolean;
+  RealValue: Double;
+begin
+  DataArray.Initialize;
+  RealValue := 0;
+  IntValue := 0;
+  BoolValue := False;
+  case DataArray.DataType of
+    rdtDouble:
+      begin
+        RealValue := DataArray.RealData[LayerIndex, 0, 0];
+      end;
+    rdtInteger:
+      begin
+        IntValue := DataArray.IntegerData[LayerIndex, 0, 0];
+      end;
+    rdtBoolean:
+      begin
+        BoolValue := DataArray.BooleanData[LayerIndex, 0, 0];
+      end;
+  else
+    Assert(False);
+  end;
+  result := True;
+  for RowIndex := 0 to DataArray.RowCount - 1 do
+  begin
+    for ColIndex := 0 to DataArray.ColumnCount - 1 do
+    begin
+      case DataArray.DataType of
+        rdtDouble:
+          begin
+            result := DataArray.RealData[LayerIndex, RowIndex, ColIndex] = RealValue;
+          end;
+        rdtInteger:
+          begin
+            result := DataArray.IntegerData[LayerIndex, RowIndex, ColIndex] = IntValue;
+          end;
+        rdtBoolean:
+          begin
+            result := DataArray.BooleanData[LayerIndex, RowIndex, ColIndex] = BoolValue;
+          end;
+      else
+        Assert(False);
+      end;
+      if not result then
+        break;
+    end;
+    if not result then
+      break;
+  end;
+end;
+
 procedure TCustomModflowWriter.CheckArray(const DataArray: TDataArray;
   const LayerIndex: integer; const ErrorOrWarningMessage: string;
   CheckMethod: TCheckValueMethod; CheckValue: double; ErrorType: TErrorType);
@@ -976,7 +1100,12 @@ var
   Value: double;
   OkValue: boolean;
   Error: string;
+  ActiveDataArray: TDataArray;
+  Active: Boolean;
 begin
+  ActiveDataArray := FModel.DataArrayManager.GetDataSetByName(rsActive);
+  Assert(ActiveDataArray <> nil);
+  ActiveDataArray.Initialize;
   DataArray.Initialize;
   for RowIndex := 0 to DataArray.RowCount -1 do
   begin
@@ -994,21 +1123,22 @@ begin
           end;
         else Assert(False);
       end;
+      Active := ActiveDataArray.BooleanData[LayerIndex, RowIndex, ColIndex];
       OkValue := True;
-      case CheckMethod of
-        cvmGreater: OkValue := Value > CheckValue;
-        cvmGreaterEqual: OkValue := Value >= CheckValue;
-        cvmEqual: OkValue := Value = CheckValue;
-        cvmNotEqual: OkValue := Value <> CheckValue;
-        cvmLessThan: OkValue := Value < CheckValue;
-        cvmLessThanEqual: OkValue := Value <= CheckValue;
-        else Assert(False);
+      if Active then
+      begin
+        case CheckMethod of
+          cvmGreater: OkValue := Value > CheckValue;
+          cvmGreaterEqual: OkValue := Value >= CheckValue;
+          cvmEqual: OkValue := Value = CheckValue;
+          cvmNotEqual: OkValue := Value <> CheckValue;
+          cvmLessThan: OkValue := Value < CheckValue;
+          cvmLessThanEqual: OkValue := Value <= CheckValue;
+          else Assert(False);
+        end;
       end;
       if not OkValue then
       begin
-//        Error := 'Layer: ' + IntToStr(LayerIndex+1)
-//          + '; Row: ' + IntToStr(RowIndex+1)
-//          + '; Column: ' + IntToStr(ColIndex+1);
         Error := Format('Layer: %d; Row: %d; Column: %d',
           [LayerIndex+1, RowIndex+1,ColIndex+1]);
         case ErrorType of
@@ -1140,8 +1270,6 @@ end;
 procedure TCustomModflowWriter.WriteArray(const DataArray: TDataArray;
   const LayerIndex: integer; const ArrayName: string; CacheArray: Boolean = True);
 var
-  RowIndex, ColIndex: Integer;
-  NeedNewLine: boolean;
   RealValue: double;
   IntValue: integer;
   BoolValue: Boolean;
@@ -1161,68 +1289,24 @@ begin
     frmProgressMM.AddMessage('    Writing array');
   end;
 
-  DataArray.Initialize;
-
-  RealValue := 0;
-  IntValue := 0;
-  BoolValue := False;
-  case DataArray.DataType of
-    rdtDouble:
-      begin
-        RealValue := DataArray.RealData[LayerIndex, 0, 0];
-      end;
-    rdtInteger:
-      begin
-        IntValue := DataArray.IntegerData[LayerIndex, 0, 0];
-      end;
-    rdtBoolean:
-      begin
-        BoolValue := DataArray.BooleanData[LayerIndex, 0, 0];
-      end;
-    else Assert(False);
-  end;
-
-  Uniform := True;
-  for RowIndex := 0 to DataArray.RowCount -1 do
-  begin
-    for ColIndex := 0 to DataArray.ColumnCount - 1 do
-    begin
-      case DataArray.DataType of
-        rdtDouble:
-          begin
-            Uniform :=
-              DataArray.RealData[LayerIndex, RowIndex, ColIndex] = RealValue;
-          end;
-        rdtInteger:
-          begin
-            Uniform :=
-              DataArray.IntegerData[LayerIndex, RowIndex, ColIndex] = IntValue;
-          end;
-        rdtBoolean:
-          begin
-            Uniform :=
-              DataArray.BooleanData[LayerIndex, RowIndex, ColIndex] = BoolValue;
-          end;
-        else Assert(False);
-      end;
-      if not Uniform then break;
-    end;
-    if not Uniform then break;
-  end;
+  Uniform := CheckArrayUniform(LayerIndex, DataArray);
 
   if Uniform then
   begin
     case DataArray.DataType of
       rdtDouble:
         begin
+          RealValue := DataArray.RealData[LayerIndex, 0, 0];
           WriteConstantU2DREL(ArrayName, RealValue);
         end;
       rdtInteger:
         begin
+          IntValue := DataArray.IntegerData[LayerIndex, 0, 0];
           WriteConstantU2DINT(ArrayName, IntValue);
         end;
       rdtBoolean:
         begin
+          BoolValue := DataArray.BooleanData[LayerIndex, 0, 0];
           IntValue := Ord(BoolValue);
           WriteConstantU2DINT(ArrayName, IntValue);
         end;
@@ -1232,45 +1316,7 @@ begin
   else
   begin
     WriteHeader(DataArray, ArrayName);
-    for RowIndex := 0 to DataArray.RowCount -1 do
-    begin
-      NeedNewLine := False;
-      for ColIndex := 0 to DataArray.ColumnCount - 1 do
-      begin
-        case DataArray.DataType of
-          rdtDouble:
-            begin
-              WriteFloat(DataArray.RealData[LayerIndex, RowIndex, ColIndex]);
-            end;
-          rdtInteger:
-            begin
-              WriteInteger(DataArray.IntegerData[
-                LayerIndex, RowIndex, ColIndex]);
-            end;
-          rdtBoolean:
-            begin
-              if DataArray.BooleanData[LayerIndex, RowIndex, ColIndex] then
-              begin
-                WriteInteger(1);
-              end
-              else
-              begin
-                WriteInteger(0);
-              end;
-            end;
-          else Assert(False);
-        end;
-        NeedNewLine := ((ColIndex + 1) mod 10) <> 0;
-        if not NeedNewLine then
-        begin
-          NewLine;
-        end
-      end;
-      if NeedNewLine then
-      begin
-        NewLine;
-      end;
-    end;
+    WriteArrayValues(LayerIndex, DataArray);
   end;
   if CacheArray then
   begin
@@ -2093,7 +2139,9 @@ end;
 
 procedure TCustomListWriter.WriteParameterDefinitions(const DS3, DS3Instances,
   DS4A, DataSetIdentifier, VariableIdentifiers, ErrorRoot: string;
-  AssignmentMethod: TUpdateMethod);
+  AssignmentMethod: TUpdateMethod;
+  MultiplierArrayNames: TTransientMultCollection;
+  ZoneArrayNames: TTransientZoneCollection);
 var
   ParamIndex: Integer;
   Param: TModflowTransientListParameter;
@@ -2194,7 +2242,7 @@ begin
           end;
           // Data set 4b.
           WriteParameterCells(CellList, NLST, VariableIdentifiers,
-            DataSetIdentifier, umAssign);
+            DataSetIdentifier, umAssign, MultiplierArrayNames, ZoneArrayNames);
         end;
         CellList.Cache;
       end;
@@ -2390,7 +2438,9 @@ end;
 
 procedure TCustomTransientArrayWriter.WriteParameterCells(
   CellList: TValueCellList; NLST: integer; const VariableIdentifiers,
-  DataSetIdentifier: string; AssignmentMethod: TUpdateMethod);
+  DataSetIdentifier: string; AssignmentMethod: TUpdateMethod;
+  MultiplierArrayNames: TTransientMultCollection;
+  ZoneArrayNames: TTransientZoneCollection);
 var
   MultiplierArray: TDataArray;
   ZoneArray: TDataArray;
@@ -2404,6 +2454,9 @@ var
   MultPrefix: string;
   ZonePrefix: string;
   NewZoneName: string;
+  MultItem: TTransientMultItem;
+  TransMultWriter: TTransientArrayWriter;
+  ZoneItem: TTransientZoneItem;
 begin
   if CellList.Count = 0 then
   begin
@@ -2499,6 +2552,25 @@ begin
       begin
         Assert(Length(MultiplierArray.Name) <= 10);
         WriteString(MultiplierArray.Name);
+
+        MultItem := MultiplierArrayNames.Add;
+        MultItem.ArrayName := MultiplierArray.Name;
+        MultItem.Uniform := CheckArrayUniform(0, MultiplierArray);
+        if MultItem.Uniform then
+        begin
+          MultItem.UniformValue := MultiplierArray.RealData[0,0,0];
+        end
+        else
+        begin
+          TransMultWriter := TTransientArrayWriter.Create(Model, FEvaluationType);
+          try
+            MultItem.FileName :=  TransMultWriter.WriteFile(FNameOfFile,
+              TModflowMultiplierWriter.ArrayType, MultiplierArray)
+          finally
+            TransMultWriter.Free;
+          end;
+        end;
+
         WriteString(' ');
         MultiplierArray.CacheData;
         Model.TransientMultiplierArrays.Add(MultiplierArray);
@@ -2525,6 +2597,27 @@ begin
       begin
         Assert(Length(ZoneArray.Name) <= 10);
         WriteString(ZoneArray.Name);
+//        ZoneArrayNames.Add(ZoneArray.Name);
+
+        ZoneItem := ZoneArrayNames.Add;
+        ZoneItem.ArrayName := ZoneArray.Name;
+        ZoneItem.Uniform := CheckArrayUniform(0, ZoneArray);
+        if ZoneItem.Uniform then
+        begin
+          ZoneItem.UniformValue := ZoneArray.IntegerData[0,0,0];
+        end
+        else
+        begin
+          TransMultWriter := TTransientArrayWriter.Create(Model, FEvaluationType);
+          try
+            ZoneItem.FileName :=  TransMultWriter.WriteFile(FNameOfFile,
+              TModflowZoneWriter.ArrayType, ZoneArray)
+          finally
+            TransMultWriter.Free;
+          end;
+        end;
+
+
         WriteString(' 1');
         ZoneArray.CacheData;
         Model.TransientZoneArrays.Add(ZoneArray);
@@ -2534,9 +2627,6 @@ begin
       begin
         WriteString(IdenticalZoneArray.Name);
         WriteString(' 1');
-//        ZoneArray.CacheData;
-//        PhastModel.TransientZoneArrays.Add(ZoneArray);
-//        ZoneArray := nil;
       end;
     end;
 
@@ -2682,7 +2772,9 @@ end;
 
 procedure TCustomTransientArrayWriter.WriteParameterDefinitions(
   const DS3, DS3Instances, DS4A, DataSetIdentifier,
-  VariableIdentifiers, ErrorRoot: string; AssignmentMethod: TUpdateMethod);
+  VariableIdentifiers, ErrorRoot: string; AssignmentMethod: TUpdateMethod;
+  MultiplierArrayNames: TTransientMultCollection;
+  ZoneArrayNames: TTransientZoneCollection);
 var
   ParamIndex: Integer;
   Param: TModflowTransientListParameter;
@@ -2785,7 +2877,7 @@ begin
               NewLine;
             end;
             WriteParameterCells(CellList, NCLU, VariableIdentifiers,
-              DataSetIdentifier, AssignmentMethod);
+              DataSetIdentifier, AssignmentMethod, MultiplierArrayNames, ZoneArrayNames);
           end;
           CellList.Cache;
         end;
@@ -4312,6 +4404,41 @@ end;
 function TCustomSubWriter.EndTimeOK(Time: double; PrintChoice: TCustomPrintItem): boolean;
 begin
   result := Time >= PrintChoice.EndTime - Abs(PrintChoice.EndTime)*Epsilon;
+end;
+
+{ TTransientArrayWriter }
+
+class function TTransientArrayWriter.Extension: string;
+begin
+  result := '';
+end;
+
+function TTransientArrayWriter.WriteFile(const AFileName,
+  ArrayType: string; ADataArray: TDataArray): string;
+var
+  ArrayName: string;
+  OutputFileName: string;
+  OutputDirectory: string;
+begin
+  ArrayName := ADataArray.Name;
+  OutputFileName := AFileName + '.' + Trim(ArrayName);
+
+  result := ExtractFileName(OutputFileName);
+  OutputDirectory := ExtractFileDir(OutputFileName);
+  OutputDirectory := IncludeTrailingPathDelimiter(OutputDirectory) + StrArrays;
+  if not DirectoryExists(OutputDirectory) then
+  begin
+    CreateDir(OutputDirectory);
+  end;
+  result := IncludeTrailingPathDelimiter(OutputDirectory) + result;
+
+  OpenFile(result);
+  try
+    WriteArrayValues(0, ADataArray);
+  finally
+    CloseFile;
+  end;
+  ADataArray.CacheData;
 end;
 
 end.

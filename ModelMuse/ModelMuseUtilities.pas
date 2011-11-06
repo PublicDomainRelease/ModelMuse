@@ -71,9 +71,27 @@ function FixShapeFileFieldName(FieldName: AnsiString): AnsiString;
 
 procedure RunAProgram(const CommandLine: string);
 
+function FileLength(fileName : string) : Int64;
+
 implementation
 
 uses ColorSchemes, JvCreateProcess, AnsiStrings;
+
+function FileLength(fileName : string) : Int64;
+ var
+   sr : TSearchRec;
+ begin
+   if FindFirst(fileName, faAnyFile, sr ) = 0 then
+   begin
+      result := sr.Size;
+   end
+   else
+   begin
+      result := -1;
+   end;
+
+   FindClose(sr) ;
+ end;
 
 procedure RunAProgram(const CommandLine: string);
 var

@@ -1349,8 +1349,8 @@ implementation
 
 uses Contnrs, frmGoPhastUnit, frmConvertChoiceUnit, GIS_Functions,
   ScreenObjectUnit, frmFormulaErrorsUnit, InterpolationUnit, SparseArrayUnit,
-  PhastModelUnit, AbstractGridUnit, frmGridColorUnit, frmContourDataUnit,
-  frmErrorsAndWarningsUnit, frmProgressUnit, GlobalVariablesUnit;
+  PhastModelUnit, AbstractGridUnit, frmErrorsAndWarningsUnit, frmProgressUnit,
+  GlobalVariablesUnit, frmDisplayDataUnit;
 
 resourcestring
   StrUnassigned = 'Unassigned';
@@ -1417,7 +1417,8 @@ var
 begin
   if (FModel <> nil)
     and (not (csDestroying in FModel.ComponentState))
-    and not (FModel as TCustomModel).Clearing then
+    and not (FModel as TCustomModel).Clearing
+    and not ClearingDeletedDataSets then
   begin
     if Assigned(OnDestroy) then
     begin
@@ -1533,7 +1534,7 @@ begin
     DeleteFile(FTempFileName);
   end;
 
-  if FModel <> nil then
+  if (FModel <> nil) and not ClearingDeletedDataSets then
   begin
     (FModel as TCustomModel).FormulaManager.Remove(FFormulaObject,
       GlobalDataArrayRemoveSubscription,
@@ -1659,29 +1660,38 @@ end;
 
 procedure TDataArray.UpdateDialogBoxes;
 var
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
 begin
   Grid := (FModel as TCustomModel).Grid;
   if Grid <> nil then
   begin
-    if Grid.ThreeDContourDataSet = self then
+    if (Grid.ThreeDContourDataSet = self)
+      or (Grid.ThreeDContourDataSet = self) then
     begin
-      if frmContourData = nil then
+      if frmDisplayData = nil then
       begin
-        frmContourData := TfrmContourData.Create(nil);
+        Application.CreateForm(TfrmDisplayData, frmDisplayData);
       end;
-      frmContourData.LegendDataSource := self;
-      UpdateFrmContourData(True);
+      UpdateFrmDisplayData(True);
     end;
-    if Grid.ThreeDDataSet = self then
-    begin
-      if frmGridColor = nil then
-      begin
-        frmGridColor := TfrmGridColor.Create(nil);
-      end;
-      frmGridColor.LegendDataSource := self;
-      UpdateFrmGridColor(True);
-    end;
+//    if Grid.ThreeDContourDataSet = self then
+//    begin
+//      if frmContourData = nil then
+//      begin
+//        frmContourData := TfrmContourData.Create(nil);
+//      end;
+//      frmContourData.LegendDataSource := self;
+//      UpdateFrmContourData(True);
+//    end;
+//    if Grid.ThreeDDataSet = self then
+//    begin
+//      if frmGridColor = nil then
+//      begin
+//        frmGridColor := TfrmGridColor.Create(nil);
+//      end;
+//      frmGridColor.LegendDataSource := self;
+//      UpdateFrmGridColor(True);
+//    end;
   end;
 end;
 
@@ -1780,7 +1790,7 @@ var
   AValue: double;
   HideProgressForm: Boolean;
   DataArrayManager: TDataArrayManager;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   LocalModel: TCustomModel;
   procedure GetLimits;
   begin
@@ -2837,11 +2847,16 @@ begin
   else
   begin
     FContours.Assign(Value);
-    if frmContourData = nil then
+//    if frmContourData = nil then
+//    begin
+//      frmContourData := TfrmContourData.Create(nil);
+//    end;
+//    frmContourData.UpdateLabelsAndLegend;
+    if frmDisplayData = nil then
     begin
-      frmContourData := TfrmContourData.Create(nil);
+      Application.CreateForm(TfrmDisplayData, frmDisplayData);
     end;
-    frmContourData.UpdateLabelsAndLegend;
+    frmDisplayData.UpdateLabelsAndLegend;
   end;
 end;
 
@@ -3674,7 +3689,7 @@ var
   RowLimit: Integer;
   LayerLimit: Integer;
   PhastModel: TCustomModel;
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
   LayerMin: Integer;
   RowMin: Integer;
   ColMin: Integer;
@@ -3915,26 +3930,37 @@ begin
     Grid := PhastModel.Grid;
     if Grid <> nil then
     begin
-      if (frmGridColor <> nil) then
+      if (frmDisplayData <> nil) then
       begin
         if (Grid.TopDataSet = self)
           or (Grid.FrontDataSet = self)
           or (Grid.SideDataSet = self)
           or (Grid.ThreeDDataSet = self) then
         begin
-          frmGridColor.LegendDataSource := self;
-          frmGridColor.UpdateLabelsAndLegend;
+          frmDisplayData.frameColorGrid.LegendDataSource := self;
+          frmDisplayData.UpdateLabelsAndLegend;
         end;
       end;
-      if frmContourData <> nil then
+//      if (frmGridColor <> nil) then
+//      begin
+//        if (Grid.TopDataSet = self)
+//          or (Grid.FrontDataSet = self)
+//          or (Grid.SideDataSet = self)
+//          or (Grid.ThreeDDataSet = self) then
+//        begin
+//          frmGridColor.LegendDataSource := self;
+//          frmGridColor.UpdateLabelsAndLegend;
+//        end;
+//      end;
+      if frmDisplayData <> nil then
       begin
         if (Grid.TopContourDataSet = self)
           or (Grid.FrontContourDataSet = self)
           or (Grid.SideContourDataSet = self)
           or (Grid.ThreeDContourDataSet = self) then
         begin
-          frmContourData.LegendDataSource := self;
-          frmContourData.UpdateLabelsAndLegend;
+          frmDisplayData.frameContourData.LegendDataSource := self;
+          frmDisplayData.UpdateLabelsAndLegend;
         end;
       end;
     end;
@@ -6186,7 +6212,7 @@ end;
 
 procedure TDataArray.RestoreArraySize;
 var
-  Grid: TCustomGrid;
+  Grid: TCustomModelGrid;
 begin
   if FCleared then
   begin

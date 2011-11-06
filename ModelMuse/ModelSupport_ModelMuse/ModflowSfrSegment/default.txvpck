@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="bbniuza0pbg4ust_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrSegment.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.StreamDepthPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.StreamWidthPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.StreambedElevationPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.StreamBedThicknessPosition" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.HydraulicConductivityPosition" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.StreamDepthAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.StreamWidthAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.StreamBedThicknessAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.StreambedElevationAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.HydraulicConductivityAnnotation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.EndingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.StartingTime" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.StreamDepth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.StreamWidth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.HydraulicConductivity" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.StreamBedThickness" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.StreambedElevation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.Cell" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentRecord.Cache(ZLib.TCompressionStream)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrSegment.TSfrSegmentStorage">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegmentStorage.SrfSegmentArray[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentStorage.Clear()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentStorage.Store(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentStorage.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentStorage.GetSrfSegmentArray()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentStorage.FSrfSegmentArray" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.FStreamDepth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.FStreamWidth" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.FHydraulicConductivity" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.FStreambedElevation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.FStreamBedThickness" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.StreamDepth[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.StreamWidth[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.StreambedElevation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.StreamBedThickness[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.HydraulicConductivity[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.Assign(Classes.TPersistent)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.Create(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.BoundaryFormulaCount()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.InvalidateModel()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.IsSame(OrderedCollectionUnit.TOrderedItem)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.SetBoundaryFormula(System.Int32,System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.GetBoundaryFormula(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.RemoveFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.GetPropertyObserver(System.Object,Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.CreateFormulaObjects()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.AssignObserverEvents(Classes.TCollection)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.GetStreamWidth()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.GetStreamDepth()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.GetStreamBedThickness()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.GetStreambedElevation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.GetHydraulicConductivity()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.SetStreamWidth(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.SetStreamDepth(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.SetStreamBedThickness(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.SetStreambedElevation(System.String)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentItem.SetHydraulicConductivity(System.String)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.Destroy()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.Create(ModflowBoundaryUnit.TModflowBoundary,System.Object,System.Object)" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.AssignmentLocation[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.SetBoundaryStartAndEndTime(System.Int32,ModflowBoundaryUnit.TCustomModflowBoundaryItem,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.ItemClass()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.InitializeTimeLists(Classes.TList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.AssignCellValues(Classes.TList,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.AddSpecificBoundary()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.InvalidateStreamDepthData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.InvalidateStreamWidthData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.InvalidateStreambedElevationData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.InvalidateStreamBedThicknessData(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.InvalidateHydraulicConductivityData(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.FAssignmentLocation" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.FStreamDepthData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.FStreamWidthData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.FStreamBedElevationData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.FStreamBedThicknessData" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegmentCollection.FHydraulicConductivityData" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrSegment.TSfrSegmentParamItem">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegmentParamItem.BoundaryClass()" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.StreambedElevation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.HydraulicConductivity[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.StressPeriod[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.Values[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.Restore(ZLib.TDecompressionStream,Classes.TStringList)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.Cache(ZLib.TCompressionStream)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetIntegerAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetRealAnnotation(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetRealValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetIntegerValue(System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetRow()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetLayer()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetColumn()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetStreamWidthAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetStreamWidth()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetStreamDepthAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetStreamDepth()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetStreamBedThicknessAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetStreambedElevationAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetHydraulicConductivityAnnotation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetStreambedElevation()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetHydraulicConductivity()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.GetStreamBedThickness()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.FStressPeriod" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.FValues" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.StreamDepthAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.StreamWidthAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.StreamBedThicknessAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.StreambedElevationAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.HydraulicConductivityAnnotation[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.StreamDepth[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.StreamWidth[]" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.StreamBedThickness[]" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:ModflowSfrSegment.TSfrSegment_Cell.FValues" />
+    </reference>
+  </view>
+</nodeSet>

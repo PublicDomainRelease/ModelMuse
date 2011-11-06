@@ -198,8 +198,10 @@ begin
     begin
       Dec(Col);
     end;
-    if (Col >= 2) and (Col <= rdgPrintFrequency.ColCount-2) then
+    if (Col >= 2) and (Col < rdgPrintFrequency.ColCount-2) then
     begin
+      // The condition can not be (Col >= 2) and (Col <= rdgPrintFrequency.ColCount-2)
+      // because that lets all the column after the fixed columns be deleted.
       rdgPrintFrequency.DeleteColumn(Col);
       rdgPrintFrequency.DeleteColumn(Col);
     end;

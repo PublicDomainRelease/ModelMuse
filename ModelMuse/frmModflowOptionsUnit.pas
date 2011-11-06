@@ -95,29 +95,19 @@ type
     comboModel: TComboBox;
     procedure FormCreate(Sender: TObject); override;
     procedure FormDestroy(Sender: TObject); override;
-    procedure cbCHTOCHClick(Sender: TObject);
-    procedure cbPRINTTIMEClick(Sender: TObject);
     procedure rdeHNOFLOExit(Sender: TObject);
     procedure comboTimeUnitChange(Sender: TObject);
     procedure comboLengthUnitChange(Sender: TObject);
     procedure edProjectNameExit(Sender: TObject);
     procedure edDateExit(Sender: TObject);
     procedure edModelerExit(Sender: TObject);
-    procedure memoCommentsExit(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
     procedure rdeHDRYExit(Sender: TObject);
     procedure cbWettingClick(Sender: TObject);
-    procedure rdeWettingFactChange(Sender: TObject);
-    procedure seCheckDryChange(Sender: TObject);
-    procedure comboWettingEquationChange(Sender: TObject);
     procedure pcOptionsChange(Sender: TObject);
-    procedure cbOpenInTextEditorClick(Sender: TObject);
-    procedure feInitialHeadsExit(Sender: TObject);
     procedure comboModelChange(Sender: TObject);
   private
     FCurrentOptions: TModelOptions;
-//    FModflowOptions: TModflowOptions;
-//    FWettingOptions: TWettingOptions;
     FModelOptionsCollection: TModelOptionsCollection;
     procedure SetCurrentOptions(const Value: TModelOptions);
     property CurrentOptions: TModelOptions read FCurrentOptions
@@ -131,18 +121,12 @@ type
 
   TUndoGeneralOptions = class(TCustomCreateRequiredDataSetsUndo)
   private
-//    FNewModflowOptions: TModflowOptions;
-//    FOldModflowOptions: TModflowOptions;
-//    FNewWettingOptions: TWettingOptions;
-//    FOldWettingOptions: TWettingOptions;
     FNewOptionsCollection: TModelOptionsCollection;
     FOldOptionsCollection: TModelOptionsCollection;
   protected
     function Description: string; override;
   public
-    Constructor Create({var NewModflowOptions: TModflowOptions;}
-//      var NewWettinOptions: TWettingOptions;
-      var NewOptionsCollection: TModelOptionsCollection);
+    Constructor Create(var NewOptionsCollection: TModelOptionsCollection);
     destructor Destroy; override;
     procedure DoCommand; override;
     procedure Undo; override;
@@ -164,30 +148,10 @@ begin
   SetData;
 end;
 
-procedure TfrmModflowOptions.cbCHTOCHClick(Sender: TObject);
-begin
-  inherited;
-//  if FModflowOptions = nil then Exit;
-//  FModflowOptions.ComputeFluxesBetweenConstantHeadCells := cbCHTOCH.Checked;
-end;
-
-procedure TfrmModflowOptions.cbPRINTTIMEClick(Sender: TObject);
-begin
-  inherited;
-//  if FModflowOptions = nil then Exit;
-//  FModflowOptions.PrintTime := cbPRINTTIME.Checked;
-end;
-
 procedure TfrmModflowOptions.FormCreate(Sender: TObject);
-//var
-//  ItemIndex: Integer;
-//  Model: TCustomModel;
-//  Item: TModelOptions;
 begin
   inherited;
   pcOptions.ActivePageIndex := 0;
-//  FModflowOptions:= TModflowOptions.Create(nil);
-//  FWettingOptions:= TWettingOptions.Create(nil);
   FModelOptionsCollection := TModelOptionsCollection.Create(frmGoPhast.PhastModel);
   GetData;
 end;
@@ -196,8 +160,6 @@ procedure TfrmModflowOptions.FormDestroy(Sender: TObject);
 begin
   inherited;
   FModelOptionsCollection.Free;
-//  FModflowOptions.Free;
-//  FWettingOptions.Free;
 end;
 
 procedure TfrmModflowOptions.GetData;
@@ -245,27 +207,11 @@ begin
   end;
 end;
 
-procedure TfrmModflowOptions.cbOpenInTextEditorClick(Sender: TObject);
-begin
-  inherited;
-//  if FModflowOptions = nil then Exit;
-//  FModflowOptions.OpenInTextEditor := cbOpenInTextEditor.Checked;
-end;
-
 procedure TfrmModflowOptions.cbWettingClick(Sender: TObject);
 begin
   inherited;
   rconWet.Enabled := cbWetting.Checked;
   lblWettingDataSets.Visible := cbWetting.Checked;
-//  if FWettingOptions = nil then Exit;
-//  FWettingOptions.WettingActive := cbWetting.Checked;
-end;
-
-procedure TfrmModflowOptions.memoCommentsExit(Sender: TObject);
-begin
-  inherited;
-//  if FModflowOptions = nil then Exit;
-//  FModflowOptions.Description := memoComments.Lines;
 end;
 
 procedure TfrmModflowOptions.pcOptionsChange(Sender: TObject);
@@ -313,13 +259,6 @@ begin
       Options.TimeUnit := comboTimeUnit.ItemIndex;
     end;
   end;
-end;
-
-procedure TfrmModflowOptions.comboWettingEquationChange(Sender: TObject);
-begin
-  inherited;
-//  if FWettingOptions = nil then Exit;
-//  FWettingOptions.WettingEquation := comboWettingEquation.ItemIndex;
 end;
 
 procedure TfrmModflowOptions.edDateExit(Sender: TObject);
@@ -373,13 +312,6 @@ begin
   end;
 end;
 
-procedure TfrmModflowOptions.feInitialHeadsExit(Sender: TObject);
-begin
-  inherited;
-//  if FModflowOptions = nil then Exit;
-//  FModflowOptions.InitialHeadFileName := feInitialHeads.Text;
-end;
-
 procedure TfrmModflowOptions.rdeHDRYExit(Sender: TObject);
 var
   Value: Extended;
@@ -422,26 +354,6 @@ begin
   end;
 end;
 
-procedure TfrmModflowOptions.rdeWettingFactChange(Sender: TObject);
-//var
-//  Value: extended;
-begin
-  inherited;
-//  if FWettingOptions = nil then Exit;
-//  if TryStrToFloat(rdeWettingFact.Text, Value) then
-//  begin
-//    FWettingOptions.WettingFactor := Value;
-//  end;
-
-end;
-
-procedure TfrmModflowOptions.seCheckDryChange(Sender: TObject);
-begin
-  inherited;
-//  if FWettingOptions = nil then Exit;
-//  FWettingOptions.WettingIterations := seCheckDry.AsInteger;
-end;
-
 procedure TfrmModflowOptions.SetCurrentOptions(const Value: TModelOptions);
 var
   AValue: extended;
@@ -458,12 +370,10 @@ begin
       begin
         FCurrentOptions.WettingFactor := AValue;
       end;
-//      FCurrentOptions.WettingFactor := StrToFloat(rdeWettingFact.Text);
       FCurrentOptions.WettingIterations := seCheckDry.AsInteger;
       FCurrentOptions.WettingEquation := comboWettingEquation.ItemIndex;
       FCurrentOptions.OpenInTextEditor := cbOpenInTextEditor.Checked;
       FCurrentOptions.Description := memoComments.Lines;
-//      FCurrentOptions.LengthUnit := comboLengthUnit.ItemIndex;
     end;
     FCurrentOptions := Value;
     if FCurrentOptions <> nil then
@@ -478,7 +388,6 @@ begin
       comboWettingEquation.ItemIndex := FCurrentOptions.WettingEquation;
       cbOpenInTextEditor.Checked := FCurrentOptions.OpenInTextEditor;
       memoComments.Lines := FCurrentOptions.Description;
-//      comboLengthUnit.ItemIndex := FCurrentOptions.LengthUnit;
     end;
   end;
 end;
@@ -495,21 +404,9 @@ end;
 
 { TUndoGeneralOptions }
 
-constructor TUndoGeneralOptions.Create({var NewModflowOptions: TModflowOptions;}
-  {var NewWettinOptions: TWettingOptions;}
-  var NewOptionsCollection: TModelOptionsCollection);
+constructor TUndoGeneralOptions.Create(var NewOptionsCollection: TModelOptionsCollection);
 begin
   inherited Create;
-//  FNewModflowOptions := NewModflowOptions;
-//  NewModflowOptions := nil;
-//  FOldModflowOptions := TModflowOptions.Create(nil);
-//  FOldModflowOptions.Assign(frmGoPhast.PhastModel.ModflowOptions);
-
-//  FNewWettingOptions := NewWettinOptions;
-//  NewWettinOptions := nil;
-//  FOldWettingOptions := TWettingOptions.Create(nil);
-//  FOldWettingOptions.Assign(frmGoPhast.PhastModel.ModflowWettingOptions);
-
   FNewOptionsCollection := NewOptionsCollection;
   NewOptionsCollection := nil;
 
@@ -523,10 +420,6 @@ end;
 
 destructor TUndoGeneralOptions.Destroy;
 begin
-//  FNewModflowOptions.Free;
-//  FOldModflowOptions.Free;
-//  FNewWettingOptions.Free;
-//  FOldWettingOptions.Free;
   FNewOptionsCollection.Free;
   FOldOptionsCollection.Free;
   inherited;
@@ -535,8 +428,6 @@ end;
 procedure TUndoGeneralOptions.DoCommand;
 begin
   inherited;
-//  frmGoPhast.PhastModel.ModflowOptions.Assign(FNewModflowOptions);
-//  frmGoPhast.PhastModel.ModflowWettingOptions.Assign(FNewWettingOptions);
   FNewOptionsCollection.AssignOptionsToModels;
   UpdatedRequiredDataSets;
 end;
@@ -544,8 +435,6 @@ end;
 procedure TUndoGeneralOptions.Undo;
 begin
   inherited;
-//  frmGoPhast.PhastModel.ModflowOptions.Assign(FOldModflowOptions);
-//  frmGoPhast.PhastModel.ModflowWettingOptions.Assign(FOldWettingOptions);
   FOldOptionsCollection.AssignOptionsToModels;
   UpdatedRequiredDataSets;
 end;

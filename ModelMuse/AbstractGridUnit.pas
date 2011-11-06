@@ -1,5 +1,5 @@
 {
-  @abstract(The main item in @name is @link(TCustomGrid) which is an abstract
+  @abstract(The main item in @name is @link(TCustomModelGrid) which is an abstract
   class that defines the interface for a grid.
   It implements storage for columns and rows but not for layers.)
 
@@ -107,7 +107,7 @@ type
   // @name is used to indicate the direction in which layers are numbered.
   TLayerDirection = (ldBottomToTop, ldTopToBottom);
 
-  { @name is used to store a color for each cell in @link(TCustomGrid).
+  { @name is used to store a color for each cell in @link(TCustomModelGrid).
   @longcode(#TCellColors = array of array of array of TColor;#)
   }
   TCellColors = array of array of array of TColor;
@@ -141,7 +141,7 @@ side views of the model.}
    @seealso(TPhastGrid)
    @seealso(TModflowGrid)
    }
-  TCustomGrid = class(TPersistent)
+  TCustomModelGrid = class(TPersistent)
   private
     // See @link(EdgesGLIndex).
     FEdgesGLIndex: GLuint;
@@ -1082,22 +1082,22 @@ side views of the model.}
 function GridFracToRainbow(const Fraction: real): TColor;
 
 {@name is used to read a one-dimensional array of real numbers
- from a stream. See @link(TCustomGrid.DefineProperties)}
+ from a stream. See @link(TCustomModelGrid.DefineProperties)}
 procedure ReadRealArray(const Reader: TReader;
   var Positions: TOneDRealArray; const Count: integer);
 
 {@name is used to write a one-dimensional array of real numbers
- to a stream. See @link(TCustomGrid.DefineProperties)}
+ to a stream. See @link(TCustomModelGrid.DefineProperties)}
 procedure WriteRealArray(const Writer: TWriter;
   const Positions: TOneDRealArray);
 
 {@name is used to read a one-dimensional array of integers
- from a stream. See @link(TCustomGrid.DefineProperties)}
+ from a stream. See @link(TCustomModelGrid.DefineProperties)}
 procedure ReadIntegerArray(const Reader: TReader;
   var Positions: TOneDIntegerArray; const Count: integer);
 
 {@name is used to write a one-dimensional array of integers
- to a stream. See @link(TCustomGrid.DefineProperties)}
+ to a stream. See @link(TCustomModelGrid.DefineProperties)}
 procedure WriteIntegerArray(const Writer: TWriter;
   const Positions: TOneDIntegerArray);
 
@@ -1129,13 +1129,13 @@ const
 
 var
   // @name is the color used for the selected column
-  // (@link(TCustomGrid.SelectedColumn)).
+  // (@link(TCustomModelGrid.SelectedColumn)).
   ExistingColumnSelectionCellColor: TColor;
   // @name is the color used for the selected row
-  // (@link(TCustomGrid.SelectedRow)).
+  // (@link(TCustomModelGrid.SelectedRow)).
   ExistingRowSelectionCellColor: TColor;
   // @name is the color used for the selected layer
-  // (@link(TCustomGrid.SelectedLayer)).
+  // (@link(TCustomModelGrid.SelectedLayer)).
   ExistingLayerSelectionCellColor: TColor;
 
   
@@ -1295,9 +1295,9 @@ begin
   result := frmGoPhast.PhastModel.GridColorParameters.FracToColor(Fraction);
 end;
 
-{ TCustomGrid }
+{ TCustomModelGrid }
 
-procedure TCustomGrid.AddColumn(const Value: real);
+procedure TCustomModelGrid.AddColumn(const Value: real);
 begin
   SetLength(FColumnPositions, Length(FColumnPositions) + 1);
   FColumnPositions[Length(FColumnPositions) - 1] := Value;
@@ -1307,7 +1307,7 @@ begin
   ColumnsChanged;
 end;
 
-procedure TCustomGrid.AddRow(const Value: real);
+procedure TCustomModelGrid.AddRow(const Value: real);
 begin
   SetLength(FRowPositions, Length(FRowPositions) + 1);
   FRowPositions[Length(FRowPositions) - 1] := Value;
@@ -1317,7 +1317,7 @@ begin
   RowsChanged;
 end;
 
-constructor TCustomGrid.Create(Model: TBaseModel);
+constructor TCustomModelGrid.Create(Model: TBaseModel);
 begin
   inherited Create;
   FModel := Model;
@@ -1342,7 +1342,7 @@ begin
   FCanDraw := True;
 end;
 
-procedure TCustomGrid.DeleteColumn(const AColumn: integer);
+procedure TCustomModelGrid.DeleteColumn(const AColumn: integer);
 var
   Index: integer;
 begin
@@ -1362,7 +1362,7 @@ begin
   ColumnsChanged;
 end;
 
-procedure TCustomGrid.DeleteRow(const ARow: integer);
+procedure TCustomModelGrid.DeleteRow(const ARow: integer);
 var
   Index: integer;
 begin
@@ -1382,7 +1382,7 @@ begin
   RowsChanged;
 end;
 
-procedure TCustomGrid.Draw(const BitMap: TBitmap32;
+procedure TCustomModelGrid.Draw(const BitMap: TBitmap32;
   const ViewDirection: TViewDirection);
 begin
   if not CanDraw then
@@ -1428,7 +1428,7 @@ begin
   result.Y := ZoomBox.YCoord(APoint.X);
 end;
 
-procedure TCustomGrid.DrawTop(const BitMap: TBitmap32;
+procedure TCustomModelGrid.DrawTop(const BitMap: TBitmap32;
   const ZoomBox: TQRbwZoomBox2);
 var
   RowIndex, ColumnIndex: integer;
@@ -1761,7 +1761,7 @@ begin
   DrawTopContours(ZoomBox, BitMap);
 end;
 
-procedure TCustomGrid.ElementCountChanged;
+procedure TCustomModelGrid.ElementCountChanged;
 const
   BigGrid = 100000;
 var
@@ -1778,36 +1778,36 @@ begin
   FElementCount := NewElementCount;
 end;
 
-procedure TCustomGrid.EndColumnChange;
+procedure TCustomModelGrid.EndColumnChange;
 begin
   Dec(FColumnUpdate);
   ColumnsChanged;
 end;
 
-procedure TCustomGrid.EndGridChange;
+procedure TCustomModelGrid.EndGridChange;
 begin
   Dec(FGridUpdate);
   GridChanged;
 end;
 
-procedure TCustomGrid.EndLayerChange;
+procedure TCustomModelGrid.EndLayerChange;
 begin
   Dec(FLayerUpdate);
   LayersChanged;
 end;
 
-procedure TCustomGrid.EndRowChange;
+procedure TCustomModelGrid.EndRowChange;
 begin
   Dec(FRowUpdate);
   RowsChanged;
 end;
 
-function TCustomGrid.GetCanDraw: boolean;
+function TCustomModelGrid.GetCanDraw: boolean;
 begin
   result := FCanDraw and (frmGoPhast.PhastModel.DataSetUpdateCount = 0);
 end;
 
-function TCustomGrid.GetCellCoordinates(Col, Row, Layer: integer): T3DCellCoordinates;
+function TCustomModelGrid.GetCellCoordinates(Col, Row, Layer: integer): T3DCellCoordinates;
 var
   X1: Real;
   X2: Real;
@@ -1927,7 +1927,7 @@ begin
   result.Col2_Row2_Lay2.z := Z2;
 end;
 
-function TCustomGrid.GetColumnPosition(const Column: integer): real;
+function TCustomModelGrid.GetColumnPosition(const Column: integer): real;
 begin
   if (Column < 0) or (Column > ColumnCount) then
   begin
@@ -1936,7 +1936,7 @@ begin
   result := FColumnPositions[Column];
 end;
 
-function TCustomGrid.GetColumnWidth(const Column: integer): real;
+function TCustomModelGrid.GetColumnWidth(const Column: integer): real;
 begin
   result := ColumnPosition[Column + 1] - ColumnPosition[Column];
   if ColumnDirection = cdEastToWest then
@@ -1945,7 +1945,7 @@ begin
   end;
 end;
 
-function TCustomGrid.GetWidths(
+function TCustomModelGrid.GetWidths(
   const PositionArray: TOneDRealArray): TOneDRealArray;
 var
   Index: Integer;
@@ -1964,7 +1964,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.CacheBlockGlGrid;
+procedure TCustomModelGrid.CacheBlockGlGrid;
 begin
   if FBlockGridCache = nil then
   begin
@@ -1974,12 +1974,12 @@ begin
   end;
 end;
 
-procedure TCustomGrid.RestoreBlockGlGrid;
+procedure TCustomModelGrid.RestoreBlockGlGrid;
 begin
   RestoreGlGrid(FBlockGlGrid, FBlockGridCache);
 end;
 
-procedure TCustomGrid.CacheNodeGlGrid;
+procedure TCustomModelGrid.CacheNodeGlGrid;
 begin
   if FNodeGridCache = nil then
   begin
@@ -1989,13 +1989,13 @@ begin
   end;
 end;
 
-procedure TCustomGrid.RestoreNodeGlGrid;
+procedure TCustomModelGrid.RestoreNodeGlGrid;
 begin
   RestoreGlGrid(FNodeGlGrid, FNodeGridCache);
 end;
 
 
-procedure TCustomGrid.CreateBlockGlGrid;
+procedure TCustomModelGrid.CreateBlockGlGrid;
 var
   ColumnIndex: Integer;
   RowIndex: Integer;
@@ -2226,7 +2226,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.CreateNodeGlGrid;
+procedure TCustomModelGrid.CreateNodeGlGrid;
 var
   ColumnIndex: Integer;
   RowIndex: Integer;
@@ -2435,7 +2435,7 @@ begin
   end;
 end;
 
-function TCustomGrid.ContourGrid(EvaluatedAt: TEvaluatedAt;
+function TCustomModelGrid.ContourGrid(EvaluatedAt: TEvaluatedAt;
   ModelSelection: TModelSelection; ViewDirection: TViewDirection;
   ColRowOrLayer: integer): T2DGrid;
 var
@@ -2563,7 +2563,7 @@ begin
   end;
 end;
 
-function TCustomGrid.GlGrid(EvaluatedAt: TEvaluatedAt;
+function TCustomModelGrid.GlGrid(EvaluatedAt: TEvaluatedAt;
   ModelSelection: TModelSelection): TGrid;
 begin
   result := nil;
@@ -2584,7 +2584,7 @@ begin
   end;
 end;
 
-function TCustomGrid.PrivateGlGrid(EvaluatedAt: TEvaluatedAt;
+function TCustomModelGrid.PrivateGlGrid(EvaluatedAt: TEvaluatedAt;
   ModelSelection: TModelSelection): TGrid;
 begin
   result := nil;
@@ -2613,12 +2613,12 @@ begin
   end;
 end;
 
-function TCustomGrid.GetColWidths: TOneDRealArray;
+function TCustomModelGrid.GetColWidths: TOneDRealArray;
 begin
   result := GetWidths(FColumnPositions);
 end;
 
-function TCustomGrid.GetRowPosition(const Row: integer): real;
+function TCustomModelGrid.GetRowPosition(const Row: integer): real;
 begin
   if (Row < 0) or (Row > RowCount) then
   begin
@@ -2627,7 +2627,7 @@ begin
   result := FRowPositions[Row];
 end;
 
-function TCustomGrid.GetRowWidth(const Row: integer): real;
+function TCustomModelGrid.GetRowWidth(const Row: integer): real;
 begin
   result := RowPosition[Row + 1] - RowPosition[Row];
   if RowDirection = rdNorthToSouth then
@@ -2636,17 +2636,17 @@ begin
   end;
 end;
 
-function TCustomGrid.GetRowWidths: TOneDRealArray;
+function TCustomModelGrid.GetRowWidths: TOneDRealArray;
 begin
   result := GetWidths(FRowPositions);
 end;
 
-function TCustomGrid.GetThreeDGridObserver: TObserver;
+function TCustomModelGrid.GetThreeDGridObserver: TObserver;
 begin
   result := FThreeDGridObserver;
 end;
 
-function TCustomGrid.GetTopCellColors(const Column, Row: integer): TColor;
+function TCustomModelGrid.GetTopCellColors(const Column, Row: integer): TColor;
 var
   ColumnLimit, RowLimit: integer;
 begin
@@ -2692,13 +2692,13 @@ begin
 
 end;
 
-function TCustomGrid.NearestColumnPosition(const APosition: real;
+function TCustomModelGrid.NearestColumnPosition(const APosition: real;
   const First: integer = -1; const Last: integer = -1): integer;
 begin
   result := NearestColumnOrRow(FColumnPositions, APosition, First, Last);
 end;
 
-function TCustomGrid.NearestColumnOrRow(const Positions: TOneDRealArray;
+function TCustomModelGrid.NearestColumnOrRow(const Positions: TOneDRealArray;
   const APosition: real; const First: integer = -1;
   const Last: integer = -1): integer;
 var
@@ -2819,13 +2819,13 @@ begin
   end;
 end;
 
-function TCustomGrid.NearestRowPosition(const APosition: real;
+function TCustomModelGrid.NearestRowPosition(const APosition: real;
   const First: integer = -1; const Last: integer = -1): integer;
 begin
   result := NearestColumnOrRow(FRowPositions, APosition, First, Last);
 end;
 
-function TCustomGrid.RotatedThreeDElementCenter(const Column, Row,
+function TCustomModelGrid.RotatedThreeDElementCenter(const Column, Row,
   Layer: integer): T3DRealPoint;
 var
   APoint: TPoint2D;
@@ -2838,7 +2838,7 @@ begin
   Result.Y := APoint.Y;
 end;
 
-function TCustomGrid.RotatedThreeDElementCorner(const Column, Row,
+function TCustomModelGrid.RotatedThreeDElementCorner(const Column, Row,
   Layer: integer): T3DRealPoint;
 var
   APoint: TPoint2D;
@@ -2851,7 +2851,7 @@ begin
   Result.Y := APoint.Y;
 end;
 
-function TCustomGrid.RotateFromGridCoordinatesToRealWorldCoordinates(
+function TCustomModelGrid.RotateFromGridCoordinatesToRealWorldCoordinates(
   const APoint: TPoint2D): TPoint2D;
 var
   temp: TPoint2D;
@@ -2865,7 +2865,7 @@ begin
   end;
 end;
 
-function TCustomGrid.RotateFromRealWorldCoordinatesToGridCoordinates(
+function TCustomModelGrid.RotateFromRealWorldCoordinatesToGridCoordinates(
   const APoint: TPoint2D): TPoint2D;
 var
   temp: TPoint2D;
@@ -2879,12 +2879,12 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetCanDraw(const Value: boolean);
+procedure TCustomModelGrid.SetCanDraw(const Value: boolean);
 begin
   FCanDraw := Value;
 end;
 
-procedure TCustomGrid.SetColumnCount(const Value: integer);
+procedure TCustomModelGrid.SetColumnCount(const Value: integer);
 var
   Index: integer;
   LastValue: real;
@@ -2927,7 +2927,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetColumnDirection(const Value: TColumnDirection);
+procedure TCustomModelGrid.SetColumnDirection(const Value: TColumnDirection);
 var
   Index: Integer;
   Temp: real;
@@ -2958,7 +2958,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetColumnPosition(const Column: integer;
+procedure TCustomModelGrid.SetColumnPosition(const Column: integer;
   const Value: real);
 begin
   if (Column < 0) or (Column > ColumnCount) then
@@ -2997,7 +2997,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetColumnPositions(const Value: TOneDRealArray);
+procedure TCustomModelGrid.SetColumnPositions(const Value: TOneDRealArray);
 var
   Index: integer;
 begin
@@ -3018,7 +3018,7 @@ begin
   ColumnsChanged;
 end;
 
-procedure TCustomGrid.SetColumnWidth(const Column: integer;
+procedure TCustomModelGrid.SetColumnWidth(const Column: integer;
   const Value: real);
 var
   Delta: real;
@@ -3051,7 +3051,7 @@ begin
   ColumnsChanged;
 end;
 
-procedure TCustomGrid.SetDisplayColumn(Value: integer);
+procedure TCustomModelGrid.SetDisplayColumn(Value: integer);
 begin
   if Value < 0 then
   begin
@@ -3073,7 +3073,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetDisplayLayer(Value: integer);
+procedure TCustomModelGrid.SetDisplayLayer(Value: integer);
 begin
   if Value < 0 then
   begin
@@ -3095,7 +3095,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetDisplayRow(Value: integer);
+procedure TCustomModelGrid.SetDisplayRow(Value: integer);
 begin
   if Value < 0 then
   begin
@@ -3117,7 +3117,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetGridLineDrawingChoice(const Value: TGridLineDrawingChoice);
+procedure TCustomModelGrid.SetGridLineDrawingChoice(const Value: TGridLineDrawingChoice);
 var
   LocalModel: TPhastModel;
   ChildIndex: Integer;
@@ -3136,7 +3136,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetGridAngle(Value: real);
+procedure TCustomModelGrid.SetGridAngle(Value: real);
 var
   Index: integer;
   GridCenter: TPoint2D;
@@ -3223,7 +3223,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetLayerCount(const Value: integer);
+procedure TCustomModelGrid.SetLayerCount(const Value: integer);
 begin
   if FLayerCount <> Value then
   begin
@@ -3246,7 +3246,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetLayerDirection(const Value: TLayerDirection);
+procedure TCustomModelGrid.SetLayerDirection(const Value: TLayerDirection);
 begin
   if FLayerDirection <> Value then
   begin
@@ -3265,7 +3265,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.ResetTopCellColors;
+procedure TCustomModelGrid.ResetTopCellColors;
 var
   ColIndex, RowIndex: integer;
   LocalModel: TPhastModel;
@@ -3331,7 +3331,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetRowCount(const Value: integer);
+procedure TCustomModelGrid.SetRowCount(const Value: integer);
 var
   Index: integer;
   LastValue: real;
@@ -3373,7 +3373,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetRowDirection(const Value: TRowDirection);
+procedure TCustomModelGrid.SetRowDirection(const Value: TRowDirection);
 var
   Index: integer;
   Temp: real;
@@ -3404,7 +3404,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetRowPosition(const Row: integer;
+procedure TCustomModelGrid.SetRowPosition(const Row: integer;
   const Value: real);
 begin
   if (Row < 0) or (Row > RowCount) then
@@ -3441,7 +3441,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetRowPositions(const Value: TOneDRealArray);
+procedure TCustomModelGrid.SetRowPositions(const Value: TOneDRealArray);
 var
   Index: integer;
 begin
@@ -3461,7 +3461,7 @@ begin
   RowsChanged;
 end;
 
-procedure TCustomGrid.SetRowWidth(const Row: integer; const Value: real);
+procedure TCustomModelGrid.SetRowWidth(const Row: integer; const Value: real);
 var
   Delta: real;
   Index: integer;
@@ -3492,7 +3492,7 @@ begin
   RowsChanged;
 end;
 
-procedure TCustomGrid.SetTopCellColors(const Column, Row: integer;
+procedure TCustomModelGrid.SetTopCellColors(const Column, Row: integer;
   const Value: TColor);
 var
   ColumnLimit, RowLimit: integer;
@@ -3534,7 +3534,7 @@ begin
   FTopCellColors[Column, Row] := Value;
 end;
 
-procedure TCustomGrid.SetTopContourDataSet(const Value: TDataArray);
+procedure TCustomModelGrid.SetTopContourDataSet(const Value: TDataArray);
 begin
   Assert((Value = nil) or (Value.Orientation in [dsoTop, dso3D]));
   if FTopContourDataSet <> Value then
@@ -3543,7 +3543,7 @@ begin
   end;
 end;
 
-function TCustomGrid.ThreeDElementCenter(const Column, Row,
+function TCustomModelGrid.ThreeDElementCenter(const Column, Row,
   Layer: integer): T3DRealPoint;
 begin
   result.X := (ColumnPosition[Column] + ColumnPosition[Column + 1]) / 2;
@@ -3552,7 +3552,7 @@ begin
     + CellElevation[Column, Row, Layer + 1]) / 2;
 end;
 
-function TCustomGrid.ThreeDElementCorner(const Column, Row,
+function TCustomModelGrid.ThreeDElementCorner(const Column, Row,
   Layer: integer): T3DRealPoint;
 begin
   result.X := ColumnPosition[Column];
@@ -3560,14 +3560,14 @@ begin
   result.Z := CellElevation[Column, Row, Layer];
 end;
 
-function TCustomGrid.UnrotatedTwoDElementCenter(const Column,
+function TCustomModelGrid.UnrotatedTwoDElementCenter(const Column,
   Row: integer): TPoint2D;
 begin
   result.X := (ColumnPosition[Column] + ColumnPosition[Column + 1]) / 2;
   result.Y := (RowPosition[Row] + RowPosition[Row + 1]) / 2;
 end;
 
-function TCustomGrid.TwoDElementCenter(const Column,
+function TCustomModelGrid.TwoDElementCenter(const Column,
   Row: integer): TPoint2D;
 begin
   result.X := (ColumnPosition[Column] + ColumnPosition[Column + 1]) / 2;
@@ -3575,14 +3575,14 @@ begin
   result := RotateFromGridCoordinatesToRealWorldCoordinates(result);
 end;
 
-function TCustomGrid.UnrotatedTwoDElementCorner(const Column,
+function TCustomModelGrid.UnrotatedTwoDElementCorner(const Column,
   Row: integer): TPoint2D;
 begin
   result.X := ColumnPosition[Column];
   result.Y := RowPosition[Row];
 end;
 
-function TCustomGrid.TwoDElementCorner(const Column,
+function TCustomModelGrid.TwoDElementCorner(const Column,
   Row: integer): TPoint2D;
 begin
   result.X := ColumnPosition[Column];
@@ -3590,7 +3590,7 @@ begin
   result := RotateFromGridCoordinatesToRealWorldCoordinates(result);
 end;
 
-procedure TCustomGrid.UpdateColumnPositions;
+procedure TCustomModelGrid.UpdateColumnPositions;
 var
   ARealList: TRealList;
   Index: integer;
@@ -3656,7 +3656,7 @@ begin
   ElementCountChanged;
 end;
 
-procedure TCustomGrid.UpdateRowPositions;
+procedure TCustomModelGrid.UpdateRowPositions;
 var
   ARealList: TRealList;
   Index: integer;
@@ -3723,7 +3723,7 @@ begin
   ElementCountChanged;
 end;
 
-function TCustomGrid.TopContainingCell(APoint: TPoint2D;
+function TCustomModelGrid.TopContainingCell(APoint: TPoint2D;
   const EvaluatedAt: TEvaluatedAt;
   const NeedToRotatePointToGridCoordinates: boolean = True;
   const BelowCol: integer = -1; const AboveCol: integer = -1;
@@ -3798,7 +3798,7 @@ begin
 //  end;
 end;
 
-procedure TCustomGrid.SetNeedToRecalculateTopCellColors(
+procedure TCustomModelGrid.SetNeedToRecalculateTopCellColors(
   const Value: boolean);
 begin
   if Value then
@@ -3807,7 +3807,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetOnSelectedColumnChange(const Value: TNotifyEvent);
+procedure TCustomModelGrid.SetOnSelectedColumnChange(const Value: TNotifyEvent);
 var
   LocalModel: TPhastModel;
   ChildIndex: Integer;
@@ -3825,7 +3825,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetOnSelectedLayerChange(const Value: TNotifyEvent);
+procedure TCustomModelGrid.SetOnSelectedLayerChange(const Value: TNotifyEvent);
 var
   LocalModel: TPhastModel;
   ChildIndex: Integer;
@@ -3843,7 +3843,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetOnSelectedRowChange(const Value: TNotifyEvent);
+procedure TCustomModelGrid.SetOnSelectedRowChange(const Value: TNotifyEvent);
 var
   LocalModel: TPhastModel;
   ChildIndex: Integer;
@@ -3861,7 +3861,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetSelectedColumn(Value: integer);
+procedure TCustomModelGrid.SetSelectedColumn(Value: integer);
 var
   PathLines: TPathLineReader;
 begin
@@ -3916,7 +3916,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetSelectedLayer(Value: integer);
+procedure TCustomModelGrid.SetSelectedLayer(Value: integer);
 var
   PathLines: TPathLineReader;
 begin
@@ -3969,7 +3969,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetSelectedRow(Value: integer);
+procedure TCustomModelGrid.SetSelectedRow(Value: integer);
 var
   PathLines: TPathLineReader;
 begin
@@ -4024,7 +4024,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetNeedToRecalculateFrontCellColors(
+procedure TCustomModelGrid.SetNeedToRecalculateFrontCellColors(
   const Value: boolean);
 begin
   if Value then
@@ -4033,7 +4033,7 @@ begin
   end;
 end;
 
-function TCustomGrid.GetFrontCellColors(const Column,
+function TCustomModelGrid.GetFrontCellColors(const Column,
   Layer: integer): TColor;
 var
   ColumnLimit, LayerLimit: integer;
@@ -4079,7 +4079,7 @@ begin
   Result := FFrontCellColors[Column, Layer];
 end;
 
-function TCustomGrid.GridLimits(ViewDirection: TViewDirection): TGridLimit;
+function TCustomModelGrid.GridLimits(ViewDirection: TViewDirection): TGridLimit;
 var
   ACorner: TPoint2D;
 begin
@@ -4153,7 +4153,7 @@ begin
   end;
 end;
 
-function TCustomGrid.GridOutline(ViewDirection: TViewDirection): TPolygon2D;
+function TCustomModelGrid.GridOutline(ViewDirection: TViewDirection): TPolygon2D;
 begin
   SetLength(result, 4);
   case ViewDirection of
@@ -4189,7 +4189,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.CalculateMinMax(DataSet: TDataArray;
+procedure TCustomModelGrid.CalculateMinMax(DataSet: TDataArray;
   var MinMaxInitialized: Boolean;
   var LayerCount, RowCount, ColCount: Integer;
   var LogRMin, LogRMax: Double;
@@ -4263,7 +4263,7 @@ begin
   end;
 end;
 
-function TCustomGrid.GetChildDataArray(const Value: TDataArray;
+function TCustomModelGrid.GetChildDataArray(const Value: TDataArray;
   ChildModel: TBaseModel): TDataArray;
 begin
   if Value = nil then
@@ -4281,7 +4281,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.InvalidateScreenObjects;
+procedure TCustomModelGrid.InvalidateScreenObjects;
 begin
   if FModel is TPhastModel then
   begin
@@ -4289,7 +4289,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.DrawOrdinaryTopColumns(const BitMap: TBitmap32;
+procedure TCustomModelGrid.DrawOrdinaryTopColumns(const BitMap: TBitmap32;
   const ZoomBox: TQRbwZoomBox2);
 var
   ColumnIndex: Integer;
@@ -4412,7 +4412,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.DrawOrdinaryTopRows(const BitMap: TBitmap32;
+procedure TCustomModelGrid.DrawOrdinaryTopRows(const BitMap: TBitmap32;
   const ZoomBox: TQRbwZoomBox2);
 var
   RowIndex: Integer;
@@ -4534,7 +4534,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.RestoreGlGrid(var AGlGrid: TGrid;
+procedure TCustomModelGrid.RestoreGlGrid(var AGlGrid: TGrid;
   GridCacheStream: TMemoryStream);
 var
   RowIndex: Integer;
@@ -4564,7 +4564,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.CacheGlGrid(GridCacheStream: TMemoryStream;
+procedure TCustomModelGrid.CacheGlGrid(GridCacheStream: TMemoryStream;
   var AGlGrid: TGrid);
 var
   RowIndex: Integer;
@@ -4600,7 +4600,7 @@ begin
   AGlGrid := nil;
 end;
 
-procedure TCustomGrid.GetLimits(const EvaluatedAt: TEvaluatedAt;
+procedure TCustomModelGrid.GetLimits(const EvaluatedAt: TEvaluatedAt;
   const ViewDirection: TViewDirection; out Limit1, Limit2: integer);
 begin
   // Get the limits of one of the sparse 2D
@@ -4665,7 +4665,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetFrontCellColors(const Column, Layer: integer;
+procedure TCustomModelGrid.SetFrontCellColors(const Column, Layer: integer;
   const Value: TColor);
 var
   ColumnLimit, LayerLimit: integer;
@@ -4707,7 +4707,7 @@ begin
   FFrontCellColors[Column, Layer] := Value;
 end;
 
-procedure TCustomGrid.SetFrontContourDataSet(const Value: TDataArray);
+procedure TCustomModelGrid.SetFrontContourDataSet(const Value: TDataArray);
 begin
   Assert((Value = nil) or (Value.Orientation in [dsoFront, dso3D]));
   if FFrontContourDataSet <> Value then
@@ -4716,7 +4716,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.ResetFrontCellColors;
+procedure TCustomModelGrid.ResetFrontCellColors;
 var
   ColIndex, LayerIndex: integer;
   LocalModel: TPhastModel;
@@ -4783,7 +4783,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetNeedToRecalculateSideCellColors(
+procedure TCustomModelGrid.SetNeedToRecalculateSideCellColors(
   const Value: boolean);
 begin
   if Value then
@@ -4792,7 +4792,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.ResetSideCellColors;
+procedure TCustomModelGrid.ResetSideCellColors;
 var
   RowIndex, LayerIndex: integer;
   LocalModel: TPhastModel;
@@ -4858,7 +4858,7 @@ begin
   end;
 end;
 
-function TCustomGrid.GetSideCellColors(const Row, Layer: integer): TColor;
+function TCustomModelGrid.GetSideCellColors(const Row, Layer: integer): TColor;
 var
   RowLimit, LayerLimit: integer;
 begin
@@ -4903,7 +4903,7 @@ begin
   Result := FSideCellColors[Row, Layer];
 end;
 
-procedure TCustomGrid.SetSideCellColors(const Row, Layer: integer;
+procedure TCustomModelGrid.SetSideCellColors(const Row, Layer: integer;
   const Value: TColor);
 var
   RowLimit, LayerLimit: integer;
@@ -4945,7 +4945,7 @@ begin
   FSideCellColors[Row, Layer] := Value;
 end;
 
-procedure TCustomGrid.SetSideContourDataSet(const Value: TDataArray);
+procedure TCustomModelGrid.SetSideContourDataSet(const Value: TDataArray);
 begin
   Assert((Value = nil) or (Value.Orientation in [dsoSide, dso3D]));
   if FSideContourDataSet <> Value then
@@ -4954,7 +4954,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetFrontDataSet(const Value: TDataArray);
+procedure TCustomModelGrid.SetFrontDataSet(const Value: TDataArray);
 begin
   Assert((Value = nil) or (Value.Orientation in [dsoFront, dso3D]));
   if FFrontDataSet <> Value then
@@ -4970,7 +4970,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetSideDataSet(const Value: TDataArray);
+procedure TCustomModelGrid.SetSideDataSet(const Value: TDataArray);
 begin
   Assert((Value = nil) or (Value.Orientation in [dsoSide, dso3D]));
   if FSideDataSet <> Value then
@@ -4987,7 +4987,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetTopDataSet(const Value: TDataArray);
+procedure TCustomModelGrid.SetTopDataSet(const Value: TDataArray);
 begin
   Assert((Value = nil) or (Value.Orientation in [dsoTop, dso3D]));
   if FTopDataSet <> Value then
@@ -5004,7 +5004,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetTopGridObserver(const Value: TObserver);
+procedure TCustomModelGrid.SetTopGridObserver(const Value: TObserver);
 begin
   FTopGridObserver := Value;
   if Assigned(FTopGridObserver) then
@@ -5014,7 +5014,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.InitializeMinMax(const Layer, Row, Col: integer;
+procedure TCustomModelGrid.InitializeMinMax(const Layer, Row, Col: integer;
   DataSet: TDataArray; var MinMaxInitialized: boolean;
   var RMin, RMax, RMinPositive: real; var IMin, IMax: integer;
   var BMin, BMax: boolean; var SMin, SMax: string);
@@ -5102,7 +5102,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.UpdateMinMax(const Layer, Row, Col: integer;
+procedure TCustomModelGrid.UpdateMinMax(const Layer, Row, Col: integer;
   DataSet: TDataArray; var MinMaxInitialized: boolean;
   var RMin, RMax, RMinPositive: real; var IMin, IMax: integer;
   var BMin, BMax: boolean; var SMin, SMax: string; StringValues: TStringList);
@@ -5208,7 +5208,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetMinMax(DataSet: TDataArray;
+procedure TCustomModelGrid.SetMinMax(DataSet: TDataArray;
   var MinMaxInitialized: boolean; var RMin, RMax, RMinPositive: real;
   var IMin, IMax: integer; var BMin, BMax: boolean; var SMin, SMax: string;
   StringValues: TStringList; LayerCount, RowCount, ColCount: integer);
@@ -5232,7 +5232,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.GetRealMinMax(DataSet: TDataArray;
+procedure TCustomModelGrid.GetRealMinMax(DataSet: TDataArray;
   var RMin, RMax, RMinPositive: real);
 var
   LayerCount, RowCount, ColCount: integer;
@@ -5251,7 +5251,7 @@ begin
     LayerCount, RowCount, ColCount);
 end;
 
-procedure TCustomGrid.GetIntegerMinMax(DataSet: TDataArray;
+procedure TCustomModelGrid.GetIntegerMinMax(DataSet: TDataArray;
   var IMin, IMax: integer);
 var
   LayerCount, RowCount, ColCount: integer;
@@ -5270,7 +5270,7 @@ begin
     LayerCount, RowCount, ColCount);
 end;
 
-procedure TCustomGrid.GetBooleanMinMax(DataSet: TDataArray;
+procedure TCustomModelGrid.GetBooleanMinMax(DataSet: TDataArray;
   var BMin, BMax: boolean);
 var
   LayerCount, RowCount, ColCount: integer;
@@ -5289,7 +5289,7 @@ begin
     LayerCount, RowCount, ColCount);
 end;
 
-procedure TCustomGrid.GetStringMinMax(DataSet: TDataArray;
+procedure TCustomModelGrid.GetStringMinMax(DataSet: TDataArray;
   var SMin, SMax: string);
 var
   LayerCount, RowCount, ColCount: integer;
@@ -5314,7 +5314,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.GetCounts(DataSet: TDataArray; var LayerCount, RowCount, ColCount: integer);
+procedure TCustomModelGrid.GetCounts(DataSet: TDataArray; var LayerCount, RowCount, ColCount: integer);
 begin
   case DataSet.EvaluatedAt of
     eaBlocks:
@@ -5382,7 +5382,7 @@ begin
 end;
 
 
-function TCustomGrid.GetElementCoordinates(Col, Row,
+function TCustomModelGrid.GetElementCoordinates(Col, Row,
   Layer: integer): T3DElementCoordinates;
 var
   Z1: Real;
@@ -5498,7 +5498,7 @@ begin
 
 end;
 
-procedure TCustomGrid.UpdateCellColors(
+procedure TCustomModelGrid.UpdateCellColors(
   const ViewDirection: TViewDirection);
 var
   DataSet: TDataArray;
@@ -6266,12 +6266,12 @@ begin
   end;
 end;
 
-function TCustomGrid.ValueOK(DataSet: TDataArray; const Layer, Row, Col: integer): boolean;
+function TCustomModelGrid.ValueOK(DataSet: TDataArray; const Layer, Row, Col: integer): boolean;
 begin
   result := DataSet.ColorGridValueOK(Layer, Row, Col);
 end;
 
-function TCustomGrid.IsElementActive(const Layer, Row, Col: integer): boolean;
+function TCustomModelGrid.IsElementActive(const Layer, Row, Col: integer): boolean;
 var
   ActiveDataSet: TDataArray;
   LocalModel: TCustomModel;
@@ -6286,7 +6286,7 @@ begin
   end;
 end;
 
-function TCustomGrid.IsActiveOk(const DataSet: TDataArray;
+function TCustomModelGrid.IsActiveOk(const DataSet: TDataArray;
   const Layer, Row, Col: integer): boolean;
 var
   ActiveDataSet: TDataArray;
@@ -6416,7 +6416,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.Update3DCellColors(var CellColors: TCellColors);
+procedure TCustomModelGrid.Update3DCellColors(var CellColors: TCellColors);
 var
   DataSet: TDataArray;
   LayerCount, RowCount, ColCount: integer;
@@ -6712,7 +6712,7 @@ begin
   end;
 end;
 
-function TCustomGrid.GetContainingColumnOrRow(
+function TCustomModelGrid.GetContainingColumnOrRow(
   const Positions: TOneDRealArray; const APosition: real): integer;
 var
   NearestPositionIndex: integer;
@@ -6778,18 +6778,18 @@ begin
   end;
 end;
 
-function TCustomGrid.GetContainingColumn(
+function TCustomModelGrid.GetContainingColumn(
   const AnXPosition: real): integer;
 begin
   result := GetContainingColumnOrRow(FColumnPositions, AnXPosition);
 end;
 
-function TCustomGrid.GetContainingRow(const AYPosition: real): integer;
+function TCustomModelGrid.GetContainingRow(const AYPosition: real): integer;
 begin
   result := GetContainingColumnOrRow(FRowPositions, AYPosition);
 end;
 
-procedure TCustomGrid.NeedToRecalculateCellColors;
+procedure TCustomModelGrid.NeedToRecalculateCellColors;
 begin
   NeedToRecalculateFrontCellColors := True;
   NeedToRecalculateSideCellColors := True;
@@ -6797,13 +6797,13 @@ begin
   NeedToRecalculate3DCellColors := True;
 end;
 
-procedure TCustomGrid.Assign(Source: TPersistent);
+procedure TCustomModelGrid.Assign(Source: TPersistent);
 var
-  SourceGrid: TCustomGrid;
+  SourceGrid: TCustomModelGrid;
 begin
-  if Source is TCustomGrid then
+  if Source is TCustomModelGrid then
   begin
-    SourceGrid := TCustomGrid(Source);
+    SourceGrid := TCustomModelGrid(Source);
     ColumnPositions := SourceGrid.ColumnPositions;
     RowPositions := SourceGrid.RowPositions;
     ColumnDirection := SourceGrid.ColumnDirection;
@@ -6819,28 +6819,28 @@ begin
   end;
 end;
 
-procedure TCustomGrid.BeginColumnChange;
+procedure TCustomModelGrid.BeginColumnChange;
 begin
   Inc(FColumnUpdate);
 end;
 
-procedure TCustomGrid.BeginGridChange;
+procedure TCustomModelGrid.BeginGridChange;
 begin
   Inc(FGridUpdate);
 end;
 
-procedure TCustomGrid.BeginLayerChange;
+procedure TCustomModelGrid.BeginLayerChange;
 begin
   Inc(FLayerUpdate);
   CanDraw := False;
 end;
 
-procedure TCustomGrid.BeginRowChange;
+procedure TCustomModelGrid.BeginRowChange;
 begin
   Inc(FRowUpdate);
 end;
 
-procedure TCustomGrid.DefineProperties(Filer: TFiler);
+procedure TCustomModelGrid.DefineProperties(Filer: TFiler);
 begin
   inherited;
   Filer.DefineProperty('ColumnPositions', ReadColumnPositions,
@@ -6849,7 +6849,7 @@ begin
     WriteRowPositions, True);
 end;
 
-procedure TCustomGrid.ReadColumnPositions(Reader: TReader);
+procedure TCustomModelGrid.ReadColumnPositions(Reader: TReader);
 var
   Positions: TOneDRealArray;
 begin
@@ -6857,12 +6857,12 @@ begin
   ColumnPositions := Positions;
 end;
 
-procedure TCustomGrid.WriteColumnPositions(Writer: TWriter);
+procedure TCustomModelGrid.WriteColumnPositions(Writer: TWriter);
 begin
   WriteRealArray(Writer, ColumnPositions);
 end;
 
-procedure TCustomGrid.ReadRowPositions(Reader: TReader);
+procedure TCustomModelGrid.ReadRowPositions(Reader: TReader);
 var
   Positions: TOneDRealArray;
 begin
@@ -6870,12 +6870,12 @@ begin
   RowPositions := Positions;
 end;
 
-procedure TCustomGrid.WriteRowPositions(Writer: TWriter);
+procedure TCustomModelGrid.WriteRowPositions(Writer: TWriter);
 begin
   WriteRealArray(Writer, RowPositions);
 end;
 
-function TCustomGrid.TwoDCellCorner(const Column, Row: integer): TPoint2D;
+function TCustomModelGrid.TwoDCellCorner(const Column, Row: integer): TPoint2D;
 begin
   if (Column = 0) and (Row = 0) then
   begin
@@ -6924,7 +6924,7 @@ begin
   end;
 end;
 
-function TCustomGrid.TwoDColumnEdgeCenter(const Column,
+function TCustomModelGrid.TwoDColumnEdgeCenter(const Column,
   Row: integer): TPoint2D;
 var
   Point1, Point2: TPoint2D;
@@ -6935,7 +6935,7 @@ begin
   result.Y := (Point1.Y + Point2.Y) / 2;
 end;
 
-function TCustomGrid.TwoDRowEdgeCenter(const Column,
+function TCustomModelGrid.TwoDRowEdgeCenter(const Column,
   Row: integer): TPoint2D;
 var
   Point1, Point2: TPoint2D;
@@ -6946,7 +6946,7 @@ begin
   result.Y := (Point1.Y + Point2.Y) / 2;
 end;
 
-function TCustomGrid.ThreeDCellCorner(Column, Row,
+function TCustomModelGrid.ThreeDCellCorner(Column, Row,
   Layer: integer): T3DRealPoint;
 begin
 //  if Column > ColumnCount then
@@ -7000,7 +7000,7 @@ begin
   end;
 end;
 
-function TCustomGrid.ThreeDColumnEdgeCenter(const Column, Row,
+function TCustomModelGrid.ThreeDColumnEdgeCenter(const Column, Row,
   Layer: integer): T3DRealPoint;
 var
   Point1, Point2: T3DRealPoint;
@@ -7012,7 +7012,7 @@ begin
   result.Z := (Point1.Z + Point2.Z) / 2;
 end;
 
-function TCustomGrid.ThreeDLayerEdgeCenter(const Column, Row,
+function TCustomModelGrid.ThreeDLayerEdgeCenter(const Column, Row,
   Layer: integer): T3DRealPoint;
 var
   Point1, Point2: T3DRealPoint;
@@ -7024,7 +7024,7 @@ begin
   result.Z := (Point1.Z + Point2.Z) / 2;
 end;
 
-function TCustomGrid.ThreeDRowEdgeCenter(const Column, Row,
+function TCustomModelGrid.ThreeDRowEdgeCenter(const Column, Row,
   Layer: integer): T3DRealPoint;
 var
   Point1, Point2: T3DRealPoint;
@@ -7036,7 +7036,7 @@ begin
   result.Z := (Point1.Z + Point2.Z) / 2;
 end;
 
-procedure TCustomGrid.RecordShell;
+procedure TCustomModelGrid.RecordShell;
 var
   X, Y, Z: single;
   ColumnIndex, RowIndex, LayerIndex: integer;
@@ -7130,7 +7130,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.RecordSide;
+procedure TCustomModelGrid.RecordSide;
 var
   X, Y, Z: single;
   ColumnIndex, RowIndex, LayerIndex: integer;
@@ -7190,7 +7190,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.RecordFront;
+procedure TCustomModelGrid.RecordFront;
 var
   X, Y, Z: single;
   ColumnIndex, RowIndex, LayerIndex: integer;
@@ -7250,7 +7250,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.RecordTop;
+procedure TCustomModelGrid.RecordTop;
 var
   X, Y, Z: single;
   ColumnIndex, RowIndex, LayerIndex: integer;
@@ -7310,7 +7310,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.Draw3D;
+procedure TCustomModelGrid.Draw3D;
 var
   Colors: array[0..2] of TGLint;
 begin
@@ -7438,7 +7438,7 @@ begin
   glPopMatrix;
 end;
 
-function TCustomGrid.CanDraw3D: boolean;
+function TCustomModelGrid.CanDraw3D: boolean;
 begin
   result := FDraw3DAllowed and (ColumnCount >= 1) and (RowCount >= 1)
     and (LayerCount >= 1)
@@ -7446,7 +7446,7 @@ begin
     and (FRowUpdate = 0) and frmGoPhast.CanDraw;
 end;
 
-procedure TCustomGrid.ViewsChanged;
+procedure TCustomModelGrid.ViewsChanged;
 begin
   frmGoPhast.frameTopView.ItemChange(nil);
   frmGoPhast.frameFrontView.ItemChange(nil);
@@ -7457,7 +7457,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.GridChanged;
+procedure TCustomModelGrid.GridChanged;
 begin
   if FGridUpdate > 0 then Exit;
 
@@ -7504,7 +7504,7 @@ begin
   ViewsChanged;
 end;
 
-destructor TCustomGrid.Destroy;
+destructor TCustomModelGrid.Destroy;
 begin
   if FListsCreated then
   begin
@@ -7515,7 +7515,7 @@ begin
   inherited;
 end;
 
-procedure TCustomGrid.SetThreeDContourDataSet(const Value: TDataArray);
+procedure TCustomModelGrid.SetThreeDContourDataSet(const Value: TDataArray);
 begin
   if FThreeDContourDataSet <> Value then
   begin
@@ -7523,7 +7523,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetThreeDDataSet(const Value: TDataArray);
+procedure TCustomModelGrid.SetThreeDDataSet(const Value: TDataArray);
 begin
 //  FThreeDDataSet := Value;
   if FThreeDDataSet <> Value then
@@ -7534,7 +7534,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetThreeDGridObserver(const Value: TObserver);
+procedure TCustomModelGrid.SetThreeDGridObserver(const Value: TObserver);
 begin
   FThreeDGridObserver := Value;
   if Assigned(FThreeDGridObserver) then
@@ -7544,7 +7544,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetNeedToRecalculate3DCellColors(
+procedure TCustomModelGrid.SetNeedToRecalculate3DCellColors(
   const Value: boolean);
 begin
   if FNeedToRecalculate3DCellColors <> Value then
@@ -7557,7 +7557,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.RecordColoredGridEdges;
+procedure TCustomModelGrid.RecordColoredGridEdges;
 var
   Index: Integer;
   Edge: TCustomModflowGridEdgeFeature;
@@ -7688,7 +7688,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.DrawLeftCellSide3D(ColIndex, RowIndex,
+procedure TCustomModelGrid.DrawLeftCellSide3D(ColIndex, RowIndex,
   LayerIndex: integer; const XPositions,
   YPositions: TOneDRealArray; const ZPositions: TThreeDRealArray);
 var
@@ -7718,7 +7718,7 @@ begin
   glEnd;
 end;
 
-procedure TCustomGrid.DrawRightCellSide3D(ColIndex, RowIndex,
+procedure TCustomModelGrid.DrawRightCellSide3D(ColIndex, RowIndex,
   LayerIndex: integer; const XPositions,
   YPositions: TOneDRealArray; const ZPositions: TThreeDRealArray);
 var
@@ -7749,7 +7749,7 @@ begin
   glEnd;
 end;
 
-procedure TCustomGrid.DrawSideContours(const ZoomBox: TQRbwZoomBox2;
+procedure TCustomModelGrid.DrawSideContours(const ZoomBox: TQRbwZoomBox2;
   const BitMap: TBitmap32);
 var
   Contourer: TMultipleContourCreator;
@@ -7778,7 +7778,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.DrawBackCellSide3D(ColIndex, RowIndex,
+procedure TCustomModelGrid.DrawBackCellSide3D(ColIndex, RowIndex,
   LayerIndex: integer; const XPositions,
   YPositions: TOneDRealArray; const ZPositions: TThreeDRealArray);
 var
@@ -7812,7 +7812,7 @@ begin
   glEnd;
 end;
 
-procedure TCustomGrid.DrawFrontCellSide3D(ColIndex, RowIndex,
+procedure TCustomModelGrid.DrawFrontCellSide3D(ColIndex, RowIndex,
   LayerIndex: integer; const XPositions,
   YPositions: TOneDRealArray; const ZPositions: TThreeDRealArray);
 var
@@ -7846,7 +7846,7 @@ begin
   glEnd;
 end;
 
-procedure TCustomGrid.DrawTopCellSide3D(ColIndex, RowIndex,
+procedure TCustomModelGrid.DrawTopCellSide3D(ColIndex, RowIndex,
   LayerIndex: integer; const XPositions,
   YPositions: TOneDRealArray; const ZPositions: TThreeDRealArray);
 var
@@ -7881,7 +7881,7 @@ begin
   glEnd;
 end;
 
-procedure TCustomGrid.DrawBottomCellSide3D(ColIndex, RowIndex,
+procedure TCustomModelGrid.DrawBottomCellSide3D(ColIndex, RowIndex,
   LayerIndex: integer; const XPositions,
   YPositions: TOneDRealArray; const ZPositions: TThreeDRealArray);
 var
@@ -7915,7 +7915,7 @@ begin
   glEnd;
 end;
 
-procedure TCustomGrid.RecordColoredGrid;
+procedure TCustomModelGrid.RecordColoredGrid;
 var
   CellColors: TCellColors;
   LayerLength, RowLength, ColLength: integer;
@@ -8158,7 +8158,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.Initialize;
+procedure TCustomModelGrid.Initialize;
 begin
   TopDataSet := nil;
   FrontDataSet := nil;
@@ -8182,13 +8182,13 @@ begin
   end;
 end;
 
-function TCustomGrid.LayerCenter(Column, Row, Layer: integer): real;
+function TCustomModelGrid.LayerCenter(Column, Row, Layer: integer): real;
 begin
   result := (CellElevation[Column, Row, Layer]
     + CellElevation[Column, Row, Layer+1])/2;
 end;
 
-procedure TCustomGrid.DrawTopContours(const ZoomBox: TQRbwZoomBox2;
+procedure TCustomModelGrid.DrawTopContours(const ZoomBox: TQRbwZoomBox2;
   const BitMap: TBitmap32);
 var
   Contourer: TMultipleContourCreator;
@@ -8218,7 +8218,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.LayersChanged;
+procedure TCustomModelGrid.LayersChanged;
 begin
   if FLayerUpdate > 0 then Exit;
   
@@ -8230,14 +8230,14 @@ begin
   end;
 end;
 
-function TCustomGrid.Nearest2DCellElevation(const Col, Row: integer;
+function TCustomModelGrid.Nearest2DCellElevation(const Col, Row: integer;
   const APosition: real; const First, Last: integer): integer;
 begin
   result := NearestColumnOrRow(TwoDCellElevations[Col, Row],
     APosition, First, Last);
 end;
 
-function TCustomGrid.NearestColumnCenter(const APosition: real;
+function TCustomModelGrid.NearestColumnCenter(const APosition: real;
   First, Last: integer): integer;
 begin
   if First <> -1 then
@@ -8266,7 +8266,7 @@ begin
   end;
 end;
 
-function TCustomGrid.NearestRowCenter(const APosition: real; First,
+function TCustomModelGrid.NearestRowCenter(const APosition: real; First,
   Last: integer): integer;
 begin
   if First <> -1 then
@@ -8295,12 +8295,12 @@ begin
   end;
 end;
 
-function TCustomGrid.ColumnCenter(const Column: integer): real;
+function TCustomModelGrid.ColumnCenter(const Column: integer): real;
 begin
   result := (ColumnPosition[Column] + ColumnPosition[Column + 1])/2
 end;
 
-procedure TCustomGrid.ColumnsChanged;
+procedure TCustomModelGrid.ColumnsChanged;
 begin
   if FColumnUpdate > 0 then Exit;
   
@@ -8312,12 +8312,12 @@ begin
   end;
 end;
 
-function TCustomGrid.RowCenter(const Row: integer): real;
+function TCustomModelGrid.RowCenter(const Row: integer): real;
 begin
   result := (RowPosition[Row] + RowPosition[Row + 1])/2
 end;
 
-procedure TCustomGrid.RowsChanged;
+procedure TCustomModelGrid.RowsChanged;
 begin
   if FRowUpdate > 0 then Exit;
   
@@ -8329,7 +8329,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetLocalEvalAt(ViewDirection: TViewDirection;
+procedure TCustomModelGrid.SetLocalEvalAt(ViewDirection: TViewDirection;
   var LocalEvalAt: TEvaluatedAt);
 begin
   case ViewDirection of
@@ -8369,7 +8369,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetLayerLineColor(LayerIndex: Integer;
+procedure TCustomModelGrid.SetLayerLineColor(LayerIndex: Integer;
   LocalEvalAt: TEvaluatedAt; var LocalLineColor: TColor32;
   var LineWidth: single);
 begin
@@ -8406,7 +8406,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetColumnLineColor(ColIndex: Integer;
+procedure TCustomModelGrid.SetColumnLineColor(ColIndex: Integer;
   LocalEvalAt: TEvaluatedAt; var LocalLineColor: TColor32;
   var LineWidth: single);
 begin
@@ -8443,7 +8443,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.SetRowLineColor(RowIndex: Integer;
+procedure TCustomModelGrid.SetRowLineColor(RowIndex: Integer;
   LocalEvalAt: TEvaluatedAt; var LocalLineColor: TColor32;
   var LineWidth: single);
 begin
@@ -8480,7 +8480,7 @@ begin
   end;
 end;
 
-procedure TCustomGrid.DrawFrontContours(const ZoomBox: TQRbwZoomBox2;
+procedure TCustomModelGrid.DrawFrontContours(const ZoomBox: TQRbwZoomBox2;
       const BitMap: TBitmap32);
 var
   Contourer: TMultipleContourCreator;

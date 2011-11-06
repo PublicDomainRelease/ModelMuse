@@ -316,7 +316,7 @@ var
 implementation
 
 uses Contnrs, JvListComb, frmGoPhastUnit, ScreenObjectUnit,
-  ModflowConstantHeadBoundaryUnit, frmGridColorUnit, frmShowHideObjectsUnit,
+  ModflowConstantHeadBoundaryUnit, frmShowHideObjectsUnit,
   frameSfrParamInstancesUnit, LayerStructureUnit, frmErrorsAndWarningsUnit, 
   frmManageFluxObservationsUnit, ModflowSubsidenceDefUnit;
 
@@ -1779,12 +1779,15 @@ begin
   begin
     ParamList := TList.Create;
     try
-      for Index := 0 to ParameterCollection.Count - 1 do
+      if ParameterCollection <> nil then
       begin
-        Parameter := ParameterCollection.Items[Index] as TModflowParameter;
-        if Parameter.ParameterType = CurrentParameterType then
+        for Index := 0 to ParameterCollection.Count - 1 do
         begin
-          ParamList.Add(Parameter);
+          Parameter := ParameterCollection.Items[Index] as TModflowParameter;
+          if Parameter.ParameterType = CurrentParameterType then
+          begin
+            ParamList.Add(Parameter);
+          end;
         end;
       end;
       ActiveFrame.PriorNumberOfParameters := ParamList.Count;

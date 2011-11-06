@@ -27,9 +27,12 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
       Height = 33
       Anchors = [akTop, akRight]
       Caption = '&OK'
+      DoubleBuffered = True
+      Kind = bkOK
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 2
       OnClick = btnOKClick
-      Kind = bkOK
     end
     object btnCancel: TBitBtn
       Left = 649
@@ -38,8 +41,11 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
       Height = 33
       Anchors = [akTop, akRight]
       Caption = '&Cancel'
-      TabOrder = 3
+      DoubleBuffered = True
       Kind = bkCancel
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 3
     end
     object btnHelp: TBitBtn
       Left = 473
@@ -47,16 +53,19 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
       Width = 82
       Height = 33
       Anchors = [akTop, akRight]
+      DoubleBuffered = True
+      Kind = bkHelp
+      NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnHelpClick
-      Kind = bkHelp
     end
     object btnHighlightObject: TButton
       Left = 4
       Top = 6
       Width = 205
       Height = 33
-      Caption = 'Highlight selected object'
+      Caption = 'Highlight selected objects'
       TabOrder = 0
       OnClick = btnHighlightObjectClick
     end
@@ -77,7 +86,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
         Width = 730
         Height = 238
         Align = alClient
-        ColCount = 8
+        ColCount = 9
         FixedCols = 0
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goAlwaysShowEditor]
         TabOrder = 0
@@ -85,6 +94,7 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
         OnMouseUp = rdgObservationsMouseUp
         OnSelectCell = rdgObservationsSelectCell
         OnSetEditText = rdgObservationsSetEditText
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
@@ -276,6 +286,27 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             WordWrapCaptions = False
             WordWrapCells = False
             AutoAdjustColWidths = True
+          end
+          item
+            AutoAdjustRowHeights = True
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -11
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = False
+            ComboUsed = False
+            Format = rcf4String
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = True
+            WordWrapCells = False
+            AutoAdjustColWidths = True
           end>
         ColWidths = (
           64
@@ -285,7 +316,8 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
           64
           64
           64
-          152)
+          152
+          64)
       end
       object Panel1: TPanel
         Left = 0
@@ -309,7 +341,6 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
           Width = 81
           Height = 26
           Style = csDropDownList
-          ItemHeight = 18
           TabOrder = 1
           OnChange = comboObsPredChange
         end
@@ -319,7 +350,6 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
           Width = 57
           Height = 26
           Style = csDropDownList
-          ItemHeight = 18
           TabOrder = 2
           OnChange = comboITTChange
         end
@@ -328,7 +358,6 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
           Top = 9
           Width = 41
           Height = 22
-          ItemHeight = 18
           TabOrder = 3
           Text = '0'
           OnChange = rdeValueChange
@@ -341,7 +370,6 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
           Top = 9
           Width = 41
           Height = 22
-          ItemHeight = 18
           TabOrder = 4
           Text = '0'
           OnChange = rdeTimeChange
@@ -354,7 +382,6 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
           Top = 9
           Width = 41
           Height = 22
-          ItemHeight = 18
           TabOrder = 5
           Text = '0'
           OnChange = rdeStatisticChange
@@ -368,7 +395,6 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
           Width = 57
           Height = 26
           Style = csDropDownList
-          ItemHeight = 18
           TabOrder = 6
           OnChange = comboStatFlagChange
         end
@@ -385,11 +411,12 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
         Align = alClient
         ColCount = 3
         FixedCols = 1
-        RowCount = 9
+        RowCount = 10
         FixedRows = 1
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
         TabOrder = 0
         OnSetEditText = rdgRowFilterSetEditText
+        ExtendedAutoDistributeText = False
         AutoMultiEdit = True
         AutoDistributeText = False
         AutoIncreaseColCount = False
@@ -595,12 +622,33 @@ inherited frmManageHeadObservations: TfrmManageHeadObservations
             ParentButtonFont = False
             WordWrapCaptions = False
             WordWrapCells = False
+          end
+          item
+            AutoAdjustRowHeights = False
+            ButtonCaption = '...'
+            ButtonFont.Charset = DEFAULT_CHARSET
+            ButtonFont.Color = clWindowText
+            ButtonFont.Height = -11
+            ButtonFont.Name = 'Tahoma'
+            ButtonFont.Style = []
+            ButtonUsed = False
+            ButtonWidth = 20
+            CheckMax = False
+            CheckMin = False
+            ComboUsed = False
+            Format = rcf4String
+            LimitToList = False
+            MaxLength = 0
+            ParentButtonFont = False
+            WordWrapCaptions = False
+            WordWrapCells = False
           end>
         ColWidths = (
           64
           184
           184)
         RowHeights = (
+          24
           24
           24
           24

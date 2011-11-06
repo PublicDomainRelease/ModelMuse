@@ -261,6 +261,7 @@ type
     lblObjectUsedWithModels: TLabel;
     cbLgrAllModels: TCheckBox;
     clbLgrUsedModels: TCheckListBox;
+    cbLock: TCheckBox;
     // @name changes which check image is displayed for the selected item
     // in @link(jvtlModflowBoundaryNavigator).
     procedure jvtlModflowBoundaryNavigatorMouseDown(Sender: TObject;
@@ -440,6 +441,7 @@ type
     procedure clbChildModelsClickCheck(Sender: TObject);
     procedure cbLgrAllModelsClick(Sender: TObject);
     procedure clbLgrUsedModelsClickCheck(Sender: TObject);
+    procedure cbLockClick(Sender: TObject);
   published
     // Clicking @name closes the @classname without changing anything.
     // See @link(btnCancelClick),
@@ -1539,8 +1541,8 @@ type
     procedure SetData;
 
     // @name sets @link(FIsLoaded) and sets
-    // @link(TframeScreenObjectNoParam.FrameLoaded
-    // TframeScreenObjectNoParam.FrameLoaded).
+    // @link(TframeScreenObject.FrameLoaded
+    // TframeScreenObject.FrameLoaded).
     procedure SetIsLoaded(const Value: boolean);
 
     // @name is called when the user press the @link(btnOK) button
@@ -1686,6 +1688,8 @@ type
     procedure CreateHydmodNode(AScreenObject: TScreenObject);
     procedure GetHydmod(const ScreenObjectList: TList);
     procedure GetChildModels(const ScreenObjectList: TList);
+    procedure UpdateNonParamCheckBox(Frame: TframeScreenObjectParam; ParamCol,
+      ACol, ARow: Integer; const Value: string);
 
     // @name is set to @true when the @classname has stored values of the
     // @link(TScreenObject)s being edited.
@@ -1857,6 +1861,7 @@ type
     procedure GetAdditionalUsedModels(const AScreenObjectList: TList);
     procedure EnableChildModelList(AScreenObject: TScreenObject);
     procedure FillChildModelList;
+    procedure GetPositionLockedForAdditionalObject(AScreenObject: TScreenObject);
     { Private declarations }
   public
     procedure Initialize;
@@ -2184,6 +2189,10 @@ begin
           if (ColIndex >= Grid.FixedCols) and (RowIndex >= Grid.FixedRows) then
           begin
             Grid.Cells[ColIndex,RowIndex] := '';
+            if Grid.Columns[ColIndex].Format = rcf4Boolean then
+            begin
+              Grid.Checked[ColIndex,RowIndex] := False;
+            end;
           end;
         end;
       end;
@@ -2238,7 +2247,6 @@ begin
   inherited;
   HelpKeyWord := jvplModflowBoundaries.ActivePage.HelpKeyword;
   btnHelp.HelpKeyword := HelpKeyWord;
-//  frameHeadObservations.HideUcodeColumns;
 end;
 
 procedure TfrmScreenObjectProperties.jvtlModflowBoundaryNavigatorChanging(
@@ -2602,6 +2610,7 @@ begin
     frmGoPhast.PhastModel.IndexOfScreenObject(AScreenObject)+1);
 
   IsLoaded := False;
+  InitializeGridObjects;
   seBoundaryTimes.Value := 1;
   rgEvaluatedAt.Enabled := frmGoPhast.PhastModel.ModelSelection = msPhast;
 
@@ -2646,6 +2655,9 @@ begin
   rgEvaluatedAt.ItemIndex := Ord(AScreenObject.EvaluatedAt);
 
   SetZLabelCaptions;
+
+  cbLock.Checked := FScreenObject.PositionLocked;
+  cbLock.AllowGrayed := False;
 
   // Display the name of the screen object.
   EdName.Text := FScreenObject.Name;
@@ -2805,7 +2817,6 @@ begin
   // whether or not anything should be done.
   IsLoaded := True;
   UpdateSubComponents(self);
-//  frameHeadObservations.HideUcodeColumns;
   if TreeViewFilled then
   begin
     UpdateCurrentEdit;
@@ -3139,6 +3150,17 @@ begin
   frameRchParam.clbParameters.Items.Clear;
   frameEvtParam.clbParameters.Items.Clear;
   frameEtsParam.clbParameters.Items.Clear;
+
+  frameChdParam.clbParameters.Items.Add('no parameter');
+  frameGhbParam.clbParameters.Items.Add('no parameter');
+  frameWellParam.clbParameters.Items.Add('no parameter');
+  frameRivParam.clbParameters.Items.Add('no parameter');
+  frameDrnParam.clbParameters.Items.Add('no parameter');
+  frameDrtParam.clbParameters.Items.Add('no parameter');
+  frameRchParam.clbParameters.Items.Add('no parameter');
+  frameEvtParam.clbParameters.Items.Add('no parameter');
+  frameEtsParam.clbParameters.Items.Add('no parameter');
+
   for Index := 0 to frmGoPhast.PhastModel.ModflowTransientParameters.Count - 1 do
   begin
     Param := frmGoPhast.PhastModel.ModflowTransientParameters[Index];
@@ -3197,6 +3219,44 @@ begin
       else Assert(False);
     end;
   end;
+
+  if frameChdParam.clbParameters.Items.Count = 1 then
+  begin
+    frameChdParam.clbParameters.Items.Clear;
+  end;
+  if frameGhbParam.clbParameters.Items.Count = 1 then
+  begin
+    frameGhbParam.clbParameters.Items.Clear;
+  end;
+  if frameWellParam.clbParameters.Items.Count = 1 then
+  begin
+    frameWellParam.clbParameters.Items.Clear;
+  end;
+  if frameRivParam.clbParameters.Items.Count = 1 then
+  begin
+    frameRivParam.clbParameters.Items.Clear;
+  end;
+  if frameDrnParam.clbParameters.Items.Count = 1 then
+  begin
+    frameDrnParam.clbParameters.Items.Clear;
+  end;
+  if frameDrtParam.clbParameters.Items.Count = 1 then
+  begin
+    frameDrtParam.clbParameters.Items.Clear;
+  end;
+  if frameRchParam.clbParameters.Items.Count = 1 then
+  begin
+    frameRchParam.clbParameters.Items.Clear;
+  end;
+  if frameEvtParam.clbParameters.Items.Count = 1 then
+  begin
+    frameEvtParam.clbParameters.Items.Clear;
+  end;
+  if frameEtsParam.clbParameters.Items.Count = 1 then
+  begin
+    frameEtsParam.clbParameters.Items.Clear;
+  end;
+
 end;
 
 procedure TfrmScreenObjectProperties.SetIsLoaded(const Value: boolean);
@@ -3355,6 +3415,23 @@ begin
     begin
       Item := FNewProperties[Index];
       Item.ScreenObject.ColorLine := cbLineColor.Checked;
+    end;
+  end;
+end;
+
+procedure TfrmScreenObjectProperties.cbLockClick(Sender: TObject);
+var
+  Index: integer;
+  Item: TScreenObjectEditItem;
+begin
+  inherited;
+  if IsLoaded then
+  begin
+    DisableAllowGrayed(cbLock);
+    for Index := 0 to FNewProperties.Count - 1 do
+    begin
+      Item := FNewProperties[Index];
+      Item.ScreenObject.PositionLocked := cbLock.Checked;
     end;
   end;
 end;
@@ -3893,7 +3970,7 @@ begin
         memoNames.Lines.Add(AScreenObject.Name);
 
         GetEvaluatedAtForAdditionalObject(AScreenObject);
-
+        GetPositionLockedForAdditionalObject(AScreenObject);
         GetDataSetsForAdditionalObject(AScreenObject);
         GetElevationFormulasForAdditionalObject(AScreenObject);
         GetCellSizeUsedForAdditionalObject(AScreenObject);
@@ -3954,6 +4031,15 @@ begin
   UpdateSubComponents(self);
   UpdateCurrentEdit;
 //  OutputDebugString('SAMPLING OFF');
+end;
+
+procedure TfrmScreenObjectProperties.GetPositionLockedForAdditionalObject(AScreenObject: TScreenObject);
+begin
+  if AScreenObject.PositionLocked <> cbLock.Checked then
+  begin
+    cbLock.AllowGrayed := True;
+    cbLock.State := cbGrayed;
+  end;
 end;
 
 procedure TfrmScreenObjectProperties.FillChildModelList;
@@ -6586,7 +6672,7 @@ procedure TfrmScreenObjectProperties.GetCellSizeUsedForAdditionalObject(AScreenO
 var
   CellSizeText: string;
 begin
-  if FScreenObject.CellSizeUsed <> cbSetGridCellSize.Checked then
+  if AScreenObject.CellSizeUsed <> cbSetGridCellSize.Checked then
   begin
     cbSetGridCellSize.AllowGrayed := True;
     cbSetGridCellSize.State := cbGrayed;
@@ -8799,7 +8885,7 @@ var
   AScreenObject: TScreenObject;
 begin
   DataGrid := Frame.dgModflowBoundary;
-  for ItemIndex := 0 to Frame.clbParameters.Items.Count - 1 do
+  for ItemIndex := 1 to Frame.clbParameters.Items.Count - 1 do
   begin
     if Frame.clbParameters.State[ItemIndex] in [cbChecked, cbGrayed] then
     begin
@@ -8967,7 +9053,8 @@ begin
     StartCol := Boundary.NonParameterColumns;
     for ColIndex := StartCol to DataGrid.ColCount - 1 do
     begin
-      if ((ColIndex - StartCol) mod Boundary.Values.TimeListCount(frmGoPhast.PhastModel)) <> 0 then
+      if ((ColIndex - StartCol) mod Boundary.Values.
+        TimeListCount(frmGoPhast.PhastModel)) <> 0 then
       begin
         Continue;
       end;
@@ -9025,7 +9112,7 @@ begin
       end;
     end;
     CheckListBox := Frame.clbParameters;
-    for CheckIndex := 0 to CheckListBox.Items.Count - 1 do
+    for CheckIndex := 1 to CheckListBox.Items.Count - 1 do
     begin
       if CheckListBox.State[CheckIndex] = cbUnchecked then
       begin
@@ -9172,6 +9259,11 @@ begin
       Boundary := AScreenObject.GetMfBoundary(Parameter);
       if Boundary <> nil then
       begin
+        if (Boundary.Values.Count > 0)
+          and (Frame.clbParameters.Items.Count > 0) then
+        begin
+          Frame.clbParameters.State[0] := cbChecked;
+        end;
         // get all the times associated with the boundary.
         for ParamIndex := 0 to Boundary.Parameters.Count - 1 do
         begin
@@ -9186,7 +9278,13 @@ begin
       end;
       if ScreenObjectIndex > 0 then
       begin
-        for ItemIndex := 0 to Frame.clbParameters.Items.Count - 1 do
+        if (Frame.clbParameters.Items.Count > 0)
+          and (Boundary <> nil)
+          and (Frame.clbParameters.Checked[0] <> (Boundary.Values.Count > 0)) then
+        begin
+          Frame.clbParameters.State[0] := cbGrayed;
+        end;
+        for ItemIndex := 1 to Frame.clbParameters.Items.Count - 1 do
         begin
           if Frame.clbParameters.State[ItemIndex] = cbGrayed then
           begin
@@ -9247,7 +9345,14 @@ begin
     Assert(Boundary <> nil);
     if ShouldStoreBoundary(Node, Boundary) then
     begin
-      StoreModflowBoundaryValues(Frame, Times, Boundary);
+      if (Frame.clbParameters.Items.Count > 0) and not (Frame.clbParameters.State[0] in [cbChecked, cbGrayed]) then
+      begin
+        Boundary.Values.Clear
+      end
+      else
+      begin
+        StoreModflowBoundaryValues(Frame, Times, Boundary);
+      end;
       StoreModflowBoundaryParameters(Boundary, Times, Frame);
     end
     else if  Node.StateIndex = 1 then
@@ -13068,10 +13173,22 @@ end;
 
 procedure TfrmScreenObjectProperties.frameRchParamdgModflowBoundarySetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
+var
+  Item: TScreenObjectEditItem;
+  StartParamCol: Integer;
 begin
   inherited;
   UpdateNodeState(FRCH_Node);
   frameRchParam.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+
+  if (FNewProperties <> nil) and (FNewProperties.Count > 0) then
+  begin
+    Item := FNewProperties[0];
+    Item.ScreenObject.CreateRchBoundary;
+    StartParamCol := Item.ScreenObject.ModflowRchBoundary.NonParameterColumns;
+    UpdateNonParamCheckBox(frameRchParam, StartParamCol, ACol, ARow,Value);
+  end;
+
   if not frameRchParam.dgModflowBoundary.DistributingText then
   begin
     StoreRchBoundary;  
@@ -13192,10 +13309,22 @@ end;
 
 procedure TfrmScreenObjectProperties.frameRivParamdgModflowBoundarySetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
+var
+  Item: TScreenObjectEditItem;
+  StartParamCol: Integer;
 begin
   inherited;
   UpdateNodeState(FRIV_Node);
   frameRivParam.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+
+  if (FNewProperties <> nil) and (FNewProperties.Count > 0) then
+  begin
+    Item := FNewProperties[0];
+    Item.ScreenObject.CreateRivBoundary;
+    StartParamCol := Item.ScreenObject.ModflowRivBoundary.NonParameterColumns;
+    UpdateNonParamCheckBox(frameRivParam, StartParamCol, ACol, ARow,Value);
+  end;
+
   if not frameRivParam.dgModflowBoundary.DistributingText then
   begin
     StoreRivBoundary;  
@@ -13461,10 +13590,22 @@ end;
 
 procedure TfrmScreenObjectProperties.frameWellParamdgModflowBoundarySetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
+var
+  Item: TScreenObjectEditItem;
+  StartParamCol: Integer;
 begin
   inherited;
   UpdateNodeState(FWEL_Node);
   frameWellParam.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+
+  if (FNewProperties <> nil) and (FNewProperties.Count > 0) then
+  begin
+    Item := FNewProperties[0];
+    Item.ScreenObject.CreateWelBoundary;
+    StartParamCol := Item.ScreenObject.ModflowWellBoundary.NonParameterColumns;
+    UpdateNonParamCheckBox(frameWellParam, StartParamCol, ACol, ARow,Value);
+  end;
+
   if not frameWellParam.dgModflowBoundary.DistributingText then
   begin
     StoreWellBoundary;
@@ -14760,12 +14901,37 @@ begin
   StoreChdBoundary;
 end;
 
+procedure TfrmScreenObjectProperties.UpdateNonParamCheckBox(
+  Frame: TframeScreenObjectParam; ParamCol, ACol, ARow: Integer;
+  const Value: string);
+begin
+  if (Frame.clbParameters.Items.Count > 0)
+    and (Frame.clbParameters.State[0] = cbUnchecked)
+    and (ARow >= Frame.dgModflowBoundary.FixedRows)
+    and (ACol >= 2) and (ACol < ParamCol) and (Value <> '') then
+  begin
+    Frame.clbParameters.Checked[0] := True;
+  end;
+end;
+
 procedure TfrmScreenObjectProperties.frameChdParamdgModflowBoundarySetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
+var
+  Item: TScreenObjectEditItem;
+  StartParamCol: Integer;
 begin
   inherited;
   UpdateNodeState(FCHD_Node);
   frameChdParam.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+
+  if (FNewProperties <> nil) and (FNewProperties.Count > 0) then
+  begin
+    Item := FNewProperties[0];
+    Item.ScreenObject.CreateChdBoundary;
+    StartParamCol := Item.ScreenObject.ModflowChdBoundary.NonParameterColumns;
+    UpdateNonParamCheckBox(frameChdParam, StartParamCol, ACol, ARow,Value);
+  end;
+
   if not frameChdParam.dgModflowBoundary.DistributingText then
   begin
     StoreChdBoundary;
@@ -14830,10 +14996,22 @@ end;
 
 procedure TfrmScreenObjectProperties.frameDrnParamdgModflowBoundarySetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
+var
+  Item: TScreenObjectEditItem;
+  StartParamCol: Integer;
 begin
   inherited;
   UpdateNodeState(FDRN_Node);
   frameDrnParam.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+
+  if (FNewProperties <> nil) and (FNewProperties.Count > 0) then
+  begin
+    Item := FNewProperties[0];
+    Item.ScreenObject.CreateDrnBoundary;
+    StartParamCol := Item.ScreenObject.ModflowDrnBoundary.NonParameterColumns;
+    UpdateNonParamCheckBox(frameDrnParam, StartParamCol, ACol, ARow,Value);
+  end;
+
   if not frameDrnParam.dgModflowBoundary.DistributingText then
   begin
     StoreDrnBoundary;
@@ -14899,10 +15077,21 @@ end;
 
 procedure TfrmScreenObjectProperties.frameDrtParamdgModflowBoundarySetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
+var
+  Item: TScreenObjectEditItem;
+  StartParamCol: Integer;
 begin
   inherited;
   UpdateNodeState(FDRT_Node);
   frameDrtParam.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+
+  if (FNewProperties <> nil) and (FNewProperties.Count > 0) then
+  begin
+    Item := FNewProperties[0];
+    Item.ScreenObject.CreateDrtBoundary;
+    StartParamCol := Item.ScreenObject.ModflowDrtBoundary.NonParameterColumns;
+    UpdateNonParamCheckBox(frameDrtParam, StartParamCol, ACol, ARow,Value);
+  end;
 
   if not frameDrtParam.dgModflowBoundary.DistributingText then
   begin
@@ -14944,10 +15133,22 @@ end;
 
 procedure TfrmScreenObjectProperties.frameEtsParamdgModflowBoundarySetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
+var
+  Item: TScreenObjectEditItem;
+  StartParamCol: Integer;
 begin
   inherited;
   UpdateNodeState(FETS_Node);
   frameEtsParam.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+
+  if (FNewProperties <> nil) and (FNewProperties.Count > 0) then
+  begin
+    Item := FNewProperties[0];
+    Item.ScreenObject.CreateEtsBoundary;
+    StartParamCol := Item.ScreenObject.ModflowEtsBoundary.NonParameterColumns;
+    UpdateNonParamCheckBox(frameEtsParam, StartParamCol, ACol, ARow,Value);
+  end;
+
   if not frameEtsParam.dgModflowBoundary.DistributingText then
   begin
     StoreEtsBoundary;  
@@ -14988,10 +15189,21 @@ end;
 
 procedure TfrmScreenObjectProperties.frameEvtParamdgModflowBoundarySetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
+var
+  Item: TScreenObjectEditItem;
+  StartParamCol: Integer;
 begin
   inherited;
   UpdateNodeState(FEVT_Node);
   frameEvtParam.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+
+  if (FNewProperties <> nil) and (FNewProperties.Count > 0) then
+  begin
+    Item := FNewProperties[0];
+    Item.ScreenObject.CreateEvtBoundary;
+    StartParamCol := Item.ScreenObject.ModflowEvtBoundary.NonParameterColumns;
+    UpdateNonParamCheckBox(frameEvtParam, StartParamCol, ACol, ARow,Value);
+  end;
 
   if not frameEvtParam.dgModflowBoundary.DistributingText then
   begin
@@ -15057,10 +15269,22 @@ end;
 
 procedure TfrmScreenObjectProperties.frameGhbParamdgModflowBoundarySetEditText(
   Sender: TObject; ACol, ARow: Integer; const Value: string);
+var
+  Item: TScreenObjectEditItem;
+  StartParamCol: Integer;
 begin
   inherited;
   UpdateNodeState(FGHB_Node);
   frameGhbParam.dgModflowBoundarySetEditText(Sender, ACol, ARow, Value);
+
+  if (FNewProperties <> nil) and (FNewProperties.Count > 0) then
+  begin
+    Item := FNewProperties[0];
+    Item.ScreenObject.CreateGhbBoundary;
+    StartParamCol := Item.ScreenObject.ModflowGhbBoundary.NonParameterColumns;
+    UpdateNonParamCheckBox(frameGhbParam, StartParamCol, ACol, ARow,Value);
+  end;
+
   if not frameGhbParam.dgModflowBoundary.DistributingText then
   begin
     StoreGhbBoundary;  

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="fwm6x7eapt9t25l_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverIntfU.IObjectObserver">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverIntfU.IObjectObserver.ObjectRemoved(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverIntfU.IObjectObserver.DataChanged(System.Object,TchangeKind)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverIntfU.IObjectListObserver">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverIntfU.IObjectListObserver.ObjectAdded(System.Object)" />
+      <reference referencedUin="delphi:l_gnt:src:ModelMuse:ObserverIntfU.IObjectListObserver:ObserverIntfU.IObjectObserver" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverIntfU.ISubject">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverIntfU.ISubject.Unsubscribe(ObserverIntfU.IObjectObserver)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverIntfU.ISubject.Subscribe(ObserverIntfU.IObjectObserver,ObserverIntfU.TChangeKindSet)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverIntfU.IObjectObserverlist">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverIntfU.IObjectObserverlist.Assign(ObserverIntfU.IObjectObserverlist)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverIntfU.IObjectObserverlist.NotifyOnAdd(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverIntfU.IObjectObserverlist.NotifyOnRemove(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverIntfU.IObjectObserverlist.NotifyOnChange(System.Object,TchangeKind)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverIntfU.IObjectObserverlist.Contains(ObserverIntfU.IObjectObserver)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverIntfU.IObjectObserverlist.Remove(ObserverIntfU.IObjectObserver)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:ObserverIntfU.IObjectObserverlist.AddOrModify(ObserverIntfU.IObjectObserver,ObserverIntfU.TChangeKindSet)" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverIntfU.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ObserverIntfU.ck_Unspecified" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverIntfU.TNotificationKind">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ObserverIntfU.TNotificationKind.nkAdd" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ObserverIntfU.TNotificationKind.nkRemove" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:ObserverIntfU.TNotificationKind.nkChange" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:ObserverIntfU.TObserverEvent">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+  </view>
+</nodeSet>

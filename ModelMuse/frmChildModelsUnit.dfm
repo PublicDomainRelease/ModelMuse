@@ -111,6 +111,9 @@ inherited frmChildModels: TfrmChildModels
     ExplicitHeight = 400
     object tabBasic: TTabSheet
       Caption = 'Basic'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 367
       DesignSize = (
         350
@@ -213,13 +216,13 @@ inherited frmChildModels: TfrmChildModels
         Left = 0
         Top = 27
         Width = 350
-        Height = 340
+        Height = 396
         Align = alClient
         BevelInner = bvNone
         ColCount = 3
         FixedCols = 2
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goAlwaysShowEditor]
-        TabOrder = 0
+        TabOrder = 1
         OnEnter = rdgDiscretizationEnter
         OnExit = rdgDiscretizationExit
         OnMouseUp = rdgDiscretizationMouseUp
@@ -313,7 +316,7 @@ inherited frmChildModels: TfrmChildModels
         Height = 27
         Align = alTop
         BevelOuter = bvNone
-        TabOrder = 1
+        TabOrder = 0
         object rdeDiscretization: TRbwDataEntry
           Left = 136
           Top = -1
@@ -335,6 +338,9 @@ inherited frmChildModels: TfrmChildModels
     object tabSolution: TTabSheet
       Caption = 'Solution'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 367
       DesignSize = (
         350
@@ -384,7 +390,7 @@ inherited frmChildModels: TfrmChildModels
         CheckMaxValue = False
         MinValue = 1.000000000000000000
         Value = 1.000000000000000000
-        TabOrder = 0
+        TabOrder = 1
         OnChange = seMaxIterationsChange
       end
       object rgPrintIterations: TRadioGroup
@@ -398,7 +404,7 @@ inherited frmChildModels: TfrmChildModels
           'Print to screen'
           'Print to listing file'
           'Don'#39't print')
-        TabOrder = 1
+        TabOrder = 2
         OnClick = rgPrintIterationsClick
       end
       object rdeRelaxHeads: TRbwDataEntry
@@ -406,7 +412,7 @@ inherited frmChildModels: TfrmChildModels
         Top = 242
         Width = 122
         Height = 22
-        TabOrder = 2
+        TabOrder = 3
         Text = '0'
         OnChange = rdeRelaxHeadsChange
         DataType = dtReal
@@ -420,7 +426,7 @@ inherited frmChildModels: TfrmChildModels
         Top = 291
         Width = 122
         Height = 22
-        TabOrder = 3
+        TabOrder = 4
         Text = '0'
         OnChange = rdeRelaxFluxChange
         DataType = dtReal
@@ -434,7 +440,7 @@ inherited frmChildModels: TfrmChildModels
         Top = 340
         Width = 122
         Height = 22
-        TabOrder = 4
+        TabOrder = 5
         Text = '0'
         OnChange = rdeHeadClosureChange
         DataType = dtReal
@@ -447,7 +453,7 @@ inherited frmChildModels: TfrmChildModels
         Top = 389
         Width = 122
         Height = 22
-        TabOrder = 5
+        TabOrder = 6
         Text = '0'
         OnChange = rdeFluxClosureChange
         DataType = dtReal
@@ -465,7 +471,7 @@ inherited frmChildModels: TfrmChildModels
         Items.Strings = (
           'One way'
           'Two way')
-        TabOrder = 6
+        TabOrder = 0
         OnClick = rgCouplingMethodClick
       end
     end

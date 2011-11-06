@@ -95,7 +95,7 @@
       <config-value name="deffont">font-family:'MS Sans Serif'; font-size:8pt; color:#000000;</config-value>
       <config-value name="contents"></config-value>
       <config-value name="topicprefix"></config-value>
-      <config-value name="autohelpstart">3635</config-value>
+      <config-value name="autohelpstart">3638</config-value>
       <config-value name="autohelpincrement">1</config-value>
       <config-value name="autohelpanchor">1</config-value>
       <config-value name="searchpath">.\;.\Used Images\;.\ScreenShots\;.\ModflowGuide\</config-value>
@@ -635,6 +635,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Data_Sets3" value="3050"/>
       <helpcontext-number href="Data_Sets4" value="3100"/>
       <helpcontext-number href="Data_Type_Problem_Dialog_Box" value="1860"/>
+      <helpcontext-number href="Data_Visualization_Dialog_Box" value="3636"/>
       <helpcontext-number href="DE4_Direct_Solver_Package_Pane" value="2800"/>
       <helpcontext-number href="DegToRad" value="1390"/>
       <helpcontext-number href="Delay_Beds_Tab" value="3561"/>
@@ -1039,6 +1040,7 @@ if( document.URL.substring( lastSlashPos + 1, lastSlashPos + 4).toLowerCase() !=
       <helpcontext-number href="Start_Up_Dialog_Box" value="100"/>
       <helpcontext-number href="Steady_Flow_Dialog_Box" value="2860"/>
       <helpcontext-number href="Straight-Lines" value="1500"/>
+      <helpcontext-number href="Stream_Links_Pane" value="3637"/>
       <helpcontext-number href="SUB_Subsidence_and_Aquifer_Sys" value="3558"/>
       <helpcontext-number href="Subdivide_Columns_Rows_and_Layers" value="1670"/>
       <helpcontext-number href="Subsidence_MM" value="3557"/>

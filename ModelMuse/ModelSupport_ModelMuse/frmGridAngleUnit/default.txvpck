@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="rqkgtj8eqfz0ihk_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmGridAngleUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridAngleUnit.frmGridAngle" />
+      <reference referencedUin="delphi:l_ast:src:ModelMuse:frmGridAngleUnit.frmGridAngle" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmGridAngleUnit.TfrmGridAngle">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGridAngleUnit.TfrmGridAngle.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGridAngleUnit.TfrmGridAngle.GetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGridAngleUnit.TfrmGridAngle.rdeGridAngleChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGridAngleUnit.TfrmGridAngle.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmGridAngleUnit.TfrmGridAngle.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridAngleUnit.TfrmGridAngle.rdeGridAngle" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridAngleUnit.TfrmGridAngle.lblGridAngle" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridAngleUnit.TfrmGridAngle.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridAngleUnit.TfrmGridAngle.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmGridAngleUnit.TfrmGridAngle.btnCancel" />
+    </reference>
+  </view>
+</nodeSet>

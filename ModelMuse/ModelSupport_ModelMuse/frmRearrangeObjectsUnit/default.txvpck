@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="u5l76nh7q0vbame_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.SetData()" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.SetCursor(System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.GetData()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.FDraggingRows" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.rgShowClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.sgObjectsSelectCell(System.Object,System.Int32,System.Int32,ref@System.Boolean)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.sgObjectsMouseUp(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.sgObjectsMouseMove(System.Object,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.sgObjectsMouseDown(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.sgObjectsDrawCell(System.Object,System.Int32,System.Int32,Types.TRect,Grids.TGridDrawState)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.btnOKClick(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.rgShow" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.sgObjects" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.pnlInstructions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.pnlBottom" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.lblInstructions" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.btnOK" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmRearrangeObjectsUnit.TfrmRearrangeObjects.btnCancel" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmRearrangeObjectsUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+  </view>
+</nodeSet>

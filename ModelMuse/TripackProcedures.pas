@@ -84,7 +84,7 @@ uses FastGeo, TripackTypes;
 procedure ADDCST (const NCC: longint; const LCC: TNcmaxIntArray;
   const N: longint; const X,Y: TNmaxSingleArray; var LWK: longint; var IWK: TLwkIntArray;
   var LIST,LPTR: TN6IntArray;
-  var LEND: TNmaxIntArray; var IER: longint);
+  var LEND: TNmaxIntArray; var IER: longint; IncudedLocationsOK: boolean = false);
 
 procedure ADDNOD (const K: longint; const XK,YK: TFloat; const IST, NCC: longint;
   var LCC: TNcmaxIntArray; var N: longint; var X,Y: TNmaxSingleArray; var LIST,LPTR: TN6IntArray;
@@ -216,7 +216,8 @@ end;
 procedure ADDCST (const NCC: longint; const LCC: TNcmaxIntArray;
   const N: longint; const X,Y: TNmaxSingleArray; var LWK: longint; var IWK: TLwkIntArray;
   var LIST,LPTR: TN6IntArray;
-  var LEND: TNmaxIntArray; var IER: longint);
+  var LEND: TNmaxIntArray; var IER: longint;
+  IncudedLocationsOK: boolean = false);
 //      SUBROUTINE ADDCST (NCC,LCC,N,X,Y, LWK,IWK,LIST,LPTR,
 //     .                   LEND, IER,IFORTRAN)
 //      INTEGER NCC, LCC(*), N, LWK, IWK(LWK), LIST(*),
@@ -525,8 +526,12 @@ begin
             begin
         //C A constraint region contains a node.
         //C
-              IER := 5;
-              Exit;
+              if not IncudedLocationsOK then
+              begin
+                IER := 5;
+                Exit;
+              end;
+
         //   10 IER = 5
         //      RETURN
             end;

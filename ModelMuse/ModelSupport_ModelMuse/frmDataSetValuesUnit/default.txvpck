@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nodeSet>
+  <view uin="3qlnat5vp6iggwo_v">
+    <property name="$defaultDiagram" value="true" />
+    <property name="$metaclass" value="Package Diagram" />
+    <property name="$name" value="default" />
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmDataSetValuesUnit.@unitclass">
+      <property name="$shortcutReference" value="true" />
+    </reference>
+    <reference referencedUin="delphi:e_class:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues">
+      <property name="$shortcutReference" value="true" />
+      <reference referencedUin="delphi:e_property:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.SelectedVirtNode[]" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.SetSelectedNode(VirtualTrees.TBaseVirtualTree,VirtualTrees.PVirtualNode)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.GetData()" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.FTempControls" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.FDataSets" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.FSelectedVirtNode" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.lbLayersMouseUp(System.Object,Controls.TMouseButton,Classes.TShiftState,System.Int32,System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.btnCopyClick(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.treecomboDataSetsDropDownTreeGetNodeDataSize(VirtualTrees.TBaseVirtualTree,ref@System.Int32)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.treecomboDataSetsChange(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.treecomboDataSetsDropDownTreeGetText(VirtualTrees.TBaseVirtualTree,VirtualTrees.PVirtualNode,VirtualTrees.TColumnIndex,VirtualTrees.TVSTTextType,ref@System.WideString)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.treecomboDataSetsDropDownTreeChange(VirtualTrees.TBaseVirtualTree,VirtualTrees.PVirtualNode)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.FormDestroy(System.Object)" />
+      <reference referencedUin="delphi:e_method:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.FormCreate(System.Object)" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.Label1" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.lbLayers" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.Panel2" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.btnCopy" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.pcDataSet" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.treecomboDataSets" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.btnHelp" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.btnClose" />
+      <reference referencedUin="delphi:e_field:src:ModelMuse:frmDataSetValuesUnit.TfrmDataSetValues.Panel1" />
+    </reference>
+  </view>
+</nodeSet>

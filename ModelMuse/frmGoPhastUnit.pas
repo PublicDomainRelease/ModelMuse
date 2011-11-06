@@ -17,7 +17,7 @@ uses
   AbstractGridUnit, JvExExtCtrls, JvNetscapeSplitter, frmRunModflowUnit,
   frmRunPhastUnit, ModelMateClassesUnit, SyncObjs, frmRunModpathUnit,
   frmRunZoneBudgetUnit, RbwModelCube, frmRunModelMateUnit, Mask, JvExMask,
-  JvSpin;
+  JvSpin, JvHint;
 
   { TODO : 
 Consider making CurrentTool a property of TframeView instead of 
@@ -182,11 +182,11 @@ type
     acSelectAllSide: TAction;
     miSelectAllFront: TMenuItem;
     miSelectAllSide: TMenuItem;
-    ShowGridValues1: TMenuItem;
+    miShowGridValues: TMenuItem;
     miPackages: TMenuItem;
     miProgramLocations: TMenuItem;
     N7: TMenuItem;
-    EditGlobalVariables1: TMenuItem;
+    miEditGlobalVariables: TMenuItem;
     AddPartstoObject1: TMenuItem;
     tbAddPartsToObject: TToolButton;
     acAddPolygonsToObject: TAction;
@@ -199,8 +199,6 @@ type
     AddPointstoObject1: TMenuItem;
     ShallAllObjects1: TMenuItem;
     HideAllObjects1: TMenuItem;
-    tbColorGrid: TToolButton;
-    acColorGrid: TAction;
     N8: TMenuItem;
     miFilesToArchive: TMenuItem;
     ModflowReference1: TMenuItem;
@@ -248,9 +246,6 @@ type
     miShowVideoTips: TMenuItem;
     N2: TMenuItem;
     N9: TMenuItem;
-    acContourData: TAction;
-    ContourData1: TMenuItem;
-    tbContourData: TToolButton;
     acExportModelMate: TAction;
     ModelMateFile1: TMenuItem;
     acImportModelMate: TAction;
@@ -266,13 +261,7 @@ type
     miDisplayDataSetValues: TMenuItem;
     miObjectstoShapefile: TMenuItem;
     miDeleteImage: TMenuItem;
-    miModpathPathline: TMenuItem;
     miPHASTProgramLocation: TMenuItem;
-    miConfigurePathlines: TMenuItem;
-    miModpathEndpoints: TMenuItem;
-    miConfigureEndpoints: TMenuItem;
-    miModpathTimeSeries: TMenuItem;
-    miConfigureTimeSeries: TMenuItem;
     SurferGridFile1: TMenuItem;
     SampleDEMData1: TMenuItem;
     ZONEBUDGETInputFiles1: TMenuItem;
@@ -328,8 +317,15 @@ type
     acModflowNwtActive: TAction;
     acRunModflowNwt: TAction;
     miExportModflowNwt: TMenuItem;
-    miHeadObservationResults: TMenuItem;
-    miConfigureHeadObservationResults: TMenuItem;
+    acMeasure: TAction;
+    tbMeasure: TToolButton;
+    hntMeasure: TJvHint;
+    miMeasure: TMenuItem;
+    miLockSelectedObjects: TMenuItem;
+    miUnlockSelectedObjects: TMenuItem;
+    btnDisplayData: TToolButton;
+    acDisplayData: TAction;
+    miDisplayData: TMenuItem;
     procedure tbUndoClick(Sender: TObject);
     procedure acUndoExecute(Sender: TObject);
     procedure tbRedoClick(Sender: TObject);
@@ -349,16 +345,12 @@ type
     procedure acShowGridValuesClick(Sender: TObject);
     procedure miPackagesClick(Sender: TObject);
     procedure miProgramLocationsClick(Sender: TObject);
-    procedure EditGlobalVariables1Click(Sender: TObject);
+    procedure miEditGlobalVariablesClick(Sender: TObject);
     procedure acAddPolygonsToObjectExecute(Sender: TObject);
     procedure acAddLinesToObjectExecute(Sender: TObject);
     procedure acAddPointsToObjectExecute(Sender: TObject);
     procedure ShallAllObjects1Click(Sender: TObject);
     procedure HideAllObjects1Click(Sender: TObject);
-    // @name allows the user to color the grid
-    // with the values of a @link(TDataArray)
-    // in GoPhast via @link(TfrmGridColor).
-    procedure acColorGridExecute(Sender: TObject);
     procedure miFilesToArchiveClick(Sender: TObject);
     procedure sdSaveDialogClose(Sender: TObject);
     procedure sdSaveDialogShow(Sender: TObject);
@@ -390,7 +382,6 @@ type
     procedure acCopyExecute(Sender: TObject);
     procedure acCutExecute(Sender: TObject);
     procedure acPasteExecute(Sender: TObject);
-    procedure acContourDataExecute(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
     procedure acExportModelMateExecute(Sender: TObject);
@@ -402,10 +393,7 @@ type
     procedure miDisplayDataSetValuesClick(Sender: TObject);
     procedure miObjectstoShapefileClick(Sender: TObject);
     procedure miDeleteImageClick(Sender: TObject);
-    procedure miModpathPathlineClick(Sender: TObject);
     procedure miPHASTProgramLocationClick(Sender: TObject);
-    procedure miModpathEndpointsClick(Sender: TObject);
-    procedure miModpathTimeSeriesClick(Sender: TObject);
     procedure SurferGridFile1Click(Sender: TObject);
     procedure sbMainDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
       const Rect: TRect);
@@ -435,8 +423,10 @@ type
     procedure miSplitObjectAtSelectedVerticesClick(Sender: TObject);
     procedure acModflowNwtActiveExecute(Sender: TObject);
     procedure acRunModflowNwtExecute(Sender: TObject);
-    procedure miHeadObservationResultsClick(Sender: TObject);
-    procedure miConfigureHeadObservationResultsClick(Sender: TObject);
+    procedure acMeasureExecute(Sender: TObject);
+    procedure miLockSelectedObjectsClick(Sender: TObject);
+    procedure miUnlockSelectedObjectsClick(Sender: TObject);
+    procedure acDisplayDataExecute(Sender: TObject);
   private
     FCreateArchive: Boolean;
     CreateArchiveSet: boolean;
@@ -456,7 +446,6 @@ type
     FRunPhast: boolean;
     FPositionList: TPositionList;
     FBrowser: string;
-//    FShowUcodeInterface: Boolean;
     FStartTime: TDateTime;
     FFileStream: TFileStream;
     FFileSize: Int64;
@@ -486,7 +475,6 @@ type
     procedure ReadModelMateProject(FileName: string;
       ModelMateProject: TProject);
     procedure InitializeModflowInputDialog;
-//    procedure SetVisibilityOfModelMateActions;
     procedure EnableDeleteImage;
     procedure CancelCurrentScreenObject;
     procedure InternalSaveFile(FileName: string);
@@ -697,8 +685,6 @@ type
     miChemistryOptions: TMenuItem;
     // See @link(acColorExecute) and @link(acColor).
     miColor: TMenuItem;
-    // See @link(acColorGridExecute).
-    miColorGrid: TMenuItem;
     // See @link(acHelpContentsExecute) and @link(acHelpContents).
     miContents: TMenuItem;
     // See @link(acCopy).
@@ -718,8 +704,9 @@ type
     miCustomize: TMenuItem;
     // See @link(acCut).
     miCut: TMenuItem;
-    // @name holds the @link(miEditDataSet), @link(miColorGrid),
-    // and @link(miShowFormulaErrors) menu items.
+    // @name holds the @link(miEditDataSet), @link(miEditGlobalVariables),
+    // @link(miDisplayData), @link(miShowGridValues)
+    // and @link(miDisplayDataSetValues) menu items.
     miData: TMenuItem;
     // See @link(acDeleteColumnRowExecute) and @link(acDeleteColumnRow).
     miDeleteGridLine: TMenuItem;
@@ -1459,7 +1446,7 @@ type
     // @name shows a long version of the hint on the status bar (@link(sbMain)).
     procedure ShowHint(Sender: TObject);
     function GetModflowGrid: TModflowGrid;
-    function GetGrid: TCustomGrid;
+    function GetGrid: TCustomModelGrid;
     procedure InvalidateViewOfModel;
     function GetModelSelection: TModelSelection;
     procedure SetModelSelection(const Value: TModelSelection);
@@ -1467,13 +1454,13 @@ type
     procedure CheckInternet;
     procedure SaveModelMateProject;
     procedure SetChangingSelection(const Value: boolean);
-//    procedure SetShowUcodeInterface(const Value: boolean);
     procedure OnOpenFile(Sender: TObject);
     procedure SetCanDraw(const Value: boolean);
     function GetObservationFileName(SD: TSaveDialog): string;
     function GetPredictionFileName(SD: TSaveDialog): string;
     function GetCanDraw: boolean;
     procedure InitializeModflowLgrInputDialog;
+    procedure DeleteLastPointInRuler;
     { Private declarations }
   protected
     // @name is used to specify the format of the files that
@@ -1485,8 +1472,6 @@ type
   public
     FCubeControl: TRbwModelCube;
     procedure EnableHufMenuItems;
-//    property ShowUcodeInterface: boolean read FShowUcodeInterface
-//      write SetShowUcodeInterface;
     property ChangingSelection: boolean read FChangingSelection
       write SetChangingSelection;
     procedure EnableManageFlowObservations;
@@ -1546,7 +1531,7 @@ type
       write SetFrontScreenObjectsChanged;
     // @name is the ini file for GoPhast.  It stores a list of the most
     // recently opened files.
-    property Grid: TCustomGrid read GetGrid;
+    property Grid: TCustomModelGrid read GetGrid;
     // @name is the name of a file containing the initialization data
     // for the program.  It contains the names of the most recently opened
     // files.
@@ -1640,7 +1625,7 @@ uses
   frmGridAngleUnit, frmGridSpacingUnit, frmSmoothGridUnit,
   frmAboutUnit, frmHintDelayUnit, UndoItemsScreenObjects,
   frmRearrangeObjectsUnit, frmSelectColRowLayerUnit, frmSetSpacingUnit,
-  frmScreenObjectPropertiesUnit, frmDataSetsUnits, frmGridColorUnit,
+  frmScreenObjectPropertiesUnit, frmDataSetsUnits,
   InteractiveTools, GIS_Functions, frmRulerOptionsUnit, frmGoToUnit,
   frmFormulaErrorsUnit, GridGeneration, frmGenerateGridUnit,
   frmPhastGridOptionsUnit, frmPrintFrequencyUnit, frmPrintInitialUnit,
@@ -1659,16 +1644,15 @@ uses
   frmLinkStreamsUnit, frmExportShapefileUnit, frmImportModflowUnit,
   frmSelectResultToImportUnit, frmScaleRotateMoveUnit, RbwInternetUtilities,
   frmModflowNameFileUnit, frmImportGriddedDataUnit, FluxObservationUnit,
-  frmManageFluxObservationsUnit, TempFiles, frmContourDataUnit, ZLib,
+  frmManageFluxObservationsUnit, TempFiles, ZLib,
   GlobalTypesUnit, JupiterUnit, CheckInternetUnit, 
   frmHUF_LayersUnit, frmBatchFileAdditionsUnit, frmSelectObjectsForEditingUnit, 
   frmDataSetValuesUnit, frmExportShapefileObjectsUnit, frmDeleteImageUnit,
-  frmModpathDisplayUnit, frmPhastLocationUnit, frmEndPointDisplayUnit,
-  frmTimeSeriesDisplayUnit, frmImportSurferGrdFileUnitUnit, frmImportDEMUnit,
+  frmPhastLocationUnit, frmImportSurferGrdFileUnitUnit, frmImportDEMUnit,
   frmExportImageUnit, frmManageParametersUnit, frmManageHeadObservationsUnit,
   RealListUnit, ContourExport, frmExportCSVUnit, frmChildModelsUnit,
   frmImportAsciiRasterUnit, CustomModflowWriterUnit, ModflowUnitNumbers,
-  ZoneBudgetWriterUnit, frmHeadObservationResultsUnit, ModflowHobUnit;
+  ZoneBudgetWriterUnit, ModflowHobUnit, frmDisplayDataUnit;
 
 resourcestring
   StrModelMate = 'ModelMate';
@@ -1683,6 +1667,10 @@ resourcestring
   StrDisplayNone = 'None';
   StrYouMustCreateThe = 'You must create the grid before attempting to impor' +
   't gridded data.';
+  StrZONEBUDGETDoesNot = 'ZONEBUDGET does not exist at the location you spec' +
+  'ified.  Do you still want to export the ZONEBUDGET input files?';
+  StrThereWasAProblem = 'There was a problem reading the ModelMate project f' +
+  'ile.';
 
 
 {$R *.dfm}
@@ -1910,12 +1898,12 @@ begin
     // Hiding instead of freeing these other forms can cause
     // TfrmStartUp.ShowModal to fail.
     FreeAndNil(frmShowHideObjects);
-    FreeAndNil(frmGridColor);
-    FreeAndNil(frmHeadObservationResults);
+//    FreeAndNil(frmGridColor);
+    FreeAndNil(frmDisplayData);
     FreeAndNil(frmGridValue);
     FreeFrmSelectedObjects;
-    FreeAndNil(frmGridColor);
-    FreeAndNil(frmContourData);
+//    FreeAndNil(frmGridColor);
+//    FreeAndNil(frmContourData);
 
     MostRecentlyUsed.FileToIgnore := '';
     MostRecentlyUsed.Capacity := 4;
@@ -2067,8 +2055,6 @@ begin
   IniFName := IniFileName(Handle, Application.ExeName);
   FIniFile:= TMemInifile.Create(IniFName);
   miShowVideoTips.Checked := FIniFile.ReadBool(StrCustomization, StrShowTips, True);
-//  FShowUcodeInterface := FIniFile.ReadBool(StrModelMate, StrEnableModelMate, False);
-//  SetVisibilityOfModelMateActions;
 
   DisplayChoices[dcColor] := FIniFile.ReadInteger(StrDisplayOption, StrColor, 0);
   DisplayChoices[dcContour] := FIniFile.ReadInteger(StrDisplayOption, StrContour, 0);
@@ -2173,7 +2159,6 @@ begin
     IniFile.WriteString(MRU_Section,
       'FileName' + IntToStr(Index), FileName);
   end;
-//  FIniFile.WriteBool(StrModelMate, StrEnableModelMate, ShowUcodeInterface);
 
   While (DisplayChoices[dcColor] > MaxDisplayChoiceCount)
     or (DisplayChoices[dcContour] > MaxDisplayChoiceCount)
@@ -3128,18 +3113,6 @@ begin
   ShowAForm(TfrmModflowNameFile);
 end;
 
-procedure TfrmGoPhast.miModpathEndpointsClick(Sender: TObject);
-begin
-  inherited;
-  ShowAForm(TfrmEndPointDisplay);
-end;
-
-procedure TfrmGoPhast.miModpathPathlineClick(Sender: TObject);
-begin
-  inherited;
-  ShowAForm(TfrmModpathDisplay);
-end;
-
 procedure TfrmGoPhast.ModflowReference1Click(Sender: TObject);
 begin
   inherited;
@@ -3147,15 +3120,10 @@ begin
 //  HelpRouter.HelpJump('', 'Introduction');
 end;
 
-procedure TfrmGoPhast.miModpathTimeSeriesClick(Sender: TObject);
-begin
-  inherited;
-  ShowAForm(TfrmTimeSeriesDisplay);
-end;
-
 procedure TfrmGoPhast.CreatePhastModel;
 begin
   PhastModel := TPhastModel.Create(self);
+  PhastModel.ContourFont := Font;
   PhastModel.OnGetZoomBox := GetZoomBox;
   PhastModel.OnGetCurrentScreenObject := GetCurrentScreenObject;
   PhastModel.OnConvertPoint := ConvertPoint;
@@ -3537,6 +3505,7 @@ begin
   AList.Add(tbAddLinesToObjects);
   AList.Add(tbAddPointsToObject);
   AList.Add(tbVertexValue);
+  AList.Add(tbMeasure);
 end;
 
 procedure TfrmGoPhast.SetButtonsUp(const CurrentButton: TObject);
@@ -3723,6 +3692,22 @@ begin
   end;
   CurrentTool := SubdivideGridTool;
   SelectDefaultButton;
+end;
+
+procedure TfrmGoPhast.acDisplayDataExecute(Sender: TObject);
+begin
+  inherited;
+  if frmDisplayData = nil then
+  begin
+    Application.CreateForm(TfrmDisplayData, frmDisplayData);
+  end;
+  UpdateFrmDisplayData(True);
+  frmDisplayData.Show;
+  if frmDisplayData.WindowState = wsMinimized then
+  begin
+    frmDisplayData.WindowState := wsNormal;
+  end;
+  frmDisplayData.HelpKeyword := 'Data_Visualization_Dialog_Box';
 end;
 
 procedure TfrmGoPhast.acUndoExecute(Sender: TObject);
@@ -3961,12 +3946,6 @@ begin
     and PhastModel.ModflowPackages.HufPackage.IsSelected;
 end;
 
-//procedure TfrmGoPhast.SetVisibilityOfModelMateActions;
-//begin
-//  acImportModelMate.Visible := FShowUcodeInterface;
-//  acExportModelMate.Visible := FShowUcodeInterface;
-//end;
-
 procedure TfrmGoPhast.InitializeModflowInputDialog;
 begin
   case PhastModel.ObservationPurpose of
@@ -4004,7 +3983,14 @@ begin
       TextStream.Position := 0;
       ObjectTextToBinary(TextStream, MemStream);
       MemStream.Position := 0;
-      MemStream.ReadComponent(ModelMateProject);
+      try
+        MemStream.ReadComponent(ModelMateProject);
+      except on E: EReadError do
+        begin
+          Beep;
+          MessageDlg(StrThereWasAProblem, mtWarning, [mbOK], 0);
+        end;
+      end;
       ModelMateProject.FileName := FileName;
     finally
       TextStream.Free;
@@ -4122,14 +4108,13 @@ end;
 
 procedure TfrmGoPhast.EnableVisualization;
 var
-  LocalGrid: TCustomGrid;
+  LocalGrid: TCustomModelGrid;
 begin
   LocalGrid := Grid;
-  acColorGrid.Enabled := (LocalGrid <> nil)
+  acDisplayData.Enabled := (LocalGrid <> nil)
     and (LocalGrid.ColumnCount > 0)
     and (LocalGrid.RowCount > 0)
     and (LocalGrid.LayerCount > 0);
-  acContourData.Enabled := acColorGrid.Enabled;
 end;
 
 function TfrmGoPhast.TestZoneBudgetLocationOK: Boolean;
@@ -4141,7 +4126,8 @@ begin
     if not FileExists(PhastModel.ProgramLocations.ZoneBudgetLocation) then
     begin
       Beep;
-      if MessageDlg('ZONEBUDGET does not exist at the location you specified.  ' + 'Do you still want to export the ZONEBUDGET input files?', mtWarning, [mbYes, mbNo], 0) <> mrYes then
+      if MessageDlg(StrZONEBUDGETDoesNot,
+        mtWarning, [mbYes, mbNo], 0) <> mrYes then
       begin
         result := False;
       end;
@@ -4276,10 +4262,14 @@ end;
 
 procedure TfrmGoPhast.UpdatePermanantDialogBoxAppearances;
 begin
-  if frmGridColor <> nil then
+  if frmDisplayData <> nil then
   begin
-    frmGridColor.CustomizeControls;
+    frmDisplayData.CustomizeControls;
   end;
+//  if frmGridColor <> nil then
+//  begin
+//    frmGridColor.CustomizeControls;
+//  end;
   frmProgressMM.CustomizeControls;
   frmSelectedObjects.CustomizeControls;
   frmColors.CustomizeControls;
@@ -4486,38 +4476,6 @@ begin
 //    mmMainMenu.Color := Color;
   end;
 
-end;
-
-procedure TfrmGoPhast.acColorGridExecute(Sender: TObject);
-begin
-  inherited;
-  if frmGridColor = nil then
-  begin
-    frmGridColor := TfrmGridColor.Create(nil);
-  end;
-  frmGridColor.Show;
-  if frmGridColor.WindowState = wsMinimized then
-  begin
-    frmGridColor.WindowState := wsNormal;
-  end;
-  UpdateFrmGridColor;
-  UpdateFrmContourData;
-end;
-
-procedure TfrmGoPhast.acContourDataExecute(Sender: TObject);
-begin
-  inherited;
-  if frmContourData = nil then
-  begin
-    frmContourData := TfrmContourData.Create(nil);
-  end;
-  frmContourData.Show;
-  if frmContourData.WindowState = wsMinimized then
-  begin
-    frmContourData.WindowState := wsNormal;
-  end;
-  UpdateFrmGridColor;
-  UpdateFrmContourData;
 end;
 
 procedure TfrmGoPhast.acCopyExecute(Sender: TObject);
@@ -4813,17 +4771,6 @@ begin
   end;
 end;
 
-procedure TfrmGoPhast.miConfigureHeadObservationResultsClick(Sender: TObject);
-begin
-  inherited;
-  if frmHeadObservationResults = nil then
-  begin
-    frmHeadObservationResults := TfrmHeadObservationResults.Create(Application);
-  end;
-  frmHeadObservationResults.GetData;
-  frmHeadObservationResults.Show;
-end;
-
 procedure TfrmGoPhast.ConvertPoint(Sender: TObject; VD: TViewDirection;
   const RealPoint: TPoint2D; var ScreenCoordinate: TPoint);
 begin
@@ -5111,7 +5058,7 @@ end;
 
 function TfrmGoPhast.DefaultVE: Real;
 var
-  LocalGrid: TCustomGrid;
+  LocalGrid: TCustomModelGrid;
   ZHeight: Real;
   XWidth: Real;
   FrameRatio: Real;
@@ -5168,6 +5115,14 @@ begin
     frmGoPhast.PhastModel.Invalidate;
   end;
   EnableDeleteImage;
+end;
+
+procedure TfrmGoPhast.DeleteLastPointInRuler;
+begin
+  if CurrentTool = RulerTool then
+  begin
+    RulerTool.DeleteLastSavedPoint;
+  end;
 end;
 
 procedure TfrmGoPhast.DeleteLastPointInScreenObject;
@@ -5253,6 +5208,7 @@ begin
     Key_Escape:
       begin
         DeleteLastPointInScreenObject;
+        DeleteLastPointInRuler;
       end;
     Key_Return:
       begin
@@ -5515,7 +5471,7 @@ begin
   end;
 end;
 
-procedure TfrmGoPhast.EditGlobalVariables1Click(Sender: TObject);
+procedure TfrmGoPhast.miEditGlobalVariablesClick(Sender: TObject);
 begin
   inherited;
   ShowAForm(TfrmGlobalVariables);
@@ -5584,15 +5540,6 @@ begin
   SideScreenObjectsChanged := True;
   frame3DView.glWidModelView.Invalidate;
 end;
-
-//procedure TfrmGoPhast.SetShowUcodeInterface(const Value: boolean);
-//begin
-//  if FShowUcodeInterface <> Value then
-//  begin
-//    FShowUcodeInterface := Value;
-//    SetVisibilityOfModelMateActions;
-//  end;
-//end;
 
 procedure TfrmGoPhast.SetSideScreenObjectsChanged(const Value: boolean);
 begin
@@ -5721,7 +5668,7 @@ begin
   end;
 end;
 
-function TfrmGoPhast.GetGrid: TCustomGrid;
+function TfrmGoPhast.GetGrid: TCustomModelGrid;
 begin
   if PhastModel = nil then
   begin
@@ -5833,6 +5780,36 @@ begin
     Application.CreateForm(TfrmLinkStreams, frmLinkStreams);
   end;
   frmLinkStreams.Show;
+end;
+
+procedure TfrmGoPhast.miLockSelectedObjectsClick(Sender: TObject);
+var
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  AList: TList;
+  Undo : TUndoLockScreenObjects;
+begin
+  inherited;
+  AList := TList.Create;
+  try
+    for ScreenObjectIndex := 0 to
+      frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+    begin
+      AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
+      if not AScreenObject.Deleted and AScreenObject.Visible and
+        AScreenObject.Selected then
+      begin
+        AList.Add(AScreenObject)
+      end;
+    end;
+    if AList.Count > 0 then
+    begin
+      Undo := TUndoLockScreenObjects.Create(AList);
+      UndoStack.Submit(Undo);
+    end;
+  finally
+    AList.Free;
+  end;
 end;
 
 procedure TfrmGoPhast.sbMainMouseMove(Sender: TObject;
@@ -6314,6 +6291,8 @@ begin
   end;
 end;
 
+
+
 procedure TfrmGoPhast.OpenAFile(const FileName: string);
 var
   TempStream: TMemoryStream;
@@ -6328,6 +6307,12 @@ begin
   begin
     Beep;
     MessageDlg(FileName + ' does not exist.', mtError, [mbOK], 0);
+    Exit;
+  end
+  else if FileLength(FileName) <= 0 then
+  begin
+    Beep;
+    MessageDlg(FileName + ' does not contain any data.', mtError, [mbOK], 0);
     Exit;
   end;
   FreeAndNil(frmModflowPackages);
@@ -6371,11 +6356,11 @@ begin
     // Free forms that aren't destroyed automatically after
     // being shown.
     FreeAndNil(frmShowHideObjects);
-    FreeAndNil(frmGridColor);
-    FreeAndNil(frmContourData);
+//    FreeAndNil(frmGridColor);
+//    FreeAndNil(frmContourData);
     FreeAndNil(frmGridValue);
     FreeAndNil(frmLinkStreams);
-    FreeAndNil(frmHeadObservationResults);
+    FreeAndNil(frmDisplayData);
 
     sdPhastInput.FileName := '';
     frmFileProgress := TfrmProgressMM.Create(nil);
@@ -6530,17 +6515,12 @@ begin
       msModflowNWT: acModflowNwtActive.Checked := True;
       else Assert(False);
     end;
-    miConfigurePathlines.Enabled := PhastModel.PathLines.Lines.Count > 0;
-    miPathlinestoShapefile.Enabled := miConfigurePathlines.Enabled;
+    miPathlinestoShapefile.Enabled := PhastModel.PathLines.Lines.Count > 0;
 
-    miConfigureEndpoints.Enabled := PhastModel.EndPoints.Points.Count > 0;
-    miEndpointsatStartingLocationstoShapefile.Enabled := miConfigureEndpoints.Enabled;
-    miEndpointsatEndingLocationstoShapefile.Enabled := miConfigureEndpoints.Enabled;
+    miEndpointsatStartingLocationstoShapefile.Enabled := PhastModel.EndPoints.Points.Count > 0;
+    miEndpointsatEndingLocationstoShapefile.Enabled := PhastModel.EndPoints.Points.Count > 0;
 
-    miConfigureTimeSeries.Enabled := PhastModel.TimeSeries.Series.Count > 0;
-    miTimeSeriestoShapefile.Enabled := miConfigureTimeSeries.Enabled;
-
-    miConfigureHeadObservationResults.Enabled := PhastModel.StoreHeadObsResults;
+    miTimeSeriestoShapefile.Enabled := PhastModel.TimeSeries.Series.Count > 0;
 
     Application.Title := ExtractFileName(FileName) + ' ' + StrModelName;
     frameTopView.ZoomBox.Image32.Invalidate;
@@ -6609,10 +6589,6 @@ begin
 
   PhastModel.ProgramLocations.ReadFromIniFile(IniFile);
 
-//  if PhastModel.ModelMateProjectFileName <> '' then
-//  begin
-//    ShowUcodeInterface := True;
-//  end;
   EnableDeleteImage;
 
   WriteIniFile;
@@ -6695,7 +6671,7 @@ end;
 
 procedure TfrmGoPhast.GriddedData1Click(Sender: TObject);
 var
-  LocalGrid: TCustomGrid;
+  LocalGrid: TCustomModelGrid;
 begin
   inherited;
   LocalGrid := Grid;
@@ -6937,6 +6913,36 @@ end;
 procedure TfrmGoPhast.miTitleAndUnitsClick(Sender: TObject);
 begin
   ShowAForm(TfrmUnits);
+end;
+
+procedure TfrmGoPhast.miUnlockSelectedObjectsClick(Sender: TObject);
+var
+  ScreenObjectIndex: Integer;
+  AScreenObject: TScreenObject;
+  AList: TList;
+  Undo : TUndoUnlockScreenObjects;
+begin
+  inherited;
+  AList := TList.Create;
+  try
+    for ScreenObjectIndex := 0 to
+      frmGoPhast.PhastModel.ScreenObjectCount - 1 do
+    begin
+      AScreenObject := frmGoPhast.PhastModel.ScreenObjects[ScreenObjectIndex];
+      if not AScreenObject.Deleted and AScreenObject.Visible and
+        AScreenObject.Selected then
+      begin
+        AList.Add(AScreenObject)
+      end;
+    end;
+    if AList.Count > 0 then
+    begin
+      Undo := TUndoUnlockScreenObjects.Create(AList);
+      UndoStack.Submit(Undo);
+    end;
+  finally
+    AList.Free;
+  end;
 end;
 
 procedure TfrmGoPhast.miSteadyFlowClick(Sender: TObject);
@@ -7291,7 +7297,7 @@ end;
 procedure TfrmGoPhast.miExportModflowClick(Sender: TObject);
 var
   FileName: string;
-  AGrid: TCustomGrid;
+  AGrid: TCustomModelGrid;
   NameWriter: TNameFileWriter;
   ModflowVersionName: string;
 begin
@@ -7419,16 +7425,22 @@ end;
 procedure TfrmGoPhast.acExportImageExecute(Sender: TObject);
 begin
   inherited;
-  if frmGridColor = nil then
+  if frmDisplayData = nil then
   begin
-    frmGridColor := TfrmGridColor.Create(nil);
-    UpdateFrmGridColor(True);
+    Application.CreateForm(TfrmDisplayData, frmDisplayData);
+//    UpdateFrmGridColor(True);
   end;
-  if frmContourData = nil then
-  begin
-    frmContourData := TfrmContourData.Create(nil);
-    UpdateFrmContourData(True);
-  end;
+    UpdateFrmDisplayData(True);
+//  if frmGridColor = nil then
+//  begin
+//    frmGridColor := TfrmGridColor.Create(nil);
+//    UpdateFrmGridColor(True);
+//  end;
+//  if frmContourData = nil then
+//  begin
+//    frmContourData := TfrmContourData.Create(nil);
+//    UpdateFrmContourData(True);
+//  end;
   if frmExportImage = nil then
   begin
     Application.CreateForm(TfrmExportImage, frmExportImage);
@@ -7647,7 +7659,7 @@ end;
 procedure TfrmGoPhast.acExportPhastInputFileExecute(Sender: TObject);
 var
   FileName: string;
-  AGrid: TCustomGrid;
+  AGrid: TCustomModelGrid;
 begin
   AGrid := Grid;
   if (AGrid = nil) or (AGrid.ColumnCount <= 0)
@@ -7988,10 +8000,32 @@ begin
   frame3DView.glWidModelView.Invalidate;
 end;
 
+procedure TfrmGoPhast.acMeasureExecute(Sender: TObject);
+begin
+  inherited;
+  // Toggle the Checked state of the Sender or it's associated action.
+  SetActionChecked(Sender);
+
+  if not (Sender is TToolButton) then
+  begin
+    tbMeasure.OnMouseDown(tbMeasure, mbLeft, [ssLeft], 0, 0);
+  end;
+
+  if tbMeasure.Down then
+  begin
+    // Make sure all buttons except the current one are up.
+    SetButtonsUp(tbMeasure);
+    // Set the cursors.
+    SetZB_Cursors(crArrow);
+  end;
+  CurrentTool := RulerTool;
+  SelectDefaultButton;
+end;
+
 procedure TfrmGoPhast.acRunModflowLgrExecute(Sender: TObject);
 var
   FileName: string;
-  AGrid: TCustomGrid;
+  AGrid: TCustomModelGrid;
   NameWriter: TNameFileWriter;
   Index: Integer;
   ChildModel: TChildModel;
@@ -8383,27 +8417,6 @@ procedure TfrmGoPhast.miExamplesClick(Sender: TObject);
 begin
   Application.HelpJump('Examples');
 //  HelpRouter.HelpJump('', 'Examples');
-end;
-
-procedure TfrmGoPhast.miHeadObservationResultsClick(Sender: TObject);
-var
-  AFileName: string;
-begin
-  inherited;
-  AFileName := PhastModel.DefaultModflowOutputFileName;
-  AFileName := ChangeFileExt(AFileName, StrHobout);
-  if not FileExists(AFileName) then
-  begin
-    AFileName := '';
-  end;
-  if frmHeadObservationResults = nil then
-  begin
-    frmHeadObservationResults := TfrmHeadObservationResults.Create(Application);
-  end;
-  if frmHeadObservationResults.ReadFile(AFileName) then
-  begin
-    frmHeadObservationResults.Show;
-  end;
 end;
 
 procedure TfrmGoPhast.miHelpOnMainWindowClick(Sender: TObject);
